@@ -1,6 +1,10 @@
 import { useCallback, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { BusinessService } from "@/core/business/services/BusinessService";
+import {
+  getUserBusinessFavorites,
+  toggleBusinessFavorite,
+} from "@/core/favorites/services";
 import type { Business } from "@/core/profiles/services/types";
 
 interface UseFavoritesResult {
@@ -22,7 +26,7 @@ export function useFavorites(profileId?: string | null): UseFavoritesResult {
         return [];
       }
 
-      const favoriteIds = await BusinessService.getFavorites(profileId);
+      const favoriteIds = await getUserBusinessFavorites(profileId);
       if (favoriteIds.length === 0) {
         return [];
       }
@@ -54,7 +58,7 @@ export function useFavorites(profileId?: string | null): UseFavoritesResult {
         return;
       }
 
-      await BusinessService.toggleFavorite(itemId, profileId);
+      await toggleBusinessFavorite(itemId, profileId);
       await queryClient.invalidateQueries({
         queryKey: ["profile", "business-favorites"],
       });

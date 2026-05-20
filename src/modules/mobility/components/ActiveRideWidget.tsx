@@ -1,11 +1,11 @@
 /**
  * Widget de Corrida Ativa
- * Mostra a corrida em andamento do usuÃ¡rio com informaÃ§Ãµes resumidas
+ * Mostra a corrida em andamento do usuario com informacoes resumidas
  */
 
 import { memo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Car, MapPin, Clock, User, ArrowRight } from "lucide-react";
+import { Car, MapPin, Clock, User, ArrowRight, Star } from "lucide-react";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import {
@@ -48,7 +48,7 @@ const STATUS_CONFIG = {
     color: "bg-teal-500/20 text-teal-400 border-teal-500/30",
   },
   completed: {
-    label: "ConcluÃ­da",
+    label: "Concluida",
     color: "bg-green-500/20 text-green-400 border-green-500/30",
   },
   cancelled: {
@@ -179,7 +179,7 @@ export const ActiveRideWidget = memo(
               </div>
             </div>
 
-            {/* InformaÃ§Ãµes da outra pessoa */}
+            {/* Informacoes da outra pessoa */}
             {otherPerson && (
               <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 mb-4">
                 <Avatar className="h-10 w-10 border-2 border-teal-400/30">
@@ -203,7 +203,7 @@ export const ActiveRideWidget = memo(
                     {isDriver ? "Passageiro" : "Motorista"}
                     {!isDriver &&
                       ride.driver?.vehicle_model &&
-                      ` â€¢ ${ride.driver.vehicle_model}`}
+                      ` - ${ride.driver.vehicle_model}`}
                   </p>
                 </div>
                 {!isDriver && ride.driver?.rating && (
@@ -211,13 +211,13 @@ export const ActiveRideWidget = memo(
                     <span className="text-sm font-medium">
                       {ride.driver.rating.toFixed(1)}
                     </span>
-                    <span className="text-xs">â­</span>
+                    <Star className="h-3 w-3 fill-current" aria-hidden="true" />
                   </div>
                 )}
               </div>
             )}
 
-            {/* PreÃ§o */}
+            {/* Preco */}
             {ride.final_price && (
               <div className="flex items-center justify-between p-3 rounded-lg bg-white/5 mb-4">
                 <span className="text-sm text-gray-400">Valor</span>
@@ -227,7 +227,7 @@ export const ActiveRideWidget = memo(
               </div>
             )}
 
-            {/* BotÃ£o de aÃ§Ã£o */}
+            {/* Botao de acao */}
             <Button
               onClick={handleClick}
               className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600"

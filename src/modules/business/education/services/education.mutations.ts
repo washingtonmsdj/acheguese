@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Education Mutations - SSOT Write Model
  *
  * Todas as operacoes de escrita para o modulo Education.
@@ -213,13 +213,13 @@ export async function createEducationProgram(
     const stageGrade = normalizeStageText(payload.grade ?? null);
 
     if (!stageName) {
-      return { data: null, error: new Error('Etapa/sÃ©rie obrigatÃ³ria para escolas') };
+      return { data: null, error: new Error('Etapa/serie obrigatoria para escolas') };
     }
 
     const official = isOfficialStageLabel(stageName, nicheKey);
     const custom = validateCustomStageText(stageName);
     if (!official && !custom) {
-      return { data: null, error: new Error('Etapa/sÃ©rie invÃ¡lida para o padrÃ£o oficial') };
+      return { data: null, error: new Error('Etapa/serie invalida para o padrao oficial') };
     }
 
     payload.name = stageName;
@@ -254,7 +254,7 @@ export async function updateEducationProgram(
     .single();
 
   if (existingProgramError || !existingProgram?.education_profile_id) {
-    return { data: null, error: new Error('Programa nÃ£o encontrado') };
+    return { data: null, error: new Error('Programa nao encontrado') };
   }
 
   const nicheKey = await getProfileNicheKey(existingProgram.education_profile_id);
@@ -271,7 +271,7 @@ export async function updateEducationProgram(
       const official = isOfficialStageLabel(candidate, nicheKey);
       const custom = validateCustomStageText(candidate);
       if (!official && !custom) {
-        return { data: null, error: new Error('Etapa/sÃ©rie invÃ¡lida para o padrÃ£o oficial') };
+        return { data: null, error: new Error('Etapa/serie invalida para o padrao oficial') };
       }
       (payload as any).name = updatedName ?? candidate;
       (payload as any).grade = updatedGrade ?? candidate;
@@ -333,7 +333,7 @@ export async function createEducationLead(
       const official = isOfficialStageLabel(desired, nicheKey);
       const custom = validateCustomStageText(desired);
       if (!official && !custom) {
-        return { data: null, error: new Error('SÃ©rie/etapa desejada invÃ¡lida') };
+        return { data: null, error: new Error('Serie/etapa desejada invalida') };
       }
       payload.desired_grade = desired;
     }
@@ -469,4 +469,3 @@ export async function deleteEducationEvent(
 
   return { data: null, error: null };
 }
-

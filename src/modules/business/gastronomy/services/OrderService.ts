@@ -1,4 +1,4 @@
-﻿/**
+/**
  * OrderService - facade de pedidos da gastronomia.
  *
  * O SSOT real de pedidos/entregas e OrderDeliverySSOTService. Este facade mantem
@@ -470,7 +470,7 @@ export const OrderService = {
   async createOrder(): Promise<ServiceResult<OrderWithItems>> {
     return {
       data: null,
-      error: 'CriaÃƒÂ§ÃƒÂ£o de pedido de gastronomia deve usar GastronomyCheckoutService/OrderDeliverySSOTService.',
+      error: 'Criacao de pedido de gastronomia deve usar GastronomyCheckoutService/OrderDeliverySSOTService.',
     };
   },
 
@@ -742,4 +742,3 @@ export const OrderService = {
     };
   },
 };
-

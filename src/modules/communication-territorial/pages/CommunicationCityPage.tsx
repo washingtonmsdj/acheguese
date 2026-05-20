@@ -1,6 +1,9 @@
 import { Helmet } from "react-helmet-async";
 import { Link, useParams } from "react-router-dom";
+import { buildPublicAbsoluteUrl } from "@/shared/config/publicAppOrigin";
+import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
+import { Card, CardContent } from "@/shared/components/ui/card";
 import { ChannelCard, CommunicationPageShell, PublicationCard } from "../components/CommunicationBlocks";
 import { useCommunicationCityHub } from "../hooks";
 import {
@@ -13,19 +16,33 @@ export default function CommunicationCityPage() {
   const { state = "", city = "" } = useParams();
   const { data, isLoading } = useCommunicationCityHub(state, city);
 
+  const cityPath = buildCommunicationCityPath(state, city);
+  const canonicalUrl = buildPublicAbsoluteUrl(cityPath);
+  const fallbackTerritoryPath = buildCommunicationTerritoryPath(
+    state,
+    city,
+    "complexo-do-nordeste-de-amaralina",
+  );
+
   return (
     <CommunicationPageShell>
       <Helmet>
         <title>{data?.title ?? "Comunicacao Territorial"} | Achegue-se</title>
-        <link rel="canonical" href={buildCommunicationCityPath(state, city)} />
+        <meta
+          name="description"
+          content="Diretorio editorial da cidade com canais locais, coberturas territoriais e publicacoes recentes."
+        />
+        <link rel="canonical" href={canonicalUrl} />
       </Helmet>
 
-      <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-sm font-medium text-primary">/comunicacao</p>
-          <h1 className="text-3xl font-bold">{data?.title ?? "Comunicação Territorial"}</h1>
-          <p className="text-muted-foreground">
-            Listagem editorial da cidade. Escolha um território para abrir os canais em contexto local.
+      <div className="mb-6 flex flex-col gap-3 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-primary">/comunicacao/{state}/{city}</p>
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+            {data?.title ?? "Comunicacao Territorial"}
+          </h1>
+          <p className="max-w-3xl text-sm text-muted-foreground sm:text-base">
+            Canais editoriais da cidade. Abra um territorio para navegar em contexto local.
           </p>
         </div>
         <Button asChild variant="outline">
@@ -33,51 +50,86 @@ export default function CommunicationCityPage() {
         </Button>
       </div>
 
-      {isLoading ? <p>Carregando...</p> : null}
-
-      <section className="grid gap-4 md:grid-cols-3">
-        {(data?.channels ?? []).map((channel) => (
-          <ChannelCard key={channel.id} channel={channel} />
-        ))}
-      </section>
-
-      <section className="mt-8 space-y-4">
-        <h2 className="text-2xl font-semibold">Cobertura por território</h2>
-        {(data?.publications ?? []).map((publication) => {
-          const locationSlug = publication.location?.slug ?? city;
-          return (
-            <PublicationCard
-              key={publication.id}
-              publication={publication}
-              channelHref={
-                publication.channel
-                  ? buildCommunicationChannelPath({
-                      state,
-                      city,
-                      territorySlug: locationSlug,
-                      channelSlug: publication.channel.slug,
-                    })
-                  : undefined
-              }
-            />
-          );
-        })}
-        {!isLoading && !data?.publications.length ? (
-          <p className="text-sm text-muted-foreground">Ainda não há publicações publicadas neste recorte.</p>
-        ) : null}
-      </section>
+      {isLoading ? (
+        <div className="space-y-6">
+          <div className="grid gap-4 md:grid-cols-3">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <Card key={index} className="border-border">
+                <CardContent className="space-y-3 p-5">
+                  <div className="h-5 w-1/2 animate-pulse rounded bg-muted" />
+                  <div className="h-4 w-full animate-pulse rounded bg-muted" />
+                  <div className="h-4 w-5/6 animate-pulse rounded bg-muted" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          <div className="h-36 animate-pulse rounded-xl bg-muted" />
+        </div>
+      ) : null}
 
       {!isLoading ? (
-        <section className="mt-8 rounded-xl border p-4">
-          <p className="text-sm text-muted-foreground">
-            Para abrir canais no contexto territorial correto, acesse tambem:
-            {" "}
-            <Link className="font-medium text-primary" to={buildCommunicationTerritoryPath(state, city, "complexo-do-nordeste-de-amaralina")}>
-              hub territorial do Complexo do Nordeste de Amaralina
-            </Link>
-            .
-          </p>
-        </section>
+        <>
+          <section className="grid gap-4 md:grid-cols-3">
+            {(data?.channels ?? []).length ? (
+              (data?.channels ?? []).map((channel) => (
+                <ChannelCard
+                  key={channel.id}
+                  channel={channel}
+                />
+              ))
+            ) : (
+              <Card className="border-border md:col-span-3">
+                <CardContent className="py-8 text-sm text-muted-foreground">
+                  Nenhum canal ativo encontrado para esta cidade.
+                </CardContent>
+              </Card>
+            )}
+          </section>
+
+          <section className="mt-8 space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-xl font-semibold sm:text-2xl">Cobertura por territorio</h2>
+              <Badge variant="outline">{data?.publications?.length ?? 0} publicacoes</Badge>
+            </div>
+            {(data?.publications ?? []).length ? (
+              (data?.publications ?? []).map((publication) => {
+                const locationSlug = publication.location?.slug ?? city;
+                return (
+                  <PublicationCard
+                    key={publication.id}
+                    publication={publication}
+                    channelHref={
+                      publication.channel
+                        ? buildCommunicationChannelPath({
+                            state,
+                            city,
+                            territorySlug: locationSlug,
+                            channelSlug: publication.channel.slug,
+                          })
+                        : undefined
+                    }
+                  />
+                );
+              })
+            ) : (
+              <Card className="border-border">
+                <CardContent className="py-8 text-sm text-muted-foreground">
+                  Ainda nao ha publicacoes neste recorte de cidade.
+                </CardContent>
+              </Card>
+            )}
+          </section>
+
+          <section className="mt-8 rounded-xl border border-border p-4">
+            <p className="text-sm text-muted-foreground">
+              Quer abrir um hub territorial de referencia?{" "}
+              <Link className="font-medium text-primary hover:underline" to={fallbackTerritoryPath}>
+                Acesse o modelo territorial de Salvador
+              </Link>
+              .
+            </p>
+          </section>
+        </>
       ) : null}
     </CommunicationPageShell>
   );

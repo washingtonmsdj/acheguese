@@ -2,11 +2,11 @@ import { DriverEarningsLayout } from "@/core/mobility/components/driver/DriverEa
 
 /**
  * CentralMotoboyGanhosPage
- * 
- * PÃ¡gina de ganhos de motoboy na Central (/central/motoboy/ganhos).
+ *
+ * Pagina de ganhos de motoboy na Central (/central/motoboy/ganhos).
  * Renderiza o componente compartilhado DriverEarningsLayout com service="motoboy".
- * 
- * Esta pÃ¡gina renderiza o conteÃºdo real da rota canÃ´nica da Central.
+ *
+ * Esta pagina renderiza o conteudo real da rota canonica da Central.
  */
 export default function CentralMotoboyGanhosPage() {
   return <DriverEarningsLayout service="motoboy" />;

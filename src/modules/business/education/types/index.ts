@@ -1,14 +1,14 @@
 /**
  * Education Module - Types
- * 
+ *
  * Tipagens centralizadas do modulo Education.
  */
 
-// Tipos específicos para escolas regulares
+// Tipos especificos para escolas regulares
 export type SchoolType = 'public' | 'private' | 'charter' | 'community';
 export type SchoolNetwork = 'municipal' | 'state' | 'federal' | 'private';
 
-// Nichos do módulo Education
+// Nichos do modulo Education
 export type EducationNicheKey =
   | 'regular_school'
   | 'daycare'
@@ -19,12 +19,12 @@ export type EducationNicheKey =
   | 'music_school'
   | 'sports_school';
 
-export type EducationLevel = 
-  | 'early_childhood' 
-  | 'elementary_1' 
-  | 'elementary_2' 
-  | 'middle_school' 
-  | 'high_school' 
+export type EducationLevel =
+  | 'early_childhood'
+  | 'elementary_1'
+  | 'elementary_2'
+  | 'middle_school'
+  | 'high_school'
   | 'technical';
 
 export type SchoolShift = 'morning' | 'afternoon' | 'evening' | 'full_day';
@@ -117,8 +117,8 @@ export interface EducationProfile {
   published_at: string | null;
   created_at: string;
   updated_at: string;
-  
-  // Campos específicos para escolas regulares (regular_school)
+
+  // Campos especificos para escolas regulares (regular_school)
   school_type?: SchoolType | null;
   school_network?: SchoolNetwork | null;
   school_inep_code?: string | null;
@@ -135,6 +135,19 @@ export interface EducationProfile {
   school_facility_features?: SchoolFacilityFeatureKey[] | null;
 }
 
+export interface EducationPublicRoute {
+  state: string;
+  city: string;
+  district: string;
+  slug: string;
+  geographic_path: string;
+}
+
+export interface EducationPublicProfile extends EducationProfile {
+  business_name: string | null;
+  public_route: EducationPublicRoute | null;
+}
+
 export interface EducationProgram {
   id: string;
   education_profile_id: string;
@@ -149,10 +162,10 @@ export interface EducationProgram {
   display_order: number;
   created_at: string;
   updated_at: string;
-  
-  // Campos específicos para escolas regulares (regular_school)
+
+  // Campos especificos para escolas regulares (regular_school)
   education_level?: EducationLevel | null;
-  grade?: string | null; // Ex: "1º ano", "6º ano", "3ª série"
+  grade?: string | null; // Ex: "1 ano", "6 ano", "3 serie"
   class_name?: string | null; // Ex: "A", "B", "Turma 1"
   max_capacity?: number | null;
   current_enrollment?: number | null;
@@ -175,12 +188,12 @@ export interface EducationLead {
   lost_reason: string | null;
   created_at: string;
   updated_at: string;
-  
-  // Campos específicos para matrícula escolar (regular_school)
-  guardian_name?: string | null; // Nome do responsável (quando diferente de full_name)
+
+  // Campos especificos para matricula escolar (regular_school)
+  guardian_name?: string | null; // Nome do responsavel (quando diferente de full_name)
   student_name?: string | null; // Nome do aluno (quando diferente de child_name)
   student_age?: number | null; // Idade do aluno
-  desired_grade?: string | null; // Série/ano desejado: "1º ano", "6º ano"
+  desired_grade?: string | null; // Serie/ano desejado: "1 ano", "6 ano"
   desired_shift?: SchoolShift | null; // Turno desejado
 }
 
@@ -204,28 +217,28 @@ export interface EducationEvent {
   is_public: boolean;
   created_at: string;
   updated_at: string;
-  
-  // Campo específico para escolas regulares
+
+  // Campo especifico para escolas regulares
   school_event_type?: SchoolEventType | null;
 }
 
-export type EducationLeadStatus = 
-  | 'new' 
-  | 'contacted' 
-  | 'visit_scheduled' 
-  | 'proposal_sent' 
-  | 'enrolled' 
+export type EducationLeadStatus =
+  | 'new'
+  | 'contacted'
+  | 'visit_scheduled'
+  | 'proposal_sent'
+  | 'enrolled'
   | 'lost';
 
-export type EducationProfileStatus = 
-  | 'draft' 
-  | 'published' 
+export type EducationProfileStatus =
+  | 'draft'
+  | 'published'
   | 'paused';
 
 // Tipos de eventos escolares
-export type SchoolEventType = 
-  | 'open_house' 
-  | 'enrollment_fair' 
+export type SchoolEventType =
+  | 'open_house'
+  | 'enrollment_fair'
   | 'parent_meeting'
   | 'trial_class'
   | 'school_tour'

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * PlanChangeValidator â€” ValidaÃ§Ã£o de impacto em mudanÃ§as de plano
  *
  * REGRAS ARQUITETURAIS:
@@ -46,7 +46,7 @@ export class PlanChangeValidator {
         .select('id, user_id, status_v2, plan_code')
         .eq('business_id', businessId)
         .in('status_v2', ['active', 'trialing']);
-      
+
       if (error) {
         logger.error('[PlanChangeValidator] Erro ao buscar assinaturas:', error);
         return {
@@ -59,33 +59,33 @@ export class PlanChangeValidator {
           requiresMigration: false,
         };
       }
-      
+
       const affectedContracts = subscriptions?.length || 0;
       const affectedUsers = new Set(subscriptions?.map(s => s.user_id) || []).size;
-      
+
       // Determinar features perdidas/ganhas
       const { willLose, willGain } = this.compareFeatures(currentPlanTier, newPlanTier);
-      
+
       // Determinar se Ã© downgrade (perde features)
       const isDowngrade = willLose.length > 0;
-      
+
       // Determinar se requer migraÃ§Ã£o
       const requiresMigration = isDowngrade && affectedContracts > 0;
-      
+
       // Bloquear downgrade destrutivo sem estratÃ©gia
       if (requiresMigration) {
         return {
           canChange: false,
-          reason: `Downgrade bloqueado: ${affectedContracts} contrato(s) ativo(s) perderÃ£o acesso a recursos crÃ­ticos. Defina estratÃ©gia de migraÃ§Ã£o antes de prosseguir.`,
+          reason: `Downgrade bloqueado: ${affectedContracts} contrato(s) ativo(s) perderao acesso a recursos criticos. Defina estrategia de migracao antes de prosseguir.`,
           affectedContracts,
           affectedUsers,
           willLoseFeatures: willLose,
           willGainFeatures: willGain,
           requiresMigration: true,
-          migrationStrategy: 'SugestÃ£o: Notifique usuÃ¡rios afetados e ofereÃ§a perÃ­odo de transiÃ§Ã£o de 30 dias.',
+          migrationStrategy: 'Sugestao: Notifique usuarios afetados e ofereca periodo de transicao de 30 dias.',
         };
       }
-      
+
       // Permitir upgrade ou mudanÃ§a sem impacto
       return {
         canChange: true,
@@ -95,9 +95,9 @@ export class PlanChangeValidator {
         willGainFeatures: willGain,
         requiresMigration: false,
       };
-      
+
     } catch (error) {
-      logger.error('[PlanChangeValidator] Erro ao validar mudanÃ§a:', error);
+      logger.error('[PlanChangeValidator] Erro ao validar mudanca:', error);
       return {
         canChange: false,
         reason: 'Erro inesperado ao validar impacto.',
@@ -109,7 +109,7 @@ export class PlanChangeValidator {
       };
     }
   }
-  
+
   /**
    * Compara features entre planos.
    */
@@ -120,46 +120,44 @@ export class PlanChangeValidator {
     // Mapa de features por tier
     const featuresByTier: Record<string, string[]> = {
       free: [
-        'PÃ¡gina pÃºblica bÃ¡sica',
-        'CardÃ¡pio limitado (20 itens)',
+        'Pagina publica basica',
+        'Cardapio limitado (20 itens)',
       ],
       pro: [
-        'PÃ¡gina pÃºblica bÃ¡sica',
-        'PÃ¡gina premium',
+        'Pagina publica basica',
+        'Pagina premium',
         'Link curto (/p/slug)',
         'QR Code personalizado',
-        'CardÃ¡pio ilimitado',
-        'PromoÃ§Ãµes',
-        'Analytics bÃ¡sico',
+        'Cardapio ilimitado',
+        'Promocoes',
+        'Analytics basico',
       ],
       delivery: [
-        'PÃ¡gina pÃºblica bÃ¡sica',
-        'PÃ¡gina premium',
+        'Pagina publica basica',
+        'Pagina premium',
         'Link curto (/p/slug)',
         'QR Code personalizado',
-        'CardÃ¡pio ilimitado',
-        'PromoÃ§Ãµes',
-        'Analytics bÃ¡sico',
+        'Cardapio ilimitado',
+        'Promocoes',
+        'Analytics basico',
         'Pedidos internos',
         'Rede de motoboys',
-        'Analytics avanÃ§ado',
+        'Analytics avancado',
       ],
     };
-    
+
     const currentFeatures = Object.entries(featuresByTier).find(
       ([tier]) => tier === currentTier,
     )?.[1] ?? [];
     const newFeatures = Object.entries(featuresByTier).find(
       ([tier]) => tier === newTier,
     )?.[1] ?? [];
-    
+
     const willLose = currentFeatures.filter(f => !newFeatures.includes(f));
     const willGain = newFeatures.filter(f => !currentFeatures.includes(f));
-    
+
     return { willLose, willGain };
   }
 }
 
 export const planChangeValidator = PlanChangeValidator;
-
-

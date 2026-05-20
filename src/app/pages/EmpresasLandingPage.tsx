@@ -1,9 +1,9 @@
 /**
  * EmpresasLandingPage (REFATORADO)
- * 
+ *
  * Página de Empresas (Comunidade) - Estilo Nextdoor
  * Mapa, distâncias, recomendações de vizinhos, rotas
- * 
+ *
  * REFATORAÇÃO: 971 linhas → ~200 linhas (orquestração limpa)
  * SSOT: Todas as sections e componentes tipados
  * Sem gambiarras: Código profissional e modular
@@ -46,7 +46,6 @@ import { EmpresasLandingLayout } from "@/app/features/business-landing/pages/Emp
 import { EmpresasHeader } from "@/app/features/business-landing/components";
 import {
   CATEGORIES,
-  FEATURED_BUSINESSES,
   NEIGHBOR_ACTIVITY,
   STATS,
   QUICK_FILTERS,
@@ -102,15 +101,15 @@ export default function EmpresasLandingPage({
   const navigate = useNavigate();
   const { user } = useAuth();
   const territorialContext = useTerritorialContextOptional();
-  
+
   const resolved = territorialContext?.resolved ?? resolvedProp;
   const activeMemberIds = territorialContext?.activeMemberIds ?? activeMemberIdsProp;
-  
+
   const territoryLabels = useTerritoryLabels(resolved);
   const moduleTerritory = useModuleTerritoryFilter({ routeResolved: resolved });
   const businessUrls = useBusinessUrls(resolved);
   const moduleUrls = useFriendlyModuleUrls();
-  
+
   // ============================================
   // State Management
   // ============================================
@@ -120,12 +119,12 @@ export default function EmpresasLandingPage({
   const [nearbyMode, setNearbyMode] = useState(false);
   const [locationDialogOpen, setLocationDialogOpen] = useState(false);
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
-  
+
   // ============================================
   // Data Fetching
   // ============================================
   const { coords: userLocation } = useRobustGeolocation({ useCache: true });
-  
+
   const { data: nearbyBusinesses } = useNearbyEntities({
     userLocation,
     entityType: 'business',
@@ -133,7 +132,7 @@ export default function EmpresasLandingPage({
     locationId: resolved?.kind === 'location' ? resolved.location.id : undefined,
     limit: 50,
   });
-  
+
   const { businesses: realBusinesses } = useBusinessList({
     searchQuery: searchQuery.trim() || undefined,
     enabled: true,
@@ -141,9 +140,9 @@ export default function EmpresasLandingPage({
     activeMemberIds,
     territoryFilter: moduleTerritory.territoryFilter,
   });
-  
+
   const { polygons: territoryPolygons, isLoading: isLoadingBounds } = useTerritoryPolygon(resolved ?? null);
-  
+
   // ============================================
   // Computed Values
   // ============================================
@@ -153,7 +152,7 @@ export default function EmpresasLandingPage({
   );
   const territoryNameShort = useMemo(() => getTerritoryNameShort(territoryName), [territoryName]);
   const territoryPreposition = useMemo(() => getTerritoryPreposition(territoryName), [territoryName]);
-  
+
   const bannerImages = useMemo(() => [heroImg, heroImg2, heroImg3], []);
   const initialSlugs = useMemo(() => {
     const geoPath =
@@ -170,10 +169,8 @@ export default function EmpresasLandingPage({
       districtSlug: parts[3] ?? null,
     };
   }, [resolved]);
-  
-  // Usar empresas reais se disponíveis, senão usar mocks
+  // Usa apenas empresas reais do SSOT.
   const businessesToShow = useMemo(() => {
-    // Se modo "perto de mim" ativo e temos resultados, usar nearbyBusinesses
     if (nearbyMode && nearbyBusinesses && nearbyBusinesses.length > 0) {
       return (nearbyBusinesses as NearbyBusinessResult[]).map((result) => ({
         id: result.entity_id || result.id,
@@ -189,9 +186,9 @@ export default function EmpresasLandingPage({
         isOpen: true,
         neighborRecs: 0,
         lastVisit: "",
-        coords: { 
-          lat: result.entity_data?.address?.latitude || result.latitude || 0, 
-          lng: result.entity_data?.address?.longitude || result.longitude || 0 
+        coords: {
+          lat: result.entity_data?.address?.latitude || result.latitude || 0,
+          lng: result.entity_data?.address?.longitude || result.longitude || 0
         },
         phone: result.entity_data?.phone || "",
         slug: result.entity_data?.slug || result.slug,
@@ -200,10 +197,7 @@ export default function EmpresasLandingPage({
         distanceMeters: result.distance_meters,
       })) as Business[];
     }
-    
-    // Senão, usar empresas do contexto territorial ou mocks
-    return realBusinesses.length > 0 
-      ? realBusinesses.map(b => ({
+    return realBusinesses.map(b => ({
           id: b.id,
           name: b.name,
           category: b.category || "Outros",
@@ -225,10 +219,9 @@ export default function EmpresasLandingPage({
           slug: b.slug,
           is_premium: b.is_premium,
           geographic_path: (b as { geographic_path?: string }).geographic_path,
-        })) as Business[]
-      : FEATURED_BUSINESSES as Business[];
+        })) as Business[];
   }, [nearbyMode, nearbyBusinesses, realBusinesses]);
-  
+
   const filteredBusinesses = useMemo(() => {
     let result = businessesToShow;
     if (searchQuery) {
@@ -245,13 +238,13 @@ export default function EmpresasLandingPage({
     }
     return result;
   }, [businessesToShow, searchQuery, activeFilters]);
-  
+
   const topBusinesses = useMemo(() => {
-    return [...FEATURED_BUSINESSES]
+    return [...businessesToShow]
       .sort((a, b) => b.neighborRecs - a.neighborRecs)
       .slice(0, 3) as Business[];
-  }, []);
-  
+  }, [businessesToShow]);
+
   // ============================================
   // Effects
   // ============================================
@@ -261,7 +254,7 @@ export default function EmpresasLandingPage({
     }, 5000);
     return () => clearInterval(interval);
   }, [bannerImages.length]);
-  
+
   // ============================================
   // Event Handlers
   // ============================================
@@ -270,7 +263,7 @@ export default function EmpresasLandingPage({
       prev.includes(label) ? prev.filter((f) => f !== label) : [...prev, label]
     );
   };
-  
+
   const toggleSave = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setSavedBusinesses((prev) => {
@@ -283,15 +276,15 @@ export default function EmpresasLandingPage({
       return next;
     });
   };
-  
+
   const handlePrevBanner = () => {
     setCurrentBannerIndex((prev) => (prev - 1 + bannerImages.length) % bannerImages.length);
   };
-  
+
   const handleNextBanner = () => {
     setCurrentBannerIndex((prev) => (prev + 1) % bannerImages.length);
   };
-  
+
   // ============================================
   // Main Render
   // ============================================
@@ -312,14 +305,14 @@ export default function EmpresasLandingPage({
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
       />
-      
+
       {/* Categorias no Topo */}
       <EmpresasCategoriasSection
         categories={CATEGORIES}
         businessUrls={businessUrls}
         navigate={navigate}
       />
-      
+
       {/* Hero com Carrossel */}
       <EmpresasHeroSection
         territoryName={territoryName}
@@ -366,7 +359,7 @@ export default function EmpresasLandingPage({
         initialSlugs={initialSlugs}
         onApplyPath={(path) => navigate(path)}
       />
-      
+
       {/* Filtros Rápidos */}
       <EmpresasFiltrosSection
         filters={QUICK_FILTERS}
@@ -374,13 +367,13 @@ export default function EmpresasLandingPage({
         onToggleFilter={toggleFilter}
         navigate={navigate}
       />
-      
+
       {/* Stats */}
       <EmpresasStatsSection stats={STATS} />
-      
+
       {/* Atividade dos Vizinhos */}
       <EmpresasAtividadeSection activities={NEIGHBOR_ACTIVITY} />
-      
+
       {/* Mapa do Bairro */}
       <EmpresasMapaSection
         territoryLabels={territoryLabels}
@@ -392,7 +385,7 @@ export default function EmpresasLandingPage({
         moduleUrls={moduleUrls}
         navigate={navigate}
       />
-      
+
       {/* Lista de Empresas */}
       <EmpresasListaSection
         businesses={filteredBusinesses}
@@ -407,7 +400,7 @@ export default function EmpresasLandingPage({
         getBusinessUrl={getBusinessUrl}
         navigate={navigate}
       />
-      
+
       {/* Recomendações da Comunidade */}
       <EmpresasRecomendacoesSection
         topBusinesses={topBusinesses}
@@ -415,10 +408,10 @@ export default function EmpresasLandingPage({
         getBusinessUrl={getBusinessUrl}
         navigate={navigate}
       />
-      
+
       {/* Por que Cadastrar */}
       <EmpresasBeneficiosSection benefits={BENEFITS} />
-      
+
       {/* CTA Footer */}
       <EmpresasCTASection user={user} navigate={navigate} />
     </EmpresasLandingLayout>

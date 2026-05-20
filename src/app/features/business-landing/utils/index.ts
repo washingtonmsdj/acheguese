@@ -4,4 +4,4 @@
 
 export * from "./businessHelpers";
 export * from "./territoryHelpers";
-export * from "./mockData";
+export * from "./landing.constants";

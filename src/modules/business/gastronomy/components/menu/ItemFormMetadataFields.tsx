@@ -1,4 +1,4 @@
-﻿import type { UseFormReturn } from 'react-hook-form';
+import type { UseFormReturn } from 'react-hook-form';
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/shared/components/ui/form';
 import { Input } from '@/shared/components/ui/input';
 import { Switch } from '@/shared/components/ui/switch';
@@ -13,8 +13,8 @@ export function DietaryFields({ form }: BaseSectionProps) {
   return (
     <div className="space-y-3 rounded-lg border p-4">
       <div>
-        <p className="font-medium">CaracterÃ­sticas DietÃ©ticas</p>
-        <p className="text-sm text-muted-foreground">Marque as opÃ§Ãµes que se aplicam ao item</p>
+        <p className="font-medium">Caracteristicas Dieteticas</p>
+        <p className="text-sm text-muted-foreground">Marque as opcoes que se aplicam ao item</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -43,7 +43,7 @@ export function DietaryFields({ form }: BaseSectionProps) {
           name="is_gluten_free"
           render={({ field }) => (
             <FormItem className="flex items-center justify-between rounded-lg border p-3">
-              <div className="space-y-0.5"><FormLabel className="text-sm">Sem GlÃºten</FormLabel></div>
+              <div className="space-y-0.5"><FormLabel className="text-sm">Sem Gluten</FormLabel></div>
               <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
             </FormItem>
           )}
@@ -76,7 +76,7 @@ export function DietaryFields({ form }: BaseSectionProps) {
           name="spicy_level"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>NÃ­vel de PicÃ¢ncia</FormLabel>
+              <FormLabel>Nivel de Picancia</FormLabel>
               <FormControl>
                 <Input
                   type="number"
@@ -111,9 +111,9 @@ export function MenuItemTextMetadataFields({ form }: BaseSectionProps) {
           <FormItem>
             <FormLabel>Ingredientes</FormLabel>
             <FormControl>
-              <Textarea placeholder="mussarela, tomate, manjericÃ£o, azeite" rows={2} {...field} />
+              <Textarea placeholder="mussarela, tomate, manjericao, azeite" rows={2} {...field} />
             </FormControl>
-            <FormDescription>Separe por vÃ­rgula</FormDescription>
+            <FormDescription>Separe por virgula</FormDescription>
             <FormMessage />
           </FormItem>
         )}
@@ -124,8 +124,8 @@ export function MenuItemTextMetadataFields({ form }: BaseSectionProps) {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Tags (opcional)</FormLabel>
-            <FormControl><Input placeholder="promoÃ§Ã£o, mais vendido, novo" {...field} /></FormControl>
-            <FormDescription>Separe por vÃ­rgula</FormDescription>
+            <FormControl><Input placeholder="promocao, mais vendido, novo" {...field} /></FormControl>
+            <FormDescription>Separe por virgula</FormDescription>
             <FormMessage />
           </FormItem>
         )}
@@ -135,9 +135,9 @@ export function MenuItemTextMetadataFields({ form }: BaseSectionProps) {
         name="allergens"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>AlergÃªnicos</FormLabel>
-            <FormControl><Input placeholder="glÃºten, lactose, amendoim, soja" {...field} /></FormControl>
-            <FormDescription>Separe por vÃ­rgula. Informe substÃ¢ncias que podem causar alergias</FormDescription>
+            <FormLabel>Alergenicos</FormLabel>
+            <FormControl><Input placeholder="gluten, lactose, amendoim, soja" {...field} /></FormControl>
+            <FormDescription>Separe por virgula. Informe substancias que podem causar alergias</FormDescription>
             <FormMessage />
           </FormItem>
         )}
@@ -155,7 +155,7 @@ export function FeaturedField({ form }: BaseSectionProps) {
         <FormItem className="flex items-center justify-between rounded-lg border p-4">
           <div className="space-y-0.5">
             <FormLabel className="text-base">Item em Destaque</FormLabel>
-            <FormDescription>Itens em destaque aparecem no topo do cardÃ¡pio</FormDescription>
+            <FormDescription>Itens em destaque aparecem no topo do cardapio</FormDescription>
           </div>
           <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
         </FormItem>

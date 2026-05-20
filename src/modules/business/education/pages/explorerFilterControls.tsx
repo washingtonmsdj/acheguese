@@ -1,28 +1,14 @@
 /* eslint-disable react-refresh/only-export-components */
-import { Building2, Check, ChevronDown, Filter as FilterIcon, Globe, Grid3x3, GraduationCap, Layers, MapPin, Rows, School, Search, Shield, Target, Users, X } from 'lucide-react';
+import { Building2, Check, ChevronDown, Filter as FilterIcon, Grid3x3, GraduationCap, Layers, MapPin, Rows, School, Search, Shield, X } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover';
 import { ScrollArea } from '@/shared/components/ui/scroll-area';
 import { Separator } from '@/shared/components/ui/separator';
-import { Slider } from '@/shared/components/ui/slider';
 import { Switch } from '@/shared/components/ui/switch';
 import { cn } from '@/shared/utils/cn';
 import { SORTERS, type FilterState, type ViewMode } from './explorerFilters';
-
-export const MODALITIES = [
-  { key: 'presencial', label: 'Presencial' },
-  { key: 'online', label: 'Online' },
-  { key: 'hibrido', label: 'Hibrido' },
-] as const;
-
-export const AUDIENCES = [
-  { key: 'kids', label: 'Criancas' },
-  { key: 'teens', label: 'Adolescentes' },
-  { key: 'adults', label: 'Adultos' },
-  { key: 'all', label: 'Todas as idades' },
-] as const;
 
 export const SCHOOL_NETWORK_FILTERS = [
   { key: 'municipal', label: 'Municipal' },
@@ -136,26 +122,6 @@ export function FilterPanel({
           })}
         </div>
       </div>
-      <Separator />
-      <div>
-        <h3 className="text-sm font-semibold text-foreground">Modalidade</h3>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {MODALITIES.map((m) => {
-            const active = filters.modalities.includes(m.key);
-            return <button key={m.key} type="button" onClick={() => toggle('modalities', m.key)} className={cn('rounded-full border px-3 py-1 text-xs transition', active ? 'border-primary bg-primary/10 text-primary' : 'border-border/70 hover:border-primary/30')}>{m.label}</button>;
-          })}
-        </div>
-      </div>
-      <Separator />
-      <div>
-        <h3 className="text-sm font-semibold text-foreground">Publico-alvo</h3>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {AUDIENCES.map((a) => {
-            const active = filters.audiences.includes(a.key);
-            return <button key={a.key} type="button" onClick={() => toggle('audiences', a.key)} className={cn('rounded-full border px-3 py-1 text-xs transition', active ? 'border-primary bg-primary/10 text-primary' : 'border-border/70 hover:border-primary/30')}>{a.label}</button>;
-          })}
-        </div>
-      </div>
       {districts.length > 0 && (
         <>
           <Separator />
@@ -174,14 +140,6 @@ export function FilterPanel({
           </div>
         </>
       )}
-      <Separator />
-      <div>
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-foreground">Faixa de preco (R$)</h3>
-          <span className="text-xs text-muted-foreground">{filters.priceRange[0]} - {filters.priceRange[1]}</span>
-        </div>
-        <Slider className="mt-4" min={0} max={3000} step={50} value={filters.priceRange} onValueChange={(v) => setFilters((prev) => ({ ...prev, priceRange: [v[0], v[1]] as [number, number] }))} />
-      </div>
       <Separator />
       <div className="flex items-center justify-between rounded-xl border border-border/70 bg-muted/40 px-4 py-3">
         <div className="flex items-center gap-2">
@@ -243,10 +201,9 @@ export function FilterBar({ filters, setFilters, niches, districts, view, setVie
     setFilters((prev) => ({ ...prev, [key]: prev[key].includes(value) ? prev[key].filter((v) => v !== value) : [...prev[key], value] }));
   };
 
-  const priceActive = filters.priceRange[0] > 0 || filters.priceRange[1] < 3000;
   const availableActive = filters.onlyAvailable;
-  const advancedCount = (priceActive ? 1 : 0) + (availableActive ? 1 : 0);
-  const totalActive = filters.niches.length + filters.schoolNetworks.length + filters.institutionTypes.length + filters.infrastructure.length + filters.modalities.length + filters.audiences.length + (filters.district ? 1 : 0) + advancedCount + (filters.query ? 1 : 0);
+  const advancedCount = availableActive ? 1 : 0;
+  const totalActive = filters.niches.length + filters.schoolNetworks.length + filters.institutionTypes.length + filters.infrastructure.length + (filters.district ? 1 : 0) + advancedCount + (filters.query ? 1 : 0);
 
   return (
     <section className="sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur-md">
@@ -272,15 +229,6 @@ export function FilterBar({ filters, setFilters, niches, districts, view, setVie
           </FilterPill>
           <FilterPill icon={Building2} label="Infra" active={filters.infrastructure.length > 0} count={filters.infrastructure.length} onClear={() => setFilters((prev) => ({ ...prev, infrastructure: [] }))}>
             <div className="space-y-1"><div className="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Estrutura da unidade</div>{INFRASTRUCTURE_FILTERS.map((infra) => <CheckOption key={infra.key} active={filters.infrastructure.includes(infra.key)} label={infra.label} onClick={() => toggle('infrastructure', infra.key)} />)}</div>
-          </FilterPill>
-          <FilterPill icon={Globe} label="Modalidade" active={filters.modalities.length > 0} count={filters.modalities.length} onClear={() => setFilters((prev) => ({ ...prev, modalities: [] }))}>
-            <div className="space-y-1"><div className="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Como prefere estudar</div>{MODALITIES.map((m) => <CheckOption key={m.key} active={filters.modalities.includes(m.key)} label={m.label} description={m.key === 'presencial' ? 'Aulas na unidade' : m.key === 'online' ? 'Acesso remoto' : 'Combinacao dos dois'} onClick={() => toggle('modalities', m.key)} />)}</div>
-          </FilterPill>
-          <FilterPill icon={Users} label="Publico" active={filters.audiences.length > 0} count={filters.audiences.length} onClear={() => setFilters((prev) => ({ ...prev, audiences: [] }))}>
-            <div className="space-y-1"><div className="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Para quem</div>{AUDIENCES.map((a) => <CheckOption key={a.key} active={filters.audiences.includes(a.key)} label={a.label} onClick={() => toggle('audiences', a.key)} />)}</div>
-          </FilterPill>
-          <FilterPill icon={Target} label="Preco" active={priceActive} count={priceActive ? 1 : 0} onClear={() => setFilters((prev) => ({ ...prev, priceRange: [0, 3000] }))}>
-            <div className="space-y-4"><div><div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Faixa mensal (R$)</div><div className="mt-1 text-sm font-bold text-foreground">R$ {filters.priceRange[0]} — R$ {filters.priceRange[1]}{filters.priceRange[1] >= 3000 && '+'}</div></div><Slider min={0} max={3000} step={50} value={filters.priceRange} onValueChange={(v) => setFilters((prev) => ({ ...prev, priceRange: [v[0], v[1]] as [number, number] }))} /><div className="grid grid-cols-3 gap-1.5">{[[0, 500], [500, 1000], [1000, 3000]].map(([min, max]) => { const isActive = filters.priceRange[0] === min && filters.priceRange[1] === max; return <button key={`${min}-${max}`} type="button" onClick={() => setFilters((prev) => ({ ...prev, priceRange: [min, max] as [number, number] }))} className={cn('rounded-lg border px-2 py-1.5 text-xs transition', isActive ? 'border-primary bg-primary/10 text-primary' : 'border-border hover:border-primary/30')}>ate R${max}</button>; })}</div></div>
           </FilterPill>
           <button type="button" onClick={() => setFilters((prev) => ({ ...prev, onlyAvailable: !prev.onlyAvailable }))} className={cn('inline-flex h-10 items-center gap-2 whitespace-nowrap rounded-xl border px-3.5 text-sm font-medium transition-all', availableActive ? 'border-emerald-500/60 bg-emerald-500/10 text-emerald-600 shadow-sm' : 'border-border bg-card text-foreground hover:border-primary/40 hover:bg-muted/40')} aria-pressed={availableActive}><Shield className={cn('h-4 w-4', availableActive ? 'text-emerald-500' : 'text-muted-foreground')} /><span>Com vagas</span></button>
           <div className="ml-auto flex items-center gap-2">

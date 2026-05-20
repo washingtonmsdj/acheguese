@@ -11,7 +11,7 @@ export { MobilidadeLeftSidebar } from "./components/MobilidadeLeftSidebar";
 export { MobilidadeRightSidebar } from "./components/MobilidadeRightSidebar";
 export { CreateRideModal } from "./components/CreateRideModal";
 export { CreateDeliveryModal } from "./components/CreateDeliveryModal";
-export { 
+export {
   RideRequestCard,
   DriverOfferCard,
   RouteEstimateCard,
@@ -72,7 +72,6 @@ export { useRideChat } from "./hooks/useRideChat";
 
 // Pages
 export { default as MobilidadeLandingPage } from "./pages/MobilidadeLandingPage";
-export { default as MotoristaPage } from "./pages/MotoristaPage";
 export { default as PassageiroPage } from "./pages/PassageiroPage";
 export { default as DriverProfilePage } from "./pages/DriverProfilePage";
 export { default as HistoricoPage } from "./pages/HistoricoPage";

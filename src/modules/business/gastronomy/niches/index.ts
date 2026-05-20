@@ -53,7 +53,6 @@ export {
   isComplexNiche,
   shouldShowAdminSection,
   getNicheOrDefault,
-  mapCuisineToNiche,
   DEFAULT_NICHE_KEY,
 } from './registry';
 

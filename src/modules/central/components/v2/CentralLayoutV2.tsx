@@ -6,9 +6,9 @@ import { BottomNav } from "@/core/navigation/BottomNav";
 
 /**
  * CentralLayoutV2
- * 
+ *
  * Layout COPIADO EXATAMENTE do maker-forge-net AppLayout
- * Estrutura idÃªntica, classes idÃªnticas, comportamento idÃªntico
+ * Estrutura identica, classes identicas, comportamento identico
  */
 export function CentralLayoutV2() {
   return (

@@ -28,6 +28,7 @@ export interface IdentityFieldProps {
   previewFn?: UrlPreviewFn;
   showHistory?: boolean;
   showCooldown?: boolean;
+  onSuggestionSelect?: (suggestion: string) => void;
 }
 
 export function IdentityField({
@@ -41,8 +42,9 @@ export function IdentityField({
   previewFn,
   showHistory = false,
   showCooldown = true,
+  onSuggestionSelect,
 }: IdentityFieldProps) {
-  const { result, isChecking, check } = useIdentityAvailability({
+  const { result, isChecking, checkDebounced } = useIdentityAvailability({
     entityType,
     excludeEntityId: entityId,
   });
@@ -65,9 +67,9 @@ export function IdentityField({
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const v = e.target.value;
       onChange(v);
-      check(v);
+      checkDebounced(v);
     },
-    [onChange, check],
+    [onChange, checkDebounced],
   );
 
   const inputId = `identity-field-${entityType}`;
@@ -91,6 +93,19 @@ export function IdentityField({
 
       <div id={`${inputId}-status`} className="space-y-1.5">
         <IdentityAvailabilityBadge result={result} isChecking={isChecking} />
+        {result?.suggestion && onSuggestionSelect && (
+          <button
+            type="button"
+            onClick={() => {
+              const suggestion = result.suggestion as string;
+              onSuggestionSelect(suggestion);
+              checkDebounced(suggestion);
+            }}
+            className="text-xs text-primary underline underline-offset-2"
+          >
+            Usar sugestao: {result.suggestion}
+          </button>
+        )}
         <IdentityUrlPreview url={urlPreview} />
       </div>
 
@@ -108,4 +123,3 @@ export function IdentityField({
     </div>
   );
 }
-

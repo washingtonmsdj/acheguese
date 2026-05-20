@@ -1,8 +1,8 @@
-﻿/**
- * ðŸ“‹ EXEMPLO: Admin Dashboard com Versionamento de Nicho
+/**
+ * EXEMPLO: Admin Dashboard com Versionamento de Nicho
  *
- * Este Ã© um exemplo completo de como usar o sistema de versionamento
- * em uma pÃ¡gina de admin.
+ * Este e um exemplo completo de como usar o sistema de versionamento
+ * em uma pagina de admin.
  */
 
 import { useNicheVersioning, useAdminSections } from '../hooks';
@@ -27,7 +27,7 @@ export function AdminDashboardExample({ businessId }: AdminDashboardExampleProps
     enabledCount,
   } = useNicheVersioning({ businessId });
 
-  // Hook de seÃ§Ãµes do admin
+  // Hook de secoes do admin
   const {
     groupedSections,
     configurableSections,
@@ -48,18 +48,18 @@ export function AdminDashboardExample({ businessId }: AdminDashboardExampleProps
   if (!config) {
     return (
       <div className="text-center text-gray-500 py-8">
-        Perfil gastronÃ´mico nÃ£o encontrado
+        Perfil gastronomico nao encontrado
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Header com informaÃ§Ãµes do nicho */}
+      {/* Header com informacoes do nicho */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Painel de AdministraÃ§Ã£o</CardTitle>
+            <CardTitle>Painel de Administracao</CardTitle>
             <div className="flex gap-2">
               <Badge variant="outline">
                 {config.primary_niche_key}
@@ -84,7 +84,7 @@ export function AdminDashboardExample({ businessId }: AdminDashboardExampleProps
               <div className="font-medium">{enabledCount}</div>
             </div>
             <div>
-              <span className="text-gray-500">DisponÃ­veis para Configurar:</span>
+              <span className="text-gray-500">Disponiveis para Configurar:</span>
               <div className="font-medium">{missingCount}</div>
             </div>
           </div>
@@ -96,13 +96,13 @@ export function AdminDashboardExample({ businessId }: AdminDashboardExampleProps
         <NicheUpgradeBanner
           profile={config}
           onUpgrade={() => {
-            // Navegar para pÃ¡gina de upgrade
+            // Navegar para pagina de upgrade
             console.log('Iniciar upgrade');
           }}
         />
       )}
 
-      {/* Tabs de seÃ§Ãµes */}
+      {/* Tabs de secoes */}
       <Tabs defaultValue="basic" className="w-full">
         <TabsList>
           {Object.keys(groupedSections).map((category) => (
@@ -117,24 +117,24 @@ export function AdminDashboardExample({ businessId }: AdminDashboardExampleProps
           )}
         </TabsList>
 
-        {/* SeÃ§Ãµes bÃ¡sicas */}
+        {/* Secoes basicas */}
         {groupedSections.basic && (
           <TabsContent value="basic" className="space-y-4">
-            {/* CardÃ¡pio - sempre visÃ­vel */}
+            {/* Cardapio - sempre visivel */}
             <Card>
               <CardHeader>
-                <CardTitle>CardÃ¡pio</CardTitle>
+                <CardTitle>Cardapio</CardTitle>
               </CardHeader>
               <CardContent>
                 <MenuManagementSection businessId={businessId} />
               </CardContent>
             </Card>
 
-            {/* VariaÃ§Ãµes - se tiver capability */}
+            {/* Variacoes - se tiver capability */}
             {isSectionVisible('variants') && (
               <Card>
                 <CardHeader>
-                  <CardTitle>VariaÃ§Ãµes</CardTitle>
+                  <CardTitle>Variacoes</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <VariantsManagementSection businessId={businessId} />
@@ -156,7 +156,7 @@ export function AdminDashboardExample({ businessId }: AdminDashboardExampleProps
           </TabsContent>
         )}
 
-        {/* SeÃ§Ãµes de Pizza */}
+        {/* Secoes de Pizza */}
         {groupedSections.pizza && (
           <TabsContent value="pizza" className="space-y-4">
             {/* Tamanhos de Pizza */}
@@ -212,12 +212,12 @@ export function AdminDashboardExample({ businessId }: AdminDashboardExampleProps
           </TabsContent>
         )}
 
-        {/* SeÃ§Ãµes configurÃ¡veis */}
+        {/* Secoes configuraveis */}
         {configurableSections.length > 0 && (
           <TabsContent value="configure" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Funcionalidades DisponÃ­veis</CardTitle>
+                <CardTitle>Funcionalidades Disponiveis</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -242,10 +242,10 @@ export function AdminDashboardExample({ businessId }: AdminDashboardExampleProps
 // Helper para labels de categorias
 function getCategoryLabel(category: string): string {
   const labels: Record<string, string> = {
-    basic: 'BÃ¡sico',
+    basic: 'Basico',
     pizza: 'Pizza',
     sushi: 'Sushi',
-    acai: 'AÃ§aÃ­',
+    acai: 'Acai',
     meat: 'Carnes',
     pastel: 'Pastel',
     other: 'Outros',
@@ -255,11 +255,11 @@ function getCategoryLabel(category: string): string {
 
 // Componentes de exemplo (substituir por componentes reais)
 function MenuManagementSection({ businessId }: { businessId: string }) {
-  return <div>Gerenciamento de CardÃ¡pio - {businessId}</div>;
+  return <div>Gerenciamento de Cardapio - {businessId}</div>;
 }
 
 function VariantsManagementSection({ businessId }: { businessId: string }) {
-  return <div>Gerenciamento de VariaÃ§Ãµes - {businessId}</div>;
+  return <div>Gerenciamento de Variacoes - {businessId}</div>;
 }
 
 function AddonsManagementSection({ businessId }: { businessId: string }) {
@@ -297,9 +297,8 @@ function ConfigurableSectionCard({
         onClick={onConfigure}
         className="text-sm text-blue-600 hover:text-blue-700"
       >
-        Configurar â†’
+        Configurar -&gt;
       </button>
     </div>
   );
 }
-

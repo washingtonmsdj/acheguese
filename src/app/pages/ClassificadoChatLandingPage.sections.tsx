@@ -1,4 +1,4 @@
-﻿import { type ElementType, type RefObject } from 'react';
+import { type ElementType, type RefObject } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
@@ -89,8 +89,8 @@ export function ClassifiedChatNotFound() {
       </nav>
       <div className="flex-1 flex flex-col items-center justify-center px-4 text-center">
         <MessageCircle className="h-16 w-16 text-muted-foreground/30 mb-4" />
-        <h1 className="text-2xl font-bold text-foreground mb-2 font-heading">Conversa nÃ£o encontrada</h1>
-        <p className="text-muted-foreground mb-6">O anÃºncio que vocÃª procura nÃ£o existe ou foi removido.</p>
+        <h1 className="text-2xl font-bold text-foreground mb-2 font-heading">Conversa nao encontrada</h1>
+        <p className="text-muted-foreground mb-6">O anuncio que voce procura nao existe ou foi removido.</p>
         <Button
           onClick={() => navigate('/classificados')}
           className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-lg"
@@ -165,7 +165,7 @@ export function ClassifiedChatHeader({
 
         <div className="flex items-center gap-1 shrink-0">
           <a
-            href={`https://wa.me/55${seller.whatsapp}?text=${encodeURIComponent(`OlÃ¡! Vi seu anÃºncio "${ad.titulo}" e tenho interesse.`)}`}
+            href={`https://wa.me/55${seller.whatsapp}?text=${encodeURIComponent(`Ola! Vi seu anuncio "${ad.titulo}" e tenho interesse.`)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="h-9 w-9 rounded-xl bg-success/10 flex items-center justify-center hover:bg-success/20 transition-colors"
@@ -182,11 +182,11 @@ export function ClassifiedChatHeader({
             <DropdownMenuContent align="end" className="w-52">
               <DropdownMenuItem onClick={() => navigate(`/classificado/${classifiedId}`)}>
                 <Package className="h-4 w-4 mr-2" />
-                Ver anÃºncio
+                Ver anuncio
               </DropdownMenuItem>
               <DropdownMenuItem onClick={onShowAdInfo}>
                 <Info className="h-4 w-4 mr-2" />
-                InformaÃ§Ãµes do anÃºncio
+                Informacoes do anuncio
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={onReport} className="text-warning focus:text-warning">
@@ -248,7 +248,7 @@ export function ClassifiedChatAdInfoPanel({
                     {ad.bairro}
                   </span>
                   <Badge variant="outline" className="text-[10px] h-5 bg-success/10 text-success border-success/20">
-                    DisponÃ­vel
+                    Disponivel
                   </Badge>
                 </div>
               </div>
@@ -261,7 +261,7 @@ export function ClassifiedChatAdInfoPanel({
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Star className="h-3.5 w-3.5 text-primary fill-primary" />
                 <span className="font-semibold text-foreground">{seller.rating.toFixed(1)}</span>
-                <span>({seller.reviews_count} avaliaÃ§Ãµes)</span>
+                <span>({seller.reviews_count} avaliacoes)</span>
               </div>
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <MapPin className="h-3.5 w-3.5" />
@@ -281,7 +281,7 @@ export function ClassifiedChatSafetyBanner() {
       <div className="max-w-3xl mx-auto px-3 sm:px-4 py-2 flex items-center justify-center gap-2">
         <Shield className="h-3.5 w-3.5 text-warning shrink-0" />
         <p className="text-[11px] text-muted-foreground text-center">
-          Negocie pelo chat. NÃ£o compartilhe dados pessoais. Encontre-se em locais pÃºblicos.
+          Negocie pelo chat. Nao compartilhe dados pessoais. Encontre-se em locais publicos.
         </p>
       </div>
     </div>
@@ -507,7 +507,7 @@ export function ClassifiedChatInputArea({
             <ShieldAlert className="h-4 w-4" />
             Conversa bloqueada
           </p>
-          <p className="text-xs text-muted-foreground mt-1">NÃ£o Ã© possÃ­vel enviar ou receber mensagens</p>
+          <p className="text-xs text-muted-foreground mt-1">Nao e possivel enviar ou receber mensagens</p>
         </div>
       </div>
     );
@@ -584,7 +584,7 @@ export function ClassifiedChatDialogs({
           <AlertDialogHeader>
             <AlertDialogTitle className="text-foreground">Denunciar conversa</AlertDialogTitle>
             <AlertDialogDescription className="text-muted-foreground">
-              Tem certeza que deseja denunciar esta conversa? Nossa equipe irÃ¡ analisar o conteÃºdo e tomar as medidas necessÃ¡rias.
+              Tem certeza que deseja denunciar esta conversa? Nossa equipe ira analisar o conteudo e tomar as medidas necessarias.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -602,7 +602,7 @@ export function ClassifiedChatDialogs({
           <AlertDialogHeader>
             <AlertDialogTitle className="text-foreground">Bloquear vendedor</AlertDialogTitle>
             <AlertDialogDescription className="text-muted-foreground">
-              Ao bloquear, nenhum dos dois poderÃ¡ enviar mensagens nesta conversa. VocÃª tambÃ©m pode denunciar a conversa se houver conteÃºdo inadequado.
+              Ao bloquear, nenhum dos dois podera enviar mensagens nesta conversa. Voce tambem pode denunciar a conversa se houver conteudo inadequado.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -1,5 +1,5 @@
 /**
- * ðŸ† EDITAR EMPRESA PAGE - SSOT Completo
+ * EDITAR EMPRESA PAGE - SSOT completo
  */
 
 import { useEffect, useRef, useState } from "react";
@@ -28,6 +28,10 @@ import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-r
 import { ActiveProfileBadge } from "@/core/profiles/components/ActiveProfileBadge";
 import { useIdentitySaveLogger } from "@/core/public-identity/hooks/useIdentitySaveLogger";
 import { CoverageSettingsForm } from "@/core/geospatial/components/CoverageSettingsForm";
+import {
+  evaluateBusinessSlugSafety,
+  isBusinessSlugSafetyBypassAllowed,
+} from "@/core/public-identity/domain/businessSlugSafety";
 
 export default function EditarEmpresaPage() {
   const navigate = useNavigate();
@@ -37,11 +41,11 @@ export default function EditarEmpresaPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [slug, setSlug] = useState("");
   const [originalSlug, setOriginalSlug] = useState("");
-  
+
   // Refs para upload de imagens
   const logoRef = useRef<HTMLInputElement>(null);
   const capaRef = useRef<HTMLInputElement>(null);
-  
+
   // Estados para preview de imagens
   const [logoPreview, setLogoPreview] = useState<string>("");
   const [capaPreview, setCapaPreview] = useState<string>("");
@@ -62,7 +66,7 @@ export default function EditarEmpresaPage() {
       navigate("/conta");
     },
   });
-  
+
   const { mutateAsync: uploadImage, isPending: uploading } = useBusinessImageUpload();
   const uploadBusinessImage = (file: File, folder: "logos" | "banners") =>
     uploadImage({ file, folder });
@@ -118,11 +122,11 @@ export default function EditarEmpresaPage() {
         latitude: business.address?.latitude,
         longitude: business.address?.longitude,
       });
-      
+
       // Inicializar previews de imagens
       setLogoPreview(business.logo_url || "");
       setCapaPreview(business.banner_url || "");
-      
+
       // Inicializar slug com valor existente ou derivado do nome
       const businessSlug = (business as Business & { slug?: string }).slug;
       if (businessSlug) {
@@ -150,24 +154,24 @@ export default function EditarEmpresaPage() {
       if (isValid) setCurrentStep(3);
     });
   };
-  
+
   // Handlers de upload de imagens
   const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
+
     // Validar tamanho (5MB)
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("Imagem muito grande. MÃ¡ximo 5MB");
+      toast.error("Imagem muito grande. Maximo 5MB");
       return;
     }
-    
+
     // Validar tipo
     if (!file.type.startsWith("image/")) {
       toast.error("Arquivo deve ser uma imagem");
       return;
     }
-    
+
     try {
       const url = await uploadBusinessImage(file, "logos");
       form.setValue("logo_url", url);
@@ -178,23 +182,23 @@ export default function EditarEmpresaPage() {
       console.error(error);
     }
   };
-  
+
   const handleCapaChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
+
     // Validar tamanho (5MB)
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("Imagem muito grande. MÃ¡ximo 5MB");
+      toast.error("Imagem muito grande. Maximo 5MB");
       return;
     }
-    
+
     // Validar tipo
     if (!file.type.startsWith("image/")) {
       toast.error("Arquivo deve ser uma imagem");
       return;
     }
-    
+
     try {
       const url = await uploadBusinessImage(file, "banners");
       form.setValue("banner_url", url);
@@ -208,12 +212,29 @@ export default function EditarEmpresaPage() {
 
   const doSave = form.handleSubmit(async (data) => {
     if (!profileId) return;
-    
+
+    const isVerifiedOfficial = Boolean(business?.is_verified);
+    if (
+      slug &&
+      !isBusinessSlugSafetyBypassAllowed({ isVerifiedOfficial })
+    ) {
+      const slugSafety = evaluateBusinessSlugSafety({
+        businessName: data.name ?? business?.name ?? "",
+        slug,
+      });
+      if (slugSafety.status === "review") {
+        toast.error(
+          "O link publico esta muito diferente do nome do negocio. Ajuste para manter autenticidade.",
+        );
+        return;
+      }
+    }
+
     const hasSlugChange = slug !== originalSlug && originalSlug;
     if (hasSlugChange) {
       logAttempt(originalSlug, slug);
     }
-    
+
     try {
       await updateBusiness({ id: profileId, data: { ...data, slug } });
       if (hasSlugChange) {
@@ -257,7 +278,7 @@ export default function EditarEmpresaPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <h2 className="text-xl font-semibold mb-2">Empresa nÃ£o encontrada</h2>
+          <h2 className="text-xl font-semibold mb-2">Empresa nao encontrada</h2>
           <button
             onClick={() => navigate("/conta")}
             className="text-primary hover:underline"
@@ -287,7 +308,7 @@ export default function EditarEmpresaPage() {
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
         <StepProgress currentStep={currentStep} totalSteps={3} />
 
-        {/* Autoria explÃ­cita */}
+        {/* Autoria explicita */}
         {effectiveProfile && (
           <ActiveProfileBadge profile={effectiveProfile} action="editando como" />
         )}
@@ -318,6 +339,8 @@ export default function EditarEmpresaPage() {
                 onSlugChange={setSlug}
                 businessId={profileId}
                 originalSlug={originalSlug}
+                businessName={form.watch("name") || business?.name || ""}
+                isVerifiedOfficial={Boolean(business?.is_verified)}
               />
               <IdentityChangeConfirmDialog {...slugConfirmProps} />
             </>
@@ -390,8 +413,8 @@ export default function EditarEmpresaPage() {
                 onBack={() => setCurrentStep(2)}
                 onSave={handleSave}
               />
-              
-              {/* Ãrea de Cobertura */}
+
+              {/* Area de cobertura */}
               <div className="mt-6">
                 <CoverageSettingsForm
                   entityType="business"
@@ -413,4 +436,3 @@ export default function EditarEmpresaPage() {
     </div>
   );
 }
-

@@ -8,8 +8,7 @@ import { SubscriptionService } from '@/core/billing/SubscriptionService';
 import { EntitlementsService } from '@/core/billing/entitlements';
 import { BillingPlanService, type PlanEntitlements } from '@/core/billing/services/BillingPlanService';
 
-export const __MENU_SERVICE_FACADE_HINT__ = 'compatibility facade';
-const legacyDb = supabase as any;
+const db = supabase as any;
 
 export interface ServiceResult<T> {
   data: T | null;
@@ -102,33 +101,70 @@ function hasImageUrl(value: string | null | undefined): boolean {
   return typeof value === 'string' && value.trim().length > 0;
 }
 
+function mapMenuCategory(row: any): MenuCategory {
+  return {
+    ...row,
+    is_active: row.is_active ?? row.is_available ?? true,
+  } as MenuCategory;
+}
+
+function mapMenuItem(row: any, menuId?: string | null): MenuItem {
+  const nutritionalInfo =
+    row.nutritional_info && typeof row.nutritional_info === 'object'
+      ? row.nutritional_info
+      : {
+          calories: row.calories ?? undefined,
+          is_vegetarian: row.is_vegetarian ?? false,
+          is_vegan: row.is_vegan ?? false,
+          is_gluten_free: row.is_gluten_free ?? false,
+          is_lactose_free: row.is_lactose_free ?? false,
+          is_spicy: row.is_spicy ?? false,
+          spicy_level: row.spicy_level ?? undefined,
+          ingredients: row.ingredients ?? [],
+        };
+
+  return {
+    ...row,
+    menu_id: row.menu_id ?? menuId ?? row.menu_categories?.menu_id ?? null,
+    price: Number(row.price ?? row.base_price ?? 0),
+    preparation_time_min: row.preparation_time_min ?? row.preparation_time ?? null,
+    stock_quantity: row.stock_quantity ?? null,
+    stock_alert_threshold: row.stock_alert_threshold ?? null,
+    tags: row.tags ?? (Array.isArray(row.metadata?.tags) ? row.metadata.tags : null),
+    nutritional_info: nutritionalInfo,
+  } as MenuItem;
+}
+
+async function listCategoryIds(menuId: string): Promise<string[]> {
+  const { data, error } = await db
+    .from('menu_categories')
+    .select('id')
+    .eq('menu_id', menuId);
+
+  if (error || !Array.isArray(data)) {
+    return [];
+  }
+
+  return data.map((row: { id: string }) => row.id);
+}
+
 async function resolveBusinessIdFromMenu(menuId: string): Promise<string | null> {
-  const primary = await supabase
+  const { data, error } = await supabase
     .from('menus')
     .select('business_id')
     .eq('id', menuId)
     .maybeSingle();
 
-  if (!primary.error && primary.data?.business_id) {
-    return String(primary.data.business_id);
-  }
-
-  const fallback = await legacyDb
-    .from('gastronomy_menus')
-    .select('business_id')
-    .eq('id', menuId)
-    .maybeSingle();
-
-  if (!fallback.error && fallback.data?.business_id) {
-    return String(fallback.data.business_id);
+  if (!error && data?.business_id) {
+    return String(data.business_id);
   }
 
   return null;
 }
 
 async function resolveMenuIdFromCategory(categoryId: string): Promise<string | null> {
-  const { data, error } = await legacyDb
-    .from('gastronomy_menu_categories')
+  const { data, error } = await db
+    .from('menu_categories')
     .select('menu_id')
     .eq('id', categoryId)
     .maybeSingle();
@@ -141,17 +177,22 @@ async function resolveMenuIdFromCategory(categoryId: string): Promise<string | n
 }
 
 async function resolveItem(itemId: string): Promise<Pick<MenuItem, 'id' | 'menu_id' | 'image_url'> | null> {
-  const { data, error } = await legacyDb
-    .from('gastronomy_menu_items')
-    .select('id, menu_id, image_url')
+  const { data, error } = await db
+    .from('menu_items')
+    .select('id, image_url, menu_categories(menu_id)')
     .eq('id', itemId)
     .maybeSingle();
 
-  if (error || !data?.id || !data?.menu_id) {
+  const menuId = data?.menu_categories?.menu_id;
+  if (error || !data?.id || !menuId) {
     return null;
   }
 
-  return data as Pick<MenuItem, 'id' | 'menu_id' | 'image_url'>;
+  return {
+    id: data.id,
+    menu_id: String(menuId),
+    image_url: data.image_url ?? null,
+  };
 }
 
 async function getEntitlementsForBusiness(businessId: string): Promise<PlanEntitlements> {
@@ -188,26 +229,32 @@ async function getPlanContextByItemId(itemId: string): Promise<PlanContext | nul
 }
 
 async function countMenuCategories(menuId: string): Promise<number> {
-  const { count } = await legacyDb
-    .from('gastronomy_menu_categories')
+  const { count } = await db
+    .from('menu_categories')
     .select('*', { count: 'exact', head: true })
     .eq('menu_id', menuId);
   return count || 0;
 }
 
 async function countMenuItems(menuId: string): Promise<number> {
-  const { count } = await legacyDb
-    .from('gastronomy_menu_items')
+  const categoryIds = await listCategoryIds(menuId);
+  if (categoryIds.length === 0) return 0;
+
+  const { count } = await db
+    .from('menu_items')
     .select('*', { count: 'exact', head: true })
-    .eq('menu_id', menuId);
+    .in('category_id', categoryIds);
   return count || 0;
 }
 
 async function countMenuItemsWithImage(menuId: string): Promise<number> {
-  const { count } = await legacyDb
-    .from('gastronomy_menu_items')
+  const categoryIds = await listCategoryIds(menuId);
+  if (categoryIds.length === 0) return 0;
+
+  const { count } = await db
+    .from('menu_items')
     .select('*', { count: 'exact', head: true })
-    .eq('menu_id', menuId)
+    .in('category_id', categoryIds)
     .not('image_url', 'is', null);
   return count || 0;
 }
@@ -222,8 +269,8 @@ function requirePlanContext(context: PlanContext | null): ServiceResult<true> {
 export const MenuService = {
   async listCategories(menuId: string): Promise<ServiceResult<MenuCategory[]>> {
     try {
-      const { data, error } = await legacyDb
-    .from('gastronomy_menu_categories')
+      const { data, error } = await db
+    .from('menu_categories')
         .select('*')
         .eq('menu_id', menuId)
         .order('display_order', { ascending: true });
@@ -233,7 +280,7 @@ export const MenuService = {
         return { data: null, error: error.message };
       }
 
-      return { data: data as MenuCategory[], error: null };
+      return { data: (data ?? []).map(mapMenuCategory), error: null };
     } catch (err) {
       return { data: null, error: err instanceof Error ? err.message : String(err) };
     }
@@ -264,14 +311,14 @@ export const MenuService = {
         }
       }
 
-      const { data, error } = await legacyDb
-    .from('gastronomy_menu_categories')
+      const { data, error } = await db
+    .from('menu_categories')
         .insert({
           menu_id: input.menu_id,
           name: sanitizeString(input.name),
           description: input.description ? sanitizeString(input.description) : null,
           display_order: input.display_order ?? 0,
-          is_active: true,
+          is_available: true,
         })
         .select()
         .single();
@@ -281,7 +328,7 @@ export const MenuService = {
         return { data: null, error: error.message };
       }
 
-      return { data: data as MenuCategory, error: null };
+      return { data: mapMenuCategory(data), error: null };
     } catch (err) {
       return { data: null, error: err instanceof Error ? err.message : String(err) };
     }
@@ -305,10 +352,10 @@ export const MenuService = {
       if (input.name !== undefined) updates.name = sanitizeString(input.name);
       if (input.description !== undefined) updates.description = input.description ? sanitizeString(input.description) : null;
       if (input.display_order !== undefined) updates.display_order = input.display_order;
-      if (input.is_active !== undefined) updates.is_active = input.is_active;
+      if (input.is_active !== undefined) updates.is_available = input.is_active;
 
-      const { data, error } = await legacyDb
-    .from('gastronomy_menu_categories')
+      const { data, error } = await db
+    .from('menu_categories')
         .update(updates)
         .eq('id', categoryId)
         .select()
@@ -319,7 +366,7 @@ export const MenuService = {
         return { data: null, error: error.message };
       }
 
-      return { data: data as MenuCategory, error: null };
+      return { data: mapMenuCategory(data), error: null };
     } catch (err) {
       return { data: null, error: err instanceof Error ? err.message : String(err) };
     }
@@ -335,8 +382,8 @@ export const MenuService = {
         return { data: null, error: 'Seu plano nao permite gerenciar categorias.' };
       }
 
-      const { error } = await legacyDb
-    .from('gastronomy_menu_categories')
+      const { error } = await db
+    .from('menu_categories')
         .delete()
         .eq('id', categoryId);
 
@@ -364,8 +411,8 @@ export const MenuService = {
       }
 
       for (const update of updates) {
-        const { error } = await legacyDb
-    .from('gastronomy_menu_categories')
+        const { error } = await db
+    .from('menu_categories')
           .update({ display_order: update.display_order })
           .eq('id', update.id);
 
@@ -383,14 +430,15 @@ export const MenuService = {
 
   async listItems(menuId: string, categoryId?: string): Promise<ServiceResult<MenuItem[]>> {
     try {
-      let query = legacyDb
-    .from('gastronomy_menu_items')
-        .select('*')
-        .eq('menu_id', menuId);
-
-      if (categoryId) {
-        query = query.eq('category_id', categoryId);
+      const categoryIds = categoryId ? [categoryId] : await listCategoryIds(menuId);
+      if (categoryIds.length === 0) {
+        return { data: [], error: null };
       }
+
+      let query = db
+    .from('menu_items')
+        .select('*')
+        .in('category_id', categoryIds);
 
       const { data, error } = await query.order('display_order', { ascending: true });
 
@@ -399,7 +447,7 @@ export const MenuService = {
         return { data: null, error: error.message };
       }
 
-      return { data: data as MenuItem[], error: null };
+      return { data: (data ?? []).map((row: any) => mapMenuItem(row, menuId)), error: null };
     } catch (err) {
       return { data: null, error: err instanceof Error ? err.message : String(err) };
     }
@@ -407,9 +455,9 @@ export const MenuService = {
 
   async getItem(itemId: string): Promise<ServiceResult<MenuItem>> {
     try {
-      const { data, error } = await legacyDb
-    .from('gastronomy_menu_items')
-        .select('*')
+      const { data, error } = await db
+    .from('menu_items')
+        .select('*, menu_categories(menu_id)')
         .eq('id', itemId)
         .single();
 
@@ -418,7 +466,7 @@ export const MenuService = {
         return { data: null, error: error.message };
       }
 
-      return { data: data as MenuItem, error: null };
+      return { data: mapMenuItem(data), error: null };
     } catch (err) {
       return { data: null, error: err instanceof Error ? err.message : String(err) };
     }
@@ -458,6 +506,10 @@ export const MenuService = {
         return { data: null, error: 'Seu plano nao permite categorias no cardapio.' };
       }
 
+      if (!input.category_id) {
+        return { data: null, error: 'Selecione uma categoria para este item.' };
+      }
+
       if (hasImageUrl(input.image_url) && !context!.entitlements.canUseMenuImages) {
         return { data: null, error: 'Seu plano nao permite imagens nos itens.' };
       }
@@ -472,14 +524,13 @@ export const MenuService = {
         }
       }
 
-      const { data, error } = await legacyDb
-    .from('gastronomy_menu_items')
+      const { data, error } = await db
+    .from('menu_items')
         .insert({
-          menu_id: input.menu_id,
-          category_id: input.category_id || null,
+          category_id: input.category_id,
           name: sanitizeString(input.name),
           description: input.description ? sanitizeString(input.description) : null,
-          price: input.price,
+          base_price: input.price,
           image_url: input.image_url || null,
           preparation_time_min: input.preparation_time_min ?? null,
           stock_quantity: input.stock_quantity ?? null,
@@ -499,7 +550,7 @@ export const MenuService = {
         return { data: null, error: error.message };
       }
 
-      return { data: data as MenuItem, error: null };
+      return { data: mapMenuItem(data, input.menu_id), error: null };
     } catch (err) {
       return { data: null, error: err instanceof Error ? err.message : String(err) };
     }
@@ -550,7 +601,7 @@ export const MenuService = {
 
       if (input.name !== undefined) updates.name = sanitizeString(input.name);
       if (input.description !== undefined) updates.description = input.description ? sanitizeString(input.description) : null;
-      if (input.price !== undefined) updates.price = input.price;
+      if (input.price !== undefined) updates.base_price = input.price;
       if (input.image_url !== undefined) updates.image_url = input.image_url;
       if (input.category_id !== undefined) updates.category_id = input.category_id;
       if (input.display_order !== undefined) updates.display_order = input.display_order;
@@ -562,11 +613,11 @@ export const MenuService = {
       if (input.allergens !== undefined) updates.allergens = input.allergens;
       if (input.nutritional_info !== undefined) updates.nutritional_info = input.nutritional_info;
 
-      const { data, error } = await legacyDb
-    .from('gastronomy_menu_items')
+      const { data, error } = await db
+    .from('menu_items')
         .update(updates)
         .eq('id', itemId)
-        .select()
+        .select('*, menu_categories(menu_id)')
         .single();
 
       if (error) {
@@ -574,7 +625,7 @@ export const MenuService = {
         return { data: null, error: error.message };
       }
 
-      return { data: data as MenuItem, error: null };
+      return { data: mapMenuItem(data), error: null };
     } catch (err) {
       return { data: null, error: err instanceof Error ? err.message : String(err) };
     }
@@ -582,8 +633,8 @@ export const MenuService = {
 
   async deleteItem(itemId: string): Promise<ServiceResult<boolean>> {
     try {
-      const { error } = await legacyDb
-    .from('gastronomy_menu_items')
+      const { error } = await db
+    .from('menu_items')
         .delete()
         .eq('id', itemId);
 
@@ -604,8 +655,8 @@ export const MenuService = {
 
   async listVariations(itemId: string): Promise<ServiceResult<MenuItemVariation[]>> {
     try {
-      const { data, error } = await legacyDb
-    .from('gastronomy_menu_item_variations')
+      const { data, error } = await db
+    .from('menu_item_variants')
         .select('*')
         .eq('item_id', itemId)
         .order('display_order', { ascending: true });
@@ -636,8 +687,8 @@ export const MenuService = {
         return { data: null, error: 'Seu plano nao permite variacoes de item.' };
       }
 
-      const { data, error } = await legacyDb
-    .from('gastronomy_menu_item_variations')
+      const { data, error } = await db
+    .from('menu_item_variants')
         .insert({
           item_id: input.item_id,
           name: sanitizeString(input.name),
@@ -662,8 +713,8 @@ export const MenuService = {
 
   async deleteVariation(variationId: string): Promise<ServiceResult<boolean>> {
     try {
-      const { error } = await legacyDb
-    .from('gastronomy_menu_item_variations')
+      const { error } = await db
+    .from('menu_item_variants')
         .delete()
         .eq('id', variationId);
 
@@ -680,8 +731,8 @@ export const MenuService = {
 
   async listAddons(itemId: string): Promise<ServiceResult<MenuItemAddon[]>> {
     try {
-      const { data, error } = await legacyDb
-    .from('gastronomy_menu_item_addons')
+      const { data, error } = await db
+    .from('menu_item_addons')
         .select('*')
         .eq('item_id', itemId)
         .order('display_order', { ascending: true });
@@ -713,8 +764,8 @@ export const MenuService = {
         return { data: null, error: 'Seu plano nao permite adicionais.' };
       }
 
-      const { data, error } = await legacyDb
-    .from('gastronomy_menu_item_addons')
+      const { data, error } = await db
+    .from('menu_item_addons')
         .insert({
           item_id: input.item_id,
           name: sanitizeString(input.name),
@@ -740,8 +791,8 @@ export const MenuService = {
 
   async deleteAddon(addonId: string): Promise<ServiceResult<boolean>> {
     try {
-      const { error } = await legacyDb
-    .from('gastronomy_menu_item_addons')
+      const { error } = await db
+    .from('menu_item_addons')
         .delete()
         .eq('id', addonId);
 
@@ -756,8 +807,3 @@ export const MenuService = {
     }
   },
 };
-
-
-
-
-

@@ -8,7 +8,6 @@ import {
   type CommunityEvent,
   type EventSortBy,
   type EventSortOrder,
-  getComplexoEventMocks,
 } from "@/core/community/services/CommunityEventsRuntimeService";
 import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
 import type { TerritoryFilter } from "@/core/location/types";
@@ -29,60 +28,6 @@ interface UseEventosOptions {
 }
 
 const EVENTS_PAGE_SIZE = 12;
-const COMPLEXO_GROUP_SLUG = "complexo-do-nordeste-de-amaralina";
-const COMPLEXO_DISTRICT_SLUGS = new Set([
-  "nordeste-de-amaralina",
-  "santa-cruz",
-  "vale-das-pedrinhas",
-  "chapada-do-rio-vermelho",
-]);
-
-function isComplexoContext(routeResolved?: RouteResolved): boolean {
-  if (!routeResolved) return false;
-
-  if ((routeResolved as { kind?: string }).kind === "group") {
-    const group = (routeResolved as { group?: { slug?: string } }).group;
-    return group?.slug === COMPLEXO_GROUP_SLUG;
-  }
-
-  if ((routeResolved as { kind?: string }).kind === "location") {
-    const location = (routeResolved as { location?: { slug?: string } }).location;
-    return COMPLEXO_DISTRICT_SLUGS.has(location?.slug ?? "");
-  }
-
-  return false;
-}
-
-function applyMockFilters(
-  events: CommunityEvent[],
-  filters?: UseEventosOptions["filters"],
-): CommunityEvent[] {
-  const search = filters?.search?.trim().toLowerCase();
-  const filtered = events.filter((event) => {
-    if (filters?.category && event.category !== filters.category) return false;
-    if (!search) return true;
-    return (
-      event.title.toLowerCase().includes(search) ||
-      event.description.toLowerCase().includes(search) ||
-      (event.location ?? "").toLowerCase().includes(search)
-    );
-  });
-
-  const sortBy = filters?.sortBy ?? "date";
-  const sortOrder = filters?.sortOrder ?? "asc";
-  const direction = sortOrder === "asc" ? 1 : -1;
-
-  return filtered.sort((a, b) => {
-    if (sortBy === "current_participants") {
-      return (a.current_participants - b.current_participants) * direction;
-    }
-    if (sortBy === "created_at") {
-      return (new Date(a.created_at).getTime() - new Date(b.created_at).getTime()) * direction;
-    }
-    return (new Date(a.date).getTime() - new Date(b.date).getTime()) * direction;
-  });
-}
-
 export function useEventos(options: UseEventosOptions = {}) {
   const { filters, routeResolved } = options;
   const moduleTerritory = useModuleTerritoryFilter({ routeResolved });
@@ -109,22 +54,7 @@ export function useEventos(options: UseEventosOptions = {}) {
         territoryFilter,
       });
 
-      if (response.items.length > 0 || !isComplexoContext(routeResolved)) {
-        return response;
-      }
-
-      const mockEvents = applyMockFilters(getComplexoEventMocks(), filters);
-      const start = page * EVENTS_PAGE_SIZE;
-      const end = start + EVENTS_PAGE_SIZE;
-      const items = mockEvents.slice(start, end);
-      const hasMore = end < mockEvents.length;
-
-      return {
-        items,
-        totalCount: mockEvents.length,
-        hasMore,
-        nextPage: hasMore ? page + 1 : null,
-      };
+      return response;
     },
     initialPageParam: 0,
     getNextPageParam: (lastPage) => lastPage.nextPage ?? undefined,

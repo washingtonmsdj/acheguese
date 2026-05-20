@@ -9,19 +9,19 @@ import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { BusinessService } from "@/core/business/services/BusinessService";
-import type { LegacyCoupon } from "@/core/business/services/business.admin";
+import type { CouponRecord } from "@/core/business/services/business.admin";
 import { ALERT_STATUS } from "@/shared/types/constants";
 const tipoIcons: Record<string, string> = {
-  porcentagem: "🏷️",
-  valor: "💰",
-  brinde: "🎁",
+  porcentagem: "ðŸ·ï¸",
+  valor: "ðŸ’°",
+  brinde: "ðŸŽ",
 };
 
 export default function CuponsPage() {
   const navigate = useNavigate();
   const [saved, setSaved] = useState<Set<string>>(new Set());
 
-  const { data: cupons = [], isLoading } = useQuery<LegacyCoupon[]>({
+  const { data: cupons = [], isLoading } = useQuery<CouponRecord[]>({
     queryKey: ["coupons"],
     queryFn: () => BusinessService.getActiveCoupons(),
   });
@@ -44,9 +44,9 @@ export default function CuponsPage() {
   return (
     <div className="flex flex-col">
       <div className="px-4 pt-4 pb-2">
-        <h1 className="text-xl font-bold font-display">Cupons & Promoções</h1>
+        <h1 className="text-xl font-bold font-display">Cupons & PromoÃ§Ãµes</h1>
         <p className="text-sm text-muted-foreground">
-          Economize no comércio do seu neighborhood
+          Economize no comÃ©rcio do seu neighborhood
         </p>
       </div>
 
@@ -56,10 +56,10 @@ export default function CuponsPage() {
         </div>
         <div>
           <p className="text-sm font-semibold">
-            {cupons.length} cupons disponíveis
+            {cupons.length} cupons disponÃ­veis
           </p>
           <p className="text-xs text-muted-foreground">
-            {saved.size} salvos por você
+            {saved.size} salvos por vocÃª
           </p>
         </div>
       </div>
@@ -72,7 +72,7 @@ export default function CuponsPage() {
         </div>
       ) : cupons.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground text-sm">
-          Nenhum cupom disponível no momento.
+          Nenhum cupom disponÃ­vel no momento.
         </div>
       ) : (
         <div className="flex flex-col gap-3 px-4 py-2">
@@ -117,7 +117,7 @@ export default function CuponsPage() {
                         </p>
                         <div className="flex items-center gap-2 mt-1.5">
                           <Badge className="bg-primary/10 text-primary border-primary/20 text-[11px] font-bold">
-                            {tipoIcons[cupom.tipo] || "🏷️"} {cupom.desconto}
+                            {tipoIcons[cupom.tipo] || "ðŸ·ï¸"} {cupom.desconto}
                           </Badge>
                         </div>
                       </div>
@@ -130,7 +130,7 @@ export default function CuponsPage() {
                             restantes
                           </span>
                         )}
-                        <span>{usosRestantes} disponíveis</span>
+                        <span>{usosRestantes} disponÃ­veis</span>
                       </div>
                       <Button
                         size="sm"

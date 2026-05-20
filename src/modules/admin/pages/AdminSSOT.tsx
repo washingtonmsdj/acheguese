@@ -100,7 +100,7 @@ const ESLINT_PLUGINS = [
   {
     name: "favorites-ssot",
     tables: ["favorites", "business_favorites", "post_favorites"],
-    service: "FavoritesService",
+    service: "favorites.queries/mutations",
   },
   {
     name: "location-ssot",

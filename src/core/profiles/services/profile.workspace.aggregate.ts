@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
-import { FavoritesService } from "@/core/favorites/services/FavoritesService";
+import { getFavoriteStats } from "@/core/favorites/services";
 import { getServicesByProfile } from "@/core/professional/services/professional.queries";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 import type {
@@ -136,7 +136,7 @@ export async function getPrivateWorkspaceAggregate(
     const rolesPromise = deps.getUserRoles(deps.userId);
     const postsPromise = postService.getPostsCountByProfile(activeProfile.id).catch(() => 0);
     const likesPromise = deps.getUserLikesCount(activeProfile.id);
-    const favoritesPromise = FavoritesService.getFavoriteStats(activeProfile.id);
+    const favoritesPromise = getFavoriteStats(activeProfile.id);
     const activeRidePromise = MobilityService.getActiveRide(activeProfile.id).catch(() => null);
     const verificationPromise = VerificationService.getVerification(
       activeProfile.id,

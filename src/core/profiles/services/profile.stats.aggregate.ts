@@ -1,4 +1,4 @@
-import { FavoritesService } from "@/core/favorites/services/FavoritesService";
+import { getFavoriteStats } from "@/core/favorites/services";
 import type { Profile } from "./types";
 
 type ProfileStatsDependencies = {
@@ -22,7 +22,7 @@ export async function getProfileStatsAggregate(deps: ProfileStatsDependencies) {
   const [postsCount, likesCount, favoritesResult] = await Promise.all([
     postService.getPostsCountByUser(deps.userId),
     deps.getUserLikesCount(activeProfile.id),
-    FavoritesService.getFavoriteStats(activeProfile.id),
+    getFavoriteStats(activeProfile.id),
   ]);
 
   return {

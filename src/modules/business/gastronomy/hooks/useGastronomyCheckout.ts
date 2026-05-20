@@ -7,10 +7,8 @@ import { useMotoboy } from "@/core/mobility/hooks/useMotoboy";
 import { toast } from "sonner";
 import { useGastronomyCartStore } from "../cart/useGastronomyCartStore";
 import { DeliveryAreaService } from "../services/DeliveryAreaService";
-import {
-  GastronomyCheckoutService,
-  type GastronomyCheckoutOrderRecord,
-} from "../services/GastronomyCheckoutService";
+import { GastronomyCheckoutService } from "../services/GastronomyCheckoutService";
+import type { OrderRecord } from "@/core/mobility/delivery/order/types";
 import type { GastronomyBusiness } from "../types/gastronomy";
 import type { Cart } from "../types/menu";
 import { logger } from "@/shared/utils/logger";
@@ -139,7 +137,7 @@ export function useGastronomyCheckout() {
   const mutation = useMutation({
     mutationFn: async (
       input: GastronomyCheckoutInput,
-    ): Promise<GastronomyCheckoutOrderRecord> => {
+    ): Promise<OrderRecord> => {
       if (!activeProfile?.id) {
         throw new Error("Selecione um perfil ativo para concluir o pedido.");
       }

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * EducationDashboardPage
  *
  * Dashboard administrativo da instituicao de educacao.
@@ -51,31 +51,31 @@ export function EducationDashboardPage() {
     {
       icon: Settings,
       label: 'Configuração',
-      href: `/central/empresas/${businessId}/education/setup`,
+      href: `/central/empresas/${businessId}/educacao/setup`,
       description: 'Dados da instituição e perfil',
     },
     {
       icon: BookOpen,
       label: 'Programas',
-      href: `/central/empresas/${businessId}/education/programas`,
+      href: `/central/empresas/${businessId}/educacao/programas`,
       description: 'Gerenciar turmas e programas',
     },
     {
       icon: Users,
       label: 'Leads',
-      href: `/central/empresas/${businessId}/education/leads`,
+      href: `/central/empresas/${businessId}/educacao/leads`,
       description: 'Pipeline de matrículas',
     },
     {
       icon: Calendar,
       label: 'Eventos',
-      href: `/central/empresas/${businessId}/education/eventos`,
+      href: `/central/empresas/${businessId}/educacao/eventos`,
       description: 'Eventos e visitas agendadas',
     },
     {
       icon: TrendingUp,
       label: 'Analytics',
-      href: `/central/empresas/${businessId}/education/analytics`,
+      href: `/central/empresas/${businessId}/educacao/analytics`,
       description: 'Estatísticas e relatórios',
     },
   ];
@@ -228,4 +228,3 @@ export function EducationDashboardPage() {
 }
 
 export default EducationDashboardPage;
-

@@ -1,13 +1,13 @@
-﻿import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
-import { 
-  Eye, 
-  BarChart3, 
-  Users, 
-  Settings, 
+import {
+  Eye,
+  BarChart3,
+  Users,
+  Settings,
   MapPin,
   FileText,
   Calendar,
@@ -27,8 +27,8 @@ export default function CentralComunicacaoPageV2() {
     queryFn: async () => {
       // Tentar buscar canais reais primeiro
       const realChannels = await CommunicationTerritorialService.listManagedChannels();
-      
-      // Se nÃƒÂ£o houver canais reais, usar mocks para desenvolvimento
+
+      // Se nao houver canais reais, usar mocks para desenvolvimento
       if (!realChannels || realChannels.length === 0) {
         // Converter agentes mockados para formato de canal
         return nordesteAgents.map(agent => ({
@@ -42,21 +42,21 @@ export default function CentralComunicacaoPageV2() {
           publications: 0,
         }));
       }
-      
+
       return realChannels;
     },
   });
 
   return (
     <div className="container mx-auto max-w-7xl space-y-6 sm:space-y-8 px-4 sm:px-6 py-6 sm:py-8 lg:px-8">
-      
+
       {/* Header */}
       <div className="space-y-2 sm:space-y-3">
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-          ComunicaÃƒÂ§ÃƒÂ£o Territorial
+          Comunicacao territorial
         </h1>
         <p className="text-sm sm:text-base lg:text-lg text-muted-foreground">
-          Gerencie seus canais de comunicaÃƒÂ§ÃƒÂ£o territorial. Para publicar conteÃƒÂºdo, acesse a pÃƒÂ¡gina pÃƒÂºblica do canal.
+          Gerencie seus canais de comunicacao territorial. Para publicar conteudo, acesse a pagina publica do canal.
         </p>
       </div>
 
@@ -78,7 +78,7 @@ export default function CentralComunicacaoPageV2() {
               <div className="space-y-2 sm:space-y-3">
                 <h2 className="text-xl sm:text-2xl font-bold text-foreground">Nenhum canal encontrado</h2>
                 <p className="text-sm sm:text-base text-muted-foreground">
-                  VocÃƒÂª ainda nÃƒÂ£o gerencia nenhum canal de comunicaÃƒÂ§ÃƒÂ£o territorial.
+                  Voce ainda nao gerencia nenhum canal de comunicacao territorial.
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -86,7 +86,7 @@ export default function CentralComunicacaoPageV2() {
                   Solicitar Novo Canal
                 </Button>
                 <Button variant="outline" onClick={() => navigate("/comunicacao")}>
-                  Explorar ComunicaÃƒÂ§ÃƒÂ£o
+                  Explorar comunicacao
                 </Button>
               </div>
             </div>
@@ -113,14 +113,14 @@ export default function CentralComunicacaoPageV2() {
                   )}
                 </div>
               </CardHeader>
-              
+
               <CardContent className="space-y-4">
-                
+
                 {/* Stats */}
                 <div className="grid grid-cols-2 gap-3 sm:gap-4 py-3 sm:py-4 border-y">
                   <div className="space-y-1">
                     <p className="text-xl sm:text-2xl font-bold text-foreground">{channel.publications || 0}</p>
-                    <p className="text-xs text-muted-foreground">PublicaÃƒÂ§ÃƒÂµes</p>
+                    <p className="text-xs text-muted-foreground">Publicacoes</p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-xl sm:text-2xl font-bold text-foreground">{channel.followers?.toLocaleString() || 0}</p>
@@ -140,18 +140,18 @@ export default function CentralComunicacaoPageV2() {
 
                 {/* Actions */}
                 <div className="space-y-2 pt-2">
-                  <Button 
+                  <Button
                     className="w-full gap-2 text-sm"
                     size="sm"
                     onClick={() => navigate(`/comunicacao/agente/${channel.slug}`)}
                   >
                     <Eye className="h-4 w-4" />
-                    Ver PÃƒÂ¡gina PÃƒÂºblica
+                    Ver pagina publica
                     <ExternalLink className="h-3 w-3 ml-auto" />
                   </Button>
-                  
-                  <Button 
-                    variant="outline" 
+
+                  <Button
+                    variant="outline"
                     size="sm"
                     className="w-full gap-2 text-sm"
                     onClick={() => navigate(`/central/comunicacao/${channel.slug}`)}
@@ -163,36 +163,36 @@ export default function CentralComunicacaoPageV2() {
 
                 {/* Quick Links */}
                 <div className="grid grid-cols-2 gap-2 pt-2 border-t">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     className="gap-1.5 sm:gap-2 justify-start text-xs"
                     onClick={() => navigate(`/central/comunicacao/${channel.slug}`)}
                   >
                     <FileText className="h-3 w-3" />
-                    <span className="truncate">PublicaÃƒÂ§ÃƒÂµes</span>
+                    <span className="truncate">Publicacoes</span>
                   </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     className="gap-1.5 sm:gap-2 justify-start text-xs"
                     onClick={() => navigate(`/central/comunicacao/${channel.slug}`)}
                   >
                     <TrendingUp className="h-3 w-3" />
                     <span className="truncate">Analytics</span>
                   </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     className="gap-1.5 sm:gap-2 justify-start text-xs"
                     onClick={() => navigate(`/central/comunicacao/${channel.slug}`)}
                   >
                     <MapPin className="h-3 w-3" />
-                    <span className="truncate">TerritÃƒÂ³rios</span>
+                    <span className="truncate">Territorios</span>
                   </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     className="gap-1.5 sm:gap-2 justify-start text-xs"
                     onClick={() => navigate(`/central/comunicacao/${channel.slug}`)}
                   >
@@ -213,22 +213,22 @@ export default function CentralComunicacaoPageV2() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-              Como publicar conteÃƒÂºdo?
+              Como publicar conteudo?
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 sm:space-y-4">
             <p className="text-xs sm:text-sm text-muted-foreground">
-              Para criar e publicar conteÃƒÂºdo, acesse a <strong>pÃƒÂ¡gina pÃƒÂºblica do canal</strong>. 
-              LÃƒÂ¡ vocÃƒÂª encontrarÃƒÂ¡ um composer social-first, similar ao Instagram ou Facebook.
+              Para criar e publicar conteudo, acesse a <strong>pagina publica do canal</strong>.
+              La voce encontrara um composer social-first, similar ao Instagram ou Facebook.
             </p>
             <div className="flex flex-wrap gap-2">
-              <Badge variant="outline" className="text-xs">Ã¢Å“Â¨ Postagens rÃƒÂ¡pidas</Badge>
-              <Badge variant="outline" className="text-xs">Ã°Å¸â€œÂ° NotÃƒÂ­cias</Badge>
-              <Badge variant="outline" className="text-xs">Ã°Å¸â€œâ€¦ Eventos</Badge>
-              <Badge variant="outline" className="text-xs">Ã°Å¸Å¡Â¨ Alertas</Badge>
+              <Badge variant="outline" className="text-xs">Postagens rapidas</Badge>
+              <Badge variant="outline" className="text-xs">Noticias</Badge>
+              <Badge variant="outline" className="text-xs">Eventos</Badge>
+              <Badge variant="outline" className="text-xs">Alertas</Badge>
             </div>
             <p className="text-xs text-muted-foreground">
-              Use este painel (Central) apenas para gestÃƒÂ£o, analytics, configuraÃƒÂ§ÃƒÂµes e moderaÃƒÂ§ÃƒÂ£o.
+              Use este painel (Central) apenas para gestao, analytics, configuracoes e moderacao.
             </p>
           </CardContent>
         </Card>

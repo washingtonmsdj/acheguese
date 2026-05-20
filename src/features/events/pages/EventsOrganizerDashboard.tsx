@@ -62,9 +62,7 @@ export default function EventsOrganizerDashboard() {
     queryFn: async () => {
       if (!activeProfile?.id) return [];
       const rows = await communityEventsRuntimeService.getEventsByOrganizerProfile(activeProfile.id, 200);
-      if (rows.length > 0) return rows.map(mapCommunityEventToEvent);
-      const fallback = await communityEventsRuntimeService.getEvents({ upcoming: true });
-      return fallback.map(mapCommunityEventToEvent);
+      return rows.map(mapCommunityEventToEvent);
     },
   });
 

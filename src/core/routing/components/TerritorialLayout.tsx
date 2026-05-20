@@ -141,8 +141,8 @@ export function TerritorialLayout() {
   const city = params.city;
   const slug = params.groupSlug ?? params.district ?? params.groupSlugOrDistrict;
 
-  const isFriendlyModule = pathname.startsWith('/empresas/') || 
-      pathname.startsWith('/servicos/') || 
+  const isFriendlyModule = pathname.startsWith('/empresas/') ||
+      pathname.startsWith('/servicos/') ||
       pathname.startsWith('/classificados/') ||
       pathname.startsWith('/comunidade/');
 
@@ -164,7 +164,7 @@ export function TerritorialLayout() {
   const baseUrl = resolved
     ? resolved.kind === 'group'
       ? (() => {
-          // Para grupo: pega a cidade âncora do primeiro membro
+          // Para grupo: pega a cidade ancora do primeiro membro
           const firstMember = resolved.group.members[0];
           if (!firstMember?.geographic_path) return `/${state}/${city}/${resolved.group.slug}`;
           const parts = firstMember.geographic_path.split('/').filter(Boolean);
@@ -187,7 +187,7 @@ export function TerritorialLayout() {
 
   // Persiste o território resolvido para uso fora das rotas territoriais (header, sidebar)
   // useEffect deve ficar ANTES de qualquer early return — Rules of Hooks
-  // 
+  //
   useEffect(() => {
     if (status === 'resolved_location' || status === 'resolved_group') {
       if (territoryName && baseUrl && !isEntityDetailRoute(pathname)) {
@@ -234,16 +234,16 @@ export function TerritorialLayout() {
             Você pode voltar ou navegar para a visão mais ampla da cidade.
           </p>
         </div>
-        <div className="flex gap-3 mt-4">
+        <div className="mt-4 flex w-full max-w-sm flex-col gap-3 sm:max-w-none sm:flex-row sm:justify-center">
           <button
             onClick={() => window.history.back()}
-            className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground border border-border rounded-lg hover:bg-muted/50 transition-colors"
+            className="w-full rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground sm:w-auto"
           >
             Voltar
           </button>
           <button
             onClick={() => window.location.href = `/${state}/${city}`}
-            className="px-4 py-2 text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 rounded-lg transition-colors"
+            className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto"
           >
             Ver Cidade Completa
           </button>

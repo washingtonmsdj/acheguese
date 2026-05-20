@@ -1,4 +1,2 @@
-export { FavoritesService } from "./services/FavoritesService";
-
-// Hooks
+export * from "./services";
 export { useFavorites } from "./hooks/useFavorites";

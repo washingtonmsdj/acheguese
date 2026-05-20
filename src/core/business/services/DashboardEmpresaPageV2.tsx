@@ -1,6 +1,6 @@
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { toast } from "sonner";
 import { useDashboardAccess } from "@/core/business/hooks/useDashboardAccess";
@@ -23,8 +23,7 @@ import SubscriptionPlans from '@/core/business/components/SubscriptionPlans';
 import { NetworkTab } from '@/core/business';
 import { QrCodeWidget } from '@/core/qr';
 import { QrEntityType } from '@/core/qr/types';
-import type { PlanType } from "@/shared/types/subscription";
-import { SUBSCRIPTION_PLAN } from "@/shared/types/constants";
+import { PlanTier, SubscriptionService, useBusinessSubscription } from "@/core/billing";
 import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-runtime-context";
 import { ActiveProfileBadge } from "@/core/profiles/components/ActiveProfileBadge";
 import type { BusinessData } from "@/shared/types/dashboard";
@@ -39,7 +38,6 @@ export default function DashboardEmpresaPageV2() {
   const { profileId } = useParams<{ profileId: string }>();
   const navigate = useNavigate();
   const appUrls = useAppUrls();
-  const [currentPlan, setCurrentPlan] = useState<PlanType>(SUBSCRIPTION_PLAN.BASICO);
   const { setModuleContext, effectiveProfile } = useMultiProfileContext();
 
   useEffect(() => {
@@ -50,6 +48,8 @@ export default function DashboardEmpresaPageV2() {
   const { permissions, loading: accessLoading } = useDashboardAccess(profileId);
   const { activeTab, setActiveTab } = useDashboardTabs();
   const { business, isLoading: dataLoading } = useBusiness(profileId || "");
+  const { planTier, refetch: refetchSubscription } =
+    useBusinessSubscription(business?.id);
 
   const dashboardBusiness: BusinessData | null = business
     ? { id: business.id, name: business.name, logo: business.logo_url || "", category: business.category, slug: business.slug || "" }
@@ -90,9 +90,17 @@ export default function DashboardEmpresaPageV2() {
     if (business) navigate(appUrls.business.edit(business.id));
   };
 
-  const handlePlanSelect = (planId: PlanType) => {
-    setCurrentPlan(planId);
-    toast.success(`Plano ${planId} selecionado!`);
+  const handlePlanSelect = async (planId: PlanTier) => {
+    if (!business?.id) return;
+
+    const result = await SubscriptionService.updatePlan(business.id, planId);
+    if (result.error) {
+      toast.error("Erro ao atualizar plano");
+      return;
+    }
+
+    await refetchSubscription();
+    toast.success("Plano atualizado");
   };
 
   if (accessLoading || dataLoading) {
@@ -144,12 +152,12 @@ export default function DashboardEmpresaPageV2() {
                 Gere e gerencie o QR Code da sua empresa para compartilhar com clientes
               </p>
             </div>
-            
+
             <QrCodeWidget
               entityType={QrEntityType.BUSINESS}
               entityId={business.id}
               businessId={business.id}
-              canonicalUrl={business.slug && business.geographic_path 
+              canonicalUrl={business.slug && business.geographic_path
                 ? BusinessUrlService.getCanonicalUrl({
                     id: business.id,
                     slug: business.slug,
@@ -166,11 +174,11 @@ export default function DashboardEmpresaPageV2() {
         </TabPanel>
 
         <TabPanel value="cupons">
-          <CouponManager businessId={business.id} planType={currentPlan} />
+          <CouponManager businessId={business.id} planType={planTier} />
         </TabPanel>
 
         <TabPanel value="plano">
-          <SubscriptionPlans currentPlan={currentPlan} onSelectPlan={handlePlanSelect} />
+          <SubscriptionPlans currentPlan={planTier} onSelectPlan={handlePlanSelect} />
         </TabPanel>
 
         <TabPanel value="configuracoes">
@@ -196,5 +204,3 @@ export default function DashboardEmpresaPageV2() {
     </div>
   );
 }
-
-

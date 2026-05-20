@@ -2,7 +2,7 @@
  * DeliveryManagementPage - Gestao de entregas (SSOT).
  *
  * SSOT: useDelivery -> RideOperationalService -> ride_requests (ride_mode='motoboy').
- * Esta pagina nao deve consumir delivery_requests legado.
+ * Esta pagina consome o fluxo canonico de entregas.
  */
 
 import { useMemo, useState } from 'react';
@@ -426,4 +426,3 @@ export default function DeliveryManagementPage() {
     </div>
   );
 }
-

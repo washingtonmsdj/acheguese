@@ -6,6 +6,10 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase } from "@/integrations/supabase";
 import { PublicIdentityService } from "@/core/public-identity";
+import {
+  evaluateBusinessSlugSafety,
+  isBusinessSlugSafetyBypassAllowed,
+} from "@/core/public-identity/domain/businessSlugSafety";
 import { AddressService } from "@/core/address/services/AddressService";
 import { BusinessHoursService } from "@/core/business/BusinessHoursService";
 const supabaseTyped = supabase as any;
@@ -286,6 +290,18 @@ export async function createBusiness(
     const validatedInput = sanitizeAndValidateInput(input, false) as CreateBusinessInput;
     let slug = validatedInput.slug;
     if (slug) {
+      if (!isBusinessSlugSafetyBypassAllowed({ isVerifiedOfficial: validatedInput.is_verified })) {
+        const slugSafety = evaluateBusinessSlugSafety({
+          businessName: validatedInput.name,
+          slug,
+        });
+        if (slugSafety.status === "review") {
+          throw new Error(
+            "O link publico esta muito diferente do nome do negocio. Ajuste para manter autenticidade.",
+          );
+        }
+      }
+
       const availability = await PublicIdentityService.checkAvailability({
         identifier: slug,
         entityType: "business",
@@ -381,7 +397,7 @@ export async function updateBusiness(
 
     const { data: currentBusiness, error: currentError } = await supabaseTyped
       .from("business_data")
-      .select("id, slug, metadata, address_id, location_id")
+      .select("id, slug, metadata, address_id, location_id, business_name, is_verified")
       .eq("profile_id", id)
       .maybeSingle();
 
@@ -399,6 +415,8 @@ export async function updateBusiness(
       metadata?: Record<string, unknown>;
       address_id?: string | null;
       location_id?: string | null;
+      business_name?: string | null;
+      is_verified?: boolean | null;
     };
 
     const addressId = await syncAddress(
@@ -433,6 +451,18 @@ export async function updateBusiness(
     }
 
     if (validatedInput.slug !== undefined && currentTyped.slug !== validatedInput.slug) {
+      if (!isBusinessSlugSafetyBypassAllowed({ isVerifiedOfficial: Boolean(currentTyped.is_verified) })) {
+        const slugSafety = evaluateBusinessSlugSafety({
+          businessName: validatedInput.name ?? currentTyped.business_name ?? "",
+          slug: validatedInput.slug,
+        });
+        if (slugSafety.status === "review") {
+          throw new Error(
+            "O link publico esta muito diferente do nome do negocio. Ajuste para manter autenticidade.",
+          );
+        }
+      }
+
       const cooldown = await PublicIdentityService.canChangeIdentifier({
         entityType: "business",
         entityId: id,

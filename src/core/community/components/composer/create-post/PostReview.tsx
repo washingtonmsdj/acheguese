@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import {
   Card,
   CardContent,
@@ -16,6 +16,7 @@ import {
 } from "@/shared/components/ui/dialog";
 import {
   Send,
+  BarChart3,
   MapPin,
   Tag,
   Users,
@@ -144,7 +145,10 @@ export function PostReview({
           {tipo === "enquete" && (
             <div className="space-y-3">
               <div className="p-3 bg-muted rounded-lg">
-                <h4 className="font-medium mb-2">ðŸ“Š {perguntaEnquete}</h4>
+                <h4 className="mb-2 flex items-center gap-2 font-medium">
+                  <BarChart3 className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                  {perguntaEnquete}
+                </h4>
                 <div className="space-y-2">
                   {opcoesEnquete
                     .filter((opt) => opt.trim())

@@ -1,16 +1,14 @@
-﻿/**
- * CountryLandingPage â€” Landing pÃºblica para nÃ­vel paÃ­s
+/**
+ * CountryLandingPage - Landing publica para nivel pais
  *
- * Lista estados ativos. Quando hÃ¡ apenas 1 estado ativo,
- * mostra a landing normalmente (nÃ£o redireciona).
+ * Lista estados ativos. Quando ha apenas 1 estado ativo,
+ * mostra a landing normalmente (nao redireciona).
  * Base futura de escala nacional.
  */
 
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  MapPin, Map, ChevronRight, Loader2, Globe, Building2,
-} from 'lucide-react';
+import { Map, ChevronRight, Loader2, Globe } from 'lucide-react';
 import { TERRITORY_CONFIG } from '@/config/territory';
 import { getCountryData, getActiveStates } from '@/core/landing/services/LandingService';
 
@@ -84,10 +82,10 @@ export function CountryLandingPage() {
               </h1>
               <p className="text-sm text-muted-foreground mt-1">
                 {states.length === 0
-                  ? 'Nenhum estado disponÃ­vel no momento'
+                  ? 'Nenhum estado disponivel no momento'
                   : states.length === 1
-                    ? '1 estado disponÃ­vel'
-                    : `${states.length} estados disponÃ­veis`}
+                    ? '1 estado disponivel'
+                    : `${states.length} estados disponiveis`}
               </p>
             </div>
           </div>
@@ -104,8 +102,8 @@ export function CountryLandingPage() {
         {states.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border bg-muted/20 px-4 py-8 text-center">
             <Map className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">Nenhum estado disponÃ­vel no momento</p>
-            <p className="text-xs text-muted-foreground/60 mt-1">Em breve novas regiÃµes serÃ£o adicionadas</p>
+            <p className="text-sm text-muted-foreground">Nenhum estado disponivel no momento</p>
+            <p className="text-xs text-muted-foreground/60 mt-1">Em breve novas regioes serao adicionadas</p>
           </div>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
@@ -136,7 +134,7 @@ export function CountryLandingPage() {
         )}
       </section>
 
-      {/* Nota de expansÃ£o */}
+      {/* Nota de expansao */}
       <div className="px-4 max-w-3xl mx-auto">
         <p className="text-xs text-muted-foreground text-center">
           Estamos expandindo para todo o Brasil. Em breve novos estados e cidades.
@@ -145,4 +143,3 @@ export function CountryLandingPage() {
     </div>
   );
 }
-

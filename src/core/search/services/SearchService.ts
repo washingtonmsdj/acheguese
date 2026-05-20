@@ -128,7 +128,12 @@ export class SearchService {
 
   private static async searchBusinesses(query: string, _filters: SearchFilters): Promise<Business[]> {
     try {
-      return (await BusinessService.searchBusinessesLegacy(query, 20)) as Business[];
+      const { businesses } = await BusinessService.getBusinessesList({
+        searchQuery: query,
+        pageSize: 20,
+        pageParam: 0,
+      });
+      return businesses as Business[];
     } catch (error) {
       logger.error("Error searching businesses:", error);
       return [];
@@ -353,5 +358,3 @@ export class SearchService {
 }
 
 export const searchService = new SearchService();
-
-

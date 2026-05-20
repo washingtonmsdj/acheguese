@@ -26,24 +26,24 @@ export function EventsOrganizerFormStepContent({
           <div className="space-y-6">
             {/* Title */}
             <div>
-              <Label htmlFor="title">TÃ­tulo do Evento *</Label>
+              <Label htmlFor="title">Titulo do Evento *</Label>
               <Input
                 id="title"
                 value={formData.title}
                 onChange={(e) => onFieldChange('title', e.target.value)}
-                placeholder="Ex: Festival de MÃºsica 2024"
+                placeholder="Ex: Festival de Musica 2024"
                 className="mt-2"
               />
             </div>
 
             {/* Subtitle */}
             <div>
-              <Label htmlFor="subtitle">SubtÃ­tulo (opcional)</Label>
+              <Label htmlFor="subtitle">Subtitulo (opcional)</Label>
               <Input
                 id="subtitle"
                 value={formData.subtitle}
                 onChange={(e) => onFieldChange('subtitle', e.target.value)}
-                placeholder="Ex: O maior festival de mÃºsica do Nordeste"
+                placeholder="Ex: O maior festival de musica do Nordeste"
                 className="mt-2"
               />
             </div>
@@ -70,12 +70,12 @@ export function EventsOrganizerFormStepContent({
 
             {/* Tags */}
             <div>
-              <Label htmlFor="tags">Tags (separadas por vÃ­rgula)</Label>
+              <Label htmlFor="tags">Tags (separadas por virgula)</Label>
               <Input
                 id="tags"
                 value={formData.tags}
                 onChange={(e) => onFieldChange('tags', e.target.value)}
-                placeholder="Ex: mÃºsica, festival, ao vivo, rock"
+                placeholder="Ex: musica, festival, ao vivo, rock"
                 className="mt-2"
               />
               <p className="mt-1 text-xs text-muted-foreground">
@@ -85,12 +85,12 @@ export function EventsOrganizerFormStepContent({
 
             {/* Short Description */}
             <div>
-              <Label htmlFor="shortDescription">DescriÃ§Ã£o Curta *</Label>
+              <Label htmlFor="shortDescription">Descricao Curta *</Label>
               <Textarea
                 id="shortDescription"
                 value={formData.shortDescription}
                 onChange={(e) => onFieldChange('shortDescription', e.target.value)}
-                placeholder="Resumo do evento em atÃ© 160 caracteres"
+                placeholder="Resumo do evento em ate 160 caracteres"
                 rows={2}
                 maxLength={160}
                 className="mt-2"
@@ -102,7 +102,7 @@ export function EventsOrganizerFormStepContent({
 
             {/* Description */}
             <div>
-              <Label htmlFor="description">DescriÃ§Ã£o Completa *</Label>
+              <Label htmlFor="description">Descricao Completa *</Label>
               <Textarea
                 id="description"
                 value={formData.description}
@@ -121,7 +121,7 @@ export function EventsOrganizerFormStepContent({
             {/* Date Range */}
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <Label htmlFor="startDate">Data de InÃ­cio *</Label>
+                <Label htmlFor="startDate">Data de Inicio *</Label>
                 <Input
                   id="startDate"
                   type="datetime-local"
@@ -131,7 +131,7 @@ export function EventsOrganizerFormStepContent({
                 />
               </div>
               <div>
-                <Label htmlFor="endDate">Data de TÃ©rmino</Label>
+                <Label htmlFor="endDate">Data de Termino</Label>
                 <Input
                   id="endDate"
                   type="datetime-local"
@@ -149,7 +149,7 @@ export function EventsOrganizerFormStepContent({
                 {[
                   { value: 'physical', label: 'Presencial', icon: MapPin },
                   { value: 'online', label: 'Online', icon: Users },
-                  { value: 'hybrid', label: 'HÃ­brido', icon: Calendar },
+                  { value: 'hybrid', label: 'Hibrido', icon: Calendar },
                 ].map(type => (
                   <button
                     key={type.value}
@@ -184,12 +184,12 @@ export function EventsOrganizerFormStepContent({
                 </div>
 
                 <div>
-                  <Label htmlFor="address">EndereÃ§o Completo *</Label>
+                  <Label htmlFor="address">Endereco Completo *</Label>
                   <Input
                     id="address"
                     value={formData.address}
                     onChange={(e) => onFieldChange('address', e.target.value)}
-                    placeholder="Rua, nÃºmero"
+                    placeholder="Rua, numero"
                     className="mt-2"
                   />
                 </div>
@@ -243,12 +243,12 @@ export function EventsOrganizerFormStepContent({
                 </div>
 
                 <div>
-                  <Label htmlFor="locationInstructions">InstruÃ§Ãµes de Acesso (opcional)</Label>
+                  <Label htmlFor="locationInstructions">Instrucoes de Acesso (opcional)</Label>
                   <Textarea
                     id="locationInstructions"
                     value={formData.locationInstructions}
                     onChange={(e) => onFieldChange('locationInstructions', e.target.value)}
-                    placeholder="Ex: Entrada pela porta lateral, estacionamento disponÃ­vel..."
+                    placeholder="Ex: Entrada pela porta lateral, estacionamento disponivel..."
                     rows={2}
                     className="mt-2"
                   />
@@ -290,7 +290,7 @@ export function EventsOrganizerFormStepContent({
                     className="mt-2"
                   />
                   <p className="mt-1 text-xs text-muted-foreground">
-                    O link serÃ¡ enviado aos participantes apÃ³s a inscriÃ§Ã£o
+                    O link sera enviado aos participantes apos a inscricao
                   </p>
                 </div>
               </>
@@ -355,8 +355,8 @@ export function EventsOrganizerFormStepContent({
             {!formData.isFree && (
               <div className="rounded-lg border border-border bg-muted/30 p-4">
                 <p className="text-sm text-muted-foreground">
-                  ObservaÃ§Ã£o: A configuraÃ§Ã£o detalhada de ingressos pagos serÃ¡ implementada em breve.
-                  Por enquanto, vocÃª pode criar o evento e adicionar os ingressos depois.
+                  Observacao: A configuracao detalhada de ingressos pagos sera implementada em breve.
+                  Por enquanto, voce pode criar o evento e adicionar os ingressos depois.
                 </p>
               </div>
             )}
@@ -386,7 +386,7 @@ export function EventsOrganizerFormStepContent({
                 id="whatToBring"
                 value={formData.whatToBring}
                 onChange={(e) => onFieldChange('whatToBring', e.target.value)}
-                placeholder="Ex:\nGarrafa de Ã¡gua\nProtetor solar"
+                placeholder="Ex:\nGarrafa de agua\nProtetor solar"
                 rows={4}
                 className="mt-2"
               />
@@ -394,7 +394,7 @@ export function EventsOrganizerFormStepContent({
 
             {/* Age Restriction */}
             <div>
-              <Label htmlFor="ageRestriction">ClassificaÃ§Ã£o EtÃ¡ria</Label>
+              <Label htmlFor="ageRestriction">Classificacao Etaria</Label>
               <Select
                 value={formData.ageRestriction}
                 onValueChange={(value) => onFieldChange('ageRestriction', value)}
@@ -427,17 +427,17 @@ export function EventsOrganizerFormStepContent({
 
             {/* Accessibility Info */}
             <div>
-              <Label htmlFor="accessibilityInfo">InformaÃ§Ãµes de Acessibilidade</Label>
+              <Label htmlFor="accessibilityInfo">Informacoes de Acessibilidade</Label>
               <Textarea
                 id="accessibilityInfo"
                 value={formData.accessibilityInfo}
                 onChange={(e) => onFieldChange('accessibilityInfo', e.target.value)}
-                placeholder="Ex: Local com rampa de acesso, banheiros adaptados, intÃ©rprete de libras disponÃ­vel..."
+                placeholder="Ex: Local com rampa de acesso, banheiros adaptados, interprete de libras disponivel..."
                 rows={3}
                 className="mt-2"
               />
               <p className="mt-1 text-xs text-muted-foreground">
-                Informe sobre acessibilidade para pessoas com deficiÃªncia
+                Informe sobre acessibilidade para pessoas com deficiencia
               </p>
             </div>
           </div>
@@ -501,7 +501,7 @@ export function EventsOrganizerFormStepContent({
 
             {/* Video URL */}
             <div>
-              <Label>VÃ­deo do Evento (opcional)</Label>
+              <Label>Video do Evento (opcional)</Label>
               <p className="mt-1 text-xs text-muted-foreground">
                 Link do YouTube, Vimeo ou outro
               </p>
@@ -522,7 +522,7 @@ export function EventsOrganizerFormStepContent({
               </p>
               <div className="mt-2 rounded-lg border border-border bg-muted/30 p-4">
                 <p className="text-sm text-muted-foreground">
-                  ObservaÃ§Ã£o: Upload de galeria serÃ¡ implementado em breve
+                  Observacao: Upload de galeria sera implementado em breve
                 </p>
               </div>
             </div>
@@ -535,20 +535,20 @@ export function EventsOrganizerFormStepContent({
             <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
               <h3 className="mb-2 flex items-center gap-2 font-semibold text-foreground">
                 <Clock className="h-5 w-5 text-primary" />
-                ProgramaÃ§Ã£o do Evento
+                Programacao do Evento
               </h3>
               <p className="text-sm text-muted-foreground">
-                Adicione a agenda/programaÃ§Ã£o do seu evento. Isso ajuda os participantes a se organizarem!
+                Adicione a agenda/programacao do seu evento. Isso ajuda os participantes a se organizarem!
               </p>
             </div>
 
             <div className="rounded-lg border border-border bg-muted/30 p-6 text-center">
               <Calendar className="mx-auto mb-3 h-12 w-12 text-muted-foreground" />
               <h4 className="mb-2 font-semibold text-foreground">
-                Gerenciador de ProgramaÃ§Ã£o
+                Gerenciador de Programacao
               </h4>
               <p className="mb-4 text-sm text-muted-foreground">
-                Adicione horÃ¡rios, palestras, atividades e palestrantes
+                Adicione horarios, palestras, atividades e palestrantes
               </p>
               <Button variant="outline" className="gap-2">
                 <Plus className="h-4 w-4" />
@@ -557,7 +557,7 @@ export function EventsOrganizerFormStepContent({
             </div>
 
             <div className="text-xs text-muted-foreground">
-              ObservaÃ§Ã£o: <strong>Dica:</strong> Uma programaÃ§Ã£o bem detalhada aumenta a confianÃ§a dos participantes!
+              Observacao: <strong>Dica:</strong> Uma programacao bem detalhada aumenta a confianca dos participantes!
             </div>
           </div>
         );
@@ -571,7 +571,7 @@ export function EventsOrganizerFormStepContent({
                 Perguntas Frequentes (FAQ)
               </h3>
               <p className="text-sm text-muted-foreground">
-                Responda as dÃºvidas mais comuns dos participantes antecipadamente!
+                Responda as duvidas mais comuns dos participantes antecipadamente!
               </p>
             </div>
 
@@ -581,7 +581,7 @@ export function EventsOrganizerFormStepContent({
                 Gerenciador de FAQ
               </h4>
               <p className="mb-4 text-sm text-muted-foreground">
-                Adicione perguntas e respostas para esclarecer dÃºvidas
+                Adicione perguntas e respostas para esclarecer duvidas
               </p>
               <Button variant="outline" className="gap-2">
                 <Plus className="h-4 w-4" />
@@ -594,11 +594,11 @@ export function EventsOrganizerFormStepContent({
                 Exemplos de perguntas comuns:
               </h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>Posso levar crianÃ§as?</li>
+                <li>Posso levar criancas?</li>
                 <li>Tem estacionamento no local?</li>
-                <li>Posso cancelar minha inscriÃ§Ã£o?</li>
-                <li>O evento serÃ¡ gravado?</li>
-                <li>Tem certificado de participaÃ§Ã£o?</li>
+                <li>Posso cancelar minha inscricao?</li>
+                <li>O evento sera gravado?</li>
+                <li>Tem certificado de participacao?</li>
               </ul>
             </div>
           </div>

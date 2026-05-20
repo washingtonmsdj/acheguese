@@ -1,6 +1,10 @@
 import { supabase } from "@/integrations/supabase";
 import { PublicIdentityService } from "@/core/public-identity";
 import {
+  evaluateProfessionalSlugSafety,
+  isProfessionalSlugSafetyBypassAllowed,
+} from "@/core/public-identity/domain/professionalSlugSafety";
+import {
   createProfessionalSchema,
   updateProfessionalSchema,
 } from "@/shared/schemas/professional/professionalSchemas";
@@ -216,6 +220,18 @@ export async function createProfessionalWithProfile(
     ? await validateAvailableProfessionalSlug(validatedInput.slug)
     : await generateUniqueProfessionalSlug(validatedInput.name);
 
+  if (!isProfessionalSlugSafetyBypassAllowed({ isVerifiedProfessional: false })) {
+    const slugSafety = evaluateProfessionalSlugSafety({
+      professionalName: validatedInput.name,
+      slug,
+    });
+    if (slugSafety.status === "review") {
+      throw new Error(
+        "O link publico esta muito diferente do nome do profissional. Ajuste o link para manter autenticidade.",
+      );
+    }
+  }
+
   if (!validatedInput.location_id) {
     throw new Error("location_id e obrigatorio para cadastrar profissional.");
   }
@@ -272,7 +288,7 @@ export async function updateProfessionalWithProfile(
   const validatedInput = sanitizeAndValidateInput(input, true) as UpdateProfessionalInput;
   const { data: currentProfessional, error: currentError } = await (supabase as any)
     .from("professional_data")
-    .select("id, profile_id, slug, metadata")
+    .select("id, profile_id, slug, metadata, professional_name, is_verified")
     .or(`profile_id.eq.${id},id.eq.${id}`)
     .maybeSingle();
 
@@ -299,6 +315,23 @@ export async function updateProfessionalWithProfile(
   }
 
   if (validatedInput.slug !== undefined && validatedInput.slug !== currentProfessional.slug) {
+    if (
+      !isProfessionalSlugSafetyBypassAllowed({
+        isVerifiedProfessional: Boolean(currentProfessional.is_verified),
+      })
+    ) {
+      const slugSafety = evaluateProfessionalSlugSafety({
+        professionalName:
+          validatedInput.name ?? currentProfessional.professional_name ?? "",
+        slug: validatedInput.slug,
+      });
+      if (slugSafety.status === "review") {
+        throw new Error(
+          "O link publico esta muito diferente do nome do profissional. Ajuste o link para manter autenticidade.",
+        );
+      }
+    }
+
     const cooldown = await PublicIdentityService.canChangeIdentifier({
       entityType: "professional",
       entityId: currentProfessional.id,

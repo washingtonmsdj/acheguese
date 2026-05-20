@@ -19,7 +19,7 @@ export function ChannelCard({
   href?: string;
 }) {
   return (
-    <Card className="h-full border-white/10 bg-white/[0.02] text-white">
+    <Card className="h-full border-border bg-card text-card-foreground shadow-sm">
       <CardHeader>
         <div className="flex items-start justify-between gap-3">
           <CardTitle className="text-lg">{channel.public_name}</CardTitle>
@@ -54,7 +54,7 @@ export function PublicationCard({
 }) {
   const date = publication.published_at ?? publication.created_at;
   return (
-    <Card className="border-white/10 bg-white/[0.02] text-white">
+    <Card className="border-border bg-card text-card-foreground shadow-sm">
       <CardHeader>
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           <Badge variant="outline">{PUBLICATION_TYPE_LABELS[publication.publication_type]}</Badge>
@@ -66,7 +66,7 @@ export function PublicationCard({
         <CardTitle className="text-xl">{publication.title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-muted-foreground">{publication.summary || publication.body}</p>
+        <p className="line-clamp-4 text-sm text-muted-foreground">{publication.summary || publication.body}</p>
         {channelHref && publication.content_format === "article" ? (
           <Button asChild size="sm" variant="outline" className="mt-3">
             <Link to={channelHref}>Ler no canal</Link>

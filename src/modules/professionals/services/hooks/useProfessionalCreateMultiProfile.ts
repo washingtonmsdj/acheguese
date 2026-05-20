@@ -1,7 +1,7 @@
 /**
  * USE PROFESSIONAL CREATE MULTI-PROFILE
  * Hook MIGRADO para usar MultiProfileService.createProfile()
- * 
+ *
  * CORREÇÃO: Cria perfil professional via RPC create_profile_with_extension
  * em vez de ProfessionalService.createProfessional() legado
  */
@@ -11,6 +11,7 @@ import { MultiProfileService } from "@/core/profiles/services/multi-profile";
 import { toast } from "sonner";
 import { locationContextStore } from "@/core/location/stores/LocationContextStore";
 import { PublicIdentityService } from "@/core/public-identity";
+import { evaluateProfessionalSlugSafety } from "@/core/public-identity/domain/professionalSlugSafety";
 import type { ProfessionalCategory } from "@/core/professional/types";
 
 interface CreateProfessionalInput {
@@ -88,6 +89,15 @@ export function useProfessionalCreateMultiProfile(
       const handle = PublicIdentityService.normalize(requestedSlug, "professional");
       if (!handle) {
         throw new Error("Slug profissional inválido");
+      }
+      const slugSafety = evaluateProfessionalSlugSafety({
+        professionalName: input.name,
+        slug: handle,
+      });
+      if (slugSafety.status === "review") {
+        throw new Error(
+          "O link público está muito diferente do nome do profissional. Ajuste o link para manter autenticidade.",
+        );
       }
       const availability = await PublicIdentityService.checkAvailability({
         identifier: handle,

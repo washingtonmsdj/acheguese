@@ -37,7 +37,6 @@ import {
   isComplexNiche,
   shouldShowAdminSection,
   getNicheOrDefault,
-  mapCuisineToNiche,
   DEFAULT_NICHE_KEY,
 } from '../registry';
 
@@ -318,15 +317,6 @@ export const NicheConfigService = {
   getSuggestedItems(key: string): string[] {
     const niche = getNicheByKey(key);
     return niche?.defaultConfig.suggestedItems ?? [];
-  },
-
-  // ══════════════════════════════════════════════════════════════════════════
-  // COMPATIBILIDADE (LEGADO)
-  // ══════════════════════════════════════════════════════════════════════════
-
-  /** Mapeia cuisine_type legado para niche_key */
-  mapLegacyCuisine(cuisineType: string): string | null {
-    return mapCuisineToNiche(cuisineType);
   },
 
   // ══════════════════════════════════════════════════════════════════════════

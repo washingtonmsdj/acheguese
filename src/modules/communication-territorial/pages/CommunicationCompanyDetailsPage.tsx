@@ -1,8 +1,10 @@
 import { Helmet } from "react-helmet-async";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
+import { buildPublicAbsoluteUrl } from "@/shared/config/publicAppOrigin";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
+import { Card, CardContent } from "@/shared/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
 import { CommunicationPageShell } from "../components/CommunicationBlocks";
 import {
@@ -12,63 +14,94 @@ import {
   CompanyDetailsTerritoriesTab,
 } from "../components/company-details/CommunicationCompanyDetailsSections";
 import { useCommunicationChannelPublicPage } from "../hooks";
-import { buildCommunicationChannelPath } from "../services";
+import {
+  buildCommunicationChannelPath,
+  buildCommunicationCityPath,
+  buildCommunicationTerritoryPath,
+} from "../services";
 
-/**
- * CommunicationCompanyDetailsPage
- *
- * Pagina de detalhes completa de uma empresa/canal de comunicacao territorial.
- * Exibe informacoes detalhadas, publicacoes, territorios cobertos, estatisticas e contato.
- */
+function LoadingState() {
+  return (
+    <div className="space-y-6">
+      <div className="h-10 w-36 animate-pulse rounded bg-muted" />
+      <div className="h-64 animate-pulse rounded-3xl bg-muted" />
+      <div className="h-10 w-full animate-pulse rounded bg-muted sm:w-80" />
+      <div className="h-56 animate-pulse rounded-xl bg-muted" />
+    </div>
+  );
+}
+
 export default function CommunicationCompanyDetailsPage() {
   const { state = "", city = "", territorySlug = "", channelSlug = "" } = useParams();
-
   const { data, isLoading } = useCommunicationChannelPublicPage(channelSlug);
 
   const channel = data?.channel;
   const publications = data?.publications ?? [];
   const territories = data?.territories ?? [];
-  const canonicalPath = buildCommunicationChannelPath({ state, city, territorySlug, channelSlug });
+
+  const territoryPath = buildCommunicationTerritoryPath(state, city, territorySlug);
+  const cityPath = buildCommunicationCityPath(state, city);
+  const canonicalPath = buildCommunicationChannelPath({
+    state,
+    city,
+    territorySlug,
+    channelSlug: channel?.slug ?? channelSlug,
+  });
+  const canonicalUrl = buildPublicAbsoluteUrl(canonicalPath);
 
   return (
     <CommunicationPageShell>
       <Helmet>
-        <title>{channel?.public_name ?? "Detalhes da Empresa"} | Comunicacao Territorial | Achegue-se</title>
+        <title>{channel?.public_name ?? "Canal de comunicacao"} | Achegue-se</title>
         <meta
           name="description"
-          content={channel?.description ?? "Detalhes completos do canal de comunicacao territorial"}
+          content={
+            channel?.description ||
+            "Detalhes completos de canal de comunicacao territorial."
+          }
         />
-        <link rel="canonical" href={canonicalPath} />
+        <link rel="canonical" href={canonicalUrl} />
+        {!isLoading && !channel ? <meta name="robots" content="noindex,follow" /> : null}
       </Helmet>
 
-      {isLoading ? (
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center space-y-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-            <p className="text-muted-foreground">Carregando informacoes...</p>
-          </div>
-        </div>
-      ) : null}
+      <nav className="mb-4 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+        <Link to="/comunicacao" className="hover:text-foreground">Comunicacao</Link>
+        <span>/</span>
+        <Link to={cityPath} className="hover:text-foreground">{city || "cidade"}</Link>
+        <span>/</span>
+        <Link to={territoryPath} className="hover:text-foreground">{territorySlug || "territorio"}</Link>
+      </nav>
+
+      {isLoading ? <LoadingState /> : null}
 
       {!isLoading && !channel ? (
-        <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-          <div className="text-center space-y-2">
-            <h2 className="text-2xl font-bold text-foreground">Canal nao encontrado</h2>
-            <p className="text-muted-foreground">O canal que voce procura nao existe ou esta inativo.</p>
-          </div>
-          <Button asChild>
-            <Link to="/comunicacao">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Voltar para Comunicacao
-            </Link>
-          </Button>
-        </div>
+        <Card className="border-border">
+          <CardContent className="space-y-4 py-8">
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold">Canal nao encontrado</h2>
+              <p className="text-muted-foreground">
+                O canal informado nao existe, esta inativo ou nao pertence a este territorio.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button asChild variant="outline">
+                <Link to={territoryPath}>
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Voltar ao territorio
+                </Link>
+              </Button>
+              <Button asChild>
+                <Link to="/comunicacao/solicitar">Solicitar canal</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       ) : null}
 
       {channel ? (
         <div className="space-y-6">
           <Button variant="ghost" size="sm" asChild>
-            <Link to="/comunicacao">
+            <Link to={territoryPath}>
               <ArrowLeft className="mr-2 h-4 w-4" />
               Voltar
             </Link>
@@ -84,8 +117,8 @@ export default function CommunicationCompanyDetailsPage() {
             </TabsList>
 
             <TabsContent value="publications" className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold">Publicacoes Recentes</h2>
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="text-lg font-semibold sm:text-xl">Publicacoes recentes</h2>
                 <Badge variant="secondary">{publications.length} publicacoes</Badge>
               </div>
               <CompanyDetailsPublicationsTab publications={publications} channelHref={canonicalPath} />
@@ -100,8 +133,8 @@ export default function CommunicationCompanyDetailsPage() {
             </TabsContent>
 
             <TabsContent value="territories" className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold">Territorios Autorizados</h2>
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="text-lg font-semibold sm:text-xl">Territorios autorizados</h2>
                 <Badge variant="secondary">{territories.length} territorios</Badge>
               </div>
               <CompanyDetailsTerritoriesTab territories={territories} />
@@ -112,4 +145,3 @@ export default function CommunicationCompanyDetailsPage() {
     </CommunicationPageShell>
   );
 }
-

@@ -1,6 +1,6 @@
 /**
- * PontoTuristicoDetailPage - PÃ¡gina de detalhe de ponto turÃ­stico
- * 
+ * PontoTuristicoDetailPage - Pagina de detalhe de ponto turistico
+ *
  * âœ… SSOT COMPLIANT - Usa TouristPointService
  */
 
@@ -47,9 +47,9 @@ export default function PontoTuristicoDetailPage() {
   if (!point) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
-        <SEO title="Ponto turÃ­stico nÃ£o encontrado" noIndex />
+        <SEO title="Ponto turistico nao encontrado" noIndex />
         <Camera className="h-12 w-12 text-muted-foreground" />
-        <h1 className="text-xl font-bold text-foreground">Ponto turÃ­stico nÃ£o encontrado</h1>
+        <h1 className="text-xl font-bold text-foreground">Ponto turistico nao encontrado</h1>
         <Button variant="outline" onClick={() => navigate(`/pontos-turisticos/${state}/${city}`)}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Voltar para lista
@@ -60,7 +60,7 @@ export default function PontoTuristicoDetailPage() {
 
   const cityName = city.charAt(0).toUpperCase() + city.slice(1);
 
-  const seoTitle = `${point.icon_emoji} ${point.name} â€” ${point.location?.name ?? point.neighborhood ?? cityName}`;
+  const seoTitle = `${point.icon_emoji} ${point.name} - ${point.location?.name ?? point.neighborhood ?? cityName}`;
   const seoDescription = point.short_description
     ?? point.description.slice(0, 160).replace(/\n/g, ' ');
   const seoImage = point.photo_url ?? undefined;
@@ -97,7 +97,7 @@ export default function PontoTuristicoDetailPage() {
             className="hover:text-foreground transition-colors flex items-center gap-1"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            Pontos TurÃ­sticos
+            Pontos Turisticos
           </Link>
           <span>/</span>
           <span className="text-foreground font-medium truncate">{point.name}</span>
@@ -107,7 +107,7 @@ export default function PontoTuristicoDetailPage() {
       {/* Main Content */}
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column â€” Main Info */}
+          {/* Left Column - Main Info */}
           <div className="lg:col-span-2 space-y-6">
             {/* Title + Category */}
             <div>
@@ -142,7 +142,7 @@ export default function PontoTuristicoDetailPage() {
                     <span className="font-bold text-sm">{point.rating.toFixed(1)}</span>
                   </div>
                   <span className="text-xs text-muted-foreground">
-                    ({point.total_reviews.toLocaleString('pt-BR')} avaliaÃ§Ãµes)
+                    ({point.total_reviews.toLocaleString('pt-BR')} avaliacoes)
                   </span>
                 </div>
               )}
@@ -170,7 +170,7 @@ export default function PontoTuristicoDetailPage() {
                   <div className="flex items-start gap-3">
                     <AlertTriangle className="h-5 w-5 text-warning flex-shrink-0 mt-0.5" />
                     <div>
-                      <h3 className="text-sm font-semibold text-foreground mb-1">ObservaÃ§Ãµes Importantes</h3>
+                      <h3 className="text-sm font-semibold text-foreground mb-1">Observacoes importantes</h3>
                       <p className="text-sm text-muted-foreground leading-relaxed">{point.observations}</p>
                     </div>
                   </div>
@@ -208,7 +208,7 @@ export default function PontoTuristicoDetailPage() {
             <CommunityPhotosSection point={point} />
           </div>
 
-          {/* Right Column â€” Sidebar */}
+          {/* Right Column - Sidebar */}
           <div className="space-y-4">
             {/* Price Card */}
             <Card>
@@ -237,7 +237,7 @@ export default function PontoTuristicoDetailPage() {
                 <CardContent className="p-4 space-y-2">
                   <div className="flex items-center gap-2">
                     <Clock className="h-5 w-5 text-primary" />
-                    <h3 className="font-semibold text-foreground">HorÃ¡rio de Funcionamento</h3>
+                    <h3 className="font-semibold text-foreground">Horario de funcionamento</h3>
                   </div>
                   <p className="text-sm text-muted-foreground">{point.visiting_hours}</p>
                 </CardContent>
@@ -250,11 +250,11 @@ export default function PontoTuristicoDetailPage() {
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-center gap-2">
                     <MapPin className="h-5 w-5 text-primary" />
-                    <h3 className="font-semibold text-foreground">EndereÃ§o</h3>
+                    <h3 className="font-semibold text-foreground">Endereco</h3>
                   </div>
                   <div className="text-sm text-muted-foreground space-y-1">
                     {point.address ? (
-                      // CanÃ´nico: join com addresses
+                      // Canonico: join com addresses
                       <>
                         {point.address.street && (
                           <p>{point.address.street}{point.address.number ? `, ${point.address.number}` : ''}</p>
@@ -324,8 +324,8 @@ export default function PontoTuristicoDetailPage() {
                 <h3 className="font-semibold text-foreground">Comodidades</h3>
                 <div className="space-y-2">
                   <AmenityItem icon={<ParkingMeter className="h-4 w-4" />} label="Estacionamento" available={point.has_parking} />
-                  <AmenityItem icon={<UtensilsCrossed className="h-4 w-4" />} label="Restaurante / AlimentaÃ§Ã£o" available={point.has_restaurant} />
-                  <AmenityItem icon={<Users className="h-4 w-4" />} label="Guia disponÃ­vel" available={point.has_guide} />
+                  <AmenityItem icon={<UtensilsCrossed className="h-4 w-4" />} label="Restaurante / Alimentacao" available={point.has_restaurant} />
+                  <AmenityItem icon={<Users className="h-4 w-4" />} label="Guia disponivel" available={point.has_guide} />
                 </div>
               </CardContent>
             </Card>
@@ -533,7 +533,7 @@ function MapSection({ point }: { point: TouristPoint }) {
       <CardHeader className="pb-2">
         <CardTitle className="text-lg flex items-center gap-2">
           <MapPin className="h-5 w-5 text-primary" />
-          LocalizaÃ§Ã£o no Mapa
+          Localizacao no Mapa
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -564,7 +564,7 @@ function NearbySection({ point, state, city }: { point: TouristPoint; state: str
       <CardHeader className="pb-2">
         <CardTitle className="text-lg flex items-center gap-2">
           <Star className="h-5 w-5 text-warning" />
-          AtraÃ§Ãµes PrÃ³ximas
+          Atracoes Proximas
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -745,4 +745,3 @@ function AmenityItem({ icon, label, available }: { icon: React.ReactNode; label:
     </div>
   );
 }
-

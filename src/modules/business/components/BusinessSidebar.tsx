@@ -1,6 +1,3 @@
- 
-import React from "react";
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/shared/components/ui/card";
@@ -51,12 +48,6 @@ export function BusinessSidebar({
 
   useEffect(() => {
     async function fetchSimilar() {
-      // Não search empresas similares se for exemplo
-      if (business.id === "exemplo-123") {
-        setSimilarBusinesses([]);
-        return;
-      }
-
       try {
         const data = await BusinessService.getSimilarBusinesses(
           business.id,
@@ -118,7 +109,7 @@ export function BusinessSidebar({
         <Card className="p-4 border-2">
           <div className="flex items-center gap-2 mb-4">
             <ArrowLeft className="h-5 w-5 text-primary" />
-            <h2 className="font-bold text-lg">Navegação</h2>
+            <h2 className="font-bold text-lg">Navegacao</h2>
           </div>
 
           <Button
@@ -134,7 +125,7 @@ export function BusinessSidebar({
 
           <div className="space-y-2">
             <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-              Ações Rápidas
+              Acoes Rapidas
             </h3>
             {business.whatsapp && (
               <Button

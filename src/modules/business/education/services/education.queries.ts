@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Education Queries - SSOT Read Model
  *
  * Todas as operacoes de leitura para o modulo Education.
@@ -10,6 +10,8 @@
 import { supabase } from '@/core/infrastructure/supabase';
 import { logger } from '@/shared/utils/logger';
 import type {
+  EducationPublicProfile,
+  EducationPublicRoute,
   EducationProfile,
   EducationProgram,
   EducationLead,
@@ -35,9 +37,210 @@ export interface TerritorySlugParams {
 }
 
 export interface PaginatedEducationProfiles {
-  profiles: EducationProfile[];
+  profiles: EducationPublicProfile[];
   nextPage: number | null;
   totalCount: number;
+}
+
+interface BusinessRouteRow {
+  id: string;
+  profile_id: string;
+  business_name: string | null;
+  slug: string | null;
+  location: { geographic_path?: string | null } | null;
+}
+
+interface EducationTerritoryFilter {
+  state?: string;
+  city?: string;
+  district?: string;
+}
+
+interface LocationRouteRow {
+  id: string;
+  geographic_path: string | null;
+}
+
+interface TerritoryCommunityRow {
+  territory_type: 'district' | 'territorial_group';
+  territory_id: string;
+}
+
+function parseEducationPublicRoute(
+  geographicPath?: string | null,
+  slug?: string | null,
+): EducationPublicRoute | null {
+  if (!geographicPath || !slug) return null;
+
+  const parts = geographicPath.split('/').filter(Boolean);
+  const [country, state, city, district] = parts;
+
+  if (country !== 'br' || !state || !city || !district) {
+    return null;
+  }
+
+  return {
+    state,
+    city,
+    district,
+    slug,
+    geographic_path: geographicPath,
+  };
+}
+
+async function enrichEducationProfilesWithPublicRoutes(
+  profiles: EducationProfile[],
+  routeRows?: BusinessRouteRow[],
+): Promise<EducationPublicProfile[]> {
+  if (profiles.length === 0) return [];
+
+  const profileIds = Array.from(new Set(profiles.map((profile) => profile.business_id)));
+  const knownRoutes = routeRows?.filter((row) => profileIds.includes(row.profile_id));
+  const data = knownRoutes ?? [];
+
+  if (!knownRoutes) {
+    const result = await supabase
+      .from('business_data')
+      .select('id, profile_id, business_name, slug, location:locations!location_id(geographic_path)')
+      .in('profile_id', profileIds)
+      .eq('status', 'active')
+      .in('business_role', ['standalone', 'branch']);
+
+    if (result.error) {
+      logger.error('[EducationQueries] Error fetching public routes:', result.error);
+      return profiles.map((profile) => ({
+        ...profile,
+        business_name: null,
+        public_route: null,
+      }));
+    }
+
+    data.push(...((result.data ?? []) as unknown as BusinessRouteRow[]));
+  }
+
+  const routeByProfileId = new Map<string, BusinessRouteRow>();
+  ((data ?? []) as unknown as BusinessRouteRow[]).forEach((row) => {
+    if (!routeByProfileId.has(row.profile_id)) {
+      routeByProfileId.set(row.profile_id, row);
+    }
+  });
+
+  return profiles.map((profile) => {
+    const business = routeByProfileId.get(profile.business_id);
+    return {
+      ...profile,
+      business_name: business?.business_name ?? null,
+      public_route: parseEducationPublicRoute(
+        business?.location?.geographic_path,
+        business?.slug,
+      ),
+    };
+  });
+}
+
+async function resolveEducationTerritoryLocationIds(
+  territory: EducationTerritoryFilter,
+): Promise<string[]> {
+  const { state, city, district } = territory;
+  if (!state || !city) return [];
+
+  const cityPath = `/br/${state}/${city}`;
+
+  if (!district) {
+    const { data, error } = await supabase
+      .from('locations')
+      .select('id, geographic_path')
+      .or(`geographic_path.eq.${cityPath},geographic_path.like.${cityPath}/%`);
+
+    if (error) {
+      logger.error('[EducationQueries] Error fetching city education locations:', error);
+      return [];
+    }
+
+    return ((data ?? []) as LocationRouteRow[]).map((location) => location.id);
+  }
+
+  const { data: cityLocation, error: cityError } = await supabase
+    .from('locations')
+    .select('id')
+    .eq('geographic_path', cityPath)
+    .maybeSingle();
+
+  if (cityError) {
+    logger.error('[EducationQueries] Error fetching city location:', cityError);
+    return [];
+  }
+
+  if (cityLocation?.id) {
+    const { data: community, error: communityError } = await supabase
+      .from('territory_communities')
+      .select('territory_type, territory_id')
+      .eq('city_id', cityLocation.id)
+      .eq('slug', district)
+      .maybeSingle();
+
+    if (communityError) {
+      logger.error('[EducationQueries] Error fetching territory community:', communityError);
+      return [];
+    }
+
+    const resolvedCommunity = community as TerritoryCommunityRow | null;
+
+    if (resolvedCommunity?.territory_type === 'district') {
+      return [resolvedCommunity.territory_id];
+    }
+
+    if (resolvedCommunity?.territory_type === 'territorial_group') {
+      const { data: members, error: membersError } = await supabase
+        .from('territorial_group_members')
+        .select('location_id')
+        .eq('group_id', resolvedCommunity.territory_id);
+
+      if (membersError) {
+        logger.error('[EducationQueries] Error fetching territorial group members:', membersError);
+        return [];
+      }
+
+      return (members ?? []).map((member) => member.location_id);
+    }
+  }
+
+  const { data, error } = await supabase
+    .from('locations')
+    .select('id')
+    .eq('geographic_path', `${cityPath}/${district}`);
+
+  if (error) {
+    logger.error('[EducationQueries] Error fetching district education location:', error);
+    return [];
+  }
+
+  return (data ?? []).map((location) => location.id);
+}
+
+async function listEducationBusinessRoutesByTerritory(
+  territory: EducationTerritoryFilter,
+): Promise<BusinessRouteRow[]> {
+  const { state, city, district } = territory;
+  if (!state || !city) return [];
+
+  const locationIds = await resolveEducationTerritoryLocationIds({ state, city, district });
+  if (locationIds.length === 0) return [];
+
+  const { data, error } = await supabase
+    .from('business_data')
+    .select('id, profile_id, business_name, slug, location:locations!location_id(geographic_path)')
+    .in('location_id', locationIds)
+    .eq('status', 'active')
+    .in('business_role', ['standalone', 'branch'])
+    .eq('category', 'educacao');
+
+  if (error) {
+    logger.error('[EducationQueries] Error fetching education business routes:', error);
+    return [];
+  }
+
+  return (data ?? []) as unknown as BusinessRouteRow[];
 }
 
 // ============================================================
@@ -92,9 +295,20 @@ export async function listPublishedEducationProfiles(
     page?: number;
     pageSize?: number;
     nicheKey?: string;
+    state?: string;
+    city?: string;
+    district?: string;
   } = {},
 ): Promise<PaginatedEducationProfiles> {
-  const { page = 1, pageSize = 20, nicheKey } = options;
+  const { page = 1, pageSize = 20, nicheKey, state, city, district } = options;
+  const hasTerritoryFilter = Boolean(state && city);
+  const routeRows = hasTerritoryFilter
+    ? await listEducationBusinessRoutesByTerritory({ state, city, district })
+    : undefined;
+
+  if (hasTerritoryFilter && (!routeRows || routeRows.length === 0)) {
+    return { profiles: [], nextPage: null, totalCount: 0 };
+  }
 
   let query = supabase
     .from('education_profiles')
@@ -103,6 +317,10 @@ export async function listPublishedEducationProfiles(
 
   if (nicheKey) {
     query = query.eq('niche_key', nicheKey);
+  }
+
+  if (routeRows) {
+    query = query.in('business_id', routeRows.map((row) => row.profile_id));
   }
 
   const { data, error, count } = await query
@@ -118,7 +336,10 @@ export async function listPublishedEducationProfiles(
   const hasMore = page * pageSize < totalCount;
 
   return {
-    profiles: (data ?? []) as EducationProfile[],
+    profiles: await enrichEducationProfilesWithPublicRoutes(
+      (data ?? []) as EducationProfile[],
+      routeRows,
+    ),
     nextPage: hasMore ? page + 1 : null,
     totalCount,
   };
@@ -399,7 +620,7 @@ export async function countLeadsByStatus(profileId: string): Promise<LeadStatusC
 }
 
 /**
- * Calcula mÃ©tricas de leads por sÃ©rie (desired_grade)
+ * Calcula metricas de leads por serie (desired_grade)
  */
 export async function getLeadsByGradeMetrics(profileId: string): Promise<GradeLeadMetrics[]> {
   if (!isValidUuid(profileId)) return [];
@@ -417,7 +638,7 @@ export async function getLeadsByGradeMetrics(profileId: string): Promise<GradeLe
   const gradeMap = new Map<string, { leadCount: number; enrollmentCount: number }>();
 
   (data ?? []).forEach((lead) => {
-    const grade = lead.desired_grade ?? 'NÃ£o informada';
+    const grade = lead.desired_grade ?? 'Nao informada';
     const current = gradeMap.get(grade) ?? { leadCount: 0, enrollmentCount: 0 };
     current.leadCount++;
     if (lead.status === 'enrolled') {
@@ -436,7 +657,7 @@ export async function getLeadsByGradeMetrics(profileId: string): Promise<GradeLe
 }
 
 /**
- * Calcula mÃ©tricas de leads por turno (desired_shift)
+ * Calcula metricas de leads por turno (desired_shift)
  */
 export async function getLeadsByShiftMetrics(profileId: string): Promise<ShiftLeadMetrics[]> {
   if (!isValidUuid(profileId)) return [];
@@ -454,7 +675,7 @@ export async function getLeadsByShiftMetrics(profileId: string): Promise<ShiftLe
   const shiftMap = new Map<string, { leadCount: number; enrollmentCount: number }>();
 
   (data ?? []).forEach((lead) => {
-    const shift = lead.desired_shift ?? 'NÃ£o informado';
+    const shift = lead.desired_shift ?? 'Nao informado';
     const current = shiftMap.get(shift) ?? { leadCount: 0, enrollmentCount: 0 };
     current.leadCount++;
     if (lead.status === 'enrolled') {
@@ -464,11 +685,11 @@ export async function getLeadsByShiftMetrics(profileId: string): Promise<ShiftLe
   });
 
   const shiftLabels: Record<string, string> = {
-    morning: 'ManhÃ£',
+    morning: 'Manha',
     afternoon: 'Tarde',
     evening: 'Noite',
     full_day: 'Integral',
-    'NÃ£o informado': 'NÃ£o informado',
+    'Nao informado': 'Nao informado',
   };
 
   return Array.from(shiftMap.entries())
@@ -481,7 +702,7 @@ export async function getLeadsByShiftMetrics(profileId: string): Promise<ShiftLe
 }
 
 /**
- * Calcula mÃ©tricas de matrÃ­cula nos programas (using max_capacity e current_enrollment)
+ * Calcula metricas de matricula nos programas (using max_capacity e current_enrollment)
  */
 export async function getProgramEnrollmentMetrics(profileId: string): Promise<ProgramEnrollmentMetrics> {
   if (!isValidUuid(profileId)) {
@@ -560,7 +781,7 @@ export async function countEventsByType(profileId: string): Promise<EventTypeCou
 }
 
 /**
- * Calcula taxa de conversÃ£o de leads
+ * Calcula taxa de conversao de leads
  */
 export async function getLeadConversionRate(profileId: string): Promise<{ rate: number; avgDays: number }> {
   if (!isValidUuid(profileId)) return { rate: 0, avgDays: 0 };
@@ -616,7 +837,7 @@ export interface TerritorialProfileParams {
  */
 export async function getEducationProfileByTerritory(
   params: TerritorialProfileParams,
-): Promise<EducationProfile | null> {
+): Promise<EducationPublicProfile | null> {
   const { state, city, district, slug } = params;
 
   // Resolve location_id pelo caminho geografico canonico
@@ -641,7 +862,7 @@ export async function getEducationProfileByTerritory(
   // Busca business ativo no territorio com o slug informado
   const { data: business, error: businessError } = await supabase
     .from('business_data')
-    .select('id')
+    .select('profile_id, business_name, slug')
     .eq('slug', slug)
     .eq('location_id', locationData.id)
     .eq('status', 'active')
@@ -653,7 +874,7 @@ export async function getEducationProfileByTerritory(
     return null;
   }
 
-  if (!business?.id) {
+  if (!business?.profile_id) {
     return null;
   }
 
@@ -661,7 +882,7 @@ export async function getEducationProfileByTerritory(
   const { data, error } = await supabase
     .from('education_profiles')
     .select('*')
-    .eq('business_id', business.id)
+    .eq('business_id', business.profile_id)
     .eq('status', 'published')
     .maybeSingle();
 
@@ -670,7 +891,13 @@ export async function getEducationProfileByTerritory(
     return null;
   }
 
-  return data as EducationProfile | null;
+  if (!data) return null;
+
+  return {
+    ...(data as EducationProfile),
+    business_name: business.business_name ?? null,
+    public_route: parseEducationPublicRoute(geographicPath, business.slug),
+  };
 }
 
 // ============================================================
@@ -884,4 +1111,3 @@ export async function getEventMetrics(profileId: string): Promise<EventMetrics[]
     ).length,
   }));
 }
-

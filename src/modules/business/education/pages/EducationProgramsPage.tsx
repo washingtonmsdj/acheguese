@@ -1,6 +1,6 @@
-﻿/**
+/**
  * EducationProgramsPage
- * 
+ *
  * Pagina de gestao de programas/turmas da instituicao.
  * Rota: /central/empresas/:businessId/education/programas
  */
@@ -73,20 +73,20 @@ export function EducationProgramsPage() {
   const { toast } = useToast();
   const { data: profile, isLoading: isProfileLoading } = useEducationProfile(businessId);
   const { programs, isLoading, create, update, remove } = useEducationPrograms(profile?.id);
-  
+
   // Integração nicho + billing
   const nicheBilling = useEducationNicheBilling({
     nicheKey: profile?.niche_key,
     businessId: businessId || '',
   });
-  
+
   const nicheInfo = profile?.niche_key ? getNicheByKey(profile.niche_key) : null;
-  
+
   // Verifica capability do nicho + plano
   const programsCapability = nicheBilling.can('basic_programs_catalog');
   const canCreateProgram = nicheBilling.checkCanCreateProgram(programs?.length || 0);
   const limitReached = !canCreateProgram.allowed && programs && nicheInfo && programs.length >= nicheInfo.entitlements.maxPrograms;
-  
+
   // Bloqueio por capability (nicho ou plano negou)
   const isProgramsBlocked = !programsCapability.allowed;
   // Bloqueio apenas por limite
@@ -133,27 +133,27 @@ export function EducationProgramsPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validação de capability final = nicho permite AND plano permite
     if (isProgramsBlocked) {
-      toast({ 
-        title: 'Recurso bloqueado', 
+      toast({
+        title: 'Recurso bloqueado',
         description: programsCapability.upgradeMessage,
         variant: 'destructive'
       });
       return;
     }
-    
+
     // Validação de limite operacional
     if (isLimitBlocked) {
-      toast({ 
-        title: 'Limite atingido', 
+      toast({
+        title: 'Limite atingido',
         description: canCreateProgram.reason || 'Limite de programas atingido para este nicho.',
         variant: 'destructive'
       });
       return;
     }
-    
+
     try {
       const stage = resolveStagePayload();
       if (!stage.name) {
@@ -305,7 +305,7 @@ export function EducationProgramsPage() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate(`/central/empresas/${businessId}/education`)}
+            onClick={() => navigate(`/central/empresas/${businessId}/educacao`)}
           >
             <ArrowLeft className="w-4 h-4 mr-1" />
           </Button>
@@ -319,15 +319,15 @@ export function EducationProgramsPage() {
             </p>
           </div>
         </div>
-        <Button 
-          onClick={openNewDialog} 
+        <Button
+          onClick={openNewDialog}
           className="gap-2"
           disabled={isProgramsBlocked || isLimitBlocked}
           title={
-            isProgramsBlocked 
-              ? programsCapability.upgradeMessage 
-              : isLimitBlocked 
-                ? canCreateProgram.reason 
+            isProgramsBlocked
+              ? programsCapability.upgradeMessage
+              : isLimitBlocked
+                ? canCreateProgram.reason
                 : ''
           }
         >
@@ -375,7 +375,7 @@ export function EducationProgramsPage() {
             <p className="text-gray-500 mb-4">
               Cadastre os programas e turmas que sua instituição oferece.
             </p>
-            <Button 
+            <Button
               onClick={openNewDialog}
               disabled={isProgramsBlocked || isLimitBlocked}
             >
@@ -637,4 +637,3 @@ export function EducationProgramsPage() {
 }
 
 export default EducationProgramsPage;
-

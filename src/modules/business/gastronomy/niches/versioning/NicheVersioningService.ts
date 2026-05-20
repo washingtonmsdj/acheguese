@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ðŸ”„ NICHE VERSIONING SERVICE
  *
  * ServiÃ§o para gerenciar versionamento e evoluÃ§Ã£o de nichos.
@@ -204,7 +204,7 @@ export class NicheVersioningService {
         from_version: '0.0.0',
         to_version: params.to_version,
         added_capabilities: [],
-        error: 'Perfil gastronÃ´mico nÃ£o encontrado',
+        error: 'Perfil gastronomico nao encontrado',
       };
     }
 
@@ -374,4 +374,3 @@ export class NicheVersioningService {
     return data as unknown as GastronomyProfileWithNiche[];
   }
 }
-

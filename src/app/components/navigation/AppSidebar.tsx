@@ -6,6 +6,7 @@ import {
   Building2,
   Calendar,
   Car,
+  GraduationCap,
   Home,
   LayoutList,
   LogIn,
@@ -123,6 +124,7 @@ export function AppSidebar() {
         items: [
           { id: 'community-business', icon: Building2, label: `Comercios do ${territoryName}`, description: `Comercios do ${territoryName}`, href: `${base}/empresas` },
           { id: 'community-gastronomy', icon: UtensilsCrossed, label: 'Gastronomia', description: 'Restaurantes e cardapios locais', href: `${base}/gastronomia` },
+          { id: 'community-education', icon: GraduationCap, label: 'Educacao', description: `Escolas e cursos do ${territoryName}`, href: `/educacao/${communityContext.state}/${communityContext.city}/${communityContext.territorySlug}` },
           { id: 'community-services', icon: Wrench, label: 'Servicos locais', description: `Servicos do ${territoryName}`, href: `${base}/servicos` },
         ] as NavItem[],
       },

@@ -6,15 +6,15 @@ import { Skeleton } from '@/shared/components/ui/skeleton';
 
 /**
  * CentralBreadcrumbs
- * 
- * Breadcrumbs simples para navegaÃ§Ã£o da Central.
- * 
+ *
+ * Breadcrumbs simples para navegacao da Central.
+ *
  * Exemplos:
  * - Central > Empresas
  * - Central > Empresas > Nome da empresa
  * - Central > Empresas > Nome da empresa > Gastronomia
- * - Central > Empresas > Nome da empresa > Gastronomia > CardÃ¡pio
- * - Central > Empresas > Nome da empresa > Gastronomia > HorÃ¡rios
+ * - Central > Empresas > Nome da empresa > Gastronomia > Cardapio
+ * - Central > Empresas > Nome da empresa > Gastronomia > Horarios
  * - Central > Empresas > Nome da empresa > Gastronomia > Pedidos
  * - Central > Motorista > Ganhos
  * - Central > Motoboy > Entregas
@@ -24,24 +24,24 @@ export function CentralBreadcrumbs() {
   const { businessId } = useParams<{ businessId: string }>();
   const pathname = location.pathname;
 
-  // Buscar dados da empresa quando businessId estÃ¡ presente
-  // Hook sempre chamado, mas sÃ³ faz fetch quando businessId estÃ¡ presente
+  // Buscar dados da empresa quando businessId esta presente
+  // Hook sempre chamado, mas so faz fetch quando businessId esta presente
   const { business, isLoading: loadingBusiness } = useBusinessById(businessId);
 
-  // Se nÃ£o estiver na Central, nÃ£o renderizar breadcrumbs
+  // Se nao estiver na Central, nao renderizar breadcrumbs
   if (!pathname.startsWith('/central')) {
     return null;
   }
 
   // Extrair segmentos do path
   const segments = pathname.split('/').filter(Boolean);
-  
-  // Se for apenas /central, nÃ£o renderizar breadcrumbs
+
+  // Se for apenas /central, nao renderizar breadcrumbs
   if (segments.length === 1) {
     return null;
   }
 
-  // Mapear segmentos para labels legÃ­veis
+  // Mapear segmentos para labels legiveis
   const getSegmentLabel = (segment: string, index: number): string => {
     if (index === 0) return 'Central';
     if (segment === 'empresas') return 'Empresas';
@@ -53,36 +53,34 @@ export function CentralBreadcrumbs() {
     if (segment === 'corridas') return 'Corridas';
     if (segment === 'entregas') return 'Entregas';
     if (segment === 'ganhos') return 'Ganhos';
-    if (segment === 'configuracoes') return 'ConfiguraÃ§Ãµes';
+    if (segment === 'configuracoes') return 'Configuracoes';
     if (segment === 'dados') return 'Dados da empresa';
     if (segment === 'gastronomia') return 'Gastronomia';
     if (segment === 'setup') return 'Setup';
-    if (segment === 'cardapio') return 'CardÃ¡pio';
-    if (segment === 'horarios') return 'HorÃ¡rios';
-    if (segment === 'area-entrega') return 'Ãrea de entrega';
+    if (segment === 'cardapio') return 'Cardapio';
+    if (segment === 'horarios') return 'Horarios';
+    if (segment === 'area-entrega') return 'Area de entrega';
     if (segment === 'pedidos') return 'Pedidos';
-    if (segment === 'promocoes') return 'PromoÃ§Ãµes';
+    if (segment === 'promocoes') return 'Promocoes';
     if (segment === 'planos') return 'Planos';
     if (segment === 'link-premium') return 'Link premium';
     if (segment === 'analytics') return 'Analytics';
-    if (segment === 'education') return 'EducaÃ§Ã£o';
+    if (segment === 'educacao') return 'Educacao';
     if (segment === 'programas') return 'Programas';
-    if (segment === 'programs') return 'Programas';
     if (segment === 'leads') return 'Leads';
     if (segment === 'eventos') return 'Eventos';
-    if (segment === 'events') return 'Eventos';
     return segment;
   };
 
   // Construir caminho para cada segmento
   const breadcrumbs = segments.map((segment, index) => {
     const path = '/' + segments.slice(0, index + 1).join('/');
-    
+
     // Se for businessId e tiver dados da empresa, usar nome da empresa
     if (segment === businessId && business) {
       return { path, label: business.name, isBusinessName: true };
     }
-    
+
     const label = getSegmentLabel(segment, index);
     return { path, label };
   });

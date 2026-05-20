@@ -1,13 +1,7 @@
 /**
- * useSubscriptionManagement — Hook para gerenciar assinaturas
+ * useSubscriptionManagement - Hook para gerenciar assinaturas de gastronomia.
  *
- * Centraliza toda a lógica de gerenciamento de assinaturas do vertical Gastronomia.
- * Consome GastronomyStripeService e mantém sincronização com o banco de dados.
- *
- * Uso:
- * ```typescript
- * const { subscription, upgrade, cancel, reactivate } = useSubscriptionManagement(businessId);
- * ```
+ * Usa GastronomySubscriptionService, que delega billing para o core/billing.
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -17,26 +11,26 @@ import {
   GastronomySubscriptionService,
 } from '@/modules/business/gastronomy/services/gastronomy-subscription.service';
 
-// ══════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // TYPES
-// ══════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 export interface UpgradeParams {
   newPlanTier: PlanTier.PRO | PlanTier.DELIVERY;
   prorationBehavior?: 'create_prorations' | 'none' | 'always_invoice';
 }
 
-// ══════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // HOOK
-// ══════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 export function useSubscriptionManagement(businessId: string) {
   const queryClient = useQueryClient();
-  
-  // ────────────────────────────────────────────────────────────────────────
+
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // QUERIES
-  // ────────────────────────────────────────────────────────────────────────
-  
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
   /**
    * Busca assinatura atual
    */
@@ -49,9 +43,9 @@ export function useSubscriptionManagement(businessId: string) {
     queryFn: () => GastronomySubscriptionService.getSubscriptionWithDetails(businessId),
     enabled: !!businessId,
   });
-  
+
   /**
-   * Busca histórico de faturas
+   * Busca histÃ³rico de faturas
    */
   const {
     data: invoices,
@@ -61,11 +55,11 @@ export function useSubscriptionManagement(businessId: string) {
     queryFn: async () => GastronomySubscriptionService.listInvoices(businessId),
     enabled: !!businessId && subscription?.stripe_subscription_id != null,
   });
-  
-  // ────────────────────────────────────────────────────────────────────────
+
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // MUTATIONS
-  // ────────────────────────────────────────────────────────────────────────
-  
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
   /**
    * Mutation para fazer upgrade/downgrade
    */
@@ -80,7 +74,7 @@ export function useSubscriptionManagement(businessId: string) {
     onSuccess: (data, variables) => {
       const planName = variables.newPlanTier === PlanTier.PRO ? 'Pro' : 'Delivery';
       toast.success(`Plano atualizado para ${planName} com sucesso!`);
-      
+
       // Invalidar queries
       queryClient.invalidateQueries({ queryKey: ['gastronomy-subscription', businessId] });
       queryClient.invalidateQueries({ queryKey: ['gastronomy-profile', businessId] });
@@ -89,7 +83,7 @@ export function useSubscriptionManagement(businessId: string) {
       toast.error(`Erro ao atualizar plano: ${error.message}`);
     },
   });
-  
+
   /**
    * Mutation para cancelar assinatura
    */
@@ -104,9 +98,9 @@ export function useSubscriptionManagement(businessId: string) {
       if (immediately) {
         toast.success('Assinatura cancelada imediatamente.');
       } else {
-        toast.success('Assinatura será cancelada no fim do período atual.');
+        toast.success('Assinatura serÃ¡ cancelada no fim do perÃ­odo atual.');
       }
-      
+
       // Invalidar queries
       queryClient.invalidateQueries({ queryKey: ['gastronomy-subscription', businessId] });
     },
@@ -114,7 +108,7 @@ export function useSubscriptionManagement(businessId: string) {
       toast.error(`Erro ao cancelar assinatura: ${error.message}`);
     },
   });
-  
+
   /**
    * Mutation para reativar assinatura
    */
@@ -124,7 +118,7 @@ export function useSubscriptionManagement(businessId: string) {
     },
     onSuccess: () => {
       toast.success('Assinatura reativada com sucesso!');
-      
+
       // Invalidar queries
       queryClient.invalidateQueries({ queryKey: ['gastronomy-subscription', businessId] });
     },
@@ -132,9 +126,9 @@ export function useSubscriptionManagement(businessId: string) {
       toast.error(`Erro ao reativar assinatura: ${error.message}`);
     },
   });
-  
+
   /**
-   * Mutation para adicionar método de pagamento
+   * Mutation para adicionar mÃ©todo de pagamento
    */
   const addPaymentMethodMutation = useMutation({
     mutationFn: async (paymentMethodId: string) => {
@@ -144,42 +138,42 @@ export function useSubscriptionManagement(businessId: string) {
       });
     },
     onSuccess: () => {
-      toast.success('Método de pagamento adicionado com sucesso!');
-      
+      toast.success('MÃ©todo de pagamento adicionado com sucesso!');
+
       // Invalidar queries
       queryClient.invalidateQueries({ queryKey: ['gastronomy-subscription', businessId] });
     },
     onError: (error: Error) => {
-      toast.error(`Erro ao adicionar método de pagamento: ${error.message}`);
+      toast.error(`Erro ao adicionar mÃ©todo de pagamento: ${error.message}`);
     },
   });
-  
-  // ────────────────────────────────────────────────────────────────────────
+
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // COMPUTED
-  // ────────────────────────────────────────────────────────────────────────
-  
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
   const currentPlan = subscription?.plan_tier || PlanTier.FREE;
   const isActive = subscription?.status === 'active';
   const isCanceled = subscription?.status === 'canceled';
   const isPastDue = subscription?.status === 'past_due';
   const isTrialing = subscription?.status === 'trialing';
   const willCancelAtPeriodEnd = subscription?.cancel_at_period_end || false;
-  
+
   const canUpgrade = isActive && currentPlan !== PlanTier.DELIVERY;
   const canDowngrade = isActive && currentPlan !== PlanTier.FREE;
   const canCancel = isActive && !willCancelAtPeriodEnd;
   const canReactivate = isActive && willCancelAtPeriodEnd;
-  
-  // ────────────────────────────────────────────────────────────────────────
+
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // RETURN
-  // ────────────────────────────────────────────────────────────────────────
-  
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
   return {
     // Data
     subscription,
     invoices,
     currentPlan,
-    
+
     // Loading states
     isLoading,
     isLoadingInvoices,
@@ -187,26 +181,26 @@ export function useSubscriptionManagement(businessId: string) {
     isCanceling: cancelMutation.isPending,
     isReactivating: reactivateMutation.isPending,
     isAddingPaymentMethod: addPaymentMethodMutation.isPending,
-    
+
     // Status flags
     isActive,
     isCanceled,
     isPastDue,
     isTrialing,
     willCancelAtPeriodEnd,
-    
+
     // Capability flags
     canUpgrade,
     canDowngrade,
     canCancel,
     canReactivate,
-    
+
     // Actions
     upgrade: upgradeMutation.mutateAsync,
     cancel: cancelMutation.mutateAsync,
     reactivate: reactivateMutation.mutateAsync,
     addPaymentMethod: addPaymentMethodMutation.mutateAsync,
-    
+
     // Errors
     fetchError,
   };

@@ -1,75 +1,94 @@
- 
-import React from "react";
-import { Check, Sparkles, TrendingUp, Crown } from "lucide-react";
+import { Check, Crown, Sparkles, Truck, TrendingUp } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Card } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
-import { SUBSCRIPTION_PLANS, type PlanType } from "@/shared/types/subscription";
+import { Skeleton } from "@/shared/components/ui/skeleton";
+import { useBillingPlans } from "@/core/billing/hooks/useBillingPlans";
+import { PlanTier } from "@/core/billing/types";
 import { cn } from "@/shared/utils/cn";
-import { SUBSCRIPTION_PLAN } from "@/shared/types/constants";
+import type { BillingPlan } from "@/core/billing/services/BillingPlanService";
+
 interface SubscriptionPlansProps {
-  currentPlan?: PlanType;
-  onSelectPlan: (planId: PlanType) => void;
+  currentPlan?: PlanTier;
+  onSelectPlan: (planId: PlanTier) => void;
 }
 
-const PLAN_ICONS = {
-  basico: Sparkles,
-  profissional: TrendingUp,
-  premium: Crown,
-};
+function getPlanIcon(plan: BillingPlan) {
+  if (plan.code === PlanTier.FREE) return Sparkles;
+  if (plan.code === PlanTier.DELIVERY) return Truck;
+  if (plan.isFeatured) return Crown;
+  return TrendingUp;
+}
+
+function formatPeriod(period: string) {
+  if (period === "month" || period === "monthly") return "/mes";
+  if (period === "year" || period === "yearly") return "/ano";
+  return period ? `/${period}` : "";
+}
 
 export default function SubscriptionPlans({
   currentPlan,
   onSelectPlan,
 }: SubscriptionPlansProps) {
+  const { data: plans = [], isLoading, isError } = useBillingPlans();
+
+  if (isLoading) {
+    return (
+      <div className="grid gap-4 py-6 md:grid-cols-3">
+        {[0, 1, 2].map((item) => (
+          <Skeleton key={item} className="h-80 rounded-2xl" />
+        ))}
+      </div>
+    );
+  }
+
+  if (isError || plans.length === 0) {
+    return (
+      <Card className="p-8 text-center text-sm text-muted-foreground">
+        Nao foi possivel carregar os planos disponiveis.
+      </Card>
+    );
+  }
+
   return (
     <div className="py-8">
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold mb-2">Escolha seu plano</h2>
+      <div className="mb-8 text-center">
+        <h2 className="mb-2 text-3xl font-bold">Escolha seu plano</h2>
         <p className="text-muted-foreground">
-          Selecione o plano ideal para o seu negócio crescer
+          Planos carregados do billing para refletir precos e recursos atuais.
         </p>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-        {SUBSCRIPTION_PLANS.map((plan) => {
-          const Icon = PLAN_ICONS[plan.id];
-          const isCurrentPlan = currentPlan === plan.id;
-          const isPopular = Boolean(plan.destaque);
+      <div className="mx-auto grid max-w-6xl gap-6 md:grid-cols-3">
+        {plans.map((plan) => {
+          const Icon = getPlanIcon(plan);
+          const planTier = plan.code as PlanTier;
+          const isCurrentPlan = currentPlan === planTier;
 
           return (
             <Card
               key={plan.id}
               className={cn(
-                "relative p-6 flex flex-col",
-                isPopular && "border-primary border-2 shadow-lg",
+                "relative flex flex-col p-6",
+                plan.isFeatured && "border-2 border-primary shadow-lg",
                 isCurrentPlan && "bg-primary/5",
               )}
             >
-              {isPopular && (
+              {plan.isFeatured && (
                 <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary">
-                  Mais Popular
+                  Mais popular
                 </Badge>
               )}
 
-              <div className="flex items-center gap-3 mb-4">
-                <div
-                  className={cn(
-                    "p-2 rounded-lg",
-                    plan.id === SUBSCRIPTION_PLAN.BASICO &&
-                      "bg-blue-500/10 text-blue-600",
-                    plan.id === "profissional" && "bg-primary/10 text-primary",
-                    plan.id === SUBSCRIPTION_PLAN.PREMIUM_20 &&
-                      "bg-yellow-500/10 text-yellow-600",
-                  )}
-                >
+              <div className="mb-4 flex items-center gap-3">
+                <div className="rounded-lg bg-primary/10 p-2 text-primary">
                   <Icon className="h-6 w-6" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-xl">{plan.name}</h3>
+                  <h3 className="text-xl font-bold">{plan.name}</h3>
                   {isCurrentPlan && (
                     <Badge variant="outline" className="text-xs">
-                      Plano Atual
+                      Plano atual
                     </Badge>
                   )}
                 </div>
@@ -77,30 +96,34 @@ export default function SubscriptionPlans({
 
               <div className="mb-4">
                 <div className="flex items-baseline gap-1">
-                  <span className="text-4xl font-bold">R$ {plan.price}</span>
-                  <span className="text-muted-foreground">/mês</span>
+                  <span className="text-4xl font-bold">{plan.priceDisplay}</span>
+                  <span className="text-muted-foreground">
+                    {formatPeriod(plan.billingPeriod)}
+                  </span>
                 </div>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {plan.description}
-                </p>
+                {plan.description && (
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {plan.description}
+                  </p>
+                )}
               </div>
 
-              <ul className="space-y-3 mb-6 flex-1">
-                {plan.recursos.map((recurso, idx) => (
-                  <li key={idx} className="flex items-start gap-2">
-                    <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                    <span className="text-sm">{recurso}</span>
+              <ul className="mb-6 flex-1 space-y-3">
+                {plan.features.map((feature) => (
+                  <li key={feature} className="flex items-start gap-2">
+                    <Check className="mt-0.5 h-5 w-5 flex-shrink-0 text-primary" />
+                    <span className="text-sm">{feature}</span>
                   </li>
                 ))}
               </ul>
 
               <Button
-                onClick={() => onSelectPlan(plan.id)}
+                onClick={() => onSelectPlan(planTier)}
                 disabled={isCurrentPlan}
-                variant={isPopular ? "default" : "outline"}
+                variant={plan.isFeatured ? "default" : "outline"}
                 className="w-full"
               >
-                {isCurrentPlan ? "Plano Atual" : "Selecionar Plano"}
+                {isCurrentPlan ? "Plano atual" : "Selecionar plano"}
               </Button>
             </Card>
           );
@@ -108,8 +131,7 @@ export default function SubscriptionPlans({
       </div>
 
       <div className="mt-8 text-center text-sm text-muted-foreground">
-        <p>Todos os planos incluem 14 dias de teste grátis</p>
-        <p>Cancele a qualquer momento, sem multas</p>
+        <p>Os recursos e limites sao definidos no billing central.</p>
       </div>
     </div>
   );

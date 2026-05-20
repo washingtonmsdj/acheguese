@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ðŸ½ï¸ GASTRONOMY MUTATIONS - SSOT Write Model
  *
  * Todas as operaÃ§Ãµes de escrita para gastronomia.
@@ -61,7 +61,7 @@ export async function createGastronomyProfile(
       .maybeSingle();
 
     if (existing) {
-      throw new Error('Este negÃ³cio jÃ¡ possui um perfil gastronÃ´mico');
+      throw new Error('Este negocio ja possui um perfil gastronomico');
     }
 
     // 3. Sanitizar input
@@ -106,7 +106,7 @@ export async function createGastronomyProfile(
   } catch (error) {
     logger.error('[GastronomyMutations] Error creating profile:', error);
     const message = error instanceof Error ? error.message : String(error);
-    throw new Error(`Erro ao criar perfil gastronÃ´mico: ${message}`);
+    throw new Error(`Erro ao criar perfil gastronomico: ${message}`);
   }
 }
 
@@ -142,7 +142,7 @@ export async function updateGastronomyProfile(
   } catch (error) {
     logger.error('[GastronomyMutations] Error updating profile:', error);
     const message = error instanceof Error ? error.message : String(error);
-    throw new Error(`Erro ao atualizar perfil gastronÃ´mico: ${message}`);
+    throw new Error(`Erro ao atualizar perfil gastronomico: ${message}`);
   }
 }
 
@@ -170,7 +170,7 @@ export async function deleteGastronomyProfile(
   } catch (error) {
     logger.error('[GastronomyMutations] Error deleting profile:', error);
     const message = error instanceof Error ? error.message : String(error);
-    throw new Error(`Erro ao deletar perfil gastronÃ´mico: ${message}`);
+    throw new Error(`Erro ao deletar perfil gastronomico: ${message}`);
   }
 }
 
@@ -221,7 +221,7 @@ export async function patchGastronomyProfile(
 
     // 2. Aplicar apenas campos vÃ¡lidos
     const validPatches: Record<string, unknown> = {};
-    
+
     if (patches.cuisine_type !== undefined) {
       validPatches.cuisine_type = sanitizeString(patches.cuisine_type);
     }
@@ -246,7 +246,7 @@ export async function patchGastronomyProfile(
     if (patches.metadata !== undefined) validPatches.metadata = patches.metadata as Json;
 
     if (Object.keys(validPatches).length === 0) {
-      throw new Error('Nenhum campo vÃ¡lido para atualizar');
+      throw new Error('Nenhum campo valido para atualizar');
     }
 
     validPatches.updated_at = new Date().toISOString();
@@ -268,6 +268,3 @@ export async function patchGastronomyProfile(
     throw new Error(`Erro ao atualizar perfil: ${message}`);
   }
 }
-
-
-

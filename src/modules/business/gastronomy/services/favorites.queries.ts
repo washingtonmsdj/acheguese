@@ -1,13 +1,7 @@
-﻿/**
- * Favorites Query Service â€” operaÃ§Ãµes de favoritos de gastronomia
+/**
+ * Favorites Query Service - operacoes de favoritos de gastronomia.
  *
  * Usa a tabela `user_favorite_businesses` criada pela migration 20260412000002.
- * Ã‰ distinta de:
- *   - `profile_favorites_new` (core/favorites â€” favoritos entre perfis)
- *   - `business_favorites` (core/favorites â€” tabela legada de business)
- *
- * Esta tabela Ã© especÃ­fica para o relacionamento user â†’ business_data
- * com campos extras (tags, notas, preferÃªncias de notificaÃ§Ã£o).
  */
 
 import { logger } from '@/shared/utils/logger';
@@ -44,27 +38,6 @@ export interface UpdateFavoritePreferencesInput {
   tags?: string[];
 }
 
-type FavoriteRpcRow = {
-  favorite_id: string;
-  business_id: string;
-  business_name: string;
-  business_slug: string | null;
-  business_description: string | null;
-  business_banner_url: string | null;
-  business_rating: number | null;
-  business_total_reviews: number | null;
-  business_is_verified: boolean | null;
-  business_geographic_path: string | null;
-  cuisine_type: string | null;
-  delivery_enabled: boolean | null;
-  price_range: string | null;
-  notify_on_promotions: boolean | null;
-  notify_on_new_items: boolean | null;
-  notes: string | null;
-  tags: string[] | null;
-  favorited_at: string;
-};
-
 type FavoriteRecordRow = {
   id: string;
   business_id: string;
@@ -99,70 +72,8 @@ type FavoriteGastronomyProfileRow = {
   price_range: string | null;
 };
 
-function mapRpcRowToFavoriteBusiness(row: FavoriteRpcRow): FavoriteBusiness {
-  return {
-    favorite_id: row.favorite_id,
-    business_id: row.business_id,
-    business_name: row.business_name,
-    business_slug: row.business_slug ?? '',
-    business_description: row.business_description,
-    business_logo_url: null,
-    business_banner_url: row.business_banner_url,
-    business_rating: row.business_rating ?? 0,
-    business_total_reviews: row.business_total_reviews ?? 0,
-    business_is_verified: row.business_is_verified ?? false,
-    business_geographic_path: row.business_geographic_path,
-    cuisine_type: row.cuisine_type,
-    delivery_enabled: row.delivery_enabled,
-    price_range: row.price_range,
-    notify_on_promotions: row.notify_on_promotions ?? true,
-    notify_on_new_items: row.notify_on_new_items ?? false,
-    notes: row.notes,
-    tags: row.tags ?? [],
-    favorited_at: row.favorited_at,
-  };
-}
-
-function isLegacyFavoritesRpcSchemaError(error: unknown): boolean {
-  if (!error || typeof error !== 'object') return false;
-
-  const maybeError = error as {
-    code?: string;
-    message?: string;
-    hint?: string;
-    details?: string;
-    cause?: unknown;
-  };
-
-  const message = (maybeError.message || '').toLowerCase();
-  const hint = (maybeError.hint || '').toLowerCase();
-  const details = (maybeError.details || '').toLowerCase();
-  const causeMessage =
-    maybeError.cause && typeof maybeError.cause === 'object'
-      ? String((maybeError.cause as { message?: string }).message || '').toLowerCase()
-      : '';
-  const mergedText = `${message} ${hint} ${details} ${causeMessage}`;
-
-  return (
-    maybeError.code === '42703' ||
-    mergedText.includes('bd.name') ||
-    mergedText.includes('column bd.name does not exist') ||
-    mergedText.includes('l.name') ||
-    (mergedText.includes('column') && mergedText.includes('does not exist'))
-  );
-}
-
 export class FavoritesQueryService {
-  /**
-   * Em SSOT, o caminho principal Ã© leitura direta de `user_favorite_businesses`
-   * + `business_data` + `gastronomy_profiles`.
-   * RPC fica desabilitada por padrÃ£o para evitar drift de schema em ambientes
-   * ainda nÃ£o migrados, mas pode ser reativada alterando este flag.
-   */
-  private static useFavoritesRpc = false;
-  private static hasLoggedRpcFallback = false;
-
-  private static async getUserFavoritesFallback(params: {
+  private static async getUserFavoritesFromRecords(params: {
     userId: string;
     limit?: number;
     offset?: number;
@@ -253,7 +164,7 @@ export class FavoritesQueryService {
   }
 
   /**
-   * Obter favoritos do usuÃ¡rio
+   * Obter favoritos do usuario.
    */
   static async getUserFavorites(params: {
     userId: string;
@@ -265,37 +176,7 @@ export class FavoritesQueryService {
         return [];
       }
 
-      if (!this.useFavoritesRpc) {
-        return await this.getUserFavoritesFallback(params);
-      }
-
-      const { data, error } = await supabase.rpc('get_user_favorite_businesses', {
-        p_user_id: params.userId,
-        p_limit: params.limit ?? 50,
-        p_offset: params.offset ?? 0,
-      });
-
-      if (error) {
-        if (isLegacyFavoritesRpcSchemaError(error)) {
-          this.useFavoritesRpc = false;
-          if (!this.hasLoggedRpcFallback) {
-            this.hasLoggedRpcFallback = true;
-            logger.warn('RPC get_user_favorite_businesses com schema legado detectado. Usando fallback SSOT.', {
-              code: (error as { code?: string })?.code,
-              message: (error as { message?: string })?.message,
-            });
-          }
-          return await this.getUserFavoritesFallback(params);
-        }
-
-        logger.error('Failed to fetch user favorites', error, {
-          userId: params.userId,
-        });
-        throw error;
-      }
-
-      const rows = (data as FavoriteRpcRow[] | null) ?? [];
-      return rows.map(mapRpcRowToFavoriteBusiness);
+      return await this.getUserFavoritesFromRecords(params);
     } catch (error) {
       logger.error('Error in getUserFavorites', error);
       throw error;
@@ -591,6 +472,3 @@ export class FavoritesQueryService {
     }
   }
 }
-
-
-

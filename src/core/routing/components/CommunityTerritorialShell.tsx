@@ -116,15 +116,15 @@ export function CommunityTerritorialShell() {
 
   if (communityStatus === "inactive") {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#081114] text-white px-4 text-center">
-        <h1 className="text-2xl font-bold">Comunidade indisponivel neste momento</h1>
-        <p className="mt-2 text-sm text-white/70 max-w-xl">
-          Esta area ainda nao esta ativa para experiencia comunitaria. Voce pode navegar pela cidade ou entrar no Complexo.
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#081114] px-4 py-10 text-center text-white">
+        <h1 className="text-2xl font-bold sm:text-3xl">Comunidade indisponivel neste momento</h1>
+        <p className="mt-3 max-w-xl text-sm text-white/70 sm:text-base">
+          Esta area ainda nao esta ativa para experiencia comunitaria. Voce pode navegar pela cidade ou acessar a comunidade principal.
         </p>
-        <div className="mt-5 flex flex-wrap gap-3 justify-center">
-          <Button onClick={() => navigate(cityHref)}>Navegar por {cityName}</Button>
-          <Button variant="outline" onClick={() => navigate("/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina")}>
-            Ir para Comunidade do Complexo
+        <div className="mt-6 flex w-full max-w-xl flex-col gap-3 sm:flex-row sm:justify-center">
+          <Button className="w-full sm:w-auto" onClick={() => navigate(cityHref)}>Navegar por {cityName}</Button>
+          <Button className="w-full sm:w-auto" variant="outline" onClick={() => navigate(communityBase)}>
+            Abrir comunidade de {cityName}
           </Button>
         </div>
       </div>
@@ -139,25 +139,25 @@ export function CommunityTerritorialShell() {
           <meta name="robots" content="noindex, follow" />
           <title>{profile?.hero_title ?? territoryName} | Achegue-se</title>
         </Helmet>
-        <div className="min-h-screen bg-[#081114] text-white px-4 py-14">
-          <div className="mx-auto max-w-3xl rounded-2xl border border-white/10 bg-white/5 p-8">
+        <div className="min-h-screen bg-[#081114] px-4 py-10 text-white sm:py-14">
+          <div className="mx-auto max-w-3xl rounded-2xl border border-white/10 bg-white/5 p-6 sm:p-8">
             <p className="text-xs uppercase tracking-wide text-primary">Proxima comunidade</p>
-            <h1 className="mt-2 text-3xl font-bold">{profile?.hero_title ?? `A comunidade de ${territoryName} esta chegando`}</h1>
-            <p className="mt-3 text-white/75">{profile?.hero_subtitle ?? profile?.description}</p>
-            <p className="mt-2 text-sm text-white/60">
+            <h1 className="mt-2 text-2xl font-bold sm:text-3xl">{profile?.hero_title ?? `A comunidade de ${territoryName} esta chegando`}</h1>
+            <p className="mt-3 text-sm text-white/75 sm:text-base">{profile?.hero_subtitle ?? profile?.description}</p>
+            <p className="mt-2 text-sm text-white/60 sm:text-base">
               Enquanto esta comunidade estiver em preparacao, voce pode navegar pela cidade e registrar interesse para o lancamento.
             </p>
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              <Button onClick={() => navigate(interestPath)}>
+              <Button className="w-full" onClick={() => navigate(interestPath)}>
                 {profile?.primary_cta_label ?? "Cadastrar interesse"}
               </Button>
-              <Button variant="outline" onClick={() => navigate(`${communityBase}/empresas`)}>
+              <Button className="w-full" variant="outline" onClick={() => navigate(`${communityBase}/empresas`)}>
                 {profile?.secondary_cta_label ?? "Quero minha empresa aqui"}
               </Button>
-              <Button variant="outline" onClick={() => navigate(interestPath)}>
+              <Button className="w-full" variant="outline" onClick={() => navigate(interestPath)}>
                 Indicar comercio ou servico da regiao
               </Button>
-              <Button variant="outline" onClick={() => navigate(`${communityBase}/eventos`)}>Cadastrar evento da regiao</Button>
+              <Button className="w-full" variant="outline" onClick={() => navigate(`${communityBase}/eventos`)}>Cadastrar evento da regiao</Button>
             </div>
           </div>
         </div>

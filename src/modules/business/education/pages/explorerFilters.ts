@@ -1,5 +1,4 @@
-import type { EducationProfile } from '../types';
-import type { EducationDetailPreview } from '../mocks/publicEducationPage.mock';
+import type { EducationPublicProfile } from '../types';
 
 export const SORTERS = [
   { key: 'relevance', label: 'Relevancia' },
@@ -38,17 +37,8 @@ export const INITIAL_FILTERS: FilterState = {
   sort: 'relevance',
 };
 
-export interface EducationPreviewRoute {
-  state?: string;
-  city?: string;
-  district?: string;
-  slug?: string;
-}
-
 export interface EnrichedEducationProfile {
-  profile: EducationProfile;
-  preview?: EducationDetailPreview;
-  route?: EducationPreviewRoute;
+  profile: EducationPublicProfile;
 }
 
 export function sanitizePublicEducationText(value?: string | null): string {
@@ -62,8 +52,11 @@ export function sanitizePublicEducationText(value?: string | null): string {
     .trim();
 }
 
-export function getInstitutionTypeKey(profile: EducationProfile): string {
-  const name = profile.institution_type.toLowerCase();
+export function getInstitutionTypeKey(profile: EducationPublicProfile): string {
+  const name = profile.institution_type
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
   const niche = profile.niche_key;
 
   if (name.includes('centro municipal de educacao infantil') || name.includes('cmei')) {
@@ -74,7 +67,7 @@ export function getInstitutionTypeKey(profile: EducationProfile): string {
     return 'creche';
   }
 
-  if (name.includes('colegio') || name.includes('colégio')) {
+  if (name.includes('colegio')) {
     return 'colegio';
   }
 
@@ -89,7 +82,7 @@ export function normalizeSlug(value?: string | null): string {
   return (value ?? '').trim().toLowerCase().replace(/\s+/g, '-');
 }
 
-export function profileHasInfrastructure(profile: EducationProfile, key: string): boolean {
+export function profileHasInfrastructure(profile: EducationPublicProfile, key: string): boolean {
   const facilities = profile.school_facility_features ?? [];
   const access = profile.school_accessibility_features ?? [];
   const equipment = profile.school_equipment_features ?? [];
@@ -102,21 +95,6 @@ export function profileHasInfrastructure(profile: EducationProfile, key: string)
   return false;
 }
 
-export function buildSourceProfiles(
-  realProfiles: EducationProfile[],
-  previewProfiles: EducationProfile[],
-  allowPreviewFallback: boolean,
-): EducationProfile[] {
-  if (!allowPreviewFallback) return realProfiles;
-
-  const realKeys = new Set(realProfiles.map((profile) => profile.school_inep_code ?? profile.id));
-  const publicProfilesNotPersisted = previewProfiles.filter(
-    (profile) => !realKeys.has(profile.school_inep_code ?? profile.id),
-  );
-
-  return [...realProfiles, ...publicProfilesNotPersisted];
-}
-
 export function filterEnrichedProfiles(
   enriched: EnrichedEducationProfile[],
   filters: FilterState,
@@ -126,10 +104,10 @@ export function filterEnrichedProfiles(
   if (filters.query.trim()) {
     const q = filters.query.toLowerCase();
     list = list.filter(
-      ({ profile, preview }) =>
+      ({ profile }) =>
         profile.institution_type.toLowerCase().includes(q) ||
-        sanitizePublicEducationText(profile.summary).toLowerCase().includes(q) ||
-        (preview?.programs ?? []).some((p) => p.name.toLowerCase().includes(q)),
+        (profile.business_name ?? '').toLowerCase().includes(q) ||
+        sanitizePublicEducationText(profile.summary).toLowerCase().includes(q),
     );
   }
 
@@ -157,44 +135,13 @@ export function filterEnrichedProfiles(
     );
   }
 
-  if (filters.modalities.length > 0) {
-    list = list.filter(({ preview }) =>
-      (preview?.programs ?? []).some((p) =>
-        filters.modalities.some((m) =>
-          (p.modality ?? '').toLowerCase().includes(m.toLowerCase()),
-        ),
-      ),
-    );
-  }
-
   if (filters.district) {
     const filterDistrict = normalizeSlug(filters.district);
-    list = list.filter(({ route, preview }) => {
-      const routeDistrict = normalizeSlug(route?.district);
-      const previewDistrict = normalizeSlug(preview?.district);
-
-      if (routeDistrict || previewDistrict) {
-        return routeDistrict === filterDistrict || previewDistrict === filterDistrict;
-      }
-
-      return true;
-    });
+    list = list.filter(({ profile }) => normalizeSlug(profile.public_route?.district) === filterDistrict);
   }
 
   if (filters.onlyAvailable) {
-    list = list.filter(({ preview }) =>
-      (preview?.programs ?? []).some((p) => (p.available_slots ?? 0) > 0 && p.is_active),
-    );
-  }
-
-  if (filters.priceRange[1] < 3000 || filters.priceRange[0] > 0) {
-    list = list.filter(({ preview }) =>
-      (preview?.programs ?? []).some(
-        (p) =>
-          (p.price_from ?? 0) >= filters.priceRange[0] &&
-          (p.price_from ?? 0) <= filters.priceRange[1],
-      ),
-    );
+    list = list.filter(({ profile }) => profile.enrollment_open === true);
   }
 
   if (filters.sort === 'name_asc') {

@@ -1,37 +1,24 @@
-﻿/**
- * CidadeLandingPage â€” Vitrine pÃºblica da cidade
- * 
- * Estilo editorial: dark theme, acentos teal, motion.
- * Consistente com HomePageV2 e ServicosLandingPage.
- * 
- * SeÃ§Ãµes:
- *   A. Hero da cidade
- *   B. EstatÃ­sticas (bairros, moradores, empresas, serviÃ§os)
- *   C. Bairros em destaque
- *   D. Vagas de emprego
- *   E. Pontos turÃ­sticos
- *   F. PolÃ­ticos eleitos
- *   G. Contatos Ãºteis (emergÃªncia, utilidade pÃºblica)
- *   H. CTA â€” FaÃ§a parte
- *   I. RodapÃ© com dados da prefeitura
+/**
+ * CidadeLandingPage - Vitrine publica da cidade
+ * SSOT territorial, sem hardcodes de cidade.
  */
 
 import { type FormEvent, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  Search, MapPin, Users, Building2, Store, Wrench,
+  Search, MapPin, Users, Store, Wrench,
   ArrowRight, ChevronRight, Star,
-  Briefcase, Camera, GraduationCap, Shield, TreePine, Bus,
-  Award, MapPinned,
+  Briefcase, Camera, GraduationCap, Shield, MapPinned,
   AlertTriangle, Ambulance, Flame,
-  Home, Loader2, BadgeCheck, Tag, X,
+  Loader2, BadgeCheck, Tag,
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { BusinessLogo } from "@/shared/components/ui/business-logo";
-import { TERRITORY_CONFIG, LAUNCH_URLS } from "@/config/territory";
+import { LAUNCH_URLS } from "@/config/territory";
 import { useAuth } from "@/core/auth/hooks/useAuth";
+import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
 import { useCityMetadata } from "@/core/city/hooks/useCityMetadata";
 import { useCityFeatured } from "@/core/city/hooks/useCityFeatured";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
@@ -39,22 +26,7 @@ import { classifiedUrlService } from "@/modules/classifieds/services/ClassifiedU
 import { useClassifiedUrls } from "@/modules/classifieds/hooks/useClassifiedUrls";
 import { useTouristPoints } from "@/modules/guide/tourist-points/hooks/useTouristPoints";
 
-import heroImg from "@/assets/hero-cidade-salvador-real.jpg";
-import {
-  BAIRROS_DESTAQUE,
-  CLASSIFICADOS_MOCK,
-  CONTATOS_EMERGENCIA,
-  CONTATOS_UTILIDADE,
-  EMPRESAS_MOCK,
-  FALLBACK_CANAIS_CIVICOS,
-  POLITICOS,
-  PREFEITURA,
-  SERVICOS_MOCK,
-  VAGAS_EMPREGO,
-  formatCategory,
-  formatNumber,
-  formatPrice,
-} from "./CidadeLanding.constants";
+import { formatCategory, formatNumber, formatPrice } from "./CidadeLanding.constants";
 import {
   CityCommunityCtaSection,
   CityElectedOfficialsSection,
@@ -62,12 +34,27 @@ import {
   CityUsefulContactsSection,
 } from "./CidadeLanding.sections";
 
-// â”€â”€ AnimaÃ§Ã£o base â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Animacao base
 const fadeUp = {
   initial: { opacity: 0, y: 20 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true },
 };
+
+const BRAZILIAN_STATE_NAMES: Record<string, string> = {
+  ac: "Acre", al: "Alagoas", ap: "Amapa", am: "Amazonas", ba: "Bahia", ce: "Ceara",
+  df: "Distrito Federal", es: "Espirito Santo", go: "Goias", ma: "Maranhao", mt: "Mato Grosso",
+  ms: "Mato Grosso do Sul", mg: "Minas Gerais", pa: "Para", pb: "Paraiba", pr: "Parana",
+  pe: "Pernambuco", pi: "Piaui", rj: "Rio de Janeiro", rn: "Rio Grande do Norte", rs: "Rio Grande do Sul",
+  ro: "Rondonia", rr: "Roraima", sc: "Santa Catarina", sp: "Sao Paulo", se: "Sergipe", to: "Tocantins",
+};
+
+function toDisplayName(slug: string): string {
+  return slug
+    .split("-")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
 
 // â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -76,36 +63,50 @@ const fadeUp = {
 export default function CidadeLandingPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { state = 'ba', city = 'salvador' } = useParams();
+  const { state = "", city = "" } = useParams();
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Busca metadados da cidade (populaÃ§Ã£o, bairros, etc.)
+  // Busca metadados da cidade (populacao, bairros, etc.)
   const { data: cityMetadata, isLoading: metadataLoading } = useCityMetadata(state, city);
-  
-  // Busca conteÃºdo em destaque (empresas, serviÃ§os, classificados reais)
-  const { businesses: businessesReal, services: servicesReal, classifieds: classifiedsReal, isLoading: featuredLoading } = useCityFeatured(state, city);
-  
-  // Mistura dados reais com mocks para comparaÃ§Ã£o
-  // Empresas: 2 mocks + atÃ© 4 reais = 6 total
-  const businesses = [...EMPRESAS_MOCK, ...businessesReal.slice(0, 4)];
-  
-  // ServiÃ§os: 2 mocks + atÃ© 4 reais = 6 total
-  const services = [...SERVICOS_MOCK, ...servicesReal.slice(0, 4)];
-  
-  // Classificados: 2 mocks + atÃ© 4 reais = 6 total
-  const classifieds = [...CLASSIFICADOS_MOCK, ...classifiedsReal.slice(0, 4)];
-  
+  const moduleTerritory = useModuleTerritoryFilter({ nearbyEnabled: false, includeDescendants: true });
+
+  // Busca conteudo em destaque (SSOT)
+  const { businesses: businessesReal, services: servicesReal, classifieds: classifiedsReal, isLoading: featuredLoading } =
+    useCityFeatured(state, city, moduleTerritory.territoryFilter);
+  const businesses = businessesReal.slice(0, 6);
+  const services = servicesReal.slice(0, 6);
+  const classifieds = classifiedsReal.slice(0, 6);
+
   // URLs helper para classificados
   const classifiedUrls = useClassifiedUrls(null);
 
-  // Pontos turÃ­sticos via SSOT (com fallback para mock)
+  // Pontos turisticos via SSOT
   const { data: touristPoints = [] } = useTouristPoints({ state, city, limit: 6 });
   const updatedAtLabel = cityMetadata?.updated_at
     ? new Date(cityMetadata.updated_at).toLocaleDateString("pt-BR")
     : null;
 
+  if (!state || !city) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background p-6 text-center">
+        <div>
+          <h1 className="text-xl font-bold text-foreground">Cidade nao informada</h1>
+          <p className="mt-2 text-sm text-muted-foreground">Use a rota com UF e cidade.</p>
+        </div>
+      </div>
+    );
+  }
+
   const communityUrl = "/" + state + "/" + city;
-  const cityDisplayName = city === "salvador" ? "Salvador" : city.replace(/-/g, " ");
+  const cityDisplayName = toDisplayName(city);
+  const stateDisplayName = BRAZILIAN_STATE_NAMES[state.toLowerCase()] ?? state.toUpperCase();
+  const cityDescription =
+    cityMetadata?.description ||
+    `Plataforma territorial de ${cityDisplayName} para descobrir negocios, profissionais, classificados e oportunidades perto de voce.`;
+  const heroBadgeText = cityMetadata?.founded_year
+    ? `${cityDisplayName} | fundada em ${cityMetadata.founded_year}`
+    : `${cityDisplayName} | ${stateDisplayName}`;
+  const searchPlaceholder = `Buscar em ${cityDisplayName}: mercado, diarista, vaga...`;
 
   const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -115,13 +116,13 @@ export default function CidadeLandingPage() {
   };
 
   const heroModules = [
-    { icon: Store, label: "Empresas", value: "NegÃ³cios locais", path: LAUNCH_URLS.business },
-    { icon: Wrench, label: "ServiÃ§os", value: "Profissionais", path: LAUNCH_URLS.services },
+    { icon: Store, label: "Empresas", value: "Negocios locais", path: LAUNCH_URLS.business },
+    { icon: Wrench, label: "Servicos", value: "Profissionais", path: LAUNCH_URLS.services },
     { icon: Tag, label: "Classificados", value: "Compra e venda", path: LAUNCH_URLS.classifieds },
     { icon: Briefcase, label: "Vagas", value: "Oportunidades", path: LAUNCH_URLS.jobs },
   ];
 
-  // EstatÃ­sticas dinÃ¢micas da cidade
+  // Estatisticas dinamicas da cidade
   const CITY_STATS = [
     { icon: MapPinned, value: formatNumber(cityMetadata?.districts_count ?? 163), label: "Bairros", color: "text-cyan-200", bg: "bg-cyan-400/15", border: "border-cyan-200/20" },
     { icon: Users, value: formatNumber(cityMetadata?.population ?? 2900000), label: "Habitantes", color: "text-amber-200", bg: "bg-amber-400/15", border: "border-amber-200/20" },
@@ -133,10 +134,10 @@ export default function CidadeLandingPage() {
   const featuredDistricts = cityMetadata?.featured_districts?.length
     ? cityMetadata.featured_districts.slice(0, 4).map((district) => ({
         nome: district.name,
-        resumo: district.description || "Sem descriÃ§Ã£o cadastrada",
-        imagem: district.image_url || heroImg,
+        resumo: district.description || "Sem descricao cadastrada",
+        imagem: district.image_url || "",
       }))
-    : BAIRROS_DESTAQUE;
+    : [];
 
   const emergencyContacts = cityMetadata?.emergency_contacts?.length
     ? cityMetadata.emergency_contacts.map((contact) => ({
@@ -151,7 +152,7 @@ export default function CidadeLandingPage() {
               : Ambulance,
         cor: "text-destructive",
       }))
-    : CONTATOS_EMERGENCIA;
+    : [];
 
   const utilityContacts = cityMetadata?.utility_contacts?.length
     ? cityMetadata.utility_contacts.map((contact) => ({
@@ -159,23 +160,22 @@ export default function CidadeLandingPage() {
         telefone: contact.phone,
         tipo: contact.type,
       }))
-    : CONTATOS_UTILIDADE;
+    : [];
 
   const cityHallInfo = cityMetadata?.city_hall_info ?? null;
   const prefeituraInfo = {
-    nome: cityHallInfo?.name || PREFEITURA.nome,
-    endereco: cityHallInfo?.address || PREFEITURA.endereco,
-    telefone: cityHallInfo?.phone || PREFEITURA.telefone,
-    email: cityHallInfo?.email || PREFEITURA.email,
-    site: cityHallInfo?.website || PREFEITURA.site,
-    horario: cityHallInfo?.hours || PREFEITURA.horario,
-    instagram: cityHallInfo?.social?.instagram || PREFEITURA.instagram,
-    facebook: cityHallInfo?.social?.facebook || PREFEITURA.facebook,
-    twitter: cityHallInfo?.social?.twitter || PREFEITURA.twitter,
-    youtube: cityHallInfo?.social?.youtube || PREFEITURA.youtube,
+    nome: cityHallInfo?.name || `Prefeitura de ${cityDisplayName}`,
+    endereco: cityHallInfo?.address || "Endereco municipal nao informado",
+    telefone: cityHallInfo?.phone || "Nao informado",
+    email: cityHallInfo?.email || "Nao informado",
+    site: cityHallInfo?.website || "",
+    horario: cityHallInfo?.hours || "Nao informado",
+    instagram: cityHallInfo?.social?.instagram || "",
+    facebook: cityHallInfo?.social?.facebook || "",
+    twitter: cityHallInfo?.social?.twitter || "",
+    youtube: cityHallInfo?.social?.youtube || "",
   };
-
-  const civicChannels = FALLBACK_CANAIS_CIVICOS;
+  const civicChannels = [];
 
   const electedCards = cityMetadata?.elected_officials
     ? [
@@ -192,7 +192,7 @@ export default function CidadeLandingPage() {
           mandato: official.term || "Mandato atual",
         })),
       ].slice(0, 3)
-    : POLITICOS;
+    : [];
 
   const scrollTo = (id: string) => {
     if (id.startsWith("#")) {
@@ -206,21 +206,14 @@ export default function CidadeLandingPage() {
     <div className="min-h-screen w-full bg-background text-foreground flex flex-col">
 
       {/* A. HERO */}
-      <section className="relative flex min-h-[720px] w-full items-center overflow-hidden md:min-h-[760px]">
+      <section className="relative flex min-h-[620px] w-full items-center overflow-hidden md:min-h-[720px]">
         <div className="absolute inset-0">
-          <img
-            src={heroImg}
-            alt="Vista real do Elevador Lacerda, Centro HistÃ³rico e BaÃ­a de Todos-os-Santos em Salvador"
-            className="h-full w-full scale-105 object-cover object-center"
-            width={1920}
-            height={800}
-          />
-          <div className="absolute inset-0 bg-[linear-gradient(110deg,hsl(var(--background)/0.98)_0%,hsl(var(--background)/0.86)_38%,hsl(var(--background)/0.36)_68%,hsl(var(--background)/0.18)_100%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_20%,rgba(255,190,90,0.28),transparent_30%),radial-gradient(circle_at_12%_88%,rgba(45,212,191,0.22),transparent_34%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(120deg,hsl(var(--background)/0.98)_0%,hsl(var(--background)/0.92)_42%,hsl(var(--background)/0.84)_100%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_82%_18%,rgba(251,191,36,0.18),transparent_35%),radial-gradient(circle_at_15%_78%,rgba(6,182,212,0.18),transparent_42%)]" />
           <div className="absolute inset-x-0 bottom-0 h-52 bg-gradient-to-t from-background via-background/74 to-transparent" />
         </div>
 
-        <div className="relative mx-auto grid w-full max-w-7xl items-center gap-10 px-4 py-20 sm:px-6 lg:grid-cols-[minmax(0,1.02fr)_minmax(380px,0.72fr)] lg:py-24">
+        <div className="relative mx-auto grid w-full max-w-7xl items-center gap-10 px-4 py-20 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(340px,0.62fr)] lg:py-24">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: "easeOut" }}>
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
@@ -230,7 +223,7 @@ export default function CidadeLandingPage() {
             >
               <MapPin className="h-4 w-4 text-amber-200" />
               <span className="text-xs font-bold uppercase tracking-[0.22em]">
-                Capital da Bahia | fundada em 1549
+                {heroBadgeText}
               </span>
             </motion.div>
             {updatedAtLabel && (
@@ -245,7 +238,7 @@ export default function CidadeLandingPage() {
             </h1>
 
             <p className="mt-6 max-w-2xl text-base leading-8 text-white/82 md:text-lg">
-              Plataforma territorial de Salvador para descobrir negÃ³cios, profissionais, classificados e oportunidades com navegaÃ§Ã£o clara e foco no que estÃ¡ perto de vocÃª.
+              {cityDescription}
             </p>
 
             <form onSubmit={handleSearchSubmit} className="mt-8 max-w-2xl rounded-2xl border border-white/15 bg-white/12 p-2 shadow-2xl shadow-black/25 backdrop-blur-xl">
@@ -255,7 +248,7 @@ export default function CidadeLandingPage() {
                   <Input
                     value={searchQuery}
                     onChange={(event) => setSearchQuery(event.target.value)}
-                    placeholder="Buscar em Salvador: mercado, diarista, vaga..."
+                    placeholder={searchPlaceholder}
                     className="h-12 border-white/10 bg-black/24 pl-12 text-white placeholder:text-white/48 focus-visible:ring-amber-300"
                   />
                 </div>
@@ -304,18 +297,30 @@ export default function CidadeLandingPage() {
           >
             <div className="absolute -left-8 -top-8 h-32 w-32 rounded-full bg-amber-300/25 blur-3xl" />
             <div className="absolute -bottom-10 right-0 h-40 w-40 rounded-full bg-cyan-300/20 blur-3xl" />
-            <div className="relative overflow-hidden rounded-[2rem] border border-white/18 bg-white/10 p-3 shadow-2xl shadow-black/30 backdrop-blur-xl">
-              <img src={heroImg} alt="Centro HistÃ³rico de Salvador visto da BaÃ­a de Todos-os-Santos" className="h-[440px] w-full rounded-[1.55rem] object-cover object-center" />
-              <div className="absolute inset-x-6 bottom-6 rounded-3xl border border-white/15 bg-slate-950/62 p-5 text-white shadow-xl backdrop-blur-xl">
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-200">Foto real de Salvador</p>
-                    <p className="mt-1 text-lg font-black">Elevador Lacerda e BaÃ­a</p>
+            <div className="rounded-[2rem] border border-white/18 bg-white/10 p-6 text-white shadow-2xl shadow-black/30 backdrop-blur-xl">
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-200">Dados territoriais</p>
+              <p className="mt-2 text-2xl font-black">{cityDisplayName}</p>
+              <p className="mt-1 text-sm text-white/70">{stateDisplayName}</p>
+              <div className="mt-6 grid grid-cols-1 gap-3">
+                {CITY_STATS.slice(0, 3).map((stat) => (
+                  <div key={`hero-${stat.label}`} className="rounded-xl border border-white/15 bg-white/5 p-3">
+                    <p className="text-xs text-white/70">{stat.label}</p>
+                    <p className="text-lg font-bold text-white">{stat.value}</p>
                   </div>
-                  <div className="rounded-full border border-white/15 bg-white/10 p-3">
-                    <Camera className="h-5 w-5 text-cyan-100" />
-                  </div>
-                </div>
+                ))}
+              </div>
+              {updatedAtLabel && (
+                <p className="mt-5 text-xs text-white/70">Atualizado em {updatedAtLabel}</p>
+              )}
+              <div className="mt-5">
+                <Button
+                  variant="outline"
+                  onClick={() => scrollTo("#turismo")}
+                  className="w-full border-white/20 bg-white/5 text-white hover:bg-white/10"
+                >
+                  Explorar cidade
+                  <ChevronRight className="ml-2 h-4 w-4" />
+                </Button>
               </div>
             </div>
           </motion.div>
@@ -352,26 +357,34 @@ export default function CidadeLandingPage() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">Bairros em Destaque</h2>
-            <p className="text-sm text-muted-foreground mt-1">Panorama territorial para navegar Salvador por regiÃ£o</p>
+            <p className="text-sm text-muted-foreground mt-1">Panorama territorial para navegar {cityDisplayName} por regiao</p>
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {featuredDistricts.map((bairro, i) => (
-            <motion.article
-              key={bairro.nome}
-              {...fadeUp}
-              transition={{ delay: i * 0.06 }}
-              className="group overflow-hidden rounded-2xl border border-border bg-card hover:border-primary/30 hover:shadow-lg transition-all"
-            >
-              <div className="h-32 overflow-hidden">
-                <img src={bairro.imagem} alt={`Foto de ${bairro.nome}, Salvador`} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
-              </div>
-              <div className="p-4">
-                <h3 className="text-sm font-bold text-foreground mb-1">{bairro.nome}</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">{bairro.resumo}</p>
-              </div>
-            </motion.article>
-          ))}
+          {featuredDistricts.length > 0 ? (
+            featuredDistricts.map((bairro, i) => (
+              <motion.article
+                key={bairro.nome}
+                {...fadeUp}
+                transition={{ delay: i * 0.06 }}
+                className="group overflow-hidden rounded-2xl border border-border bg-card hover:border-primary/30 hover:shadow-lg transition-all"
+              >
+                {bairro.imagem ? (
+                  <div className="h-32 overflow-hidden">
+                    <img src={bairro.imagem} alt={`Foto de ${bairro.nome}, ${cityDisplayName}`} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                  </div>
+                ) : null}
+                <div className="p-4">
+                  <h3 className="text-sm font-bold text-foreground mb-1">{bairro.nome}</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{bairro.resumo}</p>
+                </div>
+              </motion.article>
+            ))
+          ) : (
+            <div className="col-span-full rounded-2xl border border-border bg-card p-6 text-center text-sm text-muted-foreground">
+              Ainda nao ha bairros em destaque cadastrados para {cityDisplayName}.
+            </div>
+          )}
         </div>
       </section>
 
@@ -380,7 +393,7 @@ export default function CidadeLandingPage() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">Empresas em Destaque</h2>
-            <p className="text-sm text-muted-foreground mt-1">NegÃ³cios locais verificados</p>
+            <p className="text-sm text-muted-foreground mt-1">Negocios locais verificados</p>
           </div>
           <Button
             variant="outline"
@@ -397,14 +410,12 @@ export default function CidadeLandingPage() {
           </div>
         ) : businesses.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {businesses.map((business, index) => {
-              const isMock = business.id.startsWith('mock-');
+            {businesses.map((business) => {
               return (
                 <motion.div
                   key={business.id}
                   {...fadeUp}
                   onClick={() => {
-                    if (isMock) return;
                     if (!business.slug) return;
                     const url = BusinessUrlService.getCanonicalUrl({
                       id: business.id,
@@ -414,11 +425,7 @@ export default function CidadeLandingPage() {
                     });
                     navigate(url);
                   }}
-                  className={`bg-card border rounded-2xl p-5 hover:shadow-xl transition-all ${
-                    isMock 
-                      ? 'cursor-default border-border' 
-                      : 'cursor-pointer group border-border hover:border-primary/30'
-                  }`}
+                  className="bg-card border rounded-2xl p-5 hover:shadow-xl transition-all cursor-pointer group border-border hover:border-primary/30"
                 >
                   <div className="flex items-start gap-4">
                     <div className="h-14 w-14 rounded-xl bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center">
@@ -431,13 +438,11 @@ export default function CidadeLandingPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="mb-2 flex flex-wrap items-center gap-2">
-                        <h3 className={`max-w-full break-words pr-1 text-base font-bold leading-snug ${
-                          isMock ? 'text-foreground' : 'text-foreground group-hover:text-primary transition-colors'
-                        }`}>
+                        <h3 className="max-w-full break-words pr-1 text-base font-bold leading-snug text-foreground group-hover:text-primary transition-colors">
                           {business.name}
                         </h3>
                         {business.is_verified && <BadgeCheck className="h-4 w-4 text-blue-500 flex-shrink-0" />}
-                        {!isMock && business.is_premium && (
+                        {business.is_premium && (
                           <span className="text-[9px] bg-amber-500/15 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded font-bold">
                             PRO
                           </span>
@@ -464,12 +469,12 @@ export default function CidadeLandingPage() {
         )}
       </section>
 
-      {/* â”€â”€ SERVIÃ‡OS REAIS DA CIDADE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* SERVICOS REAIS DA CIDADE */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8 md:py-10 w-full">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">Profissionais em Destaque</h2>
-            <p className="text-sm text-muted-foreground mt-1">ServiÃ§os verificados na cidade</p>
+            <p className="text-sm text-muted-foreground mt-1">Servicos verificados na cidade</p>
           </div>
           <Button
             variant="outline"
@@ -487,17 +492,12 @@ export default function CidadeLandingPage() {
         ) : services.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {services.map((service) => {
-              const isMock = service.id.startsWith('mock-');
               return (
                 <motion.div
                   key={service.id}
                   {...fadeUp}
-                  onClick={() => !isMock && navigate(LAUNCH_URLS.services)}
-                  className={`bg-card border rounded-2xl p-5 hover:shadow-xl transition-all ${
-                    isMock 
-                      ? 'cursor-default border-border' 
-                      : 'cursor-pointer group border-border hover:border-violet-500/30'
-                  }`}
+                  onClick={() => navigate(LAUNCH_URLS.services)}
+                  className="bg-card border rounded-2xl p-5 hover:shadow-xl transition-all cursor-pointer group border-border hover:border-violet-500/30"
                 >
                   <div className="flex items-start gap-4">
                     <div className="h-14 w-14 rounded-xl bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center">
@@ -510,9 +510,7 @@ export default function CidadeLandingPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="mb-2 flex flex-wrap items-center gap-2">
-                        <h3 className={`max-w-full break-words pr-1 text-base font-bold leading-snug ${
-                          isMock ? 'text-foreground' : 'text-foreground group-hover:text-violet-500 transition-colors'
-                        }`}>
+                        <h3 className="max-w-full break-words pr-1 text-base font-bold leading-snug text-foreground group-hover:text-violet-500 transition-colors">
                           {service.name}
                         </h3>
                         {service.is_verified && <BadgeCheck className="h-4 w-4 text-blue-500 flex-shrink-0" />}
@@ -540,7 +538,7 @@ export default function CidadeLandingPage() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">Classificados Recentes</h2>
-            <p className="text-sm text-muted-foreground mt-1">AnÃºncios ativos na cidade</p>
+            <p className="text-sm text-muted-foreground mt-1">Anuncios ativos na cidade</p>
           </div>
           <Button
             variant="outline"
@@ -558,11 +556,9 @@ export default function CidadeLandingPage() {
         ) : classifieds.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {classifieds.map((classified) => {
-              const isMock = classified.id.startsWith('mock-');
               const thumb = classified.photos?.[0];
-              
+
               const getUrl = () => {
-                if (isMock) return '#';
                 if (classified.geographic_path && classified.category_slug && classified.subcategory_slug && classified.slug && classified.public_id) {
                   try {
                     const urls = classifiedUrlService.buildUrls({
@@ -585,12 +581,8 @@ export default function CidadeLandingPage() {
                 <motion.div
                   key={classified.id}
                   {...fadeUp}
-                  onClick={() => !isMock && navigate(getUrl())}
-                  className={`bg-card border rounded-2xl p-5 hover:shadow-xl transition-all ${
-                    isMock 
-                      ? 'cursor-default border-border' 
-                      : 'cursor-pointer group border-border hover:border-orange-500/30'
-                  }`}
+                  onClick={() => navigate(getUrl())}
+                  className="bg-card border rounded-2xl p-5 hover:shadow-xl transition-all cursor-pointer group border-border hover:border-orange-500/30"
                 >
                   <div className="flex items-start gap-4">
                     <div className="h-14 w-14 rounded-xl bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center">
@@ -601,9 +593,7 @@ export default function CidadeLandingPage() {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className={`text-base font-bold truncate mb-1.5 ${
-                        isMock ? 'text-foreground' : 'text-foreground group-hover:text-orange-500 transition-colors'
-                      }`}>
+                      <h3 className="text-base font-bold truncate mb-1.5 text-foreground group-hover:text-orange-500 transition-colors">
                         {classified.titulo}
                       </h3>
                       <p className="text-sm text-muted-foreground truncate mb-2">{formatCategory(classified.category)}</p>
@@ -624,76 +614,33 @@ export default function CidadeLandingPage() {
 
       {/* â”€â”€ D. VAGAS DE EMPREGO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section id="vagas" className="w-full bg-gradient-to-br from-primary/8 via-card to-accent/8 border-y border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 md:py-10">
-          <div className="text-center mb-6">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <Briefcase className="h-5 w-5 text-primary" />
-              <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">Vagas de Emprego</h2>
-            </div>
-            <p className="text-sm text-muted-foreground">Oportunidades de trabalho em Salvador</p>
-            <p className="text-[11px] text-muted-foreground mt-1">Curadoria local da comunidade (nÃ£o Ã© feed oficial em tempo real)</p>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 md:py-10 text-center">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <Briefcase className="h-5 w-5 text-primary" />
+            <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">Vagas de Emprego</h2>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {VAGAS_EMPREGO.map((vaga, i) => (
-              <motion.div
-                key={vaga.titulo}
-                {...fadeUp}
-                transition={{ delay: i * 0.08 }}
-                className="bg-card border border-border rounded-2xl p-5 md:p-6 hover:shadow-xl hover:border-primary/30 transition-all cursor-pointer group"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Briefcase className="h-6 w-6 text-primary" />
-                  </div>
-                  <span className="text-xs bg-secondary text-secondary-foreground font-semibold px-3 py-1.5 rounded-full">
-                    {vaga.tipo}
-                  </span>
-                </div>
-                <h3 className="text-base font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
-                  {vaga.titulo}
-                </h3>
-                <p className="text-sm text-muted-foreground mb-3">{vaga.empresa}</p>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-                  <MapPin className="h-4 w-4" />
-                  <span>{vaga.bairro}</span>
-                </div>
-                <p className="text-base font-bold text-primary mb-4">{vaga.salario}</p>
-                <div className="flex flex-wrap gap-2">
-                  {vaga.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="text-xs bg-primary/8 text-primary px-2.5 py-1 rounded-full border border-primary/20 font-medium"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </motion.div>
-            ))}
-          </div>
-
-          <div className="text-center mt-8">
+          <p className="text-sm text-muted-foreground">Oportunidades de trabalho em {cityDisplayName}</p>
+          <div className="mt-6">
             <Button
               variant="outline"
               className="border-primary/30 text-primary hover:bg-primary/10 font-semibold rounded-xl h-11 px-6"
               onClick={() => navigate(LAUNCH_URLS.jobs)}
             >
-              Ver todas as vagas <ArrowRight className="h-4 w-4 ml-2" />
+              Ver vagas da cidade <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
           </div>
         </div>
       </section>
 
-      {/* â”€â”€ E. PONTOS TURÃSTICOS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* E. PONTOS TURISTICOS */}
       <section id="turismo" className="max-w-7xl mx-auto px-4 sm:px-6 py-12 md:py-16 w-full">
         <div className="flex items-center justify-between mb-8">
           <div className="text-center flex-1">
             <div className="flex items-center justify-center gap-2 mb-2">
               <Camera className="h-5 w-5 text-warning" />
-              <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">Pontos TurÃ­sticos</h2>
+              <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">Pontos Turisticos</h2>
             </div>
-            <p className="text-sm text-muted-foreground">Descubra as belezas de Salvador</p>
+            <p className="text-sm text-muted-foreground">Descubra as belezas de {cityDisplayName}</p>
           </div>
           <Button
             variant="outline"
@@ -705,7 +652,7 @@ export default function CidadeLandingPage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {touristPoints.map((ponto, i) => (
+            {touristPoints.length > 0 ? touristPoints.map((ponto, i) => (
               <motion.div
               key={ponto.id}
               {...fadeUp}
@@ -737,7 +684,11 @@ export default function CidadeLandingPage() {
                 </div>
               </div>
             </motion.div>
-          ))}
+          )) : (
+            <div className="col-span-full rounded-2xl border border-border bg-card p-6 text-center text-sm text-muted-foreground">
+              Ainda nao ha pontos turisticos cadastrados para {cityDisplayName}.
+            </div>
+          )}
         </div>
 
         {/* Mobile CTA */}
@@ -752,19 +703,23 @@ export default function CidadeLandingPage() {
         </div>
       </section>
 
-      <CityElectedOfficialsSection electedCards={electedCards} />
+      <CityElectedOfficialsSection electedCards={electedCards} cityDisplayName={cityDisplayName} />
       <CityUsefulContactsSection
         emergencyContacts={emergencyContacts}
         utilityContacts={utilityContacts}
         civicChannels={civicChannels}
+        cityDisplayName={cityDisplayName}
       />
       <CityCommunityCtaSection
         isAuthenticated={Boolean(user)}
+        cityDisplayName={cityDisplayName}
         onOpenCommunity={() => navigate(user ? communityUrl : "/login")}
         onOpenBusiness={() => navigate(LAUNCH_URLS.business)}
       />
       <CityHallFooter
         prefeituraInfo={prefeituraInfo}
+        cityDisplayName={cityDisplayName}
+        stateCode={state.toUpperCase()}
         onNavigate={navigate}
         communityUrl={communityUrl}
         businessPath={LAUNCH_URLS.business}
@@ -775,4 +730,3 @@ export default function CidadeLandingPage() {
     </div>
   );
 }
-

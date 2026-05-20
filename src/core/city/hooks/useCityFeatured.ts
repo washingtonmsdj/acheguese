@@ -1,8 +1,8 @@
-﻿/**
+/**
  * useCityFeatured
- * 
- * Hook para buscar conteÃºdo em destaque de uma cidade inteira.
- * Similar ao useLandingFeatured, mas para escopo de cidade (nÃ£o bairro).
+ *
+ * Hook para buscar conteudo em destaque de uma cidade inteira.
+ * Similar ao useLandingFeatured, mas para escopo de cidade (nao bairro).
  */
 
 import { useQuery } from '@tanstack/react-query';
@@ -11,31 +11,28 @@ import type { TerritoryFilter } from '@/core/location/types';
 
 const STALE_TIME = 5 * 60 * 1000;
 
-export function useCityFeatured(state: string = 'ba', city: string = 'salvador') {
+export function useCityFeatured(state: string, city: string, territoryFilter: TerritoryFilter) {
   const svc = LandingFeaturedService;
-  
-  // Cria filtro para cidade inteira (sem bairro especÃ­fico)
-  const filter: TerritoryFilter = {
-    scope: "group",
-    location_ids: [], // Vazio = toda a cidade
-  };
 
   const businesses = useQuery({
     queryKey: ['city-featured', 'businesses', state, city],
-    queryFn: () => svc.getFeaturedBusinesses(filter, 6), // Top 6 da cidade
+    queryFn: () => svc.getFeaturedBusinesses(territoryFilter, 6),
     staleTime: STALE_TIME,
+    enabled: territoryFilter.scope !== 'none',
   });
 
   const services = useQuery({
     queryKey: ['city-featured', 'services', state, city],
-    queryFn: () => svc.getFeaturedServices(filter, 6),
+    queryFn: () => svc.getFeaturedServices(territoryFilter, 6),
     staleTime: STALE_TIME,
+    enabled: territoryFilter.scope !== 'none',
   });
 
   const classifieds = useQuery({
     queryKey: ['city-featured', 'classifieds', state, city],
-    queryFn: () => svc.getFeaturedClassifieds(filter, 6),
+    queryFn: () => svc.getFeaturedClassifieds(territoryFilter, 6),
     staleTime: STALE_TIME,
+    enabled: territoryFilter.scope !== 'none',
   });
 
   return {
@@ -45,5 +42,3 @@ export function useCityFeatured(state: string = 'ba', city: string = 'salvador')
     isLoading: businesses.isLoading || services.isLoading || classifieds.isLoading,
   };
 }
-
-

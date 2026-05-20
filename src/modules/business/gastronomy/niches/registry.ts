@@ -210,35 +210,6 @@ export function shouldShowAdminSection(nicheKey: string, section: string): boole
 }
 
 /**
- * Mapeia cuisine_type (legado) para niche_key.
- *
- * NOTA: Esta função permite compatibilidade com dados existentes
- * que usam cuisine_type.
- */
-export function mapCuisineToNiche(cuisineType: string): string | null {
-  const mapping: Record<string, string> = {
-    'lanchonete': 'lanches',
-    'hamburgueria': 'hamburguer',
-    'brasileira': 'brasileira',
-    'arabe': 'arabe',
-    'saudavel': 'saudavel',
-    'salgados': 'salgados',
-    'padaria': 'padaria',
-    'doceria': 'doces',
-    'cafeteria': 'cafes',
-    'pizzaria': 'pizza',
-    'japonesa': 'sushi',
-    'sorveteria': 'acai',
-    'pastel': 'pastel',
-    'churrascaria': 'churrascaria',
-    'bar': 'bares',
-    'pub': 'bares',
-  };
-
-  return mapping[cuisineType.toLowerCase()] ?? null;
-}
-
-/**
  * Nicho padrão/fallback quando nenhum está selecionado.
  */
 export const DEFAULT_NICHE_KEY = 'lanches';

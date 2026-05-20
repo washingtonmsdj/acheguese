@@ -16,11 +16,11 @@ interface DriverGuardProps {
  * Guard que valida driver_data e o modo correto.
  * Protege rotas /central/motorista e /central/motoboy
  *
- * ValidaÃ§Ã£o de serviÃ§o baseada no modelo atual:
+ * Validacao de servico baseada no modelo atual:
  * - Motorista: can_do_rides !== false (true ou null)
  * - Motoboy: can_do_delivery === true
  *
- * Se nÃ£o tiver perfil de driver ou modo incorreto, mostra empty state com CTA
+ * Se nao tiver perfil de driver ou modo incorreto, mostra empty state com CTA
  * para ativar no fluxo canonico da Central (/central/motorista/cadastro ou /central/motoboy/cadastro).
  */
 export function DriverGuard({ service }: DriverGuardProps) {
@@ -34,7 +34,7 @@ export function DriverGuard({ service }: DriverGuardProps) {
   const serviceIcon = service === "motorista" ? Car : Bike;
 
   useEffect(() => {
-    // Redirecionamento nÃ£o Ã© necessÃ¡rio aqui, mostraremos empty state
+    // Redirecionamento nao e necessario aqui, mostraremos empty state
   }, []);
 
   // Mostrar loading enquanto verifica
@@ -49,20 +49,20 @@ export function DriverGuard({ service }: DriverGuardProps) {
     );
   }
 
-  // Se nÃ£o tiver perfil de driver, mostrar empty state
+  // Se nao tiver perfil de driver, mostrar empty state
   if (!isRegistered || !driverData) {
     const IconComponent = service === "motorista" ? Car : Bike;
     return (
       <div className="flex min-h-[60vh] items-center justify-center px-4">
-        <Card className="max-w-md w-full">
+        <Card className="max-w-md w-full rounded-lg">
           <CardContent className="space-y-4 p-6 text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
               <IconComponent className="h-8 w-8 text-primary" />
             </div>
             <div className="space-y-2">
-              <h3 className="text-lg font-semibold">Perfil de {serviceLabel} nÃ£o encontrado</h3>
+              <h3 className="text-lg font-semibold">Perfil de {serviceLabel} nao encontrado</h3>
               <p className="text-sm text-muted-foreground">
-                VocÃª ainda nÃ£o ativou seu perfil de {serviceLabel.toLowerCase()}. Cadastre-se para comeÃ§ar a receber solicitaÃ§Ãµes.
+                Voce ainda nao ativou seu perfil de {serviceLabel.toLowerCase()}. Cadastre-se para comecar a receber solicitacoes.
               </p>
             </div>
             <Button
@@ -84,7 +84,7 @@ export function DriverGuard({ service }: DriverGuardProps) {
     );
   }
 
-  // ValidaÃ§Ã£o do modo correto
+  // Validacao do modo correto
   // Motorista: can_do_rides !== false (true ou null)
   // Motoboy: can_do_delivery === true
   const canDoRides = driverData.can_do_rides !== false;
@@ -97,15 +97,15 @@ export function DriverGuard({ service }: DriverGuardProps) {
     const IconComponent = service === "motorista" ? Car : Bike;
     return (
       <div className="flex min-h-[60vh] items-center justify-center px-4">
-        <Card className="max-w-md w-full">
+        <Card className="max-w-md w-full rounded-lg">
           <CardContent className="space-y-4 p-6 text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-orange-500/10">
               <IconComponent className="h-8 w-8 text-orange-500" />
             </div>
             <div className="space-y-2">
-              <h3 className="text-lg font-semibold">Perfil nÃ£o habilitado para {serviceLabel}</h3>
+              <h3 className="text-lg font-semibold">Perfil nao habilitado para {serviceLabel}</h3>
               <p className="text-sm text-muted-foreground">
-                Seu perfil atual estÃ¡ configurado como {wrongService}. Para acessar esta Ã¡rea, vocÃª precisa habilitar o modo de {serviceLabel.toLowerCase()}.
+                Seu perfil atual esta configurado como {wrongService}. Para acessar esta area, voce precisa habilitar o modo de {serviceLabel.toLowerCase()}.
               </p>
             </div>
             <Button

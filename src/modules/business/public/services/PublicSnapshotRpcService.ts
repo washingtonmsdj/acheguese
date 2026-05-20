@@ -1,4 +1,4 @@
-﻿import { callRPC } from "@/core/infrastructure/supabase/helpers";
+import { callRPC } from "@/core/infrastructure/supabase/helpers";
 import { SERVICE_MODES } from "@/core/business/constants";
 import { logger } from "@/shared/utils/logger";
 import type {
@@ -27,9 +27,9 @@ function toStringArray(value: unknown): string[] {
 function toBoolean(value: unknown): boolean | undefined {
   if (typeof value === "boolean") return value;
   if (typeof value === "string") {
-    const normalized = value.trim().toLowerCase();
+    const normalized = value.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     if (["true", "1", "sim", "yes"].includes(normalized)) return true;
-    if (["false", "0", "nao", "nÃ£o", "no"].includes(normalized)) return false;
+    if (["false", "0", "nao", "no"].includes(normalized)) return false;
   }
   return undefined;
 }
@@ -193,7 +193,7 @@ export class PublicSnapshotRpcService {
     try {
       // Garantir que district sempre seja uma string (usar "_" como placeholder)
       const district = params.district || "_";
-      
+
       const rpcParams = {
         p_state: params.state,
         p_city: params.city,
@@ -228,7 +228,7 @@ export class PublicSnapshotRpcService {
     try {
       // Garantir que district sempre seja uma string (usar "_" como placeholder)
       const district = params.district || "_";
-      
+
       const rpcParams = {
         p_state: params.state,
         p_city: params.city,
@@ -262,4 +262,3 @@ export class PublicSnapshotRpcService {
     }
   }
 }
-

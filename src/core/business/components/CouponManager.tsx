@@ -1,9 +1,9 @@
 import { Tag } from "lucide-react";
-import type { PlanType } from "@/shared/types/subscription";
+import type { PlanTier } from "@/core/billing/types";
 
 interface Props {
   businessId: string;
-  planType: PlanType;
+  planType: PlanTier;
 }
 
 export default function CouponManager({ businessId: _, planType: __ }: Props) {

@@ -1,6 +1,4 @@
-import React from "react";
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { Card } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Separator } from "@/shared/components/ui/separator";
@@ -46,7 +44,6 @@ export function BusinessContactSidebar({
   business,
   onNavigate,
 }: BusinessContactSidebarProps) {
-  const navigate = useNavigate();
   const { navigateToBusiness } = useBusinessNavigation();
   const [similarBusinesses, setSimilarBusinesses] = useState<SimilarBusiness[]>([]);
   const structuredAddress =
@@ -56,11 +53,6 @@ export function BusinessContactSidebar({
 
   useEffect(() => {
     async function fetchSimilar() {
-      if (business.id === "exemplo-123") {
-        setSimilarBusinesses([]);
-        return;
-      }
-
       try {
         const data = await BusinessService.getSimilarBusinesses(
           business.id,
@@ -384,8 +376,8 @@ export function BusinessContactSidebar({
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium text-muted-foreground mb-1">Endereço</p>
                   <p className="text-sm font-semibold break-words">
-                    {typeof business.address === 'string' 
-                      ? business.address 
+                    {typeof business.address === 'string'
+                      ? business.address
                       : [
                           structuredAddress?.street,
                           structuredAddress?.number,
@@ -496,8 +488,8 @@ export function BusinessContactSidebar({
                   Endereço completo
                 </p>
                 <p className="text-xs sm:text-sm font-medium break-words">
-                  {typeof business.address === 'string' 
-                    ? business.address 
+                  {typeof business.address === 'string'
+                    ? business.address
                     : [
                         structuredAddress?.street,
                         structuredAddress?.number,
@@ -546,8 +538,8 @@ export function BusinessContactSidebar({
                     frameBorder="0"
                     style={{ border: 0 }}
                     src={`https://www.google.com/maps?q=${encodeURIComponent(
-                      typeof business.address === 'string' 
-                        ? `${business.address}, ${business.neighborhood || ""}` 
+                      typeof business.address === 'string'
+                        ? `${business.address}, ${business.neighborhood || ""}`
                         : `${structuredAddress?.street || ''} ${structuredAddress?.number || ''}, ${business.neighborhood || ""}`
                     )}&output=embed&z=15`}
                     allowFullScreen
@@ -556,7 +548,7 @@ export function BusinessContactSidebar({
               </div>
 
               <div className="flex gap-2">
-                {(business.latitude && business.longitude) || 
+                {(business.latitude && business.longitude) ||
                  (structuredAddress?.latitude && structuredAddress?.longitude) ? (
                   <>
                     <ViewOnMapButton

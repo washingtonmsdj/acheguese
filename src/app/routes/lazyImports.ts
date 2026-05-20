@@ -8,7 +8,7 @@ import { lazy } from "react";
 // ============================================================
 // LAYOUT E PROVIDERS
 // ============================================================
-export const AppLayoutSidebar = lazy(() => 
+export const AppLayoutSidebar = lazy(() =>
   import("@/app/components/AppLayoutSidebar").then(m => ({ default: m.AppLayoutSidebar }))
 );
 
@@ -87,7 +87,6 @@ export const EmpresaDetailLandingPage = lazy(() => import("@/app/pages/EmpresaDe
 export const EmpresaCatalogoPublicoPage = lazy(() => import("@/modules/business/pages/EmpresaCatalogoPublicoPage"));
 export const BusinessCanonicalRoute = lazy(() => import("@/core/routing/components/BusinessCanonicalRoute"));
 export const BusinessRouteResolver = lazy(() => import("@/core/routing/components/BusinessRouteResolver"));
-export const BusinessLegacyRoute = lazy(() => import("@/core/routing/components/BusinessLegacyRoute"));
 export const PremiumBusinessSiteRoute = lazy(() => import("@/modules/business/premium/pages/PremiumBusinessSiteRoute"));
 export const PremiumBusinessHomePage = lazy(() => import("@/modules/business/premium/pages/PremiumBusinessHomePage"));
 export const PremiumBusinessMenuPage = lazy(() => import("@/modules/business/premium/pages/PremiumBusinessMenuPage"));
@@ -175,7 +174,7 @@ export const EventsMapPage = lazy(() => import("@/features/events/pages/EventsMa
 export const EventsOrganizerDashboard = lazy(() => import("@/features/events/pages/EventsOrganizerDashboard"));
 export const EventsOrganizerForm = lazy(() => import("@/features/events/pages/EventsOrganizerForm"));
 export const EventsOrganizerAnalyticsPage = lazy(() => import("@/features/events/pages/EventsOrganizerAnalyticsPage"));
-export const EventsErrorBoundary = lazy(() => 
+export const EventsErrorBoundary = lazy(() =>
   import("@/features/events/components/EventsErrorBoundary").then(m => ({ default: m.EventsErrorBoundary }))
 );
 export const RecomendacoesPage = lazy(() => import("@/modules/community-recommendations/pages/RecomendacoesPage"));
@@ -204,7 +203,6 @@ export const CommunicationAgentDashboardV2 = lazy(() => import("@/modules/commun
 export const MobilidadePage = lazy(() => import("@/modules/mobility/pages/MobilidadeLandingPage"));
 export const PassageiroPage = lazy(() => import("@/modules/mobility/pages/PassageiroPage"));
 export const BuscandoMotoristaPage = lazy(() => import("@/modules/mobility/pages/BuscandoMotoristaPage"));
-export const MotoristaPage = lazy(() => import("@/modules/mobility/pages/MotoristaPage"));
 export const MotoristaPageV2 = lazy(() => import("@/modules/mobility/pages/MotoristaPageV2"));
 export const MotoboyPage = lazy(() => import("@/modules/mobility/pages/MotoboyPage"));
 export const CriarMotoristaPage = lazy(() => import("@/modules/mobility/pages/CriarMotoristaPage"));
@@ -220,7 +218,7 @@ export const PontosTuristicosPage = lazy(() => import("@/app/pages/PontosTuristi
 export const PontoTuristicoDetailPage = lazy(() => import("@/app/pages/PontoTuristicoDetailPage"));
 export const GuideTouristPointsPage = lazy(() => import("@/modules/guide/pages/TouristPointsPage"));
 export const GuideTouristPointDetailPage = lazy(() => import("@/modules/guide/pages/TouristPointDetailPage"));
-export const TouristPointRouteResolver = lazy(() => 
+export const TouristPointRouteResolver = lazy(() =>
   import("@/modules/guide/components/TouristPointRouteResolver").then(m => ({ default: m.TouristPointRouteResolver }))
 );
 export const AdminGuideTouristPointsPage = lazy(() => import("@/modules/guide/pages/AdminTouristPointsPage"));
@@ -257,7 +255,7 @@ export const GeneralAnalyticsPage = lazy(() => import("@/core/analytics/pages/An
 // ============================================================
 // QR CODE
 // ============================================================
-export const QrResolverPage = lazy(() => 
+export const QrResolverPage = lazy(() =>
   import("@/core/qr/pages/QrResolverPage").then(m => ({ default: m.QrResolverPage }))
 );
 
@@ -278,7 +276,7 @@ export const DPOContactPage = lazy(() => import("@/app/pages/DPOContactPage"));
 // ============================================================
 // DEV/ADMIN PAGES
 // ============================================================
-export const MotoboyValidationPage = lazy(() => 
+export const MotoboyValidationPage = lazy(() =>
   import("@/app/pages/dev/MotoboyValidationPage").then(m => ({ default: m.MotoboyValidationPage }))
 );
 export const LocationsAdminPage = lazy(() => import("@/modules/admin/pages/LocationsAdminPage"));

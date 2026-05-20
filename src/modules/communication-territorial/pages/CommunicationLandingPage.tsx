@@ -1,4 +1,5 @@
 import { Helmet } from "react-helmet-async";
+import { buildPublicAbsoluteUrl } from "@/shared/config/publicAppOrigin";
 import { HeroSection } from "../v2/sections/HeroSection";
 import { FeaturedMediaSection } from "../v2/sections/FeaturedMediaSection";
 import { ActiveCoverageSection } from "../v2/sections/ActiveCoverageSection";
@@ -16,6 +17,7 @@ import { useCommunicationLandingHub } from "../hooks/useCommunicationLandingHub"
 
 export default function CommunicationLandingPage() {
   const { data: hub } = useCommunicationLandingHub({ state: "ba", city: "salvador" });
+  const canonicalUrl = buildPublicAbsoluteUrl("/comunicacao");
 
   return (
     <>
@@ -23,9 +25,9 @@ export default function CommunicationLandingPage() {
         <title>Comunicacao Territorial | Achegue-se</title>
         <meta
           name="description"
-          content="Hub de comunicação territorial: descubra portais locais, rádios comunitárias, coletivos e agentes de mídia do seu território."
+          content="Hub de comunicacao territorial: descubra portais locais, radios comunitarias, coletivos e agentes de midia do seu territorio."
         />
-        <link rel="canonical" href="/comunicacao" />
+        <link rel="canonical" href={canonicalUrl} />
       </Helmet>
 
       <div className="min-h-screen bg-background text-foreground">

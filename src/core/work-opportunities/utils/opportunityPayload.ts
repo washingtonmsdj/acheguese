@@ -51,13 +51,13 @@ export function getOpportunityTypeLabel(type?: WorkOpportunityType): string {
     case "looking_for_work":
       return "Procuro trabalho";
     case "offering_work":
-      return "Ofereço trabalho";
+      return "Ofereco trabalho";
     case "freelance":
       return "Freela";
     case "quick_job":
-      return "Diária rápida";
+      return "Diaria rapida";
     case "service_availability":
-      return "Disponível para serviços";
+      return "Disponivel para servicos";
     default:
       return "Oportunidade";
   }
@@ -68,13 +68,13 @@ export function getOpportunityUrgencyLabel(urgency?: WorkOpportunityUrgency): st
     case "hoje":
       return "Hoje";
     case "24h":
-      return "Próximas 24h";
+      return "Proximas 24h";
     case "semana":
       return "Esta semana";
     case "flexivel":
-      return "Flexível";
+      return "Flexivel";
     default:
-      return "Sem urgência definida";
+      return "Sem urgencia definida";
   }
 }
 

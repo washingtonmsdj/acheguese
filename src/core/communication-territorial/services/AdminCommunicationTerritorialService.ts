@@ -4,6 +4,9 @@ import {
   selectLooseRows,
   updateLooseRows,
 } from "@/integrations/supabase/services/supabaseHelpers";
+import { PublicIdentityService } from "@/core/public-identity";
+import type { AvailabilityResult } from "@/core/public-identity";
+import { evaluateCommunicationChannelSlugSafety } from "@/core/public-identity/domain/communicationChannelSlugSafety";
 import { SessionService } from "@/core/session/services/SessionService";
 import type {
   ChannelStatus,
@@ -44,6 +47,33 @@ async function selectRows<TRow>(
 }
 
 export class AdminCommunicationTerritorialService {
+  private static ensureCommunicationSlugAvailable(
+    availability: AvailabilityResult,
+    fallbackSlug: string,
+  ): void {
+    if (availability.status === "available") return;
+
+    if (availability.status === "taken") {
+      throw new Error(
+        availability.suggestion
+          ? `Slug indisponivel. Sugestao: ${availability.suggestion}`
+          : "Slug indisponivel para este canal.",
+      );
+    }
+
+    if (availability.status === "reserved") {
+      throw new Error("Slug reservado. Escolha outro identificador publico.");
+    }
+
+    if (availability.status === "invalid") {
+      throw new Error(
+        availability.message || `Slug invalido. Tente algo como: ${fallbackSlug}`,
+      );
+    }
+
+    throw new Error("Nao foi possivel validar disponibilidade do slug do canal.");
+  }
+
   private static async appendAudit(input: {
     channel_id?: string | null;
     request_id?: string | null;
@@ -75,9 +105,62 @@ export class AdminCommunicationTerritorialService {
     requestId: string,
     payload: { slug?: string; legal_name?: string; admin_notes?: string } = {},
   ): Promise<{ channel_id: string; profile_id: string; slug: string }> {
+    const requests = await selectRows<CommunicationChannelRequest>(
+      "communication_channel_requests",
+      {
+        columns: "id, public_name",
+        filters: [{ op: "eq", column: "id", value: requestId }],
+        limit: 1,
+      },
+    );
+
+    const request = requests[0];
+    if (!request) {
+      throw new Error("Solicitacao de canal nao encontrada.");
+    }
+
+    const hasManualSlug = typeof payload.slug === "string" && payload.slug.trim().length > 0;
+    const normalizedManualSlug = hasManualSlug
+      ? PublicIdentityService.normalize(payload.slug!.trim(), "communication_channel")
+      : "";
+    const baseSlug = PublicIdentityService.normalize(
+      request.public_name,
+      "communication_channel",
+    );
+    const slugCandidate = normalizedManualSlug || baseSlug;
+
+    if (!slugCandidate) {
+      throw new Error(
+        "Nao foi possivel gerar identificador publico para o canal. Ajuste o nome publico.",
+      );
+    }
+
+    const safety = evaluateCommunicationChannelSlugSafety({
+      publicName: request.public_name,
+      slug: slugCandidate,
+    });
+    if (safety.status === "review") {
+      throw new Error(
+        "Slug muito distante do nome publico do canal. Use um slug mais proximo para evitar fraude.",
+      );
+    }
+
+    const availability = await PublicIdentityService.checkAvailability({
+      identifier: slugCandidate,
+      entityType: "communication_channel",
+    });
+    this.ensureCommunicationSlugAvailable(availability, baseSlug || "canal-local");
+
+    const sanitizedPayload = {
+      ...payload,
+      slug: hasManualSlug ? normalizedManualSlug : undefined,
+      legal_name: payload.legal_name?.trim() || undefined,
+      admin_notes: payload.admin_notes?.trim() || undefined,
+    };
+
     return callLooseRpc("admin_approve_communication_channel", {
       request_id: requestId,
-      payload,
+      payload: sanitizedPayload,
     });
   }
 

@@ -1,4 +1,4 @@
-﻿import { useRef } from "react";
+import { useRef } from "react";
 import { Building2, Globe, Loader2, Upload } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
@@ -12,8 +12,10 @@ import {
 } from "@/shared/components/ui/card";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { getPaymentMethodLabels } from "@/core/business/constants";
+import { getBusinessCreateFieldCopy } from "./businessCreateCopy";
 
 interface ExtrasStepProps {
+  category: string;
   capaPreview: string | null;
   website: string;
   instagram: string;
@@ -40,6 +42,7 @@ interface ExtrasStepProps {
 const FORMAS_PAGAMENTO = getPaymentMethodLabels();
 
 export function ExtrasStep({
+  category,
   capaPreview,
   website,
   instagram,
@@ -62,6 +65,7 @@ export function ExtrasStep({
   onCreate,
 }: ExtrasStepProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const copy = getBusinessCreateFieldCopy(category);
 
   const handlePagamentoToggle = (forma: string, checked: boolean) => {
     if (checked) {
@@ -80,7 +84,7 @@ export function ExtrasStep({
           Midia, canais publicos e operacao complementar
         </CardTitle>
         <CardDescription>
-          Ajustes finais para enriquecer a pagina publica e o dashboard sem duplicar regra de negocio.
+          Ajustes finais para enriquecer a pagina publica do seu {copy.entityNoun} e o dashboard.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -118,7 +122,7 @@ export function ExtrasStep({
             <Label htmlFor="website">Website</Label>
             <Input
               id="website"
-              placeholder="https://empresa.com.br"
+              placeholder={copy.websitePlaceholder}
               value={website}
               onChange={(event) => onWebsiteChange(event.target.value)}
             />
@@ -129,7 +133,7 @@ export function ExtrasStep({
             <Label htmlFor="instagram">Instagram</Label>
             <Input
               id="instagram"
-              placeholder="@empresa ou URL"
+              placeholder={copy.instagramPlaceholder}
               value={instagram}
               onChange={(event) => onInstagramChange(event.target.value)}
             />
@@ -140,7 +144,7 @@ export function ExtrasStep({
             <Label htmlFor="facebook">Facebook</Label>
             <Input
               id="facebook"
-              placeholder="pagina ou URL"
+              placeholder={copy.facebookPlaceholder}
               value={facebook}
               onChange={(event) => onFacebookChange(event.target.value)}
             />
@@ -169,7 +173,7 @@ export function ExtrasStep({
             id="especialidades"
             value={especialidades}
             onChange={(event) => onEspecialidadesChange(event.target.value)}
-            placeholder="Ex: massas artesanais, cafe da manha, entrega rapida"
+            placeholder={copy.specialtiesPlaceholder}
           />
           <p className="text-xs text-muted-foreground">Separe por virgula.</p>
         </div>
@@ -180,7 +184,7 @@ export function ExtrasStep({
             id="facilidades"
             value={facilidades}
             onChange={(event) => onFacilidadesChange(event.target.value)}
-            placeholder="Ex: estacionamento, acessibilidade, wifi, pet friendly"
+            placeholder={copy.facilitiesPlaceholder}
           />
           <p className="text-xs text-muted-foreground">Separe por virgula.</p>
         </div>

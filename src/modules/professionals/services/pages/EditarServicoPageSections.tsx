@@ -140,6 +140,7 @@ export function EditarServicoInfoTab({
   slug,
   originalSlug,
   professionalId,
+  isVerifiedProfessional,
   slugConfirmProps,
   onFieldChange,
   onPhotoChange,
@@ -150,6 +151,7 @@ export function EditarServicoInfoTab({
   slug: string;
   originalSlug: string;
   professionalId: string;
+  isVerifiedProfessional?: boolean;
   slugConfirmProps: React.ComponentProps<typeof IdentityChangeConfirmDialog>;
   onFieldChange: UpdateField;
   onPhotoChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
@@ -244,6 +246,8 @@ export function EditarServicoInfoTab({
         onSlugChange={onSlugChange}
         originalSlug={originalSlug}
         professionalId={professionalId}
+        professionalName={form.name}
+        isVerifiedProfessional={isVerifiedProfessional}
       />
       <IdentityChangeConfirmDialog {...slugConfirmProps} />
     </div>

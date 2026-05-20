@@ -1,6 +1,8 @@
+import { getBusinessCreateRoute, type VerticalKey } from "@/core/verticals/config";
+
 export const businessManagementRoutes = {
   list: () => "/central/empresas",
-  create: () => "/central/empresas/nova",
+  create: (vertical?: VerticalKey) => getBusinessCreateRoute(vertical),
   overview: (businessId: string) => `/central/empresas/${businessId}`,
   dados: (businessId: string) => `/central/empresas/${businessId}/dados`,
   gastronomia: (businessId: string) => `/central/empresas/${businessId}/gastronomia`,
@@ -20,19 +22,19 @@ export const businessManagementRoutes = {
   gastronomyEntregas: (businessId: string) => `/central/empresas/${businessId}/gastronomia/entregas`,
   gastronomyAnalytics: (businessId: string) => `/central/empresas/${businessId}/gastronomia/analytics`,
   gastronomyPromocoes: (businessId: string) => `/central/empresas/${businessId}/gastronomia/promocoes`,
-  education: (businessId: string) => `/central/empresas/${businessId}/education`,
-  educationSetup: (businessId: string) => `/central/empresas/${businessId}/education/setup`,
-  educationProgramas: (businessId: string) => `/central/empresas/${businessId}/education/programas`,
-  educationLeads: (businessId: string) => `/central/empresas/${businessId}/education/leads`,
-  educationEventos: (businessId: string) => `/central/empresas/${businessId}/education/eventos`,
-  educationAnalytics: (businessId: string) => `/central/empresas/${businessId}/education/analytics`,
-  educationPlanos: (businessId: string) => `/central/empresas/${businessId}/education/planos`,
+  education: (businessId: string) => `/central/empresas/${businessId}/educacao`,
+  educationSetup: (businessId: string) => `/central/empresas/${businessId}/educacao/setup`,
+  educationProgramas: (businessId: string) => `/central/empresas/${businessId}/educacao/programas`,
+  educationLeads: (businessId: string) => `/central/empresas/${businessId}/educacao/leads`,
+  educationEventos: (businessId: string) => `/central/empresas/${businessId}/educacao/eventos`,
+  educationAnalytics: (businessId: string) => `/central/empresas/${businessId}/educacao/analytics`,
+  educationPlanos: (businessId: string) => `/central/empresas/${businessId}/educacao/planos`,
 };
 
 export function getBusinessManagementSectionLabel(pathname: string) {
   if (/\/dados$/.test(pathname)) return "Dados da empresa";
   if (/\/gastronomia(\/|$)/.test(pathname)) return "Gastronomia";
-  if (/\/education(\/|$)/.test(pathname)) return "Educação";
+  if (/\/educacao(\/|$)/.test(pathname)) return "Educacao";
   if (/\/planos$/.test(pathname)) return "Planos";
   if (/\/link-premium$/.test(pathname)) return "Link premium";
   if (/\/analytics$/.test(pathname)) return "Analytics";

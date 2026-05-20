@@ -42,6 +42,7 @@ import { servicesLocationService } from "@/modules/professionals/services/servic
 import { useProfessionalCreateMultiProfile } from "@/modules/professionals/services/hooks/useProfessionalCreateMultiProfile";
 import { ProfessionalSlugSection } from "@/modules/professionals/services/components/identity/ProfessionalSlugSection";
 import { PublicIdentityService } from "@/core/public-identity";
+import { evaluateProfessionalSlugSafety } from "@/core/public-identity/domain/professionalSlugSafety";
 import { logger } from "@/shared/utils/logger";
 import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-runtime-context";
 import { ActiveProfileBadge } from "@/core/profiles/components/ActiveProfileBadge";
@@ -123,7 +124,7 @@ export default function CadastrarServicoPage() {
   };
 
   const handleSlugChange = (value: string) => {
-    setSlug(value);
+    setSlug(PublicIdentityService.normalize(value, "professional"));
     setSlugManuallyEdited(true);
   };
 
@@ -162,6 +163,15 @@ export default function CadastrarServicoPage() {
           return "Nome deve ter pelo menos 2 caracteres";
         if (!form.category) return "Selecione uma categoria";
         if (!form.subcategory.trim()) return "Informe o título do serviço";
+        if (slug.trim()) {
+          const slugSafety = evaluateProfessionalSlugSafety({
+            professionalName: form.name.trim(),
+            slug: slug.trim(),
+          });
+          if (slugSafety.status === "review") {
+            return "O link publico esta muito diferente do nome. Ajuste o link para manter autenticidade.";
+          }
+        }
         return null;
       case "details":
         if (form.serviceAreas.length === 0)
@@ -439,6 +449,7 @@ export default function CadastrarServicoPage() {
             <ProfessionalSlugSection
               slug={slug}
               onSlugChange={handleSlugChange}
+              professionalName={form.name}
             />
           </>
         )}
@@ -768,5 +779,3 @@ export default function CadastrarServicoPage() {
     </div>
   );
 }
-
-

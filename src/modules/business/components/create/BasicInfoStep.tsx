@@ -1,4 +1,4 @@
-﻿import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Building2, FileText, Upload, ArrowRight } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
@@ -18,8 +18,17 @@ import {
 } from "@/shared/components/ui/avatar";
 import { CATEGORY_CONFIGS } from "@/modules/business/config/categoryFilters";
 import { BUSINESS_COMPANY_TYPES, BUSINESS_EMPLOYEE_COUNTS } from "@/shared/schemas/business/businessSchemas";
+import { getBusinessCreateFieldCopy } from "./businessCreateCopy";
 
 interface BasicInfoStepProps {
+  contextTitle?: string;
+  contextDescription?: string;
+  categoryLocked?: boolean;
+  categoryLockedHelp?: string;
+  nameLabel?: string;
+  namePlaceholder?: string;
+  descriptionPlaceholder?: string;
+  showNextButton?: boolean;
   name: string;
   legalName: string;
   cnpj: string;
@@ -62,6 +71,8 @@ const EMPLOYEE_COUNT_LABELS: Record<string, string> = {
   "500+": "Mais de 500 pessoas",
 };
 
+const INDUSTRY_CUSTOM_VALUE = "__custom__";
+
 function getCompanyTypeLabel(option: string): string {
   switch (option) {
     case "mei":
@@ -97,6 +108,14 @@ function getEmployeeCountLabel(option: string): string {
 }
 
 export function BasicInfoStep({
+  contextTitle,
+  contextDescription,
+  categoryLocked = false,
+  categoryLockedHelp,
+  nameLabel = "Nome da empresa",
+  namePlaceholder,
+  descriptionPlaceholder,
+  showNextButton = true,
   name,
   legalName,
   cnpj,
@@ -124,16 +143,30 @@ export function BasicInfoStep({
 }: BasicInfoStepProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const categoryOptions = Object.values(CATEGORY_CONFIGS);
+  const copy = getBusinessCreateFieldCopy(category);
+  const effectiveNamePlaceholder = namePlaceholder || copy.namePlaceholder;
+  const effectiveDescriptionPlaceholder = descriptionPlaceholder || copy.descriptionPlaceholder;
+  const industryOptions = copy.industryOptions;
+  const [manualIndustryMode, setManualIndustryMode] = useState(false);
+  const usesCustomIndustry = Boolean(industry && !industryOptions.includes(industry));
+
+  useEffect(() => {
+    if (usesCustomIndustry && !manualIndustryMode) {
+      setManualIndustryMode(true);
+    }
+  }, [manualIndustryMode, usesCustomIndustry]);
+
+  const industrySelectValue = manualIndustryMode ? INDUSTRY_CUSTOM_VALUE : industry;
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Building2 className="h-5 w-5 text-primary" />
-          Identidade e classificacao
+          {contextTitle ?? "Identidade e classificacao"}
         </CardTitle>
         <CardDescription>
-          Nome, enquadramento e descricao que definem a empresa no dominio canonico.
+          {contextDescription ?? "Nome, enquadramento e descricao que definem a empresa no dominio canonico."}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -174,13 +207,14 @@ export function BasicInfoStep({
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="space-y-2 md:col-span-2">
             <Label htmlFor="name">
-              Nome da empresa <span className="text-destructive">*</span>
+              {nameLabel} <span className="text-destructive">*</span>
             </Label>
             <Input
               id="name"
+              data-testid="business-create-name"
               value={name}
               onChange={(event) => onNameChange(event.target.value)}
-              placeholder="Ex: Padaria do Joao"
+              placeholder={effectiveNamePlaceholder}
               maxLength={100}
             />
             {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
@@ -192,7 +226,7 @@ export function BasicInfoStep({
               id="legal_name"
               value={legalName}
               onChange={(event) => onLegalNameChange(event.target.value)}
-              placeholder="Ex: Padaria do Joao LTDA"
+              placeholder={copy.legalNamePlaceholder}
             />
             {errors.legal_name && <p className="text-xs text-destructive">{errors.legal_name}</p>}
           </div>
@@ -214,8 +248,10 @@ export function BasicInfoStep({
             </Label>
             <select
               id="category"
+              data-testid="business-create-category"
               value={category}
               onChange={(event) => onCategoryChange(event.target.value)}
+              disabled={categoryLocked}
               className="w-full rounded-md border bg-background px-3 py-2"
             >
               <option value="">Selecione uma categoria</option>
@@ -225,6 +261,9 @@ export function BasicInfoStep({
                 </option>
               ))}
             </select>
+            {categoryLocked && categoryLockedHelp && (
+              <p className="text-xs text-muted-foreground">{categoryLockedHelp}</p>
+            )}
             {errors.category && <p className="text-xs text-destructive">{errors.category}</p>}
           </div>
 
@@ -234,7 +273,7 @@ export function BasicInfoStep({
               id="subcategoria"
               value={subcategory}
               onChange={(event) => onSubcategoryChange(event.target.value)}
-              placeholder="Ex: Padaria artesanal"
+              placeholder={copy.subcategoryPlaceholder}
             />
             {errors.subcategoria && <p className="text-xs text-destructive">{errors.subcategoria}</p>}
           </div>
@@ -291,12 +330,36 @@ export function BasicInfoStep({
 
           <div className="space-y-2 md:col-span-2">
             <Label htmlFor="industry">Segmento</Label>
-            <Input
+            <select
               id="industry"
-              value={industry}
-              onChange={(event) => onIndustryChange(event.target.value)}
-              placeholder="Ex: Alimentacao artesanal, servicos automotivos, clinica odontologica"
-            />
+              value={industrySelectValue}
+              onChange={(event) => {
+                const nextValue = event.target.value;
+                if (nextValue === INDUSTRY_CUSTOM_VALUE) {
+                  setManualIndustryMode(true);
+                  onIndustryChange("");
+                  return;
+                }
+                setManualIndustryMode(false);
+                onIndustryChange(nextValue);
+              }}
+              className="w-full rounded-md border bg-background px-3 py-2"
+            >
+              <option value="">Nao informado</option>
+              {industryOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+              <option value={INDUSTRY_CUSTOM_VALUE}>Outro (digitar manualmente)</option>
+            </select>
+            {manualIndustryMode && (
+              <Input
+                value={industry}
+                onChange={(event) => onIndustryChange(event.target.value)}
+                placeholder={copy.industryPlaceholder}
+              />
+            )}
             {errors.industry && <p className="text-xs text-destructive">{errors.industry}</p>}
           </div>
         </div>
@@ -309,7 +372,7 @@ export function BasicInfoStep({
             id="description"
             value={description}
             onChange={(event) => onDescriptionChange(event.target.value)}
-            placeholder="Explique o que a empresa oferece, para quem atende e o diferencial do negocio."
+            placeholder={effectiveDescriptionPlaceholder}
             maxLength={1000}
             rows={5}
           />
@@ -327,14 +390,16 @@ export function BasicInfoStep({
             O que esta sendo definido aqui
           </div>
           <p>
-            Esta etapa preenche a identidade principal da empresa, o enquadramento basico do dominio business e a base que sera reutilizada por dashboard, pagina publica e futuras extensoes verticais.
+            Esta etapa define a identidade principal do seu {copy.entityNoun}, o enquadramento basico no dominio business e a base reutilizada no painel, pagina publica e extensoes verticais.
           </p>
         </div>
 
-        <Button type="button" onClick={onNext} className="w-full gap-2">
-          Continuar
-          <ArrowRight className="h-4 w-4" />
-        </Button>
+        {showNextButton && (
+          <Button type="button" onClick={onNext} className="w-full gap-2">
+            Continuar
+            <ArrowRight className="h-4 w-4" />
+          </Button>
+        )}
       </CardContent>
     </Card>
   );

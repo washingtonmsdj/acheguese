@@ -27,6 +27,7 @@ export default defineConfig({
 
   use: {
     baseURL,
+    ignoreHTTPSErrors: true,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
@@ -45,13 +46,17 @@ export default defineConfig({
     },
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        launchOptions: { args: ['--ignore-certificate-errors'] },
+      },
       dependencies: [],
     },
     {
       name: 'education-authenticated',
       use: {
         ...devices['Desktop Chrome'],
+        launchOptions: { args: ['--ignore-certificate-errors'] },
         storageState: EDUCATION_AUTH_FILE,
       },
       testMatch: /education\/(education-setup|education-programs|education-leads|education-cookie-debug|education-network-debug|education-dashboard-debug)\.spec\.ts/,

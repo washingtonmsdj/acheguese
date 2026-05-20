@@ -1,9 +1,9 @@
 /**
- * Painel do Motoboy â€” PÃ¡gina Dedicada para Entregas
- * 
- * SeparaÃ§Ã£o profissional entre motorista (corridas) e motoboy (entregas)
+ * Painel do Motoboy - Pagina dedicada para Entregas
+ *
+ * Separacao profissional entre motorista (corridas) e motoboy (entregas)
  * seguindo SSOT e arquitetura limpa.
- * 
+ *
  * Rota: /mobilidade/motoboy
  */
 
@@ -68,7 +68,7 @@ export default function MotoboyPage() {
     "today" | "week" | "month" | "total" | null
   >(null);
 
-  // âœ… SSOT COMPLIANT: Redirecionar para cadastro se nÃ£o for motoboy
+  // SSOT compliant: Redirecionar para cadastro se nao for motoboy
   React.useEffect(() => {
     if (!hook.loading && !hook.isDriver) {
       navigate(mobilityUrls.motoboy.cadastro);
@@ -93,7 +93,7 @@ export default function MotoboyPage() {
               error={hook.error}
               onRetry={() => hook.refetch()}
               title="Erro ao carregar"
-              description="Verifique sua conexÃ£o."
+              description="Verifique sua conexao."
             />
           </div>
         </div>
@@ -116,10 +116,10 @@ export default function MotoboyPage() {
   return (
     <ErrorBoundary onReset={() => window.location.reload()}>
       <div className="bg-background">
-        {/* Header da pÃ¡gina */}
+        {/* Header da pagina */}
         <PageHeader {...hook} hook={hook} />
 
-        {/* ConteÃºdo */}
+        {/* Conteudo */}
         <div className="max-w-7xl mx-auto px-4 py-4">
           <DriverSuspensionAlert />
 
@@ -130,7 +130,7 @@ export default function MotoboyPage() {
               Modo Motoboy
             </Badge>
             <span className="text-xs text-muted-foreground">
-              Apenas entregas disponÃ­veis
+              Apenas entregas disponiveis
             </span>
           </div>
 
@@ -199,12 +199,12 @@ export default function MotoboyPage() {
                 </div>
               )}
 
-              {/* Entregas DisponÃ­veis */}
+              {/* Entregas Disponiveis */}
               {hook.availableDeliveries?.length > 0 && (
                 <div className="space-y-3">
                   <h3 className="text-xs font-bold text-foreground flex items-center gap-1.5">
                     <Package className="h-3.5 w-3.5 text-orange-500" />
-                    Entregas DisponÃ­veis ({hook.availableDeliveries.length})
+                    Entregas Disponiveis ({hook.availableDeliveries.length})
                   </h3>
                   {hook.availableDeliveries.map((delivery: DashboardRide) => (
                     <div
@@ -214,7 +214,7 @@ export default function MotoboyPage() {
                       <div className="flex items-start justify-between">
                         <div className="space-y-1">
                           <p className="text-sm font-medium">
-                            {String(delivery.origin ?? "")} â†’ {String(delivery.destination ?? "")}
+                            {String(delivery.origin ?? "")} -&gt; {String(delivery.destination ?? "")}
                           </p>
                           <p className="text-xs text-muted-foreground">
                             {String(delivery.package_description || "Pacote")}
@@ -242,7 +242,7 @@ export default function MotoboyPage() {
                   <div className="text-center py-12">
                     <Package className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
                     <p className="text-sm font-medium text-muted-foreground">
-                      Nenhuma entrega disponÃ­vel
+                      Nenhuma entrega disponivel
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
                       {hook.isDriverOnline
@@ -411,7 +411,7 @@ function PageHeader({
                   {hook.driverStats.avgRating.toFixed(1)}
                 </span>
               </div>
-              <span className="text-xs text-muted-foreground">â˜…</span>
+              <Star className="h-3 w-3 fill-current text-muted-foreground" aria-hidden="true" />
             </div>
             <div className="text-center">
               <div className="flex items-center gap-1">
@@ -486,4 +486,3 @@ function PageHeader({
     </div>
   );
 }
-

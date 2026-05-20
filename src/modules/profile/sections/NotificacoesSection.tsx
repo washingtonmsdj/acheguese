@@ -1,8 +1,8 @@
 /**
- * NotificacoesSection - SeÃ§Ã£o de notificaÃ§Ãµes do perfil
- * 
+ * NotificacoesSection - Secao de notificacoes do perfil
+ *
  * SSOT: Componente isolado com props tipadas
- * Sem gambiarras: LÃ³gica clara e organizada
+ * Sem gambiarras: Logica clara e organizada
  */
 
 import { SectionFrame, NotificationsPanel } from "@/modules/profile/components/hub";

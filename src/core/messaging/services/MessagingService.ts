@@ -1,4 +1,4 @@
-﻿import { supabase } from "@/integrations/supabase";
+import { supabase } from "@/integrations/supabase";
 import { trackError } from "@/shared/utils/errorTracking";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services";
@@ -83,10 +83,10 @@ class MessagingService {
 
           return {
             ...conv,
-            classified_title: classified?.title || "AnÃºncio",
+            classified_title: classified?.title || "Anuncio",
             classified_price: classified?.price || 0,
             classified_photo: classified?.photos?.[0] || "",
-            other_user_name: otherProfile?.name || "UsuÃ¡rio",
+            other_user_name: otherProfile?.name || "Usuario",
             other_user_avatar: otherProfile?.avatarUrl || "",
             last_message_text: lastMessage?.text || "",
             unread_count: unreadCount,
@@ -136,10 +136,10 @@ class MessagingService {
 
       return {
         ...conversation,
-        classified_title: classified?.title || "AnÃºncio",
+        classified_title: classified?.title || "Anuncio",
         classified_price: classified?.price || 0,
         classified_photo: classified?.photos?.[0] || "",
-        other_user_name: otherProfile?.name || "UsuÃ¡rio",
+        other_user_name: otherProfile?.name || "Usuario",
         other_user_avatar: otherProfile?.avatar_url || "",
       };
     } catch (error) {
@@ -474,7 +474,7 @@ class MessagingService {
         .update({
           status: "blocked",
           blocked_by: input.blocked_by,
-          block_reason: input.block_reason || "Bloqueado pelo usuÃ¡rio",
+          block_reason: input.block_reason || "Bloqueado pelo usuario",
         })
         .eq("id", input.conversation_id);
 
@@ -691,4 +691,3 @@ class MessagingService {
 
 export const messagingService = new MessagingService();
 export default messagingService;
-

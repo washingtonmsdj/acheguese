@@ -1,4 +1,4 @@
-﻿/**
+/**
  * GastronomyProfileService â€” SSOT canÃ´nico do vertical Gastronomia
  *
  * Centraliza toda a lÃ³gica de negÃ³cio do perfil gastronÃ´mico.
@@ -101,7 +101,7 @@ export const GastronomyProfileService = {
         .maybeSingle();
 
       if (existing) {
-        return { data: null, error: 'Este negÃ³cio jÃ¡ possui um perfil gastronÃ´mico.' };
+        return { data: null, error: 'Este negocio ja possui um perfil gastronomico.' };
       }
 
       const { data, error } = await supabase
@@ -192,4 +192,3 @@ export const GastronomyProfileService = {
     }
   },
 };
-

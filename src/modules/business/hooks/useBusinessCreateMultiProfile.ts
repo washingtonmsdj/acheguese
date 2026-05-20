@@ -1,4 +1,4 @@
-﻿/**
+/**
  * USE BUSINESS CREATE MULTI-PROFILE
  *
  * Cria o profile business via RPC e, em seguida, sincroniza todo o dominio
@@ -13,6 +13,10 @@ import { toast } from "sonner";
 import { locationContextStore } from "@/core/location/stores/LocationContextStore";
 import { mediaService } from "@/core/media/services/MediaService";
 import { PublicIdentityService } from "@/core/public-identity/services/PublicIdentityService";
+import {
+  evaluateBusinessSlugSafety,
+  isBusinessSlugSafetyBypassAllowed,
+} from "@/core/public-identity/domain/businessSlugSafety";
 import type { CreateBusinessInput } from "@/modules/business/types";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 
@@ -114,6 +118,18 @@ export function useBusinessCreateMultiProfile(
 
       let finalSlug = normalizedInput.slug;
       if (finalSlug) {
+        if (!isBusinessSlugSafetyBypassAllowed({ isVerifiedOfficial: normalizedInput.is_verified })) {
+          const slugSafety = evaluateBusinessSlugSafety({
+            businessName: normalizedInput.name,
+            slug: finalSlug,
+          });
+          if (slugSafety.status === "review") {
+            throw new Error(
+              "O link publico esta muito diferente do nome do negocio. Ajuste o link para manter autenticidade.",
+            );
+          }
+        }
+
         const availability = await PublicIdentityService.checkAvailability({
           identifier: finalSlug,
           entityType: "business",

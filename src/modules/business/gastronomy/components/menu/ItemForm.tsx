@@ -1,5 +1,5 @@
-﻿/**
- * ItemForm â€” FormulÃ¡rio de item do cardÃ¡pio
+/**
+ * ItemForm - Formulario de item do cardapio
  *
  * Orquestra o fluxo de criacao/edicao; schema, payload e blocos visuais ficam isolados.
  */
@@ -123,7 +123,7 @@ export function ItemForm({
         <DialogHeader>
           <DialogTitle>{item ? 'Editar Item' : 'Novo Item'}</DialogTitle>
           <DialogDescription>
-            {item ? 'Atualize as informaÃ§Ãµes do item' : 'Adicione um novo item ao cardÃ¡pio'}
+            {item ? 'Atualize as informacoes do item' : 'Adicione um novo item ao cardapio'}
           </DialogDescription>
         </DialogHeader>
 
@@ -148,7 +148,7 @@ export function ItemForm({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>DescriÃ§Ã£o</FormLabel>
+                  <FormLabel>Descricao</FormLabel>
                   <FormControl>
                     <Textarea placeholder="Descreva o item..." rows={3} {...field} />
                   </FormControl>

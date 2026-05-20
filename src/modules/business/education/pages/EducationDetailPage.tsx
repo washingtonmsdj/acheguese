@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -45,23 +45,17 @@ import {
   AccordionTrigger,
 } from '@/shared/components/ui/accordion';
 import { cn } from '@/shared/utils/cn';
+import { buildPublicAbsoluteUrl } from '@/shared/config/publicAppOrigin';
+import { usePublicBrowsingCity } from '@/core/location/hooks/usePublicBrowsingCity';
 
 import { useEducationDetail } from '../hooks/useEducationDetail';
+import { useEducationEvents } from '../hooks/useEducationEvents';
+import { useEducationPrograms } from '../hooks/useEducationPrograms';
 import { getNicheByKey } from '../niches/registry';
 import { useLabels } from '../hooks/useEducationLabels';
 import { useEducationTracking } from '../hooks/useEducationTracking';
 import { useEducationLeads } from '../hooks/useEducationLeads';
 import type { LeadFormData } from '../components/EducationLeadForm';
-import {
-  getEducationPreviewDetailBySlug,
-  isEducationPreviewEnabled,
-} from '../mocks/educationPreviewRuntime';
-import type { EducationDetailPreview } from '../mocks/publicEducationPage.mock';
-import type {
-  EducationProgram,
-  EducationEvent,
-  EducationProfile,
-} from '../types';
 import {
   ACCESSIBILITY_LABELS,
   BASIC_RESOURCE_LABELS,
@@ -90,32 +84,27 @@ import {
 export function EducationDetailPage() {
   const { state, city, district, slug } = useParams();
   const navigate = useNavigate();
+  const { active } = usePublicBrowsingCity();
+  const effectiveState = state ?? active.state;
+  const effectiveCity = city ?? active.city;
 
-  const { data: realProfile, isLoading, isError } = useEducationDetail({
+  const { data: profile, isLoading, isError } = useEducationDetail({
     state,
     city,
     district,
     slug,
   });
 
-  const allowPreviewFallback = isEducationPreviewEnabled();
-
-  const previewDetail: EducationDetailPreview | undefined = allowPreviewFallback
-    ? getEducationPreviewDetailBySlug(slug)
-    : undefined;
-
-  const isPreviewSource = !realProfile && Boolean(previewDetail);
-  const profile: EducationProfile | null = realProfile ?? previewDetail?.profile ?? null;
-  
-  const programs: EducationProgram[] = useMemo(() => {
-    return previewDetail?.programs ?? [];
-  }, [previewDetail?.programs]);
-  
-  const events: EducationEvent[] = previewDetail?.events ?? [];
-  const highlights: string[] = previewDetail?.highlights ?? [];
-  const stats = (previewDetail?.stats ?? []).filter(
-    (stat) => stat.label.toLowerCase() !== 'fonte'
-  );
+  const { programs } = useEducationPrograms(profile?.id);
+  const { events } = useEducationEvents(profile?.id, { isPublic: true, upcoming: true });
+  const highlights: string[] = [];
+  const stats = [
+    profile?.school_network ? { label: 'Rede', value: profile.school_network } : null,
+    profile?.enrollment_open ? { label: 'Matriculas', value: 'Abertas' } : null,
+    (profile?.education_levels ?? []).length > 0
+      ? { label: 'Etapas', value: String(profile?.education_levels?.length ?? 0) }
+      : null,
+  ].filter((stat): stat is { label: string; value: string } => Boolean(stat));
 
   const nicheConfig = profile ? getNicheByKey(profile.niche_key) : null;
   const labels = useLabels(profile?.niche_key);
@@ -133,11 +122,11 @@ export function EducationDetailPage() {
       nicheKey: profile?.niche_key ?? 'regular_school',
       businessId: profile?.business_id,
     });
-  const { create: createLead } = useEducationLeads(isPreviewSource ? undefined : (profile?.id ?? undefined));
+  const { create: createLead } = useEducationLeads(profile?.id ?? undefined);
 
   const handleLeadSubmit = async (formData: LeadFormData) => {
     if (!profile?.id) return;
-    
+
     const lead = await createLead({
       fullName: formData.fullName,
       email: formData.email,
@@ -162,23 +151,30 @@ export function EducationDetailPage() {
     }
   };
   useEffect(() => {
-    if (profile?.id && !isPreviewSource) {
+    if (profile?.id) {
       trackProfileView();
     }
-  }, [profile?.id, isPreviewSource, trackProfileView]);
+  }, [profile?.id, trackProfileView]);
 
   const cityLabel = (city ?? '').replace(/-/g, ' ');
   const districtLabel = (district ?? '').replace(/-/g, ' ');
 
   const institutionName =
-    previewDetail?.institutionName ?? profile?.institution_type ?? 'Instituicao';
+    profile?.business_name ?? profile?.institution_type ?? 'Instituicao';
+  const canonicalPath =
+    state && city && district && slug
+      ? `/educacao/${state}/${city}/${district}/${slug}`
+      : '/educacao';
+  const showcasePath = `/educacao/${effectiveState}/${effectiveCity}`;
 
   const whatsappHref = buildWhatsAppHref(profile?.whatsapp_number);
 
   const modalitiesPresent = useMemo(() => {
     const set = new Set<string>();
     programs.forEach((p) => {
-      if (p.modality) set.add(p.modality.toLowerCase());
+      if (p.modality) {
+        set.add(p.modality.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
+      }
     });
     return set;
   }, [programs]);
@@ -188,25 +184,43 @@ export function EducationDetailPage() {
   const equipmentFeatures = (profile.school_equipment_features ?? []).map((key) => EQUIPMENT_LABELS[key]).filter(Boolean);
   const facilityFeatures = (profile.school_facility_features ?? []).map((key) => FACILITY_LABELS[key]).filter(Boolean);
 
-  const goToShowcase = () => navigate(`/educacao/${state}/${city}`);
+  const goToShowcase = () => navigate(showcasePath);
 
-  if (isLoading && !previewDetail) {
+  if (isLoading) {
     return <EducationDetailLoadingState />;
   }
 
-  if (isError && !previewDetail) {
-    return <EducationDetailErrorState onBack={() => navigate(-1)} onGoToShowcase={goToShowcase} />;
+  if (isError) {
+    return (
+      <>
+        <Helmet>
+          <title>Erro ao carregar instituicao | Acheguese</title>
+          <meta name="robots" content="noindex,follow" />
+          <link rel="canonical" href={buildPublicAbsoluteUrl(showcasePath)} />
+        </Helmet>
+        <EducationDetailErrorState onBack={() => navigate(-1)} onGoToShowcase={goToShowcase} />
+      </>
+    );
   }
 
   if (!profile) {
-    return <EducationDetailNotFoundState cityLabel={cityLabel} onGoToShowcase={goToShowcase} />;
+    return (
+      <>
+        <Helmet>
+          <title>Instituicao nao encontrada | Acheguese</title>
+          <meta name="robots" content="noindex,follow" />
+          <link rel="canonical" href={buildPublicAbsoluteUrl(showcasePath)} />
+        </Helmet>
+        <EducationDetailNotFoundState cityLabel={cityLabel} onGoToShowcase={goToShowcase} />
+      </>
+    );
   }
 
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
         <title>
-          {institutionName} â€” Educacao em {cityLabel} | Acheguese
+          {institutionName} - Educacao em {cityLabel} | Acheguese
         </title>
         <meta
           name="description"
@@ -215,6 +229,7 @@ export function EducationDetailPage() {
             `Conheca ${institutionName}, instituicao educacional em ${districtLabel}, ${cityLabel}. Cursos, modalidades, equipe e contato direto.`
           }
         />
+        <link rel="canonical" href={buildPublicAbsoluteUrl(canonicalPath)} />
       </Helmet>
 
       {/* HERO */}
@@ -269,12 +284,6 @@ export function EducationDetailPage() {
                     <Badge className="border-amber-300/40 bg-amber-500/30 text-white backdrop-blur-sm">
                       <Star className="mr-1 h-3 w-3" />
                       Matriculas Abertas
-                    </Badge>
-                  )}
-                  {isPreviewSource && (
-                    <Badge className="border-white/30 bg-white/15 text-white backdrop-blur-sm">
-                      <Info className="mr-1 h-3 w-3" />
-                      Preview
                     </Badge>
                   )}
                 </div>
@@ -485,9 +494,9 @@ export function EducationDetailPage() {
               ) : (
                 <div className="grid gap-4 md:grid-cols-2">
                   {programs.map((p) => (
-                    <ProgramCard 
-                      key={p.id} 
-                      program={p} 
+                    <ProgramCard
+                      key={p.id}
+                      program={p}
                       onClick={() => trackProgramView(p.id)}
                     />
                   ))}
@@ -518,7 +527,7 @@ export function EducationDetailPage() {
                   icon={Sparkles}
                   title="Hibrido"
                   description="Combinacao de encontros presenciais e atividades remotas."
-                  highlight={modalitiesPresent.has('hibrido') || modalitiesPresent.has('hÃ­brido')}
+                  highlight={modalitiesPresent.has('hibrido')}
                 />
               </div>
             </section>
@@ -544,25 +553,12 @@ export function EducationDetailPage() {
                 <Camera className="h-5 w-5 text-primary" />
                 <h2 className="text-2xl font-bold">Galeria</h2>
               </header>
-              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-                {Array.from({ length: 8 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className={cn(
-                      'aspect-square rounded-2xl bg-gradient-to-br',
-                      gradient,
-                      'opacity-70'
-                    )}
-                  >
-                    <div className="flex h-full w-full items-center justify-center text-white/70">
-                      <Camera className="h-6 w-6" />
-                    </div>
-                  </div>
-                ))}
+              <div className="rounded-2xl border border-dashed border-border bg-card/40 p-6 text-sm text-muted-foreground">
+                Nenhuma imagem oficial publicada por esta instituicao ate o momento.
               </div>
               <p className="mt-3 text-xs text-muted-foreground">
                 <Info className="mr-1 inline h-3 w-3" />
-                Imagens oficiais da instituicao serao exibidas quando cadastradas.
+                As imagens serao exibidas automaticamente quando a instituicao enviar a galeria.
               </p>
             </section>
 
@@ -594,8 +590,8 @@ export function EducationDetailPage() {
                         {ev.school_event_type && profile?.niche_key === 'regular_school' && (
                           <Badge variant="outline" className="text-[11px] border-indigo-200 text-indigo-700 bg-indigo-50">
                             {ev.school_event_type === 'open_house' ? 'Portas Abertas' :
-                             ev.school_event_type === 'enrollment_fair' ? 'Feira de MatrÃ­cula' :
-                             ev.school_event_type === 'parent_meeting' ? 'ReuniÃ£o de Pais' :
+                             ev.school_event_type === 'enrollment_fair' ? 'Feira de Matricula' :
+                             ev.school_event_type === 'parent_meeting' ? 'Reuniao de Pais' :
                              ev.school_event_type === 'trial_class' ? 'Aula Experimental' :
                              ev.school_event_type === 'school_tour' ? 'Visita Escolar' :
                              ev.school_event_type === 'cultural_event' ? 'Evento Cultural' :
@@ -717,4 +713,3 @@ export function EducationDetailPage() {
 }
 
 export default EducationDetailPage;
-

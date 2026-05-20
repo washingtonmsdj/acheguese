@@ -2,6 +2,11 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { mediaService } from "@/core/media/services/MediaService";
 import { useIdentitySaveLogger } from "@/core/public-identity/hooks/useIdentitySaveLogger";
+import {
+  evaluateProfessionalSlugSafety,
+  isProfessionalSlugSafetyBypassAllowed,
+} from "@/core/public-identity/domain/professionalSlugSafety";
+import { PublicIdentityService } from "@/core/public-identity";
 import { useSessionContext } from "@/core/session";
 import { useToast } from "@/shared/hooks/use-toast";
 import { useProfessionalSlugSaveGuard } from "@/modules/professionals/services/components/identity/useProfessionalSlugSaveGuard";
@@ -110,7 +115,7 @@ export default function EditarServicoPage() {
   };
 
   const handleSlugChange = (value: string) => {
-    setSlug(value);
+    setSlug(PublicIdentityService.normalize(value, "professional"));
     setHasChanges(true);
   };
 
@@ -197,6 +202,27 @@ export default function EditarServicoPage() {
       toast({ title: "Selecione uma categoria", variant: "destructive" });
       setActiveTab("info");
       return;
+    }
+
+    if (
+      slug &&
+      !isProfessionalSlugSafetyBypassAllowed({
+        isVerifiedProfessional: Boolean(professional.is_verified),
+      })
+    ) {
+      const slugSafety = evaluateProfessionalSlugSafety({
+        professionalName: form.name.trim(),
+        slug,
+      });
+      if (slugSafety.status === "review") {
+        toast({
+          title:
+            "O link publico esta muito diferente do nome do profissional. Ajuste para manter autenticidade.",
+          variant: "destructive",
+        });
+        setActiveTab("info");
+        return;
+      }
     }
 
     const hasSlugChange = !!originalSlug && slug !== originalSlug;
@@ -287,6 +313,7 @@ export default function EditarServicoPage() {
             originalSlug={originalSlug}
             photoPreview={photoPreview}
             professionalId={professional.professional_data_id}
+            isVerifiedProfessional={Boolean(professional.is_verified)}
             slug={slug}
             slugConfirmProps={slugConfirmProps}
             onFieldChange={updateField}

@@ -16,7 +16,7 @@ import {
   useGastronomyCart,
   useGastronomyCheckout,
 } from "../hooks";
-import type { GastronomyCheckoutOrderRecord } from "../services/GastronomyCheckoutService";
+import type { OrderRecord } from "@/core/mobility/delivery/order/types";
 import type { GastronomyBusiness } from "../types/gastronomy";
 import type { CartItem } from "../types/menu";
 
@@ -253,7 +253,7 @@ function GastronomyCheckoutContent({ business }: GastronomyCheckoutContentProps)
             .filter(Boolean)
             .join(" | ")
         : null;
-      const order: GastronomyCheckoutOrderRecord = await checkout({
+      const order: OrderRecord = await checkout({
         business,
         cart,
         payment_method: paymentMethod,

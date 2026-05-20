@@ -1,10 +1,7 @@
 /**
- * 👔 BUSINESS ADMIN — Administração e estatísticas
- * 
- * Responsabilidade única: operações administrativas e analytics
- * - Dashboards, estatísticas, claims
- * - Contagens e relatórios
- * - Cupons (legado)
+ * Business admin - administracao e estatisticas.
+ *
+ * Responsabilidade unica: dashboards, estatisticas, claims e cupons.
  */
 
 import { supabase } from "@/integrations/supabase";
@@ -14,7 +11,7 @@ import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types
 import { ReviewsService } from "@/core/reviews/services/ReviewsService";
 const businessAdminDb = supabase as any;
 
-export interface LegacyCoupon {
+export interface CouponRecord {
   id: string;
   codigo: string;
   titulo: string;
@@ -80,7 +77,7 @@ export async function getBusinessClaimDetails(
 export async function getTotalBusinessesCount(): Promise<number> {
   try {
     const { count, error } = await supabase
-      .from("businesses")
+      .from("business_data")
       .select("*", { count: "exact", head: true });
 
     if (error) {
@@ -138,7 +135,7 @@ export async function getBusinessesCreatedInPeriod(
 ): Promise<number> {
   try {
     const { count, error } = await (supabase as unknown as AdminSupabaseClient)
-      .from("businesses")
+      .from("business_data")
       .select("*", { count: "exact", head: true })
       .gte("created_at", startDate.toISOString())
       .lte("created_at", endDate.toISOString());
@@ -252,9 +249,9 @@ export async function updateBusinessClaimStatus(
 }
 
 /**
- * Cupons ativos (legado)
+ * Cupons ativos
  */
-export async function getActiveCoupons(): Promise<LegacyCoupon[]> {
+export async function getActiveCoupons(): Promise<CouponRecord[]> {
   try {
     const { data, error } = await (supabase as unknown as AdminSupabaseClient)
       .from("coupons")
@@ -266,7 +263,7 @@ export async function getActiveCoupons(): Promise<LegacyCoupon[]> {
       logger.error("Error fetching coupons:", error);
       return [];
     }
-    return (data ?? []) as LegacyCoupon[];
+    return (data ?? []) as CouponRecord[];
   } catch (error) {
     logger.error("Error in getActiveCoupons:", error);
     return [];
@@ -274,9 +271,9 @@ export async function getActiveCoupons(): Promise<LegacyCoupon[]> {
 }
 
 /**
- * Cupom por ID (legado)
+ * Cupom por ID
  */
-export async function getCouponById(id: string): Promise<LegacyCoupon | null> {
+export async function getCouponById(id: string): Promise<CouponRecord | null> {
   try {
     const { data, error } = await (supabase as unknown as AdminSupabaseClient)
       .from("coupons")
@@ -288,7 +285,7 @@ export async function getCouponById(id: string): Promise<LegacyCoupon | null> {
       logger.error("Error fetching coupon:", error);
       return null;
     }
-    return data as LegacyCoupon;
+    return data as CouponRecord;
   } catch (error) {
     logger.error("Error in getCouponById:", error);
     return null;

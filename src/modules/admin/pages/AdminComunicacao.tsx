@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Badge } from "@/shared/components/ui/badge";
@@ -15,6 +15,7 @@ import {
   getCommunicationErrorMessage,
   type ChannelStatus,
 } from "@/core/communication-territorial";
+import { PublicIdentityService } from "@/core/public-identity";
 
 const CHANNEL_STATUSES: ChannelStatus[] = ["active", "restricted", "suspended", "pending_verification", "rejected"];
 
@@ -150,14 +151,17 @@ export default function AdminComunicacao() {
                 <p className="text-sm text-muted-foreground">{request.description}</p>
                 <div className="grid gap-3 md:grid-cols-3">
                   <Input
-                    placeholder="Slug opcional"
+                    placeholder="Slug opcional (automatico se vazio)"
                     value={approvalPayloads[request.id]?.slug ?? ""}
                     onChange={(event) =>
                       setApprovalPayloads({
                         ...approvalPayloads,
                         [request.id]: {
                           ...approvalPayloads[request.id],
-                          slug: event.target.value,
+                          slug: PublicIdentityService.normalize(
+                            event.target.value,
+                            "communication_channel",
+                          ),
                         },
                       })
                     }

@@ -1,6 +1,6 @@
-﻿/**
+/**
  * EducationSetupPage
- * 
+ *
  * Pagina de configuracao inicial do perfil de educacao.
  * Rota: /central/empresas/:businessId/education/setup
  */
@@ -34,6 +34,7 @@ import { useEducationProfile } from '../hooks/useEducationProfile';
 import { EducationService } from '../services/EducationService';
 import type {
   EducationLevel,
+  EducationNicheKey,
   SchoolShift,
   SchoolNetwork,
   SchoolType,
@@ -49,12 +50,27 @@ import { Separator } from '@/shared/components/ui/separator';
 
 const INSTITUTION_TYPES = [
   { value: 'school', label: 'Escola' },
-  { value: 'university', label: 'Universidade' },
-  { value: 'course', label: 'Curso/Preparatório' },
+  { value: 'daycare', label: 'Creche/Bercario' },
   { value: 'language_school', label: 'Escola de Idiomas' },
-  { value: 'daycare', label: 'Creche/Berçário' },
+  { value: 'prep_course', label: 'Curso Pre-vestibular' },
+  { value: 'technical_school', label: 'Escola Tecnica' },
+  { value: 'tutoring_center', label: 'Centro de Reforco' },
+  { value: 'music_school', label: 'Escola de Musica' },
+  { value: 'sports_school', label: 'Escola de Esportes' },
+  { value: 'university', label: 'Universidade' },
   { value: 'other', label: 'Outro' },
 ];
+
+const SCHOOL_PROFILE_NICHES: EducationNicheKey[] = ['regular_school', 'daycare'];
+const EDUCATION_LEVEL_NICHES: EducationNicheKey[] = ['regular_school', 'daycare', 'technical_school'];
+
+function isSchoolProfileNiche(nicheKey: string): nicheKey is EducationNicheKey {
+  return SCHOOL_PROFILE_NICHES.includes(nicheKey as EducationNicheKey);
+}
+
+function hasEducationLevels(nicheKey: string): nicheKey is EducationNicheKey {
+  return EDUCATION_LEVEL_NICHES.includes(nicheKey as EducationNicheKey);
+}
 
 const SCHOOL_TYPES = [
   { value: 'public', label: 'Publica' },
@@ -253,8 +269,7 @@ export function EducationSetupPage() {
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const saveSetup = async () => {
     if (!businessId) return;
     if (!formData.institutionType || !formData.nicheKey) {
       toast({
@@ -293,7 +308,7 @@ export function EducationSetupPage() {
           description: 'As alterações foram salvas com sucesso.',
         });
         refetch();
-        navigate(`/central/empresas/${businessId}/education`);
+        navigate(`/central/empresas/${businessId}/educacao`);
       } else {
         toast({
           title: 'Erro ao salvar',
@@ -312,8 +327,21 @@ export function EducationSetupPage() {
     }
   };
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    void saveSetup();
+  };
+
   const selectableNiches = getSelectableNiches();
   const selectedNiche = formData.nicheKey ? getNicheByKey(formData.nicheKey) : null;
+  const isSchoolProfile = isSchoolProfileNiche(formData.nicheKey);
+  const showEducationLevels = hasEducationLevels(formData.nicheKey);
+  const summaryLabel = selectedNiche?.uiLabels.summaryLabel ?? 'Sobre a instituicao';
+  const summaryPlaceholder =
+    selectedNiche?.uiLabels.summaryPlaceholder ??
+    'Descreva a instituicao, diferenciais, metodologia e formas de atendimento.';
+  const shiftLabel = selectedNiche?.uiLabels.shiftLabel ?? 'Turno';
+  const ageGroupLabel = selectedNiche?.uiLabels.ageGroupLabel ?? 'Faixa etaria';
 
   // Helper para status do nicho
   const getStatusBadge = (status: string) => {
@@ -352,7 +380,7 @@ export function EducationSetupPage() {
           variant="ghost"
           size="sm"
           className="mb-4"
-          onClick={() => navigate(`/central/empresas/${businessId}/education`)}
+          onClick={() => navigate(`/central/empresas/${businessId}/educacao`)}
         >
           <ArrowLeft className="w-4 h-4 mr-1" />
           Voltar
@@ -371,7 +399,7 @@ export function EducationSetupPage() {
         </div>
       </motion.div>
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} data-testid="education-setup-form">
         <div className="space-y-6">
           {/* Tipo de Instituição */}
           <Card>
@@ -390,7 +418,7 @@ export function EducationSetupPage() {
                     setFormData({ ...formData, institutionType: value })
                   }
                 >
-                  <SelectTrigger id="institutionType">
+                  <SelectTrigger id="institutionType" data-testid="education-institution-type-trigger">
                     <SelectValue placeholder="Selecione o tipo de instituição" />
                   </SelectTrigger>
                   <SelectContent>
@@ -411,7 +439,7 @@ export function EducationSetupPage() {
                     setFormData({ ...formData, nicheKey: value })
                   }
                 >
-                  <SelectTrigger id="nicheKey">
+                  <SelectTrigger id="nicheKey" data-testid="education-niche-trigger">
                     <SelectValue placeholder="Selecione o nicho" />
                   </SelectTrigger>
                   <SelectContent>
@@ -437,9 +465,9 @@ export function EducationSetupPage() {
                   <p className="text-xs text-muted-foreground mb-3">
                     {selectedNiche.description}
                   </p>
-                  
+
                   <Separator className="my-2" />
-                  
+
                   <div className="text-xs space-y-1">
                     <p><span className="font-medium">Limites:</span> {selectedNiche.entitlements.maxPrograms} programas, {selectedNiche.entitlements.maxEvents} eventos, {selectedNiche.entitlements.maxLeadsPerMonth} leads/mês</p>
                     <p><span className="font-medium">Capabilities:</span> {selectedNiche.enabledCapabilities.length} ativas</p>
@@ -458,89 +486,97 @@ export function EducationSetupPage() {
             </CardContent>
           </Card>
 
-          {/* Dados escolares */}
-          {(formData.nicheKey === 'regular_school' || formData.nicheKey === 'daycare') && (
+          {/* Dados educacionais */}
+          {formData.nicheKey && (
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <School className="w-5 h-5 text-blue-500" />
-                  Dados da Escola
+                  Dados educacionais
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <Label htmlFor="schoolType">Tipo</Label>
-                    <Select
-                      value={formData.schoolType}
-                      onValueChange={(value) =>
-                        setFormData({ ...formData, schoolType: value })
-                      }
-                    >
-                      <SelectTrigger id="schoolType">
-                        <SelectValue placeholder="Publica, privada..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {SCHOOL_TYPES.map((type) => (
-                          <SelectItem key={type.value} value={type.value}>
-                            {type.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                {isSchoolProfile && (
+                  <>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <Label htmlFor="schoolType">Tipo escolar</Label>
+                      <Select
+                        value={formData.schoolType}
+                        onValueChange={(value) =>
+                          setFormData({ ...formData, schoolType: value })
+                        }
+                      >
+                        <SelectTrigger id="schoolType" data-testid="education-school-type-trigger">
+                          <SelectValue placeholder="Publica, privada..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {SCHOOL_TYPES.map((type) => (
+                            <SelectItem key={type.value} value={type.value}>
+                              {type.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="schoolNetwork">Rede administrativa</Label>
+                      <Select
+                        value={formData.schoolNetwork}
+                        onValueChange={(value) =>
+                          setFormData({ ...formData, schoolNetwork: value })
+                        }
+                      >
+                        <SelectTrigger id="schoolNetwork" data-testid="education-school-network-trigger">
+                          <SelectValue placeholder="Municipal, estadual..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {SCHOOL_NETWORKS.map((network) => (
+                            <SelectItem key={network.value} value={network.value}>
+                              {network.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
 
-                  <div>
-                    <Label htmlFor="schoolNetwork">Rede administrativa</Label>
-                    <Select
-                      value={formData.schoolNetwork}
-                      onValueChange={(value) =>
-                        setFormData({ ...formData, schoolNetwork: value })
-                      }
-                    >
-                      <SelectTrigger id="schoolNetwork">
-                        <SelectValue placeholder="Municipal, estadual..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {SCHOOL_NETWORKS.map((network) => (
-                          <SelectItem key={network.value} value={network.value}>
-                            {network.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <Label htmlFor="schoolInepCode">Codigo INEP</Label>
+                      <Input
+                        id="schoolInepCode"
+                        data-testid="education-school-inep"
+                        value={formData.schoolInepCode}
+                        onChange={(e) =>
+                          setFormData({ ...formData, schoolInepCode: e.target.value })
+                        }
+                        placeholder="Ex: 29193559"
+                      />
+                    </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <Label htmlFor="schoolInepCode">Codigo INEP</Label>
-                    <Input
-                      id="schoolInepCode"
-                      value={formData.schoolInepCode}
-                      onChange={(e) =>
-                        setFormData({ ...formData, schoolInepCode: e.target.value })
-                      }
-                      placeholder="Ex: 29193559"
-                    />
+                    <div>
+                      <Label htmlFor="schoolSourceUrl">Fonte publica</Label>
+                      <Input
+                        id="schoolSourceUrl"
+                        data-testid="education-school-source-url"
+                        value={formData.schoolSourceUrl}
+                        onChange={(e) =>
+                          setFormData({ ...formData, schoolSourceUrl: e.target.value })
+                        }
+                        placeholder="URL do Censo, secretaria ou diretorio publico"
+                      />
+                    </div>
                   </div>
 
-                  <div>
-                    <Label htmlFor="schoolSourceUrl">Fonte publica</Label>
-                    <Input
-                      id="schoolSourceUrl"
-                      value={formData.schoolSourceUrl}
-                      onChange={(e) =>
-                        setFormData({ ...formData, schoolSourceUrl: e.target.value })
-                      }
-                      placeholder="URL do Censo, secretaria ou diretorio publico"
-                    />
-                  </div>
-                </div>
+                  <Separator />
+                  </>
+                )}
 
-                <Separator />
 
                 <div className="space-y-5">
+                  {showEducationLevels && (
                   <div>
                     <h4 className="text-sm font-semibold">Niveis educacionais</h4>
                     <div className="mt-3 grid gap-2 md:grid-cols-2">
@@ -555,9 +591,10 @@ export function EducationSetupPage() {
                       ))}
                     </div>
                   </div>
+                  )}
 
                   <div>
-                    <h4 className="text-sm font-semibold">Turnos ofertados</h4>
+                    <h4 className="text-sm font-semibold">{shiftLabel}s ofertados</h4>
                     <div className="mt-3 grid gap-2 md:grid-cols-2">
                       {SHIFT_OPTIONS.map((option) => (
                         <label key={option.key} className="flex items-center gap-2 rounded-md border px-3 py-2">
@@ -573,9 +610,10 @@ export function EducationSetupPage() {
 
                   <div className="grid gap-4 md:grid-cols-3">
                     <div>
-                      <Label htmlFor="ageRangeMin">Idade minima (anos)</Label>
+                      <Label htmlFor="ageRangeMin">{ageGroupLabel} minima</Label>
                       <Input
                         id="ageRangeMin"
+                        data-testid="education-age-min"
                         type="number"
                         min={0}
                         max={120}
@@ -585,9 +623,10 @@ export function EducationSetupPage() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="ageRangeMax">Idade maxima (anos)</Label>
+                      <Label htmlFor="ageRangeMax">{ageGroupLabel} maxima</Label>
                       <Input
                         id="ageRangeMax"
+                        data-testid="education-age-max"
                         type="number"
                         min={0}
                         max={120}
@@ -608,7 +647,9 @@ export function EducationSetupPage() {
                   </div>
                 </div>
 
-                <Separator />
+                {isSchoolProfile && (
+                  <>
+                  <Separator />
 
                 <div className="space-y-2">
                   <h4 className="text-sm font-semibold">Presets rapidos</h4>
@@ -688,6 +729,8 @@ export function EducationSetupPage() {
                     </div>
                   </div>
                 </div>
+                  </>
+                )}
               </CardContent>
             </Card>
           )}
@@ -702,14 +745,15 @@ export function EducationSetupPage() {
             </CardHeader>
             <CardContent>
               <div>
-                <Label htmlFor="summary">Sobre a instituição</Label>
+                <Label htmlFor="summary">{summaryLabel}</Label>
                 <Textarea
                   id="summary"
+                  data-testid="education-summary"
                   value={formData.summary}
                   onChange={(e) =>
                     setFormData({ ...formData, summary: e.target.value })
                   }
-                  placeholder="Descreva sua instituição, diferenciais, metodologia..."
+                  placeholder={summaryPlaceholder}
                   rows={4}
                   maxLength={500}
                 />
@@ -733,6 +777,7 @@ export function EducationSetupPage() {
                 <Label htmlFor="whatsappNumber">WhatsApp</Label>
                 <Input
                   id="whatsappNumber"
+                  data-testid="education-whatsapp"
                   value={formData.whatsappNumber}
                   onChange={(e) =>
                     setFormData({ ...formData, whatsappNumber: e.target.value })
@@ -749,8 +794,10 @@ export function EducationSetupPage() {
           {/* Ações */}
           <div className="flex gap-4">
             <Button
-              type="submit"
+              type="button"
+              data-testid="education-save-setup"
               disabled={isSaving}
+              onClick={() => void saveSetup()}
               className="flex-1 gap-2"
             >
               <Save className="w-4 h-4" />
@@ -759,7 +806,7 @@ export function EducationSetupPage() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => navigate(`/central/empresas/${businessId}/education`)}
+              onClick={() => navigate(`/central/empresas/${businessId}/educacao`)}
             >
               Cancelar
             </Button>
@@ -771,4 +818,3 @@ export function EducationSetupPage() {
 }
 
 export default EducationSetupPage;
-

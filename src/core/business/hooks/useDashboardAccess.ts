@@ -13,20 +13,24 @@ export function useDashboardAccess(profileId: string | undefined) {
     hasAccess: false,
   });
   const [loading, setLoading] = useState(true);
+  const [checkedProfileId, setCheckedProfileId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const checkAccess = useCallback(async () => {
     if (sessionLoading) {
       setLoading(true);
+      setCheckedProfileId(null);
       return;
     }
 
     if (!user || !profileId) {
+      setCheckedProfileId(null);
       setLoading(false);
       return;
     }
 
     setLoading(true);
+    setCheckedProfileId(null);
     setError(null);
 
     try {
@@ -37,6 +41,7 @@ export function useDashboardAccess(profileId: string | undefined) {
           isAdmin: false,
           hasAccess: false,
         });
+        setCheckedProfileId(profileId);
         return;
       }
 
@@ -48,6 +53,7 @@ export function useDashboardAccess(profileId: string | undefined) {
         hasAccess,
         role: hasAccess ? "owner" : undefined,
       });
+      setCheckedProfileId(profileId);
     } catch (err: unknown) {
       logger.error("Error checking access:", err);
       setError(err instanceof Error ? err.message : "Erro ao verificar permissoes");
@@ -56,6 +62,7 @@ export function useDashboardAccess(profileId: string | undefined) {
         isAdmin: false,
         hasAccess: false,
       });
+      setCheckedProfileId(profileId);
     } finally {
       setLoading(false);
     }
@@ -68,6 +75,7 @@ export function useDashboardAccess(profileId: string | undefined) {
   return {
     permissions,
     loading,
+    checkedProfileId,
     error,
     refetch: checkAccess,
   };

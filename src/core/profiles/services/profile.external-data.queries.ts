@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase";
-import { FavoritesService } from "@/core/favorites/services/FavoritesService";
+import { getUserBusinessFavorites } from "@/core/favorites/services";
 import type { Profile } from "./types";
 import type { BusinessRow } from "./profile.service.types";
 import { resolveOwnedProfileIds } from "./profile.queries";
@@ -100,7 +100,7 @@ export async function getUserFavoriteBusinessesQuery(userId: string): Promise<Bu
   if (ownerProfileIds.length === 0) return [];
 
   const businessIdGroups = await Promise.all(
-    ownerProfileIds.map((profileId) => FavoritesService.getUserBusinessFavorites(profileId)),
+    ownerProfileIds.map((profileId) => getUserBusinessFavorites(profileId)),
   );
 
   const businessIds = [...new Set(businessIdGroups.flat().filter(Boolean))];

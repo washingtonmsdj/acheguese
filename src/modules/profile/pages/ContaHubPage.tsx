@@ -1,14 +1,14 @@
 /**
- * ContaHubPage - PÃ¡gina principal do hub de conta (refatorada)
- * 
- * SSOT: Usa sections modulares e layout reutilizÃ¡vel
- * Sem gambiarras: CÃ³digo limpo e organizado
- * 
+ * ContaHubPage - Pagina principal do hub de conta (refatorada)
+ *
+ * SSOT: Usa sections modulares e layout reutilizavel
+ * Sem gambiarras: Codigo limpo e organizado
+ *
  * Responsabilidades:
  * - Carregar dados via useProfileHub
  * - Fazer guards (loading/error/no-user)
  * - Determinar section ativa
- * - Construir props especÃ­ficas por section
+ * - Construir props especificas por section
  * - Renderizar layout + section ativa
  */
 
@@ -201,12 +201,12 @@ export default function ContaHubPage() {
   const [activeSection, setActiveSection] = useState<ProfileSectionId>("resumo");
   const data = useProfileHub();
 
-  // âœ… SSOT: Perfil personal Ã© a identidade principal
+  // SSOT: Perfil personal e a identidade principal
   const personalProfile = (data.allProfiles.find((p) => p.profile_type === "personal") ||
     data.profile) as any;
   const personalProfileId = personalProfile?.id ?? null;
 
-  // FunÃ§Ã£o para mudar de section
+  // Funcao para mudar de section
   const handleSectionChange = (section: ProfileSectionId) => {
     const nextPath = getProfileSectionPath(section);
 
@@ -218,14 +218,14 @@ export default function ContaHubPage() {
     navigate(nextPath, { replace: true });
   };
 
-  // âœ… SSOT: Usar configuraÃ§Ã£o de seÃ§Ãµes com badges dinÃ¢micos
+  // SSOT: Usar configuracao de secoes com badges dinamicos
   const sectionItems: SectionNavItem<ProfileSectionId>[] = buildProfileSectionItems({
     businessModules: data.businessModules,
     operations: data.operations,
     notifications: data.notifications,
   }) as SectionNavItem<ProfileSectionId>[];
 
-  // Guard: Redirecionar se nÃ£o estiver logado
+  // Guard: Redirecionar se nao estiver logado
   useEffect(() => {
     if (!data.user) {
       navigate(data.appUrls.auth.login);
@@ -252,7 +252,7 @@ export default function ContaHubPage() {
   if (data.error && !data.profile && !data.identity) {
     return (
       <div className="mx-auto flex min-h-[60vh] max-w-2xl items-center justify-center px-4">
-        <div className="w-full rounded-3xl border border-border bg-card p-8 text-center shadow-sm">
+        <div className="w-full rounded-lg border border-border bg-card p-8 text-center shadow-sm">
           <CircleAlert className="mx-auto h-10 w-10 text-amber-600" />
           <h1 className="mt-4 text-xl font-semibold text-foreground">
             Nao foi possivel carregar a conta
@@ -280,7 +280,7 @@ export default function ContaHubPage() {
   if (!data.activeProfile && !data.profile) {
     return (
       <div className="mx-auto flex min-h-[60vh] max-w-3xl items-center justify-center px-4">
-        <div className="w-full rounded-3xl border border-border bg-card p-8 text-center shadow-sm">
+        <div className="w-full rounded-lg border border-border bg-card p-8 text-center shadow-sm">
           <Users className="mx-auto h-10 w-10 text-primary" />
           <h1 className="mt-4 text-xl font-semibold text-foreground">
             Nenhuma identidade ativa disponivel

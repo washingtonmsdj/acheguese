@@ -1,4 +1,4 @@
-﻿import { ArrowRight, Clock3, MapPin, Phone } from "lucide-react";
+import { ArrowRight, Clock3, MapPin, Phone } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
@@ -11,6 +11,7 @@ import {
 } from "@/shared/components/ui/card";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { TerritorialSelector } from "@/core/location/components/TerritorialSelector";
+import { getBusinessCreateFieldCopy } from "./businessCreateCopy";
 
 interface DayHoursValue {
   open: string;
@@ -28,6 +29,7 @@ interface SelectedLocationData {
 }
 
 interface ContactLocationStepProps {
+  category: string;
   phone: string;
   whatsapp: string;
   email: string;
@@ -72,6 +74,7 @@ const DAY_LABELS: Array<{ key: string; label: string }> = [
 ];
 
 export function ContactLocationStep({
+  category,
   phone,
   whatsapp,
   email,
@@ -97,6 +100,8 @@ export function ContactLocationStep({
   onBack,
   onNext,
 }: ContactLocationStepProps) {
+  const copy = getBusinessCreateFieldCopy(category);
+
   const handleModoToggle = (modoId: string, checked: boolean) => {
     if (checked) {
       onModosChange(Array.from(new Set([...selectedModos, modoId])));
@@ -157,7 +162,7 @@ export function ContactLocationStep({
                 id="phone"
                 value={phone}
                 onChange={(event) => onPhoneChange(event.target.value)}
-                placeholder="(71) 3333-3333"
+                placeholder={copy.phonePlaceholder}
               />
               {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
             </div>
@@ -168,7 +173,7 @@ export function ContactLocationStep({
                 id="whatsapp"
                 value={whatsapp}
                 onChange={(event) => onWhatsappChange(event.target.value)}
-                placeholder="(71) 99999-9999"
+                placeholder={copy.whatsappPlaceholder}
               />
               {errors.whatsapp && <p className="text-xs text-destructive">{errors.whatsapp}</p>}
             </div>
@@ -181,7 +186,7 @@ export function ContactLocationStep({
               type="email"
               value={email}
               onChange={(event) => onEmailChange(event.target.value)}
-              placeholder="contato@empresa.com"
+              placeholder={copy.emailPlaceholder}
             />
             {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
             <p className="text-xs text-muted-foreground">
@@ -202,7 +207,7 @@ export function ContactLocationStep({
                 id="address_street"
                 value={addressStreet}
                 onChange={(event) => onAddressStreetChange(event.target.value)}
-                placeholder="Ex: Rua das Flores"
+                placeholder={copy.streetPlaceholder}
               />
               {errors.address_street && <p className="text-xs text-destructive">{errors.address_street}</p>}
             </div>
@@ -223,7 +228,7 @@ export function ContactLocationStep({
                 id="address_complement"
                 value={addressComplement}
                 onChange={(event) => onAddressComplementChange(event.target.value)}
-                placeholder="Sala, loja, referencia ou bloco"
+                placeholder={copy.complementPlaceholder}
               />
             </div>
 

@@ -1,15 +1,22 @@
-﻿/**
+/**
  * CRIAR EMPRESA PAGE V2 - fluxo alinhado ao SSOT de business
  */
 
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, AlertCircle } from "lucide-react";
+import { ArrowLeft, AlertCircle, ArrowRight } from "lucide-react";
 import { useSessionContext } from "@/core/session";
-import { createBusinessSchema } from "@/shared/schemas/business/businessSchemas";
+import {
+  createBusinessSchema,
+  createBusinessStep1Schema,
+  createBusinessStep2Schema,
+} from "@/shared/schemas/business/businessSchemas";
 import { PublicIdentityService } from "@/core/public-identity/services/PublicIdentityService";
+import {
+  evaluateBusinessSlugSafety,
+  isBusinessSlugSafetyBypassAllowed,
+} from "@/core/public-identity/domain/businessSlugSafety";
 import { useBusinessCreateMultiProfile } from "@/modules/business/hooks/useBusinessCreateMultiProfile";
 import type { CreateBusinessInput, BusinessCategory } from "@/modules/business/types";
 import { StepIndicator } from "@/modules/business/components/create/StepIndicator";
@@ -17,11 +24,13 @@ import { BasicInfoStep } from "@/modules/business/components/create/BasicInfoSte
 import { ContactLocationStep } from "@/modules/business/components/create/ContactLocationStep";
 import { ExtrasStep } from "@/modules/business/components/create/ExtrasStep";
 import { BusinessSlugSection } from "@/modules/business/components/identity/BusinessSlugSection";
+import { Button } from "@/shared/components/ui/button";
 import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-runtime-context";
 import { ActiveProfileBadge } from "@/core/profiles/components/ActiveProfileBadge";
-import { getEligibleVerticals } from "@/core/verticals/config";
+import { getEligibleVerticals, getVerticalByCreateSlug } from "@/core/verticals/config";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
 import { EntityStatus } from "@/shared/types/enums";
+import { locationContextStore } from "@/core/location/stores/LocationContextStore";
 
 interface DayHoursValue {
   open: string;
@@ -36,6 +45,60 @@ interface SelectedLocationData {
   stateName: string;
   cityName: string;
   neighborhoodName: string;
+}
+
+interface TerritoryFallback {
+  state: string;
+  city: string;
+  district: string;
+}
+
+const STEP1_FIELDS = [
+  "name",
+  "legal_name",
+  "cnpj",
+  "category",
+  "subcategoria",
+  "company_type",
+  "employee_count",
+  "founded_year",
+  "industry",
+  "description",
+  "slug",
+] as const;
+
+const STEP2_FIELDS = [
+  "phone",
+  "whatsapp",
+  "email",
+  "location_id",
+  "address_street",
+  "postal_code",
+  "horario_funcionamento",
+  "modos_atendimento",
+] as const;
+
+function getStepErrorMessages(
+  errors: Record<string, string>,
+  fields: readonly string[],
+): string[] {
+  const collected = fields
+    .map((field) => errors[field])
+    .filter((message): message is string => Boolean(message));
+
+  return Array.from(new Set(collected));
+}
+
+function focusFieldById(field?: string) {
+  if (!field) return;
+
+  const el = document.getElementById(field);
+  if (!el) return;
+
+  el.scrollIntoView({ behavior: "smooth", block: "center" });
+  if (typeof (el as HTMLElement).focus === "function") {
+    (el as HTMLElement).focus();
+  }
 }
 
 function useObjectUrl(file: File | null) {
@@ -57,16 +120,38 @@ function useObjectUrl(file: File | null) {
 
 export default function CriarEmpresaPageV2() {
   const navigate = useNavigate();
+  const { verticalSlug } = useParams<{ verticalSlug?: string }>();
+  const [searchParams] = useSearchParams();
   const { user } = useSessionContext();
   const { setModuleContext, effectiveProfile } = useMultiProfileContext();
   const [currentStep, setCurrentStep] = useState(1);
-  const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
+  const [slugManualMode, setSlugManualMode] = useState(false);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [locationData, setLocationData] = useState<SelectedLocationData | null>(null);
+  const [step1Attempted, setStep1Attempted] = useState(false);
 
   const logoPreview = useObjectUrl(logoFile);
   const bannerPreview = useObjectUrl(bannerFile);
+  const activeLocation = locationContextStore.getActiveLocation();
+  const fallbackTerritory = useMemo<TerritoryFallback | null>(() => {
+    const path = activeLocation?.geographic_path;
+    if (!path) return null;
+
+    const parts = path.replace(/^\//, "").split("/");
+    if (parts.length < 4) return null;
+
+    return {
+      state: parts[1] || "",
+      city: parts[2] || "",
+      district: parts[3] || "",
+    };
+  }, [activeLocation?.geographic_path]);
+
+  const createVertical = useMemo(
+    () => getVerticalByCreateSlug(verticalSlug ?? searchParams.get("vertical")),
+    [searchParams, verticalSlug],
+  );
 
   useEffect(() => {
     setModuleContext("business");
@@ -82,7 +167,7 @@ export default function CriarEmpresaPageV2() {
   const { createBusinessAsync, isLoading: isCreating, isError, error } = useBusinessCreateMultiProfile({
     onSuccess: (result) => {
       const category = form.getValues("category");
-      const eligibleVerticals = getEligibleVerticals(category);
+      const eligibleVerticals = createVertical ? [createVertical] : getEligibleVerticals(category);
 
       if (eligibleVerticals.length > 0) {
         navigate(eligibleVerticals[0].setupRoute(result.profile_id));
@@ -94,13 +179,12 @@ export default function CriarEmpresaPageV2() {
   });
 
   const form = useForm<CreateBusinessInput>({
-    resolver: zodResolver(createBusinessSchema),
     defaultValues: {
       name: "",
       legal_name: "",
       cnpj: "",
       description: "",
-      category: "outros",
+      category: createVertical?.defaultCategory ?? "outros",
       subcategoria: "",
       industry: "",
       phone: "",
@@ -131,6 +215,14 @@ export default function CriarEmpresaPageV2() {
     [selectedCategory],
   );
 
+  useEffect(() => {
+    if (!createVertical) return;
+
+    form.setValue("category", createVertical.defaultCategory, {
+      shouldDirty: false,
+    });
+  }, [createVertical, form]);
+
   const getErrors = (): Record<string, string> => {
     const errors: Record<string, string> = {};
     const formErrors = form.formState.errors;
@@ -146,91 +238,129 @@ export default function CriarEmpresaPageV2() {
   };
 
   const handleNameChange = (value: string) => {
-    form.setValue("name", value, { shouldDirty: true, shouldValidate: true });
+    form.setValue("name", value, { shouldDirty: true });
 
-    if (!slugManuallyEdited) {
+    if (!slugManualMode) {
       form.setValue("slug", PublicIdentityService.normalize(value, "business"), {
         shouldDirty: true,
-        shouldValidate: true,
       });
     }
   };
 
   const handleSlugChange = (value: string) => {
-    setSlugManuallyEdited(true);
-    form.setValue("slug", value, { shouldDirty: true, shouldValidate: true });
+    form.setValue("slug", PublicIdentityService.normalize(value, "business"), { shouldDirty: true });
+  };
+
+  const handleResetSlugToAuto = () => {
+    const currentName = form.getValues("name") || "";
+    form.setValue("slug", PublicIdentityService.normalize(currentName, "business"), {
+      shouldDirty: true,
+    });
   };
 
   const handleLocationChange = (locationId: string | null, nextLocationData: SelectedLocationData | null) => {
     setLocationData(nextLocationData);
-    form.setValue("location_id", locationId ?? undefined, { shouldDirty: true, shouldValidate: true });
+    form.setValue("location_id", locationId ?? undefined, { shouldDirty: true });
     form.setValue("city", nextLocationData?.cityName || "", { shouldDirty: true });
     form.setValue("state", nextLocationData?.stateName || "", { shouldDirty: true });
     form.setValue("neighborhood", nextLocationData?.neighborhoodName || "", { shouldDirty: true });
   };
 
-  const handleNextStep1 = async () => {
-    const isValid = await form.trigger([
-      "name",
-      "legal_name",
-      "cnpj",
-      "category",
-      "subcategoria",
-      "company_type",
-      "employee_count",
-      "founded_year",
-      "industry",
-      "description",
-      "slug",
-    ]);
-
-    if (isValid) {
-      setCurrentStep(2);
-    }
+  const setSchemaErrors = (issues: Array<{ path: Array<string | number>; message: string }>) => {
+    issues.forEach((issue) => {
+      const field = issue.path[0];
+      if (typeof field !== "string") return;
+      form.setError(field as keyof CreateBusinessInput, { message: issue.message });
+    });
   };
 
-  const handleNextStep2 = async () => {
-    const values = form.getValues();
-    const isValid = await form.trigger([
-      "phone",
-      "whatsapp",
-      "email",
-      "location_id",
-      "address_street",
-      "postal_code",
-      "horario_funcionamento",
-      "modos_atendimento",
-    ]);
+  const getFirstInvalidStep = (field?: string) => {
+    if (!field) return 1;
+    if ((STEP1_FIELDS as readonly string[]).includes(field)) return 1;
+    if ((STEP2_FIELDS as readonly string[]).includes(field)) return 2;
+    return 3;
+  };
 
-    const hasContactChannel = Boolean(values.phone || values.whatsapp || values.email);
-    if (!hasContactChannel) {
-      form.setError("phone", {
-        message: "Informe pelo menos um canal de contato comercial",
-      });
+  const handleNextStep1 = () => {
+    setStep1Attempted(true);
+    form.clearErrors(STEP1_FIELDS);
+
+    const result = createBusinessStep1Schema.safeParse(form.getValues());
+
+    if (!result.success) {
+      setSchemaErrors(result.error.issues);
+      focusFieldById(String(result.error.issues[0]?.path[0] ?? ""));
       return;
     }
 
-    if (!values.location_id) {
-      form.setError("location_id", {
-        message: "Selecione o territorio principal da empresa",
+    const parsed = result.data as CreateBusinessInput;
+    if (
+      slugManualMode &&
+      parsed.slug &&
+      !isBusinessSlugSafetyBypassAllowed({ isVerifiedOfficial: parsed.is_verified })
+    ) {
+      const slugSafety = evaluateBusinessSlugSafety({
+        businessName: parsed.name,
+        slug: parsed.slug,
       });
+      if (slugSafety.status === "review") {
+        form.setError("slug", {
+          message:
+            "O link publico esta muito diferente do nome informado. Para seguranca, ajuste o link ou use o modo automatico.",
+        });
+        return;
+      }
+    }
+
+    form.clearErrors(["phone", "location_id", "address_street", "postal_code"]);
+    setStep1Attempted(false);
+    setCurrentStep(2);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const step1ErrorMessages = [
+    ...getStepErrorMessages(getErrors(), STEP1_FIELDS),
+  ];
+
+  const handleNextStep2 = () => {
+    form.clearErrors(STEP2_FIELDS);
+
+    const result = createBusinessStep2Schema.safeParse(form.getValues());
+    if (!result.success) {
+      setSchemaErrors(result.error.issues);
+      focusFieldById(String(result.error.issues[0]?.path[0] ?? ""));
       return;
     }
 
     form.clearErrors(["phone", "location_id"]);
-
-    if (isValid) {
-      setCurrentStep(3);
-    }
+    setCurrentStep(3);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleCreate = form.handleSubmit(async (data) => {
+  const handleCreate = async () => {
+    form.clearErrors();
+
+    const result = createBusinessSchema.safeParse(form.getValues());
+    if (!result.success) {
+      setSchemaErrors(result.error.issues);
+      setStep1Attempted(true);
+      const firstInvalidField = String(result.error.issues[0]?.path[0] ?? "");
+      setCurrentStep(getFirstInvalidStep(firstInvalidField));
+      focusFieldById(firstInvalidField);
+      return;
+    }
+
     await createBusinessAsync({
-      data,
+      data: result.data as CreateBusinessInput,
       logoFile,
       bannerFile,
     });
-  });
+  };
+
+  const handleFormSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    void handleCreate();
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -242,7 +372,9 @@ export default function CriarEmpresaPageV2() {
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <h1 className="text-sm font-semibold font-display">Criar empresa</h1>
+          <h1 className="text-sm font-semibold font-display">
+            {createVertical?.createCopy.title ?? "Criar empresa"}
+          </h1>
           <div className="w-6" />
         </div>
       </header>
@@ -256,9 +388,15 @@ export default function CriarEmpresaPageV2() {
 
         {eligibleVerticals.length > 0 && (
           <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm text-muted-foreground">
-            Esta categoria ja e elegivel para extensao vertical em
-            <span className="font-medium text-foreground"> {eligibleVerticals.map((vertical) => vertical.label).join(", ")}</span>.
-            O cadastro base sera reutilizado sem duplicar dados.
+            {createVertical
+              ? createVertical.createCopy.subtitle
+              : "Esta categoria ja e elegivel para extensao vertical em"}
+            {!createVertical && (
+              <>
+                <span className="font-medium text-foreground"> {eligibleVerticals.map((vertical) => vertical.label).join(", ")}</span>.
+                {" "}O cadastro base sera reutilizado sem duplicar dados.
+              </>
+            )}
           </div>
         )}
 
@@ -272,10 +410,18 @@ export default function CriarEmpresaPageV2() {
           </div>
         )}
 
-        <form onSubmit={handleCreate} className="space-y-6">
+        <form onSubmit={handleFormSubmit} className="space-y-6">
           {currentStep === 1 && (
             <>
               <BasicInfoStep
+                contextTitle={createVertical ? "Identidade da instituicao" : undefined}
+                contextDescription={createVertical?.createCopy.subtitle}
+                categoryLocked={Boolean(createVertical)}
+                categoryLockedHelp={createVertical?.createCopy.categoryLockedHelp}
+                nameLabel={createVertical?.createCopy.nameLabel}
+                namePlaceholder={createVertical?.createCopy.namePlaceholder}
+                descriptionPlaceholder={createVertical?.createCopy.descriptionPlaceholder}
+                showNextButton={false}
                 name={form.watch("name") || ""}
                 legalName={form.watch("legal_name") || ""}
                 cnpj={form.watch("cnpj") || ""}
@@ -289,30 +435,30 @@ export default function CriarEmpresaPageV2() {
                 logoPreview={logoPreview}
                 errors={getErrors()}
                 onNameChange={handleNameChange}
-                onLegalNameChange={(value) => form.setValue("legal_name", value, { shouldDirty: true, shouldValidate: true })}
-                onCnpjChange={(value) => form.setValue("cnpj", value, { shouldDirty: true, shouldValidate: true })}
-                onCategoryChange={(value) => form.setValue("category", value as BusinessCategory, { shouldDirty: true, shouldValidate: true })}
-                onSubcategoryChange={(value) => form.setValue("subcategoria", value, { shouldDirty: true, shouldValidate: true })}
+                onLegalNameChange={(value) => form.setValue("legal_name", value, { shouldDirty: true })}
+                onCnpjChange={(value) => form.setValue("cnpj", value, { shouldDirty: true })}
+                onCategoryChange={(value) => {
+                  if (createVertical) return;
+                  form.setValue("category", value as BusinessCategory, { shouldDirty: true });
+                }}
+                onSubcategoryChange={(value) => form.setValue("subcategoria", value, { shouldDirty: true })}
                 onCompanyTypeChange={(value) =>
                   form.setValue("company_type", value ? (value as CreateBusinessInput["company_type"]) : undefined, {
                     shouldDirty: true,
-                    shouldValidate: true,
                   })
                 }
                 onEmployeeCountChange={(value) =>
                   form.setValue("employee_count", value ? (value as CreateBusinessInput["employee_count"]) : undefined, {
                     shouldDirty: true,
-                    shouldValidate: true,
                   })
                 }
                 onFoundedYearChange={(value) =>
                   form.setValue("founded_year", value ? Number(value) : undefined, {
                     shouldDirty: true,
-                    shouldValidate: true,
                   })
                 }
-                onIndustryChange={(value) => form.setValue("industry", value, { shouldDirty: true, shouldValidate: true })}
-                onDescriptionChange={(value) => form.setValue("description", value, { shouldDirty: true, shouldValidate: true })}
+                onIndustryChange={(value) => form.setValue("industry", value, { shouldDirty: true })}
+                onDescriptionChange={(value) => form.setValue("description", value, { shouldDirty: true })}
                 onLogoChange={setLogoFile}
                 onNext={handleNextStep1}
               />
@@ -320,12 +466,38 @@ export default function CriarEmpresaPageV2() {
               <BusinessSlugSection
                 slug={form.watch("slug") || ""}
                 onSlugChange={handleSlugChange}
+                category={selectedCategory}
+                businessName={form.watch("name") || ""}
+                isVerifiedOfficial={Boolean(form.watch("is_verified"))}
+                stateName={locationData?.stateName || fallbackTerritory?.state}
+                cityName={locationData?.cityName || fallbackTerritory?.city}
+                districtName={locationData?.neighborhoodName || fallbackTerritory?.district}
+                manualMode={slugManualMode}
+                onManualModeChange={setSlugManualMode}
+                onResetToAuto={handleResetSlugToAuto}
               />
+
+              {step1Attempted && step1ErrorMessages.length > 0 && (
+                <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+                  <p className="font-medium">Nao foi possivel continuar.</p>
+                  <ul className="mt-2 list-disc space-y-1 pl-4">
+                    {step1ErrorMessages.map((message) => (
+                      <li key={message}>{message}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <Button type="button" onClick={handleNextStep1} className="w-full gap-2">
+                Continuar
+                <ArrowRight className="h-4 w-4" />
+              </Button>
             </>
           )}
 
           {currentStep === 2 && (
             <ContactLocationStep
+              category={selectedCategory}
               phone={form.watch("phone") || ""}
               whatsapp={form.watch("whatsapp") || ""}
               email={form.watch("email") || ""}
@@ -338,16 +510,16 @@ export default function CriarEmpresaPageV2() {
               hours={(form.watch("horario_funcionamento") as Record<string, DayHoursValue>) || {}}
               selectedModos={form.watch("modos_atendimento") || ["presencial"]}
               errors={getErrors()}
-              onPhoneChange={(value) => form.setValue("phone", value, { shouldDirty: true, shouldValidate: true })}
-              onWhatsappChange={(value) => form.setValue("whatsapp", value, { shouldDirty: true, shouldValidate: true })}
-              onEmailChange={(value) => form.setValue("email", value, { shouldDirty: true, shouldValidate: true })}
+              onPhoneChange={(value) => form.setValue("phone", value, { shouldDirty: true })}
+              onWhatsappChange={(value) => form.setValue("whatsapp", value, { shouldDirty: true })}
+              onEmailChange={(value) => form.setValue("email", value, { shouldDirty: true })}
               onLocationChange={handleLocationChange}
-              onAddressStreetChange={(value) => form.setValue("address_street", value, { shouldDirty: true, shouldValidate: true })}
+              onAddressStreetChange={(value) => form.setValue("address_street", value, { shouldDirty: true })}
               onAddressNumberChange={(value) => form.setValue("address_number", value, { shouldDirty: true })}
               onAddressComplementChange={(value) => form.setValue("address_complement", value, { shouldDirty: true })}
-              onPostalCodeChange={(value) => form.setValue("postal_code", value, { shouldDirty: true, shouldValidate: true })}
-              onHoursChange={(value) => form.setValue("horario_funcionamento", value, { shouldDirty: true, shouldValidate: true })}
-              onModosChange={(value) => form.setValue("modos_atendimento", value, { shouldDirty: true, shouldValidate: true })}
+              onPostalCodeChange={(value) => form.setValue("postal_code", value, { shouldDirty: true })}
+              onHoursChange={(value) => form.setValue("horario_funcionamento", value, { shouldDirty: true })}
+              onModosChange={(value) => form.setValue("modos_atendimento", value, { shouldDirty: true })}
               onBack={() => setCurrentStep(1)}
               onNext={handleNextStep2}
             />
@@ -355,6 +527,7 @@ export default function CriarEmpresaPageV2() {
 
           {currentStep === 3 && (
             <ExtrasStep
+              category={selectedCategory}
               capaPreview={bannerPreview}
               website={form.watch("website") || ""}
               instagram={form.watch("instagram") || ""}
@@ -366,10 +539,10 @@ export default function CriarEmpresaPageV2() {
               errors={getErrors()}
               isCreating={isCreating}
               onCapaChange={setBannerFile}
-              onWebsiteChange={(value) => form.setValue("website", value, { shouldDirty: true, shouldValidate: true })}
-              onInstagramChange={(value) => form.setValue("instagram", value, { shouldDirty: true, shouldValidate: true })}
-              onFacebookChange={(value) => form.setValue("facebook", value, { shouldDirty: true, shouldValidate: true })}
-              onPagamentosChange={(value) => form.setValue("formas_pagamento", value, { shouldDirty: true, shouldValidate: true })}
+              onWebsiteChange={(value) => form.setValue("website", value, { shouldDirty: true })}
+              onInstagramChange={(value) => form.setValue("instagram", value, { shouldDirty: true })}
+              onFacebookChange={(value) => form.setValue("facebook", value, { shouldDirty: true })}
+              onPagamentosChange={(value) => form.setValue("formas_pagamento", value, { shouldDirty: true })}
               onEspecialidadesChange={(value) =>
                 form.setValue(
                   "especialidades",
@@ -377,7 +550,7 @@ export default function CriarEmpresaPageV2() {
                     .split(",")
                     .map((item) => item.trim())
                     .filter(Boolean),
-                  { shouldDirty: true, shouldValidate: true },
+                  { shouldDirty: true },
                 )
               }
               onFacilidadesChange={(value) =>
@@ -387,7 +560,7 @@ export default function CriarEmpresaPageV2() {
                     .split(",")
                     .map((item) => item.trim())
                     .filter(Boolean),
-                  { shouldDirty: true, shouldValidate: true },
+                  { shouldDirty: true },
                 )
               }
               onStatusChange={(value) => form.setValue("status", value as CreateBusinessInput["status"], { shouldDirty: true })}

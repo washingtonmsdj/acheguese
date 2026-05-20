@@ -1,14 +1,8 @@
 /**
- * GASTRONOMY BILLING - Exports Centralizados
+ * Gastronomy billing exports.
  *
- * SSOT atual: @/core/billing.
- * Este barrel mantem apenas contratos locais ainda necessarios para compatibilidade.
- * Implementacoes legadas foram arquivadas em ./legacy e nao devem ser importadas
- * por codigo novo.
+ * Billing SSOT: @/core/billing.
+ * This module exposes only gastronomy-specific plan contracts still used by UI.
  */
-
-// Types
 export * from './types';
-
-// Plans
 export * from './plans';

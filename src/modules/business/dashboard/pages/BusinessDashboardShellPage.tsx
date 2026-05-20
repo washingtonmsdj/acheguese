@@ -11,19 +11,18 @@ import {
   BarChart3,
   Building2,
   CreditCard,
+  GraduationCap,
   Link as LinkIcon,
   Settings,
   Store,
   UtensilsCrossed,
 } from "lucide-react";
-import { toast } from "sonner";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { useBusiness } from "@/core/business/hooks/useBusiness";
 import { useBusinessSubscription } from "@/core/billing/hooks/useBusinessSubscription";
-import { useDashboardAccess } from "@/core/business/hooks/useDashboardAccess";
 import { useGastronomyStatus } from "@/core/verticals/gastronomy/hooks/useGastronomyStatus";
 import { isEligibleForVertical } from "@/core/verticals/config";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
@@ -56,18 +55,8 @@ export default function BusinessDashboardShellPage() {
     useBusinessSubscription(businessId);
   const { status: gastronomyStatus, isLoading: loadingGastronomy } =
     useGastronomyStatus(businessId || "", true);
-  const { permissions, loading: loadingAccess } = useDashboardAccess(
-    business?.profile_id,
-  );
 
-  useEffect(() => {
-    if (!loadingAccess && business && !permissions.hasAccess) {
-      toast.error("Voce nao tem permissao para gerenciar esta empresa.");
-      navigate("/central/empresas", { replace: true });
-    }
-  }, [business, loadingAccess, navigate, permissions.hasAccess]);
-
-  if (loadingBusiness || loadingSubscription || loadingAccess || loadingGastronomy) {
+  if (loadingBusiness || loadingSubscription || loadingGastronomy) {
     return (
       <div className="container mx-auto max-w-7xl space-y-4 px-4 py-6">
         <Skeleton className="h-8 w-80" />
@@ -80,11 +69,12 @@ export default function BusinessDashboardShellPage() {
     );
   }
 
-  if (!businessId || !business || !permissions.hasAccess) {
+  if (!businessId || !business) {
     return null;
   }
 
   const isGastronomyEligible = isEligibleForVertical(business.category, "gastronomy");
+  const isEducationEligible = isEligibleForVertical(business.category, "education");
   const isGastronomyActive = gastronomyStatus === "active";
 
   const publicUrl =
@@ -111,6 +101,15 @@ export default function BusinessDashboardShellPage() {
             label: "Gastronomia",
             to: businessManagementRoutes.gastronomia(businessId),
             icon: UtensilsCrossed,
+          },
+        ]
+      : []),
+    ...(isEducationEligible
+      ? [
+          {
+            label: "Educacao",
+            to: businessManagementRoutes.education(businessId),
+            icon: GraduationCap,
           },
         ]
       : []),

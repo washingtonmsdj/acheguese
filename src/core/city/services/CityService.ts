@@ -1,11 +1,11 @@
 /**
- * CityService - SSOT para operações de cidade
- * 
- * Responsável por:
+ * CityService - SSOT para operacoes de cidade
+ *
+ * Responsavel por:
  * - Buscar metadados de cidades
  * - Atualizar metadados (admin)
- * - Gerenciar informações de cidade
- * 
+ * - Gerenciar informacoes de cidade
+ *
  * @module city
  */
 
@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
+import { TERRITORY_CONFIG } from "@/config/territory";
 
 export interface EmergencyContact {
   name: string;
@@ -103,44 +104,30 @@ export type CityStatus = 'active' | 'launching' | 'coming_soon' | 'inactive';
 
 export function resolveFallbackCityStatus(state?: string, city?: string): CityStatus {
   if (!state || !city) return 'coming_soon';
-  return state.toLowerCase() === 'ba' && city.toLowerCase() === 'salvador' ? 'active' : 'coming_soon';
+  const isLaunchCity =
+    state.toLowerCase() === TERRITORY_CONFIG.launch.state.toLowerCase() &&
+    city.toLowerCase() === TERRITORY_CONFIG.launch.city.toLowerCase();
+  return isLaunchCity ? 'active' : 'coming_soon';
 }
-
-// Dados padrão para Salvador enquanto não há dados no banco
-const SALVADOR_DEFAULT: CityMetadata = {
-  id: 'salvador-ba',
-  city: 'Salvador',
-  state: 'BA',
-  population: 2900000,
-  districts_count: 163,
-  active_businesses: 45000,
-  schools_count: 1200,
-  professionals_count: 8000,
-  bus_lines_count: 450,
-  description: 'Primeira capital do Brasil, patrimônio cultural da humanidade.',
-  founded_year: 1549,
-  area_km2: 693,
-  city_status: 'active',
-};
 
 function buildDefaultCityMetadata(state: string, city: string): CityMetadata {
   const normalizedState = state.trim().toUpperCase();
   const normalizedCity = city.trim().toLowerCase();
-  if (resolveFallbackCityStatus(normalizedState, normalizedCity) === 'active') {
-    return SALVADOR_DEFAULT;
-  }
-
   const cityTitle = normalizedCity
     .split('-')
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
 
-  return {
-    ...SALVADOR_DEFAULT,
-    id: `${normalizedCity}-${normalizedState.toLowerCase()}`,
+  return {    id: `${normalizedCity}-${normalizedState.toLowerCase()}`,
     city: cityTitle,
     state: normalizedState,
-    description: `Achegue-se em implantação em ${cityTitle}.`,
+    population: 0,
+    districts_count: 0,
+    active_businesses: 0,
+    schools_count: 0,
+    professionals_count: 0,
+    bus_lines_count: 0,
+    description: `Achegue-se em implantacao em ${cityTitle}.`,
     city_status: resolveFallbackCityStatus(normalizedState, normalizedCity),
   };
 }
@@ -148,7 +135,7 @@ function buildDefaultCityMetadata(state: string, city: string): CityMetadata {
 export class CityService {
   /**
    * Busca metadados de uma cidade
-   * ✅ SSOT para city_metadata
+   * âœ… SSOT para city_metadata
    */
   static async getCityMetadata(state: string, city: string): Promise<CityMetadata> {
     const fallback = buildDefaultCityMetadata(state, city);
@@ -174,12 +161,12 @@ export class CityService {
         id: dataAny.id,
         city: dataAny.city,
         state: dataAny.state,
-        population: dataAny.population ?? SALVADOR_DEFAULT.population,
-        districts_count: dataAny.districts_count ?? SALVADOR_DEFAULT.districts_count,
-        active_businesses: dataAny.active_businesses ?? SALVADOR_DEFAULT.active_businesses,
-        schools_count: dataAny.schools_count ?? SALVADOR_DEFAULT.schools_count,
-        professionals_count: dataAny.professionals_count ?? SALVADOR_DEFAULT.professionals_count,
-        bus_lines_count: dataAny.bus_lines_count ?? SALVADOR_DEFAULT.bus_lines_count,
+        population: dataAny.population ?? 0,
+        districts_count: dataAny.districts_count ?? 0,
+        active_businesses: dataAny.active_businesses ?? 0,
+        schools_count: dataAny.schools_count ?? 0,
+        professionals_count: dataAny.professionals_count ?? 0,
+        bus_lines_count: dataAny.bus_lines_count ?? 0,
         description: dataAny.description,
         founded_year: dataAny.founded_year,
         area_km2: dataAny.area_km2,
@@ -189,9 +176,9 @@ export class CityService {
         utility_contacts: dataAny.utility_contacts ?? [],
         tourist_attractions: dataAny.tourist_attractions ?? [],
         city_hall_info: dataAny.city_hall_info ?? {},
-        elected_officials: dataAny.elected_officials ?? { 
-          executive: [], 
-          legislative: { president: null, featured: [], total_councilors: 0 } 
+        elected_officials: dataAny.elected_officials ?? {
+          executive: [],
+          legislative: { president: null, featured: [], total_councilors: 0 }
         },
         featured_districts: dataAny.featured_districts ?? [],
         city_status: (dataAny.city_status as CityStatus | null) ?? fallback.city_status,
@@ -208,7 +195,7 @@ export class CityService {
 
   /**
    * Busca metadados de uma cidade por ID
-   * ✅ SSOT para city_metadata
+   * âœ… SSOT para city_metadata
    */
   static async getCityMetadataById(cityId: string): Promise<CityMetadata | null> {
     try {
@@ -237,7 +224,7 @@ export class CityService {
 
   /**
    * Atualiza metadados de uma cidade (admin)
-   * ✅ SSOT para city_metadata updates
+   * âœ… SSOT para city_metadata updates
    */
   static async updateCityMetadata(
     cityId: string,
@@ -268,7 +255,7 @@ export class CityService {
 
   /**
    * Lista todas as cidades cadastradas
-   * ✅ SSOT para city_metadata list
+   * âœ… SSOT para city_metadata list
    */
   static async listCities(): Promise<CityMetadata[]> {
     try {

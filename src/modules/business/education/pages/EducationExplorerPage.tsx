@@ -1,4 +1,4 @@
-﻿/**
+/**
  * EducationExplorerPage
  *
  * Vitrine premium de descoberta educacional.
@@ -13,7 +13,6 @@
  * Consome SSOT existente:
  *  - useEducationList (hook)
  *  - getPublicNiches / getNicheByKey (registry)
- *  - preview runtime centralizado em /mocks/educationPreviewRuntime
  *
  * @module education
  * @version 3.0.0
@@ -31,7 +30,6 @@ import {
   Shield,
   Building2,
   X,
-  Info,
   ScanSearch,
 } from 'lucide-react';
 
@@ -41,11 +39,12 @@ import { Badge } from '@/shared/components/ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/shared/components/ui/sheet';
 import { cn } from '@/shared/utils/cn';
 import { useResolveTerritoryFromUrl } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
+import { usePublicBrowsingCity } from '@/core/location/hooks/usePublicBrowsingCity';
+import { buildPublicAbsoluteUrl } from '@/shared/config/publicAppOrigin';
 
 import { useEducationList } from '../hooks/useEducationList';
 import { getPublicNiches, getNicheByKey } from '../niches/registry';
 import {
-  buildSourceProfiles,
   filterEnrichedProfiles,
   INITIAL_FILTERS,
   sanitizePublicEducationText,
@@ -73,14 +72,7 @@ import {
   EducationNicheShowcase,
   FeaturedEducationSection,
 } from './explorerMarketingSections';
-import {
-  getEducationPreviewDistricts,
-  getEducationPreviewProfiles,
-  getEducationPreviewRoute,
-  isEducationPreviewEnabled,
-} from '../mocks/educationPreviewRuntime';
-import { educationDetailPreviewMap } from '../mocks/publicEducationPage.mock';
-import type { EducationProfile } from '../types';
+import type { EducationPublicProfile } from '../types';
 
 // ============================================================================
 // PAGINA PRINCIPAL
@@ -88,26 +80,27 @@ import type { EducationProfile } from '../types';
 
 export function EducationExplorerPage() {
   const {
-    state = 'ba',
-    city = 'salvador',
+    state,
+    city,
     district,
     groupSlugOrDistrict,
   } = useParams();
+  const { active } = usePublicBrowsingCity();
+  const effectiveState = state ?? active.state;
+  const effectiveCity = city ?? active.city;
   const niches = useMemo(() => getPublicNiches(), []);
   const { resolved } = useResolveTerritoryFromUrl();
 
-  const { data, isLoading, isError, refetch } = useEducationList({});
-  const realProfiles: EducationProfile[] = useMemo(
+  const { data, isLoading, isError, refetch } = useEducationList({
+    state: effectiveState,
+    city: effectiveCity,
+    district,
+  });
+  const sourceProfiles: EducationPublicProfile[] = useMemo(
     () => data?.pages.flatMap((p) => p.profiles ?? []) ?? [],
     [data]
   );
-  const hasRealData = realProfiles.length > 0;
-  const allowPreviewFallback = isEducationPreviewEnabled();
-  
-  const sourceProfiles: EducationProfile[] = useMemo(
-    () => buildSourceProfiles(realProfiles, getEducationPreviewProfiles(), allowPreviewFallback),
-    [realProfiles, allowPreviewFallback],
-  );
+  const hasRealData = sourceProfiles.length > 0;
 
   const [filters, setFilters] = useState<FilterState>(INITIAL_FILTERS);
   const [view, setView] = useState<ViewMode>('grid');
@@ -134,17 +127,17 @@ export function EducationExplorerPage() {
   }, [district, groupSlugOrDistrict, resolved]);
 
   const districts = useMemo(() => {
-    if (!allowPreviewFallback) return [];
-
-    return getEducationPreviewDistricts();
-  }, [allowPreviewFallback]);
+    return Array.from(
+      new Set(
+        sourceProfiles
+          .map((profile) => profile.public_route?.district)
+          .filter((value): value is string => Boolean(value)),
+      ),
+    ).sort();
+  }, [sourceProfiles]);
 
   const enriched: EnrichedEducationProfile[] = useMemo(() => {
-    return sourceProfiles.map((profile) => {
-      const route = getEducationPreviewRoute(profile.id);
-      const preview = route ? educationDetailPreviewMap[route.slug] : undefined;
-      return { profile, preview, route };
-    });
+    return sourceProfiles.map((profile) => ({ profile }));
   }, [sourceProfiles]);
 
   const filtered = useMemo(() => {
@@ -160,29 +153,31 @@ export function EducationExplorerPage() {
   const clearFilters = () => setFilters(INITIAL_FILTERS);
 
   const featured = useMemo(() => {
-    if (!allowPreviewFallback) return [];
+    return sourceProfiles.filter((profile) => profile.public_route).slice(0, 6);
+  }, [sourceProfiles]);
 
-    return Object.values(educationDetailPreviewMap).slice(0, 6);
-  }, [allowPreviewFallback]);
-
-  const cityLabel = city.replace(/-/g, ' ');
   const territoryLabel = useMemo(() => {
     if (resolved?.kind === 'group') return resolved.group.name;
     if (resolved?.kind === 'location' && resolved.location.type === 'district') {
       return resolved.location.name;
     }
     if (groupSlugOrDistrict) return slugToLabel(groupSlugOrDistrict);
-    return slugToLabel(city);
-  }, [city, groupSlugOrDistrict, resolved]);
+    return slugToLabel(effectiveCity);
+  }, [effectiveCity, groupSlugOrDistrict, resolved]);
+
+  const canonicalPath = district
+    ? `/educacao/${effectiveState}/${effectiveCity}/${district}`
+    : `/educacao/${effectiveState}/${effectiveCity}`;
 
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>Educacao em {territoryLabel} â€” Vitrine V3 | Acheguese</title>
+        <title>Educacao em {territoryLabel} - Vitrine V3 | Acheguese</title>
         <meta
           name="description"
           content={`Explore escolas, cursos, professores e instituicoes educacionais em ${territoryLabel} com filtros avancados, comparador e contato direto.`}
         />
+        <link rel="canonical" href={buildPublicAbsoluteUrl(canonicalPath)} />
       </Helmet>
 
       {/* HERO */}
@@ -284,13 +279,13 @@ export function EducationExplorerPage() {
             {/* Right: editorial collage */}
             <div className="relative hidden h-[420px] lg:block">
               <div className="absolute inset-0 grid grid-cols-2 gap-3">
-                {featured.map((p, i) => {
-                  const Icon = NICHE_ICONS[p.profile.niche_key] ?? GraduationCap;
+                {featured.map((profile, i) => {
+                  const Icon = NICHE_ICONS[profile.niche_key] ?? GraduationCap;
                   const gradient =
-                    NICHE_ACCENT[p.profile.niche_key] ?? 'from-primary to-primary/70';
+                    NICHE_ACCENT[profile.niche_key] ?? 'from-primary to-primary/70';
                   return (
                     <motion.div
-                      key={p.slug}
+                      key={profile.id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: i * 0.1 }}
@@ -306,14 +301,16 @@ export function EducationExplorerPage() {
                         <Icon className="h-8 w-8 opacity-90" />
                         <div>
                           <div className="text-[10px] uppercase tracking-wider opacity-80">
-                            {getNicheByKey(p.profile.niche_key)?.displayName}
+                            {getNicheByKey(profile.niche_key)?.displayName}
                           </div>
                           <div className="mt-1 line-clamp-2 text-base font-bold">
-                            {p.institutionName}
+                            {profile.business_name ?? profile.institution_type}
                           </div>
-                          <div className="mt-2 inline-flex items-center gap-1 text-[11px] opacity-80">
-                            <MapPin className="h-3 w-3" /> {p.district}
-                          </div>
+                          {profile.public_route?.district && (
+                            <div className="mt-2 inline-flex items-center gap-1 text-[11px] opacity-80">
+                              <MapPin className="h-3 w-3" /> {profile.public_route.district.replace(/-/g, ' ')}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </motion.div>
@@ -326,7 +323,7 @@ export function EducationExplorerPage() {
       </section>
 
       {/* ==========================================================================
-          FILTER BAR â€” sticky, refinada
+          FILTER BAR - sticky, refinada
           Linha 1: pesquisa + filtros pop-over (booking style) + sort + view
           Linha 2: rail de nichos (chips com icones)
           ========================================================================== */}
@@ -345,7 +342,7 @@ export function EducationExplorerPage() {
       {/* MAIN LAYOUT */}
       <section className="container mx-auto px-4 py-10">
         <div>
-            {/* Toolbar (apenas contador + indicador de fonte inicial) */}
+            {/* Toolbar */}
             <div className="mb-5 flex flex-wrap items-center gap-3">
               <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 text-sm">
                 <Building2 className="h-4 w-4 text-muted-foreground" />
@@ -354,12 +351,6 @@ export function EducationExplorerPage() {
                   {filtered.length === 1 ? 'instituicao' : 'instituicoes'}
                 </span>
               </div>
-              {!hasRealData && (
-                <Badge variant="outline" className="text-[10px]">
-                  <Info className="mr-1 h-3 w-3" />
-              Base publica inicial
-                </Badge>
-              )}
             </div>
 
             <ActiveEducationFilterChips
@@ -416,14 +407,11 @@ export function EducationExplorerPage() {
                     : 'flex flex-col gap-4'
                 )}
               >
-                {filtered.map(({ profile, preview, route }, i) => (
+                {filtered.map(({ profile }, i) => (
                   <EditorialCard
                     key={profile.id}
                     profile={profile}
-                    preview={preview}
-                    route={route}
                     index={i}
-                    isPreviewSource={Boolean(preview)}
                     onCompareToggle={toggleCompare}
                     comparing={comparing.includes(profile.id)}
                     view={view}

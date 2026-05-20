@@ -1,7 +1,8 @@
-﻿import { supabase } from "@/integrations/supabase";
+import { supabase } from "@/integrations/supabase";
 import { selectLooseRows } from "@/integrations/supabase/services/supabaseHelpers";
 import { SessionService } from "@/core/session/services/SessionService";
 import { TerritorialGroupService } from "@/core/location/services/TerritorialGroupService";
+import { PublicIdentityService } from "@/core/public-identity";
 import type {
   CommunicationChannel,
   CommunicationChannelTerritory,
@@ -11,6 +12,7 @@ import type {
   CreateCommunicationPublicationInput,
   RequestCommunicationChannelInput,
 } from "../types";
+import { parseRequestCommunicationChannelInput } from "../domain/requestChannelSchema";
 
 type RpcResult<T> = { data: T | null; error: { message?: string } | null };
 type RpcPayload = Record<string, unknown>;
@@ -63,7 +65,8 @@ function attachPublicationRelations(
 export class CommunicationTerritorialService {
   private static territorialGroupService = new TerritorialGroupService();
   static async requestChannel(input: RequestCommunicationChannelInput): Promise<{ request_id: string; status: string }> {
-    return callLooseRpc("request_communication_channel", { payload: input });
+    const sanitizedInput = parseRequestCommunicationChannelInput(input);
+    return callLooseRpc("request_communication_channel", { payload: sanitizedInput });
   }
 
   static async createPublication(input: CreateCommunicationPublicationInput): Promise<{ publication_id: string; status: string }> {
@@ -160,9 +163,12 @@ export class CommunicationTerritorialService {
   }
 
   static async getChannelBySlug(slug: string): Promise<CommunicationChannel | null> {
+    const normalizedSlug = PublicIdentityService.normalize(slug, "communication_channel");
+    if (!normalizedSlug) return null;
+
     const channels = await selectRows<CommunicationChannel>("communication_channels", {
       filters: [
-        { op: "eq", column: "slug", value: slug },
+        { op: "eq", column: "slug", value: normalizedSlug },
         { op: "eq", column: "status", value: "active" },
       ],
       limit: 1,
@@ -304,6 +310,3 @@ export class CommunicationTerritorialService {
     };
   }
 }
-
-
-

@@ -1,4 +1,4 @@
-﻿export interface ClassifiedChatSeller {
+export interface ClassifiedChatSeller {
   id: string;
   name: string;
   avatar: string | null;
@@ -60,7 +60,7 @@ const MOCK_CLASSIFIEDS: Record<string, MockClassified> = {
   },
   '2': {
     id: '2',
-    titulo: 'SofÃ¡ 3 lugares retrÃ¡til e reclinÃ¡vel',
+    titulo: 'Sofa 3 lugares retratil e reclinavel',
     preco: 850,
     categoria: 'moveis',
     bairro: 'Rio Vermelho',
@@ -103,7 +103,7 @@ const MOCK_CLASSIFIEDS: Record<string, MockClassified> = {
 };
 
 export const QUICK_REPLIES = [
-  'Ainda estÃ¡ disponÃ­vel?',
+  'Ainda esta disponivel?',
   'Aceita proposta?',
   'Pode enviar mais fotos?',
   'Onde podemos combinar?',
@@ -119,7 +119,7 @@ export function generateMockMessages(sellerId: string): MockMessage[] {
   return [
     {
       id: 'msg-sys-1',
-      text: 'Conversa iniciada. Negocie com respeito e seguranÃ§a.',
+      text: 'Conversa iniciada. Negocie com respeito e seguranca.',
       sender_profile_id: 'system',
       created_at: new Date(now - 3600000 * 2).toISOString(),
       read_at: new Date(now - 3600000).toISOString(),
@@ -127,7 +127,7 @@ export function generateMockMessages(sellerId: string): MockMessage[] {
     },
     {
       id: 'msg-1',
-      text: 'OlÃ¡! Vi seu anÃºncio e tenho interesse. O produto ainda estÃ¡ disponÃ­vel?',
+      text: 'Ola! Vi seu anuncio e tenho interesse. O produto ainda esta disponivel?',
       sender_profile_id: 'current-user',
       created_at: new Date(now - 3600000 * 1.5).toISOString(),
       read_at: new Date(now - 3600000).toISOString(),
@@ -135,7 +135,7 @@ export function generateMockMessages(sellerId: string): MockMessage[] {
     },
     {
       id: 'msg-2',
-      text: 'Sim, estÃ¡ disponÃ­vel! EstÃ¡ em perfeito estado. Quer marcar para ver?',
+      text: 'Sim, esta disponivel! Esta em perfeito estado. Quer marcar para ver?',
       sender_profile_id: sellerId,
       created_at: new Date(now - 3600000).toISOString(),
       read_at: new Date(now - 1800000).toISOString(),
@@ -143,7 +143,7 @@ export function generateMockMessages(sellerId: string): MockMessage[] {
     },
     {
       id: 'msg-3',
-      text: 'Ã“timo! Qual seria o melhor horÃ¡rio e local para a gente se encontrar?',
+      text: 'Otimo! Qual seria o melhor horario e local para a gente se encontrar?',
       sender_profile_id: 'current-user',
       created_at: new Date(now - 1800000).toISOString(),
       read_at: new Date(now - 900000).toISOString(),
@@ -151,7 +151,7 @@ export function generateMockMessages(sellerId: string): MockMessage[] {
     },
     {
       id: 'msg-4',
-      text: 'Pode ser amanhÃ£ Ã  tarde, no Shopping da Bahia? Fica fÃ¡cil para os dois.',
+      text: 'Pode ser amanha a tarde, no Shopping da Bahia? Fica facil para os dois.',
       sender_profile_id: sellerId,
       created_at: new Date(now - 900000).toISOString(),
       read_at: null,
@@ -200,18 +200,18 @@ export function lastSeenText(lastSeen: string, isOnline: boolean): string {
   if (isOnline) return 'Online agora';
   const diff = Date.now() - new Date(lastSeen).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 60) return `Visto hÃ¡ ${mins}min`;
+  if (mins < 60) return `Visto ha ${mins}min`;
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `Visto hÃ¡ ${hours}h`;
-  return `Visto hÃ¡ ${Math.floor(hours / 24)}d`;
+  if (hours < 24) return `Visto ha ${hours}h`;
+  return `Visto ha ${Math.floor(hours / 24)}d`;
 }
 
 export function buildMockReplyMessage(sellerId?: string): MockMessage {
   const responses = [
     'Claro! Me diga mais sobre o que precisa saber.',
     'Perfeito, podemos combinar sim!',
-    'Vou verificar e jÃ¡ te respondo.',
-    'Obrigado pelo interesse! ðŸ˜Š',
+    'Vou verificar e ja te respondo.',
+    'Obrigado pelo interesse!',
   ];
 
   return {

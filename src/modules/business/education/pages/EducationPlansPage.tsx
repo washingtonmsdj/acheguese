@@ -1,6 +1,6 @@
-﻿/**
+/**
  * EducationPlansPage
- * 
+ *
  * Pagina de planos e billing da instituicao.
  * Rota: /central/empresas/:businessId/education/planos
  */
@@ -128,7 +128,7 @@ export function EducationPlansPage() {
 
       await BillingService.redirectToCheckout({
         planCode: planId,
-        successUrl: `${window.location.origin}/central/empresas/${businessId}/education/planos?upgrade=success`,
+        successUrl: `${window.location.origin}/central/empresas/${businessId}/educacao/planos?upgrade=success`,
         cancelUrl: window.location.href,
       });
     } catch (error) {
@@ -185,7 +185,7 @@ export function EducationPlansPage() {
           variant="ghost"
           size="sm"
           className="mb-4"
-          onClick={() => navigate(`/central/empresas/${businessId}/education`)}
+          onClick={() => navigate(`/central/empresas/${businessId}/educacao`)}
         >
           <ArrowLeft className="w-4 h-4 mr-1" />
           Voltar
@@ -237,19 +237,19 @@ export function EducationPlansPage() {
               <div>
                 <p className="text-sm text-gray-500">Programas</p>
                 <p className="text-lg font-semibold">
-                  {entitlements.maxPrograms === 999 ? 'âˆž' : entitlements.maxPrograms}
+                  {entitlements.maxPrograms === 999 ? 'Ilimitado' : entitlements.maxPrograms}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Leads/mês</p>
                 <p className="text-lg font-semibold">
-                  {entitlements.maxLeadsPerMonth === 9999 ? 'âˆž' : entitlements.maxLeadsPerMonth}
+                  {entitlements.maxLeadsPerMonth === 9999 ? 'Ilimitado' : entitlements.maxLeadsPerMonth}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Eventos</p>
                 <p className="text-lg font-semibold">
-                  {entitlements.maxEvents === 999 ? 'âˆž' : entitlements.maxEvents}
+                  {entitlements.maxEvents === 999 ? 'Ilimitado' : entitlements.maxEvents}
                 </p>
               </div>
               <div>
@@ -355,5 +355,3 @@ export function EducationPlansPage() {
 }
 
 export default EducationPlansPage;
-
-

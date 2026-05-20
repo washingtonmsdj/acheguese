@@ -1,6 +1,6 @@
 /**
  * 🔍 BUSINESS QUERIES — Leitura de dados
- * 
+ *
  * Responsabilidade única: todas as operações de consulta (SELECT)
  * - Sem escritas (INSERT/UPDATE/DELETE)
  * - Sem lógica de negócio complexa
@@ -340,6 +340,43 @@ export async function getBusinessesList(params: {
   }
 }
 
+export async function getRecentBusinesses(
+  limit = 10,
+): Promise<Array<{ id: string; name: string; created_at: string }>> {
+  try {
+    const safeLimit = Math.max(1, Math.min(limit, 50));
+    const { data, error } = await supabaseTyped
+      .from("business_data")
+      .select("profile_id, business_name, created_at")
+      .eq("status", "active")
+      .in("business_role", ["standalone", "branch"])
+      .order("created_at", { ascending: false })
+      .limit(safeLimit);
+
+    if (error) {
+      logger.error("Error fetching recent businesses", error);
+      return [];
+    }
+
+    return ((data as unknown[]) || []).map((row) => {
+      const business = row as {
+        profile_id?: string | null;
+        business_name?: string | null;
+        created_at?: string | null;
+      };
+
+      return {
+        id: business.profile_id ?? "",
+        name: business.business_name ?? "Empresa",
+        created_at: business.created_at ?? "",
+      };
+    });
+  } catch (error) {
+    logger.error("Error in getRecentBusinesses", error as Error);
+    return [];
+  }
+}
+
 /**
  * Buscar perfil básico da empresa (para URLs e metadados)
  */
@@ -494,8 +531,6 @@ export async function getBusinessBySlug(slug: string): Promise<{
 export {
   checkSlugExists,
   getSimilarSlugs,
-  getSlugHistory,
-  resolveOldSlug,
 } from "./business.slug-queries";
 
 /**

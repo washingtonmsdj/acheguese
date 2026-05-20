@@ -92,7 +92,7 @@ export function AppRoutes() {
           <Route index element={<P.CentralHubPage />} />
         </Route>
       </Route>
-      
+
       <Route path="/central" element={<P.CentralLayout />}>
         <Route element={<P.CentralAccessGuard />}>
           <Route index element={<P.CentralHubPage />} />
@@ -104,6 +104,7 @@ export function AppRoutes() {
           <Route path="comunicacao/:channelSlug" element={<P.CommunicationAgentDashboardV2 />} />
           <Route path="empresas" element={<P.CentralEmpresasPage />} />
           <Route path="empresas/nova" element={<P.CriarEmpresaPage />} />
+          <Route path="empresas/nova/:verticalSlug" element={<P.CriarEmpresaPage />} />
           <Route path="empresas/:businessId" element={<P.BusinessAdminGuard />}>
             <Route element={<P.BusinessDashboardShellPage />}>
               <Route index element={<P.BusinessOverviewPage />} />
@@ -118,16 +119,13 @@ export function AppRoutes() {
               <Route path="gastronomia/entregas" element={<P.DeliveryManagementPage />} />
               <Route path="gastronomia/analytics" element={<P.AnalyticsPage />} />
               <Route path="gastronomia/promocoes" element={<P.GastronomyPromotionsPage />} />
-              <Route path="education" element={<P.EducationDashboardPage />} />
-              <Route path="education/setup" element={<P.EducationSetupPage />} />
-              <Route path="education/programas" element={<P.EducationProgramsPage />} />
-              <Route path="education/programs" element={<P.EducationProgramsPage />} />
-              <Route path="education/leads" element={<P.EducationLeadsPage />} />
-              <Route path="education/eventos" element={<P.EducationEventsPage />} />
-              <Route path="education/events" element={<P.EducationEventsPage />} />
-              <Route path="education/analytics" element={<P.EducationAnalyticsPage />} />
-              <Route path="education/planos" element={<P.EducationPlansPage />} />
-              <Route path="education/plans" element={<P.EducationPlansPage />} />
+              <Route path="educacao" element={<P.EducationDashboardPage />} />
+              <Route path="educacao/setup" element={<P.EducationSetupPage />} />
+              <Route path="educacao/programas" element={<P.EducationProgramsPage />} />
+              <Route path="educacao/leads" element={<P.EducationLeadsPage />} />
+              <Route path="educacao/eventos" element={<P.EducationEventsPage />} />
+              <Route path="educacao/analytics" element={<P.EducationAnalyticsPage />} />
+              <Route path="educacao/planos" element={<P.EducationPlansPage />} />
               <Route path="planos" element={<P.BusinessPlansPage />} />
               <Route path="link-premium" element={<P.BusinessPremiumSitePage />} />
               <Route path="analytics" element={<P.BusinessAnalyticsPage />} />
@@ -177,7 +175,6 @@ export function AppRoutes() {
         {/* Rotas publicas de landing pages */}
         <Route path="/empresas-landing" element={<P.EmpresasLandingPage />} />
         <Route path="/servicos-landing" element={<P.ServicosLandingPage />} />
-        <Route path="/empresa/:id" element={<P.BusinessLegacyRoute />} />
         <Route path="/classificado/:id" element={<P.ClassificadoDetailLandingPage />} />
         <Route path="/classificado/:id/chat" element={<P.ClassificadoChatLandingPage />} />
         <Route path="/vagas/detalhe/:id" element={<P.VagaDetailPage />} />
@@ -250,9 +247,7 @@ export function AppRoutes() {
 
         {/* LGPD / Privacidade */}
         <Route path="/dpo" element={<P.DPOContactPage />} />
-        <Route path="/motorista-legacy" element={<P.MotoristaPage />} />
-
-        {/* Rotas legadas sem territorio */}
+        {/* Rotas globais sem territorio */}
         <Route path="/educacao" element={<P.EducationExplorerPage />} />
         <Route path="/comunidade" element={<P.ComunidadePage />} />
         <Route path="/comunidade/problemas" element={<P.ProblemasPage />} />

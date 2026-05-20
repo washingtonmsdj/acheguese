@@ -18,10 +18,15 @@ export function BusinessAdminGuard() {
   const { businessId } = useParams<{ businessId: string }>();
   const navigate = useNavigate();
   const { business, isLoading: loadingBusiness } = useBusiness(businessId || "");
-  const { permissions, loading: loadingAccess } = useDashboardAccess(business?.profile_id);
+  const { permissions, loading: loadingAccess, checkedProfileId } = useDashboardAccess(business?.profile_id);
+  const accessReady = Boolean(
+    business?.profile_id &&
+      checkedProfileId === business.profile_id &&
+      !loadingAccess,
+  );
 
   useEffect(() => {
-    if (loadingBusiness || loadingAccess) return;
+    if (loadingBusiness) return;
 
     if (!businessId || !business) {
       toast.error("Empresa não encontrada.");
@@ -29,14 +34,16 @@ export function BusinessAdminGuard() {
       return;
     }
 
+    if (!accessReady) return;
+
     if (!permissions.hasAccess) {
       toast.error("Você não tem permissão para gerenciar esta empresa.");
       navigate(businessManagementRoutes.list(), { replace: true });
     }
-  }, [businessId, business, loadingBusiness, loadingAccess, permissions.hasAccess, navigate]);
+  }, [businessId, business, loadingBusiness, accessReady, permissions.hasAccess, navigate]);
 
   // Mostrar loading enquanto verifica acesso
-  if (loadingBusiness || loadingAccess) {
+  if (loadingBusiness || (business && !accessReady)) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center px-4">
         <div className="space-y-3 text-center">

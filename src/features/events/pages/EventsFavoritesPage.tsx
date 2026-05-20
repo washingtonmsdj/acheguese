@@ -1,13 +1,14 @@
 /**
  * EVENTS FAVORITES PAGE
- * 
+ *
  * Página de eventos favoritos do usuário
  * Lista todos os eventos salvos
- * 
+ *
  * @version 1.0.0
  */
 
 import { useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
@@ -15,16 +16,24 @@ import { Heart, Home, Sparkles, Trash2 } from 'lucide-react';
 import { EventCard } from '../components/EventCard';
 import { Button } from '@/shared/components/ui/button';
 import { useFavorites } from '../hooks/useFavorites';
-import { MOCK_EVENTS } from '../utils/mockData';
+import { communityEventsRuntimeService } from '@/core/community/services/CommunityEventsRuntimeService';
+import { mapCommunityEventToEvent } from '../utils/eventAdapters';
 
 export default function EventsFavoritesPage() {
   const navigate = useNavigate();
   const { favorites, removeFavorite, clearFavorites, isLoading } = useFavorites();
+  const { data: events = [], isLoading: isLoadingEvents } = useQuery({
+    queryKey: ['events-favorites', favorites],
+    enabled: favorites.length > 0,
+    queryFn: async () => {
+      const rows = await Promise.all(favorites.map((eventId) => communityEventsRuntimeService.getEventById(eventId)));
+      return rows.filter(Boolean).map((event) => mapCommunityEventToEvent(event!));
+    },
+  });
 
-  // Get favorite events
   const favoriteEvents = useMemo(() => {
-    return MOCK_EVENTS.filter(event => favorites.includes(event.id));
-  }, [favorites]);
+    return events.filter((event) => favorites.includes(event.id));
+  }, [events, favorites]);
 
   const handleEventClick = (eventId: string) => {
     navigate(`/eventos/${eventId}`);
@@ -124,7 +133,7 @@ export default function EventsFavoritesPage() {
         {/* Content */}
         <section className="py-12">
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
-            {isLoading ? (
+            {isLoading || isLoadingEvents ? (
               <div className="flex items-center justify-center py-12">
                 <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
               </div>

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * DeliveryAreaService â€” SSOT canÃ´nico de Ã¡reas de entrega
  *
  * Centraliza toda a lÃ³gica de negÃ³cio de Ã¡reas de entrega e taxas.
@@ -77,11 +77,11 @@ export interface DeliveryAreaSummary {
 // â”€â”€ Service â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const DeliveryAreaService = {
-  
+
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   // ÃREAS DE ENTREGA
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-  
+
   /**
    * Lista Ã¡reas de entrega de uma empresa
    */
@@ -248,7 +248,7 @@ export const DeliveryAreaService = {
 
       if (hasError) {
         logger.error('[DeliveryAreaService] reorderAreas error');
-        return { data: null, error: 'Erro ao reordenar Ã¡reas' };
+        return { data: null, error: 'Erro ao reordenar areas' };
       }
 
       return { data: true, error: null };
@@ -476,5 +476,3 @@ export const DeliveryAreaService = {
     }
   },
 };
-
-

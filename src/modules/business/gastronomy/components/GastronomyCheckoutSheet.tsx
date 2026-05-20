@@ -23,7 +23,7 @@ import {
   useGastronomyCart,
   useGastronomyCheckout,
 } from "../hooks";
-import type { GastronomyCheckoutOrderRecord } from "../services/GastronomyCheckoutService";
+import type { OrderRecord } from "@/core/mobility/delivery/order/types";
 import type { GastronomyBusiness } from "../types/gastronomy";
 import type { CartItem } from "../types/menu";
 import { GastronomyDeliveryDestinationPanel } from "./GastronomyDeliveryDestinationPanel";
@@ -32,7 +32,7 @@ interface Props {
   business: GastronomyBusiness;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onOrderCreated?: (order: GastronomyCheckoutOrderRecord) => void;
+  onOrderCreated?: (order: OrderRecord) => void;
 }
 
 type DeliveryFulfillmentMode = "own_fleet" | "platform_courier" | "unspecified";

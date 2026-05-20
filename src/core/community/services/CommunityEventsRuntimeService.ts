@@ -80,126 +80,6 @@ export interface EventParticipantRow {
     | null;
 }
 
-function buildMockEventDate(daysAhead: number, hour = 18): string {
-  const date = new Date();
-  date.setDate(date.getDate() + daysAhead);
-  date.setHours(hour, 0, 0, 0);
-  return date.toISOString();
-}
-
-export function getComplexoEventMocks(): CommunityEvent[] {
-  return [
-    {
-      id: "mock-complexo-event-1",
-      title: "Roda de Samba no Largo do Nordeste",
-      description: "Samba de roda com artistas locais e feira de empreendedores do Complexo.",
-      date: buildMockEventDate(2, 19),
-      location: "Largo do Nordeste de Amaralina",
-      organizer_profile_id: "mock-organizer",
-      category: "cultural",
-      image_url: "/placeholder.svg",
-      max_participants: 180,
-      current_participants: 94,
-      status: "upcoming",
-      created_at: buildMockEventDate(-1, 9),
-      updated_at: buildMockEventDate(-1, 9),
-      latitude: -13.0032,
-      longitude: -38.4698,
-      coordinate_source: "approximate",
-    },
-    {
-      id: "mock-complexo-event-2",
-      title: "Mutirão de Empregabilidade do Complexo",
-      description: "Currículo, orientação profissional e cadastro para vagas da região.",
-      date: buildMockEventDate(4, 14),
-      location: "Centro Social Urbano - Nordeste",
-      organizer_profile_id: "mock-organizer",
-      category: "educacional",
-      image_url: "/placeholder.svg",
-      max_participants: 120,
-      current_participants: 61,
-      status: "upcoming",
-      created_at: buildMockEventDate(-2, 10),
-      updated_at: buildMockEventDate(-2, 10),
-      latitude: -13.0014,
-      longitude: -38.4711,
-      coordinate_source: "approximate",
-    },
-    {
-      id: "mock-complexo-event-3",
-      title: "Aulão Aberto de Capoeira",
-      description: "Encontro comunitário com mestres locais e oficina para crianças e jovens.",
-      date: buildMockEventDate(6, 10),
-      location: "Praça de Santa Cruz",
-      organizer_profile_id: "mock-organizer",
-      category: "esportivo",
-      image_url: "/placeholder.svg",
-      max_participants: 90,
-      current_participants: 48,
-      status: "upcoming",
-      created_at: buildMockEventDate(-3, 8),
-      updated_at: buildMockEventDate(-3, 8),
-      latitude: -13.0002,
-      longitude: -38.4685,
-      coordinate_source: "approximate",
-    },
-    {
-      id: "mock-complexo-event-4",
-      title: "Feira Gastronômica do Vale das Pedrinhas",
-      description: "Comidas típicas, culinária afro-baiana e música ao vivo no bairro.",
-      date: buildMockEventDate(8, 17),
-      location: "Vale das Pedrinhas - Quadra Comunitária",
-      organizer_profile_id: "mock-organizer",
-      category: "social",
-      image_url: "/placeholder.svg",
-      max_participants: 220,
-      current_participants: 133,
-      status: "upcoming",
-      created_at: buildMockEventDate(-4, 9),
-      updated_at: buildMockEventDate(-4, 9),
-      latitude: -13.0044,
-      longitude: -38.4727,
-      coordinate_source: "approximate",
-    },
-    {
-      id: "mock-complexo-event-5",
-      title: "Encontro de Lideranças da Chapada",
-      description: "Debate comunitário sobre segurança, limpeza urbana e ações de bairro.",
-      date: buildMockEventDate(10, 18),
-      location: "Chapada do Rio Vermelho - Associação de Moradores",
-      organizer_profile_id: "mock-organizer",
-      category: "social",
-      image_url: "/placeholder.svg",
-      max_participants: 100,
-      current_participants: 39,
-      status: "upcoming",
-      created_at: buildMockEventDate(-5, 11),
-      updated_at: buildMockEventDate(-5, 11),
-      latitude: -12.9994,
-      longitude: -38.4669,
-      coordinate_source: "approximate",
-    },
-    {
-      id: "mock-complexo-event-6",
-      title: "Celebração Comunitária de Gratidão",
-      description: "Momento ecumênico com participação das redes de apoio do território.",
-      date: buildMockEventDate(12, 16),
-      location: "Nordeste de Amaralina - Espaço Comunitário",
-      organizer_profile_id: "mock-organizer",
-      category: "religioso",
-      image_url: "/placeholder.svg",
-      max_participants: 140,
-      current_participants: 72,
-      status: "upcoming",
-      created_at: buildMockEventDate(-6, 10),
-      updated_at: buildMockEventDate(-6, 10),
-      latitude: -13.0026,
-      longitude: -38.4704,
-      coordinate_source: "approximate",
-    },
-  ];
-}
-
 class CommunityEventsRuntimeService {
   private getErrorMessage(error: unknown): string {
     return error instanceof Error ? error.message : "erro desconhecido";
@@ -211,13 +91,7 @@ class CommunityEventsRuntimeService {
 
   async getEventById(id: string): Promise<CommunityEvent | null> {
     try {
-      // Check if it's a mock event ID
-      if (id.startsWith("mock-")) {
-        const mockEvents = getComplexoEventMocks();
-        return mockEvents.find(event => event.id === id) ?? null;
-      }
 
-      // Evita erro 22P02 no Postgres quando a rota recebe slugs legados
       if (!this.isUuid(id)) {
         return null;
       }

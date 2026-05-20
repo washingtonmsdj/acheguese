@@ -1,6 +1,6 @@
-﻿import React from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2 } from "lucide-react";
+import { CircleHelp, Loader2 } from "lucide-react";
 
 import { useCommunityUrls } from "@/core/community/hooks/useCommunityUrls";
 import { Button } from "@/shared/components/ui/button";
@@ -38,7 +38,7 @@ export function QuestionsList({
   if (questions.length === 0) {
     return (
       <div className="py-12 text-center">
-        <p className="mb-3 text-4xl">ðŸ¤”</p>
+        <CircleHelp className="mx-auto mb-3 h-10 w-10 text-muted-foreground" aria-hidden="true" />
         <p className="mb-3 text-sm text-muted-foreground">
           Nenhuma pergunta ainda.
         </p>
@@ -72,4 +72,3 @@ export function QuestionsList({
     </div>
   );
 }
-

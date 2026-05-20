@@ -1,5 +1,3 @@
-import React from "react";
-
 import { useState, useEffect, useCallback } from "react";
 import {
   Tabs,
@@ -8,12 +6,6 @@ import {
   TabsContent,
 } from "@/shared/components/ui/tabs";
 import { cn } from "@/shared/utils/cn";
-import {
-  businessExemplo,
-  productsExemplo,
-  servicesExemplo,
-  galeriaExemplo,
-} from "@/modules/business/components/EmpresaExemplo";
 import QuickActions from "@/modules/business/components/QuickActions.tsx";
 import PromoBanner from "@/modules/business/components/PromoBanner.tsx";
 import { BusinessService } from "@/core/business/services/BusinessService";
@@ -21,21 +13,19 @@ import type { Product, Review } from "@/core/business/types";
 import type { BusinessService as BusinessServiceType, GalleryPhoto, BusinessTabsProps } from "@/modules/business/types/components";
 import { ReviewsService } from "@/core/reviews/services/ReviewsService";
 // Tabs
-import { DashboardTab } from "./tabs/DashboardTab";
 import { VisaoGeralTab } from "./tabs/VisaoGeralTab";
 import { ProdutosTab } from "./tabs/ProdutosTab";
 import { ServicosTab } from "./tabs/ServicosTab";
 import { CardapioTab } from "./tabs/CardapioTab";
 import { PortfolioTab } from "./tabs/PortfolioTab";
 import { PromocoesTab } from "./tabs/PromocoesTab";
-import { EstatisticasTab } from "./tabs/EstatisticasTab";
 import { AgendamentosTab } from "./tabs/AgendamentosTab";
 import { logger } from "@/shared/utils/logger";
 
 export function BusinessTabs({
   business,
   isOwner,
-  canSeeDashboard,
+  canSeeDashboard: _canSeeDashboard,
   user,
 }: BusinessTabsProps) {
   const businessAddress =
@@ -47,26 +37,14 @@ export function BusinessTabs({
   const [gallery, setGallery] = useState<GalleryPhoto[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
 
-  // Fetch date
   const fetchProducts = useCallback(async () => {
-    if (business.id === "exemplo-123") {
-      setProducts(productsExemplo as unknown as Product[]);
-      return;
-    }
-
     if (!business.id) return;
 
     try {
       const data = (await BusinessService.getProducts(business.id)) as Array<
-        Partial<Product> & { id: string; name: string; category: string; active: boolean; featured: boolean; promotion: boolean; price: number; description: string }
+        Product
       >;
-      setProducts(
-        data.map((product) => ({
-          ...product,
-          profile_id: product.profile_id ?? business.id,
-          created_at: product.created_at ?? new Date().toISOString(),
-        })),
-      );
+      setProducts(data);
     } catch (err) {
       logger.warn("Error search products:", err);
       setProducts([]);
@@ -74,59 +52,31 @@ export function BusinessTabs({
   }, [business.id]);
 
   const fetchServices = useCallback(async () => {
-    if (business.id === "exemplo-123") {
-      setServices(servicesExemplo as unknown as BusinessServiceType[]);
-      return;
-    }
-
     if (!business.id) return;
 
     try {
       const data = (await BusinessService.getServices(business.id)) as Array<
-        Partial<BusinessServiceType> & { id: string; name: string; active: boolean }
+        BusinessServiceType
       >;
-      setServices(
-        data.map((service) => ({
-          id: service.id,
-          business_id: service.business_id ?? business.id,
-          name: service.name,
-          description: service.description ?? undefined,
-          category: service.category ?? undefined,
-          price: service.price ?? undefined,
-          duration: service.duration ?? undefined,
-          active: Boolean(service.active),
-          featured: service.featured ?? false,
-          created_at: service.created_at ?? new Date().toISOString(),
-        })),
-      );
+      setServices(data);
     } catch (err) {
-      logger.warn("Error search serviços:", err);
+      logger.warn("Error search servicos:", err);
       setServices([]);
     }
   }, [business.id]);
 
   const fetchGallery = useCallback(async () => {
-    if (business.id === "exemplo-123") {
-      setGallery(galeriaExemplo as unknown as GalleryPhoto[]);
-      return;
-    }
-    // Tabela business_gallery não existe no schema — galeria vazia por padrão
     setGallery([]);
-  }, [business.id]);
+  }, []);
 
   const fetchReviews = useCallback(async () => {
-    if (business.id === "exemplo-123") {
-      setReviews([]);
-      return;
-    }
-
     if (!business.id) return;
 
     try {
       const data = await ReviewsService.getReviewsForProfile(business.id, "business");
       setReviews(data as unknown as Review[]);
     } catch (err) {
-      logger.warn("Error search avaliações:", err);
+      logger.warn("Error search avaliacoes:", err);
       setReviews([]);
     }
   }, [business.id]);
@@ -163,12 +113,12 @@ export function BusinessTabs({
 
   return (
     <>
-      {/* Promo Banner - Mostra se houver products em promoção */}
+      {/* Promo Banner - Mostra se houver products em promocao */}
       {products.some((p) => p.promotion) && (
         <PromoBanner
-          title="Produtos em Promoção!"
+          title="Produtos em Promocao!"
           description="Aproveite nossos products com descontos especiais"
-          discount="Até 40% OFF"
+          discount="Ate 40% OFF"
           validUntil="31/03/2026"
           ctaText="Ver Produtos"
           onCtaClick={() => {
@@ -210,22 +160,22 @@ export function BusinessTabs({
             gridColsMap[activeTabs.length] || "grid-cols-5",
           )}
         >
-          <TabsTrigger 
+          <TabsTrigger
             value="visao-geral"
             className="data-[state=active]:bg-background data-[state=active]:shadow-md transition-all"
           >
-            Visão Geral
+            Visao Geral
           </TabsTrigger>
           {sections.services && (
-            <TabsTrigger 
+            <TabsTrigger
               value="services"
               className="data-[state=active]:bg-background data-[state=active]:shadow-md transition-all"
             >
-              Serviços
+              Servicos
             </TabsTrigger>
           )}
           {sections.products && (
-            <TabsTrigger 
+            <TabsTrigger
               value="products"
               className="data-[state=active]:bg-background data-[state=active]:shadow-md transition-all"
             >
@@ -233,31 +183,31 @@ export function BusinessTabs({
             </TabsTrigger>
           )}
           {(sections.cardapio || products.length > 0) && (
-            <TabsTrigger 
+            <TabsTrigger
               value="cardapio"
               className="data-[state=active]:bg-background data-[state=active]:shadow-md transition-all"
             >
-              Cardápio
+              Cardapio
             </TabsTrigger>
           )}
           {sections.portfolio && (
-            <TabsTrigger 
+            <TabsTrigger
               value="portfolio"
               className="data-[state=active]:bg-background data-[state=active]:shadow-md transition-all"
             >
-              Portfólio
+              Portfolio
             </TabsTrigger>
           )}
           {sections.promocoes && (
-            <TabsTrigger 
+            <TabsTrigger
               value="promocoes"
               className="data-[state=active]:bg-background data-[state=active]:shadow-md transition-all"
             >
-              Promoções
+              Promocoes
             </TabsTrigger>
           )}
           {isOwner && services.length > 0 && (
-            <TabsTrigger 
+            <TabsTrigger
               value="agendamentos"
               className="data-[state=active]:bg-background data-[state=active]:shadow-md transition-all"
             >

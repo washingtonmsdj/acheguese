@@ -9,18 +9,15 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
-import { Loader2 } from 'lucide-react';
-import gastronomyHeroBg from '@/assets/gastronomy-hero-bg.jpg';
+import { Loader2, UtensilsCrossed, Search, MapPin } from 'lucide-react';
 import { useModuleTerritoryFilter } from '@/core/location/hooks/useModuleTerritoryFilter';
 import { useAppUrls } from '@/core/routing/hooks';
 import { useTerritorialContextOptional } from '@/core/routing/components/TerritorialLayout';
 import { useSessionContext } from '@/core/session';
 import { CanonicalHero } from '@/shared/components/hero/CanonicalHero';
-import { HeroBannerCarousel, type HeroBanner } from '@/shared/components/hero/HeroBannerCarousel';
 import { Button } from '@/shared/components/ui/button';
 import { AdSense } from '@/shared/components/advertising';
 import {
-  GastronomyCategoryCards,
   GastronomyDeliveryDestinationPanel,
   GastronomyActivityFeed,
   GastronomyHeader,
@@ -325,49 +322,34 @@ export default function GastronomyLandingPage() {
           </div>
         </section>
         {/* â”€â”€ Hero Carrossel de Banners â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-        <HeroBannerCarousel
-          banners={[
-            {
-              id: '1',
-              image: gastronomyHeroBg,
-              title: 'Promoção Especial!',
-              subtitle: 'Desconto de 20% em todos os pedidos acima de R$ 50',
-              textPosition: 'center',
-              cta: {
-                label: 'Ver Ofertas',
-                onClick: () => console.log('Ver ofertas'),
-              },
-            },
-            {
-              id: '2',
-              image: gastronomyHeroBg,
-              title: 'Delivery Grátis',
-              subtitle: 'Frete grátis para pedidos acima de R$ 30',
-              textPosition: 'center',
-              cta: {
-                label: 'Pedir Agora',
-                onClick: () => console.log('Pedir agora'),
-              },
-            },
-            {
-              id: '3',
-              image: gastronomyHeroBg,
-              title: 'Novos Restaurantes',
-              subtitle: 'Conheça as novidades da sua região',
-              textPosition: 'center',
-              cta: {
-                label: 'Explorar',
-                onClick: () => console.log('Explorar'),
-              },
-            },
-          ]}
-          autoPlayInterval={5000}
-          showArrows={true}
-          showDots={false}
-          height="280px"
-          heightMd="320px"
-          heightLg="380px"
+
+        <CanonicalHero
+          moduleName="Gastronomia"
+          moduleIcon={UtensilsCrossed}
+          territoryName={territoryName}
+          title="Descubra Sabores"
+          titleHighlight="Perto de Voce"
+          subtitle={`Restaurantes e cardapios em ${territoryName}. Escolha um destino de entrega e veja as melhores opcoes da regiao.`}
+          search={{
+            value: searchQuery,
+            onChange: setSearchQuery,
+            placeholder: `Buscar em ${territoryName}: pizza, acai, hamburguer...`,
+          }}
+          primaryCTA={{
+            label: 'Buscar',
+            icon: Search,
+            onClick: () => undefined,
+          }}
+          secondaryCTA={{
+            label: 'Definir destino',
+            icon: MapPin,
+            onClick: () => setShowDestinationEditor(true),
+            variant: 'outline',
+          }}
+          backgroundImage={undefined}
+          density="banner"
         />
+
         <section className="container mx-auto px-4 pt-4">
           {/* â”€â”€ Google AdSense â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           <div className="mb-6 w-full rounded-xl">

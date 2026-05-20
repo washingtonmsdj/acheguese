@@ -4,7 +4,7 @@ import { Link, Navigate, useNavigate } from "react-router-dom";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { GastronomyCheckoutSheet } from "@/modules/business/gastronomy/components";
-import type { GastronomyCheckoutOrderRecord } from "@/modules/business/gastronomy/services/GastronomyCheckoutService";
+import type { OrderRecord } from "@/core/mobility/delivery/order/types";
 import { usePremiumBusinessSiteContext } from "@/modules/business/premium/context/PremiumBusinessSiteContext";
 import { useGastronomyCart } from "@/modules/business/gastronomy/hooks";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
@@ -55,7 +55,7 @@ export default function PremiumBusinessCheckoutPage() {
       <GastronomyCheckoutSheet
         business={business}
         open={sheetOpen}
-        onOrderCreated={(order: GastronomyCheckoutOrderRecord) => {
+        onOrderCreated={(order: OrderRecord) => {
           createdOrderIdRef.current = order.id;
         }}
         onOpenChange={(open) => {

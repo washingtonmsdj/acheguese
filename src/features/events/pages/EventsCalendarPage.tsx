@@ -1,21 +1,30 @@
 /**
  * 📅 EVENTS CALENDAR PAGE
- * 
+ *
  * Página de visualização de eventos em calendário
- * 
+ *
  * @version 1.0.0
  */
 
 import { useNavigate, Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { Calendar, Home, List, Map } from 'lucide-react';
 import { EventCalendar } from '../components/EventCalendar';
 import { Button } from '@/shared/components/ui/button';
-import { MOCK_EVENTS } from '../utils/mockData';
+import { communityEventsRuntimeService } from '@/core/community/services/CommunityEventsRuntimeService';
+import { mapCommunityEventToEvent } from '../utils/eventAdapters';
 
 export default function EventsCalendarPage() {
   const navigate = useNavigate();
+  const { data: events = [] } = useQuery({
+    queryKey: ['events-calendar'],
+    queryFn: async () => {
+      const rows = await communityEventsRuntimeService.getEvents({ upcoming: true });
+      return rows.map(mapCommunityEventToEvent);
+    },
+  });
 
   const handleEventClick = (eventId: string) => {
     navigate(`/eventos/${eventId}`);
@@ -110,8 +119,8 @@ export default function EventsCalendarPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
-              <EventCalendar 
-                events={MOCK_EVENTS} 
+              <EventCalendar
+                events={events}
                 onEventClick={handleEventClick}
               />
             </motion.div>

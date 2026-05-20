@@ -1,17 +1,15 @@
 /**
  * BILLING PLAN SERVICE — SSOT
- * 
+ *
  * Responsabilidade: Gerenciar planos de assinatura do banco de dados
- * 
+ *
  * Padrão SSOT:
  * - Única fonte de verdade para planos de billing
  * - Cache inteligente com TTL de 5 minutos
  * - Tratamento de erros consistente
  * - Logging estruturado
- * 
- * Substitui:
- * - src/core/billing/plans.ts (hardcoded)
- * - src/shared/types/subscription.ts (hardcoded)
+ *
+ * Os planos ativos sao sempre carregados de billing_plans.
  */
 
 import { logger } from '@/shared/utils/logger';
@@ -64,7 +62,7 @@ export interface PlanEntitlements extends GenericBillingEntitlementAliases {
   canUsePremiumPublicPage: boolean;
   canUseShortPremiumLink: boolean;
   canUseCustomQRCode: boolean;
-  
+
   // Cardápio / Catálogo
   canUseAdvancedMenu: boolean;
   canUseMenuCategories: boolean;
@@ -74,14 +72,14 @@ export interface PlanEntitlements extends GenericBillingEntitlementAliases {
   canUseMenuCombos: boolean;
   canManageAvailability: boolean;
   canScheduleItems: boolean;
-  
+
   // Pedidos
   canReceiveInternalOrders: boolean;
   canUseOrdersPanel: boolean;
   canManageOrderStatus: boolean;
   canCancelOrders: boolean;
   canViewOrderHistory: boolean;
-  
+
   // Delivery / Operação
   canUseMotoboyNetwork: boolean;
   canRequestDelivery: boolean;
@@ -91,21 +89,21 @@ export interface PlanEntitlements extends GenericBillingEntitlementAliases {
   canManageBusinessHours: boolean;
   canSetMinimumOrder: boolean;
   canUseOwnDelivery: boolean;
-  
+
   // Marketing
   canUsePromotions: boolean;
   canUseFeaturedPlacement: boolean;
   canUseBanners: boolean;
   canUseCoupons: boolean;
   canSchedulePromotions: boolean;
-  
+
   // Analytics
   canUseBasicAnalytics: boolean;
   canUseAdvancedAnalytics: boolean;
   canExportReports: boolean;
   canViewRealtimeMetrics: boolean;
   canViewCustomerInsights: boolean;
-  
+
   // Limites
   maxMenuItems: number | null;
   maxPromotions: number | null;
@@ -203,7 +201,7 @@ export class BillingPlanService {
       }
 
       const plans = (data as BillingPlanRow[]).map((row) => this.mapRowToPlan(row));
-      
+
       // Atualizar cache
       this.allPlansCache = plans;
       plans.forEach(plan => this.cache.set(plan.code, plan));
@@ -243,7 +241,7 @@ export class BillingPlanService {
       }
 
       const plan = this.mapRowToPlan(data as BillingPlanRow);
-      
+
       // Atualizar cache
       this.cache.set(code, plan);
       this.cacheTimestamp = Date.now();
@@ -524,4 +522,3 @@ export class BillingPlanService {
     };
   }
 }
-

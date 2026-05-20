@@ -21,6 +21,7 @@ export interface UseIdentityAvailabilityReturn {
   isChecking: boolean;
   /** Dispara checagem manual (útil em submit) */
   check: (identifier: string) => Promise<AvailabilityResult | null>;
+  checkDebounced: (identifier: string) => void;
   reset: () => void;
 }
 
@@ -87,9 +88,8 @@ export function useIdentityAvailability({
     if (timerRef.current) clearTimeout(timerRef.current);
   }, []);
 
-  return { result, isChecking, check, reset };
+  return { result, isChecking, check, checkDebounced, reset };
 }
 
 // Exporta versão debounced como default de uso em inputs
 export { useIdentityAvailability as default };
-

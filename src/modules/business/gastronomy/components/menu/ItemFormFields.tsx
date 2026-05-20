@@ -1,4 +1,4 @@
-﻿import type { RefObject } from 'react';
+import type { RefObject } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 import { Button } from '@/shared/components/ui/button';
 import {
@@ -39,7 +39,7 @@ export function PriceCategoryFields({ form, categories, allowCategorySelection }
         name="price"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>PreÃ§o (R$)</FormLabel>
+            <FormLabel>Preco (R$)</FormLabel>
             <FormControl>
               <Input
                 type="number"
@@ -359,7 +359,7 @@ export function CaloriesField({ form }: BaseSectionProps) {
               }}
             />
           </FormControl>
-          <FormDescription>Valor calÃ³rico aproximado do item</FormDescription>
+          <FormDescription>Valor calorico aproximado do item</FormDescription>
           <FormMessage />
         </FormItem>
       )}

@@ -1,5 +1,5 @@
-﻿/**
- * ClassificadoChatLandingPage â€” Chat pÃºblico de classificado
+/**
+ * ClassificadoChatLandingPage - Chat publico de classificado
  * Rota: /classificado/:id/chat
  */
 
@@ -89,13 +89,13 @@ export default function ClassificadoChatLandingPage() {
   };
 
   const handleReport = () => {
-    toast.success('DenÃºncia enviada. Nossa equipe vai analisar.');
+    toast.success('Denuncia enviada. Nossa equipe vai analisar.');
     setReportDialogOpen(false);
   };
 
   const handleBlock = () => {
     setIsBlocked(true);
-    toast.success('UsuÃ¡rio bloqueado. VocÃª nÃ£o receberÃ¡ mais mensagens.');
+    toast.success('Usuario bloqueado. Voce nao recebera mais mensagens.');
     setBlockDialogOpen(false);
   };
 

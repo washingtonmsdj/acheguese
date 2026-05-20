@@ -28,8 +28,10 @@ import AnalyticsDashboard from "./AnalyticsDashboard";
 import CouponManager from "./CouponManager";
 import SubscriptionPlans from "./SubscriptionPlans";
 import { Separator } from "@/shared/components/ui/separator";
-import type { PlanType } from "@/shared/types/subscription";
-import { FavoritesService } from "@/core/favorites/services/FavoritesService";
+import { getFavoritersOfProfile } from "@/core/favorites/services";
+import { SubscriptionService, useBusinessSubscription } from "@/core/billing";
+import { PlanTier } from "@/core/billing/types";
+import { toast } from "sonner";
 
 interface Props {
   businessId: string;
@@ -56,8 +58,8 @@ export default function EmpresaDashboardTab({
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("visao-geral");
 
-  // Mock do plano atual - em produção viria do backend
-  const [currentPlan, setCurrentPlan] = useState<PlanType>("profissional");
+  const { planTier, refetch: refetchSubscription } =
+    useBusinessSubscription(businessId);
 
   useEffect(() => {
     async function load() {
@@ -71,8 +73,7 @@ export default function EmpresaDashboardTab({
           adminBusinessService.countBusinessViews(businessId, weekAgo),
           adminBusinessService.countBusinessViews(businessId, monthAgo),
           adminBusinessService.getBusinessReviews(businessId),
-          // ✅ GATE 3 FASE 3A - Usar FavoritesService para contagem de favoritos
-          FavoritesService.getFavoritersOfProfile(businessId).then(
+          getFavoritersOfProfile(businessId).then(
             (favoriters) => ({ count: favoriters.length }),
           ),
         ]);
@@ -168,9 +169,15 @@ export default function EmpresaDashboardTab({
 
   const maxViewDay = Math.max(...metrics.recentViews.map((d) => d.count), 1);
 
-  const handlePlanSelect = (planId: PlanType) => {
-    setCurrentPlan(planId);
-    // Em produção, aqui faria a chamada para o backend para process o pagamento
+  const handlePlanSelect = async (planId: PlanTier) => {
+    const result = await SubscriptionService.updatePlan(businessId, planId);
+    if (result.error) {
+      toast.error("Erro ao atualizar plano");
+      return;
+    }
+
+    await refetchSubscription();
+    toast.success("Plano atualizado");
   };
 
   return (
@@ -279,12 +286,12 @@ export default function EmpresaDashboardTab({
         </TabsContent>
 
         <TabsContent value="cupons" className="mt-6">
-          <CouponManager businessId={businessId} planType={currentPlan} />
+          <CouponManager businessId={businessId} planType={planTier} />
         </TabsContent>
 
         <TabsContent value="plano" className="mt-6">
           <SubscriptionPlans
-            currentPlan={currentPlan}
+            currentPlan={planTier}
             onSelectPlan={handlePlanSelect}
           />
         </TabsContent>

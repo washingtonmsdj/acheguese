@@ -1,13 +1,8 @@
 /**
- * GastronomyCheckoutService â€” SSOT de checkout de gastronomia
- * 
- * INTEGRAÃ‡ÃƒO CORRETA:
- * 1. Usa OrderDeliverySSOTService (tabela orders)
- * 2. Usa GastronomyOrderOriginAdapter para conversÃ£o
- * 3. NÃƒO usa delivery_requests legado
- * 
+ * GastronomyCheckoutService - SSOT de checkout de gastronomia.
+ *
  * Fluxo:
- * Cart â†’ Adapter â†’ OrderDeliverySSOTService.createOrder â†’ orders table
+ * Cart -> GastronomyOrderOriginAdapter -> OrderDeliverySSOTService.createOrder -> orders.
  */
 
 import { logger } from "@/shared/utils/logger";
@@ -17,21 +12,6 @@ import { OrderDeliverySSOTService } from "@/core/mobility/delivery/services/Orde
 import { GastronomyOrderOriginAdapter } from "@/core/mobility/delivery/order/adapters/GastronomyOrderOriginAdapter";
 import type { OrderRecord } from "@/core/mobility/delivery/order/types";
 import { DeliveryAreaService } from "./DeliveryAreaService";
-
-export interface GastronomyCheckoutOrderRecord {
-  id: string;
-  customer_profile_id: string;
-  merchant_profile_id: string;
-  source_type: string | null;
-  source_id: string | null;
-  source_reference: string | null;
-  logistics_status: string | null;
-  financial_status: string | null;
-  payment_method: string | null;
-  notes: string | null;
-  created_at: string;
-  updated_at: string;
-}
 
 export interface CreateGastronomyCheckoutOrderInput {
   customer_profile_id: string;
@@ -62,39 +42,10 @@ export interface CreateGastronomyCheckoutOrderInput {
   };
 }
 
-/**
- * Converte OrderRecord (SSOT) para formato legado de resposta
- * MantÃ©m compatibilidade com cÃ³digo existente
- */
-function orderRecordToCheckoutRecord(order: OrderRecord): GastronomyCheckoutOrderRecord {
-  return {
-    id: order.id,
-    customer_profile_id: order.customer_profile_id,
-    merchant_profile_id: order.merchant_profile_id,
-    source_type: order.source_context.source_type,
-    source_id: order.source_context.source_id,
-    source_reference: order.source_context.source_reference,
-    logistics_status: order.logistics_status,
-    financial_status: order.financial_status,
-    payment_method: order.payment_method,
-    notes: order.notes,
-    created_at: order.created_at,
-    updated_at: order.updated_at,
-  };
-}
-
 export class GastronomyCheckoutService {
-  /**
-   * Cria pedido usando SSOT correto (OrderDeliverySSOTService)
-   * 
-   * Fluxo:
-   * 1. Converte Cart â†’ CreateOrderInput via GastronomyOrderOriginAdapter
-   * 2. Cria pedido em orders table via OrderDeliverySSOTService
-   * 3. Retorna formato compatÃ­vel com cÃ³digo existente
-   */
   static async createOrder(
     input: CreateGastronomyCheckoutOrderInput,
-  ): Promise<GastronomyCheckoutOrderRecord> {
+  ): Promise<OrderRecord> {
     try {
       if (input.business.gastronomy_profile.delivery_enabled) {
         const neighborhood = input.delivery_snapshot?.neighborhood?.trim();
@@ -130,7 +81,6 @@ export class GastronomyCheckoutService {
         }
       }
 
-      // Converte cart de gastronomia para input de pedido SSOT
       const createOrderInput = GastronomyOrderOriginAdapter.toCreateOrderInput({
         customer_profile_id: input.customer_profile_id,
         actor_profile_id: input.actor_profile_id,
@@ -142,7 +92,6 @@ export class GastronomyCheckoutService {
         delivery_snapshot: input.delivery_snapshot,
       });
 
-      // Cria pedido usando SSOT
       const result = await OrderDeliverySSOTService.createOrder(createOrderInput);
 
       if (!result.success || !result.data) {
@@ -155,9 +104,7 @@ export class GastronomyCheckoutService {
         business_id: input.business.business_data_id,
       });
 
-      // Converte para formato legado (compatibilidade)
-      return orderRecordToCheckoutRecord(result.data);
-
+      return result.data;
     } catch (error) {
       logger.error("[GastronomyCheckoutService] Erro ao criar pedido", error as Error, {
         customer_profile_id: input.customer_profile_id,

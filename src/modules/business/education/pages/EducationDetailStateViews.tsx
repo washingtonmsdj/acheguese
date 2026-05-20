@@ -1,12 +1,10 @@
-﻿import { Compass, Shield } from 'lucide-react';
+import { Compass, Shield } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 
 type EducationDetailErrorStateProps = {
-  city?: string;
   onBack: () => void;
   onGoToShowcase: () => void;
-  state?: string;
 };
 
 type EducationDetailNotFoundStateProps = {

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * EducationUrlService
  *
  * Gera URLs canonicas territoriais de education.
@@ -106,49 +106,49 @@ export const EducationUrlService = {
    * Gera URL do dashboard admin de educacao
    */
   buildAdminDashboardUrl(businessId: string): string {
-    return `/central/empresas/${businessId}/education`;
+    return `/central/empresas/${businessId}/educacao`;
   },
 
   /**
    * Gera URL de setup de educacao
    */
   buildAdminSetupUrl(businessId: string): string {
-    return `/central/empresas/${businessId}/education/setup`;
+    return `/central/empresas/${businessId}/educacao/setup`;
   },
 
   /**
    * Gera URL de leads
    */
   buildAdminLeadsUrl(businessId: string): string {
-    return `/central/empresas/${businessId}/education/leads`;
+    return `/central/empresas/${businessId}/educacao/leads`;
   },
 
   /**
    * Gera URL de programas
    */
   buildAdminProgramsUrl(businessId: string): string {
-    return `/central/empresas/${businessId}/education/programas`;
+    return `/central/empresas/${businessId}/educacao/programas`;
   },
 
   /**
    * Gera URL de eventos
    */
   buildAdminEventsUrl(businessId: string): string {
-    return `/central/empresas/${businessId}/education/eventos`;
+    return `/central/empresas/${businessId}/educacao/eventos`;
   },
 
   /**
    * Gera URL de analytics
    */
   buildAdminAnalyticsUrl(businessId: string): string {
-    return `/central/empresas/${businessId}/education/analytics`;
+    return `/central/empresas/${businessId}/educacao/analytics`;
   },
 
   /**
    * Gera URL de planos
    */
   buildAdminPlansUrl(businessId: string): string {
-    return `/central/empresas/${businessId}/education/planos`;
+    return `/central/empresas/${businessId}/educacao/planos`;
   },
 
   /**
@@ -174,4 +174,3 @@ export const EducationUrlService = {
     return `https://wa.me/${cleanPhone}?text=${encodedMessage}`;
   },
 };
-

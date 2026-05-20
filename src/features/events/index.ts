@@ -1,8 +1,8 @@
 /**
  * EVENTS V2 - EXPORTS
- * 
+ *
  * Barrel file para facilitar imports
- * 
+ *
  * @version 2.0.0
  */
 
@@ -51,9 +51,3 @@ export type {
 // ============================================================================
 // UTILS
 // ============================================================================
-
-export { 
-  MOCK_EVENTS, 
-  getMockEventById, 
-  getMockEventBySlug 
-} from './utils/mockData';

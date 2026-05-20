@@ -1,17 +1,7 @@
 /**
- * BusinessCanonicalRoute — Rota pública canônica de empresa.
+ * BusinessCanonicalRoute - rota publica canonica de empresa.
  *
  * URL: /empresas/:uf/:cidade/:bairro/:slug
- * Exemplo: /empresas/ba/salvador/pituba/tonecos-studios
- *
- * Comportamento:
- *   1. Resolve empresa via BusinessUrlService (valida território + slug)
- *   2. Não encontrada → tenta slug history (empresa pode ter mudado de slug/território)
- *   3. Slug history encontrado → redirect 308 para nova canônica
- *   4. Não encontrada em nenhum lugar → /404
- *   5. Encontrada → renderiza EmpresaDetailPage com businessId
- *
- * Esta é a rota canônica institucional de empresa no ecossistema Achegue-se.
  */
 import { logger } from '@/shared/utils/logger';
 import { useEffect, useState } from 'react';
@@ -46,8 +36,7 @@ export default function BusinessCanonicalRoute({
 
     async function resolve() {
       try {
-        // Tentativa 1: resolução direta por território + slug
-        let ctx = await BusinessUrlService.resolveByTerritoryAndSlug(
+        const ctx = await BusinessUrlService.resolveByTerritoryAndSlug(
           state!,
           city!,
           district!,
@@ -55,29 +44,12 @@ export default function BusinessCanonicalRoute({
         );
 
         if (!ctx) {
-          // Tentativa 2: slug history — empresa pode ter mudado de slug ou território
-          const oldUrl = `/empresas/${state}/${city}/${district}/${slug}`;
-          ctx = await BusinessUrlService.resolveBySlugHistory(oldUrl);
-
-          if (ctx) {
-            // Encontrou no histórico → redirect para nova canônica
-            const newCanonical = BusinessUrlService.getCanonicalUrl(ctx);
-            if (import.meta.env.DEV) {
-              logger.info(
-                `[BusinessCanonicalRoute] Slug history: ${oldUrl} → ${newCanonical}`,
-              );
-            }
-            navigate(newCanonical, { replace: true });
-            return;
-          }
-
           if (import.meta.env.DEV) {
             logger.info(
-              `[BusinessCanonicalRoute] Não encontrada: /empresas/${state}/${city}/${district}/${slug}`,
+              `[BusinessCanonicalRoute] Nao encontrada: /empresas/${state}/${city}/${district}/${slug}`,
             );
           }
 
-          // Log de 404 para monitoramento
           logPageNotFound({
             entityType: 'business',
             identifier: slug!,

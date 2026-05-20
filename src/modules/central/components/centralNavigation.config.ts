@@ -19,10 +19,10 @@ export interface CentralNavSection {
 }
 
 /**
- * Estrutura de navegaÃ§Ã£o da Central
- * 
- * Ãreas:
- * - VisÃ£o geral
+ * Estrutura de navegacao da Central
+ *
+ * Areas:
+ * - Visao geral
  * - Empresas
  * - Profissional
  * - Motorista
@@ -31,14 +31,14 @@ export interface CentralNavSection {
 export const CENTRAL_NAV_SECTIONS: CentralNavSection[] = [
   {
     id: 'overview',
-    label: 'VisÃ£o Geral',
+    label: 'Visao Geral',
     items: [
       {
         id: 'central-home',
         icon: Home,
-        label: 'InÃ­cio',
+        label: 'Inicio',
         href: '/central',
-        description: 'VisÃ£o geral da Central',
+        description: 'Visao geral da Central',
       },
     ],
   },
@@ -108,7 +108,7 @@ export const CENTRAL_NAV_SECTIONS: CentralNavSection[] = [
       {
         id: 'driver-home',
         icon: Car,
-        label: 'InÃ­cio',
+        label: 'Inicio',
         href: mobilityRoutes.motorista.home,
         description: 'Resumo operacional',
       },
@@ -143,9 +143,9 @@ export const CENTRAL_NAV_SECTIONS: CentralNavSection[] = [
       {
         id: 'driver-configuracoes',
         icon: Car,
-        label: 'ConfiguraÃ§Ãµes',
+        label: 'Configuracoes',
         href: mobilityRoutes.motorista.configuracoes,
-        description: 'PreferÃªncias e notificaÃ§Ãµes',
+        description: 'Preferencias e notificacoes',
       },
     ],
   },
@@ -156,7 +156,7 @@ export const CENTRAL_NAV_SECTIONS: CentralNavSection[] = [
       {
         id: 'motoboy-home',
         icon: Bike,
-        label: 'InÃ­cio',
+        label: 'Inicio',
         href: mobilityRoutes.motoboy.home,
         description: 'Resumo operacional',
       },
@@ -191,9 +191,9 @@ export const CENTRAL_NAV_SECTIONS: CentralNavSection[] = [
       {
         id: 'motoboy-configuracoes',
         icon: Bike,
-        label: 'ConfiguraÃ§Ãµes',
+        label: 'Configuracoes',
         href: mobilityRoutes.motoboy.configuracoes,
-        description: 'PreferÃªncias e notificaÃ§Ãµes',
+        description: 'Preferencias e notificacoes',
       },
     ],
   },

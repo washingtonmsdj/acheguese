@@ -1,14 +1,14 @@
 /**
  * ChatService - SSOT para chat de corridas
- * 
- * IMPLEMENTAÇÃO REAL - Não importar diretamente
+ *
+ * IMPLEMENTAï¿½ï¿½O REAL - Nï¿½o importar diretamente
  * Use: import { ChatService } from './ChatService'
- * 
+ *
  * Responsabilidades:
  * - Gerenciar chats de corridas
  * - Enviar e receber mensagens
  * - Marcar mensagens como lidas
- * 
+ *
  * @module modules/mobility/services
  */
 import { logger } from '@/shared/utils/logger';
@@ -43,9 +43,9 @@ export interface SendMessageInput {
 export class ChatService {
   /**
    * Buscar chat de uma corrida
-   * 
+   *
    * @param rideId - ID da corrida
-   * @returns Chat da corrida ou null se não existir
+   * @returns Chat da corrida ou null se nï¿½o existir
    */
   static async getChatByRideId(rideId: string): Promise<RideChat | null> {
     try {
@@ -69,7 +69,7 @@ export class ChatService {
 
   /**
    * Buscar mensagens de um chat
-   * 
+   *
    * @param chatId - ID do chat
    * @returns Array de mensagens ordenadas por data
    */
@@ -95,14 +95,14 @@ export class ChatService {
 
   /**
    * Enviar mensagem em um chat
-   * 
+   *
    * @param input - Dados da mensagem
    * @returns Mensagem criada
    */
   static async sendMessage(input: SendMessageInput): Promise<ChatMessage> {
     try {
       if (!input.message.trim()) {
-        throw new Error('Mensagem não pode estar vazia');
+        throw new Error('Mensagem nao pode estar vazia');
       }
 
       const { data, error } = await (supabase as any)
@@ -135,9 +135,9 @@ export class ChatService {
 
   /**
    * Marcar mensagens como lidas
-   * 
+   *
    * @param chatId - ID do chat
-   * @param userId - ID do usuário que está lendo
+   * @param userId - ID do usuï¿½rio que estï¿½ lendo
    */
   static async markMessagesAsRead(chatId: string, userId: string): Promise<void> {
     try {
@@ -159,13 +159,13 @@ export class ChatService {
       });
     } catch (error) {
       logger.error('ChatService.markMessagesAsRead', error);
-      // Não lançar erro - marcar como lido é operação não crítica
+      // Nï¿½o lanï¿½ar erro - marcar como lido ï¿½ operaï¿½ï¿½o nï¿½o crï¿½tica
     }
   }
 
   /**
    * Criar chat para uma corrida
-   * 
+   *
    * @param rideId - ID da corrida
    * @returns Chat criado
    */
@@ -198,5 +198,3 @@ export const ChatFacade = {
   queries: chatQueries,
   mutations: chatMutations,
 } as const;
-
-

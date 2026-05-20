@@ -1,8 +1,8 @@
 /**
- * SegurancaSection - SeÃ§Ã£o de seguranÃ§a e dados
- * 
+ * SegurancaSection - Secao de seguranca e dados
+ *
  * SSOT: Componente isolado com props tipadas
- * Sem gambiarras: LÃ³gica clara e organizada
+ * Sem gambiarras: Logica clara e organizada
  */
 
 import { Database, Download, Lock, Pause, Trash2 } from "lucide-react";

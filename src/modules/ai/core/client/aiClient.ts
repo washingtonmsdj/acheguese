@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AI Platform â€” Cliente Ãºnico para invocar edge functions de IA.
  * Centraliza tratamento de erros e mensagens amigÃ¡veis.
  */
@@ -43,7 +43,7 @@ export class AiClient {
   /** Gera (ou edita) imagens via edge function `ai-image`. */
   async image(req: AiImageRequest): Promise<AiImageResult> {
     const data = await invoke<AiImageRequest, AiImageResult>("ai-image", req);
-    if (!("urls" in data)) throw toAiError({ message: "Resposta invÃ¡lida da IA." });
+    if (!("urls" in data)) throw toAiError({ message: "Resposta invalida da IA." });
     return data;
   }
 
@@ -59,4 +59,3 @@ export class AiClient {
 }
 
 export const aiClient = new AiClient();
-

@@ -1,9 +1,9 @@
 import { CreditCard } from "lucide-react";
-import type { PlanType } from "@/shared/types/subscription";
+import type { PlanTier } from "@/core/billing/types";
 
 interface Props {
-  currentPlan: PlanType;
-  onSelectPlan: (plan: PlanType) => void;
+  currentPlan: PlanTier;
+  onSelectPlan: (plan: PlanTier) => void;
 }
 
 export default function SubscriptionPlans({ currentPlan: _, onSelectPlan: __ }: Props) {

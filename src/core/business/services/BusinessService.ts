@@ -1,20 +1,8 @@
 /**
- * 🏆 BUSINESS SERVICE - FACHADA SSOT
+ * BusinessService - fachada SSOT de empresas.
  *
- * ✅ Ponto único de entrada para operações de empresas
- * ✅ Mantém compatibilidade com código existente
- * ✅ Delega para módulos especializados por responsabilidade
- *
- * REFATORAÇÃO v5.0.0:
- * - Mappers → business.mappers.ts
- * - Queries → business.queries.ts
- * - Mutations → business.mutations.ts
- * - Admin → business.admin.ts
- * - Legacy → business.legacy.ts
- * - Helpers → business.helpers.ts
- *
- * ⚠️ NÃO adicionar lógica diretamente neste arquivo.
- * Use os módulos especializados acima.
+ * Ponto unico de entrada para operacoes de empresa.
+ * Nao adicionar logica diretamente neste arquivo; use os modulos especializados.
  */
 
 // Re-exports de mappers
@@ -36,8 +24,6 @@ export {
   getBusinessBySlug,
   checkSlugExists,
   getSimilarSlugs,
-  getSlugHistory,
-  resolveOldSlug,
   getBusinessesByIds,
   searchBusinessesByName,
   getProducts,
@@ -69,12 +55,6 @@ export {
   getCouponById,
   updateBusinessClaimStatus,
 } from "./business.admin";
-
-// Re-exports de legacy
-export {
-  searchBusinessesLegacy,
-  getRecentBusinessesLegacy,
-} from "./business.legacy";
 
 // Re-exports de helpers
 export {
@@ -128,17 +108,12 @@ export type {
 // ============================================================
 // 🏛️ SSOT v2.0 - FACADE
 // ============================================================
-import { logger } from '@/shared/utils/logger';
 import * as BusinessMappers from "./business.mappers";
 import * as BusinessQueries from "./business.queries";
 import * as BusinessMutations from "./business.mutations";
 import * as BusinessAdmin from "./business.admin";
-import * as BusinessLegacy from "./business.legacy";
 import * as BusinessHelpers from "./business.helpers";
 import type { BusinessStats } from "../types";
-import { ReviewsService } from "@/core/reviews/services/ReviewsService";
-import { FavoritesService } from "@/core/favorites/services/FavoritesService";
-import { profileService } from "@/core/profiles/services/ProfileService";
 /**
  * 🏢 BusinessFacade - Interface SSOT unificada v2.0
  *
@@ -152,12 +127,10 @@ export const BusinessFacade = {
   admin: BusinessAdmin,
   mappers: BusinessMappers,
   helpers: BusinessHelpers,
-  legacy: BusinessLegacy,
 } as const;
 
 /**
- * @deprecated Use BusinessFacade ou os exports diretos dos módulos.
- * BusinessService como classe estática mantido para compatibilidade.
+ * Fachada estatica para consumo dos modulos de empresa.
  */
 export class BusinessService {
   // ===== MAPPERS =====
@@ -173,8 +146,6 @@ export class BusinessService {
   static getBusinessBySlug = BusinessQueries.getBusinessBySlug;
   static checkSlugExists = BusinessQueries.checkSlugExists;
   static getSimilarSlugs = BusinessQueries.getSimilarSlugs;
-  static getSlugHistory = BusinessQueries.getSlugHistory;
-  static resolveOldSlug = BusinessQueries.resolveOldSlug;
   static getBusinessesByIds = BusinessQueries.getBusinessesByIds;
   static searchBusinessesByName = BusinessQueries.searchBusinessesByName;
   static getProducts = BusinessQueries.getProducts;
@@ -182,6 +153,19 @@ export class BusinessService {
   static getServices = BusinessQueries.getServices;
   static getSimilarBusinesses = BusinessQueries.getSimilarBusinesses;
   static getGallery = BusinessQueries.getGallery;
+  static async getRecentBusinesses(limit = 10): Promise<Array<{ id: string; name: string; created_at: string }>> {
+    const { businesses } = await BusinessQueries.getBusinessesList({
+      pageParam: 0,
+      pageSize: limit,
+      sortBy: "created_at",
+    });
+
+    return businesses.map((business) => ({
+      id: business.id,
+      name: business.name,
+      created_at: business.created_at ?? "",
+    }));
+  }
 
   // ===== MUTATIONS =====
   static createBusiness = BusinessMutations.createBusiness;
@@ -202,10 +186,6 @@ export class BusinessService {
   static getCouponById = BusinessAdmin.getCouponById;
   static updateBusinessClaimStatus = BusinessAdmin.updateBusinessClaimStatus;
 
-  // ===== LEGACY =====
-  static searchBusinessesLegacy = BusinessLegacy.searchBusinessesLegacy;
-  static getRecentBusinessesLegacy = BusinessLegacy.getRecentBusinessesLegacy;
-
   // ===== HELPERS =====
   static isBusinessMigrated = BusinessHelpers.isBusinessMigrated;
   static hasPhysicalAddress = BusinessHelpers.hasPhysicalAddress;
@@ -214,25 +194,6 @@ export class BusinessService {
   static getTerritory = BusinessHelpers.getTerritory;
   static getTerritoryName = BusinessHelpers.getTerritoryName;
 
-  // ===== WRAPPERS DEPRECATED (mantidos para compatibilidade) =====
-  
-  /**
-   * @deprecated Use FavoritesService diretamente
-   */
-  static async toggleFavorite(businessId: string, profileId: string): Promise<boolean> {
-    return FavoritesService.toggleBusinessFavorite(businessId, profileId);
-  }
-
-  /**
-   * @deprecated Use FavoritesService diretamente
-   */
-  static async getFavorites(profileId: string): Promise<string[]> {
-    return FavoritesService.getUserBusinessFavorites(profileId);
-  }
-
-  /**
-   * @deprecated Use ReviewsService diretamente
-   */
   static async getStats(): Promise<BusinessStats> {
     return {
       total: await BusinessAdmin.getTotalBusinessesCount(),
@@ -240,47 +201,5 @@ export class BusinessService {
       premium: await BusinessAdmin.getPremiumBusinessesCount(),
       by_category: {},
     };
-  }
-
-  /**
-   * @deprecated Use ReviewsService diretamente
-   */
-  static async getMyReview(businessId: string, userId: string) {
-    const activeProfile = await profileService.getProfileContext(userId);
-    if (!activeProfile) return null;
-
-    return ReviewsService.getReviewByReviewer(businessId, activeProfile.id, "business");
-  }
-
-  /**
-   * @deprecated Use ReviewsService diretamente
-   */
-  static async submitReview(
-    businessId: string,
-    userId: string,
-    rating: number,
-    comment?: string,
-  ): Promise<void> {
-    const activeProfile = await profileService.getProfileContext(userId);
-    if (!activeProfile) {
-      throw new Error("Perfil ativo não encontrado");
-    }
-
-    await ReviewsService.upsertReview(
-      {
-        reviewed_profile_id: businessId,
-        reviewer_profile_id: activeProfile.id,
-        rating,
-        comment,
-      },
-      "business",
-    );
-  }
-
-  /**
-   * @deprecated Cache removido - usar React Query invalidation
-   */
-  static clearCache(): void {
-    logger.warn("BusinessService.clearCache() foi removido. Use React Query invalidation.");
   }
 }

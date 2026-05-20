@@ -19,14 +19,14 @@ import { businessManagementRoutes } from "@/core/business/utils/businessManageme
 
 /**
  * CentralHubPage
- * 
- * PÃ¡gina hub da Central (/central).
- * Mostra cards dinÃ¢micos baseados nas entidades do usuÃ¡rio:
+ *
+ * Pagina hub da Central (/central).
+ * Mostra cards dinamicos baseados nas entidades do usuario:
  * - Minhas empresas
- * - Ãrea profissional
+ * - Area profissional
  * - Motorista
  * - Motoboy/Entregas
- * - AdministraÃ§Ã£o (se for admin)
+ * - Administracao (se for admin)
  */
 export default function CentralHubPage() {
   const navigate = useNavigate();
@@ -36,7 +36,7 @@ export default function CentralHubPage() {
     queryScope: "central-hub",
   });
 
-  // Guard jÃ¡ verifica autenticaÃ§Ã£o, nÃ£o precisa de useEffect aqui
+  // Guard ja verifica autenticacao, nao precisa de useEffect aqui
   if (!user) {
     return null;
   }
@@ -57,25 +57,25 @@ export default function CentralHubPage() {
       <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Central</h1>
         <p className="text-muted-foreground">
-          Hub de gestÃ£o e operaÃ§Ã£o para empresas, profissionais e mobilidade.
+          Hub de gestao e operacao para empresas, profissionais e mobilidade.
         </p>
       </div>
 
-      {/* SeÃ§Ã£o de Entidades Ativas */}
+      {/* Secao de entidades ativas */}
       {(hasBusinesses || hasProfessional || hasDriver || isAdmin) && (
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold">Suas Ãreas de GestÃ£o</h2>
+          <h2 className="text-lg font-semibold">Suas areas de gestao</h2>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {/* Empresas */}
             {hasBusinesses && (
-              <Card className="border-primary/20 bg-primary/5">
+              <Card className="rounded-lg border-primary/20 bg-primary/5">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Building2 className="h-5 w-5 text-primary" />
                     Minhas Empresas
                   </CardTitle>
                   <CardDescription>
-                    Gerencie seus negÃ³cios, cardÃ¡pios, pedidos e analytics.
+                    Gerencie seus negocios, cardapios, pedidos e analytics.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -91,14 +91,14 @@ export default function CentralHubPage() {
 
             {/* Profissional */}
             {hasProfessional && (
-              <Card className="border-primary/20 bg-primary/5">
+              <Card className="rounded-lg border-primary/20 bg-primary/5">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <GraduationCap className="h-5 w-5 text-primary" />
-                    Ãrea Profissional
+                    Area profissional
                   </CardTitle>
                   <CardDescription>
-                    Gerencie seus serviÃ§os, orÃ§amentos, agenda e avaliaÃ§Ãµes.
+                    Gerencie seus servicos, orcamentos, agenda e avaliacoes.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -111,7 +111,7 @@ export default function CentralHubPage() {
 
             {/* Motorista */}
             {hasDriver && driverMode === "driver" && (
-              <Card className="border-primary/20 bg-primary/5">
+              <Card className="rounded-lg border-primary/20 bg-primary/5">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Car className="h-5 w-5 text-primary" />
@@ -131,7 +131,7 @@ export default function CentralHubPage() {
 
             {/* Motoboy */}
             {hasDriver && driverMode === "motoboy" && (
-              <Card className="border-primary/20 bg-primary/5">
+              <Card className="rounded-lg border-primary/20 bg-primary/5">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Bike className="h-5 w-5 text-primary" />
@@ -149,13 +149,13 @@ export default function CentralHubPage() {
               </Card>
             )}
 
-            {/* AdministraÃ§Ã£o */}
+            {/* Administracao */}
             {isAdmin && (
-              <Card className="border-primary/20 bg-primary/5">
+              <Card className="rounded-lg border-primary/20 bg-primary/5">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Shield className="h-5 w-5 text-primary" />
-                    AdministraÃ§Ã£o
+                    Administracao
                   </CardTitle>
                   <CardDescription>
                     Acesso ao painel administrativo do sistema.
@@ -172,7 +172,7 @@ export default function CentralHubPage() {
         </div>
       )}
 
-      {/* SeÃ§Ã£o de CTAs para usuÃ¡rios sem entidades */}
+      {/* Secao de CTAs para usuarios sem entidades */}
       {!hasBusinesses && !hasProfessional && !hasDriver && (
         <div className="space-y-4">
           <h2 className="text-lg font-semibold">Comece a Gerenciar</h2>
@@ -185,7 +185,7 @@ export default function CentralHubPage() {
                   Cadastre sua Empresa
                 </CardTitle>
                 <CardDescription>
-                  Crie e gerencie seu negÃ³cio no Achegue-se.
+                  Crie e gerencie seu negocio no Achegue-se.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -205,10 +205,10 @@ export default function CentralHubPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <User className="h-5 w-5" />
-                  Ãrea Profissional
+                  Area profissional
                 </CardTitle>
                 <CardDescription>
-                  OfereÃ§a serviÃ§os e gerencie sua carreira profissional.
+                  Ofereca servicos e gerencie sua carreira profissional.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -218,7 +218,7 @@ export default function CentralHubPage() {
                   onClick={() => navigate("/services/cadastrar")}
                 >
                   <Sparkles className="mr-2 h-4 w-4" />
-                  Cadastrar ServiÃ§o
+                  Cadastrar servico
                 </Button>
               </CardContent>
             </Card>

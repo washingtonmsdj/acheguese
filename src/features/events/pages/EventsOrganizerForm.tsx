@@ -1,30 +1,32 @@
-﻿/**
+/**
  * EVENTS ORGANIZER FORM
- * 
- * FormulÃ¡rio completo para criar/editar eventos
- * Multi-step com validaÃ§Ã£o
- * 
+ *
+ * Formulario completo para criar/editar eventos
+ * Multi-step com validacao
+ *
  * @version 1.0.0
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Calendar, CheckCircle, Clock, DollarSign, FileText, HelpCircle, Image as ImageIcon, MapPin, Save, Eye } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/utils/cn';
-import { getMockEventById } from '../utils/mockData';
 import { buildEventsOrganizerFormData, type EventsOrganizerFieldChange } from './EventsOrganizerForm.model';
 import { EventsOrganizerFormStepContent } from './EventsOrganizerFormStepContent';
+import { communityEventsRuntimeService } from '@/core/community/services/CommunityEventsRuntimeService';
+import { mapCommunityEventToEvent } from '../utils/eventAdapters';
 
 const STEPS = [
-  { id: 1, title: 'InformaÃ§Ãµes BÃ¡sicas', icon: FileText },
+  { id: 1, title: 'Informacoes Basicas', icon: FileText },
   { id: 2, title: 'Data e Local', icon: MapPin },
   { id: 3, title: 'Ingressos', icon: DollarSign },
   { id: 4, title: 'Detalhes', icon: Calendar },
-  { id: 5, title: 'MÃ­dia', icon: ImageIcon },
-  { id: 6, title: 'ProgramaÃ§Ã£o', icon: Clock },
+  { id: 5, title: 'Midia', icon: ImageIcon },
+  { id: 6, title: 'Programacao', icon: Clock },
   { id: 7, title: 'FAQ', icon: HelpCircle },
   { id: 8, title: 'SEO e Extras', icon: CheckCircle },
 ];
@@ -34,11 +36,24 @@ export default function EventsOrganizerForm() {
   const { eventId } = useParams();
   const isEditing = !!eventId;
 
-  // Load event if editing
-  const existingEvent = isEditing ? getMockEventById(eventId) : null;
+  const { data: existingEvent = null } = useQuery({
+    queryKey: ['events-organizer-form', eventId],
+    enabled: isEditing,
+    queryFn: async () => {
+      if (!eventId) return null;
+      const row = await communityEventsRuntimeService.getEventById(eventId);
+      return row ? mapCommunityEventToEvent(row) : null;
+    },
+  });
 
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState(() => buildEventsOrganizerFormData(existingEvent));
+
+  useEffect(() => {
+    if (existingEvent) {
+      setFormData(buildEventsOrganizerFormData(existingEvent));
+    }
+  }, [existingEvent]);
 
   // Handlers
   const handleInputChange: EventsOrganizerFieldChange = (field, value) => {
@@ -187,7 +202,7 @@ export default function EventsOrganizerForm() {
 
             {currentStep < STEPS.length ? (
               <Button onClick={handleNext} className="gap-2">
-                PrÃ³ximo
+                Proximo
                 <ArrowRight className="h-4 w-4" />
               </Button>
             ) : (

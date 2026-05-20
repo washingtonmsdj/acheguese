@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ðŸ½ï¸ GASTRONOMY QUERIES - SSOT Read Model
  *
  * Todas as operaÃ§Ãµes de leitura para gastronomia.
@@ -337,24 +337,7 @@ export async function getGastronomyBusiness(identifier: string): Promise<Gastron
       .maybeSingle();
 
     if (idError || !byId) {
-      // Compatibilidade: aceitar profile_id como identificador em fluxos legados.
-      const { data: byProfileId } = await supabase
-        .from('business_data')
-        .select(`
-          *,
-          address:addresses!address_id(*),
-          location:locations!location_id(*)
-        `)
-        .eq('status', 'active')
-        .in('business_role', ['standalone', 'branch'])
-        .eq('profile_id', normalizedIdentifier)
-        .maybeSingle();
-
-      if (!byProfileId) {
-        return null;
-      }
-
-      return mapRecordToGastronomyBusiness(byProfileId);
+      return null;
     }
 
     return mapRecordToGastronomyBusiness(byId);
@@ -582,6 +565,3 @@ export async function hasGastronomyProfile(businessId: string): Promise<boolean>
 // ============================================================
 
 export type { PaginatedGastronomyBusinesses, TerritorySlugParams };
-
-
-

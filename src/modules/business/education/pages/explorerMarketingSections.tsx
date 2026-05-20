@@ -18,11 +18,11 @@ import {
 
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
+import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 import { cn } from '@/shared/utils/cn';
 
 import { getNicheByKey, getPublicNiches } from '../niches/registry';
-import { educationDetailPreviewMap } from '../mocks/publicEducationPage.mock';
-import type { EducationProfile } from '../types';
+import type { EducationPublicProfile } from '../types';
 import {
   INFRASTRUCTURE_FILTERS,
   INSTITUTION_TYPE_FILTERS,
@@ -30,10 +30,8 @@ import {
   SCHOOL_NETWORK_FILTERS,
 } from './explorerFilterControls';
 import type { FilterState } from './explorerFilters';
-import { CARD_HIDDEN_STAT_LABELS } from './explorerPresentation.constants';
 
 type EducationNiche = ReturnType<typeof getPublicNiches>[number];
-type EducationPreview = (typeof educationDetailPreviewMap)[keyof typeof educationDetailPreviewMap];
 
 type SetFilters = Dispatch<SetStateAction<FilterState>>;
 type NicheIconMap = Record<string, ElementType>;
@@ -181,7 +179,7 @@ export function EducationNicheShowcase({
   nicheAccent,
 }: {
   niches: EducationNiche[];
-  sourceProfiles: EducationProfile[];
+  sourceProfiles: EducationPublicProfile[];
   setFilters: SetFilters;
   nicheIcons: NicheIconMap;
   nicheAccent: Record<string, string>;
@@ -251,7 +249,7 @@ export function FeaturedEducationSection({
   nicheAccent,
   sanitizeSummary,
 }: {
-  featured: EducationPreview[];
+  featured: EducationPublicProfile[];
   territoryLabel: string;
   clearFilters: () => void;
   nicheIcons: NicheIconMap;
@@ -285,18 +283,22 @@ export function FeaturedEducationSection({
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-5 min-[1800px]:grid-cols-6">
-          {featured.map((preview, index) => {
-            const FeaturedIcon = nicheIcons[preview.profile.niche_key] ?? GraduationCap;
+          {featured.map((profile, index) => {
+            const route = profile.public_route;
+            if (!route) return null;
+
+            const FeaturedIcon = nicheIcons[profile.niche_key] ?? GraduationCap;
             const featuredGradient =
-              nicheAccent[preview.profile.niche_key] ?? 'from-primary to-primary/70';
+              nicheAccent[profile.niche_key] ?? 'from-primary to-primary/70';
             const nicheLabel =
-              getNicheByKey(preview.profile.niche_key)?.displayName ??
-              preview.profile.niche_key;
-            const detailHref = `/educacao/${preview.state}/${preview.city}/${preview.district}/${preview.slug}`;
+              getNicheByKey(profile.niche_key)?.displayName ??
+              profile.niche_key;
+            const detailHref = `/educacao/${route.state}/${route.city}/${route.district}/${route.slug}`;
+            const institutionName = profile.business_name ?? profile.institution_type;
 
             return (
               <motion.article
-                key={preview.slug}
+                key={profile.id}
                 initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -320,18 +322,20 @@ export function FeaturedEducationSection({
                     {nicheLabel}
                   </Badge>
                   <h3 className="mt-2 text-lg font-bold text-foreground transition-colors group-hover:text-primary">
-                    {preview.institutionName}
+                    {institutionName}
                   </h3>
-                  {sanitizeSummary(preview.profile.summary) && (
+                  {sanitizeSummary(profile.summary) && (
                     <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-                      {sanitizeSummary(preview.profile.summary)}
+                      {sanitizeSummary(profile.summary)}
                     </p>
                   )}
 
                   <div className="mt-4 grid grid-cols-2 gap-2">
-                    {preview.stats
-                      .filter((stat) => !CARD_HIDDEN_STAT_LABELS.has(stat.label.toLowerCase()))
-                      .slice(0, 4)
+                    {[
+                      profile.school_network ? { label: 'Rede', value: profile.school_network } : null,
+                      profile.enrollment_open ? { label: 'Matriculas', value: 'Abertas' } : null,
+                    ]
+                      .filter((stat): stat is { label: string; value: string } => Boolean(stat))
                       .map((stat) => (
                         <div
                           key={stat.label}
@@ -343,14 +347,16 @@ export function FeaturedEducationSection({
                       ))}
                   </div>
 
-                  <div className="mt-4 space-y-1.5">
-                    {preview.highlights.slice(0, 3).map((h, i) => (
-                      <div key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
+                  {(profile.education_levels ?? []).length > 0 && (
+                    <div className="mt-4 space-y-1.5">
+                      {(profile.education_levels ?? []).slice(0, 3).map((level) => (
+                        <div key={level} className="flex items-start gap-2 text-xs capitalize text-muted-foreground">
                         <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" />
-                        <span className="line-clamp-1">{h}</span>
+                          <span className="line-clamp-1">{level.replace(/_/g, ' ')}</span>
                       </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
 
                   <div className="mt-5 flex items-center justify-between">
                     <Link to={detailHref}>
@@ -364,7 +370,7 @@ export function FeaturedEducationSection({
                     </Link>
                     <span className="inline-flex items-center gap-1 text-xs capitalize text-muted-foreground">
                       <MapPin className="h-3 w-3" />
-                      {preview.district.replace(/-/g, ' ')}
+                      {route.district.replace(/-/g, ' ')}
                     </span>
                   </div>
                 </div>
@@ -443,7 +449,7 @@ export function EducationInstitutionCta() {
                 </ul>
 
                 <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-                  <Link to="/empresas/cadastrar">
+                  <Link to={businessManagementRoutes.create('education')}>
                     <Button size="lg" className="w-full rounded-full sm:w-auto">
                       Cadastrar instituicao
                       <ArrowUpRight className="ml-2 h-4 w-4" />
@@ -482,7 +488,7 @@ export function EducationCompareBar({
   clearCompare,
 }: {
   comparing: string[];
-  sourceProfiles: EducationProfile[];
+  sourceProfiles: EducationPublicProfile[];
   toggleCompare: (id: string) => void;
   clearCompare: () => void;
 }) {

@@ -1,6 +1,6 @@
-﻿/**
+/**
  * EducationEventsPage
- * 
+ *
  * Pagina de gestao de eventos da instituicao.
  * Rota: /central/empresas/:businessId/education/events
  */
@@ -77,20 +77,20 @@ export function EducationEventsPage() {
   const { toast } = useToast();
   const { data: profile, isLoading: isProfileLoading } = useEducationProfile(businessId);
   const { events, isLoading, create, update, remove } = useEducationEvents(profile?.id);
-  
+
   // Integração nicho + billing
   const nicheBilling = useEducationNicheBilling({
     nicheKey: profile?.niche_key,
     businessId: businessId || '',
   });
-  
+
   const nicheInfo = profile?.niche_key ? getNicheByKey(profile.niche_key) : null;
-  
+
   // Verifica capability do nicho + plano
   const eventsCapability = nicheBilling.can('events_public');
   const canCreateEvent = nicheBilling.checkCanCreateEvent(events?.length || 0);
   const limitReached = !canCreateEvent.allowed && events && nicheInfo && events.length >= nicheInfo.entitlements.maxEvents;
-  
+
   // Bloqueio por capability (nicho ou plano negou)
   const isEventsBlocked = !eventsCapability.allowed;
   // Bloqueio apenas por limite
@@ -110,27 +110,27 @@ export function EducationEventsPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validação de capability final = nicho permite AND plano permite
     if (isEventsBlocked) {
-      toast({ 
-        title: 'Recurso bloqueado', 
+      toast({
+        title: 'Recurso bloqueado',
         description: eventsCapability.upgradeMessage,
         variant: 'destructive'
       });
       return;
     }
-    
+
     // Validação de limite operacional
     if (isLimitBlocked) {
-      toast({ 
-        title: 'Limite atingido', 
+      toast({
+        title: 'Limite atingido',
         description: canCreateEvent.reason || 'Limite de eventos atingido para este nicho.',
         variant: 'destructive'
       });
       return;
     }
-    
+
     try {
       await create({
         title: formData.title,
@@ -259,7 +259,7 @@ export function EducationEventsPage() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate(`/central/empresas/${businessId}/education`)}
+            onClick={() => navigate(`/central/empresas/${businessId}/educacao`)}
           >
             <ArrowLeft className="w-4 h-4 mr-1" />
           </Button>
@@ -273,15 +273,15 @@ export function EducationEventsPage() {
             </p>
           </div>
         </div>
-        <Button 
-          onClick={openNewDialog} 
+        <Button
+          onClick={openNewDialog}
           className="gap-2"
           disabled={isEventsBlocked || isLimitBlocked}
           title={
-            isEventsBlocked 
-              ? eventsCapability.upgradeMessage 
-              : isLimitBlocked 
-                ? canCreateEvent.reason 
+            isEventsBlocked
+              ? eventsCapability.upgradeMessage
+              : isLimitBlocked
+                ? canCreateEvent.reason
                 : ''
           }
         >
@@ -359,7 +359,7 @@ export function EducationEventsPage() {
             <p className="text-gray-500 mb-4">
               Cadastre eventos, visitas abertas e outras atividades.
             </p>
-            <Button 
+            <Button
               onClick={openNewDialog}
               disabled={isEventsBlocked || isLimitBlocked}
             >
@@ -409,13 +409,13 @@ export function EducationEventsPage() {
                           </Badge>
                         )}
                       </div>
-                      
+
                       {event.description && (
                         <p className="text-sm text-gray-600 mb-2 line-clamp-2">
                           {event.description}
                         </p>
                       )}
-                      
+
                       <div className="flex flex-wrap gap-3 text-sm text-gray-500">
                         <span className="flex items-center gap-1">
                           <Clock className="w-4 h-4" />
@@ -430,7 +430,7 @@ export function EducationEventsPage() {
                         )}
                       </div>
                     </div>
-                    
+
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="sm">
@@ -574,4 +574,3 @@ export function EducationEventsPage() {
 }
 
 export default EducationEventsPage;
-

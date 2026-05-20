@@ -10,34 +10,34 @@ import { getMobilityServicePath } from "@/modules/mobility/routes/mobilityNaviga
 
 export interface DriverSettingsLayoutProps {
   /**
-   * Tipo de serviÃ§o: "motorista" ou "motoboy"
+   * Tipo de servico: "motorista" ou "motoboy"
    */
   service: "motorista" | "motoboy";
 }
 
 /**
  * DriverSettingsLayout
- * 
- * Layout compartilhado para pÃ¡gina de configuraÃ§Ãµes de motorista/motoboy.
+ *
+ * Layout compartilhado para pagina de configuracoes de motorista/motoboy.
  * Reutiliza os componentes DriverSettingsPanel e DriverNotifications.
- * 
+ *
  * Este componente renderiza o layout das rotas operacionais da Central.
  * /central/motorista/configuracoes e /central/motoboy/configuracoes.
  */
 export function DriverSettingsLayout({ service }: DriverSettingsLayoutProps) {
   const navigate = useNavigate();
-  const identity = useDriverProfileIdentity({ 
-    queryScope: `driver-settings-layout-${service}` 
+  const identity = useDriverProfileIdentity({
+    queryScope: `driver-settings-layout-${service}`
   });
 
   const isMotorista = service === "motorista";
-  const title = isMotorista ? "ConfiguraÃ§Ãµes de Motorista" : "ConfiguraÃ§Ãµes de Motoboy";
-  const description = isMotorista 
-    ? "PreferÃªncias, notificaÃ§Ãµes e controles do fluxo de corridas."
-    : "PreferÃªncias, notificaÃ§Ãµes e controles do fluxo de entregas.";
+  const title = isMotorista ? "Configuracoes de Motorista" : "Configuracoes de Motoboy";
+  const description = isMotorista
+    ? "Preferencias, notificacoes e controles do fluxo de corridas."
+    : "Preferencias, notificacoes e controles do fluxo de entregas.";
   const profileLabel = isMotorista ? "motorista" : "motoboy";
-  const profileStatus = identity.driverProfileId 
-    ? `Perfil de ${profileLabel} vinculado` 
+  const profileStatus = identity.driverProfileId
+    ? `Perfil de ${profileLabel} vinculado`
     : `Perfil de ${profileLabel} ausente`;
   const quickActionLabel = isMotorista ? "corridas" : "entregas";
 
@@ -63,10 +63,10 @@ export function DriverSettingsLayout({ service }: DriverSettingsLayoutProps) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <Bell className="h-4 w-4 text-primary" />
-              InformaÃ§Ãµes rÃ¡pidas
+              Informacoes rapidas
             </CardTitle>
             <CardDescription>
-              Ajustes de seguranÃ§a e acesso do perfil de {profileLabel}.
+              Ajustes de seguranca e acesso do perfil de {profileLabel}.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -76,9 +76,9 @@ export function DriverSettingsLayout({ service }: DriverSettingsLayoutProps) {
                 {profileStatus}
               </p>
             </div>
-            <Button 
-              variant="outline" 
-              className="w-full justify-between" 
+            <Button
+              variant="outline"
+              className="w-full justify-between"
               onClick={() =>
                 navigate(
                   service === "motorista"
@@ -97,7 +97,7 @@ export function DriverSettingsLayout({ service }: DriverSettingsLayoutProps) {
       <Card className="border-border">
         <CardHeader>
           <CardTitle className="text-lg">
-            NotificaÃ§Ãµes e alertas de {quickActionLabel}
+            Notificacoes e alertas de {quickActionLabel}
           </CardTitle>
           <CardDescription>
             Alertas operacionais do perfil de {profileLabel}.

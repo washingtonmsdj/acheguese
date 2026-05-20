@@ -1,4 +1,4 @@
-﻿/**
+/**
  * BUSINESS VALIDATION SCHEMAS - Validacao Centralizada SSOT
  *
  * Schema canonico compartilhado para formulario, hooks e services.
@@ -218,7 +218,7 @@ function applyBusinessRules<T extends z.AnyZodObject>(
     requireLocation?: boolean;
     requireContactChannel?: boolean;
   } = {},
-) {
+): z.ZodEffects<T, z.infer<T>, z.input<T>> {
   return schema.superRefine((data, ctx) => {
     const businessRole = data.business_role ?? "standalone";
     const hasContactChannel = Boolean(
@@ -266,6 +266,40 @@ export const createBusinessSchema = applyBusinessRules(baseBusinessObjectSchema,
   requireLocation: true,
   requireContactChannel: true,
 });
+
+export const createBusinessStep1Schema = baseBusinessObjectSchema.pick({
+  name: true,
+  legal_name: true,
+  cnpj: true,
+  category: true,
+  subcategoria: true,
+  company_type: true,
+  employee_count: true,
+  founded_year: true,
+  industry: true,
+  description: true,
+  slug: true,
+});
+
+export const createBusinessStep2Schema = applyBusinessRules(
+  baseBusinessObjectSchema.pick({
+    phone: true,
+    whatsapp: true,
+    email: true,
+    website: true,
+    location_id: true,
+    address_street: true,
+    address_number: true,
+    address_complement: true,
+    postal_code: true,
+    horario_funcionamento: true,
+    modos_atendimento: true,
+  }),
+  {
+    requireLocation: true,
+    requireContactChannel: true,
+  },
+);
 
 export const updateBusinessSchema = applyBusinessRules(baseBusinessObjectSchema.partial());
 

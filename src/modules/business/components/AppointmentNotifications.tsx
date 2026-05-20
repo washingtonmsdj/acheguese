@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Card } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
@@ -45,8 +45,8 @@ interface AppointmentNotification {
   client_name: string;
   client_phone: string;
   service_name: string;
-  appointment_date: string;
-  appointment_time: string;
+  appointment_date?: string;
+  appointment_time?: string;
   message: string;
   is_read: boolean;
   created_at: string;
@@ -126,13 +126,22 @@ function mapCanonicalNotification(
     client_name: metadata.client_name || "Cliente",
     client_phone: metadata.client_phone || "",
     service_name: metadata.service_name || "Servico",
-    appointment_date: metadata.appointment_date || new Date().toISOString(),
-    appointment_time: metadata.appointment_time || "--:--",
+    appointment_date: metadata.appointment_date || undefined,
+    appointment_time: metadata.appointment_time || undefined,
     message: notification.message,
     is_read: notification.read,
     created_at: notification.created_at,
     priority: notification.priority === "urgent" ? "high" : notification.priority,
   };
+}
+
+function formatDate(value: string | undefined, pattern: string): string {
+  if (!value) return "Nao informado";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Nao informado";
+
+  return format(date, pattern, { locale: ptBR });
 }
 
 export default function AppointmentNotifications({
@@ -213,7 +222,9 @@ export default function AppointmentNotifications({
       return;
     }
 
-    const message = `Ola ${notification.client_name}! Sobre seu agendamento de ${notification.service_name} para ${format(new Date(notification.appointment_date), "dd/MM/yyyy", { locale: ptBR })} as ${notification.appointment_time}.`;
+    const dateLabel = formatDate(notification.appointment_date, "dd/MM/yyyy");
+    const timeLabel = notification.appointment_time || "horario nao informado";
+    const message = `Ola ${notification.client_name}! Sobre seu agendamento de ${notification.service_name} para ${dateLabel} as ${timeLabel}.`;
     window.open(
       `https://wa.me/${notification.client_phone.replace(/\D/g, "")}?text=${encodeURIComponent(message)}`,
       "_blank",
@@ -337,13 +348,11 @@ export default function AppointmentNotifications({
                           </span>
                           <span className="flex items-center gap-1">
                             <Calendar className="h-3 w-3" />
-                            {format(new Date(notification.appointment_date), "dd/MM", {
-                              locale: ptBR,
-                            })}
+                            {formatDate(notification.appointment_date, "dd/MM")}
                           </span>
                           <span className="flex items-center gap-1">
                             <Clock className="h-3 w-3" />
-                            {notification.appointment_time}
+                            {notification.appointment_time || "Nao informado"}
                           </span>
                         </div>
                       </div>
@@ -410,14 +419,14 @@ export default function AppointmentNotifications({
                   <div>
                     <label className="text-xs font-medium text-muted-foreground">Data</label>
                     <p className="text-sm">
-                      {format(new Date(selectedNotification.appointment_date), "dd/MM/yyyy", {
-                        locale: ptBR,
-                      })}
+                      {formatDate(selectedNotification.appointment_date, "dd/MM/yyyy")}
                     </p>
                   </div>
                   <div>
                     <label className="text-xs font-medium text-muted-foreground">Horario</label>
-                    <p className="text-sm">{selectedNotification.appointment_time}</p>
+                    <p className="text-sm">
+                      {selectedNotification.appointment_time || "Nao informado"}
+                    </p>
                   </div>
                 </div>
               </div>

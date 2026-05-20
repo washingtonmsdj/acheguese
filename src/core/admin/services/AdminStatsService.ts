@@ -264,7 +264,7 @@ class AdminStatsService {
       const [posts, profiles, businesses, events, classifieds] = await Promise.all([
         postService.getRecentPosts(10),
         profileService.getRecentProfiles(10),
-        BusinessService.getRecentBusinessesLegacy(10),
+        BusinessService.getRecentBusinesses(10),
         adminEventsRuntimeService.getRecentEvents(10),
         adminClassifiedsService.getRecentClassifieds(10),
       ]);
@@ -318,7 +318,7 @@ class AdminStatsService {
       // ✅ SSOT: Buscar de cada serviço específico em paralelo
       const [businesses, posts, events, classifieds, profiles, comments] =
         await Promise.all([
-          BusinessService.getRecentBusinessesLegacy(10),
+          BusinessService.getRecentBusinesses(10),
           postService.getRecentPosts(10),
           adminEventsRuntimeService.getRecentEvents(10),
           adminClassifiedsService.getRecentClassifieds(10),
@@ -405,5 +405,3 @@ class AdminStatsService {
 // ============================================================================
 
 export const adminStatsService = new AdminStatsService();
-
-

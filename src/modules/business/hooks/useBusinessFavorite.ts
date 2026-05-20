@@ -1,6 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { FavoritesService } from "@/core/favorites/services/FavoritesService";
+import {
+  addBusinessFavorite,
+  getUserBusinessFavorites,
+  isBusinessFavorited,
+  removeBusinessFavorite,
+  toggleBusinessFavorite,
+} from "@/core/favorites/services";
 import { useSessionContext } from "@/core/session";
 import { logger } from "@/shared/utils/logger";
 
@@ -20,7 +26,7 @@ export function useBusinessFavorite(businessId: string | undefined) {
     queryKey: favoriteKeys.check(businessId || "", profileId || ""),
     queryFn: async () => {
       if (!profileId || !businessId) return false;
-      return await FavoritesService.isBusinessFavorited(businessId, profileId);
+      return await isBusinessFavorited(businessId, profileId);
     },
     enabled: !!profileId && !!businessId,
     staleTime: 30 * 1000,
@@ -33,10 +39,7 @@ export function useBusinessFavorite(businessId: string | undefined) {
           throw new Error("Profile ou business nao disponivel");
         }
 
-        return await FavoritesService.toggleBusinessFavorite(
-          businessId,
-          profileId,
-        );
+        return await toggleBusinessFavorite(businessId, profileId);
       },
       onSuccess: (nextIsFavorite) => {
         if (!profileId || !businessId) return;
@@ -99,7 +102,7 @@ export function useBusinessFavorites() {
     queryKey: favoriteKeys.all(profileId || ""),
     queryFn: async () => {
       if (!profileId) return [];
-      return await FavoritesService.getUserBusinessFavorites(profileId);
+      return await getUserBusinessFavorites(profileId);
     },
     enabled: !!profileId,
     staleTime: 60 * 1000,
@@ -111,7 +114,7 @@ export function useBusinessFavorites() {
         throw new Error("Faca login para favoritar");
       }
 
-      await FavoritesService.addBusinessFavorite(businessId, activeProfile.id);
+      await addBusinessFavorite(businessId, activeProfile.id);
     },
     onSuccess: (_, businessId) => {
       if (!profileId) return;
@@ -144,10 +147,7 @@ export function useBusinessFavorites() {
         throw new Error("Profile nao disponivel");
       }
 
-      await FavoritesService.removeBusinessFavorite(
-        businessId,
-        activeProfile.id,
-      );
+      await removeBusinessFavorite(businessId, activeProfile.id);
     },
     onSuccess: (_, businessId) => {
       if (!profileId) return;

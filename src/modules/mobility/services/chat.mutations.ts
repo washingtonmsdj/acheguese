@@ -1,7 +1,7 @@
 /**
  * Chat Mutations - SSOT v2.0
- * 
- * Funções de escrita para chat de corridas
+ *
+ * Funï¿½ï¿½es de escrita para chat de corridas
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/core/infrastructure/supabase';
@@ -9,14 +9,14 @@ import type { ChatMessage, SendMessageInput } from './chat.types';
 
 /**
  * Enviar mensagem em um chat
- * 
+ *
  * @param input - Dados da mensagem
  * @returns Mensagem criada
  */
 export async function sendMessage(input: SendMessageInput): Promise<ChatMessage> {
   try {
     if (!input.message.trim()) {
-      throw new Error('Mensagem não pode estar vazia');
+      throw new Error('Mensagem nao pode estar vazia');
     }
 
     const { data, error } = await (supabase as any)
@@ -49,9 +49,9 @@ export async function sendMessage(input: SendMessageInput): Promise<ChatMessage>
 
 /**
  * Marcar mensagens como lidas
- * 
+ *
  * @param chatId - ID do chat
- * @param userId - ID do usuário que está lendo
+ * @param userId - ID do usuï¿½rio que estï¿½ lendo
  */
 export async function markMessagesAsRead(chatId: string, userId: string): Promise<void> {
   try {
@@ -73,13 +73,13 @@ export async function markMessagesAsRead(chatId: string, userId: string): Promis
     });
   } catch (error) {
     logger.error('chat.mutations.markMessagesAsRead', error);
-    // Não lançar erro - marcar como lido é operação não crítica
+    // Nï¿½o lanï¿½ar erro - marcar como lido ï¿½ operaï¿½ï¿½o nï¿½o crï¿½tica
   }
 }
 
 /**
  * Criar chat para uma corrida
- * 
+ *
  * @param rideId - ID da corrida
  * @returns Chat criado
  */
@@ -104,5 +104,3 @@ export async function createChat(rideId: string): Promise<import('./chat.types')
     throw error;
   }
 }
-
-

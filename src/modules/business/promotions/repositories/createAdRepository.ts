@@ -1,8 +1,7 @@
-﻿/**
+/**
  * createAdRepository
  *
- * Factory que retorna a implementação de IAdRepository usando Supabase.
- * Mock system removed - using only local Supabase.
+ * Factory que retorna a implementacao de IAdRepository usando Supabase.
  */
 
 import { AdRepositorySupabase } from './AdRepositorySupabase';

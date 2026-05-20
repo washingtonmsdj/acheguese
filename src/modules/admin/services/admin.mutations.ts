@@ -1,6 +1,6 @@
-﻿/**
+/**
  * Admin Mutations - SSOT v2.0
- * 
+ *
  * FunÃ§Ãµes de escrita para operaÃ§Ãµes administrativas
  * âœ… SEGURO: Usa edge functions ao invÃ©s de supabaseAdmin
  */
@@ -31,15 +31,15 @@ export async function createAdminUser(config: AdminUserConfig): Promise<AdminUse
       logger.error('admin.mutations.createAdminUser', error);
       return {
         success: false,
-        message: error.message || 'Erro ao criar usuÃ¡rio',
+        message: error.message || 'Erro ao criar usuario',
       };
     }
 
-    logger.info('admin.mutations.createAdminUser', `UsuÃ¡rio criado: ${data.user.id}`);
+    logger.info('admin.mutations.createAdminUser', `Usuario criado: ${data.user.id}`);
 
     return {
       success: true,
-      message: 'UsuÃ¡rio admin criado com sucesso!',
+      message: 'Usuario admin criado com sucesso!',
       userId: data.user.id,
     };
 
@@ -51,5 +51,3 @@ export async function createAdminUser(config: AdminUserConfig): Promise<AdminUse
     };
   }
 }
-
-

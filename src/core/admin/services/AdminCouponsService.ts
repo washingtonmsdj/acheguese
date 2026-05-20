@@ -1,12 +1,5 @@
 /**
- * AdminCouponsService - Serviço de administração de cupons
- *
- * ✅ SSOT COMPLIANCE: Encapsula operações de cupons
- * Este serviço encapsula operações administrativas de cupons.
- * Atualmente delega para funções legadas em business.admin.ts,
- * mas fornece interface SSOT para admin.
- *
- * TODO: Migrar para um CouponsService dedicado em core/coupons
+ * AdminCouponsService - servico de administracao de cupons.
  */
 
 import { supabase } from "@/integrations/supabase";
@@ -15,20 +8,22 @@ import { logger } from "@/shared/utils/logger";
 export interface CouponData {
   id: string;
   codigo: string;
-  description?: string;
-  desconto: string; // discount value as string
-  tipo_desconto?: string; // discount type
+  titulo?: string;
+  description?: string | null;
+  desconto: string;
+  tipo?: string | null;
+  tipo_desconto?: string | null;
   valor_minimo?: number;
-  max_usos?: number;
-  usos_count?: number;
+  max_usos?: number | null;
+  usos?: number | null;
+  usos_count?: number | null;
   is_active: boolean;
-  validade?: string; // expires_at
-  business_id?: string;
+  validade?: string | null;
   created_at?: string;
   updated_at?: string;
-  business_name?: string;
-  business_logo?: string;
-  neighborhood?: string;
+  business_name?: string | null;
+  business_logo?: string | null;
+  neighborhood?: string | null;
 }
 
 export interface CouponsStats {
@@ -45,51 +40,74 @@ export interface CouponsListResult {
   totalPages: number;
 }
 
-interface CouponStatsRow {
+type CouponRow = {
+  id: string;
+  codigo: string;
+  titulo: string;
+  description: string | null;
+  desconto: string;
+  tipo: string | null;
+  max_usos: number | null;
+  usos: number | null;
   is_active: boolean;
-  usos_count: number | null;
   validade: string | null;
+  created_at: string;
+  updated_at: string;
+  business_name: string | null;
+  business_logo: string | null;
+  neighborhood: string | null;
+};
+
+function mapCoupon(row: CouponRow): CouponData {
+  return {
+    ...row,
+    tipo_desconto: row.tipo,
+    usos_count: row.usos,
+  };
 }
 
-interface CouponWithBusinessRow extends CouponData {
-  business?: { business_name?: string; logo_url?: string } | null;
+function toCouponWrite(data: Partial<CouponData>): Record<string, unknown> {
+  const record: Record<string, unknown> = {};
+  if (data.codigo !== undefined) record.codigo = data.codigo;
+  if (data.titulo !== undefined) record.titulo = data.titulo;
+  if (data.description !== undefined) record.description = data.description;
+  if (data.desconto !== undefined) record.desconto = data.desconto;
+  if (data.tipo !== undefined || data.tipo_desconto !== undefined) record.tipo = data.tipo ?? data.tipo_desconto;
+  if (data.max_usos !== undefined) record.max_usos = data.max_usos;
+  if (data.usos !== undefined || data.usos_count !== undefined) record.usos = data.usos ?? data.usos_count;
+  if (data.is_active !== undefined) record.is_active = data.is_active;
+  if (data.validade !== undefined) record.validade = data.validade;
+  if (data.business_name !== undefined) record.business_name = data.business_name;
+  if (data.business_logo !== undefined) record.business_logo = data.business_logo;
+  if (data.neighborhood !== undefined) record.neighborhood = data.neighborhood;
+  return record;
 }
 
 class AdminCouponsServiceClass {
   private readonly db = supabase as any;
-  /**
-   * Busca estatísticas de cupons
-   */
+
   async getStats(): Promise<CouponsStats> {
     try {
       const { data, error } = await this.db
         .from("coupons")
-        .select("is_active, usos_count, validade");
+        .select("is_active, usos, validade");
 
-      if (error) {
-        logger.error("Error fetching coupons stats:", error);
-        throw error;
-      }
+      if (error) throw error;
 
       const now = new Date().toISOString();
-      const rows: CouponStatsRow[] = (data as CouponStatsRow[]) || [];
-      const stats: CouponsStats = {
+      const rows = ((data as Array<Pick<CouponRow, "is_active" | "usos" | "validade">>) || []);
+      return {
         total: rows.length,
-        active: rows.filter((c) => c.is_active && (!c.validade || c.validade > now)).length,
-        expired: rows.filter((c) => !c.is_active || (c.validade && c.validade <= now)).length,
-        totalUsage: rows.reduce((sum, c) => sum + (c.usos_count || 0), 0),
+        active: rows.filter((coupon) => coupon.is_active && (!coupon.validade || coupon.validade > now)).length,
+        expired: rows.filter((coupon) => !coupon.is_active || Boolean(coupon.validade && coupon.validade <= now)).length,
+        totalUsage: rows.reduce((sum, coupon) => sum + (coupon.usos || 0), 0),
       };
-
-      return stats;
     } catch (error) {
-      logger.error("Error in getStats:", error);
+      logger.error("Error in AdminCouponsService.getStats", error);
       throw error;
     }
   }
 
-  /**
-   * Busca todos os cupons com paginação
-   */
   async getAllCoupons(options: {
     page?: number;
     limit?: number;
@@ -103,170 +121,100 @@ class AdminCouponsServiceClass {
 
       let query = this.db
         .from("coupons")
-        .select(
-          `
-          *,
-          business:businesses(id, business_name, logo_url)
-          `,
-          { count: "exact" }
-        );
+        .select("*", { count: "exact" });
 
-      // Aplica filtro de status se fornecido
       if (options.status === "active") {
         query = query.eq("is_active", true);
       } else if (options.status === "inactive") {
         query = query.eq("is_active", false);
       }
 
-      // Aplica busca se fornecida
       if (options.search) {
-        query = query.ilike("codigo", `%${options.search}%`);
+        query = query.ilike("codigo", "%" + options.search + "%");
       }
 
-      query = query
+      const { data, error, count } = await query
         .order("created_at", { ascending: false })
         .range(offset, offset + limit - 1);
 
-      const { data, error, count } = await query;
-
-      if (error) {
-        logger.error("Error fetching coupons:", error);
-        throw error;
-      }
-
-      // Map database response to CouponData interface
-      const rows: CouponWithBusinessRow[] = (data as CouponWithBusinessRow[]) || [];
-      const coupons = rows.map((item) => ({
-        ...item,
-        business_name: item.business?.business_name,
-        business_logo: item.business?.logo_url,
-      })) as CouponData[];
+      if (error) throw error;
 
       return {
-        data: coupons,
+        data: ((data as CouponRow[]) || []).map(mapCoupon),
         total: count || 0,
         page,
         totalPages: Math.ceil((count || 0) / limit),
       };
     } catch (error) {
-      logger.error("Error in getAllCoupons:", error);
+      logger.error("Error in AdminCouponsService.getAllCoupons", error);
       throw error;
     }
   }
 
-  /**
-   * Busca um cupom por ID
-   * ✅ SSOT: Usa função legada de business.admin
-   */
   async getCouponById(id: string): Promise<CouponData | null> {
     try {
-      const { getCouponById } = await import("@/core/business/services/business.admin");
-      const coupon = await getCouponById(id);
-      return coupon as CouponData | null;
+      const { data, error } = await this.db
+        .from("coupons")
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data ? mapCoupon(data as CouponRow) : null;
     } catch (error) {
-      logger.error("Error in getCouponById:", error);
+      logger.error("Error in AdminCouponsService.getCouponById", error);
       throw error;
     }
   }
 
-  /**
-   * Cria um novo cupom
-   */
   async createCoupon(data: Partial<CouponData>): Promise<CouponData> {
     try {
       const { data: newCoupon, error } = await this.db
         .from("coupons")
         .insert({
-          codigo: data.codigo,
-          description: data.description,
-          desconto: data.desconto,
-          tipo_desconto: data.tipo_desconto,
-          valor_minimo: data.valor_minimo,
-          max_usos: data.max_usos,
-          usos_count: 0,
+          ...toCouponWrite(data),
+          usos: 0,
           is_active: data.is_active ?? true,
-          validade: data.validade,
-          business_id: data.business_id,
-        } as any)
+        })
         .select()
         .single();
 
-      if (error) {
-        logger.error("Error creating coupon:", error);
-        throw error;
-      }
-
-      return newCoupon as CouponData;
+      if (error) throw error;
+      return mapCoupon(newCoupon as CouponRow);
     } catch (error) {
-      logger.error("Error in createCoupon:", error);
+      logger.error("Error in AdminCouponsService.createCoupon", error);
       throw error;
     }
   }
 
-  /**
-   * Atualiza um cupom
-   */
-  async updateCoupon(
-    id: string,
-    updates: Partial<CouponData>,
-  ): Promise<CouponData | null> {
+  async updateCoupon(id: string, updates: Partial<CouponData>): Promise<CouponData | null> {
     try {
-      // Map standard field names to actual schema
-      const schemaUpdates: Record<string, unknown> = {};
-      if (updates.codigo !== undefined) schemaUpdates.codigo = updates.codigo;
-      if (updates.description !== undefined) schemaUpdates.description = updates.description;
-      if (updates.desconto !== undefined) schemaUpdates.desconto = updates.desconto;
-      if (updates.tipo_desconto !== undefined) schemaUpdates.tipo_desconto = updates.tipo_desconto;
-      if (updates.valor_minimo !== undefined) schemaUpdates.valor_minimo = updates.valor_minimo;
-      if (updates.max_usos !== undefined) schemaUpdates.max_usos = updates.max_usos;
-      if (updates.is_active !== undefined) schemaUpdates.is_active = updates.is_active;
-      if (updates.validade !== undefined) schemaUpdates.validade = updates.validade;
-      if (updates.business_id !== undefined) schemaUpdates.business_id = updates.business_id;
-
       const { data, error } = await this.db
         .from("coupons")
-        .update(schemaUpdates as any)
+        .update(toCouponWrite(updates))
         .eq("id", id)
         .select()
         .single();
 
-      if (error) {
-        logger.error("Error updating coupon:", error);
-        throw error;
-      }
-
-      return data as CouponData;
+      if (error) throw error;
+      return mapCoupon(data as CouponRow);
     } catch (error) {
-      logger.error("Error in updateCoupon:", error);
+      logger.error("Error in AdminCouponsService.updateCoupon", error);
       throw error;
     }
   }
 
-  /**
-   * Deleta um cupom
-   */
   async deleteCoupon(id: string): Promise<boolean> {
     try {
-      const { error } = await this.db
-        .from("coupons")
-        .delete()
-        .eq("id", id);
-
-      if (error) {
-        logger.error("Error deleting coupon:", error);
-        throw error;
-      }
-
+      const { error } = await this.db.from("coupons").delete().eq("id", id);
+      if (error) throw error;
       return true;
     } catch (error) {
-      logger.error("Error in deleteCoupon:", error);
+      logger.error("Error in AdminCouponsService.deleteCoupon", error);
       throw error;
     }
   }
 
-  /**
-   * Toggle active status (para quick actions)
-   */
   async toggleActive(id: string, isActive: boolean): Promise<boolean> {
     try {
       const { error } = await this.db
@@ -274,29 +222,26 @@ class AdminCouponsServiceClass {
         .update({ is_active: isActive })
         .eq("id", id);
 
-      if (error) {
-        logger.error("Error toggling coupon active status:", error);
-        throw error;
-      }
-
+      if (error) throw error;
       return true;
     } catch (error) {
-      logger.error("Error in toggleActive:", error);
+      logger.error("Error in AdminCouponsService.toggleActive", error);
       throw error;
     }
   }
 
-  /**
-   * Busca cupons ativos (legado wrapper)
-   * ✅ SSOT: Usa função legada de business.admin
-   */
   async getActiveCoupons(): Promise<CouponData[]> {
     try {
-      const { getActiveCoupons } = await import("@/core/business/services/business.admin");
-      const coupons = await getActiveCoupons();
-      return coupons as CouponData[];
+      const { data, error } = await this.db
+        .from("coupons")
+        .select("*")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return ((data as CouponRow[]) || []).map(mapCoupon);
     } catch (error) {
-      logger.error("Error in getActiveCoupons:", error);
+      logger.error("Error in AdminCouponsService.getActiveCoupons", error);
       throw error;
     }
   }
