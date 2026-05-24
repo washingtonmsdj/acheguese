@@ -1,15 +1,6 @@
 #!/usr/bin/env node
 
-/**
- * Script de Verificação Pré-Deploy
- * 
- * Verifica se o projeto está pronto para deploy na Vercel
- * 
- * @usage node scripts/verify-deploy-ready.mjs
- */
-
-import { readFileSync, existsSync } from 'fs';
-import { join } from 'path';
+import { existsSync, readFileSync } from 'node:fs';
 
 const REQUIRED_FILES = [
   'package.json',
@@ -32,237 +23,127 @@ const OPTIONAL_ENV_VARS = [
   'VITE_GOOGLE_MAPS_API_KEY',
 ];
 
-console.log('🔍 Verificando preparação para deploy...\n');
+const REQUIRED_SCRIPTS = ['build', 'typecheck:app', 'lint', 'validate:ssot', 'security:validate'];
+const PUBLIC_DOMAIN = 'acheguese.com.br';
 
 let hasErrors = false;
 let hasWarnings = false;
 
-// ── Verificar arquivos obrigatórios ──────────────────────────────────────────
+function ok(message) {
+  console.log(`  OK    ${message}`);
+}
 
-console.log('📁 Verificando arquivos obrigatórios...');
+function warn(message) {
+  console.log(`  AVISO ${message}`);
+  hasWarnings = true;
+}
+
+function fail(message) {
+  console.log(`  FALHA ${message}`);
+  hasErrors = true;
+}
+
+function readJson(file) {
+  return JSON.parse(readFileSync(file, 'utf-8'));
+}
+
+console.log('Verificando preparacao para deploy...\n');
+
+console.log('Arquivos obrigatorios');
 for (const file of REQUIRED_FILES) {
-  if (existsSync(file)) {
-    console.log(`  ✅ ${file}`);
-  } else {
-    console.log(`  ❌ ${file} - FALTANDO`);
-    hasErrors = true;
-  }
+  existsSync(file) ? ok(file) : fail(`${file} nao encontrado`);
 }
 console.log();
 
-// ── Verificar package.json ───────────────────────────────────────────────────
-
-console.log('📦 Verificando package.json...');
+console.log('package.json');
 try {
-  const pkg = JSON.parse(readFileSync('package.json', 'utf-8'));
-  
-  if (pkg.scripts?.build) {
-    console.log(`  ✅ Script "build" encontrado: ${pkg.scripts.build}`);
-  } else {
-    console.log('  ❌ Script "build" não encontrado');
-    hasErrors = true;
-  }
-  
-  if (pkg.name) {
-    console.log(`  ✅ Nome do projeto: ${pkg.name}`);
-  } else {
-    console.log('  ⚠️  Nome do projeto não definido');
-    hasWarnings = true;
-  }
-  
-  if (pkg.type === 'module') {
-    console.log('  ✅ Tipo: module');
-  } else {
-    console.log('  ⚠️  Tipo não é "module"');
-    hasWarnings = true;
+  const pkg = readJson('package.json');
+  pkg.name ? ok(`nome do projeto: ${pkg.name}`) : warn('nome do projeto nao definido');
+  pkg.type === 'module' ? ok('type module configurado') : warn('package.json deveria declarar type=module');
+
+  for (const scriptName of REQUIRED_SCRIPTS) {
+    pkg.scripts?.[scriptName]
+      ? ok(`script ${scriptName}: ${pkg.scripts[scriptName]}`)
+      : fail(`script obrigatorio ausente: ${scriptName}`);
   }
 } catch (error) {
-  console.log(`  ❌ Erro ao ler package.json: ${error.message}`);
-  hasErrors = true;
+  fail(`erro ao ler package.json: ${error.message}`);
 }
 console.log();
 
-// ── Verificar vercel.json ────────────────────────────────────────────────────
-
-console.log('⚙️  Verificando vercel.json...');
+console.log('vercel.json');
 try {
-  const vercelConfig = JSON.parse(readFileSync('vercel.json', 'utf-8'));
-  
-  if (vercelConfig.buildCommand) {
-    console.log(`  ✅ Build command: ${vercelConfig.buildCommand}`);
-  } else {
-    console.log('  ⚠️  Build command não definido');
-    hasWarnings = true;
-  }
-  
-  if (vercelConfig.outputDirectory) {
-    console.log(`  ✅ Output directory: ${vercelConfig.outputDirectory}`);
-  } else {
-    console.log('  ⚠️  Output directory não definido');
-    hasWarnings = true;
-  }
-  
-  if (vercelConfig.rewrites?.length > 0) {
-    console.log('  ✅ Rewrites configurados (SPA routing)');
-  } else {
-    console.log('  ⚠️  Rewrites não configurados - rotas podem não funcionar');
-    hasWarnings = true;
-  }
-  
-  if (vercelConfig.headers?.length > 0) {
-    console.log('  ✅ Headers de segurança configurados');
-  } else {
-    console.log('  ⚠️  Headers de segurança não configurados');
-    hasWarnings = true;
-  }
+  const vercelConfig = readJson('vercel.json');
+  vercelConfig.buildCommand ? ok(`build command: ${vercelConfig.buildCommand}`) : fail('buildCommand nao definido');
+  vercelConfig.outputDirectory ? ok(`output directory: ${vercelConfig.outputDirectory}`) : fail('outputDirectory nao definido');
+  Array.isArray(vercelConfig.rewrites) && vercelConfig.rewrites.length > 0 ? ok('rewrites configurados para SPA') : fail('rewrites nao configurados');
+  Array.isArray(vercelConfig.headers) && vercelConfig.headers.length > 0 ? ok('headers configurados') : fail('headers nao configurados');
+
+  const serializedHeaders = JSON.stringify(vercelConfig.headers ?? []);
+  serializedHeaders.includes('Content-Security-Policy') ? ok('Content-Security-Policy configurada') : fail('Content-Security-Policy ausente');
+  serializedHeaders.includes('Strict-Transport-Security') ? ok('Strict-Transport-Security configurado') : fail('Strict-Transport-Security ausente');
 } catch (error) {
-  console.log(`  ❌ Erro ao ler vercel.json: ${error.message}`);
-  hasErrors = true;
+  fail(`erro ao ler vercel.json: ${error.message}`);
 }
 console.log();
 
-// ── Verificar variáveis de ambiente ──────────────────────────────────────────
+console.log('Variaveis de ambiente para configurar na Vercel');
+console.log('  Obrigatorias:');
+for (const envVar of REQUIRED_ENV_VARS) console.log(`    - ${envVar}`);
+console.log('  Opcionais recomendadas:');
+for (const envVar of OPTIONAL_ENV_VARS) console.log(`    - ${envVar}`);
+console.log();
 
-console.log('🔐 Variáveis de ambiente necessárias:');
-console.log('\n  📌 OBRIGATÓRIAS (configure na Vercel):');
-for (const envVar of REQUIRED_ENV_VARS) {
-  console.log(`     • ${envVar}`);
-}
+console.log('Estrutura de build');
+existsSync('src/main.tsx') || existsSync('src/main.ts') ? ok('entry point encontrado') : fail('entry point ausente');
+existsSync('src/App.tsx') || existsSync('src/App.ts') ? ok('App component encontrado') : fail('App component ausente');
+existsSync('public') ? ok('pasta public existe') : fail('pasta public ausente');
+console.log();
 
-console.log('\n  📌 OPCIONAIS (recomendadas):');
-for (const envVar of OPTIONAL_ENV_VARS) {
-  console.log(`     • ${envVar}`);
+console.log('TypeScript');
+try {
+  const tsconfig = readJson('tsconfig.json');
+  Array.isArray(tsconfig.references) && tsconfig.references.length > 0 ? ok('project references configuradas') : warn('project references nao configuradas');
+  ok('tsconfig.json valido');
+} catch (error) {
+  fail(`erro ao ler tsconfig.json: ${error.message}`);
 }
 console.log();
 
-// ── Verificar estrutura de build ─────────────────────────────────────────────
-
-console.log('🏗️  Verificando estrutura de build...');
-if (existsSync('src/main.tsx') || existsSync('src/main.ts')) {
-  console.log('  ✅ Entry point encontrado (src/main.tsx ou src/main.ts)');
-} else {
-  console.log('  ❌ Entry point não encontrado');
-  hasErrors = true;
-}
-
-if (existsSync('src/App.tsx') || existsSync('src/App.ts')) {
-  console.log('  ✅ App component encontrado');
-} else {
-  console.log('  ⚠️  App component não encontrado');
-  hasWarnings = true;
-}
-
-if (existsSync('public')) {
-  console.log('  ✅ Pasta public/ existe');
-} else {
-  console.log('  ⚠️  Pasta public/ não encontrada');
-  hasWarnings = true;
-}
-console.log();
-
-// ── Verificar TypeScript ─────────────────────────────────────────────────────
-
-console.log('📘 Verificando TypeScript...');
-if (existsSync('tsconfig.json')) {
-  try {
-    const tsconfig = JSON.parse(readFileSync('tsconfig.json', 'utf-8'));
-    console.log('  ✅ tsconfig.json válido');
-    
-    if (tsconfig.compilerOptions?.strict) {
-      console.log('  ✅ Modo strict ativado');
-    } else {
-      console.log('  ⚠️  Modo strict não ativado');
-      hasWarnings = true;
-    }
-  } catch (error) {
-    console.log(`  ❌ Erro ao ler tsconfig.json: ${error.message}`);
-    hasErrors = true;
-  }
-} else {
-  console.log('  ❌ tsconfig.json não encontrado');
-  hasErrors = true;
-}
-console.log();
-
-// ── Verificar SEO ────────────────────────────────────────────────────────────
-
-console.log('🔍 Verificando SEO...');
+console.log('SEO');
 try {
   const indexHtml = readFileSync('index.html', 'utf-8');
-  
-  if (indexHtml.includes('<title>')) {
-    console.log('  ✅ Tag <title> encontrada');
-  } else {
-    console.log('  ⚠️  Tag <title> não encontrada');
-    hasWarnings = true;
-  }
-  
-  if (indexHtml.includes('description')) {
-    console.log('  ✅ Meta description encontrada');
-  } else {
-    console.log('  ⚠️  Meta description não encontrada');
-    hasWarnings = true;
-  }
-  
-  if (indexHtml.includes('og:')) {
-    console.log('  ✅ Open Graph tags encontradas');
-  } else {
-    console.log('  ⚠️  Open Graph tags não encontradas');
-    hasWarnings = true;
-  }
+  indexHtml.includes('<title>') ? ok('tag title encontrada') : warn('tag title nao encontrada');
+  indexHtml.includes('description') ? ok('meta description encontrada') : warn('meta description nao encontrada');
+  indexHtml.includes('og:') ? ok('Open Graph encontrado') : warn('Open Graph nao encontrado');
 } catch (error) {
-  console.log(`  ⚠️  Erro ao verificar index.html: ${error.message}`);
-  hasWarnings = true;
+  warn(`erro ao verificar index.html: ${error.message}`);
 }
 console.log();
 
-// ── Verificar robots.txt ─────────────────────────────────────────────────────
-
-console.log('🤖 Verificando robots.txt...');
+console.log('robots.txt');
 if (existsSync('public/robots.txt')) {
   try {
     const robots = readFileSync('public/robots.txt', 'utf-8');
-    if (robots.includes('acheguese.com.br')) {
-      console.log('  ✅ robots.txt configurado com domínio correto');
-    } else {
-      console.log('  ⚠️  robots.txt não contém domínio acheguese.com.br');
-      hasWarnings = true;
-    }
+    robots.includes(PUBLIC_DOMAIN) ? ok(`robots.txt aponta para ${PUBLIC_DOMAIN}`) : fail(`robots.txt nao contem ${PUBLIC_DOMAIN}`);
   } catch (error) {
-    console.log(`  ⚠️  Erro ao ler robots.txt: ${error.message}`);
-    hasWarnings = true;
+    fail(`erro ao ler robots.txt: ${error.message}`);
   }
 } else {
-  console.log('  ⚠️  robots.txt não encontrado');
-  hasWarnings = true;
+  fail('robots.txt nao encontrado');
 }
 console.log();
 
-// ── Resultado final ──────────────────────────────────────────────────────────
-
-console.log('═══════════════════════════════════════════════════════════════');
+console.log('='.repeat(64));
 if (hasErrors) {
-  console.log('❌ PROJETO NÃO ESTÁ PRONTO PARA DEPLOY');
-  console.log('   Corrija os erros acima antes de fazer deploy.');
+  console.log('PROJETO NAO ESTA PRONTO PARA DEPLOY');
   process.exit(1);
-} else if (hasWarnings) {
-  console.log('⚠️  PROJETO PODE SER DEPLOYADO, MAS HÁ AVISOS');
-  console.log('   Recomenda-se corrigir os avisos para melhor resultado.');
-  console.log('\n📋 Próximos passos:');
-  console.log('   1. Corrija os avisos (opcional)');
-  console.log('   2. Configure variáveis de ambiente na Vercel');
-  console.log('   3. Faça push para o repositório');
-  console.log('   4. Deploy será automático');
-  process.exit(0);
-} else {
-  console.log('✅ PROJETO PRONTO PARA DEPLOY!');
-  console.log('\n📋 Próximos passos:');
-  console.log('   1. Configure variáveis de ambiente na Vercel:');
-  for (const envVar of REQUIRED_ENV_VARS) {
-    console.log(`      • ${envVar}`);
-  }
-  console.log('   2. Faça push para o repositório');
-  console.log('   3. Deploy será automático');
-  console.log('\n📖 Consulte DEPLOY.md para instruções detalhadas');
+}
+
+if (hasWarnings) {
+  console.log('PROJETO PODE SER DEPLOYADO, MAS HA AVISOS');
   process.exit(0);
 }
+
+console.log('PROJETO PRONTO PARA DEPLOY');
+process.exit(0);

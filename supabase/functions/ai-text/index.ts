@@ -1,7 +1,7 @@
 // ai-text — geração de texto e structured output (tool-calling) via Lovable AI Gateway.
 import {
   callAiGateway,
-  corsHeaders,
+  getAiCorsHeaders,
   getUserAndAdmin,
   jsonResponse,
   logAiUsage,
@@ -27,18 +27,18 @@ interface Body {
 const DEFAULT_MODEL = "google/gemini-3-flash-preview";
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") return jsonResponse({ error: "method_not_allowed" }, 405);
+  if (req.method === "OPTIONS") return new Response("ok", { headers: getAiCorsHeaders(req) });
+  if (req.method !== "POST") return jsonResponse({ error: "method_not_allowed" }, 405, req);
 
   let body: Body;
   try {
     body = await req.json();
   } catch {
-    return jsonResponse({ error: "invalid_json", code: "bad_request" }, 400);
+    return jsonResponse({ error: "invalid_json", code: "bad_request" }, 400, req);
   }
 
   if (!body?.feature || !Array.isArray(body.messages) || body.messages.length === 0) {
-    return jsonResponse({ error: "feature e messages são obrigatórios.", code: "bad_request" }, 400);
+    return jsonResponse({ error: "feature e messages são obrigatórios.", code: "bad_request" }, 400, req);
   }
 
   const { user, admin } = await getUserAndAdmin(req);
@@ -86,7 +86,7 @@ Deno.serve(async (req) => {
     metadata: { hasSchema: !!body.schema },
   });
 
-  if (!result.ok) return mapGatewayErrorToResponse(result);
+  if (!result.ok) return mapGatewayErrorToResponse(result, req);
 
   const choice = result.data?.choices?.[0];
   const message = choice?.message ?? {};
@@ -106,5 +106,5 @@ Deno.serve(async (req) => {
     model,
     usage: result.data?.usage ?? null,
     requestId: result.requestId ?? null,
-  });
+  }, 200, req);
 });

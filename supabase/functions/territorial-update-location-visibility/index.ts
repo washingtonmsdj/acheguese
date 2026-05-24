@@ -17,7 +17,7 @@ import { requireAdmin } from '../_shared/adminAuth.ts';
 interface UpdateLocationVisibilityRequest {
   locationId?: string;
   id?: string;
-  flag: 'is_selector_active' | 'is_landing_enabled' | 'is_navigable' | 'hidden' | 'visible';
+  flag: CanonicalVisibilityFlag;
   value: boolean;
 }
 
@@ -68,8 +68,8 @@ serve(async (req: Request) => {
       return errorResponse('Invalid location ID', 400);
     }
 
-    if (!canonicalFlag && !['hidden', 'visible'].includes(flag)) {
-      return errorResponse('Invalid flag. Must be canonical visibility flag or legacy "hidden/visible"', 400);
+    if (!canonicalFlag) {
+      return errorResponse('Invalid flag. Must be a canonical visibility flag', 400);
     }
 
     if (typeof value !== 'boolean') {
@@ -86,15 +86,11 @@ serve(async (req: Request) => {
       return errorResponse('Location not found', 404);
     }
 
-    const legacyVisibilityPatch = flag === 'hidden'
-      ? { hidden: value }
-      : { visible: value };
-
     const updatedMetadata: Record<string, unknown> = {
       ...(location.metadata || {}),
       updated_by: userId,
       updated_at: new Date().toISOString(),
-      ...(canonicalFlag ? { [canonicalFlag]: value } : legacyVisibilityPatch),
+      [canonicalFlag]: value,
     };
 
     const { data: updatedLocation, error: updateError } = await supabaseAdmin
@@ -107,7 +103,7 @@ serve(async (req: Request) => {
     if (updateError) throw updateError;
 
     // Propagar ocultação de seletor para filhos diretos (apenas 1 nível).
-    if ((canonicalFlag === 'is_selector_active' && value === false) || (flag === 'hidden' && value === true)) {
+    if (canonicalFlag === 'is_selector_active' && value === false) {
       const { data: children } = await supabaseAdmin
         .from('locations')
         .select('id, metadata')

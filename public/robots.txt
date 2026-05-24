@@ -1,28 +1,22 @@
-# Ordax SaaS - Robots.txt
-# Generated: 2026-04-19
-# Version: 1.0.0
+# Achegue-se - Robots.txt
+# Generated: 2026-05-24
+# Version: 1.1.0
 
-# Allow all crawlers
 User-agent: *
 Allow: /
 
-# Disallow admin and private areas
 Disallow: /admin/
 Disallow: /perfil/
 Disallow: /conta/
 Disallow: /checkout/
 Disallow: /pagamento/
-
-# Disallow API endpoints
+Disallow: /central/
 Disallow: /api/
 
-# Sitemap location
-Sitemap: https://ordax.com.br/sitemap.xml
+Sitemap: https://acheguese.com.br/sitemap.xml
 
-# Crawl delay (be nice to servers)
 Crawl-delay: 1
 
-# Specific bot rules
 User-agent: Googlebot
 Allow: /
 Crawl-delay: 0
@@ -31,7 +25,6 @@ User-agent: Bingbot
 Allow: /
 Crawl-delay: 1
 
-# Block bad bots
 User-agent: AhrefsBot
 Disallow: /
 

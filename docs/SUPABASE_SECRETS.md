@@ -25,7 +25,7 @@ Use the PowerShell helper to fetch project keys and store the admin secret encry
 
 This stores the encrypted payload outside the repository at:
 
-`%APPDATA%\Ordax\Secrets\<project-ref>\supabase-secrets.json.dpapi`
+`%APPDATA%\AchegueSe\Secrets\<project-ref>\supabase-secrets.json.dpapi`
 
 ### 2. Load secrets into the current shell
 

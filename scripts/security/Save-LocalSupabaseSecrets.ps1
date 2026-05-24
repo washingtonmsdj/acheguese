@@ -3,7 +3,7 @@ param(
   [string]$SupabaseUrl,
   [string]$PublishableKey,
   [string]$ServiceRoleKey,
-  [string]$StoragePath = "$env:APPDATA\Ordax\Secrets",
+  [string]$StoragePath = "$env:APPDATA\AchegueSe\Secrets",
   [switch]$FetchFromSupabase
 )
 

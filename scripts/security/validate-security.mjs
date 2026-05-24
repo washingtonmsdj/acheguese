@@ -106,7 +106,6 @@ function shouldExclude(filePath, excludePatterns) {
 
 function shouldScan(filePath) {
   const normalized = toPosix(filePath);
-  if (normalized.startsWith('scripts/debug/')) return false;
   const hasPrefix = SCAN_PREFIXES.some((prefix) => normalized.startsWith(prefix));
   if (!hasPrefix) return false;
 

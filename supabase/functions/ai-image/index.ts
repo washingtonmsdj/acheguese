@@ -5,7 +5,7 @@
 import { z } from "https://esm.sh/zod@3.23.8";
 import {
   callAiGateway,
-  corsHeaders,
+  getAiCorsHeaders,
   getUserAndAdmin,
   jsonResponse,
   logAiUsage,
@@ -54,15 +54,15 @@ function dataUrlToBytes(dataUrl: string): { bytes: Uint8Array; mime: string } {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (req.method === "OPTIONS") return new Response(null, { headers: getAiCorsHeaders(req) });
 
   try {
     const { user, admin } = await getUserAndAdmin(req);
-    if (!user) return jsonResponse({ error: "unauthorized" }, 401);
+    if (!user) return jsonResponse({ error: "unauthorized" }, 401, req);
 
     const parsed = BodySchema.safeParse(await req.json());
     if (!parsed.success) {
-      return jsonResponse({ error: parsed.error.flatten().fieldErrors }, 400);
+      return jsonResponse({ error: parsed.error.flatten().fieldErrors }, 400, req);
     }
     const body = parsed.data;
     const model = modelFor(body.quality);
@@ -119,7 +119,7 @@ Deno.serve(async (req) => {
             generated_urls: generatedUrls,
           })
           .eq("id", generationId);
-        return mapGatewayErrorToResponse(result);
+        return mapGatewayErrorToResponse(result, req);
       }
 
       const images = result.data?.choices?.[0]?.message?.images ?? [];
@@ -133,7 +133,7 @@ Deno.serve(async (req) => {
             generated_urls: generatedUrls,
           })
           .eq("id", generationId);
-        return jsonResponse({ error: "IA não retornou imagem." }, 502);
+        return jsonResponse({ error: "IA não retornou imagem." }, 502, req);
       }
 
       const { bytes, mime } = dataUrlToBytes(dataUrl);
@@ -160,12 +160,13 @@ Deno.serve(async (req) => {
       .update({ status: "completed", generated_urls: generatedUrls })
       .eq("id", generationId);
 
-    return jsonResponse({ ok: true, generationId, model, urls: generatedUrls });
+    return jsonResponse({ ok: true, generationId, model, urls: generatedUrls }, 200, req);
   } catch (err) {
     console.error("ai-image fatal", err);
     return jsonResponse(
       { error: err instanceof Error ? err.message : "unknown" },
       500,
+      req,
     );
   }
 });

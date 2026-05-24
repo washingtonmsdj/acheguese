@@ -3,11 +3,11 @@
 // Provider: Replicate / cuuupid/idm-vton.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getAllSecurityHeaders } from "../_shared/security.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+function responseHeaders(req: Request): Record<string, string> {
+  return getAllSecurityHeaders("POST, OPTIONS", req);
+}
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -228,7 +228,8 @@ async function imageRefToBytes(imageRef: string): Promise<{ bytes: Uint8Array; m
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const headers = responseHeaders(req);
+  if (req.method === "OPTIONS") return new Response(null, { headers });
 
   try {
     const authHeader = req.headers.get("Authorization") ?? "";
@@ -241,7 +242,7 @@ Deno.serve(async (req) => {
     if (!user) {
       return new Response(JSON.stringify({ error: "unauthorized" }), {
         status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...headers, "Content-Type": "application/json" },
       });
     }
 
@@ -249,7 +250,7 @@ Deno.serve(async (req) => {
     if (!generationId || typeof generationId !== "string") {
       return new Response(JSON.stringify({ error: "generationId required" }), {
         status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...headers, "Content-Type": "application/json" },
       });
     }
 
@@ -265,14 +266,14 @@ Deno.serve(async (req) => {
     if (!gen) {
       return new Response(JSON.stringify({ error: "not found" }), {
         status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...headers, "Content-Type": "application/json" },
       });
     }
 
     if (gen.user_id !== user.id) {
       return new Response(JSON.stringify({ error: "forbidden" }), {
         status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...headers, "Content-Type": "application/json" },
       });
     }
 
@@ -341,13 +342,13 @@ Deno.serve(async (req) => {
 
     return new Response(JSON.stringify({ ok: true, generationId, provider: "replicate" }), {
       status: 202,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...headers, "Content-Type": "application/json" },
     });
   } catch (err) {
     console.error("tryon-generate fatal", err);
     return new Response(JSON.stringify({ error: err instanceof Error ? err.message : "unknown" }), {
       status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...headers, "Content-Type": "application/json" },
     });
   }
 });

@@ -13,7 +13,6 @@ import { getAllSecurityHeaders, rateLimitMiddleware, errorResponse } from '../_s
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const FCM_SERVER_KEY = Deno.env.get('FCM_SERVER_KEY');
 const FIREBASE_SERVICE_ACCOUNT = Deno.env.get('FIREBASE_SERVICE_ACCOUNT');
 const FIREBASE_PROJECT_ID = Deno.env.get('FIREBASE_PROJECT_ID');
 
@@ -118,127 +117,65 @@ serve(async (req: Request) => {
     let failureCount = 0;
     const errors: string[] = [];
 
-    // Check if we have Firebase credentials (new API or legacy)
-    const hasFirebaseConfig = FIREBASE_SERVICE_ACCOUNT || FIREBASE_PROJECT_ID || FCM_SERVER_KEY;
-
-    if (hasFirebaseConfig) {
-      // Use new FCM API (HTTP v1) if available
-      if (FIREBASE_PROJECT_ID && FIREBASE_SERVICE_ACCOUNT) {
-        try {
-          // Parse service account
-          const serviceAccount = JSON.parse(FIREBASE_SERVICE_ACCOUNT);
-          
-          // Get OAuth2 access token
-          const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-              assertion: await createJWT(serviceAccount),
-            }),
-          });
-          
-          const { access_token } = await tokenResponse.json();
-          
-          // Send to each subscription using FCM v1 API
-          for (const subscription of subscriptions) {
-            try {
-              const response = await fetch(
-                `https://fcm.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/messages:send`,
-                {
-                  method: 'POST',
-                  headers: {
-                    'Authorization': `Bearer ${access_token}`,
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
-                    message: {
-                      token: subscription.endpoint.split('/').pop(), // Extract FCM token
-                      notification: {
-                        title: notification.title,
-                        body: notification.body,
-                        image: notification.image,
-                      },
-                      data: notification.data || {},
-                      webpush: {
-                        headers: {
-                          Urgency: 'high',
-                        },
-                        notification: {
-                          icon: notification.icon || '/icon-192x192.png',
-                          badge: notification.badge || '/badge-72x72.png',
-                          tag: notification.tag,
-                          requireInteraction: notification.requireInteraction,
-                        },
-                      },
-                    },
-                  }),
-                }
-              );
-
-              if (response.ok) {
-                successCount++;
-                await supabase
-                  .from('push_subscriptions')
-                  .update({ last_used_at: new Date().toISOString() })
-                  .eq('id', subscription.id);
-              } else {
-                failureCount++;
-                const errorData = await response.json();
-                errors.push(`Subscription ${subscription.id}: ${errorData.error?.message || 'Unknown error'}`);
-              }
-            } catch (error) {
-              failureCount++;
-              errors.push(`Subscription ${subscription.id}: ${String(error)}`);
-            }
-          }
-        } catch (error) {
-          console.error('Error with FCM v1 API:', error);
-          // Fall back to legacy API if available
-          if (FCM_SERVER_KEY) {
-            await sendViaLegacyAPI();
-          } else {
-            throw error;
-          }
-        }
-      } else if (FCM_SERVER_KEY) {
-        // Use legacy API
-        await sendViaLegacyAPI();
-      }
-    } else {
-      // Dev mode: just log
-      console.log('📱 Push Notification (dev mode):', {
-        userId,
-        notification,
-        subscriptionCount: subscriptions.length,
-      });
-      successCount = subscriptions.length;
+    if (!FIREBASE_PROJECT_ID || !FIREBASE_SERVICE_ACCOUNT) {
+      return errorResponse('Firebase push provider is not configured', 503);
     }
 
-    // Helper function for legacy API
-    async function sendViaLegacyAPI() {
+    try {
+      const serviceAccount = JSON.parse(FIREBASE_SERVICE_ACCOUNT);
+
+      const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+          assertion: await createJWT(serviceAccount),
+        }),
+      });
+
+      if (!tokenResponse.ok) {
+        throw new Error(`Failed to authorize Firebase provider: ${tokenResponse.status}`);
+      }
+
+      const { access_token } = await tokenResponse.json();
+      if (!access_token) {
+        throw new Error('Firebase provider did not return an access token');
+      }
+
       for (const subscription of subscriptions) {
         try {
-          const response = await fetch('https://fcm.googleapis.com/fcm/send', {
-            method: 'POST',
-            headers: {
-              'Authorization': `key=${FCM_SERVER_KEY}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              to: subscription.endpoint,
-              notification: {
-                title: notification.title,
-                body: notification.body,
-                icon: notification.icon || '/icon-192x192.png',
-                badge: notification.badge || '/badge-72x72.png',
-                image: notification.image,
-                tag: notification.tag,
-                requireInteraction: notification.requireInteraction,
+          const response = await fetch(
+            `https://fcm.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/messages:send`,
+            {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${access_token}`,
+                'Content-Type': 'application/json',
               },
-              data: notification.data || {},
-            }),
-          });
+              body: JSON.stringify({
+                message: {
+                  token: subscription.endpoint.split('/').pop(),
+                  notification: {
+                    title: notification.title,
+                    body: notification.body,
+                    image: notification.image,
+                  },
+                  data: notification.data || {},
+                  webpush: {
+                    headers: {
+                      Urgency: 'high',
+                    },
+                    notification: {
+                      icon: notification.icon || '/icon-192x192.png',
+                      badge: notification.badge || '/badge-72x72.png',
+                      tag: notification.tag,
+                      requireInteraction: notification.requireInteraction,
+                    },
+                  },
+                },
+              }),
+            }
+          );
 
           if (response.ok) {
             successCount++;
@@ -249,13 +186,16 @@ serve(async (req: Request) => {
           } else {
             failureCount++;
             const errorData = await response.json();
-            errors.push(`Subscription ${subscription.id}: ${errorData.error || 'Unknown error'}`);
+            errors.push(`Subscription ${subscription.id}: ${errorData.error?.message || 'Unknown error'}`);
           }
         } catch (error) {
           failureCount++;
           errors.push(`Subscription ${subscription.id}: ${String(error)}`);
         }
       }
+    } catch (error) {
+      console.error('Error with FCM v1 API:', error);
+      throw error;
     }
 
     // Helper function to create JWT for OAuth2 (RS256 via Web Crypto API)

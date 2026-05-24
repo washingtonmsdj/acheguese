@@ -17,7 +17,7 @@ import { requireAdmin } from '../_shared/adminAuth.ts';
 interface UpdateGroupVisibilityRequest {
   groupId?: string;
   id?: string;
-  flag: 'is_selector_active' | 'is_landing_enabled' | 'is_navigable' | 'hidden' | 'visible';
+  flag: CanonicalVisibilityFlag;
   value: boolean;
 }
 
@@ -69,8 +69,8 @@ serve(async (req: Request) => {
       return errorResponse('Invalid group ID', 400);
     }
 
-    if (!canonicalFlag && !['hidden', 'visible'].includes(flag)) {
-      return errorResponse('Invalid flag. Must be canonical visibility flag or legacy "hidden/visible"', 400);
+    if (!canonicalFlag) {
+      return errorResponse('Invalid flag. Must be a canonical visibility flag', 400);
     }
 
     if (typeof value !== 'boolean') {
@@ -87,15 +87,11 @@ serve(async (req: Request) => {
       return errorResponse('Group not found', 404);
     }
 
-    const legacyVisibilityPatch = flag === 'hidden'
-      ? { hidden: value }
-      : { visible: value };
-
     const updatedMetadata: Record<string, unknown> = {
       ...(group.metadata || {}),
       updated_by: userId,
       updated_at: new Date().toISOString(),
-      ...(canonicalFlag ? { [canonicalFlag]: value } : legacyVisibilityPatch),
+      [canonicalFlag]: value,
     };
 
     const { data: updatedGroup, error: updateError } = await supabaseAdmin

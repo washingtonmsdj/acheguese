@@ -2,7 +2,7 @@
 // Útil para: classificar fotos, extrair atributos de produto, gerar descrição de prato, etc.
 import {
   callAiGateway,
-  corsHeaders,
+  getAiCorsHeaders,
   getUserAndAdmin,
   jsonResponse,
   logAiUsage,
@@ -22,24 +22,25 @@ interface Body {
 const DEFAULT_MODEL = "google/gemini-2.5-flash";
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") return jsonResponse({ error: "method_not_allowed" }, 405);
+  if (req.method === "OPTIONS") return new Response("ok", { headers: getAiCorsHeaders(req) });
+  if (req.method !== "POST") return jsonResponse({ error: "method_not_allowed" }, 405, req);
 
   let body: Body;
   try {
     body = await req.json();
   } catch {
-    return jsonResponse({ error: "invalid_json", code: "bad_request" }, 400);
+    return jsonResponse({ error: "invalid_json", code: "bad_request" }, 400, req);
   }
 
   if (!body?.feature || !body?.prompt || !Array.isArray(body.imageUrls) || body.imageUrls.length === 0) {
     return jsonResponse(
       { error: "feature, prompt e imageUrls são obrigatórios.", code: "bad_request" },
       400,
+      req,
     );
   }
   if (body.imageUrls.length > 6) {
-    return jsonResponse({ error: "máximo 6 imagens por chamada.", code: "bad_request" }, 400);
+    return jsonResponse({ error: "máximo 6 imagens por chamada.", code: "bad_request" }, 400, req);
   }
 
   const { user, admin } = await getUserAndAdmin(req);
@@ -85,7 +86,7 @@ Deno.serve(async (req) => {
     metadata: { images: body.imageUrls.length, hasSchema: !!body.schema },
   });
 
-  if (!result.ok) return mapGatewayErrorToResponse(result);
+  if (!result.ok) return mapGatewayErrorToResponse(result, req);
 
   const message = result.data?.choices?.[0]?.message ?? {};
   let structured: unknown = null;
@@ -104,5 +105,5 @@ Deno.serve(async (req) => {
     model,
     usage: result.data?.usage ?? null,
     requestId: result.requestId ?? null,
-  });
+  }, 200, req);
 });

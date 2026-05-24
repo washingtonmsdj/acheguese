@@ -152,46 +152,6 @@ UPSTASH_REDIS_REST_TOKEN="<token>"
 
 Sem essas variaveis, o fallback em memoria deve ser considerado apenas para desenvolvimento local.
 
-### 5. Assinatura HMAC para endpoint administrativo de importacao
-
-O endpoint `api/admin/google-places-import.ts` suporta modo estrito com HMAC para mitigar replay e vazamento de token estatico.
-
-Ativacao:
-
-```env
-IMPORT_ADMIN_REQUIRE_HMAC="true"
-```
-
-Headers obrigatorios quando ativo:
-
-- `x-import-timestamp`: epoch em milissegundos
-- `x-import-nonce`: identificador unico por requisicao
-- `x-import-signature`: HMAC SHA-256 do payload
-
-Formato da assinatura:
-
-`HMAC_SHA256(IMPORT_ADMIN_TOKEN, "<timestamp>.<nonce>.<sha256(body)>")`
-
-Janela de validade:
-
-- Maximo de 5 minutos de diferenca de relogio
-- Nonce aceito uma unica vez dentro da janela
-
-### 6. Rotacao de segredo sem downtime
-
-Para rotacionar o segredo administrativo sem interromper automacoes:
-
-1. Defina:
-   - `IMPORT_ADMIN_TOKEN_ACTIVE` = novo segredo
-   - `IMPORT_ADMIN_TOKEN_PREVIOUS` = segredo antigo
-2. Atualize os clientes/scripts para usar o novo segredo.
-3. Apos a janela de transicao, remova `IMPORT_ADMIN_TOKEN_PREVIOUS`.
-
-Observacoes:
-
-- O endpoint aceita `ACTIVE` e `PREVIOUS` durante a transicao.
-- Em ausencia de `IMPORT_ADMIN_TOKEN_ACTIVE`, existe fallback para `IMPORT_ADMIN_TOKEN` (legado).
-
 ## 🔒 Row Level Security (RLS)
 
 ### Políticas no Supabase
@@ -326,7 +286,7 @@ await supabase.from('audit_logs').insert({
 
 ### Contatos
 
-- **Segurança**: security@projeto.com
+- **Segurança**: seguranca@acheguese.com.br
 - **Emergência**: +55 11 9999-9999
 
 ## 📋 Checklist de Segurança
@@ -408,7 +368,7 @@ await supabase.from('audit_logs').insert({
 
 Nenhuma vulnerabilidade conhecida no momento.
 
-Para reportar vulnerabilidades: security@projeto.com
+Para reportar vulnerabilidades: seguranca@acheguese.com.br
 
 ## 🔐 Compliance
 

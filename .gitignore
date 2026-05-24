@@ -7,6 +7,7 @@ src/test/
 !src/core/admin/services/__tests__/*.spec.ts
 !src/app/components/__tests__/Breadcrumbs.spec.tsx
 !src/core/maps/**/*.spec.ts
+!src/core/routing/**/*.spec.ts
 !src/core/community/utils/__tests__/*.spec.ts
 !src/core/professional/__tests__/ProfessionalLeadSSOT.test.ts
 !src/modules/business/gastronomy/__tests__/GastronomyOperationalSSOT.test.ts
@@ -19,6 +20,7 @@ src/test/
 !tests/e2e/onboarding-public.spec.ts
 !tests/e2e/institutional-public.spec.ts
 !tests/e2e/communication-territorial-operational.spec.ts
+!tests/e2e/community-territorial-operational.spec.ts
 
 # Logs
 logs

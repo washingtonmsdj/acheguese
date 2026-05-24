@@ -2,14 +2,13 @@
 // SSOT for: header building, retry/backoff, error mapping, usage logging.
 
 import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getAllSecurityHeaders } from "../_shared/security.ts";
 
 export const AI_GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
-export const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+export function getAiCorsHeaders(req?: Request): Record<string, string> {
+  return getAllSecurityHeaders("POST, OPTIONS", req);
+}
 
 export type AiCapability = "text" | "structured" | "vision" | "image" | "embed" | "moderation";
 
@@ -229,16 +228,16 @@ export async function getUserAndAdmin(req: Request): Promise<{
 }
 
 /** Helper: resposta JSON padronizada com CORS. */
-export function jsonResponse(body: unknown, status = 200): Response {
+export function jsonResponse(body: unknown, status = 200, req?: Request): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
+    headers: { ...getAiCorsHeaders(req), "Content-Type": "application/json" },
   });
 }
 
 /** Mapeia o resultado do gateway para uma Response HTTP coerente para o cliente. */
-export function mapGatewayErrorToResponse(result: AiCallResult): Response {
-  if (result.ok) return jsonResponse({ ok: true });
+export function mapGatewayErrorToResponse(result: AiCallResult, req?: Request): Response {
+  if (result.ok) return jsonResponse({ ok: true }, 200, req);
   const status =
     result.errorCode === "unauthorized"
       ? 401
@@ -256,5 +255,6 @@ export function mapGatewayErrorToResponse(result: AiCallResult): Response {
       requestId: result.requestId ?? null,
     },
     status,
+    req,
   );
 }

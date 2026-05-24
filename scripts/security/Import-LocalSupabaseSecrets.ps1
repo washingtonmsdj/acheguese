@@ -1,6 +1,6 @@
 param(
   [string]$ProjectRef = "xhdowzacfujckjelqhtd",
-  [string]$StoragePath = "$env:APPDATA\Ordax\Secrets",
+  [string]$StoragePath = "$env:APPDATA\AchegueSe\Secrets",
   [string]$WritePublicEnvFile
 )
 
