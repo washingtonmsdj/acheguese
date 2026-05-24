@@ -1805,58 +1805,6 @@ export type Database = {
           },
         ]
       }
-      business_slug_history: {
-        Row: {
-          business_id: string
-          change_reason: string | null
-          created_at: string
-          id: string
-          old_canonical_url: string
-          old_slug: string
-          profile_id: string
-        }
-        Insert: {
-          business_id: string
-          change_reason?: string | null
-          created_at?: string
-          id?: string
-          old_canonical_url: string
-          old_slug: string
-          profile_id: string
-        }
-        Update: {
-          business_id?: string
-          change_reason?: string | null
-          created_at?: string
-          id?: string
-          old_canonical_url?: string
-          old_slug?: string
-          profile_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "business_slug_history_business_id_fkey"
-            columns: ["business_id"]
-            isOneToOne: false
-            referencedRelation: "business_data"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "business_slug_history_business_id_fkey"
-            columns: ["business_id"]
-            isOneToOne: false
-            referencedRelation: "public_business_search"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "business_slug_history_business_id_fkey"
-            columns: ["business_id"]
-            isOneToOne: false
-            referencedRelation: "user_companies"
-            referencedColumns: ["company_id"]
-          },
-        ]
-      }
       business_stats: {
         Row: {
           business_id: string | null
@@ -2802,41 +2750,6 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "classified_categories"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      classified_url_history: {
-        Row: {
-          change_reason: string
-          changed_at: string
-          classified_id: string
-          id: string
-          old_canonical_url: string
-          old_slug: string | null
-        }
-        Insert: {
-          change_reason: string
-          changed_at?: string
-          classified_id: string
-          id?: string
-          old_canonical_url: string
-          old_slug?: string | null
-        }
-        Update: {
-          change_reason?: string
-          changed_at?: string
-          classified_id?: string
-          id?: string
-          old_canonical_url?: string
-          old_slug?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "classified_url_history_classified_id_fkey"
-            columns: ["classified_id"]
-            isOneToOne: false
-            referencedRelation: "classifieds"
             referencedColumns: ["id"]
           },
         ]
@@ -12582,47 +12495,6 @@ export type Database = {
         }
         Relationships: []
       }
-      slug_redirects: {
-        Row: {
-          created_at: string
-          expires_at: string | null
-          id: string
-          location_id: string
-          new_slug: string
-          old_slug: string
-          reason: string | null
-          redirect_type: string
-        }
-        Insert: {
-          created_at?: string
-          expires_at?: string | null
-          id?: string
-          location_id: string
-          new_slug: string
-          old_slug: string
-          reason?: string | null
-          redirect_type?: string
-        }
-        Update: {
-          created_at?: string
-          expires_at?: string | null
-          id?: string
-          location_id?: string
-          new_slug?: string
-          old_slug?: string
-          reason?: string | null
-          redirect_type?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "slug_redirects_location_id_fkey"
-            columns: ["location_id"]
-            isOneToOne: false
-            referencedRelation: "locations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       spatial_ref_sys: {
         Row: {
           auth_name: string | null
@@ -15877,6 +15749,10 @@ export type Database = {
           p_strategy: string
         }
         Returns: Json
+      }
+      release_driver_availability_for_ride: {
+        Args: { p_driver_profile_id: string; p_ride_id: string }
+        Returns: boolean
       }
       activate_pricing_rule: {
         Args: { p_performed_by: string; p_rule_id: string }

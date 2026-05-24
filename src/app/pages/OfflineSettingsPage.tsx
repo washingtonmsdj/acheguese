@@ -21,6 +21,7 @@ import {
   WifiOff,
   CheckCircle,
   XCircle,
+  Lightbulb,
 } from "lucide-react";
 import { useOfflineMode } from "@/shared/hooks/useOfflineMode";
 import { OfflineDataStatus } from "@/shared/components/offline/OfflineIndicator";
@@ -255,7 +256,7 @@ export default function OfflineSettingsPage() {
           open={clearCacheDialogOpen}
           onOpenChange={setClearCacheDialogOpen}
           title="Limpar dados offline?"
-          description="Esta acao remove os dados salvos para uso sem internet neste dispositivo. Voce podera salvar novamente depois."
+          description="Esta ação remove os dados salvos para uso sem internet neste dispositivo. Você poderá salvar novamente depois."
           confirmLabel="Limpar dados"
           cancelLabel="Manter dados"
           onConfirm={handleClearCache}
@@ -332,7 +333,7 @@ export default function OfflineSettingsPage() {
           open={clearCacheDialogOpen}
           onOpenChange={setClearCacheDialogOpen}
           title="Limpar dados offline?"
-          description="Esta acao remove os dados salvos para uso sem internet neste dispositivo. Voce podera salvar novamente depois."
+          description="Esta ação remove os dados salvos para uso sem internet neste dispositivo. Você poderá salvar novamente depois."
           confirmLabel="Limpar dados"
           cancelLabel="Manter dados"
           onConfirm={handleClearCache}
@@ -340,10 +341,13 @@ export default function OfflineSettingsPage() {
 
         {/* Informações */}
         <div className="p-4 bg-blue-500/10 rounded-lg border border-blue-500/30">
-          <p className="text-sm text-blue-400">
-            💡 <strong>Dica:</strong> Salve os dados importantes para acessá-los
-            mesmo sem internet. Ideal para consultar números de emergência ou
-            avisos importantes quando estiver sem sinal.
+          <p className="flex items-start gap-2 text-sm text-blue-400">
+            <Lightbulb className="h-4 w-4 mt-0.5 shrink-0" aria-hidden="true" />
+            <span>
+              <strong>Dica:</strong> Salve os dados importantes para acessá-los
+              mesmo sem internet. Ideal para consultar números de emergência ou
+              avisos importantes quando estiver sem sinal.
+            </span>
           </p>
         </div>
       </div>

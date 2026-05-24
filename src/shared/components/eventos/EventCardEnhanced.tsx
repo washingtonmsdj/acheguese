@@ -27,6 +27,8 @@ import { motion } from 'framer-motion';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/utils/cn';
+import { buildGoogleMapsSearchUrl } from '@/shared/utils/contactLinks';
+import { openSafeExternalUrl } from '@/shared/utils/safeRedirect';
 import { format, formatDistanceToNow, isToday, isTomorrow, isPast } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -177,10 +179,9 @@ function isAlmostFull(current: number, max?: number): boolean {
 }
 
 function openInMaps(latitude: number, longitude: number): void {
-  window.open(
-    `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`,
-    "_blank",
-    "noopener,noreferrer",
+  openSafeExternalUrl(
+    buildGoogleMapsSearchUrl(`${latitude},${longitude}`),
+    { context: "event-card-map" },
   );
 }
 

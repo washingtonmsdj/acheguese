@@ -1,168 +1,127 @@
-import React from "react";
-import { useState, useEffect } from "react";
+﻿import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { MapPin, Users, Store, Wrench, ArrowRight, Heart } from "lucide-react";
+import { motion } from "framer-motion";
+import { ArrowRight, Heart, MapPin, Store, Users, Wrench } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
-const populacaoTotal = 45000;
+import { TERRITORY_CONFIG } from "@/config/territory";
+import { useCityMetadata } from "@/core/city/hooks/useCityMetadata";
+import { useHomeCommunityHref } from "@/core/routing/hooks/useHomeCommunityHref";
 
-const stats = [
-  {
-    icon: Users,
-    label: "Moradores",
-    value: `~${(populacaoTotal / 1000).toFixed(0)} mil`,
-  },
-  { icon: MapPin, label: "Bairros", value: "4" },
-  { icon: Store, label: "Comércios", value: "200+" },
-  { icon: Wrench, label: "Profissionais", value: "150+" },
-];
-
-const neighborhoodNames = [
-  "Nordeste de Amaralina",
-  "Santa Cruz",
-  "Vale das Pedrinhas",
-  "Chapada do Rio Vermelho",
-];
+function formatMetric(value?: number): string {
+  if (!value) return "-";
+  return new Intl.NumberFormat("pt-BR", {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(value);
+}
 
 export default function SplashPage() {
   const navigate = useNavigate();
+  const communityHref = useHomeCommunityHref();
   const [ready, setReady] = useState(false);
+  const { data: cityMetadata } = useCityMetadata(
+    TERRITORY_CONFIG.launch.state,
+    TERRITORY_CONFIG.launch.city,
+  );
 
   useEffect(() => {
-    const t = setTimeout(() => setReady(true), 400);
-    return () => clearTimeout(t);
+    const timer = window.setTimeout(() => setReady(true), 300);
+    return () => window.clearTimeout(timer);
   }, []);
 
+  const cityName = cityMetadata?.city ?? TERRITORY_CONFIG.launch.name;
+  const stateName = cityMetadata?.state ?? TERRITORY_CONFIG.launch.state.toUpperCase();
+  const cityPath = `/${TERRITORY_CONFIG.launch.state}/${TERRITORY_CONFIG.launch.city}`;
+  const stats = [
+    { icon: Users, label: "Habitantes", value: formatMetric(cityMetadata?.population) },
+    { icon: MapPin, label: "Bairros", value: formatMetric(cityMetadata?.districts_count) },
+    { icon: Store, label: "Empresas", value: formatMetric(cityMetadata?.active_businesses) },
+    { icon: Wrench, label: "Profissionais", value: formatMetric(cityMetadata?.professionals_count) },
+  ];
+
   return (
-    <div className="min-h-screen flex flex-col bg-background overflow-hidden relative">
-      {/* Background decoration */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-32 -right-32 w-80 h-80 rounded-full bg-primary/8 blur-3xl" />
-        <div className="absolute -bottom-24 -left-24 w-64 h-64 rounded-full bg-primary/5 blur-3xl" />
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-96 h-96 rounded-full bg-warning/5 blur-3xl" />
+    <div className="relative flex min-h-screen flex-col overflow-hidden bg-background">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -right-32 -top-32 h-80 w-80 rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-primary/5 blur-3xl" />
+        <div className="absolute left-1/2 top-1/3 h-96 w-96 -translate-x-1/2 rounded-full bg-warning/5 blur-3xl" />
       </div>
 
-      <div className="relative flex-1 flex flex-col justify-between px-5 py-8">
-        {/* Hero */}
+      <div className="relative flex flex-1 flex-col justify-between px-5 py-8">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: "easeOut" }}
-          className="text-center pt-8"
+          animate={{ opacity: ready ? 1 : 0, y: ready ? 0 : 30 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="pt-8 text-center"
         >
-          {/* Logo mark */}
           <motion.div
             initial={{ scale: 0.5, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{
-              delay: 0.2,
-              duration: 0.5,
-              type: "spring",
-              stiffness: 200,
-            }}
-            className="inline-flex items-center justify-center h-20 w-20 rounded-3xl bg-primary shadow-lg shadow-primary/25 mb-5"
+            animate={{ scale: ready ? 1 : 0.5, opacity: ready ? 1 : 0 }}
+            transition={{ delay: 0.1, duration: 0.45, type: "spring", stiffness: 200 }}
+            className="mb-5 inline-flex h-20 w-20 items-center justify-center rounded-3xl bg-primary shadow-lg shadow-primary/25"
           >
-            <Heart
-              className="h-10 w-10 text-primary-foreground"
-              fill="currentColor"
-            />
+            <Heart className="h-10 w-10 text-primary-foreground" fill="currentColor" />
           </motion.div>
 
-          <motion.h1
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.6 }}
-            className="text-3xl font-bold font-display tracking-tight leading-tight"
-          >
-            Complexo do
+          <h1 className="font-display text-3xl font-bold leading-tight tracking-tight">
+            Achegue-se
             <br />
-            <span className="text-primary">Nordeste de Amaralina</span>
-          </motion.h1>
+            <span className="text-primary">{cityName}</span>
+          </h1>
 
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.7, duration: 0.5 }}
-            className="text-sm text-muted-foreground mt-3 max-w-[280px] mx-auto leading-relaxed"
-          >
-            Tudo do seu neighborhood em um só lugar. Comércios, serviços,
-            eventos e a voz da comunidade.
-          </motion.p>
+          <p className="mx-auto mt-3 max-w-[300px] text-sm leading-relaxed text-muted-foreground">
+            Empresas, serviços, escolas, oportunidades e comunidade organizados por território.
+          </p>
 
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.9, duration: 0.5 }}
-            className="text-xs text-muted-foreground/70 mt-1.5"
-          >
-            Salvador, Bahia • Região RA VII
-          </motion.p>
+          <p className="mt-1.5 text-xs text-muted-foreground/70">
+            {cityName}, {stateName}
+          </p>
         </motion.div>
 
-        {/* Stats grid */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.9, duration: 0.6 }}
-          className="grid grid-cols-2 gap-3 my-6"
+          animate={{ opacity: ready ? 1 : 0, y: ready ? 0 : 20 }}
+          transition={{ delay: 0.25, duration: 0.55 }}
+          className="my-6 grid grid-cols-2 gap-3"
         >
-          {stats.map((stat, i) => (
+          {stats.map((stat, index) => (
             <motion.div
               key={stat.label}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 1 + i * 0.1, duration: 0.4 }}
-              className="bg-card/80 backdrop-blur-sm border rounded-2xl p-4 text-center"
+              initial={{ opacity: 0, scale: 0.92 }}
+              animate={{ opacity: ready ? 1 : 0, scale: ready ? 1 : 0.92 }}
+              transition={{ delay: 0.35 + index * 0.06, duration: 0.35 }}
+              className="rounded-2xl border bg-card/80 p-4 text-center backdrop-blur-sm"
             >
-              <stat.icon className="h-5 w-5 text-primary mx-auto mb-1.5" />
-              <p className="text-lg font-bold font-display">{stat.value}</p>
+              <stat.icon className="mx-auto mb-1.5 h-5 w-5 text-primary" />
+              <p className="font-display text-lg font-bold">{stat.value}</p>
               <p className="text-[11px] text-muted-foreground">{stat.label}</p>
             </motion.div>
           ))}
         </motion.div>
 
-        {/* Bairros pills */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.3, duration: 0.5 }}
-          className="mb-6"
-        >
-          <p className="text-xs font-medium text-muted-foreground text-center mb-2.5">
-            Nossos neighborhoods
-          </p>
-          <div className="flex flex-wrap justify-center gap-2">
-            {neighborhoodNames.map((name, i) => (
-              <motion.span
-                key={name}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 1.4 + i * 0.08 }}
-                className="px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-medium border border-primary/15"
-              >
-                {name}
-              </motion.span>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* CTA */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.6, duration: 0.5 }}
+          animate={{ opacity: ready ? 1 : 0, y: ready ? 0 : 20 }}
+          transition={{ delay: 0.45, duration: 0.45 }}
           className="space-y-3"
         >
           <Button
-            onClick={() => navigate("/onboarding")}
-            className="w-full h-13 text-base font-semibold rounded-2xl shadow-lg shadow-primary/20 gap-2"
+            onClick={() => navigate(cityPath)}
+            className="h-12 w-full gap-2 rounded-2xl text-base font-semibold shadow-lg shadow-primary/20"
             size="lg"
           >
-            Entrar na comunidade
+            Ver cidade
             <ArrowRight className="h-5 w-5" />
           </Button>
-          <p className="text-[10px] text-center text-muted-foreground">
-            Gratuito • Feito pela comunidade, para a comunidade
+          <Button
+            onClick={() => navigate(communityHref)}
+            variant="outline"
+            className="h-12 w-full rounded-2xl text-base font-semibold"
+          >
+            Ver meu bairro
+          </Button>
+          <p className="text-center text-[10px] text-muted-foreground">
+            Dados exibidos a partir do cadastro municipal e módulos ativos.
           </p>
         </motion.div>
       </div>

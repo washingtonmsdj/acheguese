@@ -1,4 +1,4 @@
-﻿import { SidebarTrigger } from "@/shared/components/ui/sidebar";
+import { SidebarTrigger } from "@/shared/components/ui/sidebar";
 import { Link } from "react-router-dom";
 import { Bell, LogOut, MessageCircle } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
@@ -37,7 +37,7 @@ export function AppTopbar() {
       <SidebarTrigger className="text-muted-foreground hover:text-foreground md:mr-2" />
 
       <div className="ml-auto flex items-center gap-3">
-        <Link to="/pricing" className="hidden text-xs text-muted-foreground transition-colors hover:text-foreground sm:inline">
+        <Link to="/planos" className="hidden text-xs text-muted-foreground transition-colors hover:text-foreground sm:inline">
           Planos
         </Link>
         <Link to="/sobre" className="hidden text-xs text-muted-foreground transition-colors hover:text-foreground sm:inline">

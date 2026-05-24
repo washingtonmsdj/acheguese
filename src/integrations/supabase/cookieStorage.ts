@@ -11,16 +11,16 @@
  * SEGURANÇA:
  * - Cookies com Secure flag (HTTPS only)
  * - SameSite=Strict (proteção CSRF)
- * - HttpOnly=TRUE (via middleware.ts) ⭐ IMPLEMENTADO
+ * - HttpOnly=TRUE (via middleware.ts) IMPLEMENTADO
  * - Path=/ (disponível em toda aplicação)
  * - Max-Age configurável
  * 
  * HTTPONLY VERDADEIRO:
- * ✅ Implementado via Vercel Edge Middleware (middleware.ts)
- * ✅ Cookies inacessíveis via JavaScript
- * ✅ Proteção contra XSS cookie theft
- * ✅ Session hijacking prevention
- * ✅ Migração automática de cookies existentes
+ * - Implementado via Vercel Edge Middleware (middleware.ts)
+ * - Cookies inacessíveis via JavaScript
+ * - Proteção contra XSS cookie theft
+ * - Session hijacking prevention
+ * - Migração automática de cookies existentes
  * 
  * SSOT: Todas as configurações importadas de security.config.ts
  * 
@@ -193,8 +193,8 @@ export class HybridStorage implements SupportedStorage {
     // Log de configuração (apenas em desenvolvimento)
     if (import.meta.env.DEV) {
       devDebug('[HybridStorage] Initialized', {
-        cookies: this.cookiesAvailable ? '✅' : '❌',
-        localStorage: this.localStorageAvailable ? '✅' : '❌',
+        cookies: this.cookiesAvailable ? 'available' : 'unavailable',
+        localStorage: this.localStorageAvailable ? 'available' : 'unavailable',
         preferredStorage: this.cookiesAvailable ? 'cookies' : 'localStorage',
       });
     }

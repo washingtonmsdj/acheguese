@@ -1,5 +1,5 @@
 /**
- * 🎯 EVENT FILTERS COMPONENT (NÍVEL AAA)
+ *  EVENT FILTERS COMPONENT (NÍVEL AAA)
  *
  * Filtros otimizados para eventos
  *
@@ -17,15 +17,7 @@ import { Search } from "lucide-react";
 import { Input } from "@/shared/components/ui/input";
 import { cn } from "@/shared/utils/cn";
 import { motion } from "framer-motion";
-
-const CATEGORIAS = [
-  { id: "todos", name: "Todos", icone: "📋" },
-  { id: "cultural", name: "Cultural", icone: "🎭" },
-  { id: "esportivo", name: "Esportivo", icone: "⚽" },
-  { id: "social", name: "Social", icone: "🤝" },
-  { id: "religioso", name: "Religioso", icone: "🙏" },
-  { id: "educacional", name: "Educacional", icone: "📚" },
-];
+import { EVENT_LIST_CATEGORY_OPTIONS } from "@/shared/taxonomy/events";
 
 interface EventFiltersProps {
   category: string;
@@ -67,7 +59,7 @@ export const EventFilters = memo(function EventFilters({
 
       {/* Categories */}
       <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-        {CATEGORIAS.map((cat) => {
+        {EVENT_LIST_CATEGORY_OPTIONS.map((cat) => {
           const isActive = category === cat.id;
 
           return (
@@ -84,7 +76,7 @@ export const EventFilters = memo(function EventFilters({
               aria-pressed={isActive}
               aria-label={`Filtrar por ${cat.name}`}
             >
-              {cat.icone} {cat.name}
+              {cat.name}
             </motion.button>
           );
         })}

@@ -16,17 +16,19 @@ import {
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { BusinessLogo } from "@/shared/components/ui/business-logo";
-import { LAUNCH_URLS } from "@/config/territory";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
+import { getStateByCode } from "@/core/location/data/brazilianStates";
 import { useCityMetadata } from "@/core/city/hooks/useCityMetadata";
 import { useCityFeatured } from "@/core/city/hooks/useCityFeatured";
+import { useHomeCommunityHref } from "@/core/routing/hooks/useHomeCommunityHref";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 import { classifiedUrlService } from "@/modules/classifieds/services/ClassifiedUrlService";
 import { useClassifiedUrls } from "@/modules/classifieds/hooks/useClassifiedUrls";
 import { useTouristPoints } from "@/modules/guide/tourist-points/hooks/useTouristPoints";
+import { CATEGORY_ICONS } from "@/modules/guide/tourist-points/types";
 
-import { formatCategory, formatNumber, formatPrice } from "./CidadeLanding.constants";
+import { formatCategory, formatMetric, formatPrice } from "./CidadeLanding.constants";
 import {
   CityCommunityCtaSection,
   CityElectedOfficialsSection,
@@ -34,19 +36,11 @@ import {
   CityUsefulContactsSection,
 } from "./CidadeLanding.sections";
 
-// Animacao base
+// Animação base
 const fadeUp = {
   initial: { opacity: 0, y: 20 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true },
-};
-
-const BRAZILIAN_STATE_NAMES: Record<string, string> = {
-  ac: "Acre", al: "Alagoas", ap: "Amapa", am: "Amazonas", ba: "Bahia", ce: "Ceara",
-  df: "Distrito Federal", es: "Espirito Santo", go: "Goias", ma: "Maranhao", mt: "Mato Grosso",
-  ms: "Mato Grosso do Sul", mg: "Minas Gerais", pa: "Para", pb: "Paraiba", pr: "Parana",
-  pe: "Pernambuco", pi: "Piaui", rj: "Rio de Janeiro", rn: "Rio Grande do Norte", rs: "Rio Grande do Sul",
-  ro: "Rondonia", rr: "Roraima", sc: "Santa Catarina", sp: "Sao Paulo", se: "Sergipe", to: "Tocantins",
 };
 
 function toDisplayName(slug: string): string {
@@ -56,21 +50,18 @@ function toDisplayName(slug: string): string {
     .join(" ");
 }
 
-// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
-// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
 export default function CidadeLandingPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const homeCommunityHref = useHomeCommunityHref();
   const { state = "", city = "" } = useParams();
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Busca metadados da cidade (populacao, bairros, etc.)
+  // Busca metadados da cidade (população, bairros, etc.)
   const { data: cityMetadata, isLoading: metadataLoading } = useCityMetadata(state, city);
   const moduleTerritory = useModuleTerritoryFilter({ nearbyEnabled: false, includeDescendants: true });
 
-  // Busca conteudo em destaque (SSOT)
+  // Busca conteúdo em destaque (SSOT)
   const { businesses: businessesReal, services: servicesReal, classifieds: classifiedsReal, isLoading: featuredLoading } =
     useCityFeatured(state, city, moduleTerritory.territoryFilter);
   const businesses = businessesReal.slice(0, 6);
@@ -80,7 +71,7 @@ export default function CidadeLandingPage() {
   // URLs helper para classificados
   const classifiedUrls = useClassifiedUrls(null);
 
-  // Pontos turisticos via SSOT
+  // Pontos turísticos via SSOT
   const { data: touristPoints = [] } = useTouristPoints({ state, city, limit: 6 });
   const updatedAtLabel = cityMetadata?.updated_at
     ? new Date(cityMetadata.updated_at).toLocaleDateString("pt-BR")
@@ -90,19 +81,25 @@ export default function CidadeLandingPage() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background p-6 text-center">
         <div>
-          <h1 className="text-xl font-bold text-foreground">Cidade nao informada</h1>
+          <h1 className="text-xl font-bold text-foreground">Cidade não informada</h1>
           <p className="mt-2 text-sm text-muted-foreground">Use a rota com UF e cidade.</p>
         </div>
       </div>
     );
   }
 
-  const communityUrl = "/" + state + "/" + city;
+  const communityUrl = homeCommunityHref;
+  const cityModuleUrls = {
+    business: `/empresas/${state}/${city}`,
+    services: `/servicos/${state}/${city}`,
+    classifieds: `/classificados/${state}/${city}`,
+    jobs: `/vagas/${state}/${city}`,
+  };
   const cityDisplayName = toDisplayName(city);
-  const stateDisplayName = BRAZILIAN_STATE_NAMES[state.toLowerCase()] ?? state.toUpperCase();
+  const stateDisplayName = getStateByCode(state)?.name ?? state.toUpperCase();
   const cityDescription =
     cityMetadata?.description ||
-    `Plataforma territorial de ${cityDisplayName} para descobrir negocios, profissionais, classificados e oportunidades perto de voce.`;
+    `Plataforma territorial de ${cityDisplayName} para descobrir negócios, profissionais, classificados e oportunidades perto de você.`;
   const heroBadgeText = cityMetadata?.founded_year
     ? `${cityDisplayName} | fundada em ${cityMetadata.founded_year}`
     : `${cityDisplayName} | ${stateDisplayName}`;
@@ -116,25 +113,25 @@ export default function CidadeLandingPage() {
   };
 
   const heroModules = [
-    { icon: Store, label: "Empresas", value: "Negocios locais", path: LAUNCH_URLS.business },
-    { icon: Wrench, label: "Servicos", value: "Profissionais", path: LAUNCH_URLS.services },
-    { icon: Tag, label: "Classificados", value: "Compra e venda", path: LAUNCH_URLS.classifieds },
-    { icon: Briefcase, label: "Vagas", value: "Oportunidades", path: LAUNCH_URLS.jobs },
+    { icon: Store, label: "Empresas", value: "Negócios locais", path: cityModuleUrls.business },
+    { icon: Wrench, label: "Serviços", value: "Profissionais", path: cityModuleUrls.services },
+    { icon: Tag, label: "Classificados", value: "Compra e venda", path: cityModuleUrls.classifieds },
+    { icon: Briefcase, label: "Vagas", value: "Oportunidades", path: cityModuleUrls.jobs },
   ];
 
-  // Estatisticas dinamicas da cidade
+  // Estatísticas dinâmicas da cidade
   const CITY_STATS = [
-    { icon: MapPinned, value: formatNumber(cityMetadata?.districts_count ?? 163), label: "Bairros", color: "text-cyan-200", bg: "bg-cyan-400/15", border: "border-cyan-200/20" },
-    { icon: Users, value: formatNumber(cityMetadata?.population ?? 2900000), label: "Habitantes", color: "text-amber-200", bg: "bg-amber-400/15", border: "border-amber-200/20" },
-    { icon: Store, value: formatNumber(cityMetadata?.active_businesses ?? 45000), label: "Empresas ativas", color: "text-emerald-200", bg: "bg-emerald-400/15", border: "border-emerald-200/20" },
-    { icon: GraduationCap, value: formatNumber(cityMetadata?.schools_count ?? 1200), label: "Escolas", color: "text-sky-200", bg: "bg-sky-400/15", border: "border-sky-200/20" },
-    { icon: Wrench, value: formatNumber(cityMetadata?.professionals_count ?? 8000), label: "Profissionais", color: "text-fuchsia-200", bg: "bg-fuchsia-400/15", border: "border-fuchsia-200/20" },
+    { icon: MapPinned, value: formatMetric(cityMetadata?.districts_count), label: "Bairros", color: "text-cyan-200", bg: "bg-cyan-400/15", border: "border-cyan-200/20" },
+    { icon: Users, value: formatMetric(cityMetadata?.population), label: "Habitantes", color: "text-amber-200", bg: "bg-amber-400/15", border: "border-amber-200/20" },
+    { icon: Store, value: formatMetric(cityMetadata?.active_businesses), label: "Empresas ativas", color: "text-emerald-200", bg: "bg-emerald-400/15", border: "border-emerald-200/20" },
+    { icon: GraduationCap, value: formatMetric(cityMetadata?.schools_count), label: "Escolas", color: "text-sky-200", bg: "bg-sky-400/15", border: "border-sky-200/20" },
+    { icon: Wrench, value: formatMetric(cityMetadata?.professionals_count), label: "Profissionais", color: "text-fuchsia-200", bg: "bg-fuchsia-400/15", border: "border-fuchsia-200/20" },
   ];
 
   const featuredDistricts = cityMetadata?.featured_districts?.length
     ? cityMetadata.featured_districts.slice(0, 4).map((district) => ({
         nome: district.name,
-        resumo: district.description || "Sem descricao cadastrada",
+        resumo: district.description || "Sem descrição cadastrada",
         imagem: district.image_url || "",
       }))
     : [];
@@ -165,11 +162,11 @@ export default function CidadeLandingPage() {
   const cityHallInfo = cityMetadata?.city_hall_info ?? null;
   const prefeituraInfo = {
     nome: cityHallInfo?.name || `Prefeitura de ${cityDisplayName}`,
-    endereco: cityHallInfo?.address || "Endereco municipal nao informado",
-    telefone: cityHallInfo?.phone || "Nao informado",
-    email: cityHallInfo?.email || "Nao informado",
+    endereco: cityHallInfo?.address || "Endereço municipal não informado",
+    telefone: cityHallInfo?.phone || "Não informado",
+    email: cityHallInfo?.email || "Não informado",
     site: cityHallInfo?.website || "",
-    horario: cityHallInfo?.hours || "Nao informado",
+    horario: cityHallInfo?.hours || "Não informado",
     instagram: cityHallInfo?.social?.instagram || "",
     facebook: cityHallInfo?.social?.facebook || "",
     twitter: cityHallInfo?.social?.twitter || "",
@@ -261,7 +258,7 @@ export default function CidadeLandingPage() {
 
             <div className="mt-7 flex flex-wrap gap-3">
               <Button onClick={() => navigate(user ? communityUrl : "/login")} className="h-12 rounded-full bg-white text-slate-950 hover:bg-white/90">
-                {user ? "Abrir comunidade" : "Entrar na comunidade"}
+                {user ? "Ver meu bairro" : "Entrar na comunidade"}
                 <Users className="ml-2 h-4 w-4" />
               </Button>
               <Button variant="outline" onClick={() => scrollTo("#turismo")} className="h-12 rounded-full border-white/24 bg-white/8 text-white hover:bg-white/16 hover:text-white">
@@ -357,7 +354,7 @@ export default function CidadeLandingPage() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">Bairros em Destaque</h2>
-            <p className="text-sm text-muted-foreground mt-1">Panorama territorial para navegar {cityDisplayName} por regiao</p>
+            <p className="text-sm text-muted-foreground mt-1">Panorama territorial para navegar {cityDisplayName} por região</p>
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -382,22 +379,22 @@ export default function CidadeLandingPage() {
             ))
           ) : (
             <div className="col-span-full rounded-2xl border border-border bg-card p-6 text-center text-sm text-muted-foreground">
-              Ainda nao ha bairros em destaque cadastrados para {cityDisplayName}.
+              Ainda não há bairros em destaque cadastrados para {cityDisplayName}.
             </div>
           )}
         </div>
       </section>
 
-      {/* â”€â”€ EMPRESAS REAIS DA CIDADE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* Empresas reais da cidade */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8 md:py-10 w-full">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">Empresas em Destaque</h2>
-            <p className="text-sm text-muted-foreground mt-1">Negocios locais verificados</p>
+            <p className="text-sm text-muted-foreground mt-1">Negócios locais verificados</p>
           </div>
           <Button
             variant="outline"
-            onClick={() => navigate(LAUNCH_URLS.business)}
+            onClick={() => navigate(cityModuleUrls.business)}
             className="border-border text-muted-foreground hover:border-primary hover:text-primary font-medium text-sm rounded-xl hidden sm:flex"
           >
             Ver todas
@@ -469,16 +466,16 @@ export default function CidadeLandingPage() {
         )}
       </section>
 
-      {/* SERVICOS REAIS DA CIDADE */}
+      {/* SERVIÇOS REAIS DA CIDADE */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8 md:py-10 w-full">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">Profissionais em Destaque</h2>
-            <p className="text-sm text-muted-foreground mt-1">Servicos verificados na cidade</p>
+            <p className="text-sm text-muted-foreground mt-1">Serviços verificados na cidade</p>
           </div>
           <Button
             variant="outline"
-            onClick={() => navigate(LAUNCH_URLS.services)}
+            onClick={() => navigate(cityModuleUrls.services)}
             className="border-border text-muted-foreground hover:border-primary hover:text-primary font-medium text-sm rounded-xl hidden sm:flex"
           >
             Ver todos
@@ -496,7 +493,7 @@ export default function CidadeLandingPage() {
                 <motion.div
                   key={service.id}
                   {...fadeUp}
-                  onClick={() => navigate(LAUNCH_URLS.services)}
+                  onClick={() => navigate(cityModuleUrls.services)}
                   className="bg-card border rounded-2xl p-5 hover:shadow-xl transition-all cursor-pointer group border-border hover:border-violet-500/30"
                 >
                   <div className="flex items-start gap-4">
@@ -533,16 +530,16 @@ export default function CidadeLandingPage() {
         )}
       </section>
 
-      {/* â”€â”€ CLASSIFICADOS REAIS DA CIDADE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* Classificados reais da cidade */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8 md:py-10 w-full">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">Classificados Recentes</h2>
-            <p className="text-sm text-muted-foreground mt-1">Anuncios ativos na cidade</p>
+            <p className="text-sm text-muted-foreground mt-1">Anúncios ativos na cidade</p>
           </div>
           <Button
             variant="outline"
-            onClick={() => navigate(LAUNCH_URLS.classifieds)}
+            onClick={() => navigate(cityModuleUrls.classifieds)}
             className="border-border text-muted-foreground hover:border-primary hover:text-primary font-medium text-sm rounded-xl hidden sm:flex"
           >
             Ver todos
@@ -612,7 +609,7 @@ export default function CidadeLandingPage() {
         )}
       </section>
 
-      {/* â”€â”€ D. VAGAS DE EMPREGO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* Vagas de emprego */}
       <section id="vagas" className="w-full bg-gradient-to-br from-primary/8 via-card to-accent/8 border-y border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 md:py-10 text-center">
           <div className="flex items-center justify-center gap-2 mb-2">
@@ -624,7 +621,7 @@ export default function CidadeLandingPage() {
             <Button
               variant="outline"
               className="border-primary/30 text-primary hover:bg-primary/10 font-semibold rounded-xl h-11 px-6"
-              onClick={() => navigate(LAUNCH_URLS.jobs)}
+              onClick={() => navigate(cityModuleUrls.jobs)}
             >
               Ver vagas da cidade <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
@@ -632,13 +629,13 @@ export default function CidadeLandingPage() {
         </div>
       </section>
 
-      {/* E. PONTOS TURISTICOS */}
+      {/* E. PONTOS TURÍSTICOS */}
       <section id="turismo" className="max-w-7xl mx-auto px-4 sm:px-6 py-12 md:py-16 w-full">
         <div className="flex items-center justify-between mb-8">
           <div className="text-center flex-1">
             <div className="flex items-center justify-center gap-2 mb-2">
               <Camera className="h-5 w-5 text-warning" />
-              <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">Pontos Turisticos</h2>
+              <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">Pontos Turísticos</h2>
             </div>
             <p className="text-sm text-muted-foreground">Descubra as belezas de {cityDisplayName}</p>
           </div>
@@ -671,7 +668,10 @@ export default function CidadeLandingPage() {
                   </div>
                 )}
                 <div className="flex items-start gap-3">
-                  <span className="text-3xl">{ponto.icon_emoji}</span>
+                  {(() => {
+                    const TouristIcon = CATEGORY_ICONS[ponto.category] ?? MapPin;
+                    return <TouristIcon className="h-7 w-7 shrink-0 text-warning" aria-hidden="true" />;
+                  })()}
                   <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="text-sm font-bold text-foreground">{ponto.name}</h3>
@@ -686,7 +686,7 @@ export default function CidadeLandingPage() {
             </motion.div>
           )) : (
             <div className="col-span-full rounded-2xl border border-border bg-card p-6 text-center text-sm text-muted-foreground">
-              Ainda nao ha pontos turisticos cadastrados para {cityDisplayName}.
+              Ainda não há pontos turísticos cadastrados para {cityDisplayName}.
             </div>
           )}
         </div>
@@ -714,7 +714,7 @@ export default function CidadeLandingPage() {
         isAuthenticated={Boolean(user)}
         cityDisplayName={cityDisplayName}
         onOpenCommunity={() => navigate(user ? communityUrl : "/login")}
-        onOpenBusiness={() => navigate(LAUNCH_URLS.business)}
+        onOpenBusiness={() => navigate(cityModuleUrls.business)}
       />
       <CityHallFooter
         prefeituraInfo={prefeituraInfo}
@@ -722,9 +722,9 @@ export default function CidadeLandingPage() {
         stateCode={state.toUpperCase()}
         onNavigate={navigate}
         communityUrl={communityUrl}
-        businessPath={LAUNCH_URLS.business}
-        servicesPath={LAUNCH_URLS.services}
-        classifiedsPath={LAUNCH_URLS.classifieds}
+        businessPath={cityModuleUrls.business}
+        servicesPath={cityModuleUrls.services}
+        classifiedsPath={cityModuleUrls.classifieds}
       />
 
     </div>

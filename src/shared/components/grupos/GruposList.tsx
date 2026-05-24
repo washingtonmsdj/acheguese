@@ -26,6 +26,7 @@ interface GruposListProps {
   groups: GroupLike[];
   isLoading: boolean;
   tab: "todos" | "meus";
+  getGroupHref: (groupId: string) => string;
   onJoin: (e: React.MouseEvent, groupId: string) => void;
   onTabChange: (tab: "todos" | "meus") => void;
 }
@@ -34,6 +35,7 @@ export function GruposList({
   groups,
   isLoading,
   tab,
+  getGroupHref,
   onJoin,
   onTabChange,
 }: GruposListProps) {
@@ -83,7 +85,7 @@ export function GruposList({
           group={group}
           variant="grid"
           index={index}
-          onClick={() => navigate(`/comunidade/grupos/${group.id}`)}
+          onClick={() => navigate(getGroupHref(group.id))}
           onJoin={onJoin}
         />
       ))}

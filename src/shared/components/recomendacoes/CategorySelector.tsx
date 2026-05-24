@@ -1,63 +1,12 @@
-import React from "react";
+﻿import React from "react";
 import { Label } from "@/shared/components/ui/label";
 import { cn } from "@/shared/utils/cn";
-
-interface Category {
-  id: string;
-  label: string;
-  icon: string;
-  hint: string;
-}
+import { RECOMMENDATION_CATEGORY_OPTIONS } from "@/shared/taxonomy/recommendations";
 
 interface CategorySelectorProps {
   selectedCategory: string;
   onCategoryChange: (categoryId: string) => void;
 }
-
-const CATEGORIAS: Category[] = [
-  {
-    id: "services",
-    label: "Serviços",
-    icon: "🔧",
-    hint: "Eletricista, encanador, pintor...",
-  },
-  {
-    id: "restaurantes",
-    label: "Restaurantes",
-    icon: "🍽️",
-    hint: "Pizzaria, lanchonete, padaria...",
-  },
-  {
-    id: "manutencao",
-    label: "Manutenção",
-    icon: "🏠",
-    hint: "Reformas, consertos, instalações...",
-  },
-  {
-    id: "saude",
-    label: "Saúde",
-    icon: "🏥",
-    hint: "Médico, dentista, farmácia...",
-  },
-  {
-    id: "pets",
-    label: "Pets",
-    icon: "🐾",
-    hint: "Veterinário, pet shop, banho...",
-  },
-  {
-    id: "compras",
-    label: "Compras",
-    icon: "🛒",
-    hint: "Lojas, mercados, materiais...",
-  },
-  {
-    id: "outros",
-    label: "Outros",
-    icon: "📌",
-    hint: "Qualquer outra recomendação",
-  },
-];
 
 export function CategorySelector({
   selectedCategory,
@@ -67,7 +16,7 @@ export function CategorySelector({
     <div className="space-y-2">
       <Label>Categoria *</Label>
       <div className="grid grid-cols-2 gap-2">
-        {CATEGORIAS.map((category) => (
+        {RECOMMENDATION_CATEGORY_OPTIONS.map((category) => (
           <button
             key={category.id}
             type="button"
@@ -81,9 +30,6 @@ export function CategorySelector({
             aria-pressed={selectedCategory === category.id}
             aria-label={`Selecionar categoria ${category.label}`}
           >
-            <span className="text-xl" role="img" aria-label={category.label}>
-              {category.icon}
-            </span>
             <div>
               <p className="text-xs font-medium">{category.label}</p>
               <p className="text-[10px] text-muted-foreground">

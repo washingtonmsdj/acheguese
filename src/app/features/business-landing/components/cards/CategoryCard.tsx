@@ -7,18 +7,8 @@
 import { motion } from "framer-motion";
 import type { CategoryCardProps } from "../../sections/types";
 
-const EMOJI_BY_CATEGORY_SLUG: Record<string, string> = {
-  restaurantes: "🍽️",
-  mercados: "🛒",
-  saude: "💙",
-  educacao: "📚",
-  servicos: "🔧",
-  outros: "🏪",
-};
-
 export function CategoryCard({ category, onClick, index }: CategoryCardProps) {
   const Icon = category.icon;
-  const emoji = EMOJI_BY_CATEGORY_SLUG[category.slug];
   
   return (
     <motion.button
@@ -34,17 +24,14 @@ export function CategoryCard({ category, onClick, index }: CategoryCardProps) {
         whileHover={{ rotate: [0, -10, 10, 0] }}
         transition={{ duration: 0.4 }}
       >
-        {emoji ? (
-          <span className={category.iconColor} style={{ fontSize: "1.25rem", lineHeight: 1 }}>
-            {emoji}
-          </span>
-        ) : (
-          <Icon className={`h-5 w-5 ${category.iconColor}`} />
-        )}
+        <Icon className={`h-5 w-5 ${category.iconColor}`} />
       </motion.div>
       <span className="whitespace-nowrap text-center text-[10px] font-semibold leading-tight text-foreground">
         {category.label}
       </span>
+      {category.count ? (
+        <span className="text-[10px] leading-none text-muted-foreground">{category.count}</span>
+      ) : null}
     </motion.button>
   );
 }

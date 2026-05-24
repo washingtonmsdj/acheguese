@@ -1,5 +1,5 @@
 /**
- * LandingService - Fachada SSOT v2.0
+ * LandingService - Exports canônicos SSOT.
  *
  * Ponto unico de entrada para landing pages nacionais e estaduais.
  * Exporta queries e types organizados.
@@ -30,12 +30,3 @@ export type {
   PlatformStats,
   VerifiedBusiness,
 } from "./types";
-
-import * as landingQueries from "./landing.queries";
-
-export const LandingFacade = {
-  queries: landingQueries,
-} as const;
-
-export const LandingService = LandingFacade;
-export const landingService = LandingFacade;

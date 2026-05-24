@@ -6,21 +6,18 @@ interface OnboardingFooterProps {
   canConfirm: boolean;
 }
 
-export function OnboardingFooter({
-  onConfirm,
-  canConfirm,
-}: OnboardingFooterProps) {
+export function OnboardingFooter({ onConfirm, canConfirm }: OnboardingFooterProps) {
   return (
     <div className="px-4 py-4">
       <Button
         onClick={onConfirm}
         disabled={!canConfirm}
-        className="w-full h-12 text-base font-semibold rounded-xl"
+        className="h-12 w-full rounded-xl text-base font-semibold"
       >
-        Entrar no Complexo
+        Continuar
       </Button>
-      <p className="text-[10px] text-center text-muted-foreground mt-2">
-        Você verá conteúdo de todos os 4 neighborhoods do complexo
+      <p className="mt-2 text-center text-[10px] text-muted-foreground">
+        A navegação será ajustada ao território selecionado quando houver dados disponíveis.
       </p>
     </div>
   );

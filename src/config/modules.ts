@@ -289,62 +289,6 @@ export const ACTIVE_MODULES = MODULES_ARRAY.filter(m => m.isActive);
  */
 export const TERRITORIAL_MODULES = MODULES_ARRAY.filter(m => m.isTerritorial);
 
-function getModuleById(moduleId: string): ModuleConfig | null {
-  switch (moduleId) {
-    case 'community':
-    case 'community-feed':
-      return MODULES.communityFeed;
-    case 'community-alerts':
-      return MODULES.communityAlerts;
-    case 'community-issues':
-      return MODULES.communityIssues;
-    case 'community-groups':
-      return MODULES.communityGroups;
-    case 'community-events':
-    case 'events':
-      return MODULES.events;
-    case 'community-recommendations':
-      return MODULES.communityRecommendations;
-    case 'community-lost-found':
-      return MODULES.communityLostFound;
-    case 'business':
-      return MODULES.business;
-    case 'services':
-      return MODULES.services;
-    case 'classifieds':
-      return MODULES.classifieds;
-    case 'jobs':
-      return MODULES.jobs;
-    case 'gastronomy':
-      return MODULES.gastronomy;
-    case 'touristPoints':
-      return MODULES.touristPoints;
-    case 'mobility':
-      return MODULES.mobility;
-    case 'education':
-      return MODULES.education;
-    case 'map':
-      return MODULES.map;
-    case 'search':
-      return MODULES.search;
-    case 'ranking':
-      return MODULES.ranking;
-    default:
-      return null;
-  }
-}
-
-function resolveLegacyAlias(firstSegment: string): string | null {
-  switch (firstSegment) {
-    case 'business':
-      return 'business';
-    case 'pontos-turisticos':
-      return 'guide';
-    default:
-      return null;
-  }
-}
-
 /**
  * Helper: Detectar módulo pela URL
  * 
@@ -358,13 +302,7 @@ export function detectModuleFromPath(pathname: string): ModuleConfig | null {
   
   const firstSegment = segments[0];
   
-  // Busca por slug exato
-  const module = MODULES_ARRAY.find(m => m.slug === firstSegment);
-  if (module) return module;
-  
-  // Aliases legados
-  const moduleId = resolveLegacyAlias(firstSegment);
-  return moduleId ? getModuleById(moduleId) : null;
+  return MODULES_ARRAY.find(m => m.slug === firstSegment) ?? null;
 }
 
 /**

@@ -62,7 +62,7 @@ export default function CheckoutCancelPage() {
           <div className="flex flex-col sm:flex-row gap-3 pt-4">
             <Button
               className="flex-1"
-              onClick={() => navigate('/pricing')}
+              onClick={() => navigate('/planos')}
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Voltar para Planos

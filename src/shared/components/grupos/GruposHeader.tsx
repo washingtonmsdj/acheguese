@@ -5,9 +5,10 @@ import { Button } from "@/shared/components/ui/button";
 
 interface GruposHeaderProps {
   onCreateClick: () => void;
+  backHref: string;
 }
 
-export function GruposHeader({ onCreateClick }: GruposHeaderProps) {
+export function GruposHeader({ onCreateClick, backHref }: GruposHeaderProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const currentParams = new URLSearchParams(location.search);
@@ -22,7 +23,7 @@ export function GruposHeader({ onCreateClick }: GruposHeaderProps) {
       navigate(`${location.pathname}?${params.toString()}`);
       return;
     }
-    navigate("/comunidade");
+    navigate(backHref);
   };
 
   return (

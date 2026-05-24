@@ -1,11 +1,11 @@
 /**
- * Landing Types - SSOT v2.0
+ * Landing Types - SSOT
  * 
- * Tipos compartilhados para landing pages nacionais e estaduais
+ * Tipos compartilhados para landing pages nacionais e estaduais.
  */
 
 /**
- * Dados de país
+ * Dados de pais
  */
 export interface CountryData {
   id: string;

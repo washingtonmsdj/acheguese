@@ -16,7 +16,7 @@
  */
 
 import { memo, useRef, useEffect } from "react";
-import { Loader2 } from "lucide-react";
+import { Calendar, Loader2 } from "lucide-react";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { EventCardEnhanced } from "./EventCardEnhanced";
 
@@ -87,7 +87,7 @@ export const EventGrid = memo(function EventGrid({
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-          <span className="text-3xl">📅</span>
+          <Calendar className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
         </div>
         <p className="text-sm font-semibold text-foreground">
           Nenhum evento encontrado

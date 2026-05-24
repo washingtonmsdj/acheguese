@@ -14,14 +14,14 @@ export function getBusinessUrl(
   business: Business,
   fallbackUrl: string
 ): string {
-  if (business.slug) {
+  if (business.slug && business.geographic_path) {
     return BusinessUrlService.getCanonicalUrl({
       id: business.id,
       slug: business.slug,
       is_premium: business.is_premium || false,
-      geographic_path: business.geographic_path || null,
+      geographic_path: business.geographic_path,
     });
   }
-  // Fallback para mock sem slug - usa URL dinâmica
-  return `${fallbackUrl}/${business.id}`;
+
+  return fallbackUrl;
 }

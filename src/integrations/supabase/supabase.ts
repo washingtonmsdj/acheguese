@@ -18,25 +18,26 @@ import { AUTH_STORAGE_KEY } from "@/config/security.config";
 const viteEnv = typeof import.meta !== "undefined" ? import.meta.env : undefined;
 const nodeEnv = typeof process !== "undefined" ? process.env : undefined;
 
-// Validar variaveis de ambiente
-const SUPABASE_URL =
-  viteEnv?.VITE_SUPABASE_URL || nodeEnv?.VITE_SUPABASE_URL || "https://placeholder.supabase.co";
-const SUPABASE_KEY =
-  viteEnv?.VITE_SUPABASE_PUBLISHABLE_KEY || nodeEnv?.VITE_SUPABASE_PUBLISHABLE_KEY || "placeholder-key";
+function requireRuntimeEnv(value: string | undefined, name: string): string {
+  if (typeof value === "string" && value.trim().length > 0) {
+    return value.trim();
+  }
+
+  throw new Error(`[Supabase] Variavel de ambiente obrigatoria ausente: ${name}`);
+}
+
+// Validar variaveis de ambiente sem fallback fake.
+const SUPABASE_URL = requireRuntimeEnv(
+  viteEnv?.VITE_SUPABASE_URL || nodeEnv?.VITE_SUPABASE_URL,
+  "VITE_SUPABASE_URL",
+);
+const SUPABASE_KEY = requireRuntimeEnv(
+  viteEnv?.VITE_SUPABASE_PUBLISHABLE_KEY || nodeEnv?.VITE_SUPABASE_PUBLISHABLE_KEY,
+  "VITE_SUPABASE_PUBLISHABLE_KEY",
+);
 const DEBUG_BOOT =
   (viteEnv?.DEV ?? nodeEnv?.NODE_ENV !== "production") &&
   (viteEnv?.VITE_DEBUG_BOOT === "true" || nodeEnv?.VITE_DEBUG_BOOT === "true");
-
-if (
-  SUPABASE_URL === "https://placeholder.supabase.co" ||
-  SUPABASE_KEY === "placeholder-key"
-) {
-  // Keep bootstrap logging dependency-free to avoid cyclic imports with logger.
-  console.warn(
-    "[Supabase] Variaveis de ambiente nao configuradas. " +
-      "Usando placeholders; funcionalidades de backend nao estarao disponiveis.",
-  );
-}
 
 // Limpa tokens expirados da URL
 if (typeof window !== "undefined") {

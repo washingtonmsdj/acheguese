@@ -17,6 +17,8 @@ import { MapPin, Navigation, Loader2, Map as MapIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
 import { useRobustGeolocation } from '@/shared/hooks';
+import { buildGoogleMapsDirectionsUrl } from '@/shared/utils/contactLinks';
+import { openSafeExternalUrl } from '@/shared/utils/safeRedirect';
 
 interface Business {
   name: string;
@@ -198,13 +200,22 @@ export default function StandaloneMap({ business }: StandaloneMapProps) {
       svg.appendChild(circle);
       el.appendChild(svg);
 
+      const popupContent = document.createElement('div');
+      const title = document.createElement('p');
+      title.style.cssText = 'font-size:13px;font-weight:600';
+      title.textContent = business.name;
+      popupContent.appendChild(title);
+
+      if (addressText) {
+        const address = document.createElement('p');
+        address.style.cssText = 'font-size:11px;color:#6b7280';
+        address.textContent = addressText;
+        popupContent.appendChild(address);
+      }
+
       businessMarkerRef.current = new maplibregl.Marker({ element: el })
         .setLngLat([businessPos[1], businessPos[0]])
-        .setPopup(
-          new maplibregl.Popup({ closeButton: false }).setHTML(
-            `<p style="font-size:13px;font-weight:600">${business.name}</p>${addressText ? `<p style="font-size:11px;color:#6b7280">${addressText}</p>` : ''}`
-          )
-        )
+        .setPopup(new maplibregl.Popup({ closeButton: false }).setDOMContent(popupContent))
         .addTo(map);
 
       // Adicionar source e layer para rota
@@ -278,12 +289,9 @@ export default function StandaloneMap({ business }: StandaloneMapProps) {
 
   const openExternalRoute = useCallback(() => {
     if (!businessPos) return;
-    const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const url = isIos
-      ? `maps://maps.apple.com/?daddr=${businessPos[0]},${businessPos[1]}&q=${encodeURIComponent(business.name)}`
-      : `https://www.google.com/maps/dir/?api=1&destination=${businessPos[0]},${businessPos[1]}`;
-    window.open(url, '_blank');
-  }, [businessPos, business.name]);
+    const url = buildGoogleMapsDirectionsUrl(businessPos[0], businessPos[1]);
+    openSafeExternalUrl(url, { context: "standalone-map-route" });
+  }, [businessPos]);
 
   if (!businessPos) {
     return (
@@ -294,7 +302,6 @@ export default function StandaloneMap({ business }: StandaloneMapProps) {
             <CardContent className="space-y-1">
               {addressText && <p className="font-medium">{addressText}</p>}
               {locationName && <p className="text-muted-foreground">{locationName}</p>}
-              <p className="text-muted-foreground">Bahia - BA</p>
               {postalCode && <p className="text-muted-foreground">CEP: {postalCode}</p>}
             </CardContent>
           </Card>
@@ -318,7 +325,6 @@ export default function StandaloneMap({ business }: StandaloneMapProps) {
               <div className="space-y-1">
                 {addressText && <p className="font-medium">{addressText}</p>}
                 {locationName && <p className="text-muted-foreground">{locationName}</p>}
-                <p className="text-muted-foreground">Bahia - BA</p>
                 {postalCode && <p className="text-muted-foreground">CEP: {postalCode}</p>}
               </div>
               {distance && (

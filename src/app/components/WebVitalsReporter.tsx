@@ -1,5 +1,5 @@
 /**
- * 📊 WEB VITALS REPORTER (NÍVEL AAA)
+ * WEB VITALS REPORTER (NÍVEL AAA)
  *
  * Monitora e reporta Core Web Vitals
  * Implementado sem hooks para evitar problemas de bundling
@@ -19,7 +19,7 @@ function initWebVitals() {
     .then(({ onCLS, onINP, onFCP, onLCP, onTTFB }) => {
       const reportMetric = (metric: Metric) => {
         if (import.meta.env.DEV && import.meta.env.VITE_DEBUG_WEB_VITALS === "true") {
-          logger.info(`📊 ${metric.name}: ${metric.value}`, {
+          logger.info(`WebVital ${metric.name}: ${metric.value}`, {
             action: metric.name,
           });
         }

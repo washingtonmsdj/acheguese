@@ -48,14 +48,14 @@ export function NotificationCenter() {
           <div>
             <CardTitle className="flex items-center gap-2">
               <Bell className="h-5 w-5" />
-              Notificacoes
+              Notificações
               {hasUnread && (
                 <span className="ml-2 rounded-full bg-primary px-2 py-0.5 text-xs text-primary-foreground">
                   {unreadCount}
                 </span>
               )}
             </CardTitle>
-            <CardDescription>Suas notificacoes e atualizacoes</CardDescription>
+            <CardDescription>Suas notificações e atualizações</CardDescription>
           </div>
           {hasUnread && (
             <Button
@@ -81,7 +81,7 @@ export function NotificationCenter() {
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="all">Todas</TabsTrigger>
             <TabsTrigger value="unread">
-              Nao lidas {hasUnread && `(${unreadCount})`}
+              Não lidas {hasUnread && `(${unreadCount})`}
             </TabsTrigger>
           </TabsList>
 
@@ -91,8 +91,8 @@ export function NotificationCenter() {
                 <Bell className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
                 <p className="text-muted-foreground">
                   {filter === "unread"
-                    ? "Nenhuma notificacao nao lida"
-                    : "Nenhuma notificacao"}
+                    ? "Nenhuma notificação não lida"
+                    : "Nenhuma notificação"}
                 </p>
               </div>
             ) : (

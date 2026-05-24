@@ -1,7 +1,7 @@
 import React from "react";
-import { Home, Check } from "lucide-react";
-import { cn } from "@/shared/utils/cn";
+import { Check, Home } from "lucide-react";
 import { motion } from "framer-motion";
+import { cn } from "@/shared/utils/cn";
 
 interface NeighborhoodSelectorProps {
   neighborhoods: string[];
@@ -15,10 +15,10 @@ export function NeighborhoodSelector({
   onNeighborhoodSelect,
 }: NeighborhoodSelectorProps) {
   return (
-    <div className="px-4 flex-1">
-      <p className="text-sm font-medium mb-3 flex items-center gap-1.5">
+    <div className="flex-1 px-4">
+      <p className="mb-3 flex items-center gap-1.5 text-sm font-medium">
         <Home className="h-4 w-4 text-muted-foreground" />
-        Em qual neighborhood você mora?
+        Em qual bairro você mora?
       </p>
 
       <motion.div
@@ -34,10 +34,10 @@ export function NeighborhoodSelector({
               key={neighborhood}
               onClick={() => onNeighborhoodSelect(neighborhood)}
               className={cn(
-                "w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all text-left",
+                "flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left transition-all",
                 isSelected
-                  ? "bg-primary/10 border-primary ring-1 ring-primary/30"
-                  : "bg-card hover:border-primary/40 border-border",
+                  ? "border-primary bg-primary/10 ring-1 ring-primary/30"
+                  : "border-border bg-card hover:border-primary/40",
               )}
             >
               <div className="flex-1">
@@ -46,19 +46,21 @@ export function NeighborhoodSelector({
 
               <div
                 className={cn(
-                  "h-5 w-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ml-3 transition-all",
-                  isSelected
-                    ? "bg-primary border-primary"
-                    : "border-muted-foreground/30",
+                  "ml-3 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 transition-all",
+                  isSelected ? "border-primary bg-primary" : "border-muted-foreground/30",
                 )}
               >
-                {isSelected && (
-                  <Check className="h-3 w-3 text-primary-foreground" />
-                )}
+                {isSelected ? <Check className="h-3 w-3 text-primary-foreground" /> : null}
               </div>
             </button>
           );
         })}
+
+        {neighborhoods.length === 0 ? (
+          <div className="rounded-xl border border-dashed bg-card p-4 text-sm text-muted-foreground">
+            Nenhum bairro ativo encontrado para seleção. Você pode continuar pela visão municipal.
+          </div>
+        ) : null}
       </motion.div>
     </div>
   );

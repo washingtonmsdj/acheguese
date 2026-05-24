@@ -8,12 +8,10 @@
  */
 
 import { Routes, Route, Navigate, Outlet } from "react-router-dom";
-import { LAUNCH_TERRITORIES } from "@/config/territory";
 
 // Territorial Components (eager - critical for routing)
 import { TerritorialLayout } from "@/core/routing/components/TerritorialLayout";
 import { CommunityTerritorialShell } from "@/core/routing/components/CommunityTerritorialShell";
-import { CommunityCityEntryPage } from "@/core/routing/components/CommunityCityEntryPage";
 import { CommunityInterestPage } from "@/core/routing/components/CommunityInterestPage";
 import { TerritorialIndexPage } from "@/core/routing/components/TerritorialIndexPage";
 import { StateLandingPage } from "@/core/routing/components/StateLandingPage";
@@ -40,9 +38,6 @@ import {
 import * as P from "./lazyImports";
 
 export function AppRoutes() {
-  const launchComplexoPath =
-    LAUNCH_TERRITORIES.find((territory) => territory.slug === "complexo-do-nordeste-de-amaralina")?.path ??
-    "/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina";
   return (
     <Routes>
       {/* QR Code Resolver - DEVE VIR ANTES DE OUTRAS ROTAS */}
@@ -57,13 +52,6 @@ export function AppRoutes() {
       <Route path="/eventos/calendario" element={<P.EventsErrorBoundary><P.EventsCalendarPage /></P.EventsErrorBoundary>} />
       <Route path="/eventos/mapa" element={<P.EventsErrorBoundary><P.EventsMapPage /></P.EventsErrorBoundary>} />
 
-      {/* Namespace legado removido da area publica (sem redirect) */}
-      <Route path="/eventos/organizador" element={<P.NotFound />} />
-      <Route path="/eventos/organizador/novo" element={<P.NotFound />} />
-      <Route path="/eventos/organizador/editar/:eventId" element={<P.NotFound />} />
-
-      {/* EVENTS - Dashboard do Organizador */}
-
       {/* Event Detail - Deve vir depois das rotas especificas */}
       <Route path="/eventos/:eventId" element={<P.EventsErrorBoundary><P.EventDetailPage /></P.EventsErrorBoundary>} />
 
@@ -71,14 +59,11 @@ export function AppRoutes() {
       <Route path="/login" element={<P.LoginPage />} />
       <Route path="/cadastro" element={<P.CadastroPage />} />
       <Route path="/cadastro/confirmacao" element={<P.CadastroConfirmacaoPage />} />
-      <Route path="/login-simple" element={<P.SimpleLoginPage />} />
       <Route path="/sobre" element={<P.AboutPage />} />
       <Route path="/contato" element={<P.ContactPage />} />
       <Route path="/onboarding" element={<P.OnboardingPage />} />
       <Route path="/reset-password" element={<P.ResetPasswordPage />} />
-      <Route path="/complexo" element={<Navigate to={launchComplexoPath} replace />} />
         <Route path="/empresas/:id/catalogo" element={<P.EmpresaCatalogoPublicoPage />} />
-        <Route path="/servicos" element={<P.ServicosLandingPage />} />
         <Route path="/p/:slug/*" element={<P.PremiumBusinessSiteRoute />}>
         <Route index element={<P.PremiumBusinessHomePage />} />
         <Route path="cardapio" element={<P.PremiumBusinessMenuPage />} />
@@ -154,7 +139,7 @@ export function AppRoutes() {
         <Route path="/" element={<P.MainLandingPage />} />
 
         {/* Rotas de Billing e Assinaturas */}
-        <Route path="/pricing" element={<P.PricingPage />} />
+        <Route path="/planos" element={<P.PricingPage />} />
         <Route path="/checkout/success" element={<P.CheckoutSuccessPage />} />
         <Route path="/checkout/cancel" element={<P.CheckoutCancelPage />} />
         <Route path="/settings/subscription" element={<P.SubscriptionManagementPage />} />
@@ -168,29 +153,22 @@ export function AppRoutes() {
         {/* Rotas publicas de landing pages */}
         <Route path="/empresas-landing" element={<P.EmpresasLandingPage />} />
         <Route path="/servicos-landing" element={<P.ServicosLandingPage />} />
-        <Route path="/classificado/:id" element={<P.ClassificadoDetailLandingPage />} />
-        <Route path="/classificado/:id/chat" element={<P.ClassificadoChatLandingPage />} />
         <Route path="/vagas/detalhe/:id" element={<P.VagaDetailPage />} />
 
         {/* Rotas globais */}
         <Route path="/u/:username" element={<P.ProfilePublicRoute />} />
         <Route path="/c/:publicId" element={<P.ClassifiedShortRoute />} />
         <Route path="/vagas/publicar" element={<P.PublicarVagaPage />} />
-        <Route path="/oportunidades" element={<Navigate to="/comunidade?tab=oportunidades" replace />} />
+        <Route path="/oportunidades" element={<P.WorkOpportunitiesPage />} />
         <Route path="/oportunidades/:id" element={<P.WorkOpportunityDetailPage />} />
-        <Route path="/services/cadastrar" element={<P.CadastrarServicoPage />} />
-        <Route path="/services/:id/editar" element={<P.EditarServicoPage />} />
-        <Route path="/services/:id" element={<P.ProfissionalDetailPage />} />
+        <Route path="/servicos/cadastrar" element={<P.CadastrarServicoPage />} />
+        <Route path="/servicos/:id/editar" element={<P.EditarServicoPage />} />
+        <Route path="/servicos/:id" element={<P.ProfissionalDetailPage />} />
         <Route path="/servicos/orcamentos/:leadId" element={<P.ProfessionalLeadTrackingPage />} />
         <Route path="/classificados/novo" element={<P.NovoClassificadoPage />} />
         <Route path="/classificados/editar/:id" element={<P.EditarClassificadoPage />} />
         <Route path="/classificados/vendedor/:sellerId" element={<P.VendedorPerfilPage />} />
         <Route path="/classificados/:id" element={<P.ClassificadoDetailPage />} />
-
-        {/* Dev/Admin Routes */}
-        {import.meta.env.DEV && (
-          <Route path="/dev/mobility/motoboy-validation" element={<P.MotoboyValidationPage />} />
-        )}
 
         <Route path="/cupons" element={<P.CuponsPage />} />
         <Route path="/cupons/:id" element={<P.CupomDetailPage />} />
@@ -208,9 +186,6 @@ export function AppRoutes() {
         <Route path="/empresas/cadastrar" element={<P.EmpresasCadastroLandingPage />} />
         <Route path="/edit-business/:profileId" element={<P.EditarEmpresaPage />} />
 
-        <Route path="/admin/dashboard" element={<P.AdminDashboardPage />} />
-        <Route path="/admin/businesses" element={<P.AdminBusinessesPage />} />
-        <Route path="/admin/plans" element={<P.AdminPlansPage />} />
         <Route path="/mensagens" element={<P.MensagensPage />} />
         <Route path="/chat/:conversationId" element={<P.ChatPage />} />
         <Route path="/mapa" element={<P.MapaPage />} />
@@ -224,10 +199,7 @@ export function AppRoutes() {
         <Route path="/achados-perdidos/:id" element={<P.AchadoPerdidoDetailPage />} />
         <Route path="/ranking" element={<P.RankingPage />} />
         <Route path="/track/:token" element={<P.TrackRidePage />} />
-        <Route path="/comunidade/grupos" element={<Navigate to="/comunidade?tab=grupos" replace />} />
-        <Route path="/comunidade/grupos/:id" element={<P.GrupoDetailPage />} />
         <Route path="/novo-post" element={<P.NovoPostPage />} />
-        <Route path="/exemplo-post" element={<P.ExamplePostPage />} />
         <Route path="/busca" element={<P.BuscaPage />} />
         <Route path="/buscar" element={<P.BuscarPage />} />
         <Route path="/buscar/:state/:city" element={<P.BuscarPage />} />
@@ -242,11 +214,9 @@ export function AppRoutes() {
         <Route path="/dpo" element={<P.DPOContactPage />} />
         {/* Rotas globais sem territorio */}
         <Route path="/educacao" element={<P.EducationExplorerPage />} />
-        <Route path="/comunidade" element={<P.ComunidadePage />} />
-        <Route path="/comunidade/problemas" element={<P.ProblemasPage />} />
         <Route path="/comunicacao" element={<P.CommunicationLandingPage />} />
         <Route path="/comunicacao/solicitar" element={<P.CommunicationRequestPage />} />
-        <Route path="/services" element={<P.ServicosLandingPage />} />
+        <Route path="/servicos" element={<P.ServicosLandingPage />} />
         <Route path="/classificados" element={<P.ClassificadosPage />} />
         <Route path="/mobilidade/passageiro" element={<P.PassageiroPage />} />
         <Route path="/mobilidade/buscando/:rideId" element={<P.BuscandoMotoristaPage />} />
@@ -298,7 +268,6 @@ export function AppRoutes() {
             element={
               <TerritorialIndexPage
                 CityLandingComponent={P.CidadeLandingPage}
-                ComplexoLandingComponent={P.ComplexoNordesteLandingPage}
               />
             }
           />
@@ -309,7 +278,6 @@ export function AppRoutes() {
             element={
               <TerritorialIndexPage
                 CityLandingComponent={P.CidadeLandingPage}
-                ComplexoLandingComponent={P.ComplexoNordesteLandingPage}
               />
             }
           />
@@ -483,17 +451,17 @@ export function AppRoutes() {
         <Route path="/comunidade/:state/:city/:territorySlug/grupos" element={<CommunityTerritorialShell />}>
           <Route index element={<TerritorialCommunityPage />} />
         </Route>
+        <Route path="/comunidade/:state/:city/:territorySlug/grupos/:id" element={<CommunityTerritorialShell />}>
+          <Route index element={<P.GrupoDetailPage />} />
+        </Route>
         <Route path="/comunidade/:state/:city/:territorySlug/achados-e-perdidos" element={<CommunityTerritorialShell />}>
           <Route index element={<P.AchadosPerdidosPage />} />
         </Route>
         <Route path="/comunidade/:state/:city/:territorySlug" element={<CommunityTerritorialShell />}>
           <Route index element={<TerritorialCommunityEntryPage />} />
         </Route>
-        <Route path="/comunidade/:state/:city" element={<CommunityCityEntryPage />} />
 
-        {/* PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP */}
-        {/* ROTAS DE VAGAS - Modulo Vertical AAA */}
-        {/* PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP */}
+        {/* Rotas de vagas */}
 
         <Route path="/vagas" element={<P.VagasPublicPage />} />
         {/* Detalhe canonico: /vagas/:uf/:cidade/:slug */}
@@ -517,13 +485,12 @@ export function AppRoutes() {
         <Route path="banners" element={<P.AdminBanners />} />
         <Route path="empresas" element={<P.AdminEmpresas />} />
         <Route path="gastronomia" element={<P.AdminGastronomia />} />
-        <Route path="services" element={<P.AdminServicos />} />
+        <Route path="servicos" element={<P.AdminServicos />} />
         <Route path="classificados" element={<P.AdminClassificados />} />
         <Route path="classificados/denuncias" element={<P.AdminClassificadosDenuncias />} />
         <Route path="vagas" element={<P.AdminVagas />} />
         <Route path="eventos" element={<P.AdminEventos />} />
         <Route path="usuarios" element={<P.AdminUsuarios />} />
-        <Route path="users" element={<P.AdminUsuarios />} />
         <Route path="motoristas" element={<P.AdminMotoristas />} />
         <Route path="reports-passageiros" element={<P.AdminReportsPassageiros />} />
         <Route path="pontos-embarque" element={<P.AdminPontosEmbarque />} />
@@ -559,12 +526,6 @@ export function AppRoutes() {
         <Route path="territorial-groups" element={<P.AdminTerritorialGroups />} />
         <Route path="city-metadata" element={<P.AdminCityMetadata />} />
         <Route path="territory-management" element={<P.AdminTerritoryManagement />} />
-        <Route path="google-places-import" element={<P.AdminGooglePlacesImport />} />
-        {/* Compatibilidade com links legados de pontos turisticos */}
-        <Route path="pontos-turisticos" element={<P.AdminGuideTouristPointsPage />} />
-        <Route path="pontos-turisticos/novo" element={<P.AdminGuideTouristPointFormPage />} />
-        <Route path="pontos-turisticos/:id/editar" element={<P.AdminGuideTouristPointFormPage />} />
-
         {/* Modulo Guide - Pontos Turisticos */}
         <Route path="guia/pontos-turisticos" element={<P.AdminGuideTouristPointsPage />} />
         <Route path="guia/pontos-turisticos/novo" element={<P.AdminGuideTouristPointFormPage />} />

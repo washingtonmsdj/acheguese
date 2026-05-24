@@ -3,7 +3,7 @@
  * 
  * Padronizado com GastronomyCard:
  * - Layout horizontal (88px altura)
- * - Imagem/emoji à esquerda
+ * - Marcador visual à esquerda
  * - Informações compactas à direita
  * - Badges e status no mesmo padrão
  */
@@ -16,25 +16,6 @@ import { Badge } from "@/shared/components/ui/badge";
 import { cn } from "@/shared/utils/cn";
 import type { BusinessCardProps } from "../../sections/types";
 
-// Mapa de emojis por categoria
-const CATEGORY_EMOJI: Record<string, string> = {
-  "Restaurante": "🍽️",
-  "Lanchonete": "🍔",
-  "Padaria": "🥖",
-  "Mercado": "🛒",
-  "Farmácia": "💊",
-  "Salão": "💇",
-  "Academia": "💪",
-  "Pet Shop": "🐾",
-  "Loja": "🏪",
-  "Serviços": "🔧",
-  "Outros": "🏢",
-};
-
-function getCategoryEmoji(category: string): string {
-  return CATEGORY_EMOJI[category] || "🏢";
-}
-
 export function BusinessCard({
   business,
   onClick,
@@ -43,7 +24,6 @@ export function BusinessCard({
   nearbyMode,
   index,
 }: BusinessCardProps) {
-  const emoji = getCategoryEmoji(business.category);
   const hasDistance = business.distanceMeters !== undefined && nearbyMode;
   const distanceKm = hasDistance ? (business.distanceMeters! / 1000).toFixed(1) : null;
 
@@ -63,10 +43,10 @@ export function BusinessCard({
       role="article"
       aria-label={`${business.name} - ${business.category}`}
     >
-      {/* Imagem/Emoji à esquerda */}
+      {/* Marcador visual à esquerda */}
       <div className="relative h-full w-[88px] shrink-0 overflow-hidden">
         <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10">
-          <span className="text-4xl">{emoji}</span>
+          <Store className="h-8 w-8 text-primary/80" />
         </div>
 
         {/* Premium/Verified badge */}
@@ -107,7 +87,7 @@ export function BusinessCard({
           )}
           {business.neighborRecs > 0 && (
             <Badge variant="outline" className="h-4 px-1.5 py-0 text-[10px] font-medium">
-              {business.neighborRecs} 👍
+              {business.neighborRecs} recomendações
             </Badge>
           )}
         </div>
@@ -136,7 +116,8 @@ export function BusinessCard({
 
           {business.walkTime !== "N/A" && (
             <span className="flex items-center gap-0.5 shrink-0">
-              🚶 {business.walkTime}
+              <MapPin className="h-2.5 w-2.5" />
+              {business.walkTime}
             </span>
           )}
         </div>

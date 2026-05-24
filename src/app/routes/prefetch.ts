@@ -5,6 +5,8 @@
  * reduzindo latência percebida no primeiro clique dos atalhos.
  */
 
+import { LAUNCH_URLS } from "@/config/territory";
+
 const PREFETCHERS: Array<{ test: (path: string) => boolean; load: () => Promise<unknown> }> = [
   {
     test: (path) => path === "/",
@@ -120,7 +122,7 @@ export function scheduleIdleRouteWarmup(): void {
       "/eventos",
       "/classificados",
       "/vagas",
-      "/comunidade",
+      LAUNCH_URLS.community,
       "/servicos",
       "/mapa",
       "/busca",

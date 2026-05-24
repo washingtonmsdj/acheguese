@@ -100,8 +100,8 @@ export default function ResetPasswordPage() {
   const onValid = async (data: ResetPasswordFormInput) => {
     if (recoveryState !== 'ready') {
       toast({
-        title: 'Link invalido ou expirado',
-        description: 'Solicite um novo email de recuperacao.',
+        title: 'Link inválido ou expirado',
+        description: 'Solicite um novo email de recuperação.',
         variant: 'destructive',
       });
       return;
@@ -159,7 +159,7 @@ export default function ResetPasswordPage() {
           <div className="space-y-2">
             <h1 className="text-xl font-bold">Link expirado</h1>
             <p className="text-sm text-muted-foreground">
-              O link de recuperacao de senha expirou. Informe seu email para receber um novo link.
+              O link de recuperação de senha expirou. Informe seu email para receber um novo link.
             </p>
           </div>
           <div className="space-y-3 text-left">

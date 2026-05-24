@@ -62,7 +62,7 @@ export default function LoginPage() {
       return {
         icon: CheckCircle2,
         title: 'Email confirmado',
-        description: 'Sua conta esta pronta para login.',
+        description: 'Sua conta está pronta para login.',
       };
     }
 
@@ -115,8 +115,8 @@ export default function LoginPage() {
   const handleForgotPassword = async () => {
     if (!parsedIdentifier) {
       toast({
-        title: 'Informe email ou usuario',
-        description: 'Usamos esse identificador para enviar a recuperacao de senha.',
+        title: 'Informe email ou usuário',
+        description: 'Usamos esse identificador para enviar a recuperação de senha.',
         variant: 'destructive',
       });
       return;
@@ -133,9 +133,9 @@ export default function LoginPage() {
     } catch {
       // Evita vazamento de existencia de conta via UX.
       toast({
-        title: 'Solicitacao recebida',
+        title: 'Solicitação recebida',
         description:
-          'Se o identificador estiver cadastrado, voce recebera as instrucoes de recuperacao em instantes.',
+          'Se o identificador estiver cadastrado, você receberá as instruções de recuperação em instantes.',
       });
     } finally {
       setPendingAction(null);
@@ -149,7 +149,7 @@ export default function LoginPage() {
       await signInWithGoogle();
     } catch (error) {
       toast({
-        title: 'Google indisponivel',
+        title: 'Google indisponível',
         description: getAuthErrorMessage(error),
         variant: 'destructive',
       });
@@ -165,7 +165,7 @@ export default function LoginPage() {
         <title>Entrar | Achegue-se</title>
         <meta
           name="description"
-          content="Entre na sua conta Achegue-se para acessar seu perfil, seus negocios e a sua comunidade."
+          content="Entre na sua conta Achegue-se para acessar seu perfil, seus negócios e a sua comunidade."
         />
       </Helmet>
 
@@ -179,7 +179,7 @@ export default function LoginPage() {
             <button
               onClick={() => navigate('/')}
               className="mx-auto flex items-center justify-center gap-2 hover:opacity-80 transition-opacity"
-              aria-label="Voltar ao inicio"
+              aria-label="Voltar ao início"
             >
               <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center">
                 <Home className="h-5 w-5 text-primary-foreground" />
@@ -190,7 +190,7 @@ export default function LoginPage() {
                 Bem-vindo de volta
               </h1>
               <p className="text-sm text-muted-foreground mt-1">
-                Entre para acessar seu perfil, seus negocios e a sua comunidade.
+                Entre para acessar seu perfil, seus negócios e a sua comunidade.
               </p>
             </div>
           </div>
@@ -241,7 +241,7 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit(onValid)} className="space-y-4" noValidate>
             <div className="space-y-1.5">
-              <Label htmlFor="login-identifier">Email ou nome de usuario</Label>
+              <Label htmlFor="login-identifier">Email ou nome de usuário</Label>
               <div className="relative">
                 <Input
                   id="login-identifier"
@@ -290,10 +290,10 @@ export default function LoginPage() {
                 className="text-xs text-primary font-medium block ml-auto hover:underline"
                 disabled={pendingAction === 'recovery'}
               >
-                {pendingAction === 'recovery' ? 'Enviando recuperacao...' : 'Esqueci minha senha'}
+                {pendingAction === 'recovery' ? 'Enviando recuperação...' : 'Esqueci minha senha'}
               </button>
               <p className="text-xs text-muted-foreground">
-                A recuperacao funciona com email ou @usuario.
+                A recuperação funciona com email ou @usuário.
               </p>
             </div>
 
@@ -313,7 +313,7 @@ export default function LoginPage() {
 
           <div className="text-center space-y-2">
             <p className="text-sm text-muted-foreground">
-              Nao tem conta?
+              Não tem conta?
             </p>
             <Button
               type="button"
@@ -321,7 +321,7 @@ export default function LoginPage() {
               className="w-full h-11 border-primary/30 text-primary hover:bg-primary/10 font-semibold gap-1.5"
               onClick={() => navigate('/cadastro')}
             >
-              Criar conta gratis
+              Criar conta grátis
             </Button>
           </div>
         </main>

@@ -8,7 +8,6 @@
  * - Eventos (TODO)
  * - Cupons (TODO)
  *
- * @version 2.0.0 - Refatorado profissionalmente
  */
 
 import { useState } from "react";
@@ -98,7 +97,7 @@ const FILTERS: FilterOption[] = [
   },
   {
     id: "professionals",
-    label: "Profissoes e Servicos",
+    label: "Profissões e Serviços",
     icon: <Wrench className="h-3.5 w-3.5" />,
   },
   {
@@ -222,7 +221,7 @@ export default function BuscaPage() {
             results={results}
             activeFilter={activeFilter}
             onBusinessClick={navigateToBusiness}
-            onProfessionalClick={(id) => navigate(`/services/${id}`)}
+            onProfessionalClick={(id) => navigate(`/servicos/${id}`)}
             onOpportunityClick={(opportunity) => {
               if (opportunity.source_kind !== "vaga") {
                 void workOpportunityTelemetryService.trackOpportunityClick({
@@ -404,7 +403,7 @@ function ResultsView({
         {/* Profissionais */}
         {results.professionals.length > 0 && (
           <Section
-            title="Profissoes e Servicos"
+            title="Profissões e Serviços"
             icon={<Wrench className="h-4 w-4 text-primary" />}
           >
             {results.professionals.map((professional) => (
@@ -597,4 +596,3 @@ function OpportunityCard({
 function ClockDot({ urgency }: { urgency: string }) {
   return <span>{urgency === "hoje" ? "Hoje" : urgency === "24h" ? "24h" : urgency === "semana" ? "Semana" : "Flexivel"}</span>;
 }
-

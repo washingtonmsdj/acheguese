@@ -43,10 +43,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/components/ui/select';
+import { buildMailtoUrl } from '@/shared/utils/contactLinks';
 import { useToast } from '@/shared/hooks/use-toast';
 import { useAuth } from '@/core/auth/hooks/useAuth';
 import { PrivacyService } from '@/core/privacy';
 import { InlineFieldError } from '@/shared/components/ui/InlineFieldError';
+import { getDpoEmail } from '@/shared/config/privacyContacts';
 import {
   DPOContactSchema,
   type DPOContactInput,
@@ -109,7 +111,7 @@ export default function DPOContactPage() {
       toast({
         title: 'Erro ao enviar',
         description:
-          'Não foi possível enviar sua solicitação. Tente novamente ou envie diretamente para dpo@acheguese.com.br',
+          'Nao foi possivel enviar sua solicitacao. Tente novamente ou envie diretamente para ' + getDpoEmail(),
         variant: 'destructive',
       });
     },
@@ -311,10 +313,10 @@ export default function DPOContactPage() {
                 <div>
                   <p className="font-medium text-sm">E-mail</p>
                   <a
-                    href="mailto:dpo@acheguese.com.br"
+                    href={buildMailtoUrl(getDpoEmail()) ?? undefined}
                     className="text-sm text-primary hover:underline"
                   >
-                    dpo@acheguese.com.br
+                    {getDpoEmail()}
                   </a>
                 </div>
               </div>

@@ -1,13 +1,25 @@
 /**
  * Landing Module - Public API
- * 
- * Módulo para landing pages nacionais e estaduais.
+ *
+ * Serviços e hooks de landing territorial.
  */
 
 // Services
 export {
-  LandingService,
-  landingService,
+  getCountryData,
+  getActiveStates,
+  getStateData,
+  getActiveCitiesByState,
+  getActiveCities,
+  getTerritorialGroups,
+  getPlatformStats,
+  getVerifiedBusinesses,
+  checkAdminRole,
+  getNationalBusinesses,
+  getNationalServices,
+  getNationalClassifieds,
+  getNationalStats,
+  getActiveTerritoriesWithLanding,
 } from './services';
 
 export type {
@@ -21,7 +33,3 @@ export type {
 
 // Hooks
 export { useNationalFeatured } from './hooks/useNationalFeatured';
-
-// Pages
-export { BrasilShowcasePage } from './pages/BrasilShowcasePage';
-export { CountryLandingPage } from './pages/CountryLandingPage';

@@ -1,26 +1,23 @@
-/**
- * AboutPage — Página institucional Sobre o Achegue-se
- */
-
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, Users, Heart, Target } from 'lucide-react';
-import { Button } from '@/shared/components/ui/button';
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft, Heart, MapPin, Target, Users } from "lucide-react";
+import { Button } from "@/shared/components/ui/button";
+import { TERRITORY_CONFIG } from "@/config/territory";
 
 export default function AboutPage() {
   const navigate = useNavigate();
+  const launchPlace = `${TERRITORY_CONFIG.launch.name}, ${TERRITORY_CONFIG.launch.state.toUpperCase()}`;
 
   return (
     <div className="min-h-screen w-full bg-[#0f1419] text-white">
-      {/* Header */}
-      <header className="w-full border-b border-white/10 bg-[#0f1419]/95 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+      <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#0f1419]/95 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-4 sm:px-6">
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate('/')}
+            onClick={() => navigate("/")}
             className="text-white/70 hover:text-white"
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
+            <ArrowLeft className="mr-2 h-4 w-4" />
             Voltar
           </Button>
           <span className="text-lg font-bold tracking-tight text-white">
@@ -29,89 +26,72 @@ export default function AboutPage() {
         </div>
       </header>
 
-      {/* Conteúdo */}
-      <main id="main-content" tabIndex={-1} className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-12 focus:outline-none">
+      <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-4xl px-4 py-12 focus:outline-none sm:px-6">
         <div className="space-y-8">
-          {/* Título */}
           <div className="text-center">
-            <h1 className="text-3xl sm:text-4xl font-bold mb-4">
+            <h1 className="mb-4 text-3xl font-bold sm:text-4xl">
               Sobre o <span className="text-teal-400">Achegue-se</span>
             </h1>
-            <p className="text-white/60 text-lg">
-              Conectando vizinhanças, fortalecendo comunidades
-            </p>
+            <p className="text-lg text-white/60">Conectando territórios, serviços e comunidades</p>
           </div>
 
-          {/* Missão */}
-          <section className="bg-white/5 rounded-xl p-6 border border-white/10">
+          <section className="rounded-xl border border-white/10 bg-white/5 p-6">
             <div className="flex items-start gap-4">
-              <div className="h-12 w-12 rounded-lg bg-teal-500/20 flex items-center justify-center flex-shrink-0">
+              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-teal-500/20">
                 <Target className="h-6 w-6 text-teal-400" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold mb-2">Nossa Missão</h2>
-                <p className="text-white/70 leading-relaxed">
-                  Criar uma plataforma que aproxima vizinhos, fortalece o comércio local
-                  e facilita a vida em comunidade através da tecnologia.
+                <h2 className="mb-2 text-xl font-semibold">Nossa missão</h2>
+                <p className="leading-relaxed text-white/70">
+                  Criar uma plataforma territorial que aproxima moradores, empresas, profissionais, escolas,
+                  poder público e oportunidades locais com dados organizados em uma fonte única.
                 </p>
               </div>
             </div>
           </section>
 
-          {/* O que fazemos */}
           <section className="space-y-4">
             <h2 className="text-2xl font-semibold">O que fazemos</h2>
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div className="bg-white/5 rounded-xl p-5 border border-white/10">
-                <MapPin className="h-8 w-8 text-teal-400 mb-3" />
-                <h3 className="font-semibold mb-2">Conexão Local</h3>
-                <p className="text-sm text-white/60">
-                  Conectamos moradores do mesmo bairro para fortalecer laços comunitários
-                </p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="rounded-xl border border-white/10 bg-white/5 p-5">
+                <MapPin className="mb-3 h-8 w-8 text-teal-400" />
+                <h3 className="mb-2 font-semibold">Navegação territorial</h3>
+                <p className="text-sm text-white/60">Organizamos cidade, bairro e comunidade em rotas canônicas.</p>
               </div>
-              <div className="bg-white/5 rounded-xl p-5 border border-white/10">
-                <Users className="h-8 w-8 text-teal-400 mb-3" />
-                <h3 className="font-semibold mb-2">Comércio Local</h3>
-                <p className="text-sm text-white/60">
-                  Valorizamos empresas e profissionais da sua região
-                </p>
+              <div className="rounded-xl border border-white/10 bg-white/5 p-5">
+                <Users className="mb-3 h-8 w-8 text-teal-400" />
+                <h3 className="mb-2 font-semibold">Comércio e serviços</h3>
+                <p className="text-sm text-white/60">Valorizamos empresas, profissionais e instituições locais.</p>
               </div>
-              <div className="bg-white/5 rounded-xl p-5 border border-white/10">
-                <Heart className="h-8 w-8 text-teal-400 mb-3" />
-                <h3 className="font-semibold mb-2">Comunidade Ativa</h3>
-                <p className="text-sm text-white/60">
-                  Facilitamos eventos, alertas e colaboração entre vizinhos
-                </p>
+              <div className="rounded-xl border border-white/10 bg-white/5 p-5">
+                <Heart className="mb-3 h-8 w-8 text-teal-400" />
+                <h3 className="mb-2 font-semibold">Comunidade ativa</h3>
+                <p className="text-sm text-white/60">Apoiamos feed, alertas, eventos, recomendações e comunicação local.</p>
               </div>
-              <div className="bg-white/5 rounded-xl p-5 border border-white/10">
-                <Target className="h-8 w-8 text-teal-400 mb-3" />
-                <h3 className="font-semibold mb-2">Mobilidade</h3>
-                <p className="text-sm text-white/60">
-                  Soluções de transporte compartilhado para sua vizinhança
-                </p>
+              <div className="rounded-xl border border-white/10 bg-white/5 p-5">
+                <Target className="mb-3 h-8 w-8 text-teal-400" />
+                <h3 className="mb-2 font-semibold">Gestão escalável</h3>
+                <p className="text-sm text-white/60">Cada módulo usa contratos e dados centrais para evitar duplicação.</p>
               </div>
             </div>
           </section>
 
-          {/* História */}
-          <section className="bg-white/5 rounded-xl p-6 border border-white/10">
-            <h2 className="text-xl font-semibold mb-4">Nossa História</h2>
-            <p className="text-white/70 leading-relaxed mb-4">
-              O Achegue-se nasceu da necessidade de criar conexões mais fortes entre
-              vizinhos e valorizar o comércio local. Começamos pelo Complexo do Nordeste
-              de Amaralina, em Salvador, e estamos expandindo para outros bairros.
+          <section className="rounded-xl border border-white/10 bg-white/5 p-6">
+            <h2 className="mb-4 text-xl font-semibold">Nossa história</h2>
+            <p className="mb-4 leading-relaxed text-white/70">
+              O Achegue-se nasceu da necessidade de criar conexões mais fortes entre vizinhos,
+              serviços públicos, escolas, profissionais e comércio local.
             </p>
-            <p className="text-white/70 leading-relaxed">
-              Acreditamos que tecnologia pode aproximar pessoas e fortalecer comunidades,
-              criando bairros mais conectados, seguros e prósperos.
+            <p className="leading-relaxed text-white/70">
+              A plataforma foi desenhada para começar por uma cidade de referência e escalar para
+              novos territórios sem duplicar dados por página.
             </p>
           </section>
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="w-full px-4 sm:px-6 py-6 text-center text-white/30 text-xs border-t border-white/10 mt-12">
-        Achegue-se · Salvador, BA
+      <footer className="mt-12 w-full border-t border-white/10 px-4 py-6 text-center text-xs text-white/30 sm:px-6">
+        Achegue-se · {launchPlace}
       </footer>
     </div>
   );

@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react';
 import { CheckCircle2, XCircle, AlertCircle, Clock, Activity } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Badge } from '@/shared/components/ui/badge';
+import { PLATFORM_BRAND } from '@/shared/config/brand';
 interface HealthCheck {
   status: 'healthy' | 'degraded' | 'unhealthy';
   timestamp: string;
@@ -128,7 +129,7 @@ export default function StatusPage() {
         <div className="text-center space-y-2">
           <h1 className="text-4xl font-bold">Status do Sistema</h1>
           <p className="text-muted-foreground">
-            Monitoramento em tempo real da plataforma Ordax
+            Monitoramento em tempo real da plataforma {PLATFORM_BRAND.name}
           </p>
         </div>
 

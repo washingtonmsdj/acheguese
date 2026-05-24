@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { LogOut, Settings, User, Award, TrendingUp } from "lucide-react";
 import {
   DropdownMenu,
@@ -23,6 +23,7 @@ interface UserProfileDropdownProps {
 }
 
 export function UserProfileDropdown({ onLogout }: UserProfileDropdownProps) {
+  const navigate = useNavigate();
   const { activeProfile } = useSessionContext();
   const {
     profile: communityProfile,
@@ -44,7 +45,7 @@ export function UserProfileDropdown({ onLogout }: UserProfileDropdownProps) {
   const handleLogout = async () => {
     await AuthService.signOut();
     if (onLogout) onLogout();
-    window.location.href = "/login";
+    navigate("/login", { replace: true });
   };
 
   return (

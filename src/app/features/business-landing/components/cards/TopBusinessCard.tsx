@@ -3,47 +3,20 @@
  * 
  * Padronizado com GastronomyCard:
  * - Layout horizontal compacto
- * - Emoji por categoria
+ * - Marcador visual consistente
  * - Informações essenciais
  */
 
 import { motion } from "framer-motion";
-import { Star, MapPin, Crown, BadgeCheck } from "lucide-react";
+import { Star, MapPin, Crown, BadgeCheck, Store, ThumbsUp } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import type { TopBusinessCardProps } from "../../sections/types";
 
-// Mapa de emojis por categoria
-const CATEGORY_EMOJI: Record<string, string> = {
-  "Restaurante": "🍽️",
-  "Lanchonete": "🍔",
-  "Padaria": "🥖",
-  "Mercado": "🛒",
-  "Farmácia": "💊",
-  "Salão": "💇",
-  "Academia": "💪",
-  "Pet Shop": "🐾",
-  "Loja": "🏪",
-  "Serviços": "🔧",
-  "Outros": "🏢",
-};
-
-function getCategoryEmoji(category: string): string {
-  return CATEGORY_EMOJI[category] || "🏢";
-}
-
 export function TopBusinessCard({ business, rank, onClick }: TopBusinessCardProps) {
-  const emoji = getCategoryEmoji(business.category);
-  
   const getRankColor = (rank: number) => {
     if (rank === 1) return "from-amber-500 to-yellow-500";
     if (rank === 2) return "from-gray-400 to-gray-500";
     return "from-amber-700 to-amber-800";
-  };
-
-  const getRankBadge = (rank: number) => {
-    if (rank === 1) return "🥇";
-    if (rank === 2) return "🥈";
-    return "🥉";
   };
 
   return (
@@ -59,11 +32,11 @@ export function TopBusinessCard({ business, rank, onClick }: TopBusinessCardProp
       role="article"
       aria-label={`${business.name} - Posição ${rank}`}
     >
-      {/* Emoji/Rank à esquerda */}
+      {/* Categoria/Rank à esquerda */}
       <div className="relative h-full w-[88px] shrink-0 overflow-hidden">
         <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10">
-          <span className="text-3xl mb-1">{emoji}</span>
-          <span className="text-lg">{getRankBadge(rank)}</span>
+          <Store className="h-7 w-7 mb-1 text-primary/80" />
+          <span className="text-xs font-bold text-primary">#{rank}</span>
         </div>
 
         {/* Premium badge */}
@@ -107,7 +80,8 @@ export function TopBusinessCard({ business, rank, onClick }: TopBusinessCardProp
         {/* Recomendações + Distância */}
         <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
           <span className="flex items-center gap-0.5 font-medium text-primary">
-            👍 {business.neighborRecs} vizinhos
+            <ThumbsUp className="h-2.5 w-2.5" />
+            {business.neighborRecs} vizinhos
           </span>
           {business.distance !== "N/A" && (
             <span className="flex items-center gap-0.5">

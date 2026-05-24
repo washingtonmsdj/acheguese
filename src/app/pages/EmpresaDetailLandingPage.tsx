@@ -15,6 +15,8 @@ import { useBusinessRecommendation } from "@/modules/business/hooks/useBusinessR
 import { useBusinessReviews } from "@/modules/business/hooks/useBusinessReviews";
 import { usePublicBusinessSnapshot } from "@/modules/business/public/hooks";
 import { LAUNCH_URLS } from "@/config/territory";
+import { buildGoogleMapsSearchUrl } from "@/shared/utils/contactLinks";
+import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
 import {
   EmpresaAvaliacoesSection,
   EmpresaCTAsSection,
@@ -97,7 +99,7 @@ export default function EmpresaDetailLandingPage(
     () =>
       rawReviews.map((review: ReviewWithProfiles) => ({
         id: review.id,
-        user_name: review.reviewer_profile?.name || "Usuario",
+        user_name: review.reviewer_profile?.name || "Usuário",
         rating: review.rating,
         comment: review.comment || "",
         created_at: review.created_at,
@@ -270,10 +272,9 @@ export default function EmpresaDetailLandingPage(
   const handleRoute = () => {
     const addr = snapshot?.institutional.addressText || business?.name || "";
     const loc = snapshot?.institutional.locationText || "";
-    window.open(
-      `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${addr} ${loc}`)}`,
-      "_blank",
-    );
+    openSafeExternalUrl(buildGoogleMapsSearchUrl(`${addr} ${loc}`), {
+      context: "company-detail-route",
+    });
   };
 
   if (isLoading) {
@@ -311,9 +312,9 @@ export default function EmpresaDetailLandingPage(
         </nav>
         <div className="flex-1 flex flex-col items-center justify-center px-4 text-center">
           <Store className="h-16 w-16 text-muted-foreground/30 mb-4" />
-          <h1 className="text-2xl font-bold text-foreground mb-2">Empresa nao encontrada</h1>
+          <h1 className="text-2xl font-bold text-foreground mb-2">Empresa não encontrada</h1>
           <p className="text-muted-foreground mb-6">
-            A empresa que voce procura nao existe ou foi removida.
+            A empresa que você procura não existe ou foi removida.
           </p>
           <Button
             onClick={() => navigate(LAUNCH_URLS.business)}
@@ -353,6 +354,8 @@ export default function EmpresaDetailLandingPage(
         phone={snapshot.institutional.phone}
         email={snapshot.institutional.email}
         website={snapshot.institutional.website}
+        city={city}
+        state={state}
         latitude={typeof business.address === "object" ? business.address?.latitude : undefined}
         longitude={typeof business.address === "object" ? business.address?.longitude : undefined}
         openingHours={snapshot.institutional.openingHours}

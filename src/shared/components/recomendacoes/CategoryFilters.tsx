@@ -1,16 +1,6 @@
-import React from "react";
+﻿import React from "react";
 import { cn } from "@/shared/utils/cn";
-
-const CATEGORIAS = [
-  { id: "todos", label: "Todos", icon: "🔍" },
-  { id: "services", label: "Serviços", icon: "🔧" },
-  { id: "restaurantes", label: "Restaurantes", icon: "🍽️" },
-  { id: "manutencao", label: "Manutenção", icon: "🏠" },
-  { id: "saude", label: "Saúde", icon: "🏥" },
-  { id: "pets", label: "Pets", icon: "🐾" },
-  { id: "compras", label: "Compras", icon: "🛒" },
-  { id: "outros", label: "Outros", icon: "📌" },
-];
+import { RECOMMENDATION_FILTER_OPTIONS } from "@/shared/taxonomy/recommendations";
 
 interface CategoryFiltersProps {
   filter: string;
@@ -23,7 +13,7 @@ export function CategoryFilters({
 }: CategoryFiltersProps) {
   return (
     <div className="flex gap-2 px-4 py-3 overflow-x-auto">
-      {CATEGORIAS.map((cat) => (
+      {RECOMMENDATION_FILTER_OPTIONS.map((cat) => (
         <button
           key={cat.id}
           onClick={() => onFilterChange(cat.id)}
@@ -34,7 +24,6 @@ export function CategoryFilters({
               : "bg-card border-border",
           )}
         >
-          <span>{cat.icon}</span>
           {cat.label}
         </button>
       ))}

@@ -8,54 +8,43 @@ import { deferFrame, deferIdle, deferLoad } from "./shared/utils/deferredInit.ts
 // In local development, remove any previously registered SW/caches that can
 // intercept Vite assets and break HMR/WebSocket.
 if (import.meta.env.DEV && "serviceWorker" in navigator) {
-  navigator.serviceWorker.getRegistrations()
+  navigator.serviceWorker
+    .getRegistrations()
     .then((registrations) => Promise.all(registrations.map((registration) => registration.unregister())))
     .catch(() => undefined);
 
   if ("caches" in window) {
-    caches.keys()
+    caches
+      .keys()
       .then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
       .catch(() => undefined);
   }
 }
 
-// ============================================================
-// 🚀 CRITICAL PATH - Mínimo necessário para FCP
-// ============================================================
-
-// Render app imediatamente (máxima prioridade para FCP)
+// Critical path: render the app before starting non-critical services.
 const root = createRoot(document.getElementById("root")!);
 root.render(<App />);
 
-// ============================================================
-// ⏱️ DEFERRED INITIALIZATION - Após FCP
-// ============================================================
-
-// Defer 1 frame: Libera main thread para render
+// Defer one frame to keep the first paint responsive.
 deferFrame(() => {
-  // Initialize Web Vitals (métricas, não bloqueia funcionalidade)
   import("./shared/utils/webVitals.ts").then(({ initWebVitals }) => {
     initWebVitals();
   });
 });
 
-// Defer idle: Serviços não-críticos
+// Services that are useful but should not block page startup.
 deferIdle(() => {
-  // Initialize Sentry (error tracking)
   initializeSentry();
 
-  // Initialize authorization engine
-  import("@/core/authorization").then(({ AuthorizationEngine }) => {
+  import("@/core/authorization/services/AuthorizationEngine").then(({ AuthorizationEngine }) => {
     AuthorizationEngine.initialize();
   });
 
-  // Initialize map providers (só necessário para páginas com mapa)
   import("@/integrations/maps").then(({ setupDefaultProviders }) => {
     setupDefaultProviders();
   });
 });
 
-// Defer load: Métricas e analytics
 deferLoad(() => {
   if (import.meta.env.DEV && import.meta.env.VITE_DEBUG_BOOT === "true") {
     console.debug("Deferred initialization complete - App ready");

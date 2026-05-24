@@ -72,7 +72,7 @@ export default function RegrasPage() {
               Regras da Comunidade
             </h2>
             <p className="text-xs text-muted-foreground">
-              Para um neighborhood mais seguro e respeitoso
+              Para uma comunidade mais segura e respeitosa
             </p>
           </div>
         </div>

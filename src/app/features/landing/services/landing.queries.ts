@@ -1,7 +1,7 @@
-﻿/**
- * Landing Queries - SSOT v2.0
+/**
+ * Landing Queries - SSOT
  * 
- * FunÃ§Ãµes de leitura para landing pages nacionais e estaduais
+ * Funcoes de leitura para landing pages nacionais e estaduais
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/core/infrastructure/supabase';
@@ -10,6 +10,7 @@ import {
   type TerritoryVisibilityMetadata,
 } from '@/core/routing/utils/territoryVisibility';
 import { BusinessService } from '@/core/business/services/BusinessService';
+import { adminRolesService } from '@/core/admin/services/AdminRolesService';
 import type {
   CountryData,
   StateData,
@@ -76,7 +77,7 @@ async function countPublicServices(): Promise<number> {
 }
 
 /**
- * Buscar dados de um paÃ­s
+ * Buscar dados de um pais
  */
 export async function getCountryData(countryCode: string): Promise<CountryData | null> {
   try {
@@ -103,7 +104,7 @@ export async function getCountryData(countryCode: string): Promise<CountryData |
 }
 
 /**
- * Buscar estados ativos de um paÃ­s
+ * Buscar estados ativos de um pais
  */
 export async function getActiveStates(countryCode: string): Promise<StateData[]> {
   try {
@@ -330,7 +331,7 @@ export async function getTerritorialGroups(): Promise<TerritorialGroupData[]> {
 }
 
 /**
- * Buscar estatÃ­sticas da plataforma
+ * Buscar estatisticas da plataforma
  */
 export async function getPlatformStats(): Promise<PlatformStats> {
   try {
@@ -405,11 +406,10 @@ export async function getVerifiedBusinesses(limit: number = 6): Promise<Verified
 }
 
 /**
- * Verificar se usuÃ¡rio tem role de admin
+ * Verificar se usuario tem role de admin
  */
 export async function checkAdminRole(userId: string): Promise<boolean> {
   try {
-    const { adminRolesService } = await import('@/core/admin/services/AdminRolesService');
     const roles = await adminRolesService.getUserRoles(userId);
     const isAdmin = roles.some(
       (r) => ['admin', 'super_admin'].includes(r.role) && r.is_active,
@@ -471,7 +471,7 @@ export async function getNationalBusinesses(limit: number = 6): Promise<National
 }
 
 /**
- * Buscar serviÃ§os nacionais em destaque
+ * Buscar servicos nacionais em destaque
  */
 export async function getNationalServices(limit: number = 6): Promise<NationalService[]> {
   try {
@@ -556,7 +556,7 @@ export async function getNationalClassifieds(limit: number = 6): Promise<Nationa
 }
 
 /**
- * Buscar estatÃ­sticas nacionais
+ * Buscar estatisticas nacionais
  */
 export async function getNationalStats(): Promise<NationalStats> {
   try {
@@ -595,7 +595,7 @@ export async function getNationalStats(): Promise<NationalStats> {
 }
 
 /**
- * Buscar territÃ³rios ativos com landing habilitada
+ * Buscar territorios ativos com landing habilitada
  */
 export async function getActiveTerritoriesWithLanding(): Promise<ActiveTerritoriesWithLanding> {
   try {

@@ -9,6 +9,7 @@
  */
 import { logger } from '@/shared/utils/logger';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   CreditCard, 
   Calendar, 
@@ -25,9 +26,11 @@ import { Badge } from '@/shared/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/shared/components/ui/alert';
 import { useBilling } from '@/core/billing/hooks/useBilling';
 import { useSubscription } from '@/core/billing/hooks/useSubscription';
+import { buildPublicAbsoluteUrl } from '@/shared/config/publicAppOrigin';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 export default function SubscriptionManagementPage() {
+  const navigate = useNavigate();
   const { redirectToPortal, plans } = useBilling();
   const {
     subscription,
@@ -47,7 +50,7 @@ export default function SubscriptionManagementPage() {
   const handleManageSubscription = async () => {
     setIsRedirecting(true);
     try {
-      await redirectToPortal(`${window.location.origin}/settings/subscription`);
+      await redirectToPortal(buildPublicAbsoluteUrl("/settings/subscription"));
     } catch (error) {
       logger.error('Error redirecting to portal:', error);
     } finally {
@@ -206,7 +209,7 @@ export default function SubscriptionManagementPage() {
                 <Button
                   variant="outline"
                   className="w-full justify-start"
-                  onClick={() => window.location.href = '/pricing'}
+                  onClick={() => navigate('/planos')}
                 >
                   <TrendingUp className="h-4 w-4 mr-2" />
                   Fazer Upgrade

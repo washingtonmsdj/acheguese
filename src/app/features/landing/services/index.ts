@@ -3,8 +3,6 @@
  */
 
 export {
-  LandingService,
-  landingService,
   getCountryData,
   getActiveStates,
   getStateData,
@@ -19,7 +17,6 @@ export {
   getNationalClassifieds,
   getNationalStats,
   getActiveTerritoriesWithLanding,
-  LandingFacade,
 } from './LandingService';
 
 export type {

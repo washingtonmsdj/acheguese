@@ -8,6 +8,7 @@ import React from "react";
 import { Phone, Mail, MapPin, Instagram, Facebook, Globe } from "lucide-react";
 import { BusinessLogo } from "@/shared/components/ui/business-logo";
 import { Button } from "@/shared/components/ui/button";
+import { buildMailtoUrl, buildTelUrl } from "@/shared/utils/contactLinks";
 import type { Business } from "@/shared/types/business";
 
 interface StandaloneFooterProps {
@@ -51,7 +52,7 @@ export default function StandaloneFooter({ business }: StandaloneFooterProps) {
               <div className="space-y-2 text-sm">
                 {business.phone && (
                   <a
-                    href={`tel:${business.phone}`}
+                    href={buildTelUrl(business.phone) ?? undefined}
                     className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
                   >
                     <Phone className="h-4 w-4" />
@@ -60,7 +61,7 @@ export default function StandaloneFooter({ business }: StandaloneFooterProps) {
                 )}
                 {business.email && (
                   <a
-                    href={`mailto:${business.email}`}
+                    href={buildMailtoUrl(business.email) ?? undefined}
                     className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
                   >
                     <Mail className="h-4 w-4" />

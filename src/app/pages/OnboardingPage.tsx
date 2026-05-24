@@ -9,6 +9,9 @@ export default function OnboardingPage() {
   const {
     neighborhoods,
     populationTotal,
+    neighborhoodsCount,
+    cityName,
+    stateName,
     selectedNeighborhood,
     onNeighborhoodSelect,
     onConfirm,
@@ -17,9 +20,14 @@ export default function OnboardingPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <OnboardingHeader />
+      <OnboardingHeader cityName={cityName} stateName={stateName} />
 
-      <PopulationBanner populationTotal={populationTotal} />
+      <PopulationBanner
+        populationTotal={populationTotal}
+        neighborhoodsCount={neighborhoodsCount}
+        cityName={cityName}
+        stateName={stateName}
+      />
 
       <NeighborhoodSelector
         neighborhoods={neighborhoods}

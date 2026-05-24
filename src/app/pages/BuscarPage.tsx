@@ -29,14 +29,14 @@ export default function BuscarPage() {
             Busca inteligente
           </p>
           <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">
-            Encontre no territorio usando linguagem natural
+            Encontre no território usando linguagem natural
           </h1>
           <p className="mx-auto max-w-2xl text-muted-foreground">
-            Digite o que precisa. A IA interpreta a intencao, aplica o territorio ativo
-            e busca empresas ou servicos reais.
+            Digite o que precisa. A IA interpreta a intenção, aplica o território ativo
+            e busca empresas ou serviços reais.
           </p>
           <p className="text-xs text-muted-foreground">
-            Territorio aplicado: {appliedTerritoryLabel}
+            Território aplicado: {appliedTerritoryLabel}
           </p>
         </header>
 
@@ -61,7 +61,7 @@ export default function BuscarPage() {
             if (wantsHomeDistrict && !userTerritory.homeDistrict?.id) {
               setAppliedTerritoryLabel(moduleTerritory.displayLabel);
               setSearchError(
-                "Nao foi possivel identificar seu bairro cadastrado. Atualize sua residencia para usar a busca por 'meu bairro'.",
+                "Não foi possível identificar seu bairro cadastrado. Atualize sua residência para usar a busca por 'meu bairro'.",
               );
               return Promise.resolve();
             }

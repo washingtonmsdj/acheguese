@@ -10,6 +10,14 @@ import { Button } from "@/shared/components/ui/button";
 import { toast } from "sonner";
 import type { Business as BizData } from "@/shared/types/business";
 import { logger } from "@/shared/utils/logger";
+import {
+  buildGoogleMapsDirectionsUrl,
+  buildGoogleMapsSearchUrl,
+  buildTelUrl,
+  buildWhatsAppUrl,
+  openContactUrl,
+} from "@/shared/utils/contactLinks";
+import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
 
 interface StandaloneContactBarProps {
   business: BizData;
@@ -20,8 +28,10 @@ export default function StandaloneContactBar({
 }: StandaloneContactBarProps) {
   const handleWhatsApp = () => {
     if (business.whatsapp) {
-      const numero = business.whatsapp.replace(/\D/g, "");
-      window.open(`https://wa.me/55${numero}`, "_blank");
+      const url = buildWhatsAppUrl(business.whatsapp);
+      if (url) {
+        openSafeExternalUrl(url, { context: "standalone-contact-whatsapp" });
+      }
     } else {
       toast.error("WhatsApp não disponível");
     }
@@ -29,7 +39,8 @@ export default function StandaloneContactBar({
 
   const handleCall = () => {
     if (business.phone) {
-      window.location.href = `tel:${business.phone}`;
+      const url = buildTelUrl(business.phone);
+      openContactUrl(url);
     } else {
       toast.error("Telefone não disponível");
     }
@@ -37,24 +48,13 @@ export default function StandaloneContactBar({
 
   const handleRoute = () => {
     if (business.latitude && business.longitude) {
-      const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent);
-      if (isIos) {
-        window.open(
-          `maps://maps.apple.com/?daddr=${business.latitude},${business.longitude}&q=${encodeURIComponent(business.name)}`,
-          "_blank",
-        );
-      } else {
-        window.open(
-          `https://www.google.com/maps/dir/?api=1&destination=${business.latitude},${business.longitude}`,
-          "_blank",
-        );
-      }
+      const url = buildGoogleMapsDirectionsUrl(business.latitude, business.longitude);
+      openSafeExternalUrl(url, { context: "standalone-contact-route" });
     } else if (business.address) {
       const address = `${business.address}, ${business.neighborhood}, ${business.city}`;
-      window.open(
-        `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`,
-        "_blank",
-      );
+      openSafeExternalUrl(buildGoogleMapsSearchUrl(address), {
+        context: "standalone-contact-address-route",
+      });
     } else {
       toast.error("Localização não disponível");
     }

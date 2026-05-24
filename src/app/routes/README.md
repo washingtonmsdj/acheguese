@@ -1,6 +1,6 @@
 # Sistema de Rotas
 
-> Configuração centralizada de rotas do Ordax
+> Configuração centralizada de rotas da plataforma
 > 
 > Este módulo foi refatorado em Abril 2026 para reduzir a complexidade do App.tsx
 
@@ -81,7 +81,6 @@ No arquivo `AppRoutes.tsx`, adicione dentro do componente `Routes`:
 /empresas/:state/:city                        # Vitrine publica do modulo na cidade
 /empresas/:state/:city/:district              # Vitrine publica do modulo no bairro
 /empresas/:state/:city/:groupSlug             # Vitrine publica do modulo no grupo
-/comunidade/:state/:city                      # Comunidade da cidade
 /comunidade/:state/:city/:territorySlug       # Comunidade territorial (canonica publica)
 /comunidade/:state/:city/:territorySlug/feed  # Feed comunitario territorial
 /empresas/:state/:city/:district/:businessSlug # Detalhe especifico de empresa
@@ -100,7 +99,7 @@ Regra de intencao:
 ### Admin
 
 ```
-/admin/dashboard
+/admin
 /admin/:module
 /admin/:module/:acao
 ```

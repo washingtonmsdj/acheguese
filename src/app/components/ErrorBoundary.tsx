@@ -1,5 +1,5 @@
 /**
- * 🛡️ GLOBAL ERROR BOUNDARY (NÍVEL AAA)
+ * GLOBAL ERROR BOUNDARY (NÍVEL AAA)
  *
  * Captura erros em toda a aplicação e exibe UI amigável
  * Integrado com Sentry para tracking automático
@@ -20,6 +20,7 @@ import { ErrorBoundary as SentryErrorBoundary } from "@sentry/react";
 import { AlertTriangle, RefreshCw, Home } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { logger } from "@/shared/utils/logger";
+import { navigateToSafeRedirect } from "@/shared/utils/safeRedirect";
 
 interface Props {
   children: ReactNode;
@@ -39,7 +40,7 @@ function ErrorFallbackUI({ error, resetError }: ErrorFallbackProps) {
   };
 
   const handleGoHome = () => {
-    window.location.href = "/";
+    navigateToSafeRedirect("/", { context: "app-error-boundary-home" });
   };
 
   return (
@@ -107,7 +108,7 @@ export function ErrorBoundary({ children, fallback, showDialog = false }: Props)
 
         // Log para console em desenvolvimento
         if (import.meta.env.DEV) {
-          logger.error("🚨 Error Boundary caught an error:", normalizedError, {
+          logger.error("Error Boundary caught an error:", normalizedError, {
             component: "ErrorBoundary",
             action: "componentDidCatch",
           });

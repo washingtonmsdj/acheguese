@@ -146,6 +146,22 @@ export const SECURITY_DOMAINS = {
     alternatives: 'Disable Cloudflare Web Analytics injection',
   },
 
+  STRIPE_CHECKOUT: {
+    url: 'https://checkout.stripe.com',
+    purpose: 'Stripe hosted checkout redirect',
+    risk: 'LOW',
+    justification: 'Required for billing checkout sessions',
+    alternatives: 'Self-hosted checkout with higher PCI scope',
+  },
+
+  STRIPE_BILLING_PORTAL: {
+    url: 'https://billing.stripe.com',
+    purpose: 'Stripe hosted customer portal redirect',
+    risk: 'LOW',
+    justification: 'Required for customer subscription management',
+    alternatives: 'Self-hosted billing portal with higher PCI scope',
+  },
+
   // Google AdSense - Advertising
   GOOGLE_ADSENSE_SCRIPT: {
     url: 'https://pagead2.googlesyndication.com',
@@ -358,7 +374,7 @@ export const SECURITY_HEADERS = {
   // Force HTTPS
   'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
   
-  // XSS Protection (legacy, but defense-in-depth)
+  // XSS Protection header kept as defense-in-depth for older browsers.
   // Note: Deprecated but kept for older browsers
   'X-XSS-Protection': '1; mode=block',
 } as const;
@@ -462,7 +478,7 @@ export const HTML_SANITIZATION_CONFIG = {
 export const BLOCKED_URL_PROTOCOLS = [
   'javascript:',  // Execute JavaScript
   'data:',        // Data URLs (can contain scripts)
-  'vbscript:',    // VBScript (IE legacy)
+  'vbscript:',    // VBScript scheme blocked for older browsers
   'file:',        // Local file access
   'about:',       // Browser internals
   'blob:',        // Blob URLs (can be dangerous)

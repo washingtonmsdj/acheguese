@@ -1,3 +1,22 @@
+import {
+  Bus,
+  CalendarDays,
+  CircleHelp,
+  ClipboardList,
+  CloudSun,
+  Construction,
+  Globe2,
+  GraduationCap,
+  HeartPulse,
+  Megaphone,
+  MessageCircle,
+  Newspaper,
+  ShieldAlert,
+  Siren,
+  TrafficCone,
+  type LucideIcon,
+} from 'lucide-react';
+
 /**
  * SSOT - Categories Configuration
  * 
@@ -36,6 +55,7 @@ export const POST_TYPES = {
 } as const;
 
 export type PostType = typeof POST_TYPES[keyof typeof POST_TYPES];
+export type TaxonomyIcon = LucideIcon;
 
 export const POST_TYPE_LABELS: Record<PostType, string> = {
   [POST_TYPES.TEXT]: 'Texto',
@@ -53,12 +73,12 @@ export const POST_TYPE_LABELS: Record<PostType, string> = {
 // ============================================
 
 export const FEED_CATEGORIES = [
-  { value: 'all', label: 'Todos', icon: '🌐' },
-  { value: 'news', label: 'Notícias', icon: '📰' },
-  { value: 'events', label: 'Eventos', icon: '📅' },
-  { value: 'questions', label: 'Perguntas', icon: '❓' },
-  { value: 'announcements', label: 'Avisos', icon: '📢' },
-  { value: 'discussions', label: 'Discussões', icon: '💬' },
+  { value: 'all', label: 'Todos', icon: Globe2 },
+  { value: 'news', label: 'Notícias', icon: Newspaper },
+  { value: 'events', label: 'Eventos', icon: CalendarDays },
+  { value: 'questions', label: 'Perguntas', icon: CircleHelp },
+  { value: 'announcements', label: 'Avisos', icon: Megaphone },
+  { value: 'discussions', label: 'Discussões', icon: MessageCircle },
 ] as const;
 
 export type FeedCategory = typeof FEED_CATEGORIES[number]['value'];
@@ -89,14 +109,14 @@ export const CIVIC_PROBLEM_LABELS: Record<CivicProblemType, string> = {
   [CIVIC_PROBLEM_TYPES.OTHER]: 'Outro',
 };
 
-export const CIVIC_PROBLEM_ICONS: Record<CivicProblemType, string> = {
-  [CIVIC_PROBLEM_TYPES.INFRASTRUCTURE]: '🏗️',
-  [CIVIC_PROBLEM_TYPES.SECURITY]: '🚨',
-  [CIVIC_PROBLEM_TYPES.HEALTH]: '🏥',
-  [CIVIC_PROBLEM_TYPES.ENVIRONMENT]: '🌳',
-  [CIVIC_PROBLEM_TYPES.TRANSPORT]: '🚌',
-  [CIVIC_PROBLEM_TYPES.EDUCATION]: '🎓',
-  [CIVIC_PROBLEM_TYPES.OTHER]: '📋',
+export const CIVIC_PROBLEM_ICONS: Record<CivicProblemType, TaxonomyIcon> = {
+  [CIVIC_PROBLEM_TYPES.INFRASTRUCTURE]: Construction,
+  [CIVIC_PROBLEM_TYPES.SECURITY]: ShieldAlert,
+  [CIVIC_PROBLEM_TYPES.HEALTH]: HeartPulse,
+  [CIVIC_PROBLEM_TYPES.ENVIRONMENT]: Globe2,
+  [CIVIC_PROBLEM_TYPES.TRANSPORT]: Bus,
+  [CIVIC_PROBLEM_TYPES.EDUCATION]: GraduationCap,
+  [CIVIC_PROBLEM_TYPES.OTHER]: ClipboardList,
 };
 
 // ============================================
@@ -153,14 +173,14 @@ export const ALERT_CATEGORY_LABELS: Record<AlertCategory, string> = {
   [ALERT_CATEGORIES.OTHER]: 'Outro',
 };
 
-export const ALERT_CATEGORY_ICONS: Record<AlertCategory, string> = {
-  [ALERT_CATEGORIES.SECURITY]: '🚨',
-  [ALERT_CATEGORIES.TRAFFIC]: '🚦',
-  [ALERT_CATEGORIES.WEATHER]: '🌤️',
-  [ALERT_CATEGORIES.HEALTH]: '🏥',
-  [ALERT_CATEGORIES.EVENT]: '📅',
-  [ALERT_CATEGORIES.EMERGENCY]: '🆘',
-  [ALERT_CATEGORIES.OTHER]: '📢',
+export const ALERT_CATEGORY_ICONS: Record<AlertCategory, TaxonomyIcon> = {
+  [ALERT_CATEGORIES.SECURITY]: ShieldAlert,
+  [ALERT_CATEGORIES.TRAFFIC]: TrafficCone,
+  [ALERT_CATEGORIES.WEATHER]: CloudSun,
+  [ALERT_CATEGORIES.HEALTH]: HeartPulse,
+  [ALERT_CATEGORIES.EVENT]: CalendarDays,
+  [ALERT_CATEGORIES.EMERGENCY]: Siren,
+  [ALERT_CATEGORIES.OTHER]: Megaphone,
 };
 
 // ============================================

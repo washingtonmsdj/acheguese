@@ -2,6 +2,8 @@ import React from "react";
 import { ArrowLeft, FileText, Shield, AlertTriangle, Scale, Users, Lock, Bell } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 
+const legalForum = import.meta.env.VITE_LEGAL_FORUM ?? "foro competente definido pela legislação aplicável";
+
 const sections = [
   {
     icon: Users,
@@ -89,7 +91,7 @@ Em nenhuma hipótese a responsabilidade total da Plataforma perante o Usuário e
   {
     icon: Scale,
     title: "10. Disposições Gerais",
-    content: `Estes Termos são regidos pelas leis da República Federativa do Brasil. Fica eleito o foro da comarca de Salvador/BA para dirimir quaisquer controvérsias decorrentes destes Termos, com renúncia expressa a qualquer outro, por mais privilegiado que seja.
+    content: `Estes Termos são regidos pelas leis da República Federativa do Brasil. Fica eleito ${legalForum} para dirimir quaisquer controvérsias decorrentes destes Termos, com renúncia expressa a qualquer outro, por mais privilegiado que seja.
 
 Se qualquer disposição destes Termos for considerada inválida ou inexequível, as demais disposições permanecerão em pleno vigor e efeito.
 

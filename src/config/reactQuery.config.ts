@@ -95,6 +95,14 @@ export const QUERY_KEYS = {
     subscriptions: (userId: string) => ['gastronomy', 'subscriptions', userId] as const,
     menus: (businessId: string) => ['gastronomy', 'menus', businessId] as const,
   },
+
+  // Community
+  community: {
+    groups: ['groups'] as const,
+    group: (groupId: string) => ['groups', groupId] as const,
+    groupMessages: (groupId: string) => ['groups', groupId, 'messages'] as const,
+    groupMembers: (groupId: string) => ['groups', groupId, 'members'] as const,
+  },
   
   // Mobility
   mobility: {

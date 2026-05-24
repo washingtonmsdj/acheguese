@@ -46,7 +46,6 @@ const itemVariants = {
 export interface HeroQuickFilter {
   label: string;
   icon?: LucideIcon;
-  emoji?: string;
   isActive?: boolean;
   onClick: () => void;
 }
@@ -321,7 +320,6 @@ export function CanonicalHero({
                   }`}
                 >
                   {chip.icon && <chip.icon className="h-3.5 w-3.5 shrink-0" />}
-                  {chip.emoji && <span className="text-xs">{chip.emoji}</span>}
                   {chip.label}
                 </button>
               ))}

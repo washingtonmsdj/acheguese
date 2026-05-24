@@ -41,17 +41,17 @@ export function PushNotificationSettings() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <BellOff className="h-5 w-5" />
-            Notificacoes Push
+            Notificações Push
           </CardTitle>
           <CardDescription>
-            Configure notificacoes push para este dispositivo
+            Configure notificações push para este dispositivo
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              Notificacoes push nao sao suportadas neste navegador.
+              Notificações push não são suportadas neste navegador.
             </AlertDescription>
           </Alert>
         </CardContent>
@@ -64,10 +64,10 @@ export function PushNotificationSettings() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Bell className="h-5 w-5" />
-          Notificacoes Push
+          Notificações Push
         </CardTitle>
         <CardDescription>
-          Configure notificacoes push para este dispositivo
+          Configure notificações push para este dispositivo
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -86,8 +86,8 @@ export function PushNotificationSettings() {
               <p className="font-medium">{isSubscribed ? "Ativado" : "Desativado"}</p>
               <p className="text-sm text-muted-foreground">
                 {isSubscribed
-                  ? "Voce recebera notificacoes neste dispositivo"
-                  : "Ative para receber notificacoes"}
+                  ? "Você receberá notificações neste dispositivo"
+                  : "Ative para receber notificações"}
               </p>
             </div>
           </div>
@@ -108,7 +108,7 @@ export function PushNotificationSettings() {
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              Voce precisa permitir notificacoes no navegador.
+              Você precisa permitir notificações no navegador.
             </AlertDescription>
           </Alert>
         )}

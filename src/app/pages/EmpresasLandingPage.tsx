@@ -12,7 +12,7 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useMemo, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
-import { MapPin } from "lucide-react";
+import { BadgeCheck, MapPin, Star, Store, ThumbsUp } from "lucide-react";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { useBusinessList } from "@/modules/business/hooks/useBusinessList";
 import { useBusinessUrls } from "@/modules/business/hooks/useBusinessUrls";
@@ -25,6 +25,7 @@ import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerrito
 import { useTerritoryLabels } from "@/core/location/hooks/useTerritoryLabels";
 import { useNearbyEntities } from "@/core/geospatial/hooks/useSpatialSearch";
 import { useRobustGeolocation } from "@/shared/hooks";
+import { normalizeBusinessCategoryId } from "@/shared/taxonomy/businessCategories";
 
 import heroImg from "@/assets/empresas-hero.jpg";
 import heroImg2 from "@/assets/servicos-hero.jpg";
@@ -47,7 +48,6 @@ import { EmpresasHeader } from "@/app/features/business-landing/components";
 import {
   CATEGORIES,
   NEIGHBOR_ACTIVITY,
-  STATS,
   QUICK_FILTERS,
   BENEFITS,
   getBusinessUrl,
@@ -235,6 +235,39 @@ export default function EmpresasLandingPage({
       }) as Business[];
   }, [nearbyMode, nearbyBusinesses, realBusinesses]);
 
+  const categoryCards = useMemo(() => {
+    const counts = businessesToShow.reduce<Record<string, number>>((acc, business) => {
+      const category = normalizeBusinessCategoryId(business.category);
+      acc[category] = (acc[category] ?? 0) + 1;
+      return acc;
+    }, {});
+
+    return CATEGORIES.map((category) => ({
+      ...category,
+      count: String(counts[normalizeBusinessCategoryId(category.slug)] ?? 0),
+    }));
+  }, [businessesToShow]);
+
+  const stats = useMemo(() => {
+    const total = businessesToShow.length;
+    const ratings = businessesToShow
+      .map((business) => business.rating)
+      .filter((rating) => rating > 0);
+    const averageRating =
+      ratings.length > 0
+        ? (ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length).toFixed(1)
+        : "Sem avaliações";
+    const verified = businessesToShow.filter((business) => business.is_verified).length;
+    const neighborRecs = businessesToShow.reduce((sum, business) => sum + business.neighborRecs, 0);
+
+    return [
+      { icon: Store, value: total.toLocaleString("pt-BR"), label: "empresas cadastradas" },
+      { icon: Star, value: averageRating, label: "avaliação média" },
+      { icon: BadgeCheck, value: verified.toLocaleString("pt-BR"), label: "verificadas" },
+      { icon: ThumbsUp, value: neighborRecs.toLocaleString("pt-BR"), label: "recomendações" },
+    ];
+  }, [businessesToShow]);
+
   const filteredBusinesses = useMemo(() => {
     let result = businessesToShow;
     if (searchQuery) {
@@ -308,7 +341,7 @@ export default function EmpresasLandingPage({
           <title>Empresas locais | Achegue-se</title>
           <meta
             name="description"
-            content="Descubra empresas, lojas e negocios locais no Achegue-se. Encontre comercios perto de voce, recomendacoes da comunidade e rotas canonicas por territorio."
+            content="Descubra empresas, lojas e negócios locais no Achegue-se. Encontre comércios perto de você, recomendações da comunidade e rotas canônicas por território."
           />
         </Helmet>
       )}
@@ -321,7 +354,7 @@ export default function EmpresasLandingPage({
 
       {/* Categorias no Topo */}
       <EmpresasCategoriasSection
-        categories={CATEGORIES}
+        categories={categoryCards}
         businessUrls={businessUrls}
         navigate={navigate}
       />
@@ -382,7 +415,7 @@ export default function EmpresasLandingPage({
       />
 
       {/* Stats */}
-      <EmpresasStatsSection stats={STATS} />
+      <EmpresasStatsSection stats={stats} />
 
       {/* Atividade dos Vizinhos */}
       <EmpresasAtividadeSection activities={NEIGHBOR_ACTIVITY} />

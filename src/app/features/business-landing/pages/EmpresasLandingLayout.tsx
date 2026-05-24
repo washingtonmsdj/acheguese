@@ -1,23 +1,19 @@
-/**
- * EmpresasLandingLayout
- * 
- * Layout wrapper para a página de empresas landing
- */
-
 import type { ReactNode } from "react";
+import { TERRITORY_CONFIG } from "@/config/territory";
 
 interface EmpresasLandingLayoutProps {
   readonly children: ReactNode;
 }
 
 export function EmpresasLandingLayout({ children }: EmpresasLandingLayoutProps) {
+  const launchPlace = `${TERRITORY_CONFIG.launch.name}, ${TERRITORY_CONFIG.launch.state.toUpperCase()}`;
+
   return (
-    <div className="min-h-screen w-full bg-background text-foreground flex flex-col">
+    <div className="flex min-h-screen w-full flex-col bg-background text-foreground">
       {children}
-      
-      {/* Footer */}
-      <footer className="w-full bg-card border-t border-border px-4 sm:px-6 py-4 text-center text-muted-foreground text-xs">
-        Empresas Locais · Salvador, BA · Bairro Conectado
+
+      <footer className="w-full border-t border-border bg-card px-4 py-4 text-center text-xs text-muted-foreground sm:px-6">
+        Empresas locais · {launchPlace} · Território conectado
       </footer>
     </div>
   );

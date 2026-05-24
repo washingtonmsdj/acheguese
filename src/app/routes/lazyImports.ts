@@ -18,7 +18,6 @@ export const AppLayoutSidebar = lazy(() =>
 export const MainLandingPage = lazy(() => import("@/app/pages/MainLandingPage"));
 export const EmpresasLandingPage = lazy(() => import("@/app/pages/EmpresasLandingPage"));
 export const CidadeLandingPage = lazy(() => import("@/app/pages/CidadeLandingPage"));
-export const ComplexoNordesteLandingPage = lazy(() => import("@/app/pages/ComplexoNordesteLandingPage"));
 export const AboutPage = lazy(() => import("@/app/pages/AboutPage"));
 export const ContactPage = lazy(() => import("@/app/pages/ContactPage"));
 export const SplashPage = lazy(() => import("@/app/pages/SplashPage"));
@@ -34,7 +33,6 @@ export const VirtualTryOnPage = lazy(() => import("@/app/pages/VirtualTryOnPage"
 // AUTENTICACAO E ONBOARDING
 // ============================================================
 export const LoginPage = lazy(() => import("@/app/pages/LoginPage"));
-export const SimpleLoginPage = lazy(() => import("@/app/pages/SimpleLoginPage"));
 export const CadastroPage = lazy(() => import("@/app/features/onboarding/pages/CadastroPage"));
 export const CadastroConfirmacaoPage = lazy(() => import("@/app/features/onboarding/pages/CadastroConfirmacaoPage"));
 export const ResetPasswordPage = lazy(() => import("@/app/pages/ResetPasswordPage"));
@@ -73,7 +71,7 @@ export const ProfilePublicRoute = lazy(() => import("@/core/routing/components/P
 export const CriarEmpresaPage = lazy(() => import("@/modules/business/pages/CriarEmpresaPage"));
 export const EmpresasCadastroLandingPage = lazy(() => import("@/modules/business/pages/EmpresasCadastroLandingPage"));
 export const EditarEmpresaPage = lazy(() => import("@/modules/business/pages/EditarEmpresaPage"));
-export const DashboardEmpresaPage = lazy(() => import("@/app/features/dashboard/pages/DashboardEmpresaPage"));
+export const DashboardEmpresaPage = lazy(() => import("@/core/business/services/DashboardEmpresaPage"));
 export const BusinessDashboardShellPage = lazy(() => import("@/modules/business/dashboard/pages/BusinessDashboardShellPage"));
 export const BusinessOverviewPage = lazy(() => import("@/modules/business/dashboard/pages/BusinessOverviewPage"));
 export const BusinessDetailsPage = lazy(() => import("@/modules/business/dashboard/pages/BusinessDetailsPage"));
@@ -139,8 +137,6 @@ export const EditarServicoPage = lazy(() => import("@/modules/professionals/serv
 // ============================================================
 export const ClassificadoDetailPage = lazy(() => import("@/modules/classifieds/pages/ClassificadoDetailPage"));
 export const ClassificadosPage = lazy(() => import("@/modules/classifieds/pages/ClassificadosPage"));
-export const ClassificadoDetailLandingPage = lazy(() => import("@/app/pages/ClassificadoDetailLandingPage"));
-export const ClassificadoChatLandingPage = lazy(() => import("@/app/pages/ClassificadoChatLandingPage"));
 export const NovoClassificadoPage = lazy(() => import("@/modules/classifieds/pages/NovoClassificadoPage"));
 export const EditarClassificadoPage = lazy(() => import("@/modules/classifieds/pages/EditarClassificadoPage"));
 export const VendedorPerfilPage = lazy(() => import("@/modules/classifieds/pages/VendedorPerfilPage"));
@@ -154,6 +150,7 @@ export const PublicarVagaPage = lazy(() => import("@/modules/classifieds/jobs/pa
 export const VagasPublicPage = lazy(() => import("@/modules/classifieds/jobs/pages/VagasPublicPage"));
 export const VagaDetailPage = lazy(() => import("@/modules/classifieds/jobs/pages/VagaDetailPage"));
 export const VagaDetailPublicPage = lazy(() => import("@/modules/classifieds/jobs/pages/VagaDetailPublicPage"));
+export const WorkOpportunitiesPage = lazy(() => import("@/modules/work-opportunities/pages/WorkOpportunitiesPage"));
 export const WorkOpportunityDetailPage = lazy(() => import("@/modules/work-opportunities/pages/WorkOpportunityDetailPage"));
 
 // ============================================================
@@ -183,7 +180,6 @@ export const NovoAchadoPerdidoPage = lazy(() => import("@/modules/community-lost
 export const AchadoPerdidoDetailPage = lazy(() => import("@/modules/community-lost-found/pages/AchadoPerdidoDetailPage"));
 export const ProblemasPage = lazy(() => import("@/modules/community-issues/pages/ProblemasPage"));
 export const NovoPostPage = lazy(() => import("@/modules/community-feed/pages/NovoPostPage"));
-export const ExamplePostPage = lazy(() => import("@/modules/community-feed/pages/ExamplePostPage"));
 
 // Comunicacao Territorial
 export const CommunicationLandingPage = lazy(() => import("@/modules/communication-territorial/pages/CommunicationLandingPage").then(module => ({ default: module.default })));
@@ -212,8 +208,6 @@ export const EmergencyContactsPage = lazy(() => import("@/modules/mobility/pages
 // ============================================================
 // PONTOS TURISTICOS (GUIDE)
 // ============================================================
-export const PontosTuristicosPage = lazy(() => import("@/app/pages/PontosTuristicosPage"));
-export const PontoTuristicoDetailPage = lazy(() => import("@/app/pages/PontoTuristicoDetailPage"));
 export const GuideTouristPointsPage = lazy(() => import("@/modules/guide/pages/TouristPointsPage"));
 export const GuideTouristPointDetailPage = lazy(() => import("@/modules/guide/pages/TouristPointDetailPage"));
 export const TouristPointRouteResolver = lazy(() =>
@@ -271,20 +265,11 @@ export const OfflineSettingsPage = lazy(() => import("@/app/pages/OfflineSetting
 export const PrivacySettingsPage = lazy(() => import("@/app/pages/PrivacySettingsPage"));
 export const DPOContactPage = lazy(() => import("@/app/pages/DPOContactPage"));
 
-// ============================================================
-// DEV/ADMIN PAGES
-// ============================================================
-export const MotoboyValidationPage = lazy(() =>
-  import("@/app/pages/dev/MotoboyValidationPage").then(m => ({ default: m.MotoboyValidationPage }))
-);
 export const LocationsAdminPage = lazy(() => import("@/modules/admin/pages/LocationsAdminPage"));
 
 // ============================================================
 // ADMIN DASHBOARD E MODULOS
 // ============================================================
-export const AdminDashboardPage = lazy(() => import("@/modules/admin/pages/AdminDashboardPage"));
-export const AdminBusinessesPage = lazy(() => import("@/modules/admin/pages/AdminBusinessesPage"));
-export const AdminPlansPage = lazy(() => import("@/modules/admin/pages/AdminPlansPage"));
 
 // ============================================================
 // ADMIN LAYOUT E PAGINAS
@@ -335,7 +320,6 @@ export const AdminTerritoryContent = lazy(() => import("@/modules/admin/pages/Ad
 export const AdminTerritorialGroups = lazy(() => import("@/modules/admin/pages/AdminTerritorialGroups"));
 export const AdminCityMetadata = lazy(() => import("@/modules/admin/pages/AdminCityMetadata"));
 export const AdminTerritoryManagement = lazy(() => import("@/modules/admin/pages/AdminTerritoryManagement"));
-export const AdminGooglePlacesImport = lazy(() => import("@/modules/admin/pages/AdminGooglePlacesImport"));
 
 // ============================================================
 // CENTRAL - Gestao e Operacao

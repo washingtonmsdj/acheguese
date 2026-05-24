@@ -58,7 +58,7 @@ export interface Business {
 export interface Category {
   readonly icon: LucideIcon;
   readonly label: string;
-  readonly count: string;
+  readonly count?: string;
   readonly iconColor: string;
   readonly bg: string;
   readonly slug: string;
@@ -73,7 +73,6 @@ export interface NeighborActivity {
   readonly action: string;
   readonly business: string;
   readonly time: string;
-  readonly emoji: string;
 }
 
 // ============================================

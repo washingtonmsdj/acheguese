@@ -17,6 +17,7 @@ import { useBilling } from '@/core/billing/hooks/useBilling';
 import { useSubscription } from '@/core/billing/hooks/useSubscription';
 import { useAuth } from '@/core/auth/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
+import { buildPublicAbsoluteUrl } from '@/shared/config/publicAppOrigin';
 export default function PricingPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -26,7 +27,7 @@ export default function PricingPage() {
 
   const handleSelectPlan = async (planCode: string) => {
     if (!user) {
-      navigate('/login?redirect=/pricing');
+      navigate('/login?redirect=/planos');
       return;
     }
 
@@ -39,8 +40,8 @@ export default function PricingPage() {
     try {
       await redirectToCheckout({
         planCode,
-        successUrl: `${window.location.origin}/checkout/success`,
-        cancelUrl: `${window.location.origin}/pricing`,
+        successUrl: buildPublicAbsoluteUrl('/checkout/success'),
+        cancelUrl: buildPublicAbsoluteUrl('/planos'),
       });
     } catch (error) {
       logger.error('Error redirecting to checkout:', error);

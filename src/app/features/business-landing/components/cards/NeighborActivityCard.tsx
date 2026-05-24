@@ -5,6 +5,7 @@
  */
 
 import { motion } from "framer-motion";
+import { MessageCircle } from "lucide-react";
 import type { NeighborActivityCardProps } from "../../sections/types";
 
 export function NeighborActivityCard({ activity, index }: NeighborActivityCardProps) {
@@ -15,7 +16,7 @@ export function NeighborActivityCard({ activity, index }: NeighborActivityCardPr
       transition={{ delay: index * 0.1 }}
       className="flex items-center gap-3 bg-card border border-border rounded-xl px-4 py-3 min-w-[280px] shrink-0 hover:border-primary/30 transition-colors"
     >
-      <span className="text-xl">{activity.emoji}</span>
+      <MessageCircle className="h-5 w-5 shrink-0 text-primary" />
       <div className="min-w-0">
         <p className="text-sm text-foreground truncate">
           <span className="font-semibold">{activity.user}</span>{" "}

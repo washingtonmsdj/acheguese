@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Navigation Configuration - SSOT
  *
  * Single Source of Truth para todos os itens de navegacao da aplicacao.
@@ -22,6 +22,7 @@ import {
   LayoutGrid,
   type LucideIcon,
 } from 'lucide-react';
+import { LAUNCH_URLS } from '@/config/territory';
 
 export interface NavItem {
   id: string;
@@ -53,15 +54,15 @@ export const NAV_SECTIONS: NavSection[] = [
       {
         id: 'home',
         icon: Home,
-        label: 'Inicio',
+        label: 'Início',
         href: '/',
-        description: 'Pagina inicial',
+        description: 'Página inicial',
       },
       {
         id: 'neighborhood',
         icon: Users,
         label: 'Meu Bairro',
-        href: '/comunidade',
+        href: LAUNCH_URLS.community,
         description: 'Hub da comunidade',
         requiresAuth: true,
       },
@@ -77,19 +78,19 @@ export const NAV_SECTIONS: NavSection[] = [
         icon: UtensilsCrossed,
         label: 'Gastronomia',
         href: '/gastronomia',
-        description: 'Restaurantes e cardapios',
+        description: 'Restaurantes e cardápios',
       },
       {
         id: 'services',
         icon: Wrench,
-        label: 'Servicos',
+        label: 'Serviços',
         href: '/servicos',
         description: 'Profissionais locais',
       },
       {
         id: 'education',
         icon: GraduationCap,
-        label: 'Educacao',
+        label: 'Educação',
         href: '/educacao',
         description: 'Cursos e escolas locais',
       },
@@ -98,7 +99,7 @@ export const NAV_SECTIONS: NavSection[] = [
         icon: Tag,
         label: 'Classificados',
         href: '/classificados',
-        description: 'Anuncios locais',
+        description: 'Anúncios locais',
       },
     ],
   },
@@ -145,14 +146,14 @@ export const NAV_SECTIONS: NavSection[] = [
         icon: MapPin,
         label: 'Perto de Mim',
         href: '/perto-de-mim',
-        description: 'Descubra o que esta proximo',
+        description: 'Descubra o que está próximo',
       },
       {
         id: 'map',
         icon: Map,
         label: 'Mapa',
         href: '/mapa',
-        description: 'Mapa de empresas e servicos',
+        description: 'Mapa de empresas e serviços',
       },
       {
         id: 'mobility',
@@ -180,9 +181,9 @@ export const MOBILE_NAV_ITEMS: NavItem[] = [
   {
     id: 'home',
     icon: Home,
-    label: 'Inicio',
+    label: 'Início',
     href: '/',
-    description: 'Pagina inicial',
+    description: 'Página inicial',
   },
   {
     id: 'business',
@@ -195,7 +196,7 @@ export const MOBILE_NAV_ITEMS: NavItem[] = [
     id: 'community',
     icon: Users,
     label: 'Meu Bairro',
-    href: '/comunidade',
+    href: LAUNCH_URLS.community,
     description: 'Comunidade',
   },
   {
@@ -203,19 +204,19 @@ export const MOBILE_NAV_ITEMS: NavItem[] = [
     icon: UtensilsCrossed,
     label: 'Gastronomia',
     href: '/gastronomia',
-    description: 'Restaurantes e cardapios',
+    description: 'Restaurantes e cardápios',
   },
   {
     id: 'classifieds',
     icon: Tag,
-    label: 'Anuncios',
+    label: 'Anúncios',
     href: '/classificados',
     description: 'Classificados',
   },
   {
     id: 'services',
     icon: Wrench,
-    label: 'Servicos',
+    label: 'Serviços',
     href: '/servicos',
     description: 'Profissionais locais',
   },

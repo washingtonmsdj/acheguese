@@ -9,6 +9,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { CheckCircle2, Flag } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { getRecommendationCategoryDetails } from "@/shared/taxonomy/recommendations";
 interface QuestionAuthor {
   name?: string | null;
   avatar_url?: string | null;
@@ -29,18 +30,8 @@ interface QuestionCardProps {
   onReport: () => void;
 }
 
-const CATEGORIAS: Record<string, { label: string; icon: string }> = {
-  services: { label: "Serviços", icon: "🔧" },
-  restaurantes: { label: "Restaurantes", icon: "🍽️" },
-  manutencao: { label: "Manutenção", icon: "🏠" },
-  saude: { label: "Saúde", icon: "🏥" },
-  pets: { label: "Pets", icon: "🐾" },
-  compras: { label: "Compras", icon: "🛒" },
-  outros: { label: "Outros", icon: "📌" },
-};
-
 export function QuestionCard({ question, onReport }: QuestionCardProps) {
-  const cat = CATEGORIAS[question.category] || CATEGORIAS.outros;
+  const category = getRecommendationCategoryDetails(question.category);
 
   return (
     <div className="px-4 py-4 border-b">
@@ -60,11 +51,8 @@ export function QuestionCard({ question, onReport }: QuestionCardProps) {
             })}
           </p>
         </div>
-        <Badge variant="secondary" className="ml-auto text-xs gap-1">
-          <span role="img" aria-label={cat.label}>
-            {cat.icon}
-          </span>{" "}
-          {cat.label}
+        <Badge variant="secondary" className="ml-auto text-xs">
+          {category.label}
         </Badge>
       </div>
 

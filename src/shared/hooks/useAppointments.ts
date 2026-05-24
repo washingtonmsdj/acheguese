@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { logger } from "@/shared/utils/logger";
+import { buildTelUrl, buildWhatsAppUrl, openContactUrl } from "@/shared/utils/contactLinks";
+import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
 
 type AppointmentStatus = "pending" | "confirmed" | "cancelled" | "completed";
 
@@ -79,12 +81,11 @@ export const useAppointments = ({ businessId }: UseAppointmentsProps) => {
     (appointment: Appointment, method: "whatsapp" | "phone") => {
       if (method === "whatsapp") {
         const message = `Ola ${appointment.client_name}! Sobre seu agendamento de ${appointment.service_name} para ${appointment.appointment_date} as ${appointment.appointment_time}.`;
-        window.open(
-          `https://wa.me/${appointment.client_phone.replace(/\D/g, "")}?text=${encodeURIComponent(message)}`,
-          "_blank",
-        );
+        const url = buildWhatsAppUrl(appointment.client_phone, message);
+        if (url) openSafeExternalUrl(url, { context: "appointments-client-whatsapp" });
       } else {
-        window.location.href = `tel:${appointment.client_phone}`;
+        const url = buildTelUrl(appointment.client_phone);
+        openContactUrl(url);
       }
     },
     [],

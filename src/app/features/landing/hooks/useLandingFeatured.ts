@@ -5,7 +5,7 @@
  * Usa TanStack Query com staleTime generoso (5 min) — dados de vitrine não precisam
  * ser frescos a cada render.
  *
- * Usa createLandingFeaturedService() para alternar entre mock e Supabase.
+ * Usa createLandingFeaturedService() como ponto único para dados reais da landing.
  */
 
 import { useQuery } from '@tanstack/react-query';
