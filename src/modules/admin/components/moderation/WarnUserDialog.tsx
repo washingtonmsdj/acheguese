@@ -79,12 +79,12 @@ export function WarnUserDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="advertencia">⚠️ Advertência</SelectItem>
+                <SelectItem value="advertencia">Advertência</SelectItem>
                 <SelectItem value="suspensao_7d">
-                  🚫 Suspensão (7 dias)
+                  Suspensão (7 dias)
                 </SelectItem>
                 <SelectItem value="suspensao_permanente">
-                  ❌ Suspensão Permanente
+                  Suspensão permanente
                 </SelectItem>
               </SelectContent>
             </Select>

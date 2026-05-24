@@ -1,7 +1,7 @@
 /**
- * ProfileHeader - Cabeçalho do hub de perfil
- * 
- * Exibe avatar, nome, badges de status e ações principais
+ * ProfileHeader - Cabecalho do hub de perfil
+ *
+ * Exibe avatar, nome, badges de status e acoes principais
  */
 
 import { useRef } from 'react';
@@ -55,13 +55,13 @@ function formatPlanLabel(value?: string | null): string {
     case 'delivery':
       return 'Delivery';
     case 'basic':
-      return 'Basico';
+      return 'Básico';
     case 'premium':
       return 'Premium';
     case 'enterprise':
       return 'Enterprise';
     default:
-      return value ? value[0].toUpperCase() + value.slice(1) : 'Basico';
+      return value ? value[0].toUpperCase() + value.slice(1) : 'Básico';
   }
 }
 
@@ -107,13 +107,13 @@ function getVerificationTone(status: string): string {
 function getVerificationLabel(status: string): string {
   switch (status) {
     case 'approved':
-      return 'Residencia aprovada';
+      return 'Residência aprovada';
     case 'rejected':
-      return 'Residencia rejeitada';
+      return 'Residência rejeitada';
     case 'pending':
-      return 'Residencia em analise';
+      return 'Residência em análise';
     default:
-      return 'Residencia nao enviada';
+      return 'Residência não enviada';
   }
 }
 
@@ -138,7 +138,7 @@ export function ProfileHeader({
 
   const displayName = activeProfile?.display_name || profile?.display_name || userEmail;
   const avatarUrl = activeProfile?.avatar_url || profile?.avatar_url;
-  const bio = activeProfile?.bio || profile?.bio || 'Use este hub para coordenar identidade, operacao, negocios, conteudo e modulos ativos a partir do estado real atual da plataforma.';
+  const bio = activeProfile?.bio || profile?.bio || 'Use este hub para coordenar identidade, operação, negócios, conteúdo e módulos ativos a partir do estado real atual da plataforma.';
 
   const openCanonicalEditor = () => {
     const editorProfileId = activeProfile?.id ?? profile?.id;
@@ -205,7 +205,7 @@ export function ProfileHeader({
                 {getVerificationLabel(accountSnapshot.verificationStatus)}
               </Badge>
               <Badge variant="outline">
-                {notifications.unread > 0 ? `${notifications.unread} notificacoes nao lidas` : 'Inbox em dia'}
+                {notifications.unread > 0 ? `${notifications.unread} notificações não lidas` : 'Inbox em dia'}
               </Badge>
             </div>
 
@@ -219,7 +219,7 @@ export function ProfileHeader({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
-                {territoryLabel || 'Territorio ainda nao configurado'}
+                {territoryLabel || 'Território ainda não configurado'}
               </span>
               <span className="flex items-center gap-1">
                 <Users className="h-3.5 w-3.5" />
@@ -229,7 +229,7 @@ export function ProfileHeader({
                 <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
-                {notifications.highPriority + notifications.urgentPriority} alertas prioritarios
+                {notifications.highPriority + notifications.urgentPriority} alertas prioritários
               </span>
             </div>
           </div>
@@ -243,7 +243,7 @@ export function ProfileHeader({
           {canOpenPublicProfile ? (
             <Button variant="outline" className="gap-1.5" onClick={() => navigate(buildPublicProfileUrl(handle))}>
               <Globe className="h-4 w-4" />
-              Abrir publico
+              Abrir público
             </Button>
           ) : null}
         </div>

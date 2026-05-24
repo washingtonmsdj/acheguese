@@ -1,14 +1,14 @@
 /**
- * PlanosSection - Seção de planos e assinaturas
- * 
+ * PlanosSection - Secao de planos e assinaturas
+ *
  * SSOT: Componente isolado com props tipadas
- * Sem gambiarras: Lógica clara e organizada
- * 
- * FASE 6 - P2: Badges visuais já resolvidos no backend
+ * Sem gambiarras: Logica clara e organizada
+ *
+ * FASE 6 - P2: Badges visuais ja resolvidos no backend
  * - businessModules.subscription.canUse* vem de ProfileService
  * - ProfileService usa EntitlementResolver para popular subscription
- * - Componente apenas exibe, não calcula elegibilidade
- * - Aceitável para P2 (baixo risco - apenas visual)
+ * - Componente apenas exibe, nao calcula elegibilidade
+ * - Aceitavel para P2 (baixo risco - apenas visual)
  */
 
 import { Badge } from "@/shared/components/ui/badge";
@@ -25,13 +25,13 @@ function formatPlanLabel(value?: string | null): string {
     case "delivery":
       return "Delivery";
     case "basic":
-      return "Basico";
+      return "Básico";
     case "premium":
       return "Premium";
     case "enterprise":
       return "Enterprise";
     default:
-      return value ? value[0].toUpperCase() + value.slice(1) : "Basico";
+      return value ? value[0].toUpperCase() + value.slice(1) : "Básico";
   }
 }
 
@@ -53,7 +53,7 @@ export function PlanosSection({
               {formatPlanLabel(identity?.plan?.type || context?.plan?.type)}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Premium: {identity?.plan?.isPremium || context?.plan?.isPremium ? "sim" : "nao"}
+              Premium: {identity?.plan?.isPremium || context?.plan?.isPremium ? "sim" : "não"}
             </p>
           </div>
           <div className="rounded-2xl border border-border bg-background p-4">

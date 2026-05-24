@@ -122,11 +122,11 @@ export function NotificationSettings({
     },
     onSuccess: async () => {
       await settingsQuery.refetch();
-      toast.success("Configuracoes de notificacoes atualizadas.");
+      toast.success("Configurações de notificações atualizadas.");
       await Promise.resolve(onUpdate());
     },
     onError: () => {
-      toast.error("Erro ao salvar configuracoes.");
+      toast.error("Erro ao salvar configurações.");
     },
   });
 
@@ -151,7 +151,7 @@ export function NotificationSettings({
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
           <p className="text-sm text-muted-foreground">
-            Carregando preferencias de notificacao...
+            Carregando preferências de notificação...
           </p>
         </div>
       </div>
@@ -167,11 +167,11 @@ export function NotificationSettings({
           </div>
           <div className="space-y-1">
             <h2 className="text-base font-semibold text-foreground">
-              Falha ao carregar notificacoes
+              Falha ao carregar notificações
             </h2>
             <p className="text-sm text-muted-foreground">
-              O painel privado nao vai operar em cima de defaults locais quando o
-              estado persistido nao estiver disponivel.
+              O painel privado não vai operar em cima de defaults locais quando o
+              estado persistido não estiver disponível.
             </p>
           </div>
         </div>
@@ -188,7 +188,7 @@ export function NotificationSettings({
       <motion.div {...fadeUp} transition={{ duration: 0.3 }}>
         <h2 className="text-xl font-bold font-display tracking-tight text-foreground flex items-center gap-2">
           <Bell className="h-5 w-5 text-primary" />
-          Notificacoes
+          Notificações
         </h2>
         <p className="text-sm text-muted-foreground mt-1">
           O estado abaixo reflete o contrato persistido em
@@ -206,15 +206,15 @@ export function NotificationSettings({
             <Mail className="h-4 w-4 text-primary" />
           </div>
           <h3 className="text-sm font-semibold text-foreground">
-            Canais de notificacao
+            Canais de notificação
           </h3>
         </div>
         <div className="p-5 space-y-5">
           <ToggleRow
             id="emailNotifications"
             icon={Mail}
-            label="Notificacoes por email"
-            description="Receba atualizacoes importantes por email."
+            label="Notificações por email"
+            description="Receba atualizações importantes por email."
             checked={settings.emailNotifications}
             onToggle={() => handleToggle("emailNotifications")}
           />
@@ -222,7 +222,7 @@ export function NotificationSettings({
           <ToggleRow
             id="pushNotifications"
             icon={Bell}
-            label="Notificacoes push"
+            label="Notificações push"
             description="Receba alertas em tempo real no navegador."
             checked={settings.pushNotifications}
             onToggle={() => handleToggle("pushNotifications")}
@@ -247,15 +247,15 @@ export function NotificationSettings({
           <ToggleRow
             id="newMessages"
             label="Novas mensagens"
-            description="Quando alguem enviar uma mensagem direta."
+            description="Quando alguém enviar uma mensagem direta."
             checked={settings.newMessages}
             onToggle={() => handleToggle("newMessages")}
           />
           <Separator />
           <ToggleRow
             id="newComments"
-            label="Novos comentarios"
-            description="Quando alguem comentar nos seus posts."
+            label="Novos comentários"
+            description="Quando alguém comentar nos seus posts."
             checked={settings.newComments}
             onToggle={() => handleToggle("newComments")}
           />
@@ -263,7 +263,7 @@ export function NotificationSettings({
             id="newLikes"
             icon={Heart}
             label="Novas curtidas"
-            description="Quando alguem curtir seus posts ou comentarios."
+            description="Quando alguem curtir seus posts ou comentários."
             checked={settings.newLikes}
             onToggle={() => handleToggle("newLikes")}
           />
@@ -271,7 +271,7 @@ export function NotificationSettings({
             id="newFollowers"
             icon={Users}
             label="Novos seguidores"
-            description="Quando alguem comecar a seguir voce."
+            description="Quando alguém começar a seguir você."
             checked={settings.newFollowers}
             onToggle={() => handleToggle("newFollowers")}
           />
@@ -288,21 +288,21 @@ export function NotificationSettings({
             <Building2 className="h-4 w-4 text-primary" />
           </div>
           <h3 className="text-sm font-semibold text-foreground">
-            Atualizacoes da plataforma
+            Atualizações da plataforma
           </h3>
         </div>
         <div className="p-5 space-y-5">
           <ToggleRow
             id="businessUpdates"
-            label="Atualizacoes de empresas"
-            description="Novidades sobre empresas que voce acompanha."
+            label="Atualizações de empresas"
+            description="Novidades sobre empresas que você acompanha."
             checked={settings.businessUpdates}
             onToggle={() => handleToggle("businessUpdates")}
           />
           <Separator />
           <ToggleRow
             id="communityUpdates"
-            label="Atualizacoes da comunidade"
+            label="Atualizações da comunidade"
             description="Alertas e novidades da sua comunidade."
             checked={settings.communityUpdates}
             onToggle={() => handleToggle("communityUpdates")}
@@ -335,7 +335,7 @@ export function NotificationSettings({
           ) : (
             <Save className="h-4 w-4" />
           )}
-          Salvar alteracoes
+          Salvar alterações
         </Button>
       </motion.div>
     </div>

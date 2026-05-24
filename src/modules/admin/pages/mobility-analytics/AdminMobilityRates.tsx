@@ -1,4 +1,4 @@
-﻿import { CheckCircle, Percent, XCircle } from "lucide-react";
+import { CheckCircle, Percent, XCircle } from "lucide-react";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Progress } from "@/shared/components/ui/progress";
 import type { MobilidadeStats } from "./AdminMobilityAnalytics.types";

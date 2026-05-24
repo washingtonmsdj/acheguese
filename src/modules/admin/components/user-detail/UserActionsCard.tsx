@@ -22,6 +22,8 @@ import { toast } from "sonner";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { buildPublicProfileUrl } from "@/core/profiles/utils/publicProfileUrl";
+import { buildMailtoUrl, buildWhatsAppUrl, openContactUrl } from "@/shared/utils/contactLinks";
+import { openSafeExternalUrl, openSafeUrlInNewTab } from "@/shared/utils/safeRedirect";
 
 interface UserActionsCardProps {
   user: {
@@ -85,19 +87,21 @@ export function UserActionsCard({ user, onUpdate }: UserActionsCardProps) {
       return;
     }
 
-    window.open(buildPublicProfileUrl(username), "_blank");
+    openSafeUrlInNewTab(buildPublicProfileUrl(username), {
+      context: "admin-user-public-profile",
+    });
   };
 
   const sendEmail = () => {
     if (user.email) {
-      window.open(`mailto:${user.email}`, "_blank");
+      openContactUrl(buildMailtoUrl(user.email));
     }
   };
 
   const openWhatsApp = () => {
-    const phone = user.phone?.replace(/\D/g, "");
-    if (phone) {
-      window.open(`https://wa.me/55${phone}`, "_blank");
+    const url = buildWhatsAppUrl(user.phone);
+    if (url) {
+      openSafeExternalUrl(url, { context: "admin-user-actions-whatsapp" });
     }
   };
 

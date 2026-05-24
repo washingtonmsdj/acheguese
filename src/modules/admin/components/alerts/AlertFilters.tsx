@@ -40,9 +40,9 @@ export function AlertFilters({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="todos">Todos os status</SelectItem>
-          <SelectItem value={ALERT_STATUS.ACTIVE}>✅ Ativo</SelectItem>
-          <SelectItem value="oculto">🚫 Oculto</SelectItem>
-          <SelectItem value="expirado">⏱️ Expirado</SelectItem>
+          <SelectItem value={ALERT_STATUS.ACTIVE}>Ativo</SelectItem>
+          <SelectItem value="oculto">Oculto</SelectItem>
+          <SelectItem value="expirado">Expirado</SelectItem>
         </SelectContent>
       </Select>
       <Select value={filterBairro} onValueChange={onFilterBairroChange}>

@@ -240,7 +240,7 @@ export default function ContaHubPage() {
       <div className="flex min-h-[60vh] items-center justify-center px-4">
         <div className="space-y-3 text-center">
           <div className="mx-auto h-9 w-9 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          <p className="text-sm text-muted-foreground">Carregando area da conta...</p>
+          <p className="text-sm text-muted-foreground">Carregando área da conta...</p>
         </div>
       </div>
     );
@@ -255,7 +255,7 @@ export default function ContaHubPage() {
         <div className="w-full rounded-lg border border-border bg-card p-8 text-center shadow-sm">
           <CircleAlert className="mx-auto h-10 w-10 text-amber-600" />
           <h1 className="mt-4 text-xl font-semibold text-foreground">
-            Nao foi possivel carregar a conta
+            Não foi possível carregar a conta
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
             O snapshot privado falhou. Tente novamente para recuperar os dados.
@@ -286,7 +286,7 @@ export default function ContaHubPage() {
             Nenhuma identidade ativa disponivel
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Sua conta carregou, mas ainda nao ha um perfil operacional ativo.
+            Sua conta carregou, mas ainda não há um perfil operacional ativo.
           </p>
           <div className="mt-6 flex justify-center">
             <Button onClick={() => navigate(data.appUrls.business.create)}>

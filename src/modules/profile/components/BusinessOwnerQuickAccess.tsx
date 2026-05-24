@@ -1,14 +1,14 @@
 /**
  * BusinessOwnerQuickAccess
- * 
+ *
  * Widget de acesso rápido para donos de empresas.
  * Exibe cards destacados com links diretos para dashboards e funcionalidades principais.
- * 
+ *
  * PROPÓSITO:
  * - Resolver problema de donos não encontrarem como gerenciar suas empresas
  * - Fornecer acesso visual e intuitivo aos dashboards
  * - Destacar funcionalidades principais (cardápio, analytics, pedidos)
- * 
+ *
  * FASE 6 - P2: Badges visuais já resolvidos no backend
  * - biz.subscription.canUse* vem de ProfileService
  * - ProfileService usa EntitlementResolver para popular subscription
@@ -16,14 +16,14 @@
  * - Aceitável para P2 (baixo risco - apenas visual)
  */
 
-import { Building2, BarChart3, Package, Settings, UtensilsCrossed, Crown, ExternalLink } from "lucide-react";
+import { Building2, BarChart3, Package, Settings, UtensilsCrossed, Crown, ExternalLink, Lightbulb } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Card } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
-import type { ProfileBusinessModuleItem } from "@/core/profiles/services/types";
+import type { ProfileBusinessModuleSnapshot } from "@/core/profiles/services/ProfileBusinessTypes";
 
 interface BusinessOwnerQuickAccessProps {
-  businesses: readonly ProfileBusinessModuleItem[];
+  businesses: readonly ProfileBusinessModuleSnapshot[];
   onNavigate: (url: string) => void;
 }
 
@@ -56,8 +56,8 @@ export function BusinessOwnerQuickAccess({ businesses, onNavigate }: BusinessOwn
       {/* Business Cards */}
       <div className="space-y-4">
         {businesses.map((biz) => (
-          <div 
-            key={biz.businessId} 
+          <div
+            key={biz.businessId}
             className="rounded-xl border-2 border-border bg-card p-4 shadow-sm hover:shadow-md transition-shadow"
           >
             {/* Business Header */}
@@ -195,8 +195,9 @@ export function BusinessOwnerQuickAccess({ businesses, onNavigate }: BusinessOwn
 
       {/* Footer com dica */}
       <div className="mt-4 pt-4 border-t border-border">
-        <p className="text-xs text-muted-foreground text-center">
-          💡 Dica: Clique em "Dashboard" para acessar todas as funcionalidades de gerenciamento
+        <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground text-center">
+          <Lightbulb className="h-3.5 w-3.5" aria-hidden="true" />
+          Dica: Clique em "Dashboard" para acessar todas as funcionalidades de gerenciamento
         </p>
       </div>
     </Card>

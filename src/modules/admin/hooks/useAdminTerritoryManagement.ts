@@ -1,9 +1,9 @@
 /**
  * useAdminTerritoryManagement
- * 
+ *
  * Hook para gestão de visibilidade de territórios no seletor principal.
  * Controla metadata.is_selector_active em locations e territorial_groups.
- * 
+ *
  * ✅ SSOT: Database → TerritorialManagementService → Hook → Component
  */
 import { logger } from '@/shared/utils/logger';
@@ -43,7 +43,7 @@ export function useAdminTerritoryManagement() {
 
   const districtIds =
     data?.locations
-      ?.filter((location: TerritoryNode) => location.type === 'district')
+      ?.filter((location: TerritoryNode) => location.type === 'neighborhood' || location.type === 'district')
       .map((location: TerritoryNode) => location.id) ?? [];
 
   const { data: districtCommunityMetrics = new Map<string, DistrictCommunityMetric>() } = useQuery({
@@ -98,24 +98,24 @@ export function useAdminTerritoryManagement() {
   const toggleLocationMutation = useMutation({
     mutationFn: async ({ id, currentValue }: { id: string; currentValue: boolean }) => {
       logger.debug(`Toggle location ${id}: ${currentValue} -> ${!currentValue}`);
-      
+
       const newValue = !currentValue;
       await TerritorialManagementService.toggleLocationSelector(id, newValue);
-      
+
       logger.debug("Toggle location completed");
       return { id, newValue };
     },
     onMutate: async ({ id, currentValue }) => {
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: ['admin', 'territory-management'] });
-      
+
       // Snapshot previous value
       const previousData = queryClient.getQueryData<TerritoryManagementData>(['admin', 'territory-management']);
-      
+
       // Optimistically update
       queryClient.setQueryData<TerritoryManagementData>(['admin', 'territory-management'], (old) => {
         if (!old) return old;
-        
+
         return {
           ...old,
           locations: old.locations.map((loc: TerritoryNode) =>
@@ -123,7 +123,7 @@ export function useAdminTerritoryManagement() {
           ),
         };
       });
-      
+
       return { previousData };
     },
     onError: (err: unknown, variables, context) => {
@@ -136,13 +136,13 @@ export function useAdminTerritoryManagement() {
     },
     onSuccess: () => {
       logger.debug("Toggle location mutation success; invalidating queries");
-      
+
       // Pequeno delay para garantir que o banco foi atualizado
       setTimeout(() => {
         queryClient.invalidateQueries({ queryKey: ['admin', 'territory-management'] });
         queryClient.invalidateQueries({ queryKey: ['selector-territories'] });
       }, 100);
-      
+
       toast.success('Visibilidade no seletor atualizada');
     },
   });
@@ -150,24 +150,24 @@ export function useAdminTerritoryManagement() {
   const toggleGroupMutation = useMutation({
     mutationFn: async ({ id, currentValue }: { id: string; currentValue: boolean }) => {
       logger.debug(`Toggle group ${id}: ${currentValue} -> ${!currentValue}`);
-      
+
       const newValue = !currentValue;
       await TerritorialManagementService.toggleGroupSelector(id, newValue);
-      
+
       logger.debug("Toggle group completed");
       return { id, newValue };
     },
     onMutate: async ({ id, currentValue }) => {
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: ['admin', 'territory-management'] });
-      
+
       // Snapshot previous value
       const previousData = queryClient.getQueryData<TerritoryManagementData>(['admin', 'territory-management']);
-      
+
       // Optimistically update
       queryClient.setQueryData<TerritoryManagementData>(['admin', 'territory-management'], (old) => {
         if (!old) return old;
-        
+
         return {
           ...old,
           groups: old.groups.map((grp: TerritoryNode) =>
@@ -175,7 +175,7 @@ export function useAdminTerritoryManagement() {
           ),
         };
       });
-      
+
       return { previousData };
     },
     onError: (err: unknown, variables, context) => {
@@ -188,13 +188,13 @@ export function useAdminTerritoryManagement() {
     },
     onSuccess: () => {
       logger.debug("Toggle group mutation success; invalidating queries");
-      
+
       // Pequeno delay para garantir que o banco foi atualizado
       setTimeout(() => {
         queryClient.invalidateQueries({ queryKey: ['admin', 'territory-management'] });
         queryClient.invalidateQueries({ queryKey: ['selector-territories'] });
       }, 100);
-      
+
       toast.success('Visibilidade do grupo no seletor atualizada');
     },
   });
@@ -202,7 +202,7 @@ export function useAdminTerritoryManagement() {
   // Generic flag toggle for locations
   const toggleLocationFlag = async (id: string, flag: VisibilityFlag, currentValue: boolean) => {
     await TerritorialManagementService.updateMetadataFlag('locations', id, flag, !currentValue);
-    
+
     setTimeout(() => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'territory-management'] });
       queryClient.invalidateQueries({ queryKey: ['selector-territories'] });
@@ -212,7 +212,7 @@ export function useAdminTerritoryManagement() {
 
   const toggleGroupFlag = async (id: string, flag: VisibilityFlag, currentValue: boolean) => {
     await TerritorialManagementService.updateMetadataFlag('territorial_groups', id, flag, !currentValue);
-    
+
     setTimeout(() => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'territory-management'] });
       queryClient.invalidateQueries({ queryKey: ['selector-territories'] });

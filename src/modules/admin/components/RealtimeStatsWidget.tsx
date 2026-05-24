@@ -12,11 +12,12 @@ import {
   TrendingUp,
   AlertTriangle,
   CheckCircle,
+  Star,
 } from "lucide-react";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
 import { cn } from "@/shared/utils/cn";
-import { useRealtimeMetrics } from "@/modules/admin/hooks/useRealtimeMetrics";
+import { useRealtimeMetrics } from "@/core/admin/hooks/useRealtimeMetrics";
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(
@@ -225,7 +226,10 @@ export function RealtimeStatsWidget() {
                 {metrics.completionRate}%
               </span>
               <span className="text-xs text-muted-foreground">
-                ⭐{metrics.avgRating}
+                <span className="inline-flex items-center gap-1">
+                  <Star className="h-3 w-3" aria-hidden="true" />
+                  {metrics.avgRating}
+                </span>
               </span>
             </div>
           </div>

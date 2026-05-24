@@ -1,5 +1,5 @@
 /**
- * MobilidadeSection - Secao de mobilidade do perfil
+ * MobilidadeSection - Seção de mobilidade do perfil
  * SSOT: componente isolado com props tipadas.
  */
 
@@ -48,7 +48,7 @@ export function MobilidadeSection({
     <div className="space-y-6">
       <SectionFrame
         title="Mobilidade"
-        description="Motorista e Motoboy sao servicos separados dentro da secao geral de mobilidade."
+        description="Motorista e motoboy são serviços separados dentro da seção geral de mobilidade."
       >
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           <HubLinkCard
@@ -66,7 +66,7 @@ export function MobilidadeSection({
           <HubLinkCard
             icon={ArrowRight}
             title="Abrir hub de mobilidade"
-            description="Acessar a visao geral da mobilidade com os dois servicos separados."
+            description="Acessar a visão geral da mobilidade com os dois serviços separados."
             badge={operations.ridesTotal > 0 ? `${operations.ridesTotal}` : undefined}
             onClick={() => navigate(appUrls.profile.mobilidade.home)}
           />
@@ -84,7 +84,7 @@ export function MobilidadeSection({
         ) : driverSnapshot ? (
           <SectionFrame
             title="Dados operacionais compartilhados"
-            description="Base comum de mobilidade usada por motorista e motoboy sem duplicacao desnecessaria."
+            description="Base comum de mobilidade usada por motorista e motoboy sem duplicação desnecessária."
           >
             <div className="grid gap-4 xl:grid-cols-[1.2fr,0.8fr]">
               <DriverOperationalSnapshotCard
@@ -100,15 +100,15 @@ export function MobilidadeSection({
         ) : (
           <EmptyPanel
             title="Perfil operacional incompleto"
-            description="Existe perfil de mobilidade, mas os dados comuns ainda nao estao completos."
+            description="Existe perfil de mobilidade, mas os dados comuns ainda não estão completos."
             actionLabel="Completar cadastro"
             onAction={() => navigate(appUrls.profile.mobilidade.motorista.cadastro)}
           />
         )
       ) : (
         <EmptyPanel
-          title="Mobilidade nao ativada"
-          description="Ainda nao existe perfil operacional vinculado para motorista ou motoboy."
+          title="Mobilidade não ativada"
+          description="Ainda não existe perfil operacional vinculado para motorista ou motoboy."
           actionLabel="Abrir cadastro de motorista"
           onAction={() => navigate(appUrls.profile.mobilidade.motorista.cadastro)}
         />
@@ -118,8 +118,8 @@ export function MobilidadeSection({
         <ProfileActiveRideCard ride={activeRide as MobilityRide} />
       ) : (
         <EmptyPanel
-          title="Nenhuma operacao ativa"
-          description="Nao ha corrida nem entrega em andamento para o perfil ativo no momento."
+          title="Nenhuma operação ativa"
+          description="Não há corrida nem entrega em andamento para o perfil ativo no momento."
           actionLabel="Abrir mobilidade"
           onAction={() => navigate(appUrls.profile.mobilidade.home)}
         />
@@ -127,4 +127,3 @@ export function MobilidadeSection({
     </div>
   );
 }
-

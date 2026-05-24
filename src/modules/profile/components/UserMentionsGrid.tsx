@@ -46,9 +46,9 @@ const POST_TYPE_LABELS: Record<string, string> = {
 };
 
 const RANK_LABELS: Record<number, string> = {
-  1: "🥇 1º Lugar",
-  2: "🥈 2º Lugar",
-  3: "🥉 3º Lugar",
+  1: "1\u00ba lugar",
+  2: "2\u00ba lugar",
+  3: "3\u00ba lugar",
 };
 
 export function UserMentionsGrid({

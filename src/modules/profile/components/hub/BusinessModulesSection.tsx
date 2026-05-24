@@ -1,13 +1,13 @@
 /**
- * BusinessModulesSection - Seção de módulos empresariais
- * 
- * Exibe empresas do usuário com seus módulos e funcionalidades
- * 
- * FASE 6 - P2: Badges visuais já resolvidos no backend
+ * BusinessModulesSection - Secao de modulos empresariais
+ *
+ * Exibe empresas do usuario com seus modulos e funcionalidades
+ *
+ * FASE 6 - P2: Badges visuais ja resolvidos no backend
  * - business.subscription.canUse* vem de ProfileService
  * - ProfileService usa EntitlementResolver para popular subscription
- * - Componente apenas exibe, não calcula elegibilidade
- * - Aceitável para P2 (baixo risco - apenas visual)
+ * - Componente apenas exibe, nao calcula elegibilidade
+ * - Aceitavel para P2 (baixo risco - apenas visual)
  */
 
 import { Sparkles } from 'lucide-react';
@@ -17,10 +17,10 @@ import { SectionFrame } from './SectionFrame';
 import { EmptyPanel } from './EmptyPanel';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 
-import type { ProfileBusinessModuleItem } from '@/core/profiles/services/types';
+import type { ProfileBusinessModuleSnapshot } from '@/core/profiles/services/ProfileBusinessTypes';
 
 interface BusinessModulesSectionProps {
-  businessModules: readonly ProfileBusinessModuleItem[];
+  businessModules: readonly ProfileBusinessModuleSnapshot[];
   showOnboarding: boolean;
   onCreateBusiness: () => void;
   onNavigate: (url: string) => void;
@@ -36,13 +36,13 @@ function formatPlanLabel(value?: string | null): string {
     case 'delivery':
       return 'Delivery';
     case 'basic':
-      return 'Basico';
+      return 'Básico';
     case 'premium':
       return 'Premium';
     case 'enterprise':
       return 'Enterprise';
     default:
-      return value ? value[0].toUpperCase() + value.slice(1) : 'Basico';
+      return value ? value[0].toUpperCase() + value.slice(1) : 'Básico';
   }
 }
 
@@ -62,8 +62,8 @@ export function BusinessModulesSection({
 
   return (
     <SectionFrame
-      title="Negocios, modulos e dashboards"
-      description="Operacao empresarial consolidada com dashboard, analytics, visitantes, imagens, produtos e delivery."
+      title="Negocios, módulos e dashboards"
+      description="Operação empresarial consolidada com dashboard, analytics, visitantes, imagens, produtos e delivery."
       action={
         <Button className="gap-2" onClick={onCreateBusiness}>
           <Sparkles className="h-4 w-4" />
@@ -75,13 +75,13 @@ export function BusinessModulesSection({
         showOnboarding ? (
           <EmptyPanel
             title="Nenhuma empresa ativa vinculada"
-            description="A plataforma ja tem dashboard empresarial, vertical gastronomica, QR e billing. Falta apenas uma empresa sua entrar nesse fluxo."
+            description="A plataforma ja tem dashboard empresarial, vertical gastronômica, QR e billing. Falta apenas uma empresa sua entrar nesse fluxo."
             actionLabel="Criar empresa"
             onAction={onCreateBusiness}
           />
         ) : (
           <div className="rounded-2xl border border-dashed border-border bg-background p-6 text-sm text-muted-foreground">
-            Este perfil nao possui empresas administradas no momento.
+            Este perfil não possui empresas administradas no momento.
           </div>
         )
       ) : (
@@ -90,7 +90,7 @@ export function BusinessModulesSection({
             <div className="rounded-2xl border border-border bg-background p-4">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">Empresas</p>
               <p className="mt-2 text-xl font-semibold text-foreground">{businessModules.length}</p>
-              <p className="mt-1 text-xs text-muted-foreground">Operacao empresarial total</p>
+              <p className="mt-1 text-xs text-muted-foreground">Operação empresarial total</p>
             </div>
             <div className="rounded-2xl border border-border bg-background p-4">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">Gastronomia</p>
@@ -100,7 +100,7 @@ export function BusinessModulesSection({
             <div className="rounded-2xl border border-border bg-background p-4">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">Delivery</p>
               <p className="mt-2 text-xl font-semibold text-foreground">{businessSummary.delivery}</p>
-              <p className="mt-1 text-xs text-muted-foreground">Operacoes com delivery ligado</p>
+              <p className="mt-1 text-xs text-muted-foreground">Operações com delivery ligado</p>
             </div>
             <div className="rounded-2xl border border-border bg-background p-4">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">QR / premium</p>
@@ -132,7 +132,7 @@ function BusinessModuleCard({
   onNavigate,
   onCopy,
 }: {
-  business: ProfileBusinessModuleItem;
+  business: ProfileBusinessModuleSnapshot;
   onNavigate: (url: string) => void;
   onCopy: (url: string, label: string) => void;
 }) {
@@ -190,7 +190,7 @@ function BusinessModuleCard({
           </div>
 
           <p className="mt-2 text-xs text-muted-foreground">
-            {business.neighborhood || "Bairro nao informado"}
+            {business.neighborhood || "Bairro não informado"}
             {business.city ? `, ${business.city}` : ""}
           </p>
 
@@ -203,7 +203,7 @@ function BusinessModuleCard({
               ))
             ) : (
               <Badge variant="outline" className="text-[10px] text-muted-foreground">
-                Sem modulos extras configurados
+                Sem módulos extras configurados
               </Badge>
             )}
           </div>
@@ -244,7 +244,7 @@ function BusinessModuleCard({
           </Button>
           {business.publicUrl && (
             <Button size="sm" variant="outline" className="gap-1.5" onClick={() => onNavigate(business.publicUrl!)}>
-              Ver pagina publica
+              Ver pagina pública
             </Button>
           )}
           {business.shareUrl && (
@@ -268,7 +268,7 @@ function BusinessModuleCard({
       {gastronomyOwnerActions.length > 0 ? (
         <div className="mt-4 border-t border-border/70 pt-4">
           <p className="mb-2 text-[11px] uppercase tracking-wide text-muted-foreground">
-            Gestao operacional
+            Gestão operacional
           </p>
           <div className="flex flex-wrap gap-2">
             {gastronomyOwnerActions.map((action) => (

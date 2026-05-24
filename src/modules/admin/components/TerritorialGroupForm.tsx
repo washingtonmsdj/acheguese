@@ -1,10 +1,10 @@
 /**
  * TerritorialGroupForm
- * 
- * Formulário de criação/edição de grupo territorial
- * UI melhorada com exibição de membros atuais e melhor organização
- * 
- * ✅ SSOT - Usa TerritorialGroupService
+ *
+ * Formulario de criacao/edicao de grupo territorial
+ * UI melhorada com exibicao de membros atuais e melhor organizacao
+ *
+ * SSOT - Usa TerritorialGroupService
  */
 import { logger } from '@/shared/utils/logger';
 import { useState, useEffect } from 'react';
@@ -43,7 +43,7 @@ const service = new TerritorialGroupService();
 
 export function TerritorialGroupForm({ group, onSuccess, onCancel }: TerritorialGroupFormProps) {
   const queryClient = useQueryClient();
-  
+
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
   const [description, setDescription] = useState('');
@@ -76,12 +76,12 @@ export function TerritorialGroupForm({ group, onSuccess, onCancel }: Territorial
         setDescription(group.description || '');
         setAnchorCityId(group.parent_id || '');
         setLoadingMembers(true);
-        
+
         try {
-          // ✅ SSOT - Buscar membros via TerritorialGroupService
+          // SSOT - Buscar membros via TerritorialGroupService
           const groupWithMembers = await service.getGroupWithMembers(group.id);
           const members = groupWithMembers?.members ?? [];
-          
+
           if (members) {
             setSelectedDistricts(members.map(m => m.id));
             setCurrentMemberNames(members.map(m => m.name || 'Desconhecido'));
@@ -96,7 +96,7 @@ export function TerritorialGroupForm({ group, onSuccess, onCancel }: Territorial
         }
       }
     }
-    
+
     loadGroupMembers();
   }, [group]);
 
@@ -147,9 +147,9 @@ export function TerritorialGroupForm({ group, onSuccess, onCancel }: Territorial
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!name.trim()) return toast.error('Nome é obrigatório');
-    if (!slug.trim()) return toast.error('Slug é obrigatório');
-    if (!anchorCityId) return toast.error('Cidade âncora é obrigatória');
+    if (!name.trim()) return toast.error('Nome e obrigatorio');
+    if (!slug.trim()) return toast.error('Slug e obrigatorio');
+    if (!anchorCityId) return toast.error('Cidade ancora e obrigatoria');
     if (selectedDistricts.length === 0) return toast.error('Selecione pelo menos um bairro');
 
     const data = {
@@ -171,7 +171,7 @@ export function TerritorialGroupForm({ group, onSuccess, onCancel }: Territorial
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Resumo do grupo (edição) */}
+      {/* Resumo do grupo (edicao) */}
       {group && (
         <div className="rounded-xl border border-border bg-gradient-to-br from-purple-500/5 to-transparent p-5">
           <div className="flex items-center gap-3 mb-3">
@@ -181,11 +181,11 @@ export function TerritorialGroupForm({ group, onSuccess, onCancel }: Territorial
             <div>
               <h4 className="font-semibold text-sm">{group.name}</h4>
               <p className="text-xs text-muted-foreground">
-                {group.status === 'active' ? '● Ativo' : '○ Inativo'} · Slug: {group.slug}
+                {group.status === 'active' ? 'Ativo' : 'Inativo'} - Slug: {group.slug}
               </p>
             </div>
           </div>
-          
+
           {/* Membros atuais */}
           {loadingMembers ? (
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -199,9 +199,9 @@ export function TerritorialGroupForm({ group, onSuccess, onCancel }: Territorial
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {currentMemberNames.sort().map((name, idx) => (
-                  <Badge 
-                    key={idx} 
-                    variant="secondary" 
+                  <Badge
+                    key={idx}
+                    variant="secondary"
                     className="text-[11px] px-2 py-0.5 bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/20"
                   >
                     <MapPin className="h-2.5 w-2.5 mr-1" />
@@ -216,7 +216,7 @@ export function TerritorialGroupForm({ group, onSuccess, onCancel }: Territorial
         </div>
       )}
 
-      {/* Dados básicos */}
+      {/* Dados basicos */}
       <div className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2">
@@ -227,7 +227,7 @@ export function TerritorialGroupForm({ group, onSuccess, onCancel }: Territorial
             <Input
               value={name}
               onChange={(e) => handleNameChange(e.target.value)}
-              placeholder="Ex: Complexo do Nordeste de Amaralina"
+              placeholder="Ex: Área Central, Região Comercial, Orla Norte"
               disabled={isSubmitting}
               className="h-11"
             />
@@ -253,12 +253,12 @@ export function TerritorialGroupForm({ group, onSuccess, onCancel }: Territorial
 
         <div>
           <label className="text-sm font-medium mb-1.5 block">
-            Descrição (opcional)
+            Descricao (opcional)
           </label>
           <Textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Breve descrição do grupo territorial..."
+            placeholder="Breve descricao do grupo territorial..."
             rows={2}
             disabled={isSubmitting}
             className="resize-none"
@@ -286,10 +286,10 @@ export function TerritorialGroupForm({ group, onSuccess, onCancel }: Territorial
         />
       </div>
 
-      {/* Ações */}
+      {/* Acoes */}
       <div className="flex items-center justify-between gap-3 pt-4 border-t">
         <p className="text-[11px] text-muted-foreground hidden sm:block">
-          {group ? 'As alterações serão aplicadas imediatamente' : 'O grupo será criado como ativo'}
+          {group ? 'As alteracoes serao aplicadas imediatamente' : 'O grupo sera criado como ativo'}
         </p>
         <div className="flex items-center gap-3 ml-auto">
           <Button
@@ -301,18 +301,16 @@ export function TerritorialGroupForm({ group, onSuccess, onCancel }: Territorial
           >
             Cancelar
           </Button>
-          <Button 
-            type="submit" 
-            disabled={isSubmitting} 
+          <Button
+            type="submit"
+            disabled={isSubmitting}
             className="gap-2 min-w-[130px]"
           >
             {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-            {group ? 'Salvar Alterações' : 'Criar Grupo'}
+            {group ? 'Salvar Alteracoes' : 'Criar Grupo'}
           </Button>
         </div>
       </div>
     </form>
   );
 }
-
-

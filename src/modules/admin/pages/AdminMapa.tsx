@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
@@ -291,7 +291,7 @@ export default function AdminMapa() {
           subtitle={
             snapshotQuery.isError
               ? "Falha ao carregar catalogo"
-              : `${stats?.touristPointsInactive || 0} fora do runtime publico`
+              : `${stats?.touristPointsNonPublic || 0} fora do runtime publico`
           }
           icon={Telescope}
           iconColor="text-emerald-600"
@@ -678,5 +678,3 @@ export default function AdminMapa() {
     </div>
   );
 }
-
-

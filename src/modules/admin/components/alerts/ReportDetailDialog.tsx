@@ -1,4 +1,4 @@
-import { CheckCircle, XCircle, ShieldBan, Loader2 } from "lucide-react";
+import { CheckCircle, XCircle, ShieldBan, Loader2, Siren } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -16,11 +16,11 @@ import type {
 } from "@/modules/admin/hooks/useAlertData";
 
 const REPORT_MOTIVO_LABELS: Record<string, string> = {
-  alerta_falso: "❌ Alerta Falso",
-  uso_criminoso: "🚨 Uso Criminoso",
-  spam: "🚫 Spam",
-  conteudo_ofensivo: "🤬 Conteúdo Ofensivo",
-  acusacao_pessoa: "⚠️ Acusação de Pessoa",
+  alerta_falso: "Alerta falso",
+  uso_criminoso: "Uso criminoso",
+  spam: "Spam",
+  conteudo_ofensivo: "Conteúdo ofensivo",
+  acusacao_pessoa: "Acusação de pessoa",
 };
 
 interface ReportDetailDialogProps {
@@ -88,7 +88,10 @@ export function ReportDetailDialog({
                 Alerta denunciado
               </p>
               <div className="bg-muted/50 rounded-lg p-3 text-sm">
-                🚨 {post.texto}
+                <div className="flex items-start gap-2">
+                  <Siren className="h-4 w-4 shrink-0 text-destructive" aria-hidden="true" />
+                  <span>{post.texto}</span>
+                </div>
               </div>
             </div>
           )}

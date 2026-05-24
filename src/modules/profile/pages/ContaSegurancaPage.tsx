@@ -1,8 +1,8 @@
 /**
- * /conta/seguranca - Configuracoes da conta, separado da identidade publica.
+ * /conta/seguranca - Configurações da conta, separado da identidade pública.
  *
  * Conta = auth.users (email, senha, sessoes, exclusao)
- * Perfil publico = identidade publica/social visivel para outros usuarios
+ * Perfil público = identidade pública/social visível para outros usuários
  */
 
 import { useState } from 'react';
@@ -68,7 +68,7 @@ export default function ContaSegurancaPage() {
           <div>
             <h1 className="text-lg font-semibold">Minha conta</h1>
             <p className="text-xs text-muted-foreground">
-              Configuracoes de acesso, recuperacao e seguranca
+              Configurações de acesso, recuperação e segurança
             </p>
           </div>
         </div>
@@ -78,7 +78,7 @@ export default function ContaSegurancaPage() {
           <h2 className="mt-2 text-xl font-semibold text-foreground">{user.email}</h2>
           <p className="mt-2 text-sm text-muted-foreground">
             Esta superficie cuida apenas de acesso e seguranca. Privacidade da identidade,
-            membros e configuracoes operacionais ficam em areas separadas.
+            membros e configurações operacionais ficam em áreas separadas.
           </p>
         </div>
 
@@ -143,7 +143,7 @@ export default function ContaSegurancaPage() {
           <CardContent className="space-y-2">
             <p className="text-xs text-muted-foreground">
               A exclusao da conta e permanente e remove todos os seus perfis, dados e
-              conteudo. Esta acao nao pode ser desfeita.
+              conteúdo. Esta ação não pode ser desfeita.
             </p>
             <Button
               variant="outline"
@@ -161,4 +161,3 @@ export default function ContaSegurancaPage() {
     </>
   );
 }
-

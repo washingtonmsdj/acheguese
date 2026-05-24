@@ -6,7 +6,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { AdminService } from '@/core/admin/AdminService';
+import { AdminService } from '@/core/admin/services/AdminService';
 import { toast } from 'sonner';
 
 // ── Query Keys ────────────────────────────────────────────────────────────

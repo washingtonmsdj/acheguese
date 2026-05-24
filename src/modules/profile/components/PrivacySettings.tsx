@@ -125,7 +125,7 @@ export function PrivacySettings({ profile, onUpdate }: PrivacySettingsProps) {
   const saveMutation = useMutation({
     mutationFn: async (nextSettings: PrivacySettingsForm) => {
       if (!profile?.id) {
-        throw new Error("Perfil ativo indisponivel para atualizar privacidade.");
+        throw new Error("Perfil ativo indisponível para atualizar privacidade.");
       }
 
       await profileService.updatePrivacySettings(
@@ -134,14 +134,14 @@ export function PrivacySettings({ profile, onUpdate }: PrivacySettingsProps) {
       );
     },
     onSuccess: async () => {
-      toast.success("Configuracoes de privacidade atualizadas.");
+      toast.success("Configurações de privacidade atualizadas.");
       await Promise.resolve(onUpdate());
     },
     onError: (error: unknown) => {
       const message =
         error instanceof Error
           ? error.message
-          : "Erro ao salvar configuracoes de privacidade.";
+          : "Erro ao salvar configurações de privacidade.";
       toast.error(message);
     },
   });
@@ -173,10 +173,10 @@ export function PrivacySettings({ profile, onUpdate }: PrivacySettingsProps) {
           </div>
           <div className="space-y-1">
             <h2 className="text-base font-semibold text-foreground">
-              Perfil indisponivel
+              Perfil indisponível
             </h2>
             <p className="text-sm text-muted-foreground">
-              O hub privado nao deve editar privacidade sem um perfil ativo.
+              O hub privado não deve editar privacidade sem um perfil ativo.
             </p>
           </div>
         </div>
@@ -192,7 +192,7 @@ export function PrivacySettings({ profile, onUpdate }: PrivacySettingsProps) {
           Privacidade
         </h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Controle quem pode ver seus dados publicos e interagir com voce.
+          Controle quem pode ver seus dados públicos e interagir com você.
         </p>
       </motion.div>
 
@@ -213,7 +213,7 @@ export function PrivacySettings({ profile, onUpdate }: PrivacySettingsProps) {
           <ToggleRow
             id="profileVisible"
             icon={Globe}
-            label="Perfil publico"
+            label="Perfil público"
             description="Seu perfil pode ser encontrado por qualquer pessoa."
             checked={settings.profileVisible}
             onToggle={(checked) => handleToggle("profileVisible", checked)}
@@ -222,21 +222,21 @@ export function PrivacySettings({ profile, onUpdate }: PrivacySettingsProps) {
           <ToggleRow
             id="showEmail"
             label="Mostrar email"
-            description="Outros usuarios podem ver seu email."
+            description="Outros usuários podem ver seu email."
             checked={settings.showEmail}
             onToggle={(checked) => handleToggle("showEmail", checked)}
           />
           <ToggleRow
             id="showPhone"
             label="Mostrar telefone"
-            description="Outros usuarios podem ver seu telefone."
+            description="Outros usuários podem ver seu telefone."
             checked={settings.showPhone}
             onToggle={(checked) => handleToggle("showPhone", checked)}
           />
           <ToggleRow
             id="showLocation"
-            label="Mostrar localizacao"
-            description="Outros usuarios podem ver sua cidade e bairro."
+            label="Mostrar localização"
+            description="Outros usuários podem ver sua cidade e bairro."
             checked={settings.showLocation}
             onToggle={(checked) => handleToggle("showLocation", checked)}
           />
@@ -252,14 +252,14 @@ export function PrivacySettings({ profile, onUpdate }: PrivacySettingsProps) {
           <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
             <Users className="h-4 w-4 text-primary" />
           </div>
-          <h3 className="text-sm font-semibold text-foreground">Interacoes</h3>
+          <h3 className="text-sm font-semibold text-foreground">Interações</h3>
         </div>
         <div className="p-5 space-y-5">
           <ToggleRow
             id="allowMessages"
             icon={Lock}
             label="Permitir mensagens"
-            description="Outros usuarios podem enviar mensagens diretas."
+            description="Outros usuários podem enviar mensagens diretas."
             checked={settings.allowMessages}
             onToggle={(checked) => handleToggle("allowMessages", checked)}
           />
@@ -267,14 +267,14 @@ export function PrivacySettings({ profile, onUpdate }: PrivacySettingsProps) {
           <ToggleRow
             id="showActivity"
             label="Mostrar atividade"
-            description="Outros usuarios podem ver seus posts e comentarios."
+            description="Outros usuários podem ver seus posts e comentários."
             checked={settings.showActivity}
             onToggle={(checked) => handleToggle("showActivity", checked)}
           />
           <ToggleRow
             id="showBusinesses"
             label="Mostrar empresas"
-            description="Outros usuarios podem ver suas empresas vinculadas."
+            description="Outros usuários podem ver suas empresas vinculadas."
             checked={settings.showBusinesses}
             onToggle={(checked) => handleToggle("showBusinesses", checked)}
           />
@@ -299,7 +299,7 @@ export function PrivacySettings({ profile, onUpdate }: PrivacySettingsProps) {
           ) : (
             <Save className="h-4 w-4" />
           )}
-          Salvar alteracoes
+          Salvar alterações
         </Button>
       </motion.div>
     </div>

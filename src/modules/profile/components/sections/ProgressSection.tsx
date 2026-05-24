@@ -1,4 +1,3 @@
- 
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -10,7 +9,7 @@ import {
 } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Progress } from "@/shared/components/ui/progress";
-import { useAppUrls } from "@/core/routing/hooks"; // ✅ SSOT URLs
+import { useAppUrls } from "@/core/routing/hooks";
 import {
   Trophy,
   Award,
@@ -33,13 +32,15 @@ interface ProgressSectionProps {
 
 export function ProgressSection({ profile }: ProgressSectionProps) {
   const navigate = useNavigate();
-  const appUrls = useAppUrls(); // ✅ SSOT URLs
-  const legacyProfile = profile as any;
-  const points = legacyProfile?.pontos || 0;
+  const appUrls = useAppUrls();
+  const points = profile.reputation ?? 0;
   const nivel = getNivel(points);
   const progresso = getProgresso(points);
-  const memberSince = legacyProfile?.created_at
-    ? new Date(legacyProfile.created_at).getFullYear()
+  const badgeIds = Array.isArray(profile.metadata?.badges)
+    ? profile.metadata.badges.filter((badgeId): badgeId is string => typeof badgeId === "string")
+    : [];
+  const memberSince = profile.createdAt
+    ? new Date(profile.createdAt).getFullYear()
     : new Date().getFullYear();
 
   return (
@@ -95,11 +96,11 @@ export function ProgressSection({ profile }: ProgressSectionProps) {
           </div>
         </div>
 
-        {legacyProfile?.badges && legacyProfile.badges.length > 0 && (
+        {badgeIds.length > 0 && (
           <div className="space-y-2">
             <h4 className="text-sm font-semibold">Conquistas</h4>
             <div className="flex flex-wrap gap-2">
-              {legacyProfile.badges.map((bId: string) => {
+              {badgeIds.map((bId) => {
                 const b = badges.find((x) => x.id === bId);
                 if (!b) return null;
                 return (
@@ -121,7 +122,7 @@ export function ProgressSection({ profile }: ProgressSectionProps) {
         <Button
           variant="outline"
           className="w-full"
-          onClick={() => navigate(appUrls.ranking)} // ✅ SSOT
+          onClick={() => navigate(appUrls.ranking)}
         >
           <BarChart3 className="h-4 w-4 mr-2" />
           Ver Ranking Completo
@@ -130,4 +131,3 @@ export function ProgressSection({ profile }: ProgressSectionProps) {
     </Card>
   );
 }
-

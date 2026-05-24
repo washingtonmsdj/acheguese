@@ -1,4 +1,4 @@
-import { Eye, Clock, User, CheckCircle, XCircle, Flag } from "lucide-react";
+import { Ban, Eye, Clock, User, CheckCircle, XCircle, Flag, Siren, Timer } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/utils/cn";
@@ -44,7 +44,13 @@ export function AlertCard({
                 : "bg-destructive/10",
           )}
         >
-          {post.hidden ? "🚫" : expired ? "⏱️" : "🚨"}
+          {post.hidden ? (
+            <Ban className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+          ) : expired ? (
+            <Timer className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+          ) : (
+            <Siren className="h-4 w-4 text-destructive" aria-hidden="true" />
+          )}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 mb-1 flex-wrap">
@@ -89,7 +95,7 @@ export function AlertCard({
                 <User className="h-3 w-3" />
                 {author.name || "Usuário"}
                 {author.alert_banned && (
-                  <span className="text-destructive">🚫</span>
+                  <Ban className="h-3 w-3 text-destructive" aria-label="Banido" />
                 )}
               </span>
             )}

@@ -12,7 +12,7 @@ interface DriverVehicleDetailsCardProps {
 }
 
 function formatOptionalNumber(value?: number | null): string {
-  if (typeof value !== "number") return "Nao informado";
+  if (typeof value !== "number") return "Não informado";
   return String(value);
 }
 
@@ -27,11 +27,11 @@ export function DriverVehicleDetailsCard({
       <div className="mt-3 space-y-2">
         <MobilityDetailRow
           label="Modelo"
-          value={driverSnapshot.vehicle_model || "Nao informado"}
+          value={driverSnapshot.vehicle_model || "Não informado"}
         />
         <MobilityDetailRow
           label="Placa"
-          value={driverSnapshot.vehicle_plate || "Nao informado"}
+          value={driverSnapshot.vehicle_plate || "Não informado"}
         />
         <MobilityDetailRow
           label="Ano"
@@ -39,11 +39,9 @@ export function DriverVehicleDetailsCard({
         />
         <MobilityDetailRow
           label="Cor"
-          value={driverSnapshot.vehicle_color || "Nao informado"}
+          value={driverSnapshot.vehicle_color || "Não informado"}
         />
       </div>
     </div>
   );
 }
-
-

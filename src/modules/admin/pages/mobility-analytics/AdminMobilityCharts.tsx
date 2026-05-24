@@ -1,4 +1,4 @@
-﻿import { Activity, DollarSign } from "lucide-react";
+import { Activity, DollarSign } from "lucide-react";
 import {
   Area,
   AreaChart,

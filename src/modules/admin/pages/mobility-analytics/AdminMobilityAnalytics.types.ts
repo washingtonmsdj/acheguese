@@ -1,4 +1,4 @@
-﻿import { RIDE_STATUS } from "@/shared/types/constants";
+import { RIDE_STATUS } from "@/shared/types/constants";
 
 export interface MobilidadeStats {
   totalRides: number;

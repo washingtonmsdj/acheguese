@@ -2,12 +2,12 @@
 /**
  * DistrictSelector
  *
- * Seletor de bairros canônicos para grupos territoriais.
- * Leitura via useLocationOptions (LocationRepository) — sem query direta.
+ * Seletor de bairros canonicos para grupos territoriais.
+ * Leitura via useLocationOptions (LocationRepository) - sem query direta.
  *
  * Regras:
  * - Apenas locations.type = 'district', status = 'active'
- * - Apenas bairros da cidade âncora selecionada
+ * - Apenas bairros da cidade ancora selecionada
  * - Sem input manual de texto
  * - Multiselect com busca
  */
@@ -45,15 +45,15 @@ export function DistrictSelector({
     const matchesSearch =
       d.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       d.slug.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     if (showOnlySelected) {
       return matchesSearch && selectedDistricts.includes(d.id);
     }
-    
+
     return matchesSearch;
   });
 
-  // Ao trocar cidade, descartar seleções que não pertencem à nova cidade
+  // Ao trocar cidade, descartar selecoes que nao pertencem a nova cidade
   useEffect(() => {
     if (!anchorCityId || selectedDistricts.length === 0) return;
     const validIds = new Set(districts.map((d) => d.id));
@@ -70,9 +70,9 @@ export function DistrictSelector({
 
   return (
     <div className="space-y-5">
-      {/* Cidade âncora */}
+      {/* Cidade ancora */}
       <div className="space-y-2">
-        <label className="text-sm font-medium block">Cidade Âncora</label>
+        <label className="text-sm font-medium block">Cidade ancora</label>
         {loadingCities ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground py-3 px-4 border border-border rounded-lg bg-muted/20">
             <Loader2 className="h-4 w-4 animate-spin" /> Carregando cidades...
@@ -93,7 +93,7 @@ export function DistrictSelector({
               ))}
             </select>
             <p className="text-xs text-muted-foreground">
-              Apenas bairros desta cidade poderão ser selecionados
+              Apenas bairros desta cidade poderao ser selecionados
             </p>
           </>
         )}
@@ -111,7 +111,7 @@ export function DistrictSelector({
             </Badge>
           </div>
 
-          {/* Barra de ações */}
+          {/* Barra de acoes */}
           <div className="flex items-center gap-2 mb-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -125,13 +125,13 @@ export function DistrictSelector({
             </div>
             <label
               className={`flex items-center gap-2 h-9 px-3 rounded-md border transition-colors cursor-pointer ${
-                showOnlySelected 
-                  ? 'bg-primary text-primary-foreground border-primary' 
+                showOnlySelected
+                  ? 'bg-primary text-primary-foreground border-primary'
                   : 'bg-background border-border hover:bg-accent'
               } ${disabled || selectedDistricts.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              <Checkbox 
-                checked={showOnlySelected} 
+              <Checkbox
+                checked={showOnlySelected}
                 onCheckedChange={() => !disabled && selectedDistricts.length > 0 && setShowOnlySelected(!showOnlySelected)}
                 disabled={disabled || selectedDistricts.length === 0}
                 className="pointer-events-none"
@@ -140,7 +140,7 @@ export function DistrictSelector({
             </label>
           </div>
 
-          {/* Ações rápidas */}
+          {/* Acoes rapidas */}
           <div className="flex gap-2 mb-3">
             <Button
               type="button"
@@ -164,7 +164,7 @@ export function DistrictSelector({
               disabled={disabled || selectedDistricts.length === 0}
               onClick={() => onDistrictsChange([])}
             >
-              Limpar seleção
+              Limpar selecao
             </Button>
           </div>
 
@@ -176,11 +176,11 @@ export function DistrictSelector({
             <div className="text-center py-12 border border-border rounded-lg bg-muted/20">
               <MapPin className="h-8 w-8 text-muted-foreground mx-auto mb-2 opacity-50" />
               <p className="text-sm text-muted-foreground">
-                {searchTerm 
-                  ? 'Nenhum bairro encontrado com esse termo' 
+                {searchTerm
+                  ? 'Nenhum bairro encontrado com esse termo'
                   : showOnlySelected
                   ? 'Nenhum bairro selecionado ainda'
-                  : 'Nenhum bairro disponível nesta cidade'}
+                  : 'Nenhum bairro disponivel nesta cidade'}
               </p>
             </div>
           ) : (
@@ -204,9 +204,7 @@ export function DistrictSelector({
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-medium truncate">{d.name}</span>
                           {isSelected && (
-                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                              ✓
-                            </Badge>
+                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0">OK</Badge>
                           )}
                         </div>
                         <span className="text-xs text-muted-foreground truncate block font-mono">
@@ -223,7 +221,7 @@ export function DistrictSelector({
 
           <div className="mt-3 p-3 bg-muted/30 rounded-lg border border-border">
             <p className="text-xs text-muted-foreground">
-              💡 Dica: Use o filtro "Apenas selecionados" para revisar os bairros já adicionados ao grupo
+              Dica: Use o filtro "Apenas selecionados" para revisar os bairros ja adicionados ao grupo
             </p>
           </div>
         </div>
@@ -231,4 +229,3 @@ export function DistrictSelector({
     </div>
   );
 }
-

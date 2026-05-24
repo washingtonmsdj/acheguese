@@ -200,7 +200,7 @@ export function ChangePasswordForm({ onSave, onCancel }: ChangePasswordFormProps
               <p
                 className={`text-[10px] font-medium ${passwordsMatch ? 'text-success' : 'text-destructive'}`}
               >
-                {passwordsMatch ? 'OK As senhas coincidem' : 'As senhas nao coincidem'}
+                {passwordsMatch ? 'OK As senhas coincidem' : 'As senhas não coincidem'}
               </p>
             )}
           </div>
@@ -222,7 +222,7 @@ export function ChangePasswordForm({ onSave, onCancel }: ChangePasswordFormProps
             </ul>
           </div>
 
-          {/* Botões */}
+          {/* Botoes */}
           <motion.div
             {...fadeUp}
             transition={{ duration: 0.3, delay: 0.1 }}

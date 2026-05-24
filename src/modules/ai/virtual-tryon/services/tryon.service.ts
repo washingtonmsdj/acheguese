@@ -1,4 +1,4 @@
-﻿import { supabase } from '@/core/infrastructure/supabase/client';
+import { supabase } from '@/core/infrastructure/supabase/client';
 import { mediaService } from '@/core/media/services/MediaService';
 import type { Database } from '@/core/infrastructure/supabase/types.generated';
 import type {
@@ -7,6 +7,7 @@ import type {
   TryOnGender,
   TryOnStyle,
 } from '../domain/types';
+import { TRYON_DEFAULTS, TRYON_GENERATION_STATUS } from '../constants/tryonConfig';
 
 type Row = Database['public']['Tables']['tryon_generations']['Row'];
 
@@ -31,7 +32,7 @@ function rowToGeneration(r: Row): TryOnGeneration {
 
 class TryOnService {
   private readonly TABLE = 'tryon_generations' as const;
-  private readonly BUCKET = 'tryon';
+  private readonly BUCKET = TRYON_DEFAULTS.bucket;
 
   async uploadProductImage(userId: string, file: File): Promise<string> {
     const upload = await mediaService.uploadToBucket(file, {
@@ -51,11 +52,11 @@ class TryOnService {
         user_id: userId,
         product_image_url: input.productImageUrl,
         category: input.category,
-        target_gender: input.targetGender ?? 'neutral',
-        style: input.style ?? 'casual',
-        status: 'pending',
-        provider: 'replicate',
-        metadata: { variations: input.variations ?? 4 },
+        target_gender: input.targetGender ?? TRYON_DEFAULTS.gender,
+        style: input.style ?? TRYON_DEFAULTS.style,
+        status: TRYON_GENERATION_STATUS.PENDING,
+        provider: TRYON_DEFAULTS.provider,
+        metadata: { variations: input.variations ?? TRYON_DEFAULTS.variations },
       })
       .select()
       .single();
@@ -93,7 +94,7 @@ class TryOnService {
     if (error) throw error;
   }
 
-  /** Dispara a edge function de forma assÃ­ncrona (UI nÃ£o trava). */
+  /** Dispara a edge function de forma assincrona (UI nao trava). */
   async enqueueGeneration(generationId: string): Promise<void> {
     const { error } = await supabase.functions.invoke('tryon-generate', {
       body: { generationId },
@@ -101,7 +102,7 @@ class TryOnService {
     if (error) throw error;
   }
 
-  /** Realtime: recebe atualizaÃ§Ãµes de status. */
+  /** Realtime: recebe atualizacoes de status. */
   subscribeToGeneration(id: string, cb: (g: TryOnGeneration) => void) {
     const channel = supabase
       .channel(`tryon:${id}`)
@@ -118,4 +119,3 @@ class TryOnService {
 }
 
 export const tryOnService = new TryOnService();
-

@@ -78,7 +78,7 @@ export function UserPostsGrid({
   if (isError) {
     return (
       <div className="text-center py-12">
-        <p className="text-red-500">Erro ao carregar posts publicados.</p>
+        <p className="text-red-500">Erro ao carregar posts públicados.</p>
       </div>
     );
   }
@@ -134,7 +134,7 @@ export function UserPostsGrid({
         <EmptyStateProfile
           icon={FileText}
           title="Nenhum post encontrado"
-          description="Este perfil ainda nao publicou posts neste formato."
+          description="Este perfil ainda não publicou posts neste formato."
         />
       ) : (
         <>

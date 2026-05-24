@@ -9,11 +9,11 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Database, Download, Pause, Trash2 } from "lucide-react";
 import type { Profile } from "@/core/profiles/domain/Profile";
-import type { ProfileStats } from "@/core/profiles/services/types";
+import type { ProfileActivityStats } from "@/core/profiles/services/ProfileOperationTypes";
 
 interface DataManagementDialogsProps {
   profile: Profile | null;
-  stats: ProfileStats;
+  stats: ProfileActivityStats;
   userEmail?: string;
   downloadOpen: boolean;
   viewOpen: boolean;
@@ -99,21 +99,21 @@ export function DataManagementDialogs({
           </DialogHeader>
 
           <div className="mt-2 space-y-3">
-            <DataField label="Nome" value={profile?.displayName || profile?.name || "Nao informado"} />
-            <DataField label="Email" value={userEmail || "Nao informado"} />
+            <DataField label="Nome" value={profile?.displayName || profile?.name || "Não informado"} />
+            <DataField label="Email" value={userEmail || "Não informado"} />
             <DataField
               label="Localizacao"
               value={
                 // SessionProfileView tem city/neighborhood/state como snapshots
-                // Profile domain não tem esses campos — usar fallback vazio
-                "Nao informado"
+                // Profile domain nao tem esses campos - usar fallback vazio
+                "Não informado"
               }
             />
             <DataField
               label="Telefone"
-              value={profile?.phone || "Nao informado"}
+              value={profile?.phone || "Não informado"}
             />
-            <DataField label="WhatsApp" value={profile?.whatsapp || "Nao informado"} />
+            <DataField label="WhatsApp" value={profile?.whatsapp || "Não informado"} />
             <DataField
               label="Membro desde"
               value={
@@ -144,7 +144,7 @@ export function DataManagementDialogs({
               Pausar Conta Temporariamente
             </DialogTitle>
             <DialogDescription>
-              O fluxo de pausa e revisao e feito na area Minha Conta.
+              O fluxo de pausa e revisao e feito na area Minhá Conta.
             </DialogDescription>
           </DialogHeader>
 
@@ -152,7 +152,7 @@ export function DataManagementDialogs({
             <div className="rounded-lg border border-warning/30 bg-warning/10 p-4 text-sm">
               <p className="mb-2 font-medium">Proximo passo:</p>
               <ul className="list-inside list-disc space-y-1 text-muted-foreground">
-                <li>Voce sera redirecionado para Minha Conta</li>
+                <li>Você sera redirecionado para Minhá Conta</li>
                 <li>A pausa e validada com contexto de seguranca</li>
                 <li>O sistema aplica o estado oficial da conta</li>
               </ul>
@@ -168,7 +168,7 @@ export function DataManagementDialogs({
                 onClick={onDeactivate}
               >
                 <Pause className="mr-2 h-4 w-4" />
-                Ir para Minha Conta
+                Ir para Minhá Conta
               </Button>
             </div>
           </div>
@@ -183,7 +183,7 @@ export function DataManagementDialogs({
               Encerrar Conta
             </DialogTitle>
             <DialogDescription>
-              O encerramento definitivo e iniciado pela area Minha Conta.
+              O encerramento definitivo e iniciado pela area Minhá Conta.
             </DialogDescription>
           </DialogHeader>
 
@@ -191,8 +191,8 @@ export function DataManagementDialogs({
             <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm">
               <p className="mb-2 font-medium text-destructive">ATENCAO:</p>
               <ul className="list-inside list-disc space-y-1 text-muted-foreground">
-                <li>Voce sera redirecionado para Minha Conta</li>
-                <li>O pedido de encerramento passa por validacoes de seguranca</li>
+                <li>Você sera redirecionado para Minhá Conta</li>
+                <li>O pedido de encerramento passa por validações de segurança</li>
                 <li>As regras oficiais de retencao de dados serao aplicadas</li>
               </ul>
             </div>

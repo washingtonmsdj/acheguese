@@ -1,3 +1,5 @@
+import { MAP_DEFAULT_COORDINATES } from "@/shared/config/mapDefaults";
+
 export const PICKUP_POINTS_DEFAULTS: {
   neighborhood: string;
   coordinates: {
@@ -5,9 +7,6 @@ export const PICKUP_POINTS_DEFAULTS: {
     longitude: number;
   };
 } = {
-  neighborhood: "Nordeste de Amaralina",
-  coordinates: {
-    latitude: -12.9833,
-    longitude: -38.4667,
-  },
+  neighborhood: "",
+  coordinates: MAP_DEFAULT_COORDINATES,
 };

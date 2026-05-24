@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { commentService } from "@/core/comments/services";
+import { CommentService } from "@/core/comments/services";
 import { postService } from "@/core/posts/services";
 import { profileService } from "@/core/profiles/services";
 import type { ActivityStats } from "@/shared/types/activity";
@@ -21,7 +21,7 @@ export function useActivityStats({
         await Promise.all([
           postService.getPostsCountByAuthor(profileId),
           postService.getPostsLikesReceivedByAuthor(profileId),
-          commentService.getCommentCountByAuthor(profileId),
+          CommentService.getCommentCountByAuthor(profileId),
           profileService.getStats(userId),
         ]);
 

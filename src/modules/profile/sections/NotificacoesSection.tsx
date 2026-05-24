@@ -18,11 +18,11 @@ export function NotificacoesSection({
   return (
     <div className="space-y-6">
       <SectionFrame
-        title="Resumo de notificacoes"
-        description="Estado atual da sua inbox para triagem rapida."
+        title="Resumo de notificações"
+        description="Estado atual da sua inbox para triagem rápida."
       >
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <NotificationStatCard label="Nao lidas" value={notifications.unread} />
+          <NotificationStatCard label="Não lidas" value={notifications.unread} />
           <NotificationStatCard label="Prioridade alta" value={notifications.highPriority} />
           <NotificationStatCard label="Urgentes" value={notifications.urgentPriority} />
           <NotificationStatCard label="Total" value={notifications.total} />

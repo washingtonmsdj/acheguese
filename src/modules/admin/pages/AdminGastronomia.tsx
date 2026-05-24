@@ -42,6 +42,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { CUISINE_TYPES } from "@/shared/services/gastronomyFacade";
+import { openSafeUrlInNewTab } from "@/shared/utils/safeRedirect";
 
 const PAGE_SIZE = 20;
 
@@ -563,7 +564,11 @@ export default function AdminGastronomia() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => window.open(`/negocio/${business.slug}/cardapio`, "_blank")}
+                            onClick={() =>
+                              openSafeUrlInNewTab(`/negocio/${business.slug}/cardapio`, {
+                                context: "admin-gastronomy-menu",
+                              })
+                            }
                           >
                             Ver Cardapio
                           </Button>
@@ -668,5 +673,3 @@ export default function AdminGastronomia() {
     </div>
   );
 }
-
-

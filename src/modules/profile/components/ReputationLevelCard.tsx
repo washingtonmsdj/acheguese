@@ -20,10 +20,10 @@ export function ReputationLevelCard({
   // Determinar nível
   const getLevel = () => {
     if (reputation >= 100)
-      return { name: "Ouro", color: "#FFD700", emoji: "🥇", next: null };
+      return { name: "Ouro", color: "#FFD700", next: null };
     if (reputation >= 50)
-      return { name: "Prata", color: "#C0C0C0", emoji: "🥈", next: 100 };
-    return { name: "Bronze", color: "#CD7F32", emoji: "🥉", next: 50 };
+      return { name: "Prata", color: "#C0C0C0", next: 100 };
+    return { name: "Bronze", color: "#CD7F32", next: 50 };
   };
 
   const level = getLevel();
@@ -47,7 +47,7 @@ export function ReputationLevelCard({
             className="flex items-center gap-2 px-3 py-1 rounded-full"
             style={{ backgroundColor: `${level.color}20` }}
           >
-            <span className="text-lg">{level.emoji}</span>
+            <Award className="h-4 w-4" style={{ color: level.color }} aria-hidden="true" />
             <span className="font-bold text-sm" style={{ color: level.color }}>
               {level.name}
             </span>

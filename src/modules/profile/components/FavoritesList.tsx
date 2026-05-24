@@ -1,13 +1,13 @@
-import React from "react";
+﻿import React from "react";
 import { Button } from "@/shared/components/ui/button";
 import { motion } from "framer-motion";
 import { Heart, Star, BadgeCheck, Loader2, Search } from "lucide-react";
-import type { Business } from "@/core/profiles/services/types";
+import type { ProfileAssociatedBusiness } from "@/core/profiles/services/ProfileBusinessTypes";
 
 interface FavoritesListProps {
-  favorites: Business[];
+  favorites: ProfileAssociatedBusiness[];
   loading: boolean;
-  onBusinessClick: (business: Business) => void;
+  onBusinessClick: (business: ProfileAssociatedBusiness) => void;
   onExplore: () => void;
 }
 
@@ -107,7 +107,7 @@ export function FavoritesList({
                       <span className="capitalize">{business.category}</span>
                       {business.neighborhood && (
                         <>
-                          <span className="text-border">•</span>
+                          <span className="text-border">·</span>
                           <span>{business.neighborhood}</span>
                         </>
                       )}

@@ -114,10 +114,10 @@ function BusinessSection({ data, onChange }: {
 
       <div className="grid grid-cols-2 gap-3">
         <Field id="business_city" label="Cidade">
-          <Input id="business_city" value={data.business_city ?? ''} onChange={e => set('business_city', e.target.value)} placeholder="Salvador" />
+          <Input id="business_city" value={data.business_city ?? ''} onChange={e => set('business_city', e.target.value)} placeholder="Cidade" />
         </Field>
         <Field id="business_state" label="Estado">
-          <Input id="business_state" value={data.business_state ?? ''} onChange={e => set('business_state', e.target.value)} placeholder="BA" maxLength={2} />
+          <Input id="business_state" value={data.business_state ?? ''} onChange={e => set('business_state', e.target.value)} placeholder="UF" maxLength={2} />
         </Field>
       </div>
 
@@ -195,7 +195,7 @@ function ProfessionalSection({ data, onChange }: {
       <Field id="service_area" label="áreas de atendimento" hint="Separe por vírgula">
         <Input id="service_area" value={arrToStr(data.service_area)}
           onChange={e => set('service_area', strToArr(e.target.value))}
-          placeholder="Ex: Nordeste de Amaralina, Pituba, Barra" />
+          placeholder="Ex: Centro, Zona Norte, bairros atendidos" />
       </Field>
 
       <Field id="availability_notes" label="Disponibilidade">
@@ -225,7 +225,7 @@ function ProfessionalSection({ data, onChange }: {
           <Input id="license_number" value={data.license_number ?? ''} onChange={e => set('license_number', e.target.value)} placeholder="CRM, CREA, OAB..." />
         </Field>
         <Field id="license_state" label="Estado do registro">
-          <Input id="license_state" value={data.license_state ?? ''} onChange={e => set('license_state', e.target.value)} placeholder="BA" maxLength={2} />
+          <Input id="license_state" value={data.license_state ?? ''} onChange={e => set('license_state', e.target.value)} placeholder="UF" maxLength={2} />
         </Field>
       </div>
 
@@ -295,7 +295,7 @@ function DriverSection({ data, onChange }: {
           <Input id="license_expiry" type="date" value={data.license_expiry ?? ''} onChange={e => set('license_expiry', e.target.value)} />
         </Field>
         <Field id="license_state" label="Estado emissor *">
-          <Input id="license_state" value={data.license_state ?? ''} onChange={e => set('license_state', e.target.value)} placeholder="BA" maxLength={2} />
+          <Input id="license_state" value={data.license_state ?? ''} onChange={e => set('license_state', e.target.value)} placeholder="UF" maxLength={2} />
         </Field>
       </div>
 
@@ -514,15 +514,15 @@ export default function ContaEditarPerfilPage() {
           <div className="sticky top-6 space-y-3 rounded-3xl border border-border/70 bg-card/85 p-4 shadow-sm backdrop-blur">
             <p className="text-sm font-semibold text-foreground">Nesta tela</p>
             <div className="space-y-2 text-sm text-muted-foreground">
-              <p>Identidade publica</p>
+              <p>Identidade pública</p>
               <p>Contato exibido</p>
               <p>Visibilidade</p>
-              {editableUsername !== null && <p>URL publica</p>}
+              {editableUsername !== null && <p>URL pública</p>}
               {profileType !== 'personal' && <p>Dados operacionais</p>}
             </div>
             <Separator />
             <div className="rounded-2xl bg-muted/50 p-3 text-xs leading-5 text-muted-foreground">
-              Endereco residencial e entrega ficam em Configuracoes operacionais, nao neste formulario.
+              Endereço residencial e entrega ficam em Configurações operacionais, não neste formulário.
             </div>
           </div>
         </aside>
@@ -611,7 +611,7 @@ export default function ContaEditarPerfilPage() {
             variant="outline"
             size="sm"
             className="mt-3"
-            onClick={() => navigate("/conta/enderecos")}
+            onClick={() => navigate(appUrls.profile.addresses)}
           >
             Abrir configurações operacionais
           </Button>
@@ -624,7 +624,7 @@ export default function ContaEditarPerfilPage() {
         </Field>
 
         <Field id="phone" label="Telefone">
-          <Input id="phone" type="tel" value={baseForm.phone ?? ''} onChange={e => setBaseField('phone', e.target.value)} placeholder="(71) 99999-9999" />
+          <Input id="phone" type="tel" value={baseForm.phone ?? ''} onChange={e => setBaseField('phone', e.target.value)} placeholder="(00) 00000-0000" />
         </Field>
 
         <SectionTitle>Visibilidade</SectionTitle>

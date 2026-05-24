@@ -123,7 +123,7 @@ export const ADMIN_NAV_SECTIONS: readonly AdminNavSection[] = [
     items: [
       { id: "empresas", to: "/admin/empresas", icon: Building2, label: "Empresas", section: "negocios" },
       { id: "gastronomia", to: "/admin/gastronomia", icon: UtensilsCrossed, label: "Gastronomia", section: "negocios" },
-      { id: "services", to: "/admin/services", icon: Wrench, label: "Servicos", section: "negocios" },
+      { id: "services", to: "/admin/servicos", icon: Wrench, label: "Servicos", section: "negocios" },
       { id: "vagas", to: "/admin/vagas", icon: Briefcase, label: "Vagas de Emprego", section: "negocios" },
       {
         id: "assinaturas",
@@ -266,19 +266,6 @@ export const ADMIN_NAV_SECTIONS: readonly AdminNavSection[] = [
     items: [
       { id: "analytics", to: "/admin/analytics", icon: BarChart3, label: "Analytics Avancado", section: "analytics" },
       { id: "ssot", to: "/admin/ssot", icon: Database, label: "Central SSOT", section: "analytics" },
-    ],
-  },
-  {
-    id: "ferramentas",
-    label: "FERRAMENTAS",
-    items: [
-      {
-        id: "google-places-import",
-        to: "/admin/google-places-import",
-        icon: Database,
-        label: "Import Google Places",
-        section: "ferramentas",
-      },
     ],
   },
 ];

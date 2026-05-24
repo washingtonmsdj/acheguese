@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/shared/hooks/use-toast";
 import { usePrivateProfileWorkspace } from "@/core/profiles";
@@ -7,11 +7,11 @@ import { useAvatarUpload } from "@/core/auth/hooks/useAvatarUpload";
 import { useFavorites } from "@/core/favorites/hooks/useFavorites";
 import { useAppUrls } from '@/core/routing/hooks/useAppUrls';
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
-import type { Business } from "@/core/profiles/services/types";
+import type { ProfileAssociatedBusiness } from "@/core/profiles/services/ProfileBusinessTypes";
 import { logger } from "@/shared/utils/logger";
 
 /**
- * ✅ SSOT COMPLIANT - Hook de workspace privado da conta
+ * SSOT COMPLIANT - Hook de workspace privado da conta
  * Usa AuthService via useAuth para logout
  * Usa useAppUrls para navegação (sem hardcoded URLs)
  */
@@ -124,7 +124,7 @@ export function useContaWorkspace() {
     navigate(appUrls.profile.account);
   };
 
-  const handleBusinessClick = (business: Business) => {
+  const handleBusinessClick = (business: ProfileAssociatedBusiness) => {
     if (!business.slug) {
       logger.warn("[useContaWorkspace] Empresa sem slug para navegacao", {
         businessId: business.id,
@@ -142,7 +142,7 @@ export function useContaWorkspace() {
     navigate(url);
   };
 
-  const handleEditBusiness = (e: React.MouseEvent, business: Business) => {
+  const handleEditBusiness = (e: React.MouseEvent, business: ProfileAssociatedBusiness) => {
     e.stopPropagation();
     navigate(appUrls.business.edit(business.id));
   };

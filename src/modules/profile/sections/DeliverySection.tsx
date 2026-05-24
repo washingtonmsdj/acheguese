@@ -1,5 +1,5 @@
 /**
- * DeliverySection - Secao de delivery do perfil
+ * DeliverySection - Seção de delivery do perfil
  * SSOT: usa entitlements canonicos por empresa com cache React Query.
  */
 
@@ -9,7 +9,7 @@ import { SectionFrame, EmptyPanel } from "@/modules/profile/components/hub";
 import { useEntitlements } from "@/core/billing/hooks/useEntitlements";
 
 import type { DeliverySectionProps } from "./types";
-import type { ProfileBusinessModuleItem } from "@/core/profiles/services/types";
+import type { ProfileBusinessModuleSnapshot } from "@/core/profiles/services/ProfileBusinessTypes";
 
 function formatPlanLabel(value?: string | null): string {
   switch (value) {
@@ -20,17 +20,17 @@ function formatPlanLabel(value?: string | null): string {
     case "delivery":
       return "Delivery";
     case "basic":
-      return "Basico";
+      return "Básico";
     case "premium":
       return "Premium";
     case "enterprise":
       return "Enterprise";
     default:
-      return value ? value[0].toUpperCase() + value.slice(1) : "Basico";
+      return value ? value[0].toUpperCase() + value.slice(1) : "Básico";
   }
 }
 
-function hasDeliveryCapability(item: ProfileBusinessModuleItem): boolean {
+function hasDeliveryCapability(item: ProfileBusinessModuleSnapshot): boolean {
   return (
     item.gastronomy.deliveryEnabled ||
     item.subscription.canUseMotoboyNetwork ||
@@ -43,7 +43,7 @@ function hasDeliveryCapability(item: ProfileBusinessModuleItem): boolean {
 }
 
 interface DeliveryBusinessCardProps {
-  readonly item: ProfileBusinessModuleItem;
+  readonly item: ProfileBusinessModuleSnapshot;
   readonly navigate: DeliverySectionProps["navigate"];
 }
 
@@ -147,7 +147,7 @@ export function DeliverySection({
     >
       {deliveryModules.length === 0 ? (
         <EmptyPanel
-          title="Sem operacao de delivery ativa"
+          title="Sem operação de delivery ativa"
           description="Nenhuma empresa com delivery/motoboy ativo foi encontrada no perfil atual."
           actionLabel="Ver area de empresas"
           onAction={() => setActiveSection("empresas")}

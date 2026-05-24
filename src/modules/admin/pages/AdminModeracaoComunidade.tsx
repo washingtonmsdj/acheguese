@@ -20,6 +20,8 @@ import {
   MessageSquare,
   RefreshCw,
   Filter,
+  MapPin,
+  Heart,
 } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import { toast } from "sonner";
@@ -346,10 +348,10 @@ export default function AdminModeracaoComunidade() {
         <DialogContent className="bg-[#1E2529] border-white/10 text-white">
           <DialogHeader>
             <DialogTitle>
-              {actionModal.action === "approve" && "✅ Aprovar Postagem"}
-              {actionModal.action === "reject" && "❌ Rejeitar Postagem"}
-              {actionModal.action === "flag" && "🚩 Marcar Postagem"}
-              {actionModal.action === "delete" && "🗑️ Deletar Postagem"}
+              {actionModal.action === "approve" && "Aprovar postagem"}
+              {actionModal.action === "reject" && "Rejeitar postagem"}
+              {actionModal.action === "flag" && "Marcar postagem"}
+              {actionModal.action === "delete" && "Deletar postagem"}
             </DialogTitle>
             <DialogDescription className="text-gray-400">
               {actionModal.post?.content}
@@ -547,9 +549,18 @@ function PostCard({
           <p className="text-sm text-white mb-2">{post.content}</p>
 
           <div className="flex items-center gap-4 text-xs text-gray-400">
-            <span>👤 {post.author_name}</span>
-            <span>📍 {post.destination}</span>
-            <span>❤️ {post.interested_count} interessados</span>
+            <span className="inline-flex items-center gap-1">
+              <Users className="h-3 w-3" aria-hidden="true" />
+              {post.author_name}
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <MapPin className="h-3 w-3" aria-hidden="true" />
+              {post.destination}
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <Heart className="h-3 w-3" aria-hidden="true" />
+              {post.interested_count} interessados
+            </span>
           </div>
         </div>
 
@@ -592,4 +603,3 @@ function PostCard({
     </div>
   );
 }
-

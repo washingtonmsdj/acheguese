@@ -1,6 +1,6 @@
 /**
  * ✅ SSOT AAA - Hook useModeration migrado
- * Usa AdminModerationService que delega para PostsFacade, CommentsFacade, ProfileService (SSOT)
+ * Usa AdminModerationService que delega para PostsFacade, CommentService, ProfileService (SSOT)
  */
 
 import { useState, useEffect } from "react";
@@ -36,7 +36,7 @@ export function useModeration() {
     try {
       // ✅ SSOT AAA - Usa AdminModerationService que delega para serviços de domínio
       const data = await adminModerationService.getAllModerationData();
-      
+
       setPosts((data.posts ?? []) as unknown as Record<string, unknown>[]);
       setComments((data.comments ?? []) as unknown as Record<string, unknown>[]);
       setProfiles((data.profiles ?? []) as unknown as Record<string, unknown>[]);
@@ -89,7 +89,7 @@ export function useModeration() {
     adminNotes?: string,
   ) => {
     try {
-      // ✅ SSOT AAA - Usa AdminModerationService que delega para PostsFacade/CommentsFacade
+      // ✅ SSOT AAA - Usa AdminModerationService que delega para PostsFacade/CommentService
       await adminModerationService.deleteContent(type, id);
 
       if (type === "post") {
@@ -123,8 +123,8 @@ export function useModeration() {
       toast({
         title:
           warnType === "advertencia"
-            ? "⚠️ Advertência aplicada"
-            : "🚫 Usuário suspenso",
+            ? "Advertência aplicada"
+            : "Usuário suspenso",
         description: `Ação aplicada com sucesso.`,
       });
 
@@ -156,4 +156,3 @@ export function useModeration() {
     fetchAll,
   };
 }
-

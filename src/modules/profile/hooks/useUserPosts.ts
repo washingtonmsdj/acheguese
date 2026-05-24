@@ -1,5 +1,5 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { PostsFacade } from "@/core/posts/services"; // ✅ SSOT v2.0
+import { PostsFacade } from "@/core/posts/services"; // ✅ SSOT
 import type { ServiceProfilePostRow } from "@/modules/profile/types/profileFeed";
 import {
   normalizeProfileFeedPostType,

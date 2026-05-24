@@ -215,4 +215,4 @@ O sistema suporta:
 - Interface admin: `./ADMIN_LOCATIONS_INTERFACE.md`
 - Sistema completo: `../../../core/location/docs/LOCATION_COORDINATES_SYSTEM.md`
 - Quick start: `../../../core/location/docs/LOCATION_COORDINATES_QUICKSTART.md`
-- Resumo: `../../../../docs/archive/status/SISTEMA_COMPLETO_FINALIZADO.md`
+- Status vigente: `../../../../docs/STATUS_ATUAL.md`

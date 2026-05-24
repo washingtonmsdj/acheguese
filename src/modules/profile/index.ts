@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Profile module public API.
  *
  * Identidade, sessao e operacoes canonicas de perfil pertencem a `core/profiles`.
@@ -19,4 +19,4 @@ export { useUserActivity } from './hooks/useUserActivity';
 export { useUserMentions } from './hooks/useUserMentions';
 export { useUserPosts } from './hooks/useUserPosts';
 
-export type { Business, Profile, ProfileStats } from './types';
+export type { Profile, ProfileAssociatedBusiness, ProfileActivityStats } from './types';

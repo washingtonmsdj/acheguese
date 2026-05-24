@@ -19,12 +19,12 @@ interface DriverOperationalSnapshotCardProps {
 }
 
 function formatPercent(value?: number | null): string {
-  if (typeof value !== "number") return "Nao informado";
+  if (typeof value !== "number") return "Não informado";
   return `${Math.round(value)}%`;
 }
 
 function formatOptionalNumber(value?: number | null): string {
-  if (typeof value !== "number") return "Nao informado";
+  if (typeof value !== "number") return "Não informado";
   return String(value);
 }
 
@@ -40,7 +40,7 @@ export function DriverOperationalSnapshotCard({
           {driverSnapshot.is_online ? "Online" : "Offline"}
         </Badge>
         <Badge variant="outline" className="text-[10px]">
-          {driverSnapshot.is_available ? "Disponivel" : "Indisponivel"}
+          {driverSnapshot.is_available ? "Disponível" : "Indisponível"}
         </Badge>
         {driverSnapshot.is_verified ? (
           <Badge variant="outline" className="text-[10px]">
@@ -51,11 +51,11 @@ export function DriverOperationalSnapshotCard({
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <MobilityMetricCard
-          label="Avaliacao"
+          label="Avaliação"
           value={
             typeof driverSnapshot.rating === "number"
               ? driverSnapshot.rating.toFixed(1)
-              : "Nao informado"
+              : "Não informado"
           }
         />
         <MobilityMetricCard
@@ -63,7 +63,7 @@ export function DriverOperationalSnapshotCard({
           value={formatOptionalNumber(driverSnapshot.total_rides)}
         />
         <MobilityMetricCard
-          label="Concluidas"
+          label="Concluídas"
           value={formatOptionalNumber(driverSnapshot.total_rides_completed)}
         />
         <MobilityMetricCard
@@ -71,7 +71,7 @@ export function DriverOperationalSnapshotCard({
           value={formatOptionalNumber(driverSnapshot.total_rides_cancelled)}
         />
         <MobilityMetricCard
-          label="Aceitacao"
+          label="Aceitação"
           value={formatPercent(driverSnapshot.acceptance_rate)}
         />
         <MobilityMetricCard
@@ -82,5 +82,3 @@ export function DriverOperationalSnapshotCard({
     </div>
   );
 }
-
-

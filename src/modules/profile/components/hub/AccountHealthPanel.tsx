@@ -1,7 +1,7 @@
 /**
- * AccountHealthPanel - Painel de saúde da conta
- * 
- * Exibe estado, verificação, plano e reputação
+ * AccountHealthPanel - Painel de saude da conta
+ *
+ * Exibe estado, verificacao, plano e reputacao
  */
 
 import { Badge } from '@/shared/components/ui/badge';
@@ -36,13 +36,13 @@ function formatPlanLabel(value?: string | null): string {
     case 'delivery':
       return 'Delivery';
     case 'basic':
-      return 'Basico';
+      return 'Básico';
     case 'premium':
       return 'Premium';
     case 'enterprise':
       return 'Enterprise';
     default:
-      return value ? value[0].toUpperCase() + value.slice(1) : 'Basico';
+      return value ? value[0].toUpperCase() + value.slice(1) : 'Básico';
   }
 }
 
@@ -83,7 +83,7 @@ export function AccountHealthPanel({
   return (
     <SectionFrame
       title="Saude da conta"
-      description="Estado atual, verificacao, reputacao e sinais de risco do perfil ativo."
+      description="Estado atual, verificação, reputacao e sinais de risco do perfil ativo."
     >
       <div className="space-y-4">
         <div className="rounded-2xl border border-border bg-background p-4">
@@ -115,7 +115,7 @@ export function AccountHealthPanel({
               {formatPlanLabel(identity?.plan.type || context?.plan.type)}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Premium: {identity?.plan.isPremium || context?.plan.isPremium ? 'sim' : 'nao'}
+              Premium: {identity?.plan.isPremium || context?.plan.isPremium ? 'sim' : 'não'}
             </p>
           </div>
           <div className="rounded-2xl border border-border bg-background p-4">
@@ -143,7 +143,7 @@ export function AccountHealthPanel({
               ))
             ) : (
               <Badge variant="outline" className="text-[10px]">
-                Papel padrao do usuario
+                Papel padrão do usuário
               </Badge>
             )}
           </div>

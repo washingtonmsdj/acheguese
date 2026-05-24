@@ -25,6 +25,7 @@ import { toast } from "sonner";
 import { RIDE_STATUS, ALERT_STATUS } from "@/shared/types/constants";
 import { logger } from "@/shared/utils/logger";
 import { adminMobilityService } from "@/core/admin"; // ✅ MIGRADO - Usa AdminMobilityService do core
+import type { FraudAlertStatus } from "@/modules/admin/types/fraudDetection";
 
 interface FraudEvidence {
   duration_minutes?: number;
@@ -40,7 +41,7 @@ type FraudRideSummary = {
 type FraudDriverSummary = {
   profile?: { name?: string | null } | null;
 };
-type FraudAlert = { id: string; ride_id?: string | null; driver_profile_id?: string | null; status: "pending" | "investigating" | "confirmed" | "false_positive" | "resolved"; severity?: string; fraud_type?: string; description?: string | null; evidence?: FraudEvidence | null; created_at?: string };
+type FraudAlert = { id: string; ride_id?: string | null; driver_profile_id?: string | null; status: FraudAlertStatus; severity?: string; fraud_type?: string; description?: string | null; evidence?: FraudEvidence | null; created_at?: string };
 type FraudAlertExtended = FraudAlert & {
   ride?: FraudRideSummary | null;
   driver?: FraudDriverSummary | null;
@@ -150,11 +151,11 @@ export function FraudDetectionPanel() {
 
   const getFraudTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
-      quick_ride: "⚡ Corrida Rápida",
-      zero_distance: "📍 Distância Zero",
-      pattern_quick_rides: "🔄 Padrão: Corridas Rápidas",
-      pattern_zero_distance: "🔄 Padrão: Distância Zero",
-      fake_completion: "🎭 Conclusão Falsa",
+      quick_ride: "Corrida rápida",
+      zero_distance: "Distância zero",
+      pattern_quick_rides: "Padrão: corridas rápidas",
+      pattern_zero_distance: "Padrão: distância zero",
+      fake_completion: "Conclusão falsa",
     };
     return Object.entries(labels).find(([key]) => key === type)?.[1] ?? type;
   };
@@ -375,6 +376,3 @@ export function FraudDetectionPanel() {
     </div>
   );
 }
-
-
-

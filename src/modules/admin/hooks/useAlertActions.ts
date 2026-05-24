@@ -68,8 +68,8 @@ export function useAlertActions({
       );
       toast({
         title: profile.alert_banned
-          ? "✅ Ban removido"
-          : "🚫 Usuário banido de criar alertas",
+          ? "Ban removido"
+          : "Usuário banido de criar alertas",
         description: profile.alert_banned
           ? `${profile.name} pode criar alertas novamente`
           : `${profile.name} não poderá mais criar alertas`,
@@ -94,10 +94,10 @@ export function useAlertActions({
     try {
       // ✅ SSOT - Tabela post_reports não existe
       // Reports devem ser implementados quando necessário
-      toast({ 
-        title: "Funcionalidade não disponível", 
+      toast({
+        title: "Funcionalidade não disponível",
         description: "Sistema de reports ainda não implementado",
-        variant: "destructive" 
+        variant: "destructive"
       });
     } catch (e: unknown) {
       toast({

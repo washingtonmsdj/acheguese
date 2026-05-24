@@ -1,27 +1,29 @@
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { ArrowLeft, Building2, MapPin } from "lucide-react";
+import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { ResidenceManager } from "@/core/residence/components/ResidenceManager";
 
 export default function ContaEnderecosPage() {
   const navigate = useNavigate();
+  const appUrls = useAppUrls();
 
   return (
     <>
       <Helmet>
-        <title>Meus enderecos</title>
+        <title>Meus endereços</title>
       </Helmet>
       <div className="mx-auto max-w-5xl space-y-6 px-4 py-6">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/conta")}>
+          <Button variant="ghost" size="icon" onClick={() => navigate(appUrls.profile.home)}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-lg font-semibold">Meus enderecos</h1>
+            <h1 className="text-lg font-semibold">Meus endereços</h1>
             <p className="text-xs text-muted-foreground">
-              Endereco operacional privado (entregas/corridas) e territorio pessoal.
+              Endereço operacional privado (entregas/corridas) e território pessoal.
             </p>
           </div>
         </div>
@@ -30,16 +32,16 @@ export default function ContaEnderecosPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-sm">
               <MapPin className="h-4 w-4" />
-              Privacidade de endereco
+              Privacidade de endereço
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm text-muted-foreground">
             <p>
-              O perfil publico exibe somente contexto territorial (bairro/comunidade), nunca rua,
-              numero, complemento ou referencia detalhada.
+              O perfil público exibe somente contexto territorial (bairro/comunidade), nunca rua,
+              número, complemento ou referência detalhada.
             </p>
             <p>
-              Se voce atua profissionalmente, gerencie cobertura operacional na{" "}
+              Se você atua profissionalmente, gerencie cobertura operacional na{" "}
               <button
                 type="button"
                 className="font-medium text-primary underline underline-offset-2"
@@ -62,7 +64,7 @@ export default function ContaEnderecosPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
-            Areas de atuacao de empresas, motorista, motoboy e servicos ficam em{" "}
+            Áreas de atuação de empresas, motorista, motoboy e serviços ficam em{" "}
             <button
               type="button"
               className="font-medium text-primary underline underline-offset-2"

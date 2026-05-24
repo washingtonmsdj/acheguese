@@ -1,6 +1,6 @@
 /**
  * Types compartilhados para as sections de Admin Territory Management
- * 
+ *
  * SSOT: Todas as sections recebem props tipadas e validadas
  * Sem gambiarras: Props explícitas, sem "any" ou "unknown"
  */
@@ -20,6 +20,7 @@ export interface TerritoryNode {
     | "country"
     | "state"
     | "city"
+    | "neighborhood"
     | "district"
     | "territorial_group"
     | "group";

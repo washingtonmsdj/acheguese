@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Edit, Power, PowerOff, Trash2 } from "lucide-react";
@@ -46,7 +46,7 @@ export function PricingRulesList({
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       logger.error("Error toggling rule:", errorMessage);
-      
+
       // Detectar conflito via tipo de erro
       if (err instanceof PricingError && err.isConflict()) {
         toast.error("Conflito: já existe regra ativa para este modo");
@@ -200,6 +200,3 @@ export function PricingRulesList({
     </>
   );
 }
-
-
-

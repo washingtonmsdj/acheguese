@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { BarChart3, Loader2, Shield } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";

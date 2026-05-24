@@ -1,13 +1,13 @@
 /**
  * LocationsAdminPage - Interface admin para gerenciar locations
- * 
+ *
  * Funcionalidades:
  * - Listar todos os locations (hierárquico)
  * - Adicionar novos locations (com geocoding automático)
  * - Editar coordenadas existentes
  * - Visualizar no mapa
  * - Refinar coordenadas via geocoding
- * 
+ *
  * @module modules/admin/pages
  */
 import { logger } from '@/shared/utils/logger';
@@ -22,6 +22,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/sha
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select';
 import { useToast } from '@/shared/hooks/use-toast';
 import { MapPin, Plus, Edit, RefreshCw, Map as MapIcon, ChevronRight, ChevronDown } from 'lucide-react';
+import { buildGoogleMapsSearchUrl } from '@/shared/utils/contactLinks';
+import { openSafeExternalUrl } from '@/shared/utils/safeRedirect';
 interface Location {
   id: string;
   parent_id: string | null;
@@ -54,7 +56,7 @@ export default function LocationsAdminPage() {
   // Form state
   const [formData, setFormData] = useState({
     parentId: '',
-    type: LocationType.DISTRICT as Location['type'],
+    type: LocationType.NEIGHBORHOOD as Location['type'],
     slug: '',
     name: '',
     latitude: '',
@@ -126,10 +128,10 @@ export default function LocationsAdminPage() {
       // Buscar parent para construir full_name
       let fullName = formData.name;
       let parentPath = '';
-      
+
       if (formData.parentId) {
         const parent = await locationAdminService.getParentSummary(formData.parentId);
-        
+
         if (parent) {
           fullName = `${formData.name}, ${parent.full_name}`;
           parentPath = parent.geographic_path;
@@ -166,7 +168,7 @@ export default function LocationsAdminPage() {
       // Resetar form e recarregar
       setFormData({
         parentId: '',
-          type: LocationType.DISTRICT,
+          type: LocationType.NEIGHBORHOOD,
         slug: '',
         name: '',
         latitude: '',
@@ -215,7 +217,7 @@ export default function LocationsAdminPage() {
       setEditingLocation(null);
       setFormData({
         parentId: '',
-          type: LocationType.DISTRICT,
+          type: LocationType.NEIGHBORHOOD,
         slug: '',
         name: '',
         latitude: '',
@@ -271,7 +273,7 @@ export default function LocationsAdminPage() {
       const result = results[0];
       const latitude = result.coordinates.latitude;
       const longitude = result.coordinates.longitude;
-      
+
       await locationAdminService.updateLocation(locationId, {
         metadata: {
           ...location.metadata,
@@ -332,11 +334,11 @@ export default function LocationsAdminPage() {
               )}
             </button>
           )}
-          
+
           {!hasChildren && <div className="w-6" />}
-          
+
           <MapPin className={`w-4 h-4 ${hasCoords ? 'text-green-600' : 'text-gray-400'}`} />
-          
+
           <div className="flex-1">
             <div className="flex items-center gap-2">
               <span className="font-medium">{location.name}</span>
@@ -368,8 +370,8 @@ export default function LocationsAdminPage() {
                 <RefreshCw className="w-4 h-4" />
               </Button>
             )}
-            <Button 
-              size="sm" 
+            <Button
+              size="sm"
               variant="ghost"
               onClick={() => startEdit(location)}
               title="Editar location"
@@ -377,10 +379,15 @@ export default function LocationsAdminPage() {
               <Edit className="w-4 h-4" />
             </Button>
             {hasCoords && (
-              <Button 
-                size="sm" 
+              <Button
+                size="sm"
                 variant="ghost"
-                onClick={() => window.open(`https://www.google.com/maps?q=${location.metadata.center_latitude},${location.metadata.center_longitude}`, '_blank')}
+                onClick={() =>
+                  openSafeExternalUrl(
+                    buildGoogleMapsSearchUrl(`${location.metadata.center_latitude},${location.metadata.center_longitude}`),
+                    { context: "admin-location-map" },
+                  )
+                }
                 title="Ver no Google Maps"
               >
                 <MapIcon className="w-4 h-4" />
@@ -438,7 +445,7 @@ export default function LocationsAdminPage() {
             <div className="text-sm text-gray-600">Total de Locations</div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="pt-6">
             <div className="text-2xl font-bold text-green-600">
@@ -452,7 +459,7 @@ export default function LocationsAdminPage() {
             <div className="text-sm text-gray-600">Com Coordenadas</div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="pt-6">
             <div className="text-2xl font-bold text-yellow-600">
@@ -466,12 +473,19 @@ export default function LocationsAdminPage() {
             <div className="text-sm text-gray-600">Precisam Refinamento</div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="pt-6">
             <div className="text-2xl font-bold text-blue-600">
               {locations.reduce((acc, loc) => {
-                const districts = loc.children?.reduce((a, c) => a + (c.children?.filter(x => x.type === 'district').length || 0), 0) || 0;
+                const districts = loc.children?.reduce(
+                  (a, c) =>
+                    a +
+                    (c.children?.filter(
+                      (x) => x.type === 'neighborhood' || x.type === 'district',
+                    ).length || 0),
+                  0,
+                ) || 0;
                 return acc + districts;
               }, 0)}
             </div>
@@ -503,7 +517,8 @@ export default function LocationsAdminPage() {
                     <SelectItem value="country">País</SelectItem>
                     <SelectItem value="state">Estado</SelectItem>
                     <SelectItem value="city">Cidade</SelectItem>
-                    <SelectItem value="district">Bairro</SelectItem>
+                    <SelectItem value="neighborhood">Bairro</SelectItem>
+                    <SelectItem value="district">Distrito IBGE</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -524,7 +539,7 @@ export default function LocationsAdminPage() {
                 <Label htmlFor="name">Nome *</Label>
                 <Input
                   id="name"
-                  placeholder="Ex: Pituba"
+                  placeholder="Ex: Centro"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 />
@@ -534,7 +549,7 @@ export default function LocationsAdminPage() {
                 <Label htmlFor="slug">Slug *</Label>
                 <Input
                   id="slug"
-                  placeholder="Ex: pituba"
+                  placeholder="Ex: centro"
                   value={formData.slug}
                   onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
                 />
@@ -548,7 +563,7 @@ export default function LocationsAdminPage() {
                   id="latitude"
                   type="number"
                   step="0.000001"
-                  placeholder="Ex: -12.971111"
+                  placeholder="Ex: -14.235000"
                   value={formData.latitude}
                   onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
                 />
@@ -560,7 +575,7 @@ export default function LocationsAdminPage() {
                   id="longitude"
                   type="number"
                   step="0.000001"
-                  placeholder="Ex: -38.510833"
+                  placeholder="Ex: -51.925300"
                   value={formData.longitude}
                   onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
                 />
@@ -591,7 +606,7 @@ export default function LocationsAdminPage() {
                 <Label htmlFor="edit-name">Nome *</Label>
                 <Input
                   id="edit-name"
-                  placeholder="Ex: Pituba"
+                  placeholder="Ex: Centro"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 />
@@ -601,7 +616,7 @@ export default function LocationsAdminPage() {
                 <Label htmlFor="edit-slug">Slug *</Label>
                 <Input
                   id="edit-slug"
-                  placeholder="Ex: pituba"
+                  placeholder="Ex: centro"
                   value={formData.slug}
                   onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
                 />
@@ -636,14 +651,14 @@ export default function LocationsAdminPage() {
 
             <div className="flex gap-2">
               <Button onClick={handleEditLocation}>Salvar</Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => {
                   setShowEditForm(false);
                   setEditingLocation(null);
                   setFormData({
                     parentId: '',
-                    type: LocationType.DISTRICT,
+                    type: LocationType.NEIGHBORHOOD,
                     slug: '',
                     name: '',
                     latitude: '',

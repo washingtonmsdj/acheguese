@@ -14,7 +14,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
-import { AdminService } from "@/modules/admin/services/AdminService";
+import { getOperationalOverview } from "@/core/admin/services/admin.queries";
 import { cn } from "@/shared/utils/cn";
 
 type TrendDirection = "up" | "down" | "neutral";
@@ -57,7 +57,7 @@ export default function AdminAnalytics() {
     refetch,
   } = useQuery({
     queryKey: ["admin", "operational-overview", windowDays],
-    queryFn: () => AdminService.getOperationalOverview(windowDays),
+    queryFn: () => getOperationalOverview(windowDays),
     staleTime: 30_000,
   });
 

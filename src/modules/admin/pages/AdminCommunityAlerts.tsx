@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AdminCommunityAlerts - Gestao administrativa de alertas comunitarios
  *
  * SSOT: usa adminCommunityAlertsService.

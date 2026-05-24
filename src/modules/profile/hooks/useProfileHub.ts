@@ -1,7 +1,7 @@
-/**
- * useProfileHub - Hook consolidado para o hub de perfil
- * 
- * Organiza e prepara todos os dados necessários para os componentes do hub
+﻿/**
+ * useProfileHub - Hook consolidado para o hub de perfil.
+ *
+ * Organiza e prepara todos os dados necessarios para os componentes do hub.
  */
 
 import { useMemo } from 'react';
@@ -17,7 +17,6 @@ import {
   Globe,
   Bell,
   KeyRound,
-  ExternalLink,
   MessageSquare,
   MapPin,
   Users,
@@ -32,20 +31,22 @@ import {
 import { useAuth } from '@/core/auth/hooks/useAuth';
 import { useMultiProfileContext } from '@/core/profiles/contexts/multi-profile-runtime-context';
 import { useAppUrls } from '@/core/routing/hooks/useAppUrls';
+import { useHomeCommunityHref } from '@/core/routing/hooks/useHomeCommunityHref';
+import { LAUNCH_URLS } from '@/config/territory';
 import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
-import { useDriverProfileIdentity } from '@/core/profiles/services/useDriverProfileIdentity';
+import { useDriverProfileIdentity } from '@/core/mobility/hooks/useDriverProfileIdentity';
 import { useContaWorkspace } from './usePerfilPageV3';
 import { buildProfileEditUrl, buildPublicProfileUrl } from '@/core/profiles/utils/publicProfileUrl';
 import { canProfileHaveMembers, isProfileVerified } from '../utils/profileDomainRules';
 
-import type { Business } from '@/core/profiles/services/types';
+import type { ProfileAssociatedBusiness } from '@/core/profiles/services/ProfileBusinessTypes';
 
 const GLOBAL_MODULE_URLS = {
   business: '/empresas',
   services: '/servicos',
   gastronomy: '/gastronomia',
   gastronomyFavorites: '/gastronomia/favoritos',
-  community: '/comunidade',
+  community: LAUNCH_URLS.community,
   jobs: '/vagas',
   events: '/eventos',
   touristPoints: '/pontos-turisticos',
@@ -58,6 +59,14 @@ export function useProfileHub() {
   const { user } = useAuth();
   const { activeProfile, allProfiles, switchProfile } = useMultiProfileContext();
   const appUrls = useAppUrls();
+  const homeCommunityHref = useHomeCommunityHref();
+  const moduleUrls = useMemo(
+    () => ({
+      ...GLOBAL_MODULE_URLS,
+      community: homeCommunityHref,
+    }),
+    [homeCommunityHref],
+  );
 
   const {
     profile,
@@ -93,14 +102,12 @@ export function useProfileHub() {
     refreshWorkspace,
   } = useContaWorkspace();
 
-  // Dados básicos
   const activeProfileId = activeProfile?.id ?? profile?.id ?? null;
   const isVerified = isProfileVerified(activeProfile, profile);
   const handle = activeProfile?.handle ?? identity?.username ?? '';
   const canOpenPublicProfile = Boolean(handle);
   const territoryLabel = identity?.territoryLabel;
 
-  // Permissões
   const canManageProfileMembers = canProfileHaveMembers(activeProfile);
   const hasDriverProfile = allProfiles.some((item) => item.profile_type === 'driver');
   const hasBusinesses = businessModules.length > 0;
@@ -112,7 +119,6 @@ export function useProfileHub() {
     allProfiles.find((item) => item.id === driverIdentity.driverProfileId) ?? fallbackDriverProfile;
   const resolvedDriverProfileId = driverIdentity.driverProfileId ?? fallbackDriverProfile?.id ?? null;
 
-  // Estatísticas para ProfileStats
   const statsData = useMemo(
     () => [
       {
@@ -143,7 +149,6 @@ export function useProfileHub() {
     [operations, notifications],
   );
 
-  // Links pessoais
   const personalLinks = useMemo(
     () => [
       {
@@ -194,7 +199,7 @@ export function useProfileHub() {
         icon: Settings2,
         title: 'Configuracoes operacionais',
         description: 'Residencia, areas de atuacao e preferencias operacionais do contexto atual.',
-        onClick: () => navigate(appUrls.settings),
+        onClick: () => navigate(appUrls.profile.addresses),
       },
       {
         icon: Bell,
@@ -229,7 +234,6 @@ export function useProfileHub() {
     ],
   );
 
-  // Links operacionais
   const operationalLinks = useMemo(
     () => [
       {
@@ -254,7 +258,7 @@ export function useProfileHub() {
         icon: Settings2,
         title: 'Residencia e areas',
         description: 'Residencia, areas de atuacao e preferencias operacionais.',
-        onClick: () => navigate(appUrls.settings),
+        onClick: () => navigate(appUrls.profile.addresses),
       },
       {
         icon: Car,
@@ -275,68 +279,66 @@ export function useProfileHub() {
     [hasDriverProfile, operations.ridesTotal, navigate, appUrls],
   );
 
-  // Links do ecossistema
   const ecosystemLinks = useMemo(
     () => [
       {
         icon: Building2,
         title: 'Empresas do territorio',
         description: 'Explore empresas, presenca local e operacao publica ja ativa.',
-        onClick: () => navigate('/empresas'),
+        onClick: () => navigate(appUrls.business.list),
       },
       {
         icon: Wrench,
         title: 'Servicos',
         description: 'Descubra profissionais e servicos publicados no territorio atual.',
-        onClick: () => navigate('/servicos'),
+        onClick: () => navigate(appUrls.services.list),
       },
       {
         icon: UtensilsCrossed,
         title: 'Gastronomia',
         description: 'Acesse a vitrine gastronomica e os negocios com vertical ativa.',
-        onClick: () => navigate('/gastronomia'),
+        onClick: () => navigate(GLOBAL_MODULE_URLS.gastronomy),
       },
       {
         icon: Bookmark,
         title: 'Favoritos gastro',
         description: 'Entrada rapida para seus favoritos de gastronomia.',
-        onClick: () => navigate('/gastronomia/favoritos'),
+        onClick: () => navigate(GLOBAL_MODULE_URLS.gastronomyFavorites),
       },
       {
         icon: MessageSquare,
         title: 'Comunidade',
         description: 'Postagens, recomendacoes, conversas e conteudo territorial.',
-        onClick: () => navigate('/comunidade'),
+        onClick: () => navigate(appUrls.community.feed),
       },
       {
         icon: Briefcase,
         title: 'Vagas',
         description: 'Veja oportunidades e movimentacao economica local.',
-        onClick: () => navigate('/vagas'),
+        onClick: () => navigate(appUrls.jobs),
       },
       {
         icon: CalendarDays,
         title: 'Eventos',
         description: 'Acompanhe eventos ativos e programacao territorial existente.',
-        onClick: () => navigate('/eventos'),
+        onClick: () => navigate(GLOBAL_MODULE_URLS.events),
       },
       {
         icon: Globe,
         title: 'Pontos turisticos',
         description: 'Vertical publica de pontos turisticos e conteudo territorial.',
-        onClick: () => navigate('/pontos-turisticos'),
+        onClick: () => navigate(GLOBAL_MODULE_URLS.touristPoints),
       },
       {
         icon: Crown,
         title: 'Ranking local',
         description: 'Acesse ranking, relevancia e sinais de destaque do territorio.',
-        onClick: () => navigate('/ranking'),
+        onClick: () => navigate(appUrls.ranking),
       },
     ],
-    [navigate],
+    [navigate, appUrls],
   );
 
-  // Próximas ações
   const showBusinessOnboarding =
     !hasBusinesses &&
     Boolean(
@@ -353,8 +355,8 @@ export function useProfileHub() {
           ? {
               title: 'Definir residencia ou territorio',
               description: 'Ainda faltam sinais territoriais para personalizacao e descoberta local.',
-              actionLabel: 'Abrir preferencias',
-              onClick: () => navigate(appUrls.settings),
+              actionLabel: 'Abrir enderecos',
+              onClick: () => navigate(appUrls.profile.addresses),
             }
           : null,
         !canOpenPublicProfile
@@ -412,14 +414,13 @@ export function useProfileHub() {
     ],
   );
 
-  // Handlers
   const handleSwitchProfile = async (profileId: string) => {
     if (profileId === activeProfile?.id) return;
     const result = await switchProfile(profileId);
     if (result) toast.success('Perfil ativo alterado');
   };
 
-  const handleBusinessClick = (business: Business) => {
+  const handleBusinessClick = (business: ProfileAssociatedBusiness) => {
     if (!business.slug) return;
     const url = BusinessUrlService.getCanonicalUrl({
       id: business.id,
@@ -440,7 +441,6 @@ export function useProfileHub() {
   };
 
   return {
-    // Dados básicos
     user,
     activeProfile,
     profile,
@@ -450,24 +450,20 @@ export function useProfileHub() {
     handle,
     canOpenPublicProfile,
     territoryLabel,
-    
-    // Contexto e identidade
+
     context,
     identity,
     account,
-    
-    // Estatísticas e operações
+
     stats,
     operations,
     notifications,
     roles,
-    
-    // Módulos empresariais
+
     businessModules,
     hasBusinesses,
     showBusinessOnboarding,
 
-    // Snapshot de motorista (mobilidade)
     hasDriverProfile,
     canManageProfileMembers,
     driverProfile: resolvedDriverProfile,
@@ -475,23 +471,18 @@ export function useProfileHub() {
     driverData: driverIdentity.driverData ?? null,
     driverDataLoading: driverIdentity.isLoading,
     driverDataError: driverIdentity.error ?? null,
-    
-    // Estados
+
     loading,
     error,
-    
-    // Mobilidade
+
     activeRide,
     hasActiveRide,
-    
-    // Verificação
+
     verificationStatus,
     verificationRejectionReason,
-    
-    // Favoritos
+
     favorites,
 
-    // Dialogos e seguranca
     downloadDataOpen,
     setDownloadDataOpen,
     viewDataOpen,
@@ -505,15 +496,13 @@ export function useProfileHub() {
     handleDownloadData,
     handleDeactivateAccount,
     handleDeleteAccount,
-    
-    // Dados preparados para componentes
+
     statsData,
     personalLinks,
     operationalLinks,
     ecosystemLinks,
     nextActions,
-    
-    // Handlers
+
     handleAvatarChange,
     handleSwitchProfile,
     handleBusinessClick,
@@ -521,6 +510,6 @@ export function useProfileHub() {
     refreshWorkspace,
     navigate,
     appUrls,
-    moduleUrls: GLOBAL_MODULE_URLS,
+    moduleUrls,
   };
 }

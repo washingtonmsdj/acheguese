@@ -1,9 +1,9 @@
 /**
  * LocationsView
- * 
+ *
  * Visualização focada em localizações (sem grupos).
  * Exibe cards compactos agrupados por tipo (país, estado, cidade, bairro).
- * 
+ *
  * SSOT: Props tipadas vindas de sections/types.ts
  * Sem gambiarras: Componente focado apenas em renderização
  */
@@ -39,8 +39,16 @@ const TYPE_CONFIG: Record<string, TypeConfig> = {
     textClass: 'text-orange-600',
     borderClass: 'border-orange-500/20',
   },
-  district: {
+  neighborhood: {
     label: 'Bairros',
+    icon: MapPin,
+    color: 'cyan',
+    bgClass: 'bg-cyan-500/10',
+    textClass: 'text-cyan-600',
+    borderClass: 'border-cyan-500/20',
+  },
+  district: {
+    label: 'Distritos IBGE',
     icon: MapPin,
     color: 'cyan',
     bgClass: 'bg-cyan-500/10',
@@ -59,6 +67,7 @@ export function LocationsView({
     country: locations.filter(l => l.type === 'country'),
     state: locations.filter(l => l.type === 'state'),
     city: locations.filter(l => l.type === 'city'),
+    neighborhood: locations.filter(l => l.type === 'neighborhood'),
     district: locations.filter(l => l.type === 'district'),
   };
 
@@ -75,10 +84,10 @@ export function LocationsView({
     <div className="space-y-4">
       {Object.entries(byType).map(([type, locs]) => {
         if (locs.length === 0) return null;
-        
+
         const config = TYPE_CONFIG[type as keyof typeof TYPE_CONFIG];
         const Icon = config.icon;
-        
+
         return (
           <div key={type}>
             {/* Header da seção */}
@@ -91,19 +100,19 @@ export function LocationsView({
                 {locs.length}
               </Badge>
             </div>
-            
+
             {/* Grid ultra-compacto */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
               {locs.map(loc => {
                 const parent = loc.parent_id ? allLocations.find(l => l.id === loc.parent_id) : null;
-                
+
                 return (
                   <div
                     key={loc.id}
                     className={cn(
                       "group relative border rounded-md p-2.5 transition-all hover:shadow-sm",
-                      loc.is_selector_active 
-                        ? cn("bg-primary/5", config.borderClass, "hover:shadow-md") 
+                      loc.is_selector_active
+                        ? cn("bg-primary/5", config.borderClass, "hover:shadow-md")
                         : "bg-card border-border hover:border-border/60"
                     )}
                   >
@@ -120,19 +129,20 @@ export function LocationsView({
                         <Eye className={cn("h-3 w-3 shrink-0", config.textClass)} />
                       )}
                     </div>
-                    
+
                     {/* Slug */}
                     <p className="text-[10px] text-muted-foreground font-mono mb-1.5 truncate leading-tight">
                       {loc.slug}
                     </p>
-                    
+
                     {/* Parent (se houver) */}
                     {parent && (
-                      <p className="text-[9px] text-muted-foreground mb-2 truncate leading-tight">
-                        📍 {parent.name}
+                      <p className="flex items-center gap-1 text-[9px] text-muted-foreground mb-2 truncate leading-tight">
+                        <MapPin className="h-3 w-3 shrink-0" aria-hidden="true" />
+                        {parent.name}
                       </p>
                     )}
-                    
+
                     {/* Footer com status e switch */}
                     <div className="flex items-center justify-between pt-1.5 border-t">
                       {loc.is_selector_active ? (
@@ -146,7 +156,7 @@ export function LocationsView({
                           <span className="text-[9px] text-muted-foreground">Oculto</span>
                         </div>
                       )}
-                      
+
                       <Switch
                         checked={loc.is_selector_active}
                         onCheckedChange={() => onToggleLocation(loc.id, loc.is_selector_active)}

@@ -11,9 +11,7 @@ import {
   TryOnCategory, TryOnGender,
   type TryOnStyle,
 } from '../domain/types';
-
-const MAX_BYTES = 8 * 1024 * 1024;
-const ACCEPTED = ['image/png', 'image/jpeg', 'image/webp'];
+import { TRYON_UPLOAD_LIMITS } from '../constants/tryonConfig';
 
 interface Props {
   onSubmit: (file: File, opts: {
@@ -44,8 +42,8 @@ export function TryOnUploadPanel({ onSubmit, disabled }: Props) {
   const accept = useCallback((f: File | null) => {
     setError(null);
     if (!f) return;
-    if (!ACCEPTED.includes(f.type)) { setError('Formato inválido. Use PNG, JPG ou WEBP.'); return; }
-    if (f.size > MAX_BYTES) { setError('Arquivo muito grande (máx 8MB).'); return; }
+    if (!TRYON_UPLOAD_LIMITS.acceptedMimeTypes.includes(f.type as typeof TRYON_UPLOAD_LIMITS.acceptedMimeTypes[number])) { setError('Formato inválido. Use PNG, JPG ou WEBP.'); return; }
+    if (f.size > TRYON_UPLOAD_LIMITS.maxImageBytes) { setError('Arquivo muito grande (máx 8MB).'); return; }
     if (preview) URL.revokeObjectURL(preview);
     setFile(f);
     setPreview(URL.createObjectURL(f));
@@ -97,7 +95,7 @@ export function TryOnUploadPanel({ onSubmit, disabled }: Props) {
         <input
           id="tryon-file"
           type="file"
-          accept={ACCEPTED.join(',')}
+          accept={TRYON_UPLOAD_LIMITS.acceptedMimeTypes.join(',')}
           className="hidden"
           onChange={(e) => accept(e.target.files?.[0] ?? null)}
         />

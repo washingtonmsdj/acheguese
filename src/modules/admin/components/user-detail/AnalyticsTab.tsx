@@ -4,6 +4,8 @@ import {
   Award,
   Activity,
   Calendar,
+  CheckCircle2,
+  BarChart3,
 } from "lucide-react";
 import {
   Card,
@@ -278,7 +280,10 @@ export function AnalyticsTab({
         <CardContent className="space-y-2">
           {riskScore >= 70 && (
             <div className="p-3 bg-red-500/10 border border-red-500/30 rounded text-xs">
-              <p className="font-semibold text-red-400 mb-1">⚠️ Ação Urgente</p>
+              <p className="flex items-center gap-1.5 font-semibold text-red-400 mb-1">
+                <AlertCircle className="h-3.5 w-3.5" aria-hidden="true" />
+                Ação urgente
+              </p>
               <p className="text-red-200">
                 Usuário de alto risco. Considere suspensão ou monitoramento
                 intensivo.
@@ -288,7 +293,10 @@ export function AnalyticsTab({
 
           {reportsReceived.length >= 2 && (
             <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded text-xs">
-              <p className="font-semibold text-yellow-400 mb-1">⚠️ Atenção</p>
+              <p className="flex items-center gap-1.5 font-semibold text-yellow-400 mb-1">
+                <AlertCircle className="h-3.5 w-3.5" aria-hidden="true" />
+                Atenção
+              </p>
               <p className="text-yellow-200">
                 Múltiplos reports recebidos. Investigar padrão de comportamento.
               </p>
@@ -298,7 +306,8 @@ export function AnalyticsTab({
           {driverData && driverData.acceptance_rate < 50 && (
             <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded text-xs">
               <p className="font-semibold text-yellow-400 mb-1">
-                📊 Performance
+                <BarChart3 className="mr-1.5 inline h-3.5 w-3.5" aria-hidden="true" />
+                Performance
               </p>
               <p className="text-yellow-200">
                 Taxa de aceitação baixa. Considerar treinamento ou advertência.
@@ -309,7 +318,8 @@ export function AnalyticsTab({
           {riskScore < 40 && reportsReceived.length === 0 && (
             <div className="p-3 bg-green-500/10 border border-green-500/30 rounded text-xs">
               <p className="font-semibold text-green-400 mb-1">
-                ✅ Usuário Confiável
+                <CheckCircle2 className="mr-1.5 inline h-3.5 w-3.5" aria-hidden="true" />
+                Usuário confiável
               </p>
               <p className="text-green-200">
                 Sem histórico de problemas. Usuário em boa situação.

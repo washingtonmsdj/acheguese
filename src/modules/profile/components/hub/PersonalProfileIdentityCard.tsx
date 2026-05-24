@@ -51,7 +51,7 @@ export function PersonalProfileIdentityCard({
 }: PersonalProfileIdentityCardProps) {
   if (!profile) return null;
 
-  const displayName = profile.display_name || "Usuario";
+  const displayName = profile.display_name || "Usuário";
   const avatarUrl = profile.avatar_url;
   const bio = profile.bio;
 

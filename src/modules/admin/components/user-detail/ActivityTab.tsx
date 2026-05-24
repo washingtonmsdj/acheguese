@@ -130,7 +130,7 @@ export function ActivityTab({ user, driverData }: ActivityTabProps) {
             Rastreamento de dispositivos será implementado em breve
           </p>
           <div className="text-xs text-gray-500 mt-2 p-2 bg-[#0A0F14] rounded">
-            <p className="mb-1">📱 Funcionalidades futuras:</p>
+            <p className="mb-1">Funcionalidades futuras:</p>
             <ul className="list-disc list-inside space-y-1 ml-2">
               <li>Lista de dispositivos usados</li>
               <li>Histórico de IPs</li>
@@ -154,7 +154,7 @@ export function ActivityTab({ user, driverData }: ActivityTabProps) {
             Logs detalhados serão implementados em breve
           </p>
           <div className="text-xs text-gray-500 mt-2 p-2 bg-[#0A0F14] rounded">
-            <p className="mb-1">📋 Funcionalidades futuras:</p>
+            <p className="mb-1">Funcionalidades futuras:</p>
             <ul className="list-disc list-inside space-y-1 ml-2">
               <li>Histórico de logins</li>
               <li>Ações realizadas</li>

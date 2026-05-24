@@ -1,9 +1,9 @@
 /**
  * AdminVagas - Gestão administrativa de vagas de emprego
- * 
+ *
  * SSOT: Usa AdminVagasService (novo)
  * Migration: 20260416110000_create_vagas.sql
- * 
+ *
  * Atualizado para usar:
  * - Enums: vaga_status, vaga_contrato, vaga_modalidade, vaga_nivel, vaga_urgencia
  * - Full-text search em português
@@ -44,6 +44,7 @@ import {
   EyeOff,
   Trash2,
   RefreshCw,
+  MapPin,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { VagaStatus, VagaContrato, VagaModalidade } from "@/core/admin/services/AdminVagasService";
@@ -599,8 +600,9 @@ export default function AdminVagas() {
                             {vaga.empresa} • {vaga.contrato} • {vaga.modalidade}
                           </p>
                           {vaga.location && (
-                            <p className="text-sm text-muted-foreground">
-                              📍 {vaga.location.name}
+                            <p className="flex items-center gap-1 text-sm text-muted-foreground">
+                              <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
+                              {vaga.location.name}
                             </p>
                           )}
                           <p className="text-sm mt-2 text-destructive font-medium">
@@ -650,4 +652,3 @@ export default function AdminVagas() {
     </div>
   );
 }
-

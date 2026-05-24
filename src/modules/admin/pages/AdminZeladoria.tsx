@@ -29,7 +29,7 @@ import { adminCommunityService } from "@/core/admin/services/AdminCommunityServi
 import { cn } from "@/shared/utils/cn";
 import { USER_ROLE } from "@/shared/types/constants";
 import { useSessionContext } from "@/core/session";
-import { AuthorizationEngine } from "@/core/authorization";
+import { AuthorizationEngine } from "@/core/authorization/services/AuthorizationEngine";
 import { logger } from "@/shared/utils/logger";
 
 interface CivicReport {
@@ -344,4 +344,3 @@ function ReportCard({ report, onUpdateStatus }: ReportCardProps) {
     </Card>
   );
 }
-

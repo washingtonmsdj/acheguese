@@ -1,4 +1,4 @@
-﻿export const formatAnalyticsDate = (date: string) => {
+export const formatAnalyticsDate = (date: string) => {
   const [, month, day] = date.split("-");
   return `${day}/${month}`;
 };

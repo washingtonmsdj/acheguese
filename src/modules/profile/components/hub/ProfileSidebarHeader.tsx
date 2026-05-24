@@ -44,10 +44,10 @@ export function ProfileSidebarHeader({
   className,
 }: ProfileSidebarHeaderProps) {
   const navigate = useNavigate();
-  
+
   if (!profile) return null;
 
-  const displayName = profile.display_name || "Usuario";
+  const displayName = profile.display_name || "Usuário";
   const avatarUrl = profile.avatar_url;
   const profileType = getProfileTypeLabel(profile);
 

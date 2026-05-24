@@ -1,30 +1,34 @@
 /**
  * AdminTerritoryContent
- * 
+ *
  * Painel admin híbrido: campos editáveis + botão para regenerar com IA.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useTerritoryAIContent, type TerritoryAIContent } from '@/core/territorial/hooks/useTerritoryAIContent';
+import { TerritorialGroupsReadService } from '@/core/location/services/TerritorialGroupsReadService';
 import { Button } from '@/shared/components/ui/button';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { Input } from '@/shared/components/ui/input';
 import { toast } from 'sonner';
 import {
-  Sparkles, Save, RefreshCw, Loader2, Plus, Trash2,
+  Sparkles, Save, Loader2, Plus, Trash2,
   BookOpen, Users, Calendar, Building2,
 } from 'lucide-react';
 
-const DEFAULT_SLUG = 'complexo-do-nordeste-de-amaralina';
-const DEFAULT_NAME = 'Complexo do Nordeste de Amaralina';
-const DEFAULT_MEMBERS = ['Nordeste de Amaralina', 'Santa Cruz', 'Vale das Pedrinhas'];
 type TerritoryEvent = NonNullable<TerritoryAIContent['events']>[number];
 
 export default function AdminTerritoryContent() {
-  const [slug, setSlug] = useState(DEFAULT_SLUG);
-  const [name, setName] = useState(DEFAULT_NAME);
+  const [slug, setSlug] = useState('');
+  const [name, setName] = useState('');
 
   const { content, isLoading, generateWithAI, updateContent } = useTerritoryAIContent(slug);
+  const { data: territoryGroups = [], isLoading: isGroupsLoading } = useQuery({
+    queryKey: ['admin', 'territory-content', 'active-groups'],
+    queryFn: () => TerritorialGroupsReadService.listActiveGroups(),
+    staleTime: 5 * 60 * 1000,
+  });
 
   const [description, setDescription] = useState('');
   const [history, setHistory] = useState('');
@@ -33,6 +37,28 @@ export default function AdminTerritoryContent() {
   const [area, setArea] = useState('');
   const [characteristics, setCharacteristics] = useState('');
   const [events, setEvents] = useState<TerritoryEvent[]>([]);
+
+  const sortedGroups = useMemo(
+    () => [...territoryGroups].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')),
+    [territoryGroups],
+  );
+
+  const selectedGroup = useMemo(
+    () => sortedGroups.find((group) => group.slug === slug) ?? null,
+    [sortedGroups, slug],
+  );
+
+  const selectedMembers = useMemo(
+    () => selectedGroup?.members.map((member) => member.name).filter(Boolean) ?? [],
+    [selectedGroup],
+  );
+
+  useEffect(() => {
+    if (slug || sortedGroups.length === 0) return;
+    const firstGroup = sortedGroups[0];
+    setSlug(firstGroup.slug);
+    setName(firstGroup.name);
+  }, [slug, sortedGroups]);
 
   useEffect(() => {
     if (content) {
@@ -49,10 +75,23 @@ export default function AdminTerritoryContent() {
       setArea(String(demographics.area_km2 || ''));
       setCharacteristics((demographics.main_characteristics || []).join(', '));
       setEvents(content.events || []);
+    } else {
+      setDescription('');
+      setHistory('');
+      setEconomy('');
+      setPopulation('');
+      setArea('');
+      setCharacteristics('');
+      setEvents([]);
     }
   }, [content]);
 
   const handleSave = async () => {
+    if (!slug) {
+      toast.error('Selecione um território antes de salvar.');
+      return;
+    }
+
     try {
       await updateContent.mutateAsync({
         description,
@@ -73,11 +112,16 @@ export default function AdminTerritoryContent() {
   };
 
   const handleRegenerate = async () => {
+    if (!slug || !name) {
+      toast.error('Selecione um território antes de regenerar.');
+      return;
+    }
+
     try {
       await generateWithAI.mutateAsync({
         territory_slug: slug,
         territory_name: name,
-        members: DEFAULT_MEMBERS,
+        members: selectedMembers,
       });
       toast.success('Conteúdo regenerado com IA!');
     } catch (e: unknown) {
@@ -97,7 +141,7 @@ export default function AdminTerritoryContent() {
     setEvents(events.map((e, i) => (i === index ? { ...e, [field]: value } : e)));
   };
 
-  if (isLoading) {
+  if (isLoading || isGroupsLoading) {
     return (
       <div className="flex items-center justify-center py-20">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -112,7 +156,7 @@ export default function AdminTerritoryContent() {
         <div>
           <h1 className="text-xl font-bold text-foreground">Conteúdo do Território</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Gerencie o conteúdo IA da landing page territorial
+            Gerencie o conteúdo IA da landing page territorial com base nos grupos ativos.
           </p>
         </div>
         <div className="flex gap-2">
@@ -150,7 +194,26 @@ export default function AdminTerritoryContent() {
           <Building2 className="h-4 w-4 text-muted-foreground" />
           Território
         </h2>
-        <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="text-xs text-muted-foreground mb-1 block">Grupo territorial ativo</label>
+          <select
+            value={slug}
+            onChange={(event) => {
+              const group = sortedGroups.find((item) => item.slug === event.target.value);
+              setSlug(group?.slug ?? '');
+              setName(group?.name ?? '');
+            }}
+            className="h-10 w-full rounded-md border border-border bg-background px-3 text-sm"
+          >
+            <option value="">Selecione um grupo territorial</option>
+            {sortedGroups.map((group) => (
+              <option key={group.id} value={group.slug}>
+                {group.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <div>
             <label className="text-xs text-muted-foreground mb-1 block">Slug</label>
             <Input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="slug-do-territorio" />
@@ -160,6 +223,11 @@ export default function AdminTerritoryContent() {
             <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome do território" />
           </div>
         </div>
+        <p className="text-[11px] text-muted-foreground">
+          {selectedMembers.length > 0
+            ? `${selectedMembers.length} bairros vinculados: ${selectedMembers.join(', ')}`
+            : 'Nenhum bairro vinculado ao grupo selecionado.'}
+        </p>
         {content?.ai_generated_at && (
           <p className="text-[10px] text-muted-foreground">
             Última geração IA: {new Date(content.ai_generated_at).toLocaleString('pt-BR')}

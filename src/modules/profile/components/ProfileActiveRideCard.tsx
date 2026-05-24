@@ -38,9 +38,9 @@ export function ProfileActiveRideCard({ ride }: ProfileActiveRideCardProps) {
   const navigate = useNavigate();
   const appUrls = useAppUrls();
 
-  const origin = ride.origin_details || ride.origin || "Origem nao informada";
+  const origin = ride.origin_details || ride.origin || "Origem não informada";
   const destination =
-    ride.destination_details || ride.destination || "Destino nao informado";
+    ride.destination_details || ride.destination || "Destino não informado";
   const statusLabel = STATUS_LABELS[ride.status || "pending"] || "Em andamento";
   const mobilityPath =
     ride.ride_mode === "motoboy"

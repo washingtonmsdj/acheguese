@@ -1,3 +1,8 @@
+import {
+  BUSINESS_CATEGORIES,
+  type BusinessCategory,
+} from "@/shared/taxonomy/businessCategories";
+
 /**
  * 🏆 ADMIN BUSINESS FIELDS - SSOT COMPLIANT
  *
@@ -15,16 +20,7 @@ export const ADMIN_BUSINESS_FIELDS = [
     key: "category",
     label: "Categoria",
     type: "select" as const,
-    options: [
-      "restaurante",
-      "mercado",
-      "farmacia",
-      "saude",
-      "educacao",
-      "servicos",
-      "lazer",
-      "outros",
-    ],
+    options: [...BUSINESS_CATEGORIES],
   },
   {
     key: "status",
@@ -159,16 +155,7 @@ export const ADMIN_BUSINESS_FIELDS = [
   },
 ];
 
-export const ADMIN_BUSINESS_CATEGORIES = [
-  "restaurante",
-  "mercado",
-  "farmacia",
-  "saude",
-  "educacao",
-  "servicos",
-  "lazer",
-  "outros",
-] as const;
+export const ADMIN_BUSINESS_CATEGORIES = BUSINESS_CATEGORIES;
 
 export const ADMIN_BUSINESS_STATUS = [
   "active",
@@ -177,5 +164,5 @@ export const ADMIN_BUSINESS_STATUS = [
   "suspended",
 ] as const;
 
-export type AdminBusinessCategory = (typeof ADMIN_BUSINESS_CATEGORIES)[number];
+export type AdminBusinessCategory = BusinessCategory;
 export type AdminBusinessStatus = (typeof ADMIN_BUSINESS_STATUS)[number];

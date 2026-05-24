@@ -1,15 +1,15 @@
-import React from "react";
+﻿import React from "react";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { motion } from "framer-motion";
 import { Store, Star, Settings, Pencil, Crown, Plus, Building2 } from "lucide-react";
-import type { Business } from "@/core/profiles/services/types";
+import type { ProfileAssociatedBusiness } from "@/core/profiles/services/ProfileBusinessTypes";
 import { cn } from "@/shared/utils/cn";
 
 interface BusinessListProps {
-  businesses: Business[];
-  onBusinessClick: (business: Business) => void;
-  onEditClick: (e: React.MouseEvent, business: Business) => void;
+  businesses: ProfileAssociatedBusiness[];
+  onBusinessClick: (business: ProfileAssociatedBusiness) => void;
+  onEditClick: (e: React.MouseEvent, business: ProfileAssociatedBusiness) => void;
   onDashboardClick: (e: React.MouseEvent, businessId: string) => void;
   onCreateNew: () => void;
 }
@@ -133,7 +133,7 @@ export function BusinessList({
                       <span className="capitalize">{business.category}</span>
                       {business.neighborhood && (
                         <>
-                          <span className="text-border">•</span>
+                          <span className="text-border">·</span>
                           <span>{business.neighborhood}</span>
                         </>
                       )}

@@ -1,6 +1,6 @@
 /**
- * AI Platform â€” Cliente Ãºnico para invocar edge functions de IA.
- * Centraliza tratamento de erros e mensagens amigÃ¡veis.
+ * AI Platform - Cliente unico para invocar edge functions de IA.
+ * Centraliza tratamento de erros e mensagens amigaveis.
  */
 import { supabase } from "@/core/infrastructure/supabase/client";
 import type {
@@ -47,12 +47,12 @@ export class AiClient {
     return data;
   }
 
-  /** GeraÃ§Ã£o de texto / structured output via edge function `ai-text`. */
+  /** Geracao de texto / structured output via edge function `ai-text`. */
   async text<T = unknown>(req: AiTextRequest): Promise<AiTextResult<T>> {
     return invoke<AiTextRequest, AiTextResult<T>>("ai-text", req);
   }
 
-  /** AnÃ¡lise multimodal de imagens via edge function `ai-vision`. */
+  /** Analise multimodal de imagens via edge function `ai-vision`. */
   async vision<T = unknown>(req: AiVisionRequest): Promise<AiVisionResult<T>> {
     return invoke<AiVisionRequest, AiVisionResult<T>>("ai-vision", req);
   }

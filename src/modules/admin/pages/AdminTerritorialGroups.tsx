@@ -1,9 +1,9 @@
- 
+
 /**
  * AdminTerritorialGroups
- * 
- * Gestão de grupos territoriais no admin
- * Usa apenas base canônica reconciliada (locations, territorial_groups, territorial_group_members)
+ *
+ * Gestao de grupos territoriais no admin
+ * Usa apenas base canonica reconciliada (locations, territorial_groups, territorial_group_members)
  */
 
 import { useState } from 'react';
@@ -62,15 +62,15 @@ export default function AdminTerritorialGroups() {
         <div>
           <h1 className="text-2xl font-bold">Grupos Territoriais</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Gerencie agrupamentos de bairros para governança territorial
+            Gerencie agrupamentos de bairros para governanca territorial
           </p>
         </div>
         <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-6">
           <p className="text-sm font-medium text-foreground">
-            Não foi possível carregar os grupos territoriais.
+            Nao foi possivel carregar os grupos territoriais.
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            {error.message || 'Falha temporária. Tente novamente.'}
+            {error.message || 'Falha temporaria. Tente novamente.'}
           </p>
           <Button
             className="mt-4"
@@ -91,7 +91,7 @@ export default function AdminTerritorialGroups() {
         <div>
           <h1 className="text-2xl font-bold">Grupos Territoriais</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Gerencie agrupamentos de bairros para governança territorial
+            Gerencie agrupamentos de bairros para governanca territorial
           </p>
         </div>
         <Button onClick={handleCreate} className="gap-2">
@@ -127,9 +127,9 @@ export default function AdminTerritorialGroups() {
                       {group.status === 'active' ? 'Ativo' : 'Inativo'}
                     </Badge>
                   </div>
-                  
+
                   <p className="text-sm text-muted-foreground mb-3">
-                    {group.description || 'Sem descrição'}
+                    {group.description || 'Sem descricao'}
                   </p>
 
                   <div className="flex items-center gap-4 text-xs text-muted-foreground">
@@ -144,7 +144,7 @@ export default function AdminTerritorialGroups() {
                     {group.anchor_city_id ? (
                       <div className="flex items-center gap-1">
                         <MapPin className="h-3 w-3" />
-                        <span>Cidade âncora: {group.anchor_city_id}</span>
+                        <span>Cidade ancora: {group.anchor_city_id}</span>
                       </div>
                     ) : null}
                   </div>
@@ -181,7 +181,7 @@ export default function AdminTerritorialGroups() {
         )}
       </div>
 
-      {/* Dialog de formulário */}
+      {/* Dialog de formulario */}
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>

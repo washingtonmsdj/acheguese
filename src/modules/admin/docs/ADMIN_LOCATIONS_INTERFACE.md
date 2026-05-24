@@ -211,4 +211,4 @@ Locations criados via admin:
 
 - Documentação completa: `../../../core/location/docs/LOCATION_COORDINATES_SYSTEM.md`
 - Quick start: `../../../core/location/docs/LOCATION_COORDINATES_QUICKSTART.md`
-- Sistema completo: `../../../../docs/archive/status/SISTEMA_COMPLETO_FINALIZADO.md`
+- Status vigente: `../../../../docs/STATUS_ATUAL.md`

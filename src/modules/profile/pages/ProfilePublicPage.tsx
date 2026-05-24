@@ -1,1 +1,1 @@
-﻿export { ProfilePublicPage } from "@/core/profile/pages/ProfilePublicPage";
+export { ProfilePublicPage } from "@/core/profile/pages/ProfilePublicPage";

@@ -46,17 +46,8 @@ const RUNTIME_CHECK_TABLES: OperationalTable[] = [
   { table: "ride_requests", label: "Corridas e entregas", required: true },
   { table: "ride_reports", label: "Reports de corrida", required: true },
   { table: "driver_moderation_events", label: "Historico de moderacao de motoristas", required: true },
+  { table: "pickup_points", label: "Pontos de embarque", required: false },
   { table: "pricing_rules", label: "Regras de pricing", required: false },
-];
-
-const OPTIONAL_NOT_PROVISIONED: OperationalTableResult[] = [
-  {
-    table: "pickup_points",
-    label: "Pontos de embarque",
-    required: false,
-    state: "not_provisioned",
-    detail: "Modulo opcional nao provisionado neste schema",
-  },
 ];
 
 const QUICK_TOOLS = [
@@ -152,7 +143,7 @@ export default function AdminOperacoes() {
         RUNTIME_CHECK_TABLES,
       );
 
-      setTableResults([...checks, ...OPTIONAL_NOT_PROVISIONED]);
+      setTableResults(checks);
     } catch (error) {
       logger.error("AdminOperacoes: erro ao validar tabelas operacionais", error as Error);
       setDiagnosticsError("Nao foi possivel consolidar o diagnostico das tabelas operacionais.");
@@ -479,5 +470,3 @@ export default function AdminOperacoes() {
     </div>
   );
 }
-
-

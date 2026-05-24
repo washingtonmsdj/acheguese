@@ -1,6 +1,6 @@
 /**
  * AdminPontosTuristicos - Gerenciamento de pontos turísticos
- * 
+ *
  * CRUD completo, escalável para qualquer cidade do Brasil.
  * ✅ SSOT COMPLIANT - Usa TouristPointService
  */
@@ -41,22 +41,11 @@ import { useToast } from '@/shared/components/ui/use-toast';
 import {
   Plus, Loader2, Pencil, Trash2, Star, Search,
   MapPin, Camera, Eye, EyeOff, Filter,
+  Accessibility, ParkingCircle, Utensils, Compass,
 } from 'lucide-react';
 import { useSessionContext } from '@/core/session';
 import { TerritorialSelector } from '@/core/location/components/TerritorialSelector';
-
-// Brazilian states for dropdown (mantido para filtros)
-const BRAZILIAN_STATES = [
-  { value: 'ac', label: 'AC' }, { value: 'al', label: 'AL' }, { value: 'ap', label: 'AP' },
-  { value: 'am', label: 'AM' }, { value: 'ba', label: 'BA' }, { value: 'ce', label: 'CE' },
-  { value: 'df', label: 'DF' }, { value: 'es', label: 'ES' }, { value: 'go', label: 'GO' },
-  { value: 'ma', label: 'MA' }, { value: 'mt', label: 'MT' }, { value: 'ms', label: 'MS' },
-  { value: 'mg', label: 'MG' }, { value: 'pa', label: 'PA' }, { value: 'pb', label: 'PB' },
-  { value: 'pr', label: 'PR' }, { value: 'pe', label: 'PE' }, { value: 'pi', label: 'PI' },
-  { value: 'rj', label: 'RJ' }, { value: 'rn', label: 'RN' }, { value: 'rs', label: 'RS' },
-  { value: 'ro', label: 'RO' }, { value: 'rr', label: 'RR' }, { value: 'sc', label: 'SC' },
-  { value: 'sp', label: 'SP' }, { value: 'se', label: 'SE' }, { value: 'to', label: 'TO' },
-];
+import { BRAZILIAN_STATES } from '@/core/location/data/brazilianStates';
 
 type FormPayload = Partial<CreateTouristPointInput> & Record<string, unknown>;
 type LocationSelection = {
@@ -183,7 +172,6 @@ export default function AdminPontosTuristicos() {
         latitude: payload.latitude as number | undefined,
         longitude: payload.longitude as number | undefined,
         photo_url: payload.photo_url as string | undefined,
-        icon_emoji: payload.icon_emoji as string | undefined,
         visiting_hours: payload.visiting_hours as string | undefined,
         entry_fee: payload.entry_fee as string | undefined,
         website: payload.website as string | undefined,
@@ -264,9 +252,9 @@ export default function AdminPontosTuristicos() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
-                {BRAZILIAN_STATES.map((s) => (
-                  <SelectItem key={s.value} value={s.value}>
-                    {s.label}
+                {BRAZILIAN_STATES.map((stateOption) => (
+                  <SelectItem key={stateOption.code} value={stateOption.code}>
+                    {stateOption.code.toUpperCase()}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -283,11 +271,18 @@ export default function AdminPontosTuristicos() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas</SelectItem>
-                {Object.entries(CATEGORY_LABELS).map(([val, label]) => (
-                  <SelectItem key={val} value={val}>
-                    {CATEGORY_ICONS[val as TouristPointCategory]} {label}
-                  </SelectItem>
-                ))}
+                {Object.entries(CATEGORY_LABELS).map(([val, label]) => {
+                  const Icon = CATEGORY_ICONS[val as TouristPointCategory] ?? MapPin;
+
+                  return (
+                    <SelectItem key={val} value={val}>
+                      <span className="flex items-center gap-2">
+                        <Icon className="h-4 w-4 text-muted-foreground" />
+                        <span>{label}</span>
+                      </span>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>
@@ -347,9 +342,10 @@ export default function AdminPontosTuristicos() {
                   <div className="h-14 w-14 rounded-xl bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
                     {point.photo_url ? (
                       <img src={point.photo_url} alt={point.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-2xl">{point.icon_emoji || CATEGORY_ICONS[point.category]}</span>
-                    )}
+                    ) : (() => {
+                      const Icon = CATEGORY_ICONS[point.category] ?? MapPin;
+                      return <Icon className="h-6 w-6 text-primary" aria-hidden="true" />;
+                    })()}
                   </div>
 
                   {/* Info */}
@@ -366,7 +362,11 @@ export default function AdminPontosTuristicos() {
                         {point.city.charAt(0).toUpperCase() + point.city.slice(1)}, {point.state.toUpperCase()}
                       </span>
                       <Badge variant="outline" className="text-[10px]">
-                        {CATEGORY_ICONS[point.category]} {CATEGORY_LABELS[point.category]}
+                        {(() => {
+                          const Icon = CATEGORY_ICONS[point.category] ?? MapPin;
+                          return <Icon className="mr-1 inline h-3 w-3" aria-hidden="true" />;
+                        })()}
+                        {CATEGORY_LABELS[point.category]}
                       </Badge>
                     </div>
                     <p className="text-xs text-muted-foreground line-clamp-1">{point.short_description || point.description}</p>
@@ -443,7 +443,6 @@ function TouristPointForm({
       latitude: parseFloat(fd.get('latitude') as string) || undefined,
       longitude: parseFloat(fd.get('longitude') as string) || undefined,
       photo_url: (fd.get('photo_url') as string) || undefined,
-      icon_emoji: (fd.get('icon_emoji') as string) || '📍',
       visiting_hours: (fd.get('visiting_hours') as string) || undefined,
       entry_fee: (fd.get('entry_fee') as string) || undefined,
       website: (fd.get('website') as string) || undefined,
@@ -491,15 +490,10 @@ function TouristPointForm({
           >
             {Object.entries(CATEGORY_LABELS).map(([val, label]) => (
               <option key={val} value={val}>
-                {CATEGORY_ICONS[val as TouristPointCategory]} {label}
+                {label}
               </option>
             ))}
           </select>
-        </div>
-
-        <div>
-          <Label htmlFor="icon_emoji">Emoji</Label>
-          <Input id="icon_emoji" name="icon_emoji" defaultValue={point?.icon_emoji || '📍'} />
         </div>
       </div>
 
@@ -587,23 +581,28 @@ function TouristPointForm({
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" name="is_featured" defaultChecked={point?.is_featured} />
-          ⭐ Destaque
+          <Star className="h-4 w-4 text-warning" />
+          Destaque
         </label>
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" name="accessibility" defaultChecked={point?.accessibility} />
-          ♿ Acessível
+          <Accessibility className="h-4 w-4 text-primary" />
+          Acessível
         </label>
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" name="has_parking" defaultChecked={point?.has_parking} />
-          🅿️ Estacionamento
+          <ParkingCircle className="h-4 w-4 text-blue-500" />
+          Estacionamento
         </label>
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" name="has_restaurant" defaultChecked={point?.has_restaurant} />
-          🍽️ Restaurante
+          <Utensils className="h-4 w-4 text-orange-500" />
+          Restaurante
         </label>
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" name="has_guide" defaultChecked={point?.has_guide} />
-          🧭 Guia disponível
+          <Compass className="h-4 w-4 text-emerald-500" />
+          Guia disponível
         </label>
       </div>
 
@@ -614,4 +613,3 @@ function TouristPointForm({
     </form>
   );
 }
-

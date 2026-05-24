@@ -1,4 +1,4 @@
-﻿import { Car, DollarSign, Star, Users, type LucideIcon } from "lucide-react";
+import { Car, DollarSign, Star, Users, type LucideIcon } from "lucide-react";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { cn } from "@/shared/utils/cn";
 import type { MobilidadeStats } from "./AdminMobilityAnalytics.types";

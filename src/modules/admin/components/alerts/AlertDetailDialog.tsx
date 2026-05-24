@@ -27,11 +27,11 @@ import type {
 } from "@/modules/admin/hooks/useAlertData";
 
 const REPORT_MOTIVO_LABELS: Record<string, string> = {
-  alerta_falso: "❌ Alerta Falso",
-  uso_criminoso: "🚨 Uso Criminoso",
-  spam: "🚫 Spam",
-  conteudo_ofensivo: "🤬 Conteúdo Ofensivo",
-  acusacao_pessoa: "⚠️ Acusação de Pessoa",
+  alerta_falso: "Alerta falso",
+  uso_criminoso: "Uso criminoso",
+  spam: "Spam",
+  conteudo_ofensivo: "Conteúdo ofensivo",
+  acusacao_pessoa: "Acusação de pessoa",
 };
 
 interface AlertDetailDialogProps {
@@ -102,7 +102,7 @@ export function AlertDetailDialog({
                     : "bg-destructive/10 text-destructive border-destructive/20",
               )}
             >
-              {post.hidden ? "🚫 Oculto" : expired ? "⏱️ Expirado" : "🟢 Ativo"}
+              {post.hidden ? "Oculto" : expired ? "Expirado" : "Ativo"}
             </Badge>
             <Badge variant="secondary">{post.category}</Badge>
             {reportCount > 0 && (

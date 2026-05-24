@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import { adminPickupPointsService } from "@/core/admin/services/AdminPickupPointsService";
 import type { PickupPoint } from "@/core/admin/services/AdminPickupPointsService";
 import { Button } from "@/shared/components/ui/button";
@@ -40,6 +40,7 @@ import {
 import { cn } from "@/shared/utils/cn";
 import { toast } from "sonner";
 import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
+import { useLocationContext } from "@/core/location";
 import { PICKUP_POINTS_DEFAULTS } from "@/modules/admin/config/pickupPoints.config";
 
 type PickupPointFormData = {
@@ -58,6 +59,25 @@ type PickupPointFormData = {
   active: boolean;
   notes: string;
 };
+
+function createEmptyFormData(territoryName = ""): PickupPointFormData {
+  return {
+    name: "",
+    description: "",
+    address: "",
+    neighborhood: territoryName,
+    latitude: PICKUP_POINTS_DEFAULTS.coordinates.latitude,
+    longitude: PICKUP_POINTS_DEFAULTS.coordinates.longitude,
+    type: "bus_stop",
+    capacity: 10,
+    has_shelter: false,
+    has_bench: false,
+    has_lighting: false,
+    accessibility: false,
+    active: true,
+    notes: "",
+  };
+}
 
 const typeConfig: Record<
   string,
@@ -102,32 +122,40 @@ const typeConfig: Record<
 
 export default function AdminPontosEmbarque() {
   const { canModerate, isChecking } = useAdminGuard();
+  const { activeLocation } = useLocationContext();
+  const activeLocationId = activeLocation?.id ?? null;
+  const activeLocationName = activeLocation?.name ?? "";
   const [points, setPoints] = useState<PickupPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingPoint, setEditingPoint] = useState<PickupPoint | null>(null);
-  const [formData, setFormData] = useState<PickupPointFormData>({
-    name: "",
-    description: "",
-    address: "",
-    neighborhood: PICKUP_POINTS_DEFAULTS.neighborhood,
-    latitude: PICKUP_POINTS_DEFAULTS.coordinates.latitude,
-    longitude: PICKUP_POINTS_DEFAULTS.coordinates.longitude,
-    type: "bus_stop",
-    capacity: 10,
-    has_shelter: false,
-    has_bench: false,
-    has_lighting: false,
-    accessibility: false,
-    active: true,
-    notes: "",
-  });
+  const [formData, setFormData] = useState<PickupPointFormData>(() => createEmptyFormData());
+
+  const fetchPoints = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await adminPickupPointsService.getAllPickupPoints(activeLocationId);
+      setPoints(data);
+    } catch (error: unknown) {
+      toast.error("Erro ao carregar pontos", {
+        description: error instanceof Error ? error.message : "Falha ao carregar pontos",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [activeLocationId]);
 
   useEffect(() => {
     if (!isChecking && canModerate) {
       fetchPoints();
     }
-  }, [canModerate, isChecking]);
+  }, [canModerate, fetchPoints, isChecking]);
+
+  useEffect(() => {
+    if (!editingPoint) {
+      setFormData((current) => ({ ...current, neighborhood: activeLocationName }));
+    }
+  }, [activeLocationName, editingPoint]);
 
   // Validação de admin
   if (!isChecking && !canModerate) {
@@ -144,31 +172,28 @@ export default function AdminPontosEmbarque() {
     );
   }
 
-  const fetchPoints = async () => {
-    try {
-      const data = await adminPickupPointsService.getAllPickupPoints();
-      setPoints(data);
-    } catch (error: unknown) {
-      toast.error("Erro ao carregar pontos", {
-        description: error instanceof Error ? error.message : "Falha ao carregar pontos",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!activeLocationId) {
+      toast.error("Selecione um território antes de cadastrar pontos de embarque.");
+      return;
+    }
+
     try {
+      const payload = {
+        ...formData,
+        location_id: activeLocationId,
+      };
+
       if (editingPoint) {
         await adminPickupPointsService.updatePickupPoint(
           editingPoint.id,
-          formData,
+          payload,
         );
         toast.success("Ponto atualizado com sucesso!");
       } else {
-        await adminPickupPointsService.createPickupPoint(formData);
+        await adminPickupPointsService.createPickupPoint(payload);
         toast.success("Ponto criado com sucesso!");
       }
 
@@ -189,7 +214,7 @@ export default function AdminPontosEmbarque() {
       name: point.name,
       description: point.description || "",
       address: point.address,
-      neighborhood: point.neighborhood,
+      neighborhood: point.location_name || activeLocationName,
       latitude: Number(point.latitude),
       longitude: Number(point.longitude),
       type: point.type,
@@ -234,22 +259,7 @@ export default function AdminPontosEmbarque() {
   };
 
   const resetForm = () => {
-    setFormData({
-      name: "",
-      description: "",
-      address: "",
-      neighborhood: PICKUP_POINTS_DEFAULTS.neighborhood,
-      latitude: PICKUP_POINTS_DEFAULTS.coordinates.latitude,
-      longitude: PICKUP_POINTS_DEFAULTS.coordinates.longitude,
-      type: "bus_stop",
-      capacity: 10,
-      has_shelter: false,
-      has_bench: false,
-      has_lighting: false,
-      accessibility: false,
-      active: true,
-      notes: "",
-    });
+    setFormData(createEmptyFormData(activeLocationName));
   };
 
   const openCreateModal = () => {
@@ -272,7 +282,7 @@ export default function AdminPontosEmbarque() {
             Pontos de Embarque
           </h1>
           <p className="text-sm text-gray-400 mt-1">
-            Gerencie os pontos de embarque do bairro
+            Gerencie os pontos de embarque do território selecionado
           </p>
         </div>
         <Button
@@ -326,9 +336,9 @@ export default function AdminPontosEmbarque() {
       {points.length === 0 ? (
         <div className="rounded-xl border border-white/10 bg-[#1E2529] p-12 text-center">
           <MapPin className="h-12 w-12 text-gray-600 mx-auto mb-4" />
-          <p className="text-gray-400 mb-2">Funcionalidade não disponível</p>
+          <p className="text-gray-400 mb-2">Nenhum ponto de embarque cadastrado</p>
           <p className="text-sm text-gray-500">
-            A tabela pickup_points não existe no banco de dados
+            Selecione um território e cadastre o primeiro ponto operacional.
           </p>
         </div>
       ) : (
@@ -500,13 +510,12 @@ export default function AdminPontosEmbarque() {
 
             {/* Bairro */}
             <div>
-              <Label className="text-xs text-gray-400">Bairro *</Label>
+              <Label className="text-xs text-gray-400">Território *</Label>
               <Input
                 value={formData.neighborhood}
-                onChange={(e) =>
-                  setFormData({ ...formData, neighborhood: e.target.value })
-                }
+                placeholder="Selecione um território no contexto do admin"
                 className="bg-white/5 border-white/10"
+                disabled
                 required
               />
             </div>

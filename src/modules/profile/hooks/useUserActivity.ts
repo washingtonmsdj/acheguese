@@ -1,5 +1,5 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { commentService } from "@/core/comments/services";
+import { CommentService } from "@/core/comments/services";
 import { postService } from "@/core/posts/services";
 import { profileService } from "@/core/profiles/services";
 import type {
@@ -22,7 +22,7 @@ type PostCreatedActivityRecord = Awaited<
 >[number];
 
 type CommentActivityRecord = Awaited<
-  ReturnType<typeof commentService.getCommentsByAuthor>
+  ReturnType<typeof CommentService.getCommentsByAuthor>
 >[number];
 
 interface UseUserActivityOptions {
@@ -160,7 +160,7 @@ export function useUserActivity({
       }
 
       if (!filters.types || filters.types.includes("comment_created")) {
-        const commentData = await commentService.getCommentsByAuthor(profileId, {
+        const commentData = await CommentService.getCommentsByAuthor(profileId, {
           limit: pageSize,
           offset: from,
         });

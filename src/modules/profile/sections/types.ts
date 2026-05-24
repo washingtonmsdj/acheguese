@@ -1,13 +1,13 @@
-﻿/**
+/**
  * Types compartilhados para as sections do ContaHub
- * 
+ *
  * SSOT: Todas as sections recebem props tipadas e validadas
- * Sem gambiarras: Props explÃ­citas, sem "any" ou "unknown"
+ * Sem gambiarras: props explicitas, sem contratos frouxos
  */
 
 import type { NavigateFunction } from "react-router-dom";
 import type { MultiProfileRecord } from "@/core/profiles/services/multi-profile/types";
-import type { ProfileBusinessModuleItem } from "@/core/profiles/services/types";
+import type { ProfileBusinessModuleSnapshot } from "@/core/profiles/services/ProfileBusinessTypes";
 import type { Tables } from "@/core/infrastructure/supabase/types.generated";
 export type ProfileSectionId =
   import("@/modules/profile/config/profile-sections.config").ProfileSectionId;
@@ -29,7 +29,7 @@ export interface BaseSectionProps {
 }
 
 // ============================================
-// Operations (mÃ©tricas de atividade)
+// Operations (metricas de atividade)
 // ============================================
 
 export interface Operations {
@@ -62,7 +62,7 @@ export interface Notifications {
 }
 
 // ============================================
-// Stats (estatÃ­sticas do perfil)
+// Stats (estatisticas do perfil)
 // ============================================
 
 export interface Stats {
@@ -73,7 +73,7 @@ export interface Stats {
 }
 
 // ============================================
-// Identity & Context (dados de reputaÃ§Ã£o/plano)
+// Identity & Context (dados de reputacao/plano)
 // ============================================
 
 export interface Identity {
@@ -103,7 +103,7 @@ export interface Context {
 }
 
 // ============================================
-// Next Actions (aÃ§Ãµes sugeridas)
+// Next Actions (acoes sugeridas)
 // ============================================
 
 export interface NextAction {
@@ -155,7 +155,7 @@ export interface AccountSnapshot {
 }
 
 // ============================================
-// Roles (permissÃµes)
+// Roles (permissoes)
 // ============================================
 
 export interface Roles {
@@ -163,14 +163,14 @@ export interface Roles {
 }
 
 // ============================================
-// Section Props EspecÃ­ficas
+// Section Props especificas
 // ============================================
 
 export interface ResumoSectionProps extends BaseSectionProps {
   readonly operations: Operations;
   readonly notifications: Notifications;
   readonly stats: Stats;
-  readonly nextActions: readonly NextAction[]; 
+  readonly nextActions: readonly NextAction[];
   readonly hasActiveRide: boolean;
   readonly activeRide?: Ride;
   readonly driverProfileId: string | null;
@@ -193,7 +193,7 @@ export interface DadosPessoaisSectionProps extends BaseSectionProps {
 }
 
 export interface EmpresasSectionProps extends BaseSectionProps {
-  readonly businessModules: readonly ProfileBusinessModuleItem[];
+  readonly businessModules: readonly ProfileBusinessModuleSnapshot[];
   readonly showBusinessOnboarding: boolean;
   readonly handleBusinessClick: (id: string) => void;
   readonly copyToClipboard: (text: string) => void;
@@ -211,14 +211,14 @@ export interface MobilidadeSectionProps extends BaseSectionProps {
 }
 
 export interface DeliverySectionProps extends BaseSectionProps {
-  readonly businessModules: readonly ProfileBusinessModuleItem[]; 
+  readonly businessModules: readonly ProfileBusinessModuleSnapshot[];
   readonly setActiveSection: (section: ProfileSectionId) => void;
 }
 
 export interface PlanosSectionProps extends BaseSectionProps {
   readonly identity: Identity | null;
   readonly context: Context | null;
-  readonly businessModules: readonly ProfileBusinessModuleItem[];
+  readonly businessModules: readonly ProfileBusinessModuleSnapshot[];
 }
 
 export interface NotificacoesSectionProps extends BaseSectionProps {
@@ -269,4 +269,3 @@ export type SectionPropsMap = {
   readonly preferencias: PreferenciasSectionProps;
   readonly seguranca: SegurancaSectionProps;
 };
-

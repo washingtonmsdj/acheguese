@@ -8,6 +8,8 @@ import {
 } from "@/shared/components/ui/card";
 import { toast } from "sonner";
 import type { AdminUserDetail } from "@/modules/admin/hooks/useAdminUserDetail";
+import { buildMailtoUrl, buildWhatsAppUrl, openContactUrl } from "@/shared/utils/contactLinks";
+import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
 
 interface UserContactTabProps {
   user: AdminUserDetail;
@@ -20,15 +22,15 @@ export function UserContactTab({ user }: UserContactTabProps) {
   };
 
   const openWhatsApp = () => {
-    const phone = user.phone?.replace(/\D/g, "");
-    if (phone) {
-      window.open(`https://wa.me/55${phone}`, "_blank");
+    const url = buildWhatsAppUrl(user.phone);
+    if (url) {
+      openSafeExternalUrl(url, { context: "admin-user-contact-whatsapp" });
     }
   };
 
   const sendEmail = () => {
     if (user.email) {
-      window.open(`mailto:${user.email}`, "_blank");
+      openContactUrl(buildMailtoUrl(user.email));
     }
   };
 

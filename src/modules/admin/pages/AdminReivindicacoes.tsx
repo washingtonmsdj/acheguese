@@ -158,8 +158,8 @@ export default function AdminReivindicacoes() {
       type: "info" as const,
       title:
         action === "aprovada"
-          ? "✅ Reivindicação aprovada"
-          : "❌ Reivindicação rejeitada",
+          ? "Reivindicação aprovada"
+          : "Reivindicação rejeitada",
       message: msg,
       priority: "high" as const,
       metadata: businessUrl ? {
@@ -308,4 +308,3 @@ export default function AdminReivindicacoes() {
     </div>
   );
 }
-

@@ -1,6 +1,6 @@
-# Componentes de perfil
+﻿# Componentes de perfil
 
-Componentes React usados nas telas de perfil do usuario.
+Componentes React usados nas telas de perfil do usuário.
 
 ## Escopo
 

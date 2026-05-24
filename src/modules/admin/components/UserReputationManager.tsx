@@ -39,9 +39,9 @@ export function UserReputationManager({
   const [isUpdating, setIsUpdating] = useState(false);
 
   const getCurrentLevel = (rep: number) => {
-    if (rep >= 100) return { name: "Ouro", emoji: "🥇", color: "#FFD700" };
-    if (rep >= 50) return { name: "Prata", emoji: "🥈", color: "#C0C0C0" };
-    return { name: "Bronze", emoji: "🥉", color: "#CD7F32" };
+    if (rep >= 100) return { name: "Ouro", color: "#FFD700" };
+    if (rep >= 50) return { name: "Prata", color: "#C0C0C0" };
+    return { name: "Bronze", color: "#CD7F32" };
   };
 
   const currentLevel = getCurrentLevel(currentReputation);
@@ -125,7 +125,7 @@ export function UserReputationManager({
                 Nível Atual
               </p>
               <div className="flex items-center gap-2 mt-1">
-                <span className="text-lg">{currentLevel.emoji}</span>
+                <Award className="h-4 w-4" style={{ color: currentLevel.color }} aria-hidden="true" />
                 <span
                   className="font-bold"
                   style={{ color: currentLevel.color }}
@@ -154,7 +154,7 @@ export function UserReputationManager({
               className="text-xs"
               style={{ borderColor: "#CD7F32", color: "#CD7F32" }}
             >
-              🥉 Bronze (0)
+              Bronze (0)
             </Button>
             <Button
               type="button"
@@ -164,7 +164,7 @@ export function UserReputationManager({
               className="text-xs"
               style={{ borderColor: "#C0C0C0", color: "#C0C0C0" }}
             >
-              🥈 Prata (50)
+              Prata (50)
             </Button>
             <Button
               type="button"
@@ -174,7 +174,7 @@ export function UserReputationManager({
               className="text-xs"
               style={{ borderColor: "#FFD700", color: "#FFD700" }}
             >
-              🥇 Ouro (100)
+              Ouro (100)
             </Button>
           </div>
           <div className="grid grid-cols-3 gap-2">
@@ -257,7 +257,7 @@ export function UserReputationManager({
                   Novo Nível
                 </p>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className="text-base">{newLevel.emoji}</span>
+                  <Award className="h-4 w-4" style={{ color: newLevel.color }} aria-hidden="true" />
                   <span
                     className="font-bold text-sm"
                     style={{ color: newLevel.color }}

@@ -1,12 +1,12 @@
 /**
  * LocationCard - Card de localização
- * 
+ *
  * SSOT: Componente reutilizável
  * Sem gambiarras: Props tipadas e código limpo
  */
 
 import { cn } from "@/shared/utils/cn";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, MapPin } from "lucide-react";
 import { Switch } from "@/shared/components/ui/switch";
 import type { LocationCardProps } from "../../sections/types";
 
@@ -55,8 +55,9 @@ export function LocationCard({
 
       {/* Parent (se houver) */}
       {parent && (
-        <p className="text-[9px] text-muted-foreground mb-2 truncate leading-tight">
-          📍 {parent.name}
+        <p className="flex items-center gap-1 text-[9px] text-muted-foreground mb-2 truncate leading-tight">
+          <MapPin className="h-3 w-3 shrink-0" aria-hidden="true" />
+          {parent.name}
         </p>
       )}
 

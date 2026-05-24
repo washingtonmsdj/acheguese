@@ -1,5 +1,5 @@
-﻿export type MobilityServiceStatus =
-  | "Nao cadastrado"
+export type MobilityServiceStatus =
+  | "Não cadastrado"
   | "Cadastro incompleto"
   | "Aguardando aprovacao"
   | "Ativo"
@@ -26,16 +26,16 @@ export function getMobilityServiceStatus(params: {
 }): MobilityServiceStatus {
   const { driverProfileId, driverData, service } = params;
 
-  if (!driverProfileId) return "Nao cadastrado";
+  if (!driverProfileId) return "Não cadastrado";
   if (driverData?.is_suspended) return "Suspenso";
   if (!hasCommonRegistrationData(driverData)) return "Cadastro incompleto";
 
   if (service === "motorista" && driverData?.can_do_rides === false) {
-    return "Nao cadastrado";
+    return "Não cadastrado";
   }
 
   if (service === "motoboy" && driverData?.can_do_delivery !== true) {
-    return "Nao cadastrado";
+    return "Não cadastrado";
   }
 
   if (driverData?.is_verified === true) return "Ativo";

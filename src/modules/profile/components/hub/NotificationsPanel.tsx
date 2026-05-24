@@ -1,6 +1,6 @@
 /**
  * NotificationsPanel - Painel de notificações recentes
- * 
+ *
  * Exibe últimas notificações do usuário
  */
 
@@ -32,7 +32,7 @@ export function NotificationsPanel({
 }: NotificationsPanelProps) {
   return (
     <SectionFrame
-      title="Notificacoes recentes"
+      title="Notificações recentes"
       description="Ultimos sinais do sistema para o perfil ativo, sem sair do hub."
       action={
         <Button variant="ghost" size="sm" className="gap-1.5" onClick={onViewAll}>

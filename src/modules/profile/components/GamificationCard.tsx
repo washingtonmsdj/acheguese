@@ -22,14 +22,14 @@ import { cn } from "@/shared/utils/cn";
 /**
  * GamificationProfileView — Shape mínimo para exibição de gamificação
  *
- * Não usa LegacyProfile completo — apenas os campos necessários.
+ * Usa apenas os campos necessários para a visualização de gamificação.
  * Quando pontos/badges forem migrados para domain/Profile, este tipo
  * será atualizado para usar Profile diretamente.
  */
 interface GamificationProfileView {
-  /** Pontos de gamificação (campo legado — mapeado de `reputation` ou `pontos`) */
+  /** Pontos de gamificação mapeados de `reputation` ou `pontos`. */
   pontos?: number;
-  /** Badges conquistados (campo legado) */
+  /** Badges conquistados. */
   badges?: string[];
   /** Data de criação (para exibir "membro desde") */
   created_at: string;
@@ -100,7 +100,7 @@ export function GamificationCard({
           <p className="text-xs text-muted-foreground mt-2">
             {pontosParaProximo > 0
               ? `${pontosParaProximo} pontos para o próximo nível`
-              : "Nível máximo atingido! 🎉"}
+              : "Nível máximo atingido!"}
           </p>
         </div>
 

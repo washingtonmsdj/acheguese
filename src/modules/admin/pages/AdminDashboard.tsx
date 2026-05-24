@@ -64,7 +64,7 @@ const statConfig: {
     label: "Profissionais",
     icon: Wrench,
     color: "bg-amber-500/10 text-amber-600",
-    route: "/admin/services",
+    route: "/admin/servicos",
   },
   {
     key: "classifieds",
@@ -92,7 +92,7 @@ const statConfig: {
     label: "Usuários",
     icon: Users,
     color: "bg-sky-500/10 text-sky-600",
-    route: "/admin/users",
+    route: "/admin/usuarios",
   },
   {
     key: "comments",
@@ -482,7 +482,7 @@ export default function AdminDashboard() {
                   {(stats.profiles ?? 0).toLocaleString('pt-BR')}
                 </span>
               </div>
-              
+
               <div className="flex items-center justify-between p-3 bg-amber-500/5 rounded-lg">
                 <div className="flex items-center gap-2">
                   <Building2 className="h-4 w-4 text-amber-600" />
@@ -558,4 +558,3 @@ export default function AdminDashboard() {
     </div>
   );
 }
-

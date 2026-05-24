@@ -78,13 +78,13 @@ export function NamingPatternValidator() {
               <p className="font-semibold">Regras de Nomenclatura:</p>
               <ul className="text-sm space-y-1 ml-4">
                 <li>
-                  ✅ Contexto social → <code>*_profile_id</code>
+                  Contexto social: <code>*_profile_id</code>
                 </li>
                 <li>
-                  ✅ Contexto global → <code>*_user_id</code>
+                  Contexto global: <code>*_user_id</code>
                 </li>
                 <li>
-                  ❌ Proibido: <code>author_profile_id</code>,{" "}
+                  Proibido: <code>author_profile_id</code>,{" "}
                   <code>owner_profile_id</code>, <code>creator_profile_id</code>
                 </li>
               </ul>

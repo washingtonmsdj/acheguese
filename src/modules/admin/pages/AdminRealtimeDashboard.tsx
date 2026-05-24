@@ -19,6 +19,7 @@ import {
   Wifi,
   WifiOff,
   Shield,
+  Star,
 } from "lucide-react";
 import {
   Card,
@@ -34,7 +35,7 @@ import {
   AvatarImage,
 } from "@/shared/components/ui/avatar";
 import { cn } from "@/shared/utils/cn";
-import { useRealtimeMetrics } from "@/modules/admin/hooks/useRealtimeMetrics";
+import { useRealtimeMetrics } from "@/core/admin/hooks/useRealtimeMetrics";
 import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
 
 const StatusIndicator = ({
@@ -274,7 +275,7 @@ export default function AdminRealtimeDashboard() {
               Taxa de Conclusão
             </span>
             <p className="text-xs text-muted-foreground mt-1">
-              ⭐ {metrics.avgRating} • {metrics.avgResponseTime}min
+              Nota {metrics.avgRating} - {metrics.avgResponseTime}min
             </p>
           </CardContent>
         </Card>
@@ -317,7 +318,7 @@ export default function AdminRealtimeDashboard() {
                           <span className="font-medium">
                             {ride.passenger_name}
                           </span>
-                          <span className="text-muted-foreground">→</span>
+                          <span className="text-muted-foreground">para</span>
                           <span className="font-medium">
                             {ride.driver_name}
                           </span>
@@ -396,7 +397,10 @@ export default function AdminRealtimeDashboard() {
                       </div>
 
                       <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                        <span>⭐ {driver.rating.toFixed(1)}</span>
+                        <span className="inline-flex items-center gap-1">
+                          <Star className="h-3 w-3" aria-hidden="true" />
+                          {driver.rating.toFixed(1)}
+                        </span>
                         <span>{driver.total_rides} corridas</span>
                         {driver.vehicle_model && (
                           <span className="truncate">

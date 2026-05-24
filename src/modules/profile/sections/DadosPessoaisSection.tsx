@@ -1,6 +1,6 @@
-﻿/**
+/**
  * DadosPessoaisSection - Seção de dados pessoais do perfil
- * 
+ *
  * SSOT: Componente isolado com props tipadas
  * Sem gambiarras: Lógica clara e organizada
  */
@@ -110,8 +110,8 @@ export function DadosPessoaisSection({
 
       {/* Ações Principais */}
       <SectionFrame
-        title="Acoes da conta"
-        description="Gerencie identidade, endereco pessoal, privacidade e preferencias sem misturar operacao da Central."
+        title="Ações da conta"
+        description="Gerencie identidade, endereço pessoal, privacidade e preferências sem misturar operação da Central."
       >
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           <HubLinkCard
@@ -125,9 +125,9 @@ export function DadosPessoaisSection({
           />
           <HubLinkCard
             icon={MapPin}
-            title="Meus enderecos"
-            description="Endereco usado para entregas/corridas."
-            onClick={() => navigate("/conta/enderecos")}
+            title="Meus endereços"
+            description="Endereço usado para entregas/corridas."
+            onClick={() => navigate(appUrls.profile.addresses)}
           />
           <HubLinkCard
             icon={Shield}
@@ -147,7 +147,7 @@ export function DadosPessoaisSection({
           />
           <HubLinkCard
             icon={Settings2}
-            title="Preferencias"
+            title="Preferências"
             description="Ajustes gerais da conta"
             onClick={() => navigate("/conta/preferencias")}
           />
@@ -179,22 +179,22 @@ export function DadosPessoaisSection({
       </SectionFrame>
 
       <SectionFrame
-        title="Endereco e verificacao residencial"
-        description="Endereco pessoal fica no SSOT de residencia. Ele alimenta territorio, confianca e verificacao sem exposicao publica do endereco completo."
+        title="Endereço e verificação residencial"
+        description="Endereço pessoal fica no SSOT de residência. Ele alimenta território, confiança e verificação sem exposição pública do endereço completo."
       >
         <div className="grid gap-4 lg:grid-cols-[1fr_1.1fr]">
           <div className="rounded-2xl border border-border/70 bg-muted/35 p-4">
             <MapPin className="h-5 w-5 text-primary" />
-            <h3 className="mt-3 text-sm font-semibold text-foreground">Onde editar o endereco?</h3>
+            <h3 className="mt-3 text-sm font-semibold text-foreground">Onde editar o endereço?</h3>
             <p className="mt-1 text-sm leading-6 text-muted-foreground">
-              Use Meus enderecos para atualizar residencia, territorio e comprovacao. A conta apenas resume e direciona para o local correto.
+              Use Meus endereços para atualizar residência, território e comprovação. A conta apenas resume e direciona para o local correto.
             </p>
             <button
               type="button"
-              onClick={() => navigate("/conta/enderecos")}
+              onClick={() => navigate(appUrls.profile.addresses)}
               className="mt-4 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
             >
-              Editar residencia
+              Editar residência
             </button>
           </div>
           {profile ? (

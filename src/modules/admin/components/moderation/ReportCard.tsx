@@ -4,12 +4,12 @@ import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/utils/cn";
 
 const MOTIVO_LABELS: Record<string, string> = {
-  spam: "🚫 Spam",
-  ofensivo: "🤬 Ofensivo",
-  fora_tema: "📌 Fora do tema",
-  falso: "❌ Info falsa",
-  difamacao: "⚖️ Difamação",
-  outro: "📝 Outro",
+  spam: "Spam",
+  ofensivo: "Ofensivo",
+  fora_tema: "Fora do tema",
+  falso: "Info falsa",
+  difamacao: "Difamação",
+  outro: "Outro",
 };
 
 const STATUS_COLORS: Record<string, string> = {

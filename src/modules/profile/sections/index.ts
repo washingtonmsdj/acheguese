@@ -1,8 +1,7 @@
 /**
- * Sections - Barrel export para todas as sections do ContaHub
- * 
- * SSOT: Ponto único de exportação
- * Sem gambiarras: Exports explícitos
+ * Sections - Barrel export para todas as sections do ContaHub.
+ *
+ * SSOT: ponto unico de exportacao.
  */
 
 export { ResumoSection } from "./ResumoSection";

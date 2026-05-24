@@ -1,1 +1,1 @@
-﻿export * from "@/core/profile/utils/profileDomainRules";
+export * from "@/core/profile/utils/profileDomainRules";

@@ -1,7 +1,7 @@
 import React from "react";
 import { Users, Star, TrendingUp, Shield } from "lucide-react";
 import { StatCard } from "./stats/StatCard";
-import { useReputationStats } from "@/modules/admin/hooks/useReputationStats";
+import { useReputationStats } from "@/core/admin/hooks/useReputationStats";
 
 export function ReputationStats() {
   const { stats, loading } = useReputationStats();

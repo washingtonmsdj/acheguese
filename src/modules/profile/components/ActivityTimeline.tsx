@@ -377,7 +377,7 @@ export function ActivityTimeline({
         <EmptyStateProfile
           icon={ActivityIcon}
           title="Nenhuma atividade"
-          description="Voce ainda nao tem atividades registradas. Comece interagindo com a comunidade."
+          description="Você ainda não tem atividades registradas. Comece interagindo com a comunidade."
         />
       ) : (
         <div className="space-y-4">

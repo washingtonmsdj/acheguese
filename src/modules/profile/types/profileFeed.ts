@@ -97,7 +97,7 @@ export function toProfileFeedPost(
   return {
     id: post.id,
     author_profile_id: post.author_profile_id,
-    author_name: authorProfile?.name ?? authorProfile?.username ?? "Usuario",
+    author_name: authorProfile?.name ?? authorProfile?.username ?? "Usuário",
     author_avatar: authorProfile?.avatar_url ?? undefined,
     author_reputation: authorProfile?.reputation ?? 0,
     is_verified_resident: authorProfile?.verified ?? false,

@@ -183,7 +183,7 @@ export function HighlightForm({ defaultTerritory, initial, onClose, onSave, isSa
               id="hl-title"
               value={form.title}
               onChange={(e) => set('title', e.target.value)}
-              placeholder="Ex: Mutirão de limpeza no Complexo"
+              placeholder="Ex: Mutirão de limpeza na comunidade"
               className="mt-1 text-sm"
             />
           </div>

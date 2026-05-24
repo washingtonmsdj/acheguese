@@ -49,7 +49,6 @@ import { toast } from "sonner";
 
 const PAGE_SIZE = 20;
 const SELLERS_LIMIT = 30;
-const URL_HISTORY_PAGE_SIZE = 15;
 
 function statusBadge(status: string) {
   if (status === ALERT_STATUS.ACTIVE) {
@@ -92,7 +91,6 @@ export default function AdminClassificados() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
-  const [historyPage, setHistoryPage] = useState(1);
   const [selectedClassified, setSelectedClassified] = useState<AdminClassifiedData | null>(null);
 
   const statsQuery = useQuery({
@@ -114,16 +112,6 @@ export default function AdminClassificados() {
   const policyQuery = useQuery({
     queryKey: ["admin-classifieds", "policy-summary"],
     queryFn: () => adminClassifiedsService.getPolicySummary(),
-    enabled: tab === "governance",
-  });
-
-  const urlHistoryQuery = useQuery({
-    queryKey: ["admin-classifieds", "url-history", historyPage, URL_HISTORY_PAGE_SIZE],
-    queryFn: () =>
-      adminClassifiedsService.getUrlHistory({
-        page: historyPage,
-        limit: URL_HISTORY_PAGE_SIZE,
-      }),
     enabled: tab === "governance",
   });
 
@@ -187,7 +175,6 @@ export default function AdminClassificados() {
   const stats = statsQuery.data;
   const categoryCoverage = categoriesQuery.data;
   const policy = policyQuery.data;
-  const urlHistory = urlHistoryQuery.data;
   const catalog = classifiedsQuery.data;
   const sellers = sellersQuery.data;
 
@@ -226,14 +213,6 @@ export default function AdminClassificados() {
           icon={Store}
           iconColor="text-emerald-600"
           loading={sellersQuery.isLoading && tab === "sellers"}
-        />
-        <AdminStatsCard
-          title="Histórico de URL"
-          value={urlHistory?.totalEntries || 0}
-          subtitle={urlHistory?.latestChangeAt ? `Última mudança em ${toDate(urlHistory.latestChangeAt)}` : "Sem mudanças registradas"}
-          icon={Link2}
-          iconColor="text-amber-600"
-          loading={urlHistoryQuery.isLoading && tab === "governance"}
         />
       </AdminStatsGrid>
 
@@ -494,13 +473,12 @@ export default function AdminClassificados() {
         </TabsContent>
 
         <TabsContent value="governance" className="space-y-4">
-          {policyQuery.isError || urlHistoryQuery.isError ? (
+          {policyQuery.isError ? (
             <AdminErrorState
               title="Falha ao carregar governança de classificados"
               description="A leitura de políticas e histórico de URL não foi concluída."
               onRetry={() => {
                 void policyQuery.refetch();
-                void urlHistoryQuery.refetch();
               }}
             />
           ) : (
@@ -523,8 +501,8 @@ export default function AdminClassificados() {
                   loading={policyQuery.isLoading}
                 />
                 <AdminStatsCard
-                  title="Categoria legada"
-                  value={policy?.withLegacyCategoryOnly || 0}
+                  title="Categoria sem taxonomia"
+                  value={policy?.withUnmappedCategoryOnly || 0}
                   subtitle={`Sem location_id: ${policy?.missingLocationId || 0}`}
                   icon={Shield}
                   iconColor="text-orange-600"
@@ -532,55 +510,6 @@ export default function AdminClassificados() {
                 />
               </div>
 
-              <AdminSectionCard
-                title="Histórico de URLs"
-                description="Trilha administrativa de canonical URLs antigas para redirecionamento e auditoria."
-                icon={Link2}
-              >
-                <AdminDataState
-                  loading={urlHistoryQuery.isLoading}
-                  isEmpty={!urlHistory?.entries.length}
-                  emptyTitle="Sem histórico de URL registrado"
-                >
-                  <AdminTable
-                    footer={
-                      <AdminPagination
-                        currentPage={urlHistory?.page || 1}
-                        totalPages={urlHistory?.totalPages || 1}
-                        totalItems={urlHistory?.totalEntries || 0}
-                        itemsPerPage={URL_HISTORY_PAGE_SIZE}
-                        onPageChange={setHistoryPage}
-                      />
-                    }
-                  >
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Classificado</TableHead>
-                        <TableHead>URL antiga</TableHead>
-                        <TableHead>Motivo</TableHead>
-                        <TableHead>Data</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {(urlHistory?.entries || []).map((entry) => (
-                        <TableRow key={entry.id}>
-                          <TableCell className="font-medium">
-                            {entry.classifiedTitle}
-                            <p className="text-xs text-muted-foreground">
-                              {entry.classifiedPublicId ? `public_id: ${entry.classifiedPublicId}` : "Sem public_id"}
-                            </p>
-                          </TableCell>
-                          <TableCell className="max-w-[420px] truncate" title={entry.oldCanonicalUrl}>
-                            {entry.oldCanonicalUrl}
-                          </TableCell>
-                          <TableCell>{entry.changeReason}</TableCell>
-                          <TableCell>{toDate(entry.changedAt)}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </AdminTable>
-                </AdminDataState>
-              </AdminSectionCard>
             </>
           )}
         </TabsContent>

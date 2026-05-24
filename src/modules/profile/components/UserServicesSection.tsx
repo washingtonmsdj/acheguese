@@ -57,13 +57,13 @@ export function UserServicesSection({
       <Card className="border-dashed">
         <CardContent className="p-12 text-center">
           <Wrench className="mx-auto mb-4 h-16 w-16 text-muted-foreground" />
-          <h3 className="mb-2 text-lg font-semibold">Nenhum servico cadastrado</h3>
+          <h3 className="mb-2 text-lg font-semibold">Nenhum serviço cadastrado</h3>
           <p className="mx-auto mb-6 max-w-md text-sm text-muted-foreground">
-            Receba oportunidades na sua regiao com um perfil profissional leve e territorial.
+            Receba oportunidades na sua região com um perfil profissional leve e territorial.
           </p>
           <Button onClick={onCreateNew} className="gap-2">
             <Plus className="h-4 w-4" />
-            Ativar primeiro servico
+            Ativar primeiro serviço
           </Button>
         </CardContent>
       </Card>
@@ -75,21 +75,21 @@ export function UserServicesSection({
       <div className="flex items-center justify-between">
         <h2 className="flex items-center gap-2 text-xl font-bold font-display">
           <Wrench className="h-5 w-5" />
-          Profissoes e servicos
+          Profissões e serviços
           <Badge variant="secondary">{services.length}</Badge>
         </h2>
 
         <Button onClick={onCreateNew} size="sm" className="gap-2">
           <Plus className="h-4 w-4" />
-          Novo servico
+          Novo serviço
         </Button>
       </div>
 
       <Card className="border-primary/20 bg-primary/5">
         <CardContent className="p-4">
-          <p className="text-xs uppercase tracking-wide text-primary/80">Profissoes vinculadas</p>
+          <p className="text-xs uppercase tracking-wide text-primary/80">Profissões vinculadas</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Clique em uma profissao para abrir o perfil estruturado e conectado ao modulo de servicos.
+            Clique em uma profissão para abrir o perfil estruturado e conectado ao módulo de serviços.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             {services.map((service) => (
@@ -106,10 +106,10 @@ export function UserServicesSection({
                     actorUserId: activeProfile?.userId ?? activeProfile?.userId ?? null,
                     metadata: { entrypoint: "profile_professions_chip" },
                   });
-                  navigate(`/services/${service.professional_data_id || service.id}`);
+                  navigate(`/servicos/${service.professional_data_id || service.id}`);
                 }}
               >
-                {service.category || "servico"}
+                {service.category || "serviço"}
               </button>
             ))}
           </div>
@@ -120,9 +120,9 @@ export function UserServicesSection({
         <CardContent className="p-4">
           <p className="text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Ative sua circulacao local</p>
           <div className="mt-2 grid gap-1 text-sm">
-            <p>Receba oportunidades na sua regiao.</p>
-            <p>Mostre seus trabalhos para pessoas proximas.</p>
-            <p>Apareca para quem procura profissionais no seu bairro.</p>
+            <p>Receba oportunidades na sua região.</p>
+            <p>Mostre seus trabalhos para pessoas próximas.</p>
+            <p>Apareça para quem procura profissionais no seu bairro.</p>
           </div>
         </CardContent>
       </Card>
@@ -136,11 +136,11 @@ export function UserServicesSection({
                   <div>
                     <h3 className="mb-1 text-lg font-semibold">{service.name || "Sem nome"}</h3>
                     <p className="line-clamp-2 text-sm text-muted-foreground">
-                      {service.description || "Sem descricao"}
+                      {service.description || "Sem descrição"}
                     </p>
                     <div className="mt-2 flex flex-wrap gap-2">
                       <Badge variant={service.is_accepting_clients ? "default" : "secondary"}>
-                        {service.is_accepting_clients ? "Disponivel" : "Indisponivel"}
+                        {service.is_accepting_clients ? "Disponível" : "Indisponível"}
                       </Badge>
                       {service.visibility && (
                         <Badge variant="outline">{service.visibility.replace("_", " ")}</Badge>
@@ -172,7 +172,7 @@ export function UserServicesSection({
                   {service.total_reviews > 0 && (
                     <div className="flex items-center gap-1 text-sm text-muted-foreground">
                       <Eye className="h-4 w-4" />
-                      <span>{service.total_reviews} avaliacoes</span>
+                      <span>{service.total_reviews} avaliações</span>
                     </div>
                   )}
                 </div>
@@ -190,7 +190,7 @@ export function UserServicesSection({
                         actorUserId: activeProfile?.userId ?? activeProfile?.userId ?? null,
                         metadata: { entrypoint: "profile_professions_card" },
                       });
-                      navigate(`/services/${service.professional_data_id || service.id}`);
+                      navigate(`/servicos/${service.professional_data_id || service.id}`);
                     }}
                     className="gap-2"
                   >
@@ -217,7 +217,7 @@ export function UserServicesSection({
         <CardContent className="p-6">
           <div className="mb-3 flex items-center justify-between">
             <h3 className="text-base font-semibold">Oportunidades recentes</h3>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/comunidade?tab=oportunidades")}>Explorar</Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/oportunidades")}>Explorar</Button>
           </div>
 
           {recentOpportunities.length === 0 ? (

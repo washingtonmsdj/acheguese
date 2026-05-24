@@ -1,8 +1,8 @@
 /**
  * ProfileHeaderCompact - Header redesenhado, denso e responsivo
  *
- * Mobile-first. Avatar grande à esquerda, nome + badges principais visíveis,
- * badges secundários em popover, acoes em menu compacto no canto.
+ * Mobile-first. Avatar grande a esquerda, nome + badges principais visiveis,
+ * badges secundarios em popover, acoes em menu compacto no canto.
  */
 
 import { useRef } from "react";
@@ -81,12 +81,12 @@ function getInitials(name?: string | null): string {
 }
 
 function formatPlanLabel(value?: string | null): string {
-  if (!value) return "Basico";
+  if (!value) return "Básico";
   const map: Record<string, string> = {
     free: "Free",
     pro: "Pro",
     delivery: "Delivery",
-    basic: "Basico",
+    basic: "Básico",
     premium: "Premium",
     enterprise: "Enterprise",
   };
@@ -122,13 +122,13 @@ function getAccountStateLabel(state: AccountSnapshot["accountState"]): string {
 function getVerificationLabel(status: string): string {
   switch (status) {
     case "approved":
-      return "Residencia aprovada";
+      return "Residência aprovada";
     case "rejected":
-      return "Residencia rejeitada";
+      return "Residência rejeitada";
     case "pending":
-      return "Em analise";
+      return "Em análise";
     default:
-      return "Sem verificacao";
+      return "Sem verificação";
   }
 }
 
@@ -190,7 +190,7 @@ export function ProfileHeaderCompact({
       transition={{ duration: 0.3 }}
       className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-primary/10 via-card to-accent/10 p-3 shadow-sm sm:rounded-3xl sm:p-5"
     >
-      {/* Topo: avatar + nome + acoes */}
+      {/* Topo: avatar + nome + ações */}
       <div className="flex items-start gap-3 sm:gap-4">
         <div className="relative shrink-0">
           <Avatar className="h-16 w-16 border-2 border-card shadow-md sm:h-20 sm:w-20 md:h-24 md:w-24 md:border-4">
@@ -260,7 +260,7 @@ export function ProfileHeaderCompact({
               )}
             </div>
 
-            {/* Acoes: botão principal + menu dropdown */}
+            {/* Ações: botão principal + menu dropdown */}
             <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
               <Button
                 size="sm"
@@ -282,7 +282,7 @@ export function ProfileHeaderCompact({
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button size="icon" variant="outline" className="h-8 w-8" aria-label="Mais opcoes">
+                  <Button size="icon" variant="outline" className="h-8 w-8" aria-label="Mais opções">
                     <MoreHorizontal className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -294,7 +294,7 @@ export function ProfileHeaderCompact({
                       onClick={() => navigate(buildPublicProfileUrl(handle))}
                     >
                       <Globe className="mr-2 h-4 w-4" />
-                      Abrir perfil publico
+                      Abrir perfil público
                     </DropdownMenuItem>
                   ) : null}
                   <DropdownMenuItem
@@ -320,7 +320,7 @@ export function ProfileHeaderCompact({
 
       {/* Linha de badges + meta - Responsiva e compacta */}
       <div className="mt-3 space-y-2 sm:mt-4 sm:space-y-3">
-        {/* Primeira linha: Status, Plano, Verificacao, Reputacao */}
+        {/* Primeira linha: Status, Plano, Verificação, Reputação */}
         <div className="flex flex-wrap items-center gap-1.5 text-[10px] sm:gap-2 sm:text-xs">
           {/* Status da conta */}
           <div className="flex items-center gap-1">
@@ -338,11 +338,11 @@ export function ProfileHeaderCompact({
           {/* Plano */}
           <div className="flex items-center gap-1">
             <span className="hidden font-medium text-muted-foreground sm:inline">Plano:</span>
-            <Badge 
-              variant="outline" 
+            <Badge
+              variant="outline"
               className={cn(
                 "h-5 text-[9px] font-semibold sm:h-6 sm:text-[10px]",
-                (identity?.plan?.isPremium || context?.plan?.isPremium) 
+                (identity?.plan?.isPremium || context?.plan?.isPremium)
                   ? "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400"
                   : ""
               )}
@@ -354,9 +354,9 @@ export function ProfileHeaderCompact({
 
           <span className="hidden text-muted-foreground/30 sm:inline">|</span>
 
-          {/* Verificacao - oculta em mobile muito pequeno */}
+          {/* Verificação - oculta em mobile muito pequeno */}
           <div className="hidden items-center gap-1 xs:flex">
-            <span className="hidden font-medium text-muted-foreground sm:inline">Verificacao:</span>
+            <span className="hidden font-medium text-muted-foreground sm:inline">Verificação:</span>
             <Badge
               variant="outline"
               className={cn(
@@ -368,7 +368,7 @@ export function ProfileHeaderCompact({
             </Badge>
           </div>
 
-          {/* Reputacao (se houver) */}
+          {/* Reputação (se houver) */}
           {reputation ? (
             <>
               <span className="hidden text-muted-foreground/30 md:inline">|</span>
@@ -378,13 +378,13 @@ export function ProfileHeaderCompact({
                   variant="outline"
                   className="h-5 gap-1 border-amber-500/30 bg-amber-500/10 text-[9px] font-semibold text-amber-700 dark:text-amber-400 sm:h-6 sm:text-[10px]"
                 >
-                  N?vel {reputation.level} ? {reputation.score} pts
+                  Nível {reputation.level} · {reputation.score} pts
                 </Badge>
               </div>
             </>
           ) : null}
 
-          {/* Territorio - compacto em mobile */}
+          {/* Território - compacto em mobile */}
           {territoryLabel ? (
             <>
               <span className="hidden text-muted-foreground/30 lg:inline">|</span>
@@ -397,7 +397,7 @@ export function ProfileHeaderCompact({
             </>
           ) : null}
 
-          {/* Botão "Mais detalhes" - sempre visível */}
+          {/* Botao "Mais detalhes" - sempre visivel */}
           <Popover>
             <PopoverTrigger asChild>
               <button
@@ -412,17 +412,17 @@ export function ProfileHeaderCompact({
               <div className="space-y-3">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Territorio
+                    Território
                   </p>
                   <p className="mt-1 text-sm font-medium text-foreground">
-                    {territoryLabel || "Nao configurado"}
+                    {territoryLabel || "Não configurado"}
                   </p>
                 </div>
-                
+
                 {(identity?.reputation || context?.reputation) ? (
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Reputacao completa
+                      Reputação completa
                     </p>
                     <div className="mt-1 space-y-1 text-sm">
                       <p>
@@ -445,13 +445,13 @@ export function ProfileHeaderCompact({
 
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Notificacoes
+                    Notificações
                   </p>
                   <div className="mt-1 space-y-1 text-sm">
                     <p>
                       {notifications.unread > 0 ? (
                         <span className="font-semibold text-warning">
-                          {notifications.unread} nao lidas
+                          {notifications.unread} não lidas
                         </span>
                       ) : (
                         <span className="text-muted-foreground">Em dia</span>
@@ -500,7 +500,7 @@ export function ProfileHeaderCompact({
           </Popover>
         </div>
 
-        {/* Segunda linha: Informacoes adicionais - apenas desktop */}
+        {/* Segunda linha: Informações adicionais - apenas desktop */}
         <div className="hidden flex-wrap items-center gap-2 text-xs md:flex">
           {/* Total de perfis */}
           {activeProfile && (
@@ -515,13 +515,13 @@ export function ProfileHeaderCompact({
             </>
           )}
 
-          {/* Notificacoes nao lidas */}
+          {/* Notificações não lidas */}
           {notifications.unread > 0 ? (
             <>
               <div className="flex items-center gap-1.5">
                 <Bell className="h-3.5 w-3.5 text-warning" />
                 <span className="font-semibold text-warning">
-                  {notifications.unread} {notifications.unread === 1 ? "notificacao" : "notificacoes"}
+                  {notifications.unread} {notifications.unread === 1 ? "notificação" : "notificações"}
                 </span>
               </div>
               <span className="text-muted-foreground/30">|</span>
@@ -532,7 +532,7 @@ export function ProfileHeaderCompact({
           {totalAlerts > 0 ? (
             <div className="flex items-center gap-1.5">
               <span className="font-semibold text-destructive">
-                ! {totalAlerts} {totalAlerts === 1 ? "alerta" : "alertas"} prioritário{totalAlerts === 1 ? "" : "s"}
+                ! {totalAlerts} {totalAlerts === 1 ? "alerta prioritário" : "alertas prioritários"}
               </span>
             </div>
           ) : null}

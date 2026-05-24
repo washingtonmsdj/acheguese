@@ -1,13 +1,13 @@
 /**
- * PlanChangeValidator â€” ValidaÃ§Ã£o de impacto em mudanÃ§as de plano
+ * PlanChangeValidator - Validacao de impacto em mudancas de plano.
  *
- * REGRAS ARQUITETURAIS:
- *   - Validar impacto antes de permitir alteraÃ§Ã£o de plano
- *   - Bloquear alteraÃ§Ãµes destrutivas sem estratÃ©gia
- *   - Exibir impacto claro para admin
+ * Regras arquiteturais:
+ *   - Validar impacto antes de permitir alteracao de plano.
+ *   - Bloquear alteracoes destrutivas sem estrategia.
+ *   - Exibir impacto claro para admin.
  *
- * FASE: 3 - Services e Contratos
- * REFERÃŠNCIA: F3_MIGRACAO_GATES_FRONTEND.md
+ * Fase: 3 - Services e Contratos.
+ * Referencia: F3_MIGRACAO_GATES_FRONTEND.md
  *
  * @version 1.0.0
  */
@@ -15,7 +15,7 @@
 import { supabase } from '@/core/infrastructure/supabase';
 import { logger } from '@/shared/utils/logger';
 
-// â”€â”€â”€ Tipos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Tipos
 
 export interface PlanChangeImpact {
   canChange: boolean;
@@ -28,11 +28,11 @@ export interface PlanChangeImpact {
   migrationStrategy?: string;
 }
 
-// â”€â”€â”€ Service â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Service
 
 export class PlanChangeValidator {
   /**
-   * Valida se mudanÃ§a de plano Ã© permitida e retorna impacto.
+   * Valida se mudanca de plano e permitida e retorna impacto.
    */
   static async validateChange(
     businessId: string,
@@ -66,13 +66,13 @@ export class PlanChangeValidator {
       // Determinar features perdidas/ganhas
       const { willLose, willGain } = this.compareFeatures(currentPlanTier, newPlanTier);
 
-      // Determinar se Ã© downgrade (perde features)
+      // Determinar se e downgrade (perde features)
       const isDowngrade = willLose.length > 0;
 
-      // Determinar se requer migraÃ§Ã£o
+      // Determinar se requer migracao
       const requiresMigration = isDowngrade && affectedContracts > 0;
 
-      // Bloquear downgrade destrutivo sem estratÃ©gia
+      // Bloquear downgrade destrutivo sem estrategia
       if (requiresMigration) {
         return {
           canChange: false,
@@ -86,7 +86,7 @@ export class PlanChangeValidator {
         };
       }
 
-      // Permitir upgrade ou mudanÃ§a sem impacto
+      // Permitir upgrade ou mudanca sem impacto
       return {
         canChange: true,
         affectedContracts,

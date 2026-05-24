@@ -10,6 +10,18 @@ import {
   ExternalLink,
   Upload,
   Image as ImageIcon,
+  ArrowDown,
+  ArrowLeftRight,
+  ArrowRight,
+  ArrowUp,
+  Building2,
+  Calendar,
+  Car,
+  CheckCircle2,
+  Globe2,
+  Home,
+  Users,
+  XCircle,
 } from "lucide-react";
 import { useToast } from "@/shared/hooks/use-toast";
 import { logger } from "@/shared/utils/logger";
@@ -309,13 +321,15 @@ export default function BannersPage() {
               <label className="block text-sm font-medium mb-2">Página *</label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {[
-                  { value: "all", label: "Todas", icon: "🌐" },
-                  { value: "home", label: "Home", icon: "🏠" },
-                  { value: "community", label: "Comunidade", icon: "👥" },
-                  { value: "mobility", label: "Mobilidade", icon: "🚗" },
-                  { value: "business", label: "Negócios", icon: "🏢" },
-                  { value: "events", label: "Eventos", icon: "📅" },
-                ].map((page) => (
+                  { value: "all", label: "Todas", icon: Globe2 },
+                  { value: "home", label: "Home", icon: Home },
+                  { value: "community", label: "Comunidade", icon: Users },
+                  { value: "mobility", label: "Mobilidade", icon: Car },
+                  { value: "business", label: "Negócios", icon: Building2 },
+                  { value: "events", label: "Eventos", icon: Calendar },
+                ].map((page) => {
+                  const PageIcon = page.icon;
+                  return (
                   <button
                     key={page.value}
                     type="button"
@@ -328,10 +342,11 @@ export default function BannersPage() {
                         : "border-gray-200 hover:border-primary/50"
                     }`}
                   >
-                    <div className="text-3xl mb-1">{page.icon}</div>
+                    <PageIcon className="mx-auto mb-1 h-7 w-7 text-primary" aria-hidden="true" />
                     <div className="text-sm font-medium">{page.label}</div>
                   </button>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
@@ -342,11 +357,13 @@ export default function BannersPage() {
               </label>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {[
-                  { value: "top", label: "Topo", icon: "⬆️" },
-                  { value: "middle", label: "Meio", icon: "↔️" },
-                  { value: "bottom", label: "Rodapé", icon: "⬇️" },
-                  { value: "sidebar", label: "Sidebar", icon: "➡️" },
-                ].map((pos) => (
+                  { value: "top", label: "Topo", icon: ArrowUp },
+                  { value: "middle", label: "Meio", icon: ArrowLeftRight },
+                  { value: "bottom", label: "Rodapé", icon: ArrowDown },
+                  { value: "sidebar", label: "Sidebar", icon: ArrowRight },
+                ].map((pos) => {
+                  const PositionIcon = pos.icon;
+                  return (
                   <button
                     key={pos.value}
                     type="button"
@@ -359,10 +376,11 @@ export default function BannersPage() {
                         : "border-gray-200 hover:border-primary/50"
                     }`}
                   >
-                    <div className="text-2xl mb-1">{pos.icon}</div>
+                    <PositionIcon className="mx-auto mb-1 h-6 w-6 text-primary" aria-hidden="true" />
                     <div className="text-sm font-medium">{pos.label}</div>
                   </button>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
@@ -400,7 +418,14 @@ export default function BannersPage() {
                     className="w-4 h-4"
                   />
                   <label htmlFor="is_active" className="text-sm font-medium">
-                    {formData.is_active ? "✅ Ativo" : "❌ Inativo"}
+                    <span className="inline-flex items-center gap-1.5">
+                      {formData.is_active ? (
+                        <CheckCircle2 className="h-4 w-4 text-green-600" aria-hidden="true" />
+                      ) : (
+                        <XCircle className="h-4 w-4 text-red-600" aria-hidden="true" />
+                      )}
+                      {formData.is_active ? "Ativo" : "Inativo"}
+                    </span>
                   </label>
                 </div>
               </div>
@@ -550,4 +575,3 @@ export default function BannersPage() {
     </div>
   );
 }
-

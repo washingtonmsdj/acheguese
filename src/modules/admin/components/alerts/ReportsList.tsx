@@ -1,4 +1,4 @@
-import { Flag, User, Eye } from "lucide-react";
+import { Flag, Siren, User, Eye } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/utils/cn";
@@ -9,11 +9,11 @@ import type {
 } from "@/modules/admin/hooks/useAlertData";
 
 const REPORT_MOTIVO_LABELS: Record<string, string> = {
-  alerta_falso: "❌ Alerta Falso",
-  uso_criminoso: "🚨 Uso Criminoso",
-  spam: "🚫 Spam",
-  conteudo_ofensivo: "🤬 Conteúdo Ofensivo",
-  acusacao_pessoa: "⚠️ Acusação de Pessoa",
+  alerta_falso: "Alerta falso",
+  uso_criminoso: "Uso criminoso",
+  spam: "Spam",
+  conteudo_ofensivo: "Conteúdo ofensivo",
+  acusacao_pessoa: "Acusação de pessoa",
 };
 
 interface ReportsListProps {
@@ -87,8 +87,9 @@ export function ReportsList({
                   </p>
                 )}
                 {post && (
-                  <div className="bg-muted/50 rounded-lg p-2 text-sm line-clamp-1">
-                    🚨 {post.texto}
+                  <div className="flex items-start gap-2 bg-muted/50 rounded-lg p-2 text-sm line-clamp-1">
+                    <Siren className="h-4 w-4 shrink-0 text-destructive" aria-hidden="true" />
+                    <span>{post.texto}</span>
                   </div>
                 )}
                 {author && (

@@ -1,12 +1,12 @@
 /**
  * AdminTerritoryManagement (REFATORADO)
- * 
+ *
  * Gestão de visibilidade de territórios no seletor principal.
  * Hierarquia: Estado → Cidade → Bairro + Grupos Territoriais
- * 
+ *
  * Toggle is_selector_active via metadata — não altera status geral.
  * Inclui criação/edição de grupos territoriais inline.
- * 
+ *
  * REFATORAÇÃO: 1187 linhas → ~200 linhas (orquestração limpa)
  * SSOT: Todas as sections e componentes tipados
  * Sem gambiarras: Código profissional e modular
@@ -85,7 +85,7 @@ export default function AdminTerritoryManagement() {
   const districtRows = useMemo(
     () =>
       locations
-        .filter((location) => location.type === 'district')
+        .filter((location) => location.type === 'neighborhood' || location.type === 'district')
         .map((district) => ({
           district,
           metrics:

@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
+import { LocationType } from "@/core/location/types";
 import { logger } from "@/shared/utils/logger";
 
 interface LocationFieldsProps {
@@ -18,12 +19,12 @@ interface LocationFieldsProps {
 
 /**
  * LocationFields - Componente de seleção em cascata de localização
- * 
+ *
  * Segue o SSOT de localização (src/core/location):
  * - Usa useLocationCascade para carregar estados → cidades → bairros da tabela locations
  * - Resolve location_id inicial usando findAncestors do repositório
  * - Retorna apenas location_id (UUID do bairro) como valor canônico
- * 
+ *
  * @param locationId - UUID do bairro (location_id da tabela locations)
  * @param onChange - Callback chamado quando o usuário seleciona um bairro
  */
@@ -46,15 +47,17 @@ export function LocationFields({ locationId, onChange }: LocationFieldsProps) {
   useEffect(() => {
     if (locationId && !stateId && !isResolvingLocation) {
       setIsResolvingLocation(true);
-      
+
       const repo = createLocationRepository();
       repo
         .findAncestors(locationId, true)
         .then((ancestors) => {
           const state = ancestors.find((loc) => loc.type === "state");
           const city = ancestors.find((loc) => loc.type === "city");
-          const neighborhood = ancestors.find((loc) => loc.type === "district");
-          
+          const neighborhood = ancestors.find(
+            (loc) => loc.type === LocationType.NEIGHBORHOOD || loc.type === LocationType.DISTRICT,
+          );
+
           if (state) setStateId(state.id);
           if (city) setCityId(city.id);
           if (neighborhood) setNeighborhoodId(neighborhood.id);
@@ -85,6 +88,11 @@ export function LocationFields({ locationId, onChange }: LocationFieldsProps) {
     setNeighborhoodId(value);
     onChange(value);
   };
+
+  const hasMunicipalNeighborhoods = neighborhoods.some(
+    (item) => item.type === LocationType.NEIGHBORHOOD,
+  );
+  const localityLabel = hasMunicipalNeighborhoods ? "Bairro" : "Distrito";
 
   return (
     <div className="space-y-4">
@@ -137,14 +145,14 @@ export function LocationFields({ locationId, onChange }: LocationFieldsProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="neighborhood">Bairro</Label>
+        <Label htmlFor="neighborhood">{localityLabel}</Label>
         <Select
           value={neighborhoodId}
           onValueChange={handleNeighborhoodChange}
           disabled={!cityId}
         >
           <SelectTrigger id="neighborhood">
-            <SelectValue placeholder="Selecione o bairro" />
+            <SelectValue placeholder={`Selecione o ${localityLabel.toLowerCase()}`} />
           </SelectTrigger>
           <SelectContent>
             {loadingNeighborhoods ? (

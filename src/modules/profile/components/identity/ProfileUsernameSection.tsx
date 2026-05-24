@@ -1,6 +1,6 @@
 /**
  * ProfileUsernameSection
- * Secao de username publico para tela de edicao de perfil pessoal.
+ * Seção de username público para tela de edição de perfil pessoal.
  * O fluxo de confirmacao de salvamento e controlado pela pagina.
  */
 
@@ -28,7 +28,7 @@ export function ProfileUsernameSection({
   return (
     <div className="rounded-lg border bg-card p-4 space-y-3">
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-        Identidade publica
+        Identidade pública
       </p>
 
       <ProfileIdentityField

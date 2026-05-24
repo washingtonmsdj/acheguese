@@ -1,1 +1,1 @@
-﻿export { default } from "@/core/verification/pages/AdminVerificationsPage";
+export { default } from "@/core/verification/pages/AdminVerificationsPage";

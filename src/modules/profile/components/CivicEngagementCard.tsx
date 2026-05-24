@@ -1,7 +1,7 @@
 import React from "react";
 import { Card } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
-import { Construction, Users, TrendingUp, Award } from "lucide-react";
+import { Construction, Users, TrendingUp, Award, Lightbulb } from "lucide-react";
 interface CivicEngagementCardProps {
   reportsCount: number;
   supportsCount: number;
@@ -13,41 +13,35 @@ interface CivicEngagementCardProps {
 
 const BADGE_INFO: Record<
   string,
-  { label: string; icon: string; color: string }
+  { label: string; color: string }
 > = {
-  first_report: { label: "Primeiro Reporte", icon: "🎯", color: "bg-blue-500" },
+  first_report: { label: "Primeiro Reporte", color: "bg-blue-500" },
   reporter_bronze: {
     label: "Reporter Bronze",
-    icon: "🥉",
     color: "bg-amber-700",
   },
   reporter_silver: {
     label: "Reporter Prata",
-    icon: "🥈",
     color: "bg-gray-400",
   },
-  reporter_gold: { label: "Reporter Ouro", icon: "🥇", color: "bg-yellow-500" },
+  reporter_gold: { label: "Reporter Ouro", color: "bg-yellow-500" },
   supporter_bronze: {
     label: "Apoiador Bronze",
-    icon: "🥉",
     color: "bg-amber-700",
   },
   supporter_silver: {
     label: "Apoiador Prata",
-    icon: "🥈",
     color: "bg-gray-400",
   },
   supporter_gold: {
     label: "Apoiador Ouro",
-    icon: "🥇",
     color: "bg-yellow-500",
   },
   critical_creator: {
     label: "Criador Crítico",
-    icon: "🔥",
     color: "bg-orange-500",
   },
-  civic_hero: { label: "Herói Cívico", icon: "🦸", color: "bg-purple-500" },
+  civic_hero: { label: "Herói Cívico", color: "bg-purple-500" },
 };
 
 export function CivicEngagementCard({
@@ -117,7 +111,7 @@ export function CivicEngagementCard({
                   key={badgeType}
                   className={`${info.color} text-white border-0 gap-1`}
                 >
-                  <span>{info.icon}</span>
+                  <Award className="h-3.5 w-3.5" aria-hidden="true" />
                   <span className="text-xs">{info.label}</span>
                 </Badge>
               );
@@ -129,9 +123,12 @@ export function CivicEngagementCard({
       {/* Mensagem motivacional */}
       {engagementScore === 0 && (
         <div className="mt-4 p-3 bg-blue-500/10 rounded-lg border border-blue-500/30">
-          <p className="text-sm text-blue-400">
-            💡 Comece a reportar problemas e apoiar sua comunidade para ganhar
-            pontos e badges!
+          <p className="flex items-start gap-2 text-sm text-blue-400">
+            <Lightbulb className="h-4 w-4 mt-0.5 shrink-0" aria-hidden="true" />
+            <span>
+              Comece a reportar problemas e apoiar sua comunidade para ganhar
+              pontos e badges.
+            </span>
           </p>
         </div>
       )}

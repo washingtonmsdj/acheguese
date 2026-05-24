@@ -1,12 +1,11 @@
-/**
- * ContentTabsSection - SeÃ§Ã£o de conteÃºdo com tabs
- * 
- * Exibe posts, salvos, favoritos, serviÃ§os e classificados em tabs
+﻿/**
+ * ContentTabsSection - seção de conteúdo com tabs
+ *
+ * Exibe posts, salvos, favoritos, serviços e classificados em tabs
  */
 
 import { useState } from 'react';
 import { FileText, Bookmark, Heart, Wrench, Briefcase } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
 import { SectionFrame } from './SectionFrame';
@@ -16,14 +15,14 @@ import { FavoritesList } from '../FavoritesList';
 import { UserServicesSection } from '../UserServicesSection';
 import { UserClassifiedsSection } from '../UserClassifiedsSection';
 
-import type { Business } from '@/core/profiles/services/types';
+import type { ProfileAssociatedBusiness } from '@/core/profiles/services/ProfileBusinessTypes';
 import type { Favorite } from '@/modules/profile/sections/types';
 
 const CONTENT_TABS = [
   { id: 'posts', label: 'Posts', icon: FileText },
   { id: 'saved', label: 'Salvos', icon: Bookmark },
   { id: 'favorites', label: 'Favoritos', icon: Heart },
-  { id: 'services', label: 'Servicos', icon: Wrench },
+  { id: 'services', label: 'serviços', icon: Wrench },
   { id: 'classifieds', label: 'Classificados', icon: Briefcase },
 ] as const;
 
@@ -37,7 +36,7 @@ interface ContentTabsSectionProps {
     loading: boolean;
   };
   onPostClick: (id: string) => void;
-  onBusinessClick: (business: Business) => void;
+  onBusinessClick: (business: ProfileAssociatedBusiness) => void;
   onExplore: () => void;
   onCreateService: () => void;
   onEditService: (id: string) => void;
@@ -61,8 +60,8 @@ export function ContentTabsSection({
 
   return (
     <SectionFrame
-      title="Conteudo, servicos e ativos pessoais"
-      description="Gerencie o que voce publica, salva e opera dentro do ecossistema."
+      title="conteúdo, serviços e ativos pessoais"
+      description="Gerencie o que você publica, salva e opera dentro do ecossistema."
     >
       <Tabs value={contentTab} onValueChange={(value) => setContentTab(value as ContentTab)}>
         <TabsList className="mb-4 flex h-auto flex-wrap gap-2 bg-transparent p-0">
