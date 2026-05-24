@@ -19,7 +19,7 @@ import { useSessionContext } from "@/core/session";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { ModuleLocationDialog, useTerritoryLabels } from "@/core/location";
 import { useClassificados } from "@/modules/classifieds/hooks/useClassificados";
-import { CLASSIFIED_CATEGORIES, getCategoryEmoji } from "@/modules/classifieds/constants/categories";
+import { CLASSIFIED_CATEGORIES } from "@/modules/classifieds/constants/categories";
 import { classifiedUrlService } from "@/modules/classifieds/services/ClassifiedUrlService";
 import { ClassifiedsViewToggle, VendedorCard, ClassificadosHeader, AdvancedFilters } from "@/modules/classifieds/components";
 import { cn } from "@/shared/utils/cn";
@@ -275,7 +275,6 @@ export default function ClassificadosLandingPage({ resolved, activeMemberIds }: 
                 )}
                 aria-pressed={isActive}
               >
-                <span className="text-xs">{cat.emoji}</span>
                 {cat.label}
               </motion.button>
             );

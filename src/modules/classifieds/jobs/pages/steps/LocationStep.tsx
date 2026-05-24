@@ -33,7 +33,7 @@ export function LocationStep({
         <div className="flex-1">
           {hasActiveLocation ? (
             <>
-              <p className="text-sm font-semibold text-foreground">📍 {activeLocationName}</p>
+              <p className="text-sm font-semibold text-foreground">{activeLocationName}</p>
               <p className="text-[10px] text-muted-foreground">Localização ativa — sua vaga aparecerá nesta região</p>
             </>
           ) : (

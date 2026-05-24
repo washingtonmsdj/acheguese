@@ -1,4 +1,4 @@
-﻿/**
+/**
  * CategoryChips - Chips de categorias scrolláveis
  * 
  * SSOT: Componente reutilizável de categorias
@@ -15,7 +15,6 @@ import { cn } from "@/shared/utils/cn";
 export interface Category {
   readonly id: string;
   readonly label: string;
-  readonly emoji: string;
 }
 
 export interface CategoryChipsProps {
@@ -51,7 +50,6 @@ export function CategoryChips({
               )}
               aria-pressed={isActive}
             >
-              <span className="text-xs">{cat.emoji}</span>
               {cat.label}
             </motion.button>
           );

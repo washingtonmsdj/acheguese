@@ -1,4 +1,4 @@
-﻿/**
+/**
  * VagasPublicLayout - Layout principal da página de vagas
  * 
  * SSOT: Layout reutilizável com props tipadas

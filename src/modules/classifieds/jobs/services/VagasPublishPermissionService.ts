@@ -1,4 +1,4 @@
-﻿import { AuthService } from "@/core/auth/services/AuthService";
+import { AuthService } from "@/core/auth/services/AuthService";
 import { supabase } from "@/core/infrastructure/supabase/supabase";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services/ProfileService";

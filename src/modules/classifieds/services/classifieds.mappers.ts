@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 📦 CLASSIFIEDS MAPPERS - SSOT Data Transformation
  *
  * Mapeadores centralizados para transformação de dados de classificados.

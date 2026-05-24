@@ -1,4 +1,4 @@
-﻿/**
+/**
  * SponsoredCard - Card de anúncio patrocinado
  * 
  * SSOT: Componente reutilizável para anúncios patrocinados

@@ -15,7 +15,8 @@ import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { useClassificadoDetail } from "@/modules/classifieds/hooks/useClassificadoDetail";
 import { useClassificados } from "@/modules/classifieds/hooks/useClassificados";
 import { useSellerAds } from "@/modules/classifieds/hooks/useSellerAds";
-import { getCategoryEmoji } from "@/modules/classifieds/constants/categories";
+import { getCategoryLabel } from "@/modules/classifieds/constants/categories";
+import { CLASSIFIED_STATUS, type ClassifiedStatusValue } from "@/modules/classifieds/constants/statuses";
 import { ClassifiedCommentsSection } from "@/modules/classifieds/components/detail/ClassifiedCommentsSection";
 import {
   ClassifiedStatusOwnerPanel,
@@ -35,8 +36,11 @@ import {
 } from "@/modules/classifieds/services";
 import { useToast } from "@/shared/components/ui/use-toast";
 import { cn } from "@/shared/utils/cn";
+import { buildWhatsAppUrl } from "@/shared/utils/contactLinks";
+import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { messagingService } from "@/core/messaging";
 
 type ReportReason = "fraud" | "fake" | "inappropriate" | "spam" | "duplicate" | "wrong-category" | "sold" | "other";
 interface ClassificadoDetailPageProps { classifiedId?: string; }
@@ -58,6 +62,7 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
   const [reportOpen, setReportOpen] = useState(false);
   const [reportReason, setReportReason] = useState("");
   const [submittingReport, setSubmittingReport] = useState(false);
+  const [startingChat, setStartingChat] = useState(false);
 
   const { classificado, isLoading, error, refetch } = useClassificadoDetail(id!);
 
@@ -68,14 +73,14 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
   const { sellerAds } = useSellerAds(classificado?.vendedor?.id, id);
   const isOwner = Boolean(activeProfile?.id && classificado?.vendedor?.id === activeProfile.id);
   const statusMutation = useMutation({
-    mutationFn: async (nextStatus: "active" | "inactive" | "sold") => {
+    mutationFn: async (nextStatus: ClassifiedStatusValue) => {
       if (!id || !activeProfile?.id) throw new Error("Perfil ativo ausente");
-      if (nextStatus === "sold") return markAsSold(id, activeProfile.id);
-      if (nextStatus === "active") return reactivateClassified(id, activeProfile.id);
-      return updateClassified(id, activeProfile.id, { status: "inactive" });
+      if (nextStatus === CLASSIFIED_STATUS.SOLD) return markAsSold(id, activeProfile.id);
+      if (nextStatus === CLASSIFIED_STATUS.ACTIVE) return reactivateClassified(id, activeProfile.id);
+      return updateClassified(id, activeProfile.id, { status: CLASSIFIED_STATUS.INACTIVE });
     },
     onSuccess: async () => {
-      toast({ title: "Status do anuncio atualizado" });
+      toast({ title: "Status do anúncio atualizado" });
       await Promise.all([
         refetch(),
         queryClient.invalidateQueries({ queryKey: ["classificados"] }),
@@ -118,14 +123,51 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
     if (!classificado?.vendedor) return;
     const phone = classificado.vendedor.whatsapp || classificado.vendedor.phone;
     if (!phone) return;
-    const msg = encodeURIComponent(`Olá! Vi seu anúncio "${classificado.titulo}" e tenho interesse.`);
-    window.open(`https://wa.me/${phone}?text=${msg}`, "_blank");
+    const url = buildWhatsAppUrl(
+      phone,
+      `Olá! Vi seu anúncio "${classificado.titulo}" e tenho interesse.`,
+    );
+    if (url) {
+      openSafeExternalUrl(url, { context: "classified-whatsapp" });
+    }
   }, [classificado]);
 
-  const handleChat = useCallback(() => {
-    if (!user) { navigate(appUrls.auth.login); return; }
-    navigate(`/classificado/${id}/chat`);
-  }, [user, navigate, appUrls, id]);
+  const handleChat = useCallback(async () => {
+    if (!user || !activeProfile?.id) {
+      navigate(appUrls.auth.login);
+      return;
+    }
+
+    const sellerId = classificado?.vendedor?.id;
+    if (!id || !sellerId) {
+      toast({
+        title: "Chat indisponível",
+        description: "Não foi possível identificar o vendedor deste anúncio.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (sellerId === activeProfile.id) {
+      navigate(appUrls.messages);
+      return;
+    }
+
+    setStartingChat(true);
+    try {
+      const conversation = await messagingService.findOrCreateConversation(id, activeProfile.id, sellerId);
+      if (!conversation) throw new Error("Conversation was not created");
+      navigate(`/chat/${conversation.id}`);
+    } catch {
+      toast({
+        title: "Não foi possível abrir o chat",
+        description: "Tente novamente em alguns instantes.",
+        variant: "destructive",
+      });
+    } finally {
+      setStartingChat(false);
+    }
+  }, [activeProfile?.id, appUrls.auth.login, appUrls.messages, classificado?.vendedor?.id, id, navigate, toast, user]);
 
   const handleShare = useCallback(async () => {
     const url = window.location.href;
@@ -143,7 +185,7 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
       toast({ title: "Link copiado!" });
     } catch {
       toast({
-        title: "Nao foi possivel compartilhar",
+        title: "Não foi possível compartilhar",
         description: "Copie o link direto da barra do navegador.",
         variant: "destructive",
       });
@@ -164,14 +206,14 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
       window.localStorage.setItem(CLASSIFIED_FAVORITES_KEY, JSON.stringify(nextFavorites));
       setIsFav(nextIsFav);
       toast({
-        title: nextIsFav ? "Anuncio salvo" : "Anuncio removido",
+        title: nextIsFav ? "Anúncio salvo" : "Anúncio removido",
         description: nextIsFav
-          ? "Voce pode acessar depois em seus favoritos."
-          : "O anuncio foi removido dos favoritos.",
+          ? "Você pode acessar depois em seus favoritos."
+          : "O anúncio foi removido dos favoritos.",
       });
     } catch {
       toast({
-        title: "Nao foi possivel atualizar favoritos",
+        title: "Não foi possível atualizar favoritos",
         description: "Tente novamente em alguns instantes.",
         variant: "destructive",
       });
@@ -233,7 +275,7 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center max-w-md px-4">
-          <div className="text-6xl mb-4">??</div>
+          <Package className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
           <h2 className="text-2xl font-bold text-foreground mb-2">Anúncio não encontrado</h2>
           <p className="text-muted-foreground mb-6">O anúncio que você procura não existe ou foi removido.</p>
           <Button onClick={() => navigate(appUrls.classifieds.list)}>Voltar para Classificados</Button>
@@ -244,7 +286,7 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
 
   const photos = classificado.fotos || [];
   const hasMultiplePhotos = photos.length > 1;
-  const categoryEmoji = getCategoryEmoji(classificado.categoria);
+  const categoryLabel = getCategoryLabel(classificado.categoria);
   const timeAgo = formatDistanceToNow(new Date(classificado.created_at), { addSuffix: true, locale: ptBR });
 
   return (
@@ -293,8 +335,8 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-7xl bg-gradient-to-br from-primary/10 to-accent/10">
-                {categoryEmoji}
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10">
+                <Package className="h-16 w-16 text-muted-foreground" aria-hidden="true" />
               </div>
             )}
 
@@ -408,7 +450,8 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
                 vendedor={classificado.vendedor}
                 onWhatsApp={handleWhatsApp}
                 onChat={handleChat}
-              activeAdsCount={sellerAds.length + 1}
+                isChatLoading={startingChat}
+                activeAdsCount={sellerAds.length + 1}
               />
             </div>
 
@@ -420,7 +463,7 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
               className="bg-card border border-border rounded-2xl p-5"
             >
               <h2 className="text-sm font-bold text-foreground mb-3 flex items-center gap-1.5">
-                ?? Descrição
+                Descrição
               </h2>
               <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
                 {classificado.descricao}
@@ -434,11 +477,11 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
               transition={{ delay: 0.15 }}
               className="grid grid-cols-2 sm:grid-cols-4 gap-3"
             >
-              <DetailBox label="Categoria" value={`${categoryEmoji} ${classificado.categoria}`} />
+              <DetailBox label="Categoria" value={categoryLabel} />
               <DetailBox label="Condição" value={
-                classificado.condition === "novo" ? "?? Novo"
-                : classificado.condition === "seminovo" ? "?? Seminovo"
-                : "? Usado"
+                classificado.condition === "novo" ? "Novo"
+                : classificado.condition === "seminovo" ? "Seminovo"
+                : "Usado"
               } />
               <DetailBox label="Localização" value={classificado.bairro || "-"} />
               <DetailBox label="Status" value={getClassifiedStatusLabel(classificado.status)} />
@@ -458,7 +501,8 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
                 vendedor={classificado.vendedor}
                 onWhatsApp={handleWhatsApp}
                 onChat={handleChat}
-              activeAdsCount={sellerAds.length + 1}
+                isChatLoading={startingChat}
+                activeAdsCount={sellerAds.length + 1}
               />
               <div className="mt-4">
                 <SafetyTips />

@@ -3,7 +3,7 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
-import { ClassifiedsFacade } from "@/modules/classifieds/services";
+import { ClassifiedsService } from "@/modules/classifieds/services";
 import type { ClassificadoWithVendedor } from "./useClassificados";
 
 export function useSellerAds(sellerId: string | undefined, excludeId?: string) {
@@ -11,7 +11,7 @@ export function useSellerAds(sellerId: string | undefined, excludeId?: string) {
     queryKey: ["seller-ads", sellerId],
     queryFn: async () => {
       if (!sellerId) return [];
-      const data = await ClassifiedsFacade.queries.getClassifiedsBySeller(sellerId);
+      const data = await ClassifiedsService.queries.getClassifiedsBySeller(sellerId);
       return data
         .filter((item) => item.id !== excludeId)
         .map((item) => ({
@@ -46,4 +46,3 @@ export function useSellerAds(sellerId: string | undefined, excludeId?: string) {
     isLoading: query.isLoading,
   };
 }
-

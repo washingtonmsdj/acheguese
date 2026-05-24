@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { getCategoryFields, hasCategoryFields } from "@/modules/classifieds/constants/category-fields";
-import { getCategoryLabel, getCategoryEmoji } from "@/modules/classifieds/constants/categories";
+import { getCategoryLabel } from "@/modules/classifieds/constants/categories";
 
 interface CategoryFieldsStepProps {
   category: string;
@@ -39,7 +39,6 @@ export function CategoryFieldsStep({ category, details, onChange }: CategoryFiel
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 mb-1">
-        <span className="text-lg">{getCategoryEmoji(category)}</span>
         <h3 className="text-sm font-semibold text-foreground">
           Detalhes de {getCategoryLabel(category)}
         </h3>

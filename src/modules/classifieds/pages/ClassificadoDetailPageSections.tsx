@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { MapPin, MessageCircle, Package, Phone, Shield } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
-import { getCategoryEmoji } from "@/modules/classifieds/constants/categories";
+import { CLASSIFIED_STATUS, type ClassifiedStatusValue } from "@/modules/classifieds/constants/statuses";
 import { cn } from "@/shared/utils/cn";
 import { getClassifiedStatusLabel } from "./ClassificadoDetailStatus";
 
@@ -30,13 +30,13 @@ export function ClassifiedStatusOwnerPanel({
 }: {
   status?: string;
   isPending: boolean;
-  onStatusChange: (status: "active" | "inactive" | "sold") => void;
+  onStatusChange: (status: ClassifiedStatusValue) => void;
 }) {
   return (
     <div className="rounded-2xl border border-border bg-card p-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-sm font-bold text-foreground">Status do anuncio</p>
+          <p className="text-sm font-bold text-foreground">Status do anúncio</p>
           <p className="text-xs text-muted-foreground">
             Atual: {getClassifiedStatusLabel(status)}
           </p>
@@ -46,8 +46,8 @@ export function ClassifiedStatusOwnerPanel({
             type="button"
             size="sm"
             variant="outline"
-            disabled={isPending || status === "inactive"}
-            onClick={() => onStatusChange("inactive")}
+            disabled={isPending || status === CLASSIFIED_STATUS.INACTIVE}
+            onClick={() => onStatusChange(CLASSIFIED_STATUS.INACTIVE)}
           >
             Pausar
           </Button>
@@ -55,16 +55,16 @@ export function ClassifiedStatusOwnerPanel({
             type="button"
             size="sm"
             variant="outline"
-            disabled={isPending || status === "active"}
-            onClick={() => onStatusChange("active")}
+            disabled={isPending || status === CLASSIFIED_STATUS.ACTIVE}
+            onClick={() => onStatusChange(CLASSIFIED_STATUS.ACTIVE)}
           >
             Reativar
           </Button>
           <Button
             type="button"
             size="sm"
-            disabled={isPending || status === "sold"}
-            onClick={() => onStatusChange("sold")}
+            disabled={isPending || status === CLASSIFIED_STATUS.SOLD}
+            onClick={() => onStatusChange(CLASSIFIED_STATUS.SOLD)}
           >
             Marcar vendido
           </Button>
@@ -78,11 +78,13 @@ export function SellerCard({
   vendedor,
   onWhatsApp,
   onChat,
+  isChatLoading = false,
   activeAdsCount,
 }: {
   vendedor: any;
   onWhatsApp: () => void;
   onChat: () => void;
+  isChatLoading?: boolean;
   activeAdsCount: number;
 }) {
   return (
@@ -104,7 +106,7 @@ export function SellerCard({
           </div>
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <Package className="h-3 w-3" />
-            <span>{activeAdsCount} anuncio{activeAdsCount === 1 ? "" : "s"} ativo{activeAdsCount === 1 ? "" : "s"}</span>
+            <span>{activeAdsCount} anúncio{activeAdsCount === 1 ? "" : "s"} ativo{activeAdsCount === 1 ? "" : "s"}</span>
           </div>
         </div>
       </div>
@@ -117,9 +119,9 @@ export function SellerCard({
           <Phone className="h-4 w-4 mr-2" />
           WhatsApp
         </Button>
-        <Button onClick={onChat} variant="outline" className="w-full h-11 rounded-xl font-bold">
+        <Button onClick={onChat} variant="outline" className="w-full h-11 rounded-xl font-bold" disabled={isChatLoading}>
           <MessageCircle className="h-4 w-4 mr-2" />
-          Chat
+          {isChatLoading ? "Abrindo..." : "Chat"}
         </Button>
       </div>
     </motion.div>
@@ -160,8 +162,8 @@ export function MiniAdCard({ ad, index, onClick }: { ad: any; index: number; onC
         {ad.fotos?.[0] ? (
           <img src={ad.fotos[0]} alt={ad.titulo} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-3xl bg-gradient-to-br from-primary/10 to-accent/10">
-            {getCategoryEmoji(ad.categoria)}
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10">
+            <Package className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />

@@ -13,7 +13,6 @@
  * - Memoização completa
  * - Responsividade completa
  *
- * @version 2.0.0 - Redesign Completo
  * @author Kiro AI
  * @date 2026-04-15
  */

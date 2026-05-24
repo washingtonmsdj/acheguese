@@ -2,21 +2,21 @@
  * useClassificadoDetail - Hook para buscar detalhes de um classificado
  *
  * ? SSOT compliant:
- * - Usa ClassifiedsFacade
+ * - Usa ClassifiedsService
  * - TanStack Query para cache
  * - Mapper centralizado para transformação de dados
  * - Tipagem correta
  */
 
 import { useQuery } from "@tanstack/react-query";
-import { ClassifiedsFacade, mapToClassificadoWithVendedor } from "@/modules/classifieds/services";
+import { ClassifiedsService, mapToClassificadoWithVendedor } from "@/modules/classifieds/services";
 import type { ClassificadoWithVendedor } from "./useClassificados";
 
 export function useClassificadoDetail(id: string) {
   const query = useQuery<ClassificadoWithVendedor | null>({
     queryKey: ["classificado", id],
     queryFn: async () => {
-      const data = await ClassifiedsFacade.queries.getClassifiedById(id);
+      const data = await ClassifiedsService.queries.getClassifiedById(id);
 
       if (!data) return null;
 
@@ -32,4 +32,3 @@ export function useClassificadoDetail(id: string) {
     refetch: query.refetch,
   };
 }
-

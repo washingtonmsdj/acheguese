@@ -43,7 +43,7 @@ export function useClassifiedUrls(routeResolved?: ResolvedTerritory | null): Cla
   
   if (routeResolved) {
     if (routeResolved.kind === 'group') {
-      // Grupo: /classificados/ba/salvador/area/complexo-do-nordeste-de-amaralina
+      // Grupo: /classificados/ba/salvador/complexo-do-nordeste-de-amaralina
       const firstMember = routeResolved.group.members[0];
       if (firstMember?.geographic_path) {
         const parts = firstMember.geographic_path.split('/').filter(Boolean);

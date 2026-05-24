@@ -1,4 +1,4 @@
-﻿/**
+/**
  * HorizontalSection - Seção horizontal scrollável de anúncios
  * 
  * SSOT: Componente reutilizável para seções horizontais

@@ -56,8 +56,8 @@ export function ClassifiedCommentsSection({
   const isBusy = createMutation.isPending || deleteMutation.isPending;
 
   const placeholder = useMemo(() => {
-    if (!canPost) return "Entre para fazer uma pergunta publica sobre este anuncio.";
-    return "Escreva uma pergunta ou comentario publico para o vendedor...";
+    if (!canPost) return "Entre para fazer uma pergunta pública sobre este anúncio.";
+    return "Escreva uma pergunta ou comentário público para o vendedor...";
   }, [canPost]);
 
   const handleSubmit = async () => {
@@ -65,8 +65,8 @@ export function ClassifiedCommentsSection({
     if (!trimmed) return;
     if (!activeProfile?.id) {
       toast({
-        title: "Login necessario",
-        description: "Entre para comentar no anuncio.",
+        title: "Login necessário",
+        description: "Entre para comentar no anúncio.",
         variant: "destructive",
       });
       return;
@@ -78,10 +78,10 @@ export function ClassifiedCommentsSection({
         content: trimmed,
       });
       setContent("");
-      toast({ title: "Comentario publicado" });
+      toast({ title: "Comentário publicado" });
     } catch {
       toast({
-        title: "Erro ao publicar comentario",
+        title: "Erro ao publicar comentário",
         description: "Tente novamente em instantes.",
         variant: "destructive",
       });
@@ -95,10 +95,10 @@ export function ClassifiedCommentsSection({
         commentId,
         authorProfileId: activeProfile.id,
       });
-      toast({ title: "Comentario removido" });
+      toast({ title: "Comentário removido" });
     } catch {
       toast({
-        title: "Erro ao remover comentario",
+        title: "Erro ao remover comentário",
         description: "Tente novamente em instantes.",
         variant: "destructive",
       });
@@ -116,8 +116,8 @@ export function ClassifiedCommentsSection({
 
     if (!activeProfile?.id) {
       toast({
-        title: "Login necessario",
-        description: "Entre para denunciar comentarios deste anuncio.",
+        title: "Login necessário",
+        description: "Entre para denunciar comentários deste anúncio.",
         variant: "destructive",
       });
       return;
@@ -125,8 +125,8 @@ export function ClassifiedCommentsSection({
 
     if (activeProfile.id === comment.author_profile_id) {
       toast({
-        title: "Acao invalida",
-        description: "Voce nao pode denunciar o proprio comentario.",
+        title: "Ação inválida",
+        description: "Você não pode denunciar o próprio comentário.",
         variant: "destructive",
       });
       return;
@@ -156,13 +156,13 @@ export function ClassifiedCommentsSection({
 
       if (!response.created) {
         toast({
-          title: "Denuncia ja registrada",
-          description: "Este comentario ja esta em analise na moderacao.",
+          title: "Denúncia já registrada",
+          description: "Este comentário já está em análise na moderação.",
         });
       } else {
         toast({
-          title: "Denuncia registrada",
-          description: "Nossa equipe vai analisar este comentario.",
+          title: "Denúncia registrada",
+          description: "Nossa equipe vai analisar este comentário.",
         });
       }
 
@@ -172,7 +172,7 @@ export function ClassifiedCommentsSection({
       setReportDescription("");
     } catch {
       toast({
-        title: "Erro ao denunciar comentario",
+        title: "Erro ao denunciar comentário",
         description: "Tente novamente em instantes.",
         variant: "destructive",
       });
@@ -185,7 +185,7 @@ export function ClassifiedCommentsSection({
     <section className="mt-10 rounded-2xl border border-border bg-card p-5">
       <div className="mb-4 flex items-center gap-2">
         <MessageCircle className="h-4 w-4 text-primary" />
-        <h2 className="text-base font-bold text-foreground">Perguntas e comentarios</h2>
+        <h2 className="text-base font-bold text-foreground">Perguntas e comentários</h2>
       </div>
 
       <div className="mb-4 space-y-2">
@@ -199,7 +199,7 @@ export function ClassifiedCommentsSection({
         />
         <div className="flex items-center justify-between">
           <p className="text-xs text-muted-foreground">
-            Conversa publica visivel para o bairro.
+            Conversa pública visível para o bairro.
           </p>
           <Button
             type="button"
@@ -215,12 +215,12 @@ export function ClassifiedCommentsSection({
 
       <div className="space-y-3">
         {commentsQuery.isLoading && (
-          <p className="text-sm text-muted-foreground">Carregando comentarios...</p>
+          <p className="text-sm text-muted-foreground">Carregando comentários...</p>
         )}
 
         {!commentsQuery.isLoading && comments.length === 0 && (
           <p className="text-sm text-muted-foreground">
-            Ainda nao ha comentarios. Seja o primeiro a perguntar.
+            Ainda não há comentários. Seja o primeiro a perguntar.
           </p>
         )}
 
@@ -262,8 +262,8 @@ export function ClassifiedCommentsSection({
                       disabled={isBusy || isReported}
                       title={
                         isReported
-                          ? "Comentario ja denunciado por voce."
-                          : "Denunciar comentario"
+                          ? "Comentário já denunciado por você."
+                          : "Denunciar comentário"
                       }
                     >
                       <Flag className="h-3.5 w-3.5" />
@@ -273,7 +273,7 @@ export function ClassifiedCommentsSection({
               </div>
               {isReported && (
                 <p className="mb-1 text-xs text-amber-600">
-                  Denuncia enviada por voce. Em analise.
+                  Denúncia enviada por você. Em análise.
                 </p>
               )}
               <p className="whitespace-pre-wrap text-sm text-muted-foreground">
@@ -292,9 +292,9 @@ export function ClassifiedCommentsSection({
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Denunciar comentario</DialogTitle>
+            <DialogTitle>Denunciar comentário</DialogTitle>
             <DialogDescription>
-              Essa denuncia gera um evento privado para moderacao administrativa.
+              Essa denúncia gera um evento privado para moderação administrativa.
             </DialogDescription>
           </DialogHeader>
 
@@ -313,7 +313,7 @@ export function ClassifiedCommentsSection({
                   <SelectItem value="spam">Spam</SelectItem>
                   <SelectItem value="offensive">Ofensivo</SelectItem>
                   <SelectItem value="fraud">Suspeita de golpe</SelectItem>
-                  <SelectItem value="harassment">Assedio</SelectItem>
+                  <SelectItem value="harassment">Assédio</SelectItem>
                   <SelectItem value="other">Outro</SelectItem>
                 </SelectContent>
               </Select>
@@ -327,7 +327,7 @@ export function ClassifiedCommentsSection({
                 id="classified-comment-report-description"
                 value={reportDescription}
                 onChange={(event) => setReportDescription(event.target.value)}
-                placeholder="Descreva rapidamente o problema para ajudar a moderacao."
+                placeholder="Descreva rapidamente o problema para ajudar a moderação."
                 maxLength={600}
                 disabled={submittingReport}
               />
@@ -344,7 +344,7 @@ export function ClassifiedCommentsSection({
               Cancelar
             </Button>
             <Button type="button" onClick={handleReport} disabled={submittingReport}>
-              {submittingReport ? "Enviando..." : "Enviar denuncia"}
+              {submittingReport ? "Enviando..." : "Enviar denúncia"}
             </Button>
           </DialogFooter>
         </DialogContent>

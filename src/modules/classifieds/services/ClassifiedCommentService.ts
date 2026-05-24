@@ -1,4 +1,4 @@
-﻿import { supabase } from "@/core/infrastructure/supabase";
+import { supabase } from "@/core/infrastructure/supabase";
 import { logger } from "@/shared/utils/logger";
 import {
   TRUST_ACTOR_ROLES,
@@ -168,7 +168,7 @@ class ClassifiedCommentService {
       visibility: TRUST_VISIBILITIES.PRIVATE,
       description:
         input.description ??
-        "Comentario/pergunta de classificado denunciado para revisao administrativa.",
+        "Comentário/pergunta de classificado denunciado para revisão administrativa.",
       evidence: {
         comment_id: input.commentId,
         ...(input.evidence ?? {}),
@@ -185,4 +185,3 @@ class ClassifiedCommentService {
 }
 
 export const classifiedCommentService = new ClassifiedCommentService();
-

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * VagasFiltrosSection - Filtros e busca de vagas
  * 
  * SSOT: Section modular

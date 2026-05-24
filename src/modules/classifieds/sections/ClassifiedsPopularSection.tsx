@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ClassifiedsPopularSection - Anúncios mais procurados
  * 
  * SSOT: Section modular e reutilizável

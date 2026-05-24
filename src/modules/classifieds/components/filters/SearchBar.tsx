@@ -1,4 +1,4 @@
-﻿/**
+/**
  * SearchBar - Barra de busca com filtros avançados
  * 
  * SSOT: Componente reutilizável de busca e filtros

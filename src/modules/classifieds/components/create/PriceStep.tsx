@@ -31,28 +31,31 @@ export function PriceStep({
     <div className="space-y-4">
       {/* Price Type Selector */}
       <div className="grid grid-cols-2 gap-2">
-        {PRICE_TYPES.map((pt) => (
-          <button
-            key={pt.id}
-            type="button"
-            onClick={() => {
-              onPriceTypeChange(pt.id);
-              if (!pt.showInput) onPriceChange("0");
-            }}
-            className={cn(
-              "flex items-center gap-2 p-3 rounded-xl border text-left transition-all",
-              priceType === pt.id
-                ? "bg-primary/10 border-primary text-primary shadow-sm"
-                : "bg-card border-border text-foreground hover:border-primary/30"
-            )}
-          >
-            <span className="text-lg">{pt.icon}</span>
-            <div>
-              <span className="text-xs font-semibold block">{pt.label}</span>
-              <span className="text-[10px] text-muted-foreground">{pt.description}</span>
-            </div>
-          </button>
-        ))}
+        {PRICE_TYPES.map((pt) => {
+          const PriceTypeIcon = pt.icon;
+          return (
+            <button
+              key={pt.id}
+              type="button"
+              onClick={() => {
+                onPriceTypeChange(pt.id);
+                if (!pt.showInput) onPriceChange("0");
+              }}
+              className={cn(
+                "flex items-center gap-2 p-3 rounded-xl border text-left transition-all",
+                priceType === pt.id
+                  ? "bg-primary/10 border-primary text-primary shadow-sm"
+                  : "bg-card border-border text-foreground hover:border-primary/30"
+              )}
+            >
+              <PriceTypeIcon className="h-4 w-4 shrink-0" />
+              <div>
+                <span className="text-xs font-semibold block">{pt.label}</span>
+                <span className="text-[10px] text-muted-foreground">{pt.description}</span>
+              </div>
+            </button>
+          );
+        })}
       </div>
 
       {/* Price Input */}

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * VagasFooterSection - Stats, Como Funciona e CTA
  * 
  * SSOT: Section modular

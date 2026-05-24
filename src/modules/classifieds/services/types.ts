@@ -1,10 +1,9 @@
-﻿/**
+/**
  * 📦 CLASSIFIEDS TYPES - SSOT Type Definitions
  *
  * Tipagens centrais do módulo de classificados.
  * SSOT para estrutura de dados.
  *
- * @version 2.0.0
  */
 
 /**

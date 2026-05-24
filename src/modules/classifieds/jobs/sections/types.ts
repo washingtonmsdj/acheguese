@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Types compartilhados para as sections de Vagas
  * 
  * SSOT: Todas as sections recebem props tipadas e validadas

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ClassifiedCard - Card de anúncio classificado
  * 
  * SSOT: Componente reutilizável para exibir anúncios

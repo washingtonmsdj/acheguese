@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ═══════════════════════════════════════════════════════════════════════════════
  * VAGAS SERVICE — SSOT NÍVEL AAA
  * ═══════════════════════════════════════════════════════════════════════════════
@@ -386,7 +386,7 @@ export class VagasService {
         if (this.isMissingColumnError(error)) {
           this.urgenciaColumnAvailable = false;
           logger.warn(
-            '[VagasService] Coluna urgencia nao encontrada. Aplicar migration 20260417100000_fix_vagas_urgencia_highlight.sql',
+            '[VagasService] Coluna urgência não encontrada. Aplicar migration 20260417100000_fix_vagas_urgencia_highlight.sql',
           );
           return this.getRecentByLocation(locationId, limit);
         }
@@ -426,7 +426,7 @@ export class VagasService {
         if (this.isMissingColumnError(error)) {
           this.highlightTypeColumnAvailable = false;
           logger.warn(
-            '[VagasService] Coluna highlight_type nao encontrada. Aplicar migration 20260417100000_fix_vagas_urgencia_highlight.sql',
+            '[VagasService] Coluna highlight_type não encontrada. Aplicar migration 20260417100000_fix_vagas_urgencia_highlight.sql',
           );
           return this.getRecentByLocation(locationId, limit);
         }
@@ -782,5 +782,4 @@ export class VagasService {
 
 // Export singleton
 export const vagasService = VagasService;
-
 

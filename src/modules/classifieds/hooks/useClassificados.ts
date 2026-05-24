@@ -1,6 +1,6 @@
 import { logger } from '@/shared/utils/logger';
 import { useQuery } from "@tanstack/react-query";
-import { ClassifiedsFacade, mapToClassificadoList } from "@/modules/classifieds/services";
+import { ClassifiedsService, mapToClassificadoList } from "@/modules/classifieds/services";
 import {
   useModuleTerritoryFilter,
   type ModuleTerritoryUiFilter,
@@ -85,7 +85,7 @@ export function useClassificados(options: UseClassificadosOptions = {}) {
 
       try {
         // Passa o filtro territorial para o service — query real no backend
-        const data = await ClassifiedsFacade.queries.getAllClassifieds(filter);
+        const data = await ClassifiedsService.queries.getAllClassifieds(filter);
 
         // Filtros locais de UI (categoria, busca, preço)
         let filtered = data;
@@ -133,5 +133,3 @@ export function useClassificados(options: UseClassificadosOptions = {}) {
     hasTerritory: filterReady,
   };
 }
-
-

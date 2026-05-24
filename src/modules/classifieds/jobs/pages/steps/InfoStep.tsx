@@ -7,7 +7,7 @@ import { JOB_FORM_LIMITS } from "../../constants/form-limits";
 import type { VagaContrato, VagaModalidade, VagaNivel } from "../../types/vagas.types";
 import { FormField, SelectionPills } from "./shared";
 
-type FormCategory = { id: string; label: string; emoji: string };
+type FormCategory = { id: string; label: string };
 
 export interface InfoStepProps {
   errors: Record<string, string>;
@@ -135,7 +135,6 @@ export function InfoStep(props: InfoStepProps) {
                   : "bg-card border-border text-foreground hover:border-primary/30",
               )}
             >
-              <span className="text-xl">{cat.emoji}</span>
               <span className="text-[10px] font-semibold leading-tight">{cat.label}</span>
             </button>
           ))}

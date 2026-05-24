@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ActiveFilterChip - Chip de filtro ativo com botão de remoção
  * 
  * SSOT: Componente reutilizável

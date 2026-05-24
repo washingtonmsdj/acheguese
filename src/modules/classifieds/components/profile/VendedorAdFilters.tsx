@@ -100,7 +100,7 @@ export function VendedorAdFilters({
                   : "bg-secondary/50 text-muted-foreground border-border hover:border-primary/30"
               )}
             >
-              {cat.emoji} {cat.label}
+              {cat.label}
             </button>
           ))}
         </div>

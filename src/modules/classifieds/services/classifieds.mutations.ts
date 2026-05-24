@@ -1,10 +1,9 @@
-﻿/**
- * ðŸ“¦ CLASSIFIEDS MUTATIONS - SSOT Write Model
+/**
+ *  CLASSIFIEDS MUTATIONS - SSOT Write Model
  *
- * Todas as operaÃ§Ãµes de escrita para classificados.
- * CriaÃ§Ã£o, atualizaÃ§Ã£o, exclusÃ£o (soft delete).
+ *  Todas as operacoes de escrita para classificados.
+ *  Criao, atualizao, excluso (soft delete).
  *
- * @version 2.0.0 - ExtraÃ­do de ClassifiedService.impl.ts
  */
 
 import { supabase } from "@/core/infrastructure/supabase";
@@ -34,43 +33,43 @@ function mapMutationClassified(data: Record<string, unknown>): ClassifiedData {
   };
 }
 
-// ============================================================
-// HELPERS INTERNOS
-// ============================================================
+//  ============================================================
+//  HELPERS INTERNOS
+//  ============================================================
 
 /**
- * Gera slug a partir do tÃ­tulo (importado dinamicamente do ClassifiedUrlService)
+ *  Gera slug a partir do ttulo (importado dinamicamente do ClassifiedUrlService)
  */
 async function generateSlug(title: string): Promise<string> {
   return slugify(title);
 }
 
-// ============================================================
-// MUTATIONS - CRUD
-// ============================================================
+//  ============================================================
+//  MUTATIONS - CRUD
+//  ============================================================
 
 /**
- * Cria um novo classificado
+ *  Cria um novo classificado
  */
 export async function createClassified(
   userId: string,
   input: CreateClassifiedInput,
 ): Promise<ClassifiedData> {
   try {
-    // Gera slug automaticamente a partir do tÃ­tulo
+    //  Gera slug automaticamente a partir do ttulo
     const slug = await generateSlug(input.title);
 
     const { data, error } = await supabase
       .from("classifieds")
       .insert({
         ...input,
-        slug, // âœ… Slug gerado automaticamente
+        slug, //  Slug gerado automaticamente
         seller_id: userId,
-        status: CLASSIFIED_STATUS.ACTIVE, // Define status ao invÃ©s de is_active (que Ã© computed)
+        status: CLASSIFIED_STATUS.ACTIVE, //  Define status ao invs de is_active (que computed)
       })
       .select(
         `
-        *,
+        * ,
         seller:profiles!seller_id (
           id,
           name,
@@ -99,7 +98,7 @@ export async function createClassified(
 }
 
 /**
- * Atualiza um classificado
+ *  Atualiza um classificado
  */
 export async function updateClassified(
   id: string,
@@ -111,10 +110,10 @@ export async function updateClassified(
       .from("classifieds")
       .update(input)
       .eq("id", id)
-      .eq("seller_id", userId) // SÃ³ o vendedor pode atualizar
+      .eq("seller_id", userId) //  S o vendedor pode atualizar
       .select(
         `
-        *,
+        * ,
         seller:profiles!seller_id (
           id,
           name,
@@ -143,15 +142,15 @@ export async function updateClassified(
 }
 
 /**
- * Deleta um classificado (soft delete - marca como inativo)
+ *  Deleta um classificado (soft delete - marca como inativo)
  */
 export async function deleteClassified(id: string, userId: string): Promise<boolean> {
   try {
     const { error } = await supabase
       .from("classifieds")
-      .update({ status: CLASSIFIED_STATUS.INACTIVE }) // Atualiza status ao invÃ©s de is_active (que Ã© computed)
+      .update({ status: CLASSIFIED_STATUS.INACTIVE }) //  Atualiza status ao invs de is_active (que computed)
       .eq("id", id)
-      .eq("seller_id", userId); // SÃ³ o vendedor pode deletar
+      .eq("seller_id", userId); //  S o vendedor pode deletar
 
     if (error) {
       logger.error("Error deleting classified:", error);
@@ -169,12 +168,12 @@ export async function deleteClassified(id: string, userId: string): Promise<bool
   }
 }
 
-// ============================================================
-// MUTATIONS - STATUS MANAGEMENT
-// ============================================================
+//  ============================================================
+//  MUTATIONS - STATUS MANAGEMENT
+//  ============================================================
 
 /**
- * Marca um classificado como vendido
+ *  Marca um classificado como vendido
  */
 export async function markAsSold(
   id: string,
@@ -188,7 +187,7 @@ export async function markAsSold(
       .eq("seller_id", userId)
       .select(
         `
-        *,
+        * ,
         seller:profiles!seller_id (
           id,
           name,
@@ -217,7 +216,7 @@ export async function markAsSold(
 }
 
 /**
- * Reativa um classificado inativo
+ *  Reativa um classificado inativo
  */
 export async function reactivateClassified(
   id: string,
@@ -231,7 +230,7 @@ export async function reactivateClassified(
       .eq("seller_id", userId)
       .select(
         `
-        *,
+        * ,
         seller:profiles!seller_id (
           id,
           name,
@@ -258,6 +257,3 @@ export async function reactivateClassified(
     throw error;
   }
 }
-
-
-

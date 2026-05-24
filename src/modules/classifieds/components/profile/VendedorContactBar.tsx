@@ -17,6 +17,8 @@ import { toast } from "sonner";
 import { useAuth } from "@/core/auth";
 import { messagingService } from "@/core/messaging";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
+import { buildWhatsAppUrl } from "@/shared/utils/contactLinks";
+import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
 
 interface VendedorContactBarProps {
   vendedorId: string;
@@ -43,34 +45,33 @@ export function VendedorContactBar({
 
   const handleWhatsApp = () => {
     if (!whatsappNumber) {
-      toast.info("Este vendedor nao informou WhatsApp.");
+      toast.info("Este vendedor não informou WhatsApp.");
       return;
     }
 
-    const cleaned = whatsappNumber.replace(/\D/g, "");
-    const fullNumber = cleaned.startsWith("55") ? cleaned : `55${cleaned}`;
-    const text = encodeURIComponent(
-      `Ola ${vendedorName}! Vi seu perfil nos classificados e gostaria de saber mais sobre seus anuncios.`,
-    );
+    const text = `Olá ${vendedorName}! Vi seu perfil nos classificados e gostaria de saber mais sobre seus anúncios.`;
+    const url = buildWhatsAppUrl(whatsappNumber, text);
 
-    window.open(`https://wa.me/${fullNumber}?text=${text}`, "_blank");
+    if (url) {
+      openSafeExternalUrl(url, { context: "classified-seller-whatsapp" });
+    }
   };
 
   const handleSendMessage = async () => {
     if (!message.trim()) return;
 
     if (!user?.id) {
-      toast.error("Faca login para enviar mensagens.");
+      toast.error("Faça login para enviar mensagens.");
       return;
     }
 
     if (user.id === vendedorId) {
-      toast.info("Voce nao pode enviar mensagem para o proprio perfil.");
+      toast.info("Você não pode enviar mensagem para o próprio perfil.");
       return;
     }
 
     if (!initialClassifiedId) {
-      toast.info("Abra um anuncio deste vendedor para iniciar conversa.");
+      toast.info("Abra um anúncio deste vendedor para iniciar conversa.");
       return;
     }
 
@@ -82,7 +83,7 @@ export function VendedorContactBar({
       );
 
       if (!conversation?.id) {
-        toast.error("Nao foi possivel iniciar conversa agora.");
+        toast.error("Não foi possível iniciar conversa agora.");
         return;
       }
 
@@ -132,7 +133,7 @@ export function VendedorContactBar({
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder={`Ola ${vendedorName}, tenho interesse nos seus anuncios...`}
+              placeholder={`Olá ${vendedorName}, tenho interesse nos seus anúncios...`}
               className="min-h-[120px] w-full resize-none rounded-xl border border-border bg-secondary/30 p-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
               autoFocus
             />

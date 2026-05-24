@@ -1,4 +1,4 @@
-﻿/**
+/**
  * VagaDetailPage — Página pública de detalhe de vaga
  * Estilo consistente com ClassificadoDetailLandingPage
  */
@@ -22,6 +22,8 @@ import { useVagas } from "../hooks/useVagas";
 import { VagaCardEnhanced } from "../components/VagaCardEnhanced";
 import { useVagasLocation } from "../hooks/useVagasLocation";
 import { CONTRATO_LABELS, MODALIDADE_LABELS, NIVEL_LABELS } from "../types/vagas.types";
+import { buildMailtoUrl, buildTelUrl, openContactUrl } from "@/shared/utils/contactLinks";
+import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -70,14 +72,7 @@ export default function VagaDetailPage() {
 
   const vaga = id ? getVagaById(id) : undefined;
   const relatedVagas = vaga ? getRelatedVagas(vaga) : [];
-  const vagaLegacy = vaga as typeof vaga & {
-    contatoWhatsapp?: string;
-    contatoEmail?: string;
-    contatoUrl?: string;
-    empresa?: string;
-    destaque?: boolean;
-  };
-  const companyName = vagaLegacy?.empresa ?? vaga?.empresaNome ?? "Empresa";
+  const companyName = vaga.empresaNome || "Empresa";
 
   // ── LOADING ──
   if (isLoading) {
@@ -125,8 +120,9 @@ export default function VagaDetailPage() {
   }
 
   // ── Derived data ──
-  const whatsappUrl = vagaLegacy?.contatoWhatsapp
-    ? `https://wa.me/55${vagaLegacy.contatoWhatsapp}?text=${encodeURIComponent(`Olá! Vi a vaga "${vaga.titulo}" e tenho interesse. Podemos conversar?`)}`
+  const whatsappNumber = vaga.applicationWhatsapp?.replace(/\D/g, "");
+  const whatsappUrl = whatsappNumber
+    ? `https://wa.me/55${whatsappNumber}?text=${encodeURIComponent(`Olá! Vi a vaga "${vaga.titulo}" e tenho interesse. Podemos conversar?`)}`
     : null;
 
   return (
@@ -202,7 +198,7 @@ export default function VagaDetailPage() {
                 <GraduationCap className="h-3 w-3 mr-1" />
                 {NIVEL_LABELS[vaga.nivel]}
               </Badge>
-              {vagaLegacy?.destaque && (
+              {vaga.highlightType !== "none" && (
                 <Badge className="bg-warning/15 text-warning border-warning/30 font-semibold">
                   <Star className="h-3 w-3 mr-1" /> Destaque
                 </Badge>
@@ -314,7 +310,7 @@ export default function VagaDetailPage() {
               <div className="space-y-3">
                 {whatsappUrl && (
                   <Button
-                    onClick={() => window.open(whatsappUrl, "_blank")}
+                    onClick={() => openSafeExternalUrl(whatsappUrl, { context: "job-detail-whatsapp" })}
                     className="w-full bg-success hover:bg-success/90 text-success-foreground font-bold rounded-xl h-11"
                   >
                     <Phone className="h-4 w-4 mr-2" />
@@ -322,9 +318,15 @@ export default function VagaDetailPage() {
                   </Button>
                 )}
 
-                {vagaLegacy?.contatoEmail && (
+                {vaga.applicationEmail && (
                   <Button
-                    onClick={() => window.open(`mailto:${vagaLegacy.contatoEmail}?subject=Interesse na vaga: ${vaga.titulo}`, "_blank")}
+                    onClick={() =>
+                      openContactUrl(
+                        buildMailtoUrl(vaga.applicationEmail, {
+                          subject: `Interesse na vaga: ${vaga.titulo}`,
+                        }),
+                      )
+                    }
                     variant="outline"
                     className="w-full border-primary/30 text-primary hover:bg-primary/10 font-bold rounded-xl h-11"
                   >
@@ -333,14 +335,25 @@ export default function VagaDetailPage() {
                   </Button>
                 )}
 
-                {vagaLegacy?.contatoUrl && (
+                {vaga.applicationUrl && (
                   <Button
-                    onClick={() => window.open(vagaLegacy.contatoUrl!, "_blank")}
+                    onClick={() => openSafeExternalUrl(vaga.applicationUrl, { context: "job-detail-application-url" })}
                     variant="outline"
                     className="w-full border-border text-foreground hover:bg-secondary font-bold rounded-xl h-11"
                   >
                     <ExternalLink className="h-4 w-4 mr-2" />
                     Site da Empresa
+                  </Button>
+                )}
+
+                {vaga.applicationPhone && (
+                  <Button
+                    onClick={() => openContactUrl(buildTelUrl(vaga.applicationPhone))}
+                    variant="outline"
+                    className="w-full border-border text-foreground hover:bg-secondary font-bold rounded-xl h-11"
+                  >
+                    <Phone className="h-4 w-4 mr-2" />
+                    Ligar
                   </Button>
                 )}
               </div>

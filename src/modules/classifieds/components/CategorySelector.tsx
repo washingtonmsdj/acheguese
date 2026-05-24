@@ -28,7 +28,6 @@ export function CategorySelector({
                 : "bg-secondary text-secondary-foreground border-border hover:border-primary/30",
             )}
           >
-            <span>{cat.emoji}</span>
             {cat.label}
           </button>
         ))}

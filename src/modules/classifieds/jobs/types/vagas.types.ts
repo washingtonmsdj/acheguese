@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ═══════════════════════════════════════════════════════════════════════════════
  * VAGAS TYPES — SSOT NÍVEL AAA
  * ═══════════════════════════════════════════════════════════════════════════════
@@ -185,9 +185,7 @@ export interface Vaga {
 /** Categoria de vaga */
 export interface VagaCategoria {
   id: string;
-  label: string;
-  emoji: string;
-}
+  label: string;}
 
 /** Filtros de listagem */
 export interface VagaFilters {
@@ -254,24 +252,24 @@ export interface Candidatura {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export const VAGA_CATEGORIAS: readonly VagaCategoria[] = [
-  { id: 'tecnologia',     label: 'Tecnologia',       emoji: '💻' },
-  { id: 'saude',          label: 'Saúde',            emoji: '🏥' },
-  { id: 'educacao',       label: 'Educação',         emoji: '📚' },
-  { id: 'comercio',       label: 'Comércio',         emoji: '🛒' },
-  { id: 'alimentacao',    label: 'Alimentação',      emoji: '🍽️' },
-  { id: 'construcao',     label: 'Construção',       emoji: '🏗️' },
-  { id: 'logistica',      label: 'Logística',        emoji: '🚛' },
-  { id: 'administrativo', label: 'Administrativo', emoji: '📋' },
-  { id: 'financeiro',     label: 'Financeiro',       emoji: '💰' },
-  { id: 'marketing',      label: 'Marketing',        emoji: '📢' },
-  { id: 'vendas',         label: 'Vendas',           emoji: '🤝' },
-  { id: 'servicos-gerais', label: 'Serviços Gerais', emoji: '🔧' },
-  { id: 'turismo',        label: 'Turismo',          emoji: '✈️' },
-  { id: 'juridico',       label: 'Jurídico',         emoji: '⚖️' },
-  { id: 'industria',      label: 'Indústria',        emoji: '🏭' },
-  { id: 'rh',             label: 'RH',               emoji: '👥' },
-  { id: 'design',         label: 'Design',           emoji: '🎨' },
-  { id: 'outro',          label: 'Outros',           emoji: '📌' },
+  { id: 'tecnologia',     label: 'Tecnologia' },
+  { id: 'saude',          label: 'Saúde' },
+  { id: 'educacao',       label: 'Educação' },
+  { id: 'comercio',       label: 'Comércio' },
+  { id: 'alimentacao',    label: 'Alimentação' },
+  { id: 'construcao',     label: 'Construção' },
+  { id: 'logistica',      label: 'Logística' },
+  { id: 'administrativo', label: 'Administrativo' },
+  { id: 'financeiro',     label: 'Financeiro' },
+  { id: 'marketing',      label: 'Marketing' },
+  { id: 'vendas',         label: 'Vendas' },
+  { id: 'servicos-gerais', label: 'Serviços Gerais' },
+  { id: 'turismo',        label: 'Turismo' },
+  { id: 'juridico',       label: 'Jurídico' },
+  { id: 'industria',      label: 'Indústria' },
+  { id: 'rh',             label: 'RH' },
+  { id: 'design',         label: 'Design' },
+  { id: 'outro',          label: 'Outros' },
 ] as const;
 
 export const VAGA_STATUS_LABELS: Record<VagaStatus, string> = {

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ExpandedFilters - Painel de filtros expandidos
  * 
  * SSOT: Componente reutilizável
@@ -87,7 +87,6 @@ export function ExpandedFilters({
                   : "bg-secondary hover:bg-secondary/80"
               }`}
             >
-              <span className="mr-1">{cat.emoji}</span>
               {cat.label}
             </button>
           ))}

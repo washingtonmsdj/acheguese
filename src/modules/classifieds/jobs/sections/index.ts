@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Sections - Barrel export para todas as sections de Vagas
  * 
  * SSOT: Ponto único de exportação

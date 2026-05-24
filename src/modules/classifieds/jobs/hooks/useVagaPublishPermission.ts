@@ -1,4 +1,4 @@
-﻿import { useMemo } from "react";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSessionContext } from "@/core/session";
 import { useVagasLocation } from "./useVagasLocation";

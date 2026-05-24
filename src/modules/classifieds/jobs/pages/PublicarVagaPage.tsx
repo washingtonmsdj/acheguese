@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 📝 PUBLICAR VAGA PAGE — Formulário completo multi-step
  *
  * ✅ 6 seções: Informações → Detalhes → Salário → Localização → Contato → Revisão

@@ -32,9 +32,9 @@ export function StatusSelector({
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value={ALERT_STATUS.ACTIVE}>✅ Disponível</SelectItem>
-          <SelectItem value="reservado">⏳ Reservado</SelectItem>
-          <SelectItem value="vendido">🏷️ Vendido</SelectItem>
+          <SelectItem value={ALERT_STATUS.ACTIVE}>Disponível</SelectItem>
+          <SelectItem value="reservado">Reservado</SelectItem>
+          <SelectItem value="vendido">Vendido</SelectItem>
         </SelectContent>
       </Select>
     </div>

@@ -8,11 +8,9 @@ import {
   CheckCircle2,
   Phone,
   MessageCircle,
-  Calendar,
-  Tag,
 } from "lucide-react";
-import { getCategoryEmoji, getCategoryLabel } from "@/modules/classifieds/constants/categories";
-import { getSubcategoryLabel, getSubcategoryEmoji } from "@/modules/classifieds/constants/subcategories";
+import { getCategoryLabel } from "@/modules/classifieds/constants/categories";
+import { getSubcategoryLabel } from "@/modules/classifieds/constants/subcategories";
 import { getPriceTypeLabel } from "@/modules/classifieds/constants/price-types";
 import { getCategoryFields } from "@/modules/classifieds/constants/category-fields";
 
@@ -92,15 +90,15 @@ export function PreviewStep({
           {/* Tags */}
           <div className="flex gap-2 flex-wrap">
             <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-primary/10 text-primary border border-primary/20">
-              {getCategoryEmoji(category)} {getCategoryLabel(category)}
+              {getCategoryLabel(category)}
             </span>
             {subcategory && (
               <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-primary/5 text-primary border border-primary/10">
-                {getSubcategoryEmoji(category, subcategory)} {getSubcategoryLabel(category, subcategory)}
+                {getSubcategoryLabel(category, subcategory)}
               </span>
             )}
             <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-secondary text-secondary-foreground border border-border">
-              {condition === "novo" ? "✨ Novo" : condition === "seminovo" ? "👍 Seminovo" : "📦 Usado"}
+              {condition === "novo" ? "Novo" : condition === "seminovo" ? "Seminovo" : "Usado"}
             </span>
             <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-accent text-accent-foreground border border-border">
               {getPriceTypeLabel(priceType)}

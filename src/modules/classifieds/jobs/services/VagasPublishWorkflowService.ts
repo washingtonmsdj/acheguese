@@ -146,7 +146,7 @@ export class VagasPublishWorkflowService {
         },
       });
     } catch (feedError) {
-      console.warn("[VagasPublishWorkflowService] Nao foi possivel distribuir vaga no feed", feedError);
+      console.warn("[VagasPublishWorkflowService] Não foi possível distribuir vaga no feed", feedError);
     }
 
     try {
@@ -159,7 +159,7 @@ export class VagasPublishWorkflowService {
         actorUserId: context.actorUserId ?? null,
       });
     } catch (matchingError) {
-      console.warn("[VagasPublishWorkflowService] Nao foi possivel notificar matching da vaga", matchingError);
+      console.warn("[VagasPublishWorkflowService] Não foi possível notificar matching da vaga", matchingError);
     }
 
     return createdVaga;

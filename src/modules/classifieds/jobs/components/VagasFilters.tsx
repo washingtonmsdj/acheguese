@@ -1,4 +1,4 @@
-﻿/**
+/**
  * VagasFilters — Painel de filtros para vagas
  */
 
@@ -78,7 +78,6 @@ export function VagasFilters({
                 : "bg-card border-border text-muted-foreground hover:border-primary/30"
             }`}
           >
-            <span>{cat.emoji}</span>
             {cat.label}
           </button>
         ))}

@@ -1,5 +1,5 @@
 import React from "react";
-import { Award, Clock } from "lucide-react";
+import { Award, Clock, Lightbulb } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Switch } from "@/shared/components/ui/switch";
 import { Input } from "@/shared/components/ui/input";
@@ -60,8 +60,9 @@ export function SalaryStep({
               />
             </div>
           </FormField>
-          <p className="text-xs text-muted-foreground px-1">
-            💡 Vagas com salário informado recebem até 3x mais candidaturas
+          <p className="flex items-start gap-1.5 text-xs text-muted-foreground px-1">
+            <Lightbulb className="h-3.5 w-3.5 mt-0.5 shrink-0" aria-hidden="true" />
+            <span>Vagas com salário informado recebem até 3x mais candidaturas</span>
           </p>
         </div>
       )}

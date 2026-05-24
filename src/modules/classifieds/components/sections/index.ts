@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Barrel export para sections components de Classificados
  */
 

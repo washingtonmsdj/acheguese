@@ -1,8 +1,8 @@
-﻿/**
- * ClassifiedReportService - ServiÃ§o de denÃºncias de classificados
- * 
- * Gerencia denÃºncias de anÃºncios suspeitos ou inadequados.
- * Armazena em classified_reports e notifica administradores.
+/**
+ *  ClassifiedReportService - Servio de denncias de classificados
+ *
+ *  Gerencia denncias de anncios suspeitos ou inadequados.
+ *  Armazena em classified_reports e notifica administradores.
  */
 
 import { supabase } from "@/core/infrastructure/supabase";
@@ -55,7 +55,7 @@ function mapReport(row: Record<string, unknown>): ClassifiedReport {
 
 class ClassifiedReportServiceClass {
   /**
-   * Cria uma nova denÃºncia
+   *  Cria uma nova denncia
    */
   async createReport(
     userId: string | null,
@@ -97,7 +97,7 @@ class ClassifiedReportServiceClass {
   }
 
   /**
-   * Busca todas as denÃºncias (admin)
+   *  Busca todas as denncias (admin)
    */
   async getAllReports(filters?: {
     status?: string;
@@ -107,7 +107,7 @@ class ClassifiedReportServiceClass {
       let query = supabase
         .from("classified_reports")
         .select(`
-          *,
+          * ,
           classified:classifieds(id, title, seller_id),
           reporter:profiles!reporter_id(id, name, avatar_url)
         `)
@@ -140,14 +140,14 @@ class ClassifiedReportServiceClass {
   }
 
   /**
-   * Busca denÃºncias de um classificado especÃ­fico
+   *  Busca denncias de um classificado especfico
    */
   async getReportsByClassified(classifiedId: string): Promise<ClassifiedReport[]> {
     try {
       const { data, error } = await supabase
         .from("classified_reports")
         .select(`
-          *,
+          * ,
           reporter:profiles!reporter_id(id, name, avatar_url)
         `)
         .eq("classified_id", classifiedId)
@@ -170,7 +170,7 @@ class ClassifiedReportServiceClass {
   }
 
   /**
-   * Atualiza status de uma denÃºncia (admin)
+   *  Atualiza status de uma denncia (admin)
    */
   async updateReportStatus(
     reportId: string,
@@ -214,7 +214,7 @@ class ClassifiedReportServiceClass {
   }
 
   /**
-   * Conta denÃºncias pendentes (admin dashboard)
+   *  Conta denncias pendentes (admin dashboard)
    */
   async getPendingReportsCount(): Promise<number> {
     try {
@@ -236,14 +236,14 @@ class ClassifiedReportServiceClass {
   }
 
   /**
-   * Busca denÃºncias recentes (admin dashboard)
+   *  Busca denncias recentes (admin dashboard)
    */
   async getRecentReports(limit = 10): Promise<ClassifiedReport[]> {
     try {
       const { data, error } = await supabase
         .from("classified_reports")
         .select(`
-          *,
+          * ,
           classified:classifieds(id, title, seller_id),
           reporter:profiles!reporter_id(id, name, avatar_url)
         `)
@@ -264,6 +264,3 @@ class ClassifiedReportServiceClass {
 }
 
 export const classifiedReportService = new ClassifiedReportServiceClass();
-
-
-

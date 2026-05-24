@@ -3,7 +3,7 @@
  */
 
 import { memo } from "react";
-import { MapPin, Star, ChevronRight } from "lucide-react";
+import { MapPin, Package, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/shared/utils/cn";
 import type { VendedorWithAds } from "@/modules/classifieds/hooks/useVendedores";
@@ -83,8 +83,8 @@ export const VendedorCard = memo(function VendedorCard({
                   loading="lazy"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
-                  📦
+                <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                  <Package className="h-5 w-5 opacity-40" aria-hidden="true" />
                 </div>
               )}
               <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent p-1">

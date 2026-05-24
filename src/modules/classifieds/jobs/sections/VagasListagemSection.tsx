@@ -1,4 +1,4 @@
-﻿/**
+/**
  * VagasListagemSection - Listagem de vagas
  * 
  * SSOT: Section modular

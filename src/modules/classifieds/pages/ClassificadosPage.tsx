@@ -23,6 +23,7 @@ import {
   Star,
 } from "lucide-react";
 import { useClassificadosPage } from "@/modules/classifieds/hooks/useClassificadosPage";
+import { CLASSIFIED_CATEGORIES, CLASSIFIED_CATEGORY_LABELS } from "@/config/categories";
 import { ClassificadosLayout } from "./ClassificadosLayout";
 import {
   ClassifiedsHeroSection,
@@ -44,49 +45,43 @@ import type { HighlightCategory } from "../sections/types";
 
 const HIGHLIGHT_CATEGORIES: readonly HighlightCategory[] = [
   {
-    id: "imóveis",
-    label: "Imóveis",
-    emoji: "🏠",
+    id: CLASSIFIED_CATEGORIES.REAL_ESTATE,
+    label: CLASSIFIED_CATEGORY_LABELS[CLASSIFIED_CATEGORIES.REAL_ESTATE],
     icon: Building2,
     bg: "bg-blue-500/15 border-blue-500/20",
     iconColor: "text-blue-400",
   },
   {
-    id: "veículos",
-    label: "Autos",
-    emoji: "🚗",
+    id: CLASSIFIED_CATEGORIES.VEHICLES,
+    label: CLASSIFIED_CATEGORY_LABELS[CLASSIFIED_CATEGORIES.VEHICLES],
     icon: Car,
     bg: "bg-red-500/15 border-red-500/20",
     iconColor: "text-red-400",
   },
   {
-    id: "eletrônicos",
-    label: "Eletrônicos",
-    emoji: "📱",
+    id: CLASSIFIED_CATEGORIES.ELECTRONICS,
+    label: CLASSIFIED_CATEGORY_LABELS[CLASSIFIED_CATEGORIES.ELECTRONICS],
     icon: Smartphone,
     bg: "bg-purple-500/15 border-purple-500/20",
     iconColor: "text-purple-400",
   },
   {
-    id: "serviços",
-    label: "Serviços",
-    emoji: "🔧",
+    id: CLASSIFIED_CATEGORIES.SERVICES,
+    label: CLASSIFIED_CATEGORY_LABELS[CLASSIFIED_CATEGORIES.SERVICES],
     icon: Wrench,
     bg: "bg-amber-500/15 border-amber-500/20",
     iconColor: "text-amber-400",
   },
   {
-    id: "vagas",
-    label: "Vagas",
-    emoji: "💼",
+    id: CLASSIFIED_CATEGORIES.JOBS,
+    label: CLASSIFIED_CATEGORY_LABELS[CLASSIFIED_CATEGORIES.JOBS],
     icon: Briefcase,
     bg: "bg-emerald-500/15 border-emerald-500/20",
     iconColor: "text-emerald-400",
   },
   {
-    id: "games",
-    label: "Games",
-    emoji: "🎮",
+    id: CLASSIFIED_CATEGORIES.FURNITURE,
+    label: CLASSIFIED_CATEGORY_LABELS[CLASSIFIED_CATEGORIES.FURNITURE],
     icon: Sparkles,
     bg: "bg-pink-500/15 border-pink-500/20",
     iconColor: "text-pink-400",

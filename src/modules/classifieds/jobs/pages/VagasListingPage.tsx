@@ -1,4 +1,4 @@
-﻿/**
+/**
  * VagasListingPage — Página pública de listagem de vagas
  * 
  * ✅ SSOT compliant:

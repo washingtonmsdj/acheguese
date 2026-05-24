@@ -16,7 +16,7 @@ export interface CategoryField {
 }
 
 export const CATEGORY_SPECIFIC_FIELDS: Record<string, CategoryField[]> = {
-  veículos: [
+  veiculos: [
     { key: "brand", label: "Marca", type: "text", placeholder: "Ex: Honda", required: true },
     { key: "model", label: "Modelo", type: "text", placeholder: "Ex: Civic", required: true },
     {
@@ -43,7 +43,7 @@ export const CATEGORY_SPECIFIC_FIELDS: Record<string, CategoryField[]> = {
       ],
     },
   ],
-  imóveis: [
+  imoveis: [
     {
       key: "property_type", label: "Tipo de Imóvel", type: "select", required: true,
       options: [
@@ -68,7 +68,7 @@ export const CATEGORY_SPECIFIC_FIELDS: Record<string, CategoryField[]> = {
     },
     { key: "parking", label: "Vagas Garagem", type: "number", placeholder: "Ex: 1" },
   ],
-  serviços: [
+  servicos: [
     { key: "service_type", label: "Tipo de Serviço", type: "text", placeholder: "Ex: Encanador", required: true },
     {
       key: "availability", label: "Disponibilidade", type: "select",
@@ -111,7 +111,7 @@ export const CATEGORY_SPECIFIC_FIELDS: Record<string, CategoryField[]> = {
     },
     { key: "salary_range", label: "Faixa Salarial", type: "text", placeholder: "Ex: R$ 3.000 - R$ 5.000" },
   ],
-  eletrônicos: [
+  eletronicos: [
     { key: "brand", label: "Marca", type: "text", placeholder: "Ex: Samsung" },
     { key: "model", label: "Modelo", type: "text", placeholder: "Ex: Galaxy S24" },
     { key: "storage", label: "Armazenamento", type: "text", placeholder: "Ex: 256GB" },
@@ -120,27 +120,6 @@ export const CATEGORY_SPECIFIC_FIELDS: Record<string, CategoryField[]> = {
       options: [
         { value: "sim", label: "Com garantia" },
         { value: "nao", label: "Sem garantia" },
-      ],
-    },
-  ],
-  games: [
-    {
-      key: "platform", label: "Plataforma", type: "select",
-      options: [
-        { value: "ps5", label: "PlayStation 5" },
-        { value: "ps4", label: "PlayStation 4" },
-        { value: "xbox-series", label: "Xbox Series" },
-        { value: "xbox-one", label: "Xbox One" },
-        { value: "switch", label: "Nintendo Switch" },
-        { value: "pc", label: "PC" },
-      ],
-    },
-    {
-      key: "item_type", label: "Tipo", type: "select",
-      options: [
-        { value: "console", label: "Console" },
-        { value: "jogo", label: "Jogo" },
-        { value: "acessorio", label: "Acessório" },
       ],
     },
   ],

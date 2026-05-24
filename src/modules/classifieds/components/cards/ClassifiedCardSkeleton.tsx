@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ClassifiedCardSkeleton - Loading skeleton para ClassifiedCard
  * 
  * SSOT: Componente de loading state

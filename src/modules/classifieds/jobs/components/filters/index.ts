@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Filters - Barrel export para componentes de filtros
  * 
  * SSOT: Ponto único de exportação

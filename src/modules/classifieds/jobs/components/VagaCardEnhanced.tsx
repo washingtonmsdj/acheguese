@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 💼 VAGA CARD - NÍVEL AAA
  *
  * ✅ CARACTERÍSTICAS:
@@ -14,7 +14,6 @@
  * - Responsividade completa
  * - Logo da empresa com fallback de iniciais
  *
- * @version 2.0.0 - Redesign Completo AAA
  * @author Kiro AI
  * @date 2026-04-15
  */

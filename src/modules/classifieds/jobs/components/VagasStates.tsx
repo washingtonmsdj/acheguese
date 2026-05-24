@@ -1,4 +1,4 @@
-﻿/**
+/**
  * VagasStates — Loading, Empty, Error states para vagas
  */
 

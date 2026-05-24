@@ -1,4 +1,4 @@
-﻿export * from "./hooks/useClassificados";
+export * from "./hooks/useClassificados";
 export * from "./hooks/useClassifiedUrls";
 export * from "./hooks/useClassificadosPage";
 export * from "./hooks/useVendedores";

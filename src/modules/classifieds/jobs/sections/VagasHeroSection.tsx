@@ -1,4 +1,4 @@
-﻿/**
+/**
  * VagasHeroSection - Hero e banner promocional
  * 
  * SSOT: Section modular

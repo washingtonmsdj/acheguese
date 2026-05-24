@@ -111,7 +111,6 @@ export const CONDITION_OPTIONS: readonly ConditionOption[] = [
 export interface HighlightCategory {
   readonly id: string;
   readonly label: string;
-  readonly emoji: string;
   readonly icon: React.ComponentType<{ className?: string }>;
   readonly bg: string;
   readonly iconColor: string;

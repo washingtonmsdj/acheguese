@@ -12,7 +12,6 @@ import {
 interface PreviewCategory {
   id: string;
   label: string;
-  emoji: string;
 }
 
 export interface PreviewStepProps {
@@ -91,7 +90,6 @@ export function PreviewStep({
           )}
           {categoria && (
             <span className="text-[10px] bg-secondary text-secondary-foreground px-2 py-0.5 rounded-full font-medium">
-              {formCategories.find((c) => c.id === categoria)?.emoji}{" "}
               {formCategories.find((c) => c.id === categoria)?.label}
             </span>
           )}

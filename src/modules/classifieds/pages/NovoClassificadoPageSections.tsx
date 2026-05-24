@@ -26,9 +26,9 @@ import { cn } from "@/shared/utils/cn";
 import { getStepAt, STEPS, type StepId } from "./NovoClassificadoSteps";
 
 const CONDITIONS = [
-  { id: "novo", label: "Novo", emoji: "✨", description: "Embalagem original" },
-  { id: "seminovo", label: "Seminovo", emoji: "👍", description: "Pouco uso" },
-  { id: "usado", label: "Usado", emoji: "📦", description: "Bom estado" },
+  { id: "novo", label: "Novo", description: "Embalagem original" },
+  { id: "seminovo", label: "Seminovo", description: "Pouco uso" },
+  { id: "usado", label: "Usado", description: "Bom estado" },
 ] as const;
 
 export function CreateHeader({
@@ -166,7 +166,6 @@ export function InfoStep({
                   : "bg-card border-border text-foreground hover:border-primary/30"
               )}
             >
-              <span className="text-xl">{cat.emoji}</span>
               <span className="text-[10px] font-semibold leading-tight">{cat.label}</span>
             </button>
           ))}
@@ -192,7 +191,6 @@ export function InfoStep({
                     : "bg-card border-border text-foreground hover:border-primary/30"
                 )}
               >
-                {sub.emoji && <span className="text-base">{sub.emoji}</span>}
                 <span className="text-[11px] font-semibold leading-tight flex-1">{sub.label}</span>
               </button>
             ))}
@@ -222,7 +220,6 @@ export function InfoStep({
                   : "bg-card border-border text-foreground hover:border-primary/30"
               )}
             >
-              <span className="text-sm">{item.emoji}</span>
               <span className="text-xs font-semibold">{item.label}</span>
               <span className="text-[9px] text-muted-foreground">{item.description}</span>
             </button>
@@ -265,7 +262,7 @@ export function LocationStep({
         <div className="flex-1">
           {hasActiveLocation ? (
             <>
-              <p className="text-sm font-semibold text-foreground">📍 {activeLocationName}</p>
+              <p className="text-sm font-semibold text-foreground">{activeLocationName}</p>
               <p className="text-[10px] text-muted-foreground">
                 Localização ativa — seu anúncio aparecerá nesta região
               </p>

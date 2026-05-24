@@ -249,7 +249,7 @@ export default function NovoClassificadoPage() {
         location_id: activeLocationId ?? undefined,
       });
 
-      toast.success("Anúncio publicado com sucesso! 🎉");
+      toast.success("Anúncio publicado com sucesso!");
       navigate(appUrls.classifieds.list);
     } catch (error) {
       logger.error("Erro ao publicar:", error);

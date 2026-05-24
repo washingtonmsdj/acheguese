@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ClassifiedsSponsoredSection - Anúncios patrocinados
  * 
  * SSOT: Section modular e reutilizável

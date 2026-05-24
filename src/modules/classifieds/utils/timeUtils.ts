@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Time utilities para Classificados
  * 
  * SSOT: Funções utilitárias centralizadas

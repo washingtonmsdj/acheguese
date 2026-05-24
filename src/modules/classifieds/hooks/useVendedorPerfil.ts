@@ -4,7 +4,7 @@
  */
 import { logger } from "@/shared/utils/logger";
 import { useQuery } from "@tanstack/react-query";
-import { ClassifiedsFacade } from "@/modules/classifieds/services";
+import { ClassifiedsService } from "@/modules/classifieds/services";
 import { profileService } from "@/core/profiles/services";
 import type { VendedorWithAds } from "./useVendedores";
 
@@ -49,7 +49,7 @@ export function useVendedorPerfil(sellerId: string | undefined) {
         const profileNeighborhood =
           (profile as { public_neighborhood?: string | null }).public_neighborhood ?? null;
 
-        const classifieds = await ClassifiedsFacade.queries.getClassifiedsBySeller(sellerId);
+        const classifieds = await ClassifiedsService.queries.getClassifiedsBySeller(sellerId);
         const activeAds = classifieds.filter((ad) => ad.is_active);
         const allAds = classifieds.map((ad) => ({
           id: ad.id,
@@ -65,7 +65,7 @@ export function useVendedorPerfil(sellerId: string | undefined) {
           id: profile.id,
           name: profile.name || profile.username || "Vendedor",
           avatar_url: profile.avatar_url || null,
-          neighborhood: profileNeighborhood || "Nao informado",
+          neighborhood: profileNeighborhood || "Não informado",
           active_ads_count: activeAds.length,
           bio: profile.bio || "Vendedor na plataforma",
           member_since: profile.created_at || new Date().toISOString(),

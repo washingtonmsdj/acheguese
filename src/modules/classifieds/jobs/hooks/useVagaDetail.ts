@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ═══════════════════════════════════════════════════════════════════════════════
  * USE VAGA DETAIL — Hook para página de detalhe de vaga
  * ═══════════════════════════════════════════════════════════════════════════════
@@ -19,6 +19,8 @@ import { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { VagasService } from '../services/VagasService';
 import type { Vaga, Candidatura } from '../types/vagas.types';
+import { buildMailtoUrl, buildTelUrl, openContactUrl } from '@/shared/utils/contactLinks';
+import { openSafeExternalUrl } from '@/shared/utils/safeRedirect';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -119,23 +121,28 @@ export function useVagaDetail(params: UseVagaDetailParams): UseVagaDetailReturn 
         case 'whatsapp':
           if (vaga.applicationWhatsapp) {
             const text = encodeURIComponent(`Olá! Vi a vaga de ${vaga.titulo} e tenho interesse. Podemos conversar?`);
-            window.open(`https://wa.me/55${vaga.applicationWhatsapp.replace(/\D/g, '')}?text=${text}`, '_blank');
+            openSafeExternalUrl(`https://wa.me/55${vaga.applicationWhatsapp.replace(/\D/g, '')}?text=${text}`, {
+              context: 'job-apply-whatsapp',
+            });
           }
           break;
         case 'email':
           if (vaga.applicationEmail) {
-            const subject = encodeURIComponent(`Candidatura: ${vaga.titulo}`);
-            window.location.href = `mailto:${vaga.applicationEmail}?subject=${subject}`;
+            openContactUrl(
+              buildMailtoUrl(vaga.applicationEmail, {
+                subject: `Candidatura: ${vaga.titulo}`,
+              }),
+            );
           }
           break;
         case 'external_url':
           if (vaga.applicationUrl) {
-            window.open(vaga.applicationUrl, '_blank');
+            openSafeExternalUrl(vaga.applicationUrl, { context: 'job-apply-external-url' });
           }
           break;
         case 'phone':
           if (vaga.applicationPhone) {
-            window.location.href = `tel:${vaga.applicationPhone.replace(/\D/g, '')}`;
+            openContactUrl(buildTelUrl(vaga.applicationPhone));
           }
           break;
         case 'internal':

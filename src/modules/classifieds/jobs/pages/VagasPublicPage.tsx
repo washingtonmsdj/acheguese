@@ -1,4 +1,4 @@
-﻿/**
+/**
  * VagasPublicPage - Página pública de listagem de vagas (REFATORADA)
  * 
  * SSOT: Usa sections modulares e layout reutilizável
@@ -21,6 +21,7 @@ import { ModuleLocationDialog } from "@/core/location/components/ModuleLocationD
 import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
 import { useTerritoryLabels } from "@/core/location/hooks/useTerritoryLabels";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
+import { TERRITORY_CONFIG } from "@/config/territory";
 import { VagasPublicLayout } from "./VagasPublicLayout";
 import { VagasHeader } from "../components";
 import {
@@ -48,7 +49,9 @@ interface VagasPublicPageProps {
 export default function VagasPublicPage({ resolved }: VagasPublicPageProps = {}) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { state = "ba", city = "salvador" } = useParams<{ state: string; city: string }>();
+  const { state, city } = useParams<{ state?: string; city?: string }>();
+  const routeState = state?.trim() || TERRITORY_CONFIG.launch.state;
+  const routeCity = city?.trim() || TERRITORY_CONFIG.launch.city;
   const { user } = useAuth();
   const [locationDialogOpen, setLocationDialogOpen] = useState(false);
   const { permission, isLoading: isLoadingPublishPermission } =
@@ -107,32 +110,32 @@ export default function VagasPublicPage({ resolved }: VagasPublicPageProps = {})
   const moduleBasePath = useMemo(() => {
     if (!isEmbeddedCommunityRoute) return "/vagas";
     const parts = location.pathname.split("/").filter(Boolean);
-    const routeState = parts[1] ?? state;
-    const routeCity = parts[2] ?? city;
+    const embeddedState = parts[1] ?? routeState;
+    const embeddedCity = parts[2] ?? routeCity;
     const routeTerritorySlug =
       parts[3] ??
       (resolved?.kind === "group" ? resolved.group.slug : resolved?.location.slug) ??
-      city;
-    return `/comunidade/${routeState}/${routeCity}/${routeTerritorySlug}/vagas`;
-  }, [city, isEmbeddedCommunityRoute, location.pathname, resolved, state]);
+      routeCity;
+    return `/comunidade/${embeddedState}/${embeddedCity}/${routeTerritorySlug}/vagas`;
+  }, [isEmbeddedCommunityRoute, location.pathname, resolved, routeCity, routeState]);
   const publishPath = useMemo(() => {
     if (!isEmbeddedCommunityRoute) return "/vagas/publicar";
     const parts = location.pathname.split("/").filter(Boolean);
-    const routeState = parts[1] ?? state;
-    const routeCity = parts[2] ?? city;
+    const embeddedState = parts[1] ?? routeState;
+    const embeddedCity = parts[2] ?? routeCity;
     const routeTerritorySlug =
       parts[3] ??
       (resolved?.kind === "group" ? resolved.group.slug : resolved?.location.slug) ??
-      city;
-    return `/comunidade/${routeState}/${routeCity}/${routeTerritorySlug}/vagas/publicar`;
-  }, [city, isEmbeddedCommunityRoute, location.pathname, resolved, state]);
+      routeCity;
+    return `/comunidade/${embeddedState}/${embeddedCity}/${routeTerritorySlug}/vagas/publicar`;
+  }, [isEmbeddedCommunityRoute, location.pathname, resolved, routeCity, routeState]);
 
   // Handlers
   const handleVagaClick = useCallback(
     (slug: string) => {
-      navigate(`/vagas/${state}/${city}/${slug}`);
+      navigate(`/vagas/${routeState}/${routeCity}/${slug}`);
     },
-    [navigate, state, city]
+    [navigate, routeCity, routeState]
   );
 
   const handleOpenPublish = useCallback(() => {
@@ -189,8 +192,8 @@ export default function VagasPublicPage({ resolved }: VagasPublicPageProps = {})
       <VagasHeroSection
         cityName={cityName}
         locationId={locationId}
-        state={state}
-        city={city}
+        state={routeState}
+        city={routeCity}
         navigate={navigate}
         total={total}
         user={user}
@@ -203,8 +206,8 @@ export default function VagasPublicPage({ resolved }: VagasPublicPageProps = {})
       <VagasFooterSection
         cityName={cityName}
         locationId={locationId}
-        state={state}
-        city={city}
+        state={routeState}
+        city={routeCity}
         navigate={navigate}
         user={user}
         permission={permission}
@@ -243,8 +246,8 @@ export default function VagasPublicPage({ resolved }: VagasPublicPageProps = {})
       <VagasFiltrosSection
         cityName={cityName}
         locationId={locationId}
-        state={state}
-        city={city}
+        state={routeState}
+        city={routeCity}
         navigate={navigate}
         total={total}
         isLoading={isLoading}
@@ -261,8 +264,8 @@ export default function VagasPublicPage({ resolved }: VagasPublicPageProps = {})
       <VagasListagemSection
         cityName={cityName}
         locationId={locationId}
-        state={state}
-        city={city}
+        state={routeState}
+        city={routeCity}
         navigate={navigate}
         vagas={vagas as never}
         vagasUrgentes={vagasUrgentes as never}

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ClassifiedsHeroSection - Hero da página de classificados
  * 
  * SSOT: Section modular e reutilizável

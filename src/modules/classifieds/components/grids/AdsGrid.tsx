@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AdsGrid - Grid de anúncios com infinite scroll
  * 
  * SSOT: Componente reutilizável de grid

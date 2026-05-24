@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ClassifiedUrlService — SSOT para URLs públicas de classificados
  *
  * REGRAS ARQUITETURAIS:
@@ -21,7 +21,6 @@
  */
 
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/core/infrastructure/supabase/supabase';
 import { getAllClassifieds } from '@/modules/classifieds/services/classifieds.queries';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
@@ -51,8 +50,6 @@ export interface ClassifiedResolution {
   id: string;
   public_id: string;
   current_canonical: string;
-  needs_redirect: boolean;
-  redirect_to?: string;
 }
 
 // ─── Helpers internos ─────────────────────────────────────────────────────────
@@ -134,7 +131,7 @@ export class ClassifiedUrlService {
 
   /**
    * Resolve um classificado por public_id.
-   * Retorna URL canônica atual e indica se precisa redirect.
+   * Retorna a URL canônica atual sem criar compatibilidade com URLs antigas.
    */
   static async resolveByPublicId(publicId: string): Promise<ClassifiedResolution | null> {
     try {
@@ -162,7 +159,6 @@ export class ClassifiedUrlService {
         id: data.id,
         public_id: data.public_id,
         current_canonical: urls.canonical,
-        needs_redirect: false,
       };
     } catch (error) {
       logger.error('[ClassifiedUrlService] Erro ao resolver public_id:', error);
@@ -172,7 +168,7 @@ export class ClassifiedUrlService {
 
   /**
    * Resolve um classificado pela URL canônica completa.
-   * Detecta se a URL está desatualizada e retorna redirect.
+   * URLs divergentes são tratadas como 404 para evitar legado e conteúdo duplicado.
    */
   static async resolveByCanonicalUrl(
     uf: string,
@@ -185,70 +181,13 @@ export class ClassifiedUrlService {
   ): Promise<ClassifiedResolution | null> {
     const requestedUrl = `/classificados/${uf}/${cidade}/${bairro}/${categoriaSlug}/${subcategoriaSlug}/${slug}/${publicId}`;
 
-    // Resolve pelo public_id (âncora estável)
     const resolution = await this.resolveByPublicId(publicId);
-    
-    if (!resolution) {
-      // Tenta buscar no histórico
-      return await this.resolveFromHistory(requestedUrl);
-    }
 
-    // Verifica se URL atual difere da solicitada
-    if (resolution.current_canonical !== requestedUrl) {
-      return {
-        ...resolution,
-        needs_redirect: true,
-        redirect_to: resolution.current_canonical,
-      };
+    if (!resolution || resolution.current_canonical !== requestedUrl) {
+      return null;
     }
 
     return resolution;
-  }
-
-  /**
-   * Busca URL antiga no histórico e retorna redirect para canonical atual.
-   */
-  private static async resolveFromHistory(oldUrl: string): Promise<ClassifiedResolution | null> {
-    try {
-      const { data, error } = await supabase
-        .from('classified_url_history')
-        .select('classified_id')
-        .eq('old_canonical_url', oldUrl)
-        .order('changed_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (error || !data) {
-        return null;
-      }
-
-      // Busca classificado atual
-      const classifieds = await getAllClassifieds({ scope: 'none' });
-      const classified = classifieds.find((item) => item.id === data.classified_id);
-      if (!classified || !classified.geographic_path || !classified.category_slug || !classified.subcategory_slug) {
-        return null;
-      }
-
-      const urls = this.buildUrls({
-        id: classified.id,
-        public_id: classified.public_id,
-        slug: classified.slug,
-        geographic_path: classified.geographic_path,
-        category_slug: classified.category_slug,
-        subcategory_slug: classified.subcategory_slug,
-      });
-
-      return {
-        id: classified.id,
-        public_id: classified.public_id,
-        current_canonical: urls.canonical,
-        needs_redirect: true,
-        redirect_to: urls.canonical,
-      };
-    } catch (error) {
-      logger.error('[ClassifiedUrlService] Erro ao buscar histórico:', error);
-      return null;
-    }
   }
 
   /**
@@ -288,4 +227,3 @@ export class ClassifiedUrlService {
 }
 
 export const classifiedUrlService = ClassifiedUrlService;
-

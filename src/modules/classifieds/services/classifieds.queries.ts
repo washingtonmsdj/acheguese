@@ -1,10 +1,9 @@
-﻿/**
- * ðŸ“¦ CLASSIFIEDS QUERIES - SSOT Read Model
+/**
+ *  CLASSIFIEDS QUERIES - SSOT Read Model
  *
- * Todas as operaÃ§Ãµes de leitura para classificados.
- * Sem side effects, sem mutations.
+ *  Todas as operacoes de leitura para classificados.
+ *  Sem side effects, sem mutations.
  *
- * @version 2.0.0 - ExtraÃ­do de ClassifiedService.impl.ts
  */
 
 import { supabase } from "@/core/infrastructure/supabase";
@@ -16,7 +15,7 @@ import { createLocationRepository } from "@/core/location/repositories/createLoc
 import type { TerritoryFilter } from "@/core/location/types";
 import type { ClassifiedData, NeighborhoodWithClassifiedCount } from "./types";
 
-// InstÃ¢ncia do LocationService com repositÃ³rio
+//  Instancia do LocationService com repositorio
 const locationService = new LocationService(createLocationRepository());
 
 type ClassifiedSellerRow = {
@@ -54,12 +53,12 @@ function ensureStringArray(value: unknown): string[] {
   return [];
 }
 
-// ============================================================
-// HELPERS INTERNOS
-// ============================================================
+//  ============================================================
+//  HELPERS INTERNOS
+//  ============================================================
 
 /**
- * Mapeia resposta do Supabase para ClassifiedData com seller info
+ *  Mapeia resposta do Supabase para ClassifiedData com seller info
  */
 function mapClassifiedWithSeller(item: ClassifiedWithRelationsRow): ClassifiedData {
   return {
@@ -86,12 +85,12 @@ function mapRawClassified(item: Record<string, unknown>): ClassifiedData {
   };
 }
 
-// ============================================================
-// QUERIES - LISTAGEM E BUSCA
-// ============================================================
+//  ============================================================
+//  QUERIES - LISTAGEM E BUSCA
+//  ============================================================
 
 /**
- * Busca bairros com anÃºncios ativos por cidade.
+ *  Busca bairros com anncios ativos por cidade.
  */
 export async function getNeighborhoodsWithClassifieds(
   cityId: string,
@@ -141,14 +140,14 @@ export async function getNeighborhoodsWithClassifieds(
 }
 
 /**
- * Busca todos os classificados ativos, com filtro territorial opcional.
+ *  Busca todos os classificados ativos, com filtro territorial opcional.
  *
- * @param filter - TerritoryFilter canÃ´nico.
- *   scope: 'location' â†’ .eq('location_id', id) + descendentes (hierÃ¡rquico) + anÃºncios globais
- *   scope: 'group'    â†’ .in('location_id', ids) + anÃºncios globais
- *   scope: 'none'     â†’ sem filtro territorial (retorna todos)
+ *  @param filter - TerritoryFilter cannico.
+ *  scope: 'location' .eq('location_id', id) + descendentes (hierrquico) + anncios globais
+ *  scope: 'group' .in('location_id', ids) + anncios globais
+ *  scope: 'none' sem filtro territorial (retorna todos)
  *
- * âœ… SSOT: Inclui anÃºncios com reach='city' ou 'state' quando aplicÃ¡vel
+ *  SSOT: Inclui anncios com reach='city' ou 'state' quando aplicvel
  */
 export async function getAllClassifieds(
   filter?: TerritoryFilter,
@@ -158,7 +157,7 @@ export async function getAllClassifieds(
       .from("classifieds")
       .select(
         `
-        *,
+        * ,
         seller:profiles!seller_id (
           id,
           name,
@@ -174,18 +173,18 @@ export async function getAllClassifieds(
       .eq("is_active", true)
       .order("created_at", { ascending: false });
 
-    // âœ… HIERÃRQUICO - Resolve descendentes antes de aplicar filtro
+    //  HIERRQUICO - Resolve descendentes antes de aplicar filtro
     let resolvedFilter = filter;
     let parentCityId: string | null = null;
 
     if (filter?.scope === "location") {
-      // Busca location + todos descendentes via RPC
+      //  Busca location + todos descendentes via RPC
       const { data: descendantIds, error: rpcError } = await supabase.rpc(
         "rpc_get_location_descendants_ids",
         { p_location_id: filter.location_id },
       );
 
-      // âœ… SSOT - Busca informaÃ§Ãµes da location via LocationService
+      //  SSOT - Busca informaes da location via LocationService
       try {
         const { location } = await locationService.getLocationById({
           id: filter.location_id,
@@ -203,27 +202,27 @@ export async function getAllClassifieds(
       }
 
       if (!rpcError && descendantIds && descendantIds.length > 0) {
-        // Converte para scope='group' com array de IDs
+        //  Converte para scope='group' com array de IDs
         resolvedFilter = {
           scope: "group",
           location_ids: descendantIds,
         };
       }
-      // Se erro, mantÃ©m filter original (exact match)
+      //  Se erro, mantm filter original (exact match)
     }
 
-    // Aplica filtro resolvido (se scope !== 'none', aplica filtro)
+    //  Aplica filtro resolvido (se scope !== 'none', aplica filtro)
     if (resolvedFilter && resolvedFilter.scope !== "none") {
-      // âœ… NOVIDADE: Busca anÃºncios locais + anÃºncios com alcance maior
+      //  NOVIDADE: Busca anncios locais + anncios com alcance maior
       if (resolvedFilter.scope === "group") {
-        // AnÃºncios do bairro/cidade OU anÃºncios com reach='city' da cidade pai
+        //  Anncios do bairro/cidade OU anncios com reach='city' da cidade pai
         if (parentCityId) {
-          // Estamos em um bairro: incluir anÃºncios do bairro + anÃºncios com reach='city' da cidade
+          //  Estamos em um bairro: incluir anncios do bairro + anncios com reach='city' da cidade
           query = query.or(
             `location_id.in.(${resolvedFilter.location_ids.join(",")}),and(location_id.eq.${parentCityId},reach.eq.city)`,
           );
         } else {
-          // Estamos em uma cidade: apenas anÃºncios da cidade e descendentes
+          //  Estamos em uma cidade: apenas anncios da cidade e descendentes
           query = query.in("location_id", resolvedFilter.location_ids);
         }
       } else {
@@ -252,7 +251,7 @@ export async function getAllClassifieds(
 }
 
 /**
- * Busca um classificado por ID
+ *  Busca um classificado por ID
  */
 export async function getClassifiedById(id: string): Promise<ClassifiedData | null> {
   try {
@@ -260,7 +259,7 @@ export async function getClassifiedById(id: string): Promise<ClassifiedData | nu
       .from("classifieds")
       .select(
         `
-        *,
+        * ,
         seller:profiles!seller_id (
           id,
           name,
@@ -293,7 +292,7 @@ export async function getClassifiedById(id: string): Promise<ClassifiedData | nu
 }
 
 /**
- * Busca classificados por categoria
+ *  Busca classificados por categoria
  */
 export async function getClassifiedsByCategory(category: string): Promise<ClassifiedData[]> {
   try {
@@ -301,7 +300,7 @@ export async function getClassifiedsByCategory(category: string): Promise<Classi
       .from("classifieds")
       .select(
         `
-        *,
+        * ,
         seller:profiles!seller_id (
           id,
           name,
@@ -332,7 +331,7 @@ export async function getClassifiedsByCategory(category: string): Promise<Classi
 }
 
 /**
- * Busca classificados do usuÃ¡rio
+ *  Busca classificados do usurio
  */
 export async function getUserClassifieds(userId: string): Promise<ClassifiedData[]> {
   try {
@@ -340,7 +339,7 @@ export async function getUserClassifieds(userId: string): Promise<ClassifiedData
       .from("classifieds")
       .select(
         `
-        *,
+        * ,
         seller:profiles!seller_id (
           id,
           name,
@@ -370,7 +369,7 @@ export async function getUserClassifieds(userId: string): Promise<ClassifiedData
 }
 
 /**
- * Busca classificados de um vendedor especÃ­fico
+ *  Busca classificados de um vendedor especfico
  */
 export async function getClassifiedsBySeller(sellerId: string): Promise<ClassifiedData[]> {
   try {
@@ -378,7 +377,7 @@ export async function getClassifiedsBySeller(sellerId: string): Promise<Classifi
       .from("classifieds")
       .select(
         `
-        *,
+        * ,
         seller:profiles!seller_id (
           id, name, avatar_url, phone, whatsapp
         )
@@ -400,13 +399,13 @@ export async function getClassifiedsBySeller(sellerId: string): Promise<Classifi
   }
 }
 
-// ============================================================
-// QUERIES - ESTATÃSTICAS ADMINISTRATIVAS
-// ============================================================
+//  ============================================================
+//  QUERIES - Estatisticas ADMINISTRATIVAS
+//  ============================================================
 
 /**
- * ðŸ“Š OBTER CONTAGEM TOTAL DE CLASSIFICADOS
- * âœ… SSOT para contagem de classificados no dashboard admin
+ *  OBTER CONTAGEM TOTAL DE CLASSIFICADOS
+ *  SSOT para contagem de classificados no dashboard admin
  */
 export async function getTotalClassifiedsCount(): Promise<number> {
   try {
@@ -433,8 +432,8 @@ export async function getTotalClassifiedsCount(): Promise<number> {
 }
 
 /**
- * ðŸ“‹ OBTER CLASSIFICADOS RECENTES
- * âœ… SSOT para atividade recente de classificados
+ *  OBTER CLASSIFICADOS RECENTES
+ *  SSOT para atividade recente de classificados
  */
 export async function getRecentClassifieds(limit = 10): Promise<ClassifiedData[]> {
   try {
@@ -464,8 +463,8 @@ export async function getRecentClassifieds(limit = 10): Promise<ClassifiedData[]
 }
 
 /**
- * ðŸ“… OBTER CLASSIFICADOS CRIADOS EM UM PERÃODO
- * âœ… SSOT para atividade de classificados por perÃ­odo
+ *  OBTER CLASSIFICADOS CRIADOS EM UM PERODO
+ *  SSOT para atividade de classificados por perodo
  */
 export async function getClassifiedsCreatedInPeriod(
   startDate: Date,
@@ -496,12 +495,12 @@ export async function getClassifiedsCreatedInPeriod(
   }
 }
 
-// ============================================================
-// QUERIES - VENDEDORES
-// ============================================================
+//  ============================================================
+//  QUERIES - VENDEDORES
+//  ============================================================
 
 /**
- * Lista vendedores com contagem de anÃºncios ativos
+ *  Lista vendedores com contagem de anncios ativos
  */
 export async function getSellersWithAds(
   filter?: TerritoryFilter,
@@ -516,10 +515,10 @@ export async function getSellersWithAds(
   }>
 > {
   try {
-    // Busca todos classificados ativos (reutiliza filtro territorial)
+    //  Busca todos classificados ativos (reutiliza filtro territorial)
     const allAds = await getAllClassifieds(filter);
 
-    // Agrupa por vendedor
+    //  Agrupa por vendedor
     const sellerMap = new Map<
       string,
       {
@@ -560,6 +559,3 @@ export async function getSellersWithAds(
     return [];
   }
 }
-
-
-

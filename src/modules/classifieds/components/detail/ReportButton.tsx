@@ -12,12 +12,12 @@ import {
 import { toast } from "sonner";
 
 const REPORT_REASONS = [
-  { id: "spam", label: "Spam ou golpe", emoji: "🚫" },
-  { id: "fake", label: "Anúncio falso", emoji: "❌" },
-  { id: "inappropriate", label: "Conteúdo impróprio", emoji: "⚠️" },
-  { id: "duplicate", label: "Anúncio duplicado", emoji: "📋" },
-  { id: "wrong_category", label: "Categoria errada", emoji: "🔄" },
-  { id: "other", label: "Outro motivo", emoji: "💬" },
+  { id: "spam", label: "Spam ou golpe" },
+  { id: "fake", label: "Anúncio falso" },
+  { id: "inappropriate", label: "Conteúdo impróprio" },
+  { id: "duplicate", label: "Anúncio duplicado" },
+  { id: "wrong_category", label: "Categoria errada" },
+  { id: "other", label: "Outro motivo" },
 ];
 
 export function ReportButton() {
@@ -57,7 +57,7 @@ export function ReportButton() {
               onClick={() => handleReport(reason.id)}
               className="w-full flex items-center gap-3 p-3 rounded-xl bg-secondary/50 hover:bg-secondary transition-colors text-left"
             >
-              <span className="text-lg">{reason.emoji}</span>
+              <Flag className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
               <span className="text-sm font-medium">{reason.label}</span>
             </button>
           ))}

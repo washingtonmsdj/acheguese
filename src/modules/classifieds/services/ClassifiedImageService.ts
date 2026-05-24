@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 📸 SSOT: CLASSIFIED IMAGE SERVICE
  *
  * Serviço centralizado para upload, compressão e gerenciamento de imagens de classificados.

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ClassifiedsTrendingSection - Anúncios em alta
  * 
  * SSOT: Section modular e reutilizável

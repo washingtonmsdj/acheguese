@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ClassificadosLayout - Layout da página de classificados
  * 
  * SSOT: Layout reutilizável

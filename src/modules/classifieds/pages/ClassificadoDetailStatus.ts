@@ -3,11 +3,11 @@ export function getClassifiedStatusLabel(status?: string) {
     active: "ativo",
     inactive: "pausado",
     sold: "vendido",
-    pending: "em analise",
+    pending: "em análise",
     rejected: "rejeitado",
     expired: "expirado",
     deleted: "removido",
   };
 
-  return labels[status || ""] || "nao informado";
+  return labels[status || ""] || "não informado";
 }

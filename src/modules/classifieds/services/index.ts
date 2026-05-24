@@ -1,13 +1,9 @@
-﻿/**
- * Core Classifieds Services - Canonical barrel
- *
- * Core is the canonical import surface. Implementation still delegates
- * to stable modules services where migration is not yet finalized.
+/**
+ * Classifieds services - canonical barrel.
  */
 
 export {
-  ClassifiedsFacade,
-  default as ClassifiedService,
+  ClassifiedsService,
   CLASSIFIED_CONDITIONS,
   CLASSIFIED_STATUSES,
 } from "@/modules/classifieds/services/ClassifiedService";
@@ -62,12 +58,8 @@ export type {
   ReportReason,
 } from "@/modules/classifieds/services/ClassifiedReportService";
 
-export {
-  classifiedCommentService,
-} from "./ClassifiedCommentService";
-export type {
-  ClassifiedComment,
-} from "./ClassifiedCommentService";
+export { classifiedCommentService } from "./ClassifiedCommentService";
+export type { ClassifiedComment } from "./ClassifiedCommentService";
 
 export {
   classifiedsLocationService,

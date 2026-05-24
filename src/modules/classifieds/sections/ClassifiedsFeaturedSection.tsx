@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ClassifiedsFeaturedSection - Anúncios em destaque
  * 
  * SSOT: Section modular e reutilizável

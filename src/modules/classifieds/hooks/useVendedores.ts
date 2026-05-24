@@ -3,7 +3,7 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
-import { ClassifiedsFacade } from "@/modules/classifieds/services";
+import { ClassifiedsService } from "@/modules/classifieds/services";
 import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
 import { territoryFilterKey } from "@/core/location/hooks/useTerritoryFilter";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
@@ -42,7 +42,7 @@ export function useVendedores(options: UseVendedoresOptions = {}) {
       let result: VendedorWithAds[] = [];
 
       try {
-        const sellers = await ClassifiedsFacade.queries.getSellersWithAds(filter);
+        const sellers = await ClassifiedsService.queries.getSellersWithAds(filter);
         result = sellers.map((s) => ({
           id: s.id,
           name: s.name,

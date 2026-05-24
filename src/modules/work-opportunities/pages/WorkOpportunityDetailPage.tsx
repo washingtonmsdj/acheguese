@@ -27,11 +27,13 @@ import { useSessionContext } from "@/core/session";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import { buildTelUrl, openContactUrl } from "@/shared/utils/contactLinks";
+import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
 
 function visibilityLabel(value: string): string {
-  if (value === "public_unlisted") return "Publico nao listado";
+  if (value === "public_unlisted") return "Público não listado";
   if (value === "private") return "Privado";
-  return "Publico listado";
+  return "Público listado";
 }
 
 function statusLabel(value: string): string {
@@ -46,14 +48,12 @@ function tryOpenContact(raw?: string | null): boolean {
   if (!raw) return false;
   const trimmed = raw.trim();
   if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
-    window.open(trimmed, "_blank", "noopener,noreferrer");
-    return true;
+    return openSafeExternalUrl(trimmed, { context: "work-opportunity-contact" });
   }
 
   const phone = trimmed.replace(/\D/g, "");
   if (phone.length >= 10) {
-    window.open(`https://wa.me/${phone}`, "_blank", "noopener,noreferrer");
-    return true;
+    return openSafeExternalUrl(`https://wa.me/${phone}`, { context: "work-opportunity-whatsapp" });
   }
 
   return false;
@@ -74,7 +74,7 @@ function RecentOpportunityItem({ item, onClick }: { item: WorkOpportunityRecentI
     >
       <p className="text-sm font-semibold">{item.headline}</p>
       <p className="mt-1 text-xs text-muted-foreground">
-        {getOpportunityTypeLabel(item.opportunity_type)} - {item.territory_name ?? "Territorio"} - {getOpportunityUrgencyLabel(item.urgency)}
+        {getOpportunityTypeLabel(item.opportunity_type)} - {item.territory_name ?? "Território"} - {getOpportunityUrgencyLabel(item.urgency)}
       </p>
     </button>
   );
@@ -128,7 +128,7 @@ export default function WorkOpportunityDetailPage() {
       await navigator.clipboard.writeText(data.contact_notes);
       toast.success("Contato copiado.");
     } catch {
-      toast.error("Nao foi possivel copiar o contato.");
+      toast.error("Não foi possível copiar o contato.");
     }
   };
 
@@ -161,12 +161,12 @@ export default function WorkOpportunityDetailPage() {
       });
 
       if (!trustResult.ok) {
-        toast.error(trustResult.error ?? "Nao foi possivel salvar feedback.");
+        toast.error(trustResult.error ?? "Não foi possível salvar feedback.");
         return;
       }
 
       setFeedbackDone(answer);
-      toast.success("Feedback enviado. Obrigado por fortalecer a confianca local.");
+      toast.success("Feedback enviado. Obrigado por fortalecer a confiança local.");
     } finally {
       setFeedbackSaving(null);
     }
@@ -187,8 +187,8 @@ export default function WorkOpportunityDetailPage() {
       <div className="min-h-screen bg-background px-4 py-6 sm:py-8">
         <Card className="mx-auto max-w-2xl">
           <CardContent className="space-y-4 py-10 text-center">
-            <p className="text-sm text-muted-foreground">Oportunidade nao encontrada ou nao esta mais publica.</p>
-            <Button onClick={() => navigate("/comunidade?tab=oportunidades")}>Voltar para oportunidades</Button>
+            <p className="text-sm text-muted-foreground">Oportunidade não encontrada ou não está mais pública.</p>
+            <Button onClick={() => navigate("/oportunidades")}>Voltar para oportunidades</Button>
           </CardContent>
         </Card>
       </div>
@@ -220,7 +220,7 @@ export default function WorkOpportunityDetailPage() {
             <div className="flex flex-wrap gap-4 text-xs sm:text-sm text-muted-foreground">
               <span className="inline-flex items-center gap-1">
                 <MapPin className="h-4 w-4" />
-                {data.territory_name ?? "Territorio local"}
+                {data.territory_name ?? "Território local"}
               </span>
               <span className="inline-flex items-center gap-1">
                 <Clock3 className="h-4 w-4" />
@@ -238,7 +238,7 @@ export default function WorkOpportunityDetailPage() {
                 <CardTitle className="text-base sm:text-lg">Contato e interesse</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
-                <p className="text-muted-foreground">{data.contact_notes ?? "Contato nao informado. Use mensagem direta no perfil do autor."}</p>
+                <p className="text-muted-foreground">{data.contact_notes ?? "Contato não informado. Use mensagem direta no perfil do autor."}</p>
                 <div className="flex flex-wrap gap-2">
                   <Button
                     className="gap-2"
@@ -263,7 +263,7 @@ export default function WorkOpportunityDetailPage() {
                           actorUserId: activeProfile?.userId ?? null,
                         });
                       } else {
-                        toast.info("Nao foi possivel abrir automaticamente. Copie o contato.");
+                        toast.info("Não foi possível abrir automaticamente. Copie o contato.");
                       }
                     }}
                   >
@@ -283,7 +283,7 @@ export default function WorkOpportunityDetailPage() {
                           actorUserId: activeProfile?.userId ?? null,
                           metadata: { channel: "phone" },
                         });
-                        window.open(`tel:${directPhone}`, "_self");
+                        openContactUrl(buildTelUrl(directPhone));
                       }}
                     >
                       Ligar agora
@@ -301,10 +301,10 @@ export default function WorkOpportunityDetailPage() {
                         actorUserId: activeProfile?.userId ?? null,
                         metadata: { conversion_type: "quick_interest" },
                       });
-                      toast.success("Interesse rapido enviado. Continue o contato direto.");
+                      toast.success("Interesse rápido enviado. Continue o contato direto.");
                     }}
                   >
-                    Interesse rapido
+                    Interesse rápido
                   </Button>
                   <Button variant="outline" onClick={handleCopyContact}>
                     Copiar contato
@@ -315,28 +315,28 @@ export default function WorkOpportunityDetailPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-base sm:text-lg">Retorno rapido da comunidade</CardTitle>
+                <CardTitle className="text-base sm:text-lg">Retorno rápido da comunidade</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
-                <p className="text-muted-foreground">Essa oportunidade ajudou sua circulacao profissional?</p>
+                <p className="text-muted-foreground">Essa oportunidade ajudou sua circulação profissional?</p>
                 <div className="flex flex-wrap gap-2">
                   <Button variant="outline" disabled={feedbackSaving !== null} onClick={() => handleFeedback("helped")}>
                     Ajudou
                   </Button>
                   <Button variant="outline" disabled={feedbackSaving !== null} onClick={() => handleFeedback("found_someone")}>
-                    Consegui encontrar alguem
+                    Consegui encontrar alguém
                   </Button>
                   <Button variant="outline" disabled={feedbackSaving !== null} onClick={() => handleFeedback("service_done")}>
-                    Servico realizado
+                    Serviço realizado
                   </Button>
                   <Button variant="ghost" disabled={feedbackSaving !== null} onClick={() => handleFeedback("no_help")}>
-                    Ainda nao ajudou
+                    Ainda não ajudou
                   </Button>
                 </div>
                 {feedbackDone && (
                   <p className="inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-300">
                     <CheckCircle2 className="h-3.5 w-3.5" />
-                    Feedback salvo para melhorar relevancia e confianca territorial.
+                    Feedback salvo para melhorar relevância e confiança territorial.
                   </p>
                 )}
               </CardContent>
@@ -391,18 +391,18 @@ export default function WorkOpportunityDetailPage() {
 
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <ShieldCheck className="h-4 w-4" />
-                      <span>{data.professional.is_accepting_clients ? "Disponivel para servicos" : "Indisponivel no momento"}</span>
+                      <span>{data.professional.is_accepting_clients ? "Disponível para serviços" : "Indisponível no momento"}</span>
                     </div>
 
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <Star className="h-4 w-4" />
-                      <span>Reputacao pratica: {data.professional.rating ?? 0} ({data.professional.total_reviews} avaliacoes)</span>
+                      <span>Reputação prática: {data.professional.rating ?? 0} ({data.professional.total_reviews} avaliações)</span>
                     </div>
 
                     {reputationByProfessional && (
                       <div className="space-y-1 text-xs text-muted-foreground">
                         <p>
-                          Contexto desta profissao: {reputationByProfessional.avg_rating.toFixed(1)} media em{" "}
+                          Contexto desta profissão: {reputationByProfessional.avg_rating.toFixed(1)} média em{" "}
                           {reputationByProfessional.total_feedback} retornos recentes.
                         </p>
                         <p>
@@ -433,7 +433,7 @@ export default function WorkOpportunityDetailPage() {
                           actorProfileId: activeProfile?.id,
                           actorUserId: activeProfile?.userId ?? null,
                         });
-                        navigate(`/services/${data.professional?.id}`);
+                        navigate(`/servicos/${data.professional?.id}`);
                       }}
                     >
                       <Eye className="h-4 w-4" />
@@ -441,7 +441,7 @@ export default function WorkOpportunityDetailPage() {
                     </Button>
                   </>
                 ) : (
-                  <p className="text-muted-foreground">Esta oportunidade ainda nao esta vinculada a um perfil profissional estruturado.</p>
+                  <p className="text-muted-foreground">Esta oportunidade ainda não está vinculada a um perfil profissional estruturado.</p>
                 )}
               </CardContent>
             </Card>
@@ -449,7 +449,7 @@ export default function WorkOpportunityDetailPage() {
             {primaryPortfolio.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base sm:text-lg">Fotos e portfolio</CardTitle>
+                  <CardTitle className="text-base sm:text-lg">Fotos e portfólio</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 gap-2">
@@ -457,7 +457,7 @@ export default function WorkOpportunityDetailPage() {
                       <img
                         key={imageUrl}
                         src={imageUrl}
-                        alt="Portfolio profissional"
+                        alt="Portfólio profissional"
                         className="h-24 w-full rounded-lg border object-cover"
                       />
                     ))}

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * useVagasLocation
  *
  * Hook para integração do módulo vagas com a fundação geográfica SSOT.

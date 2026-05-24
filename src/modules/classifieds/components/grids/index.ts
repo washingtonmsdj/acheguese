@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Barrel export para grids de Classificados
  */
 

@@ -17,13 +17,13 @@ interface ClassifiedTrustFeedbackPanelProps {
 }
 
 const CLASSIFIED_FEEDBACK_REASONS: TrustFeedbackReason[] = [
-  { value: "smooth_negotiation", label: "Negociacao concluida sem problema", severity: "low" },
-  { value: "late_cancellation", label: "Cancelamento tardio que gerou prejuizo", severity: "high" },
-  { value: "no_show", label: "Nao compareceu para retirada/encontro", severity: "medium" },
+  { value: "smooth_negotiation", label: "Negociação concluída sem problema", severity: "low" },
+  { value: "late_cancellation", label: "Cancelamento tardio que gerou prejuízo", severity: "high" },
+  { value: "no_show", label: "Não compareceu para retirada/encontro", severity: "medium" },
   { value: "abusive_behavior", label: "Conduta abusiva ou insegura", severity: "critical" },
   { value: "payment_issue", label: "Problema de pagamento ou repasse", severity: "high" },
-  { value: "mismatch_item_state", label: "Produto nao correspondia ao combinado", severity: "high" },
-  { value: "other_negotiation_issue", label: "Outro problema na negociacao", severity: "medium" },
+  { value: "mismatch_item_state", label: "Produto não correspondia ao combinado", severity: "high" },
+  { value: "other_negotiation_issue", label: "Outro problema na negociação", severity: "medium" },
 ];
 
 export function ClassifiedTrustFeedbackPanel({
@@ -59,7 +59,7 @@ export function ClassifiedTrustFeedbackPanel({
         id,
         label: `Comprador: ${name}`,
         subjectRole: TRUST_ACTOR_ROLES.CUSTOMER,
-        helper: "Feedback privado do vendedor sobre o comprador da negociacao.",
+        helper: "Feedback privado do vendedor sobre o comprador da negociação.",
       }));
     }
 
@@ -84,8 +84,8 @@ export function ClassifiedTrustFeedbackPanel({
 
   return (
     <TrustFeedbackForm
-      title="Confianca da negociacao"
-      notice="Registro privado bilateral comprador-vendedor para suporte a moderacao e penalidades quando necessario."
+      title="Confiança da negociação"
+      notice="Registro privado bilateral comprador-vendedor para suporte a moderação e penalidades quando necessário."
       actorRole={actorRole}
       contextType={TRUST_CONTEXT_TYPES.CLASSIFIED}
       contextId={classifiedId}
@@ -93,7 +93,7 @@ export function ClassifiedTrustFeedbackPanel({
       reasons={CLASSIFIED_FEEDBACK_REASONS}
       enabled={enabled}
       compact
-      unavailableMessage="O feedback bilateral fica disponivel quando o anuncio for marcado como vendido."
+      unavailableMessage="O feedback bilateral fica disponível quando o anúncio for marcado como vendido."
       evidence={{
         classified_id: classifiedId,
         classified_status: classifiedStatus ?? null,
@@ -103,4 +103,3 @@ export function ClassifiedTrustFeedbackPanel({
     />
   );
 }
-

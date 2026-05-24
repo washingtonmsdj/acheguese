@@ -1,4 +1,4 @@
-﻿/**
+/**
  * useVagas — Hook de lógica de negócio para vagas
  *
  * ✅ SSOT compliant - usa VagasService (banco de dados)

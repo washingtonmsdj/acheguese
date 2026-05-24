@@ -190,7 +190,9 @@ export default function VendedorPerfilPage() {
                     {ad.photos?.[0] ? (
                       <img src={ad.photos[0]} alt={ad.title} className="w-full h-full object-cover" loading="lazy" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">📦</div>
+                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                        <Package className="h-8 w-8 opacity-40" aria-hidden="true" />
+                      </div>
                     )}
                     <Badge className="absolute top-2 left-2 text-[10px] bg-background/80 backdrop-blur-sm text-foreground border-0">
                       {ad.condition}

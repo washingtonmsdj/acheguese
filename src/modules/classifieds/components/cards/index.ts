@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Barrel export para cards de Classificados
  */
 

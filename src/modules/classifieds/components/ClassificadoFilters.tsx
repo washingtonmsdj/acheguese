@@ -27,15 +27,11 @@ import {
 } from "@/shared/components/ui/sheet";
 import { cn } from "@/shared/utils/cn";
 import { motion } from "framer-motion";
+import { CLASSIFIED_CATEGORY_LABELS } from "@/config/categories";
 
-const CATEGORIAS = [
-  { id: "todos", label: "Todos", emoji: "🔥" },
-  { id: "móveis", label: "Móveis", emoji: "🪑" },
-  { id: "eletrônicos", label: "Eletrônicos", emoji: "📱" },
-  { id: "veículos", label: "Veículos", emoji: "🚗" },
-  { id: "roupas", label: "Roupas", emoji: "👕" },
-  { id: "serviços", label: "Serviços", emoji: "🔧" },
-  { id: "outros", label: "Outros", emoji: "📦" },
+const CATEGORY_OPTIONS = [
+  { id: "todos", label: "Todos" },
+  ...Object.entries(CLASSIFIED_CATEGORY_LABELS).map(([id, label]) => ({ id, label })),
 ];
 
 const SORT_OPTIONS = [
@@ -226,7 +222,7 @@ export const ClassificadoFilters = memo(function ClassificadoFilters({
 
       {/* Categories */}
       <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-        {CATEGORIAS.map((cat) => {
+        {CATEGORY_OPTIONS.map((cat) => {
           const isActive = category === cat.id;
 
           return (
@@ -243,7 +239,6 @@ export const ClassificadoFilters = memo(function ClassificadoFilters({
               aria-pressed={isActive}
               aria-label={`Filtrar por ${cat.label}`}
             >
-              <span className="text-sm">{cat.emoji}</span>
               {cat.label}
             </motion.button>
           );

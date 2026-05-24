@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ClassifiedsFooterSection - Footer com banners e CTA
  * 
  * SSOT: Section modular e reutilizável
