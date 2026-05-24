@@ -11,22 +11,22 @@ import type { MapEntityType, MapLayerKey } from "../types/core";
 
 export interface MarkerTypeConfig {
   label: string;
-  emoji: string;
+  abbr: string;
   color: string;
   iconClass: string;
 }
 
 export const MARKER_TYPE_CONFIG: Record<MapEntityType, MarkerTypeConfig> = {
-  business: { label: "Negocio", emoji: "🏪", color: "#3b82f6", iconClass: "text-blue-500" },
-  service: { label: "Servico", emoji: "🔧", color: "#10b981", iconClass: "text-emerald-500" },
-  classified: { label: "Classificado", emoji: "🏷️", color: "#f59e0b", iconClass: "text-amber-500" },
-  event: { label: "Evento", emoji: "🎉", color: "#8b5cf6", iconClass: "text-purple-500" },
-  alert: { label: "Alerta", emoji: "⚠️", color: "#ef4444", iconClass: "text-red-500" },
-  professional: { label: "Profissional", emoji: "👤", color: "#f97316", iconClass: "text-orange-500" },
-  tourist_point: { label: "Ponto Turistico", emoji: "📍", color: "#14b8a6", iconClass: "text-teal-500" },
-  driver: { label: "Motorista", emoji: "🚗", color: "#6b7280", iconClass: "text-gray-500" },
-  ride: { label: "Corrida", emoji: "🚕", color: "#6b7280", iconClass: "text-gray-500" },
-  user_location: { label: "Voce", emoji: "📌", color: "#10b981", iconClass: "text-emerald-500" },
+  business: { label: "Negócio", abbr: "E", color: "#3b82f6", iconClass: "text-blue-500" },
+  service: { label: "Serviço", abbr: "S", color: "#10b981", iconClass: "text-emerald-500" },
+  classified: { label: "Classificado", abbr: "C", color: "#f59e0b", iconClass: "text-amber-500" },
+  event: { label: "Evento", abbr: "EV", color: "#8b5cf6", iconClass: "text-purple-500" },
+  alert: { label: "Alerta", abbr: "!", color: "#ef4444", iconClass: "text-red-500" },
+  professional: { label: "Profissional", abbr: "P", color: "#f97316", iconClass: "text-orange-500" },
+  tourist_point: { label: "Ponto Turístico", abbr: "T", color: "#14b8a6", iconClass: "text-teal-500" },
+  driver: { label: "Motorista", abbr: "M", color: "#6b7280", iconClass: "text-gray-500" },
+  ride: { label: "Corrida", abbr: "R", color: "#6b7280", iconClass: "text-gray-500" },
+  user_location: { label: "Você", abbr: "V", color: "#10b981", iconClass: "text-emerald-500" },
 };
 
 export function getMarkerConfig(type: MapEntityType): MarkerTypeConfig {
@@ -108,7 +108,7 @@ export function getLayerConfig(key: MapLayerKey): MarkerTypeConfig {
   const type = getLayerEntityType(key);
   const baseConfig = type
     ? getMarkerConfig(type)
-    : { label: key, emoji: "📌", color: "#6b7280", iconClass: "text-gray-500" };
+    : { label: key, abbr: "?", color: "#6b7280", iconClass: "text-gray-500" };
 
   const overrides = key === "gastronomy" ? LAYER_CONFIG_OVERRIDES.gastronomy : undefined;
   return overrides ? { ...baseConfig, ...overrides } : baseConfig;

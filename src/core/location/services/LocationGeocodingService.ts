@@ -653,7 +653,9 @@ export class LocationGeocodingService {
       (location) => location.type === LocationType.CITY,
     );
     const districts = activeLocations.filter(
-      (location) => location.type === LocationType.DISTRICT,
+      (location) =>
+        location.type === LocationType.NEIGHBORHOOD ||
+        location.type === LocationType.DISTRICT,
     );
     const citiesByIbgeCode = new Map<string, Location>();
     for (const city of cities) {

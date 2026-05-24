@@ -1,12 +1,16 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
+import {
+  RESIDENTIAL_LOCALITY_STATUS,
+  type ResidentialLocalityStatus,
+} from "@/core/location/types/residentialLocality";
 
 export interface ResidentialLocality {
   id: string;
   city_location_id: string;
   slug: string;
   name: string;
-  status: "active" | "pending_review" | "inactive";
+  status: ResidentialLocalityStatus;
   source: string;
   aliases: string[];
   metadata: Record<string, unknown>;
@@ -33,7 +37,7 @@ export class ResidentialLocalityService {
       .from("residential_localities" as never)
       .select("*")
       .eq("city_location_id", cityLocationId)
-      .eq("status", "active")
+      .eq("status", RESIDENTIAL_LOCALITY_STATUS.ACTIVE)
       .order("name", { ascending: true });
 
     if (error) {

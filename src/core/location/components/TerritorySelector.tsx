@@ -1,4 +1,4 @@
-﻿import { useState, useMemo } from 'react';
+import { useCallback, useState, useMemo } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { MapPin, Building2, ChevronDown, Search, X, Users } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
@@ -56,14 +56,31 @@ export function TerritorySelector({ currentTerritoryName, currentPath }: Territo
     const pathParts = anchorCity.geographic_path.split('/').filter(Boolean);
     if (pathParts.length < 3) return '#';
     const [, state, city] = pathParts; // ignora country
-    return `/${state}/${city}/area/${group.slug}`;
+    return `/${state}/${city}/${group.slug}`;
   };
+
+  const getSelectableLocalitiesForCity = useCallback((cityId: string) => {
+    const neighborhoods = allLocations.filter(
+      loc => loc.type === 'neighborhood' && loc.parent_id === cityId && loc.status === 'active'
+    );
+
+    if (neighborhoods.length > 0) return neighborhoods;
+
+    return allLocations.filter(
+      loc => loc.type === 'district' && loc.parent_id === cityId && loc.status === 'active'
+    );
+  }, [allLocations]);
 
   const filteredCities = useMemo(() => {
     if (!searchQuery.trim()) return cities;
     const q = searchQuery.toLowerCase();
-    return cities.filter(city => city.name.toLowerCase().includes(q));
-  }, [cities, searchQuery]);
+    return cities.filter(city => {
+      if (city.name.toLowerCase().includes(q)) return true;
+      return getSelectableLocalitiesForCity(city.id).some(locality =>
+        locality.name.toLowerCase().includes(q)
+      );
+    });
+  }, [cities, getSelectableLocalitiesForCity, searchQuery]);
 
   const filteredGroups = useMemo(() => {
     if (!searchQuery.trim()) return allGroups;
@@ -73,12 +90,6 @@ export function TerritorySelector({ currentTerritoryName, currentPath }: Territo
       group.members.some(m => m.name.toLowerCase().includes(q))
     );
   }, [allGroups, searchQuery]);
-
-  const getDistrictsForCity = (cityId: string) => {
-    return allLocations.filter(
-      loc => loc.type === 'district' && loc.parent_id === cityId && loc.status === 'active'
-    );
-  };
 
   const handleSelect = (path: string) => {
     // ✅ SSOT: Preservar contexto completo da rota (módulo + sufixo) ao mudar de local
@@ -153,7 +164,7 @@ export function TerritorySelector({ currentTerritoryName, currentPath }: Territo
                         <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-foreground">{group.name}</p>
-                          <p className="text-xs text-muted-foreground">{anchorCity?.name ?? 'Salvador'} • {group.members.length} bairros</p>
+                          <p className="text-xs text-muted-foreground">{anchorCity?.name ?? 'Cidade'} • {group.members.length} bairros</p>
                         </div>
                       </button>
                     );
@@ -164,23 +175,28 @@ export function TerritorySelector({ currentTerritoryName, currentPath }: Territo
                 <div className="py-2">
                   <p className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Cidades</p>
                   {filteredCities.map(city => {
-                    const districts = getDistrictsForCity(city.id);
-                    const showDistricts = !searchQuery && districts.length > 0 && districts.length <= 10;
+                    const localities = getSelectableLocalitiesForCity(city.id);
+                    const hasMunicipalNeighborhoods = localities.some((item) => item.type === 'neighborhood');
+                    const localityPlural = hasMunicipalNeighborhoods ? 'bairros' : 'distritos';
+                    const visibleLocalities = searchQuery.trim()
+                      ? localities.filter((item) => item.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                      : localities.slice(0, 10);
+                    const showLocalities = visibleLocalities.length > 0 && (searchQuery.trim() || localities.length <= 10);
                     return (
                       <div key={city.id}>
                         <button onClick={() => handleSelect(toPublicUrl(city.geographic_path))} className={cn("w-full flex items-center gap-3 px-4 py-2.5 hover:bg-secondary transition-colors text-left", currentPath === toPublicUrl(city.geographic_path) && "bg-primary/10")}>
                           <Building2 className="h-4 w-4 text-blue-500 flex-shrink-0" />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-foreground">{city.name}</p>
-                            <p className="text-xs text-muted-foreground">Toda a cidade • {districts.length} bairros</p>
+                            <p className="text-xs text-muted-foreground">Toda a cidade • {localities.length} {localityPlural}</p>
                           </div>
                         </button>
-                        {showDistricts && (
+                        {showLocalities && (
                           <div className="bg-muted/30">
-                            {districts.slice(0, 10).map(district => (
-                              <button key={district.id} onClick={() => handleSelect(toPublicUrl(district.geographic_path))} className={cn("w-full flex items-center gap-3 pl-11 pr-4 py-2 hover:bg-secondary transition-colors text-left", currentPath === toPublicUrl(district.geographic_path) && "bg-primary/10")}>
+                            {visibleLocalities.map(locality => (
+                              <button key={locality.id} onClick={() => handleSelect(toPublicUrl(locality.geographic_path))} className={cn("w-full flex items-center gap-3 pl-11 pr-4 py-2 hover:bg-secondary transition-colors text-left", currentPath === toPublicUrl(locality.geographic_path) && "bg-primary/10")}>
                                 <MapPin className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                                <p className="text-sm text-foreground">{district.name}</p>
+                                <p className="text-sm text-foreground">{locality.name}</p>
                               </button>
                             ))}
                           </div>

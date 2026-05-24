@@ -1,21 +1,13 @@
-/**
- * IpGeolocationService
- * 
- * Serviço para obter localização aproximada baseada em IP.
- * Usado como fallback quando permissão de GPS é negada.
- * 
- * @module core/maps/services
- */
-
-import { logger } from '@/shared/utils/logger';
-import { MAP_DEFAULT_COORDINATES } from '../config/defaultCoordinates';
+import { MAP_DEFAULT_COORDINATES, MAP_DEFAULT_LOCATION } from "../config/defaultCoordinates";
 import type { Coordinates } from "../types/core";
+import { logger } from "@/shared/utils/logger";
+
 export interface IpGeolocationResult {
   coordinates: Coordinates;
   city?: string;
   region?: string;
   country?: string;
-  accuracy: "ip-based"; // Sempre baixa precisão
+  accuracy: "ip-based";
   source: "ip-geolocation";
 }
 
@@ -24,26 +16,11 @@ export interface IpGeolocationError {
   message: string;
 }
 
-/**
- * Serviço de geolocalização por IP
- * 
- * Usa múltiplos provedores com fallback:
- * 1. ipapi.co (gratuito, sem API key)
- * 2. ip-api.com (gratuito, sem API key)
- * 3. Fallback para Salvador, BA
- */
 export class IpGeolocationService {
   private static readonly TIMEOUT_MS = 5000;
-  private static readonly SALVADOR_FALLBACK: Coordinates = MAP_DEFAULT_COORDINATES;
+  private static readonly DEFAULT_FALLBACK: Coordinates = MAP_DEFAULT_COORDINATES;
 
-  /**
-   * Obtém localização aproximada baseada em IP
-   * 
-   * @returns Resultado com coordenadas e informações de localização
-   * @throws IpGeolocationError se todos os provedores falharem
-   */
   static async getLocationByIp(): Promise<IpGeolocationResult> {
-    // Tentar ipapi.co primeiro
     try {
       const result = await this.fetchFromIpApiCo();
       if (result) return result;
@@ -51,7 +28,6 @@ export class IpGeolocationService {
       logger.warn("ipapi.co falhou:", error);
     }
 
-    // Tentar ip-api.com como fallback
     try {
       const result = await this.fetchFromIpApi();
       if (result) return result;
@@ -59,21 +35,17 @@ export class IpGeolocationService {
       logger.warn("ip-api.com falhou:", error);
     }
 
-    // Fallback final: Salvador, BA
-    logger.info("Usando fallback para Salvador, BA");
+    logger.info("Usando fallback configurado de mapa", MAP_DEFAULT_LOCATION);
     return {
-      coordinates: this.SALVADOR_FALLBACK,
-      city: "Salvador",
-      region: "Bahia",
-      country: "Brasil",
+      coordinates: this.DEFAULT_FALLBACK,
+      city: MAP_DEFAULT_LOCATION.city,
+      region: MAP_DEFAULT_LOCATION.region,
+      country: MAP_DEFAULT_LOCATION.country,
       accuracy: "ip-based",
       source: "ip-geolocation",
     };
   }
 
-  /**
-   * Busca localização via ipapi.co
-   */
   private static async fetchFromIpApiCo(): Promise<IpGeolocationResult | null> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.TIMEOUT_MS);
@@ -114,9 +86,6 @@ export class IpGeolocationService {
     }
   }
 
-  /**
-   * Busca localização via ip-api.com
-   */
   private static async fetchFromIpApi(): Promise<IpGeolocationResult | null> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.TIMEOUT_MS);
@@ -157,13 +126,10 @@ export class IpGeolocationService {
     }
   }
 
-  /**
-   * Verifica se as coordenadas são do fallback de Salvador
-   */
-  static isSalvadorFallback(coordinates: Coordinates): boolean {
+  static isDefaultFallback(coordinates: Coordinates): boolean {
     return (
-      Math.abs(coordinates.latitude - this.SALVADOR_FALLBACK.latitude) < 0.001 &&
-      Math.abs(coordinates.longitude - this.SALVADOR_FALLBACK.longitude) < 0.001
+      Math.abs(coordinates.latitude - this.DEFAULT_FALLBACK.latitude) < 0.001 &&
+      Math.abs(coordinates.longitude - this.DEFAULT_FALLBACK.longitude) < 0.001
     );
   }
 }

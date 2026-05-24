@@ -5,12 +5,17 @@
  * - Engine oficial: MapLibre GL JS
  * - Tiles provider: OpenStreetMap via tiles.openfreemap.org (gratuito, sem token)
  * - Estilo padrao: Positron, por ser o estilo upstream mais estavel no runtime atual
- * - Defaults de camera para Salvador/BA
+ * - Defaults de camera vindos da configuração central de mapas
  *
  * Para trocar de provider de tiles (ex: Maptiler, Stadia), mude apenas aqui.
  */
 
 import type { TileProviderConfig } from '../types/providers';
+import {
+  DEFAULT_TILE_STYLE as SHARED_DEFAULT_TILE_STYLE,
+  MAP_DEFAULT_CENTER_LNGLAT,
+  MAP_DEFAULT_ZOOM,
+} from '@/shared/config/mapDefaults';
 
 interface MapCamera {
   center: [number, number];
@@ -18,16 +23,11 @@ interface MapCamera {
 }
 
 /** Style URL compativel com MapLibre GL - OpenFreeMap (OSM, sem token) */
-export const DEFAULT_TILE_STYLE: TileProviderConfig = {
-  name: 'openfreemap',
-  styleUrl: 'https://tiles.openfreemap.org/styles/positron',
-  attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
-};
+export const DEFAULT_TILE_STYLE: TileProviderConfig = SHARED_DEFAULT_TILE_STYLE;
 
-/** Camera padrao: Salvador, BA */
 export const DEFAULT_CAMERA: MapCamera = {
-  center: [-38.476, -12.975], // MapLibre usa [lng, lat]
-  zoom: 14,
+  center: MAP_DEFAULT_CENTER_LNGLAT,
+  zoom: MAP_DEFAULT_ZOOM,
 };
 
 /** Paleta de cores para multiplos bairros */

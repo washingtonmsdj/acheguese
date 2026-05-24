@@ -35,10 +35,10 @@ export const MAP_PRODUCT_SURFACES: MapProductSurface[] = [
     note: "Mapa contextual por bairro.",
   },
   {
-    route: "/mapa/:state/:city/area/:groupSlug",
+    route: "/mapa/:state/:city/:territorySlug",
     owner: "src/core/routing/components/TerritorialModulePages.tsx",
     status: "official",
-    note: "Mapa contextual por grupo territorial.",
+    note: "Mapa contextual por territorio (bairro ou grupo).",
   },
   {
     route: "/perto-de-mim",

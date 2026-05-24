@@ -1,4 +1,4 @@
-﻿/**
+/**
  * useGeocoding - hooks de geocoding/reverse geocoding.
  *
  * SSOT:

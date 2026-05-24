@@ -70,7 +70,7 @@ export type {
 export { formatDuration, formatDistance } from '@/core/routing/services/formatters';
 
 // ============================================
-// LEGACY ROUTING TYPES - DEPRECATED
+// ROUTING TYPES RE-EXPORTED DURING MAPS/ROUTING CONSOLIDATION
 // ============================================
 
 /**

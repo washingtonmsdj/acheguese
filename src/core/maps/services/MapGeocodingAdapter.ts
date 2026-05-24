@@ -1,8 +1,7 @@
 /**
- * GeocodingService
+ * MapGeocodingAdapter
  *
- * Camada de compatibilidade para consumidores legados de mapas.
- * O SSOT real agora vive em `@/core/location/services/LocationGeocodingService`.
+ * Adapter público de mapas para o SSOT de geocoding em core/location.
  */
 
 import { logger } from '@/shared/utils/logger';

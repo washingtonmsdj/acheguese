@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { getLayerConfig, getMarkerConfig } from "./markerConfig";
 
@@ -18,7 +18,7 @@ describe("markerConfig SSOT", () => {
   });
 
   it("returns marker config for mapped entity type", () => {
-    expect(getMarkerConfig("tourist_point").emoji).toBe("📍");
+    expect(getMarkerConfig("tourist_point").abbr).toBe("T");
     expect(getMarkerConfig("alert").color).toBe("#ef4444");
   });
 });

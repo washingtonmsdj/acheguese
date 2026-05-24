@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
 import { useLocationCascade } from "@/core/location/hooks/useLocationCascade";
+import { LocationType } from "@/core/location/types";
 import { Label } from "@/shared/components/ui/label";
 import {
   Select,
@@ -23,6 +24,9 @@ const tokenizeValue = (value: string | null | undefined): string[] =>
   normalizeValue(value)
     .split(/[\s,./-]+/)
     .filter(Boolean);
+
+const isSelectableLocalityType = (type: string): boolean =>
+  type === LocationType.NEIGHBORHOOD || type === LocationType.DISTRICT;
 
 interface SelectedLocationData {
   stateId: string;
@@ -97,22 +101,22 @@ export function TerritorialSelector({
 
         const state = ancestors.find((location) => location.type === "state");
         const city = ancestors.find((location) => location.type === "city");
-        const district = ancestors.find(
-          (location) => location.type === "district",
+        const locality = ancestors.find((location) =>
+          isSelectableLocalityType(location.type),
         );
 
         if (state) setSelectedStateId(state.id);
         if (city) setSelectedCityId(city.id);
 
-        if (district) {
-          setSelectedNeighborhoodId(district.id);
+        if (locality) {
+          setSelectedNeighborhoodId(locality.id);
           setResolvedLabels({
             stateId: state?.id || "",
             cityId: city?.id || "",
-            neighborhoodId: district.id,
+            neighborhoodId: locality.id,
             stateName: state?.name || "",
             cityName: city?.name || "",
-            neighborhoodName: district.name,
+            neighborhoodName: locality.name,
           });
           return;
         }
@@ -305,6 +309,12 @@ export function TerritorialSelector({
   };
 
   const isLoadingInitialState = isResolvingLocation && !selectedStateId;
+  const hasMunicipalNeighborhoods = neighborhoods.some(
+    (item) => item.type === LocationType.NEIGHBORHOOD,
+  );
+  const localityLabel = hasMunicipalNeighborhoods ? "Bairro" : "Distrito";
+  const visibleLocalityLabel = labels.neighborhood || localityLabel;
+  const selectLocalityText = `Selecione o ${visibleLocalityLabel.toLowerCase()}`;
 
   return (
     <div className="space-y-4">
@@ -373,7 +383,7 @@ export function TerritorialSelector({
       {!cityOnly && (!progressiveReveal || Boolean(selectedCityId)) && (
         <div>
           <Label htmlFor="territorial-neighborhood">
-            {labels.neighborhood || "Bairro"} {!allowCityOnly && "*"}
+            {visibleLocalityLabel} {!allowCityOnly && "*"}
           </Label>
           {loadingNeighborhoods ? (
             <div className="flex h-10 items-center gap-2 rounded-md border bg-muted px-3">
@@ -389,13 +399,13 @@ export function TerritorialSelector({
               <SelectTrigger id="territorial-neighborhood">
                 <SelectValue
                   placeholder={
-                    selectedCityId ? "Selecione o bairro" : "Selecione a cidade primeiro"
+                    selectedCityId ? selectLocalityText : "Selecione a cidade primeiro"
                   }
                 />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none" disabled>
-                  Selecione o bairro
+                  {selectLocalityText}
                 </SelectItem>
                 {neighborhoods.map((neighborhood) => (
                   <SelectItem key={neighborhood.id} value={neighborhood.id}>
@@ -404,6 +414,11 @@ export function TerritorialSelector({
                 ))}
               </SelectContent>
             </Select>
+          )}
+          {selectedCityId && !loadingNeighborhoods && neighborhoods.length === 0 && (
+            <p className="mt-1 text-xs text-destructive">
+              Nenhum bairro ou distrito ativo encontrado para esta cidade.
+            </p>
           )}
           {allowCityOnly && (
             <p className="mt-1 text-xs text-muted-foreground">

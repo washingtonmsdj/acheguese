@@ -488,68 +488,12 @@ console.warn('[MapEntityProjection] Invalid coordinates:', entity.id);
 console.log('[Maps] Default providers configured');
 ```
 
-## Migração e Compatibilidade
+## Migracao
 
-### Legacy Support
+Nao ha camada de compatibilidade antiga no runtime de mapas. Consumers devem importar os services canonicos:
 
-Exports legados mantidos para compatibilidade:
-
-```typescript
-// Legacy (manter por enquanto)
-export { MapsService } from './services/MapsService';
-
-// Novo (usar em código novo)
+```ts
 export { mapViewportService } from './services';
 ```
 
-### Deprecation Path
-
-1. Marcar como deprecated
-2. Adicionar warning no console
-3. Documentar alternativa
-4. Remover após 2 versões
-
-## Próximos Passos Arquiteturais
-
-### Curto Prazo (1-2 sprints)
-
-1. **Hooks Layer**
-   - useMapLayers
-   - useMapViewport
-   - useMapMarkers
-   - useMapState
-
-2. **Components Layer**
-   - MapContainer
-   - MapMarkerLayer
-   - MapControls
-
-### Médio Prazo (3-6 sprints)
-
-1. **Clustering**
-   - Supercluster integration
-   - Web Worker processing
-
-2. **Real Routing**
-   - OSRM provider
-   - Fallback strategy
-
-3. **Advanced Features**
-   - Heatmaps
-   - Service areas
-   - Isochrones
-
-### Longo Prazo (6+ sprints)
-
-1. **Mobilidade**
-   - Driver tracking
-   - Ride matching
-   - Real-time updates
-
-2. **Offline Support**
-   - Tile caching
-   - Offline routing
-
-3. **Analytics**
-   - Usage tracking
-   - Performance monitoring
+Qualquer API antiga deve ser removida junto com o consumidor antes de merge.

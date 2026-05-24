@@ -1,13 +1,14 @@
 /**
- * Geospatial Service Mock - In-Memory Implementation
- * 
- * Mock implementation of IGeospatialPort for testing without real maps API.
+ * HaversineGeospatialPort - cálculo geoespacial baseado em locations.
+ *
+ * Implementação real de IGeospatialPort para distância territorial simples,
+ * usando coordenadas canônicas do SSOT de locations.
  */
 
 import type { IGeospatialPort, GeospatialError, GeospatialErrorCode } from '@/core/coverage/index';
 import type { ILocationRepository } from '@/core/location/repositories/ILocationRepository';
 
-export class GeospatialServiceMock implements IGeospatialPort {
+export class HaversineGeospatialPort implements IGeospatialPort {
   constructor(private locationRepository: ILocationRepository) {}
 
   async isWithinRadius(

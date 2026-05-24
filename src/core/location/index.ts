@@ -51,17 +51,14 @@ export type { ILocationContextStore } from './services/ILocationContextStore';
 export type { ILocationRepository } from './repositories/ILocationRepository';
 export type { ITerritorialGroupRepository } from './repositories/ITerritorialGroupRepository';
 
-export { LocationRepositoryMock } from './repositories/LocationRepositoryMock';
 export { LocationRepositorySupabase } from './repositories/LocationRepositorySupabase';
 export { createLocationRepository } from './repositories/createLocationRepository';
-export { TerritorialGroupRepositoryMock } from './repositories/TerritorialGroupRepositoryMock';
 export { createTerritorialGroupRepository } from './repositories/createTerritorialGroupRepository';
 
 export { locationContextStore } from './stores/LocationContextStore';
 export { BaseLocationService } from './services/BaseLocationService';
 export { residentialLocalityService, ResidentialLocalityService } from './services/ResidentialLocalityService';
 export type { ResidentialLocality } from './services/ResidentialLocalityService';
-export { TerritorialGroupService } from './services/TerritorialGroupService';
 export { TerritoryModeManager } from './services/TerritoryModeManager'; // SSOT para lógica de modo territorial
 
 // ============================================
@@ -152,10 +149,10 @@ export type {
 } from './services/LocationGeocodingService';
 
 // ============================================
-// LEGACY EXPORTS
-// LocationService: gerencia GPS/histórico/residência — NÃO é territorial.
+// LOCATION HISTORY EXPORTS
+// LocationService: gerencia GPS/histórico/residência - não é territorial.
 // Mantido separado da fundação territorial por responsabilidade distinta.
-// Candidato a mover para src/core/location-history/ em refactor futuro.
+// Mantido aqui como contrato público de histórico residencial.
 // ============================================
 export { locationService, LocationService } from "./services/LocationHistoryService";
 export type {

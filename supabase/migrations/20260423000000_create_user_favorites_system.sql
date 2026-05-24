@@ -1,7 +1,7 @@
 -- ============================================================================
 -- USER FAVORITES - Sistema de Favoritos de Estabelecimentos
 -- ============================================================================
--- Migração consolidada das migrations_old:
+-- Migração consolidada no histórico linear ativo:
 --   20260412000002_add_user_favorites.sql
 --   20260412000003_update_favorites_with_geopath.sql
 -- ============================================================================

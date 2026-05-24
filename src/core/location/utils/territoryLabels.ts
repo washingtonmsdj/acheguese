@@ -52,6 +52,7 @@ function resolveTerritoryLevel(resolved: ResolvedTerritory | null | undefined): 
   if (resolved.kind === 'group') return 'group';
   if (resolved.kind === 'location') {
     switch (resolved.location.type) {
+      case LocationType.NEIGHBORHOOD: return 'district';
       case LocationType.DISTRICT: return 'district';
       case LocationType.CITY: return 'city';
       case LocationType.STATE: return 'state';

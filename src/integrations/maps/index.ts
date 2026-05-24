@@ -20,7 +20,7 @@ export {
   nominatimGeocodingProvider,
   NominatimGeocodingProvider,
 } from './providers/NominatimGeocodingProvider';
-export { mockRoutingProvider, MockRoutingProvider } from './providers/MockRoutingProvider';
+export { osrmProvider, OSRMProvider, createOSRMProvider } from './providers/OSRMProvider';
 
 // ============================================
 // PROVIDER SETUP

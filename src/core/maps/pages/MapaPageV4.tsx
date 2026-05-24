@@ -19,6 +19,7 @@ import { MapMarkerPopup } from '../components/v3/MapMarkerPopup';
 import { useMapViewportFetch } from '../hooks/useMapViewportFetch';
 import { mapEntityProjection } from '../services/MapEntityProjectionService';
 import { DEFAULT_TILE_STYLE } from '../providers/MapProvider';
+import { MAP_DEFAULT_BOUNDS, MAP_DEFAULT_ZOOM } from '../config/defaultCoordinates';
 import { MAP_RUNTIME_LAYER_KEYS } from '../config/runtimeConfig';
 import { BusinessService } from '@/core/business/services/BusinessService';
 import { communityEventsRuntimeService, type CommunityEvent } from '@/core/community-events/services/CommunityEventsRuntimeService';
@@ -49,9 +50,9 @@ interface MapaPageV4Props {
 // styleimagemissing no MapLibreAdapter — não trocamos de estilo por isso.
 const TILE_STYLE_URL = DEFAULT_TILE_STYLE.styleUrl;
 
-// ─── Bounds e zoom iniciais (Salvador, BA) ────────────────────────────────────
-const SALVADOR_BOUNDS: BoundingBox = [-38.6, -13.1, -38.3, -12.8];
-const INITIAL_ZOOM = 13;
+// ─── Bounds e zoom iniciais vindos do SSOT de mapas ───────────────────────────
+const INITIAL_BOUNDS: BoundingBox = MAP_DEFAULT_BOUNDS;
+const INITIAL_ZOOM = MAP_DEFAULT_ZOOM;
 
 function createInitialVisibleLayers(): Partial<Record<MapLayerKey, boolean>> {
   return Object.fromEntries(
@@ -209,7 +210,7 @@ function makeAlertFetcher(territoryFilter: TerritoryFilter) {
 export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV4Props) {
   const adapterRef = useRef<MapLibreAdapterHandle>(null);
   const [selectedMarker, setSelectedMarker] = useState<MapMarker | null>(null);
-  const [currentBounds, setCurrentBounds] = useState<BoundingBox>(SALVADOR_BOUNDS);
+  const [currentBounds, setCurrentBounds] = useState<BoundingBox>(INITIAL_BOUNDS);
   const [currentZoom, setCurrentZoom] = useState<number>(INITIAL_ZOOM);
   const [visibleLayers, setVisibleLayers] = useState<Partial<Record<MapLayerKey, boolean>>>(
     createInitialVisibleLayers,
@@ -329,11 +330,11 @@ export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV
     }
   }, [clearLayer]);
 
-  // Fetch inicial com bounds de Salvador.
+  // Fetch inicial com bounds configurados.
   // Quando os polígonos do território chegarem, o MapLibreAdapter centraliza
   // automaticamente e o onViewportChange dispara fetchByBounds com os bounds reais.
   useEffect(() => {
-    fetchByBounds(SALVADOR_BOUNDS, INITIAL_ZOOM);
+    fetchByBounds(INITIAL_BOUNDS, INITIAL_ZOOM);
   }, [fetchByBounds]);
 
   // Re-fetch quando o território muda (fetchers recriados com novo territoryFilter)
@@ -512,7 +513,5 @@ export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV
     </div>
   );
 }
-
-
 
 

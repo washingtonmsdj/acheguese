@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/core/auth/hooks/useAuth';
 import { residenceService } from '@/core/residence/services/ResidenceService';
-import { TerritorialGroupService } from '@/core/location/services/TerritorialGroupService';
+import { TerritorialGroupService } from '@/core/territorial/services/TerritorialGroupService';
 import { useUserTerritory } from './useUserTerritory';
 
 const territorialGroupService = new TerritorialGroupService();

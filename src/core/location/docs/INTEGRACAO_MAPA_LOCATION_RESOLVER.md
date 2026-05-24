@@ -1,56 +1,46 @@
-# Integração useResolvedUserLocation no Mapa Central
+# Integracao do `useResolvedUserLocation` no Mapa Central
 
 ## Resumo
-O mapa central (`/mapa`) agora usa o hook `useResolvedUserLocation` para resolver a localização do usuário com fallback territorial automático quando o GPS é negado.
 
-## Mudanças Implementadas
+O mapa central (`/mapa`) usa `useResolvedUserLocation` para resolver a localizacao do usuario com fallback territorial quando o GPS e negado ou indisponivel.
 
-### 1. Substituição do Hook de Geolocalização
-- **Antes**: `useRobustGeolocation` (apenas GPS, sem fallback)
-- **Depois**: `useResolvedUserLocation` (GPS + fallback territorial)
+## Estrategia de Resolucao
 
-### 2. Estratégia de Resolução
-O hook resolve a localização seguindo esta ordem:
-1. **GPS** - Se o usuário permitir acesso à localização
-2. **Território Ativo** - Se GPS for negado, usa o centro do território selecionado
-3. **Cidade Padrão** - Fallback final (Salvador, BA)
+1. GPS, quando o usuario permite acesso a localizacao.
+2. Territorio ativo, usando o centro do territorio selecionado.
+3. Centro padrao configurado por ambiente quando nao ha territorio ativo.
 
-### 3. Indicador Visual
-Um badge na parte inferior do mapa mostra a fonte da localização:
-- 🟢 Verde com 📍: "Usando sua localização GPS"
-- 🔵 Azul com 📌: "Mostrando resultados em [território]" ou "Mostrando resultados da região padrão"
+## Indicador Visual
 
-### 4. Comportamento
-- **Auto-resolve**: Solicita localização automaticamente ao montar
-- **Reativo**: Atualiza quando o território muda (se não estiver usando GPS)
-- **Transparente**: Usuário sempre sabe qual fonte está sendo usada
+A UI deve informar explicitamente a origem da localizacao:
 
-## Código Relevante
+- GPS: `Usando sua localiza??o GPS`.
+- Territorio: `Mostrando resultados em [territorio]`.
+- Padrao: `Mostrando resultados da regi?o padr?o`.
+
+## Comportamento
+
+- Auto-resolve ao montar quando configurado.
+- Atualiza quando o territorio muda, desde que a origem atual nao seja GPS.
+- Mantem transparencia para o usuario sobre a fonte da localizacao.
+
+## Codigo Relevante
 
 ```typescript
-const { 
-  coords: userLocation,      // Coordenadas resolvidas
-  isGps,                     // true se veio do GPS
-  status: locationStatus,    // 'gps' | 'territory' | 'fallback'
-  sourceMessage,             // Mensagem explicativa
-  resolve: resolveLocation   // Função para re-resolver
-} = useResolvedUserLocation({ 
-  autoResolve: true,  // Resolve automaticamente
-  tryGps: true        // Tenta GPS primeiro
+const {
+  coords: userLocation,
+  isGps,
+  status: locationStatus,
+  sourceMessage,
+  resolve: resolveLocation,
+} = useResolvedUserLocation({
+  autoResolve: true,
+  tryGps: true,
 });
 ```
 
-## Benefícios
-
-1. **Experiência Consistente**: Mapa sempre tem uma localização válida
-2. **Fallback Inteligente**: Usa território selecionado quando GPS não está disponível
-3. **Transparência**: Usuário sabe de onde vem a localização
-4. **SSOT**: Usa o mesmo resolver de localização em todo o sistema
-
-## Arquivos Modificados
-- `src/core/maps/pages/MapaPageV4.tsx`
-
 ## Arquivos Relacionados
-- `src/core/location/hooks/useResolvedUserLocation.ts` - Hook principal
-- `src/core/location/services/UserLocationResolver.ts` - Serviço de resolução
-- `docs/MIGRATION_ADDRESS_PRECISION.sql` - Migração de banco aplicada
+
+- `src/core/location/hooks/useResolvedUserLocation.ts`
+- `src/core/location/services/UserLocationResolver.ts`
+- `src/core/maps/pages/MapaPageV4.tsx`

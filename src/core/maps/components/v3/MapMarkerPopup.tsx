@@ -1,4 +1,4 @@
-import { X, ExternalLink, Star } from 'lucide-react';
+import { CheckCircle2, X, ExternalLink, Star } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { getMarkerConfig } from '../../config/markerConfig';
 import type { MapMarker } from '../../types/core';
@@ -29,10 +29,10 @@ export function MapMarkerPopup({ marker, onClose, onNavigate }: MapMarkerPopupPr
       <div className="bg-card border border-border rounded-2xl shadow-xl overflow-hidden">
         <div className="flex items-start gap-3 p-4 pb-3">
           <div
-            className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-base mt-0.5"
+            className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-xs font-bold text-white mt-0.5"
             style={{ backgroundColor: `${config.color}20` }}
           >
-            <span>{config.emoji}</span>
+            <span style={{ color: config.color }}>{config.abbr}</span>
           </div>
 
           <div className="flex-1 min-w-0">
@@ -47,7 +47,7 @@ export function MapMarkerPopup({ marker, onClose, onNavigate }: MapMarkerPopupPr
               )}
               {isVerified && (
                 <span className="text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded">
-                  ✓
+                  <CheckCircle2 className="h-3 w-3" aria-label="Verificado" />
                 </span>
               )}
             </div>

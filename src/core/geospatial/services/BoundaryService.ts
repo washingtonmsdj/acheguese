@@ -402,7 +402,9 @@ class BoundaryServiceClass {
       (location) => location.type === LocationType.CITY,
     );
     const districts = activeLocations.filter(
-      (location) => location.type === LocationType.DISTRICT,
+      (location) =>
+        location.type === LocationType.NEIGHBORHOOD ||
+        location.type === LocationType.DISTRICT,
     );
 
     const citiesByStateId = new Map<string, Location[]>();

@@ -17,7 +17,7 @@ export type * from './types';
 export { mapEntityProjection } from './services/MapEntityProjectionService';
 export { GeolocationService } from './services/GeolocationService';
 export { clusteringService } from './services/ClusteringService';
-export { GeocodingService, geocodingService } from './services/GeocodingService';
+export { GeocodingService, geocodingService } from './services/MapGeocodingAdapter';
 export type { GeolocationCoords, GeolocationResult, GeolocationOptions } from './services/GeolocationService';
 export type { ClusterPoint, ClusterOptions } from './services/ClusteringService';
 

@@ -231,29 +231,14 @@ console.assert(results.length > 0);
 
 ## Problemas Conhecidos
 
-### 1. Dependência Circular
-- `core/geocoding` não deve importar `core/address` ou `core/maps`
-- Services legados importam o novo SSOT com `await import()`
+### 1. Dependencia Circular
+- `core/geocoding` nao deve importar `core/address` ou `core/maps`.
+- Integracoes devem consumir o contrato canonico diretamente, sem adaptadores antigos.
 
-### 2. Tipos Diferentes
-- `CepLookupResult` (legado) vs `PostalCodeLookupResult` (novo)
-- Converter quando necessário:
-```typescript
-const legacyToNew = (legacy: CepLookupResult): PostalCodeLookupResult => ({
-  postalCode: legacy.cep,
-  street: legacy.logradouro,
-  complement: legacy.complemento,
-  neighborhood: legacy.bairro,
-  city: legacy.localidade,
-  state: legacy.uf,
-  ibgeCode: legacy.ibge,
-});
-```
-
-### 3. Coordenadas Opcionais
-- ViaCEP não fornece coordenadas
-- `PostalCodeLookupResult.coordinates` é opcional
-- Consumidores devem tratar `undefined`
+### 2. Coordenadas Opcionais
+- ViaCEP nao fornece coordenadas.
+- `PostalCodeLookupResult.coordinates` e opcional.
+- Consumidores devem tratar `undefined`.
 
 ---
 

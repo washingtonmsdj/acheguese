@@ -19,7 +19,7 @@ export abstract class BaseLocationService {
   protected locationService: LocationService;
 
   constructor() {
-    // Usa factory: mock em dev (VITE_USE_MOCK_DATA=true), Supabase em produção
+    // Usa a factory canônica de locations; produção e desenvolvimento seguem o mesmo contrato.
     this.locationService = new LocationService(createLocationRepository());
   }
 
@@ -55,7 +55,8 @@ export abstract class BaseLocationService {
 
   /** Verifica se localização ativa é distrito */
   isDistrict(): boolean {
-    return this.getActiveLocation()?.type === LocationType.DISTRICT;
+    const type = this.getActiveLocation()?.type;
+    return type === LocationType.DISTRICT || type === LocationType.NEIGHBORHOOD;
   }
 
   /** Valida se um location_id é válido e ativo na fundação */
@@ -90,7 +91,7 @@ export abstract class BaseLocationService {
   getFilterScope(): 'city' | 'district' | 'none' {
     const location = this.getActiveLocation();
     if (!location) return 'none';
-    if (location.type === LocationType.DISTRICT) return 'district';
+    if (location.type === LocationType.DISTRICT || location.type === LocationType.NEIGHBORHOOD) return 'district';
     if (location.type === LocationType.CITY) return 'city';
     return 'city';
   }

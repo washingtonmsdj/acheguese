@@ -1,4 +1,5 @@
 import { EntityStatus } from "@/shared/types/enums";
+import { MAP_DEFAULT_CENTER_LNGLAT, MAP_DEFAULT_ZOOM } from "../../config/defaultCoordinates";
 import type { MapMarker } from "../../types/core";
 
 export interface CircleArea {
@@ -30,8 +31,8 @@ export function writeMapState(state: MapRuntimeState): void {
   typedWindow.__mapState = state;
 }
 
-export const DEFAULT_CENTER: [number, number] = [-38.5014, -12.9714];
-export const DEFAULT_ZOOM = 13;
+export const DEFAULT_CENTER: [number, number] = MAP_DEFAULT_CENTER_LNGLAT;
+export { MAP_DEFAULT_ZOOM as DEFAULT_ZOOM };
 
 interface ClusterRenderMarker {
   id: string;

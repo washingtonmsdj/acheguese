@@ -141,11 +141,19 @@ export function useCityNeighborhoodsPolygons({
     const run = async () => {
       try {
         const repo = createLocationRepository();
-        const { locations: neighborhoods } = await repo.findChildren(cityId, {
-          type: LocationType.DISTRICT,
+        const { locations: municipalNeighborhoods } = await repo.findChildren(cityId, {
+          type: LocationType.NEIGHBORHOOD,
           status: LocationStatus.ACTIVE,
           page_size: 200,
         });
+        const { locations: ibgeDistricts } = municipalNeighborhoods.length > 0
+          ? { locations: [] as Location[] }
+          : await repo.findChildren(cityId, {
+              type: LocationType.DISTRICT,
+              status: LocationStatus.ACTIVE,
+              page_size: 200,
+            });
+        const neighborhoods = municipalNeighborhoods.length > 0 ? municipalNeighborhoods : ibgeDistricts;
 
         if (cancelled) return;
 

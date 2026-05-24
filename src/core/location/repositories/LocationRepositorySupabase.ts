@@ -1,10 +1,9 @@
 /**
  * LocationRepositorySupabase
  *
- * Implementação real de ILocationRepository usando Supabase.
- * Substitui LocationRepositoryMock quando VITE_USE_MOCK_DATA=false.
+ * Implementação canônica de ILocationRepository usando Supabase.
  *
- * Contrato público idêntico ao mock — LocationService não sabe qual está ativo.
+ * Contrato público único para LocationService e consumidores territoriais.
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
@@ -146,10 +145,10 @@ export class LocationRepositorySupabase implements ILocationRepository {
       page_size?: number;
     }
   ): Promise<{ locations: Location[]; total_count: number }> {
-    // ✅ SSOT - Validação: location_id deve ser UUID válido
+    //  SSOT - Validação: location_id deve ser UUID válido
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(location_id)) {
-      logger.warn(`⚠️ LocationRepository.findChildren: Invalid UUID format for location_id: ${location_id}`);
+      logger.warn(` LocationRepository.findChildren: Invalid UUID format for location_id: ${location_id}`);
       return { locations: [], total_count: 0 };
     }
 
@@ -182,12 +181,25 @@ export class LocationRepositorySupabase implements ILocationRepository {
   }
 
   async findAll(): Promise<Location[]> {
-    const { data, error } = await supabase
-      .from(TABLE)
-      .select('*')
-      .order('geographic_path', { ascending: true });
+    const pageSize = 1000;
+    let from = 0;
+    const rows: Record<string, unknown>[] = [];
 
-    if (error) throw new LocationError(LocationErrorCode.DATABASE_ERROR, error.message);
-    return (data ?? []).map(rowToLocation);
+    while (true) {
+      const { data, error } = await supabase
+        .from(TABLE)
+        .select('*')
+        .order('geographic_path', { ascending: true })
+        .range(from, from + pageSize - 1);
+
+      if (error) throw new LocationError(LocationErrorCode.DATABASE_ERROR, error.message);
+
+      const page = (data ?? []) as Record<string, unknown>[];
+      rows.push(...page);
+      if (page.length < pageSize) break;
+      from += pageSize;
+    }
+
+    return rows.map(rowToLocation);
   }
 }

@@ -1,45 +1,36 @@
 /**
- * UserLocationResolver - SSOT para resolução de posição do usuário
- * 
- * Responsável por resolver a posição do usuário com fallback inteligente:
+ * UserLocationResolver - SSOT para resolucao de posicao do usuario
+ *
+ * Fallback progressivo:
  * 1. GPS do dispositivo (se permitido)
  * 2. Cache de GPS recente
- * 3. Território ativo no seletor
- * 4. Cidade padrão do sistema
- * 
- * NUNCA depender exclusivamente de GPS para a aplicação funcionar.
- * 
- * @module core/location/services
+ * 3. Territorio ativo no seletor
+ * 4. Cidade de lancamento configurada
  */
-import { logger } from '@/shared/utils/logger';
-import { GeolocationService } from '@/core/maps/services/GeolocationService';
-import { locationContextStore } from '../stores/LocationContextStore';
-import { TERRITORY_CENTERS } from '../config/territoryCenters';
-import type { ResolvedEntityLocation } from '../types/entityLocation';
+
+import { logger } from "@/shared/utils/logger";
+import { GeolocationService } from "@/core/maps/services/GeolocationService";
+import { MAP_DEFAULT_COORDINATES, MAP_DEFAULT_LOCATION } from "@/shared/config/mapDefaults";
+import { locationContextStore } from "../stores/LocationContextStore";
+import type { ResolvedEntityLocation } from "../types/entityLocation";
 
 export interface UserLocationResolverOptions {
-  /** Tentar GPS? (default: true) */
   tryGps?: boolean;
-  /** Timeout para GPS em ms (default: 10000) */
   gpsTimeout?: number;
-  /** Usar cache? (default: true) */
   useCache?: boolean;
 }
 
 class UserLocationResolverClass {
-  /**
-   * Resolve a posição do usuário com fallback progressivo.
-   * 
-   * Ordem:
-   * 1. GPS (se permitido e disponível)
-   * 2. Cache de GPS
-   * 3. Centro do território ativo
-   * 4. Fallback final (cidade padrão)
-   */
+  private getSystemFallbackCenter(): { lat: number; lng: number } {
+    return {
+      lat: MAP_DEFAULT_COORDINATES.latitude,
+      lng: MAP_DEFAULT_COORDINATES.longitude,
+    };
+  }
+
   async resolve(options: UserLocationResolverOptions = {}): Promise<ResolvedEntityLocation> {
     const { tryGps = true, gpsTimeout = 10000, useCache = true } = options;
 
-    // 1. Tentar GPS
     if (tryGps) {
       try {
         const result = await GeolocationService.getCurrentLocation({
@@ -49,14 +40,14 @@ class UserLocationResolverClass {
         });
 
         return {
-          entityType: 'user_gps',
-          source: result.source === 'ip' ? 'ip_geolocation' : 'gps',
+          entityType: "user_gps",
+          source: result.source === "ip" ? "ip_geolocation" : "gps",
           latitude: result.coords.latitude,
           longitude: result.coords.longitude,
           accuracy: result.coords.accuracy,
-          locationId: null, // GPS não resolve location_id diretamente
+          locationId: null,
           locationName: null,
-          confidence: result.isHighAccuracy ? 'high' : result.source === 'ip' ? 'low' : 'medium',
+          confidence: result.isHighAccuracy ? "high" : result.source === "ip" ? "low" : "medium",
         };
       } catch (error: unknown) {
         const normalizedError =
@@ -64,84 +55,66 @@ class UserLocationResolverClass {
             ? (error as { code?: number; message?: string })
             : {};
         const message = normalizedError.message ?? "";
-        const isDenied = normalizedError.code === 1 || message.includes('negada') || message.includes('denied');
-        
+        const isDenied = normalizedError.code === 1 || message.includes("negada") || message.includes("denied");
+
         if (isDenied) {
-          logger.info('[UserLocationResolver] GPS negado, usando fallback territorial');
+          logger.info("[UserLocationResolver] GPS negado, usando fallback territorial");
         } else {
-          logger.warn('[UserLocationResolver] GPS falhou, usando fallback territorial', message);
+          logger.warn("[UserLocationResolver] GPS falhou, usando fallback territorial", message);
         }
       }
     }
 
-    // 2. Fallback: território ativo no seletor
     return this.resolveFromTerritory();
   }
 
-  /**
-   * Resolve posição a partir do território ativo no seletor.
-   * Usado como fallback quando GPS não está disponível.
-   */
   resolveFromTerritory(): ResolvedEntityLocation {
     const territory = locationContextStore.getActiveTerritory();
-    
+
     if (territory?.location) {
       const loc = territory.location;
-      
-      // Tentar obter coordenadas do centro do território
-      const slug = loc.slug;
-      const center =
-        Object.entries(TERRITORY_CENTERS).find(([key]) => key === slug)?.[1] ?? null;
-      const systemFallback = TERRITORY_CENTERS['salvador'];
-      
-      // Também checar metadata do location
+      const systemFallback = this.getSystemFallbackCenter();
+
       const metaLat = loc.metadata?.center_latitude as number | undefined;
       const metaLng = loc.metadata?.center_longitude as number | undefined;
-      
-      const lat = metaLat ?? center?.lat ?? systemFallback.lat;
-      const lng = metaLng ?? center?.lng ?? systemFallback.lng;
+
+      const lat = metaLat ?? systemFallback.lat;
+      const lng = metaLng ?? systemFallback.lng;
 
       return {
-        entityType: 'user_gps',
-        source: 'territory_center',
+        entityType: "user_gps",
+        source: "territory_center",
         latitude: lat,
         longitude: lng,
-        accuracy: center || metaLat || metaLng ? 5000 : 10000,
+        accuracy: metaLat && metaLng ? 5000 : 10000,
         locationId: loc.id,
         locationName: loc.name,
-        confidence: 'low',
+        confidence: "low",
       };
     }
 
-    // 3. Fallback final: Salvador (cidade padrão do sistema)
-    const fallback = TERRITORY_CENTERS['salvador'];
+    const fallback = this.getSystemFallbackCenter();
     return {
-      entityType: 'user_gps',
-      source: 'territory_center',
+      entityType: "user_gps",
+      source: "territory_center",
       latitude: fallback.lat,
       longitude: fallback.lng,
       accuracy: 10000,
       locationId: null,
-      locationName: 'Salvador',
-      confidence: 'low',
+      locationName: MAP_DEFAULT_LOCATION.city,
+      confidence: "low",
     };
   }
 
-  /**
-   * Verifica se GPS está disponível sem solicitar permissão.
-   */
   async isGpsAvailable(): Promise<boolean> {
-    if (!('geolocation' in navigator)) return false;
+    if (!("geolocation" in navigator)) return false;
     const permission = await GeolocationService.checkPermission();
-    return permission === 'granted';
+    return permission === "granted";
   }
 
-  /**
-   * Verifica se a posição tem qualidade suficiente para "perto de mim"
-   */
   isGoodForProximity(location: ResolvedEntityLocation): boolean {
     if (!location.latitude || !location.longitude) return false;
-    return location.source === 'gps' && (location.accuracy ?? Infinity) < 1000;
+    return location.source === "gps" && (location.accuracy ?? Infinity) < 1000;
   }
 }
 

@@ -33,7 +33,7 @@ export class SelectorTerritoryService {
       .filter(
         (location) =>
           location.status === 'active' &&
-          (location.type === 'city' || location.type === 'district') &&
+          (location.type === 'city' || location.type === 'district' || location.type === 'neighborhood') &&
           isTerritorySelectorActive(location.metadata) &&
           isTerritoryPubliclyNavigable(location.metadata),
       )
@@ -59,7 +59,7 @@ export class SelectorTerritoryService {
       .map((group) => {
         const anchorCity = locationById.get(group.anchor_city_id);
         const anchorPath = anchorCity?.geographic_path?.replace(/^\/br/, '') || '';
-        const path = anchorPath ? `${anchorPath}/area/${group.slug}` : `/area/${group.slug}`;
+        const path = anchorPath ? `${anchorPath}/${group.slug}` : `/${group.slug}`;
 
         return {
           kind: 'group' as const,

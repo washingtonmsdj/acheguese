@@ -22,15 +22,15 @@ const supabaseUrl = process.env.VITE_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
-  console.error('❌ Variáveis de ambiente não encontradas');
-  console.error('   VITE_SUPABASE_URL:', supabaseUrl ? '✓' : '✗');
-  console.error('   SUPABASE_SERVICE_ROLE_KEY:', supabaseKey ? '✓' : '✗');
+  console.error('FALHA Variáveis de ambiente não encontradas');
+  console.error('   VITE_SUPABASE_URL:', supabaseUrl ? 'OK' : 'FALHA');
+  console.error('   SUPABASE_SERVICE_ROLE_KEY:', supabaseKey ? 'OK' : 'FALHA');
   process.exit(1);
 }
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// ─── Geocoding Service (inline) ──────────────────────────────────────────────
+// --- Geocoding Service (inline) ----------------------------------------------
 
 const NOMINATIM_BASE_URL = 'https://nominatim.openstreetmap.org';
 const REQUEST_DELAY_MS = 1000;
@@ -47,7 +47,7 @@ async function geocodeWithNominatim(location: any) {
     
     const response = await fetch(url.toString(), {
       headers: {
-        'User-Agent': 'OrdaxApp/1.0',
+        'User-Agent': 'AchegueSeApp/1.0',
       },
     });
     
@@ -202,7 +202,7 @@ async function processBatch(locations: any[], onProgress?: any) {
     
     if (updated) {
       stats.success++;
-      console.log(`✓ ${location.fullName} - ${result.latitude}, ${result.longitude}`);
+      console.log(`OK ${location.fullName} - ${result.latitude}, ${result.longitude}`);
     } else {
       stats.failed++;
     }
@@ -215,7 +215,7 @@ async function processBatch(locations: any[], onProgress?: any) {
   return stats;
 }
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
+// --- Main ---------------------------------------------------------------------
 
 async function main() {
   const args = process.argv.slice(2);
@@ -233,7 +233,7 @@ async function main() {
     const locations = await getLocationsNeedingRefinement();
     
     if (locations.length === 0) {
-      console.log('✓ Nenhum location precisa de refinamento!');
+      console.log('OK Nenhum location precisa de refinamento!');
       return;
     }
     
@@ -253,8 +253,8 @@ async function main() {
     console.log('');
     console.log('========================================');
     console.log('Refinamento concluído:');
-    console.log(`  ✓ Sucesso: ${stats.success}`);
-    console.log(`  ✗ Falhas: ${stats.failed}`);
+    console.log(`  OK Sucesso: ${stats.success}`);
+    console.log(`  FALHA Falhas: ${stats.failed}`);
     console.log('========================================');
   } else {
     console.log('Modo: Geocodificar locations sem coordenadas');
@@ -263,7 +263,7 @@ async function main() {
     const locations = await getLocationsWithoutCoordinates();
     
     if (locations.length === 0) {
-      console.log('✓ Todos os locations já têm coordenadas!');
+      console.log('OK Todos os locations já têm coordenadas!');
       return;
     }
     
@@ -285,8 +285,8 @@ async function main() {
     console.log('');
     console.log('========================================');
     console.log('Geocoding concluído:');
-    console.log(`  ✓ Sucesso: ${stats.success}`);
-    console.log(`  ✗ Falhas: ${stats.failed}`);
+    console.log(`  OK Sucesso: ${stats.success}`);
+    console.log(`  FALHA Falhas: ${stats.failed}`);
     console.log('========================================');
   }
 }

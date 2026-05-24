@@ -1,6 +1,7 @@
-import type { Coordinates } from '../types/core';
-
-export const MAP_DEFAULT_COORDINATES: Coordinates = {
-  latitude: -12.9714,
-  longitude: -38.5014,
-};
+export {
+  MAP_DEFAULT_BOUNDS,
+  MAP_DEFAULT_CENTER_LNGLAT,
+  MAP_DEFAULT_COORDINATES,
+  MAP_DEFAULT_LOCATION,
+  MAP_DEFAULT_ZOOM,
+} from "@/shared/config/mapDefaults";

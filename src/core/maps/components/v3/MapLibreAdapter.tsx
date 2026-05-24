@@ -732,8 +732,8 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
               'cursor:pointer',
             ].join(';');
             const inner = document.createElement('span');
-            inner.style.cssText = 'transform:rotate(45deg);font-size:15px;line-height:1;';
-            inner.textContent = cfg.emoji;
+            inner.style.cssText = 'transform:rotate(45deg);font-size:12px;line-height:1;font-weight:800;color:white;font-family:Arial,sans-serif;';
+            inner.textContent = cfg.abbr;
             el.appendChild(inner);
           }
 

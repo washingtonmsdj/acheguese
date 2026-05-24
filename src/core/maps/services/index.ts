@@ -9,6 +9,6 @@ export { MapEntityProjectionService, mapEntityProjection } from './MapEntityProj
 export { GeolocationService } from './GeolocationService';
 export type { GeolocationCoords, GeolocationResult, GeolocationOptions } from './GeolocationService';
 
-export { GeocodingService, geocodingService } from './GeocodingService';
+export { GeocodingService, geocodingService } from './MapGeocodingAdapter';
 
 

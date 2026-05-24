@@ -4,7 +4,7 @@
 -- A tabela canônica `reviews` (criada em 20260418050000) é minimalista. As
 -- colunas exigidas por gastronomia (photos, status, helpful_count,
 -- business_response, order_id, etc.) viviam em uma migration legada que foi
--- arquivada em `migrations_old`. A função `get_business_reviews` deployada
+-- consolidada antes desta migration. A função `get_business_reviews` deployada
 -- referencia `r.is_verified` (coluna inexistente), causando erro 42703.
 --
 -- Esta migration:

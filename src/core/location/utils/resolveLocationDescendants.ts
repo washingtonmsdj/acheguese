@@ -57,7 +57,7 @@ export async function resolveLocationDescendants(
     } while ((page - 1) * pageSize < totalCount);
 
     if (allIds.size === 0) {
-      logger.warn('⚠️ No descendants found for location, using exact match');
+      logger.warn(' No descendants found for location, using exact match');
       return filter; // Fallback: usa filtro original
     }
 
@@ -67,7 +67,7 @@ export async function resolveLocationDescendants(
       location_ids: Array.from(allIds),
     };
   } catch (err) {
-    logger.warn('⚠️ Exception resolving descendants, using exact match:', err);
+    logger.warn(' Exception resolving descendants, using exact match:', err);
     return filter; // Fallback: usa filtro original
   }
 }

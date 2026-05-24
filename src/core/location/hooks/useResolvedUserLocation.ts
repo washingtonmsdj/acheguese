@@ -1,58 +1,56 @@
 /**
- * useResolvedUserLocation - Hook SSOT para posição do usuário com fallback
- * 
- * Resolve a posição do usuário com estratégia progressiva:
- * 1. GPS (se permitido)
- * 2. Território ativo (seletor)
- * 3. Cidade padrão
- * 
- * Diferente de useGeolocation (apenas GPS), este hook SEMPRE retorna
- * uma posição útil, mesmo sem GPS.
- * 
- * @module core/location/hooks
+ * useResolvedUserLocation - Hook SSOT para posi??o do usu?rio com fallback.
+ *
+ * Resolve a posi??o do usu?rio com estrat?gia progressiva:
+ * 1. GPS, se permitido.
+ * 2. Territ?rio ativo no seletor.
+ * 3. Centro padr?o configurado por ambiente.
+ *
+ * Diferente de useGeolocation, este hook sempre retorna uma posi??o ?til
+ * ap?s a resolu??o, mesmo sem GPS.
  */
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
 import { userLocationResolver } from '../services/UserLocationResolver';
 import type { ResolvedEntityLocation } from '../types/entityLocation';
 import { useLocationContext } from './useLocationContext';
 
-export type LocationResolutionStatus = 
-  | 'idle'        // Não solicitado ainda
-  | 'resolving'   // Em progresso
-  | 'gps'         // Resolvido via GPS
-  | 'territory'   // Resolvido via território (fallback)
-  | 'fallback'    // Fallback final (cidade padrão)
-  | 'error';      // Erro
+export type LocationResolutionStatus =
+  | 'idle'
+  | 'resolving'
+  | 'gps'
+  | 'territory'
+  | 'fallback'
+  | 'error';
 
 export interface UseResolvedUserLocationOptions {
-  /** Solicitar GPS automaticamente ao montar (default: true) */
+  /** Solicitar GPS automaticamente ao montar. */
   autoResolve?: boolean;
-  /** Tentar GPS (default: true) */
+  /** Tentar GPS antes do fallback territorial. */
   tryGps?: boolean;
 }
 
 export interface UseResolvedUserLocationReturn {
-  /** Posição resolvida (sempre disponível após resolução) */
+  /** Posi??o resolvida. */
   location: ResolvedEntityLocation | null;
-  /** Status da resolução */
+  /** Status da resolu??o. */
   status: LocationResolutionStatus;
-  /** Se a posição veio de GPS real */
+  /** Se a posi??o veio de GPS real. */
   isGps: boolean;
-  /** Se a posição é boa o suficiente para proximidade */
+  /** Se a posi??o ? boa o suficiente para proximidade precisa. */
   isGoodForProximity: boolean;
-  /** Coordenadas simplificadas (conveniência) */
+  /** Coordenadas simplificadas. */
   coords: { latitude: number; longitude: number } | null;
-  /** Solicitar resolução (ou re-resolução) */
+  /** Solicitar resolu??o ou re-resolu??o. */
   resolve: () => Promise<void>;
-  /** Se está carregando */
+  /** Se est? carregando. */
   isLoading: boolean;
-  /** Mensagem explicativa para o usuário sobre a fonte */
+  /** Mensagem explicativa para o usu?rio sobre a fonte. */
   sourceMessage: string;
 }
 
 export function useResolvedUserLocation(
-  options: UseResolvedUserLocationOptions = {}
+  options: UseResolvedUserLocationOptions = {},
 ): UseResolvedUserLocationReturn {
   const { autoResolve = true, tryGps = true } = options;
   const { activeTerritory } = useLocationContext();
@@ -70,7 +68,6 @@ export function useResolvedUserLocation(
       const result = await userLocationResolver.resolve({ tryGps });
       setLocation(result);
 
-      // Determinar status baseado na fonte
       if (result.source === 'gps') {
         setStatus('gps');
       } else if (result.source === 'territory_center' && result.locationId) {
@@ -79,7 +76,6 @@ export function useResolvedUserLocation(
         setStatus('fallback');
       }
     } catch {
-      // Mesmo em erro, resolver via território
       const fallback = userLocationResolver.resolveFromTerritory();
       setLocation(fallback);
       setStatus('fallback');
@@ -88,7 +84,6 @@ export function useResolvedUserLocation(
     }
   }, [tryGps]);
 
-  // Auto-resolver ao montar
   useEffect(() => {
     if (autoResolve && !resolvedOnce.current) {
       resolvedOnce.current = true;
@@ -96,7 +91,6 @@ export function useResolvedUserLocation(
     }
   }, [autoResolve, resolve]);
 
-  // Re-resolver quando território muda (sem GPS, atualiza fallback)
   useEffect(() => {
     if (status === 'territory' || status === 'fallback') {
       const fallback = userLocationResolver.resolveFromTerritory();
@@ -107,18 +101,23 @@ export function useResolvedUserLocation(
 
   const isGps = location?.source === 'gps';
   const isGoodForProximity = location ? userLocationResolver.isGoodForProximity(location) : false;
-  
+
   const coords = location?.latitude != null && location?.longitude != null
     ? { latitude: location.latitude, longitude: location.longitude }
     : null;
 
   const sourceMessage = (() => {
     switch (status) {
-      case 'gps': return 'Usando sua localização GPS';
-      case 'territory': return `Mostrando resultados ${location?.locationName ? `em ${location.locationName}` : 'do território selecionado'}`;
-      case 'fallback': return 'Mostrando resultados da região padrão';
-      case 'resolving': return 'Obtendo localização...';
-      default: return '';
+      case 'gps':
+        return 'Usando sua localiza??o GPS';
+      case 'territory':
+        return `Mostrando resultados ${location?.locationName ? `em ${location.locationName}` : 'do territ?rio selecionado'}`;
+      case 'fallback':
+        return 'Mostrando resultados da regi?o padr?o';
+      case 'resolving':
+        return 'Obtendo localiza??o...';
+      default:
+        return '';
     }
   })();
 
