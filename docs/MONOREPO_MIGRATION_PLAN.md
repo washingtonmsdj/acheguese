@@ -34,7 +34,7 @@
 ### 1.1 Estrutura atual (single-repo Vite)
 
 ```
-projeto-ordax2/
+projeto-acheguese/
 ├── src/
 │   ├── app/              # Shell (73 linhas)
 │   ├── core/             # 65+ domínios canônicos (721 itens)

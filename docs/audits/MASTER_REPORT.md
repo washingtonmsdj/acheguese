@@ -144,7 +144,7 @@ Fase executada: consolidacao de identidade publica, extracao inicial de regras d
 2. O dominio `profile` saiu do passivo de regra de negocio em UI no gate atual, ganhou snapshots privados canonicos para hub e editor, corrigiu a persistencia de `username`/`handle` no fluxo privado, perdeu superficies privadas mortas, encerrou a edicao paralela dentro do hub, consolidou `family` em `FamilyService` e formalizou o schema local do dominio; o principal alvo restante passou a ser rollout da migration de `family`, historico administrativo de permissoes e tipagem do hub remanescente.
 3. `core/admin` ja foi saneado por dentro e ganhou baseline visual com shell, filtros, loading, erro e tabela nas superficies prioritarias, mas ainda precisa fechar ownership formal das pages restantes e levar diagnosticos soltos para contratos centrais.
 4. O gate estrutural zerou services paralelos, mas ainda existem wrappers historicos a consolidar em dominios como mobility, location, landing, business e classifieds.
-5. A documentacao ativa estava parcialmente organizada, mas ainda havia sobreposicao entre `docs/README.md`, `docs/DOCUMENTATION_INDEX.md`, `docs/CANONICAL_MAP.md` e um pacote historico fora de `docs/historico/`.
+5. A documentacao ativa foi reduzida para fontes vivas; historico e snapshots nao permanecem como parte do repositorio principal.
 6. O front-end base ainda esta mais maduro em `perto-de-mim`, `empresas` e `gastronomia` do que em `map` e `profile`. `admin` melhorou nas superficies prioritarias, mas o restante da aplicacao ainda carrega experiencia visual inconsistente.
 7. `notifications` passou a ter cobertura administrativa fechada em `/admin/notifications`, com segunda camada (templates, canais e auditoria de entrega) consolidada em 2026-04-21.
 8. `profile` passou a ter coverage administrativa formal em `/admin/identidade`, incluindo reputacao por origem, residence canonica primaria, `family` via service canonico e snapshot de permissoes; o backlog residual agora esta no rollout da migration de `family` e no historico administrativo de permissoes.
@@ -307,9 +307,8 @@ O inventario completo e regeneravel e esta em [PROJECT_INVENTORY.md](./PROJECT_I
 - Classificacao: manter `NotificationService`; manter consumo em `core`; remover mocks quando possivel; documentar politicas globais e fluxo de reprocessamento administrativo.
 
 ## Organizacao documental executada
-- `docs/README.md`, `docs/DOCUMENTATION_INDEX.md`, `docs/CANONICAL_MAP.md`, `docs/CURRENT_RULES.md` e `docs/MAINTENANCE.md` foram reescritos para refletir a estrutura atual.
-- `docs/architecture-fix/` foi movido para `docs/historico/architecture-fix/` e deixou de competir com documentacao ativa.
-- `docs/DOCUMENT_REPLACEMENTS.md` passou a registrar documentos substituidos e a fonte oficial atual.
+- `docs/README.md`, `docs/INDEX_CANONICO.md`, `docs/CANONICAL_MAP.md`, `docs/CURRENT_RULES.md` e `docs/MAINTENANCE.md` refletem a estrutura atual.
+- Historico e snapshots foram removidos do repositorio principal para nao competir com documentacao ativa.
 - `docs/audits/` passou a concentrar inventario, relatorio mestre, checklist, quick wins e backlog pos-prontidao.
 
 ## Blindagem arquitetural implementada
@@ -426,7 +425,7 @@ O gate esta verde no baseline atual. Ele deixou de ser cerca reativa e passou a 
 ### Fase 5 - Documentacao final de dominio
 - criar SSOT documental para profile, community-alerts, mobility e classifieds
 - manter `docs/audits/PROJECT_INVENTORY.md` como base regeneravel
-- revisar `DOCUMENTATION_INDEX` e `CANONICAL_MAP` a cada consolidacao estrutural
+- revisar `INDEX_CANONICO` e `CANONICAL_MAP` a cada consolidacao estrutural
 
 
 

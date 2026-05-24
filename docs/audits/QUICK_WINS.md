@@ -72,7 +72,7 @@ Atualizado em: 2026-04-10
 ## Ganhos de curto prazo identificados em 2026-04-10
 
 ### Raiz do projeto (impacto imediato, sem risco)
-1. Mover os >80 arquivos SQL avulsos da raiz para `docs/archive/sql-scripts/` ou `supabase/migrations/` conforme o tipo.
+1. Consolidar qualquer SQL avulso restante em `supabase/migrations/` ou remover se for historico.
 2. Mover os >60 scripts `.mjs`/`.ts` avulsos da raiz para `scripts/` ou arquivar.
 3. Remover `src/app/pages/HomePageLegacy.tsx` e `src/app/pages/LoginPageLegacy.tsx` do inventario ativo.
 4. Remover `ClassificadosPageLegado.tsx`, `NovoClassificadoPageLegado.tsx` e `TestUploadPage.tsx` de classificados.

@@ -46,10 +46,9 @@ Definir uma taxonomia unica e oficial do projeto, separando com clareza:
 - Classificacao: infraestrutura.
 
 ### 2.6 `docs`
-- Papel: SSOT documental ativo + historico/arquivo.
+- Papel: SSOT documental ativo.
 - Classificacao:
   - ativo: `docs/`, `docs/architecture`, `docs/audits`, `docs/tasks`
-  - legado/historico: `docs/archive`, `docs/historico`
 
 ### 2.7 `scripts`
 - Papel: validacao, governanca, migracoes, automacao.

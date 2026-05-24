@@ -610,7 +610,7 @@ Para cada hardcode crítico:
 
 - [CURRENT_RULES.md](./CURRENT_RULES.md) - Regras vigentes do sistema
 - [ADDRESS_SSOT.md](../src/core/address/docs/ADDRESS_SSOT.md) - Exemplo de SSOT bem implementado
-- [DOCUMENTATION_INDEX.md](./DOCUMENTATION_INDEX.md) - Índice mestre
+- [INDEX_CANONICO.md](../INDEX_CANONICO.md) - Índice mestre
 
 ---
 

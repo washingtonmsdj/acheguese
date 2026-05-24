@@ -1,6 +1,6 @@
 # Arquitetura de Estado (State Management)
 
-> Decisões arquiteturais sobre gerenciamento de estado no Ordax
+> Decisões arquiteturais sobre gerenciamento de estado no Achegue-se
 >
 > Data-base: Abril 2026
 > Status: Ativo
@@ -9,7 +9,7 @@
 
 ## Visão Geral
 
-O Ordax utiliza uma **arquitetura híbrida** de estado, onde cada ferramenta é usada para seu propósito específico:
+O Achegue-se utiliza uma **arquitetura híbrida** de estado, onde cada ferramenta é usada para seu propósito específico:
 
 | Ferramenta | Propósito | Uso |
 |------------|-----------|-----|

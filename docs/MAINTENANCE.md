@@ -7,7 +7,7 @@ Manter o repositorio aderente ao SSOT, com documentacao navegavel e com gates es
 1. Regenerar inventario estrutural quando houver consolidacao relevante.
 2. Rodar os validadores estruturais antes de build e antes de merge.
 3. Atualizar `docs/audits/MASTER_REPORT.md` quando a topologia do projeto mudar de forma material.
-4. Manter `docs/DOCUMENTATION_INDEX.md` e `docs/CANONICAL_MAP.md` consistentes com a arvore real.
+4. Manter `docs/INDEX_CANONICO.md` e `docs/CANONICAL_MAP.md` consistentes com a arvore real.
 
 ## Validacoes recomendadas
 ```bash
@@ -22,8 +22,6 @@ npm run typecheck
 ## Politica de documentacao
 - Global ativo: `docs/`
 - Auditoria executiva: `docs/audits/`
-- Arquivo e snapshots: `docs/archive/`
-- Historico consolidado: `docs/historico/`
 - Dominio vivo: `src/<dominio>/README.md` ou `src/<dominio>/docs/`
 
 ## Higiene estrutural

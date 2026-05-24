@@ -30,8 +30,8 @@ Versao documental: 3.1
 ## 3. Regras documentais
 - Documento global vivo fica em `docs/`.
 - Documento tecnico de dominio fica no proprio dominio.
-- Historico vai para `docs/archive/` ou `docs/historico/`.
-- `docs/temp-work-*` e `supabase/migrations_old` sao historicos e nao podem ser usados como SSOT de regras, schema ou contrato.
+- Historico, snapshots e relatorios de sessao nao devem permanecer no repositorio principal.
+- `supabase/migrations/` e a unica fonte de schema versionado.
 - O indice mestre da documentacao e `docs/INDEX_CANONICO.md`.
 - O relatorio executivo vigente de organizacao e blindagem e `docs/audits/MASTER_REPORT.md`.
 - Documentos fora do indice canonico (principalmente historico/sessao) nao substituem status oficial.

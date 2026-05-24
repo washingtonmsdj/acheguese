@@ -951,7 +951,7 @@ Criterio de aceite:
 
 - Nenhum documento antigo e necessario para saber estado atual.
 - [x] Implementado: `docs/STATUS_ATUAL.md` e a fonte operacional unica para estado, validacoes, P0 abertos e proximas tarefas.
-- [x] Implementado: indices principais (`README`, `INDEX`, `DOCUMENTATION_INDEX`, `INDEX_CANONICO`) apontam para `STATUS_ATUAL.md`.
+- [x] Implementado: indices principais (`README`, `INDEX`, `INDEX_CANONICO`) apontam para `STATUS_ATUAL.md`.
 
 ## Tarefa 9.2: Marcar ou arquivar docs obsoletos
 
@@ -965,7 +965,7 @@ Alvos:
 Passos:
 
 - Nao apagar sem necessidade.
-- Se historico, mover para `docs/archive` ou adicionar banner:
+- Se historico, remover do repositorio principal ou consolidar o conteudo vigente em `docs/STATUS_ATUAL.md`:
 
 ```markdown
 > Historico: este documento nao representa o status atual. Consulte `docs/STATUS_ATUAL.md`.
@@ -975,7 +975,7 @@ Criterio de aceite:
 
 - Documentos obsoletos nao competem com documentos vivos.
 - [x] Implementado parcial P0: `docs/STATUS.md` e `docs/VALIDACAO_FINAL_E_PROXIMOS_PASSOS.md` foram convertidos em redirecionamentos historicos.
-- [x] Implementado parcial P0: `docs/DOCUMENT_REPLACEMENTS.md` registra substituicao por `STATUS_ATUAL.md` e plano executavel atual.
+- [x] Implementado P0: documentos substituidos foram removidos ou consolidados em `STATUS_ATUAL.md` e no plano executavel atual.
 
 ## Tarefa 9.3: Atualizar auditorias
 

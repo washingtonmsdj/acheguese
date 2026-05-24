@@ -105,8 +105,8 @@ Atualizado em: 2026-04-21
 - [ ] Criar documento canonico para classifieds.
 - [ ] Criar documento canonico para mobility.
 - [ ] Criar documento canonico para professionals/services.
-- [ ] Manter `docs/DOCUMENTATION_INDEX.md` e `docs/CANONICAL_MAP.md` como portas oficiais.
-- [ ] Remover arquivos SQL avulsos da raiz (mover para `docs/archive/` ou `supabase/migrations/`).
+- [ ] Manter `docs/INDEX_CANONICO.md` e `docs/CANONICAL_MAP.md` como portas oficiais.
+- [ ] Remover arquivos SQL avulsos da raiz ou consolidar em `supabase/migrations/`.
 - [ ] Remover scripts avulsos da raiz (mover para `scripts/` ou arquivar).
 - [ ] Remover `src/app/pages/HomePageLegacy.tsx` do inventario ativo.
 - [ ] Remover `src/app/pages/LoginPageLegacy.tsx` do inventario ativo.

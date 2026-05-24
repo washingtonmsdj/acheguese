@@ -22,7 +22,6 @@ Se houver conflito entre documentos, vence a ordem abaixo:
 | Seguranca | `docs/SECURITY.md` |
 | Migracoes | `docs/MIGRATIONS.md` |
 | Manutencao e gates | `docs/MAINTENANCE.md` |
-| Mapa de substituicoes documentais | `docs/DOCUMENT_REPLACEMENTS.md` |
 
 ## Fontes canonicas por dominio
 | Dominio | Fonte oficial atual |
@@ -44,9 +43,6 @@ Se houver conflito entre documentos, vence a ordem abaixo:
 | verification | `src/core/verification/README.md`, `src/core/verification/services/VerificationService.ts` |
 
 ## Nao canonico
-- `docs/archive/**`
-- `docs/historico/**`
-- `docs/historico/architecture-fix/**`
 - relatorios de sessao, fases, entregas, snapshots e comparativos antigos
 
 

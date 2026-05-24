@@ -40,17 +40,8 @@ Observacao:
 - Auditorias podem citar caminhos legados por contexto historico; para decisao atual, prevalecem `CURRENT_RULES.md`, `STATUS_ATUAL.md` e `ACAO_EXECUTAVEL_AUDITORIA_HIPERLOCAL.md`.
 - `STATUS.md` e documentos com `FINAL`, `100%`, `completo` ou `pronto para producao` no texto/nome sao historicos ate revalidacao explicita em `STATUS_ATUAL.md`.
 
-## Historico e legado
-- Historico consolidado: `docs/historico/`
-- Arquivo de legado e sessoes: `docs/archive/`
-- Lote movido da raiz em 2026-04-20: `docs/historico/root-markdown/`
-- Lote movido da raiz em 2026-05-12 (analises/refatoracoes/sessoes/progresso): `docs/historico/root-markdown-2026-05-cleanup/`
-- Lote pre-launch consolidado em 2026-04-20: `docs/historico/pre-launch/2026-04-20/`
-- Lote gastronomia legado consolidado em 2026-04-22: `docs/archive/2026-04-22-gastronomy-legacy/`
-- Ponte historica de pre-launch: `docs/pre-launch/README.md` e `docs/pre-launch/INDEX.md`
-
 ## Regras de atualizacao
 1. Documento vivo global permanece em `docs/`.
 2. Contrato tecnico de dominio deve ficar junto ao codigo dono em `src/<dominio>/README.md` ou `src/<dominio>/docs/`.
-3. Documento datado de sessao, entrega ou comparativo entra em `docs/archive/` ou `docs/historico/`.
+3. Documento datado de sessao, entrega ou comparativo nao deve permanecer no repositorio principal.
 4. Este arquivo e o ponto de entrada canonico da documentacao vigente.
