@@ -37,7 +37,7 @@ export default function BusinessPlansPage() {
           <Badge variant="secondary" className="uppercase">
             {planTier}
           </Badge>
-          <Link to="/pricing">
+          <Link to="/planos">
             <Button size="sm">Upgrade ou downgrade</Button>
           </Link>
         </CardContent>

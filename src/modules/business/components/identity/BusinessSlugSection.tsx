@@ -64,14 +64,15 @@ export function BusinessSlugSection({
   const [confirmOpen, setConfirmOpen] = useState(false);
   const copy = getBusinessCreateFieldCopy(category);
 
-  const stateSegment = toUrlSegment(stateName, "seu-estado");
-  const citySegment = toUrlSegment(cityName, "sua-cidade");
-  const districtSegment = toUrlSegment(districtName, "seu-bairro");
+  const stateSegment = toUrlSegment(stateName, "uf");
+  const citySegment = toUrlSegment(cityName, "cidade");
+  const districtSegment = toUrlSegment(districtName, "bairro");
 
   const canonicalPreviewFn = (value: string) => {
     if (!value) return "";
     return buildPublicAbsoluteUrl(`/empresas/${stateSegment}/${citySegment}/${districtSegment}/${value}`);
   };
+
   const canonicalPreviewSkeleton = buildPublicAbsoluteUrl(
     `/empresas/${stateSegment}/${citySegment}/${districtSegment}/seu-link`,
   );
@@ -79,10 +80,12 @@ export function BusinessSlugSection({
   const previewFn = isPremium
     ? (value: string) => (value ? buildPublicAbsoluteUrl(`/p/${value}`) : "")
     : canonicalPreviewFn;
+
   const slugSafety =
     manualMode && businessName && slug
       ? evaluateBusinessSlugSafety({ businessName, slug })
       : null;
+
   const shouldShowSafetyWarning =
     slugSafety?.status === "review" &&
     !isBusinessSlugSafetyBypassAllowed({ isVerifiedOfficial });
@@ -91,8 +94,8 @@ export function BusinessSlugSection({
   const newUrl = slug ? previewFn(slug) : "";
 
   return (
-    <div className="rounded-lg border bg-card p-4 space-y-3">
-      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+    <div className="space-y-3 rounded-lg border bg-card p-4">
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         Seu link público
       </p>
       <p className="text-xs text-muted-foreground">{copy.identityHelper}</p>
@@ -150,7 +153,8 @@ export function BusinessSlugSection({
 
       {shouldShowSafetyWarning && (
         <p className="text-xs text-amber-700">
-          Este link está distante do nome informado. Para reduzir risco de fraude, use um link mais próximo do nome oficial.
+          Este link está distante do nome informado. Para reduzir risco de fraude, use um link mais próximo do
+          nome oficial.
         </p>
       )}
 
@@ -166,7 +170,8 @@ export function BusinessSlugSection({
 
       {!isPremium && (
         <p className="text-xs text-muted-foreground">
-          Link curto premium: <span className="font-mono">{buildPublicAbsoluteUrl(`/p/${slug || "seu-link"}`)}</span>
+          Link curto premium disponível no plano pago:{" "}
+          <span className="font-mono">{buildPublicAbsoluteUrl(`/p/${slug || "seu-link"}`)}</span>
         </p>
       )}
 

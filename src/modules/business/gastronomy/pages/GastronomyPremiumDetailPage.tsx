@@ -22,6 +22,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Separator } from '@/shared/components/ui/separator';
 import { Textarea } from '@/shared/components/ui/textarea';
+import { PLATFORM_BRAND } from '@/shared/config/brand';
 import { GastronomyShareDialog, MenuItemDetailDrawer, StickyOrderBar } from '../components';
 import {
   useActivePromotions,
@@ -191,7 +192,7 @@ export default function GastronomyPremiumDetailPage() {
   return (
     <>
       <Helmet>
-        <title>{business.name} | Premium | OrdaX</title>
+        <title>{business.name} | Premium | {PLATFORM_BRAND.name}</title>
         <meta
           name="description"
           content={`${business.description} — cardápio premium e pedidos online em ${neighborhoodName}`}
@@ -319,9 +320,9 @@ export default function GastronomyPremiumDetailPage() {
                     )
                   }
                 >
-                  {sortMode === 'mais-pedidos' && 'Sortar: Mais pedidos'}
-                  {sortMode === 'menor-preco' && 'Sortar: Menor preço'}
-                  {sortMode === 'maior-preco' && 'Sortar: Maior preço'}
+                  {sortMode === 'mais-pedidos' && 'Ordenar: Mais pedidos'}
+                  {sortMode === 'menor-preco' && 'Ordenar: Menor preço'}
+                  {sortMode === 'maior-preco' && 'Ordenar: Maior preço'}
                   <ChevronDown className="ml-2 h-4 w-4" />
                 </Button>
               </div>

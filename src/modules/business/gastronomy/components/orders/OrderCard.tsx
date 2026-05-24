@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
 import { OrderStatusBadge } from './OrderStatusBadge';
 import { OrderTrackingBadge } from './OrderTrackingBadge';
+import { buildTelUrl } from '@/shared/utils/contactLinks';
 import type { Order } from '@/modules/business/gastronomy/services/OrderService';
 
 interface OrderCardProps {
@@ -52,11 +53,11 @@ export function OrderCard({ order, onViewDetails }: OrderCardProps) {
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <Phone className="w-4 h-4 text-muted-foreground" />
-            <span className="font-medium">{order.customer_name || 'Cliente nao informado'}</span>
+            <span className="font-medium">{order.customer_name || 'Cliente não informado'}</span>
             {order.customer_phone && (
               <>
                 <span className="text-muted-foreground">/</span>
-                <a href={`tel:${order.customer_phone}`} className="text-muted-foreground hover:text-primary">
+                <a href={buildTelUrl(order.customer_phone) ?? undefined} className="text-muted-foreground hover:text-primary">
                   {order.customer_phone}
                 </a>
               </>
@@ -81,7 +82,7 @@ export function OrderCard({ order, onViewDetails }: OrderCardProps) {
                     )}
                   </>
                 ) : (
-                  <p className="text-muted-foreground">Endereco pendente no snapshot do pedido.</p>
+                  <p className="text-muted-foreground">Endereço pendente no snapshot do pedido.</p>
                 )}
               </div>
             </div>
@@ -128,7 +129,7 @@ export function OrderCard({ order, onViewDetails }: OrderCardProps) {
 
         {order.notes && (
           <div className="text-sm p-2 bg-muted rounded">
-            <p className="font-medium mb-1">Observacoes:</p>
+            <p className="font-medium mb-1">Observações:</p>
             <p className="text-muted-foreground">{order.notes}</p>
           </div>
         )}

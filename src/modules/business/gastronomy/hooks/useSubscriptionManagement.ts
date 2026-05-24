@@ -11,25 +11,19 @@ import {
   GastronomySubscriptionService,
 } from '@/modules/business/gastronomy/services/gastronomy-subscription.service';
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // TYPES
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 export interface UpgradeParams {
   newPlanTier: PlanTier.PRO | PlanTier.DELIVERY;
   prorationBehavior?: 'create_prorations' | 'none' | 'always_invoice';
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // HOOK
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 export function useSubscriptionManagement(businessId: string) {
   const queryClient = useQueryClient();
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // QUERIES
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   /**
    * Busca assinatura atual
@@ -45,7 +39,7 @@ export function useSubscriptionManagement(businessId: string) {
   });
 
   /**
-   * Busca histÃ³rico de faturas
+   * Busca historico de faturas
    */
   const {
     data: invoices,
@@ -56,9 +50,7 @@ export function useSubscriptionManagement(businessId: string) {
     enabled: !!businessId && subscription?.stripe_subscription_id != null,
   });
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // MUTATIONS
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   /**
    * Mutation para fazer upgrade/downgrade
@@ -98,7 +90,7 @@ export function useSubscriptionManagement(businessId: string) {
       if (immediately) {
         toast.success('Assinatura cancelada imediatamente.');
       } else {
-        toast.success('Assinatura serÃ¡ cancelada no fim do perÃ­odo atual.');
+        toast.success('Assinatura sera cancelada no fim do periodo atual.');
       }
 
       // Invalidar queries
@@ -128,7 +120,7 @@ export function useSubscriptionManagement(businessId: string) {
   });
 
   /**
-   * Mutation para adicionar mÃ©todo de pagamento
+   * Mutation para adicionar metodo de pagamento
    */
   const addPaymentMethodMutation = useMutation({
     mutationFn: async (paymentMethodId: string) => {
@@ -138,19 +130,17 @@ export function useSubscriptionManagement(businessId: string) {
       });
     },
     onSuccess: () => {
-      toast.success('MÃ©todo de pagamento adicionado com sucesso!');
+      toast.success('Metodo de pagamento adicionado com sucesso!');
 
       // Invalidar queries
       queryClient.invalidateQueries({ queryKey: ['gastronomy-subscription', businessId] });
     },
     onError: (error: Error) => {
-      toast.error(`Erro ao adicionar mÃ©todo de pagamento: ${error.message}`);
+      toast.error(`Erro ao adicionar metodo de pagamento: ${error.message}`);
     },
   });
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // COMPUTED
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const currentPlan = subscription?.plan_tier || PlanTier.FREE;
   const isActive = subscription?.status === 'active';
@@ -164,9 +154,7 @@ export function useSubscriptionManagement(businessId: string) {
   const canCancel = isActive && !willCancelAtPeriodEnd;
   const canReactivate = isActive && willCancelAtPeriodEnd;
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // RETURN
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   return {
     // Data

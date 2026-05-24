@@ -107,7 +107,6 @@ export function ContactLocationStep({
       onModosChange(Array.from(new Set([...selectedModos, modoId])));
       return;
     }
-
     onModosChange(selectedModos.filter((modo) => modo !== modoId));
   };
 
@@ -145,7 +144,9 @@ export function ContactLocationStep({
           {errors.location_id && <p className="text-xs text-destructive">{errors.location_id}</p>}
           {locationData && (
             <div className="rounded-lg bg-muted/40 p-3 text-sm text-muted-foreground">
-              Exibição pública principal em <span className="font-medium text-foreground">{locationData.neighborhoodName}</span>, {locationData.cityName} - {locationData.stateName}.
+              Exibição pública principal em{" "}
+              <span className="font-medium text-foreground">{locationData.neighborhoodName}</span>,{" "}
+              {locationData.cityName} - {locationData.stateName}.
             </div>
           )}
         </div>
@@ -257,7 +258,7 @@ export function ContactLocationStep({
 
               return (
                 <div key={day.key} className="grid grid-cols-1 gap-3 rounded-lg border p-3 md:grid-cols-[160px_1fr_1fr_140px] md:items-center">
-                  <div className="font-medium text-sm">{day.label}</div>
+                  <div className="text-sm font-medium">{day.label}</div>
                   <Input
                     type="time"
                     value={dayValue?.open || "09:00"}

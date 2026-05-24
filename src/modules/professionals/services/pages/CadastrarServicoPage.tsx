@@ -51,7 +51,7 @@ import {
   getServiceCategoryIcon,
   getServiceCategoryLabel,
 } from "@/modules/professionals/services/domain/professionalCategories";
-import { SERVICE_AREA_OPTIONS } from "@/modules/professionals/services/domain/serviceAreaOptions";
+import { useServiceAreaOptions } from "@/modules/professionals/services/hooks/useServiceAreaOptions";
 import type { ProfessionalCategory } from "@/core/professional/types";
 import { useEffect } from "react";
 
@@ -73,6 +73,12 @@ export default function CadastrarServicoPage() {
   const { toast } = useToast();
   const { user } = useSessionContext();
   const { setModuleContext, effectiveProfile } = useMultiProfileContext();
+  const {
+    options: serviceAreaOptions,
+    city: serviceAreaCity,
+    isLoading: loadingServiceAreaOptions,
+    isUnavailable: serviceAreaOptionsUnavailable,
+  } = useServiceAreaOptions();
   const [step, setStep] = useState<Step>("info");
 
   // Definir contexto professional ao montar, limpar ao desmontar
@@ -91,7 +97,7 @@ export default function CadastrarServicoPage() {
         title: "Serviço cadastrado com sucesso!",
         description: "Seu perfil profissional está ativo.",
       });
-      navigate('/services');
+      navigate('/servicos');
     },
   });
 
@@ -169,11 +175,13 @@ export default function CadastrarServicoPage() {
             slug: slug.trim(),
           });
           if (slugSafety.status === "review") {
-            return "O link publico esta muito diferente do nome. Ajuste o link para manter autenticidade.";
+            return "O link público está muito diferente do nome. Ajuste o link para manter autenticidade.";
           }
         }
         return null;
       case "details":
+        if (serviceAreaOptions.length === 0)
+          return "Defina uma cidade ou bairro com áreas cadastradas antes de avançar";
         if (form.serviceAreas.length === 0)
           return "Selecione pelo menos um bairro";
         return null;
@@ -303,6 +311,7 @@ export default function CadastrarServicoPage() {
   const getCategoryLabel = (id: string) =>
     getServiceCategoryLabel(id) || id;
   const getCategoryIcon = (id: string) => getServiceCategoryIcon(id);
+  const CategoryIcon = getCategoryIcon(form.category);
 
   return (
     <div className="flex flex-col pb-24">
@@ -411,11 +420,18 @@ export default function CadastrarServicoPage() {
                   <SelectValue placeholder="Selecione uma categoria" />
                 </SelectTrigger>
                 <SelectContent>
-                  {FORM_CATEGORIES.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id}>
-                      {cat.icone} {cat.name}
-                    </SelectItem>
-                  ))}
+                  {FORM_CATEGORIES.map((cat) => {
+                    const Icon = cat.icon;
+
+                    return (
+                      <SelectItem key={cat.id} value={cat.id}>
+                        <span className="flex items-center gap-2">
+                          <Icon className="h-4 w-4 text-muted-foreground" />
+                          <span>{cat.name}</span>
+                        </span>
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>
@@ -463,19 +479,33 @@ export default function CadastrarServicoPage() {
                 Bairros onde atende <span className="text-destructive">*</span>
               </Label>
               <p className="text-xs text-muted-foreground mb-2">
-                Selecione os bairros onde você presta serviços
+                {serviceAreaCity
+                  ? `Selecione os bairros cadastrados em ${serviceAreaCity.name}`
+                  : "Selecione seu território para carregar bairros do banco"}
               </p>
               <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto p-3 border rounded-lg bg-card">
-                {SERVICE_AREA_OPTIONS.map((bairro) => (
+                {loadingServiceAreaOptions && (
+                  <p className="col-span-2 text-sm text-muted-foreground">
+                    Carregando áreas de atendimento...
+                  </p>
+                )}
+
+                {!loadingServiceAreaOptions && serviceAreaOptionsUnavailable && (
+                  <p className="col-span-2 text-sm text-muted-foreground">
+                    Nenhuma área disponível para o território atual. Atualize seu território ou cadastre os bairros no admin.
+                  </p>
+                )}
+
+                {!loadingServiceAreaOptions && serviceAreaOptions.map((area) => (
                   <label
-                    key={bairro}
+                    key={area.id}
                     className="flex items-center gap-2 text-sm cursor-pointer hover:text-primary transition-colors"
                   >
                     <Checkbox
-                      checked={form.serviceAreas.includes(bairro)}
-                      onCheckedChange={() => toggleBairro(bairro)}
+                      checked={form.serviceAreas.includes(area.name)}
+                      onCheckedChange={() => toggleBairro(area.name)}
                     />
-                    {bairro}
+                    {area.name}
                   </label>
                 ))}
               </div>
@@ -657,8 +687,8 @@ export default function CadastrarServicoPage() {
                       className="h-16 w-16 rounded-xl object-cover"
                     />
                   ) : (
-                    <div className="h-16 w-16 rounded-xl bg-secondary flex items-center justify-center text-2xl">
-                      {getCategoryIcon(form.category)}
+                    <div className="h-16 w-16 rounded-xl bg-secondary flex items-center justify-center">
+                      <CategoryIcon className="h-7 w-7 text-primary" />
                     </div>
                   )}
                   <div>
@@ -667,7 +697,7 @@ export default function CadastrarServicoPage() {
                       {form.subcategory || "Título do serviço"}
                     </p>
                     <Badge variant="outline" className="text-xs mt-1">
-                      {getCategoryIcon(form.category)}{" "}
+                      <CategoryIcon className="mr-1 h-3.5 w-3.5" />
                       {getCategoryLabel(form.category)}
                     </Badge>
                   </div>

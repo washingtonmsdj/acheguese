@@ -16,8 +16,8 @@ const FINAL_STATUSES: OrderStatus[] = ["delivered", "completed", "cancelled"];
 const ORDER_FEEDBACK_REASONS: TrustFeedbackReason[] = [
   { value: "smooth_operation", label: "Fluxo correto / sem problema", severity: "low" },
   { value: "customer_late_cancel", label: "Cliente cancelou tarde", severity: "high" },
-  { value: "customer_no_show", label: "Cliente ausente / nao respondeu", severity: "medium" },
-  { value: "invalid_address", label: "Endereco incorreto ou incompleto", severity: "medium" },
+  { value: "customer_no_show", label: "Cliente ausente / não respondeu", severity: "medium" },
+  { value: "invalid_address", label: "Endereço incorreto ou incompleto", severity: "medium" },
   { value: "abusive_behavior", label: "Conduta abusiva ou insegura", severity: "critical" },
   { value: "courier_delay", label: "Motoboy atrasou retirada/entrega", severity: "medium" },
   { value: "courier_package_issue", label: "Problema com pacote/entrega", severity: "high" },
@@ -53,7 +53,7 @@ export function OrderTrustFeedbackPanel({ order }: OrderTrustFeedbackPanelProps)
       targets={targets}
       reasons={ORDER_FEEDBACK_REASONS}
       enabled={FINAL_STATUSES.includes(order.status)}
-      unavailableMessage="O feedback fica disponivel quando o pedido for entregue, concluido ou cancelado."
+      unavailableMessage="O feedback fica disponível quando o pedido for entregue, concluído ou cancelado."
       evidence={{
         order_status: order.status,
         order_total: order.total,

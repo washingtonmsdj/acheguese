@@ -1,10 +1,9 @@
 /**
- * ðŸ½ï¸ GASTRONOMY MUTATIONS - SSOT Write Model
+ *  GASTRONOMY MUTATIONS - SSOT Write Model
  *
- * Todas as operaÃ§Ãµes de escrita para gastronomia.
- * INSERT, UPDATE, DELETE com validaÃ§Ãµes.
+ *  Todas as operações de escrita para gastronomia.
+ *  INSERT, UPDATE, DELETE com validaes.
  *
- * @version 2.0.0 - ExtraÃ­do de GastronomyService
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/core/infrastructure/supabase';
@@ -21,12 +20,12 @@ import type {
   UpdateGastronomyProfileInput,
 } from '../types';
 
-// ============================================================
-// HELPERS INTERNOS
-// ============================================================
+//  ============================================================
+//  HELPERS INTERNOS
+//  ============================================================
 
 /**
- * Sanitizar input de criaÃ§Ã£o/atualizaÃ§Ã£o
+ *  Sanitizar input de criao/atualizao
  */
 function sanitizeInput(
   input: CreateGastronomyProfileInput | UpdateGastronomyProfileInput,
@@ -38,22 +37,22 @@ function sanitizeInput(
   };
 }
 
-// ============================================================
-// MUTATIONS PÃšBLICAS - Perfil GastronÃ´mico
-// ============================================================
+//  ============================================================
+//  MUTATIONS PBLICAS - Perfil Gastronmico
+//  ============================================================
 
 /**
- * Criar perfil gastronÃ´mico
+ *  Criar perfil gastronmico
  */
 export async function createGastronomyProfile(
   input: CreateGastronomyProfileInput,
   userId: string,
 ): Promise<GastronomyProfile> {
   try {
-    // 1. Verificar ownership via BusinessOwnershipService (SSOT)
+    //  1. Verificar ownership via BusinessOwnershipService (SSOT)
     await BusinessOwnershipService.requireOwnership(input.business_id, userId);
 
-    // 2. Verificar se jÃ¡ existe perfil gastronÃ´mico
+    //  2. Verificar se j existe perfil gastronmico
     const { data: existing } = await supabase
       .from('gastronomy_profiles')
       .select('id')
@@ -64,13 +63,13 @@ export async function createGastronomyProfile(
       throw new Error('Este negocio ja possui um perfil gastronomico');
     }
 
-    // 3. Sanitizar input
+    //  3. Sanitizar input
     const sanitized = sanitizeInput({
       business_id: input.business_id,
       ...input,
     });
 
-    // 4. Criar perfil
+    //  4. Criar perfil
     const insertData = {
       business_id: sanitized.business_id as string,
       cuisine_type: sanitized.cuisine_type as string,
@@ -111,7 +110,7 @@ export async function createGastronomyProfile(
 }
 
 /**
- * Atualizar perfil gastronÃ´mico
+ *  Atualizar perfil gastronmico
  */
 export async function updateGastronomyProfile(
   businessId: string,
@@ -119,13 +118,13 @@ export async function updateGastronomyProfile(
   userId: string,
 ): Promise<GastronomyProfile> {
   try {
-    // 1. Verificar ownership via BusinessOwnershipService (SSOT)
+    //  1. Verificar ownership via BusinessOwnershipService (SSOT)
     await BusinessOwnershipService.requireOwnership(businessId, userId);
 
-    // 2. Sanitizar input
+    //  2. Sanitizar input
     const sanitized = sanitizeInput(input);
 
-    // 3. Atualizar perfil
+    //  3. Atualizar perfil
     const { data, error } = await supabase
       .from('gastronomy_profiles')
       .update({
@@ -147,17 +146,17 @@ export async function updateGastronomyProfile(
 }
 
 /**
- * Deletar perfil gastronÃ´mico (soft delete)
+ *  Deletar perfil gastronmico (soft delete)
  */
 export async function deleteGastronomyProfile(
   businessId: string,
   userId: string,
 ): Promise<void> {
   try {
-    // 1. Verificar ownership via BusinessOwnershipService (SSOT)
+    //  1. Verificar ownership via BusinessOwnershipService (SSOT)
     await BusinessOwnershipService.requireOwnership(businessId, userId);
 
-    // 2. Soft delete
+    //  2. Soft delete
     const { error } = await supabase
       .from('gastronomy_profiles')
       .update({
@@ -175,7 +174,7 @@ export async function deleteGastronomyProfile(
 }
 
 /**
- * Atualizar status operacional
+ *  Atualizar status operacional
  */
 export async function updateOperationalStatus(
   businessId: string,
@@ -183,10 +182,10 @@ export async function updateOperationalStatus(
   userId: string,
 ): Promise<void> {
   try {
-    // 1. Verificar ownership via BusinessOwnershipService (SSOT)
+    //  1. Verificar ownership via BusinessOwnershipService (SSOT)
     await BusinessOwnershipService.requireOwnership(businessId, userId);
 
-    // 2. Atualizar status
+    //  2. Atualizar status
     const { error } = await supabase
       .from('gastronomy_profiles')
       .update({
@@ -203,12 +202,12 @@ export async function updateOperationalStatus(
   }
 }
 
-// ============================================================
-// MUTATIONS EM LOTE (BATCH)
-// ============================================================
+//  ============================================================
+//  MUTATIONS EM LOTE (BATCH)
+//  ============================================================
 
 /**
- * Atualizar mÃºltiplos campos do perfil em uma operaÃ§Ã£o
+ *  Atualizar mltiplos campos do perfil em uma operao
  */
 export async function patchGastronomyProfile(
   businessId: string,
@@ -216,10 +215,10 @@ export async function patchGastronomyProfile(
   userId: string,
 ): Promise<GastronomyProfile> {
   try {
-    // 1. Verificar ownership
+    //  1. Verificar ownership
     await BusinessOwnershipService.requireOwnership(businessId, userId);
 
-    // 2. Aplicar apenas campos vÃ¡lidos
+    //  2. Aplicar apenas campos vlidos
     const validPatches: Record<string, unknown> = {};
 
     if (patches.cuisine_type !== undefined) {
@@ -251,7 +250,7 @@ export async function patchGastronomyProfile(
 
     validPatches.updated_at = new Date().toISOString();
 
-    // 3. Atualizar
+    //  3. Atualizar
     const { data, error } = await supabase
       .from('gastronomy_profiles')
       .update(validPatches)

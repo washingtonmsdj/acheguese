@@ -15,6 +15,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { formatBrl } from "@/modules/business/gastronomy/utils/currency";
 import { usePremiumBusinessSiteContext } from "@/modules/business/premium/context/PremiumBusinessSiteContext";
+import { buildWhatsAppUrl } from "@/shared/utils/contactLinks";
 
 export default function PremiumBusinessHomePage() {
   const { businessSnapshot, hasGastronomy, routes } = usePremiumBusinessSiteContext();
@@ -28,7 +29,7 @@ export default function PremiumBusinessHomePage() {
       ? "Aberto"
       : businessSnapshot.institutional.openStatus.open === false
         ? "Fechado"
-        : "Horario nao informado";
+        : "Horário não informado";
   const openStatusVariant =
     businessSnapshot.institutional.openStatus.open === true ? "default" : "secondary";
 
@@ -74,21 +75,21 @@ export default function PremiumBusinessHomePage() {
             <div className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-primary" />
-                <span>{businessSnapshot.institutional.addressText ?? "Endereco nao informado"}</span>
+                <span>{businessSnapshot.institutional.addressText ?? "Endereço não informado"}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Clock3 className="h-4 w-4 text-primary" />
-                <span>{businessSnapshot.institutional.openStatus.todayHours ?? "Horario nao informado"}</span>
+                <span>{businessSnapshot.institutional.openStatus.todayHours ?? "Horário não informado"}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-primary" />
-                <span>{businessSnapshot.institutional.phone ?? "Contato nao informado"}</span>
+                <span>{businessSnapshot.institutional.phone ?? "Contato não informado"}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Star className="h-4 w-4 text-amber-500" />
                 <span>
                   {businessSnapshot.institutional.rating.toFixed(1)} (
-                  {businessSnapshot.institutional.reviewCount} avaliacoes)
+                  {businessSnapshot.institutional.reviewCount} avaliações)
                 </span>
               </div>
             </div>
@@ -96,7 +97,7 @@ export default function PremiumBusinessHomePage() {
             {hasGastronomy && (
               <div className="pt-1">
                 <Button asChild className="w-full sm:w-auto">
-                  <Link to={routes.menu}>Ver cardapio e pedir</Link>
+                  <Link to={routes.menu}>Ver cardápio e pedir</Link>
                 </Button>
               </div>
             )}
@@ -111,7 +112,7 @@ export default function PremiumBusinessHomePage() {
               </CardHeader>
               <CardContent className="space-y-3 text-sm text-muted-foreground">
                 <div className="flex items-center justify-between">
-                  <span>Cardapio com itens</span>
+                  <span>Cardápio com itens</span>
                   <Badge variant="outline">{commerce.length}</Badge>
                 </div>
                 <div className="flex gap-2">
@@ -125,7 +126,7 @@ export default function PremiumBusinessHomePage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Servicos disponiveis</CardTitle>
+              <CardTitle className="text-base">Serviços disponíveis</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm text-muted-foreground">
               {business.modos_atendimento?.length ? (
@@ -137,14 +138,14 @@ export default function PremiumBusinessHomePage() {
                   ))}
                 </div>
               ) : (
-                <p>Sem servicos cadastrados.</p>
+                <p>Sem serviços cadastrados.</p>
               )}
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Modulos ativos</CardTitle>
+              <CardTitle className="text-base">Módulos ativos</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm text-muted-foreground">
               {businessSnapshot.verticals.activeVerticals.length ? (
@@ -156,7 +157,7 @@ export default function PremiumBusinessHomePage() {
                   ))}
                 </div>
               ) : (
-                <p>Sem modulos ativos.</p>
+                <p>Sem módulos ativos.</p>
               )}
             </CardContent>
           </Card>
@@ -167,15 +168,15 @@ export default function PremiumBusinessHomePage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
                 <Phone className="h-4 w-4 text-primary" />
-                Contato rapido
+                Contato rápido
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
-              <p className="text-muted-foreground">{businessSnapshot.institutional.phone ?? "Nao informado"}</p>
+              <p className="text-muted-foreground">{businessSnapshot.institutional.phone ?? "Não informado"}</p>
               {businessSnapshot.institutional.whatsapp ? (
                 <Button asChild size="sm" className="w-full">
                   <a
-                    href={`https://wa.me/${businessSnapshot.institutional.whatsapp.replace(/\D/g, "")}`}
+                    href={buildWhatsAppUrl(businessSnapshot.institutional.whatsapp) ?? undefined}
                     target="_blank"
                     rel="noreferrer"
                   >
@@ -190,11 +191,11 @@ export default function PremiumBusinessHomePage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
                 <Globe className="h-4 w-4 text-primary" />
-                Presenca online
+                Presença online
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm text-muted-foreground">
-              <p>{businessSnapshot.institutional.website ?? "Site nao informado"}</p>
+              <p>{businessSnapshot.institutional.website ?? "Site não informado"}</p>
             </CardContent>
           </Card>
 
@@ -208,7 +209,7 @@ export default function PremiumBusinessHomePage() {
             <CardContent className="space-y-1 text-sm text-muted-foreground">
               <p>
                 Nota {businessSnapshot.institutional.rating.toFixed(1)} com{" "}
-                {businessSnapshot.institutional.reviewCount} avaliacoes.
+                {businessSnapshot.institutional.reviewCount} avaliações.
               </p>
             </CardContent>
           </Card>
@@ -239,16 +240,16 @@ export default function PremiumBusinessHomePage() {
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-base">
                 <UtensilsCrossed className="h-4 w-4 text-primary" />
-                Previa do cardapio
+                Prévia do cardápio
               </CardTitle>
               <Button asChild size="sm">
-                <Link to={routes.menu}>Abrir cardapio</Link>
+                <Link to={routes.menu}>Abrir cardápio</Link>
               </Button>
             </CardHeader>
             <CardContent>
               {previewItems.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
-                  Ainda nao ha itens em destaque no cardapio.
+                  Ainda não há itens em destaque no cardápio.
                 </p>
               ) : (
                 <div className="grid gap-3 sm:grid-cols-3">

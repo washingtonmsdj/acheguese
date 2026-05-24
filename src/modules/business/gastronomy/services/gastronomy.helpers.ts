@@ -4,7 +4,6 @@
  * Funções utilitárias puras para gastronomia.
  * Sem side effects, sem acesso a banco de dados.
  *
- * @version 2.0.0 - SSOT Helpers
  */
 
 import type {

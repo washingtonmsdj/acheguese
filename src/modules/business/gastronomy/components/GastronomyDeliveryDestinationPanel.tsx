@@ -63,7 +63,7 @@ export function GastronomyDeliveryDestinationPanel({
               <span className="line-clamp-1">{destinationLabel}</span>
             </div>
             <p className="text-xs text-muted-foreground">
-              Endereco usado para entrega deste pedido.
+              Endereço usado para entrega deste pedido.
               {destinationSourceLabel ? ` Fonte: ${destinationSourceLabel}.` : ''}
             </p>
           </div>
@@ -112,12 +112,12 @@ export function GastronomyDeliveryDestinationPanel({
           Entrega personalizada
         </p>
         <h2 className="text-base font-bold text-foreground">
-          Escolha o endereco de entrega
+          Escolha o endereço de entrega
         </h2>
         <p className="text-xs text-muted-foreground">
           {showCurrentLocationAction
-            ? 'Use seu endereco salvo no perfil ou informe outro endereco para esta entrega.'
-            : 'Informe o endereco completo de entrega (CEP, rua, numero, bairro e cidade).'}
+            ? 'Use seu endereço salvo no perfil ou informe outro endereço para esta entrega.'
+            : 'Informe o endereço completo de entrega (CEP, rua, número, bairro e cidade).'}
         </p>
       </div>
 
@@ -133,11 +133,11 @@ export function GastronomyDeliveryDestinationPanel({
           }}
           placeholder={
             showCurrentLocationAction
-              ? 'Rua, numero e bairro'
-              : 'CEP, rua, numero, bairro e cidade'
+              ? 'Rua, número e bairro'
+              : 'CEP, rua, número, bairro e cidade'
           }
           className="h-10 text-sm"
-          aria-label="Endereco de entrega"
+          aria-label="Endereço de entrega"
         />
         <Button
           type="button"
@@ -153,7 +153,7 @@ export function GastronomyDeliveryDestinationPanel({
           ) : (
             <>
               <Search className="mr-1.5 h-4 w-4" />
-              Confirmar endereco
+              Confirmar endereço
             </>
           )}
         </Button>
@@ -174,7 +174,7 @@ export function GastronomyDeliveryDestinationPanel({
             ) : (
               <LocateFixed className="mr-1 h-3.5 w-3.5" />
             )}
-            Usar localizacao atual
+            Usar localização atual
           </Button>
         )}
 
@@ -187,7 +187,7 @@ export function GastronomyDeliveryDestinationPanel({
             onClick={onUseSavedAddress}
           >
             <Home className="mr-1 h-3.5 w-3.5" />
-            {savedAddressLabel ? 'Usar endereco salvo' : 'Usar residencia'}
+            {savedAddressLabel ? 'Usar endereço salvo' : 'Usar residência'}
           </Button>
         )}
 
@@ -207,7 +207,7 @@ export function GastronomyDeliveryDestinationPanel({
       {!isAuthenticated && (
         <div className="mt-3 rounded-xl border border-dashed border-border bg-background/60 p-3">
           <p className="text-xs text-muted-foreground">
-            Entre na sua conta para aproveitar endereco residencial salvo e manter o destino sincronizado.
+            Entre na sua conta para aproveitar endereço residencial salvo e manter o destino sincronizado.
           </p>
           <Button
             type="button"
@@ -224,7 +224,7 @@ export function GastronomyDeliveryDestinationPanel({
 
       {savedAddressLabel && hasSavedAddressOption && (
         <p className="mt-2 text-[11px] text-muted-foreground">
-          Endereco salvo: {savedAddressLabel}
+          Endereço salvo: {savedAddressLabel}
         </p>
       )}
 

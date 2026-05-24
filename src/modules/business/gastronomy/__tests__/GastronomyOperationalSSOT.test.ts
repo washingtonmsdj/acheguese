@@ -34,17 +34,22 @@ describe("gastronomy operational SSOT flow", () => {
     const orderDetailsHookSource = readProjectFile(
       "src/modules/business/gastronomy/hooks/useOrderDetails.ts",
     );
+    const realtimeServiceSource = readProjectFile(
+      "src/modules/business/gastronomy/services/GastronomyOrderRealtimeService.ts",
+    );
 
-    expect(ordersHookSource).toContain("gastronomy-orders:${businessId}");
-    expect(ordersHookSource).toContain("table: 'orders'");
-    expect(ordersHookSource).toContain("filter: `source_id=eq.${businessId}`");
-    expect(ordersHookSource).toContain("table: 'order_timeline_events'");
-    expect(ordersHookSource).toContain(".eq('source_id', businessId)");
+    expect(ordersHookSource).toContain("GastronomyOrderRealtimeService.subscribeBusinessOrders");
+    expect(realtimeServiceSource).toContain("gastronomy-orders:${businessId}");
+    expect(realtimeServiceSource).toContain('table: "orders"');
+    expect(realtimeServiceSource).toContain("filter: `source_id=eq.${businessId}`");
+    expect(realtimeServiceSource).toContain('table: "order_timeline_events"');
+    expect(realtimeServiceSource).toContain('.eq("source_id", businessId)');
     expect(ordersHookSource).toContain("setTimeout(() => {");
     expect(ordersHookSource).toContain("verifiedBusinessOrderIdsRef");
-    expect(orderDetailsHookSource).toContain("gastronomy-order:${orderId}");
-    expect(orderDetailsHookSource).toContain("filter: `id=eq.${orderId}`");
-    expect(orderDetailsHookSource).toContain("filter: `order_id=eq.${orderId}`");
+    expect(orderDetailsHookSource).toContain("GastronomyOrderRealtimeService.subscribeOrderDetails");
+    expect(realtimeServiceSource).toContain("gastronomy-order:${orderId}");
+    expect(realtimeServiceSource).toContain("filter: `id=eq.${orderId}`");
+    expect(realtimeServiceSource).toContain("filter: `order_id=eq.${orderId}`");
     expect(orderDetailsHookSource).toContain("setTimeout(() => {");
     expect(ordersHookSource).not.toContain("refetchInterval:");
     expect(orderDetailsHookSource).not.toContain("refetchInterval:");
@@ -54,9 +59,13 @@ describe("gastronomy operational SSOT flow", () => {
     const trackingHookSource = readProjectFile(
       "src/modules/business/gastronomy/hooks/useOrderTracking.ts",
     );
+    const realtimeServiceSource = readProjectFile(
+      "src/modules/business/gastronomy/services/GastronomyOrderRealtimeService.ts",
+    );
 
-    expect(trackingHookSource).toContain("table: 'ride_requests'");
-    expect(trackingHookSource).toContain("filter: `source_id=eq.${orderId}`");
+    expect(trackingHookSource).toContain("GastronomyOrderRealtimeService.subscribeOrderTracking");
+    expect(realtimeServiceSource).toContain('table: "ride_requests"');
+    expect(realtimeServiceSource).toContain("filter: `source_id=eq.${orderId}`");
     expect(trackingHookSource).toContain("source_type");
     expect(trackingHookSource).toContain("newSourceType === 'gastronomy' || oldSourceType === 'gastronomy'");
     expect(trackingHookSource).toContain("refetchInterval: (query) => {");
@@ -83,7 +92,7 @@ describe("gastronomy operational SSOT flow", () => {
   it("keeps trust notifications with canonical audience URLs", () => {
     const trustSource = readProjectFile("src/core/trust/services/TrustEventService.ts");
 
-    expect(trustSource).toContain("const subjectActionUrl = linkedEvent ? trustContextActionUrl(linkedEvent) : \"/perfil\"");
+    expect(trustSource).toContain("const subjectActionUrl = linkedEvent ? trustContextActionUrl(linkedEvent) : \"/conta\"");
     expect(trustSource).toContain("const adminActionUrl = \"/admin/moderacao\"");
     expect(trustSource).toContain("action_url: subjectActionUrl");
     expect(trustSource).toContain("action_url: adminActionUrl");
@@ -99,6 +108,9 @@ describe("gastronomy operational SSOT flow", () => {
     const deliveryNotificationSource = readProjectFile(
       "src/modules/mobility/delivery/services/OrderDeliveryNotificationService.ts",
     );
+    const notificationServiceSource = readProjectFile(
+      "src/core/notifications/services/NotificationService.ts",
+    );
     const trustSource = readProjectFile("src/core/trust/services/TrustEventService.ts");
     const sqlSource = readProjectFile(
       "supabase/migrations/20260511183000_create_notification_transactional_preference.sql",
@@ -108,8 +120,11 @@ describe("gastronomy operational SSOT flow", () => {
     expect(deliveryNotificationSource).toContain('metadata: { ...metadata, audience: "customer" }');
     expect(deliveryNotificationSource).toContain('metadata: { ...metadata, audience: "merchant" }');
     expect(deliveryNotificationSource).toContain('metadata: { ...metadata, audience: "courier" }');
-    expect(deliveryNotificationSource).toContain("p_type: payload.type");
-    expect(deliveryNotificationSource).toContain("p_category: payload.category");
+    expect(deliveryNotificationSource).toContain("NotificationService.createNotification");
+    expect(deliveryNotificationSource).toContain("type: payload.type");
+    expect(deliveryNotificationSource).toContain("category: payload.category");
+    expect(notificationServiceSource).toContain("p_type: input.type");
+    expect(notificationServiceSource).toContain("p_category: input.category || 'social'");
     expect(deliveryNotificationSource).not.toContain('p_category: "system"');
     expect(deliveryNotificationSource).not.toContain('p_type: "order_update"');
 
@@ -127,7 +142,7 @@ describe("gastronomy operational SSOT flow", () => {
 
     expect(checkoutHookSource).toContain("DeliveryAreaService.checkEligibility");
     expect(checkoutHookSource).toContain("if (!eligibilityResult.data.is_eligible)");
-    expect(checkoutHookSource).toContain("Este endereco esta fora da area de entrega deste estabelecimento.");
+    expect(checkoutHookSource).toContain("Este endereço está fora da área de entrega deste estabelecimento.");
     expect(checkoutHookSource).toContain("if (input.business.gastronomy_profile.delivery_enabled)");
   });
 
@@ -178,6 +193,12 @@ describe("gastronomy operational SSOT flow", () => {
     const formSource = readProjectFile(
       "src/modules/business/gastronomy/components/menu/ItemForm.tsx",
     );
+    const formModelSource = readProjectFile(
+      "src/modules/business/gastronomy/components/menu/ItemForm.model.ts",
+    );
+    const formFieldsSource = readProjectFile(
+      "src/modules/business/gastronomy/components/menu/ItemFormFields.tsx",
+    );
     const cardSource = readProjectFile(
       "src/modules/business/gastronomy/components/menu/ItemCard.tsx",
     );
@@ -191,11 +212,13 @@ describe("gastronomy operational SSOT flow", () => {
       "src/modules/business/gastronomy/services/MenuService.ts",
     );
 
-    expect(formSource).toContain('name="is_available"');
-    expect(formSource).toContain('name="stock_quantity"');
-    expect(formSource).toContain('name="stock_alert_threshold"');
-    expect(formSource).toContain("stock_quantity: item?.stock_quantity ?? undefined");
-    expect(formSource).toContain("stock_alert_threshold: item?.stock_alert_threshold ?? undefined");
+    const fullFormSource = `${formSource}\n${formModelSource}\n${formFieldsSource}`;
+
+    expect(fullFormSource).toContain('name="is_available"');
+    expect(fullFormSource).toContain('name="stock_quantity"');
+    expect(fullFormSource).toContain('name="stock_alert_threshold"');
+    expect(formModelSource).toContain("stock_quantity: item?.stock_quantity ?? undefined");
+    expect(formModelSource).toContain("stock_alert_threshold: item?.stock_alert_threshold ?? undefined");
     expect(cardSource).toContain("const isSoldOut = item.stock_quantity === 0");
     expect(cardSource).toContain("Marcar esgotado");
     expect(cardSource).toContain("onMarkSoldOut");

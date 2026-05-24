@@ -1,4 +1,4 @@
-﻿/**
+/**
  * TodayOrdersCard - Card de pedidos do dia
  *
  * Mostra resumo dos pedidos de hoje.

@@ -28,13 +28,6 @@ interface BusinessIdentifiers {
   slug: string;
 }
 
-interface EducationBusinessUrlData {
-  state: string;
-  city: string;
-  district: string;
-  slug: string;
-}
-
 // ============================================================
 // URL BUILDERS
 // ============================================================
@@ -71,35 +64,16 @@ export const EducationUrlService = {
   },
 
   /**
-   * Resolve URL publica de uma instituicao de educacao
-   * Fallback para URL basica quando sem entitlement premium
+   * Resolve URL publica de uma instituicao de educacao.
+   * Retorna null quando a instituicao ainda nao tem contexto territorial canonico.
    */
-  async resolvePublicUrl(
-    businessId: string,
-    options: {
-      preferShortLink?: boolean;
-    } = {},
-  ): Promise<string> {
+  async resolvePublicUrl(businessId: string): Promise<string | null> {
     const resolved = await BusinessUrlService.resolveById(businessId);
     if (resolved) {
       return BusinessUrlService.getCanonicalUrl(resolved);
     }
 
-    // Fallback: dado compativel legado (quando disponivel)
-    const business = (await (BusinessUrlService as unknown as {
-      getBusinessData?: (id: string) => Promise<EducationBusinessUrlData | null>;
-    }).getBusinessData?.(businessId)) ?? null;
-    if (business) {
-      return this.buildDetailUrl({
-        state: business.state,
-        city: business.city,
-        district: business.district,
-        slug: business.slug,
-      });
-    }
-
-    // Ultimo fallback: lancamento
-    return this.buildLaunchUrl();
+    return null;
   },
 
   /**

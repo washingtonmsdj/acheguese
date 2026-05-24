@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AdEligibilityService
  *
  * Resolve qual anúncio exibir dado um contexto geográfico e um placement.

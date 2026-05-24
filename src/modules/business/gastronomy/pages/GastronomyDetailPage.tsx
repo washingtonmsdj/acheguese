@@ -21,6 +21,13 @@ import { Separator } from '@/shared/components/ui/separator';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { usePublicGastronomySnapshot } from '@/modules/business/public/hooks';
 import { cn } from '@/shared/utils/cn';
+import {
+  buildGoogleMapsDirectionsUrl,
+  buildMailtoUrl,
+  buildTelUrl,
+  buildWhatsAppUrl,
+} from '@/shared/utils/contactLinks';
+import { openSafeExternalUrl } from '@/shared/utils/safeRedirect';
 
 import {
   GastronomyShareDialog,
@@ -241,9 +248,9 @@ function BusinessInfoSidebar({ business, openingStatus, onNavigate }: BusinessIn
     profile.accepts_reservations && { icon: Info, label: 'Aceita reservas' },
     profile.has_parking && { icon: Store, label: 'Estacionamento' },
     profile.has_wifi && { icon: 'wifi', label: 'Wi-Fi' },
-    profile.has_accessibility && { icon: 'accessibility', label: 'Acessivel' },
-    profile.has_kids_area && { icon: 'kids', label: 'Area kids' },
-    profile.has_live_music && { icon: 'music', label: 'Musica ao vivo' },
+    profile.has_accessibility && { icon: 'accessibility', label: 'Acessível' },
+    profile.has_kids_area && { icon: 'kids', label: 'Área kids' },
+    profile.has_live_music && { icon: 'music', label: 'Música ao vivo' },
   ].filter(Boolean) as Array<{ icon: typeof Info; label: string }>;
 
   return (
@@ -258,7 +265,7 @@ function BusinessInfoSidebar({ business, openingStatus, onNavigate }: BusinessIn
         <div className="space-y-3">
           {business.phone && (
             <a
-              href={`tel:${business.phone}`}
+              href={buildTelUrl(business.phone) ?? undefined}
               className="flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-muted/50"
             >
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted">
@@ -273,7 +280,7 @@ function BusinessInfoSidebar({ business, openingStatus, onNavigate }: BusinessIn
 
           {business.whatsapp && (
             <a
-              href={`https://wa.me/${business.whatsapp}`}
+              href={buildWhatsAppUrl(business.whatsapp) ?? undefined}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-muted/50"
@@ -292,7 +299,7 @@ function BusinessInfoSidebar({ business, openingStatus, onNavigate }: BusinessIn
 
           {business.email && (
             <a
-              href={`mailto:${business.email}`}
+              href={buildMailtoUrl(business.email) ?? undefined}
               className="flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-muted/50"
             >
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted">
@@ -317,7 +324,7 @@ function BusinessInfoSidebar({ business, openingStatus, onNavigate }: BusinessIn
               className="bg-success text-success-foreground hover:bg-success/90"
             >
               <a
-                href={`https://wa.me/${business.whatsapp}`}
+                href={buildWhatsAppUrl(business.whatsapp) ?? undefined}
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -330,7 +337,7 @@ function BusinessInfoSidebar({ business, openingStatus, onNavigate }: BusinessIn
           )}
           {business.phone && (
             <Button variant="outline" asChild>
-              <a href={`tel:${business.phone}`}>
+              <a href={buildTelUrl(business.phone) ?? undefined}>
                 <Phone className="mr-2 h-4 w-4" />
                 Ligar
               </a>
@@ -343,7 +350,7 @@ function BusinessInfoSidebar({ business, openingStatus, onNavigate }: BusinessIn
       <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
         <h3 className="mb-4 flex items-center gap-2 font-semibold text-card-foreground">
           <Clock className="h-4 w-4" />
-          Horario de Funcionamento
+          Horário de Funcionamento
         </h3>
 
         {openingStatus ? (
@@ -389,7 +396,7 @@ function BusinessInfoSidebar({ business, openingStatus, onNavigate }: BusinessIn
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
           <h3 className="mb-4 flex items-center gap-2 font-semibold text-card-foreground">
             <MapPin className="h-4 w-4" />
-            Localizacao
+            Localização
           </h3>
           {business.location?.full_name && (
             <p className="mb-3 text-sm text-muted-foreground">{business.location.full_name}</p>
@@ -463,11 +470,9 @@ export default function GastronomyDetailPage() {
     const lat = business?.address?.latitude;
     const lng = business?.address?.longitude;
     if (typeof lat === 'number' && typeof lng === 'number') {
-      const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent);
-      const url = isIos
-        ? `maps://maps.apple.com/?daddr=${lat},${lng}`
-        : `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
-      window.open(url, '_blank');
+      openSafeExternalUrl(buildGoogleMapsDirectionsUrl(lat, lng), {
+        context: "gastronomy-detail-route",
+      });
     }
   };
 
@@ -484,16 +489,16 @@ export default function GastronomyDetailPage() {
   };
 
   // SEO Schema
-  const seoTitle = snapshot?.seo.title ?? `${business?.name ?? 'Gastronomia'} - Cardapio | Achegue-se`;
+  const seoTitle = snapshot?.seo.title ?? `${business?.name ?? 'Gastronomia'} - Cardápio | Achegue-se`;
   const seoDescription =
     snapshot?.seo.description ??
-    `${business?.description ?? ''} - cardapio, precos e pedidos online.`;
+    `${business?.description ?? ''} - cardápio, preços e pedidos online.`;
 
   const breadcrumbsSchema = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Inicio', item: window.location.origin },
+      { '@type': 'ListItem', position: 1, name: 'Início', item: window.location.origin },
       {
         '@type': 'ListItem',
         position: 2,
@@ -515,9 +520,9 @@ export default function GastronomyDetailPage() {
         <div className="rounded-full bg-muted p-6">
           <UtensilsCrossed className="h-12 w-12 text-muted-foreground/60" />
         </div>
-        <h1 className="mt-6 text-2xl font-bold text-foreground">Estabelecimento nao encontrado</h1>
+        <h1 className="mt-6 text-2xl font-bold text-foreground">Estabelecimento não encontrado</h1>
         <p className="mt-2 max-w-md text-center text-muted-foreground">
-          O endereco informado nao pertence a um estabelecimento ativo neste territorio.
+          O endereço informado não pertence a um estabelecimento ativo neste território.
         </p>
         <Button asChild className="mt-6">
           <Link to="/gastronomia">Voltar para gastronomia</Link>
@@ -561,7 +566,7 @@ export default function GastronomyDetailPage() {
             business.location?.name ??
             business.location?.full_name ??
             snapshot?.institutional.locationText ??
-            'Bairro nao informado'
+            'Bairro não informado'
           }
           cuisineLabel={getCuisineLabel(profile.cuisine_type)}
           isFavorited={isFavorited}
@@ -584,12 +589,12 @@ export default function GastronomyDetailPage() {
           />
         )}
 
-        {/* Main Content - cardapio em foco, full-width */}
+        {/* Main Content - cardápio em foco, full-width */}
         <main className="mx-auto max-w-7xl space-y-8 px-4 py-6 sm:px-6 lg:px-8">
           {/* Promotions */}
           {promotions.length > 0 && (
             <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-              <h2 className="mb-4 text-lg font-semibold text-card-foreground">Promocoes Ativas</h2>
+              <h2 className="mb-4 text-lg font-semibold text-card-foreground">Promoções Ativas</h2>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {promotions.map((promo) => (
                   <div
@@ -610,7 +615,7 @@ export default function GastronomyDetailPage() {
           <section>
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold text-foreground">
-                {activeCategoryData?.name ?? 'Cardapio'}
+                {activeCategoryData?.name ?? 'Cardápio'}
               </h2>
               <span className="text-sm text-muted-foreground">
                 {activeItems.length} {activeItems.length === 1 ? 'item' : 'itens'}
@@ -632,8 +637,8 @@ export default function GastronomyDetailPage() {
                 <UtensilsCrossed className="mx-auto h-12 w-12 text-muted-foreground/40" />
                 <p className="mt-4 text-muted-foreground">
                   {menu
-                    ? 'Nenhum item disponivel nesta categoria.'
-                    : 'Este estabelecimento ainda nao publicou um cardapio operacional.'}
+                    ? 'Nenhum item disponível nesta categoria.'
+                    : 'Este estabelecimento ainda não publicou um cardápio operacional.'}
                 </p>
               </div>
             )}
@@ -647,12 +652,12 @@ export default function GastronomyDetailPage() {
             />
           </section>
 
-          {/* Sobre o estabelecimento - contato, horario, comodidades, localizacao */}
+          {/* Sobre o estabelecimento - contato, horário, comodidades, localização */}
           <section className="space-y-4">
             <div>
               <h2 className="text-lg font-semibold text-foreground">Sobre o estabelecimento</h2>
               <p className="text-sm text-muted-foreground">
-                Contato, horario de funcionamento e comodidades.
+                Contato, horário de funcionamento e comodidades.
               </p>
             </div>
             <BusinessInfoSidebar

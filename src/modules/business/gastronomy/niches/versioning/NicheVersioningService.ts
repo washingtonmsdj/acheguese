@@ -1,10 +1,8 @@
 /**
- * ðŸ”„ NICHE VERSIONING SERVICE
+ * NicheVersioningService
  *
- * ServiÃ§o para gerenciar versionamento e evoluÃ§Ã£o de nichos.
- * Garante que upgrades nÃ£o quebrem registros antigos.
- *
- * @version 1.0.0
+ * Servi?o para gerenciar versionamento e evolu??o de nichos.
+ * Garante que upgrades n?o quebrem registros antigos.
  */
 
 import { supabase } from '@/core/infrastructure/supabase/client';
@@ -49,8 +47,11 @@ export class NicheVersioningService {
   }
 
   /**
-   * Verifica se um perfil tem uma capability especÃ­fica
-   */
+ * NicheVersioningService
+ *
+ * Servi?o para gerenciar versionamento e evolu??o de nichos.
+ * Garante que upgrades n?o quebrem registros antigos.
+ */
   static async hasCapability(
     business_id: string,
     capability: NicheCapability,
@@ -77,8 +78,11 @@ export class NicheVersioningService {
   }
 
   /**
-   * Verifica mÃºltiplas capabilities de uma vez
-   */
+ * NicheVersioningService
+ *
+ * Servi?o para gerenciar versionamento e evolu??o de nichos.
+ * Garante que upgrades n?o quebrem registros antigos.
+ */
   static async hasCapabilities(
     business_id: string,
     capabilities: NicheCapability[],
@@ -120,8 +124,11 @@ export class NicheVersioningService {
   }
 
   /**
-   * Adiciona uma capability a um perfil
-   */
+ * NicheVersioningService
+ *
+ * Servi?o para gerenciar versionamento e evolu??o de nichos.
+ * Garante que upgrades n?o quebrem registros antigos.
+ */
   static async addCapability(
     params: AddCapabilityParams,
   ): Promise<AddCapabilityResult> {
@@ -145,8 +152,11 @@ export class NicheVersioningService {
   }
 
   /**
-   * Adiciona mÃºltiplas capabilities de uma vez
-   */
+ * NicheVersioningService
+ *
+ * Servi?o para gerenciar versionamento e evolu??o de nichos.
+ * Garante que upgrades n?o quebrem registros antigos.
+ */
   static async addCapabilities(
     business_id: string,
     capabilities: NicheCapability[],
@@ -167,8 +177,11 @@ export class NicheVersioningService {
   }
 
   /**
-   * Marca perfis de um nicho como necessitando upgrade
-   */
+ * NicheVersioningService
+ *
+ * Servi?o para gerenciar versionamento e evolu??o de nichos.
+ * Garante que upgrades n?o quebrem registros antigos.
+ */
   static async markNeedsUpgrade(
     params: MarkNeedsUpgradeParams,
   ): Promise<MarkNeedsUpgradeResult> {
@@ -186,12 +199,15 @@ export class NicheVersioningService {
   }
 
   /**
-   * Realiza upgrade completo de um nicho
-   */
+ * NicheVersioningService
+ *
+ * Servi?o para gerenciar versionamento e evolu??o de nichos.
+ * Garante que upgrades n?o quebrem registros antigos.
+ */
   static async upgradeNiche(
     params: UpgradeNicheParams,
   ): Promise<UpgradeNicheResult> {
-    // Buscar configuraÃ§Ã£o atual
+    // Buscar configuração atual
     const { data: currentProfile, error: fetchError } = await supabase
       .from('gastronomy_profiles')
       .select('niche_config_version, operational_mode, enabled_capabilities')
@@ -204,7 +220,7 @@ export class NicheVersioningService {
         from_version: '0.0.0',
         to_version: params.to_version,
         added_capabilities: [],
-        error: 'Perfil gastronomico nao encontrado',
+        error: 'Perfil gastronômico não encontrado',
       };
     }
 
@@ -240,7 +256,7 @@ export class NicheVersioningService {
       };
     }
 
-    // Registrar no histÃ³rico
+    // Registrar no histórico
     await supabase.from('gastronomy_niche_upgrade_history').insert({
       business_id: params.business_id,
       from_version: fromVersion,
@@ -262,8 +278,11 @@ export class NicheVersioningService {
   }
 
   /**
-   * ObtÃ©m configuraÃ§Ã£o de nicho de um perfil
-   */
+ * NicheVersioningService
+ *
+ * Servi?o para gerenciar versionamento e evolu??o de nichos.
+ * Garante que upgrades n?o quebrem registros antigos.
+ */
   static async getProfileNicheConfig(
     business_id: string,
   ): Promise<ProfileNicheConfig | null> {
@@ -301,8 +320,11 @@ export class NicheVersioningService {
   }
 
   /**
-   * ObtÃ©m perfil com informaÃ§Ãµes de nicho
-   */
+ * NicheVersioningService
+ *
+ * Servi?o para gerenciar versionamento e evolu??o de nichos.
+ * Garante que upgrades n?o quebrem registros antigos.
+ */
   static async getProfileWithNicheInfo(
     business_id: string,
   ): Promise<GastronomyProfileWithNiche | null> {
@@ -320,8 +342,11 @@ export class NicheVersioningService {
   }
 
   /**
-   * ObtÃ©m histÃ³rico de upgrades de um perfil
-   */
+ * NicheVersioningService
+ *
+ * Servi?o para gerenciar versionamento e evolu??o de nichos.
+ * Garante que upgrades n?o quebrem registros antigos.
+ */
   static async getUpgradeHistory(
     business_id: string,
   ): Promise<NicheUpgradeHistory[]> {
@@ -351,8 +376,11 @@ export class NicheVersioningService {
   }
 
   /**
-   * Lista perfis que precisam de upgrade
-   */
+ * NicheVersioningService
+ *
+ * Servi?o para gerenciar versionamento e evolu??o de nichos.
+ * Garante que upgrades n?o quebrem registros antigos.
+ */
   static async listProfilesNeedingUpgrade(
     niche_key?: string,
   ): Promise<GastronomyProfileWithNiche[]> {

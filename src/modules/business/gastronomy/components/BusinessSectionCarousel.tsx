@@ -94,7 +94,7 @@ export function BusinessSectionCarousel({
               onClick={handleNext}
               disabled={pageIndex >= totalPages - 1}
             >
-              <span className="hidden sm:inline">Proximos</span>
+              <span className="hidden sm:inline">Próximos</span>
               <ChevronRight className="h-3.5 w-3.5" />
             </Button>
           </div>

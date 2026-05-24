@@ -47,7 +47,7 @@ export default function BusinessStandalonePage({
         const data = await BusinessService.getBusinessById(businessId);
         setBusiness(data);
       } catch (err) {
-        logger.error("❌ BusinessStandalonePage: Erro:", err);
+        logger.error("BusinessStandalonePage: Erro:", err);
         setError(err instanceof Error ? err.message : "Erro desconhecido");
         setNotFound(true);
       } finally {

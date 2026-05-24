@@ -16,7 +16,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { useParams, Link, useLocation, Navigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import {
   ArrowLeft,
@@ -36,7 +36,7 @@ import { useTerritoryFilter } from '@/core/location/hooks/useTerritoryFilter';
 import { useTouristPoint } from '../hooks/useTouristPoint';
 import { useTouristPoints } from '../hooks/useTouristPoints';
 import { useGuideUrls } from '../hooks/useGuideUrls';
-import { shouldRedirect } from '../utils/canonicalRedirect';
+import { TERRITORY_CONFIG } from '@/config/territory';
 import { TouristPointGallery } from '../components/TouristPointGallery';
 import { TouristPointFactsPanel } from '../components/TouristPointFactsPanel';
 import { TouristPointTipsSection } from '../components/TouristPointTipsSection';
@@ -80,41 +80,13 @@ function getCategoryLabel(category?: TouristPointCategory | null): string | null
   }
 }
 
-function getCategoryIcon(category?: TouristPointCategory | null): string | null {
+function getCategoryIcon(category?: TouristPointCategory | null) {
   if (!category) return null;
-  switch (category) {
-    case 'praia':
-      return CATEGORY_ICONS.praia;
-    case 'praca':
-      return CATEGORY_ICONS.praca;
-    case 'parque':
-      return CATEGORY_ICONS.parque;
-    case 'trilha':
-      return CATEGORY_ICONS.trilha;
-    case 'mirante':
-      return CATEGORY_ICONS.mirante;
-    case 'museu':
-      return CATEGORY_ICONS.museu;
-    case 'centro-cultural':
-      return CATEGORY_ICONS['centro-cultural'];
-    case 'historico':
-      return CATEGORY_ICONS.historico;
-    case 'igreja':
-      return CATEGORY_ICONS.igreja;
-    case 'monumento':
-      return CATEGORY_ICONS.monumento;
-    case 'mercado':
-      return CATEGORY_ICONS.mercado;
-    case 'ar-livre':
-      return CATEGORY_ICONS['ar-livre'];
-    default:
-      return null;
-  }
+  return CATEGORY_ICONS[category] ?? null;
 }
 
 export default function TouristPointDetailPage() {
   const params = useParams<{ state?: string; city?: string; slug?: string; groupSlugOrDistrict?: string; id?: string }>();
-  const location = useLocation();
   // Para rota direta por ID, resolved pode não existir (não está dentro de TerritorialLayout)
   let resolved;
   let activeMemberIds: string[] | undefined;
@@ -175,13 +147,6 @@ export default function TouristPointDetailPage() {
     };
   }, [isLoading]);
 
-  // BLINDAGEM: Redirecionamento canônico
-  // Se a URL não está no formato canônico (sem bairro ou bairro errado), redireciona
-  const redirectCheck = shouldRedirect(location.pathname, point ?? null);
-  if (redirectCheck.shouldRedirect && redirectCheck.canonicalUrl) {
-    return <Navigate to={redirectCheck.canonicalUrl} replace />;
-  }
-
   const territoryName = resolved
     ? (resolved.kind === 'location'
       ? resolved.location.full_name
@@ -239,7 +204,7 @@ export default function TouristPointDetailPage() {
 
   const category = displayModel.category as TouristPointCategory | undefined;
   const catLabel = getCategoryLabel(category);
-  const catIcon = getCategoryIcon(category);
+  const CategoryIcon = getCategoryIcon(category);
   const rating = displayModel.rating;
   const reviewCount = displayModel.review_count;
   const neighborhood = displayModel.location?.name ?? displayModel.neighborhood;
@@ -283,9 +248,9 @@ export default function TouristPointDetailPage() {
           <div className="mb-8">
             {/* Category + badges row */}
             <div className="flex items-center gap-2 flex-wrap mb-3">
-              {catLabel && (
+              {catLabel && CategoryIcon && (
                 <Badge variant="secondary" className="text-xs flex items-center gap-1">
-                  <span>{catIcon}</span>
+                  <CategoryIcon className="h-3.5 w-3.5" aria-hidden="true" />
                   {catLabel}
                 </Badge>
               )}
@@ -416,7 +381,7 @@ export default function TouristPointDetailPage() {
             pointTitle={displayPoint.title}
             pointSlug={displayPoint.slug}
             locationId={locationId || null}
-            city={params.city ?? 'salvador'}
+            city={params.city ?? TERRITORY_CONFIG.launch.city}
             state={params.state}
             neighborhood={neighborhood ?? null}
           />

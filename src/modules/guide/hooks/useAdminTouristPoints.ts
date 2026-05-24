@@ -21,7 +21,7 @@ export function useAdminTouristPoints(locationIds: string[]) {
   return useQuery({
     queryKey: [QUERY_KEY, locationIds],
     queryFn: () => TouristPointQueryService.listAdmin({ location_ids: locationIds }),
-    enabled: locationIds.length > 0,
+    enabled: true,
     staleTime: 60 * 1000,
     retry: false,
   });

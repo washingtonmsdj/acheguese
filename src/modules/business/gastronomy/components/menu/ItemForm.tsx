@@ -1,7 +1,7 @@
 /**
- * ItemForm - Formulario de item do cardapio
+ * ItemForm - formulário de item do cardápio
  *
- * Orquestra o fluxo de criacao/edicao; schema, payload e blocos visuais ficam isolados.
+ * Orquestra o fluxo de criação/edição; schema, payload e blocos visuais ficam isolados.
  */
 
 import { useRef, useState } from 'react';
@@ -88,13 +88,13 @@ export function ItemForm({
 
   const handleUploadImage = async (file?: File) => {
     if (!file || !user?.id) {
-      toast.error('Nao foi possivel enviar a imagem.');
+      toast.error('Não foi possível enviar a imagem.');
       return;
     }
 
     const validation = validateImageFile(file);
     if (!validation.valid) {
-      toast.error(validation.error || 'Arquivo de imagem invalido.');
+      toast.error(validation.error || 'Arquivo de imagem inválido.');
       return;
     }
 
@@ -123,7 +123,7 @@ export function ItemForm({
         <DialogHeader>
           <DialogTitle>{item ? 'Editar Item' : 'Novo Item'}</DialogTitle>
           <DialogDescription>
-            {item ? 'Atualize as informacoes do item' : 'Adicione um novo item ao cardapio'}
+            {item ? 'Atualize as informações do item' : 'Adicione um novo item ao cardápio'}
           </DialogDescription>
         </DialogHeader>
 
@@ -148,7 +148,7 @@ export function ItemForm({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Descricao</FormLabel>
+                  <FormLabel>Descrição</FormLabel>
                   <FormControl>
                     <Textarea placeholder="Descreva o item..." rows={3} {...field} />
                   </FormControl>

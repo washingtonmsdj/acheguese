@@ -231,7 +231,7 @@ export function OrderOperationsPanel({ order, businessId }: OrderOperationsPanel
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <ClipboardCheck className="h-5 w-5" />
-          Operacao da loja
+          Operação da loja
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -259,9 +259,9 @@ export function OrderOperationsPanel({ order, businessId }: OrderOperationsPanel
           </div>
         ) : (
           <div className="rounded-lg border bg-background p-4">
-            <p className="font-medium">Sem acao operacional pendente</p>
+            <p className="font-medium">Sem ação operacional pendente</p>
             <p className="text-sm text-muted-foreground">
-              Este pedido esta em estado final ou aguardando atualizacao externa do fluxo de entrega.
+              Este pedido está em estado final ou aguardando atualização externa do fluxo de entrega.
             </p>
           </div>
         )}
@@ -308,7 +308,7 @@ export function OrderOperationsPanel({ order, businessId }: OrderOperationsPanel
 
         {!activeProfile?.id && (
           <p className="text-sm text-destructive">
-            Perfil ativo obrigatorio para operar pedidos.
+            Perfil ativo obrigatório para operar pedidos.
           </p>
         )}
       </CardContent>
@@ -318,7 +318,7 @@ export function OrderOperationsPanel({ order, businessId }: OrderOperationsPanel
           <AlertDialogHeader>
             <AlertDialogTitle>Cancelar pedido #{order.order_number}</AlertDialogTitle>
             <AlertDialogDescription>
-              Informe o motivo. Ele sera registrado na linha do tempo e usado nas notificacoes operacionais.
+              Informe o motivo. Ele será registrado na linha do tempo e usado nas notificações operacionais.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="space-y-2">

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ServicesService - Wrapper for Professional Services
  *
  * This service provides a simplified API for the services module

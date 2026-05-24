@@ -103,11 +103,11 @@ export function saveDeliveryDestination(destination: DeliveryDestination | null)
 export function getDestinationSourceLabel(source: DeliveryDestinationSource): string {
   switch (source) {
     case 'gps':
-      return 'localizacao atual';
+      return 'localização atual';
     case 'saved_residence':
-      return 'endereco salvo';
+      return 'endereço salvo';
     case 'manual_address':
-      return 'endereco informado';
+      return 'endereço informado';
   }
 }
 

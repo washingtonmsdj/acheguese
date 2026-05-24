@@ -29,6 +29,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui
 import { Separator } from '@/shared/components/ui/separator';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
+import { buildTelUrl } from '@/shared/utils/contactLinks';
 
 const ORDER_TYPE_LABELS = {
   pickup: 'Retirada',
@@ -38,9 +39,9 @@ const ORDER_TYPE_LABELS = {
 
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
   pix: 'PIX na entrega/retirada',
-  card_on_delivery: 'Cartao na entrega/retirada',
-  debit_card: 'Cartao de debito',
-  credit_card: 'Cartao de credito',
+  card_on_delivery: 'Cartão na entrega/retirada',
+  debit_card: 'Cartão de débito',
+  credit_card: 'Cartão de crédito',
   cash: 'Dinheiro na entrega/retirada',
   online: 'Pagamento online',
   payment_link: 'Link de pagamento',
@@ -49,7 +50,7 @@ const PAYMENT_METHOD_LABELS: Record<string, string> = {
 const PAYMENT_STATUS_LABELS: Record<string, string> = {
   pending_payment: 'Pendente',
   paid: 'Pago',
-  not_applicable: 'Nao aplicavel',
+  not_applicable: 'Não aplicável',
   refunded: 'Reembolsado',
   partially_refunded: 'Parcialmente reembolsado',
 };
@@ -61,7 +62,7 @@ const ORDER_STATUS_LABELS: Record<string, string> = {
   ready: 'Pronto',
   out_for_delivery: 'Saiu para entrega',
   delivered: 'Entregue',
-  completed: 'Concluido',
+  completed: 'Concluído',
   cancelled: 'Cancelado',
 };
 
@@ -74,10 +75,10 @@ function resolvePaymentOperationalHint(paymentMethod: string | null): string {
     return 'Envie o link ao cliente e confirme manualmente o recebimento antes de liberar entrega.';
   }
   if (paymentMethod === 'pix') {
-    return 'Confirme o recebimento do PIX antes de liberar o pedido para expedicao.';
+    return 'Confirme o recebimento do PIX antes de liberar o pedido para expedição.';
   }
   if (paymentMethod === 'cash') {
-    return 'Validar troco quando informado nas observacoes do pedido.';
+    return 'Validar troco quando informado nas observações do pedido.';
   }
   if (paymentMethod === 'card_on_delivery') {
     return 'Garantir disponibilidade de maquineta no momento da entrega/retirada.';
@@ -89,10 +90,10 @@ function resolveTimelineTitle(event: OrderWithItems['status_history'][number]): 
   if (event.to_financial_status || event.from_financial_status) {
     const fromFinancial = event.from_financial_status
       ? PAYMENT_STATUS_LABELS[event.from_financial_status] ?? event.from_financial_status
-      : 'Nao definido';
+      : 'Não definido';
     const toFinancial = event.to_financial_status
       ? PAYMENT_STATUS_LABELS[event.to_financial_status] ?? event.to_financial_status
-      : 'Nao definido';
+      : 'Não definido';
     return `Pagamento: ${fromFinancial} -> ${toFinancial}`;
   }
 
@@ -101,7 +102,7 @@ function resolveTimelineTitle(event: OrderWithItems['status_history'][number]): 
     : null;
   const toStatus = event.to_status
     ? ORDER_STATUS_LABELS[event.to_status] ?? event.to_status
-    : 'Atualizacao operacional';
+      : 'Atualização operacional';
 
   return fromStatus ? `${fromStatus} -> ${toStatus}` : toStatus;
 }
@@ -115,7 +116,7 @@ export default function OrderDetailsPage() {
   if (!orderId) {
     return (
       <div className="container max-w-6xl py-8">
-        <p className="text-center text-destructive">Parametros invalidos</p>
+        <p className="text-center text-destructive">Parâmetros inválidos</p>
       </div>
     );
   }
@@ -137,7 +138,7 @@ export default function OrderDetailsPage() {
   if (!order) {
     return (
       <div className="container max-w-6xl py-8">
-        <p className="text-center text-destructive">Pedido nao encontrado</p>
+        <p className="text-center text-destructive">Pedido não encontrado</p>
       </div>
     );
   }
@@ -211,20 +212,20 @@ export default function OrderDetailsPage() {
           <CardContent className="space-y-3">
             <div>
               <p className="text-sm text-muted-foreground">Nome</p>
-              <p className="font-medium">{order.customer_name || 'Cliente nao informado'}</p>
+              <p className="font-medium">{order.customer_name || 'Cliente não informado'}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Telefone</p>
               {order.customer_phone ? (
                 <a
-                  href={`tel:${order.customer_phone}`}
+                  href={buildTelUrl(order.customer_phone) ?? undefined}
                   className="font-medium text-primary hover:underline flex items-center gap-1"
                 >
                   <Phone className="h-4 w-4" />
                   {order.customer_phone}
                 </a>
               ) : (
-                <p className="font-medium text-muted-foreground">Nao informado</p>
+                <p className="font-medium text-muted-foreground">Não informado</p>
               )}
             </div>
           </CardContent>
@@ -257,7 +258,7 @@ export default function OrderDetailsPage() {
                 </>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  Endereco completo ainda nao esta disponivel no pedido. O SSOT deve receber o snapshot do endereco formatado no checkout.
+                  Endereço completo ainda não está disponível no pedido. O SSOT deve receber o snapshot do endereço formatado no checkout.
                 </p>
               )}
             </CardContent>
@@ -273,11 +274,11 @@ export default function OrderDetailsPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div>
-              <p className="text-sm text-muted-foreground">Metodo</p>
+              <p className="text-sm text-muted-foreground">Método</p>
               <p className="font-medium">
                 {order.payment_method
                   ? PAYMENT_METHOD_LABELS[order.payment_method] ?? order.payment_method
-                  : 'Nao informado'}
+                  : 'Não informado'}
               </p>
               {order.payment_method === 'payment_link' && (
                 <Badge variant="outline" className="mt-2">
@@ -327,7 +328,7 @@ export default function OrderDetailsPage() {
                   </p>
                   {order.delivery_courier_cost !== null && (
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Custo logistica (motoboy)</span>
+                      <span className="text-muted-foreground">Custo logística (motoboy)</span>
                       <span className="font-medium">R$ {order.delivery_courier_cost.toFixed(2)}</span>
                     </div>
                   )}
@@ -349,7 +350,7 @@ export default function OrderDetailsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Clock className="h-5 w-5" />
-              Horarios
+              Horários
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -418,7 +419,7 @@ export default function OrderDetailsPage() {
           <CardContent className="grid md:grid-cols-2 gap-4 text-sm">
             {proof.code && (
               <div>
-                <p className="text-muted-foreground">Codigo</p>
+                <p className="text-muted-foreground">Código</p>
                 <p className="font-medium">{proof.code}</p>
               </div>
             )}
@@ -430,7 +431,7 @@ export default function OrderDetailsPage() {
             )}
             {proof.observation && (
               <div className="md:col-span-2">
-                <p className="text-muted-foreground">Observacao</p>
+                <p className="text-muted-foreground">Observação</p>
                 <p className="font-medium">{proof.observation}</p>
               </div>
             )}
@@ -482,7 +483,7 @@ export default function OrderDetailsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
-              Observacoes
+              Observações
             </CardTitle>
           </CardHeader>
           <CardContent>

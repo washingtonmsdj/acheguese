@@ -156,7 +156,7 @@ export default function EmpresaDashboardTab({
     {
       icon: Star,
       label: "Avaliações",
-      value: `${metrics.avgRating} ⭐ (${metrics.totalReviews})`,
+      value: `${metrics.avgRating} (${metrics.totalReviews})`,
       color: "bg-warning/10 text-warning",
     },
     {

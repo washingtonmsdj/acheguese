@@ -161,7 +161,7 @@ export function useProfessionalCreateMultiProfile(
       queryClient.invalidateQueries({ queryKey: ["professionals"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
 
-      toast.success("Serviço cadastrado com sucesso! ✅");
+      toast.success("Serviço cadastrado com sucesso!");
       options.onSuccess?.(result);
     },
 

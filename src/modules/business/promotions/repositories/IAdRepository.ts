@@ -1,4 +1,4 @@
-﻿/**
+/**
  * IAdRepository - Contrato do repositório de anúncios
  */
 

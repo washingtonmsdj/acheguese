@@ -1,16 +1,17 @@
-﻿import { Building2, Sparkles } from "lucide-react";
+import { Building2, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { BusinessModulesSection } from "@/core/profile/components/hub/BusinessModulesSection";
 import { useProfileHub } from "@/core/profile/hooks/useProfileHub";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
+import { navigateToSafeRedirect } from "@/shared/utils/safeRedirect";
 
 /**
  * CentralEmpresasPage
  *
- * Pagina lista de empresas na Central (/central/empresas).
- * Lista empresas do usuario com CTAs para acessar painel e criar nova empresa.
+ * Página lista de empresas na Central (/central/empresas).
+ * Lista empresas do usuário com CTAs para acessar painel e criar nova empresa.
  */
 export default function CentralEmpresasPage() {
   const navigate = useNavigate();
@@ -19,7 +20,11 @@ export default function CentralEmpresasPage() {
 
   const handleNavigate = (url: string) => {
     if (/^https?:\/\//i.test(url)) {
-      window.location.assign(url);
+      navigateToSafeRedirect(url, {
+        allowAnyHttpOrigin: true,
+        allowRelative: false,
+        context: "central-business-module",
+      });
       return;
     }
 
@@ -63,7 +68,7 @@ export default function CentralEmpresasPage() {
             <div className="space-y-2">
               <h3 className="text-lg font-semibold">Nenhuma empresa ativa</h3>
               <p className="text-sm text-muted-foreground">
-                Voce ainda nao possui empresas administradas. Crie sua primeira empresa para comecar a usar o painel empresarial.
+                Você ainda não possui empresas administradas. Crie sua primeira empresa para começar a usar o painel empresarial.
               </p>
             </div>
             <Button onClick={handleCreateBusiness} className="w-full gap-2 sm:w-auto">
@@ -81,7 +86,7 @@ export default function CentralEmpresasPage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold">Empresas</h1>
-          <p className="text-muted-foreground">Gerencie suas empresas e acesse os paineis operacionais.</p>
+          <p className="text-muted-foreground">Gerencie suas empresas e acesse os painéis operacionais.</p>
         </div>
         <Button onClick={handleCreateBusiness} className="w-full gap-2 sm:w-auto">
           <Sparkles className="h-4 w-4" />

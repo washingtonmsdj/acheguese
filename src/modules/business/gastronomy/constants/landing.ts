@@ -6,10 +6,10 @@
  */
 
 export const BUSINESS_SORT_OPTIONS = [
-  { key: 'relevance', label: 'Relevancia' },
-  { key: 'nearest', label: 'Mais proximo' },
+  { key: 'relevance', label: 'Relevância' },
+  { key: 'nearest', label: 'Mais próximo' },
   { key: 'rating', label: 'Melhor avaliado' },
-  { key: 'delivery_time', label: 'Mais rapido' },
+  { key: 'delivery_time', label: 'Mais rápido' },
   { key: 'delivery_fee', label: 'Menor taxa' },
 ] as const;
 
@@ -20,4 +20,4 @@ export const INITIAL_VISIBLE_COUNT = 12;
 export const LOAD_MORE_INCREMENT = 12;
 
 export const INSECURE_CONTEXT_DESTINATION_MESSAGE =
-  'Localizacao automatica indisponivel neste ambiente. Use HTTPS/localhost ou informe seu endereco manualmente.';
+  'Localização automática indisponível neste ambiente. Use HTTPS/localhost ou informe seu endereço manualmente.';

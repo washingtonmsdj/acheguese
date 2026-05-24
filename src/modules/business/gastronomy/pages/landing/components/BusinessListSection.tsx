@@ -125,7 +125,7 @@ export function BusinessListSection(props: BusinessListSectionProps) {
           </div>
           <h3 className="mb-2 text-xl font-bold text-foreground">Nenhum restaurante encontrado</h3>
           <p className="mx-auto mb-6 max-w-md text-muted-foreground">
-            Tente ajustar os filtros ou navegar para outra area ativa.
+            Tente ajustar os filtros ou navegar para outra área ativa.
           </p>
           {hasActiveFilters && (
             <Button onClick={onClearFilters} variant="outline" className="rounded-full">

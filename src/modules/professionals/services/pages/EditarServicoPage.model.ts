@@ -25,9 +25,6 @@ export interface ProfessionalEditForm {
   isAcceptingClients: boolean;
 }
 
-export const MAX_PROFESSIONAL_IMAGE_BYTES = 5 * 1024 * 1024;
-export const MAX_PROFESSIONAL_PORTFOLIO_IMAGES = 10;
-
 export const createInitialProfessionalEditForm = (): ProfessionalEditForm => ({
   name: "",
   category: "",

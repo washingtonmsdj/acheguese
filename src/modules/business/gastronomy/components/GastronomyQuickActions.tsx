@@ -8,6 +8,13 @@ import { Building2, MessageCircle, Navigation, Phone, ShoppingCart } from 'lucid
 import { toast } from 'sonner';
 
 import { Button } from '@/shared/components/ui/button';
+import {
+  buildGoogleMapsDirectionsUrl,
+  buildTelUrl,
+  buildWhatsAppUrl,
+  openContactUrl,
+} from '@/shared/utils/contactLinks';
+import { openSafeExternalUrl } from '@/shared/utils/safeRedirect';
 import type { GastronomyBusiness } from '../types';
 
 interface GastronomyQuickActionsProps {
@@ -31,8 +38,9 @@ export function GastronomyQuickActions({
       toast.error('WhatsApp não disponível');
       return;
     }
-    const message = `Olá! Vi o ${business.name} no OrdaX e gostaria de fazer um pedido.`;
-    window.open(`https://wa.me/${whatsapp}?text=${encodeURIComponent(message)}`, '_blank');
+    const message = `Olá! Vi o ${business.name} no Achegue-se e gostaria de fazer um pedido.`;
+    const url = buildWhatsAppUrl(whatsapp, message);
+    if (url) openSafeExternalUrl(url, { context: "gastronomy-quick-whatsapp" });
   };
 
   const makeCall = () => {
@@ -40,16 +48,15 @@ export function GastronomyQuickActions({
       toast.error('Telefone não disponível');
       return;
     }
-    window.location.href = `tel:${phone}`;
+    const url = buildTelUrl(phone);
+    openContactUrl(url);
   };
 
   const openNavigation = () => {
     if (!hasCoords) return;
-    const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const url = isIos
-      ? `maps://maps.apple.com/?daddr=${latitude},${longitude}`
-      : `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
-    window.open(url, '_blank');
+    openSafeExternalUrl(buildGoogleMapsDirectionsUrl(latitude, longitude), {
+      context: "gastronomy-quick-route",
+    });
   };
 
   const hasActions = whatsapp || phone || hasCoords || profile.delivery_enabled || companyUrl;

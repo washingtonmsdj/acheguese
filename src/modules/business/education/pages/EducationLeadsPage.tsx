@@ -2,7 +2,7 @@
  * EducationLeadsPage
  *
  * Pagina de gestao de leads da instituicao.
- * Rota: /central/empresas/:businessId/education/leads
+ * Rota: /central/empresas/:businessId/educacao/leads
  */
 
 import { useParams } from 'react-router-dom';

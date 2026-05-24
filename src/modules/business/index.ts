@@ -5,7 +5,7 @@
  * Internal implementation details should not be exported.
  *
  * Validates: Requirements 8.1, 8.2, 8.3
- * Validates: Property 6 (Barrel Exports Apenas para API PÃºblica)
+ * Validates: Property 6 (Barrel Exports Apenas para API Pública)
  */
 
 // Components

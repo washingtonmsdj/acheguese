@@ -1,10 +1,7 @@
-﻿/**
- * useOrderTracking Ã¢â‚¬â€ Hook para rastreamento GPS de pedidos
+/**
+ * useOrderTracking - Hook para rastreamento GPS de pedidos.
  *
- * SSOT: Vincula orders (pedido) com ride_requests (rastreamento GPS)
- *
- * Uso:
- *   const { rideRequest, hasTracking, isLoading } = useOrderTracking(orderId);
+ * SSOT: Vincula orders (pedido) com ride_requests (rastreamento GPS).
  */
 
 import { useEffect, useMemo, useRef } from 'react';
@@ -55,7 +52,7 @@ export function useOrderTracking(orderId: string): UseOrderTrackingResult {
     staleTime: 10000,
     refetchInterval: (query) => {
       const data = query.state.data;
-      // Fallback: enquanto nao houver vinculo, manter verificacao leve.
+      // Fallback: enquanto não houver vínculo, manter verificação leve.
       if (!data) return 15000;
       return isActiveTrackingStatus(data.status) ? 15000 : false;
     },
@@ -116,4 +113,3 @@ export function useOrderTracking(orderId: string): UseOrderTrackingResult {
     refetch,
   };
 }
-

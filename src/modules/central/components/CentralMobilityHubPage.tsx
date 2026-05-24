@@ -3,7 +3,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Route, Settings2, Wallet } from "lucide-react";
-import { useDriverProfileIdentity } from "@/core/profiles/services/useDriverProfileIdentity";
+import { useDriverProfileIdentity } from "@/core/mobility/hooks/useDriverProfileIdentity";
 import { useNavigate } from "react-router-dom";
 
 type ActivationMode = "rides" | "delivery";
@@ -69,9 +69,9 @@ export function CentralMobilityHubPage({
               <EmptyIcon className="h-8 w-8 text-primary" />
             </div>
             <div className="space-y-2">
-              <h3 className="text-lg font-semibold">Perfil de {profileNoun} nao encontrado</h3>
+              <h3 className="text-lg font-semibold">Perfil de {profileNoun} não encontrado</h3>
               <p className="text-sm text-muted-foreground">
-                Voce ainda nao ativou seu perfil de {profileNoun}. Cadastre-se para comecar a receber solicitacoes.
+                Você ainda não ativou seu perfil de {profileNoun}. Cadastre-se para começar a receber solicitações.
               </p>
             </div>
             <Button onClick={() => navigate(registrationPath)} className="w-full gap-2 sm:w-auto">
@@ -93,7 +93,7 @@ export function CentralMobilityHubPage({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold">{title}</h1>
-          <p className="text-muted-foreground">Gerencie seu perfil de {profileNoun} e acompanhe suas operacoes</p>
+          <p className="text-muted-foreground">Gerencie seu perfil de {profileNoun} e acompanhe suas operações</p>
         </div>
         <Badge variant={isActive ? "default" : "secondary"}>{isActive ? "Ativo" : "Inativo"}</Badge>
       </div>
@@ -108,7 +108,7 @@ export function CentralMobilityHubPage({
               <div>
                 <p className="text-sm font-medium">Status do perfil</p>
                 <p className="text-xs text-muted-foreground">
-                  {driverData.background_check_status === "approved" ? "Aprovado" : "Em verificacao"}
+                  {driverData.background_check_status === "approved" ? "Aprovado" : "Em verificação"}
                 </p>
               </div>
             </div>
@@ -122,7 +122,7 @@ export function CentralMobilityHubPage({
                 <Route className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-sm font-medium">Taxa de aceitacao</p>
+                <p className="text-sm font-medium">Taxa de aceitação</p>
                 <p className="text-xs text-muted-foreground">{driverData.acceptance_rate ? `${driverData.acceptance_rate}%` : "N/A"}</p>
               </div>
             </div>
@@ -145,7 +145,7 @@ export function CentralMobilityHubPage({
       </div>
 
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold">Acoes rapidas</h2>
+        <h2 className="text-lg font-semibold">Ações rápidas</h2>
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           {actions.map((action) => {
             const ActionIcon = action.icon;
@@ -172,7 +172,7 @@ export function CentralMobilityHubPage({
             <div className="space-y-1">
               <p className="text-sm font-medium">Fluxo unificado na Central</p>
               <p className="text-xs text-muted-foreground">
-                Todas as acoes acima permanecem dentro da Central para evitar perda de contexto durante a operacao.
+                Todas as ações acima permanecem dentro da Central para evitar perda de contexto durante a operação.
               </p>
             </div>
           </div>

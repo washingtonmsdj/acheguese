@@ -28,10 +28,43 @@ import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-r
 import { ActiveProfileBadge } from "@/core/profiles/components/ActiveProfileBadge";
 import { useIdentitySaveLogger } from "@/core/public-identity/hooks/useIdentitySaveLogger";
 import { CoverageSettingsForm } from "@/core/geospatial/components/CoverageSettingsForm";
+import { CATEGORY_CONFIGS } from "@/modules/business/config/categoryFilters";
 import {
   evaluateBusinessSlugSafety,
   isBusinessSlugSafetyBypassAllowed,
 } from "@/core/public-identity/domain/businessSlugSafety";
+
+function normalizeCategoryValue(rawCategory: unknown): BusinessCategory {
+  const value = String(rawCategory ?? "").trim().toLowerCase();
+  if ((value as BusinessCategory) in CATEGORY_CONFIGS) {
+    return value as BusinessCategory;
+  }
+
+  switch (value) {
+    case "alimentacao":
+    case "alimentação":
+      return "restaurante";
+    case "beleza":
+    case "beleza e estetica":
+    case "beleza e estética":
+      return "servicos";
+    case "construcao":
+    case "construção":
+      return "servicos";
+    case "educacao":
+    case "educação":
+      return "educacao";
+    case "saude":
+    case "saúde":
+      return "saude";
+    case "tecnologia":
+      return "servicos";
+    case "varejo":
+      return "mercado";
+    default:
+      return "outros";
+  }
+}
 
 export default function EditarEmpresaPage() {
   const navigate = useNavigate();
@@ -74,7 +107,7 @@ export default function EditarEmpresaPage() {
   const { logAttempt, logSuccess, logError } = useIdentitySaveLogger({
     entityType: 'business',
     entityId: profileId!,
-    userId: user!.id,
+    userId: user?.id ?? "unknown-user",
     page: 'EditarEmpresaPage',
   });
 
@@ -103,7 +136,7 @@ export default function EditarEmpresaPage() {
       form.reset({
         name: business.name,
         description: business.description,
-        category: business.category,
+        category: normalizeCategoryValue(business.category),
         phone: business.phone || "",
         whatsapp: business.whatsapp || "",
         email: business.email || "",
@@ -360,8 +393,6 @@ export default function EditarEmpresaPage() {
               onLatitudeChange={(value) => form.setValue("latitude", value)}
               longitude={form.watch("longitude")}
               onLongitudeChange={(value) => form.setValue("longitude", value)}
-              schedules={""}
-              onSchedulesChange={() => {}}
               selectedModos={form.watch("modos_atendimento") || []}
               onModosChange={(value) =>
                 form.setValue("modos_atendimento", value)
@@ -375,6 +406,7 @@ export default function EditarEmpresaPage() {
           {currentStep === 3 && (
             <>
               <ExtrasStep
+                category={form.watch("category")}
                 capaPreview={capaPreview}
                 capaRef={capaRef}
                 onCapaChange={handleCapaChange}

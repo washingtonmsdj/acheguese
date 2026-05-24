@@ -23,6 +23,7 @@ import type { BizData } from "@/modules/business/types";
 import type { BizEditData } from "@/modules/business/components/EmpresaEditSheet";
 import type { LucideIcon } from "lucide-react";
 import { logger } from "@/shared/utils/logger";
+import { openSafeUrlInNewTab } from "@/shared/utils/safeRedirect";
 
 interface User {
   id: string;
@@ -166,7 +167,9 @@ export function BusinessHeader({
             className="absolute bottom-4 sm:bottom-6 right-4 sm:right-6"
           >
             <Button
-              onClick={() => window.open(`/${business.slug}`, "_blank")}
+              onClick={() => openSafeUrlInNewTab(`/p/${business.slug}`, {
+                context: "business-header-premium-page",
+              })}
               className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-xl gap-2 hover:shadow-2xl transition-all"
             >
               <ExternalLink className="h-4 w-4" />

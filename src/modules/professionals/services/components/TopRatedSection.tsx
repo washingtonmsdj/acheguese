@@ -25,33 +25,37 @@ export function TopRatedSection({
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4">
-        {topRated.map((professional) => (
-          <div
-            key={professional.id}
-            onClick={() => onProfessionalClick(professional)}
-            className="flex-shrink-0 w-32 bg-card rounded-xl border p-2 cursor-pointer hover:shadow-md transition-shadow"
-          >
-            {professional.avatar_url ? (
-              <img
-                src={professional.avatar_url}
-                alt={professional.name}
-                className="h-16 w-full rounded-lg object-cover mb-1"
-                loading="lazy"
-              />
-            ) : (
-              <div className="h-16 w-full rounded-lg bg-secondary flex items-center justify-center text-2xl mb-1">
-                {getServiceCategoryIcon(professional.category)}
+        {topRated.map((professional) => {
+          const CategoryIcon = getServiceCategoryIcon(professional.category);
+
+          return (
+            <div
+              key={professional.id}
+              onClick={() => onProfessionalClick(professional)}
+              className="flex-shrink-0 w-32 bg-card rounded-xl border p-2 cursor-pointer hover:shadow-md transition-shadow"
+            >
+              {professional.avatar_url ? (
+                <img
+                  src={professional.avatar_url}
+                  alt={professional.name}
+                  className="h-16 w-full rounded-lg object-cover mb-1"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="h-16 w-full rounded-lg bg-secondary flex items-center justify-center mb-1">
+                  <CategoryIcon className="h-7 w-7 text-primary" />
+                </div>
+              )}
+
+              <p className="text-xs font-medium truncate">{professional.name}</p>
+
+              <div className="flex items-center gap-0.5 text-xs text-muted-foreground">
+                <Star className="h-3 w-3 text-warning fill-warning" />
+                {professional.rating ? professional.rating.toFixed(1) : "0.0"}
               </div>
-            )}
-
-            <p className="text-xs font-medium truncate">{professional.name}</p>
-
-            <div className="flex items-center gap-0.5 text-xs text-muted-foreground">
-              <Star className="h-3 w-3 text-warning fill-warning" />
-              {professional.rating ? professional.rating.toFixed(1) : "0.0"}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

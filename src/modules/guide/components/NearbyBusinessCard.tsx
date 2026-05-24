@@ -2,7 +2,7 @@
  * NearbyBusinessCard — Card de estabelecimento próximo (modo Ao redor)
  */
 
-import { MapPin, Star, Clock, ExternalLink } from 'lucide-react';
+import { MapPin, Star } from 'lucide-react';
 import { Card, CardContent } from '@/shared/components/ui/card';
 import { Badge } from '@/shared/components/ui/badge';
 
@@ -32,14 +32,14 @@ export type NearbyBusinessType =
   | 'hotel'
   | 'experiencia';
 
-const TYPE_CONFIG: Record<NearbyBusinessType, { label: string; emoji: string; color: string }> = {
-  restaurante: { label: 'Restaurante', emoji: '🍽️', color: 'bg-orange-500/10 text-orange-600 border-orange-500/20' },
-  cafe: { label: 'Café', emoji: '☕', color: 'bg-amber-500/10 text-amber-600 border-amber-500/20' },
-  loja: { label: 'Loja', emoji: '🛍️', color: 'bg-blue-500/10 text-blue-600 border-blue-500/20' },
-  servico: { label: 'Serviço', emoji: '🔧', color: 'bg-green-500/10 text-green-600 border-green-500/20' },
-  bar: { label: 'Bar', emoji: '🍸', color: 'bg-purple-500/10 text-purple-600 border-purple-500/20' },
-  hotel: { label: 'Hospedagem', emoji: '🏨', color: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20' },
-  experiencia: { label: 'Experiência', emoji: '🎯', color: 'bg-rose-500/10 text-rose-600 border-rose-500/20' },
+const TYPE_CONFIG: Record<NearbyBusinessType, { label: string; color: string }> = {
+  restaurante: { label: 'Restaurante', color: 'bg-orange-500/10 text-orange-600 border-orange-500/20' },
+  cafe: { label: 'Café', color: 'bg-amber-500/10 text-amber-600 border-amber-500/20' },
+  loja: { label: 'Loja', color: 'bg-blue-500/10 text-blue-600 border-blue-500/20' },
+  servico: { label: 'Serviço', color: 'bg-green-500/10 text-green-600 border-green-500/20' },
+  bar: { label: 'Bar', color: 'bg-purple-500/10 text-purple-600 border-purple-500/20' },
+  hotel: { label: 'Hospedagem', color: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20' },
+  experiencia: { label: 'Experiência', color: 'bg-rose-500/10 text-rose-600 border-rose-500/20' },
 };
 
 interface NearbyBusinessCardProps {
@@ -65,7 +65,7 @@ export function NearbyBusinessCard({ business, variant = 'card' }: NearbyBusines
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${config.color}`}>
-                {config.emoji} {config.label}
+                {config.label}
               </Badge>
               <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
                 <MapPin className="h-2.5 w-2.5" />
@@ -103,7 +103,7 @@ export function NearbyBusinessCard({ business, variant = 'card' }: NearbyBusines
         />
         <div className="absolute top-2 left-2 flex gap-1.5">
           <Badge className={`text-xs ${config.color} backdrop-blur-sm`}>
-            {config.emoji} {config.label}
+            {config.label}
           </Badge>
           <Badge variant="outline" className="text-xs bg-background/70 backdrop-blur-sm">
             {business.distance}

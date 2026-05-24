@@ -44,7 +44,7 @@ export default function PremiumBusinessProductPage() {
         <title>{`${item.name} | ${business.name}`}</title>
         <meta
           name="description"
-          content={`Detalhes de ${item.name} no cardapio premium de ${business.name}.`}
+          content={`Detalhes de ${item.name} no cardápio premium de ${business.name}.`}
         />
         {absoluteCanonical && <link rel="canonical" href={absoluteCanonical} />}
         <meta name="robots" content="noindex, nofollow" />
@@ -54,7 +54,7 @@ export default function PremiumBusinessProductPage() {
         <div className="flex items-center justify-between gap-3">
           <h1 className="text-2xl font-bold text-foreground">Produto</h1>
           <Button asChild variant="outline">
-            <Link to={routes.menu}>Voltar ao cardapio</Link>
+            <Link to={routes.menu}>Voltar ao cardápio</Link>
           </Button>
         </div>
 
@@ -72,13 +72,13 @@ export default function PremiumBusinessProductPage() {
             <div className="space-y-3">
               <h2 className="text-xl font-semibold text-foreground">{item.name}</h2>
               <p className="text-sm text-muted-foreground">
-                {item.description || "Sem descricao adicional."}
+                {item.description || "Sem descrição adicional."}
               </p>
               <p className="text-lg font-bold text-primary">{formatBrl(item.base_price)}</p>
               <div className="flex flex-wrap gap-2">
                 {item.is_featured && <Badge>Destaque</Badge>}
                 {item.is_vegan && <Badge variant="outline">Vegano</Badge>}
-                {item.is_gluten_free && <Badge variant="outline">Sem gluten</Badge>}
+                {item.is_gluten_free && <Badge variant="outline">Sem glúten</Badge>}
               </div>
               <Button onClick={() => setDrawerOpen(true)}>Escolher adicionais e adicionar</Button>
             </div>

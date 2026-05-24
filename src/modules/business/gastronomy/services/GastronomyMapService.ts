@@ -1,4 +1,4 @@
-﻿import { applyTerritoryFilter } from "@/core/location";
+import { applyTerritoryFilter } from "@/core/location";
 import type { TerritoryFilter } from "@/core/location/types";
 import { supabase } from "@/core/infrastructure/supabase";
 import { logger } from "@/shared/utils/logger";

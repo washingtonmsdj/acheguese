@@ -3,6 +3,7 @@ import { Phone, MessageCircle, Star, Share2, Mail, Send } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { useToast } from "@/shared/hooks/use-toast";
 import { ProfessionalLeadRequestDialog } from "@/modules/professionals/components/ProfessionalLeadRequestDialog";
+import { buildMailtoUrl, buildTelUrl, buildWhatsAppUrl } from "@/shared/utils/contactLinks";
 import type { ProfessionalData } from "@/modules/professionals/services/hooks/useProfessionalDetail";
 
 interface ProfessionalActionButtonsProps {
@@ -51,7 +52,7 @@ export function ProfessionalActionButtons({
             className="bg-success hover:bg-success/90 text-success-foreground"
           >
             <a
-              href={`https://wa.me/55${professional.whatsapp.replace(/\D/g, "")}`}
+              href={buildWhatsAppUrl(professional.whatsapp) ?? undefined}
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -63,7 +64,7 @@ export function ProfessionalActionButtons({
 
         {hasPhone && (
           <Button asChild variant="outline" size="sm">
-            <a href={`tel:${professional.phone}`}>
+            <a href={buildTelUrl(professional.phone) ?? undefined}>
               <Phone className="h-4 w-4 mr-1.5" />
               Ligar
             </a>
@@ -72,7 +73,7 @@ export function ProfessionalActionButtons({
 
         {hasEmail && (
           <Button asChild variant="outline" size="sm">
-            <a href={`mailto:${professional.email}`}>
+            <a href={buildMailtoUrl(professional.email) ?? undefined}>
               <Mail className="h-4 w-4 mr-1.5" />
               Email
             </a>
@@ -96,7 +97,7 @@ export function ProfessionalActionButtons({
         professionalId={professional.professional_data_id}
         professionalName={professional.name}
         defaultService={professional.service || professional.category}
-        sourceChannel="legacy_detail"
+        sourceChannel="service_profile"
       />
     </div>
   );

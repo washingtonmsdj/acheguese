@@ -1,5 +1,5 @@
-import type { CommunicationDashboardView } from "@/modules/communication-territorial/types/communicationDashboard";
-import { mobilityRoutes } from "@/modules/mobility/routes/mobilityRoutes";
+import type { CommunicationDashboardView } from "@/core/communication-territorial/types/communicationDashboard";
+import { mobilityRoutes } from "@/core/mobility/routes/mobilityRoutes";
 
 export const centralRoutes = {
   home: "/central",
@@ -27,8 +27,8 @@ export const centralRoutes = {
     home: "/central/profissional",
   },
   servicos: {
-    create: "/services/cadastrar",
-    edit: (serviceId: string) => `/services/${serviceId}/editar`,
+    create: "/servicos/cadastrar",
+    edit: (serviceId: string) => `/servicos/${serviceId}/editar`,
   },
   motorista: mobilityRoutes.motorista,
   motoboy: mobilityRoutes.motoboy,

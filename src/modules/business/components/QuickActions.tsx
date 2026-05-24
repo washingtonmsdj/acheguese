@@ -9,6 +9,13 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import BookingButton from "./BookingButton";
+import {
+  buildGoogleMapsDirectionsUrl,
+  buildTelUrl,
+  buildWhatsAppUrl,
+  openContactUrl,
+} from "@/shared/utils/contactLinks";
+import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
 interface QuickActionsProps {
   whatsapp?: string;
   phone?: string;
@@ -44,11 +51,9 @@ export default function QuickActions({
       toast.error("WhatsApp não disponível");
       return;
     }
-    const message = `Olá! Vi o profile de ${businessName} no LocalConnect e gostaria de saber mais informações.`;
-    window.open(
-      `https://wa.me/${whatsapp}?text=${encodeURIComponent(message)}`,
-      "_blank",
-    );
+    const message = `Olá! Vi o perfil de ${businessName} no Achegue-se e gostaria de saber mais informações.`;
+    const url = buildWhatsAppUrl(whatsapp, message);
+    if (url) openSafeExternalUrl(url, { context: "business-quick-actions-whatsapp" });
   };
 
   const makeCall = () => {
@@ -56,7 +61,8 @@ export default function QuickActions({
       toast.error("Telefone não disponível");
       return;
     }
-    window.location.href = `tel:${phone}`;
+    const url = buildTelUrl(phone);
+    openContactUrl(url);
   };
 
   const openMaps = () => {
@@ -65,18 +71,9 @@ export default function QuickActions({
       return;
     }
 
-    const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    if (isIos) {
-      window.open(
-        `maps://maps.apple.com/?daddr=${latitude},${longitude}&q=${encodeURIComponent(businessName)}`,
-        "_blank",
-      );
-    } else {
-      window.open(
-        `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`,
-        "_blank",
-      );
-    }
+    openSafeExternalUrl(buildGoogleMapsDirectionsUrl(latitude, longitude), {
+      context: "business-quick-actions-route",
+    });
   };
 
   const scrollToProducts = () => {

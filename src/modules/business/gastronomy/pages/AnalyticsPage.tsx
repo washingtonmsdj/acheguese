@@ -17,7 +17,7 @@ import {
 import { AnalyticsOverviewCard } from '@/modules/business/gastronomy/components/analytics/AnalyticsOverviewCard';
 import { AnalyticsChartCard } from '@/modules/business/gastronomy/components/analytics/AnalyticsChartCard';
 import { AnalyticsEngagementCard } from '@/modules/business/gastronomy/components/analytics/AnalyticsEngagementCard';
-import { CalendarIcon, Download } from 'lucide-react';
+import { CalendarIcon, Download, Lightbulb } from 'lucide-react';
 import { format, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/shared/utils/cn';
@@ -182,7 +182,10 @@ export default function AnalyticsPage() {
 
       {/* Insights */}
       <div className="rounded-lg border bg-card p-6">
-        <h3 className="text-lg font-semibold mb-4">💡 Insights</h3>
+        <h3 className="flex items-center gap-2 text-lg font-semibold mb-4">
+          <Lightbulb className="h-5 w-5 text-primary" aria-hidden="true" />
+          Insights
+        </h3>
         <div className="space-y-3 text-sm">
           <p className="text-muted-foreground">
             • Seus pedidos aumentaram 15% em relação ao período anterior

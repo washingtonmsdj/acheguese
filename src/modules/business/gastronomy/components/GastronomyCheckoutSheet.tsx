@@ -252,7 +252,7 @@ export function GastronomyCheckoutSheet({
     if (canUseCardOnDelivery) {
       options.splice(1, 0, {
         value: "card_on_delivery",
-        label: `Cartao na ${locationLabel}`,
+        label: `Cartão na ${locationLabel}`,
         icon: CreditCard,
       });
     }
@@ -281,7 +281,7 @@ export function GastronomyCheckoutSheet({
 
   const minimumOrderLabel = useMemo(() => {
     if (minimumOrderRemaining <= 0) return null;
-    return `Faltam R$ ${minimumOrderRemaining.toFixed(2)} para atingir o pedido minimo.`;
+    return `Faltam R$ ${minimumOrderRemaining.toFixed(2)} para atingir o pedido mínimo.`;
   }, [minimumOrderRemaining]);
 
   useEffect(() => {
@@ -343,7 +343,7 @@ export function GastronomyCheckoutSheet({
           <SheetTitle>Revisar pedido</SheetTitle>
           <SheetDescription>
             O pagamento acontece direto com o estabelecimento. O app registra o
-            pedido e acompanha a operacao da entrega.
+            pedido e acompanha a operação da entrega.
           </SheetDescription>
         </SheetHeader>
 
@@ -450,7 +450,7 @@ export function GastronomyCheckoutSheet({
             </div>
             {requiresDeliveryDestination && deliveryFulfillmentMode === "platform_courier" && (
               <p className="text-sm text-amber-700">
-                Entrega por rede de motoboy: cartao na entrega pode nao estar disponivel. Prefira PIX, link de pagamento ou dinheiro.
+                Entrega por rede de motoboy: cartão na entrega pode não estar disponível. Prefira PIX, link de pagamento ou dinheiro.
               </p>
             )}
             {paymentMethod === "cash" && (
@@ -495,7 +495,7 @@ export function GastronomyCheckoutSheet({
               />
             )}
 
-            <h3 className="font-semibold">Observacoes do pedido</h3>
+            <h3 className="font-semibold">Observações do pedido</h3>
             <Textarea
               placeholder="Ex.: interfone 12, troco para 100, entregar na portaria."
               value={customerNotes}
@@ -531,7 +531,7 @@ export function GastronomyCheckoutSheet({
             )}
             {requiresDeliveryDestination && !hasDeliveryDestination && (
               <p className="mt-3 text-sm text-amber-700">
-                Informe o endereco completo de entrega (CEP, rua, numero e bairro) para continuar.
+                Informe o endereço completo de entrega (CEP, rua, número e bairro) para continuar.
               </p>
             )}
           </section>

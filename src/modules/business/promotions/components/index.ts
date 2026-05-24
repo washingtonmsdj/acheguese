@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Promotions Components - Barrel Export
  */
 

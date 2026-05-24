@@ -27,9 +27,12 @@ import { TerritoryIndicator, useTerritoryLabels } from "@/core/location";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { useServicos } from "@/modules/professionals/services/hooks/useServicos";
 import { useTopRatedProfessionals } from "@/modules/professionals/services/hooks/useTopRatedProfessionals";
+import { buildWhatsAppUrl } from "@/shared/utils/contactLinks";
+import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
 import { ServicosHeader } from "@/modules/professionals/services/components";
 import {
   SERVICE_CATEGORY_OPTIONS,
+  SERVICE_FORM_CATEGORY_OPTIONS,
   getServiceCategoryIcon,
   getServiceCategoryLabel,
 } from "@/modules/professionals/services/domain/professionalCategories";
@@ -62,37 +65,47 @@ const BENEFITS = [
 
 // ── Componentes auxiliares ────────────────────────────────────────────
 
-// Categorias de serviços (estilo gastronomia - filtros visuais)
-const SERVICOS_CATEGORIES = [
-  { id: 'eletricista',  emoji: '⚡', label: 'Eletricista',   categoryFilter: 'Eletricista',   color: 'text-yellow-400',  bg: 'bg-yellow-500/15 border-yellow-500/20' },
-  { id: 'encanador',    emoji: '🔧', label: 'Encanador',     categoryFilter: 'Encanador',     color: 'text-blue-400',    bg: 'bg-blue-500/15 border-blue-500/20' },
-  { id: 'pintor',       emoji: '🎨', label: 'Pintor',        categoryFilter: 'Pintor',        color: 'text-purple-400',  bg: 'bg-purple-500/15 border-purple-500/20' },
-  { id: 'diarista',     emoji: '🧹', label: 'Diarista',      categoryFilter: 'Diarista',      color: 'text-pink-400',    bg: 'bg-pink-500/15 border-pink-500/20' },
-  { id: 'jardineiro',   emoji: '🌱', label: 'Jardineiro',    categoryFilter: 'Jardineiro',    color: 'text-green-400',   bg: 'bg-green-500/15 border-green-500/20' },
-  { id: 'marceneiro',   emoji: '🪚', label: 'Marceneiro',    categoryFilter: 'Marceneiro',    color: 'text-amber-400',   bg: 'bg-amber-500/15 border-amber-500/20' },
-  { id: 'pedreiro',     emoji: '🧱', label: 'Pedreiro',      categoryFilter: 'Pedreiro',      color: 'text-orange-400',  bg: 'bg-orange-500/15 border-orange-500/20' },
-  { id: 'mecanico',     emoji: '🔩', label: 'Mecânico',      categoryFilter: 'Mecânico',      color: 'text-gray-400',    bg: 'bg-gray-500/15 border-gray-500/20' },
-  { id: 'eletronico',   emoji: '📱', label: 'Eletrônico',    categoryFilter: 'Técnico em Eletrônicos', color: 'text-cyan-400', bg: 'bg-cyan-500/15 border-cyan-500/20' },
-  { id: 'chaveiro',     emoji: '🔑', label: 'Chaveiro',      categoryFilter: 'Chaveiro',      color: 'text-yellow-500',  bg: 'bg-yellow-600/15 border-yellow-600/20' },
-  { id: 'vidraceiro',   emoji: '🪟', label: 'Vidraceiro',    categoryFilter: 'Vidraceiro',    color: 'text-sky-400',     bg: 'bg-sky-500/15 border-sky-500/20' },
-  { id: 'serralheiro',  emoji: '⚒️', label: 'Serralheiro',   categoryFilter: 'Serralheiro',   color: 'text-slate-400',   bg: 'bg-slate-500/15 border-slate-500/20' },
-  { id: 'dedetizador',  emoji: '🦟', label: 'Dedetizador',   categoryFilter: 'Dedetizador',   color: 'text-lime-400',    bg: 'bg-lime-500/15 border-lime-500/20' },
-  { id: 'ar',           emoji: '❄️', label: 'Ar Condicionado', categoryFilter: 'Técnico em Ar Condicionado', color: 'text-blue-300', bg: 'bg-blue-400/15 border-blue-400/20' },
-  { id: 'informatica',  emoji: '💻', label: 'Informática',   categoryFilter: 'Técnico em Informática', color: 'text-indigo-400', bg: 'bg-indigo-500/15 border-indigo-500/20' },
-  { id: 'costureira',   emoji: '🧵', label: 'Costureira',    categoryFilter: 'Costureira',    color: 'text-rose-400',    bg: 'bg-rose-500/15 border-rose-500/20' },
-];
+const SERVICE_CATEGORY_STYLE_BY_ID: Record<string, { color: string; bg: string }> = {
+  eletricista: { color: "text-yellow-400", bg: "bg-yellow-500/15 border-yellow-500/20" },
+  encanador: { color: "text-blue-400", bg: "bg-blue-500/15 border-blue-500/20" },
+  pedreiro: { color: "text-orange-400", bg: "bg-orange-500/15 border-orange-500/20" },
+  pintor: { color: "text-purple-400", bg: "bg-purple-500/15 border-purple-500/20" },
+  diarista: { color: "text-pink-400", bg: "bg-pink-500/15 border-pink-500/20" },
+  tecnico_celular: { color: "text-cyan-400", bg: "bg-cyan-500/15 border-cyan-500/20" },
+  mecanico: { color: "text-gray-400", bg: "bg-gray-500/15 border-gray-500/20" },
+  chaveiro: { color: "text-yellow-500", bg: "bg-yellow-600/15 border-yellow-600/20" },
+  jardineiro: { color: "text-green-400", bg: "bg-green-500/15 border-green-500/20" },
+  saude: { color: "text-red-400", bg: "bg-red-500/15 border-red-500/20" },
+  beleza: { color: "text-rose-400", bg: "bg-rose-500/15 border-rose-500/20" },
+  educacao: { color: "text-sky-400", bg: "bg-sky-500/15 border-sky-500/20" },
+  tecnologia: { color: "text-indigo-400", bg: "bg-indigo-500/15 border-indigo-500/20" },
+  construcao: { color: "text-amber-400", bg: "bg-amber-500/15 border-amber-500/20" },
+  consultoria: { color: "text-teal-400", bg: "bg-teal-500/15 border-teal-500/20" },
+  design: { color: "text-fuchsia-400", bg: "bg-fuchsia-500/15 border-fuchsia-500/20" },
+  fotografia: { color: "text-violet-400", bg: "bg-violet-500/15 border-violet-500/20" },
+  juridico: { color: "text-slate-400", bg: "bg-slate-500/15 border-slate-500/20" },
+  contabilidade: { color: "text-emerald-400", bg: "bg-emerald-500/15 border-emerald-500/20" },
+  outros: { color: "text-muted-foreground", bg: "bg-muted/40 border-border" },
+};
+
+const SERVICE_CATEGORY_RAIL = SERVICE_FORM_CATEGORY_OPTIONS.map((category) => ({
+  ...category,
+  ...(SERVICE_CATEGORY_STYLE_BY_ID[category.id] ?? SERVICE_CATEGORY_STYLE_BY_ID.outros),
+}));
 
 
 function ProfessionalCard({ pro, index, onClick }: { pro: ProfessionalItem; index: number; onClick: () => void }) {
-  const categoryEmoji = getServiceCategoryIcon(pro.category);
+  const CategoryIcon = getServiceCategoryIcon(pro.category);
   const hasRating = pro.rating && pro.rating > 0;
   const hasWhatsApp = !!pro.whatsapp;
 
   const handleWhatsAppClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (hasWhatsApp) {
-      const cleanNumber = pro.whatsapp!.replace(/\D/g, '');
-      window.open(`https://wa.me/55${cleanNumber}`, '_blank');
+      const url = buildWhatsAppUrl(pro.whatsapp);
+      if (url) {
+        openSafeExternalUrl(url, { context: "services-whatsapp" });
+      }
     }
   };
 
@@ -109,7 +122,7 @@ function ProfessionalCard({ pro, index, onClick }: { pro: ProfessionalItem; inde
       role="article"
       aria-label={`${pro.name} - ${pro.category}`}
     >
-      {/* Emoji/Foto à esquerda */}
+      {/* Foto ou icone canonico a esquerda */}
       <div className="relative h-full w-[88px] shrink-0 overflow-hidden">
         {pro.avatar_url ? (
           <img
@@ -120,7 +133,7 @@ function ProfessionalCard({ pro, index, onClick }: { pro: ProfessionalItem; inde
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10">
-            <span className="text-4xl">{categoryEmoji}</span>
+            <CategoryIcon className="h-9 w-9 text-primary" />
           </div>
         )}
 
@@ -186,7 +199,7 @@ function ProfessionalCard({ pro, index, onClick }: { pro: ProfessionalItem; inde
 }
 
 function TopRatedCard({ pro, rank, onClick }: { pro: ProfessionalItem; rank: number; onClick: () => void }) {
-  const medals = ["🥇", "🥈", "🥉"];
+  const CategoryIcon = getServiceCategoryIcon(pro.category);
   return (
     <motion.button
       initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}
@@ -198,11 +211,13 @@ function TopRatedCard({ pro, rank, onClick }: { pro: ProfessionalItem; rank: num
         {pro.avatar_url ? (
           <img src={pro.avatar_url} alt={pro.name} className="h-24 w-full rounded-xl object-cover mb-2 group-hover:scale-[1.02] transition-transform" loading="lazy" />
         ) : (
-          <div className="h-24 w-full rounded-xl bg-gradient-to-br from-warning/10 to-primary/10 flex items-center justify-center text-3xl mb-2">
-            {getServiceCategoryIcon(pro.category)}
+          <div className="h-24 w-full rounded-xl bg-gradient-to-br from-warning/10 to-primary/10 flex items-center justify-center mb-2">
+            <CategoryIcon className="h-8 w-8 text-primary" />
           </div>
         )}
-        <span className="absolute -top-1 -left-1 text-lg">{medals[rank] || `#${rank + 1}`}</span>
+        <span className="absolute -top-1 -left-1 rounded-full bg-warning px-2 py-0.5 text-[10px] font-bold text-warning-foreground">
+          #{rank + 1}
+        </span>
       </div>
       <p className="text-xs font-bold text-foreground truncate group-hover:text-primary transition-colors">{pro.name}</p>
       <p className="text-[10px] text-muted-foreground truncate">{pro.service}</p>
@@ -269,7 +284,7 @@ export default function ServicosLandingPage({ resolved, activeMemberIds }: Servi
           <title>Servicos locais | Achegue-se</title>
           <meta
             name="description"
-            content="Encontre profissionais e servicos locais no Achegue-se. Busque prestadores avaliados pela comunidade, acompanhe orcamentos e navegue por territorio."
+            content="Encontre profissionais e serviços locais no Achegue-se. Busque prestadores avaliados pela comunidade, acompanhe orçamentos e navegue por território."
           />
         </Helmet>
       )}
@@ -284,8 +299,9 @@ export default function ServicosLandingPage({ resolved, activeMemberIds }: Servi
       <section className="w-full bg-card/50 border-b border-border py-4">
         <div className="w-full overflow-x-auto scrollbar-hide">
           <div className="flex justify-center gap-3 pb-1 px-4 min-w-max mx-auto">
-            {SERVICOS_CATEGORIES.map((cat, i) => {
-              const isActive = selectedCategory === cat.categoryFilter;
+            {SERVICE_CATEGORY_RAIL.map((cat, i) => {
+              const Icon = cat.icon;
+              const isActive = selectedCategory === cat.id;
               return (
                 <motion.button
                   key={cat.id}
@@ -294,14 +310,14 @@ export default function ServicosLandingPage({ resolved, activeMemberIds }: Servi
                   transition={{ delay: 0.03 * i }}
                   whileHover={{ scale: 1.08, y: -4 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => setSelectedCategory(isActive ? "todos" : cat.categoryFilter)}
+                  onClick={() => setSelectedCategory(isActive ? "todos" : cat.id)}
                   className={`flex flex-col items-center gap-1.5 p-2.5 rounded-xl border bg-card/80 backdrop-blur-sm transition-colors duration-200 group shrink-0 min-w-[60px] ${cat.bg} ${isActive ? 'ring-2 ring-primary/40' : ''}`}
                 >
                   <motion.div whileHover={{ rotate: [0, -10, 10, 0] }} transition={{ duration: 0.4 }}>
-                    <span className={`text-2xl ${cat.color}`}>{cat.emoji}</span>
+                    <Icon className={`h-6 w-6 ${cat.color}`} />
                   </motion.div>
                   <span className="text-[10px] font-semibold text-foreground leading-tight text-center whitespace-nowrap">
-                    {cat.label}
+                    {cat.name}
                   </span>
                 </motion.button>
               );
@@ -344,7 +360,6 @@ export default function ServicosLandingPage({ resolved, activeMemberIds }: Servi
         primaryCTA={{ label: "Buscar", onClick: () => {} }}
         quickFilters={SERVICE_CATEGORY_OPTIONS.slice(1, 6).map((cat) => ({
           label: cat.name,
-          emoji: cat.icone,
           isActive: selectedCategory === cat.id,
           onClick: () => setSelectedCategory(cat.id),
         }))}
@@ -396,7 +411,7 @@ export default function ServicosLandingPage({ resolved, activeMemberIds }: Servi
             <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">
               {selectedCategory === "todos" 
                 ? "Profissionais Disponíveis" 
-                : SERVICOS_CATEGORIES.find(c => c.categoryFilter === selectedCategory)?.label || selectedCategory
+                : getServiceCategoryLabel(selectedCategory) || selectedCategory
               }
             </h2>
             <p className="text-sm text-muted-foreground mt-1">{professionals.length} profissionais encontrados</p>

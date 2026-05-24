@@ -1,7 +1,7 @@
 /**
- * Favorites Query Service - operacoes de favoritos de gastronomia.
+ *  Favorites Query Service - operações de favoritos de gastronomia.
  *
- * Usa a tabela `user_favorite_businesses` criada pela migration 20260412000002.
+ *  Usa a tabela `user_favorite_businesses` criada pela migration 20260412000002.
  */
 
 import { logger } from '@/shared/utils/logger';
@@ -164,7 +164,7 @@ export class FavoritesQueryService {
   }
 
   /**
-   * Obter favoritos do usuario.
+   *  Obter favoritos do usuario.
    */
   static async getUserFavorites(params: {
     userId: string;
@@ -184,7 +184,7 @@ export class FavoritesQueryService {
   }
 
   /**
-   * Verificar se negÃ³cio estÃ¡ nos favoritos
+   *  Verificar se negcio est nos favoritos
    */
   static async isBusinessFavorited(params: {
     userId: string;
@@ -209,7 +209,7 @@ export class FavoritesQueryService {
   }
 
   /**
-   * Toggle favorito (adiciona ou remove)
+   *  Toggle favorito (adiciona ou remove)
    */
   static async toggleFavorite(params: {
     userId: string;
@@ -240,7 +240,7 @@ export class FavoritesQueryService {
   }
 
   /**
-   * Adicionar aos favoritos
+   *  Adicionar aos favoritos
    */
   static async addFavorite(params: {
     userId: string;
@@ -274,7 +274,7 @@ export class FavoritesQueryService {
   }
 
   /**
-   * Remover dos favoritos
+   *  Remover dos favoritos
    */
   static async removeFavorite(params: {
     userId: string;
@@ -300,7 +300,7 @@ export class FavoritesQueryService {
   }
 
   /**
-   * Atualizar preferÃªncias de um favorito
+   *  Atualizar preferncias de um favorito
    */
   static async updateFavoritePreferences(
     favoriteId: string,
@@ -334,7 +334,7 @@ export class FavoritesQueryService {
   }
 
   /**
-   * Obter contador de favoritos de um negÃ³cio
+   *  Obter contador de favoritos de um negcio
    */
   static async getBusinessFavoritesCount(businessId: string): Promise<number> {
     if (!UUID_REGEX.test(businessId)) {
@@ -361,7 +361,7 @@ export class FavoritesQueryService {
   }
 
   /**
-   * Buscar favoritos por tags
+   *  Buscar favoritos por tags
    */
   static async searchFavoritesByTags(params: {
     userId: string;
@@ -404,7 +404,7 @@ export class FavoritesQueryService {
         throw error;
       }
 
-      // Transformar dados para o formato esperado
+      //  Transformar dados para o formato esperado
       type TagSearchRow = {
         id: string;
         notify_on_promotions: boolean;
@@ -453,7 +453,7 @@ export class FavoritesQueryService {
         business_rating: item.business_data.rating,
         business_total_reviews: item.business_data.total_reviews,
         business_is_verified: item.business_data.is_verified,
-        business_geographic_path: null, // nÃ£o disponÃ­vel nesta query
+        business_geographic_path: null, //  no disponvel nesta query
         cuisine_type: profile?.cuisine_type ?? null,
         delivery_enabled: profile?.delivery_enabled ?? null,
         price_range: profile?.price_range ?? null,

@@ -4,7 +4,6 @@
  * Configuração para pizzarias - nicho complexo a ser implementado.
  * Este arquivo define a estrutura completa que será desenvolvida na próxima etapa.
  *
- * @version 2.0.0 - Full Enabled
  * @status full_enabled
  */
 

@@ -1,4 +1,4 @@
-﻿import { SidebarTrigger } from "@/shared/components/ui/sidebar";
+import { SidebarTrigger } from "@/shared/components/ui/sidebar";
 import { Link } from "react-router-dom";
 import { Bell, Home, LogOut } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
@@ -33,7 +33,7 @@ export function CentralHeader() {
           <Home className="h-4 w-4" />
           <span className="hidden sm:inline">Ver site</span>
         </a>
-        <Link to="/pricing" className="hidden text-xs text-muted-foreground transition-colors hover:text-foreground sm:inline">
+        <Link to="/planos" className="hidden text-xs text-muted-foreground transition-colors hover:text-foreground sm:inline">
           Planos
         </Link>
         <Link to="/sobre" className="hidden text-xs text-muted-foreground transition-colors hover:text-foreground sm:inline">

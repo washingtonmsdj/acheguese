@@ -1,20 +1,20 @@
 /**
- * DeliveryAreaService â€” SSOT canÃ´nico de Ã¡reas de entrega
+ *  DeliveryAreaService SSOT cannico de reas de entrega
  *
- * Centraliza toda a lÃ³gica de negÃ³cio de Ã¡reas de entrega e taxas.
- * Hooks e componentes NÃƒO acessam Supabase diretamente â€” consomem este service.
+ *  Centraliza toda a lgica de negcio de reas de entrega e taxas.
+ *  Hooks e componentes NO acessam Supabase diretamente consomem este service.
  *
- * Responsabilidades:
- * - CRUD de Ã¡reas de entrega
- * - CRUD de bairros atendidos
- * - ValidaÃ§Ã£o de elegibilidade
- * - CÃ¡lculo de taxa e tempo
+ *  Responsabilidades:
+ *  - CRUD de reas de entrega
+ *  - CRUD de bairros atendidos
+ *  - Validao de elegibilidade
+ *  - Clculo de taxa e tempo
  */
 
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/core/infrastructure/supabase';
 
-// â”€â”€ Tipos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+//  Tipos
 
 export interface ServiceResult<T> {
   data: T | null;
@@ -74,16 +74,16 @@ export interface DeliveryAreaSummary {
   avg_estimated_time: number | null;
 }
 
-// â”€â”€ Service â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+//  Service
 
 export const DeliveryAreaService = {
 
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-  // ÃREAS DE ENTREGA
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  //
+  //  REAS DE ENTREGA
+  //
 
   /**
-   * Lista Ã¡reas de entrega de uma empresa
+   *  Lista reas de entrega de uma empresa
    */
   async listAreas(businessId: string): Promise<ServiceResult<DeliveryArea[]>> {
     try {
@@ -106,7 +106,7 @@ export const DeliveryAreaService = {
   },
 
   /**
-   * Busca uma Ã¡rea especÃ­fica
+   *  Busca uma rea especfica
    */
   async getArea(areaId: string): Promise<ServiceResult<DeliveryArea>> {
     try {
@@ -129,7 +129,7 @@ export const DeliveryAreaService = {
   },
 
   /**
-   * Cria uma nova Ã¡rea de entrega
+   *  Cria uma nova rea de entrega
    */
   async createArea(input: {
     business_id: string;
@@ -178,7 +178,7 @@ export const DeliveryAreaService = {
   },
 
   /**
-   * Atualiza uma Ã¡rea de entrega
+   *  Atualiza uma rea de entrega
    */
   async updateArea(
     areaId: string,
@@ -205,7 +205,7 @@ export const DeliveryAreaService = {
   },
 
   /**
-   * Deleta uma Ã¡rea de entrega
+   *  Deleta uma rea de entrega
    */
   async deleteArea(areaId: string): Promise<ServiceResult<boolean>> {
     try {
@@ -227,14 +227,14 @@ export const DeliveryAreaService = {
   },
 
   /**
-   * Reordena Ã¡reas de entrega
+   *  Reordena reas de entrega
    */
   async reorderAreas(
     businessId: string,
     areaIds: string[]
   ): Promise<ServiceResult<boolean>> {
     try {
-      // Atualiza display_order de cada Ã¡rea
+      //  Atualiza display_order de cada rea
       const updates = areaIds.map((id, index) =>
         supabase
           .from('delivery_areas')
@@ -258,12 +258,12 @@ export const DeliveryAreaService = {
     }
   },
 
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-  // BAIRROS
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  //
+  //  BAIRROS
+  //
 
   /**
-   * Lista bairros de uma Ã¡rea
+   *  Lista bairros de uma rea
    */
   async listNeighborhoods(areaId: string): Promise<ServiceResult<DeliveryNeighborhood[]>> {
     try {
@@ -286,7 +286,7 @@ export const DeliveryAreaService = {
   },
 
   /**
-   * Adiciona um bairro a uma Ã¡rea
+   *  Adiciona um bairro a uma rea
    */
   async addNeighborhood(input: {
     delivery_area_id: string;
@@ -327,7 +327,7 @@ export const DeliveryAreaService = {
   },
 
   /**
-   * Atualiza um bairro
+   *  Atualiza um bairro
    */
   async updateNeighborhood(
     neighborhoodId: string,
@@ -354,7 +354,7 @@ export const DeliveryAreaService = {
   },
 
   /**
-   * Remove um bairro
+   *  Remove um bairro
    */
   async deleteNeighborhood(neighborhoodId: string): Promise<ServiceResult<boolean>> {
     try {
@@ -376,7 +376,7 @@ export const DeliveryAreaService = {
   },
 
   /**
-   * Adiciona mÃºltiplos bairros de uma vez
+   *  Adiciona mltiplos bairros de uma vez
    */
   async addNeighborhoodsBulk(
     areaId: string,
@@ -410,12 +410,12 @@ export const DeliveryAreaService = {
     }
   },
 
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-  // VALIDAÃ‡ÃƒO E CÃLCULOS
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  //
+  //  VALIDAO E CLCULOS
+  //
 
   /**
-   * Verifica elegibilidade de entrega
+   *  Verifica elegibilidade de entrega
    */
   async checkEligibility(
     businessId: string,
@@ -442,7 +442,7 @@ export const DeliveryAreaService = {
         return { data: null, error: error.message };
       }
 
-      // RPC retorna array, pega primeiro resultado
+      //  RPC retorna array, pega primeiro resultado
       const result = Array.isArray(data) ? data[0] : data;
 
       return { data: result as DeliveryEligibility, error: null };
@@ -453,7 +453,7 @@ export const DeliveryAreaService = {
   },
 
   /**
-   * Retorna resumo das Ã¡reas de entrega
+   *  Retorna resumo das reas de entrega
    */
   async getSummary(businessId: string): Promise<ServiceResult<DeliveryAreaSummary>> {
     try {
@@ -466,7 +466,7 @@ export const DeliveryAreaService = {
         return { data: null, error: error.message };
       }
 
-      // RPC retorna array, pega primeiro resultado
+      //  RPC retorna array, pega primeiro resultado
       const result = Array.isArray(data) ? data[0] : data;
 
       return { data: result as DeliveryAreaSummary, error: null };

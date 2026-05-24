@@ -1,4 +1,4 @@
-﻿/**
+/**
  * USE BUSINESS EDIT - Hook SSOT para edicao de empresas
  */
 

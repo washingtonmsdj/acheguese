@@ -21,7 +21,7 @@ interface ProfessionalLeadRequestDialogProps {
   professionalId: string;
   professionalName: string;
   defaultService?: string | null;
-  sourceChannel?: "public_profile" | "legacy_detail" | "central" | string;
+  sourceChannel?: "public_profile" | "service_profile" | "central" | string;
 }
 
 export function ProfessionalLeadRequestDialog({

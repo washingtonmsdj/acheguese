@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ContactCard
  * 
  * Card de contato com telefone, WhatsApp, email, website e redes sociais.
@@ -21,6 +21,7 @@ import {
   Award,
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
+import { buildMailtoUrl, buildTelUrl, buildWhatsAppUrl } from '@/shared/utils/contactLinks';
 import type { ContactCardProps } from '../../sections/types';
 
 export function ContactCard({
@@ -39,7 +40,7 @@ export function ContactCard({
             <div className="flex items-center gap-3">
               <Phone className="h-4 w-4 text-primary shrink-0" />
               <a
-                href={`tel:${business.phone}`}
+                href={buildTelUrl(business.phone) ?? undefined}
                 className="text-sm text-foreground hover:text-primary transition-colors flex-1"
               >
                 {business.phone}
@@ -60,7 +61,7 @@ export function ContactCard({
             <div className="flex items-center gap-3">
               <MessageCircle className="h-4 w-4 text-emerald-400 shrink-0" />
               <a
-                href={`https://wa.me/${business.whatsapp.replace(/\D/g, "")}`}
+                href={buildWhatsAppUrl(business.whatsapp) ?? undefined}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-sm text-foreground hover:text-emerald-400 transition-colors"
@@ -73,7 +74,7 @@ export function ContactCard({
             <div className="flex items-center gap-3">
               <Mail className="h-4 w-4 text-primary shrink-0" />
               <a
-                href={`mailto:${business.email}`}
+                href={buildMailtoUrl(business.email) ?? undefined}
                 className="text-sm text-foreground hover:text-primary transition-colors truncate"
               >
                 {business.email}
@@ -145,4 +146,3 @@ export function ContactCard({
     </div>
   );
 }
-

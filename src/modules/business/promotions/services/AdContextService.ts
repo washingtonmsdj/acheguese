@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AdContextService
  *
  * Constrói o AdEligibilityContext a partir da fundação geográfica.

@@ -123,7 +123,7 @@ describe("GastronomyCheckoutSheet", () => {
     },
   };
 
-  it("bloqueia checkout de delivery quando nao ha destino de entrega valido", () => {
+  it("bloqueia checkout de delivery quando não há destino de entrega válido", () => {
     mockedUseGastronomyCart.mockReturnValue(baseCartMock);
     mockedUseGastronomyCheckout.mockReturnValue(baseCheckoutMock);
     mockedUseDeliveryDestination.mockReturnValue(baseDeliveryDestinationMock as never);
@@ -140,11 +140,11 @@ describe("GastronomyCheckoutSheet", () => {
     );
 
     expect(
-      screen.getByText(/escolha o endereco de entrega/i),
+      screen.getByText(/escolha o endereço de entrega/i),
     ).toBeInTheDocument();
 
     expect(
-      screen.getAllByText(/informe o endereco completo de entrega/i).length,
+      screen.getAllByText(/informe o endereço completo de entrega/i).length,
     ).toBeGreaterThan(0);
 
     expect(screen.getByRole("button", { name: /confirmar pedido/i })).toBeDisabled();

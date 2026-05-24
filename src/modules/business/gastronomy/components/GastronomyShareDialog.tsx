@@ -9,6 +9,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { toast } from 'sonner';
 
 import { Button } from '@/shared/components/ui/button';
+import { openSafeExternalUrl } from '@/shared/utils/safeRedirect';
 import {
   Dialog,
   DialogContent,
@@ -40,13 +41,15 @@ export function GastronomyShareDialog({
 
   const shareWhatsApp = () => {
     const text = `Olha que legal! 🍽️\n\n*${businessName}*\n${businessDescription}\n\nConfira: ${businessUrl}`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    openSafeExternalUrl(`https://wa.me/?text=${encodeURIComponent(text)}`, {
+      context: "gastronomy-share-whatsapp",
+    });
   };
 
   const shareFacebook = () => {
-    window.open(
+    openSafeExternalUrl(
       `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(businessUrl)}`,
-      '_blank',
+      { context: "gastronomy-share-facebook" },
     );
   };
 

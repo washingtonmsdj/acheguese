@@ -3,5 +3,6 @@
  */
 
 export * from './cuisine';
+export * from './cuisineFilters';
 export * from './categoryShortcuts';
 export * from './landing';

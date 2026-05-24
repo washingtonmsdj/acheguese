@@ -63,7 +63,7 @@ export function useBusinessFavorite(businessId: string | undefined) {
 
         toast.success(
           nextIsFavorite
-            ? "Adicionado aos favoritos ❤️"
+            ? "Adicionado aos favoritos"
             : "Removido dos favoritos",
         );
       },

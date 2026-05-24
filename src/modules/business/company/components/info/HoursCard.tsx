@@ -24,7 +24,7 @@ export function HoursCard({
       ? "Aberto agora"
       : openStatus.open === false
         ? "Fechado"
-        : "Horario nao informado";
+        : "Horário não informado";
   const openStatusContainerClass =
     openStatus.open === true
       ? "bg-emerald-500/10 border border-emerald-500/20"

@@ -1,4 +1,4 @@
-import { Building2, ArrowRight } from "lucide-react";
+import { ArrowRight, Building2, Globe, Home, Truck } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -10,12 +10,12 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Checkbox } from "@/shared/components/ui/checkbox";
-import { DRIVER_STATUS } from "@/shared/types/constants";
-const modosAtendimento = [
-  { id: "presencial", label: "Presencial", icon: "🏪" },
-  { id: "delivery", label: "Delivery", icon: "🚚" },
-  { id: "domicilio", label: "A domicílio", icon: "🏠" },
-  { id: DRIVER_STATUS.ONLINE, label: "Online", icon: "🌐" },
+
+const MODOS_ATENDIMENTO = [
+  { id: "presencial", label: "Presencial", icon: Building2 },
+  { id: "delivery", label: "Delivery", icon: Truck },
+  { id: "domicilio", label: "A domicílio", icon: Home },
+  { id: "online", label: "Online", icon: Globe },
 ];
 
 interface ContactStepProps {
@@ -31,8 +31,6 @@ interface ContactStepProps {
   onLatitudeChange: (value: number | undefined) => void;
   longitude?: number;
   onLongitudeChange: (value: number | undefined) => void;
-  schedules: string;
-  onSchedulesChange: (value: string) => void;
   selectedModos: string[];
   onModosChange: (modos: string[]) => void;
   errors: Record<string, string>;
@@ -53,8 +51,6 @@ export function ContactStep({
   onLatitudeChange,
   longitude,
   onLongitudeChange,
-  schedules,
-  onSchedulesChange,
   selectedModos,
   onModosChange,
   errors,
@@ -66,12 +62,12 @@ export function ContactStep({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Building2 className="h-5 w-5 text-primary" />
-          Contato e Localização
+          Contato e localização
         </CardTitle>
-        <CardDescription>Como os clientes podem te encontrar</CardDescription>
+        <CardDescription>Atualize como clientes e moradores encontram seu negócio.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="phone">Telefone</Label>
             <Input
@@ -80,6 +76,7 @@ export function ContactStep({
               onChange={(e) => onPhoneChange(e.target.value)}
               placeholder="(71) 99999-9999"
             />
+            {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
           </div>
 
           <div className="space-y-2">
@@ -90,6 +87,7 @@ export function ContactStep({
               onChange={(e) => onWhatsappChange(e.target.value)}
               placeholder="(71) 99999-9999"
             />
+            {errors.whatsapp && <p className="text-xs text-destructive">{errors.whatsapp}</p>}
           </div>
         </div>
 
@@ -100,15 +98,13 @@ export function ContactStep({
             type="email"
             value={email}
             onChange={(e) => onEmailChange(e.target.value)}
-            placeholder="contato@empresa.com"
+            placeholder="contato@empresa.com.br"
           />
-          {errors.email && (
-            <p className="text-xs text-destructive">{errors.email}</p>
-          )}
+          {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="address">Endereço Completo</Label>
+          <Label htmlFor="address">Endereço completo</Label>
           <Input
             id="address"
             value={address}
@@ -117,7 +113,7 @@ export function ContactStep({
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="latitude">Latitude</Label>
             <Input
@@ -129,10 +125,10 @@ export function ContactStep({
               placeholder="-12.9714"
             />
             <p className="text-xs text-muted-foreground">
-              Coordenada para localização no mapa
+              Usada para posicionar no mapa da cidade.
             </p>
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="longitude">Longitude</Label>
             <Input
@@ -144,53 +140,44 @@ export function ContactStep({
               placeholder="-38.5014"
             />
             <p className="text-xs text-muted-foreground">
-              Coordenada para localização no mapa
+              Usada para posicionar no mapa da cidade.
             </p>
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="schedules">Horários de Funcionamento</Label>
-          <Input
-            id="schedules"
-            value={schedules}
-            onChange={(e) => onSchedulesChange(e.target.value)}
-            placeholder="Ex: Seg-Sex 8h-18h, Sáb 8h-12h"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label>Modos de Atendimento</Label>
-          <div className="grid grid-cols-2 gap-3">
-            {modosAtendimento.map((modo) => (
-              <div key={modo.id} className="flex items-center space-x-2">
-                <Checkbox
-                  id={modo.id}
-                  checked={selectedModos.includes(modo.id)}
-                  onCheckedChange={(checked) => {
-                    if (checked) {
-                      onModosChange([...selectedModos, modo.id]);
-                    } else {
+          <Label>Modos de atendimento</Label>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            {MODOS_ATENDIMENTO.map((modo) => {
+              const Icon = modo.icon;
+              return (
+                <label key={modo.id} className="flex items-center gap-3 rounded-lg border p-3 text-sm">
+                  <Checkbox
+                    checked={selectedModos.includes(modo.id)}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        onModosChange(Array.from(new Set([...selectedModos, modo.id])));
+                        return;
+                      }
                       onModosChange(selectedModos.filter((m) => m !== modo.id));
-                    }
-                  }}
-                />
-                <label
-                  htmlFor={modo.id}
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                >
-                  {modo.icon} {modo.label}
+                    }}
+                  />
+                  <span className="flex items-center gap-2">
+                    <Icon className="h-4 w-4 text-muted-foreground" />
+                    {modo.label}
+                  </span>
                 </label>
-              </div>
-            ))}
+              );
+            })}
           </div>
+          {errors.modos_atendimento && <p className="text-xs text-destructive">{errors.modos_atendimento}</p>}
         </div>
 
         <div className="flex gap-3">
-          <Button variant="outline" onClick={onBack} className="flex-1">
+          <Button type="button" variant="outline" onClick={onBack} className="flex-1">
             Voltar
           </Button>
-          <Button onClick={onNext} className="flex-1 gap-2">
+          <Button type="button" onClick={onNext} className="flex-1 gap-2">
             Próximo
             <ArrowRight className="h-4 w-4" />
           </Button>

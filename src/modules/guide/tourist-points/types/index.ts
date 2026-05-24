@@ -1,8 +1,26 @@
+import {
+  Building2,
+  Church,
+  Dumbbell,
+  FerrisWheel,
+  Footprints,
+  Landmark,
+  Leaf,
+  MapPin,
+  Mountain,
+  ShoppingBag,
+  Store,
+  Theater,
+  Trees,
+  Utensils,
+  Waves,
+  type LucideIcon,
+} from 'lucide-react';
+
 /**
- * Tourist Points Types - SSOT
- * 
- * Tipos canônicos para pontos turísticos.
- * Escalável para qualquer cidade do Brasil.
+ * Tourist points types - SSOT.
+ *
+ * Canonical public/admin contract for tourist points in any Brazilian city.
  */
 
 export const TouristPointCategory = {
@@ -46,51 +64,71 @@ export const CATEGORY_LABELS: Record<TouristPointCategory, string> = {
   esportivo: 'Esportivo',
   entretenimento: 'Entretenimento',
   compras: 'Compras',
-  praca: 'Praca',
+  praca: 'Praça',
   trilha: 'Trilha',
   igreja: 'Igreja',
   mercado: 'Mercado',
-  'centro-cultural': 'Centro Cultural',
-  'ar-livre': 'Ar Livre',
+  'centro-cultural': 'Centro cultural',
+  'ar-livre': 'Ar livre',
   outro: 'Outro',
 };
 
-export const CATEGORY_ICONS: Record<TouristPointCategory, string> = {
-  historico: '🏛️',
-  natural: '🌿',
-  religioso: '⛪',
-  cultural: '🎭',
-  gastronomico: '🍽️',
-  praia: '🏖️',
-  parque: '🌳',
-  mirante: '🏔️',
-  museu: '🏛️',
-  monumento: '🗿',
-  arquitetonico: '🏗️',
-  esportivo: '⚽',
-  entretenimento: '🎡',
-  compras: '🛍️',
-  praca: '🏛️',
-  trilha: '🥾',
-  igreja: '⛪',
-  mercado: '🛒',
-  'centro-cultural': '🎭',
-  'ar-livre': '🌳',
-  outro: '📍',
+export const CATEGORY_ICONS: Record<TouristPointCategory, LucideIcon> = {
+  historico: Landmark,
+  natural: Leaf,
+  religioso: Church,
+  cultural: Theater,
+  gastronomico: Utensils,
+  praia: Waves,
+  parque: Trees,
+  mirante: Mountain,
+  museu: Landmark,
+  monumento: Landmark,
+  arquitetonico: Building2,
+  esportivo: Dumbbell,
+  entretenimento: FerrisWheel,
+  compras: ShoppingBag,
+  praca: Landmark,
+  trilha: Footprints,
+  igreja: Church,
+  mercado: Store,
+  'centro-cultural': Theater,
+  'ar-livre': Trees,
+  outro: MapPin,
+};
+
+export const CATEGORY_MARKER_ABBR: Record<TouristPointCategory, string> = {
+  historico: 'H',
+  natural: 'N',
+  religioso: 'R',
+  cultural: 'C',
+  gastronomico: 'G',
+  praia: 'P',
+  parque: 'PQ',
+  mirante: 'M',
+  museu: 'MU',
+  monumento: 'MO',
+  arquitetonico: 'A',
+  esportivo: 'E',
+  entretenimento: 'EN',
+  compras: 'CO',
+  praca: 'PR',
+  trilha: 'T',
+  igreja: 'I',
+  mercado: 'ME',
+  'centro-cultural': 'CC',
+  'ar-livre': 'AR',
+  outro: '?',
 };
 
 export const TouristPointStatus = {
   DRAFT: 'draft',
   PUBLISHED: 'published',
   ARCHIVED: 'archived',
-  ACTIVE: 'active',
-  INACTIVE: 'inactive',
-  PENDING_REVIEW: 'pending_review',
 } as const;
 
 export type TouristPointStatus = typeof TouristPointStatus[keyof typeof TouristPointStatus];
 
-/** Tipo de preço do ponto turístico */
 export const PriceType = {
   FREE: 'free',
   PAID: 'paid',
@@ -103,18 +141,17 @@ export type PriceType = typeof PriceType[keyof typeof PriceType];
 export const PRICE_TYPE_LABELS: Record<PriceType, string> = {
   free: 'Gratuito',
   paid: 'Pago',
-  range: 'Faixa de preco',
+  range: 'Faixa de preço',
   consult: 'Consultar',
 };
+
 export const PRICE_TYPE = PriceType;
 export const TOURIST_POINT_STATUS = TouristPointStatus;
+
 export const TOURIST_POINT_STATUS_LABELS: Record<TouristPointStatus, string> = {
   draft: 'Rascunho',
   published: 'Publicado',
   archived: 'Arquivado',
-  active: 'Ativo',
-  inactive: 'Inativo',
-  pending_review: 'Em revisao',
 };
 
 export function generateSlug(value: string): string {
@@ -126,7 +163,6 @@ export function generateSlug(value: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
-/** Nível de acessibilidade */
 export const AccessibilityLevel = {
   FULL: 'total',
   PARTIAL: 'parcial',
@@ -160,19 +196,13 @@ export interface TouristPoint {
   tags: string[];
   state: string;
   city: string;
-
-  // ── Canônico SSOT (mesmo padrão de business_data) ──────────────────
-  /** Território principal obrigatório — bairro/cidade (FK locations) */
   location_id: string | null;
-  /** Endereço físico detalhado opcional (FK addresses) */
   address_id: string | null;
-  /** Relação carregada via join com locations */
   location?: {
     name: string;
     full_name: string;
     geographic_path: string | null;
   } | null;
-  /** Relação carregada via join com addresses */
   address?: {
     street: string | null;
     number: string | null;
@@ -181,28 +211,18 @@ export interface TouristPoint {
     latitude: number | null;
     longitude: number | null;
   } | null;
-
-  // ── Legado (mantido para compatibilidade com mock data) ────────────
-  /** @deprecated Use location.name */
   neighborhood: string | null;
-  /** @deprecated Use address fields */
   address_text: string | null;
-  /** @deprecated Use address.latitude */
   latitude: number | null;
-  /** @deprecated Use address.longitude */
   longitude: number | null;
-
   photo_url: string | null;
   gallery_urls: string[];
-  icon_emoji: string;
   visiting_hours: string | null;
-  /** @deprecated Use price_type + price_text */
   entry_fee: string | null;
   price_type: PriceType;
   price_text: string | null;
   website: string | null;
   phone: string | null;
-  /** @deprecated Use accessibility_level */
   accessibility: boolean;
   accessibility_level: AccessibilityLevel;
   accessibility_description: string | null;
@@ -236,17 +256,14 @@ export interface CreateTouristPointInput {
   tags?: string[];
   state?: string;
   city?: string;
-  // Canônico
   location_id?: string;
   address_id?: string;
-  // Legado (aceito na criação para compatibilidade)
   neighborhood?: string;
   address_text?: string;
   latitude?: number;
   longitude?: number;
   photo_url?: string;
   gallery_urls?: string[];
-  icon_emoji?: string;
   visiting_hours?: string;
   entry_fee?: string;
   price_type?: PriceType;
@@ -270,11 +287,8 @@ export type UpdateTouristPointInput = Partial<CreateTouristPointInput> & {
 };
 
 export interface TouristPointFilters {
-  /** SSOT: Filtro por location_id (bairro/cidade) */
   location_id?: string;
-  /** @deprecated Use location_id - mantido para compatibilidade */
   state?: string;
-  /** @deprecated Use location_id - mantido para compatibilidade */
   city?: string;
   category?: TouristPointCategory;
   is_featured?: boolean;
@@ -297,4 +311,3 @@ export interface TouristPointMedia {
 export type TouristPointQueryFilters = TouristPointFilters & {
   location_ids?: string[];
 };
-

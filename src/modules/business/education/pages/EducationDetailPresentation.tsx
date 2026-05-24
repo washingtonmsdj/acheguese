@@ -119,7 +119,7 @@ export function ProgramCard({
         )}
         {isSchoolProgram && program.schedule && (
           <div className="rounded-lg bg-muted/60 px-3 py-2">
-            <dt className="text-muted-foreground">Horario</dt>
+            <dt className="text-muted-foreground">Horário</dt>
             <dd className="font-semibold text-foreground">{program.schedule}</dd>
           </div>
         )}

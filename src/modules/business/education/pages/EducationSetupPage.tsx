@@ -1,8 +1,8 @@
 /**
  * EducationSetupPage
  *
- * Pagina de configuracao inicial do perfil de educacao.
- * Rota: /central/empresas/:businessId/education/setup
+ * Página de configuração inicial do perfil de educação.
+ * Rota: /central/empresas/:businessId/educacao/setup
  */
 
 import { useEffect, useState } from 'react';
@@ -73,9 +73,9 @@ function hasEducationLevels(nicheKey: string): nicheKey is EducationNicheKey {
 }
 
 const SCHOOL_TYPES = [
-  { value: 'public', label: 'Publica' },
+  { value: 'public', label: 'Pública' },
   { value: 'private', label: 'Privada' },
-  { value: 'community', label: 'Comunitaria' },
+  { value: 'community', label: 'Comunitária' },
   { value: 'charter', label: 'Conveniada' },
 ];
 
@@ -87,37 +87,37 @@ const SCHOOL_NETWORKS = [
 ];
 
 const EDUCATION_LEVEL_OPTIONS: { key: EducationLevel; label: string }[] = [
-  { key: 'early_childhood', label: 'Educacao Infantil' },
+  { key: 'early_childhood', label: 'Educação Infantil' },
   { key: 'elementary_1', label: 'Ensino Fundamental - Anos Iniciais' },
   { key: 'elementary_2', label: 'Ensino Fundamental - Anos Finais' },
   { key: 'middle_school', label: 'EJA' },
-  { key: 'high_school', label: 'Ensino Medio' },
-  { key: 'technical', label: 'Tecnico' },
+  { key: 'high_school', label: 'Ensino Médio' },
+  { key: 'technical', label: 'Técnico' },
 ];
 
 const SHIFT_OPTIONS: { key: SchoolShift; label: string }[] = [
-  { key: 'morning', label: 'Manha' },
+  { key: 'morning', label: 'Manhã' },
   { key: 'afternoon', label: 'Tarde' },
   { key: 'evening', label: 'Noite' },
   { key: 'full_day', label: 'Integral' },
 ];
 
 const BASIC_RESOURCE_OPTIONS: { key: SchoolBasicResourceKey; label: string }[] = [
-  { key: 'water_supply', label: 'Abastecimento de agua' },
-  { key: 'electricity', label: 'Energia eletrica' },
+  { key: 'water_supply', label: 'Abastecimento de água' },
+  { key: 'electricity', label: 'Energia elétrica' },
   { key: 'sewage', label: 'Esgoto' },
   { key: 'waste_collection', label: 'Coleta de lixo' },
 ];
 
 const ACCESSIBILITY_OPTIONS: { key: SchoolAccessibilityFeatureKey; label: string }[] = [
-  { key: 'handrails_guardrails', label: 'Corrimao e guarda-corpos' },
+  { key: 'handrails_guardrails', label: 'Corrimão e guarda-corpos' },
   { key: 'elevator', label: 'Elevador' },
-  { key: 'tactile_flooring', label: 'Pisos tateis' },
+  { key: 'tactile_flooring', label: 'Pisos táteis' },
   { key: 'wide_doors_80cm', label: 'Portas com vao livre >= 80cm' },
   { key: 'ramps', label: 'Rampas' },
-  { key: 'sound_signage', label: 'Sinalizacao sonora' },
-  { key: 'tactile_signage', label: 'Sinalizacao tatil' },
-  { key: 'visual_signage', label: 'Sinalizacao visual' },
+  { key: 'sound_signage', label: 'Sinalização sonora' },
+  { key: 'tactile_signage', label: 'Sinalização tatil' },
+  { key: 'visual_signage', label: 'Sinalização visual' },
 ];
 
 const EQUIPMENT_OPTIONS: { key: SchoolEquipmentFeatureKey; label: string }[] = [
@@ -128,21 +128,21 @@ const EQUIPMENT_OPTIONS: { key: SchoolEquipmentFeatureKey; label: string }[] = [
   { key: 'scanner', label: 'Scanner' },
   { key: 'dvd_player', label: 'DVD' },
   { key: 'sound_system', label: 'Aparelho de som' },
-  { key: 'television', label: 'Aparelho de televisao' },
+  { key: 'television', label: 'Aparelho de televisão' },
   { key: 'digital_whiteboard', label: 'Lousa digital' },
-  { key: 'multimedia_projector', label: 'Projetor multimidia' },
+  { key: 'multimedia_projector', label: 'Projetor multimídia' },
   { key: 'desktop_computer', label: 'Computador desktop' },
   { key: 'notebook', label: 'Notebook' },
   { key: 'tablet', label: 'Tablet' },
   { key: 'internet', label: 'Internet' },
-  { key: 'satellite_dish', label: 'Antena parabolica' },
+  { key: 'satellite_dish', label: 'Antena parabólica' },
 ];
 
 const FACILITY_OPTIONS: { key: SchoolFacilityFeatureKey; label: string }[] = [
   { key: 'library', label: 'Biblioteca' },
   { key: 'reading_room', label: 'Sala de leitura' },
-  { key: 'science_lab', label: 'Laboratorio de ciencias' },
-  { key: 'computer_lab', label: 'Laboratorio de informatica' },
+  { key: 'science_lab', label: 'Laboratório de ciencias' },
+  { key: 'computer_lab', label: 'Laboratório de informatica' },
   { key: 'kitchen', label: 'Cozinha' },
   { key: 'cafeteria', label: 'Refeitorio' },
   { key: 'pool', label: 'Piscina' },
@@ -150,14 +150,14 @@ const FACILITY_OPTIONS: { key: SchoolFacilityFeatureKey; label: string }[] = [
   { key: 'sports_court', label: 'Quadra de esportes' },
   { key: 'covered_sports_court', label: 'Quadra coberta' },
   { key: 'open_sports_court', label: 'Quadra descoberta' },
-  { key: 'covered_courtyard', label: 'Patio coberto' },
-  { key: 'open_courtyard', label: 'Patio descoberto' },
-  { key: 'auditorium', label: 'Auditorio' },
-  { key: 'green_area', label: 'Area verde' },
+  { key: 'covered_courtyard', label: 'Pátio coberto' },
+  { key: 'open_courtyard', label: 'Pátio descoberto' },
+  { key: 'auditorium', label: 'Auditório' },
+  { key: 'green_area', label: 'Área verde' },
   { key: 'multiuse_room', label: 'Sala multiuso' },
-  { key: 'art_room', label: 'Sala/atelie de artes' },
-  { key: 'music_room', label: 'Sala de musica/coral' },
-  { key: 'dance_studio', label: 'Sala de danca' },
+  { key: 'art_room', label: 'Sala/ateliê de artes' },
+  { key: 'music_room', label: 'Sala de música/coral' },
+  { key: 'dance_studio', label: 'Sala de dança' },
   { key: 'principal_office', label: 'Sala de diretoria' },
   { key: 'secretary_office', label: 'Sala de secretaria' },
   { key: 'teacher_room', label: 'Sala de professores' },
@@ -165,8 +165,8 @@ const FACILITY_OPTIONS: { key: SchoolFacilityFeatureKey; label: string }[] = [
   { key: 'aee_resource_room', label: 'Sala de recursos AEE' },
   { key: 'bathroom', label: 'Banheiro' },
   { key: 'child_bathroom', label: 'Banheiro infantil' },
-  { key: 'accessible_bathroom_pcd', label: 'Banheiro acessivel PCD' },
-  { key: 'staff_bathroom', label: 'Banheiro exclusivo funcionarios' },
+  { key: 'accessible_bathroom_pcd', label: 'Banheiro acessível PCD' },
+  { key: 'staff_bathroom', label: 'Banheiro exclusivo funcionários' },
   { key: 'bathroom_with_shower', label: 'Banheiro/vestiario com chuveiro' },
   { key: 'pantry', label: 'Despensa' },
   { key: 'warehouse', label: 'Almoxarifado' },
@@ -274,7 +274,7 @@ export function EducationSetupPage() {
     if (!formData.institutionType || !formData.nicheKey) {
       toast({
         title: 'Campos obrigatorios',
-        description: 'Selecione o tipo de instituicao e o nicho.',
+        description: 'Selecione o tipo de instituição e o nicho.',
         variant: 'destructive',
       });
       return;
@@ -312,7 +312,7 @@ export function EducationSetupPage() {
       } else {
         toast({
           title: 'Erro ao salvar',
-          description: 'Nao foi possivel salvar as configuracoes.',
+        description: 'Não foi possível salvar as configurações.',
           variant: 'destructive',
         });
       }
@@ -336,10 +336,10 @@ export function EducationSetupPage() {
   const selectedNiche = formData.nicheKey ? getNicheByKey(formData.nicheKey) : null;
   const isSchoolProfile = isSchoolProfileNiche(formData.nicheKey);
   const showEducationLevels = hasEducationLevels(formData.nicheKey);
-  const summaryLabel = selectedNiche?.uiLabels.summaryLabel ?? 'Sobre a instituicao';
+  const summaryLabel = selectedNiche?.uiLabels.summaryLabel ?? 'Sobre a instituição';
   const summaryPlaceholder =
     selectedNiche?.uiLabels.summaryPlaceholder ??
-    'Descreva a instituicao, diferenciais, metodologia e formas de atendimento.';
+    'Descreva a instituição, diferenciais, metodologia e formas de atendimento.';
   const shiftLabel = selectedNiche?.uiLabels.shiftLabel ?? 'Turno';
   const ageGroupLabel = selectedNiche?.uiLabels.ageGroupLabel ?? 'Faixa etaria';
 
@@ -508,7 +508,7 @@ export function EducationSetupPage() {
                         }
                       >
                         <SelectTrigger id="schoolType" data-testid="education-school-type-trigger">
-                          <SelectValue placeholder="Publica, privada..." />
+                          <SelectValue placeholder="Pública, privada..." />
                         </SelectTrigger>
                         <SelectContent>
                           {SCHOOL_TYPES.map((type) => (
@@ -641,7 +641,7 @@ export function EducationSetupPage() {
                           checked={formData.enrollmentOpen}
                           onCheckedChange={(checked) => setFormData({ ...formData, enrollmentOpen: Boolean(checked) })}
                         />
-                        <span className="text-sm">Matricula aberta</span>
+                        <span className="text-sm">Matrícula aberta</span>
                       </label>
                     </div>
                   </div>
@@ -652,16 +652,16 @@ export function EducationSetupPage() {
                   <Separator />
 
                 <div className="space-y-2">
-                  <h4 className="text-sm font-semibold">Presets rapidos</h4>
+                  <h4 className="text-sm font-semibold">Presets rápidos</h4>
                   <div className="flex flex-wrap gap-2">
                     <Button type="button" variant="outline" size="sm" onClick={() => applyInfrastructurePreset('daycare')}>
                       Creche/CMEI
                     </Button>
                     <Button type="button" variant="outline" size="sm" onClick={() => applyInfrastructurePreset('basic_school')}>
-                      Escola basica
+                      Escola básica
                     </Button>
                     <Button type="button" variant="outline" size="sm" onClick={() => applyInfrastructurePreset('accessible')}>
-                      Escola acessivel
+                      Escola acessível
                     </Button>
                   </div>
                 </div>
@@ -670,7 +670,7 @@ export function EducationSetupPage() {
 
                 <div className="space-y-5">
                   <div>
-                    <h4 className="text-sm font-semibold">Recursos basicos</h4>
+                    <h4 className="text-sm font-semibold">Recursos básicos</h4>
                     <div className="mt-3 grid gap-2 md:grid-cols-2">
                       {BASIC_RESOURCE_OPTIONS.map((option) => (
                         <label key={option.key} className="flex items-center gap-2 rounded-md border px-3 py-2">
@@ -715,7 +715,7 @@ export function EducationSetupPage() {
                   </div>
 
                   <div>
-                    <h4 className="text-sm font-semibold">Instalacoes</h4>
+                    <h4 className="text-sm font-semibold">Instalações</h4>
                     <div className="mt-3 grid gap-2 md:grid-cols-2">
                       {FACILITY_OPTIONS.map((option) => (
                         <label key={option.key} className="flex items-center gap-2 rounded-md border px-3 py-2">

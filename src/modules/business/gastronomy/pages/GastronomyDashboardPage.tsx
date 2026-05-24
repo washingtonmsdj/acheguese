@@ -36,6 +36,7 @@ import {
   Settings,
   Clock,
   MapPin,
+  CheckCircle2,
 } from 'lucide-react';
 
 export default function GastronomyDashboardPage() {
@@ -135,7 +136,7 @@ export default function GastronomyDashboardPage() {
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Scans totais</span>
-              <span className="font-medium">Nao rastreado</span>
+              <span className="font-medium">Não rastreado</span>
             </div>
             <Link to={businessManagementRoutes.linkPremium(businessId!)}>
               <Button className="w-full" variant="outline">
@@ -143,8 +144,9 @@ export default function GastronomyDashboardPage() {
               </Button>
             </Link>
             {can('canUseCustomQRCode') && (
-              <p className="text-xs text-muted-foreground">
-                ✨ QR Code personalizado disponível
+              <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <CheckCircle2 className="h-3.5 w-3.5 text-success" aria-hidden="true" />
+                QR Code personalizado disponível
               </p>
             )}
           </CardContent>
@@ -276,8 +278,9 @@ export default function GastronomyDashboardPage() {
                   </Button>
                 </Link>
                 {can('canUseAdvancedAnalytics') && (
-                  <p className="text-xs text-muted-foreground">
-                    ✨ Analytics avançado disponível
+                  <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-success" aria-hidden="true" />
+                    Analytics avançado disponível
                   </p>
                 )}
               </>

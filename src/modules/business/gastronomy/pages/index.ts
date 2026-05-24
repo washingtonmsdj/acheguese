@@ -1,5 +1,5 @@
 /**
- * Exports centralizados das pÃ¡ginas de Gastronomia
+ * Exports centralizados das paginas de Gastronomia.
  */
 
 export { default as GastronomyLandingPage } from './GastronomyLandingPage';
@@ -13,4 +13,3 @@ export { default as DeliveryAreaPage } from './DeliveryAreaPage';
 export { default as OrdersPage } from './OrdersPage';
 export { default as DeliveryManagementPage } from './DeliveryManagementPage';
 export { default as AnalyticsPage } from './AnalyticsPage';
-

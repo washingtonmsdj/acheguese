@@ -16,12 +16,12 @@ interface DriverGuardProps {
  * Guard que valida driver_data e o modo correto.
  * Protege rotas /central/motorista e /central/motoboy
  *
- * Validacao de servico baseada no modelo atual:
+ * Validação de serviço baseada no modelo atual:
  * - Motorista: can_do_rides !== false (true ou null)
  * - Motoboy: can_do_delivery === true
  *
- * Se nao tiver perfil de driver ou modo incorreto, mostra empty state com CTA
- * para ativar no fluxo canonico da Central (/central/motorista/cadastro ou /central/motoboy/cadastro).
+ * Se não tiver perfil de driver ou modo incorreto, mostra empty state com CTA
+ * para ativar no fluxo canônico da Central (/central/motorista/cadastro ou /central/motoboy/cadastro).
  */
 export function DriverGuard({ service }: DriverGuardProps) {
   const navigate = useNavigate();
@@ -34,7 +34,7 @@ export function DriverGuard({ service }: DriverGuardProps) {
   const serviceIcon = service === "motorista" ? Car : Bike;
 
   useEffect(() => {
-    // Redirecionamento nao e necessario aqui, mostraremos empty state
+    // Redirecionamento não é necessário aqui, mostraremos empty state
   }, []);
 
   // Mostrar loading enquanto verifica
@@ -49,7 +49,7 @@ export function DriverGuard({ service }: DriverGuardProps) {
     );
   }
 
-  // Se nao tiver perfil de driver, mostrar empty state
+  // Se não tiver perfil de driver, mostrar empty state
   if (!isRegistered || !driverData) {
     const IconComponent = service === "motorista" ? Car : Bike;
     return (
@@ -60,9 +60,9 @@ export function DriverGuard({ service }: DriverGuardProps) {
               <IconComponent className="h-8 w-8 text-primary" />
             </div>
             <div className="space-y-2">
-              <h3 className="text-lg font-semibold">Perfil de {serviceLabel} nao encontrado</h3>
+              <h3 className="text-lg font-semibold">Perfil de {serviceLabel} não encontrado</h3>
               <p className="text-sm text-muted-foreground">
-                Voce ainda nao ativou seu perfil de {serviceLabel.toLowerCase()}. Cadastre-se para comecar a receber solicitacoes.
+                Você ainda não ativou seu perfil de {serviceLabel.toLowerCase()}. Cadastre-se para começar a receber solicitações.
               </p>
             </div>
             <Button
@@ -84,7 +84,7 @@ export function DriverGuard({ service }: DriverGuardProps) {
     );
   }
 
-  // Validacao do modo correto
+  // Validação do modo correto
   // Motorista: can_do_rides !== false (true ou null)
   // Motoboy: can_do_delivery === true
   const canDoRides = driverData.can_do_rides !== false;
@@ -103,9 +103,9 @@ export function DriverGuard({ service }: DriverGuardProps) {
               <IconComponent className="h-8 w-8 text-orange-500" />
             </div>
             <div className="space-y-2">
-              <h3 className="text-lg font-semibold">Perfil nao habilitado para {serviceLabel}</h3>
+              <h3 className="text-lg font-semibold">Perfil não habilitado para {serviceLabel}</h3>
               <p className="text-sm text-muted-foreground">
-                Seu perfil atual esta configurado como {wrongService}. Para acessar esta area, voce precisa habilitar o modo de {serviceLabel.toLowerCase()}.
+                Seu perfil atual está configurado como {wrongService}. Para acessar esta área, você precisa habilitar o modo de {serviceLabel.toLowerCase()}.
               </p>
             </div>
             <Button

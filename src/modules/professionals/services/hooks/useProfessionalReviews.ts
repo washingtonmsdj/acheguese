@@ -152,7 +152,7 @@ export function useProfessionalReviews(professionalId?: string) {
             },
           );
 
-          toast({ title: "Avaliação enviada! ⭐" });
+          toast({ title: "Avaliação enviada!" });
         } else {
           setReviews((prev) =>
             prev.map((r) => (r.id === review.id ? newReview : r)),

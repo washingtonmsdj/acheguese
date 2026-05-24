@@ -48,7 +48,7 @@ const DEFAULT_COPY: BusinessCreateFieldCopy = {
   facilitiesPlaceholder: "Ex: acessibilidade, estacionamento, wi-fi, atendimento agendado",
   identityLabel: "Escolha o final do seu link público",
   identityHelper:
-    "Você escolhe apenas o final. O estado, cidade e bairro são preenchidos automaticamente.",
+    "Você escolhe apenas o final do link. Estado, cidade e bairro são definidos automaticamente pelo território selecionado.",
 };
 
 const CATEGORY_COPY: Partial<Record<BusinessCategory, Partial<BusinessCreateFieldCopy>>> = {
@@ -67,7 +67,7 @@ const CATEGORY_COPY: Partial<Record<BusinessCategory, Partial<BusinessCreateFiel
       "Cafeteria",
     ],
     descriptionPlaceholder:
-      "Descreva seu cardápio, horário principal e experiência que você entrega ao cliente.",
+      "Descreva seu cardápio, horário principal e a experiência que você entrega ao cliente.",
     emailPlaceholder: "contato@cantinhodabahia.com.br",
     websitePlaceholder: "https://www.cantinhodabahia.com.br",
     instagramPlaceholder: "@cantinhodabahia",
@@ -104,7 +104,7 @@ const CATEGORY_COPY: Partial<Record<BusinessCategory, Partial<BusinessCreateFiel
     namePlaceholder: "Ex: Farmácia Vida Mais",
     legalNamePlaceholder: "Ex: Farmácia Vida Mais LTDA",
     subcategoryPlaceholder: "Ex: Drogaria e perfumaria",
-    industryPlaceholder: "Ex: Saude, medicamentos e bem-estar",
+    industryPlaceholder: "Ex: Saúde, medicamentos e bem-estar",
     industryOptions: [
       "Drogaria",
       "Farmácia de manipulação",
@@ -119,11 +119,11 @@ const CATEGORY_COPY: Partial<Record<BusinessCategory, Partial<BusinessCreateFiel
     instagramPlaceholder: "@farmaciavidamais",
     facebookPlaceholder: "facebook.com/farmaciavidamais",
     specialtiesPlaceholder: "Ex: medicamentos genéricos, dermocosméticos, testes rápidos",
-    facilitiesPlaceholder: "Ex: entrega, atendimento por whatsapp, acessibilidade",
+    facilitiesPlaceholder: "Ex: entrega, atendimento por WhatsApp, acessibilidade",
     identityLabel: "Escolha o final do link da sua farmácia",
   },
   saude: {
-    entityNoun: "clinica",
+    entityNoun: "clínica",
     namePlaceholder: "Ex: Clínica Cuidar",
     legalNamePlaceholder: "Ex: Clínica Cuidar Serviços Médicos LTDA",
     subcategoryPlaceholder: "Ex: Clínica geral",

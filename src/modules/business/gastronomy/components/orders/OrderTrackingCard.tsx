@@ -1,7 +1,7 @@
 /**
  * OrderTrackingCard - card de rastreamento GPS do pedido.
  *
- * Exibe o estado operacional da entrega mesmo quando ainda nao ha motoboy.
+ * Exibe o estado operacional da entrega mesmo quando ainda não há motoboy.
  */
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
@@ -39,7 +39,7 @@ export function OrderTrackingCard({ order, className }: OrderTrackingCardProps) 
     typeof rideRequest?.origin_lng === 'number' &&
     typeof rideRequest?.destination_lat === 'number' &&
     typeof rideRequest?.destination_lng === 'number';
-  const statusLabel = rideRequest ? STATUS_LABELS[rideRequest.status] || rideRequest.status : 'Entrega ainda nao vinculada';
+  const statusLabel = rideRequest ? STATUS_LABELS[rideRequest.status] || rideRequest.status : 'Entrega ainda não vinculada';
 
   return (
     <Card className={className}>
@@ -107,7 +107,7 @@ export function OrderTrackingCard({ order, className }: OrderTrackingCardProps) 
               <div className="flex-1 space-y-1">
                 <p className="text-sm font-medium">Entregador</p>
                 <p className="text-xs text-muted-foreground">
-                  {rideRequest.driver_profile.name || 'Nao informado'}
+                  {rideRequest.driver_profile.name || 'Não informado'}
                 </p>
               </div>
             </div>
@@ -145,7 +145,7 @@ export function OrderTrackingCard({ order, className }: OrderTrackingCardProps) 
               </p>
               <p className="text-xs text-muted-foreground">
                 {hasTracking
-                  ? 'Aguarde enquanto encontramos um entregador disponivel.'
+                  ? 'Aguarde enquanto encontramos um entregador disponível.'
                   : 'Quando o pedido gerar a entrega SSOT, o rastreamento aparecera aqui.'}
               </p>
             </div>

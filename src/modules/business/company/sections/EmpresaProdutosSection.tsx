@@ -97,7 +97,7 @@ export function EmpresaProdutosSection({
           </>
         ) : (
           <div className="rounded-xl border border-border bg-card p-5 text-sm text-muted-foreground">
-            Catalogo nao disponivel no momento.
+            Catálogo não disponível no momento.
           </div>
         )}
       </motion.div>

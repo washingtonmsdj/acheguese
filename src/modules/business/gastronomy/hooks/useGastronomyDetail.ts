@@ -1,7 +1,6 @@
 /**
  * Hook para detalhe de negocio gastronomico alinhado ao territorio da rota.
  *
- * @version 2.0.0 - Atualizado para GastronomyFacade
  */
 
 import { useQuery } from '@tanstack/react-query';

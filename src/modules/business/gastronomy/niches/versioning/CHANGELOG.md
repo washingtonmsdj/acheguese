@@ -57,9 +57,6 @@ Sistema completo de versionamento e evolução de nichos gastronômicos.
 - `QUICK_REFERENCE.md` - Referência rápida
 - `CHANGELOG.md` - Este arquivo
 
-#### Exemplos
-- `AdminDashboardExample.tsx` - Exemplo completo de dashboard
-
 ### 🔧 Funcionalidades
 
 - Verificação de capabilities individuais e múltiplas

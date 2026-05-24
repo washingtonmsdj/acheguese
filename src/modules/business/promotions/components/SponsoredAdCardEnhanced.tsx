@@ -1,7 +1,7 @@
-﻿/**
- * 📢 SPONSORED AD CARD - NÍVEL AAA
+/**
+ * SPONSORED AD CARD - NÍVEL AAA
  *
- * ✅ CARACTERÍSTICAS:
+ * CARACTERÍSTICAS:
  * - Design otimizado para conversão de cliques
  * - Hierarquia visual clara (título e CTA em destaque)
  * - Badge "Patrocinado" discreto mas visível
@@ -15,17 +15,17 @@
  * - Responsividade completa
  * - SSOT compliant (usa tipo AdCampaignWithTargets)
  *
- * @version 2.0.0 - Redesign Completo AAA
  * @author Kiro AI
  * @date 2026-04-15
  */
 
 import { memo, forwardRef, useCallback, useMemo } from 'react';
-import { ExternalLink, Megaphone, TrendingUp, Sparkles } from 'lucide-react';
+import { ExternalLink, Megaphone, Package, Sparkles, Star, Store, TrendingUp, Wrench, type LucideIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/utils/cn';
+import { openSafeExternalUrl } from '@/shared/utils/safeRedirect';
 import type { AdCampaignWithTargets } from '../types';
 
 // ============================================================================
@@ -75,18 +75,18 @@ function hasCTA(campaign: AdCampaignWithTargets): boolean {
 /**
  * Obtém ícone baseado no tipo de owner
  */
-function getOwnerIcon(ownerType: string) {
+function getOwnerIcon(ownerType: string): LucideIcon {
   switch (ownerType) {
     case 'business':
-      return '🏪';
+      return Store;
     case 'service_provider':
-      return '🔧';
+      return Wrench;
     case 'classified':
-      return '📦';
+      return Package;
     case 'platform':
-      return '⭐';
+      return Star;
     default:
-      return '📢';
+      return Megaphone;
   }
 }
 
@@ -111,7 +111,7 @@ export const SponsoredAdCardEnhanced = memo(
 
     const hasImg = useMemo(() => hasImage(campaign), [campaign]);
     const hasCta = useMemo(() => hasCTA(campaign), [campaign]);
-    const ownerIcon = useMemo(() => getOwnerIcon(campaign.owner_entity_type), [campaign.owner_entity_type]);
+    const OwnerIcon = useMemo(() => getOwnerIcon(campaign.owner_entity_type), [campaign.owner_entity_type]);
 
     // ========================================================================
     // HANDLERS
@@ -123,7 +123,7 @@ export const SponsoredAdCardEnhanced = memo(
 
       // Open URL
       if (campaign.cta_url) {
-        window.open(campaign.cta_url, '_blank', 'noopener,noreferrer');
+        openSafeExternalUrl(campaign.cta_url, { context: 'sponsored-ad-cta' });
       }
     }, [campaign.id, campaign.cta_url, onAdClick]);
 
@@ -149,7 +149,7 @@ export const SponsoredAdCardEnhanced = memo(
         >
           {/* Ícone */}
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-purple-500/20">
-            <span className="text-2xl">{ownerIcon}</span>
+            <OwnerIcon className="h-5 w-5 text-primary" />
           </div>
 
           {/* Conteúdo */}

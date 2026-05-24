@@ -1,9 +1,8 @@
-﻿/**
- * ðŸ½ï¸ MENU QUERIES - SSOT Read Model para CardÃ¡pios
+/**
+ *  MENU QUERIES - SSOT Read Model para Cardpios
  *
- * Todas as operaÃ§Ãµes de leitura para menus, categorias e itens.
+ *  Todas as operações de leitura para menus, categorias e itens.
  *
- * @version 2.0.0 - ExtraÃ­do de MenuQueryService
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/core/infrastructure/supabase';
@@ -32,12 +31,12 @@ import type {
   GastronomyBusiness,
 } from '../types';
 
-// ============================================================
-// HELPERS INTERNOS
-// ============================================================
+//  ============================================================
+//  HELPERS INTERNOS
+//  ============================================================
 
 /**
- * Mapeia item para formato pÃºblico de catÃ¡logo
+ *  Mapeia item para formato pblico de catlogo
  */
 function mapToPublicFoodItem(params: {
   item: MenuItem;
@@ -50,7 +49,7 @@ function mapToPublicFoodItem(params: {
     ? (item.metadata as Record<string, unknown>)
     : {}) as Record<string, unknown>;
   
-  // Validar coordenadas antes de usar (evitar null/NaN no MapLibre)
+  //  Validar coordenadas antes de usar (evitar null/NaN no MapLibre)
   const businessLatitude =
     typeof business.address?.latitude === 'number' &&
     !isNaN(business.address.latitude) &&
@@ -107,12 +106,12 @@ function mapToPublicFoodItem(params: {
   };
 }
 
-// ============================================================
-// QUERIES - MENUS
-// ============================================================
+//  ============================================================
+//  QUERIES - MENUS
+//  ============================================================
 
 /**
- * Buscar menu por ID
+ *  Buscar menu por ID
  */
 export async function getMenu(menuId: string): Promise<Menu | null> {
   try {
@@ -141,7 +140,7 @@ export async function getMenu(menuId: string): Promise<Menu | null> {
 }
 
 /**
- * Buscar menus de um negÃ³cio
+ *  Buscar menus de um negcio
  */
 export async function getMenusByBusiness(businessId: string): Promise<Menu[]> {
   try {
@@ -170,15 +169,15 @@ export async function getMenusByBusiness(businessId: string): Promise<Menu[]> {
 }
 
 /**
- * Buscar menu completo com categorias e itens
+ *  Buscar menu completo com categorias e itens
  */
 export async function getMenuWithCategories(menuId: string): Promise<MenuWithCategories | null> {
   try {
-    // 1. Buscar menu
+    //  1. Buscar menu
     const menu = await getMenu(menuId);
     if (!menu) return null;
 
-    // 2. Buscar categorias
+    //  2. Buscar categorias
     const { data: categories, error: catError } = await supabase
       .from('menu_categories')
       .select('*')
@@ -191,7 +190,7 @@ export async function getMenuWithCategories(menuId: string): Promise<MenuWithCat
       return null;
     }
 
-    // 3. Buscar itens de cada categoria
+    //  3. Buscar itens de cada categoria
     const categoriesWithItems = await Promise.all(
       (categories || []).map(async (category) => {
         const items = await getMenuItemsByCategory(category.id);
@@ -212,12 +211,12 @@ export async function getMenuWithCategories(menuId: string): Promise<MenuWithCat
   }
 }
 
-// ============================================================
-// QUERIES - CATEGORIAS
-// ============================================================
+//  ============================================================
+//  QUERIES - CATEGORIAS
+//  ============================================================
 
 /**
- * Buscar categorias de um menu
+ *  Buscar categorias de um menu
  */
 export async function getMenuCategories(menuId: string): Promise<MenuCategory[]> {
   try {
@@ -245,7 +244,7 @@ export async function getMenuCategories(menuId: string): Promise<MenuCategory[]>
 }
 
 /**
- * Buscar categoria por ID
+ *  Buscar categoria por ID
  */
 export async function getMenuCategory(categoryId: string): Promise<MenuCategory | null> {
   try {
@@ -272,12 +271,12 @@ export async function getMenuCategory(categoryId: string): Promise<MenuCategory 
   }
 }
 
-// ============================================================
-// QUERIES - ITENS
-// ============================================================
+//  ============================================================
+//  QUERIES - ITENS
+//  ============================================================
 
 /**
- * Buscar itens de uma categoria
+ *  Buscar itens de uma categoria
  */
 export async function getMenuItemsByCategory(
   categoryId: string,
@@ -294,7 +293,7 @@ export async function getMenuItemsByCategory(
       .eq('category_id', categoryId)
       .eq('is_available', true);
 
-    // Aplicar filtros
+    //  Aplicar filtros
     if (filters?.is_featured !== undefined) {
       query = query.eq('is_featured', filters.is_featured);
     }
@@ -324,7 +323,7 @@ export async function getMenuItemsByCategory(
       return [];
     }
 
-    // Carregar relaÃ§Ãµes para cada item
+    //  Carregar relaes para cada item
     const itemsWithRelations = await Promise.all(
       (data || []).map(async (item) => {
         const [variants, addons] = await Promise.all([
@@ -348,7 +347,7 @@ export async function getMenuItemsByCategory(
 }
 
 /**
- * Buscar item por ID
+ *  Buscar item por ID
  */
 export async function getMenuItem(itemId: string): Promise<MenuItemWithRelations | null> {
   try {
@@ -385,7 +384,7 @@ export async function getMenuItem(itemId: string): Promise<MenuItemWithRelations
 }
 
 /**
- * Buscar itens em destaque de um negÃ³cio
+ *  Buscar itens em destaque de um negcio
  */
 export async function getFeaturedMenuItems(businessId: string): Promise<MenuItemWithRelations[]> {
   try {
@@ -393,13 +392,13 @@ export async function getFeaturedMenuItems(businessId: string): Promise<MenuItem
       return [];
     }
 
-    // Buscar menus do negÃ³cio
+    //  Buscar menus do negcio
     const menus = await getMenusByBusiness(businessId);
     if (!menus.length) return [];
 
     const menuIds = menus.map((m) => m.id);
 
-    // Buscar itens em destaque
+    //  Buscar itens em destaque
     const { data, error } = await (supabase as any)
       .from('menu_items')
       .select('*')
@@ -414,7 +413,7 @@ export async function getFeaturedMenuItems(businessId: string): Promise<MenuItem
       return [];
     }
 
-    // Carregar relaÃ§Ãµes
+    //  Carregar relaes
     const itemsWithRelations = await Promise.all(
       (data || []).map(async (item) => {
         const [variants, addons] = await Promise.all([
@@ -437,12 +436,12 @@ export async function getFeaturedMenuItems(businessId: string): Promise<MenuItem
   }
 }
 
-// ============================================================
-// QUERIES - VARIANTES E ADICIONAIS
-// ============================================================
+//  ============================================================
+//  QUERIES - VARIANTES E ADICIONAIS
+//  ============================================================
 
 /**
- * Buscar variantes de um item
+ *  Buscar variantes de um item
  */
 export async function getMenuItemVariants(itemId: string): Promise<MenuItemVariant[]> {
   try {
@@ -470,7 +469,7 @@ export async function getMenuItemVariants(itemId: string): Promise<MenuItemVaria
 }
 
 /**
- * Buscar adicionais de um item
+ *  Buscar adicionais de um item
  */
 export async function getMenuItemAddons(itemId: string): Promise<MenuItemAddon[]> {
   try {
@@ -497,13 +496,13 @@ export async function getMenuItemAddons(itemId: string): Promise<MenuItemAddon[]
   }
 }
 
-// ============================================================
-// QUERIES - PROMOÃ‡Ã•ES
-// ============================================================
+//  ============================================================
+//  QUERIES - PROMOES
+//  ============================================================
 
 /**
- * Buscar promoÃ§Ãµes ativas de um negÃ³cio gastronÃ´mico.
- * SSOT: menu_promotions pertence diretamente a business_data via business_id.
+ *  Buscar promoes ativas de um negcio gastronmico.
+ *  SSOT: menu_promotions pertence diretamente a business_data via business_id.
  */
 export async function getActiveMenuPromotions(businessId: string): Promise<MenuPromotion[]> {
   try {
@@ -534,12 +533,12 @@ export async function getActiveMenuPromotions(businessId: string): Promise<MenuP
   }
 }
 
-// ============================================================
-// QUERIES - CATÃLOGO PÃšBLICO
-// ============================================================
+//  ============================================================
+//  QUERIES - CATLOGO PBLICO
+//  ============================================================
 
 /**
- * Buscar catÃ¡logo completo de um negÃ³cio para exibiÃ§Ã£o pÃºblica
+ *  Buscar catlogo completo de um negcio para exibio pblica
  */
 export async function getPublicMenuCatalog(businessId: string): Promise<{
   business: GastronomyBusiness | null;
@@ -556,7 +555,7 @@ export async function getPublicMenuCatalog(businessId: string): Promise<{
       return { business, menu: null };
     }
 
-    // Pegar o primeiro menu ativo (ou o principal)
+    //  Pegar o primeiro menu ativo (ou o principal)
     const mainMenu = menus[0];
     const menuWithCategories = await getMenuWithCategories(mainMenu.id);
 
@@ -571,7 +570,7 @@ export async function getPublicMenuCatalog(businessId: string): Promise<{
 }
 
 /**
- * Buscar catÃ¡logo de comida por territÃ³rio com filtros
+ *  Buscar catlogo de comida por territrio com filtros
  */
 export async function getPublicFoodCatalog(params: {
   territoryFilter: import('@/core/location/types').TerritoryFilter;
@@ -582,7 +581,7 @@ export async function getPublicFoodCatalog(params: {
   sortBy?: string;
 }): Promise<PublicGastronomyFoodItem[]> {
   try {
-    // Buscar negÃ³cios gastronÃ´micos por territÃ³rio
+    //  Buscar negcios gastronmicos por territrio
     const filters: GastronomyBusinessFilters = {
       territoryFilter: params.territoryFilter,
       cuisine_type: params.cuisineType,
@@ -688,7 +687,7 @@ export async function getPublicFoodCatalog(params: {
       })
       .filter((item): item is PublicGastronomyFoodItem => item !== null);
 
-    // Aplicar ordenaÃ§Ã£o
+    //  Aplicar ordenao
     switch (params.sortBy) {
       case 'price_asc':
         publicItems.sort((left, right) => left.price - right.price);
@@ -720,7 +719,7 @@ export async function getPublicFoodCatalog(params: {
 }
 
 /**
- * Buscar itens para catÃ¡logo pÃºblico (formato simplificado)
+ *  Buscar itens para catlogo pblico (formato simplificado)
  */
 export async function getPublicFoodItems(params: {
   businessId: string;
@@ -742,7 +741,7 @@ export async function getPublicFoodItems(params: {
     } else if (featuredOnly) {
       items = await getFeaturedMenuItems(businessId);
     } else {
-      // Buscar todos os itens do negÃ³cio
+      //  Buscar todos os itens do negcio
       const menus = await getMenusByBusiness(businessId);
       const menuIds = menus.map((m) => m.id);
       
@@ -768,7 +767,7 @@ export async function getPublicFoodItems(params: {
       }
     }
 
-    // Mapear para formato pÃºblico usando batch queries
+    //  Mapear para formato pblico usando batch queries
     const categoryIds = items.map((item) => item.category_id);
     const menuIds = [
       ...new Set(items.map((item) => ((item as unknown as { menu_id?: string }).menu_id || '')).filter(Boolean)),
@@ -812,7 +811,7 @@ export async function getPublicFoodItems(params: {
 }
 
 /**
- * Buscar uso atual dos recursos de cardÃ¡pio para o dashboard.
+ *  Buscar uso atual dos recursos de cardpio para o dashboard.
  */
 export async function getMenuUsageStats(businessId: string): Promise<{
   currentMenuItems: number;
@@ -889,6 +888,3 @@ export async function getMenuUsageStats(businessId: string): Promise<{
     };
   }
 }
-
-
-

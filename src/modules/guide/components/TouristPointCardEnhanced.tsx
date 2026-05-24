@@ -21,7 +21,7 @@ interface Props {
 export function TouristPointCardEnhanced({ point, detailUrl, variant = 'card' }: Props) {
   const coverMedia = point.media?.find((m) => m.is_cover) ?? point.media?.[0];
   const categoryLabel = CATEGORY_LABELS[point.category] ?? point.category;
-  const categoryIcon = CATEGORY_ICONS[point.category] ?? '📍';
+  const CategoryIcon = CATEGORY_ICONS[point.category] ?? MapPin;
 
   if (variant === 'compact') {
     return (
@@ -40,7 +40,7 @@ export function TouristPointCardEnhanced({ point, detailUrl, variant = 'card' }:
             )}
             <div className="flex-1 min-w-0 py-1">
               <div className="flex items-center gap-1.5 mb-1">
-                <span className="text-sm">{categoryIcon}</span>
+                <CategoryIcon className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
                 <span className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">
                   {categoryLabel}
                 </span>
@@ -93,7 +93,7 @@ export function TouristPointCardEnhanced({ point, detailUrl, variant = 'card' }:
             {/* Category badge */}
             <div className="absolute top-2 left-2">
               <Badge className="bg-background/85 text-foreground backdrop-blur-sm text-xs border-0 gap-1">
-                <span>{categoryIcon}</span>
+                <CategoryIcon className="h-3.5 w-3.5" aria-hidden="true" />
                 {categoryLabel}
               </Badge>
             </div>

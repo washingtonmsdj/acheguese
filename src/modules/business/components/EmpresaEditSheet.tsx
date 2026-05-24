@@ -16,13 +16,18 @@ import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Label } from "@/shared/components/ui/label";
 import { ScrollArea } from "@/shared/components/ui/scroll-area";
-import { Save, Loader2 } from "lucide-react";
+import { Clock, Lightbulb, Save, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/shared/utils/cn";
 import { DRIVER_STATUS } from "@/shared/types/constants";
 import { profileService } from "@/core/profiles/services";
 import { InlineFieldError } from "@/shared/components/ui/InlineFieldError";
-import { updateBusinessSchema, type UpdateBusinessInput } from "@/shared/schemas/business/businessSchemas";
+import {
+  BUSINESS_CATEGORIES,
+  updateBusinessSchema,
+  type UpdateBusinessInput,
+} from "@/shared/schemas/business/businessSchemas";
+import { CATEGORY_CONFIGS } from "@/modules/business/config/categoryFilters";
 
 export interface BizEditData {
   id: string;
@@ -58,23 +63,16 @@ interface Props {
   mode?: "edit" | "create";
 }
 
-const CATEGORIAS = [
-  "restaurante",
-  "mercado",
-  "farmácia",
-  "salão",
-  "academia",
-  "pet shop",
-  "padaria",
-  "oficina",
-  "loja",
-  "outros",
-];
+const CATEGORY_OPTIONS = BUSINESS_CATEGORIES.map((id) => ({
+  id,
+  label: CATEGORY_CONFIGS[id]?.label ?? id,
+}));
+
 const MODOS = [
-  { id: "presencial", label: "🏪 Presencial" },
-  { id: "delivery", label: "🚚 Delivery" },
-  { id: "domicilio", label: "🏠 A domicílio" },
-  { id: DRIVER_STATUS.ONLINE, label: "🌐 Online" },
+  { id: "presencial", label: "Presencial" },
+  { id: "delivery", label: "Delivery" },
+  { id: "domicilio", label: "A domicílio" },
+  { id: DRIVER_STATUS.ONLINE, label: "Online" },
 ];
 
 function Field({
@@ -292,7 +290,7 @@ export default function EmpresaEditSheet({
           activeProfile.id,
         );
 
-        toast.success("Empresa cadastrada! Aguarde aprovação pela equipe. ⏳");
+        toast.success("Empresa cadastrada. Aguarde aprovação pela equipe.");
         onSaved({
           id: profile.id,
           name: data.name ?? "",
@@ -339,7 +337,7 @@ export default function EmpresaEditSheet({
         // 2. Atualizar business_profiles (usando profile_id)
         try {
           await adminBusinessService.updateBusinessProfile(biz.id, payload);
-          toast.success("Informações atualizadas! ✅");
+          toast.success("Informações atualizadas.");
           onSaved({
             id: biz.id,
             name: data.name ?? biz.name,
@@ -380,12 +378,12 @@ export default function EmpresaEditSheet({
       <SheetContent side="bottom" className="h-[90vh] rounded-t-2xl p-0">
         <SheetHeader className="px-4 pt-4 pb-2">
           <SheetTitle className="text-lg font-display">
-            {mode === "create" ? "Cadastrar business" : "Editar business"}
+            {mode === "create" ? "Cadastrar empresa" : "Editar empresa"}
           </SheetTitle>
         </SheetHeader>
         <ScrollArea className="h-[calc(90vh-120px)] px-4">
           <form onSubmit={handleSubmit(onValid)} className="space-y-3 pb-4">
-            <SectionTitle>📋 Dados básicos</SectionTitle>
+            <SectionTitle>Dados básicos</SectionTitle>
             <Field label="Nome *">
               <Input {...register("name")} />
               <InlineFieldError message={errors.name?.message} />
@@ -395,9 +393,9 @@ export default function EmpresaEditSheet({
                 {...register("category")}
                 className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
               >
-                {CATEGORIAS.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
+                {CATEGORY_OPTIONS.map((categoryOption) => (
+                  <option key={categoryOption.id} value={categoryOption.id}>
+                    {categoryOption.label}
                   </option>
                 ))}
               </select>
@@ -408,9 +406,9 @@ export default function EmpresaEditSheet({
               <InlineFieldError message={errors.description?.message} />
             </Field>
 
-            <SectionTitle>🚀 Modos de Atendimento</SectionTitle>
+            <SectionTitle>Modos de atendimento</SectionTitle>
             <p className="text-xs text-muted-foreground">
-              Selecione como sua business atende os clientes:
+              Selecione como sua empresa atende os clientes:
             </p>
             <div className="grid grid-cols-2 gap-2">
               {MODOS.map((m) => {
@@ -433,7 +431,7 @@ export default function EmpresaEditSheet({
               })}
             </div>
 
-            <SectionTitle>📍 Endereço</SectionTitle>
+            <SectionTitle>Endereço</SectionTitle>
             <Field label="Endereço">
               <Input
                 value={address}
@@ -495,7 +493,12 @@ export default function EmpresaEditSheet({
               />
             </Field>
 
-            <SectionTitle>🕐 Horários e Serviços</SectionTitle>
+            <SectionTitle>
+              <span className="inline-flex items-center gap-2">
+                <Clock className="h-4 w-4" aria-hidden="true" />
+                Horários e Serviços
+              </span>
+            </SectionTitle>
             <Field label="Horário de funcionamento">
               <Textarea
                 value={schedule}
@@ -503,8 +506,9 @@ export default function EmpresaEditSheet({
                 placeholder="Seg-Sex: 8h-18h&#10;Sábado: 8h-12h&#10;Domingo: Fechado"
                 rows={4}
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                💡 Dica: Use uma linha por dia. Ex: "Seg-Sex: 8h-18h"
+              <p className="flex items-start gap-1.5 text-xs text-muted-foreground mt-1">
+                <Lightbulb className="h-3.5 w-3.5 mt-0.5 shrink-0" aria-hidden="true" />
+                <span>Dica: Use uma linha por dia. Ex: "Seg-Sex: 8h-18h"</span>
               </p>
             </Field>
             <Field label="Horário de fechamento hoje (HH:MM)">
@@ -514,8 +518,9 @@ export default function EmpresaEditSheet({
                 placeholder="18:00"
                 maxLength={5}
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                💡 Usado para mostrar "Fecha às 18:00" quando aberto
+              <p className="flex items-start gap-1.5 text-xs text-muted-foreground mt-1">
+                <Lightbulb className="h-3.5 w-3.5 mt-0.5 shrink-0" aria-hidden="true" />
+                <span>Usado para mostrar "Fecha às 18:00" quando aberto</span>
               </p>
             </Field>
             <Field label="Especialidades (separar por vírgula)">

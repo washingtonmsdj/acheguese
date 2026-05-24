@@ -79,14 +79,14 @@ export function BusinessSections(props: BusinessSectionsProps) {
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-8 rounded-full px-3 text-xs"
-                onClick={onActivateLocation}
-                disabled={isLocatingUser}
-              >
-                {isLocatingUser ? 'Localizando...' : 'Ativar localizacao'}
-              </Button>
-            )}
-          </div>
+              className="h-8 rounded-full px-3 text-xs"
+              onClick={onActivateLocation}
+              disabled={isLocatingUser}
+            >
+              {isLocatingUser ? 'Localizando...' : 'Ativar localização'}
+            </Button>
+          )}
+        </div>
         </motion.div>
       )}
 

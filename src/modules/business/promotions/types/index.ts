@@ -1,4 +1,4 @@
-﻿/**
+/**
  * modules/ads - Tipos canônicos
  *
  * Anúncios locais segmentados por location_id.

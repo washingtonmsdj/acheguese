@@ -72,7 +72,7 @@ export default function GastronomyCheckoutPage() {
   if (!business) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <p className="text-sm text-muted-foreground">Checkout invalido. Volte para a loja e reabra o pedido.</p>
+        <p className="text-sm text-muted-foreground">Checkout inválido. Volte para a loja e reabra o pedido.</p>
         <Button className="mt-4" onClick={() => navigate("/gastronomia")}>Voltar</Button>
       </div>
     );
@@ -220,7 +220,7 @@ function GastronomyCheckoutContent({ business }: GastronomyCheckoutContentProps)
       acceptedPaymentMethods.has("payment_link") ? { value: "payment_link", label: "Link de pagamento", icon: Link2 } : null,
       acceptedPaymentMethods.has("cash") ? { value: "cash", label: `Dinheiro na ${locationLabel}`, icon: Wallet } : null,
     ];
-    if (canUseCardOnDelivery) options.splice(1, 0, { value: "card_on_delivery", label: `Cartao na ${locationLabel}`, icon: CreditCard });
+    if (canUseCardOnDelivery) options.splice(1, 0, { value: "card_on_delivery", label: `Cartão na ${locationLabel}`, icon: CreditCard });
     return options.filter((o): o is { value: string; label: string; icon: typeof Wallet } => Boolean(o));
   }, [acceptedPaymentMethods, canUseCardOnDelivery, requiresDeliveryDestination]);
 
@@ -246,9 +246,9 @@ function GastronomyCheckoutContent({ business }: GastronomyCheckoutContentProps)
         ? [
             effectiveDeliveryDestination?.postalCode ? `CEP: ${effectiveDeliveryDestination.postalCode}` : null,
             effectiveDeliveryDestination?.street ? `Rua: ${effectiveDeliveryDestination.street}` : null,
-            streetNumber.trim() ? `Numero: ${streetNumber.trim()}` : null,
+            streetNumber.trim() ? `Número: ${streetNumber.trim()}` : null,
             complement.trim() ? `Complemento: ${complement.trim()}` : null,
-            referencePoint.trim() ? `Referencia: ${referencePoint.trim()}` : null,
+            referencePoint.trim() ? `Referência: ${referencePoint.trim()}` : null,
           ]
             .filter(Boolean)
             .join(" | ")
@@ -290,14 +290,14 @@ function GastronomyCheckoutContent({ business }: GastronomyCheckoutContentProps)
         <Link to={appUrls.auth.login} className="text-xs text-muted-foreground">Trocar conta</Link>
       </div>
       <h1 className="text-2xl font-bold">Confirmar pedido</h1>
-      <p className="mt-1 text-sm text-muted-foreground">Endereco de entrega e pagamento direto com a loja.</p>
+      <p className="mt-1 text-sm text-muted-foreground">Endereço de entrega e pagamento direto com a loja.</p>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
         <div className="space-y-6">
           {requiresDeliveryDestination && (
             <div className="space-y-3">
               <div className="rounded-xl border bg-card p-4">
-                <h3 className="mb-3 text-sm font-semibold">Endereco de entrega</h3>
+                <h3 className="mb-3 text-sm font-semibold">Endereço de entrega</h3>
                 <div className="grid gap-2 sm:grid-cols-2">
                   <button
                     type="button"
@@ -309,7 +309,7 @@ function GastronomyCheckoutContent({ business }: GastronomyCheckoutContentProps)
                         : "border-border"
                     } ${!hasSavedResidence ? "cursor-not-allowed opacity-60" : ""}`}
                   >
-                    Usar endereco do perfil
+                    Usar endereço do perfil
                   </button>
                   <button
                     type="button"
@@ -320,12 +320,12 @@ function GastronomyCheckoutContent({ business }: GastronomyCheckoutContentProps)
                         : "border-border"
                     }`}
                   >
-                    Usar outro endereco
+                    Usar outro endereço
                   </button>
                 </div>
                 {!hasSavedResidence && (
                   <p className="mt-2 text-xs text-muted-foreground">
-                    Nenhum endereco salvo no perfil. Informe outro endereco para esta entrega.
+                    Nenhum endereço salvo no perfil. Informe outro endereço para esta entrega.
                   </p>
                 )}
               </div>
@@ -350,11 +350,11 @@ function GastronomyCheckoutContent({ business }: GastronomyCheckoutContentProps)
                 showCurrentLocationAction={false}
               />
               <div className="rounded-xl border bg-card p-4">
-                <h3 className="mb-3 text-sm font-semibold">Dados do endereco de entrega</h3>
+                <h3 className="mb-3 text-sm font-semibold">Dados do endereço de entrega</h3>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <Input value={effectiveDeliveryDestination?.postalCode ?? ""} readOnly placeholder="CEP" />
                   <Input value={effectiveDeliveryDestination?.street ?? ""} readOnly placeholder="Rua" />
-                  <Input value={streetNumber} onChange={(e) => setStreetNumber(e.target.value)} placeholder="Numero *" />
+                  <Input value={streetNumber} onChange={(e) => setStreetNumber(e.target.value)} placeholder="Número *" />
                   <Input value={complement} onChange={(e) => setComplement(e.target.value)} placeholder="Complemento" />
                   <Input value={effectiveDeliveryDestination?.neighborhood ?? ""} readOnly placeholder="Bairro" />
                   <Input value={effectiveDeliveryDestination?.city ?? ""} readOnly placeholder="Cidade" />
@@ -417,7 +417,7 @@ function GastronomyCheckoutContent({ business }: GastronomyCheckoutContentProps)
               </div>
             )}
             <div className="mt-3">
-              <Textarea placeholder="Observacoes do pedido" value={customerNotes} onChange={(e) => setCustomerNotes(e.target.value)} maxLength={280} />
+              <Textarea placeholder="Observações do pedido" value={customerNotes} onChange={(e) => setCustomerNotes(e.target.value)} maxLength={280} />
             </div>
           </section>
 
@@ -428,12 +428,12 @@ function GastronomyCheckoutContent({ business }: GastronomyCheckoutContentProps)
               <Separator />
               <div className="flex justify-between font-semibold"><span>Total</span><span>R$ {cart.total.toFixed(2)}</span></div>
             </div>
-            {minimumOrderRemaining > 0 && <p className="mt-3 text-xs text-amber-700">Faltam R$ {minimumOrderRemaining.toFixed(2)} para o minimo.</p>}
+            {minimumOrderRemaining > 0 && <p className="mt-3 text-xs text-amber-700">Faltam R$ {minimumOrderRemaining.toFixed(2)} para o mínimo.</p>}
             {requiresDeliveryDestination && !hasDeliveryDestination && (
-              <p className="mt-3 text-xs text-amber-700">Informe o endereco completo de entrega para continuar.</p>
+              <p className="mt-3 text-xs text-amber-700">Informe o endereço completo de entrega para continuar.</p>
             )}
             {requiresDeliveryDestination && hasDeliveryDestination && !structuredDeliveryReady && (
-              <p className="mt-3 text-xs text-amber-700">Preencha CEP, rua, numero, bairro, cidade e UF para confirmar.</p>
+              <p className="mt-3 text-xs text-amber-700">Preencha CEP, rua, número, bairro, cidade e UF para confirmar.</p>
             )}
             <Button className="mt-4 w-full" size="lg" disabled={isCheckoutDisabled} onClick={handleSubmit}>
               {isSubmitting ? "Criando pedido..." : "Confirmar pedido"}

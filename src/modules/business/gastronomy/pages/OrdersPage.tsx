@@ -1,5 +1,5 @@
 /**
- * OrdersPage - pagina de gestao de pedidos.
+ * OrdersPage - página de gestão de pedidos.
  */
 
 import { useMemo, useState } from 'react';
@@ -53,7 +53,7 @@ export default function OrdersPage() {
     >();
 
     orders.forEach((order) => {
-      const identity = `${order.customer_name || 'Cliente nao informado'}:${order.customer_phone || 'sem-telefone'}`;
+      const identity = `${order.customer_name || 'Cliente não informado'}:${order.customer_phone || 'sem-telefone'}`;
       const existing = byCustomer.get(identity);
 
       if (existing) {
@@ -67,8 +67,8 @@ export default function OrdersPage() {
 
       byCustomer.set(identity, {
         key: identity,
-        name: order.customer_name || 'Cliente nao informado',
-        phone: order.customer_phone || 'Nao informado',
+        name: order.customer_name || 'Cliente não informado',
+        phone: order.customer_phone || 'Não informado',
         totalOrders: 1,
         totalSpent: order.total,
         lastOrderAt: order.created_at,
@@ -102,7 +102,7 @@ export default function OrdersPage() {
   if (!businessId) {
     return (
       <div className="container max-w-6xl py-8">
-        <p className="text-center text-destructive">ID do negocio nao encontrado</p>
+        <p className="text-center text-destructive">ID do negócio não encontrado</p>
       </div>
     );
   }
@@ -116,7 +116,7 @@ export default function OrdersPage() {
             Pedidos
           </h1>
           <p className="text-muted-foreground mt-2">
-            Acompanhe fila, preparo, entrega e finalizacao dos pedidos.
+            Acompanhe fila, preparo, entrega e finalização dos pedidos.
           </p>
           <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
             <span
@@ -129,7 +129,7 @@ export default function OrdersPage() {
             </span>
             {lastRealtimeEventAt && (
               <span className="text-muted-foreground">
-                Ultima atualizacao ha{' '}
+                Última atualização há{' '}
                 {formatDistanceToNowStrict(new Date(lastRealtimeEventAt), {
                   addSuffix: false,
                   locale: ptBR,
@@ -150,7 +150,7 @@ export default function OrdersPage() {
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Users className="h-5 w-5" />
-            Clientes e historico rapido
+            Clientes e histórico rápido
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -177,7 +177,7 @@ export default function OrdersPage() {
                   </div>
                   <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm">
                     <span className="text-muted-foreground">
-                      Ultimo pedido ha{' '}
+                      Último pedido há{' '}
                       {formatDistanceToNowStrict(new Date(customer.lastOrderAt), {
                         addSuffix: false,
                         locale: ptBR,
@@ -212,7 +212,7 @@ export default function OrdersPage() {
             <SelectItem value="ready">Prontos</SelectItem>
             <SelectItem value="out_for_delivery">Saiu para entrega</SelectItem>
             <SelectItem value="delivered">Entregues</SelectItem>
-            <SelectItem value="completed">Concluidos</SelectItem>
+            <SelectItem value="completed">Concluídos</SelectItem>
             <SelectItem value="cancelled">Cancelados</SelectItem>
           </SelectContent>
         </Select>
@@ -267,8 +267,8 @@ export default function OrdersPage() {
           <h3 className="text-lg font-semibold mb-2">Nenhum pedido encontrado</h3>
           <p className="text-muted-foreground">
             {statusFilter !== 'all' || paymentStatusFilter !== 'all'
-              ? 'Nao ha pedidos com este status.'
-              : 'Aguardando o primeiro pedido da operacao.'}
+              ? 'Não há pedidos com este status.'
+              : 'Aguardando o primeiro pedido da operação.'}
           </p>
         </div>
       )}

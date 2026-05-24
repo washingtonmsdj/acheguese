@@ -100,7 +100,7 @@ export function EducationDetailPage() {
   const highlights: string[] = [];
   const stats = [
     profile?.school_network ? { label: 'Rede', value: profile.school_network } : null,
-    profile?.enrollment_open ? { label: 'Matriculas', value: 'Abertas' } : null,
+    profile?.enrollment_open ? { label: 'Matrículas', value: 'Abertas' } : null,
     (profile?.education_levels ?? []).length > 0
       ? { label: 'Etapas', value: String(profile?.education_levels?.length ?? 0) }
       : null,
@@ -160,7 +160,7 @@ export function EducationDetailPage() {
   const districtLabel = (district ?? '').replace(/-/g, ' ');
 
   const institutionName =
-    profile?.business_name ?? profile?.institution_type ?? 'Instituicao';
+    profile?.business_name ?? profile?.institution_type ?? 'Instituição';
   const canonicalPath =
     state && city && district && slug
       ? `/educacao/${state}/${city}/${district}/${slug}`
@@ -194,7 +194,7 @@ export function EducationDetailPage() {
     return (
       <>
         <Helmet>
-          <title>Erro ao carregar instituicao | Acheguese</title>
+          <title>Erro ao carregar instituição | Acheguese</title>
           <meta name="robots" content="noindex,follow" />
           <link rel="canonical" href={buildPublicAbsoluteUrl(showcasePath)} />
         </Helmet>
@@ -207,7 +207,7 @@ export function EducationDetailPage() {
     return (
       <>
         <Helmet>
-          <title>Instituicao nao encontrada | Acheguese</title>
+          <title>Instituição não encontrada | Acheguese</title>
           <meta name="robots" content="noindex,follow" />
           <link rel="canonical" href={buildPublicAbsoluteUrl(showcasePath)} />
         </Helmet>
@@ -220,13 +220,13 @@ export function EducationDetailPage() {
     <div className="min-h-screen bg-background">
       <Helmet>
         <title>
-          {institutionName} - Educacao em {cityLabel} | Acheguese
+          {institutionName} - Educação em {cityLabel} | Acheguese
         </title>
         <meta
           name="description"
           content={
             sanitizePublicEducationText(profile.summary) ||
-            `Conheca ${institutionName}, instituicao educacional em ${districtLabel}, ${cityLabel}. Cursos, modalidades, equipe e contato direto.`
+            `Conheça ${institutionName}, instituição educacional em ${districtLabel}, ${cityLabel}. Cursos, modalidades, equipe e contato direto.`
           }
         />
         <link rel="canonical" href={buildPublicAbsoluteUrl(canonicalPath)} />
@@ -255,7 +255,7 @@ export function EducationDetailPage() {
               </Link>
               <ChevronRight className="h-3 w-3" />
               <Link to={`/educacao/${state}/${city}`} className="hover:text-white">
-                Educacao
+                Educação
               </Link>
               <ChevronRight className="h-3 w-3" />
               <span className="capitalize">{districtLabel}</span>
@@ -283,7 +283,7 @@ export function EducationDetailPage() {
                   {profile.enrollment_open === true && (
                     <Badge className="border-amber-300/40 bg-amber-500/30 text-white backdrop-blur-sm">
                       <Star className="mr-1 h-3 w-3" />
-                      Matriculas Abertas
+                      Matrículas Abertas
                     </Badge>
                   )}
                 </div>
@@ -369,12 +369,12 @@ export function EducationDetailPage() {
             <section id="overview" className="scroll-mt-24">
               <header className="mb-4 flex items-center gap-2">
                 <Compass className="h-5 w-5 text-primary" />
-                <h2 className="text-2xl font-bold">Visao geral</h2>
+                <h2 className="text-2xl font-bold">Visão geral</h2>
               </header>
               <div className="rounded-3xl border border-border bg-card p-6">
                 <p className="text-base leading-relaxed text-muted-foreground">
                   {sanitizePublicEducationText(profile.summary) ||
-                    `${institutionName} e uma instituicao educacional em ${cityLabel}, focada em entregar uma experiencia de aprendizagem de alta qualidade.`}
+                    `${institutionName} é uma instituição educacional em ${cityLabel}, focada em entregar uma experiência de aprendizagem de alta qualidade.`}
                 </p>
                 {highlights.length > 0 && (
                   <>
@@ -412,7 +412,7 @@ export function EducationDetailPage() {
                   {basicResources.length > 0 && (
                     <div>
                       <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                        Recursos basicos
+                        Recursos básicos
                       </h3>
                       <ul className="grid gap-2 md:grid-cols-2">
                         {basicResources.map((item) => (
@@ -457,7 +457,7 @@ export function EducationDetailPage() {
                   {facilityFeatures.length > 0 && (
                     <div>
                       <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                        Instalacoes
+                        Instalações
                       </h3>
                       <ul className="grid gap-2 md:grid-cols-2">
                         {facilityFeatures.map((item) => (
@@ -481,14 +481,14 @@ export function EducationDetailPage() {
                   <h2 className="text-2xl font-bold">{labels.programPlural}</h2>
                 </div>
                 {programs.length > 0 && (
-                  <Badge variant="secondary">{programs.length} disponiveis</Badge>
+                  <Badge variant="secondary">{programs.length} disponíveis</Badge>
                 )}
               </header>
               {programs.length === 0 ? (
                 <div className="rounded-3xl border border-dashed border-border bg-card/40 p-8 text-center">
                   <BookOpen className="mx-auto h-8 w-8 text-muted-foreground" />
                   <p className="mt-3 text-sm text-muted-foreground">
-                    {labels.programEmptyState}. Entre em contato para mais informacoes.
+                    {labels.programEmptyState}. Entre em contato para mais informações.
                   </p>
                 </div>
               ) : (
@@ -520,13 +520,13 @@ export function EducationDetailPage() {
                 <ModalityCard
                   icon={PlayCircle}
                   title="Online"
-                  description="Aulas ao vivo ou conteudo digital com acompanhamento periodico."
+                  description="Aulas ao vivo ou conteúdo digital com acompanhamento periódico."
                   highlight={modalitiesPresent.has('online')}
                 />
                 <ModalityCard
                   icon={Sparkles}
-                  title="Hibrido"
-                  description="Combinacao de encontros presenciais e atividades remotas."
+                  title="Híbrido"
+                  description="Combinação de encontros presenciais e atividades remotas."
                   highlight={modalitiesPresent.has('hibrido')}
                 />
               </div>
@@ -539,11 +539,11 @@ export function EducationDetailPage() {
                 <h2 className="text-2xl font-bold">Equipe</h2>
               </header>
               <div className="rounded-2xl border border-dashed border-border bg-card/40 p-5 text-sm text-muted-foreground">
-                Dados da equipe ainda nao informados pela instituicao.
+                Dados da equipe ainda não informados pela instituição.
               </div>
               <p className="mt-3 text-xs text-muted-foreground">
                 <Info className="mr-1 inline h-3 w-3" />
-                Este modulo exibe somente informacoes declaradas pela instituicao.
+                Este módulo exibe somente informações declaradas pela instituição.
               </p>
             </section>
 
@@ -554,11 +554,11 @@ export function EducationDetailPage() {
                 <h2 className="text-2xl font-bold">Galeria</h2>
               </header>
               <div className="rounded-2xl border border-dashed border-border bg-card/40 p-6 text-sm text-muted-foreground">
-                Nenhuma imagem oficial publicada por esta instituicao ate o momento.
+                Nenhuma imagem oficial publicada por esta instituição até o momento.
               </div>
               <p className="mt-3 text-xs text-muted-foreground">
                 <Info className="mr-1 inline h-3 w-3" />
-                As imagens serao exibidas automaticamente quando a instituicao enviar a galeria.
+                As imagens serão exibidas automaticamente quando a instituição enviar a galeria.
               </p>
             </section>
 
@@ -590,8 +590,8 @@ export function EducationDetailPage() {
                         {ev.school_event_type && profile?.niche_key === 'regular_school' && (
                           <Badge variant="outline" className="text-[11px] border-indigo-200 text-indigo-700 bg-indigo-50">
                             {ev.school_event_type === 'open_house' ? 'Portas Abertas' :
-                             ev.school_event_type === 'enrollment_fair' ? 'Feira de Matricula' :
-                             ev.school_event_type === 'parent_meeting' ? 'Reuniao de Pais' :
+                             ev.school_event_type === 'enrollment_fair' ? 'Feira de Matrícula' :
+                             ev.school_event_type === 'parent_meeting' ? 'Reunião de Pais' :
                              ev.school_event_type === 'trial_class' ? 'Aula Experimental' :
                              ev.school_event_type === 'school_tour' ? 'Visita Escolar' :
                              ev.school_event_type === 'cultural_event' ? 'Evento Cultural' :
@@ -656,7 +656,7 @@ export function EducationDetailPage() {
             <section id="location" className="scroll-mt-24">
               <header className="mb-4 flex items-center gap-2">
                 <MapIcon className="h-5 w-5 text-primary" />
-                <h2 className="text-2xl font-bold">Localizacao</h2>
+                <h2 className="text-2xl font-bold">Localização</h2>
               </header>
               <div className="overflow-hidden rounded-3xl border border-border bg-card">
                 <div
@@ -677,7 +677,7 @@ export function EducationDetailPage() {
                         {districtLabel}, {cityLabel}
                       </h3>
                       <p className="text-xs text-muted-foreground">
-                        Endereco completo disponivel mediante contato.
+                        Endereço completo disponível mediante contato.
                       </p>
                     </div>
                     <a

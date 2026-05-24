@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Award,
@@ -45,12 +45,12 @@ export function CentralProfessionalHeader({
       <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Central Profissional</h1>
         <p className="text-muted-foreground">
-          Gerencie seu perfil, disponibilidade, servicos publicados e sinais de demanda local.
+          Gerencie seu perfil, disponibilidade, serviços publicados e sinais de demanda local.
         </p>
       </div>
       <Button onClick={onCreateService} className="w-full gap-2 sm:w-auto">
         <Plus className="h-4 w-4" />
-        Novo servico
+        Novo serviço
       </Button>
     </div>
   );
@@ -109,19 +109,19 @@ export function CentralProfessionalStatsGrid({
   return (
     <div className="grid gap-4 md:grid-cols-4">
       <StatCard
-        title="Servicos"
+        title="Serviços"
         value={servicesCount}
         description={`${activeServicesCount} recebendo clientes`}
         icon={BriefcaseBusiness}
       />
       <StatCard
-        title="Avaliacao media"
+        title="Avaliação média"
         value={averageRating.toFixed(1)}
-        description="Media dos perfis publicados"
+        description="Média dos perfis publicados"
         icon={Star}
       />
       <StatCard
-        title="Visualizacoes"
+        title="Visualizações"
         value={getProfessionalStatsValue(stats, "total_views", "totalViews")}
         description="Servico principal"
         icon={Eye}
@@ -167,12 +167,12 @@ function ServiceCard({ service }: { service: Professional }) {
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="line-clamp-2 text-sm text-muted-foreground">
-          {service.description || "Sem descricao publica cadastrada."}
+          {service.description || "Sem descrição pública cadastrada."}
         </p>
 
         <div className="grid gap-3 text-sm sm:grid-cols-3">
           <div className="rounded-lg border p-3">
-            <p className="text-xs text-muted-foreground">Avaliacao</p>
+            <p className="text-xs text-muted-foreground">Avaliação</p>
             <p className="font-semibold">{service.rating?.toFixed?.(1) ?? service.rating ?? 0}/5</p>
           </div>
           <div className="rounded-lg border p-3">
@@ -195,7 +195,7 @@ function ServiceCard({ service }: { service: Professional }) {
           <Button asChild variant="outline" size="sm">
             <Link to={publicUrl}>
               <Eye className="mr-2 h-4 w-4" />
-              Ver publico
+              Ver público
             </Link>
           </Button>
         </div>
@@ -220,28 +220,28 @@ export function CentralProfessionalOperationPanel({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Operacao profissional</CardTitle>
+        <CardTitle>Operação profissional</CardTitle>
         <CardDescription>
-          Estes dados vem do SSOT `ProfessionalFacade`; nao ha contador fixo nem placeholder operacional.
+          Estes dados vêm do SSOT `ProfessionalFacade`; não há contador fixo nem placeholder operacional.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {error && (
           <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
-            Nao foi possivel carregar seus servicos profissionais.
+            Não foi possível carregar seus serviços profissionais.
           </div>
         )}
 
         {!isLoading && !services.length && !error && (
           <div className="rounded-xl border border-dashed p-6 text-center">
             <BriefcaseBusiness className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
-            <h2 className="font-semibold">Nenhum servico publicado ainda</h2>
+            <h2 className="font-semibold">Nenhum serviço publicado ainda</h2>
             <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-              Cadastre seu primeiro servico para aparecer na busca local e receber contatos de moradores.
+              Cadastre seu primeiro serviço para aparecer na busca local e receber contatos de moradores.
             </p>
             <Button onClick={onCreateService} className="mt-4 w-full gap-2 sm:w-auto">
               <Plus className="h-4 w-4" />
-              Cadastrar servico
+              Cadastrar serviço
             </Button>
           </div>
         )}
@@ -263,7 +263,7 @@ function PrimaryServiceOperationalData({ service }: { service: Professional }) {
     <div className="rounded-xl border bg-muted/20 p-4">
       <h3 className="text-sm font-semibold">Dados operacionais do perfil</h3>
       <p className="mt-1 text-xs text-muted-foreground">
-        Campos reais de `professional_data` usados na operacao (sem placeholders).
+        Campos reais de `professional_data` usados na operação (sem placeholders).
       </p>
       <div className="mt-3 grid gap-3 sm:grid-cols-3">
         <div className="rounded-lg border bg-background p-3">
@@ -271,7 +271,7 @@ function PrimaryServiceOperationalData({ service }: { service: Professional }) {
           <p className="font-semibold">
             {typeof service.service_radius_km === "number"
               ? `${service.service_radius_km} km`
-              : "Nao informado"}
+              : "Não informado"}
           </p>
         </div>
         <div className="rounded-lg border bg-background p-3 sm:col-span-2">
@@ -279,7 +279,7 @@ function PrimaryServiceOperationalData({ service }: { service: Professional }) {
           <p className="font-semibold">
             {service.service_areas?.length
               ? service.service_areas.join(", ")
-              : "Nao informado"}
+              : "Não informado"}
           </p>
         </div>
         <div className="rounded-lg border bg-background p-3 sm:col-span-3">
@@ -331,15 +331,15 @@ export function LeadPipeline({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Pedidos de orcamento</CardTitle>
+        <CardTitle>Pedidos de orçamento</CardTitle>
         <CardDescription>
-          Leads capturados pelo perfil publico e roteados pelo SSOT profissional.
+          Leads capturados pelo perfil público e roteados pelo SSOT profissional.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {error && (
           <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
-            Nao foi possivel carregar os pedidos agora.
+            Não foi possível carregar os pedidos agora.
           </div>
         )}
         {isLoading && (
@@ -359,7 +359,7 @@ export function LeadPipeline({
             <p className="text-2xl font-semibold">{leads.length}</p>
           </div>
           <div className="rounded-lg border p-3">
-            <p className="text-xs text-muted-foreground">Ultimo pedido</p>
+            <p className="text-xs text-muted-foreground">Último pedido</p>
             <p className="text-sm font-semibold">
               {leads[0] ? new Date(leads[0].created_at).toLocaleDateString("pt-BR") : "Nenhum"}
             </p>
@@ -397,7 +397,7 @@ export function LeadPipeline({
                           [lead.id]: event.target.value,
                         }))
                       }
-                      placeholder="Responder ao cliente pelo funil do orcamento"
+                      placeholder="Responder ao cliente pelo funil do orçamento"
                       rows={2}
                     />
                     <Button
@@ -434,7 +434,7 @@ export function LeadPipeline({
             <Clock3 className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
             <h2 className="font-semibold">Nenhum pedido recebido ainda</h2>
             <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-              Quando um morador solicitar orcamento pelo perfil publico, o pedido aparece aqui.
+              Quando um morador solicitar orçamento pelo perfil público, o pedido aparece aqui.
             </p>
           </div>
         ) : null}
@@ -500,7 +500,7 @@ function LeadQuoteForm({
           onChange={(event) => updateQuote("startDate", event.target.value)}
         />
         <Input
-          placeholder="Prazo estimado"
+        placeholder="Prazo estimado"
           value={quote?.duration ?? ""}
           onChange={(event) => updateQuote("duration", event.target.value)}
         />
@@ -508,7 +508,7 @@ function LeadQuoteForm({
       <Textarea
         value={quote?.description ?? ""}
         onChange={(event) => updateQuote("description", event.target.value)}
-        placeholder="Descreva escopo, inclusoes e condicoes da proposta"
+        placeholder="Descreva escopo, inclusões e condições da proposta"
         rows={2}
       />
       <Button
@@ -566,6 +566,7 @@ function LeadStatusActions({
           onClick={() => onStatusChange(lead.id, "quoted")}
         >
           Orcamento enviado
+          Orçamento enviado
         </Button>
       )}
       {lead.status !== "completed" && (
@@ -620,13 +621,13 @@ export function EngagementsPanel({
           Atendimentos contratados
         </CardTitle>
         <CardDescription>
-          Execucoes criadas automaticamente a partir de propostas aceitas.
+          Execuções criadas automaticamente a partir de propostas aceitas.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {error && (
           <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
-            Nao foi possivel carregar os atendimentos agora.
+            Não foi possível carregar os atendimentos agora.
           </div>
         )}
         {isLoading && (
@@ -646,7 +647,7 @@ export function EngagementsPanel({
             <p className="text-2xl font-semibold">{engagements.length}</p>
           </div>
           <div className="rounded-lg border p-3">
-            <p className="text-xs text-muted-foreground">Ultimo contrato</p>
+            <p className="text-xs text-muted-foreground">Último contrato</p>
             <p className="text-sm font-semibold">
               {engagements[0]
                 ? new Date(engagements[0].created_at).toLocaleDateString("pt-BR")
@@ -746,4 +747,3 @@ function EngagementCard({
     </div>
   );
 }
-

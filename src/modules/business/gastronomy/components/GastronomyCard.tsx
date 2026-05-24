@@ -33,6 +33,7 @@ import {
   Sparkles,
   TrendingUp,
   Package,
+  Flame,
 } from 'lucide-react';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
@@ -327,7 +328,8 @@ export const GastronomyCard = memo<GastronomyCardProps>(
               )}
               {showPromotion && (
                 <Badge className="bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20 text-[10px]">
-                  🔥 Promoção
+                  <Flame className="mr-1 h-3 w-3" aria-hidden="true" />
+                  Promoção
                 </Badge>
               )}
             </div>

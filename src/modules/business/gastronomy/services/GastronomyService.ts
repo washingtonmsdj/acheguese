@@ -4,7 +4,6 @@
  * Fachada que re-exporta todos os módulos de gastronomia.
  * Mantém estabilidade com código migracao.
  *
- * @version 2.0.0 - Refatorado para SSOT
  */
 
 // ============================================================
@@ -220,5 +219,3 @@ export const GastronomyFacade = {
 
 // Export default para import simplificado
 export default GastronomyFacade;
-
-

@@ -21,13 +21,13 @@ export const INSTITUTION_TYPE_FILTERS = [
   { key: 'cmei', label: 'CMEI' },
   { key: 'creche', label: 'Creche' },
   { key: 'escola', label: 'Escola' },
-  { key: 'colegio', label: 'Colegio' },
+  { key: 'colegio', label: 'Colégio' },
   { key: 'curso', label: 'Curso' },
 ] as const;
 
 export const INFRASTRUCTURE_FILTERS = [
   { key: 'library', label: 'Biblioteca' },
-  { key: 'laboratory', label: 'Laboratorio' },
+  { key: 'laboratory', label: 'Laboratório' },
   { key: 'sports_court', label: 'Quadra' },
   { key: 'pool', label: 'Piscina' },
   { key: 'accessibility', label: 'Acessibilidade' },
@@ -216,16 +216,16 @@ export function FilterBar({ filters, setFilters, niches, districts, view, setVie
           </div>
           <FilterPill icon={MapPin} label="Bairro" active={Boolean(filters.district)} count={filters.district ? 1 : 0} onClear={() => setFilters((prev) => ({ ...prev, district: null }))}>
             <div className="space-y-1">
-              <div className="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Bairros disponiveis</div>
+              <div className="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Bairros disponíveis</div>
               <CheckOption active={!filters.district} label="Todos os bairros" onClick={() => setFilters((prev) => ({ ...prev, district: null }))} />
               <div className="max-h-64 overflow-y-auto">{districts.map((d) => <CheckOption key={d} active={filters.district === d} label={d.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())} onClick={() => setFilters((prev) => ({ ...prev, district: prev.district === d ? null : d }))} />)}</div>
             </div>
           </FilterPill>
           <FilterPill icon={Building2} label="Rede" active={filters.schoolNetworks.length > 0} count={filters.schoolNetworks.length} onClear={() => setFilters((prev) => ({ ...prev, schoolNetworks: [] }))}>
-            <div className="space-y-1"><div className="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Rede administrativa</div>{SCHOOL_NETWORK_FILTERS.map((network) => <CheckOption key={network.key} active={filters.schoolNetworks.includes(network.key)} label={network.label} description={network.key === 'municipal' ? 'Unidades da prefeitura' : network.key === 'state' ? 'Unidades do estado' : network.key === 'federal' ? 'Unidades federais' : 'Instituicoes privadas'} onClick={() => toggle('schoolNetworks', network.key)} />)}</div>
+            <div className="space-y-1"><div className="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Rede administrativa</div>{SCHOOL_NETWORK_FILTERS.map((network) => <CheckOption key={network.key} active={filters.schoolNetworks.includes(network.key)} label={network.label} description={network.key === 'municipal' ? 'Unidades da prefeitura' : network.key === 'state' ? 'Unidades do estado' : network.key === 'federal' ? 'Unidades federais' : 'Instituições privadas'} onClick={() => toggle('schoolNetworks', network.key)} />)}</div>
           </FilterPill>
           <FilterPill icon={School} label="Tipo" active={filters.institutionTypes.length > 0} count={filters.institutionTypes.length} onClear={() => setFilters((prev) => ({ ...prev, institutionTypes: [] }))}>
-            <div className="space-y-1"><div className="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Tipo de unidade</div>{INSTITUTION_TYPE_FILTERS.map((type) => <CheckOption key={type.key} active={filters.institutionTypes.includes(type.key)} label={type.label} description={type.key === 'cmei' ? 'Centro municipal de educacao infantil' : type.key === 'creche' ? 'Atendimento de primeira infancia' : type.key === 'colegio' ? 'Unidade com series mais amplas' : type.key === 'curso' ? 'Cursos e formacoes livres' : 'Escolas regulares'} onClick={() => toggle('institutionTypes', type.key)} />)}</div>
+            <div className="space-y-1"><div className="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Tipo de unidade</div>{INSTITUTION_TYPE_FILTERS.map((type) => <CheckOption key={type.key} active={filters.institutionTypes.includes(type.key)} label={type.label} description={type.key === 'cmei' ? 'Centro municipal de educação infantil' : type.key === 'creche' ? 'Atendimento de primeira infância' : type.key === 'colegio' ? 'Unidade com séries mais amplas' : type.key === 'curso' ? 'Cursos e formações livres' : 'Escolas regulares'} onClick={() => toggle('institutionTypes', type.key)} />)}</div>
           </FilterPill>
           <FilterPill icon={Building2} label="Infra" active={filters.infrastructure.length > 0} count={filters.infrastructure.length} onClear={() => setFilters((prev) => ({ ...prev, infrastructure: [] }))}>
             <div className="space-y-1"><div className="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Estrutura da unidade</div>{INFRASTRUCTURE_FILTERS.map((infra) => <CheckOption key={infra.key} active={filters.infrastructure.includes(infra.key)} label={infra.label} onClick={() => toggle('infrastructure', infra.key)} />)}</div>

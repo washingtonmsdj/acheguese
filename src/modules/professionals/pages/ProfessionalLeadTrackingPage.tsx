@@ -14,9 +14,9 @@ import { useToast } from "@/shared/hooks/use-toast";
 const STATUS_LABELS: Record<string, string> = {
   new: "Recebido",
   contacted: "Contato iniciado",
-  quoted: "Orcamento enviado",
+  quoted: "Orçamento enviado",
   scheduled: "Agendado",
-  completed: "Concluido",
+  completed: "Concluído",
   cancelled: "Cancelado",
   archived: "Arquivado",
 };
@@ -83,7 +83,7 @@ export default function ProfessionalLeadTrackingPage() {
     },
     onError: (error) => {
       toast({
-        title: "Nao foi possivel enviar",
+        title: "Não foi possível enviar",
         description: error instanceof Error ? error.message : "Erro desconhecido",
         variant: "destructive",
       });
@@ -110,7 +110,7 @@ export default function ProfessionalLeadTrackingPage() {
     },
     onError: (error) => {
       toast({
-        title: "Nao foi possivel atualizar a proposta",
+        title: "Não foi possível atualizar a proposta",
         description: error instanceof Error ? error.message : "Erro desconhecido",
         variant: "destructive",
       });
@@ -120,7 +120,7 @@ export default function ProfessionalLeadTrackingPage() {
   const submitReviewMutation = useMutation({
     mutationFn: async () => {
       const currentEngagement = engagementQuery.data;
-      if (!currentEngagement) throw new Error("Atendimento nao encontrado");
+      if (!currentEngagement) throw new Error("Atendimento não encontrado");
       const result = await ProfessionalLeadService.submitEngagementReview({
         engagementId: currentEngagement.id,
         rating: reviewRating,
@@ -131,11 +131,11 @@ export default function ProfessionalLeadTrackingPage() {
     },
     onSuccess: () => {
       setReviewComment("");
-      toast({ title: "Avaliacao enviada" });
+      toast({ title: "Avaliação enviada" });
     },
     onError: (error) => {
       toast({
-        title: "Nao foi possivel avaliar",
+        title: "Não foi possível avaliar",
         description: error instanceof Error ? error.message : "Erro desconhecido",
         variant: "destructive",
       });
@@ -153,7 +153,7 @@ export default function ProfessionalLeadTrackingPage() {
       <main id="main-content" tabIndex={-1} className="container mx-auto max-w-3xl px-4 py-10 focus:outline-none">
         <Card>
           <CardHeader>
-            <CardTitle>Acompanhar orcamento</CardTitle>
+            <CardTitle>Acompanhar orçamento</CardTitle>
             <CardDescription>
               Entre na sua conta para ver o status e as respostas do profissional.
             </CardDescription>
@@ -182,16 +182,16 @@ export default function ProfessionalLeadTrackingPage() {
       <main id="main-content" tabIndex={-1} className="container mx-auto max-w-3xl px-4 py-10 focus:outline-none">
         <Card>
           <CardHeader>
-            <CardTitle>Orcamento nao encontrado</CardTitle>
+            <CardTitle>Orçamento não encontrado</CardTitle>
             <CardDescription>
-              O pedido pode nao existir ou nao estar vinculado ao seu usuario.
+              O pedido pode não existir ou não estar vinculado ao seu usuário.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Button asChild variant="outline">
               <Link to="/servicos">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Voltar para servicos
+                Voltar para serviços
               </Link>
             </Button>
           </CardContent>
@@ -210,7 +210,7 @@ export default function ProfessionalLeadTrackingPage() {
       <Button asChild variant="ghost" size="sm">
         <Link to="/servicos">
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Servicos
+          Serviços
         </Link>
       </Button>
 
@@ -235,7 +235,7 @@ export default function ProfessionalLeadTrackingPage() {
             </div>
             <div className="rounded-lg border p-3">
               <p className="text-xs text-muted-foreground">Bairro</p>
-              <p className="font-medium">{lead.neighborhood || "Nao informado"}</p>
+              <p className="font-medium">{lead.neighborhood || "Não informado"}</p>
             </div>
             <div className="rounded-lg border p-3">
               <p className="text-xs text-muted-foreground">Preferencia</p>
@@ -247,7 +247,7 @@ export default function ProfessionalLeadTrackingPage() {
           </div>
 
           <div className="rounded-lg border p-4">
-            <p className="mb-1 text-sm font-medium">Descricao do pedido</p>
+            <p className="mb-1 text-sm font-medium">Descrição do pedido</p>
             <p className="text-sm text-muted-foreground">{lead.description}</p>
           </div>
         </CardContent>
@@ -333,7 +333,7 @@ export default function ProfessionalLeadTrackingPage() {
               Atendimento contratado
             </CardTitle>
             <CardDescription>
-              Esta execucao foi criada automaticamente quando a proposta foi aceita.
+              Esta execução foi criada automaticamente quando a proposta foi aceita.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -358,7 +358,7 @@ export default function ProfessionalLeadTrackingPage() {
             </div>
             {engagement.status === "completed" && (
               <div className="rounded-lg border bg-muted/30 p-4">
-                <p className="mb-2 font-medium">Avaliar atendimento concluido</p>
+                <p className="mb-2 font-medium">Avaliar atendimento concluído</p>
                 <div className="mb-3 flex flex-wrap gap-2">
                   {[1, 2, 3, 4, 5].map((rating) => (
                     <Button
@@ -384,7 +384,7 @@ export default function ProfessionalLeadTrackingPage() {
                   disabled={submitReviewMutation.isPending}
                   onClick={() => submitReviewMutation.mutate()}
                 >
-                  Enviar avaliacao
+                  Enviar avaliação
                 </Button>
               </div>
             )}
@@ -396,10 +396,10 @@ export default function ProfessionalLeadTrackingPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MessageSquare className="h-5 w-5" />
-            Conversa do orcamento
+            Conversa do orçamento
           </CardTitle>
           <CardDescription>
-            Mensagens ficam vinculadas ao pedido, nao a um contato publico solto.
+            Mensagens ficam vinculadas ao pedido, não a um contato público solto.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -411,7 +411,7 @@ export default function ProfessionalLeadTrackingPage() {
                 <div key={item.id} className="rounded-lg border p-3">
                   <div className="mb-1 flex items-center justify-between gap-2">
                     <Badge variant={item.sender_role === "professional" ? "default" : "secondary"}>
-                      {item.sender_role === "professional" ? "Profissional" : "Voce"}
+                      {item.sender_role === "professional" ? "Profissional" : "Você"}
                     </Badge>
                     <span className="text-xs text-muted-foreground">
                       {new Date(item.created_at).toLocaleString("pt-BR")}
@@ -424,7 +424,7 @@ export default function ProfessionalLeadTrackingPage() {
           ) : (
             <div className="rounded-xl border border-dashed p-6 text-center">
               <Clock3 className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
-              <p className="font-medium">Ainda nao ha mensagens</p>
+              <p className="font-medium">Ainda não há mensagens</p>
               <p className="mt-1 text-sm text-muted-foreground">
                 Quando o profissional responder, a conversa aparece aqui.
               </p>

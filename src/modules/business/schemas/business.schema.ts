@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Business schema facade.
  *
  * Mantem compatibilidade com imports historicos, mas a fonte unica de

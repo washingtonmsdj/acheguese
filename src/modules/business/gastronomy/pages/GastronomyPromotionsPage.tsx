@@ -21,7 +21,7 @@ export default function GastronomyPromotionsPage() {
       <div className="space-y-4">
         <Card>
           <CardContent className="py-10 text-sm text-muted-foreground">
-            Carregando promocoes...
+            Carregando promoções...
           </CardContent>
         </Card>
       </div>
@@ -35,16 +35,16 @@ export default function GastronomyPromotionsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Percent className="h-5 w-5" />
-              Promocoes
+              Promoções
             </CardTitle>
             <CardDescription>
-              A vertical continua no contexto da empresa, mas a liberacao vem do plano empresarial.
+              A vertical continua no contexto da empresa, mas a liberação vem do plano empresarial.
             </CardDescription>
           </CardHeader>
         </Card>
         <UpgradePromptInline
           businessId={businessId}
-          feature="Promocoes"
+          feature="Promoções"
           offerKey="catalog"
         />
       </div>
@@ -59,7 +59,7 @@ export default function GastronomyPromotionsPage() {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Percent className="h-5 w-5" />
-                Promocoes da gastronomia
+                Promoções da gastronomia
               </CardTitle>
               <CardDescription>
                 Ofertas ativas da empresa dentro da vertical Gastronomia.
@@ -68,17 +68,17 @@ export default function GastronomyPromotionsPage() {
             <Link to={businessManagementRoutes.gastronomyCardapio(businessId)}>
               <Button size="sm" className="gap-2">
                 <Plus className="h-4 w-4" />
-                Vincular ao cardapio
+                Vincular ao cardápio
               </Button>
             </Link>
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
           {loadingPromotions ? (
-            <p className="text-sm text-muted-foreground">Carregando promocoes...</p>
+            <p className="text-sm text-muted-foreground">Carregando promoções...</p>
           ) : promotions.length === 0 ? (
             <div className="rounded-md border border-dashed p-6 text-sm text-muted-foreground">
-              Nenhuma promocao ativa. Cadastre itens e ofertas a partir do cardapio.
+              Nenhuma promoção ativa. Cadastre itens e ofertas a partir do cardápio.
             </div>
           ) : (
             promotions.map((promotion) => (

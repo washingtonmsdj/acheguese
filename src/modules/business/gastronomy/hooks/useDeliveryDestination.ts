@@ -168,8 +168,8 @@ export function useDeliveryDestination(options: UseDeliveryDestinationOptions) {
         label:
           current?.label ||
           (userCoords.accuracy > 1000
-            ? 'Localizacao aproximada'
-            : 'Localizacao atual'),
+            ? 'Localização aproximada'
+            : 'Localização atual'),
         updatedAt: new Date().toISOString(),
       };
 
@@ -208,7 +208,7 @@ export function useDeliveryDestination(options: UseDeliveryDestinationOptions) {
     setDestinationErrorMessage(
       (current) =>
         current ??
-        'Permissao de localizacao negada. Informe um endereco para continuar com proximidade real.',
+        'Permissão de localização negada. Informe um endereço para continuar com proximidade real.',
     );
   }, [canUseGeolocation, distanceReferenceCoords, locationPermissionState]);
 
@@ -324,7 +324,7 @@ export function useDeliveryDestination(options: UseDeliveryDestinationOptions) {
   const handleSubmitAddressDestination = useCallback(async () => {
     const normalizedQuery = destinationAddressQuery.trim();
     if (normalizedQuery.length < 5) {
-      setDestinationErrorMessage('Informe um endereco mais completo para continuar.');
+      setDestinationErrorMessage('Informe um endereço mais completo para continuar.');
       return;
     }
 
@@ -356,7 +356,7 @@ export function useDeliveryDestination(options: UseDeliveryDestinationOptions) {
       const firstResult = results[0];
       if (!firstResult) {
         setDestinationErrorMessage(
-          'Nao encontramos esse endereco. Revise os dados e tente novamente.',
+          'Não encontramos esse endereço. Revise os dados e tente novamente.',
         );
         return;
       }
@@ -380,7 +380,7 @@ export function useDeliveryDestination(options: UseDeliveryDestinationOptions) {
       setDestinationAddressQuery(firstResult.displayAddress);
     } catch {
       setDestinationErrorMessage(
-        'Falha ao consultar endereco agora. Tente novamente em instantes.',
+        'Falha ao consultar endereço agora. Tente novamente em instantes.',
       );
     } finally {
       setIsResolvingDestinationAddress(false);
@@ -389,7 +389,7 @@ export function useDeliveryDestination(options: UseDeliveryDestinationOptions) {
 
   const handleUseSavedResidence = useCallback(async () => {
     if (!primaryResidence) {
-      setDestinationErrorMessage('Nenhum endereco residencial salvo para esta conta.');
+      setDestinationErrorMessage('Nenhum endereço residencial salvo para esta conta.');
       return;
     }
 
@@ -414,7 +414,7 @@ export function useDeliveryDestination(options: UseDeliveryDestinationOptions) {
       const fallbackQuery = rawAddressParts.join(', ').trim();
       if (!fallbackQuery) {
         setDestinationErrorMessage(
-          'Seu endereco salvo no perfil esta incompleto. Atualize CEP, rua, numero, bairro, cidade e estado.',
+          'Seu endereço salvo no perfil está incompleto. Atualize CEP, rua, número, bairro, cidade e estado.',
         );
         return;
       }
@@ -427,7 +427,7 @@ export function useDeliveryDestination(options: UseDeliveryDestinationOptions) {
         const first = geocode[0];
         if (!first) {
           setDestinationErrorMessage(
-            'Nao foi possivel localizar seu endereco salvo. Revise os dados do perfil.',
+            'Não foi possível localizar seu endereço salvo. Revise os dados do perfil.',
           );
           return;
         }
@@ -437,13 +437,13 @@ export function useDeliveryDestination(options: UseDeliveryDestinationOptions) {
         };
       } catch {
         setDestinationErrorMessage(
-          'Falha ao localizar o endereco salvo do perfil. Tente novamente.',
+          'Falha ao localizar o endereço salvo do perfil. Tente novamente.',
         );
         return;
       }
     }
 
-    const label = getResidenceReferenceLabel(primaryResidence) || 'Residencia principal';
+    const label = getResidenceReferenceLabel(primaryResidence) || 'Residência principal';
 
     setDestinationErrorMessage(null);
     const locationMetadata =

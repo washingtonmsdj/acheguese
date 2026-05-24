@@ -225,7 +225,7 @@ export function ExceptionsManager({ businessId }: ExceptionsManagerProps) {
             if (!open) setExceptionToDelete(null);
           }}
           title="Deletar excecao"
-          description="Esta excecao de horario sera removida e o dia voltara a seguir a configuracao padrao."
+          description="Esta exceção de horário será removida e o dia voltará a seguir a configuração padrão."
           confirmLabel="Deletar excecao"
           onConfirm={handleConfirmDelete}
         />

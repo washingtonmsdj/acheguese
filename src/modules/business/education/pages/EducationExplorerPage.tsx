@@ -1,11 +1,11 @@
-/**
+﻿/**
  * EducationExplorerPage
  *
  * Vitrine premium de descoberta educacional.
  * Design editorial/boutique com command-search, filtros multi-faceta,
  * comparador flutuante e cards de alta densidade informacional.
  *
- * Foco: descoberta, comparacao e conversao.
+ * Foco: descoberta, comparação e conversão.
  *
  * Rota: /educacao/:state/:city
  *       /educacao/:state/:city/:district
@@ -40,6 +40,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/sh
 import { cn } from '@/shared/utils/cn';
 import { useResolveTerritoryFromUrl } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
 import { usePublicBrowsingCity } from '@/core/location/hooks/usePublicBrowsingCity';
+import { LocationType } from '@/core/location/types';
 import { buildPublicAbsoluteUrl } from '@/shared/config/publicAppOrigin';
 
 import { useEducationList } from '../hooks/useEducationList';
@@ -114,7 +115,10 @@ export function EducationExplorerPage() {
       return;
     }
 
-    if (resolved?.kind === 'location' && resolved.location.type === 'district') {
+    if (
+      resolved?.kind === 'location' &&
+      (resolved.location.type === LocationType.NEIGHBORHOOD || resolved.location.type === LocationType.DISTRICT)
+    ) {
       const districtSlug = resolved.location.slug ?? groupSlugOrDistrict;
       if (districtSlug) {
         setFilters((prev) => ({ ...prev, district: districtSlug }));
@@ -122,7 +126,7 @@ export function EducationExplorerPage() {
       return;
     }
 
-    // URL de grupo territorial: nao aplicar filtro de bairro fixo
+    // URL de grupo territorial: não aplicar filtro de bairro fixo
     setFilters((prev) => ({ ...prev, district: null }));
   }, [district, groupSlugOrDistrict, resolved]);
 
@@ -158,7 +162,10 @@ export function EducationExplorerPage() {
 
   const territoryLabel = useMemo(() => {
     if (resolved?.kind === 'group') return resolved.group.name;
-    if (resolved?.kind === 'location' && resolved.location.type === 'district') {
+    if (
+      resolved?.kind === 'location' &&
+      (resolved.location.type === LocationType.NEIGHBORHOOD || resolved.location.type === LocationType.DISTRICT)
+    ) {
       return resolved.location.name;
     }
     if (groupSlugOrDistrict) return slugToLabel(groupSlugOrDistrict);
@@ -175,10 +182,10 @@ export function EducationExplorerPage() {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>Educacao em {territoryLabel} - Vitrine V3 | Acheguese</title>
+        <title>Educação em {territoryLabel} - Vitrine V3 | Acheguese</title>
         <meta
           name="description"
-          content={`Explore escolas, cursos, professores e instituicoes educacionais em ${territoryLabel} com filtros avancados, comparador e contato direto.`}
+          content={`Explore escolas, cursos, professores e instituições educacionais em ${territoryLabel} com filtros avançados, comparador e contato direto.`}
         />
         <link rel="canonical" href={buildPublicAbsoluteUrl(canonicalPath)} />
       </Helmet>
@@ -200,7 +207,7 @@ export function EducationExplorerPage() {
                 className="mb-4 inline-flex items-center gap-1.5 rounded-full border-primary/30 bg-primary/5 px-3 py-1 text-xs uppercase tracking-wide text-primary"
               >
                 <Sparkles className="h-3 w-3" />
-                Vitrine Educacional V3
+                Vitrine educacional V3
               </Badge>
               <h1 className="text-balance text-4xl font-bold tracking-tight text-foreground md:text-5xl lg:text-6xl">
                 Encontre a escola, curso ou professor ideal em{' '}
@@ -209,7 +216,7 @@ export function EducationExplorerPage() {
                 </span>
               </h1>
               <p className="mt-4 max-w-xl text-balance text-base text-muted-foreground md:text-lg">
-                Compare instituicoes, filtre por modalidade, bairro e preco e fale
+                Compare instituições, filtre por modalidade, bairro e preço e fale
                 diretamente por WhatsApp ou agende uma visita.
               </p>
 
@@ -221,7 +228,7 @@ export function EducationExplorerPage() {
                   onChange={(e) =>
                     setFilters((prev) => ({ ...prev, query: e.target.value }))
                   }
-                  placeholder="Buscar por curso, escola, professor ou servico..."
+                  placeholder="Buscar por curso, escola, professor ou serviço..."
                   className="border-0 bg-transparent shadow-none focus-visible:ring-0"
                 />
                 <Sheet open={filterSheetOpen} onOpenChange={setFilterSheetOpen}>
@@ -351,7 +358,7 @@ export function EducationExplorerPage() {
                 <Building2 className="h-4 w-4 text-muted-foreground" />
                 <strong className="text-foreground">{filtered.length}</strong>
                 <span className="text-muted-foreground">
-                  {filtered.length === 1 ? 'instituicao' : 'instituicoes'}
+                  {filtered.length === 1 ? 'instituição' : 'instituições'}
                 </span>
               </div>
             </div>
@@ -367,10 +374,10 @@ export function EducationExplorerPage() {
               <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-border bg-card/40 p-12 text-center">
                 <Shield className="h-10 w-10 text-rose-500" />
                 <h3 className="mt-4 text-lg font-semibold">
-                  Nao conseguimos carregar a vitrine
+                  não conseguimos carregar a vitrine
                 </h3>
                 <p className="mt-2 max-w-sm text-sm text-muted-foreground">
-                  Houve um erro ao consultar as instituicoes. Tente novamente em alguns
+                  Houve um erro ao consultar as instituições. Tente novamente em alguns
                   segundos.
                 </p>
                 <Button onClick={() => refetch()} className="mt-4 rounded-full">
@@ -395,7 +402,7 @@ export function EducationExplorerPage() {
                 <h3 className="mt-4 text-lg font-semibold">Nenhum resultado encontrado</h3>
                 <p className="mt-2 max-w-sm text-sm text-muted-foreground">
                   Tente remover alguns filtros ou buscar com outro termo. Estamos ampliando
-                  a base de instituicoes constantemente.
+                  a base de instituições constantemente.
                 </p>
                 <Button onClick={clearFilters} className="mt-4 rounded-full" variant="outline">
                   <X className="mr-2 h-4 w-4" />

@@ -1,5 +1,5 @@
 /**
- * MenuService - SSOT de cardapio com validacao de plano.
+ * MenuService - SSOT de cardápio com validação de plano.
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/core/infrastructure/supabase';
@@ -261,7 +261,7 @@ async function countMenuItemsWithImage(menuId: string): Promise<number> {
 
 function requirePlanContext(context: PlanContext | null): ServiceResult<true> {
   if (!context) {
-    return { data: null, error: 'Nao foi possivel validar o plano deste menu.' };
+    return { data: null, error: 'Não foi possível validar o plano deste menu.' };
   }
   return { data: true, error: null };
 }
@@ -298,7 +298,7 @@ export const MenuService = {
       if (contextCheck.error) return { data: null, error: contextCheck.error };
 
       if (!context!.entitlements.canUseMenuCategories) {
-        return { data: null, error: 'Seu plano nao permite categorias no cardapio.' };
+        return { data: null, error: 'Seu plano não permite categorias no cardápio.' };
       }
 
       if (context!.entitlements.maxCategories !== null) {
@@ -344,7 +344,7 @@ export const MenuService = {
       if (contextCheck.error) return { data: null, error: contextCheck.error };
 
       if (!context!.entitlements.canUseMenuCategories) {
-        return { data: null, error: 'Seu plano nao permite gerenciar categorias.' };
+        return { data: null, error: 'Seu plano não permite gerenciar categorias.' };
       }
 
       const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
@@ -379,7 +379,7 @@ export const MenuService = {
       if (contextCheck.error) return { data: null, error: contextCheck.error };
 
       if (!context!.entitlements.canUseMenuCategories) {
-        return { data: null, error: 'Seu plano nao permite gerenciar categorias.' };
+        return { data: null, error: 'Seu plano não permite gerenciar categorias.' };
       }
 
       const { error } = await db
@@ -407,7 +407,7 @@ export const MenuService = {
       if (contextCheck.error) return { data: null, error: contextCheck.error };
 
       if (!context!.entitlements.canUseMenuCategories) {
-        return { data: null, error: 'Seu plano nao permite reordenar categorias.' };
+        return { data: null, error: 'Seu plano não permite reordenar categorias.' };
       }
 
       for (const update of updates) {
@@ -435,7 +435,7 @@ export const MenuService = {
         return { data: [], error: null };
       }
 
-      let query = db
+      const query = db
     .from('menu_items')
         .select('*')
         .in('category_id', categoryIds);
@@ -503,7 +503,7 @@ export const MenuService = {
       }
 
       if (input.category_id && !context!.entitlements.canUseMenuCategories) {
-        return { data: null, error: 'Seu plano nao permite categorias no cardapio.' };
+        return { data: null, error: 'Seu plano não permite categorias no cardápio.' };
       }
 
       if (!input.category_id) {
@@ -511,7 +511,7 @@ export const MenuService = {
       }
 
       if (hasImageUrl(input.image_url) && !context!.entitlements.canUseMenuImages) {
-        return { data: null, error: 'Seu plano nao permite imagens nos itens.' };
+        return { data: null, error: 'Seu plano não permite imagens nos itens.' };
       }
 
       if (hasImageUrl(input.image_url) && context!.entitlements.maxImages !== null) {
@@ -563,7 +563,7 @@ export const MenuService = {
     try {
       const item = await resolveItem(itemId);
       if (!item) {
-        return { data: null, error: 'Item nao encontrado.' };
+        return { data: null, error: 'Item não encontrado.' };
       }
 
       const context = await getPlanContextByMenuId(item.menu_id);
@@ -571,12 +571,12 @@ export const MenuService = {
       if (contextCheck.error) return { data: null, error: contextCheck.error };
 
       if (input.category_id !== undefined && input.category_id !== null && !context!.entitlements.canUseMenuCategories) {
-        return { data: null, error: 'Seu plano nao permite categorias no cardapio.' };
+        return { data: null, error: 'Seu plano não permite categorias no cardápio.' };
       }
 
       if (input.image_url !== undefined) {
         if (hasImageUrl(input.image_url) && !context!.entitlements.canUseMenuImages) {
-          return { data: null, error: 'Seu plano nao permite imagens nos itens.' };
+          return { data: null, error: 'Seu plano não permite imagens nos itens.' };
         }
 
         const willHaveImage = hasImageUrl(input.image_url);
@@ -594,7 +594,7 @@ export const MenuService = {
       }
 
       if (input.is_available !== undefined && !context!.entitlements.canManageAvailability) {
-        return { data: null, error: 'Seu plano nao permite gerenciar disponibilidade.' };
+        return { data: null, error: 'Seu plano não permite gerenciar disponibilidade.' };
       }
 
       const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
@@ -684,7 +684,7 @@ export const MenuService = {
       if (contextCheck.error) return { data: null, error: contextCheck.error };
 
       if (!context!.entitlements.canUseMenuVariations) {
-        return { data: null, error: 'Seu plano nao permite variacoes de item.' };
+        return { data: null, error: 'Seu plano não permite variações de item.' };
       }
 
       const { data, error } = await db
@@ -761,7 +761,7 @@ export const MenuService = {
       if (contextCheck.error) return { data: null, error: contextCheck.error };
 
       if (!context!.entitlements.canUseMenuAddons) {
-        return { data: null, error: 'Seu plano nao permite adicionais.' };
+        return { data: null, error: 'Seu plano não permite adicionais.' };
       }
 
       const { data, error } = await db

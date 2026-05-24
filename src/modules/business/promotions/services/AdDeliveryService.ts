@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AdDeliveryService
  *
  * Ponto de entrada principal para entrega de anúncios.

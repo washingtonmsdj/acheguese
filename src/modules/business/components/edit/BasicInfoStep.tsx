@@ -1,4 +1,4 @@
-import { Building2, Upload, ArrowRight } from "lucide-react";
+import { ArrowRight, Building2, Upload } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -15,18 +15,8 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Label } from "@/shared/components/ui/label";
-
-const categories = [
-  "Alimentação",
-  "Beleza e Estética",
-  "Construção",
-  "Educação",
-  "Saúde",
-  "Serviços",
-  "Tecnologia",
-  "Varejo",
-  "Outros",
-];
+import { CATEGORY_CONFIGS } from "@/modules/business/config/categoryFilters";
+import { getBusinessCreateFieldCopy } from "@/modules/business/components/create/businessCreateCopy";
 
 interface BasicInfoStepProps {
   name: string;
@@ -57,22 +47,25 @@ export function BasicInfoStep({
   errors,
   onNext,
 }: BasicInfoStepProps) {
+  const categoryOptions = Object.values(CATEGORY_CONFIGS);
+  const copy = getBusinessCreateFieldCopy(category);
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Building2 className="h-5 w-5 text-primary" />
-          Informações Básicas
+          Identidade da empresa
         </CardTitle>
-        <CardDescription>Dados essenciais da sua empresa</CardDescription>
+        <CardDescription>Atualize os dados principais que aparecem no perfil público.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-2">
-          <Label>Logo da Empresa</Label>
+          <Label>Logo da empresa</Label>
           <div className="flex items-center gap-4">
-            <Avatar className="h-20 w-20">
+            <Avatar className="h-20 w-20 rounded-2xl">
               <AvatarImage src={logoPreview || undefined} />
-              <AvatarFallback>
+              <AvatarFallback className="rounded-2xl">
                 <Building2 className="h-10 w-10" />
               </AvatarFallback>
             </Avatar>
@@ -93,10 +86,10 @@ export function BasicInfoStep({
                 className="gap-2"
               >
                 <Upload className="h-4 w-4" />
-                {uploading ? "Enviando..." : logoPreview ? "Trocar Logo" : "Adicionar Logo"}
+                {uploading ? "Enviando..." : logoPreview ? "Trocar logo" : "Adicionar logo"}
               </Button>
-              <p className="text-xs text-muted-foreground mt-1">
-                Recomendado: 400x400px, máximo 5MB
+              <p className="mt-1 text-xs text-muted-foreground">
+                Recomendado: imagem quadrada, máximo 5 MB.
               </p>
             </div>
           </div>
@@ -104,13 +97,13 @@ export function BasicInfoStep({
 
         <div className="space-y-2">
           <Label htmlFor="name">
-            Nome da Empresa <span className="text-destructive">*</span>
+            Nome da empresa <span className="text-destructive">*</span>
           </Label>
           <Input
             id="name"
             value={name}
             onChange={(e) => onNameChange(e.target.value)}
-            placeholder="Ex: Padaria do João"
+            placeholder={copy.namePlaceholder}
             maxLength={100}
           />
           {errors.name && (
@@ -126,8 +119,8 @@ export function BasicInfoStep({
             id="description"
             value={description}
             onChange={(e) => onDescriptionChange(e.target.value)}
-            placeholder="Descreva sua empresa e o que você oferece..."
-            maxLength={500}
+            placeholder={copy.descriptionPlaceholder}
+            maxLength={1000}
             rows={4}
           />
           <div className="flex justify-between text-xs text-muted-foreground">
@@ -136,7 +129,7 @@ export function BasicInfoStep({
             ) : (
               <span>Mínimo 10 caracteres</span>
             )}
-            <span>{description.length}/500</span>
+            <span>{description.length}/1000</span>
           </div>
         </div>
 
@@ -148,12 +141,12 @@ export function BasicInfoStep({
             id="category"
             value={category}
             onChange={(e) => onCategoryChange(e.target.value)}
-            className="w-full px-3 py-2 border rounded-md bg-background"
+            className="w-full rounded-md border bg-background px-3 py-2"
           >
             <option value="">Selecione uma categoria</option>
-            {categories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
+            {categoryOptions.map((option) => (
+              <option key={option.slug} value={option.slug}>
+                {option.label}
               </option>
             ))}
           </select>
@@ -162,7 +155,7 @@ export function BasicInfoStep({
           )}
         </div>
 
-        <Button onClick={onNext} className="w-full gap-2">
+        <Button type="button" onClick={onNext} className="w-full gap-2">
           Próximo
           <ArrowRight className="h-4 w-4" />
         </Button>

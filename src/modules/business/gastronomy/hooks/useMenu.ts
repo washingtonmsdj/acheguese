@@ -1,7 +1,6 @@
 /**
  * Hook para cardápio completo
  *
- * @version 2.0.0 - Atualizado para GastronomyFacade
  */
 
 import { useQuery } from '@tanstack/react-query';

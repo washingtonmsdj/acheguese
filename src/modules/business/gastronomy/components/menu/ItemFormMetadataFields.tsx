@@ -14,7 +14,7 @@ export function DietaryFields({ form }: BaseSectionProps) {
     <div className="space-y-3 rounded-lg border p-4">
       <div>
         <p className="font-medium">Caracteristicas Dieteticas</p>
-        <p className="text-sm text-muted-foreground">Marque as opcoes que se aplicam ao item</p>
+        <p className="text-sm text-muted-foreground">Marque as opções que se aplicam ao item</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -124,7 +124,7 @@ export function MenuItemTextMetadataFields({ form }: BaseSectionProps) {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Tags (opcional)</FormLabel>
-            <FormControl><Input placeholder="promocao, mais vendido, novo" {...field} /></FormControl>
+            <FormControl><Input placeholder="promoção, mais vendido, novo" {...field} /></FormControl>
             <FormDescription>Separe por virgula</FormDescription>
             <FormMessage />
           </FormItem>
@@ -155,7 +155,7 @@ export function FeaturedField({ form }: BaseSectionProps) {
         <FormItem className="flex items-center justify-between rounded-lg border p-4">
           <div className="space-y-0.5">
             <FormLabel className="text-base">Item em Destaque</FormLabel>
-            <FormDescription>Itens em destaque aparecem no topo do cardapio</FormDescription>
+            <FormDescription>Itens em destaque aparecem no topo do cardápio</FormDescription>
           </div>
           <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
         </FormItem>

@@ -52,7 +52,7 @@ export function RelatedPointsBlock({
 function RelatedPointCard({ point, detailUrl }: { point: TouristPointDisplay; detailUrl: string }) {
   const coverUrl = point.media?.[0]?.url;
   const catLabel = CATEGORY_LABELS[point.category] ?? point.category;
-  const catIcon = CATEGORY_ICONS[point.category] ?? '📍';
+  const CategoryIcon = CATEGORY_ICONS[point.category] ?? MapPin;
 
   return (
     <Link
@@ -74,7 +74,7 @@ function RelatedPointCard({ point, detailUrl }: { point: TouristPointDisplay; de
           {point.title}
         </p>
         <div className="flex items-center gap-1.5 mt-1">
-          <span className="text-xs">{catIcon}</span>
+          <CategoryIcon className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
           <span className="text-xs text-muted-foreground">{catLabel}</span>
         </div>
         <div className="flex items-center gap-2 mt-1.5">

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * useMenuVariations - Hook para gerenciar variações de itens
  *
  * SSOT: Consome MenuService do modules/business/gastronomy

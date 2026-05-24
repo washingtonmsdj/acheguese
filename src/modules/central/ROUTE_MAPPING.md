@@ -25,7 +25,7 @@ Este documento substitui os mapas de transicao antigos. O sistema esta em desenv
 ## Verticais da empresa
 
 - Gastronomia: `/central/empresas/:businessId/gastronomia/*`.
-- Education: `/central/empresas/:businessId/education/*`.
+- Education: `/central/empresas/:businessId/educacao/*`.
 
 ## Mobilidade operacional
 

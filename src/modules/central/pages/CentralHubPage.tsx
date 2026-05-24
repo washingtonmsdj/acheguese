@@ -1,5 +1,6 @@
-﻿import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
+  ArrowUpRight,
   Bike,
   Building2,
   Car,
@@ -20,13 +21,13 @@ import { centralRoutes } from "@/modules/central/routes/centralRoutes";
 /**
  * CentralHubPage
  *
- * Pagina hub da Central (/central).
- * Mostra cards dinamicos baseados nas entidades do usuario:
+ * Página hub da Central (/central).
+ * Mostra cards dinâmicos baseados nas entidades do usuário:
  * - Minhas empresas
- * - Area profissional
+ * - Área profissional
  * - Motorista
  * - Motoboy/Entregas
- * - Administracao (se for admin)
+ * - Administração (se for admin)
  */
 export default function CentralHubPage() {
   const navigate = useNavigate();
@@ -58,14 +59,20 @@ export default function CentralHubPage() {
 
   return (
     <div className="container mx-auto max-w-6xl space-y-6 px-4 py-8">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Central</h1>
-        <p className="text-muted-foreground">Hub de gestao e operacao para empresas, profissionais e mobilidade.</p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold tracking-tight">Central</h1>
+          <p className="text-muted-foreground">Hub de gestão e operação para empresas, profissionais e mobilidade.</p>
+        </div>
+        <Button variant="outline" className="w-full sm:w-auto gap-2" onClick={() => navigate("/")}>
+          Ir para o site
+          <ArrowUpRight className="h-4 w-4" />
+        </Button>
       </div>
 
       {(hasBusinesses || hasProfessional || hasDriver || isAdmin) ? (
         <section className="space-y-4">
-          <h2 className="text-lg font-semibold">Suas areas de gestao</h2>
+          <h2 className="text-lg font-semibold">Suas áreas de gestão</h2>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {hasBusinesses ? (
               <Card className="rounded-lg border-primary/20 bg-primary/5">
@@ -74,7 +81,7 @@ export default function CentralHubPage() {
                     <Building2 className="h-5 w-5 text-primary" />
                     Minhas Empresas
                   </CardTitle>
-                  <CardDescription>Gerencie seus negocios, operacao e analytics.</CardDescription>
+                  <CardDescription>Gerencie seus negócios, operação e analytics.</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -92,9 +99,9 @@ export default function CentralHubPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <GraduationCap className="h-5 w-5 text-primary" />
-                    Area profissional
+                    Área profissional
                   </CardTitle>
-                  <CardDescription>Gerencie servicos, orcamentos, agenda e avaliacoes.</CardDescription>
+                  <CardDescription>Gerencie serviços, orçamentos, agenda e avaliações.</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Button
@@ -163,7 +170,7 @@ export default function CentralHubPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Shield className="h-5 w-5 text-primary" />
-                    Administracao
+                    Administração
                   </CardTitle>
                   <CardDescription>Acesso ao painel administrativo do sistema.</CardDescription>
                 </CardHeader>
@@ -188,7 +195,7 @@ export default function CentralHubPage() {
                   <Building2 className="h-5 w-5" />
                   Cadastre sua empresa
                 </CardTitle>
-                <CardDescription>Crie e gerencie seu negocio no Achegue-se.</CardDescription>
+                <CardDescription>Crie e gerencie seu negócio no Achegue-se.</CardDescription>
               </CardHeader>
               <CardContent>
                 <Button className="w-full" variant="outline" onClick={() => navigate(centralRoutes.empresas.create)}>
@@ -202,14 +209,14 @@ export default function CentralHubPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <User className="h-5 w-5" />
-                  Area profissional
+                  Área profissional
                 </CardTitle>
-                <CardDescription>Ofereca servicos e gerencie sua carreira profissional.</CardDescription>
+                <CardDescription>Ofereça serviços e gerencie sua carreira profissional.</CardDescription>
               </CardHeader>
               <CardContent>
                 <Button className="w-full" variant="outline" onClick={() => navigate(centralRoutes.servicos.create)}>
                   <Sparkles className="mr-2 h-4 w-4" />
-                  Cadastrar servico
+                  Cadastrar serviço
                 </Button>
               </CardContent>
             </Card>

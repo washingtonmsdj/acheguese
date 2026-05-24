@@ -1,4 +1,4 @@
-﻿import { ArrowRight, Building2, CheckCircle2, LayoutDashboard, MapPin, Store } from "lucide-react";
+import { ArrowRight, Building2, CheckCircle2, LayoutDashboard, MapPin, Store } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 

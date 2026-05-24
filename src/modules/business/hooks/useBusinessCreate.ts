@@ -1,4 +1,4 @@
-﻿/**
+/**
  * USE BUSINESS CREATE - Hook SSOT para criacao de empresas
  */
 

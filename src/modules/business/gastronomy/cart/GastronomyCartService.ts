@@ -99,7 +99,7 @@ export class GastronomyCartService {
     const { item } = input;
 
     if (!item.is_available) {
-      throw new Error("Nao e possivel adicionar um item indisponivel ao carrinho.");
+      throw new Error("Não é possível adicionar um item indisponível ao carrinho.");
     }
 
     const quantity = normalizeQuantity(input.quantity);

@@ -54,7 +54,7 @@ export class GastronomyCheckoutService {
 
         if (!neighborhood || !city || !state) {
           throw new Error(
-            "Destino de entrega incompleto. Informe bairro, cidade e estado para validar a area.",
+            "Destino de entrega incompleto. Informe bairro, cidade e estado para validar a área.",
           );
         }
 
@@ -69,14 +69,14 @@ export class GastronomyCheckoutService {
         if (eligibilityResult.error || !eligibilityResult.data) {
           throw new Error(
             eligibilityResult.error ||
-              "Nao foi possivel validar sua area de entrega no momento.",
+              "Não foi possível validar sua área de entrega no momento.",
           );
         }
 
         if (!eligibilityResult.data.is_eligible) {
           throw new Error(
             eligibilityResult.data.message ||
-              "Este endereco esta fora da area de entrega deste estabelecimento.",
+              "Este endereço está fora da área de entrega deste estabelecimento.",
           );
         }
       }

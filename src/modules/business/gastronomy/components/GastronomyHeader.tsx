@@ -14,9 +14,9 @@ interface GastronomyHeaderProps {
 
 const GASTRONOMY_TAGLINES = [
   (place: string) => `Sabores que fazem ${place} especial`,
-  (place: string) => `O melhor da culinÃ¡ria em ${place}`,
+  (place: string) => `O melhor da culinária em ${place}`,
   (place: string) => `Restaurantes, delivery e muito mais em ${place}`,
-  (place: string) => `De onde vocÃª estÃ¡ em ${place}, tem algo gostoso perto`,
+  (place: string) => `De onde você está em ${place}, tem algo gostoso perto`,
 ];
 
 export function GastronomyHeader({ searchQuery, onSearchChange }: GastronomyHeaderProps) {

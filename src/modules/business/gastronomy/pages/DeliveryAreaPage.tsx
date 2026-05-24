@@ -160,9 +160,9 @@ export default function DeliveryAreaPage() {
         onOpenChange={(open) => {
           if (!open) setAreaToDelete(null);
         }}
-        title="Deletar area de entrega"
-        description="Esta acao remove a area e todos os bairros vinculados. Evite remover coberturas usadas por pedidos em andamento."
-        confirmLabel="Deletar area"
+        title="Deletar área de entrega"
+        description="Esta ação remove a área e todos os bairros vinculados. Evite remover coberturas usadas por pedidos em andamento."
+        confirmLabel="Deletar área"
         onConfirm={handleConfirmDeleteArea}
       />
     </div>

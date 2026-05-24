@@ -34,6 +34,13 @@ import { Card } from '@/shared/components/ui/card';
 import { Separator } from '@/shared/components/ui/separator';
 import { MiniMap } from '@/shared/components/maps/MiniMap';
 import { normalizePublicTerritoryPath } from '@/core/routing/utils/territoryUrls';
+import {
+  buildGoogleMapsDirectionsUrl,
+  buildMailtoUrl,
+  buildTelUrl,
+  buildWhatsAppUrl,
+} from '@/shared/utils/contactLinks';
+import { openSafeExternalUrl, resolveSafeRedirectUrl } from '@/shared/utils/safeRedirect';
 import { GastronomyShareDialog } from './GastronomyShareDialog';
 import { useGastronomySimilar } from '../hooks/useGastronomySimilar';
 import { useGastronomyOpeningStatus } from '../hooks/useGastronomyOpeningStatus';
@@ -61,14 +68,41 @@ export function GastronomyContactSidebar({ business }: GastronomyContactSidebarP
   const latitude = business.address?.latitude;
   const longitude = business.address?.longitude;
   const hasCoords = typeof latitude === 'number' && typeof longitude === 'number';
+  const whatsappUrl = buildWhatsAppUrl(
+    business.whatsapp,
+    `Olá! Vi o ${business.name} no Achegue-se e gostaria de mais informações.`,
+  );
+  const phoneUrl = buildTelUrl(business.phone);
+  const instagramUrl = business.instagram
+    ? resolveSafeRedirectUrl(`https://instagram.com/${business.instagram.replace('@', '')}`, {
+        allowRelative: false,
+        allowAnyHttpOrigin: true,
+        context: "gastronomy-contact-instagram",
+      })
+    : null;
+  const facebookUrl = business.facebook
+    ? resolveSafeRedirectUrl(business.facebook, {
+        allowRelative: false,
+        allowAnyHttpOrigin: true,
+        context: "gastronomy-contact-facebook",
+      })
+    : null;
+  const websiteUrl = business.website
+    ? resolveSafeRedirectUrl(
+        business.website.startsWith('http') ? business.website : `https://${business.website}`,
+        {
+          allowRelative: false,
+          allowAnyHttpOrigin: true,
+          context: "gastronomy-contact-website",
+        },
+      )
+    : null;
 
   const handleNavigate = () => {
     if (hasCoords) {
-      const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent);
-      const url = isIos
-        ? `maps://maps.apple.com/?daddr=${latitude},${longitude}`
-        : `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
-      window.open(url, '_blank');
+      openSafeExternalUrl(buildGoogleMapsDirectionsUrl(latitude, longitude), {
+        context: "gastronomy-contact-route",
+      });
     }
   };
 
@@ -99,16 +133,14 @@ export function GastronomyContactSidebar({ business }: GastronomyContactSidebarP
         <Card className="p-4 border-2 shadow-md">
           <h3 className="font-bold text-base mb-4">Ações Rápidas</h3>
           <div className="grid grid-cols-2 gap-2">
-            {business.whatsapp && (
+            {whatsappUrl && (
               <Button
                 asChild
                 size="sm"
                 className="w-full justify-start bg-[#25D366] hover:bg-[#20BA5A] text-white"
               >
                 <a
-                  href={`https://wa.me/${business.whatsapp}?text=${encodeURIComponent(
-                    `Olá! Vi o ${business.name} no OrdaX e gostaria de mais informações.`,
-                  )}`}
+                  href={whatsappUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -117,9 +149,9 @@ export function GastronomyContactSidebar({ business }: GastronomyContactSidebarP
                 </a>
               </Button>
             )}
-            {business.phone && (
+            {phoneUrl && (
               <Button asChild size="sm" variant="outline" className="w-full justify-start">
-                <a href={`tel:${business.phone}`}>
+                <a href={phoneUrl}>
                   <Phone className="h-4 w-4 mr-2" />
                   Ligar
                 </a>
@@ -197,10 +229,10 @@ export function GastronomyContactSidebar({ business }: GastronomyContactSidebarP
               </div>
             </div>
 
-            {(business.phone || business.whatsapp || business.email) && <Separator />}
+            {(phoneUrl || whatsappUrl || business.email) && <Separator />}
 
             {/* Telefone */}
-            {business.phone && (
+            {phoneUrl && (
               <div className="flex items-start gap-3">
                 <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                   <Phone className="h-4 w-4 text-primary" />
@@ -208,7 +240,7 @@ export function GastronomyContactSidebar({ business }: GastronomyContactSidebarP
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium text-muted-foreground mb-1">Telefone</p>
                   <a
-                    href={`tel:${business.phone}`}
+                    href={phoneUrl}
                     className="text-sm font-semibold hover:text-primary transition-colors block truncate"
                   >
                     {business.phone}
@@ -218,7 +250,7 @@ export function GastronomyContactSidebar({ business }: GastronomyContactSidebarP
             )}
 
             {/* WhatsApp */}
-            {business.whatsapp && (
+            {whatsappUrl && (
               <div className="flex items-start gap-3">
                 <div className="h-9 w-9 rounded-lg bg-[#25D366]/10 flex items-center justify-center shrink-0">
                   <MessageCircle className="h-4 w-4 text-[#25D366]" />
@@ -226,7 +258,7 @@ export function GastronomyContactSidebar({ business }: GastronomyContactSidebarP
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium text-muted-foreground mb-1">WhatsApp</p>
                   <a
-                    href={`https://wa.me/${business.whatsapp}`}
+                    href={whatsappUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-sm font-semibold hover:text-[#25D366] transition-colors block truncate"
@@ -246,7 +278,7 @@ export function GastronomyContactSidebar({ business }: GastronomyContactSidebarP
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium text-muted-foreground mb-1">E-mail</p>
                   <a
-                    href={`mailto:${business.email}`}
+                    href={buildMailtoUrl(business.email) ?? undefined}
                     className="text-sm font-semibold hover:text-primary transition-colors block truncate"
                   >
                     {business.email}
@@ -256,7 +288,7 @@ export function GastronomyContactSidebar({ business }: GastronomyContactSidebarP
             )}
 
             {/* Instagram */}
-            {business.instagram && (
+            {instagramUrl && (
               <div className="flex items-start gap-3">
                 <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 flex items-center justify-center shrink-0">
                   <ExternalLink className="h-4 w-4 text-white" />
@@ -264,7 +296,7 @@ export function GastronomyContactSidebar({ business }: GastronomyContactSidebarP
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium text-muted-foreground mb-1">Instagram</p>
                   <a
-                    href={`https://instagram.com/${business.instagram.replace('@', '')}`}
+                    href={instagramUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-sm font-semibold hover:text-pink-600 transition-colors block truncate"
@@ -276,7 +308,7 @@ export function GastronomyContactSidebar({ business }: GastronomyContactSidebarP
             )}
 
             {/* Facebook */}
-            {business.facebook && (
+            {facebookUrl && (
               <div className="flex items-start gap-3">
                 <div className="h-9 w-9 rounded-lg bg-[#1877F2] flex items-center justify-center shrink-0">
                   <ExternalLink className="h-4 w-4 text-white" />
@@ -284,7 +316,7 @@ export function GastronomyContactSidebar({ business }: GastronomyContactSidebarP
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium text-muted-foreground mb-1">Facebook</p>
                   <a
-                    href={business.facebook}
+                    href={facebookUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-sm font-semibold hover:text-[#1877F2] transition-colors block truncate"
@@ -296,7 +328,7 @@ export function GastronomyContactSidebar({ business }: GastronomyContactSidebarP
             )}
 
             {/* Website */}
-            {business.website && (
+            {websiteUrl && (
               <div className="flex items-start gap-3">
                 <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                   <Globe className="h-4 w-4 text-primary" />
@@ -304,11 +336,7 @@ export function GastronomyContactSidebar({ business }: GastronomyContactSidebarP
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium text-muted-foreground mb-1">Website</p>
                   <a
-                    href={
-                      business.website.startsWith('http')
-                        ? business.website
-                        : `https://${business.website}`
-                    }
+                    href={websiteUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-sm font-semibold hover:text-primary transition-colors block truncate"

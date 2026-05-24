@@ -45,7 +45,7 @@ export function EmpresaHeroSection({
       ? "Aberto agora"
       : openStatus.open === false
         ? "Fechado"
-        : "Horario nao informado";
+        : "Horário não informado";
   const openStatusBadgeClass =
     openStatus.open === true
       ? "bg-emerald-500/90 text-white"
@@ -91,7 +91,7 @@ export function EmpresaHeroSection({
   const paymentHighlights = (() => {
     const values: string[] = [];
     if (business.aceita_pix) values.push('PIX');
-    if (business.aceita_cartao) values.push('Cartao');
+    if (business.aceita_cartao) values.push('Cartão');
 
     (business.formas_pagamento ?? []).forEach((item) => {
       const normalized = getPaymentMethodLabel(item.trim());

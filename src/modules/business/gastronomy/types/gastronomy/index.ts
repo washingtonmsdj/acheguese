@@ -1,4 +1,4 @@
-﻿import type { Business } from '@/core/business';
+import type { Business } from '@/core/business';
 import type { TerritoryFilter } from '@/core/location/types';
 import type { Json } from '@/core/infrastructure/supabase';
 import type { GastronomyProfileStatus } from '@/core/business/constants';
@@ -110,7 +110,6 @@ export interface GastronomyActivity {
   business_name: string;
   business_slug: string;
   action_label: string;
-  emoji: string;
   created_at: string;
   time_ago: string;
 }
@@ -122,4 +121,3 @@ export interface GastronomyActivityFilters {
 }
 
 export type { CuisineType } from '../../constants/cuisine';
-

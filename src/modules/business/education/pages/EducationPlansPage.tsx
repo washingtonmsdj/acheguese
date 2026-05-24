@@ -1,8 +1,8 @@
 /**
  * EducationPlansPage
  *
- * Pagina de planos e billing da instituicao.
- * Rota: /central/empresas/:businessId/education/planos
+ * Página de planos e billing da instituição.
+ * Rota: /central/empresas/:businessId/educacao/planos
  */
 
 import { useParams, useNavigate } from 'react-router-dom';
@@ -29,14 +29,14 @@ import { Skeleton } from '@/shared/components/ui/skeleton';
 import { useToast } from '@/shared/hooks/use-toast';
 import { logger } from '@/shared/utils/logger';
 import { BillingService } from '@/core/billing';
+import { useBillingPlans } from '@/core/billing/hooks/useBillingPlans';
 import { useEducationSubscription } from '../hooks/useEducationSubscription';
 
-const PLANS = [
+const EDUCATION_PLAN_TEMPLATES = [
   {
-    id: 'free',
+    billingCode: 'free',
     name: 'Gratuito',
     description: 'Para começar',
-    price: 0,
     features: {
       maxPrograms: 5,
       maxLeadsPerMonth: 50,
@@ -49,10 +49,9 @@ const PLANS = [
     },
   },
   {
-    id: 'basic',
+    billingCode: 'pro',
     name: 'Básico',
     description: 'Para instituições em crescimento',
-    price: 49,
     features: {
       maxPrograms: 20,
       maxLeadsPerMonth: 500,
@@ -65,10 +64,9 @@ const PLANS = [
     },
   },
   {
-    id: 'premium',
+    billingCode: 'delivery',
     name: 'Premium',
     description: 'Para instituições profissionais',
-    price: 99,
     popular: true,
     features: {
       maxPrograms: 50,
@@ -82,10 +80,9 @@ const PLANS = [
     },
   },
   {
-    id: 'enterprise',
+    billingCode: 'enterprise',
     name: 'Empresarial',
     description: 'Para redes de instituições',
-    price: 299,
     features: {
       maxPrograms: 999,
       maxLeadsPerMonth: 9999,
@@ -118,12 +115,27 @@ export function EducationPlansPage() {
     businessId: businessId!,
     enabled: Boolean(businessId),
   });
+  const { data: billingPlans = [], isLoading: billingPlansLoading } = useBillingPlans();
+
+  const planCards = EDUCATION_PLAN_TEMPLATES.map((template) => {
+    const billingPlan = billingPlans.find((plan) => plan.code === template.billingCode);
+    return {
+      ...template,
+      name: billingPlan?.name ?? template.name,
+      description: billingPlan?.description ?? template.description,
+      priceDisplay: billingPlan?.priceDisplay ?? 'Consultar',
+      billingPeriod: billingPlan?.billingPeriod ?? 'month',
+      popular: billingPlan?.isFeatured ?? template.popular,
+    };
+  });
+
+  const currentPlanCode = planType === 'free' ? 'free' : planType === 'premium' ? 'delivery' : 'pro';
 
   const handleUpgrade = async (planId: string) => {
     try {
       toast({
         title: 'Redirecionando...',
-        description: 'Voce sera redirecionado para a pagina de checkout.',
+        description: 'Você será redirecionado para a página de checkout.',
       });
 
       await BillingService.redirectToCheckout({
@@ -135,7 +147,7 @@ export function EducationPlansPage() {
       logger.error('[EducationPlansPage] Erro ao iniciar checkout', error);
       toast({
         title: 'Erro ao iniciar checkout',
-        description: 'Nao foi possivel abrir o checkout. Tente novamente.',
+        description: 'Não foi possível abrir o checkout. Tente novamente.',
         variant: 'destructive',
       });
     }
@@ -158,7 +170,7 @@ export function EducationPlansPage() {
     return value.toLocaleString('pt-BR');
   };
 
-  if (isLoading) {
+  if (isLoading || billingPlansLoading) {
     return (
       <div className="container mx-auto p-6">
         <Skeleton className="h-8 w-1/3 mb-6" />
@@ -171,7 +183,7 @@ export function EducationPlansPage() {
     );
   }
 
-  const currentPlan = PLANS.find((p) => p.id === planType) || PLANS[0];
+  const currentPlan = planCards.find((p) => p.billingCode === currentPlanCode) || planCards[0];
 
   return (
     <div className="container mx-auto p-6">
@@ -268,16 +280,16 @@ export function EducationPlansPage() {
       {/* Plans Grid */}
       <h2 className="text-lg font-semibold mb-4">Escolha seu Plano</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {PLANS.map((plan, index) => (
+        {planCards.map((plan, index) => (
           <motion.div
-            key={plan.id}
+            key={plan.billingCode}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
           >
             <Card
               className={`h-full flex flex-col ${
-                planType === plan.id
+                currentPlanCode === plan.billingCode
                   ? 'border-blue-500 ring-2 ring-blue-500/20'
                   : ''
               } ${plan.popular ? 'border-blue-300' : ''}`}
@@ -291,8 +303,8 @@ export function EducationPlansPage() {
                 <CardTitle className="text-lg">{plan.name}</CardTitle>
                 <p className="text-sm text-gray-500">{plan.description}</p>
                 <div className="mt-2">
-                  <span className="text-3xl font-bold">R$ {plan.price}</span>
-                  <span className="text-gray-500">/mês</span>
+                  <span className="text-3xl font-bold">{plan.priceDisplay}</span>
+                  {plan.priceDisplay !== 'Grátis' && <span className="text-gray-500">/mês</span>}
                 </div>
               </CardHeader>
               <CardContent className="flex-1 flex flex-col">
@@ -313,12 +325,12 @@ export function EducationPlansPage() {
                   })}
                 </ul>
                 <Button
-                  variant={planType === plan.id ? 'secondary' : 'default'}
+                  variant={currentPlanCode === plan.billingCode ? 'secondary' : 'default'}
                   className="w-full"
-                  disabled={planType === plan.id}
-                  onClick={() => handleUpgrade(plan.id)}
+                  disabled={currentPlanCode === plan.billingCode}
+                  onClick={() => handleUpgrade(plan.billingCode)}
                 >
-                  {planType === plan.id ? 'Plano Atual' : 'Escolher Plano'}
+                  {currentPlanCode === plan.billingCode ? 'Plano Atual' : 'Escolher Plano'}
                 </Button>
               </CardContent>
             </Card>
@@ -328,7 +340,7 @@ export function EducationPlansPage() {
 
       {/* FAQ */}
       <div className="mt-12">
-        <h2 className="text-lg font-semibold mb-4">Dúvidas Frequentes</h2>
+        <h2 className="text-lg font-semibold mb-4">Dúvidas frequentes</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card>
             <CardContent className="p-4">

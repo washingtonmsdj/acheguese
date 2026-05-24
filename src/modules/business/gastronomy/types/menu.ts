@@ -1,5 +1,5 @@
-﻿/**
- * Tipos do sistema de cardÃ¡pio
+/**
+ * Tipos do sistema de cardápio
  */
 
 import type { Json } from '@/core/infrastructure/supabase';
@@ -15,7 +15,7 @@ export interface Menu {
   description?: string;
   is_active: boolean;
   display_order: number;
-  available_days?: number[]; // 0=domingo, 6=sÃ¡bado
+  available_days?: number[]; // 0=domingo, 6=sábado
   available_start_time?: string;
   available_end_time?: string;
   created_at: string;
@@ -49,7 +49,7 @@ export interface MenuItem {
   base_price: number;
   image_url?: string;
   
-  // InformaÃ§Ãµes nutricionais e dietÃ©ticas
+  // Informações nutricionais e dietéticas
   preparation_time?: number;
   calories?: number;
   is_vegetarian: boolean;
@@ -59,7 +59,7 @@ export interface MenuItem {
   is_spicy: boolean;
   spicy_level?: number; // 1-5
   
-  // Ingredientes e alÃ©rgenos
+  // Ingredientes e alérgenos
   ingredients?: string[];
   allergens?: string[];
   
@@ -117,7 +117,7 @@ export interface MenuItemAddon {
 export interface MenuItemAvailability {
   id: string;
   item_id: string;
-  day_of_week: number; // 0=domingo, 6=sÃ¡bado
+  day_of_week: number; // 0=domingo, 6=sábado
   start_time: string;
   end_time: string;
   is_available: boolean;

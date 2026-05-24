@@ -2,7 +2,7 @@
  * useTouristPoints - Hook SSOT para pontos turísticos
  *
  * retry: false em todos os hooks de leitura — o serviço já trata erros
- * internamente e retorna mock como fallback. Não há motivo para retry.
+ * internamente e retorna lista vazia quando não houver dado real.
  */
 
 import { useQuery } from '@tanstack/react-query';

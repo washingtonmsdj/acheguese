@@ -344,8 +344,8 @@ const handleWhatsAppClick = useCallback(
   (e: React.MouseEvent) => {
     e.stopPropagation();
     if (hasWhatsApp) {
-      const cleanNumber = professional.whatsapp!.replace(/\D/g, '');
-      window.open(`https://wa.me/55${cleanNumber}`, '_blank');
+      const url = buildWhatsAppUrl(professional.whatsapp);
+      if (url) openSafeExternalUrl(url, { context: "service-card-whatsapp" });
     }
   },
   [hasWhatsApp, professional.whatsapp],

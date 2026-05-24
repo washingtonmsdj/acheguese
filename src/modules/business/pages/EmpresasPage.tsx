@@ -12,12 +12,13 @@ import { useSessionContext } from "@/core/session";
 import { useGeolocation } from "@/shared/hooks/useGeolocation";
 import { useBusinessList } from "@/modules/business/hooks/useBusinessList";
 import { useBusinessFavorites } from "@/modules/business/hooks/useBusinessFavorite";
-import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 
 import { BusinessFilters } from "@/modules/business/components/BusinessFilters";
 import { BusinessGrid } from "@/modules/business/components/BusinessGrid";
 import { TerritoryIndicator, useTerritoryLabels } from "@/core/location";
 import { calculateDistance, formatDistance } from "@/shared/utils/geolocation";
+import { buildGoogleMapsDirectionsUrl } from "@/shared/utils/contactLinks";
+import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
 import { toast } from "sonner";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 
@@ -50,7 +51,6 @@ CreateBusinessFAB.displayName = "CreateBusinessFAB";
  */
 export default function EmpresasPage({ resolved, activeMemberIds }: EmpresasPageProps) {
   const navigate = useNavigate();
-  const appUrls = useAppUrls();
   const { user, activeProfile } = useSessionContext();
   const geoState = useGeolocation();
   const territoryLabels = useTerritoryLabels(resolved);
@@ -101,14 +101,11 @@ export default function EmpresasPage({ resolved, activeMemberIds }: EmpresasPage
 
   const handleNavigate = useCallback(
     (lat: number, lng: number) => {
-      const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent);
-      if (isIos) {
-        window.open(`maps://maps.apple.com/?daddr=${lat},${lng}`, '_blank');
-      } else {
-        navigate(appUrls.map);
-      }
+      openSafeExternalUrl(buildGoogleMapsDirectionsUrl(lat, lng), {
+        context: "business-list-route",
+      });
     },
-    [navigate, appUrls.map],
+    [],
   );
 
   const handleCreateBusiness = useCallback(() => {

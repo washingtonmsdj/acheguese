@@ -256,7 +256,6 @@ const {
 
 Ver arquivos:
 - `USAGE_EXAMPLES.md` - Exemplos práticos de uso
-- `examples/AdminDashboardExample.tsx` - Exemplo completo de dashboard
 - `NICHE_EVOLUTION_GUIDE.md` - Guia completo de evolução
 
 ## Testes

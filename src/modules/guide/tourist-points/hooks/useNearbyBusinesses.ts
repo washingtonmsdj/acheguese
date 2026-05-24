@@ -10,9 +10,12 @@ import { useQuery } from '@tanstack/react-query';
 import { BusinessService } from '@/core/business/services/BusinessService';
 import { calculateDistance } from '@/shared/utils/geolocation';
 import type { Business } from '@/core/business/types/Business';
-import { TOURIST_POINT_NEARBY_LIMITS } from '../constants/nearby';
-
-const BUSINESS_CATEGORIES = ['restaurante', 'lazer', 'servicos'] as const;
+import {
+  TOURIST_POINT_GUIDE_CATEGORIES,
+  TOURIST_POINT_GUIDE_KEYWORDS,
+  TOURIST_POINT_NEARBY_BUSINESS_CATEGORIES,
+  TOURIST_POINT_NEARBY_LIMITS,
+} from '../constants/nearby';
 
 export interface NearbyBusiness extends Business {
   distanceMeters?: number;
@@ -48,7 +51,7 @@ function withDistance(
 
 async function fetchNearbyBusinesses(lat: number | null, lng: number | null) {
   const results = await Promise.all(
-    BUSINESS_CATEGORIES.map((cat) =>
+    TOURIST_POINT_NEARBY_BUSINESS_CATEGORIES.map((cat) =>
       BusinessService.getBusinesses({ category: cat, sortBy: 'rating' }),
     ),
   );
@@ -68,18 +71,18 @@ export function useNearbyBusinesses(lat: number | null, lng: number | null) {
 // ── Guias turísticos ──────────────────────────────────────────────────────────
 
 async function fetchNearbyGuides(lat: number | null, lng: number | null) {
-  const [lazer, servicos] = await Promise.all([
-    BusinessService.getBusinesses({ category: 'lazer', sortBy: 'rating' }),
-    BusinessService.getBusinesses({ category: 'servicos', sortBy: 'rating' }),
-  ]);
+  const results = await Promise.all(
+    TOURIST_POINT_GUIDE_CATEGORIES.map((category) =>
+      BusinessService.getBusinesses({ category, sortBy: 'rating' }),
+    ),
+  );
 
-  const GUIDE_KEYWORDS = ['guia', 'turismo', 'tour', 'excursão', 'passeio'];
-  const guides = [...lazer, ...servicos].filter((b) => {
+  const guides = results.flat().filter((b) => {
     const sub = (b.subcategoria ?? '').toLowerCase();
     const specs = (b.especialidades ?? []).join(' ').toLowerCase();
     const name = b.name.toLowerCase();
     const desc = (b.description ?? '').toLowerCase();
-    return GUIDE_KEYWORDS.some((kw) =>
+    return TOURIST_POINT_GUIDE_KEYWORDS.some((kw) =>
       sub.includes(kw) || specs.includes(kw) || name.includes(kw) || desc.includes(kw),
     );
   });

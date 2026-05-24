@@ -29,11 +29,14 @@ import {
   Navigation,
   Phone,
   MessageCircle,
+  Crown,
 } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { BusinessLogo } from "@/shared/components/ui/business-logo";
 import { cn } from "@/shared/utils/cn";
+import { buildWhatsAppUrl } from "@/shared/utils/contactLinks";
+import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 import type { Business } from "@/modules/business/types";
 
@@ -120,8 +123,8 @@ export const BusinessCard = memo(
         (e: React.MouseEvent) => {
           e.stopPropagation();
           if (business.whatsapp) {
-            const cleanNumber = business.whatsapp.replace(/\D/g, "");
-            window.open(`https://wa.me/${cleanNumber}`, "_blank");
+            const url = buildWhatsAppUrl(business.whatsapp);
+            if (url) openSafeExternalUrl(url, { context: "business-card-whatsapp" });
           }
         },
         [business.whatsapp],
@@ -188,8 +191,9 @@ export const BusinessCard = memo(
                 animate={{ opacity: 1, x: 0 }}
                 className="absolute top-3 left-3"
               >
-                <Badge className="bg-gradient-to-r from-amber-400 to-orange-500 text-white border-0 shadow-lg">
-                  ⭐ Premium
+                <Badge className="bg-gradient-to-r from-amber-400 to-orange-500 text-white border-0 shadow-lg gap-1">
+                  <Crown className="h-3 w-3" aria-hidden="true" />
+                  Premium
                 </Badge>
               </motion.div>
             )}

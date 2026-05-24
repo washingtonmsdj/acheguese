@@ -27,7 +27,7 @@ import { Textarea } from "@/shared/components/ui/textarea";
 import { IdentityChangeConfirmDialog } from "@/core/public-identity/components/IdentityChangeConfirmDialog";
 import { ProfessionalSlugSection } from "@/modules/professionals/services/components/identity/ProfessionalSlugSection";
 import { SERVICE_FORM_CATEGORY_OPTIONS } from "@/modules/professionals/services/domain/professionalCategories";
-import { SERVICE_AREA_OPTIONS } from "@/modules/professionals/services/domain/serviceAreaOptions";
+import type { ServiceAreaOption } from "@/modules/professionals/services/hooks/useServiceAreaOptions";
 import type { ProfessionalEditForm, ProfessionalEditTab } from "./EditarServicoPage.model";
 
 type UpdateField = (
@@ -208,7 +208,7 @@ export function EditarServicoInfoTab({
                 {SERVICE_FORM_CATEGORY_OPTIONS.map((category) => (
                   <SelectItem key={category.id} value={category.id}>
                     <span className="flex items-center gap-2">
-                      <span>{category.icone}</span>
+                      <category.icon className="h-4 w-4 text-muted-foreground" />
                       <span>{category.name}</span>
                     </span>
                   </SelectItem>
@@ -256,13 +256,22 @@ export function EditarServicoInfoTab({
 
 export function EditarServicoDetailsTab({
   form,
+  serviceAreaOptions,
+  loadingServiceAreaOptions,
   onFieldChange,
   onToggleServiceArea,
 }: {
   form: ProfessionalEditForm;
+  serviceAreaOptions: ServiceAreaOption[];
+  loadingServiceAreaOptions: boolean;
   onFieldChange: UpdateField;
   onToggleServiceArea: (area: string) => void;
 }) {
+  const displayOptions = [
+    ...serviceAreaOptions.map((area) => area.name),
+    ...form.serviceAreas.filter((area) => !serviceAreaOptions.some((option) => option.name === area)),
+  ];
+
   return (
     <div className="space-y-6">
       <Card className="border-border">
@@ -334,7 +343,17 @@ export function EditarServicoDetailsTab({
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
-            {SERVICE_AREA_OPTIONS.map((area) => {
+            {loadingServiceAreaOptions && (
+              <p className="text-sm text-muted-foreground">Carregando áreas de atendimento...</p>
+            )}
+
+            {!loadingServiceAreaOptions && displayOptions.length === 0 && (
+              <p className="text-sm text-muted-foreground">
+                Nenhuma área disponível para o território deste profissional. Cadastre bairros no admin territorial antes de atualizar a cobertura.
+              </p>
+            )}
+
+            {!loadingServiceAreaOptions && displayOptions.map((area) => {
               const selected = form.serviceAreas.includes(area);
 
               return (

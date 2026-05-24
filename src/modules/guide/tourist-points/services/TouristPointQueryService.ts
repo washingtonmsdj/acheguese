@@ -1,4 +1,4 @@
-﻿/**
+/**
  * TouristPointQueryService
  *
  * Canonical read owner for tourist_points.
@@ -70,11 +70,22 @@ export class TouristPointQueryService {
 
     if (!location) return [locationId];
 
-    if (location.type === 'district') {
+    if (location.type === 'district' || location.type === 'neighborhood') {
       return [locationId];
     }
 
     if (location.type === 'city') {
+      const { data: neighborhoods } = await supabase
+        .from('locations')
+        .select('id')
+        .eq('parent_id', locationId)
+        .eq('type', 'neighborhood')
+        .eq('status', 'active');
+
+      if (neighborhoods && neighborhoods.length > 0) {
+        return neighborhoods.map((neighborhood) => neighborhood.id);
+      }
+
       const { data: districts } = await supabase
         .from('locations')
         .select('id')

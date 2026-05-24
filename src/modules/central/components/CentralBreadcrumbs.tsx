@@ -7,14 +7,14 @@ import { Skeleton } from '@/shared/components/ui/skeleton';
 /**
  * CentralBreadcrumbs
  *
- * Breadcrumbs simples para navegacao da Central.
+ * Breadcrumbs simples para navegação da Central.
  *
  * Exemplos:
  * - Central > Empresas
  * - Central > Empresas > Nome da empresa
  * - Central > Empresas > Nome da empresa > Gastronomia
- * - Central > Empresas > Nome da empresa > Gastronomia > Cardapio
- * - Central > Empresas > Nome da empresa > Gastronomia > Horarios
+ * - Central > Empresas > Nome da empresa > Gastronomia > Cardápio
+ * - Central > Empresas > Nome da empresa > Gastronomia > Horários
  * - Central > Empresas > Nome da empresa > Gastronomia > Pedidos
  * - Central > Motorista > Ganhos
  * - Central > Motoboy > Entregas
@@ -24,11 +24,11 @@ export function CentralBreadcrumbs() {
   const { businessId } = useParams<{ businessId: string }>();
   const pathname = location.pathname;
 
-  // Buscar dados da empresa quando businessId esta presente
-  // Hook sempre chamado, mas so faz fetch quando businessId esta presente
+  // Buscar dados da empresa quando businessId está presente
+  // Hook sempre chamado, mas só faz fetch quando businessId está presente
   const { business, isLoading: loadingBusiness } = useBusinessById(businessId);
 
-  // Se nao estiver na Central, nao renderizar breadcrumbs
+  // Se não estiver na Central, não renderizar breadcrumbs
   if (!pathname.startsWith('/central')) {
     return null;
   }
@@ -36,12 +36,12 @@ export function CentralBreadcrumbs() {
   // Extrair segmentos do path
   const segments = pathname.split('/').filter(Boolean);
 
-  // Se for apenas /central, nao renderizar breadcrumbs
+  // Se for apenas /central, não renderizar breadcrumbs
   if (segments.length === 1) {
     return null;
   }
 
-  // Mapear segmentos para labels legiveis
+  // Mapear segmentos para labels legíveis
   const getSegmentLabel = (segment: string, index: number): string => {
     if (index === 0) return 'Central';
     if (segment === 'empresas') return 'Empresas';
@@ -53,19 +53,19 @@ export function CentralBreadcrumbs() {
     if (segment === 'corridas') return 'Corridas';
     if (segment === 'entregas') return 'Entregas';
     if (segment === 'ganhos') return 'Ganhos';
-    if (segment === 'configuracoes') return 'Configuracoes';
+    if (segment === 'configuracoes') return 'Configurações';
     if (segment === 'dados') return 'Dados da empresa';
     if (segment === 'gastronomia') return 'Gastronomia';
     if (segment === 'setup') return 'Setup';
-    if (segment === 'cardapio') return 'Cardapio';
-    if (segment === 'horarios') return 'Horarios';
-    if (segment === 'area-entrega') return 'Area de entrega';
+    if (segment === 'cardapio') return 'Cardápio';
+    if (segment === 'horarios') return 'Horários';
+    if (segment === 'area-entrega') return 'Área de entrega';
     if (segment === 'pedidos') return 'Pedidos';
-    if (segment === 'promocoes') return 'Promocoes';
+    if (segment === 'promocoes') return 'Promoções';
     if (segment === 'planos') return 'Planos';
     if (segment === 'link-premium') return 'Link premium';
     if (segment === 'analytics') return 'Analytics';
-    if (segment === 'educacao') return 'Educacao';
+    if (segment === 'educacao') return 'Educação';
     if (segment === 'programas') return 'Programas';
     if (segment === 'leads') return 'Leads';
     if (segment === 'eventos') return 'Eventos';

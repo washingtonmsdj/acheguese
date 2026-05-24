@@ -8,7 +8,7 @@ interface ProfessionalHeaderProps {
 }
 
 export function ProfessionalHeader({ professional }: ProfessionalHeaderProps) {
-  const categoryIcon = getServiceCategoryIcon(professional.category);
+  const CategoryIcon = getServiceCategoryIcon(professional.category);
 
   return (
     <div className="relative">
@@ -35,8 +35,8 @@ export function ProfessionalHeader({ professional }: ProfessionalHeaderProps) {
             className="h-24 w-24 rounded-2xl object-cover border-4 border-background shadow-lg mb-3"
           />
         ) : (
-          <div className="h-24 w-24 rounded-2xl bg-secondary border-4 border-background shadow-lg flex items-center justify-center text-4xl mb-3">
-            {categoryIcon}
+          <div className="h-24 w-24 rounded-2xl bg-secondary border-4 border-background shadow-lg flex items-center justify-center mb-3">
+            <CategoryIcon className="h-10 w-10 text-primary" />
           </div>
         )}
 

@@ -8,6 +8,8 @@ import { memo, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Award, BadgeCheck, Clock, MapPin, MessageCircle, Star } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
+import { buildWhatsAppUrl } from '@/shared/utils/contactLinks';
+import { openSafeExternalUrl } from '@/shared/utils/safeRedirect';
 import { getServiceCategoryIcon } from '@/modules/professionals/services/domain/professionalCategories';
 import type { ProfessionalItem } from '@/modules/professionals/services/hooks/useServicos';
 
@@ -27,7 +29,7 @@ export const ServiceCardEnhanced = memo<ServiceCardProps>(
     onProfessionalClick,
     className,
   }) => {
-    const categoryIcon = useMemo(
+    const CategoryIcon = useMemo(
       () => getServiceCategoryIcon(professional.category),
       [professional.category],
     );
@@ -44,8 +46,10 @@ export const ServiceCardEnhanced = memo<ServiceCardProps>(
       (e: React.MouseEvent) => {
         e.stopPropagation();
         if (hasWhatsApp) {
-          const cleanNumber = professional.whatsapp!.replace(/\D/g, '');
-          window.open(`https://wa.me/55${cleanNumber}`, '_blank');
+          const url = buildWhatsAppUrl(professional.whatsapp);
+          if (url) {
+            openSafeExternalUrl(url, { context: "service-card-whatsapp" });
+          }
         }
       },
       [hasWhatsApp, professional.whatsapp],
@@ -78,7 +82,7 @@ export const ServiceCardEnhanced = memo<ServiceCardProps>(
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10">
-              <span className="text-4xl">{categoryIcon}</span>
+              <CategoryIcon className="h-9 w-9 text-primary" />
             </div>
           )}
 

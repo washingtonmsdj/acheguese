@@ -29,11 +29,9 @@ import {
 import { TOURIST_POINT_STATUS_LABELS, PRICE_TYPE_LABELS } from '../tourist-points/types';
 import type { TouristPoint, TouristPointStatus } from '../tourist-points/types';
 
-// Locations de Salvador para filtro piloto
-const SALVADOR_LOCATION_IDS = [
-  // Serão preenchidos dinamicamente via LocationRepository em produção
-  // Por ora, o admin lista todos os pontos sem filtro de location
-];
+// Empty list means "all territories"; scoped filtering must come from the
+// location selector, not from a launch-city constant.
+const ADMIN_TOURIST_POINT_LOCATION_IDS: string[] = [];
 
 export default function AdminTouristPointsPage() {
   const { toast } = useToast();
@@ -43,7 +41,7 @@ export default function AdminTouristPointsPage() {
 
   // Para o admin, listamos com location_ids vazio = sem filtro territorial
   // Em produção, o admin pode selecionar o território
-  const { data: points = [], isLoading } = useAdminTouristPoints(SALVADOR_LOCATION_IDS);
+  const { data: points = [], isLoading } = useAdminTouristPoints(ADMIN_TOURIST_POINT_LOCATION_IDS);
 
   const deleteMutation = useDeleteTouristPoint();
   const statusMutation = useSetTouristPointStatus(user?.id);

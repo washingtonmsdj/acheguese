@@ -35,6 +35,8 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/shared/utils/cn";
 import { toast } from "sonner";
+import { buildTelUrl, buildWhatsAppUrl, openContactUrl } from "@/shared/utils/contactLinks";
+import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
 
 interface BookingButtonProps {
   businessId: string;
@@ -141,10 +143,8 @@ export default function BookingButton({
       `*Serviço:* ${formData.service || "[Escolher]"}\n` +
       `*Observações:* ${formData.observacoes || "Nenhuma"}`;
 
-    window.open(
-      `https://wa.me/${businessWhatsApp}?text=${encodeURIComponent(message)}`,
-      "_blank",
-    );
+    const url = buildWhatsAppUrl(businessWhatsApp, message);
+    if (url) openSafeExternalUrl(url, { context: "business-booking-whatsapp" });
   };
 
   return (
@@ -360,7 +360,10 @@ export default function BookingButton({
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={() => (window.location.href = `tel:${businessPhone}`)}
+                onClick={() => {
+                  const url = buildTelUrl(businessPhone);
+                  openContactUrl(url);
+                }}
                 className="text-sm"
               >
                 <Phone className="h-3 w-3 mr-1" />

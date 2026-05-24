@@ -19,6 +19,7 @@ import { ViewOnMapButton } from "@/core/maps/components/ViewOnMapButton";
 import { useBusinessNavigation } from "@/modules/business/hooks/useBusinessNavigation";
 import { BusinessService } from "@/core/business/services/BusinessService";
 import { logger } from "@/shared/utils/logger";
+import { buildMailtoUrl, buildTelUrl, buildWhatsAppUrl } from "@/shared/utils/contactLinks";
 import type { BizData } from "@/modules/business/types";
 
 interface SimilarBusiness {
@@ -108,7 +109,7 @@ export function BusinessContactSidebar({
                 className="w-full justify-start bg-[#25D366] hover:bg-[#20BA5A] text-white shadow-md hover:shadow-lg transition-all"
               >
                 <a
-                  href={`https://wa.me/${business.whatsapp}`}
+                  href={buildWhatsAppUrl(business.whatsapp) ?? undefined}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -124,7 +125,7 @@ export function BusinessContactSidebar({
                 variant="outline"
                 className="w-full justify-start hover:bg-secondary/80 transition-all"
               >
-                <a href={`tel:${business.phone}`}>
+                <a href={buildTelUrl(business.phone) ?? undefined}>
                   <Phone className="h-4 w-4 mr-2" />
                   <span className="truncate">Ligar</span>
                 </a>
@@ -236,7 +237,7 @@ export function BusinessContactSidebar({
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium text-muted-foreground mb-1">Telefone</p>
                   <a
-                    href={`tel:${business.phone}`}
+                    href={buildTelUrl(business.phone) ?? undefined}
                     className="text-sm font-semibold hover:text-primary transition-colors block truncate"
                   >
                     {business.phone}
@@ -254,7 +255,7 @@ export function BusinessContactSidebar({
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium text-muted-foreground mb-1">WhatsApp</p>
                   <a
-                    href={`https://wa.me/${business.whatsapp}`}
+                    href={buildWhatsAppUrl(business.whatsapp) ?? undefined}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-sm font-semibold hover:text-[#25D366] transition-colors block truncate"
@@ -278,7 +279,7 @@ export function BusinessContactSidebar({
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium text-muted-foreground mb-1">E-mail</p>
                   <a
-                    href={`mailto:${business.email}`}
+                    href={buildMailtoUrl(business.email) ?? undefined}
                     className="text-sm font-semibold hover:text-primary transition-colors block truncate"
                   >
                     {business.email}

@@ -36,9 +36,9 @@ export function EducationDetailErrorState({ onBack, onGoToShowcase }: EducationD
     <div className="min-h-screen bg-background">
       <div className="container mx-auto flex min-h-[60vh] flex-col items-center justify-center px-4 py-10 text-center">
         <Shield className="h-12 w-12 text-rose-500" />
-        <h1 className="mt-4 text-2xl font-bold">Nao conseguimos carregar esta pagina</h1>
+        <h1 className="mt-4 text-2xl font-bold">Não conseguimos carregar esta página</h1>
         <p className="mt-2 max-w-md text-muted-foreground">
-          Houve um erro ao buscar os detalhes desta instituicao. Tente novamente em instantes ou volte para a vitrine.
+          Houve um erro ao buscar os detalhes desta instituição. Tente novamente em instantes ou volte para a vitrine.
         </p>
         <div className="mt-6 flex gap-2">
           <Button variant="outline" onClick={onBack} className="rounded-full">
@@ -58,9 +58,9 @@ export function EducationDetailNotFoundState({ cityLabel, onGoToShowcase }: Educ
     <div className="min-h-screen bg-background">
       <div className="container mx-auto flex min-h-[60vh] flex-col items-center justify-center px-4 py-10 text-center">
         <Compass className="h-12 w-12 text-muted-foreground" />
-        <h1 className="mt-4 text-2xl font-bold">Instituicao nao encontrada</h1>
+        <h1 className="mt-4 text-2xl font-bold">Instituição não encontrada</h1>
         <p className="mt-2 max-w-md text-muted-foreground">
-          Nao localizamos a instituicao buscada. Volte para a vitrine para descobrir outras opcoes em {cityLabel}.
+          Não localizamos a instituição buscada. Volte para a vitrine para descobrir outras opções em {cityLabel}.
         </p>
         <Button onClick={onGoToShowcase} className="mt-6 rounded-full">
           Ver vitrine educacional

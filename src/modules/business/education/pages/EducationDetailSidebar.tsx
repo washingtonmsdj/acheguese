@@ -1,4 +1,4 @@
-﻿import { Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Calendar, Check, ChevronLeft, FileText, MessageCircle, Shield } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { EducationLeadForm, type LeadFormData } from '../components/EducationLeadForm';
@@ -28,7 +28,7 @@ export function EducationDetailSidebar({
       <div className="space-y-4">
         <div className="rounded-3xl border border-border bg-card p-5 shadow-sm">
           <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            Falar com a instituicao
+            Falar com a instituição
           </h3>
           <div className="mt-3 space-y-2">
             {whatsappHref && (
@@ -56,10 +56,10 @@ export function EducationDetailSidebar({
             <Button
               variant="outline"
               className="w-full rounded-full"
-              onClick={() => trackEnrollmentCTAClick('Solicitar orcamento')}
+              onClick={() => trackEnrollmentCTAClick('Solicitar orçamento')}
             >
               <FileText className="mr-2 h-4 w-4" />
-              Solicitar orcamento
+              Solicitar orçamento
             </Button>
           </div>
         </div>
@@ -81,10 +81,10 @@ export function EducationDetailSidebar({
               <Check className="mt-0.5 h-3.5 w-3.5 text-emerald-500" /> Perfil institucional publicado
             </li>
             <li className="flex items-start gap-2">
-              <Check className="mt-0.5 h-3.5 w-3.5 text-emerald-500" /> Comunicacao direta com a instituicao
+              <Check className="mt-0.5 h-3.5 w-3.5 text-emerald-500" /> Comunicação direta com a instituição
             </li>
             <li className="flex items-start gap-2">
-              <Check className="mt-0.5 h-3.5 w-3.5 text-emerald-500" /> Dados declarados e rastreaveis por fonte
+              <Check className="mt-0.5 h-3.5 w-3.5 text-emerald-500" /> Dados declarados e rastreáveis por fonte
             </li>
           </ul>
         </div>

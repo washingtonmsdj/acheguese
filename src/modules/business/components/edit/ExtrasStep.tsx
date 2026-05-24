@@ -1,4 +1,4 @@
-import { Building2, Upload, Save, Loader2 } from "lucide-react";
+import { Building2, Loader2, Save, Upload } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -11,11 +11,13 @@ import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { getPaymentMethodLabels } from "@/core/business/constants";
+import { getBusinessCreateFieldCopy } from "@/modules/business/components/create/businessCreateCopy";
 
-// SSOT: Usa constantes centralizadas de formas de pagamento
-const formasPagamento = getPaymentMethodLabels();
+// SSOT: usa constantes centralizadas de formas de pagamento.
+const FORMAS_PAGAMENTO = getPaymentMethodLabels();
 
 interface ExtrasStepProps {
+  category?: string;
   capaPreview: string | null;
   capaRef: React.RefObject<HTMLInputElement>;
   onCapaChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -38,6 +40,7 @@ interface ExtrasStepProps {
 }
 
 export function ExtrasStep({
+  category,
   capaPreview,
   capaRef,
   onCapaChange,
@@ -58,24 +61,26 @@ export function ExtrasStep({
   onBack,
   onSave,
 }: ExtrasStepProps) {
+  const copy = getBusinessCreateFieldCopy(category);
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Building2 className="h-5 w-5 text-primary" />
-          Informações Extras
+          Informações complementares
         </CardTitle>
-        <CardDescription>Complete o perfil da sua empresa</CardDescription>
+        <CardDescription>Finalize dados públicos e comerciais da sua empresa.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-2">
-          <Label>Imagem de Capa</Label>
+          <Label>Imagem de capa</Label>
           {capaPreview && (
-            <div className="relative h-32 rounded-lg overflow-hidden mb-2">
+            <div className="relative mb-2 h-32 overflow-hidden rounded-lg">
               <img
                 src={capaPreview}
                 alt="Capa"
-                className="w-full h-full object-cover"
+                className="h-full w-full object-cover"
               />
             </div>
           )}
@@ -95,57 +100,50 @@ export function ExtrasStep({
             className="gap-2"
           >
             <Upload className="h-4 w-4" />
-            {uploading ? "Enviando..." : capaPreview ? "Trocar Capa" : "Adicionar Capa"}
+            {uploading ? "Enviando..." : capaPreview ? "Trocar capa" : "Adicionar capa"}
           </Button>
           <p className="text-xs text-muted-foreground">
-            Recomendado: 1200x400px, máximo 5MB
+            Recomendado: 1200x400px, máximo 5 MB.
           </p>
         </div>
 
         <div className="space-y-4">
-          <Label>Redes Sociais</Label>
+          <Label>Canais digitais</Label>
           <Input
-            placeholder="Website (https://...)"
+            placeholder={copy.websitePlaceholder}
             value={website}
             onChange={(e) => onWebsiteChange(e.target.value)}
           />
           <Input
-            placeholder="Instagram (@user)"
+            placeholder={copy.instagramPlaceholder}
             value={instagram}
             onChange={(e) => onInstagramChange(e.target.value)}
           />
           <Input
-            placeholder="Facebook (facebook.com/...)"
+            placeholder={copy.facebookPlaceholder}
             value={facebook}
             onChange={(e) => onFacebookChange(e.target.value)}
           />
         </div>
 
         <div className="space-y-2">
-          <Label>Formas de Pagamento</Label>
-          <div className="grid grid-cols-2 gap-2">
-            {formasPagamento.map((forma) => (
-              <div key={forma} className="flex items-center space-x-2">
+          <Label>Formas de pagamento</Label>
+          <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+            {FORMAS_PAGAMENTO.map((forma) => (
+              <label key={forma} className="flex items-center space-x-2 rounded-lg border p-3">
                 <Checkbox
                   id={forma}
                   checked={selectedPagamentos.includes(forma)}
                   onCheckedChange={(checked) => {
                     if (checked) {
-                      onPagamentosChange([...selectedPagamentos, forma]);
+                      onPagamentosChange(Array.from(new Set([...selectedPagamentos, forma])));
                     } else {
-                      onPagamentosChange(
-                        selectedPagamentos.filter((f) => f !== forma),
-                      );
+                      onPagamentosChange(selectedPagamentos.filter((f) => f !== forma));
                     }
                   }}
                 />
-                <label
-                  htmlFor={forma}
-                  className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                >
-                  {forma}
-                </label>
-              </div>
+                <span className="text-sm leading-none">{forma}</span>
+              </label>
             ))}
           </div>
         </div>
@@ -156,7 +154,7 @@ export function ExtrasStep({
             id="especialidades"
             value={especialidades}
             onChange={(e) => onEspecialidadesChange(e.target.value)}
-            placeholder="Ex: Pizza, Massas, Sobremesas (separado por vírgula)"
+            placeholder={copy.specialtiesPlaceholder}
           />
         </div>
 
@@ -166,15 +164,15 @@ export function ExtrasStep({
             id="facilidades"
             value={facilidades}
             onChange={(e) => onFacilidadesChange(e.target.value)}
-            placeholder="Ex: Estacionamento, Wi-Fi, Acessibilidade (separado por vírgula)"
+            placeholder={copy.facilitiesPlaceholder}
           />
         </div>
 
         <div className="flex gap-3">
-          <Button variant="outline" onClick={onBack} className="flex-1">
+          <Button type="button" variant="outline" onClick={onBack} className="flex-1">
             Voltar
           </Button>
-          <Button onClick={onSave} disabled={saving} className="flex-1 gap-2">
+          <Button type="button" onClick={onSave} disabled={saving} className="flex-1 gap-2">
             {saving ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -183,7 +181,7 @@ export function ExtrasStep({
             ) : (
               <>
                 <Save className="h-4 w-4" />
-                Salvar Alterações
+                Salvar alterações
               </>
             )}
           </Button>

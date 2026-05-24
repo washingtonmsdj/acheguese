@@ -137,7 +137,7 @@ export function PizzaAdminPanel({ businessId, userId }: Props) {
 
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
-      toast.error("Nome e obrigatorio");
+      toast.error("Nome é obrigatório");
       return;
     }
 
@@ -251,7 +251,7 @@ export function PizzaAdminPanel({ businessId, userId }: Props) {
       <Card>
         <CardHeader>
           <CardTitle>Pizzaria</CardTitle>
-          <CardDescription>Configuracao do nicho completo de pizzaria</CardDescription>
+          <CardDescription>Configuração do nicho completo de pizzaria</CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-destructive">{error}</p>
@@ -265,7 +265,7 @@ export function PizzaAdminPanel({ businessId, userId }: Props) {
       <Card>
         <CardHeader>
           <CardTitle>Pizzaria</CardTitle>
-          <CardDescription>Carregando configuracoes...</CardDescription>
+          <CardDescription>Carregando configurações...</CardDescription>
         </CardHeader>
       </Card>
     );
@@ -278,7 +278,7 @@ export function PizzaAdminPanel({ businessId, userId }: Props) {
           <div>
             <CardTitle>Nicho Pizzaria</CardTitle>
             <CardDescription>
-              Configure tamanhos, sabores, limites, bordas, massas e regra de preco.
+              Configure tamanhos, sabores, limites, bordas, massas e regra de preço.
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
@@ -290,15 +290,15 @@ export function PizzaAdminPanel({ businessId, userId }: Props) {
         </CardHeader>
         <CardContent className="grid gap-3 md:grid-cols-2">
           <div className="rounded-lg border p-3">
-            <p className="text-sm font-medium">Regra de preco padrao</p>
+            <p className="text-sm font-medium">Regra de preço padrão</p>
             <p className="text-sm text-muted-foreground">{catalog.config.default_price_rule}</p>
           </div>
           <div className="rounded-lg border p-3">
             <p className="text-sm font-medium">Limites ativos</p>
             <p className="text-sm text-muted-foreground">
-              2 sabores: {catalog.config.allow_half_half ? "sim" : "nao"} · 3 sabores:{" "}
-              {catalog.config.allow_three_flavors ? "sim" : "nao"} · 4 sabores:{" "}
-              {catalog.config.allow_four_flavors ? "sim" : "nao"}
+              2 sabores: {catalog.config.allow_half_half ? "sim" : "não"} · 3 sabores:{" "}
+              {catalog.config.allow_three_flavors ? "sim" : "não"} · 4 sabores:{" "}
+              {catalog.config.allow_four_flavors ? "sim" : "não"}
             </p>
           </div>
         </CardContent>
@@ -308,7 +308,7 @@ export function PizzaAdminPanel({ businessId, userId }: Props) {
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle>Tamanhos</CardTitle>
-            <CardDescription>Broto, pequena, media, grande e familia com limite de sabores.</CardDescription>
+            <CardDescription>Broto, pequena, média, grande e família com limite de sabores.</CardDescription>
           </div>
           <Button size="sm" onClick={() => openDialog("size")}>Adicionar</Button>
         </CardHeader>
@@ -325,7 +325,7 @@ export function PizzaAdminPanel({ businessId, userId }: Props) {
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-sm text-muted-foreground">
-                    ate {size.max_flavors} sabor(es) · R$ {size.base_price.toFixed(2)}
+                    até {size.max_flavors} sabor(es) · R$ {size.base_price.toFixed(2)}
                   </span>
                   <Button variant="ghost" size="sm" onClick={() => openDialog("size", size)}>Editar</Button>
                 </div>
@@ -358,7 +358,7 @@ export function PizzaAdminPanel({ businessId, userId }: Props) {
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-sm text-muted-foreground">
-                    R$ {flavor.base_price.toFixed(2)} · {flavor.is_available ? "disponivel" : "indisponivel"}
+                    R$ {flavor.base_price.toFixed(2)} · {flavor.is_available ? "disponível" : "indisponível"}
                   </span>
                   <Button variant="ghost" size="sm" onClick={() => openDialog("flavor", flavor)}>Editar</Button>
                 </div>
@@ -452,7 +452,7 @@ export function PizzaAdminPanel({ businessId, userId }: Props) {
             </DialogTitle>
             <DialogDescription>
               {dialogType === "config"
-                ? "Configure as regras de preco e limites de sabores."
+                ? "Configure as regras de preço e limites de sabores."
                 : `Preencha os dados abaixo para ${editingItem ? "atualizar" : "criar"} o item.`}
             </DialogDescription>
           </DialogHeader>
@@ -460,17 +460,17 @@ export function PizzaAdminPanel({ businessId, userId }: Props) {
             {dialogType === "config" && (
               <>
                 <div className="space-y-2">
-                  <Label htmlFor="default_price_rule">Regra de preco padrao</Label>
+                  <Label htmlFor="default_price_rule">Regra de preço padrão</Label>
                   <select
                     id="default_price_rule"
                     value={configForm.default_price_rule}
                     onChange={(e) => setConfigForm({ ...configForm, default_price_rule: e.target.value as PizzaPriceRuleType })}
                     className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                   >
-                    <option value="highest_price">Maior preco (padrao)</option>
-                    <option value="average_price">Media simples</option>
-                    <option value="weighted_average">Media ponderada</option>
-                    <option value="fixed_base_plus_flavors">Preco base + sabores</option>
+                    <option value="highest_price">Maior preço (padrão)</option>
+                    <option value="average_price">Média simples</option>
+                    <option value="weighted_average">Média ponderada</option>
+                    <option value="fixed_base_plus_flavors">Preço base + sabores</option>
                   </select>
                 </div>
                 <div className="space-y-3 rounded-lg border p-4">
@@ -517,19 +517,19 @@ export function PizzaAdminPanel({ businessId, userId }: Props) {
 
             {(dialogType === "flavor" || dialogType === "edge" || dialogType === "dough") && (
               <div className="space-y-2">
-                <Label htmlFor="description">Descricao</Label>
+                <Label htmlFor="description">Descrição</Label>
                 <Input
                   id="description"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Ex: Molho de tomate, mussarela e manjericao"
+                  placeholder="Ex: molho de tomate, mussarela e manjericão"
                 />
               </div>
             )}
 
             {(dialogType === "size" || dialogType === "flavor") && (
               <div className="space-y-2">
-                <Label htmlFor="base_price">Preco base (R$)</Label>
+                <Label htmlFor="base_price">Preço base (R$)</Label>
                 <Input
                   id="base_price"
                   type="number"
@@ -544,7 +544,7 @@ export function PizzaAdminPanel({ businessId, userId }: Props) {
             {dialogType === "size" && (
               <>
                 <div className="space-y-2">
-                  <Label htmlFor="slug">Slug (identificador unico)</Label>
+                  <Label htmlFor="slug">Slug (identificador único)</Label>
                   <Input
                     id="slug"
                     value={formData.slug}
@@ -554,7 +554,7 @@ export function PizzaAdminPanel({ businessId, userId }: Props) {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="max_flavors">Maximo de sabores</Label>
+                    <Label htmlFor="max_flavors">Máximo de sabores</Label>
                     <Input
                       id="max_flavors"
                       type="number"
@@ -566,7 +566,7 @@ export function PizzaAdminPanel({ businessId, userId }: Props) {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="slices">Numero de fatias</Label>
+                    <Label htmlFor="slices">Número de fatias</Label>
                     <Input
                       id="slices"
                       type="number"
@@ -579,7 +579,7 @@ export function PizzaAdminPanel({ businessId, userId }: Props) {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="diameter_cm">Diametro (cm)</Label>
+                  <Label htmlFor="diameter_cm">Diâmetro (cm)</Label>
                   <Input
                     id="diameter_cm"
                     type="number"
@@ -596,21 +596,21 @@ export function PizzaAdminPanel({ businessId, userId }: Props) {
             {dialogType === "flavor" && (
               <>
                 <div className="space-y-2">
-                  <Label htmlFor="ingredients">Ingredientes (separados por virgula)</Label>
+                  <Label htmlFor="ingredients">Ingredientes (separados por vírgula)</Label>
                   <Input
                     id="ingredients"
                     value={formData.ingredients}
                     onChange={(e) => setFormData({ ...formData, ingredients: e.target.value })}
-                    placeholder="Ex: tomate, mussarela, manjericao"
+                    placeholder="Ex: tomate, mussarela, manjericão"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="allergens">Alergenos (separados por virgula)</Label>
+                  <Label htmlFor="allergens">Alérgenos (separados por vírgula)</Label>
                   <Input
                     id="allergens"
                     value={formData.allergens}
                     onChange={(e) => setFormData({ ...formData, allergens: e.target.value })}
-                    placeholder="Ex: lactose, gluten"
+                    placeholder="Ex: lactose, glúten"
                   />
                 </div>
               </>
@@ -618,7 +618,7 @@ export function PizzaAdminPanel({ businessId, userId }: Props) {
 
             {dialogType === "edge" && (
               <div className="space-y-2">
-                <Label htmlFor="price">Preco (R$)</Label>
+                <Label htmlFor="price">Preço (R$)</Label>
                 <Input
                   id="price"
                   type="number"
@@ -632,7 +632,7 @@ export function PizzaAdminPanel({ businessId, userId }: Props) {
 
             {dialogType === "dough" && (
               <div className="space-y-2">
-                <Label htmlFor="price_adjustment">Ajuste de preco (R$)</Label>
+                <Label htmlFor="price_adjustment">Ajuste de preço (R$)</Label>
                 <Input
                   id="price_adjustment"
                   type="number"
@@ -651,7 +651,7 @@ export function PizzaAdminPanel({ businessId, userId }: Props) {
                   checked={formData.is_available}
                   onCheckedChange={(checked) => setFormData({ ...formData, is_available: checked })}
                 />
-                <Label htmlFor="is_available">Disponivel</Label>
+                <Label htmlFor="is_available">Disponível</Label>
               </div>
             )}
           </div>

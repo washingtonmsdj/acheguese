@@ -5,7 +5,6 @@ import { PremiumBusinessSiteResolver } from "@/core/business/services/PremiumBus
 import { usePublicBusinessSnapshot, usePublicGastronomySnapshot } from "@/modules/business/public/hooks";
 import { PremiumBusinessShell } from "@/modules/business/premium/components/PremiumBusinessShell";
 import type { PremiumBusinessSiteContextValue } from "@/modules/business/premium/context/PremiumBusinessSiteContext";
-import { logger } from "@/shared/utils/logger";
 import type { PublicSlugRouteParams } from "@/modules/business/public/types";
 
 interface ResolutionState {
@@ -81,12 +80,6 @@ export default function PremiumBusinessSiteRoute() {
 
   if (!businessSnapshot) {
     return <Navigate to="/404" replace />;
-  }
-
-  if (businessSnapshot.routing.redirectToCanonical && import.meta.env.DEV) {
-    logger.warn(
-      `[PremiumBusinessSiteRoute] Snapshot retornou redirect canônico inesperado: ${businessSnapshot.routing.redirectToCanonical}`,
-    );
   }
 
   const routes = PremiumBusinessSiteResolver.buildRoutes(resolution.premiumSlug);

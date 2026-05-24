@@ -33,7 +33,7 @@ export default function PremiumBusinessCartPage() {
           <h1 className="text-2xl font-bold text-foreground">Carrinho</h1>
           <div className="flex gap-2">
             <Button asChild variant="outline">
-              <Link to={routes.menu}>Voltar ao cardapio</Link>
+              <Link to={routes.menu}>Voltar ao cardápio</Link>
             </Button>
             <Button asChild>
               <Link to={routes.checkout}>Ir para checkout</Link>
@@ -50,7 +50,7 @@ export default function PremiumBusinessCartPage() {
           <CardContent className="space-y-3">
             {!hasCart && (
               <div className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
-                Seu carrinho esta vazio.
+                Seu carrinho está vazio.
               </div>
             )}
 
@@ -89,7 +89,7 @@ export default function PremiumBusinessCartPage() {
                   </div>
                   {minimumOrderRemaining > 0 && (
                     <p className="mt-2 text-xs text-amber-700">
-                      Faltam {formatBrl(minimumOrderRemaining)} para o pedido minimo.
+                      Faltam {formatBrl(minimumOrderRemaining)} para o pedido mínimo.
                     </p>
                   )}
                 </div>

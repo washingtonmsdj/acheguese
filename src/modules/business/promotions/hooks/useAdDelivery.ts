@@ -1,4 +1,4 @@
-﻿/**
+/**
  * useAdDelivery
  *
  * Hook principal para entrega de anúncios.

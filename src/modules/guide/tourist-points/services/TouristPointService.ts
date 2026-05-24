@@ -8,19 +8,15 @@ import type {
   CreateTouristPointInput,
   UpdateTouristPointInput,
   TouristPointFilters,
+  TouristPointStatus,
 } from '../types';
+import { TouristPointStatus as TOURIST_POINT_STATUS } from '../types';
 
-const DB_STATUS = {
-  DRAFT: 'draft',
-  PUBLISHED: 'published',
-  ARCHIVED: 'archived',
-} as const;
-
-const DEFAULT_LEGACY_STATUS = 'active';
-const DEFAULT_TOURIST_POINT_ICON = '\u{1F4CD}';
+const DEFAULT_PUBLIC_STATUS = TOURIST_POINT_STATUS.PUBLISHED;
+const DEFAULT_CREATE_STATUS = TOURIST_POINT_STATUS.DRAFT;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-const SELECT_LEGACY = `
+const TOURIST_POINT_SELECT = `
   *,
   location_relation:locations!location_id(id, name, full_name, geographic_path, parent_id, type),
   address_relation:addresses!address_id(street, number, complement, postal_code, latitude, longitude),
@@ -46,18 +42,19 @@ function slugify(text: string): string {
     .replace(/(^-|-$)/g, '');
 }
 
-function normalizeDbStatus(status: unknown): string {
+function normalizeTouristPointStatus(
+  status: unknown,
+  fallback: TouristPointStatus = DEFAULT_PUBLIC_STATUS,
+): TouristPointStatus {
   const v = toText(status)?.toLowerCase();
-  if (v === 'inactive' || v === 'pending_review' || v === DB_STATUS.DRAFT) return DB_STATUS.DRAFT;
-  if (v === DB_STATUS.ARCHIVED) return DB_STATUS.ARCHIVED;
-  return DB_STATUS.PUBLISHED;
-}
-
-function mapDbStatusToLegacy(status: unknown): TouristPoint['status'] {
-  const v = toText(status)?.toLowerCase();
-  if (v === DB_STATUS.DRAFT) return 'inactive';
-  if (v === DB_STATUS.ARCHIVED) return 'archived';
-  return 'active';
+  if (
+    v === TOURIST_POINT_STATUS.DRAFT ||
+    v === TOURIST_POINT_STATUS.PUBLISHED ||
+    v === TOURIST_POINT_STATUS.ARCHIVED
+  ) {
+    return v;
+  }
+  return fallback;
 }
 
 function normalizeDbPriceType(priceType: unknown): string {
@@ -69,20 +66,12 @@ function normalizeDbPriceType(priceType: unknown): string {
   return 'free';
 }
 
-function mapDbPriceTypeToLegacy(priceType: unknown): TouristPoint['price_type'] {
-  const v = toText(priceType)?.toLowerCase();
-  if (v === 'free' || v === 'gratuito') return 'free';
-  if (v === 'range' || v === 'faixa') return 'range';
-  if (v === 'consult' || v === 'consultar') return 'consult';
-  return 'paid';
-}
-
 function firstOrNull<T>(v: T | T[] | null | undefined): T | null {
   if (Array.isArray(v)) return v[0] ?? null;
   return v ?? null;
 }
 
-function mapDbToLegacy(point: any): TouristPoint {
+function mapDbToTouristPoint(point: any): TouristPoint {
   const location = firstOrNull(point.location_relation);
   const address = firstOrNull(point.address_relation);
   const media = Array.isArray(point.media) ? point.media : [];
@@ -135,10 +124,9 @@ function mapDbToLegacy(point: any): TouristPoint {
     gallery_urls: Array.isArray(point.gallery_urls)
       ? point.gallery_urls
       : media.map((m) => m.url).filter(Boolean),
-    icon_emoji: toText(point.icon_emoji) ?? DEFAULT_TOURIST_POINT_ICON,
     visiting_hours: openingHours,
     entry_fee: toText(point.entry_fee) ?? toText(point.price_text),
-    price_type: mapDbPriceTypeToLegacy(point.price_type),
+    price_type: normalizeDbPriceType(point.price_type) as TouristPoint['price_type'],
     price_text: toText(point.price_text),
     website,
     phone: toText(point.phone),
@@ -152,7 +140,7 @@ function mapDbToLegacy(point: any): TouristPoint {
     display_order: Number(point.display_order ?? 0),
     rating: Number(point.rating ?? 0),
     total_reviews: Number(point.total_reviews ?? 0),
-    status: mapDbStatusToLegacy(point.status),
+    status: normalizeTouristPointStatus(point.status, DEFAULT_CREATE_STATUS),
     observations: toText(point.observations),
     nearby_point_ids: Array.isArray(point.nearby_point_ids) ? point.nearby_point_ids : [],
     created_by: point.created_by ?? null,
@@ -178,7 +166,7 @@ export class TouristPointService {
       .select('id, type')
       .eq('id', locationId)
       .eq('status', 'active')
-      .in('type', [LocationType.CITY, LocationType.DISTRICT])
+      .in('type', [LocationType.CITY, LocationType.DISTRICT, LocationType.NEIGHBORHOOD])
       .maybeSingle();
 
     if (error || !data) throw new Error(`location_id invalido: ${locationId}`);
@@ -206,7 +194,11 @@ export class TouristPointService {
       };
     }
 
-    if (location.type === LocationType.DISTRICT && location.parent_id) {
+    if (
+      (location.type === LocationType.DISTRICT ||
+        location.type === LocationType.NEIGHBORHOOD) &&
+      location.parent_id
+    ) {
       const { data: city } = await supabase
         .from('locations')
         .select('id, name, slug, parent_id')
@@ -241,11 +233,11 @@ export class TouristPointService {
 
   static async list(filters: TouristPointFilters = {}): Promise<TouristPoint[]> {
     try {
-      const dbStatus = normalizeDbStatus(filters.status ?? DEFAULT_LEGACY_STATUS);
+      const dbStatus = normalizeTouristPointStatus(filters.status ?? DEFAULT_PUBLIC_STATUS);
 
       let query = supabase
         .from('tourist_points')
-        .select(SELECT_LEGACY)
+        .select(TOURIST_POINT_SELECT)
         .eq('status', dbStatus)
         .order('display_order', { ascending: true })
         .order('is_featured', { ascending: false })
@@ -278,7 +270,7 @@ export class TouristPointService {
 
       const { data, error } = await query;
       if (error || !data || data.length === 0) return [];
-      return data.map(mapDbToLegacy);
+      return data.map(mapDbToTouristPoint);
     } catch (error) {
       logger.warn('TouristPointService.list failed', error);
       return [];
@@ -287,10 +279,10 @@ export class TouristPointService {
 
   static async getById(id: string): Promise<TouristPoint | null> {
     try {
-      const { data, error } = await supabase.from('tourist_points').select(SELECT_LEGACY).eq('id', id).maybeSingle();
+      const { data, error } = await supabase.from('tourist_points').select(TOURIST_POINT_SELECT).eq('id', id).maybeSingle();
       if (error) return null;
       if (!data) return null;
-      return mapDbToLegacy(data);
+      return mapDbToTouristPoint(data);
     } catch {
       return null;
     }
@@ -302,24 +294,24 @@ export class TouristPointService {
       if (resolution) {
         const { data } = await supabase
           .from('tourist_points')
-          .select(SELECT_LEGACY)
+          .select(TOURIST_POINT_SELECT)
           .eq('slug', slug)
-          .eq('status', DB_STATUS.PUBLISHED)
+          .eq('status', TOURIST_POINT_STATUS.PUBLISHED)
           .in('location_id', [resolution.cityId, ...resolution.districtIds])
           .maybeSingle();
-        if (data) return mapDbToLegacy(data);
+        if (data) return mapDbToTouristPoint(data);
       }
 
       const { data: fallback } = await supabase
         .from('tourist_points')
-        .select(SELECT_LEGACY)
+        .select(TOURIST_POINT_SELECT)
         .eq('state', state.toLowerCase())
         .eq('city', city.toLowerCase())
         .eq('slug', slug)
-        .eq('status', DB_STATUS.PUBLISHED)
+        .eq('status', TOURIST_POINT_STATUS.PUBLISHED)
         .maybeSingle();
 
-      if (fallback) return mapDbToLegacy(fallback);
+      if (fallback) return mapDbToTouristPoint(fallback);
       return null;
     } catch {
       return null;
@@ -332,9 +324,9 @@ export class TouristPointService {
     if (!uuidIds.length) return [];
 
     try {
-      const { data, error } = await supabase.from('tourist_points').select(SELECT_LEGACY).in('id', uuidIds);
+      const { data, error } = await supabase.from('tourist_points').select(TOURIST_POINT_SELECT).in('id', uuidIds);
       if (error || !data) return [];
-      return data.map(mapDbToLegacy);
+      return data.map(mapDbToTouristPoint);
     } catch {
       return [];
     }
@@ -355,7 +347,7 @@ export class TouristPointService {
     const baseSlug = toText(payload.slug) ?? slugify(name);
     const slug = await this.ensureUniqueSlug(locationId, baseSlug);
     const territory = await this.resolveStateAndCity(locationId);
-    const dbStatus = normalizeDbStatus(payload.status ?? (has(payload, 'title') ? DB_STATUS.DRAFT : DEFAULT_LEGACY_STATUS));
+    const dbStatus = normalizeTouristPointStatus(payload.status, DEFAULT_CREATE_STATUS);
     const dbPriceType = normalizeDbPriceType(payload.price_type ?? payload.entry_fee);
 
     const addressText = toText(payload.address_text) ?? toText(payload.address);
@@ -383,7 +375,6 @@ export class TouristPointService {
       longitude: payload.longitude ?? null,
       photo_url: toText(payload.photo_url),
       gallery_urls: Array.isArray(payload.gallery_urls) ? payload.gallery_urls : [],
-      icon_emoji: toText(payload.icon_emoji) ?? DEFAULT_TOURIST_POINT_ICON,
       opening_hours: openingHours,
       visiting_hours: openingHours,
       entry_fee: toText(payload.entry_fee) ?? toText(payload.price_text),
@@ -406,7 +397,7 @@ export class TouristPointService {
       status: dbStatus,
       observations: toText(payload.observations),
       nearby_point_ids: Array.isArray(payload.nearby_point_ids) ? payload.nearby_point_ids : [],
-      published_at: dbStatus === DB_STATUS.PUBLISHED ? new Date().toISOString() : null,
+      published_at: dbStatus === TOURIST_POINT_STATUS.PUBLISHED ? new Date().toISOString() : null,
       created_by: userId ?? null,
       updated_by: userId ?? null,
     };
@@ -414,10 +405,10 @@ export class TouristPointService {
     const { data, error } = await supabase
       .from('tourist_points')
       .insert(insertPayload as any)
-      .select(SELECT_LEGACY)
+      .select(TOURIST_POINT_SELECT)
       .single();
     if (error || !data) throw error ?? new Error('Falha ao criar ponto turistico');
-    return mapDbToLegacy(data);
+    return mapDbToTouristPoint(data);
   }
 
   static async update(
@@ -477,7 +468,6 @@ export class TouristPointService {
     if (has(payload, 'longitude')) patch.longitude = payload.longitude ?? null;
     if (has(payload, 'photo_url')) patch.photo_url = toText(payload.photo_url);
     if (has(payload, 'gallery_urls')) patch.gallery_urls = Array.isArray(payload.gallery_urls) ? payload.gallery_urls : [];
-    if (has(payload, 'icon_emoji')) patch.icon_emoji = toText(payload.icon_emoji) ?? DEFAULT_TOURIST_POINT_ICON;
 
     if (has(payload, 'opening_hours') || has(payload, 'visiting_hours')) {
       const openingHours = toText(payload.opening_hours) ?? toText(payload.visiting_hours);
@@ -512,18 +502,18 @@ export class TouristPointService {
     if (has(payload, 'nearby_point_ids')) patch.nearby_point_ids = Array.isArray(payload.nearby_point_ids) ? payload.nearby_point_ids : [];
 
     if (has(payload, 'status')) {
-      const status = normalizeDbStatus(payload.status);
+      const status = normalizeTouristPointStatus(payload.status);
       patch.status = status;
-      if (status === DB_STATUS.PUBLISHED && !existing.published_at) patch.published_at = new Date().toISOString();
+      if (status === TOURIST_POINT_STATUS.PUBLISHED && !existing.published_at) patch.published_at = new Date().toISOString();
     }
 
     let nextSlug = toText(payload.slug);
     if (!nextSlug && name) nextSlug = slugify(name);
     if (nextSlug) patch.slug = await this.ensureUniqueSlug(locationId, nextSlug, id);
 
-    const { data, error } = await (supabase as any).from('tourist_points').update(patch).eq('id', id).select(SELECT_LEGACY).single();
+    const { data, error } = await (supabase as any).from('tourist_points').update(patch).eq('id', id).select(TOURIST_POINT_SELECT).single();
     if (error || !data) throw error ?? new Error('Falha ao atualizar ponto turistico');
-    return mapDbToLegacy(data);
+    return mapDbToTouristPoint(data);
   }
 
   static async delete(id: string): Promise<void> {
@@ -548,19 +538,19 @@ export class TouristPointService {
   }
 
   static async setStatus(id: string, status: string, userId?: string): Promise<void> {
-    const dbStatus = normalizeDbStatus(status);
+    const dbStatus = normalizeTouristPointStatus(status);
     const patch: Record<string, unknown> = { status: dbStatus, updated_by: userId ?? null };
-    if (dbStatus === DB_STATUS.PUBLISHED) patch.published_at = new Date().toISOString();
+    if (dbStatus === TOURIST_POINT_STATUS.PUBLISHED) patch.published_at = new Date().toISOString();
     const { error } = await supabase.from('tourist_points').update(patch).eq('id', id);
     if (error) throw error;
   }
 
   static async publish(id: string, userId?: string): Promise<void> {
-    await this.setStatus(id, DB_STATUS.PUBLISHED, userId);
+    await this.setStatus(id, TOURIST_POINT_STATUS.PUBLISHED, userId);
   }
 
   static async archive(id: string, userId?: string): Promise<void> {
-    await this.setStatus(id, DB_STATUS.ARCHIVED, userId);
+    await this.setStatus(id, TOURIST_POINT_STATUS.ARCHIVED, userId);
   }
 
   static async countByCity(state: string, city: string): Promise<number> {
@@ -572,7 +562,7 @@ export class TouristPointService {
           .select('*', { count: 'exact', head: true })
           .eq('state', state.toLowerCase())
           .eq('city', city.toLowerCase())
-          .eq('status', DB_STATUS.PUBLISHED);
+          .eq('status', TOURIST_POINT_STATUS.PUBLISHED);
         if (error) return 0;
         return count ?? 0;
       }
@@ -582,7 +572,7 @@ export class TouristPointService {
         .from('tourist_points')
         .select('*', { count: 'exact', head: true })
         .in('location_id', resolution.districtIds)
-        .eq('status', DB_STATUS.PUBLISHED);
+        .eq('status', TOURIST_POINT_STATUS.PUBLISHED);
       if (error) return 0;
       return count ?? 0;
     } catch {
@@ -599,7 +589,7 @@ export class TouristPointService {
           .select('category')
           .eq('state', state.toLowerCase())
           .eq('city', city.toLowerCase())
-          .eq('status', DB_STATUS.PUBLISHED);
+          .eq('status', TOURIST_POINT_STATUS.PUBLISHED);
         if (error) return [];
         return [...new Set((data ?? []).map((d: any) => d.category).filter(Boolean))];
       }
@@ -609,7 +599,7 @@ export class TouristPointService {
         .from('tourist_points')
         .select('category')
         .in('location_id', resolution.districtIds)
-        .eq('status', DB_STATUS.PUBLISHED);
+        .eq('status', TOURIST_POINT_STATUS.PUBLISHED);
       if (error) return [];
       return [...new Set((data ?? []).map((d: any) => d.category).filter(Boolean))];
     } catch {

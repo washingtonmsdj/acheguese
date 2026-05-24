@@ -14,6 +14,7 @@ import { useSessionContext } from '@/core/session';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
+import { PLATFORM_BRAND } from '@/shared/config/brand';
 import { FavoriteBusinessCard } from '../components/FavoriteBusinessCard';
 import { useUserFavorites } from '../hooks/useFavorites';
 
@@ -36,7 +37,7 @@ export default function MyFavoritesPage() {
           <Heart className="mx-auto h-12 w-12 text-muted-foreground/30" />
           <h1 className="mt-4 text-xl font-semibold">Entre para ver seus favoritos</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Seus restaurantes salvos ficam disponiveis depois do login.
+            Seus restaurantes salvos ficam disponíveis depois do login.
           </p>
           <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
             <Button asChild>
@@ -94,7 +95,7 @@ export default function MyFavoritesPage() {
   return (
     <>
       <Helmet>
-        <title>Meus Favoritos | OrdaX</title>
+        <title>Meus Favoritos | {PLATFORM_BRAND.name}</title>
         <meta name="description" content="Seus restaurantes favoritos" />
       </Helmet>
 

@@ -348,7 +348,7 @@ export default function GastronomySetupPage({ businessId: propBusinessId }: { bu
             {([
               { field: 'accepts_payment_pix', label: 'Aceitar PIX' },
               { field: 'accepts_payment_cash', label: 'Aceitar dinheiro' },
-              { field: 'accepts_payment_card_on_delivery', label: 'Aceitar cartao na entrega/retirada' },
+              { field: 'accepts_payment_card_on_delivery', label: 'Aceitar cartão na entrega/retirada' },
               { field: 'accepts_payment_link', label: 'Aceitar link de pagamento' },
             ] as const).map(({ field, label }) => (
               <div key={field} className="flex items-center justify-between">
@@ -360,7 +360,7 @@ export default function GastronomySetupPage({ businessId: propBusinessId }: { bu
               </div>
             ))}
             <p className="text-xs text-muted-foreground">
-              Se sua empresa nao usa gateway/link, deixe essa opcao desmarcada.
+              Se sua empresa não usa gateway/link, deixe essa opção desmarcada.
             </p>
             {form.formState.errors.accepts_payment_pix?.message && (
               <p className="text-xs text-destructive">

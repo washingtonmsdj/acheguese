@@ -1,4 +1,4 @@
-﻿import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
@@ -15,9 +15,8 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { CommunicationTerritorialService } from "@/core/communication-territorial";
-import { nordesteAgents } from "@/modules/communication-territorial/mocks";
-import type { CommunicationDashboardView } from "@/modules/communication-territorial/types/communicationDashboard";
-import { communicationRoutes } from "@/modules/communication-territorial/routes/communicationRoutes";
+import type { CommunicationDashboardView } from "@/core/communication-territorial/types/communicationDashboard";
+import { communicationRoutes } from "@/core/communication-territorial/routes/communicationRoutes";
 import { centralRoutes } from "@/modules/central/routes/centralRoutes";
 
 type ManagedChannel = {
@@ -45,26 +44,11 @@ function getDashboardRoute(slug: string, view?: CommunicationDashboardView) {
 
 export default function CentralComunicacaoPage() {
   const navigate = useNavigate();
-  const canUseMockChannels = import.meta.env.DEV;
 
   const { data: channels, isLoading } = useQuery<ManagedChannel[]>({
     queryKey: ["central", "communication", "channels"],
     queryFn: async () => {
       const realChannels = await CommunicationTerritorialService.listManagedChannels();
-
-      if (canUseMockChannels && (!realChannels || realChannels.length === 0)) {
-        return nordesteAgents.map((agent) => ({
-          id: agent.id,
-          public_name: agent.name,
-          slug: agent.id,
-          verification_status: agent.verified ? "verified" : "pending",
-          reliability_score: agent.verified ? 95 : 70,
-          status: "active",
-          followers: agent.followers,
-          publications: 0,
-        }));
-      }
-
       return (realChannels ?? []) as ManagedChannel[];
     },
   });
@@ -72,9 +56,9 @@ export default function CentralComunicacaoPage() {
   return (
     <div className="container mx-auto max-w-7xl space-y-6 px-4 py-6 sm:space-y-8 sm:px-6 sm:py-8 lg:px-8">
       <header className="space-y-2 sm:space-y-3">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Comunicacao territorial</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Comunicação territorial</h1>
         <p className="text-sm text-muted-foreground sm:text-base lg:text-lg">
-          Gerencie seus canais de comunicacao territorial. Para publicar conteudo, acesse a pagina publica do canal.
+          Gerencie seus canais de comunicação territorial. Para publicar conteúdo, acesse a página pública do canal.
         </p>
       </header>
 
@@ -94,7 +78,7 @@ export default function CentralComunicacaoPage() {
               <div className="space-y-2 sm:space-y-3">
                 <h2 className="text-xl font-bold text-foreground sm:text-2xl">Nenhum canal encontrado</h2>
                 <p className="text-sm text-muted-foreground sm:text-base">
-                  Voce ainda nao gerencia nenhum canal de comunicacao territorial.
+                  Você ainda não gerencia nenhum canal de comunicação territorial.
                 </p>
               </div>
               <div className="flex flex-col justify-center gap-3 sm:flex-row">
@@ -102,7 +86,7 @@ export default function CentralComunicacaoPage() {
                   Solicitar novo canal
                 </Button>
                 <Button className="w-full sm:w-auto" variant="outline" onClick={() => navigate(communicationRoutes.home)}>
-                  Explorar comunicacao
+                  Explorar comunicação
                 </Button>
               </div>
             </div>
@@ -133,7 +117,7 @@ export default function CentralComunicacaoPage() {
                 <div className="grid grid-cols-2 gap-3 border-y py-3 sm:gap-4 sm:py-4">
                   <div className="space-y-1">
                     <p className="text-xl font-bold text-foreground sm:text-2xl">{channel.publications ?? 0}</p>
-                    <p className="text-xs text-muted-foreground">Publicacoes</p>
+                    <p className="text-xs text-muted-foreground">Publicações</p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-xl font-bold text-foreground sm:text-2xl">
@@ -155,7 +139,7 @@ export default function CentralComunicacaoPage() {
                     onClick={() => navigate(communicationRoutes.agent(channel.slug))}
                   >
                     <Eye className="h-4 w-4" />
-                    Ver pagina publica
+                    Ver página pública
                     <ExternalLink className="ml-auto h-3 w-3" />
                   </Button>
 
@@ -178,7 +162,7 @@ export default function CentralComunicacaoPage() {
                     onClick={() => navigate(getDashboardRoute(channel.slug, "publications"))}
                   >
                     <FileText className="h-3 w-3" />
-                    <span className="truncate">Publicacoes</span>
+                    <span className="truncate">Publicações</span>
                   </Button>
                   <Button
                     variant="ghost"
@@ -196,7 +180,7 @@ export default function CentralComunicacaoPage() {
                     onClick={() => navigate(getDashboardRoute(channel.slug, "territories"))}
                   >
                     <MapPin className="h-3 w-3" />
-                    <span className="truncate">Territorios</span>
+                    <span className="truncate">Territórios</span>
                   </Button>
                   <Button
                     variant="ghost"
@@ -219,20 +203,20 @@ export default function CentralComunicacaoPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <MessageSquare className="h-4 w-4 text-primary sm:h-5 sm:w-5" />
-              Como publicar conteudo?
+              Como publicar conteúdo?
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 sm:space-y-4">
             <p className="text-xs text-muted-foreground sm:text-sm">
-              Para criar e publicar conteudo, acesse a <strong>pagina publica do canal</strong>. La voce encontra um
+              Para criar e publicar conteúdo, acesse a <strong>página pública do canal</strong>. Lá você encontra um
               composer social-first, semelhante a Instagram e Facebook.
             </p>
             <div className="flex flex-wrap gap-2">
               <Badge variant="outline" className="text-xs">
-                Postagens rapidas
+                Postagens rápidas
               </Badge>
               <Badge variant="outline" className="text-xs">
-                Noticias
+                Notícias
               </Badge>
               <Badge variant="outline" className="text-xs">
                 Eventos
@@ -242,7 +226,7 @@ export default function CentralComunicacaoPage() {
               </Badge>
             </div>
             <p className="text-xs text-muted-foreground">
-              Use este painel da Central para gestao, analytics, configuracoes e moderacao.
+              Use este painel da Central para gestão, analytics, configurações e moderação.
             </p>
           </CardContent>
         </Card>
@@ -250,4 +234,3 @@ export default function CentralComunicacaoPage() {
     </div>
   );
 }
-

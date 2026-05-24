@@ -1,5 +1,5 @@
-﻿import { useEffect, useMemo, useState } from "react";
-import { Minus, Plus } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { AlertTriangle, Minus, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 import { Badge } from "@/shared/components/ui/badge";
@@ -141,7 +141,7 @@ export function MenuItemDetailDrawer({
         setPizzaCatalogError(
           error instanceof Error
             ? error.message
-            : "Nao foi possivel carregar configuracoes da pizzaria.",
+            : "Não foi possível carregar configurações da pizzaria.",
         );
       });
 
@@ -297,7 +297,7 @@ export function MenuItemDetailDrawer({
       onOpenChange(false);
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Nao foi possivel adicionar o item ao carrinho.";
+        error instanceof Error ? error.message : "Não foi possível adicionar o item ao carrinho.";
       toast.error(message);
     }
   };
@@ -317,7 +317,7 @@ export function MenuItemDetailDrawer({
       onOpenChange(false);
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Nao foi possivel adicionar a pizza ao carrinho.";
+        error instanceof Error ? error.message : "Não foi possível adicionar a pizza ao carrinho.";
       toast.error(message);
     }
   };
@@ -389,7 +389,7 @@ export function MenuItemDetailDrawer({
               )
             ) : (
               <div className="rounded-xl border p-4 text-sm text-muted-foreground">
-                {pizzaCatalogError ?? "Carregando configuracoes da pizzaria..."}
+                {pizzaCatalogError ?? "Carregando configurações da pizzaria..."}
               </div>
             ))}
 
@@ -397,14 +397,14 @@ export function MenuItemDetailDrawer({
             <>
               <div className="flex items-center justify-between rounded-xl border bg-muted/30 p-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">Preco base</p>
+                  <p className="text-sm text-muted-foreground">Preço base</p>
                   <p className="text-2xl font-bold text-primary">R$ {resolvedItem.base_price.toFixed(2)}</p>
                   {resolvedItem.calories && (
                     <p className="text-xs text-muted-foreground mt-1">{resolvedItem.calories} kcal</p>
                   )}
                 </div>
 
-                {!deliveryEnabled && <Badge variant="outline">Delivery indisponivel</Badge>}
+                {!deliveryEnabled && <Badge variant="outline">Delivery indisponível</Badge>}
               </div>
 
               {/* Ingredientes e Alérgenos */}
@@ -421,7 +421,10 @@ export function MenuItemDetailDrawer({
                   
                   {resolvedItem.allergens && resolvedItem.allergens.length > 0 && (
                     <div>
-                      <h4 className="text-sm font-semibold mb-2 text-amber-700">⚠️ Contém Alérgenos</h4>
+                      <h4 className="flex items-center gap-1.5 text-sm font-semibold mb-2 text-amber-700">
+                        <AlertTriangle className="h-4 w-4" aria-hidden="true" />
+                        Contém alérgenos
+                      </h4>
                       <p className="text-sm text-amber-600">
                         {resolvedItem.allergens.join(', ')}
                       </p>
@@ -542,7 +545,7 @@ export function MenuItemDetailDrawer({
               </section>
 
               <section className="space-y-3">
-                <h3 className="font-semibold">Observacoes (opcional)</h3>
+                <h3 className="font-semibold">Observações (opcional)</h3>
                 <Textarea
                   placeholder="Algo a destacar para a cozinha?"
                   value={specialInstructions}

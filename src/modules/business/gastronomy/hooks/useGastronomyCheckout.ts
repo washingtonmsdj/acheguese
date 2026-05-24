@@ -96,14 +96,14 @@ async function resolveDeliveryLocationInfo(deliveryAddress: DeliveryAddress): Pr
 
   if (!reverse) {
     throw new Error(
-      "Nao foi possivel validar o endereco de entrega. Informe um endereco mais completo.",
+      "Não foi possível validar o endereço de entrega. Informe um endereço mais completo.",
     );
   }
 
   const info = locationGeocodingService.extractLocationInfo(reverse);
   if (!info.neighborhood || !info.city || !info.state) {
     throw new Error(
-      "Endereco sem bairro, cidade e estado validos para calcular area de entrega.",
+      "Endereço sem bairro, cidade e estado válidos para calcular área de entrega.",
     );
   }
 
@@ -153,7 +153,7 @@ export function useGastronomyCheckout() {
       if (input.business.gastronomy_profile.delivery_enabled) {
         if (!input.deliveryAddress) {
           throw new Error(
-            "Defina um destino de entrega valido antes de concluir o pedido.",
+            "Defina um destino de entrega válido antes de concluir o pedido.",
           );
         }
 
@@ -172,14 +172,14 @@ export function useGastronomyCheckout() {
         if (eligibilityResult.error || !eligibilityResult.data) {
           throw new Error(
             eligibilityResult.error ||
-              "Nao foi possivel validar sua area de entrega no momento.",
+              "Não foi possível validar sua área de entrega no momento.",
           );
         }
 
         if (!eligibilityResult.data.is_eligible) {
           throw new Error(
             eligibilityResult.data.message ||
-              "Este endereco esta fora da area de entrega deste estabelecimento.",
+              "Este endereço está fora da área de entrega deste estabelecimento.",
           );
         }
       }
@@ -239,8 +239,8 @@ export function useGastronomyCheckout() {
             dropoff: { lat: input.deliveryAddress.lat, lng: input.deliveryAddress.lng },
           });
 
-          // Minimizacao de dados: o motoboy recebe somente informacoes operacionais
-          // necessarias para localizar o destino (sem observacoes gerais/pagamento).
+          // Minimização de dados: o motoboy recebe somente informações operacionais
+          // necessárias para localizar o destino (sem observações gerais/pagamento).
           const paymentContext = resolveDeliveryPaymentContext(input.payment_method);
           const orderSubtotal = Number.isFinite(input.cart.subtotal) ? input.cart.subtotal : 0;
           const orderDeliveryFee = Number.isFinite(input.cart.delivery_fee) ? input.cart.delivery_fee : 0;
@@ -252,7 +252,7 @@ export function useGastronomyCheckout() {
             `PEDIDO_SUBTOTAL: ${orderSubtotalLabel}`,
             `TAXA_ENTREGA_CLIENTE: ${orderDeliveryFeeLabel}`,
             `PEDIDO_TOTAL: ${orderTotalLabel}`,
-            `COBRAR_NA_ENTREGA: ${paymentContext.shouldCollectOnDelivery ? "sim" : "nao"}`,
+            `COBRAR_NA_ENTREGA: ${paymentContext.shouldCollectOnDelivery ? "sim" : "não"}`,
             `FORMA_PAGAMENTO: ${paymentContext.operationalLabel}`,
             input.deliveryAddress.postal_code
               ? `CEP ${input.deliveryAddress.postal_code}`
@@ -264,7 +264,7 @@ export function useGastronomyCheckout() {
               ? `Complemento: ${input.deliveryAddress.complement}`
               : null,
             input.deliveryAddress.reference
-              ? `Referencia: ${input.deliveryAddress.reference}`
+              ? `Referência: ${input.deliveryAddress.reference}`
               : null,
           ]
             .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
@@ -307,12 +307,12 @@ export function useGastronomyCheckout() {
 
             toast.success("Pedido criado! Buscando entregador...");
           } else {
-            logger.warn("[useGastronomyCheckout] Rastreamento nao disponivel", {
+            logger.warn("[useGastronomyCheckout] Rastreamento não disponível", {
               order_id: order.id,
               error: deliveryResult.error,
             });
 
-            toast.warning("Pedido criado, mas rastreamento nao disponivel no momento");
+            toast.warning("Pedido criado, mas rastreamento não disponível no momento");
           }
         } catch (deliveryError) {
           logger.error(
@@ -324,7 +324,7 @@ export function useGastronomyCheckout() {
             },
           );
 
-          toast.warning("Pedido criado, mas rastreamento nao disponivel no momento");
+          toast.warning("Pedido criado, mas rastreamento não disponível no momento");
         }
       }
 

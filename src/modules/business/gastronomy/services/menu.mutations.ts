@@ -1,9 +1,8 @@
 /**
- * ðŸ½ï¸ MENU MUTATIONS - SSOT Write Model para CardÃ¡pios
+ *  MENU MUTATIONS - SSOT Write Model para Cardpios
  *
- * Todas as operaÃ§Ãµes de escrita para menus, categorias e itens.
+ *  Todas as operações de escrita para menus, categorias e itens.
  *
- * @version 2.0.0 - ExtraÃ­do de MenuService
  */
 
 import { supabase } from '@/core/infrastructure/supabase';
@@ -30,9 +29,9 @@ import type {
   UpdateMenuPromotionInput,
 } from '../types';
 
-// ============================================================
-// TIPOS PARA RELAÃ‡Ã•ES ANINHADAS DO SUPABASE
-// ============================================================
+//  ============================================================
+//  TIPOS PARA RELAES ANINHADAS DO SUPABASE
+//  ============================================================
 
 interface ItemWithNestedBusinessId {
   menu_categories: {
@@ -41,9 +40,9 @@ interface ItemWithNestedBusinessId {
   };
 }
 
-// ============================================================
-// HELPERS DE EXTRAÃ‡ÃƒO DE BUSINESS_ID
-// ============================================================
+//  ============================================================
+//  HELPERS DE EXTRAO DE BUSINESS_ID
+//  ============================================================
 
 function extractBusinessIdFromCategory(data: unknown): string | null {
   const categoryData = data as ItemWithNestedBusinessId | undefined;
@@ -55,15 +54,15 @@ function extractBusinessIdFromItem(data: unknown): string | null {
   return itemData?.menu_items?.menu_categories?.menus?.business_id ?? null;
 }
 
-// ============================================================
-// MUTATIONS - MENUS
-// ============================================================
+//  ============================================================
+//  MUTATIONS - MENUS
+//  ============================================================
 
 /**
- * Criar menu
+ *  Criar menu
  */
 export async function createMenu(input: CreateMenuInput, userId: string): Promise<Menu> {
-  // Verificar ownership via BusinessOwnershipService (SSOT)
+  //  Verificar ownership via BusinessOwnershipService (SSOT)
   await BusinessOwnershipService.requireOwnership(input.business_id, userId);
 
   const { data, error } = await supabase
@@ -86,14 +85,14 @@ export async function createMenu(input: CreateMenuInput, userId: string): Promis
 }
 
 /**
- * Atualizar menu
+ *  Atualizar menu
  */
 export async function updateMenu(
   menuId: string,
   input: UpdateMenuInput,
   userId: string,
 ): Promise<Menu> {
-  // Buscar business_id do menu
+  //  Buscar business_id do menu
   const { data: menu } = await supabase
     .from('menus')
     .select('business_id')
@@ -101,10 +100,10 @@ export async function updateMenu(
     .single();
 
   if (!menu) {
-    throw new Error('Menu nao encontrado');
+    throw new Error('Menu não encontrado');
   }
 
-  // Verificar ownership via BusinessOwnershipService (SSOT)
+  //  Verificar ownership via BusinessOwnershipService (SSOT)
   await BusinessOwnershipService.requireOwnership(menu.business_id, userId);
 
   const { data, error } = await supabase
@@ -124,7 +123,7 @@ export async function updateMenu(
 }
 
 /**
- * Deletar menu (soft delete)
+ *  Deletar menu (soft delete)
  */
 export async function deleteMenu(menuId: string, userId: string): Promise<void> {
   const { data: menu } = await supabase
@@ -134,10 +133,10 @@ export async function deleteMenu(menuId: string, userId: string): Promise<void> 
     .single();
 
   if (!menu) {
-    throw new Error('Menu nao encontrado');
+    throw new Error('Menu não encontrado');
   }
 
-  // Verificar ownership via BusinessOwnershipService (SSOT)
+  //  Verificar ownership via BusinessOwnershipService (SSOT)
   await BusinessOwnershipService.requireOwnership(menu.business_id, userId);
 
   const { error } = await supabase
@@ -148,12 +147,12 @@ export async function deleteMenu(menuId: string, userId: string): Promise<void> 
   if (error) throw error;
 }
 
-// ============================================================
-// MUTATIONS - CATEGORIAS
-// ============================================================
+//  ============================================================
+//  MUTATIONS - CATEGORIAS
+//  ============================================================
 
 /**
- * Criar categoria
+ *  Criar categoria
  */
 export async function createCategory(
   input: CreateMenuCategoryInput,
@@ -166,10 +165,10 @@ export async function createCategory(
     .single();
 
   if (!menu) {
-    throw new Error('Menu nao encontrado');
+    throw new Error('Menu não encontrado');
   }
 
-  // Verificar ownership via BusinessOwnershipService (SSOT)
+  //  Verificar ownership via BusinessOwnershipService (SSOT)
   await BusinessOwnershipService.requireOwnership(menu.business_id, userId);
 
   const { data, error } = await supabase
@@ -189,7 +188,7 @@ export async function createCategory(
 }
 
 /**
- * Atualizar categoria
+ *  Atualizar categoria
  */
 export async function updateCategory(
   categoryId: string,
@@ -203,15 +202,15 @@ export async function updateCategory(
     .single();
 
   if (!category) {
-    throw new Error('Categoria nao encontrada');
+    throw new Error('Categoria não encontrada');
   }
 
   const businessId = extractBusinessIdFromCategory(category);
   if (!businessId) {
-    throw new Error('Nao foi possivel identificar o negocio proprietario da categoria');
+    throw new Error('Não foi possível identificar o negócio proprietário da categoria');
   }
 
-  // Verificar ownership via BusinessOwnershipService (SSOT)
+  //  Verificar ownership via BusinessOwnershipService (SSOT)
   await BusinessOwnershipService.requireOwnership(businessId, userId);
 
   const { data, error } = await supabase
@@ -230,7 +229,7 @@ export async function updateCategory(
 }
 
 /**
- * Deletar categoria (soft delete)
+ *  Deletar categoria (soft delete)
  */
 export async function deleteCategory(categoryId: string, userId: string): Promise<void> {
   const { data: category } = await supabase
@@ -240,15 +239,15 @@ export async function deleteCategory(categoryId: string, userId: string): Promis
     .single();
 
   if (!category) {
-    throw new Error('Categoria nao encontrada');
+    throw new Error('Categoria não encontrada');
   }
 
   const businessId = extractBusinessIdFromCategory(category);
   if (!businessId) {
-    throw new Error('Nao foi possivel identificar o negocio proprietario da categoria');
+    throw new Error('Não foi possível identificar o negócio proprietário da categoria');
   }
 
-  // Verificar ownership via BusinessOwnershipService (SSOT)
+  //  Verificar ownership via BusinessOwnershipService (SSOT)
   await BusinessOwnershipService.requireOwnership(businessId, userId);
 
   const { error } = await supabase
@@ -259,12 +258,12 @@ export async function deleteCategory(categoryId: string, userId: string): Promis
   if (error) throw error;
 }
 
-// ============================================================
-// MUTATIONS - ITENS
-// ============================================================
+//  ============================================================
+//  MUTATIONS - ITENS
+//  ============================================================
 
 /**
- * Criar item
+ *  Criar item
  */
 export async function createItem(input: CreateMenuItemInput, userId: string): Promise<MenuItem> {
   const { data: category } = await supabase
@@ -274,15 +273,15 @@ export async function createItem(input: CreateMenuItemInput, userId: string): Pr
     .single();
 
   if (!category) {
-    throw new Error('Categoria nao encontrada');
+    throw new Error('Categoria não encontrada');
   }
 
   const businessId = extractBusinessIdFromCategory(category);
   if (!businessId) {
-    throw new Error('Nao foi possivel identificar o negocio proprietario da categoria');
+    throw new Error('Não foi possível identificar o negócio proprietário da categoria');
   }
 
-  // Verificar ownership via BusinessOwnershipService (SSOT)
+  //  Verificar ownership via BusinessOwnershipService (SSOT)
   await BusinessOwnershipService.requireOwnership(businessId, userId);
 
   const { data, error } = await supabase
@@ -316,7 +315,7 @@ export async function createItem(input: CreateMenuItemInput, userId: string): Pr
 }
 
 /**
- * Atualizar item
+ *  Atualizar item
  */
 export async function updateItem(
   itemId: string,
@@ -330,15 +329,15 @@ export async function updateItem(
     .single();
 
   if (!item) {
-    throw new Error('Item nao encontrado');
+    throw new Error('Item não encontrado');
   }
 
   const businessId = extractBusinessIdFromItem(item);
   if (!businessId) {
-    throw new Error('Nao foi possivel identificar o negocio proprietario do item');
+    throw new Error('Não foi possível identificar o negócio proprietário do item');
   }
 
-  // Verificar ownership via BusinessOwnershipService (SSOT)
+  //  Verificar ownership via BusinessOwnershipService (SSOT)
   await BusinessOwnershipService.requireOwnership(businessId, userId);
 
   const { data, error } = await supabase
@@ -357,7 +356,7 @@ export async function updateItem(
 }
 
 /**
- * Deletar item (soft delete)
+ *  Deletar item (soft delete)
  */
 export async function deleteItem(itemId: string, userId: string): Promise<void> {
   const { data: item } = await supabase
@@ -367,15 +366,15 @@ export async function deleteItem(itemId: string, userId: string): Promise<void> 
     .single();
 
   if (!item) {
-    throw new Error('Item nao encontrado');
+    throw new Error('Item não encontrado');
   }
 
   const businessId = extractBusinessIdFromItem(item);
   if (!businessId) {
-    throw new Error('Nao foi possivel identificar o negocio proprietario do item');
+    throw new Error('Não foi possível identificar o negócio proprietário do item');
   }
 
-  // Verificar ownership via BusinessOwnershipService (SSOT)
+  //  Verificar ownership via BusinessOwnershipService (SSOT)
   await BusinessOwnershipService.requireOwnership(businessId, userId);
 
   const { error } = await supabase
@@ -386,12 +385,12 @@ export async function deleteItem(itemId: string, userId: string): Promise<void> 
   if (error) throw error;
 }
 
-// ============================================================
-// MUTATIONS - VARIANTES
-// ============================================================
+//  ============================================================
+//  MUTATIONS - VARIANTES
+//  ============================================================
 
 /**
- * Criar variante
+ *  Criar variante
  */
 export async function createVariant(
   input: CreateMenuItemVariantInput,
@@ -404,15 +403,15 @@ export async function createVariant(
     .single();
 
   if (!item) {
-    throw new Error('Item nao encontrado');
+    throw new Error('Item não encontrado');
   }
 
   const businessId = extractBusinessIdFromItem(item);
   if (!businessId) {
-    throw new Error('Nao foi possivel identificar o negocio proprietario do item');
+    throw new Error('Não foi possível identificar o negócio proprietário do item');
   }
 
-  // Verificar ownership via BusinessOwnershipService (SSOT)
+  //  Verificar ownership via BusinessOwnershipService (SSOT)
   await BusinessOwnershipService.requireOwnership(businessId, userId);
 
   const { data, error } = await supabase
@@ -432,7 +431,7 @@ export async function createVariant(
 }
 
 /**
- * Atualizar variante
+ *  Atualizar variante
  */
 export async function updateVariant(
   variantId: string,
@@ -446,15 +445,15 @@ export async function updateVariant(
     .single();
 
   if (!variant) {
-    throw new Error('Variante nao encontrada');
+    throw new Error('Variante não encontrada');
   }
 
   const businessId = extractBusinessIdFromItem(variant);
   if (!businessId) {
-    throw new Error('Nao foi possivel identificar o negocio proprietario da variante');
+    throw new Error('Não foi possível identificar o negócio proprietário da variante');
   }
 
-  // Verificar ownership via BusinessOwnershipService (SSOT)
+  //  Verificar ownership via BusinessOwnershipService (SSOT)
   await BusinessOwnershipService.requireOwnership(businessId, userId);
 
   const { data, error } = await supabase
@@ -473,7 +472,7 @@ export async function updateVariant(
 }
 
 /**
- * Deletar variante
+ *  Deletar variante
  */
 export async function deleteVariant(variantId: string, userId: string): Promise<void> {
   const { data: variant } = await supabase
@@ -483,15 +482,15 @@ export async function deleteVariant(variantId: string, userId: string): Promise<
     .single();
 
   if (!variant) {
-    throw new Error('Variante nao encontrada');
+    throw new Error('Variante não encontrada');
   }
 
   const businessId = extractBusinessIdFromItem(variant);
   if (!businessId) {
-    throw new Error('Nao foi possivel identificar o negocio proprietario da variante');
+    throw new Error('Não foi possível identificar o negócio proprietário da variante');
   }
 
-  // Verificar ownership via BusinessOwnershipService (SSOT)
+  //  Verificar ownership via BusinessOwnershipService (SSOT)
   await BusinessOwnershipService.requireOwnership(businessId, userId);
 
   const { error } = await supabase.from('menu_item_variants').delete().eq('id', variantId);
@@ -499,12 +498,12 @@ export async function deleteVariant(variantId: string, userId: string): Promise<
   if (error) throw error;
 }
 
-// ============================================================
-// MUTATIONS - ADICIONAIS
-// ============================================================
+//  ============================================================
+//  MUTATIONS - ADICIONAIS
+//  ============================================================
 
 /**
- * Criar adicional
+ *  Criar adicional
  */
 export async function createAddon(
   input: CreateMenuItemAddonInput,
@@ -517,15 +516,15 @@ export async function createAddon(
     .single();
 
   if (!item) {
-    throw new Error('Item nao encontrado');
+    throw new Error('Item não encontrado');
   }
 
   const businessId = extractBusinessIdFromItem(item);
   if (!businessId) {
-    throw new Error('Nao foi possivel identificar o negocio proprietario do item');
+    throw new Error('Não foi possível identificar o negócio proprietário do item');
   }
 
-  // Verificar ownership via BusinessOwnershipService (SSOT)
+  //  Verificar ownership via BusinessOwnershipService (SSOT)
   await BusinessOwnershipService.requireOwnership(businessId, userId);
 
   const { data, error } = await supabase
@@ -545,7 +544,7 @@ export async function createAddon(
 }
 
 /**
- * Atualizar adicional
+ *  Atualizar adicional
  */
 export async function updateAddon(
   addonId: string,
@@ -559,15 +558,15 @@ export async function updateAddon(
     .single();
 
   if (!addon) {
-    throw new Error('Adicional nao encontrado');
+    throw new Error('Adicional não encontrado');
   }
 
   const businessId = extractBusinessIdFromItem(addon);
   if (!businessId) {
-    throw new Error('Nao foi possivel identificar o negocio proprietario do adicional');
+    throw new Error('Não foi possível identificar o negócio proprietário do adicional');
   }
 
-  // Verificar ownership via BusinessOwnershipService (SSOT)
+  //  Verificar ownership via BusinessOwnershipService (SSOT)
   await BusinessOwnershipService.requireOwnership(businessId, userId);
 
   const { data, error } = await supabase
@@ -586,7 +585,7 @@ export async function updateAddon(
 }
 
 /**
- * Deletar adicional
+ *  Deletar adicional
  */
 export async function deleteAddon(addonId: string, userId: string): Promise<void> {
   const { data: addon } = await supabase
@@ -596,15 +595,15 @@ export async function deleteAddon(addonId: string, userId: string): Promise<void
     .single();
 
   if (!addon) {
-    throw new Error('Adicional nao encontrado');
+    throw new Error('Adicional não encontrado');
   }
 
   const businessId = extractBusinessIdFromItem(addon);
   if (!businessId) {
-    throw new Error('Nao foi possivel identificar o negocio proprietario do adicional');
+    throw new Error('Não foi possível identificar o negócio proprietário do adicional');
   }
 
-  // Verificar ownership via BusinessOwnershipService (SSOT)
+  //  Verificar ownership via BusinessOwnershipService (SSOT)
   await BusinessOwnershipService.requireOwnership(businessId, userId);
 
   const { error } = await supabase.from('menu_item_addons').delete().eq('id', addonId);
@@ -612,18 +611,18 @@ export async function deleteAddon(addonId: string, userId: string): Promise<void
   if (error) throw error;
 }
 
-// ============================================================
-// MUTATIONS - PROMOÃ‡Ã•ES
-// ============================================================
+//  ============================================================
+//  MUTATIONS - PROMOES
+//  ============================================================
 
 /**
- * Criar promoÃ§Ã£o
+ *  Criar promoo
  */
 export async function createPromotion(
   input: CreateMenuPromotionInput,
   userId: string,
 ): Promise<MenuPromotion> {
-  // Verificar ownership via BusinessOwnershipService (SSOT)
+  //  Verificar ownership via BusinessOwnershipService (SSOT)
   await BusinessOwnershipService.requireOwnership(input.business_id, userId);
 
   const { data, error } = await supabase
@@ -648,14 +647,14 @@ export async function createPromotion(
 }
 
 /**
- * Atualizar promoÃ§Ã£o
+ *  Atualizar promoo
  */
 export async function updatePromotion(
   promotionId: string,
   input: UpdateMenuPromotionInput,
   userId: string,
 ): Promise<MenuPromotion> {
-  // menu_promotions.business_id Ã© a FK direta â€” sem join necessÃ¡rio
+  //  menu_promotions.business_id a FK direta sem join necessario
   const { data: promotion } = await supabase
     .from('menu_promotions')
     .select('business_id')
@@ -663,10 +662,10 @@ export async function updatePromotion(
     .single();
 
   if (!promotion) {
-    throw new Error('Promocao nao encontrada');
+    throw new Error('Promoção não encontrada');
   }
 
-  // Verificar ownership via BusinessOwnershipService (SSOT)
+  //  Verificar ownership via BusinessOwnershipService (SSOT)
   await BusinessOwnershipService.requireOwnership(promotion.business_id, userId);
 
   const { data, error } = await supabase
@@ -692,7 +691,7 @@ export async function updatePromotion(
 }
 
 /**
- * Deletar promoÃ§Ã£o
+ *  Deletar promoo
  */
 export async function deletePromotion(promotionId: string, userId: string): Promise<void> {
   const { data: promotion } = await supabase
@@ -702,10 +701,10 @@ export async function deletePromotion(promotionId: string, userId: string): Prom
     .single();
 
   if (!promotion) {
-    throw new Error('Promocao nao encontrada');
+    throw new Error('Promoção não encontrada');
   }
 
-  // Verificar ownership via BusinessOwnershipService (SSOT)
+  //  Verificar ownership via BusinessOwnershipService (SSOT)
   await BusinessOwnershipService.requireOwnership(promotion.business_id, userId);
 
   const { error } = await supabase.from('menu_promotions').delete().eq('id', promotionId);
@@ -713,12 +712,12 @@ export async function deletePromotion(promotionId: string, userId: string): Prom
   if (error) throw error;
 }
 
-// ============================================================
-// MUTATIONS EM LOTE
-// ============================================================
+//  ============================================================
+//  MUTATIONS EM LOTE
+//  ============================================================
 
 /**
- * Reordenar itens de uma categoria
+ *  Reordenar itens de uma categoria
  */
 export async function reorderMenuItems(
   categoryId: string,
@@ -732,18 +731,18 @@ export async function reorderMenuItems(
     .single();
 
   if (!category) {
-    throw new Error('Categoria nao encontrada');
+    throw new Error('Categoria não encontrada');
   }
 
   const reorderBusinessId = extractBusinessIdFromCategory(category);
   if (!reorderBusinessId) {
-    throw new Error('Nao foi possivel identificar o negocio proprietario da categoria');
+    throw new Error('Não foi possível identificar o negócio proprietário da categoria');
   }
 
-  // Verificar ownership via BusinessOwnershipService (SSOT)
+  //  Verificar ownership via BusinessOwnershipService (SSOT)
   await BusinessOwnershipService.requireOwnership(reorderBusinessId, userId);
 
-  // Atualizar ordem de cada item
+  //  Atualizar ordem de cada item
   const updates = itemOrders.map(({ itemId, displayOrder }) =>
     supabase
       .from('menu_items')
@@ -756,7 +755,7 @@ export async function reorderMenuItems(
 }
 
 /**
- * Reordenar categorias de um menu
+ *  Reordenar categorias de um menu
  */
 export async function reorderMenuCategories(
   menuId: string,
@@ -770,13 +769,13 @@ export async function reorderMenuCategories(
     .single();
 
   if (!menu) {
-    throw new Error('Menu nao encontrado');
+    throw new Error('Menu não encontrado');
   }
 
-  // Verificar ownership via BusinessOwnershipService (SSOT)
+  //  Verificar ownership via BusinessOwnershipService (SSOT)
   await BusinessOwnershipService.requireOwnership(menu.business_id, userId);
 
-  // Atualizar ordem de cada categoria
+  //  Atualizar ordem de cada categoria
   const updates = categoryOrders.map(({ categoryId, displayOrder }) =>
     supabase.from('menu_categories').update({ display_order: displayOrder }).eq('id', categoryId),
   );

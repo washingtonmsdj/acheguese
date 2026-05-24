@@ -39,7 +39,7 @@ export function PriceCategoryFields({ form, categories, allowCategorySelection }
         name="price"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Preco (R$)</FormLabel>
+            <FormLabel>Preço (R$)</FormLabel>
             <FormControl>
               <Input
                 type="number"
@@ -89,7 +89,7 @@ export function PriceCategoryFields({ form, categories, allowCategorySelection }
         />
       ) : (
         <div className="rounded-md border p-3 text-sm text-muted-foreground">
-          Seu plano nao permite organizar itens por categoria.
+          Seu plano não permite organizar itens por categoria.
         </div>
       )}
     </div>
@@ -185,7 +185,7 @@ export function ImagePreparationFields({
                           <SelectValue placeholder="Ajuste da imagem" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="cover">Preencher area (cover)</SelectItem>
+                          <SelectItem value="cover">Preencher área (cover)</SelectItem>
                           <SelectItem value="contain">Manter imagem inteira (contain)</SelectItem>
                         </SelectContent>
                       </Select>
@@ -232,7 +232,7 @@ export function ImagePreparationFields({
         />
       ) : (
         <div className="rounded-md border p-3 text-sm text-muted-foreground">
-          Seu plano nao permite imagem nos itens.
+          Seu plano não permite imagem nos itens.
         </div>
       )}
 
@@ -265,7 +265,7 @@ export function InventoryFields({ form }: BaseSectionProps) {
   return (
     <div className="space-y-3 rounded-lg border p-4">
       <div>
-        <p className="font-medium">Operacao e estoque</p>
+        <p className="font-medium">Operação e estoque</p>
         <p className="text-sm text-muted-foreground">
           Controle se o item aparece para o cliente e quando deve ser tratado como esgotado.
         </p>
@@ -277,8 +277,8 @@ export function InventoryFields({ form }: BaseSectionProps) {
         render={({ field }) => (
           <FormItem className="flex items-center justify-between rounded-lg border p-3">
             <div className="space-y-0.5">
-              <FormLabel className="text-sm">Disponivel para venda</FormLabel>
-              <FormDescription>Ao desativar, o item fica pausado no cardapio do cliente.</FormDescription>
+              <FormLabel className="text-sm">Disponível para venda</FormLabel>
+              <FormDescription>Ao desativar, o item fica pausado no cardápio do cliente.</FormDescription>
             </div>
             <FormControl>
               <Switch checked={field.value} onCheckedChange={field.onChange} />
@@ -330,7 +330,7 @@ export function InventoryFields({ form }: BaseSectionProps) {
                   }}
                 />
               </FormControl>
-              <FormDescription>Valor usado para destacar reposicao no painel da loja.</FormDescription>
+              <FormDescription>Valor usado para destacar reposição no painel da loja.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -359,7 +359,7 @@ export function CaloriesField({ form }: BaseSectionProps) {
               }}
             />
           </FormControl>
-          <FormDescription>Valor calorico aproximado do item</FormDescription>
+          <FormDescription>Valor calórico aproximado do item</FormDescription>
           <FormMessage />
         </FormItem>
       )}
@@ -371,7 +371,7 @@ export function PizzaVisualFields({ form }: BaseSectionProps) {
   return (
     <div className="space-y-3 rounded-lg border p-4">
       <div>
-        <p className="font-medium">Configuracao de tamanho da pizza</p>
+        <p className="font-medium">Configuração de tamanho da pizza</p>
         <p className="text-sm text-muted-foreground">
           Esses dados deixam o visual da pizza coerente com o tamanho real.
         </p>
@@ -384,7 +384,7 @@ export function PizzaVisualFields({ form }: BaseSectionProps) {
             <FormItem>
               <FormLabel>Tamanho</FormLabel>
               <FormControl>
-                <Input placeholder="Ex: Media, Grande, Familia" {...field} />
+                <Input placeholder="Ex: Média, Grande, Família" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -416,7 +416,7 @@ export function PizzaVisualFields({ form }: BaseSectionProps) {
           name="pizza_diameter_cm"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Diametro (cm)</FormLabel>
+              <FormLabel>Diâmetro (cm)</FormLabel>
               <FormControl>
                 <Input
                   type="number"

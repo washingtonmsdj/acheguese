@@ -1,4 +1,4 @@
-﻿import { useNavigate, Outlet } from "react-router-dom";
+import { useNavigate, Outlet } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useSessionContext } from "@/core/session";
 import { SessionService } from "@/core/session/services/SessionService";
@@ -10,10 +10,10 @@ import { centralRoutes } from "@/modules/central/routes/centralRoutes";
 /**
  * ProfessionalGuard
  *
- * Guard que valida vinculo profissional.
+ * Guard que valida vínculo profissional.
  * Protege rotas /central/profissional/*
  *
- * Se usuario nao tiver professional_data, mostra empty state com CTA
+ * Se usuário não tiver professional_data, mostra empty state com CTA
  * para ativar/cadastrar usando fluxo atual.
  */
 export function ProfessionalGuard() {
@@ -56,14 +56,14 @@ export function ProfessionalGuard() {
               <Building2 className="h-8 w-8 text-primary" />
             </div>
             <div className="space-y-2">
-              <h3 className="text-lg font-semibold">Perfil profissional nao encontrado</h3>
+              <h3 className="text-lg font-semibold">Perfil profissional não encontrado</h3>
               <p className="text-sm text-muted-foreground">
-                Voce ainda nao ativou seu perfil profissional. Cadastre seus servicos para comecar a receber clientes.
+                Você ainda não ativou seu perfil profissional. Cadastre seus serviços para começar a receber clientes.
               </p>
             </div>
             <Button onClick={() => navigate(centralRoutes.servicos.create)} className="w-full gap-2 sm:w-auto">
               <Plus className="h-4 w-4" />
-              Cadastrar servicos
+              Cadastrar serviços
             </Button>
           </CardContent>
         </Card>

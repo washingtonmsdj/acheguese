@@ -6,7 +6,6 @@
  * ✅ Cache via React Query
  * ✅ Error handling
  *
- * @version 2.0.0 - Tipagem Total
  */
 
 import { useQuery } from "@tanstack/react-query";

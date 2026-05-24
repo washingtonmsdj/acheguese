@@ -2,7 +2,7 @@
  * EducationProgramsPage
  *
  * Pagina de gestao de programas/turmas da instituicao.
- * Rota: /central/empresas/:businessId/education/programas
+ * Rota: /central/empresas/:businessId/educacao/programas
  */
 
 import { useState } from 'react';

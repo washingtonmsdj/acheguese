@@ -3,7 +3,7 @@
  *
  * O SSOT real de pedidos/entregas e OrderDeliverySSOTService. Este facade mantem
  * o contrato historico das telas de gastronomia enquanto converte leitura e
- * operacoes para orders/order_items/order_timeline_events canonicos.
+ * operações para orders/order_items/order_timeline_events canônicos.
  */
 
 import { logger } from '@/shared/utils/logger';
@@ -449,7 +449,7 @@ export const OrderService = {
     try {
       const result = await OrderDeliverySSOTService.getOrderById(orderId);
       if (!result.success || !result.data) {
-        return { data: null, error: result.error ?? 'Pedido nao encontrado.' };
+        return { data: null, error: result.error ?? 'Pedido não encontrado.' };
       }
 
       const order = mapOrder(result.data);
@@ -470,7 +470,7 @@ export const OrderService = {
   async createOrder(): Promise<ServiceResult<OrderWithItems>> {
     return {
       data: null,
-      error: 'Criacao de pedido de gastronomia deve usar GastronomyCheckoutService/OrderDeliverySSOTService.',
+      error: 'Criação de pedido de gastronomia deve usar GastronomyCheckoutService/OrderDeliverySSOTService.',
     };
   },
 
@@ -482,12 +482,12 @@ export const OrderService = {
   ): Promise<ServiceResult<Order>> {
     try {
       if (!actorProfileId) {
-        return { data: null, error: 'Perfil ativo obrigatorio para atualizar pedido.' };
+        return { data: null, error: 'Perfil ativo obrigatório para atualizar pedido.' };
       }
 
       const current = await OrderDeliverySSOTService.getOrderById(orderId);
       if (!current.success || !current.data) {
-        return { data: null, error: current.error ?? 'Pedido nao encontrado.' };
+        return { data: null, error: current.error ?? 'Pedido não encontrado.' };
       }
 
       const target = orderStatusToLogistics(status);
@@ -541,12 +541,12 @@ export const OrderService = {
     },
   ): Promise<ServiceResult<Order>> {
     if (!actorProfileId) {
-      return { data: null, error: 'Perfil ativo obrigatorio para cancelar pedido.' };
+      return { data: null, error: 'Perfil ativo obrigatório para cancelar pedido.' };
     }
 
     const current = await OrderDeliverySSOTService.getOrderById(orderId);
     if (!current.success || !current.data) {
-      return { data: null, error: current.error ?? 'Pedido nao encontrado.' };
+      return { data: null, error: current.error ?? 'Pedido não encontrado.' };
     }
 
     const previousOrder = mapOrder(current.data);
@@ -607,12 +607,12 @@ export const OrderService = {
   ): Promise<ServiceResult<Order>> {
     try {
       if (!actorProfileId) {
-        return { data: null, error: 'Perfil ativo obrigatorio para atualizar notas internas.' };
+        return { data: null, error: 'Perfil ativo obrigatório para atualizar notas internas.' };
       }
 
       const normalizedNotes = notes.trim();
       if (!normalizedNotes) {
-        return { data: null, error: 'Informe uma nota valida para atualizar o pedido.' };
+        return { data: null, error: 'Informe uma nota válida para atualizar o pedido.' };
       }
 
       const result = await OrderDeliverySSOTService.updateOrderNotes({
@@ -644,19 +644,19 @@ export const OrderService = {
   ): Promise<ServiceResult<Order>> {
     try {
       if (!actorProfileId) {
-        return { data: null, error: 'Perfil ativo obrigatorio para confirmar pagamento.' };
+        return { data: null, error: 'Perfil ativo obrigatório para confirmar pagamento.' };
       }
 
       const current = await this.getOrder(orderId);
       if (current.error || !current.data) {
-        return { data: null, error: current.error ?? 'Pedido nao encontrado.' };
+        return { data: null, error: current.error ?? 'Pedido não encontrado.' };
       }
 
       const currentOrder = current.data;
       if (!['pix', 'payment_link'].includes(currentOrder.payment_method ?? '')) {
         return {
           data: null,
-          error: 'Confirmacao manual disponivel apenas para PIX ou link de pagamento.',
+          error: 'Confirmação manual disponível apenas para PIX ou link de pagamento.',
         };
       }
 
@@ -671,7 +671,7 @@ export const OrderService = {
       if (!allowedPendingStatuses.has(String(currentOrder.payment_status))) {
         return {
           data: null,
-          error: `Status financeiro atual (${currentOrder.payment_status}) nao permite confirmacao manual.`,
+          error: `Status financeiro atual (${currentOrder.payment_status}) não permite confirmação manual.`,
         };
       }
 

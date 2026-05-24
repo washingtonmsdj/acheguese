@@ -62,7 +62,7 @@ interface LocationRouteRow {
 }
 
 interface TerritoryCommunityRow {
-  territory_type: 'district' | 'territorial_group';
+  territory_type: 'neighborhood' | 'district' | 'territorial_group';
   territory_id: string;
 }
 
@@ -186,7 +186,10 @@ async function resolveEducationTerritoryLocationIds(
 
     const resolvedCommunity = community as TerritoryCommunityRow | null;
 
-    if (resolvedCommunity?.territory_type === 'district') {
+    if (
+      resolvedCommunity?.territory_type === 'neighborhood' ||
+      resolvedCommunity?.territory_type === 'district'
+    ) {
       return [resolvedCommunity.territory_id];
     }
 

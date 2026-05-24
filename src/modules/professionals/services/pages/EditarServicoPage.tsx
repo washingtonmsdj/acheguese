@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { mediaService } from "@/core/media/services/MediaService";
 import { useIdentitySaveLogger } from "@/core/public-identity/hooks/useIdentitySaveLogger";
@@ -13,16 +13,16 @@ import { useProfessionalSlugSaveGuard } from "@/modules/professionals/services/c
 import { useProfessionalById } from "@/modules/professionals/services/hooks/useProfessionalById";
 import { useProfessionalEdit } from "@/modules/professionals/services/hooks/useProfessionalEdit";
 import { useServiceUrls } from "@/modules/professionals/services/hooks/useServiceUrls";
+import { useServiceAreaOptions } from "@/modules/professionals/services/hooks/useServiceAreaOptions";
 import {
   buildProfessionalUpdateInput,
   createInitialProfessionalEditForm,
   mapProfessionalToEditForm,
-  MAX_PROFESSIONAL_IMAGE_BYTES,
-  MAX_PROFESSIONAL_PORTFOLIO_IMAGES,
   toggleServiceAreaSelection,
   type ProfessionalEditForm,
   type ProfessionalEditTab,
 } from "./EditarServicoPage.model";
+import { PROFESSIONAL_EDIT_LIMITS } from "@/modules/professionals/services/constants/professionalEditLimits";
 import {
   EditarServicoAvailabilityTab,
   EditarServicoContactTab,
@@ -63,6 +63,10 @@ export default function EditarServicoPage() {
     id: id || "",
     enabled: !!id,
   });
+  const {
+    options: serviceAreaOptions,
+    isLoading: loadingServiceAreaOptions,
+  } = useServiceAreaOptions(professional?.location_id ?? null);
 
   const { updateProfessional } = useProfessionalEdit({
     onSuccess: () => {
@@ -123,7 +127,7 @@ export default function EditarServicoPage() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (file.size > MAX_PROFESSIONAL_IMAGE_BYTES) {
+    if (file.size > PROFESSIONAL_EDIT_LIMITS.maxImageBytes) {
       toast({
         title: "Imagem muito grande",
         description: "Máximo 5MB",
@@ -145,21 +149,21 @@ export default function EditarServicoPage() {
     const currentCount = portfolioPreviews.length + portfolioFiles.length;
     const allowedFiles = files.slice(
       0,
-      MAX_PROFESSIONAL_PORTFOLIO_IMAGES - currentCount,
+      PROFESSIONAL_EDIT_LIMITS.maxPortfolioImages - currentCount,
     );
 
     if (allowedFiles.length < files.length) {
       toast({
-        title: `Máximo ${MAX_PROFESSIONAL_PORTFOLIO_IMAGES} imagens no portfólio`,
+        title: `Máximo ${PROFESSIONAL_EDIT_LIMITS.maxPortfolioImages} imagens no portfólio`,
         variant: "destructive",
       });
     }
 
     const validFiles = allowedFiles.filter((file) => {
-      if (file.size <= MAX_PROFESSIONAL_IMAGE_BYTES) return true;
+      if (file.size <= PROFESSIONAL_EDIT_LIMITS.maxImageBytes) return true;
 
       toast({
-        title: `${file.name} é muito grande (máx 5MB)`,
+        title: `${file.name} é muito grande (máx. 5MB)`,
         variant: "destructive",
       });
       return false;
@@ -217,7 +221,7 @@ export default function EditarServicoPage() {
       if (slugSafety.status === "review") {
         toast({
           title:
-            "O link publico esta muito diferente do nome do profissional. Ajuste para manter autenticidade.",
+            "O link p?blico est? muito diferente do nome do profissional. Ajuste para manter autenticidade.",
           variant: "destructive",
         });
         setActiveTab("info");
@@ -325,6 +329,8 @@ export default function EditarServicoPage() {
         {activeTab === "details" && (
           <EditarServicoDetailsTab
             form={form}
+            serviceAreaOptions={serviceAreaOptions}
+            loadingServiceAreaOptions={loadingServiceAreaOptions}
             onFieldChange={updateField}
             onToggleServiceArea={toggleBairro}
           />

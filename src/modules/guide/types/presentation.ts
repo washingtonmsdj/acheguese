@@ -1,9 +1,10 @@
-import type { TouristPoint, TouristPointCategory } from '@/modules/guide/tourist-points/types';
+import { CATEGORY_ICONS, type TouristPoint, type TouristPointCategory } from '@/modules/guide/tourist-points/types';
+import type { LucideIcon } from 'lucide-react';
 
 export interface TouristPointCategoryShortcut {
   id: string;
   label: string;
-  emoji: string;
+  icon: LucideIcon;
   categoryFilter: TouristPointCategory;
   image: string;
 }
@@ -12,28 +13,28 @@ export const TOURIST_CATEGORY_SHORTCUTS: TouristPointCategoryShortcut[] = [
   {
     id: 'cat-praia',
     label: 'Praias',
-    emoji: '🏖️',
+    icon: CATEGORY_ICONS.praia,
     categoryFilter: 'praia',
     image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=300&fit=crop',
   },
   {
     id: 'cat-historico',
     label: 'Historico',
-    emoji: '🏰',
+    icon: CATEGORY_ICONS.historico,
     categoryFilter: 'historico',
     image: 'https://images.unsplash.com/photo-1564507004663-b6dfb3c824d5?w=400&h=300&fit=crop',
   },
   {
     id: 'cat-museu',
     label: 'Museus',
-    emoji: '🏛️',
+    icon: CATEGORY_ICONS.museu,
     categoryFilter: 'museu',
     image: 'https://images.unsplash.com/photo-1554907984-15263bfd63bd?w=400&h=300&fit=crop',
   },
   {
     id: 'cat-parque',
     label: 'Parques',
-    emoji: '🌿',
+    icon: CATEGORY_ICONS.parque,
     categoryFilter: 'parque',
     image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=400&h=300&fit=crop',
   },

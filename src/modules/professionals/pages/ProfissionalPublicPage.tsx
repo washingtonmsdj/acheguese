@@ -138,10 +138,10 @@ export default function ProfissionalPublicPage() {
             disabled={!professional.is_accepting_clients}
           >
             <Send className="h-4 w-4 mr-2" />
-            Solicitar orcamento
+            Solicitar orçamento
           </Button>
           <p className="mt-2 text-center text-xs text-muted-foreground">
-            Pedido registrado na central do profissional, sem expor contato publico.
+            Pedido registrado na central do profissional, sem expor contato público.
           </p>
         </div>
       </div>

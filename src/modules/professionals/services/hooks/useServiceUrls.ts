@@ -1,4 +1,4 @@
-﻿/**
+/**
  * useServiceUrls
  * 
  * Hook centralizado para URLs do módulo de serviços.

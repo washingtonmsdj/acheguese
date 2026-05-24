@@ -6,7 +6,6 @@
  * - Lógica de negócio no service
  * - React Query para cache
  *
- * @version 2.0.0 - Atualizado para GastronomyFacade
  */
 
 import { useInfiniteQuery } from '@tanstack/react-query';

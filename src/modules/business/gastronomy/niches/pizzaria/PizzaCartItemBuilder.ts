@@ -48,18 +48,18 @@ function findRequired<T extends { id: string; name: string }>(
   label: string,
 ): T {
   const value = values.find((entry) => entry.id === id);
-  if (!value) throw new Error(`${label} nao encontrado: ${id}.`);
+  if (!value) throw new Error(`${label} não encontrado: ${id}.`);
   return value;
 }
 
 function buildPizzaName(size: PizzaSize, flavorCount: number): string {
-  return `Pizza ${size.name} — ${flavorCount} sabor${flavorCount > 1 ? "es" : ""}`;
+  return `Pizza ${size.name} - ${flavorCount} sabor${flavorCount > 1 ? "es" : ""}`;
 }
 
 export class PizzaCartItemBuilder {
   static build(selection: PizzaBuildSelection, catalog: PizzaCatalog): CartItem {
     if (!selection.item.is_available) {
-      throw new Error("Nao e possivel adicionar um item indisponivel ao carrinho.");
+      throw new Error("Não é possível adicionar um item indisponível ao carrinho.");
     }
 
     const quantity = normalizeQuantity(selection.quantity);

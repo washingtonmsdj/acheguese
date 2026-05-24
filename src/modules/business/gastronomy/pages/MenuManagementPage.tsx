@@ -1,5 +1,5 @@
 /**
- * MenuManagementPage - Pagina de gestao do cardapio
+ * MenuManagementPage - Página de gestão do cardápio
  *
  * SSOT: Usa hooks que consomem MenuService.
  */
@@ -190,8 +190,8 @@ export default function MenuManagementPage() {
           Voltar ao Dashboard
         </Button>
         <div className="text-center py-12 text-muted-foreground">
-          <p className="text-lg font-medium mb-2">Nenhum cardapio encontrado</p>
-          <p className="text-sm">Configure o perfil gastronomico para criar seu cardapio.</p>
+          <p className="text-lg font-medium mb-2">Nenhum cardápio encontrado</p>
+          <p className="text-sm">Configure o perfil gastronômico para criar seu cardápio.</p>
         </div>
       </div>
     );
@@ -211,7 +211,7 @@ export default function MenuManagementPage() {
 
         <UpgradePromptInline
           businessId={businessId!}
-          feature="Cardapio Avancado"
+          feature="Cardápio Avançado"
           offerKey="catalog"
         />
       </div>
@@ -230,9 +230,9 @@ export default function MenuManagementPage() {
           <ArrowLeft className="w-4 h-4 mr-2" />
           Voltar ao Dashboard
         </Button>
-        <h1 className="text-3xl font-bold">Gestao de Cardapio</h1>
+        <h1 className="text-3xl font-bold">Gestão de Cardápio</h1>
         <p className="text-muted-foreground mt-2">
-          Gerencie categorias, itens, variacoes e adicionais
+          Gerencie categorias, itens, variações e adicionais
         </p>
       </div>
 
@@ -246,7 +246,7 @@ export default function MenuManagementPage() {
         <TabsContent value="items" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Itens do Cardapio</CardTitle>
+              <CardTitle>Itens do Cardápio</CardTitle>
               <CardDescription>
                 {totalItemsCount}
                 {entitlements.maxMenuItems !== null && ` / ${entitlements.maxMenuItems}`} itens
@@ -288,13 +288,13 @@ export default function MenuManagementPage() {
 
               {!canUseImages && (
                 <div className="text-sm text-muted-foreground bg-muted/50 border rounded-lg p-3">
-                  Seu plano nao permite imagens nos itens.
+                  Seu plano não permite imagens nos itens.
                 </div>
               )}
 
               {!canAddMoreItems && (
                 <div className="text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-lg p-3">
-                  Voce atingiu o limite de {entitlements.maxMenuItems} itens. Faca upgrade para adicionar mais.
+                  Você atingiu o limite de {entitlements.maxMenuItems} itens. Faça upgrade para adicionar mais.
                 </div>
               )}
             </CardContent>
@@ -404,7 +404,7 @@ export default function MenuManagementPage() {
           if (!open) setCategoryToDelete(null);
         }}
         title="Deletar categoria"
-        description="A categoria sera removida do cardapio. Confira antes se existem itens dependentes dela."
+        description="A categoria será removida do cardápio. Confira antes se existem itens dependentes dela."
         confirmLabel="Deletar categoria"
         onConfirm={handleConfirmDeleteCategory}
       />
@@ -415,7 +415,7 @@ export default function MenuManagementPage() {
           if (!open) setItemToDelete(null);
         }}
         title="Deletar item"
-        description="O item sera removido do cardapio e deixara de aparecer para clientes."
+        description="O item será removido do cardápio e deixará de aparecer para clientes."
         confirmLabel="Deletar item"
         onConfirm={handleConfirmDeleteItem}
       />

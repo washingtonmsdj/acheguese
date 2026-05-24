@@ -190,7 +190,7 @@ export function EducationNicheShowcase({
         <div>
           <h2 className="text-xl font-bold">Categorias educacionais</h2>
           <p className="text-sm text-muted-foreground">
-            Navegue por tipo de instituicao e descubra opcoes especializadas.
+            Navegue por tipo de instituição e descubra opções especializadas.
           </p>
         </div>
         <Layers className="h-6 w-6 text-primary" />
@@ -225,7 +225,7 @@ export function EducationNicheShowcase({
               <div className="mt-3 text-sm font-semibold">{n.displayName}</div>
               <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
                 <span>
-                  {count} {count === 1 ? 'opcao' : 'opcoes'}
+                  {count} {count === 1 ? 'opção' : 'opções'}
                 </span>
                 {n.isBeta && (
                   <Badge variant="outline" className="text-[10px]">
@@ -269,7 +269,7 @@ export function FeaturedEducationSection({
               Instituicoes em destaque em {territoryLabel}
             </h2>
             <p className="mt-2 max-w-2xl text-muted-foreground">
-              Curadoria com base em dados territoriais e informacoes institucionais publicas.
+              Curadoria com base em dados territoriais e informações institucionais públicas.
             </p>
           </div>
           <Button
@@ -333,7 +333,7 @@ export function FeaturedEducationSection({
                   <div className="mt-4 grid grid-cols-2 gap-2">
                     {[
                       profile.school_network ? { label: 'Rede', value: profile.school_network } : null,
-                      profile.enrollment_open ? { label: 'Matriculas', value: 'Abertas' } : null,
+                      profile.enrollment_open ? { label: 'Matrículas', value: 'Abertas' } : null,
                     ]
                       .filter((stat): stat is { label: string; value: string } => Boolean(stat))
                       .map((stat) => (
@@ -390,11 +390,11 @@ export function EducationDataDisclaimer() {
         <div className="flex flex-col gap-2 rounded-2xl border border-border bg-muted/30 p-4 text-xs leading-5 text-muted-foreground md:flex-row md:items-start md:gap-3">
           <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
           <p>
-            Os dados iniciais das escolas publicas sao organizados a partir de bases
-            publicas e consultas institucionais. Podem existir divergencias,
-            desatualizacoes ou inconsistencias em horarios, contatos, etapas ofertadas e
-            demais informacoes. Recomendamos confirmar os dados diretamente com a
-            instituicao antes de tomar qualquer decisao.
+            Os dados iniciais das escolas públicas são organizados a partir de bases
+            públicas e consultas institucionais. Podem existir divergências,
+            desatualizações ou inconsistências em horários, contatos, etapas ofertadas e
+            demais informações. Recomendamos confirmar os dados diretamente com a
+            instituição antes de tomar qualquer decisão.
           </p>
         </div>
       </div>
@@ -427,19 +427,19 @@ export function EducationInstitutionCta({ businessExplorerHref }: { businessExpl
                   Para instituicoes
                 </Badge>
                 <h2 className="text-balance text-3xl font-bold text-foreground md:text-4xl">
-                  Tem uma instituicao de ensino?
+                  Tem uma instituição de ensino?
                 </h2>
                 <p className="mt-3 max-w-xl text-balance text-muted-foreground md:text-lg">
-                  Cadastre-se no Achegue-se e alcance familias em busca de educacao de
-                  qualidade. Capture leads, gerencie visitas e aumente suas matriculas.
+                  Cadastre-se no Achegue-se e alcance famílias em busca de educação de
+                  qualidade. Capture leads, gerencie visitas e aumente suas matrículas.
                 </p>
 
                 <ul className="mt-5 grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
                   {[
                     'Vitrine territorial com SEO',
-                    'Captacao e pipeline de leads',
+                    'Captação e pipeline de leads',
                     'Eventos e visitas agendadas',
-                    'Analytics de conversao',
+                    'Analytics de conversão',
                   ].map((item) => (
                     <li key={item} className="flex items-start gap-2">
                       <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
@@ -451,7 +451,7 @@ export function EducationInstitutionCta({ businessExplorerHref }: { businessExpl
                 <div className="mt-7 flex flex-col gap-3 sm:flex-row">
                   <Link to={businessManagementRoutes.create('education')}>
                     <Button size="lg" className="w-full rounded-full sm:w-auto">
-                      Cadastrar instituicao
+                      Cadastrar instituição
                       <ArrowUpRight className="ml-2 h-4 w-4" />
                     </Button>
                   </Link>

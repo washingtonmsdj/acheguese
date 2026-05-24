@@ -5,6 +5,7 @@
  */
 
 import { motion } from 'framer-motion';
+import { Check } from 'lucide-react';
 import { TOURIST_CATEGORY_SHORTCUTS } from '../types/presentation';
 import type { TouristPointCategory } from '../types/categories';
 
@@ -32,47 +33,51 @@ export function TouristPointCategoryCards({ onCategorySelect, activeCategory }: 
       variants={containerVariants}
       className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4"
     >
-      {TOURIST_CATEGORY_SHORTCUTS.map((cat) => (
-        <motion.button
-          key={cat.id}
-          variants={itemVariants}
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.97 }}
-          onClick={() =>
-            onCategorySelect(activeCategory === cat.categoryFilter ? '' : cat.categoryFilter)
-          }
-          className={`
-            relative group rounded-2xl overflow-hidden aspect-[4/3] cursor-pointer
-            border-2 transition-colors duration-200
-            ${activeCategory === cat.categoryFilter
-              ? 'border-primary ring-2 ring-primary/30'
-              : 'border-transparent hover:border-primary/40'
+      {TOURIST_CATEGORY_SHORTCUTS.map((cat) => {
+        const Icon = cat.icon;
+
+        return (
+          <motion.button
+            key={cat.id}
+            variants={itemVariants}
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() =>
+              onCategorySelect(activeCategory === cat.categoryFilter ? '' : cat.categoryFilter)
             }
-          `}
-        >
-          <img
-            src={cat.image}
-            alt={cat.label}
-            loading="lazy"
-            className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-          <div className="absolute bottom-0 left-0 right-0 p-3">
-            <div className="flex items-center gap-1.5">
-              <span className="text-lg">{cat.emoji}</span>
-              <h3 className="text-white font-bold text-sm sm:text-base leading-tight drop-shadow-lg">
-                {cat.label}
-              </h3>
+            className={`
+              relative group rounded-2xl overflow-hidden aspect-[4/3] cursor-pointer
+              border-2 transition-colors duration-200
+              ${activeCategory === cat.categoryFilter
+                ? 'border-primary ring-2 ring-primary/30'
+                : 'border-transparent hover:border-primary/40'
+              }
+            `}
+          >
+            <img
+              src={cat.image}
+              alt={cat.label}
+              loading="lazy"
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 p-3">
+              <div className="flex items-center gap-1.5">
+                <Icon className="h-4 w-4 text-white drop-shadow-lg" aria-hidden="true" />
+                <h3 className="text-white font-bold text-sm sm:text-base leading-tight drop-shadow-lg">
+                  {cat.label}
+                </h3>
+              </div>
+              <span className="text-white/70 text-xs">Explorar</span>
             </div>
-            <span className="text-white/70 text-xs">Explorar</span>
-          </div>
-          {activeCategory === cat.categoryFilter && (
-            <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
-              ✓
-            </div>
-          )}
-        </motion.button>
-      ))}
+            {activeCategory === cat.categoryFilter && (
+              <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
+                <Check className="h-3.5 w-3.5" aria-hidden="true" />
+              </div>
+            )}
+          </motion.button>
+        );
+      })}
     </motion.div>
   );
 }

@@ -2,7 +2,7 @@
  * EducationEventsPage
  *
  * Pagina de gestao de eventos da instituicao.
- * Rota: /central/empresas/:businessId/education/events
+ * Rota: /central/empresas/:businessId/educacao/eventos
  */
 
 import { useState } from 'react';

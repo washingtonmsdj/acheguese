@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Building2, FileText, Upload, ArrowRight } from "lucide-react";
+import { ArrowRight, Building2, FileText, Upload } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
@@ -390,7 +390,8 @@ export function BasicInfoStep({
             O que está sendo definido aqui
           </div>
           <p>
-            Esta etapa define a identidade principal do seu {copy.entityNoun}, o enquadramento básico no domínio business e a base reutilizada no painel, página pública e extensões verticais.
+            Esta etapa define a identidade principal do seu {copy.entityNoun}, o enquadramento básico no
+            domínio business e a base reutilizada no painel, página pública e extensões verticais.
           </p>
         </div>
 

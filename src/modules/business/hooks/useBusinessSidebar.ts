@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Business } from "@/modules/business/types";
 import { logger } from "@/shared/utils/logger";
+import { buildGoogleMapsDirectionsUrl } from "@/shared/utils/contactLinks";
+import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
 
 export function useBusinessSidebar(business?: Business) {
   const navigate = useNavigate();
@@ -56,10 +58,12 @@ export function useBusinessSidebar(business?: Business) {
       return;
     }
 
-    const encodedAddress = encodeURIComponent(addressText);
-    const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}`;
+    const mapsUrl =
+      typeof business.address.latitude === "number" && typeof business.address.longitude === "number"
+        ? buildGoogleMapsDirectionsUrl(business.address.latitude, business.address.longitude)
+        : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(addressText)}`;
 
-    window.open(mapsUrl, "_blank", "noopener,noreferrer");
+    openSafeExternalUrl(mapsUrl, { context: "business-sidebar-hook-route" });
   }, [business?.address]);
 
   return {

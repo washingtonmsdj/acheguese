@@ -1,5 +1,5 @@
 /**
- * GastronomyLandingPage - REFATORADA
+ * GastronomyLandingPage
  *
  * Territory-aware gastronomy listing.
  * The active territorial selector and territorial route are the SSOT.
@@ -16,7 +16,9 @@ import { useTerritorialContextOptional } from '@/core/routing/components/Territo
 import { useSessionContext } from '@/core/session';
 import { CanonicalHero } from '@/shared/components/hero/CanonicalHero';
 import { Button } from '@/shared/components/ui/button';
+import { PLATFORM_BRAND } from '@/shared/config/brand';
 import { AdSense } from '@/shared/components/advertising';
+import { GASTRONOMY_CUISINE_FILTERS } from '../constants';
 import {
   GastronomyDeliveryDestinationPanel,
   GastronomyActivityFeed,
@@ -50,37 +52,7 @@ const fadeIn = {
   hidden: { opacity: 0, y: 24 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.45 } },
 };
-// â”€â”€ Categorias de gastronomia (estilo empresa) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Componente para emoji como ícone
-const EmojiIcon = ({ emoji, className }: { emoji: string; className?: string }) => (
-  <span className={className} style={{ fontSize: '1.5rem', lineHeight: 1 }}>{emoji}</span>
-);
-type CategoryIconComponent = (props: { className?: string }) => JSX.Element;
-const GASTRO_CATEGORIES: Array<{
-  id: string;
-  icon: CategoryIconComponent;
-  label: string;
-  cuisineFilter: string;
-  iconColor: string;
-  bg: string;
-}> = [
-  { id: 'lanches',    icon: () => <EmojiIcon emoji="🥪" />, label: 'Lanches',       cuisineFilter: 'lanchonete',   iconColor: 'text-amber-400',   bg: 'bg-amber-500/15 border-amber-500/20' },
-  { id: 'pizza',      icon: () => <EmojiIcon emoji="🍕" />, label: 'Pizza',         cuisineFilter: 'pizzaria',     iconColor: 'text-red-400',     bg: 'bg-red-500/15 border-red-500/20' },
-  { id: 'brasileira', icon: () => <EmojiIcon emoji="🍛" />, label: 'Brasileira',    cuisineFilter: 'brasileira',   iconColor: 'text-orange-400',  bg: 'bg-orange-500/15 border-orange-500/20' },
-  { id: 'arabe',      icon: () => <EmojiIcon emoji="🥙" />, label: 'Árabe',         cuisineFilter: 'arabe',        iconColor: 'text-yellow-400',  bg: 'bg-yellow-500/15 border-yellow-500/20' },
-  { id: 'sorveteria', icon: () => <EmojiIcon emoji="🍨" />, label: 'Açaí / Sorvete',cuisineFilter: 'sorveteria',   iconColor: 'text-purple-400',  bg: 'bg-purple-500/15 border-purple-500/20' },
-  { id: 'saudavel',   icon: () => <EmojiIcon emoji="🥗" />, label: 'Saudável',      cuisineFilter: 'vegetariana',  iconColor: 'text-green-400',   bg: 'bg-green-500/15 border-green-500/20' },
-  { id: 'japonesa',   icon: () => <EmojiIcon emoji="🍱" />, label: 'Japonesa',      cuisineFilter: 'japonesa',     iconColor: 'text-pink-400',    bg: 'bg-pink-500/15 border-pink-500/20' },
-  { id: 'salgados',   icon: () => <EmojiIcon emoji="🥟" />, label: 'Salgados',      cuisineFilter: 'outros',       iconColor: 'text-lime-400',    bg: 'bg-lime-500/15 border-lime-500/20' },
-  { id: 'pastel',     icon: () => <EmojiIcon emoji="🥐" />, label: 'Pastel',        cuisineFilter: 'pastel',       iconColor: 'text-orange-500',  bg: 'bg-orange-600/15 border-orange-600/20' },
-  { id: 'padaria',    icon: () => <EmojiIcon emoji="🥖" />, label: 'Padarias',      cuisineFilter: 'padaria',      iconColor: 'text-yellow-600',  bg: 'bg-yellow-600/15 border-yellow-600/20' },
-  { id: 'doceria',    icon: () => <EmojiIcon emoji="🍰" />, label: 'Doces & Bolos', cuisineFilter: 'doceria',      iconColor: 'text-fuchsia-400', bg: 'bg-fuchsia-500/15 border-fuchsia-500/20' },
-  { id: 'carnes',     icon: () => <EmojiIcon emoji="🥩" />, label: 'Carnes',        cuisineFilter: 'churrascaria', iconColor: 'text-red-500',     bg: 'bg-red-600/15 border-red-600/20' },
-  { id: 'marmita',    icon: () => <EmojiIcon emoji="🍲" />, label: 'Marmita',       cuisineFilter: 'regional',     iconColor: 'text-teal-400',    bg: 'bg-teal-500/15 border-teal-500/20' },
-  { id: 'bar',        icon: () => <EmojiIcon emoji="🍺" />, label: 'Bares',         cuisineFilter: 'bar',          iconColor: 'text-emerald-400', bg: 'bg-emerald-500/15 border-emerald-500/20' },
-  { id: 'cafeteria',  icon: () => <EmojiIcon emoji="☕" />, label: 'Cafés',         cuisineFilter: 'cafeteria',    iconColor: 'text-yellow-500',  bg: 'bg-yellow-500/15 border-yellow-500/20' },
-  { id: 'hamburger',  icon: () => <EmojiIcon emoji="🍔" />, label: 'Hambúrguer',    cuisineFilter: 'hamburguer',   iconColor: 'text-amber-500',   bg: 'bg-amber-600/15 border-amber-600/20' },
-];
+
 export default function GastronomyLandingPage() {
   const navigate = useNavigate();
   const territorialContext = useTerritorialContextOptional();
@@ -229,21 +201,21 @@ export default function GastronomyLandingPage() {
     ? `Exibindo restaurantes da categoria ${activeCuisineLabel}`
     : hasActiveFilters
       ? 'Exibindo restaurantes com filtros ativos'
-      : `Catalogo completo de restaurantes em ${territoryName}`;
+      : `Catálogo completo de restaurantes em ${territoryName}`;
   const destinationGateMessage = !canUseGeolocation
     ? INSECURE_CONTEXT_DESTINATION_MESSAGE
     : isLocatingUser
-      ? 'Validando sua localizacao para calcular distancias e tempo de entrega com precisao.'
+      ? 'Validando sua localização para calcular distâncias e tempo de entrega com precisão.'
       : locationPermissionState === 'denied'
-        ? 'Localizacao bloqueada no navegador. Informe um endereco valido para liberar a listagem.'
-        : 'Informe um endereco completo ou use sua localizacao atual para liberar restaurantes e cardapios.';
+        ? 'Localização bloqueada no navegador. Informe um endereço válido para liberar a listagem.'
+        : 'Informe um endereço completo ou use sua localização atual para liberar restaurantes e cardápios.';
   const proximityFallbackMessage = distanceReferenceCoords
     ? `Ainda estamos mapeando os restaurantes desta seleção. Em breve você verá os mais próximos do seu endereço.`
     : !canUseGeolocation
       ? INSECURE_CONTEXT_DESTINATION_MESSAGE
       : locationPermissionState === 'denied'
-        ? 'Localizacao bloqueada no navegador. Informe um endereco para calcular proximidade real.'
-        : 'Defina um destino de entrega para ordenar por distancia real.';
+        ? 'Localização bloqueada no navegador. Informe um endereço para calcular proximidade real.'
+        : 'Defina um destino de entrega para ordenar por distância real.';
   const isProximitySortActive = sortBy === 'nearest';
   const isLoading = businessesLoading && sortedBusinesses.length === 0;
   // Handlers
@@ -277,23 +249,21 @@ export default function GastronomyLandingPage() {
   return (
     <>
       <Helmet>
-        <title>Gastronomia em {territoryName} | OrdaX</title>
+        <title>Gastronomia em {territoryName} | {PLATFORM_BRAND.name}</title>
         <meta
           name="description"
-          content={`Descubra restaurantes e cardapios de gastronomia em ${territoryName}.`}
+          content={`Descubra restaurantes e cardápios de gastronomia em ${territoryName}.`}
         />
       </Helmet>
       <div className="min-h-screen bg-background">
-        {/* â”€â”€ Header exclusivo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <GastronomyHeader
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
         />
-        {/* â”€â”€ Cards de Categorias (TOPO) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <section className="w-full bg-card/50 border-b border-border py-4">
           <div className="w-full overflow-x-auto scrollbar-hide">
             <div className="flex justify-center gap-3 pb-1 px-4 min-w-max mx-auto">
-              {GASTRO_CATEGORIES.map((cat, i) => {
+              {GASTRONOMY_CUISINE_FILTERS.map((cat, i) => {
                 const Icon = cat.icon;
                 const isActive = filters.cuisine_type === cat.cuisineFilter;
                 return (
@@ -321,19 +291,18 @@ export default function GastronomyLandingPage() {
             </div>
           </div>
         </section>
-        {/* â”€â”€ Hero Carrossel de Banners â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
 
         <CanonicalHero
           moduleName="Gastronomia"
           moduleIcon={UtensilsCrossed}
           territoryName={territoryName}
           title="Descubra Sabores"
-          titleHighlight="Perto de Voce"
-          subtitle={`Restaurantes e cardapios em ${territoryName}. Escolha um destino de entrega e veja as melhores opcoes da regiao.`}
+          titleHighlight="Perto de Você"
+          subtitle={`Restaurantes e cardápios em ${territoryName}. Escolha um destino de entrega e veja as melhores opções da região.`}
           search={{
             value: searchQuery,
             onChange: setSearchQuery,
-            placeholder: `Buscar em ${territoryName}: pizza, acai, hamburguer...`,
+            placeholder: `Buscar em ${territoryName}: pizza, açaí, hambúrguer...`,
           }}
           primaryCTA={{
             label: 'Buscar',
@@ -351,7 +320,6 @@ export default function GastronomyLandingPage() {
         />
 
         <section className="container mx-auto px-4 pt-4">
-          {/* â”€â”€ Google AdSense â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           <div className="mb-6 w-full rounded-xl">
             <div className="overflow-hidden rounded-xl max-h-[90px] min-h-[50px]">
               <AdSense
@@ -402,7 +370,6 @@ export default function GastronomyLandingPage() {
                 />
               </motion.div>
             </section>
-            {/* â”€â”€ ATIVIDADE DOS VIZINHOS (SSOT) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
             <GastronomyActivityFeed
               territoryFilter={territoryFilter}
               limit={5}
@@ -489,13 +456,13 @@ export default function GastronomyLandingPage() {
                   className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 via-card to-accent/5 p-8 text-center md:p-12"
                 >
                   <div className="mb-4 inline-block rounded-full bg-primary/10 p-3">
-                    <EmojiIcon emoji="🍽️" className="h-8 w-8 text-primary" />
+                    <UtensilsCrossed className="h-8 w-8 text-primary" />
                   </div>
                   <h2 className="mb-3 text-2xl font-bold text-foreground md:text-3xl">
                     Tem um restaurante?
                   </h2>
                   <p className="mx-auto mb-6 max-w-lg text-muted-foreground">
-                    Publique seu cardapio operacional e integre pedido, preparo e entrega ao SSOT
+                    Publique seu cardápio operacional e integre pedido, preparo e entrega ao SSOT
                     do produto.
                   </p>
                   <div className="flex flex-col justify-center gap-3 sm:flex-row">

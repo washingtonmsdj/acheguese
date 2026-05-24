@@ -26,6 +26,8 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/shared/utils/cn";
 import { toast } from "sonner";
+import { buildWhatsAppUrl } from "@/shared/utils/contactLinks";
+import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
 import { useUnifiedNotifications } from "@/core/notifications/useUnifiedNotifications";
 import {
   NotificationType,
@@ -225,10 +227,8 @@ export default function AppointmentNotifications({
     const dateLabel = formatDate(notification.appointment_date, "dd/MM/yyyy");
     const timeLabel = notification.appointment_time || "horário não informado";
     const message = `Olá ${notification.client_name}! Sobre seu agendamento de ${notification.service_name} para ${dateLabel} às ${timeLabel}.`;
-    window.open(
-      `https://wa.me/${notification.client_phone.replace(/\D/g, "")}?text=${encodeURIComponent(message)}`,
-      "_blank",
-    );
+    const url = buildWhatsAppUrl(notification.client_phone, message);
+    if (url) openSafeExternalUrl(url, { context: "appointment-notification-whatsapp" });
   };
 
   if (!isOwner) return null;

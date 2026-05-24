@@ -33,15 +33,15 @@ export function EmpresaGastronomiaPreviewSection({
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-lg font-bold text-foreground">
-                Cardapio de {businessName}
+                Cardápio de {businessName}
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                A experiencia de cardapio e pedidos fica na pagina de gastronomia.
+                A experiência de cardápio e pedidos fica na página de gastronomia.
               </p>
             </div>
             <Button asChild className="shrink-0 gap-2">
               <Link to={canonicalUrl}>
-                Abrir cardapio
+                Abrir cardápio
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
@@ -54,23 +54,23 @@ export function EmpresaGastronomiaPreviewSection({
   return (
     <section
       className="max-w-5xl mx-auto px-4 sm:px-6 w-full mt-6"
-      aria-label="Previa do cardapio"
+      aria-label="Prévia do cardápio"
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between mb-4">
         <div>
           <div className="flex items-center gap-2">
             <UtensilsCrossed className="h-5 w-5 text-primary" />
             <h2 className="text-lg font-bold text-foreground">
-              Destaques do cardapio
+              Destaques do cardápio
             </h2>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
-            Veja uma previa. O cardapio completo e os pedidos ficam em Gastronomia.
+            Veja uma prévia. O cardápio completo e os pedidos ficam em Gastronomia.
           </p>
         </div>
         <Button asChild className="shrink-0 gap-2">
           <Link to={canonicalUrl}>
-            Ver cardapio e pedir
+            Ver cardápio e pedir
             <ArrowRight className="h-4 w-4" />
           </Link>
         </Button>

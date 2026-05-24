@@ -18,6 +18,7 @@ import {
   Share2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
 interface ShareBusinessDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -35,25 +36,27 @@ export default function ShareBusinessDialog({
 }: ShareBusinessDialogProps) {
   const copyLink = () => {
     navigator.clipboard.writeText(businessUrl);
-    toast.success("Link copiado! 📋");
+    toast.success("Link copiado!");
   };
 
   const shareWhatsApp = () => {
-    const text = `Olha que legal! 🎉\n\n*${businessName}*\n${businessDescription}\n\nConfira: ${businessUrl}`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+    const text = `Olha que legal!\n\n*${businessName}*\n${businessDescription}\n\nConfira: ${businessUrl}`;
+    openSafeExternalUrl(`https://wa.me/?text=${encodeURIComponent(text)}`, {
+      context: "business-share-whatsapp",
+    });
   };
 
   const shareFacebook = () => {
-    window.open(
+    openSafeExternalUrl(
       `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(businessUrl)}`,
-      "_blank",
+      { context: "business-share-facebook" },
     );
   };
 
   const shareInstagram = () => {
     // Instagram não tem API de compartilhamento direto, então copiamos o link
     navigator.clipboard.writeText(businessUrl);
-    toast.success("Link copiado! Cole na bio ou stories do Instagram 📸");
+    toast.success("Link copiado! Cole na bio ou stories do Instagram.");
   };
 
   const downloadQRCode = () => {

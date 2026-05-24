@@ -38,7 +38,7 @@ interface ExtrasStepProps {
   onCreate: () => void;
 }
 
-// SSOT: Usa constantes centralizadas de formas de pagamento
+// SSOT: usa constantes centralizadas de formas de pagamento.
 const FORMAS_PAGAMENTO = getPaymentMethodLabels();
 
 export function ExtrasStep({
@@ -72,7 +72,6 @@ export function ExtrasStep({
       onPagamentosChange(Array.from(new Set([...selectedPagamentos, forma])));
       return;
     }
-
     onPagamentosChange(selectedPagamentos.filter((item) => item !== forma));
   };
 
@@ -175,7 +174,7 @@ export function ExtrasStep({
             onChange={(event) => onEspecialidadesChange(event.target.value)}
             placeholder={copy.specialtiesPlaceholder}
           />
-          <p className="text-xs text-muted-foreground">Separe por vírgula.</p>
+          <p className="text-xs text-muted-foreground">Separe os itens por vírgula.</p>
         </div>
 
         <div className="space-y-2">
@@ -186,7 +185,7 @@ export function ExtrasStep({
             onChange={(event) => onFacilidadesChange(event.target.value)}
             placeholder={copy.facilitiesPlaceholder}
           />
-          <p className="text-xs text-muted-foreground">Separe por vírgula.</p>
+          <p className="text-xs text-muted-foreground">Separe os itens por vírgula.</p>
         </div>
 
         <div className="space-y-2">
@@ -198,7 +197,7 @@ export function ExtrasStep({
             className="w-full rounded-md border bg-background px-3 py-2"
           >
             <option value="active">Ativa e publicada</option>
-            <option value="pending">Pendente / revisar depois</option>
+            <option value="pending">Pendente para revisar depois</option>
           </select>
         </div>
 

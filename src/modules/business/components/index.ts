@@ -3,7 +3,6 @@
  *
  * Exportações organizadas por categoria para facilitar manutenção
  *
- * @version 2.0.0 - Organização completa
  * @author Kiro AI
  * @date 2026-04-10
  */

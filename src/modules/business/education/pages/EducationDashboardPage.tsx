@@ -2,7 +2,7 @@
  * EducationDashboardPage
  *
  * Dashboard administrativo da instituicao de educacao.
- * Rota: /central/empresas/:businessId/education
+ * Rota: /central/empresas/:businessId/educacao
  */
 
 import { useParams, Link } from 'react-router-dom';

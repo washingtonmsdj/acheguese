@@ -28,7 +28,7 @@ export function EmpresaAvaliacoesSection({
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Star className="h-5 w-5 text-primary" />
-            <h2 className="text-lg font-bold text-foreground">Avaliacoes</h2>
+            <h2 className="text-lg font-bold text-foreground">Avaliações</h2>
           </div>
         </div>
 
@@ -49,17 +49,17 @@ export function EmpresaAvaliacoesSection({
             ))
           ) : (
             <div className="rounded-xl border border-border bg-card p-5 text-sm text-muted-foreground">
-              Ainda nao ha avaliacoes publicadas para este estabelecimento.
+              Ainda não há avaliações publicadas para este estabelecimento.
             </div>
           )}
         </div>
 
         <div className="mt-4 bg-card border border-border rounded-xl p-5 text-center">
           <p className="text-sm font-semibold text-foreground mb-1">
-            Ja visitou {business.name}?
+            Já visitou {business.name}?
           </p>
           <p className="text-xs text-muted-foreground mb-3">
-            Compartilhe sua experiencia com os vizinhos
+            Compartilhe sua experiência com os vizinhos
           </p>
           {(!user || reviewUrl) && (
             <Button
@@ -75,12 +75,12 @@ export function EmpresaAvaliacoesSection({
               variant="outline"
               className="border-primary/30 text-primary hover:bg-primary/5 gap-2"
             >
-              <Star className="h-4 w-4" /> Escrever avaliacao
+              <Star className="h-4 w-4" /> Escrever avaliação
             </Button>
           )}
           {user && !reviewUrl && (
             <p className="text-xs text-muted-foreground">
-              Avaliacoes disponiveis para estabelecimentos com pagina de cardapio.
+              Avaliações disponíveis para estabelecimentos com página de cardápio.
             </p>
           )}
         </div>

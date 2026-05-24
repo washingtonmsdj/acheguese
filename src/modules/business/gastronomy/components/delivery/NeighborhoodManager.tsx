@@ -348,7 +348,7 @@ export function NeighborhoodManager({ area, onClose }: NeighborhoodManagerProps)
             if (!open) setNeighborhoodToDelete(null);
           }}
           title="Remover bairro"
-          description={`O bairro "${neighborhoodToDelete?.neighborhood_name ?? ''}" deixara de ser atendido por esta area.`}
+          description={`O bairro "${neighborhoodToDelete?.neighborhood_name ?? ''}" deixará de ser atendido por esta área.`}
           confirmLabel="Remover bairro"
           onConfirm={handleConfirmDelete}
           disabled={isDeleting}

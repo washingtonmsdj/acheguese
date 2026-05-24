@@ -53,13 +53,13 @@ export function getResidenceReferenceLabel(residence: UserResidenceWithRelations
   }
 
   const formatted = residenceService.getFormattedAddress(residence);
-  if (formatted && formatted !== 'Endereco nao disponivel') {
+  if (formatted && formatted !== 'Endereço não disponível') {
     return formatted;
   }
 
   if (residence.location?.name) {
-    return `Residencia em ${residence.location.name}`;
+    return `Residência em ${residence.location.name}`;
   }
 
-  return 'Residencia principal';
+  return 'Residência principal';
 }

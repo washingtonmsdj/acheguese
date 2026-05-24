@@ -1,10 +1,9 @@
 /**
- * 🛠️ SERVICES MODULE - SSOT v2.0 Exports
+ * 🛠️ SERVICES MODULE - SSOT Exports
  *
  * Este módulo é um wrapper para o core Professional.
  * Delega todas as operações para ProfessionalFacade.
  *
- * @version 2.0.0 - Refatoração SSOT
  */
 
 // ============================================================

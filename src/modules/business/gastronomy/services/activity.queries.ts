@@ -1,4 +1,4 @@
-﻿import { logger } from '@/shared/utils/logger';
+import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/core/infrastructure/supabase';
 import type {
   GastronomyActivity,
@@ -26,8 +26,8 @@ function buildGeographicPathPattern(
   if (!territoryFilter) {
     return null;
   }
-  // TerritoryFilter canonico nao carrega state/city/district diretamente.
-  // Nesta query, filtro geografico textual e opcional; quando nao ha
+  // TerritoryFilter canônico não carrega state/city/district diretamente.
+  // Nesta query, filtro geográfico textual é opcional; quando não há
   // conversao segura, mantemos null para evitar inferencia incorreta.
   return null;
 }
@@ -45,7 +45,6 @@ function mapActivityRows(rows: Array<Record<string, unknown>>): GastronomyActivi
       business_name: String(row.business_name ?? ''),
       business_slug: String(row.business_slug ?? ''),
       action_label: String(row.action_label ?? ''),
-      emoji: String(row.emoji ?? ''),
       created_at: createdAt,
       time_ago: formatTimeAgo(createdAt),
     };
@@ -204,6 +203,4 @@ export class ActivityQueryService {
     }
   }
 }
-
-
 

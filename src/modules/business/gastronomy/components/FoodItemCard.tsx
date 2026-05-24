@@ -32,7 +32,7 @@ export function FoodItemCard({ item, variant = 'card', distanceMeters }: Props) 
 
   if (variant === 'compact') {
     return (
-      <Link to={url} className="block group" aria-label={`Ver cardapio de ${item.business_name}`}>
+      <Link to={url} className="block group" aria-label={`Ver cardápio de ${item.business_name}`}>
         <div className="flex gap-3 rounded-xl border border-border/50 bg-card p-2.5 transition-all duration-200 hover:border-primary/30 hover:shadow-md">
           <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg">
             {item.image_url ? (
@@ -78,7 +78,7 @@ export function FoodItemCard({ item, variant = 'card', distanceMeters }: Props) 
   }
 
   return (
-    <Link to={url} className="block h-full group" aria-label={`Ver cardapio de ${item.business_name}`}>
+    <Link to={url} className="block h-full group" aria-label={`Ver cardápio de ${item.business_name}`}>
       <div className="flex h-full flex-col overflow-hidden rounded-xl border border-border/50 bg-card transition-all duration-300 hover:border-primary/30 hover:shadow-xl">
         <div className="relative aspect-[4/3] overflow-hidden">
           {item.image_url ? (
@@ -139,7 +139,7 @@ export function FoodItemCard({ item, variant = 'card', distanceMeters }: Props) 
                 {item.business_delivery_fee !== undefined && (
                   <span className="flex items-center gap-0.5">
                     <Truck className="h-3 w-3" />
-                    {item.business_delivery_fee === 0 ? 'Gratis' : formatBrl(item.business_delivery_fee)}
+                    {item.business_delivery_fee === 0 ? 'Grátis' : formatBrl(item.business_delivery_fee)}
                   </span>
                 )}
               </div>
@@ -179,7 +179,7 @@ export function FoodItemCard({ item, variant = 'card', distanceMeters }: Props) 
           </div>
 
           <div className="mt-auto flex w-full items-center justify-center gap-1 rounded-lg border border-border px-3 py-2 text-[11px] transition-colors group-hover:border-primary group-hover:bg-primary group-hover:text-primary-foreground sm:text-xs">
-            Ver cardapio <ChevronRight className="h-3 w-3" />
+            Ver cardápio <ChevronRight className="h-3 w-3" />
           </div>
         </div>
       </div>

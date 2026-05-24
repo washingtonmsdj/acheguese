@@ -1,7 +1,7 @@
 /**
  * GastronomyPlansPage - Comparacao e upgrade de planos
  *
- * SSOT: Planos vindos de billing_plans (banco), nao de constantes hardcoded.
+ * SSOT: planos vindos de billing_plans (banco), não de constantes hardcoded.
  */
 
 import { logger } from '@/shared/utils/logger';

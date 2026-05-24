@@ -186,9 +186,9 @@ export default function DigitalMenu({
       product.price && typeof product.price === "number"
         ? `R$ ${product.price.toFixed(2)}`
         : "--";
-    const text = `Olha que delícia! 🍽️\n\n*${product.name}*\n${product.description || ""}\n\nPreço: ${priceText}\n\nConfira no cardápio de ${businessName}`;
+    const text = `Olha esta opção do cardápio:\n\n*${product.name}*\n${product.description || ""}\n\nPreço: ${priceText}\n\nConfira no cardápio de ${businessName}`;
     navigator.clipboard.writeText(text);
-    toast.success("Produto copiado para compartilhar! 📋");
+    toast.success("Produto copiado para compartilhar");
   };
 
   if (products.length === 0) {

@@ -37,7 +37,7 @@ export function StickyOrderBar({ business }: Props) {
             </p>
             {!minimumOrderReached && (
               <p className="text-xs text-amber-700">
-                Faltam {formatBrl(minimumOrderRemaining)} para o pedido minimo.
+                Faltam {formatBrl(minimumOrderRemaining)} para o pedido mínimo.
               </p>
             )}
           </div>

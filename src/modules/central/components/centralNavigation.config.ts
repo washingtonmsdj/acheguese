@@ -29,10 +29,10 @@ const CENTRAL_PRIMARY_NAV_IDS = [
 ] as const;
 
 /**
- * Estrutura de navegacao da Central
+ * Estrutura de navegação da Central
  *
  * Areas:
- * - Visao geral
+ * - Visão geral
  * - Empresas
  * - Profissional
  * - Motorista
@@ -41,14 +41,14 @@ const CENTRAL_PRIMARY_NAV_IDS = [
 export const CENTRAL_NAV_SECTIONS: CentralNavSection[] = [
   {
     id: 'overview',
-    label: 'Visao Geral',
+    label: 'Visão Geral',
     items: [
       {
         id: 'central-home',
         icon: Home,
-        label: 'Inicio',
+        label: 'Início',
         href: centralRoutes.home,
-        description: 'Visao geral da Central',
+        description: 'Visão geral da Central',
       },
     ],
   },
@@ -87,14 +87,14 @@ export const CENTRAL_NAV_SECTIONS: CentralNavSection[] = [
   },
   {
     id: 'communication',
-    label: 'Comunicacao',
+    label: 'Comunicação',
     items: [
       {
         id: 'communication-home',
         icon: Radio,
         label: 'Meus Canais',
         href: centralRoutes.comunicacao.home,
-        description: 'Publicar conteudo territorial',
+        description: 'Publicar conteúdo territorial',
       },
     ],
   },
@@ -118,7 +118,7 @@ export const CENTRAL_NAV_SECTIONS: CentralNavSection[] = [
       {
         id: 'driver-home',
         icon: Car,
-        label: 'Inicio',
+        label: 'Início',
         href: centralRoutes.motorista.home,
         description: 'Resumo operacional',
       },
@@ -153,9 +153,9 @@ export const CENTRAL_NAV_SECTIONS: CentralNavSection[] = [
       {
         id: 'driver-configuracoes',
         icon: Car,
-        label: 'Configuracoes',
+        label: 'Configurações',
         href: centralRoutes.motorista.configuracoes,
-        description: 'Preferencias e notificacoes',
+        description: 'Preferências e notificações',
       },
     ],
   },
@@ -166,7 +166,7 @@ export const CENTRAL_NAV_SECTIONS: CentralNavSection[] = [
       {
         id: 'motoboy-home',
         icon: Bike,
-        label: 'Inicio',
+        label: 'Início',
         href: centralRoutes.motoboy.home,
         description: 'Resumo operacional',
       },
@@ -201,9 +201,9 @@ export const CENTRAL_NAV_SECTIONS: CentralNavSection[] = [
       {
         id: 'motoboy-configuracoes',
         icon: Bike,
-        label: 'Configuracoes',
+        label: 'Configurações',
         href: centralRoutes.motoboy.configuracoes,
-        description: 'Preferencias e notificacoes',
+        description: 'Preferências e notificações',
       },
     ],
   },

@@ -216,7 +216,7 @@ function GastronomyNeighborhoodMap({ business }: { business: GastronomyBusiness 
   if (!hasCoords && !locationName) {
     return (
       <div className="flex h-64 items-center justify-center rounded-xl border border-dashed bg-muted/20 text-sm text-muted-foreground">
-        Coordenadas nao disponiveis para exibir o mapa
+        Coordenadas não disponíveis para exibir o mapa
       </div>
     );
   }
@@ -224,7 +224,7 @@ function GastronomyNeighborhoodMap({ business }: { business: GastronomyBusiness 
   return (
     <div className="space-y-3">
       <p className="text-sm text-muted-foreground">
-        Localizacao do restaurante no bairro
+        Localização do restaurante no bairro
       </p>
       <div className="h-72 rounded-xl overflow-hidden border">
         {isLoading ? (

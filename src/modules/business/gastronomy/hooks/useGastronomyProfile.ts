@@ -3,7 +3,6 @@
  *
  * Usado na página de empresas para detectar se deve exibir CTA de gastronomia
  *
- * @version 2.0.0 - Atualizado para GastronomyFacade
  */
 
 import { useQuery } from "@tanstack/react-query";

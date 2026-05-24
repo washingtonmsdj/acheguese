@@ -1,10 +1,9 @@
-﻿/**
+/**
  * AdRepositorySupabase
  *
  * Implementação real de IAdRepository usando Supabase.
  *
- * STATUS: implementado, NÃO validado em runtime — banco desligado.
- * Validar quando VITE_USE_MOCK_DATA=false e tabelas ad_campaigns/ad_targets existirem.
+ * STATUS: implementação canônica; depende das migrations de ad_campaigns/ad_targets.
  *
  * Migration necessária: src/modules/ads/sql/001_ads_tables.sql (a criar)
  */
@@ -126,4 +125,3 @@ export class AdRepositorySupabase implements IAdRepository {
     return rowToCampaign(row, targets);
   }
 }
-

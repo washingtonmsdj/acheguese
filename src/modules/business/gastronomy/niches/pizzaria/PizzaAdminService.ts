@@ -1,4 +1,4 @@
-﻿import { supabase } from "@/core/infrastructure/supabase";
+import { supabase } from "@/core/infrastructure/supabase";
 import { BusinessOwnershipService } from "@/core/business/services/BusinessOwnershipService";
 import type {
   PizzaCatalog,

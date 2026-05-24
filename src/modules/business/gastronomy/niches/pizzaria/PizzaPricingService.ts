@@ -17,7 +17,7 @@ function resolveSelectedFlavors(
   return selection.map((entry) => {
     const flavor = flavors.find((candidate) => candidate.id === entry.flavor_id);
     if (!flavor) {
-      throw new Error(`Sabor de pizza nao encontrado: ${entry.flavor_id}.`);
+      throw new Error(`Sabor de pizza não encontrado: ${entry.flavor_id}.`);
     }
 
     return {

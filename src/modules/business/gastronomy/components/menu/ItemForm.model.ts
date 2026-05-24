@@ -4,11 +4,11 @@ import type { MenuCategory, MenuItem } from '@/modules/business/gastronomy/servi
 export const NO_CATEGORY_VALUE = '__none__';
 
 export const itemSchema = z.object({
-  name: z.string().min(1, 'Nome e obrigatorio').max(100),
+  name: z.string().min(1, 'Nome é obrigatório').max(100),
   description: z.string().max(500).optional(),
-  price: z.number().min(0, 'Preco deve ser maior ou igual a 0'),
+  price: z.number().min(0, 'Preço deve ser maior ou igual a 0'),
   category_id: z.string().optional(),
-  image_url: z.string().url('URL invalida').optional().or(z.literal('')),
+  image_url: z.string().url('URL inválida').optional().or(z.literal('')),
   preparation_time_min: z.number().min(0).optional(),
   stock_quantity: z.number().int().min(0).optional(),
   stock_alert_threshold: z.number().int().min(0).optional(),

@@ -339,7 +339,7 @@ export default function TouristPointsPage() {
           <div className="container mx-auto px-4 space-y-10 py-4">
             {featuredPoints.length > 0 && (
               <TouristPointSectionCarousel
-                title="⭐ Destaques da Região"
+                title="Destaques da região"
                 subtitle={`Os pontos mais visitados de ${territoryName}`}
                 icon={Star}
                 items={featuredPoints}
@@ -350,7 +350,7 @@ export default function TouristPointsPage() {
 
             {freePoints.length > 0 && (
               <TouristPointSectionCarousel
-                title="🆓 Gratuitos"
+                title="Gratuitos"
                 subtitle="Experiências incríveis sem custo"
                 icon={Heart}
                 items={freePoints}
@@ -361,7 +361,7 @@ export default function TouristPointsPage() {
 
             {topRated.length > 0 && (
               <TouristPointSectionCarousel
-                title="🏆 Mais Avaliados"
+                title="Mais avaliados"
                 subtitle="Os favoritos dos visitantes"
                 icon={TrendingUp}
                 items={topRated}
@@ -382,7 +382,7 @@ export default function TouristPointsPage() {
                 <Store className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
                 <p className="text-foreground font-semibold">Camada "Ao redor" em ajuste para dados reais</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Esta seção foi desativada para remover dados mock em produção.
+                  Esta seção será exibida quando houver estabelecimentos com localização validada neste território.
                 </p>
                 <Button variant="outline" className="mt-4 rounded-full gap-2" onClick={() => switchViewMode('pontos')}>
                   <Compass className="h-4 w-4" />

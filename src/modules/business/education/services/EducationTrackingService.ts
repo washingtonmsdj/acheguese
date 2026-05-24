@@ -1,8 +1,8 @@
-﻿/**
+/**
  * EducationTrackingService
  *
- * ServiÃ§o centralizado para tracking de eventos do mÃ³dulo Education.
- * Todas as operaÃ§Ãµes de analytics devem passar por aqui.
+ * Servico centralizado para tracking de eventos do modulo Education.
+ * Todas as operacoes de analytics devem passar por aqui.
  *
  * Principios:
  * - Fire-and-forget: tracking nunca bloqueia a UI

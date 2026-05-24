@@ -1,8 +1,8 @@
 /**
- * DeliveryManagementPage - Gestao de entregas (SSOT).
+ * DeliveryManagementPage - Gestão de entregas (SSOT).
  *
  * SSOT: useDelivery -> RideOperationalService -> ride_requests (ride_mode='motoboy').
- * Esta pagina consome o fluxo canonico de entregas.
+ * Esta página consome o fluxo canônico de entregas.
  */
 
 import { useMemo, useState } from 'react';
@@ -68,7 +68,7 @@ function statusLabel(status: string): string {
   const labels: Record<string, string> = {
     requested: 'Solicitada',
     searching_driver: 'Buscando motoboy',
-    driver_assigned: 'Motoboy atribuido',
+    driver_assigned: 'Motoboy atribuído',
     driver_accepted: 'Motoboy aceitou',
     driver_arriving: 'Motoboy a caminho',
     pickup_confirmed: 'Coleta confirmada',
@@ -198,7 +198,7 @@ export default function DeliveryManagementPage() {
   if (!businessId) {
     return (
       <div className="container mx-auto p-6">
-        <p className="text-muted-foreground">ID da empresa nao encontrado.</p>
+        <p className="text-muted-foreground">ID da empresa não encontrado.</p>
       </div>
     );
   }
@@ -207,8 +207,8 @@ export default function DeliveryManagementPage() {
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Gestao de Entregas</h1>
-          <p className="text-muted-foreground">Painel da rede de motoboys da operacao, integrado aos pedidos.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold">Gestão de Entregas</h1>
+          <p className="text-muted-foreground">Painel da rede de motoboys da operação, integrado aos pedidos.</p>
         </div>
         <Button onClick={() => setCreateModalOpen(true)} className="gap-2 w-full sm:w-auto" disabled={!activeLocation}>
           <Plus className="h-4 w-4" />
@@ -273,7 +273,7 @@ export default function DeliveryManagementPage() {
                 <div>
                   <p className="font-medium">Falha ao carregar entregas vinculadas aos pedidos.</p>
                   <p className="text-muted-foreground">
-                    As entregas manuais continuam visiveis, mas o acompanhamento de pedidos pode estar incompleto.
+                    As entregas manuais continuam visíveis, mas o acompanhamento de pedidos pode estar incompleto.
                   </p>
                 </div>
               </CardContent>
@@ -303,7 +303,7 @@ export default function DeliveryManagementPage() {
                                 addSuffix: true,
                                 locale: ptBR,
                               })
-                            : 'Data nao informada'}
+                            : 'Data não informada'}
                         </p>
                       </div>
                       <Badge variant={statusVariant(ride.status)}>{statusLabel(ride.status)}</Badge>
@@ -314,7 +314,7 @@ export default function DeliveryManagementPage() {
                       <div className="space-y-2">
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <User className="h-4 w-4" />
-                          <span>{ride.recipient_name || 'Destinatario nao informado'}</span>
+                          <span>{ride.recipient_name || 'Destinatário não informado'}</span>
                         </div>
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <Phone className="h-4 w-4" />
@@ -329,11 +329,11 @@ export default function DeliveryManagementPage() {
                       <div className="space-y-2">
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <MapPin className="h-4 w-4" />
-                          <span>{ride.destination || 'Destino nao informado'}</span>
+                          <span>{ride.destination || 'Destino não informado'}</span>
                         </div>
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <Clock className="h-4 w-4" />
-                          <span>Pagamento: {ride.payment_method || 'nao informado'}</span>
+                          <span>Pagamento: {ride.payment_method || 'não informado'}</span>
                         </div>
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <DollarSign className="h-4 w-4" />
@@ -369,7 +369,7 @@ export default function DeliveryManagementPage() {
               <Package className="h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium mb-2">Nenhuma entrega encontrada</h3>
               <p className="text-sm text-muted-foreground max-w-sm">
-                Nao ha entregas para este filtro no momento.
+                Não há entregas para este filtro no momento.
               </p>
               {activeTab === 'all' && (
                 <Button variant="outline" className="mt-4 gap-2" onClick={() => setCreateModalOpen(true)}>
@@ -398,7 +398,7 @@ export default function DeliveryManagementPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Cancelar entrega</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja cancelar esta entrega? Esta acao nao pode ser desfeita.
+              Tem certeza que deseja cancelar esta entrega? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
 

@@ -53,10 +53,10 @@ export default function PremiumBusinessMenuPage() {
   return (
     <>
       <Helmet>
-        <title>{`${business.name} | Cardapio premium`}</title>
+        <title>{`${business.name} | Cardápio premium`}</title>
         <meta
           name="description"
-          content={`Cardapio oficial de ${business.name} no link premium.`}
+          content={`Cardápio oficial de ${business.name} no link premium.`}
         />
         {absoluteCanonical && <link rel="canonical" href={absoluteCanonical} />}
         <meta name="robots" content="noindex, nofollow" />
@@ -64,11 +64,11 @@ export default function PremiumBusinessMenuPage() {
 
       <section className="space-y-5 pb-24">
         <div className="space-y-3">
-          <h1 className="text-2xl font-bold text-foreground">Cardapio</h1>
+          <h1 className="text-2xl font-bold text-foreground">Cardápio</h1>
           <Input
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="Buscar item no cardapio..."
+            placeholder="Buscar item no cardápio..."
             className="max-w-md"
           />
           <div className="flex flex-wrap items-center gap-2">
@@ -118,7 +118,7 @@ export default function PremiumBusinessMenuPage() {
 
           {!activeItems.length && (
             <div className="rounded-xl border border-dashed p-8 text-center text-muted-foreground">
-              Nenhum item disponivel nesta categoria.
+              Nenhum item disponível nesta categoria.
             </div>
           )}
         </div>

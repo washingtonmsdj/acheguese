@@ -1,5 +1,5 @@
-﻿/**
- * useMenuAddons â€” Hook para gerenciar adicionais de itens
+/**
+ * useMenuAddons — Hook para gerenciar adicionais de itens
  *
  * SSOT: Consome MenuService do modules/business/gastronomy
  */

@@ -10,7 +10,7 @@
  */
 
 import { motion } from 'framer-motion';
-import { Users, Loader2 } from 'lucide-react';
+import { Heart, Loader2, MapPin, ShoppingBag, Star, Users, type LucideIcon } from 'lucide-react';
 import { useGastronomyActivity } from '../hooks/useGastronomyActivity';
 import type { TerritoryFilter } from '@/core/location/types';
 import type { GastronomyActivity } from '../types/gastronomy';
@@ -20,6 +20,13 @@ interface GastronomyActivityFeedProps {
   limit?: number;
   className?: string;
 }
+
+const ACTIVITY_ICONS: Record<GastronomyActivity['type'], LucideIcon> = {
+  review: Star,
+  favorite: Heart,
+  order: ShoppingBag,
+  visit: MapPin,
+};
 
 /**
  * Item individual de atividade
@@ -31,6 +38,8 @@ function ActivityItem({
   activity: GastronomyActivity;
   index: number;
 }) {
+  const ActivityIcon = ACTIVITY_ICONS[activity.type] ?? Users;
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -38,9 +47,8 @@ function ActivityItem({
       transition={{ delay: index * 0.1 }}
       className="flex items-center gap-3 bg-card border border-border rounded-xl px-4 py-3 min-w-[280px] shrink-0 hover:border-primary/30 transition-colors"
     >
-      {/* Emoji */}
-      <span className="text-xl" aria-label={activity.type}>
-        {activity.emoji}
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+        <ActivityIcon className="h-4 w-4" aria-hidden="true" />
       </span>
 
       {/* Conteúdo */}

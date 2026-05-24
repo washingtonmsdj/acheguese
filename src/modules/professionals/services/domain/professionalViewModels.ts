@@ -1,4 +1,4 @@
-﻿import type { Professional } from "@/core/professional/types";
+import type { Professional } from "@/core/professional/types";
 
 export interface ProfessionalItem {
   id: string;
@@ -16,7 +16,7 @@ export interface ProfessionalItem {
   latitude: number | null;
   longitude: number | null;
   created_at: string;
-  // Legacy/camelCase compatibility
+  // CamelCase aliases for UI view models.
   photo?: string | null;
   totalAvaliacoes?: number;
   priceMedio?: string;

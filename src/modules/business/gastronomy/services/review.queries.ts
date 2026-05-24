@@ -1,11 +1,11 @@
-﻿/**
- * Review Query Service â€” operaÃ§Ãµes de reviews para gastronomia
+/**
+ *  Review Query Service - operações de reviews para gastronomia.
  *
- * Usa a tabela canÃ´nica `reviews` (schema base) com as colunas
- * adicionadas pela migration 20260412000001 (photos, status, helpful_count, etc.)
+ *  Usa a tabela cannica `reviews` (schema base) com as colunas
+ *  adicionadas pela migration 20260412000001 (photos, status, helpful_count, etc.)
  *
- * O core/reviews usa tabelas legadas (business_reviews_new) â€” este serviÃ§o
- * opera na tabela canÃ´nica e Ã© o SSOT para reviews de gastronomia.
+ *  O core/reviews usa tabelas legadas (business_reviews_new) este servio
+ *  opera na tabela cannica e o SSOT para reviews de gastronomia.
  */
 
 import { logger } from '@/shared/utils/logger';
@@ -14,9 +14,9 @@ import { REPORT_STATUS } from '@/shared/types/constants';
 import { EntityStatus } from '@/shared/types/enums';
 const rpcDb = supabase as any;
 
-// â”€â”€ Tipos estendidos da tabela canÃ´nica `reviews` â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Estende o tipo base de @/shared/types/reviews com os campos adicionados
-// pela migration 20260412000001 (especÃ­ficos de gastronomia).
+//  Tipos estendidos da tabela cannica `reviews`
+//  Estende o tipo base de @/shared/types/reviews com os campos adicionados
+//  pela migration 20260412000001 (especficos de gastronomia).
 
 export interface Review {
   id: string;
@@ -25,7 +25,7 @@ export interface Review {
   reviewer_avatar: string | null;
   rating: number;
   comment: string | null;
-  // Campos adicionados pela migration 20260412000001
+  //  Campos adicionados pela migration 20260412000001
   photos: string[];
   business_response: string | null;
   business_response_at: string | null;
@@ -70,7 +70,7 @@ export interface VoteReviewInput {
 
 export class ReviewQueryService {
   /**
-   * Obter avaliaÃ§Ãµes de um negÃ³cio
+   *  Obter avaliaes de um negcio
    */
   static async getBusinessReviews(params: {
     businessProfileId: string;
@@ -99,7 +99,7 @@ export class ReviewQueryService {
   }
 
   /**
-   * Verificar se usuÃ¡rio pode avaliar um negÃ³cio
+   *  Verificar se usurio pode avaliar um negcio
    */
   static async canUserReviewBusiness(params: {
     userId: string;
@@ -124,7 +124,7 @@ export class ReviewQueryService {
   }
 
   /**
-   * Criar avaliaÃ§Ã£o
+   *  Criar avaliao
    */
   static async createReview(input: CreateReviewInput): Promise<{ id: string }> {
     try {
@@ -156,7 +156,7 @@ export class ReviewQueryService {
   }
 
   /**
-   * Atualizar avaliaÃ§Ã£o
+   *  Atualizar avaliao
    */
   static async updateReview(
     reviewId: string,
@@ -183,7 +183,7 @@ export class ReviewQueryService {
   }
 
   /**
-   * Deletar avaliaÃ§Ã£o
+   *  Deletar avaliao
    */
   static async deleteReview(reviewId: string): Promise<void> {
     try {
@@ -204,7 +204,7 @@ export class ReviewQueryService {
   }
 
   /**
-   * Adicionar resposta do estabelecimento
+   *  Adicionar resposta do estabelecimento
    */
   static async addBusinessResponse(
     reviewId: string,
@@ -229,7 +229,7 @@ export class ReviewQueryService {
   }
 
   /**
-   * Denunciar avaliaÃ§Ã£o
+   *  Denunciar avaliao
    */
   static async reportReview(input: ReportReviewInput): Promise<{ id: string }> {
     try {
@@ -263,7 +263,7 @@ export class ReviewQueryService {
   }
 
   /**
-   * Votar em avaliaÃ§Ã£o (Ãºtil/nÃ£o Ãºtil)
+   *  Votar em avaliao (til/no til)
    */
   static async voteReview(input: VoteReviewInput): Promise<void> {
     try {
@@ -293,7 +293,7 @@ export class ReviewQueryService {
   }
 
   /**
-   * Obter voto do usuÃ¡rio em uma avaliaÃ§Ã£o
+   *  Obter voto do usurio em uma avaliao
    */
   static async getUserReviewVote(params: {
     reviewId: string;
@@ -320,7 +320,7 @@ export class ReviewQueryService {
   }
 
   /**
-   * Obter estatÃ­sticas de avaliaÃ§Ãµes de um negÃ³cio
+   *  Obter Estatisticas de avaliaes de um negcio
    */
   static async getBusinessReviewStats(businessProfileId: string): Promise<{
     total: number;
@@ -367,7 +367,7 @@ export class ReviewQueryService {
         new Map<number, number>(),
       );
 
-      // Garantir que todas as estrelas estejam no objeto
+      //  Garantir que todas as estrelas estejam no objeto
       for (let i = 1; i <= 5; i++) {
         if (!distribution.has(i)) {
           distribution.set(i, 0);
@@ -385,6 +385,3 @@ export class ReviewQueryService {
     }
   }
 }
-
-
-

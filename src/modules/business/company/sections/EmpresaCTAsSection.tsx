@@ -24,6 +24,7 @@ import { Card, CardContent } from '@/shared/components/ui/card';
 import { ActionButton, RouteOptions } from '../components/ctas';
 import type { VerticalKey } from '@/core/verticals';
 import { VERTICAL_CONFIGS } from '@/core/verticals';
+import { buildTelUrl, buildWhatsAppUrl } from '@/shared/utils/contactLinks';
 import type { EmpresaCTAsSectionProps } from './types';
 
 export function EmpresaCTAsSection({
@@ -66,7 +67,7 @@ export function EmpresaCTAsSection({
               className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-base rounded-xl shadow-lg gap-2"
             >
               <Link to={gastronomyUrl}>
-                <ShoppingBag className="h-5 w-5" /> Ver cardapio e pedir
+                <ShoppingBag className="h-5 w-5" /> Ver cardápio e pedir
               </Link>
             </Button>
             <Button
@@ -75,7 +76,7 @@ export function EmpresaCTAsSection({
               className="w-full h-12 border-primary/30 text-primary hover:bg-primary/5 font-semibold text-base rounded-xl gap-2"
             >
               <Link to={gastronomyUrl}>
-                <ClipboardList className="h-5 w-5" /> Abrir cardapio
+                <ClipboardList className="h-5 w-5" /> Abrir cardápio
               </Link>
             </Button>
           </div>
@@ -87,7 +88,7 @@ export function EmpresaCTAsSection({
               <ActionButton
                 icon={MessageCircle}
                 label="WhatsApp"
-                href={`https://wa.me/${business.whatsapp.replace(/\D/g, '')}`}
+                href={buildWhatsAppUrl(business.whatsapp) ?? undefined}
                 color="emerald-400"
               />
             )}
@@ -95,7 +96,7 @@ export function EmpresaCTAsSection({
               <ActionButton
                 icon={Phone}
                 label="Ligar"
-                href={`tel:${business.phone}`}
+                href={buildTelUrl(business.phone) ?? undefined}
                 color="primary"
               />
             )}

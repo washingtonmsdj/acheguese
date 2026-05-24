@@ -50,14 +50,14 @@ function humanizeCuisineSlug(value: string): string {
 
 const CUISINE_LABEL_OVERRIDES: Partial<Record<CuisineType, string>> = {
   "frutos-do-mar": "Frutos do Mar",
-  sorveteria: "Acai e Sorvetes",
-  hamburguer: "Hamburguer",
+  sorveteria: "A\u00e7a\u00ed e Sorvetes",
+  hamburguer: "Hamb\u00farguer",
   pastel: "Pastel",
 };
 
 export function getCuisineLabel(cuisineType?: string | null): string {
   if (!cuisineType) {
-    return "Culinaria";
+    return "Culin\u00e1ria";
   }
 
   return (

@@ -71,9 +71,6 @@ export interface PublicBusinessSnapshot {
   readonly verticals: PublicSnapshotVerticals;
   readonly gastronomyPreview: readonly PublicGastronomyPreviewItem[];
   readonly seo: PublicSnapshotSeo;
-  readonly routing: {
-    readonly redirectToCanonical?: string;
-  };
 }
 
 export interface PublicGastronomySnapshot {
@@ -100,9 +97,6 @@ export interface PublicGastronomySnapshot {
     readonly canonicalGastronomyUrl: string;
     readonly canonicalBusinessUrl: string;
     readonly shouldNoIndex: boolean;
-  };
-  readonly routing: {
-    readonly redirectToCanonical?: string;
   };
 }
 

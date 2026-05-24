@@ -31,7 +31,7 @@ export function resolveProfessionalPublicUrl(service: Professional): string {
     });
   }
 
-  return `/services/${service.id}`;
+  return `/servicos/${service.id}`;
 }
 
 export function getProfessionalStatsValue(

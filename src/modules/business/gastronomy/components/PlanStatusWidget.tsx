@@ -15,7 +15,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/sha
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { Progress } from '@/shared/components/ui/progress';
-import { Crown, TrendingUp, Zap } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Crown, TrendingUp, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 
@@ -116,8 +116,9 @@ export function PlanStatusWidget({
             </div>
             <Progress value={menuItemsProgress} className="h-2" />
             {menuItemsProgress >= 90 && (
-              <p className="text-xs text-amber-600">
-                ⚠️ Você está próximo do limite. Faça upgrade para adicionar mais itens.
+              <p className="flex items-start gap-1.5 text-xs text-amber-600">
+                <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" aria-hidden="true" />
+                <span>Você está próximo do limite. Faça upgrade para adicionar mais itens.</span>
               </p>
             )}
           </div>
@@ -134,8 +135,9 @@ export function PlanStatusWidget({
             </div>
             <Progress value={imagesProgress} className="h-2" />
             {imagesProgress >= 90 && (
-              <p className="text-xs text-amber-600">
-                ⚠️ Você está próximo do limite de imagens.
+              <p className="flex items-start gap-1.5 text-xs text-amber-600">
+                <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" aria-hidden="true" />
+                <span>Você está próximo do limite de imagens.</span>
               </p>
             )}
           </div>
@@ -152,8 +154,9 @@ export function PlanStatusWidget({
             </div>
             <Progress value={promotionsProgress} className="h-2" />
             {promotionsProgress >= 90 && (
-              <p className="text-xs text-amber-600">
-                ⚠️ Você está próximo do limite de promoções.
+              <p className="flex items-start gap-1.5 text-xs text-amber-600">
+                <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" aria-hidden="true" />
+                <span>Você está próximo do limite de promoções.</span>
               </p>
             )}
           </div>
@@ -162,8 +165,9 @@ export function PlanStatusWidget({
         {/* Recursos Ilimitados */}
         {(entitlements.maxMenuItems === null || entitlements.maxImages === null) && (
           <div className="pt-2 border-t">
-            <p className="text-sm text-muted-foreground">
-              ✨ Recursos ilimitados disponíveis no seu plano
+            <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <CheckCircle2 className="h-4 w-4 text-success" aria-hidden="true" />
+              Recursos ilimitados disponíveis no seu plano
             </p>
           </div>
         )}

@@ -1,5 +1,5 @@
 /**
- * ItemCard � Card de item do card�pio
+ * ItemCard — Card de item do cardápio
  */
 
 import { Card, CardContent } from '@/shared/components/ui/card';
@@ -124,7 +124,7 @@ export function ItemCard({
                   onCheckedChange={(checked) => onToggleAvailability(item.id, checked)}
                 />
                 <span className="text-sm text-muted-foreground">
-                  {item.is_available ? 'Disponivel para venda' : 'Pausado no cardapio'}
+                  {item.is_available ? 'Disponível para venda' : 'Pausado no cardápio'}
                 </span>
               </div>
               {!isSoldOut && (

@@ -25,7 +25,7 @@ import {
   getBusinessAnalyticsSummary,
   getMetricChange,
   type BusinessAnalyticsPeriod,
-} from "@/modules/business/services/business-analytics.service";
+} from "@/core/business/services/business-analytics.service";
 
 interface AnalyticsMetric {
   label: string;

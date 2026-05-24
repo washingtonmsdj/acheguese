@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { Card } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Separator } from "@/shared/components/ui/separator";
@@ -16,6 +15,8 @@ import { useBusinessNavigation } from "@/modules/business/hooks/useBusinessNavig
 import { BusinessService } from "@/core/business/services/BusinessService";
 import type { BizData } from "@/modules/business/types";
 import { logger } from "@/shared/utils/logger";
+import { buildGoogleMapsDirectionsUrl, buildTelUrl, buildWhatsAppUrl } from "@/shared/utils/contactLinks";
+import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
 
 interface SimilarBusiness {
   id: string;
@@ -40,7 +41,6 @@ export function BusinessSidebar({
   business,
   onNavigateBack,
 }: BusinessSidebarProps) {
-  const navigate = useNavigate();
   const { navigateToBusiness } = useBusinessNavigation();
   const [similarBusinesses, setSimilarBusinesses] = useState<SimilarBusiness[]>(
     [],
@@ -79,15 +79,10 @@ export function BusinessSidebar({
 
   const openRoute = () => {
     if (business.latitude && business.longitude) {
-      const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent);
-      if (isIos) {
-        window.open(
-          `maps://maps.apple.com/?daddr=${business.latitude},${business.longitude}&q=${encodeURIComponent(business.name)}`,
-          "_blank",
-        );
-      } else {
-        navigate("/mapa");
-      }
+      openSafeExternalUrl(
+        buildGoogleMapsDirectionsUrl(business.latitude, business.longitude),
+        { context: "business-sidebar-route" },
+      );
     }
   };
 
@@ -133,7 +128,7 @@ export function BusinessSidebar({
                 className="w-full justify-start bg-[#25D366] hover:bg-[#20BA5A] text-white"
               >
                 <a
-                  href={`https://wa.me/${business.whatsapp}`}
+                  href={buildWhatsAppUrl(business.whatsapp) ?? undefined}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -148,7 +143,7 @@ export function BusinessSidebar({
                 variant="outline"
                 className="w-full justify-start"
               >
-                <a href={`tel:${business.phone}`}>
+                <a href={buildTelUrl(business.phone) ?? undefined}>
                   <Phone className="h-4 w-4 mr-2" />
                   Ligar
                 </a>
