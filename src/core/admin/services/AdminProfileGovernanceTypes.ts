@@ -213,7 +213,7 @@ export type AdminProfileReputationOrigin =
 export type AdminProfileReputationStatus =
   | "canonical"
   | "derived"
-  | "legacy"
+  | "historical"
   | "missing";
 
 export interface AdminProfileReputationSourceSummary {

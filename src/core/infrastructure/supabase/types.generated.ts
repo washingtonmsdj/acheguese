@@ -1,1 +1,1 @@
-﻿export * from '@/integrations/supabase/types.generated';
+export * from '@/integrations/supabase/types.generated';

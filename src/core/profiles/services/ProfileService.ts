@@ -3,6 +3,7 @@ import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 import { getServicesByProfile } from "@/core/professional/services/professional.queries";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
+import { adminRolesService } from "@/core/admin/services/AdminRolesService";
 import { publicIdentityService, PublicIdentityService } from "@/core/public-identity";
 import { callRPC } from "@/integrations/supabase/services/supabaseHelpers";
 import { PROFILE_VERIFICATION_STATUS } from "@/core/profile/constants/verificationStatus";
@@ -92,10 +93,10 @@ import {
   checkUsernameExists as checkUsernameExistsQuery,
   getByUsername as getByUsernameQuery,
   getPassengerRatings as getPassengerRatingsQuery,
-  getProfileByIdLegacy,
-  getProfileByTypeLegacy,
+  getProfileById as getProfileByIdQuery,
+  getProfileByType as getProfileByTypeQuery,
   getPublicProfileById as getPublicProfileByIdQuery,
-  getProfilesByUserIdLegacy,
+  getProfilesByUserId as getProfilesByUserIdQuery,
   getProfilesByIds as getProfilesByIdsQuery,
   getProfilesByVerificationStatus as getProfilesByVerificationStatusQuery,
   getProfilesCreatedInPeriod as getProfilesCreatedInPeriodQuery,
@@ -113,7 +114,7 @@ import {
   getVerificationStats as getVerificationStatsQuery,
   resolveProfileIdByUserId,
 } from "./profile.queries";
-export class ProfileServiceLegacy {
+export class ProfileService {
   private async withFallback<T>(
     action: string,
     fallback: T,
@@ -150,11 +151,11 @@ export class ProfileServiceLegacy {
   async getProfileContext(userId: string): Promise<ProfileContext | null> {
     return getProfileContextAggregate({ userId, getActiveProfile: (id) => this.getActiveProfile(id) });
   }
-  async getProfileById(profileId: string): Promise<Profile | null> { return getProfileByIdLegacy(profileId); }
+  async getProfileById(profileId: string): Promise<Profile | null> { return getProfileByIdQuery(profileId); }
   async getActiveProfile(userId?: string): Promise<Profile | null> { return getActiveProfileRpc(userId); }
-  async getProfilesByUserId(userId?: string): Promise<Profile[]> { return getProfilesByUserIdLegacy(userId); }
+  async getProfilesByUserId(userId?: string): Promise<Profile[]> { return getProfilesByUserIdQuery(userId); }
   async getProfileByType(userId: string, profileType: "personal" | "driver" | "business" | "professional"): Promise<Profile | null> {
-    return getProfileByTypeLegacy(userId, profileType);
+    return getProfileByTypeQuery(userId, profileType);
   }
   async ensureDriverProfileForUser(userId: string): Promise<Profile | null> { return ensureActiveDriverProfileForUser(userId); }
   async getRequiredActiveProfile(userId?: string): Promise<Profile> {
@@ -261,7 +262,7 @@ export class ProfileServiceLegacy {
       getUserLikesCount: (profileId) => this.getUserLikesCount(profileId),
     });
   }
-  // ðŸ“Š ESTATÃSTICAS ADMINISTRATIVAS
+  // ESTATISTICAS ADMINISTRATIVAS
   async getTotalProfilesCount(): Promise<number> {
     return getTotalProfilesCountQuery();
   }
@@ -425,11 +426,9 @@ export class ProfileServiceLegacy {
   > {
     return getAllUsersQuery();
   }
-  // SSOT: MÃ©todos auxiliares para dados complementares de perfil
+  // SSOT: metodos auxiliares para dados complementares de perfil
   async getUserRoles(userId: string): Promise<string[]> {
     try {
-      const { adminRolesService } =
-        await import("@/core/admin/services/AdminRolesService");
       const roles = await adminRolesService.getUserRoles(userId);
       return roles.map((r) => r.role);
     } catch (error) {
@@ -443,7 +442,7 @@ export class ProfileServiceLegacy {
   }
   async getUserLikesCount(profileId: string): Promise<number> {
     try {
-      // Import dinÃ¢mico evita ciclo ProfileService <-> SocialInteractionsService.
+      // Import dinamico evita ciclo ProfileService <-> SocialInteractionsService.
       const { SocialInteractionsService } = await import(
         "@/core/social/services/SocialInteractionsService"
       );
@@ -616,7 +615,7 @@ export class ProfileServiceLegacy {
       { profileId, userId, role },
     );
   }
-  // âœ… SSOT: USERNAME MANAGEMENT (para ProfileIdentityAdapter)
+  // SSOT: USERNAME MANAGEMENT (para ProfileIdentityAdapter)
   static async checkUsernameExists(
     username: string,
     excludeId?: string
@@ -640,8 +639,6 @@ export class ProfileServiceLegacy {
     return getUsernameHistoryQuery(profileId);
   }
 }
-// ðŸ›ï¸ PROFILE FACADE - Interface unificada SSOT v2.0
+// Profile facade - interface unificada SSOT.
 export { ProfileFacade } from "./profile.facade";
-// ðŸ”§ LEGACY - Compatibilidade com cÃ³digo existente
-export const profileService = new ProfileServiceLegacy();
-export { ProfileServiceLegacy as ProfileService };
+export const profileService = new ProfileService();

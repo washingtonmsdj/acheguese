@@ -25,14 +25,6 @@ export const POST_TYPE_LABELS: Record<PostType, string> = {
   [POST_TYPES.PERGUNTA]: "Pergunta",
 };
 
-// Ícones dos Tipos de Posts (emoji)
-export const POST_TYPE_ICONS: Record<PostType, string> = {
-  [POST_TYPES.DISCUSSAO]: "💬",
-  [POST_TYPES.RECOMENDACAO]: "⭐",
-  [POST_TYPES.ENQUETE]: "📊",
-  [POST_TYPES.PERGUNTA]: "❓",
-};
-
 // Cores dos Tipos de Posts
 export const POST_TYPE_COLORS: Record<PostType, string> = {
   [POST_TYPES.DISCUSSAO]: "#3B82F6", // blue-500

@@ -5,7 +5,7 @@ import { useCivicReportById } from "../useCivicReports";
 import { logger } from "@/shared/utils/logger";
 import { useSessionContext } from "@/core/session";
 import { CivicReportService } from "@/core/community/services/CivicReportService";
-import { commentService } from "@/core/comments/services/CommentService";
+import { CommentService } from "@/core/comments/services/CommentService";
 import type { Poll } from "@/shared/types/poll";
 
 interface CommunityPost {
@@ -66,7 +66,7 @@ export const useUnifiedDetailModal = (content: UnifiedContent) => {
   const authorName =
     postData?.author_name ||
     civicReport?.profile?.name ||
-    "Usuario";
+    "Usuário";
   const authorAvatar =
     postData?.author_avatar || civicReport?.profile?.avatar_url;
   const createdAt = postData?.created_at || civicReportData?.created_at || "";
@@ -81,7 +81,7 @@ export const useUnifiedDetailModal = (content: UnifiedContent) => {
 
     try {
       if (isPost && postData?.id) {
-        await commentService.createComment({
+        await CommentService.createComment({
           post_id: postData.id,
           author_profile_id: activeProfile.id,
           content: commentText.trim(),

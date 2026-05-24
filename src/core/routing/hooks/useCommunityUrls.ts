@@ -1,4 +1,4 @@
-import { TERRITORY_CONFIG } from "@/config/territory";
+import { LAUNCH_URLS } from "@/config/territory";
 import { useActiveTerritory } from "@/core/location/hooks/useActiveTerritory";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { buildCommunityTerritoryUrl, buildModuleTerritoryUrl, geoPathToPublicUrl, MODULE_SLUGS } from "@/core/routing/utils/territoryUrls";
@@ -21,6 +21,10 @@ export interface CommunityUrls {
   newPost: string;
 }
 
+function hasCommunityTerritorySlug(publicPath: string): boolean {
+  return publicPath.split("/").filter(Boolean).length >= 3;
+}
+
 export function useCommunityUrls(routeResolved?: ResolvedTerritory | null): CommunityUrls {
   const { activeLocation } = useActiveTerritory();
 
@@ -36,21 +40,21 @@ export function useCommunityUrls(routeResolved?: ResolvedTerritory | null): Comm
         feedUrl = buildCommunityTerritoryUrl(communityTerritoryPath);
         eventsUrl = buildModuleTerritoryUrl(MODULE_SLUGS.events, communityTerritoryPath);
       } else {
-        feedUrl = `/comunidade/${TERRITORY_CONFIG.launch.state}/${TERRITORY_CONFIG.launch.city}`;
-        eventsUrl = `/eventos/${TERRITORY_CONFIG.launch.state}/${TERRITORY_CONFIG.launch.city}`;
+        feedUrl = LAUNCH_URLS.community;
+        eventsUrl = LAUNCH_URLS.events;
       }
     } else {
       const geoUrl = geoPathToPublicUrl(routeResolved.location.geographic_path);
-      feedUrl = buildCommunityTerritoryUrl(geoUrl);
-      eventsUrl = buildModuleTerritoryUrl(MODULE_SLUGS.events, geoUrl);
+      feedUrl = hasCommunityTerritorySlug(geoUrl) ? buildCommunityTerritoryUrl(geoUrl) : LAUNCH_URLS.community;
+      eventsUrl = hasCommunityTerritorySlug(geoUrl) ? buildModuleTerritoryUrl(MODULE_SLUGS.events, geoUrl) : LAUNCH_URLS.events;
     }
   } else if (activeLocation?.geographic_path) {
     const geoUrl = geoPathToPublicUrl(activeLocation.geographic_path);
-    feedUrl = buildCommunityTerritoryUrl(geoUrl);
-    eventsUrl = buildModuleTerritoryUrl(MODULE_SLUGS.events, geoUrl);
+    feedUrl = hasCommunityTerritorySlug(geoUrl) ? buildCommunityTerritoryUrl(geoUrl) : LAUNCH_URLS.community;
+    eventsUrl = hasCommunityTerritorySlug(geoUrl) ? buildModuleTerritoryUrl(MODULE_SLUGS.events, geoUrl) : LAUNCH_URLS.events;
   } else {
-    feedUrl = `/comunidade/${TERRITORY_CONFIG.launch.state}/${TERRITORY_CONFIG.launch.city}`;
-    eventsUrl = `/eventos/${TERRITORY_CONFIG.launch.state}/${TERRITORY_CONFIG.launch.city}`;
+    feedUrl = LAUNCH_URLS.community;
+    eventsUrl = LAUNCH_URLS.events;
   }
 
   const alertsUrl = `${feedUrl}/feed?tab=alertas`;
@@ -64,7 +68,7 @@ export function useCommunityUrls(routeResolved?: ResolvedTerritory | null): Comm
     events: eventsUrl,
     eventDetail: (id: string) => `/eventos/${id}`,
     groups: groupsUrl,
-    groupDetail: (id: string) => `/comunidade/grupos/${id}`,
+    groupDetail: (id: string) => `${groupsUrl}/${id}`,
     recommendations: "/recomendacoes",
     newRecommendation: "/recomendacoes/nova",
     recommendationDetail: (id: string) => `/recomendacoes/${id}`,

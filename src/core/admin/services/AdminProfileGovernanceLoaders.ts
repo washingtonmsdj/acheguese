@@ -1,4 +1,4 @@
-﻿import { supabase } from "@/integrations/supabase";
+import { supabase } from "@/integrations/supabase";
 import { AuthorizationEngine } from "@/core/authorization/services/AuthorizationEngine";
 import { FamilyService, FAMILY_TABLES } from "@/core/family";
 import { profileService } from "@/core/profiles/services/ProfileService";

@@ -39,8 +39,6 @@ export type {
   ClassifiedCategoryCoverageResult,
   ClassifiedSellerCoverageItem,
   ClassifiedSellerCoverageResult,
-  ClassifiedUrlHistoryItem,
-  ClassifiedUrlHistoryResult,
   ClassifiedPolicySummary,
 } from "./AdminClassifiedsService";
 export { adminCommunityAlertsService } from "./AdminCommunityAlertsService";

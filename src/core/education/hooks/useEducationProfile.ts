@@ -1,1 +1,1 @@
-﻿export { useEducationProfile } from '@/modules/business/education/hooks/useEducationProfile';
+export { useEducationProfile } from '@/modules/business/education/hooks/useEducationProfile';

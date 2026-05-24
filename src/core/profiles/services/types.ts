@@ -1,31 +1,9 @@
 /**
- * Profile Service Types — Hub de compatibilidade (Fase 4)
+ * Profile service types.
  *
- * ⚠️ ARQUIVO DE COMPATIBILIDADE — não adicionar tipos novos aqui.
- *
- * Os tipos foram movidos para arquivos com responsabilidade explícita:
- *
- * | Tipo canônico                  | Arquivo canônico                                      |
- * |-------------------------------|-------------------------------------------------------|
- * | ProfileStatus                 | contracts/ProfileRuntimeContracts.ts                  |
- * | ProfilePermissions            | contracts/ProfileRuntimeContracts.ts                  |
- * | ProfilePlan                   | contracts/ProfileRuntimeContracts.ts                  |
- * | ProfileReputation             | contracts/ProfileRuntimeContracts.ts                  |
- * | ProfileAssociatedBusiness     | services/ProfileBusinessTypes.ts                      |
- * | ProfileBusinessModuleSnapshot | services/ProfileBusinessTypes.ts                      |
- * | ProfileActivityStats          | services/ProfileOperationTypes.ts                     |
- * | ProfileContext                | views/ProfileContext.ts                               |
- * | Profile (entidade)            | domain/Profile.ts                                     |
- * | ProfileSummary                | views/ProfileSummary.ts                               |
- * | ProfileAccountSnapshot        | views/ProfileAccountSnapshot.ts                       |
- * | ProfileLikeActivityRecord     | views/ProfileActivityRecords.ts                       |
- * | ProfileSaveActivityRecord     | views/ProfileActivityRecords.ts                       |
- * | ProfilePollVoteActivityRecord | views/ProfileActivityRecords.ts                       |
- *
- * Aliases abaixo mantêm compatibilidade com código existente.
- * Novos imports desses nomes são bloqueados pelo ESLint (.eslintrc-profile-rules.json).
+ * Contratos compartilhados por services de perfil. Evite adicionar tipos novos
+ * aqui quando houver arquivo de domínio, contrato ou view mais específico.
  */
-
 // ── Re-exports canônicos ──────────────────────────────────────────────────
 
 export type {
@@ -86,8 +64,8 @@ export type ProfileType =
   | "community"
   | (string & {});
 
-/** @deprecated Tipo legado — não usar em código novo */
-export type LegacyProfileType = "personal" | "company" | "service";
+/** Alias antigo de tipo de perfil preservado para leitura de linhas antigas do banco. */
+export type ProfileTypeAlias = "personal" | "company" | "service";
 
 export type ProfileVerificationStatusValue =
   | "not_requested"
@@ -97,7 +75,7 @@ export type ProfileVerificationStatusValue =
 
 /**
  * @deprecated Use Profile de @/core/profiles/domain/Profile
- * Mantido porque ProfileService ainda usa internamente (snake_case do banco).
+ * Contrato de linha usado internamente pelo ProfileService (snake_case do banco).
  */
 export interface Profile {
   id: string;
@@ -106,7 +84,7 @@ export interface Profile {
   name: string;
   display_name: string;
   username: string;
-  type?: LegacyProfileType;
+  type?: ProfileTypeAlias;
   bio?: string;
   short_bio?: string;
   avatar_url?: string;
@@ -156,7 +134,7 @@ export interface CreateProfileData {
   display_name?: string;
   username: string;
   city: string;
-  type?: LegacyProfileType;
+  type?: ProfileTypeAlias;
   bio?: string;
   short_bio?: string;
   avatar_url?: string;

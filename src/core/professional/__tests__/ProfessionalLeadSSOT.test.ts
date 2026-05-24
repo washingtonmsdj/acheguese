@@ -77,7 +77,7 @@ describe("professional lead SSOT", () => {
     expect(publicPage).toContain("ProfessionalLeadRequestDialog");
     expect(publicPage).toContain("Solicitar orcamento");
     expect(actionButtons).toContain("ProfessionalLeadRequestDialog");
-    expect(actionButtons).toContain('sourceChannel="legacy_detail"');
+    expect(actionButtons).toContain('sourceChannel="service_profile"');
     expect(trackingPage).toContain("ProfessionalLeadService.getLeadDetails");
     expect(trackingPage).toContain("ProfessionalLeadService.listMessages");
     expect(trackingPage).toContain("ProfessionalLeadService.listQuotes");
@@ -96,6 +96,10 @@ describe("professional lead SSOT", () => {
     const centralPage = readProjectFile(
       "src/modules/central/pages/CentralProfissionalPage.tsx",
     );
+    const centralSections = readProjectFile(
+      "src/modules/central/pages/CentralProfissionalPageSections.tsx",
+    );
+    const centralRuntime = `${centralPage}\n${centralSections}`;
 
     expect(centralPage).toContain("ProfessionalLeadService.listLeadsForProfessional");
     expect(centralPage).toContain("ProfessionalLeadService.updateLeadStatus");
@@ -103,12 +107,12 @@ describe("professional lead SSOT", () => {
     expect(centralPage).toContain("ProfessionalLeadService.createQuote");
     expect(centralPage).toContain("ProfessionalLeadService.listEngagementsForProfessional");
     expect(centralPage).toContain("ProfessionalLeadService.updateEngagementStatus");
-    expect(centralPage).toContain("Pedidos de orcamento");
-    expect(centralPage).toContain("Atendimentos contratados");
-    expect(centralPage).toContain("Marcar contatado");
-    expect(centralPage).toContain("Enviar resposta");
-    expect(centralPage).toContain("Enviar proposta");
-    expect(centralPage).toContain("Leads capturados pelo perfil publico");
+    expect(centralRuntime).toContain("Pedidos de orcamento");
+    expect(centralRuntime).toContain("Atendimentos contratados");
+    expect(centralRuntime).toContain("Marcar contatado");
+    expect(centralRuntime).toContain("Enviar resposta");
+    expect(centralRuntime).toContain("Enviar proposta");
+    expect(centralRuntime).toContain("Leads capturados pelo perfil publico");
     expect(centralPage).not.toContain('.from("professional_leads")');
     expect(centralPage).not.toContain('.from("professional_lead_messages")');
     expect(centralPage).not.toContain('.from("professional_lead_quotes")');

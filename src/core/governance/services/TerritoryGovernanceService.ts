@@ -6,14 +6,12 @@
  * Responsabilidades:
  * - Versionamento de locations
  * - Aliases históricos e populares
- * - Redirects de slugs
  * - Eventos de mudança territorial
  * - Histórico postal
  * 
  * Regras:
  * - Versão ativa: valid_until IS NULL ou ainda vigente
  * - Alias não pode ser ambíguo
- * - Redirect de slug antigo único
  * - Eventos registram mudanças oficiais
  */
 
@@ -26,8 +24,6 @@ import type {
   CreateLocationVersionInput,
   LocationAlias,
   CreateLocationAliasInput,
-  SlugRedirect,
-  CreateSlugRedirectInput,
   TerritoryChangeEvent,
   CreateTerritoryChangeEventInput,
   PostalCodeHistory,
@@ -140,55 +136,6 @@ export class TerritoryGovernanceService {
       throw new Error('Location ID is required');
     }
     return await this.repository.listAliasesForLocation(locationId);
-  }
-
-  // ============================================
-  // SLUG REDIRECTS
-  // ============================================
-
-  /**
-   * Criar redirect de slug antigo para novo
-   * 
-   * Regras:
-   * - Location deve existir
-   * - old_slug único (não pode ter redirect duplicado)
-   * - old_slug != new_slug
-   */
-  async createSlugRedirect(input: CreateSlugRedirectInput): Promise<SlugRedirect> {
-    if (!input.location_id || !input.old_slug || !input.new_slug) {
-      throw new Error('location_id, old_slug, and new_slug are required');
-    }
-
-    if (input.old_slug === input.new_slug) {
-      throw new Error('old_slug and new_slug must be different');
-    }
-
-    const location = await this.locationRepository.findById(input.location_id);
-    if (!location) {
-      throw new Error(`Location ${input.location_id} not found`);
-    }
-
-    return await this.repository.createSlugRedirect(input);
-  }
-
-  /**
-   * Resolver redirect por slug antigo
-   */
-  async resolveRedirectByOldSlug(oldSlug: string): Promise<SlugRedirect | null> {
-    if (!oldSlug) {
-      throw new Error('Old slug is required');
-    }
-    return await this.repository.findRedirectByOldSlug(oldSlug);
-  }
-
-  /**
-   * Listar redirects de uma location
-   */
-  async listRedirectsForLocation(locationId: string): Promise<SlugRedirect[]> {
-    if (!locationId) {
-      throw new Error('Location ID is required');
-    }
-    return await this.repository.listRedirectsForLocation(locationId);
   }
 
   // ============================================

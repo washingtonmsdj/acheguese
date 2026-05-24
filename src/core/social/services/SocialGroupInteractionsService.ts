@@ -66,7 +66,7 @@ export class SocialGroupInteractionsService {
         });
 
       if (error) {
-        // Ignorar erro de duplicata (já é membro)
+        // Ignorar erro de duplicata (ja e membro)
         if (error.code === "23505") {
           return { success: true };
         }
@@ -156,7 +156,7 @@ export class SocialGroupInteractionsService {
   }
 
   /**
-   * Verificar se profile é membro de um grupo
+   * Verificar se profile e membro de um grupo
    */
   static async isMemberOfGroup(
     groupId: string,
@@ -618,7 +618,7 @@ export class SocialGroupInteractionsService {
   }
 
   /**
-   * Busca IDs dos grupos em que o usuário é membro
+   * Busca IDs dos grupos em que o usuario e membro
    */
   static async getUserGroupIds(userId?: string): Promise<string[]> {
     try {
@@ -675,4 +675,3 @@ export class SocialGroupInteractionsService {
   }
 
 }
-

@@ -1,32 +1,25 @@
 import React from "react";
 import type { Alert } from "@/core/alerts/types";
 import { ALERT_STATUS } from "@/shared/types/constants";
+import { AlertTriangle } from "lucide-react";
+import { ALERT_TYPE_CONFIG } from "@/core/alerts/constants/alertTypes";
+import { cn } from "@/shared/utils/cn";
 interface AlertCardProps {
   alert: Alert;
   onConfirm?: () => void;
   onResolve?: () => void;
 }
 
-const alertTypeConfig = {
-  crime: { icon: "🚨", color: "red", label: "Crime" },
-  accident: { icon: "🚗", color: "orange", label: "Acidente" },
-  fire: { icon: "🔥", color: "red", label: "Incêndio" },
-  flood: { icon: "🌊", color: "blue", label: "Alagamento" },
-  power_outage: { icon: "⚡", color: "yellow", label: "Falta de Luz" },
-  water_outage: { icon: "💧", color: "blue", label: "Falta de Água" },
-  road_closure: { icon: "🚧", color: "orange", label: "Via Bloqueada" },
-  other: { icon: "⚠️", color: "gray", label: "Outro" },
-};
-
 const statusConfig = {
-  active: { label: "Ativo", color: "green" },
-  resolved: { label: "Resolvido", color: "gray" },
-  expired: { label: "Expirado", color: "gray" },
+  active: { label: "Ativo", className: "bg-green-100 text-green-700" },
+  resolved: { label: "Resolvido", className: "bg-gray-100 text-gray-700" },
+  expired: { label: "Expirado", className: "bg-gray-100 text-gray-700" },
 };
 
 export function AlertCard({ alert, onConfirm, onResolve }: AlertCardProps) {
-  const typeInfo = alertTypeConfig[alert.type];
+  const typeInfo = ALERT_TYPE_CONFIG[alert.type];
   const statusInfo = statusConfig[alert.status];
+  const TypeIcon = typeInfo.icon;
 
   const expiresAt = new Date(alert.expires_at);
   const now = new Date();
@@ -39,18 +32,18 @@ export function AlertCard({ alert, onConfirm, onResolve }: AlertCardProps) {
     <div className="border rounded-lg p-4 bg-white shadow-sm">
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-2">
-          <span className="text-2xl">{typeInfo.icon}</span>
+          <TypeIcon className={cn("h-6 w-6", typeInfo.iconClassName)} aria-hidden="true" />
           <div>
             <h3 className="font-semibold">{alert.title}</h3>
             <span
-              className={`text-xs px-2 py-1 rounded bg-${typeInfo.color}-100 text-${typeInfo.color}-700`}
+              className={cn("text-xs px-2 py-1 rounded", typeInfo.badgeClassName)}
             >
               {typeInfo.label}
             </span>
           </div>
         </div>
         <span
-          className={`text-xs px-2 py-1 rounded bg-${statusInfo.color}-100 text-${statusInfo.color}-700`}
+          className={cn("text-xs px-2 py-1 rounded", statusInfo.className)}
         >
           {statusInfo.label}
         </span>
@@ -65,9 +58,9 @@ export function AlertCard({ alert, onConfirm, onResolve }: AlertCardProps) {
           {alert.street && `, ${alert.street}`}
         </div>
         {alert.status === ALERT_STATUS.ACTIVE && (
-          <div className={isExpiringSoon ? "text-orange-600 font-medium" : ""}>
-            {isExpiringSoon && "⚠️ "}
-            Expira em {daysUntilExpiration} dias
+          <div className={cn("flex items-center gap-1", isExpiringSoon && "text-orange-600 font-medium")}>
+            {isExpiringSoon && <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />}
+            <span>Expira em {daysUntilExpiration} dias</span>
           </div>
         )}
       </div>

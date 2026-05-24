@@ -1,1 +1,1 @@
-﻿export * from '@/modules/mobility/delivery/order/sourceMetadata';
+export * from '@/modules/mobility/delivery/order/sourceMetadata';

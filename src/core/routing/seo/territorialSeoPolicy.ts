@@ -1,4 +1,5 @@
 import { MODULE_SLUGS } from "../utils/territoryUrls";
+import { isReservedSlug } from "../reservedSlugs";
 
 export interface TerritorialSeoPolicy {
   canonicalPath: string;
@@ -22,32 +23,19 @@ export function resolveSeoPolicy(pathname: string): TerritorialSeoPolicy {
 
   if (parts[0] === MODULE_SLUGS.community && parts[1] && parts[2]) {
     const part3 = parts[3];
-    const isGroup = part3 === "area" && Boolean(parts[4]);
-    const isCityEmbeddedModule = Boolean(part3 && embeddedCommunityModules.has(part3));
+    const isInvalidCommunityTerritory = !part3 || part3 === "area" || isReservedSlug(part3);
     const isDistrictEmbeddedModule = Boolean(
-      !isGroup && parts[4] && embeddedCommunityModules.has(parts[4]),
+      !isInvalidCommunityTerritory && parts[4] && embeddedCommunityModules.has(parts[4]),
     );
 
-    if (isGroup) {
-      const embeddedModule = parts[5];
-      if (embeddedModule && embeddedCommunityModules.has(embeddedModule)) {
-        const territoryParts = parts.slice(1, 5);
-        return {
-          canonicalPath: `/${embeddedModule}/${territoryParts.join("/")}`,
-          robots: "noindex, follow",
-        };
-      }
-      const suffix = parts.length > 5 ? `/${parts.slice(5).join("/")}` : "";
+    if (isInvalidCommunityTerritory) {
       return {
-        canonicalPath: `/${MODULE_SLUGS.community}/${parts[1]}/${parts[2]}/${parts[4]}${suffix}`,
-        robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
-      };
-    } else if (isCityEmbeddedModule) {
-      return {
-        canonicalPath: `/${part3}/${parts.slice(1, 3).join("/")}`,
+        canonicalPath: cleanPath,
         robots: "noindex, follow",
       };
-    } else if (isDistrictEmbeddedModule) {
+    }
+
+    if (isDistrictEmbeddedModule) {
       const embeddedModule = parts[4];
       return {
         canonicalPath: `/${embeddedModule}/${parts.slice(1, 4).join("/")}`,

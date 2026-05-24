@@ -138,23 +138,6 @@ export class RoutingService {
     this.defaultProfile = profile;
   }
 
-  /**
-   * Mapear perfil legado para novo
-   */
-  mapLegacyProfile(legacyProfile: string): TransportProfile {
-    switch (legacyProfile) {
-      case 'driving':
-      case 'transit':
-        return 'car';
-      case 'walking':
-        return 'foot';
-      case 'cycling':
-        return 'bicycle';
-      default:
-        return this.defaultProfile;
-    }
-  }
-
   // ============================================
   // VALIDATIONS
   // ============================================

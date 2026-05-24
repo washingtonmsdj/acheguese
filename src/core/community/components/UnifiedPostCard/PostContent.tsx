@@ -15,7 +15,6 @@ import {
 import { type PostType } from "@/shared/constants/postTypeConfig";
 import {
   extractOpportunityPayload,
-  getOpportunityTypeEmoji,
   getOpportunityTypeLabel,
   getOpportunityUrgencyLabel,
 } from "@/core/work-opportunities";
@@ -90,7 +89,7 @@ export const PostContent = memo<PostContentProps>(
               {COMMUNITY_POST_CARD_COPY.territoryOpportunityLabel}
             </p>
             <p className="mt-2 text-base font-semibold text-emerald-100">
-              {getOpportunityTypeEmoji(opportunityPayload.type)} {opportunityPayload.headline ?? content}
+              {opportunityPayload.headline ?? content}
             </p>
             <div className="mt-2 space-y-1.5 text-sm text-emerald-100/85">
               <p className="flex items-center gap-2">

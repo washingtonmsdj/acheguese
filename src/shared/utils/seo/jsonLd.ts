@@ -17,25 +17,23 @@
  * @version 1.0.0
  */
 
+import { buildPublicAssetUrl, getPublicSiteOrigin, PLATFORM_BRAND } from '@/shared/config/brand';
+
 /**
  * Organization Schema
- * 
- * Represents the Ordax organization.
+ *
+ * Represents the platform organization.
  */
 export function generateOrganizationSchema() {
+  const origin = getPublicSiteOrigin();
+
   return {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: 'Ordax',
-    url: 'https://ordax.com.br',
-    logo: 'https://ordax.com.br/logo.png',
-    description: 'Plataforma completa para conectar pessoas e negócios locais',
-    sameAs: [
-      'https://facebook.com/ordaxbr',
-      'https://instagram.com/ordaxbr',
-      'https://twitter.com/ordaxbr',
-      'https://linkedin.com/company/ordax',
-    ],
+    name: PLATFORM_BRAND.name,
+    url: origin,
+    logo: buildPublicAssetUrl('/logo.png'),
+    description: 'Plataforma completa para conectar pessoas e negocios locais',
     contactPoint: {
       '@type': 'ContactPoint',
       telephone: '+55-11-0000-0000',
@@ -52,16 +50,18 @@ export function generateOrganizationSchema() {
  * Enables Google search box in SERPs.
  */
 export function generateWebSiteSchema() {
+  const origin = getPublicSiteOrigin();
+
   return {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: 'Ordax',
-    url: 'https://ordax.com.br',
+    name: PLATFORM_BRAND.name,
+    url: origin,
     potentialAction: {
       '@type': 'SearchAction',
       target: {
         '@type': 'EntryPoint',
-        urlTemplate: 'https://ordax.com.br/buscar?q={search_term_string}',
+        urlTemplate: `${origin}/buscar?q={search_term_string}`,
       },
       'query-input': 'required name=search_term_string',
     },

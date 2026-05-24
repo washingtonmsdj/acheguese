@@ -21,6 +21,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Badge } from "@/shared/components/ui/badge";
 import { cn } from "@/shared/utils/cn";
+import { buildTelUrl, buildWhatsAppUrl, openContactUrl } from "@/shared/utils/contactLinks";
 import { useBusinessList } from "@/core/business/hooks/useBusinessList";
 import { useBusinessUrls } from "@/core/business/hooks/useBusinessUrls";
 import { useUserPosition } from "@/core/business/hooks/useUserPosition";
@@ -28,6 +29,7 @@ import { useBusinessDistance, useSortedByDistance } from "@/core/business/hooks/
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 import { getCategoryConfig } from "@/core/business/config/categoryFilters";
 import { formatDistance } from "@/shared/utils/geolocation";
+import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
 import { useTerritoryLabels, getCategoryDescription } from "@/core/location/hooks/useTerritoryLabels";
 import type { CategoryConfig, FilterOption } from "@/core/business/config/categoryFilters";
 import type { Business } from "@/core/business/types/Business";
@@ -484,7 +486,7 @@ export default function CategoryBusinessPage({
         {/* Empty */}
         {!isLoading && !isError && filteredBusinesses.length === 0 && (
           <div className="text-center py-16">
-            <span className="text-5xl block mb-4">{config.emptyEmoji}</span>
+            <Icon className={cn("h-12 w-12 mx-auto mb-4", config.color)} />
             <h3 className="text-lg font-bold text-foreground mb-2">Nenhum resultado</h3>
             <p className="text-sm text-muted-foreground mb-4">
               {hasActiveFilters
@@ -652,8 +654,12 @@ export default function CategoryBusinessPage({
                           className="flex-1 h-8 text-xs bg-success/10 border-success/30 hover:bg-success/20 text-success"
                           onClick={(e) => {
                             e.stopPropagation();
-                            const n = business.whatsapp!.replace(/\D/g, "");
-                            window.open(`https://wa.me/${n}`, "_blank");
+                            const url = buildWhatsAppUrl(business.whatsapp);
+                            if (url) {
+                              openSafeExternalUrl(url, {
+                                context: "category-business-whatsapp",
+                              });
+                            }
                           }}
                         >
                           <MessageCircle className="w-3.5 h-3.5 mr-1" /> WhatsApp
@@ -666,7 +672,8 @@ export default function CategoryBusinessPage({
                           className="flex-1 h-8 text-xs border-border text-muted-foreground hover:text-primary hover:border-primary/30"
                           onClick={(e) => {
                             e.stopPropagation();
-                            window.open(`tel:${business.phone}`, "_self");
+                            const url = buildTelUrl(business.phone);
+                            openContactUrl(url);
                           }}
                         >
                           <Phone className="w-3.5 h-3.5 mr-1" /> Ligar

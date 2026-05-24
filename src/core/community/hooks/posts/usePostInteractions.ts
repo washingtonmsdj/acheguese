@@ -4,7 +4,7 @@ import { useSessionContext } from "@/core/session";
 import { postService } from "@/core/posts/services";
 import { toast } from "sonner";
 import { logger } from "@/shared/utils/logger";
-import { SocialInteractionsService } from "@/core/social/services/SocialInteractionsService"; // ✅ GATE 3 FASE 3C
+import { SocialInteractionsService } from "@/core/social/services/SocialInteractionsService"; //  GATE 3 FASE 3C
 
 /**
  * Hook profissional para gerenciar interações com posts
@@ -43,7 +43,7 @@ export function usePostInteractions(
     if (isProcessing || !user || !activeProfile) {
       if (!user) {
         if (import.meta.env.DEV) {
-          logger.info("❌ Usuário não autenticado");
+          logger.info(" Usuário não autenticado");
         }
         toast.error("Faça login para curtir posts");
       }
@@ -53,12 +53,12 @@ export function usePostInteractions(
     setIsProcessing(true);
 
     try {
-      // ✅ MIGRADO - Verificar se o post existe usando PostService
+      //  MIGRADO - Verificar se o post existe usando PostService
       const postExists = await postService.postExists(postId);
 
       if (!postExists) {
         if (import.meta.env.DEV) {
-          logger.error("❌ Post não encontrado no banco:", { postId });
+          logger.error(" Post não encontrado no banco:", { postId });
         }
 
         // Post não existe - limpar do cache
@@ -77,7 +77,7 @@ export function usePostInteractions(
         : state.likesCount - 1;
 
       if (import.meta.env.DEV) {
-        logger.info("📝 Otimistic update:", {
+        logger.info(" Otimistic update:", {
           previousState,
           newIsLiked,
           newLikesCount,
@@ -93,10 +93,10 @@ export function usePostInteractions(
       if (newIsLiked) {
         // Adicionar curtida
         if (import.meta.env.DEV) {
-          logger.info("➕ Adicionando curtida...");
+          logger.info(" Adicionando curtida...");
         }
 
-        // ✅ GATE 3 FASE 3C - Usar SocialInteractionsService
+        //  GATE 3 FASE 3C - Usar SocialInteractionsService
         const result = await SocialInteractionsService.likePost(
           postId,
           activeProfile.id,
@@ -106,15 +106,15 @@ export function usePostInteractions(
         }
 
         if (import.meta.env.DEV) {
-          logger.info("✅ Curtida adicionada");
+          logger.info(" Curtida adicionada");
         }
       } else {
         // Remover curtida
         if (import.meta.env.DEV) {
-          logger.info("➖ Removendo curtida...");
+          logger.info(" Removendo curtida...");
         }
 
-        // ✅ GATE 3 FASE 3C - Usar SocialInteractionsService
+        //  GATE 3 FASE 3C - Usar SocialInteractionsService
         const result = await SocialInteractionsService.unlikePost(
           postId,
           activeProfile.id,
@@ -124,7 +124,7 @@ export function usePostInteractions(
         }
 
         if (import.meta.env.DEV) {
-          logger.info("✅ Curtida removida");
+          logger.info(" Curtida removida");
         }
       }
 
@@ -133,12 +133,12 @@ export function usePostInteractions(
       queryClient.invalidateQueries({ queryKey: ["community-feed-aaa"] });
 
       if (import.meta.env.DEV) {
-        logger.info("✅ Cache invalidado");
+        logger.info(" Cache invalidado");
       }
     } catch (error: unknown) {
       // Rollback em caso de erro
       if (import.meta.env.DEV) {
-        logger.error("❌ Erro no handleLike:", error);
+        logger.error(" Erro no handleLike:", error);
       }
 
       setState(state); // Restaurar state original
@@ -155,7 +155,7 @@ export function usePostInteractions(
     } finally {
       setIsProcessing(false);
       if (import.meta.env.DEV) {
-        logger.info("✅ handleLike finalizado");
+        logger.info(" handleLike finalizado");
       }
     }
   };
@@ -186,7 +186,7 @@ export function usePostInteractions(
     try {
       if (newIsSaved) {
         // Salvar post
-        // ✅ GATE 3 FASE 3C - Usar SocialInteractionsService
+        //  GATE 3 FASE 3C - Usar SocialInteractionsService
         const result = await SocialInteractionsService.savePost(
           postId,
           activeProfile.id,
@@ -198,7 +198,7 @@ export function usePostInteractions(
         toast.success("Post salvo com sucesso");
       } else {
         // Remover dos salvos
-        // ✅ GATE 3 FASE 3C - Usar SocialInteractionsService
+        //  GATE 3 FASE 3C - Usar SocialInteractionsService
         const result = await SocialInteractionsService.unsavePost(
           postId,
           activeProfile.id,
@@ -243,7 +243,7 @@ export function usePostInteractions(
       if (navigator.share && navigator.canShare?.(shareData)) {
         await navigator.share(shareData);
 
-        // ✅ MIGRADO - Incrementar contador usando PostService
+        //  MIGRADO - Incrementar contador usando PostService
         await postService.incrementSharesCount(postId);
       } else {
         // Fallback: copiar link

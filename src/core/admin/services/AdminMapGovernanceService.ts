@@ -19,7 +19,7 @@ import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 
 type VisibilityStatus = "official" | "compatibility" | "attention";
-type TouristPointStatus = "active" | "inactive" | "archived";
+type TouristPointPublicationStatus = "draft" | "published" | "archived";
 
 interface TouristPoint {
   id: string;
@@ -28,17 +28,11 @@ interface TouristPoint {
   longitude: number | null;
 }
 
-const TouristPointStatus = {
-  ACTIVE: "active",
-  INACTIVE: "inactive",
+const TouristPointPublicationStatus = {
+  DRAFT: "draft",
+  PUBLISHED: "published",
   ARCHIVED: "archived",
 } as const;
-
-const TOURIST_POINT_DB_STATUS: Record<TouristPointStatus, string> = {
-  active: "published",
-  inactive: "draft",
-  archived: "archived",
-};
 
 const CATEGORY_LABELS: Record<string, string> = {
   historico: "Histórico",
@@ -74,7 +68,7 @@ export interface AdminMapGovernanceStats {
   totalGroups: number;
   touristPointsTotal: number;
   touristPointsMapped: number;
-  touristPointsInactive: number;
+  touristPointsNonPublic: number;
   attentionItems: number;
 }
 
@@ -367,11 +361,11 @@ function compareHotspots(
   return left.name.localeCompare(right.name);
 }
 
-async function listTouristPointsByStatus(status: TouristPointStatus): Promise<TouristPoint[]> {
+async function listTouristPointsByStatus(status: TouristPointPublicationStatus): Promise<TouristPoint[]> {
   const { data, error } = await supabase
     .from("tourist_points")
     .select("id, category, latitude, longitude")
-    .eq("status", TOURIST_POINT_DB_STATUS[status]);
+    .eq("status", status);
 
   if (error) {
     logger.error("AdminMapGovernanceService.listTouristPointsByStatus", error);
@@ -465,13 +459,13 @@ class AdminMapGovernanceService {
 
   async getSnapshot(): Promise<AdminMapGovernanceSnapshot> {
     try {
-      const [locations, territoryTree, activePoints, inactivePoints, archivedPoints] =
+      const [locations, territoryTree, publishedPoints, draftPoints, archivedPoints] =
         await Promise.all([
           locationAdminService.listLocations(),
           TerritorialManagementService.fetchTerritoryTree(),
-          listTouristPointsByStatus(TouristPointStatus.ACTIVE),
-          listTouristPointsByStatus(TouristPointStatus.INACTIVE),
-          listTouristPointsByStatus(TouristPointStatus.ARCHIVED),
+          listTouristPointsByStatus(TouristPointPublicationStatus.PUBLISHED),
+          listTouristPointsByStatus(TouristPointPublicationStatus.DRAFT),
+          listTouristPointsByStatus(TouristPointPublicationStatus.ARCHIVED),
         ]);
 
       const visibilityMap = new Map(
@@ -482,8 +476,8 @@ class AdminMapGovernanceService {
         createLocationCoverageRecord(location, visibilityMap.get(location.id)),
       );
 
-      const allTouristPoints = [...activePoints, ...inactivePoints, ...archivedPoints];
-      const mappedTouristPoints = activePoints.filter((point) =>
+      const allTouristPoints = [...publishedPoints, ...draftPoints, ...archivedPoints];
+      const mappedTouristPoints = publishedPoints.filter((point) =>
         Boolean(point.latitude != null && point.longitude != null),
       );
 
@@ -562,7 +556,7 @@ class AdminMapGovernanceService {
       ];
 
       const touristPointCategories: AdminMapTouristPointCategorySummary[] = Object.entries(
-        activePoints.reduce<Record<string, TouristPoint[]>>((acc, point) => {
+        publishedPoints.reduce<Record<string, TouristPoint[]>>((acc, point) => {
           const bucket = acc[point.category] ?? [];
           bucket.push(point);
           acc[point.category] = bucket;
@@ -613,7 +607,7 @@ class AdminMapGovernanceService {
           totalGroups: territoryTree.groups.length,
           touristPointsTotal: allTouristPoints.length,
           touristPointsMapped: mappedTouristPoints.length,
-          touristPointsInactive: inactivePoints.length + archivedPoints.length,
+          touristPointsNonPublic: draftPoints.length + archivedPoints.length,
           attentionItems,
         },
         providers,
@@ -637,7 +631,7 @@ class AdminMapGovernanceService {
           totalGroups: 0,
           touristPointsTotal: 0,
           touristPointsMapped: 0,
-          touristPointsInactive: 0,
+          touristPointsNonPublic: 0,
           attentionItems: 0,
         },
         providers: [],

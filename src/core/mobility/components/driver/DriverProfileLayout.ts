@@ -1,1 +1,1 @@
-﻿export { DriverProfileLayout } from '@/modules/mobility/components/driver/DriverProfileLayout';
+export { DriverProfileLayout } from '@/modules/mobility/components/driver/DriverProfileLayout';

@@ -27,7 +27,7 @@ export interface MultiProfileRecord {
   profile_type: ProfileType;
   handle: string;
   display_name: string;
-  // Legacy/cross-module aliases
+  // Cross-module aliases normalized at service boundary.
   name?: string;
   username?: string | null;
   avatar_url?: string;

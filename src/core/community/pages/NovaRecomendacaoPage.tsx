@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { useNovaRecomendacao } from "@/core/community/hooks/useNovaRecomendacao";
 import { RecomendacaoHeader } from "@/shared/components/recomendacoes/RecomendacaoHeader";
 import { RecomendacaoTip } from "@/shared/components/recomendacoes/RecomendacaoTip";

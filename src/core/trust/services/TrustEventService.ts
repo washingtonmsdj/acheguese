@@ -4,6 +4,7 @@ import { NotificationService } from "@/core/notifications/services/NotificationS
 import { logger } from "@/shared/utils/logger";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
 import { mobilityRoutes } from "@/core/mobility/routes/mobilityRoutes";
+import { LAUNCH_URLS } from "@/config/territory";
 import {
   TRUST_ADMIN_ACTION_TYPES,
   TRUST_EVENT_STATUSES,
@@ -104,7 +105,7 @@ function trustContextActionUrl(event: Pick<TrustEvent, "context_type" | "context
     return "/central/profissional";
   }
   if (event.context_type === "community") {
-    return "/comunidade";
+    return LAUNCH_URLS.community;
   }
   return "/admin/moderacao";
 }

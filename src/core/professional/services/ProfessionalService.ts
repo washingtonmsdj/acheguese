@@ -1,24 +1,13 @@
 /**
- * PROFILE.1.3b - BURN-DOWN AGRESSIVO
+ * ProfessionalService - servico canonico de profissionais.
  *
- * ProfessionalService migrado para usar ProfileService como fonte única de verdade
- * Elimina regras manuais: is_verified
- * Score original: 123 (11 regras manuais)
- *
- * ✅ Fonte única para TODAS as operações de profissionais
- * ✅ Validações consistentes
- * ✅ Tratamento de erros padronizado
- * ✅ Mappers centralizados e tipados
- * ✅ Cache via React Query apenas
- * ✅ ZERO uso de any
- * ✅ Baseado no padrão BusinessService
- * ✅ MIGRADO - Usa ProfileService para verificação
- *
- * @version 1.0.0 - SSOT Migration + Profile Integration
+ * Centraliza leitura, escrita, identidade publica, estatisticas e integracoes
+ * de profissionais usando queries/mutations SSOT e ProfileService.
  */
 import { supabase } from "@/integrations/supabase";
 import { ReviewsService } from "@/core/reviews";
 import type { TerritoryFilter } from "@/core/location/types";
+import { profileService } from "@/core/profiles/services/ProfileService";
 import { logger } from "@/shared/utils/logger";
 import { PAGINATION } from "@/shared/constants";
 import {
@@ -63,45 +52,14 @@ export const ProfessionalFacade = {
 } as const;
 
 // ============================================================
-// LEGACY COMPATIBILITY - Instância singleton (DEPRECATED)
-// ============================================================
-
-export const professionalService = new (class ProfessionalServiceLegacy {
-  // Delega todas as chamadas para os novos módulos SSOT
-  // Queries
-  getProfessionals = professionalQueries.getProfessionals;
-  getProfessionalsList = professionalQueries.getProfessionalsList;
-  getProfessionalById = professionalQueries.getProfessionalById;
-  getServicesByProfile = professionalQueries.getServicesByProfile;
-  getStats = professionalQueries.getStats;
-  getTotalProfessionalsCount = professionalQueries.getTotalProfessionalsCount;
-  getProfessionalsCreatedInPeriod = professionalQueries.getProfessionalsCreatedInPeriod;
-  getReviews = professionalQueries.getReviews;
-  getMyReview = professionalQueries.getMyReview;
-  getJobs = professionalQueries.getJobs;
-  getProfessionalsByIds = professionalQueries.getProfessionalsByIds;
-  searchProfessionals = professionalQueries.searchProfessionals;
-  getPublicProfileBySlug = professionalQueries.getPublicProfileBySlug;
-
-  // Mutations
-  createProfessional = professionalMutations.createProfessional;
-  updateProfessional = professionalMutations.updateProfessional;
-  deleteProfessional = professionalMutations.deleteProfessional;
-  createJob = professionalMutations.createJob;
-  updateProfessionalStatus = professionalMutations.updateProfessionalStatus;
-  deleteProfessionalReview = professionalMutations.deleteProfessionalReview;
-  updateProfessionalReport = professionalMutations.updateProfessionalReport;
-})();
-
-// ============================================================
-// PROFESSIONAL SERVICE CLASS (LEGADO - mantido para compatibilidade)
+// PROFESSIONAL SERVICE CLASS
 // ============================================================
 
 export class ProfessionalService {
 
   /**
-   * 🔍 BUSCAR SERVIÇOS POR PERFIL
-   * ✅ SSOT: Método para buscar todos os serviços de um perfil específico
+   * BUSCAR SERVICOS POR PERFIL
+   * SSOT: metodo para buscar todos os servicos de um perfil especifico.
    */
   static async getServicesByProfile(profileId: string): Promise<Professional[]> {
     return professionalQueries.getServicesByProfile(profileId);
@@ -152,8 +110,8 @@ export class ProfessionalService {
 
 
   /**
-   * ✨ CRIAR PROFISSIONAL (com validação dupla e cache)
-   * FASE PROFILE.1.3 - Usa ProfileService para criação de perfil
+   * CRIAR PROFISSIONAL (com validacao dupla e cache)
+   * FASE PROFILE.1.3: usa ProfileService para criacao de perfil.
    */
   static async createProfessional(
     input: CreateProfessionalInput,
@@ -163,8 +121,8 @@ export class ProfessionalService {
   }
 
   /**
-   * 📝 ATUALIZAR PROFISSIONAL (com validação dupla)
-   * FASE PROFILE.1.3 - Usa ProfileService para atualização de perfil
+   * ATUALIZAR PROFISSIONAL (com validacao dupla)
+   * FASE PROFILE.1.3: usa ProfileService para atualizacao de perfil.
    */
   static async updateProfessional(
     id: string,
@@ -174,8 +132,8 @@ export class ProfessionalService {
   }
 
   /**
-   * ☠️ SOFT DELETE - Não remove dados, apenas marca como inativo
-   * FASE PROFILE.1.3 - Usa ProfileService para soft delete
+   * SOFT DELETE - nao remove dados, apenas marca como inativo.
+   * FASE PROFILE.1.3: usa ProfileService para soft delete.
    */
   static async deleteProfessional(id: string): Promise<void> {
     return deleteProfessionalWithProfile(id);
@@ -189,7 +147,7 @@ export class ProfessionalService {
     userId: string,
   ): Promise<boolean> {
     try {
-      // Verificar se já é favorito
+      // Verificar se ja e favorito.
       const { data: existing } = await (supabase as any)
         .from("professional_favorites")
         .select("id")
@@ -219,33 +177,33 @@ export class ProfessionalService {
   }
 
   /**
-   * 📊 OBTER ESTATÍSTICAS
+   * OBTER ESTATISTICAS
    */
   static async getStats(professionalId: string): Promise<ProfessionalStats> {
     return professionalQueries.getStats(professionalId);
   }
 
   // ============================================================================
-  // 📊 ESTATÍSTICAS ADMINISTRATIVAS
+  // ESTATISTICAS ADMINISTRATIVAS
   // ============================================================================
 
   /**
-   * 📊 OBTER CONTAGEM TOTAL DE PROFISSIONAIS
-   * ✅ SSOT para contagem de profissionais no dashboard admin
+   * OBTER CONTAGEM TOTAL DE PROFISSIONAIS
+   * SSOT para contagem de profissionais no dashboard admin.
    *
-   * @returns Número total de profissionais cadastrados
+   * @returns Numero total de profissionais cadastrados.
    */
   static async getTotalProfessionalsCount(): Promise<number> {
     return professionalQueries.getTotalProfessionalsCount();
   }
 
   /**
-   * 📅 OBTER PROFISSIONAIS CRIADOS EM UM PERÍODO
-   * ✅ SSOT para atividade de profissionais por período
+   * OBTER PROFISSIONAIS CRIADOS EM UM PERIODO
+   * SSOT para atividade de profissionais por periodo.
    *
-   * @param startDate - Data inicial do período
-   * @param endDate - Data final do período
-   * @returns Número de profissionais criados no período
+   * @param startDate - Data inicial do periodo.
+   * @param endDate - Data final do periodo.
+   * @returns Numero de profissionais criados no periodo.
    */
   static async getProfessionalsCreatedInPeriod(
     startDate: Date,
@@ -255,8 +213,8 @@ export class ProfessionalService {
   }
 
   /**
-   * ⭐ OBTER AVALIAÇÕES DE UM PROFISSIONAL
-   * ✅ LOTE 6 - Refatorado para usar ReviewsService
+   * OBTER AVALIACOES DE UM PROFISSIONAL
+   * LOTE 6: refatorado para usar ReviewsService.
    */
   static async getReviews(
     professionalId: string,
@@ -265,8 +223,8 @@ export class ProfessionalService {
   }
 
   /**
-   * ⭐ OBTER AVALIAÇÃO DO USUÁRIO
-   * ✅ LOTE 6 - Refatorado para usar ReviewsService
+   * OBTER AVALIACAO DO USUARIO
+   * LOTE 6: refatorado para usar ReviewsService.
    */
   static async getMyReview(
     professionalId: string,
@@ -276,7 +234,7 @@ export class ProfessionalService {
   }
 
   /**
-   * ⭐ CRIAR/ATUALIZAR AVALIAÇÃO
+   * CRIAR OU ATUALIZAR AVALIACAO
    */
   static async submitReview(
     professionalId: string,
@@ -286,12 +244,11 @@ export class ProfessionalService {
     jobType?: string,
   ): Promise<void> {
     try {
-      const { profileService } = await import("@/core/profiles/services/ProfileService");
-      // Buscar profile ativo do usuário
+      // Buscar profile ativo do usuario.
       const activeProfile = await profileService.getActiveProfile(userId);
       
       if (!activeProfile) {
-        throw new Error("Perfil ativo não encontrado");
+        throw new Error("Perfil ativo nao encontrado");
       }
 
       // Usar upsertReview para criar ou atualizar
@@ -306,19 +263,19 @@ export class ProfessionalService {
         "professional",
       );
     } catch (error: any) {
-      throw new Error(`Erro ao enviar avaliação: ${error.message}`);
+      throw new Error(`Erro ao enviar avaliacao: ${error.message}`);
     }
   }
 
   /**
-   * 🛍️ OBTER SERVIÇOS DE UM PROFISSIONAL
+   * OBTER SERVICOS DE UM PROFISSIONAL
    */
   static async getJobs(professionalId: string): Promise<ProfessionalJob[]> {
     return professionalQueries.getJobs(professionalId);
   }
 
   /**
-   * 🛍️ CRIAR SERVIÇO
+   * CRIAR SERVICO
    */
   static async createJob(
     professionalId: string,
@@ -328,21 +285,21 @@ export class ProfessionalService {
   }
 
   /**
-   * 👁️ INCREMENTAR VISUALIZAÇÕES
+   * INCREMENTAR VISUALIZACOES
    */
   static async incrementViews(professionalId: string): Promise<void> {
     return professionalMutations.incrementViews(professionalId);
   }
 
   /**
-   * 🔍 BUSCAR PROFISSIONAIS POR IDs (para recomendações)
+   * BUSCAR PROFISSIONAIS POR IDS (para recomendacoes)
    */
   static async getProfessionalsByIds(ids: string[]): Promise<Professional[]> {
     return professionalQueries.getProfessionalsByIds(ids);
   }
 
   /**
-   * 🔍 BUSCAR PROFISSIONAIS (para busca global)
+   * BUSCAR PROFISSIONAIS (para busca global)
    */
   static async searchProfessionals(
     query: string,
@@ -364,12 +321,12 @@ export class ProfessionalService {
   
 
   // ============================================================================
-  // MÉTODOS DE ADMIN
+  // METODOS DE ADMIN
   // ============================================================================
 
   /**
    * Atualizar status de profissional (admin)
-   * ✅ SSOT - Centraliza atualização de status
+   * SSOT - Centraliza atualizacao de status.
    */
   static async updateProfessionalStatus(
     id: string,
@@ -379,16 +336,16 @@ export class ProfessionalService {
   }
 
   /**
-   * Deletar avaliação de profissional (admin)
-   * ✅ SSOT - Centraliza deleção de avaliações
+   * Deletar avaliacao de profissional (admin).
+   * SSOT - Centraliza delecao de avaliacoes.
    */
   static async deleteProfessionalReview(reviewId: string): Promise<void> {
     return professionalMutations.deleteProfessionalReview(reviewId);
   }
 
   /**
-   * Atualizar status de denúncia de profissional (admin)
-   * ✅ SSOT - Centraliza atualização de denúncias
+   * Atualizar status de denuncia de profissional (admin).
+   * SSOT - Centraliza atualizacao de denuncias.
    */
   static async updateProfessionalReport(
     reportId: string,
@@ -399,7 +356,7 @@ export class ProfessionalService {
 
   /**
    * Buscar profissionais por IDs (para admin)
-   * ✅ SSOT - Centraliza busca por IDs
+   * SSOT - Centraliza busca por IDs.
    */
   static async getProfessionalsByIdsSimple(
     ids: string[],
@@ -433,29 +390,29 @@ export class ProfessionalService {
 
   /**
    * ============================================
-   * MÉTODOS CANÔNICOS (ETAPA 9)
+   * METODOS CANONICOS (ETAPA 9)
    * ============================================
    */
 
   /**
-   * Verificar se profissional está migrado para modelo canônico
+   * Verificar se profissional esta migrado para modelo canonico.
    */
   static isProfessionalMigrated(professional: ProfessionalDataRecord): boolean {
     return isProfessionalMigratedCanonical(professional);
   }
 
   /**
-   * Verificar se profissional tem endereço físico
+   * Verificar se profissional tem endereco fisico.
    */
   static hasPhysicalAddress(professional: ProfessionalDataRecord): boolean {
     return hasPhysicalAddressCanonical(professional);
   }
 
   /**
-   * Obter endereço formatado (apenas canônico)
+   * Obter endereco formatado (apenas canonico).
    */
   static getFormattedAddress(professional: ProfessionalDataRecord): string {
-    // Usar apenas address canônico quando relações estiverem carregadas
+    // Usar apenas address canonico quando relacoes estiverem carregadas.
     if ((professional as ProfessionalDataWithRelations).address) {
       const addr = (professional as ProfessionalDataWithRelations).address as unknown as Record<string, unknown>;
       const parts: string[] = [];
@@ -474,10 +431,10 @@ export class ProfessionalService {
   }
 
   /**
-   * Obter coordenadas (apenas canônico)
+   * Obter coordenadas (apenas canonico).
    */
   static getCoordinates(professional: ProfessionalDataRecord): { latitude: number; longitude: number } | null {
-    // Usar apenas address canônico quando relações estiverem carregadas
+    // Usar apenas address canonico quando relacoes estiverem carregadas.
     if (
       (professional as ProfessionalDataWithRelations).address?.latitude &&
       (professional as ProfessionalDataWithRelations).address?.longitude
@@ -492,17 +449,17 @@ export class ProfessionalService {
   }
 
   /**
-   * Obter território principal
+   * Obter territorio principal.
    */
   static getTerritory(professional: ProfessionalDataRecord): string | null {
     return getProfessionalTerritory(professional);
   }
 
   /**
-   * Obter nome do território (apenas canônico)
+   * Obter nome do territorio (apenas canonico).
    */
   static getTerritoryName(professional: ProfessionalDataRecord): string | null {
-    // Usar apenas location canônico quando relações estiverem carregadas
+    // Usar apenas location canonico quando relacoes estiverem carregadas.
     if ((professional as ProfessionalDataWithRelations).location?.name) {
       return (professional as ProfessionalDataWithRelations).location.name;
     }
@@ -511,8 +468,8 @@ export class ProfessionalService {
   }
 
   /**
-   * Busca perfil público de profissional por slug + uf + cidade.
-   * SSOT para acesso à tabela professional_data por slug.
+   * Busca perfil publico de profissional por slug + UF + cidade.
+   * SSOT para acesso a tabela professional_data por slug.
    */
   static async getPublicProfileBySlug(
     slug: string,
@@ -539,12 +496,12 @@ export class ProfessionalService {
   }
 
   /**
-   * Verifica se slug já existe
-   * Usado por ProfessionalIdentityAdapter para validação de unicidade
+   * Verifica se slug ja existe.
+   * Usado por ProfessionalIdentityAdapter para validacao de unicidade.
    * 
    * @param slug - Slug a verificar
-   * @param excludeId - ID do profissional a excluir da verificação (para updates)
-   * @returns true se slug existe, false caso contrário
+   * @param excludeId - ID do profissional a excluir da verificacao (para updates).
+   * @returns true se slug existe, false caso contrario.
    */
   static async checkSlugExists(
     slug: string,
@@ -554,23 +511,23 @@ export class ProfessionalService {
   }
 
   /**
-   * Busca slugs similares para sugestão
-   * Usado por ProfessionalIdentityAdapter para gerar sugestões de slugs disponíveis
+   * Busca slugs similares para sugestao.
+   * Usado por ProfessionalIdentityAdapter para gerar sugestoes de slugs disponiveis.
    * 
    * @param slug - Slug base para buscar similares
-   * @param limit - Número máximo de resultados (padrão: 20)
-   * @returns Array de slugs similares
+   * @param limit - Numero maximo de resultados (padrao: 20).
+   * @returns Array de slugs similares.
    */
   static async getSimilarSlugs(slug: string, limit = PAGINATION.DEFAULT_LIMIT): Promise<string[]> {
     return professionalQueries.getProfessionalSimilarSlugs(slug, limit);
   }
 
   /**
-   * Busca histórico de mudanças de slug
-   * Usado por ProfessionalIdentityAdapter para verificar cooldown
+   * Busca historico de mudancas de slug.
+   * Usado por ProfessionalIdentityAdapter para verificar cooldown.
    * 
    * @param professionalId - ID do profissional (professional_data.id)
-   * @returns Array de registros de histórico
+   * @returns Array de registros de historico.
    */
   static async getSlugHistory(professionalId: string): Promise<Array<{
     id: string;

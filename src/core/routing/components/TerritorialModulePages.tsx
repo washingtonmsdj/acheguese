@@ -1,12 +1,12 @@
-/**
+﻿/**
  * TerritorialModulePages
  *
- * Paginas de modulo dentro do contexto territorial.
- * Cada uma renderiza o conteudo existente do modulo,
+ * Páginas de módulo dentro do contexto territorial.
+ * Cada uma renderiza o conteúdo existente do módulo,
  * passando o routeResolved do TerritorialLayout para que
  * os hooks de filtro territorial funcionem corretamente.
  *
- * Padrao: /:state/:city/:district/:module
+ * Padrão: /:state/:city/:district/:module
  *         /:state/:city/:groupSlug/:module
  */
 
@@ -14,16 +14,16 @@ import { lazy, Suspense, type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useTerritorialContext } from './TerritorialLayout';
+import { TerritorialLandingPage } from './TerritorialLandingPage';
 import { ModulePageLoader } from '@/shared/components/loading/PageLoader';
 import { useCityMetadata } from '@/core/city/hooks/useCityMetadata';
 import { resolveFallbackCityStatus, type CityStatus } from '@/core/city/services/CityService';
 import { TERRITORY_CONFIG } from '@/config/territory';
 import { buildPublicAbsoluteUrl } from '@/shared/config/publicAppOrigin';
 
-// Lazy imports dos modulos existentes
+// Lazy imports dos módulos existentes
 const ComunidadePage       = lazy(() => import('@/modules/community-feed/pages/ComunidadePage'));
 const CidadeLandingPage    = lazy(() => import('@/app/pages/CidadeLandingPage'));
-const ComplexoLandingPage  = lazy(() => import('@/app/pages/ComplexoNordesteLandingPage'));
 const CommunityCommunicationTabPage = lazy(() => import('@/modules/communication-territorial/pages/CommunityCommunicationTabPage'));
 const ProblemasPage        = lazy(() => import('@/modules/community-issues/pages/ProblemasPage'));
 const EmpresasPage         = lazy(() => import('@/app/pages/EmpresasLandingPage'));
@@ -50,48 +50,48 @@ type PublicModuleKey =
 
 const MODULE_EMPTY_COPY: Record<PublicModuleKey, { title: string; description: (city: string) => string; cta: string }> = {
   empresas: {
-    title: 'Comercios da comunidade em implantacao',
-    description: (city) => `Ainda nao temos comercios cadastrados para esta comunidade de ${city}. Seja um dos primeiros.`,
+    title: 'Comércios da comunidade em implantação',
+    description: (city) => `Ainda não temos comércios cadastrados para esta comunidade de ${city}. Seja um dos primeiros.`,
     cta: 'Cadastrar empresa',
   },
   gastronomia: {
-    title: 'Gastronomia da comunidade em implantacao',
-    description: (city) => `Estamos organizando restaurantes e cardapios para esta comunidade de ${city}.`,
+    title: 'Gastronomia da comunidade em implantação',
+    description: (city) => `Estamos organizando restaurantes e cardápios para esta comunidade de ${city}.`,
     cta: 'Indicar estabelecimento',
   },
   educacao: {
-    title: 'Educacao da comunidade em implantacao',
-    description: (city) => `Estamos organizando escolas, cursos e instituicoes para esta comunidade de ${city}.`,
-    cta: 'Indicar instituicao',
+    title: 'Educação da comunidade em implantação',
+    description: (city) => `Estamos organizando escolas, cursos e instituições para esta comunidade de ${city}.`,
+    cta: 'Indicar instituição',
   },
   eventos: {
-    title: 'Eventos da comunidade em implantacao',
-    description: (city) => `Ainda nao encontramos eventos para esta comunidade de ${city}. Cadastre um evento local.`,
+    title: 'Eventos da comunidade em implantação',
+    description: (city) => `Ainda não encontramos eventos para esta comunidade de ${city}. Cadastre um evento local.`,
     cta: 'Cadastrar evento',
   },
   classificados: {
-    title: 'Classificados da comunidade em implantacao',
-    description: (city) => `Ainda nao ha classificados para esta comunidade de ${city}. Publique o primeiro anuncio.`,
-    cta: 'Publicar anuncio',
+    title: 'Classificados da comunidade em implantação',
+    description: (city) => `Ainda não há classificados para esta comunidade de ${city}. Publique o primeiro anúncio.`,
+    cta: 'Publicar anúncio',
   },
   vagas: {
-    title: 'Vagas proximas em implantacao',
-    description: (city) => `Ainda nao ha vagas publicadas para esta comunidade de ${city}. Empresas locais podem cadastrar oportunidades.`,
+    title: 'Vagas próximas em implantação',
+    description: (city) => `Ainda não há vagas publicadas para esta comunidade de ${city}. Empresas locais podem cadastrar oportunidades.`,
     cta: 'Cadastrar vaga',
   },
   servicos: {
-    title: 'Servicos locais em implantacao',
-    description: (city) => `Estamos organizando profissionais e servicos para esta comunidade de ${city}.`,
-    cta: 'Cadastrar servico',
+    title: 'Serviços locais em implantação',
+    description: (city) => `Estamos organizando profissionais e serviços para esta comunidade de ${city}.`,
+    cta: 'Cadastrar serviço',
   },
   busca: {
-    title: 'Busca em implantacao',
+    title: 'Busca em implantação',
     description: (city) => `Estamos estruturando resultados locais em ${city}.`,
     cta: 'Voltar para cidade ativa',
   },
   comunidade: {
-    title: 'Comunidade em implantacao',
-    description: (city) => `A comunidade deste territorio em ${city} ainda nao esta disponivel.`,
+    title: 'Comunidade em implantação',
+    description: (city) => `A comunidade deste território em ${city} ainda não está disponível.`,
     cta: 'Quero ser avisado',
   },
 };
@@ -160,11 +160,11 @@ function CityStatusGate({ module, enforceActive = false, children }: CityStatusG
       </Helmet>
       <div className="rounded-2xl border bg-card p-6 md:p-8">
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Em implantacao
+          Em implantação
         </p>
         <h1 className="text-2xl font-semibold">{copy.title}</h1>
         <p className="mt-3 text-muted-foreground">
-          {`Estamos chegando em ${cityName}. O Achegue-se ainda esta organizando empresas, eventos, servicos e conteudos locais nesta regiao.`}
+          {`Estamos chegando em ${cityName}. O Achegue-se ainda está organizando empresas, eventos, serviços e conteúdos locais nesta região.`}
         </p>
         <p className="mt-2 text-muted-foreground">{copy.description(cityName)}</p>
         <div className="mt-6 flex flex-wrap gap-3">
@@ -175,7 +175,7 @@ function CityStatusGate({ module, enforceActive = false, children }: CityStatusG
             Entrar na lista de interesse
           </Link>
           <Link to={communityEntryHref} className="inline-flex rounded-lg border px-4 py-2 text-sm font-medium hover:bg-accent">
-            Abrir pagina da comunidade
+            Abrir página da comunidade
           </Link>
         </div>
       </div>
@@ -184,11 +184,11 @@ function CityStatusGate({ module, enforceActive = false, children }: CityStatusG
 }
 
 /**
- * HOC minimo: injeta routeResolved no contexto do modulo.
- * Os modulos leem routeResolved via useTerritoryFilter(routeResolved).
- * Por ora, os modulos existentes nao recebem props - o TerritoryFilter
- * e resolvido via useTerritorialContext() dentro de useTerritoryFilter.
- * Esta camada garante que o contexto de Outlet esta disponivel.
+ * HOC mínimo: injeta routeResolved no contexto do módulo.
+ * Os módulos leem routeResolved via useTerritoryFilter(routeResolved).
+ * Por ora, os módulos existentes não recebem props - o TerritoryFilter
+ * é resolvido via useTerritorialContext() dentro de useTerritoryFilter.
+ * Esta camada garante que o contexto de Outlet está disponível.
  */
 
 export function TerritorialCommunityPage() {
@@ -205,9 +205,13 @@ export function TerritorialCommunityPage() {
 export function TerritorialCommunityHomePage() {
   const { resolved } = useTerritorialContext();
 
+  if (resolved.kind === 'group') {
+    return <TerritorialLandingPage />;
+  }
+
   return (
     <Suspense fallback={<ModulePageLoader />}>
-      {resolved.kind === 'group' ? <ComplexoLandingPage /> : <CidadeLandingPage />}
+      <CidadeLandingPage />
     </Suspense>
   );
 }
@@ -349,4 +353,3 @@ export function TerritorialMapPage() {
     </Suspense>
   );
 }
-

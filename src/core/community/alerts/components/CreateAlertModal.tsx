@@ -16,6 +16,7 @@ import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Label } from "@/shared/components/ui/label";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/shared/components/ui/radio-group";
+import { Siren } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import { createAlertSchema, type CreateAlertFormData } from "../schemas/alertSchema";
 import { RPC_ERROR_MESSAGES, useCreateAlert } from "../hooks/useCreateAlert";
@@ -161,7 +162,7 @@ export function CreateAlertModal({
 
             {!canSubmit && (
               <p className="text-xs text-amber-600">
-                Selecione um bairro valido para publicar alertas.
+                Selecione um bairro válido para publicar alertas.
               </p>
             )}
 
@@ -254,7 +255,7 @@ function StepLocation({ control, errors, city, neighborhood, locationId }: StepL
       <div>
         <p className="text-sm font-medium">Confirme a regiao aproximada do alerta</p>
         <p className="mt-3 text-sm text-muted-foreground rounded-lg bg-muted/50 px-3 py-2.5 border border-border">
-          Este alerta sera publicado para moradores de{" "}
+          Este alerta será publicado para moradores de{" "}
           <span className="font-semibold text-foreground">{neighborhood ? `${neighborhood}, ${city}` : city}</span>.
         </p>
       </div>
@@ -363,7 +364,7 @@ function StepDescription({ control, errors, charCount }: StepDescriptionProps) {
   return (
     <div className="space-y-3">
       <p className="text-sm font-medium">Descreva o alerta de forma objetiva.</p>
-      <p className="text-xs text-muted-foreground">Apenas fatos observaveis. Sem nomes, placas ou enderecos exatos.</p>
+      <p className="text-xs text-muted-foreground">Apenas fatos observáveis. Sem nomes, placas ou endereços exatos.</p>
 
       <Controller
         name="description"
@@ -372,7 +373,7 @@ function StepDescription({ control, errors, charCount }: StepDescriptionProps) {
           <Textarea
             {...field}
             rows={4}
-            placeholder="Ex: Tiroteio na altura da praca, proximo ao mercado. Evitem a area."
+            placeholder="Ex: tiroteio na altura da praça, próximo ao mercado. Evitem a área."
             className="resize-none"
             maxLength={DESCRIPTION_MAX_LENGTH}
           />
@@ -380,7 +381,7 @@ function StepDescription({ control, errors, charCount }: StepDescriptionProps) {
       />
 
       <div className="flex justify-between text-xs text-muted-foreground">
-        <span>Minimo: {DESCRIPTION_MIN_LENGTH} caracteres</span>
+        <span>Mínimo: {DESCRIPTION_MIN_LENGTH} caracteres</span>
         <span
           className={cn(
             charCount > DESCRIPTION_MAX_LENGTH && "text-destructive",
@@ -420,7 +421,7 @@ function StepConfirmation({ control, errors, serverError }: StepConfirmationProp
       </div>
 
       {(errors.confirm_real || errors.confirm_no_ops || errors.confirm_consequences) && (
-        <p className="text-xs text-destructive">Todas as confirmacoes sao obrigatorias.</p>
+        <p className="text-xs text-destructive">Todas as confirmações são obrigatórias.</p>
       )}
 
       {serverError && <p className="text-sm text-destructive font-medium">{serverError}</p>}
@@ -431,7 +432,9 @@ function StepConfirmation({ control, errors, serverError }: StepConfirmationProp
 function SuccessState({ onClose }: { onClose: () => void }) {
   return (
     <div className="flex flex-col items-center gap-4 py-6 text-center">
-      <div className="text-4xl">🚨</div>
+      <div className="rounded-full bg-destructive/10 p-4">
+        <Siren className="h-8 w-8 text-destructive" aria-hidden="true" />
+      </div>
       <p className="font-semibold">Alerta publicado</p>
       <p className="text-sm text-muted-foreground">Sua comunidade foi notificada. O alerta expira automaticamente.</p>
       <Button onClick={onClose} className="w-full">

@@ -26,11 +26,11 @@ export default function RouterInterceptor({
     // Se a URL começa com /@, é uma rota standalone
     if (path.startsWith("/@")) {
       if (import.meta.env.DEV) {
-        logger.info("🔍 RouterInterceptor: URL com @ detectada:", path);
+        logger.info(" RouterInterceptor: URL com @ detectada:", path);
       }
       const handle = path.substring(2); // Remove /@
       if (import.meta.env.DEV) {
-        logger.info("🔍 RouterInterceptor: Handle extraído:", handle);
+        logger.info(" RouterInterceptor: Handle extraído:", handle);
       }
 
       // Não faz nada, deixa o React Router process normalmente

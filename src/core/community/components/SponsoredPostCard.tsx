@@ -15,6 +15,7 @@ import {
   AvatarImage,
 } from "@/shared/components/ui/avatar";
 import { MapPin, ExternalLink } from "lucide-react";
+import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
 import {
   getCardClasses,
   getCardBackground,
@@ -95,7 +96,7 @@ export function SponsoredPostCard({
   const handleClick = () => {
     onClick?.(ad.id);
     if (ad.cta_url) {
-      window.open(ad.cta_url, "_blank", "noopener,noreferrer");
+      openSafeExternalUrl(ad.cta_url, { context: "sponsored-post-cta" });
     }
   };
 

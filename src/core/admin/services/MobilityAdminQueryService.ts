@@ -1,4 +1,4 @@
-﻿/**
+/**
  * MobilityAdminQueryService
  *
  * SSOT para consultas administrativas do domínio mobility.

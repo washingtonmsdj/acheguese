@@ -1,15 +1,3 @@
-/**
- * useAuthorization — checagens imperativas (event handlers, mutations)
- *
- * Uso: dentro de handlers, não em render direto.
- * Ownership resolvido internamente pelo AuthorizationEngine.
- *
- * const { canPerform } = useAuthorization();
- * const handlePost = async () => {
- *   if (await canPerform('createPost')) { ... }
- * };
- */
-
 import { useCallback } from "react";
 import { useSessionContext } from "@/core/session";
 import { AuthorizationEngine } from "../services/AuthorizationEngine";

@@ -20,7 +20,7 @@ export class TerritorialHighlightRepositorySupabase
       .select('*')
       .eq('territory_type', query.territory_type);
     
-    // ✅ SSOT - Só adiciona filtro se territory_ref_id não estiver vazio
+    //  SSOT - Só adiciona filtro se territory_ref_id não estiver vazio
     if (query.territory_ref_id) {
       q = q.eq('territory_ref_id', query.territory_ref_id);
     }
@@ -40,7 +40,7 @@ export class TerritorialHighlightRepositorySupabase
 
     const { data, error } = await q;
     if (error) {
-      logger.warn('⚠️ TerritorialHighlightRepositorySupabase.listForTerritory:', error.message);
+      logger.warn(' TerritorialHighlightRepositorySupabase.listForTerritory:', error.message);
       return [];
     }
     return (data ?? []) as unknown as TerritorialHighlight[];

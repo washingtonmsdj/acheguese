@@ -182,7 +182,7 @@ export function useAwardBadge() {
     }) => CommunityService.awardBadge(userId, badgeCode),
     onSuccess: (result, variables) => {
       if (result.success && !result.alreadyEarned) {
-        toast.success("Badge conquistado! 🏆");
+        toast.success("Badge conquistado!");
 
         // Invalidar queries relacionadas
         queryClient.invalidateQueries({

@@ -14,7 +14,7 @@ export function useRankingUsers(limit: number = 3) {
       const leaderboard = await CommunityService.getLeaderboard(limit);
       return leaderboard.map((user, index) => ({
         id: user.id,
-        name: user.display_name || "Usuario",
+        name: user.display_name || "Usuário",
         points: user.total_points || 0,
         position: index + 1,
       }));

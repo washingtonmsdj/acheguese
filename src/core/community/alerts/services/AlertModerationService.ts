@@ -1,5 +1,5 @@
 /**
- * AlertModerationService - Reports, strikes e moderacao de alertas
+ * AlertModerationService - Reports, strikes e moderação de alertas
  */
 
 import { supabase } from "@/integrations/supabase";

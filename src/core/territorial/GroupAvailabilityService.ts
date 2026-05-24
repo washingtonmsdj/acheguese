@@ -1,31 +1,25 @@
 /**
  * GroupAvailabilityService
  *
- * Determina a disponibilidade de um módulo em contexto de grupo territorial.
+ * Determina a disponibilidade de um modulo em contexto de grupo territorial.
  *
  * Regras:
- *   - Avalia rollout de cada membro ativo do grupo via batch (1 query)
- *   - Herança: se membro não tem rollout LOCAL, resolve via ancestors
- *   - full    → todos os membros ativos têm o módulo ativo
- *   - partial → pelo menos um membro ativo tem o módulo ativo (OR)
- *   - none    → nenhum membro ativo tem o módulo ativo
- *   - active_member_ids → apenas os membros com rollout ativo (usado no TerritoryFilter)
+ * - Avalia rollout de cada membro ativo do grupo via batch (1 query).
+ * - Heranca: se membro nao tem rollout LOCAL, resolve via ancestors.
+ * - full: todos os membros ativos tem o modulo ativo.
+ * - partial: pelo menos um membro ativo tem o modulo ativo (OR).
+ * - none: nenhum membro ativo tem o modulo ativo.
+ * - active_member_ids: apenas os membros com rollout ativo.
  *
- * Performance:
- *   - Usa findByModuleAndLocations (batch) para buscar rollouts explícitos em 1 query
- *   - Membros sem rollout LOCAL resolvem herança via RolloutService individualmente
- *   - Na prática, com herança de Salvador ativa, todos os bairros resolvem via
- *     ancestor lookup — o batch elimina N queries para o caso comum (rollout explícito)
- *
- * NÃO adiciona group_id em module_rollouts.
- * NÃO cria atalho estrutural fora do SSOT.
+ * Nao adiciona group_id em module_rollouts.
+ * Nao cria atalho estrutural fora do SSOT.
  */
-
-import { RolloutService } from '@/core/rollout/services/RolloutService';
-import { createRolloutRepository } from '@/core/rollout/repositories/createRolloutRepository';
 import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
 import { createTerritorialGroupRepository } from '@/core/location/repositories/createTerritorialGroupRepository';
+import { createRolloutRepository } from '@/core/rollout/repositories/createRolloutRepository';
+import { RolloutService } from '@/core/rollout/services/RolloutService';
 import { RolloutStatus } from '@/core/rollout/types';
+
 import type { ModuleKey } from '@/core/rollout/types';
 import type {
   GroupAvailabilityResult,
@@ -45,14 +39,12 @@ export class GroupAvailabilityService {
   }
 
   /**
-   * Resolve a disponibilidade de um módulo para um grupo territorial.
+   * Resolve a disponibilidade de um modulo para um grupo territorial.
    *
-   * Estratégia batch:
-   *   1. Busca rollouts explícitos de todos os membros em 1 query (findByModuleAndLocations)
-   *   2. Membros com rollout LOCAL → usa diretamente (sem query adicional)
-   *   3. Membros sem rollout LOCAL → resolve herança via RolloutService (ancestor lookup)
-   *      Estes são os casos que ainda fazem queries individuais, mas são a minoria
-   *      quando a herança de cidade está configurada.
+   * Estrategia batch:
+   * 1. Busca rollouts explicitos de todos os membros em 1 query.
+   * 2. Membros com rollout LOCAL usam diretamente o resultado do batch.
+   * 3. Membros sem rollout LOCAL resolvem heranca via RolloutService.
    */
   async getGroupModuleAvailability(
     groupId: string,
@@ -71,24 +63,19 @@ export class GroupAvailabilityService {
     }
 
     const activeMemberIds = activeMembers.map((m) => m.id);
-
-    // Batch: busca rollouts explícitos de todos os membros em 1 query
     const explicitRollouts = await this.rolloutRepo.findByModuleAndLocations(
       moduleKey,
       activeMemberIds,
     );
 
-    // Resolve status de cada membro
     const statuses: MemberRolloutStatus[] = await Promise.all(
       activeMembers.map(async (location) => {
         const explicit = explicitRollouts.get(location.id);
 
         if (explicit) {
-          // Rollout LOCAL encontrado — sem query adicional
           return { location, is_active: explicit.status === RolloutStatus.ACTIVE };
         }
 
-        // Sem rollout LOCAL — resolve herança (ancestor lookup)
         try {
           const result = await this.rolloutService.isModuleActive({
             module_key: moduleKey,
@@ -115,8 +102,6 @@ export class GroupAvailabilityService {
     };
   }
 }
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
 
 function emptyResult(groupId: string, moduleKey: ModuleKey): GroupAvailabilityResult {
   return {

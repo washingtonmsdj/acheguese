@@ -29,13 +29,13 @@ import { postService } from "@/core/posts/services"; // ✅ LOTE 8
 import { profileService } from "@/core/profiles/services/ProfileService";
 
 const ALERT_TYPES = [
-  { id: "tiroteio", label: "Tiroteio", emoji: "🔫" },
-  { id: "assalto", label: "Assalto", emoji: "🚨" },
-  { id: "tentativa_assalto", label: "Tentativa de assalto", emoji: "🏃" },
-  { id: "atividade_suspeita", label: "Atividade suspeita", emoji: "👁️" },
-  { id: "acidente", label: "Acidente", emoji: "💥" },
-  { id: "risco_rua", label: "Risco na rua", emoji: "⚠️" },
-  { id: "outro", label: "Outro risco", emoji: "🔴" },
+  { id: "tiroteio", label: "Tiroteio", icon: ShieldAlert },
+  { id: "assalto", label: "Assalto", icon: ShieldAlert },
+  { id: "tentativa_assalto", label: "Tentativa de assalto", icon: AlertTriangle },
+  { id: "atividade_suspeita", label: "Atividade suspeita", icon: Shield },
+  { id: "acidente", label: "Acidente", icon: AlertTriangle },
+  { id: "risco_rua", label: "Risco na rua", icon: AlertTriangle },
+  { id: "outro", label: "Outro risco", icon: ShieldAlert },
 ] as const;
 
 // Blocked words to prevent misuse (police operations, illegal activities, accusations)
@@ -104,6 +104,8 @@ export function PanicAlertButton({ userId }: Props) {
   );
   const [gettingLocation, setGettingLocation] = useState(false);
   const [checking, setChecking] = useState(false);
+  const selectedAlertType = ALERT_TYPES.find((type) => type.id === alertType);
+  const SelectedAlertIcon = selectedAlertType?.icon ?? AlertTriangle;
 
   const getLocation = useCallback(async () => {
     setGettingLocation(true);
@@ -199,7 +201,7 @@ export function PanicAlertButton({ userId }: Props) {
     setSending(true);
     try {
       const selected = ALERT_TYPES.find((t) => t.id === alertType);
-      const texto = `${selected?.emoji} **${selected?.label?.toUpperCase()}** — ${details || "Alerta de risco na região!"}`;
+      const texto = `**${selected?.label?.toUpperCase()}** - ${details || "Alerta de risco na região!"}`;
 
       // ✅ CLEANUP PÓS-SPRINT2: Usar createPost() diretamente
       // userId aqui é author_profile_id (não user_id)
@@ -228,7 +230,7 @@ export function PanicAlertButton({ userId }: Props) {
       );
 
       toast.success(
-        "🚨 Alerta enviado! +25 pontos. Vizinhos serão notificados.",
+        "Alerta enviado! +25 pontos. Vizinhos serão notificados.",
       );
       setOpen(false);
     } catch (err) {
@@ -339,16 +341,20 @@ export function PanicAlertButton({ userId }: Props) {
                   Qual o tipo de ocorrência?
                 </p>
                 <div className="grid grid-cols-2 gap-2">
-                  {ALERT_TYPES.map((type) => (
-                    <button
-                      key={type.id}
-                      onClick={() => handleSelectType(type.id)}
-                      className="flex items-center gap-2 p-3 rounded-xl border hover:bg-destructive/10 hover:border-destructive/30 transition-all text-left"
-                    >
-                      <span className="text-lg">{type.emoji}</span>
-                      <span className="text-sm font-medium">{type.label}</span>
-                    </button>
-                  ))}
+                  {ALERT_TYPES.map((type) => {
+                    const TypeIcon = type.icon;
+
+                    return (
+                      <button
+                        key={type.id}
+                        onClick={() => handleSelectType(type.id)}
+                        className="flex items-center gap-2 p-3 rounded-xl border hover:bg-destructive/10 hover:border-destructive/30 transition-all text-left"
+                      >
+                        <TypeIcon className="h-4 w-4 text-destructive" aria-hidden="true" />
+                        <span className="text-sm font-medium">{type.label}</span>
+                      </button>
+                    );
+                  })}
                 </div>
                 <button
                   onClick={() => setStep("rules")}
@@ -369,11 +375,9 @@ export function PanicAlertButton({ userId }: Props) {
                 className="space-y-3"
               >
                 <div className="flex items-center gap-2 bg-destructive/10 rounded-lg px-3 py-2">
-                  <span className="text-lg">
-                    {ALERT_TYPES.find((t) => t.id === alertType)?.emoji}
-                  </span>
+                  <SelectedAlertIcon className="h-4 w-4 text-destructive" aria-hidden="true" />
                   <span className="text-sm font-semibold text-destructive">
-                    {ALERT_TYPES.find((t) => t.id === alertType)?.label}
+                    {selectedAlertType?.label}
                   </span>
                   <button
                     onClick={() => setStep("type")}
@@ -396,7 +400,7 @@ export function PanicAlertButton({ userId }: Props) {
                 {hasBlockedContent(details) && (
                   <div className="bg-destructive/10 border border-destructive/30 rounded-lg px-3 py-2">
                     <p className="text-xs text-destructive font-medium">
-                      🚫 Conteúdo bloqueado: Não é permitido divulgar operações
+                      Conteúdo bloqueado: Não é permitido divulgar operações
                       policiais, acusar pessoas ou locais específicos.
                     </p>
                   </div>
@@ -435,8 +439,9 @@ export function PanicAlertButton({ userId }: Props) {
                 className="space-y-4"
               >
                 <div className="bg-warning/10 border border-warning/30 rounded-xl p-4 space-y-2">
-                  <p className="text-sm font-semibold text-warning-foreground">
-                    ⚠️ Tem certeza?
+                  <p className="flex items-center gap-2 text-sm font-semibold text-warning-foreground">
+                    <AlertTriangle className="h-4 w-4" aria-hidden="true" />
+                    Tem certeza?
                   </p>
                   <p className="text-xs text-muted-foreground leading-relaxed">
                     Alertas de segurança enviam notificações para{" "}
@@ -450,12 +455,10 @@ export function PanicAlertButton({ userId }: Props) {
                 </div>
 
                 <div className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2">
-                  <span className="text-lg">
-                    {ALERT_TYPES.find((t) => t.id === alertType)?.emoji}
-                  </span>
+                  <SelectedAlertIcon className="h-4 w-4 text-destructive" aria-hidden="true" />
                   <div>
                     <p className="text-sm font-medium">
-                      {ALERT_TYPES.find((t) => t.id === alertType)?.label}
+                      {selectedAlertType?.label}
                     </p>
                     {details && (
                       <p className="text-xs text-muted-foreground truncate max-w-[250px]">

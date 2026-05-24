@@ -489,7 +489,7 @@ export async function getOperationalOverview(
       moduleCoverage(
         "professionals",
         "Profissionais e serviços",
-        "/admin/services",
+        "/admin/servicos",
         stats.professionals,
         0,
         "professional_services",

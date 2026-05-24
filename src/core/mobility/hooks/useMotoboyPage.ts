@@ -1,1 +1,1 @@
-﻿export { useMotoboyPage } from '@/modules/mobility/hooks/useMotoboyPage';
+export { useMotoboyPage } from '@/modules/mobility/hooks/useMotoboyPage';

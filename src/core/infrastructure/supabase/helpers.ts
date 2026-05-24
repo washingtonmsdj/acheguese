@@ -1,1 +1,1 @@
-﻿export * from '@/integrations/supabase/services/supabaseHelpers';
+export * from '@/integrations/supabase/services/supabaseHelpers';

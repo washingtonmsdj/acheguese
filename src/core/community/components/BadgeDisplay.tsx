@@ -1,4 +1,4 @@
-﻿import { Award, Lock } from "lucide-react";
+import { Award, Lock } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import {
   Tooltip,

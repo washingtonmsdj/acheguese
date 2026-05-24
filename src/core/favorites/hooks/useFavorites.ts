@@ -5,10 +5,10 @@ import {
   getUserBusinessFavorites,
   toggleBusinessFavorite,
 } from "@/core/favorites/services";
-import type { Business } from "@/core/profiles/services/types";
+import type { ProfileAssociatedBusiness } from "@/core/profiles/services/ProfileBusinessTypes";
 
 interface UseFavoritesResult {
-  favorites: Business[];
+  favorites: ProfileAssociatedBusiness[];
   favoriteIds: string[];
   loading: boolean;
   toggleFavorite: (itemId: string, itemType: string) => Promise<void>;
@@ -19,7 +19,7 @@ interface UseFavoritesResult {
 export function useFavorites(profileId?: string | null): UseFavoritesResult {
   const queryClient = useQueryClient();
 
-  const { data: favorites = [], refetch, isLoading, isFetching } = useQuery<Business[]>({
+  const { data: favorites = [], refetch, isLoading, isFetching } = useQuery<ProfileAssociatedBusiness[]>({
     queryKey: ["profile", "business-favorites", profileId],
     queryFn: async () => {
       if (!profileId) {
@@ -38,7 +38,7 @@ export function useFavorites(profileId?: string | null): UseFavoritesResult {
 
       return favoriteIds
         .map((favoriteId) => businessById.get(favoriteId))
-        .filter(Boolean) as Business[];
+        .filter(Boolean) as ProfileAssociatedBusiness[];
     },
     enabled: Boolean(profileId),
   });

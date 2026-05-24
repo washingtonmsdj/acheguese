@@ -1,9 +1,9 @@
 /**
- * ComunidadePage - Pagina principal da comunidade
+ * ComunidadePage - Página principal da comunidade
  * 
  * SSOT - Usa Services via hooks
  * Arquitetura modular - Componentes isolados
- * Performance - Lazy loading e memoizacao
+ * Performance - Lazy loading e memoização
  * Acessibilidade - ARIA labels e roles
  */
 
@@ -80,7 +80,7 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
   const appUrls = useAppUrls(resolved); // SSOT URLs com contexto territorial
   const territoryFilter = useTerritoryFilter(resolved);
 
-  // SSOT: guarda de acesso por UUID canonico, nao por string de perfil
+  // SSOT: guarda de acesso por UUID canônico, não por string de perfil
   const { homeDistrict, homeCity, loading: territoryLoading } = useUserTerritory();
   const { isAdmin, loading: adminLoading } = useIsAdmin();
   const { isLoading: rolloutLoading } = useCommunityRollout(resolved);
@@ -204,7 +204,7 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
     (scope: "city" | "neighborhood" | "street") => {
       if (scope === "street" && !hasPrimaryStreet) {
         toast.info(COMMUNITY_PAGE_COPY.streetScopeMissingAddress);
-        navigate("/conta/enderecos");
+        navigate(appUrls.profile.addresses);
         return;
       }
 
@@ -215,10 +215,10 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
 
       setLocationScope(scope);
     },
-    [hasPrimaryStreet, navigate, setLocationScope],
+    [appUrls.profile.addresses, hasPrimaryStreet, navigate, setLocationScope],
   );
 
-  // Bloquear se nao estiver logado
+  // Bloquear se não estiver logado
   if (!profile) {
     return (
       <TooltipProvider>
@@ -240,7 +240,7 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
     );
   }
 
-  // Aguardar resolucao do territorio antes de bloquear
+  // Aguardar resolução do território antes de bloquear
   if (territoryLoading || adminLoading || rolloutLoading || homeDistrictRolloutLoading) {
     return (
       <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#12181B] flex items-center justify-center">
@@ -249,7 +249,7 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
     );
   }
 
-  // SSOT: bloquear por ausencia de user_residence (location_id), nao por string de perfil
+  // SSOT: bloquear por ausência de user_residence (location_id), não por string de perfil
   // Admin e moderadores tem acesso mesmo sem bairro cadastrado
   if (!homeDistrict && !isAdmin) {
     return (
@@ -263,7 +263,7 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
             <p className="text-gray-400 mb-6">
               {COMMUNITY_PAGE_COPY.setupDistrictDescription}
             </p>
-            <Button onClick={() => navigate("/conta/enderecos")} className="bg-teal-500 hover:bg-teal-400">
+            <Button onClick={() => navigate(appUrls.profile.addresses)} className="bg-teal-500 hover:bg-teal-400">
               {COMMUNITY_PAGE_COPY.setupDistrictAction}
             </Button>
           </div>
@@ -290,14 +290,12 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
     );
   }
 
-  // Aviso se nao for verificado (mas permite acesso)
+  // Aviso se não for verificado (mas permite acesso)
   const showVerificationBanner = !profile?.verified;
 
   return (
     <TooltipProvider>
       <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#12181B]" role="main">
-        {/* Bloco legado desativado: hero expandido da comunidade */}
-
         <div className="mx-auto w-full max-w-[1600px] min-w-0 px-4 py-6 md:px-6 lg:px-8">
           <nav
             className="mb-6 flex min-w-0 flex-wrap gap-1 border-b border-white/10 pb-0"
@@ -368,7 +366,10 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
 
             <aside className="hidden lg:block w-80 flex-shrink-0" aria-label="Widgets da comunidade">
               <div className="sticky top-6">
-                <CommunityRightSidebar />
+                <CommunityRightSidebar
+                  resolved={resolved}
+                  territoryFilter={communityTerritoryFilter}
+                />
               </div>
             </aside>
           </div>

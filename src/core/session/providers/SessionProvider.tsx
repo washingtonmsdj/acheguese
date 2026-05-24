@@ -38,7 +38,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     // Em dev, o Supabase pode levar alguns segundos para recuperar um lock
     // de sessao; abaixo disso a UI gera falso positivo de timeout.
     const timeout = setTimeout(() => {
-      logger.warn("⚠️ SessionProvider: auth init timeout — liberando UI");
+      logger.warn(" SessionProvider: auth init timeout — liberando UI");
       setIsLoading(false);
     }, AUTH_INIT_TIMEOUT_MS);
 

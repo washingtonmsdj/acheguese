@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { logger } from "@/shared/utils/logger";
 import { SocialInteractionsService } from "@/core/social/services/SocialInteractionsService"; // ✅ GATE 3 FASE 3C
 import { ModerationService } from "@/core/moderation";
+import { LAUNCH_URLS } from "@/config/territory";
 
 // Helper para criar notificação de like (✅ SSOT MIGRATION)
 async function createLikeNotification(postId: string, userId: string) {
@@ -230,7 +231,7 @@ export function usePostActions() {
 
   // Share post (mantido igual - não precisa de migração)
   const sharePost = (postId: string) => {
-    const url = `${window.location.origin}/comunidade?post=${postId}`;
+    const url = `${window.location.origin}${LAUNCH_URLS.community}?post=${postId}`;
 
     if (navigator.share) {
       navigator

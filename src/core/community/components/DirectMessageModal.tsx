@@ -253,7 +253,7 @@ export function DirectMessageModal({
                 variant="secondary"
                 className="text-[6px] mt-0.5 bg-red-500/30 text-red-300 border-0 px-0.5 py-0"
               >
-                🔥 TESTE
+                Teste
               </Badge>
             </div>
           </div>

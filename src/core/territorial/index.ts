@@ -26,7 +26,7 @@ export type {
   AddMembersInput,
   RemoveMembersInput,
 } from './services/TerritorialGroupService';
-export { TerritorialManagementService, territorialManagementService } from './services/TerritorialManagementService';
+export { TerritorialManagementService } from './services/TerritorialManagementService';
 export type {
   VisibilityFlag,
   TerritoryNode,

@@ -1,1 +1,1 @@
-﻿export * from '@/modules/profile/utils/mobilityServiceStatus';
+export * from '@/modules/profile/utils/mobilityServiceStatus';

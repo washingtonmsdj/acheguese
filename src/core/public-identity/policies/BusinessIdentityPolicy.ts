@@ -1,6 +1,6 @@
 /**
  * Business Identity Policy
- * PolÃ­tica para empresas: slug, kebab-case, hÃ­fen
+ * Política para empresas: slug, kebab-case, hífen
  */
 
 import type { IdentityPolicy } from '../domain/IdentityPolicy';
@@ -32,7 +32,7 @@ export class BusinessIdentityPolicy implements IdentityPolicy {
       .trim()
       .replace(/[^\w\s-]/g, '')
       .replace(/[\s_]+/g, '-')
-      .replace(/-+/g, '-') // Remove hÃ­fens duplicados
+      .replace(/-+/g, '-') // Remove hífens duplicados
       .replace(/^-+|-+$/g, '');
   }
 
@@ -40,21 +40,21 @@ export class BusinessIdentityPolicy implements IdentityPolicy {
     if (!identifier || identifier.length < this.minLength) {
       return {
         valid: false,
-        error: `MÃ­nimo ${this.minLength} caracteres`,
+        error: `Mínimo ${this.minLength} caracteres`,
       };
     }
 
     if (identifier.length > this.maxLength) {
       return {
         valid: false,
-        error: `MÃ¡ximo ${this.maxLength} caracteres`,
+        error: `Máximo ${this.maxLength} caracteres`,
       };
     }
 
     if (!this.regex.test(identifier)) {
       return {
         valid: false,
-        error: 'Formato invÃ¡lido. Use apenas letras minÃºsculas, nÃºmeros e hÃ­fen',
+        error: 'Formato inválido. Use apenas letras minúsculas, números e hífen',
       };
     }
 
@@ -72,7 +72,7 @@ export class BusinessIdentityPolicy implements IdentityPolicy {
   suggest(name: string, existingSlugs: string[]): string {
     let slug = this.normalize(name);
 
-    // Se Ã© reservado, adiciona sufixo
+    // Se é reservado, adiciona sufixo
     if (this.isReserved(slug)) {
       slug = `${slug}-empresa`;
     }

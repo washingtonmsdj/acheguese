@@ -76,32 +76,6 @@ export interface CreateLocationAliasInput {
 }
 
 // ============================================
-// SLUG REDIRECT
-// ============================================
-
-export type SlugRedirectType = 'permanent' | 'temporary';
-
-export interface SlugRedirect {
-  id: string;
-  location_id: string;
-  old_slug: string;
-  new_slug: string;
-  redirect_type: SlugRedirectType;
-  reason: string | null;
-  created_at: string;
-  expires_at: string | null;
-}
-
-export interface CreateSlugRedirectInput {
-  location_id: string;
-  old_slug: string;
-  new_slug: string;
-  redirect_type?: SlugRedirectType;
-  reason?: string;
-  expires_at?: string | null;
-}
-
-// ============================================
 // TERRITORY CHANGE EVENT
 // ============================================
 

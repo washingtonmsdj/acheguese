@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useGrupos, type GroupSort } from "@/core/community/hooks/useGrupos";
 import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
+import { useHomeCommunityHref } from "@/core/routing/hooks/useHomeCommunityHref";
 import { Hash, Loader2, Lock, MessageSquare, Sparkles, Users } from "lucide-react";
 import { GruposHeader } from "@/shared/components/grupos/GruposHeader";
 import { GruposSearch } from "@/shared/components/grupos/GruposSearch";
@@ -18,6 +19,7 @@ const SORT_OPTIONS: Array<{ id: GroupSort; label: string }> = [
 
 export default function GruposPage() {
   const { homeDistrict } = useUserTerritory();
+  const communityHref = useHomeCommunityHref();
   const [categoryFilter, setCategoryFilter] = useState("todos");
   const territoryFilter = useMemo(
     () => homeDistrict
@@ -70,7 +72,7 @@ export default function GruposPage() {
 
   return (
     <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#0b1417] text-white">
-      <GruposHeader onCreateClick={() => setShowCreate(true)} />
+      <GruposHeader backHref={communityHref} onCreateClick={() => setShowCreate(true)} />
 
       <div className="mx-auto w-full max-w-6xl min-w-0 space-y-4 px-3 py-4 sm:px-4 md:space-y-5 md:px-6 md:py-5">
         <section className="overflow-hidden rounded-2xl border border-teal-400/15 bg-[radial-gradient(1200px_220px_at_0%_0%,rgba(45,212,191,0.14),transparent),#0f191d] p-3.5 shadow-2xl shadow-black/20 md:p-5">
@@ -215,6 +217,7 @@ export default function GruposPage() {
               }))}
               isLoading={isLoading}
               tab={tab}
+              getGroupHref={(groupId) => `${communityHref}/grupos/${groupId}`}
               onJoin={(_e, groupId) => handleJoin(groupId)}
               onTabChange={setTab}
             />

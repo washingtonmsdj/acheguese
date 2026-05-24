@@ -21,6 +21,7 @@ import {
   ArrowLeft,
   Share2,
   CheckCircle2,
+  PartyPopper,
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
@@ -83,8 +84,8 @@ export default function EventoDetailPage() {
             className="w-full h-full object-cover"
           />
         ) : (
-          <div className="w-full h-full bg-secondary flex items-center justify-center text-5xl">
-            🎉
+          <div className="w-full h-full bg-secondary flex items-center justify-center">
+            <PartyPopper className="h-12 w-12 text-muted-foreground" aria-hidden="true" />
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />

@@ -165,7 +165,7 @@ export function ServiceModesSelector({
               <Input
                 value={newArea}
                 onChange={(e) => setNewArea(e.target.value)}
-                placeholder="Ex: Pituba, Itaigara, Centro"
+                placeholder="Ex: Centro, Zona Norte, bairros atendidos"
                 className="flex-1"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {

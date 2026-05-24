@@ -1,1 +1,1 @@
-﻿export { useLandingFeatured } from '@/app/features/landing/hooks/useLandingFeatured';
+export { useLandingFeatured } from '@/app/features/landing/hooks/useLandingFeatured';

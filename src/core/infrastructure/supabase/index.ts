@@ -1,2 +1,2 @@
-﻿export * from '@/integrations/supabase';
+export * from '@/integrations/supabase';
 export { supabase } from '@/integrations/supabase';

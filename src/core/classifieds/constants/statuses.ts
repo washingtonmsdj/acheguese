@@ -1,1 +1,1 @@
-﻿export { CLASSIFIED_STATUS } from '@/modules/classifieds/constants/statuses';
+export { CLASSIFIED_STATUS } from '@/modules/classifieds/constants/statuses';

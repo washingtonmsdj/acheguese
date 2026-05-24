@@ -76,7 +76,7 @@ export function UnifiedComposer({
           <Button
             size="lg"
             className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg"
-            aria-label="Criar novo conteudo"
+            aria-label="Criar novo conteúdo"
           >
             <Plus className="w-5 h-5 mr-2" />
             Criar
@@ -90,9 +90,9 @@ export function UnifiedComposer({
           >
             <MessageCircle className="w-4 h-4 text-blue-500" />
             <div>
-              <div className="font-medium">Conteudo territorial</div>
+              <div className="font-medium">Conteúdo territorial</div>
               <div className="text-sm text-muted-foreground">
-                Discussao, enquete, oportunidade...
+                Discussão, enquete, oportunidade...
               </div>
             </div>
           </DropdownMenuItem>
@@ -105,7 +105,7 @@ export function UnifiedComposer({
             <div>
               <div className="font-medium">Alerta Urgente</div>
               <div className="text-sm text-muted-foreground">
-                Situacao que precisa de atencao imediata
+                Situação que precisa de atenção imediata
               </div>
             </div>
           </DropdownMenuItem>

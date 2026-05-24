@@ -5,7 +5,7 @@
  * Dados incluem: população, número de bairros, empresas ativas, escolas, etc.
  * 
  * Esses dados são gerenciados pelo admin e podem ser atualizados pela IA.
- * Enquanto não houver dados no banco, usa valores padrão para Salvador.
+ * Enquanto não houver dados no banco, usa fallback genérico para a cidade solicitada.
  * 
  * ✅ SSOT COMPLIANT - Usa CityService para acesso ao banco
  */
@@ -27,10 +27,13 @@ export type {
 } from '@/core/city/services/CityService';
 
 export function useCityMetadata(state?: string, city?: string) {
+  const normalizedState = state?.trim();
+  const normalizedCity = city?.trim();
+
   return useQuery({
-    queryKey: ['city-metadata', state, city],
-    queryFn: () => CityService.getCityMetadata(state ?? 'ba', city ?? 'salvador'),
-    enabled: Boolean(state && city),
+    queryKey: ['city-metadata', normalizedState, normalizedCity],
+    queryFn: () => CityService.getCityMetadata(normalizedState!, normalizedCity!),
+    enabled: Boolean(normalizedState && normalizedCity),
     staleTime: 10 * 60 * 1000, // 10 minutos - dados da cidade mudam raramente
     gcTime: 30 * 60 * 1000, // 30 minutos no cache
   });

@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase";
 import { selectLooseRows } from "@/integrations/supabase/services/supabaseHelpers";
 import { SessionService } from "@/core/session/services/SessionService";
-import { TerritorialGroupService } from "@/core/location/services/TerritorialGroupService";
+import { TerritorialGroupService } from "@/core/territorial/services/TerritorialGroupService";
 import { PublicIdentityService } from "@/core/public-identity";
 import type {
   CommunicationChannel,
@@ -292,9 +292,9 @@ export class CommunicationTerritorialService {
       return { locationIds: [city.id, ...childIds], title: `Comunicacao em ${city.name}` };
     }
 
-    const group = await this.territorialGroupService.findBySlugAndCity(params.territorySlug, city.id);
+    const group = await this.territorialGroupService.getGroupBySlugAndCity(params.territorySlug, city.id);
     if (group && group.status === "active") {
-      const members = await this.territorialGroupService.listMembers(group.id);
+      const members = await this.territorialGroupService.listAllMembers(group.id);
       return {
         locationIds: [...new Set(members.map((member) => member.id))],
         title: `Comunicacao em ${group.name}`,

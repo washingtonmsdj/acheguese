@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
@@ -67,7 +67,7 @@ export default function RecomendacaoDetailPage() {
   };
 
   const handleNavigateToProfessional = (professionalId: string) => {
-    navigate(`/services/${professionalId}`);
+    navigate(`/servicos/${professionalId}`);
   };
 
   const handleNavigateToBusiness = (business: NavigableBusiness) => {

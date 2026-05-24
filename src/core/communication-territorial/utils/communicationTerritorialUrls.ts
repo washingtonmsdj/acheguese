@@ -1,4 +1,4 @@
-﻿export interface CommunicationChannelUrlParts {
+export interface CommunicationChannelUrlParts {
   state: string;
   city: string;
   territorySlug: string;

@@ -14,9 +14,9 @@ interface ResolveCommunityFeedTerritoryFilterInput {
  *
  * Regras:
  * - Se o territorio base e grupo, nunca reduzir para um unico bairro.
- * - Scope "city" privilegia a cidade da rota atual quando disponivel.
- * - Scope "neighborhood" privilegia o bairro da rota atual quando disponivel.
- * - Fallbacks usam homeCity/homeDistrict apenas quando a rota nao resolve esse nivel.
+ * - Scope "city" privilegia a cidade da rota atual quando disponível.
+ * - Scope "neighborhood" privilegia o bairro da rota atual quando disponível.
+ * - Fallbacks usam homeCity/homeDistrict apenas quando a rota não resolve esse nível.
  */
 export function resolveCommunityFeedTerritoryFilter({
   baseFilter,

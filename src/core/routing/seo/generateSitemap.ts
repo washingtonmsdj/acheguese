@@ -1,4 +1,4 @@
-﻿/**
+/**
  * generateSitemap - Gerador de sitemap dinamico
  *
  * Gera sitemap.xml com rotas territoriais canonicas e paginas publicas.
@@ -27,6 +27,30 @@ interface SitemapUrl {
   lastmod?: string;
   changefreq?: 'always' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'never';
   priority?: number;
+}
+
+function normalizeBaseUrl(value: string): string {
+  return value.trim().replace(/\/+$/, "");
+}
+
+function resolveSitemapBaseUrl(explicitBaseUrl?: string): string {
+  const envBaseUrl =
+    typeof process !== "undefined"
+      ? process.env.VITE_PUBLIC_APP_ORIGIN ||
+        process.env.VITE_SITE_ORIGIN ||
+        process.env.VITE_SITE_URL ||
+        process.env.SITE_URL ||
+        ""
+      : "";
+
+  const resolvedBaseUrl = (explicitBaseUrl || envBaseUrl).trim();
+  if (!resolvedBaseUrl) {
+    throw new Error(
+      "Sitemap base URL not configured. Define VITE_PUBLIC_APP_ORIGIN (or VITE_SITE_ORIGIN/VITE_SITE_URL).",
+    );
+  }
+
+  return normalizeBaseUrl(resolvedBaseUrl);
 }
 
 function asTerritoryVisibilityMetadata(
@@ -64,12 +88,14 @@ function generateTerritoryUrls(
     });
   });
 
-  // Comunidade usa padrão canônico sem /area/
-  urls.push({
-    loc: `${baseUrl}${buildCommunityTerritoryUrl(publicPath)}`,
-    changefreq: 'daily',
-    priority: 0.7,
-  });
+  const hasCommunityTerritorySlug = publicPath.split('/').filter(Boolean).length >= 3;
+  if (hasCommunityTerritorySlug) {
+    urls.push({
+      loc: `${baseUrl}${buildCommunityTerritoryUrl(publicPath)}`,
+      changefreq: 'daily',
+      priority: 0.7,
+    });
+  }
 
   if (isGroup) {
     urls.push(
@@ -92,11 +118,12 @@ function generateTerritoryUrls(
 export function generateSitemap(
   locations: Location[],
   groups: TerritorialGroupWithMembers[],
-  baseUrl = 'https://acheguese.com.br',
+  baseUrl: string,
 ): string {
+  const normalizedBaseUrl = resolveSitemapBaseUrl(baseUrl);
   const urls: SitemapUrl[] = [
     {
-      loc: baseUrl,
+      loc: normalizedBaseUrl,
       changefreq: 'daily',
       priority: 1.0,
     },
@@ -111,7 +138,7 @@ export function generateSitemap(
 
   staticPages.forEach((page) => {
     urls.push({
-      loc: `${baseUrl}${page.path}`,
+      loc: `${normalizedBaseUrl}${page.path}`,
       changefreq: 'monthly',
       priority: page.priority,
     });
@@ -120,7 +147,7 @@ export function generateSitemap(
   locations
     .filter((location) => location.status === 'active')
     .forEach((location) => {
-      urls.push(...generateTerritoryUrls(baseUrl, geoPathToPublicUrl(location.geographic_path), false));
+      urls.push(...generateTerritoryUrls(normalizedBaseUrl, geoPathToPublicUrl(location.geographic_path), false));
     });
 
   groups
@@ -130,7 +157,7 @@ export function generateSitemap(
       if (firstMember?.geographic_path) {
         const parts = firstMember.geographic_path.split('/').filter(Boolean);
         const groupPath = buildGroupBaseUrl(group, `/${parts[0]}/${parts[1]}/${parts[2]}`);
-        urls.push(...generateTerritoryUrls(baseUrl, groupPath, true));
+        urls.push(...generateTerritoryUrls(normalizedBaseUrl, groupPath, true));
       }
     });
 
@@ -169,7 +196,7 @@ export async function generateAndSaveSitemap() {
       isTerritoryVisibleInLanding(asTerritoryVisibilityMetadata(group.metadata)),
     ) as TerritorialGroupWithMembers[];
 
-  const sitemap = generateSitemap(locations, groups);
+  const sitemap = generateSitemap(locations, groups, resolveSitemapBaseUrl());
   const outputPath = resolve(process.cwd(), 'public', 'sitemap.xml');
   await writeFile(outputPath, sitemap, 'utf8');
 

@@ -10,10 +10,17 @@
  */
 import { logger } from '@/shared/utils/logger';
 import { useEffect, useState } from 'react';
-import { useParams, Navigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { QrCodeService } from '../QrCodeService';
-import { DeviceType } from '../types';
 import { Loader2 } from 'lucide-react';
+import {
+  getAllowedRedirectOriginsFromEnv,
+  navigateToSafeRedirect,
+  resolveSafeRedirectUrl,
+} from '@/shared/utils/safeRedirect';
+
+const QR_REDIRECT_ORIGINS = getAllowedRedirectOriginsFromEnv('VITE_ALLOWED_QR_REDIRECT_ORIGINS');
+
 export function QrResolverPage() {
   const { token } = useParams<{ token: string }>();
   const [resolvedUrl, setResolvedUrl] = useState<string | null>(null);
@@ -35,7 +42,16 @@ export function QrResolverPage() {
           return;
         }
         
-        const destinationUrl = result.data;
+        const destinationUrl = resolveSafeRedirectUrl(result.data, {
+          allowedOrigins: QR_REDIRECT_ORIGINS,
+          allowRelative: true,
+          context: 'qr-resolver',
+        });
+
+        if (!destinationUrl) {
+          setError('Destino do QR Code bloqueado por segurança');
+          return;
+        }
         
         // Buscar QR Code para registrar scan
         const qrResult = await QrCodeService.getByToken(token!);
@@ -68,11 +84,19 @@ export function QrResolverPage() {
     resolve();
   }, [token]);
   
-  // Redirecionar
-  if (resolvedUrl) {
-    window.location.href = resolvedUrl;
-    return null;
-  }
+  useEffect(() => {
+    if (!resolvedUrl) return;
+
+    const redirected = navigateToSafeRedirect(resolvedUrl, {
+      allowedOrigins: QR_REDIRECT_ORIGINS,
+      allowRelative: true,
+      context: 'qr-resolver',
+    });
+
+    if (!redirected) {
+      setError('Destino do QR Code bloqueado por segurança');
+    }
+  }, [resolvedUrl]);
   
   // Erro
   if (error) {

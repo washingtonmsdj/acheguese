@@ -1,10 +1,10 @@
-/* eslint-disable react-hooks/exhaustive-deps */
+﻿/* eslint-disable react-hooks/exhaustive-deps */
 import React from "react";
 
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { lostFoundRuntimeService as lostFoundService } from "@/core/community/services/LostFoundRuntimeService";
-import { useAppUrls } from "@/core/routing/hooks"; // ✅ SSOT URLs
+import { useAppUrls } from "@/core/routing/hooks"; // SSOT URLs
 import {
   ArrowLeft,
   MapPin,
@@ -14,6 +14,7 @@ import {
   Send,
   Loader2,
   Calendar,
+  Lightbulb,
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Textarea } from "@/shared/components/ui/textarea";
@@ -36,23 +37,13 @@ import { ptBR } from "date-fns/locale";
 import { cn } from "@/shared/utils/cn";
 import { motion } from "framer-motion";
 import { ProfileService } from "@/core/profiles/services/ProfileService";
-import type {
-  Profile,
-  ProfileSummary,
-} from "@/core/profiles/services/types";
+import { buildWhatsAppUrl } from "@/shared/utils/contactLinks";
+import { getLostFoundCategoryLabel } from "@/shared/validation/schemas/lostfound.schema";
+import type { ProfileRow } from "@/core/profiles/persistence/ProfileRow";
 import type { LostFoundComment } from "@/core/community-lost-found/services";
+type CommentProfileSummary = { id: string; name: string; avatarUrl?: string | null };
 
 const profileServiceInstance = new ProfileService();
-
-const CAT_ICONS: Record<string, string> = {
-  animal: "🐾",
-  celular: "📱",
-  documentos: "📄",
-  chaves: "🔑",
-  carteira: "👛",
-  objetos: "📦",
-  outro: "❓",
-};
 
 interface Post {
   id: string;
@@ -82,7 +73,7 @@ interface Comment {
 export default function AchadoPerdidoDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const appUrls = useAppUrls(); // ✅ SSOT URLs
+  const appUrls = useAppUrls(); // SSOT URLs
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -110,7 +101,7 @@ export default function AchadoPerdidoDetailPage() {
 
     const profile = (await profileServiceInstance.getProfileById(
       data.autor_id,
-    )) as Profile | null;
+    )) as ProfileRow | null;
 
     setPost({
       id: data.id,
@@ -151,7 +142,7 @@ export default function AchadoPerdidoDetailPage() {
       autorIds.length > 0
         ? ((await profileServiceInstance.getProfilesSummary(
             autorIds,
-          )) as ProfileSummary[])
+          )) as CommentProfileSummary[])
         : [];
 
     const profileMap = new Map(
@@ -191,7 +182,7 @@ export default function AchadoPerdidoDetailPage() {
       toast({ title: "Comentário enviado!" });
       await loadComments();
     } catch {
-      toast({ title: "Error comentar", variant: "destructive" });
+      toast({ title: "Erro ao comentar", variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
@@ -223,7 +214,7 @@ export default function AchadoPerdidoDetailPage() {
         <p>Publicação não encontrada.</p>
         <Button
           variant="outline"
-          onClick={() => navigate(appUrls.community.lostAndFound)} // ✅ SSOT
+          onClick={() => navigate(appUrls.community.lostAndFound)} // SSOT
           className="mt-4"
         >
           Voltar
@@ -262,8 +253,8 @@ export default function AchadoPerdidoDetailPage() {
             className="w-full h-56 object-cover"
           />
         ) : (
-          <div className="w-full h-40 bg-secondary flex items-center justify-center text-5xl">
-            {CAT_ICONS[post.category] || "❓"}
+          <div className="w-full h-40 bg-secondary flex items-center justify-center">
+            <Flag className="h-12 w-12 text-muted-foreground" />
           </div>
         )}
 
@@ -272,10 +263,10 @@ export default function AchadoPerdidoDetailPage() {
             <Badge
               variant={post.tipo === "perdido" ? "destructive" : "default"}
             >
-              {post.tipo === "perdido" ? "🔴 Perdido" : "🟢 Encontrado"}
+              {post.tipo === "perdido" ? "Perdido" : "Encontrado"}
             </Badge>
             <Badge variant="secondary">
-              {CAT_ICONS[post.category]} {post.category}
+              {getLostFoundCategoryLabel(post.category)}
             </Badge>
             {post.resolvido && (
               <Badge
@@ -342,7 +333,7 @@ export default function AchadoPerdidoDetailPage() {
                 className="bg-success hover:bg-success/90"
               >
                 <a
-                  href={`https://wa.me/55${post.autor.whatsapp}`}
+                  href={buildWhatsAppUrl(post.autor.whatsapp) ?? undefined}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -481,7 +472,7 @@ export default function AchadoPerdidoDetailPage() {
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Categoria:</span>
                 <span className="font-medium">
-                  {CAT_ICONS[post.category]} {post.category}
+                  {getLostFoundCategoryLabel(post.category)}
                 </span>
               </div>
               {post.publicNeighborhood && (
@@ -505,11 +496,14 @@ export default function AchadoPerdidoDetailPage() {
           </div>
 
           <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
-            <p className="text-xs text-blue-500 leading-relaxed">
-              💡 <strong>Dica:</strong>{" "}
-              {post.tipo === "perdido"
-                ? "Se você encontrou este item, entre em contato com o autor pelo WhatsApp."
-                : "Se este item é seu, entre em contato com quem encontrou para combinar a devolução."}
+            <p className="flex items-start gap-2 text-xs text-blue-500 leading-relaxed">
+              <Lightbulb className="h-3.5 w-3.5 mt-0.5 shrink-0" aria-hidden="true" />
+              <span>
+                <strong>Dica:</strong>{" "}
+                {post.tipo === "perdido"
+                  ? "Se você encontrou este item, entre em contato com o autor pelo WhatsApp."
+                  : "Se este item é seu, entre em contato com quem encontrou para combinar a devolução."}
+              </span>
             </p>
           </div>
         </div>
@@ -517,4 +511,3 @@ export default function AchadoPerdidoDetailPage() {
     </div>
   );
 }
-

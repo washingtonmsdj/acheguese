@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services/ProfileService";
-import { commentService } from "@/core/comments/services";
+import { CommentService } from "@/core/comments/services";
 
 interface CommentWithReplies {
   id: string;
@@ -42,7 +42,7 @@ export const useComments = (
     if (!postId) return;
     setLoading(true);
     try {
-      const commentsData = await commentService.getCommentsByPost(postId);
+      const commentsData = await CommentService.getCommentsByPost(postId);
 
       const formattedComments: CommentWithReplies[] = commentsData.map(
         (comment: any) => ({
@@ -94,7 +94,7 @@ export const useComments = (
           return false;
         }
 
-        await commentService.createComment({
+        await CommentService.createComment({
           post_id: postId,
           author_profile_id: context.id,
           content: content.trim(),

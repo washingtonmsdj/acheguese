@@ -8,7 +8,7 @@
  */
 
 /**
- * Valida se um ID é válido (não vazio, não mock em produção)
+ * Valida se um ID é UUID válido.
  * 
  * @param id - ID a ser validado
  * @returns true se o ID é válido
@@ -26,16 +26,6 @@ export function isValidId(id: unknown): id is string {
   }
 
   if (!id.trim()) {
-    return false;
-  }
-
-  // Permitir IDs mock em desenvolvimento
-  if (import.meta.env.DEV && id.startsWith('mock-')) {
-    return true;
-  }
-
-  // Em produção, não aceitar IDs de mock
-  if (import.meta.env.PROD && id.startsWith('mock-')) {
     return false;
   }
 

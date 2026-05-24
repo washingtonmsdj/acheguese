@@ -1,19 +1,11 @@
 /**
- * 🔔 NOTIFICATIONS SERVICES - SSOT v2.0 Exports
- *
- * @version 2.0.0 - Refatoração SSOT
+ * Notifications services - SSOT exports.
  */
 
-// ============================================================
-// 🏛️ FACADE - Interface unificada SSOT v2.0
-// ============================================================
 export { NotificationService, notificationService } from "./NotificationService";
 export { PushNotificationPreferencesService } from "./PushNotificationPreferencesService";
 export { UserNotificationPreferencesService } from "./UserNotificationPreferencesService";
 
-// ============================================================
-// 📦 LEGACY - Re-exports de types
-// ============================================================
 export type {
   CreateNotificationParams,
   Notification,
@@ -23,7 +15,4 @@ export type {
   NotificationTypeValue as NotificationType,
 } from "../types";
 
-// ============================================================
-// 🛠️ UTILS
-// ============================================================
 export { normalizeNotification } from "../utils/normalizeNotification";

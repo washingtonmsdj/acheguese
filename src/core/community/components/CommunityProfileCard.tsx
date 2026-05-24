@@ -1,4 +1,4 @@
-﻿import { MapPin, Award, TrendingUp, CheckCircle } from "lucide-react";
+import { MapPin, Award, TrendingUp, CheckCircle } from "lucide-react";
 import { Card } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
 import {

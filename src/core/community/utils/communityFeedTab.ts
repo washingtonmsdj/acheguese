@@ -29,7 +29,7 @@ export interface CommunityFeedComposerActionOption {
 }
 
 export const COMMUNITY_FEED_HEADER_FILTERS: readonly CommunityFeedHeaderFilterOption[] = [
-  { id: "para_voce", label: "Para voce" },
+  { id: "para_voce", label: "Para você" },
   { id: "alertas", label: "Alertas" },
   { id: "empresas", label: "Empresas" },
   { id: "eventos", label: "Eventos" },
@@ -44,7 +44,7 @@ export const COMMUNITY_FEED_SORT_FILTERS: readonly CommunityFeedSortFilterOption
 
 export const COMMUNITY_FEED_COMPOSER_ACTIONS: readonly CommunityFeedComposerActionOption[] = [
   { id: "text", label: "Texto" },
-  { id: "media", label: "Foto/video" },
+  { id: "media", label: "Foto/vídeo" },
   { id: "poll", label: "Enquete" },
   { id: "alert", label: "Aviso" },
   { id: "file", label: "Arquivo" },

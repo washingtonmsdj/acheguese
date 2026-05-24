@@ -1,20 +1,19 @@
-/**
- * ClassifiedCanonicalRoute — Rota canônica de classificado
+﻿/**
+ * ClassifiedCanonicalRoute - Rota canônica de classificado
  *
  * Resolve classificado pela URL canônica completa:
  * /classificados/:uf/:cidade/:bairro/:categoria/:subcategoria/:slug/:publicId
  *
  * Comportamento:
  * - Resolve pelo public_id (âncora estável)
- * - Detecta URL desatualizada (slug/território/categoria mudou)
- * - Redirect 308 para canonical atual
- * - 404 se não encontrado
+ * - Renderiza o detalhe diretamente, sem redirect de canonicalização
+ * - 404 visível se não encontrado
  *
  * @version 1.0.0
  */
 import { logger } from '@/shared/utils/logger';
 import { lazy, Suspense, useEffect, useState } from 'react';
-import { useParams, Navigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { classifiedUrlService } from '@/shared/services/classifieds';
 import { FullScreenLoader } from '@/shared/components/loading/PageLoader';
 
@@ -32,9 +31,8 @@ export default function ClassifiedCanonicalRoute() {
   }>();
 
   const [resolution, setResolution] = useState<{
-    status: 'loading' | 'found' | 'redirect' | 'not-found';
+    status: 'loading' | 'found' | 'not-found';
     classifiedId?: string;
-    redirectTo?: string;
   }>({ status: 'loading' });
 
   useEffect(() => {
@@ -61,15 +59,6 @@ export default function ClassifiedCanonicalRoute() {
           return;
         }
 
-        if (result.needs_redirect && result.redirect_to) {
-          logger.info('[ClassifiedCanonicalRoute] Redirect para canonical:', result.redirect_to);
-          setResolution({
-            status: 'redirect',
-            redirectTo: result.redirect_to,
-          });
-          return;
-        }
-
         setResolution({
           status: 'found',
           classifiedId: result.id,
@@ -87,12 +76,21 @@ export default function ClassifiedCanonicalRoute() {
     return <FullScreenLoader />;
   }
 
-  if (resolution.status === 'redirect' && resolution.redirectTo) {
-    return <Navigate to={resolution.redirectTo} replace />;
-  }
-
   if (resolution.status === 'not-found') {
-    return <Navigate to="/404" replace />;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <div className="max-w-md text-center">
+          <p className="text-4xl font-bold text-muted-foreground">404</p>
+          <p className="mt-2 text-lg font-semibold text-foreground">Classificado não encontrado</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Este classificado não existe mais ou foi removido.
+          </p>
+          <a href="/classificados" className="mt-4 inline-block text-sm text-primary underline">
+            Voltar para classificados
+          </a>
+        </div>
+      </div>
+    );
   }
 
   // Renderiza página de detalhe com ID resolvido
@@ -102,4 +100,3 @@ export default function ClassifiedCanonicalRoute() {
     </Suspense>
   );
 }
-

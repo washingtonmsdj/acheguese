@@ -47,7 +47,6 @@ export { CoverageService } from './services/CoverageService';
 export type { ICoverageRepository } from './repositories/ICoverageRepository';
 export type { IGeospatialPort, GeospatialError, GeospatialErrorCode } from './ports/IGeospatialPort';
 
-export { CoverageRepositoryMock } from './repositories/CoverageRepositoryMock';
 export { CoverageRepositorySupabase } from './repositories/CoverageRepositorySupabase';
 export { createCoverageRepository } from './repositories/createCoverageRepository';
 

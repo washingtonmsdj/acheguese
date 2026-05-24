@@ -10,6 +10,7 @@ import React from 'react';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import { navigateToSafeRedirect } from '@/shared/utils/safeRedirect';
 
 interface ErrorFallbackProps {
   error: Error;
@@ -23,7 +24,7 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
   const isDev = import.meta.env.DEV;
 
   const handleGoHome = () => {
-    window.location.href = '/';
+    navigateToSafeRedirect('/', { context: 'shared-error-fallback-home' });
   };
 
   return (

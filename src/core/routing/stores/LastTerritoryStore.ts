@@ -1,15 +1,11 @@
 /**
  * LastTerritoryStore
  *
- * Singleton leve que persiste o último território visitado pelo usuário.
- * Alimentado pelo TerritorialLayout quando resolve qualquer território (bairro ou grupo).
- * Lido pelo useModuleUrls para exibir o chip no header mesmo fora de rotas territoriais.
- *
- * Não usa React state — é um store externo com subscribe, compatível com useSyncExternalStore.
- * Persiste em sessionStorage para sobreviver a navegações internas mas não entre sessões.
+ * Lightweight singleton that stores the last resolved territorial context.
+ * It is fed by TerritorialLayout and consumed by header/sidebar URL helpers.
  */
 
-const STORAGE_KEY = 'achegue:last_territory';
+const STORAGE_KEY = "achegue:last_territory";
 
 export interface LastTerritory {
   name: string;
@@ -21,20 +17,18 @@ class LastTerritoryStoreClass {
   private listeners: Set<() => void> = new Set();
 
   constructor() {
-    // Restaura do sessionStorage na inicialização
     try {
       const raw = sessionStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed: LastTerritory = JSON.parse(raw);
-        // Valida que o baseUrl é uma URL pública válida (sem /br, sem /local, sem /area como prefixo)
-        if (parsed.baseUrl && !parsed.baseUrl.startsWith('/br/') && !parsed.baseUrl.startsWith('/local/')) {
-          this.current = parsed;
-        } else {
-          sessionStorage.removeItem(STORAGE_KEY);
-        }
+      if (!raw) return;
+
+      const parsed: LastTerritory = JSON.parse(raw);
+      if (parsed.baseUrl && !parsed.baseUrl.startsWith("/br/") && !parsed.baseUrl.startsWith("/local/")) {
+        this.current = parsed;
+      } else {
+        sessionStorage.removeItem(STORAGE_KEY);
       }
     } catch {
-      // sessionStorage indisponível — sem problema
+      // Ignore storage failures and keep in-memory state only.
     }
   }
 
@@ -43,21 +37,17 @@ class LastTerritoryStoreClass {
   }
 
   set(territory: LastTerritory): void {
-    // Só notifica se mudou de fato
-    if (
-      this.current?.baseUrl === territory.baseUrl &&
-      this.current?.name === territory.name
-    ) return;
+    if (this.current?.baseUrl === territory.baseUrl && this.current?.name === territory.name) return;
 
     this.current = territory;
 
     try {
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(territory));
     } catch {
-      // sessionStorage indisponível — continua sem persistência
+      // Ignore storage failures and keep in-memory state only.
     }
 
-    this.listeners.forEach((fn) => fn());
+    this.listeners.forEach((listener) => listener());
   }
 
   subscribe(listener: () => void): () => void {

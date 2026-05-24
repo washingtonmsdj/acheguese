@@ -1,9 +1,9 @@
 /**
- * StateLandingPage - Landing publica para nivel estadual
+ * StateLandingPage - Landing pública para nível estadual
  *
  * Lista cidades ativas dentro do estado.
  * Serve como fallback elegante e base futura de escala.
- * Quando ha apenas 1 cidade ativa, ainda mostra a landing (nao redireciona).
+ * Quando há apenas 1 cidade ativa, ainda mostra a landing (não redireciona).
  */
 
 import { useEffect, useState } from 'react';
@@ -88,15 +88,15 @@ export function StateLandingPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-3 p-8 text-center">
         <Map className="h-12 w-12 text-muted-foreground" />
-        <p className="text-lg font-semibold text-foreground">Estado nao encontrado</p>
+        <p className="text-lg font-semibold text-foreground">Estado não encontrado</p>
         <p className="text-sm text-muted-foreground max-w-sm">
-          Este estado nao esta disponivel no momento.
+          Este estado não está disponível no momento.
         </p>
         <button
           onClick={() => navigate('/')}
           className="mt-4 text-sm text-primary hover:underline"
         >
-          Voltar ao inicio
+          Voltar ao início
         </button>
       </div>
     );
@@ -120,10 +120,10 @@ export function StateLandingPage() {
               </h1>
               <p className="text-sm text-muted-foreground mt-1">
                 {cities.length === 0
-                  ? 'Nenhuma cidade disponivel no momento'
+                  ? 'Nenhuma cidade disponível no momento'
                   : cities.length === 1
-                    ? '1 cidade disponivel'
-                    : `${cities.length} cidades disponiveis`}
+                    ? '1 cidade disponível'
+                    : `${cities.length} cidades disponíveis`}
               </p>
             </div>
           </div>
@@ -140,8 +140,8 @@ export function StateLandingPage() {
         {cities.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border bg-muted/20 px-4 py-8 text-center">
             <MapPin className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">Nenhuma cidade disponivel neste estado</p>
-            <p className="text-xs text-muted-foreground/60 mt-1">Em breve novas cidades serao adicionadas</p>
+            <p className="text-sm text-muted-foreground">Nenhuma cidade disponível neste estado</p>
+            <p className="text-xs text-muted-foreground/60 mt-1">Em breve novas cidades serão adicionadas</p>
           </div>
         ) : (
           <div className="grid gap-3">
@@ -172,7 +172,7 @@ export function StateLandingPage() {
         )}
       </section>
 
-      {/* Nota de expansao */}
+      {/* Nota de expansão */}
       <div className="px-4 max-w-3xl mx-auto">
         <p className="text-xs text-muted-foreground text-center">
           Em breve em mais cidades de {stateData?.name || stateCode}

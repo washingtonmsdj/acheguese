@@ -1,4 +1,4 @@
-﻿export const FAMILY_TABLES = {
+export const FAMILY_TABLES = {
   connections: "family_connections",
   locations: "family_locations",
   locationSharingSettings: "family_location_sharing_settings",

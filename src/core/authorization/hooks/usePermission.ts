@@ -1,23 +1,9 @@
-/**
- * usePermission — checagem reativa para render/UI
- *
- * Retorna { allowed, isLoading, error } com cache via useQuery.
- * Ownership resolvido internamente pelo AuthorizationEngine.
- *
- * const { allowed, isLoading } = usePermission('createPost');
- * return isLoading ? <Spinner /> : allowed ? <PostButton /> : null;
- */
-
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSessionContext } from "@/core/session";
 import { AuthorizationEngine } from "../services/AuthorizationEngine";
 import type { Action, ActionContext, TargetEntity } from "../types";
 
-/**
- * Normaliza context e targetEntity para chave de cache estável.
- * Garante que a mesma combinação semântica produza a mesma chave.
- */
 function normalizeQueryKey(
   profileId: string,
   action: Action,
@@ -52,14 +38,12 @@ export function usePermission(
   const targetType = targetEntity?.type;
   const targetId = targetEntity?.id;
 
-  // Memoizar context e targetEntity para evitar re-renders desnecessários
   const stableContext = useMemo<ActionContext>(
     () => ({
       communityId: context.communityId,
       businessId: context.businessId,
       eventId: context.eventId,
     }),
-
     [context.communityId, context.businessId, context.eventId],
   );
 
@@ -88,7 +72,7 @@ export function usePermission(
       );
     },
     enabled: !!profileId,
-    staleTime: 60_000, // 1 min — alinhado com CACHE_TTL do AuthorizationEngine
+    staleTime: 60_000,
     gcTime: 120_000,
   });
 

@@ -1,17 +1,17 @@
 /**
  * SocialInteractionsService - GATE 3 FASE 3C
  *
- * Service centralizado para interações sociais usando profile_id consistentemente
- * Responsável por:
+ * Service centralizado para interacoes sociais usando profile_id consistentemente
+ * Responsavel por:
  * - Likes de posts (post_likes_new)
  * - Posts salvos (saved_posts_new)
  * - Membros de grupos (group_members_new)
  * - Mensagens de grupos (group_messages_new)
  *
  * REGRAS:
- * - Usa profile ativo como identidade de interação
- * - Elimina uso de user_id como identidade de atuação
- * - Fonte única de verdade para interações sociais
+ * - Usa profile ativo como identidade de interacao
+ * - Elimina uso de user_id como identidade de atuacao
+ * - Fonte unica de verdade para interacoes sociais
  */
 
 import { supabase } from "@/integrations/supabase";
@@ -51,7 +51,7 @@ export class SocialInteractionsService {
       });
 
       if (error) {
-        // Ignorar erro de duplicata (já curtiu)
+        // Ignorar erro de duplicata (ja curtiu)
         if (error.code === "23505") {
           return { success: true };
         }
@@ -130,7 +130,7 @@ export class SocialInteractionsService {
   }
 
   /**
-   * Buscar likes de múltiplos posts para um profile
+   * Buscar likes de multiplos posts para um profile
    */
   static async getLikesForPosts(
     postIds: string[],
@@ -182,7 +182,7 @@ export class SocialInteractionsService {
       });
 
       if (error) {
-        // Ignorar erro de duplicata (já salvou)
+        // Ignorar erro de duplicata (ja salvou)
         if (error.code === "23505") {
           return { success: true };
         }
@@ -261,7 +261,7 @@ export class SocialInteractionsService {
   }
 
   /**
-   * Buscar posts salvos de múltiplos posts para um profile
+   * Buscar posts salvos de multiplos posts para um profile
    */
   static async getSavedForPosts(
     postIds: string[],
@@ -386,14 +386,14 @@ export class SocialInteractionsService {
 
 
   /**
-   * Buscar estatísticas de interações sociais para um profile
-   * @param profileId - ID do perfil (profiles.id), não user_id
+   * Buscar estatisticas de interacoes sociais para um profile
+   * @param profileId - ID do perfil (profiles.id), nao user_id
    */
   static async getInteractionStats(
     profileId?: string,
   ): Promise<SocialInteractionStats> {
     try {
-      // Se profileId não fornecido, resolver via usuário autenticado
+      // Se profileId nao fornecido, resolver via usuario autenticado
       let targetProfileId = profileId;
       if (!targetProfileId) {
         const activeProfile = await profileService.getRequiredActiveProfile();
@@ -462,7 +462,7 @@ export class SocialInteractionsService {
   }
 
   /**
-   * Verifica se está seguindo um usuário
+   * Verifica se esta seguindo um usuario
    */
   static async isFollowingUser(
     followerId: string,
@@ -482,7 +482,7 @@ export class SocialInteractionsService {
   }
 
   /**
-   * Alterna follow/unfollow de um usuário
+   * Alterna follow/unfollow de um usuario
    */
   static async toggleFollowUser(
     followerId: string,
@@ -517,7 +517,7 @@ export class SocialInteractionsService {
   }
 
   /**
-   * Busca IDs dos usuários seguidos por um usuário
+   * Busca IDs dos usuarios seguidos por um usuario
    */
   static async getFollowedUserIds(userId: string): Promise<string[]> {
     try {
@@ -532,7 +532,7 @@ export class SocialInteractionsService {
   }
 
   /**
-   * Busca IDs dos grupos em que o usuário é membro
+   * Busca IDs dos grupos em que o usuario e membro
    */
   static async getUserGroupIds(userId?: string) {
     return SocialGroupInteractionsService.getUserGroupIds(userId);
@@ -542,60 +542,3 @@ export class SocialInteractionsService {
     return SocialGroupInteractionsService.getGroupMessageById(messageId);
   }
 }
-
-export const socialInteractionsService = new SocialInteractionsService();
-
-// ============================================================================
-// ??? SSOT v2.0 - FACADE
-// ============================================================================
-
-/**
- * ?? SocialInteractionsFacade - Interface SSOT unificada v2.0
- *
- * Uso: SocialInteractionsFacade.likePost(postId, userId)
- *      SocialInteractionsFacade.savePost(postId, userId)
- *      SocialInteractionsFacade.joinGroup(groupId, userId)
- *
- * @deprecated Use SocialInteractionsService diretamente (já é estático)
- */
-export const SocialInteractionsFacade = {
-  // Post Likes
-  likePost: SocialInteractionsService.likePost,
-  unlikePost: SocialInteractionsService.unlikePost,
-  hasLikedPost: SocialInteractionsService.hasLikedPost,
-  getLikesForPosts: SocialInteractionsService.getLikesForPosts,
-
-  // Saved Posts
-  savePost: SocialInteractionsService.savePost,
-  unsavePost: SocialInteractionsService.unsavePost,
-  hasSavedPost: SocialInteractionsService.hasSavedPost,
-  getSavedPosts: SocialInteractionsService.getSavedPosts,
-
-  // Group Members
-  joinGroup: SocialInteractionsService.joinGroup,
-  leaveGroup: SocialInteractionsService.leaveGroup,
-  getGroupMembers: SocialInteractionsService.getGroupMembers,
-  updateGroupMemberRole: SocialInteractionsService.updateGroupMemberRole,
-  getUserGroupIds: SocialInteractionsService.getUserGroupIds,
-
-  // Group Messages
-  sendGroupMessage: SocialInteractionsService.sendGroupMessage,
-  getGroupMessages: SocialInteractionsService.getGroupMessages,
-  deleteGroupMessage: SocialInteractionsService.deleteGroupMessage,
-  updateGroupMessage: SocialInteractionsService.updateGroupMessage,
-  getGroupMessageById: SocialInteractionsService.getGroupMessageById,
-  reportGroupMessage: SocialInteractionsService.reportGroupMessage,
-  getGroupMessageReports: SocialInteractionsService.getGroupMessageReports,
-  updateGroupMessageReportStatus: SocialInteractionsService.updateGroupMessageReportStatus,
-
-  // Comment Likes
-  likeComment: SocialInteractionsService.likeComment,
-  unlikeComment: SocialInteractionsService.unlikeComment,
-
-  // Follows
-  getFollowedUserIds: SocialInteractionsService.getFollowedUserIds,
-
-  // Stats
-  getInteractionStats: SocialInteractionsService.getInteractionStats,
-} as const;
-

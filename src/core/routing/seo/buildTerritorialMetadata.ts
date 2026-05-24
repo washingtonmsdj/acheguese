@@ -1,5 +1,5 @@
-/**
- * territorialSeo — Builder central de metadados SEO territorial
+﻿/**
+ * territorialSeo - Builder central de metadados SEO territorial
  *
  * SSOT para geração de title, description, canonical e Open Graph
  * em rotas territoriais. Nunca montar strings de SEO fora daqui.
@@ -16,7 +16,7 @@ import type { ModuleSlug } from '../utils/territoryUrls';
 import { MODULE_SLUGS } from '../utils/territoryUrls';
 import { buildPublicAbsoluteUrl, getPublicAppOrigin } from '@/shared/config/publicAppOrigin';
 
-// ── Textos para a landing hub (sem módulo) ───────────────────────────────────
+// Textos para a landing hub (sem módulo)
 
 const HUB_COPY = {
   label: 'Vitrine',
@@ -24,12 +24,12 @@ const HUB_COPY = {
   descriptionSuffix: 'Comunidade, empresas, serviços e mobilidade hiperlocal.',
 };
 
-// ── Configuração da marca ────────────────────────────────────────────────────
+// Configuração da marca
 
 const BRAND = 'Achegue-se';
 const DEFAULT_OG_IMAGE = '/og-image.png';
 
-// ── Textos por módulo ────────────────────────────────────────────────────────
+// Textos por módulo
 
 interface ModuleCopy {
   label: string;
@@ -47,6 +47,11 @@ const MODULE_COPY: Record<ModuleSlug, ModuleCopy> = {
     label: 'Empresas',
     focus: 'Empresas e negócios locais',
     descriptionSuffix: 'Descubra empresas, lojas e negócios locais.',
+  },
+  educacao: {
+    label: 'Educação',
+    focus: 'Educação local',
+    descriptionSuffix: 'Escolas, cursos e instituições de educação na região.',
   },
   servicos: {
     label: 'Serviços',
@@ -100,7 +105,7 @@ const MODULE_COPY: Record<ModuleSlug, ModuleCopy> = {
   },
 };
 
-// ── Tipos de saída ───────────────────────────────────────────────────────────
+// Tipos de saída
 
 export interface TerritorialMetadata {
   title: string;
@@ -123,7 +128,7 @@ export interface TerritorialMetadata {
   };
 }
 
-// ── Input types ──────────────────────────────────────────────────────────────
+// Input types
 
 export interface LocationSeoInput {
   kind: 'location';
@@ -143,7 +148,7 @@ export interface GroupSeoInput {
 
 export type TerritorialSeoInput = LocationSeoInput | GroupSeoInput;
 
-// ── Builder principal ────────────────────────────────────────────────────────
+// Builder principal
 
 export function buildTerritorialMetadata(input: TerritorialSeoInput): TerritorialMetadata {
   const copy = input.module ? MODULE_COPY[input.module] : HUB_COPY;
@@ -155,7 +160,7 @@ export function buildTerritorialMetadata(input: TerritorialSeoInput): Territoria
   return buildGroupMetadata(input, copy, canonical);
 }
 
-// ── Builder para bairro (Location) ──────────────────────────────────────────
+// Builder para bairro (Location)
 
 function buildLocationMetadata(
   input: LocationSeoInput,
@@ -164,7 +169,7 @@ function buildLocationMetadata(
 ): TerritorialMetadata {
   const { location, module } = input;
 
-  // Extrai cidade do geographic_path: /br/ba/salvador/nordeste-de-amaralina → Salvador
+  // Extrai cidade do geographic_path: /br/ba/salvador/nordeste-de-amaralina -> Salvador
   const cityName = extractCityName(location.geographic_path);
 
   const title = module
@@ -177,7 +182,7 @@ function buildLocationMetadata(
   return buildMetadata(title, description, canonical);
 }
 
-// ── Builder para grupo territorial ──────────────────────────────────────────
+// Builder para grupo territorial
 
 function buildGroupMetadata(
   input: GroupSeoInput,
@@ -192,7 +197,7 @@ function buildGroupMetadata(
     ? ` Reúne ${formatList(memberNames)}.`
     : '';
 
-  // Extrai cidade do canonical path: /ba/salvador/... → Salvador
+  // Extrai cidade do canonical path: /ba/salvador/... -> Salvador
   const cityName = extractCityNameFromGroupPath(input.canonicalPath);
 
   const title = module
@@ -205,7 +210,7 @@ function buildGroupMetadata(
   return buildMetadata(title, description, canonical);
 }
 
-// ── Montagem final ───────────────────────────────────────────────────────────
+// Montagem final
 
 function buildMetadata(
   title: string,
@@ -237,11 +242,11 @@ function buildMetadata(
   };
 }
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// Helpers
 
 /**
  * Extrai o nome da cidade a partir do geographic_path de um district.
- * /br/ba/salvador/nordeste-de-amaralina → "Salvador"
+ * /br/ba/salvador/nordeste-de-amaralina -> "Salvador"
  */
 function extractCityName(geographicPath: string): string {
   const parts = geographicPath.split('/').filter(Boolean);
@@ -252,7 +257,7 @@ function extractCityName(geographicPath: string): string {
 
 /**
  * Extrai o nome da cidade a partir do canonical path de um grupo.
- * /ba/salvador/complexo-... → "Salvador"
+ * /ba/salvador/complexo-... -> "Salvador"
  */
 function extractCityNameFromGroupPath(canonicalPath: string): string {
   const parts = canonicalPath.split('/').filter(Boolean);
@@ -266,7 +271,7 @@ function extractCityNameFromGroupPath(canonicalPath: string): string {
 
 /**
  * Converte slug para título legível.
- * "nordeste-de-amaralina" → "Nordeste de Amaralina"
+ * "nordeste-de-amaralina" -> "Nordeste de Amaralina"
  */
 function slugToTitle(slug: string): string {
   const LOWERCASE_WORDS = new Set(['de', 'da', 'do', 'das', 'dos', 'e', 'em', 'a', 'o']);
@@ -282,7 +287,7 @@ function slugToTitle(slug: string): string {
 
 /**
  * Formata lista de nomes com vírgulas e "e" no final.
- * ["A", "B", "C"] → "A, B e C"
+ * ["A", "B", "C"] -> "A, B e C"
  */
 function formatList(items: string[]): string {
   if (items.length === 0) return '';

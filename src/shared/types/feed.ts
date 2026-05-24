@@ -52,8 +52,6 @@ export interface Post {
   likes_count: number;
   comments_count: number;
 
-  // Flag para posts mock (desenvolvimento)
-  isMock?: boolean;
 }
 
 export interface CreatePostInput {

@@ -2,7 +2,7 @@
  * 🏛️ ADMIN MODERATION SERVICE - SSOT v2.0 NÍVEL AAA
  *
  * Serviço administrativo para moderação de conteúdo.
- * Delega para PostsFacade, CommentsFacade, ProfileService (SSOT).
+ * Delega para PostsFacade, CommentService, ProfileService (SSOT).
  *
  * ✅ SSOT: Single Source of Truth - delega para serviços de domínio
  * ✅ Facade Pattern: Interface unificada para operações de moderação
@@ -14,7 +14,7 @@
  */
 
 import { PostsFacade } from "@/core/posts/services";
-import { CommentsFacade } from "@/core/comments/services";
+import { CommentService } from "@/core/comments/services";
 import { profileService } from "@/core/profiles/services";
 import { userWarningsService, adminAuditService } from "@/core/moderation";
 import { logger } from "@/shared/utils/logger";
@@ -67,7 +67,7 @@ export interface AdminModerationData {
 class AdminModerationService {
   /**
    * Busca todos os dados de moderação
-   * Delega para PostsFacade, CommentsFacade, ProfileService (SSOT)
+   * Delega para PostsFacade, CommentService, ProfileService (SSOT)
    */
   async getAllModerationData(): Promise<AdminModerationData> {
     try {
@@ -77,8 +77,8 @@ class AdminModerationService {
       });
       const posts = feedResult.posts;
 
-      // ✅ SSOT AAA - Usa CommentsFacade para buscar comentários
-      const comments = await CommentsFacade.queries.getAllComments(1000);
+      // ✅ SSOT AAA - Usa CommentService para buscar comentários
+      const comments = await CommentService.getAllComments(1000);
 
       // ✅ SSOT AAA - Usa ProfileService para buscar perfis
       const profiles = await profileService.getAllUsers();
@@ -108,7 +108,7 @@ class AdminModerationService {
 
   /**
    * Exclui conteúdo (post ou comentário)
-   * Delega para PostsFacade ou CommentsFacade (SSOT)
+   * Delega para PostsFacade ou CommentService (SSOT)
    */
   async deleteContent(
     type: "post" | "comment",
@@ -120,8 +120,8 @@ class AdminModerationService {
         await PostsFacade.mutations.deletePost(contentId);
         logger.info(`Post ${contentId} excluído via moderação`);
       } else {
-        // ✅ SSOT AAA - Usa CommentsFacade para deletar comentário
-        await CommentsFacade.mutations.deleteComment(contentId);
+        // ✅ SSOT AAA - Usa CommentService para deletar comentário
+        await CommentService.deleteComment(contentId);
         logger.info(`Comentário ${contentId} excluído via moderação`);
       }
     } catch (error) {
@@ -241,4 +241,3 @@ class AdminModerationService {
 // ============================================================================
 
 export const adminModerationService = new AdminModerationService();
-

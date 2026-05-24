@@ -1,10 +1,11 @@
 import { AIIntentSchema, type AIIntent, type AIProvider, type IntentParserInput } from "../domain/types";
-import { MockAIProvider } from "../providers/MockAIProvider";
+import { OpenAIProvider } from "../providers/OpenAIProvider";
+import { RuleBasedAIProvider } from "../providers/RuleBasedAIProvider";
 
 export class IntentParser {
   constructor(
-    private readonly provider: AIProvider = new MockAIProvider(),
-    private readonly fallbackProvider: AIProvider = new MockAIProvider(),
+    private readonly provider: AIProvider = new OpenAIProvider(),
+    private readonly fallbackProvider: AIProvider = new RuleBasedAIProvider(),
   ) {}
 
   async parse(input: IntentParserInput): Promise<AIIntent> {

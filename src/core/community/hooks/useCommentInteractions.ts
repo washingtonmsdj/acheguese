@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useSessionContext } from "@/core/session";
 import { toast } from "sonner";
 import { logger } from "@/shared/utils/logger";
-import { commentService } from "@/core/comments/services"; // ✅ GATE 4A FASE 2
+import { CommentService } from "@/core/comments/services"; // ✅ GATE 4A FASE 2
 import { SocialInteractionsService } from "@/core/social/services/SocialInteractionsService"; // ✅ GATE 3 FASE 3C
 /**
  * Hook profissional para gerenciar interações com comentários

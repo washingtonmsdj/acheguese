@@ -261,7 +261,7 @@ export function AddressEditor({
           id="neighborhood"
           value={address.neighborhood || ""}
           onChange={(e) => handleChange("neighborhood", e.target.value)}
-          placeholder="Ex: Pituba"
+          placeholder="Ex: Centro"
         />
       </div>
 
@@ -275,7 +275,7 @@ export function AddressEditor({
             id="city"
             value={address.city || ""}
             onChange={(e) => handleChange("city", e.target.value)}
-            placeholder="Ex: Salvador"
+            placeholder="Ex: cidade"
           />
         </div>
         <div className="space-y-2">

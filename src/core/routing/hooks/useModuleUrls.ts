@@ -1,4 +1,5 @@
 import { useParams } from 'react-router-dom';
+import { LAUNCH_URLS } from '@/config/territory';
 import { isReservedSlug } from '@/core/routing/reservedSlugs';
 import { buildCommunityTerritoryUrl, buildModuleTerritoryUrl, MODULE_SLUGS } from '@/core/routing/utils/territoryUrls';
 
@@ -35,18 +36,22 @@ export function useModuleUrls(): ModuleUrls {
   return {
     base: '/',
     territoryName: null,
-    community: '/comunidade',
-    business: '/empresas',
-    services: '/servicos',
-    classifieds: '/classificados',
+    community: LAUNCH_URLS.community,
+    business: LAUNCH_URLS.business,
+    services: LAUNCH_URLS.services,
+    classifieds: LAUNCH_URLS.classifieds,
   };
+}
+
+function hasCommunityTerritorySlug(base: string): boolean {
+  return base.split('/').filter(Boolean).length >= 3;
 }
 
 function buildTerritorialModuleUrls(base: string, territoryName: string | null): ModuleUrls {
   return {
     base,
     territoryName,
-    community: buildCommunityTerritoryUrl(base),
+    community: hasCommunityTerritorySlug(base) ? buildCommunityTerritoryUrl(base) : LAUNCH_URLS.community,
     business: buildModuleTerritoryUrl(MODULE_SLUGS.business, base),
     services: buildModuleTerritoryUrl(MODULE_SLUGS.services, base),
     classifieds: buildModuleTerritoryUrl(MODULE_SLUGS.classifieds, base),

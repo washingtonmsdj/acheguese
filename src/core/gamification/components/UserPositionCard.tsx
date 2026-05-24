@@ -65,6 +65,7 @@ export function UserPositionCard({
           {currentUserRank.badges.map((bId) => {
             const badge = badges.find((x) => x.id === bId);
             if (!badge) return null;
+            const BadgeIcon = badge.icone;
 
             return (
               <button
@@ -75,7 +76,8 @@ export function UserPositionCard({
                   badge.cor,
                 )}
               >
-                {badge.icone} {badge.name}
+                <BadgeIcon className="mr-1 inline h-3 w-3" aria-hidden="true" />
+                {badge.name}
               </button>
             );
           })}

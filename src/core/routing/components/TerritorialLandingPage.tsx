@@ -478,8 +478,8 @@ export function TerritorialLandingPage() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           {/* Habitantes */}
           <div className="flex items-center gap-2 p-2.5 rounded-lg bg-card border border-border hover:border-teal-500/40 hover:bg-accent transition-all">
-            <div className="h-10 w-10 rounded-lg bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center text-xl">
-              👥
+            <div className="h-10 w-10 rounded-lg bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center">
+              <Users className="h-5 w-5 text-teal-500" aria-hidden="true" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-bold text-foreground truncate">
@@ -502,8 +502,8 @@ export function TerritorialLandingPage() {
 
           {/* Profissionais */}
           <div className="flex items-center gap-2 p-2.5 rounded-lg bg-card border border-border hover:border-violet-500/40 hover:bg-accent transition-all">
-            <div className="h-10 w-10 rounded-lg bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center text-xl">
-              🔧
+            <div className="h-10 w-10 rounded-lg bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center">
+              <Wrench className="h-5 w-5 text-violet-500" aria-hidden="true" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-bold text-foreground truncate">{isLoading ? '—' : stats.services}</p>
@@ -513,8 +513,8 @@ export function TerritorialLandingPage() {
 
           {/* Anúncios */}
           <div className="flex items-center gap-2 p-2.5 rounded-lg bg-card border border-border hover:border-orange-500/40 hover:bg-accent transition-all">
-            <div className="h-10 w-10 rounded-lg bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center text-xl">
-              🏷️
+            <div className="h-10 w-10 rounded-lg bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center">
+              <Tag className="h-5 w-5 text-orange-500" aria-hidden="true" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-bold text-foreground truncate">{isLoading ? '—' : stats.classifieds}</p>
@@ -524,8 +524,8 @@ export function TerritorialLandingPage() {
 
           {/* Escolas */}
           <div className="flex items-center gap-2 p-2.5 rounded-lg bg-card border border-border hover:border-green-500/40 hover:bg-accent transition-all">
-            <div className="h-10 w-10 rounded-lg bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center text-xl">
-              🎓
+            <div className="h-10 w-10 rounded-lg bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center">
+              <GraduationCap className="h-5 w-5 text-green-500" aria-hidden="true" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-bold text-foreground truncate">
@@ -710,7 +710,7 @@ export function TerritorialLandingPage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-10 md:pb-14 w-full">
         <div className="mb-6">
           <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">Lazer e Atividades</h2>
-          <p className="text-sm text-muted-foreground mt-1">O que esta a venda no {isGroup ? 'complexo' : 'bairro'}</p>
+          <p className="text-sm text-muted-foreground mt-1">O que está à venda no {isGroup ? 'complexo' : 'bairro'}</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="relative overflow-hidden bg-gradient-to-br from-teal-500/12 to-teal-500/6 border border-teal-500/25 rounded-2xl p-6 hover:scale-105 transition-transform">
@@ -753,7 +753,7 @@ export function TerritorialLandingPage() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">Classificados Recentes</h2>
-            <p className="text-sm text-muted-foreground mt-1">O que esta a venda no {isGroup ? 'complexo' : 'bairro'}</p>
+            <p className="text-sm text-muted-foreground mt-1">O que está à venda no {isGroup ? 'complexo' : 'bairro'}</p>
           </div>
           <button
             onClick={() => navigate(moduleUrls.classifieds)}

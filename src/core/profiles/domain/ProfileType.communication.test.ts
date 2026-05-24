@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { isProfileType, PROFILE_TYPE_LABELS } from "./ProfileType";
 
 describe("ProfileType communication_channel", () => {

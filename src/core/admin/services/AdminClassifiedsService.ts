@@ -1,9 +1,9 @@
-﻿/**
- * AdminClassifiedsService - ServiÃ§o de administraÃ§Ã£o de classificados
+/**
+ * AdminClassifiedsService - Servico de administracao de classificados
  *
- * âœ… SSOT COMPLIANCE: Delega para ClassifiedService (modules/classifieds)
- * Este serviÃ§o encapsula operaÃ§Ãµes administrativas de classificados,
- * delegando para o ClassifiedService (SSOT) sempre que possÃ­vel.
+ * SSOT COMPLIANCE: Delega para ClassifiedService (modules/classifieds)
+ * Este servico encapsula operacoes administrativas de classificados,
+ * delegando para o ClassifiedService (SSOT) sempre que possivel.
  */
 
 import { supabase } from "@/integrations/supabase";
@@ -90,26 +90,6 @@ export interface ClassifiedSellerCoverageResult {
   sellers: ClassifiedSellerCoverageItem[];
 }
 
-export interface ClassifiedUrlHistoryItem {
-  id: string;
-  changedAt: string;
-  changeReason: string;
-  oldCanonicalUrl: string;
-  oldSlug: string | null;
-  classifiedId: string;
-  classifiedTitle: string;
-  classifiedPublicId: string | null;
-  classifiedStatus: string | null;
-}
-
-export interface ClassifiedUrlHistoryResult {
-  totalEntries: number;
-  page: number;
-  totalPages: number;
-  latestChangeAt: string | null;
-  entries: ClassifiedUrlHistoryItem[];
-}
-
 export interface ClassifiedPolicySummary {
   totalClassifieds: number;
   missingCategoryId: number;
@@ -117,7 +97,7 @@ export interface ClassifiedPolicySummary {
   missingLocationId: number;
   missingPublicId: number;
   missingSlug: number;
-  withLegacyCategoryOnly: number;
+  withUnmappedCategoryOnly: number;
 }
 
 interface ClassifiedStatusRow {
@@ -129,20 +109,6 @@ interface SellerProfileRow {
   name?: string | null;
   phone?: string | null;
   whatsapp?: string | null;
-}
-
-interface ClassifiedUrlHistoryRow {
-  id: string;
-  changed_at: string;
-  change_reason: string;
-  old_canonical_url: string;
-  old_slug: string | null;
-  classified_id: string;
-  classifieds?: {
-    title?: string | null;
-    public_id?: string | null;
-    status?: string | null;
-  } | null;
 }
 
 interface ClassifiedListRow extends AdminClassifiedData {
@@ -215,7 +181,7 @@ class AdminClassifiedsServiceClass {
   }
 
   /**
-   * Busca estatÃ­sticas de classificados
+   * Busca estatisticas de classificados
    */
   async getStats(): Promise<ClassifiedsStats> {
     try {
@@ -399,61 +365,6 @@ class AdminClassifiedsServiceClass {
     }
   }
 
-  async getUrlHistory(options?: { page?: number; limit?: number }): Promise<ClassifiedUrlHistoryResult> {
-    try {
-      const page = options?.page || 1;
-      const limit = options?.limit || 20;
-      const offset = (page - 1) * limit;
-
-      const { data, error, count } = await supabase
-        .from("classified_url_history")
-        .select(
-          `
-          id,
-          changed_at,
-          change_reason,
-          old_canonical_url,
-          old_slug,
-          classified_id,
-          classifieds(
-            title,
-            public_id,
-            status
-          )
-        `,
-          { count: "exact" },
-        )
-        .order("changed_at", { ascending: false })
-        .range(offset, offset + limit - 1);
-
-      if (error) throw error;
-
-      const rows: ClassifiedUrlHistoryRow[] = data || [];
-      const entries: ClassifiedUrlHistoryItem[] = rows.map((row) => ({
-        id: row.id,
-        changedAt: row.changed_at,
-        changeReason: row.change_reason,
-        oldCanonicalUrl: row.old_canonical_url,
-        oldSlug: row.old_slug,
-        classifiedId: row.classified_id,
-        classifiedTitle: row.classifieds?.title || "Classificado removido",
-        classifiedPublicId: row.classifieds?.public_id ?? null,
-        classifiedStatus: row.classifieds?.status ?? null,
-      }));
-
-      return {
-        totalEntries: count || 0,
-        page,
-        totalPages: Math.max(1, Math.ceil((count || 0) / limit)),
-        latestChangeAt: entries[0]?.changedAt || null,
-        entries,
-      };
-    } catch (error) {
-      logger.error("Error in getUrlHistory:", error);
-      throw error;
-    }
-  }
-
   async getPolicySummary(): Promise<ClassifiedPolicySummary> {
     try {
       const { data, error } = await supabase
@@ -470,7 +381,7 @@ class AdminClassifiedsServiceClass {
         missingLocationId: rows.filter((row) => !row.location_id).length,
         missingPublicId: rows.filter((row) => !row.public_id).length,
         missingSlug: rows.filter((row) => !row.slug).length,
-        withLegacyCategoryOnly: rows.filter((row) => Boolean(row.category) && !row.category_id).length,
+        withUnmappedCategoryOnly: rows.filter((row) => Boolean(row.category) && !row.category_id).length,
       };
     } catch (error) {
       logger.error("Error in getPolicySummary:", error);
@@ -479,8 +390,8 @@ class AdminClassifiedsServiceClass {
   }
 
   /**
-   * Busca todos os classificados com paginaÃ§Ã£o
-   * âœ… SSOT: Delega para ClassifiedsFacade.queries.getAllClassifieds
+   * Busca todos os classificados com paginacao
+   * SSOT: Delega para ClassifiedsService.queries.getAllClassifieds
    */
   async getAllClassifieds(options: {
     page?: number;
@@ -563,7 +474,7 @@ class AdminClassifiedsServiceClass {
 
   /**
    * Busca um classificado por ID
-   * âœ… SSOT: Delega para ClassifiedsFacade.queries.getClassifiedById
+   * SSOT: Delega para ClassifiedsService.queries.getClassifiedById
    */
   async getClassifiedById(id: string): Promise<AdminClassifiedData | null> {
     try {
@@ -591,7 +502,7 @@ class AdminClassifiedsServiceClass {
 
   /**
    * Atualiza um classificado
-   * âœ… SSOT: Delega para ClassifiedsFacade.mutations.updateClassified
+   * SSOT: Delega para ClassifiedsService.mutations.updateClassified
    */
   async updateClassified(
     id: string,
@@ -630,7 +541,7 @@ class AdminClassifiedsServiceClass {
 
   /**
    * Deleta um classificado
-   * âœ… SSOT: Delega para ClassifiedsFacade.mutations.deleteClassified
+   * SSOT: Delega para ClassifiedsService.mutations.deleteClassified
    */
   async deleteClassified(id: string): Promise<boolean> {
     try {
@@ -703,7 +614,7 @@ class AdminClassifiedsServiceClass {
 
   /**
    * Marca um classificado como vendido
-   * âœ… SSOT: Delega para ClassifiedsFacade.mutations.markAsSold
+   * SSOT: Delega para ClassifiedsService.mutations.markAsSold
    */
   async markAsSold(id: string): Promise<boolean> {
     try {
@@ -732,7 +643,7 @@ class AdminClassifiedsServiceClass {
 
   /**
    * Reativa um classificado
-   * âœ… SSOT: Delega para ClassifiedsFacade.mutations.reactivateClassified
+   * SSOT: Delega para ClassifiedsService.mutations.reactivateClassified
    */
   async reactivateClassified(id: string): Promise<boolean> {
     try {

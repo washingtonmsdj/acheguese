@@ -1,4 +1,4 @@
-﻿import { IdentityField, type IdentityFieldProps } from '../IdentityField';
+import { IdentityField, type IdentityFieldProps } from '../IdentityField';
 
 type CommunicationChannelIdentityFieldProps = Omit<
   IdentityFieldProps,

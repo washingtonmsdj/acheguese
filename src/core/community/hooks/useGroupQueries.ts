@@ -1,5 +1,5 @@
 ﻿import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "@/shared/utils/queryClient";
+import { QUERY_KEYS } from "@/shared/utils/queryClient";
 import { toast } from "sonner";
 import { useSessionContext } from "@/core/session"; // ✅ SSOT - Migrado de useAuth
 import { SocialInteractionsService } from "@/core/social/services/SocialInteractionsService"; // ✅ GATE 3 FASE 3C
@@ -50,7 +50,7 @@ interface GroupMessage {
 // Hook for list grupos
 export function useGroups() {
   return useQuery({
-    queryKey: queryKeys.groups,
+    queryKey: QUERY_KEYS.community.groups,
     queryFn: async () => {
       // ✅ LOTE 7 - CommunityService.getGroups
       const data = await CommunityService.getGroups();
@@ -63,7 +63,7 @@ export function useGroups() {
 // Hook for search grupo por ID
 export function useGroup(groupId: string | undefined) {
   return useQuery({
-    queryKey: queryKeys.group(groupId || ""),
+    queryKey: QUERY_KEYS.community.group(groupId || ""),
     queryFn: async () => {
       // ✅ LOTE 7 - CommunityService.getGroupById
       const data = await CommunityService.getGroupById(groupId!);
@@ -78,7 +78,7 @@ export function useGroup(groupId: string | undefined) {
 // Hook for mensagens do grupo
 export function useGroupMessages(groupId: string | undefined) {
   return useQuery({
-    queryKey: queryKeys.groupMessages(groupId || ""),
+    queryKey: QUERY_KEYS.community.groupMessages(groupId || ""),
     queryFn: async () => {
       if (!groupId) return [];
 
@@ -98,7 +98,7 @@ export function useGroupMessages(groupId: string | undefined) {
 // Hook for membros do grupo
 export function useGroupMembers(groupId: string | undefined) {
   return useQuery({
-    queryKey: queryKeys.groupMembers(groupId || ""),
+    queryKey: QUERY_KEYS.community.groupMembers(groupId || ""),
     queryFn: async () => {
       if (!groupId) return [];
 
@@ -182,7 +182,7 @@ export function useSendGroupMessage() {
     },
     onSuccess: (_, { groupId }) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.groupMessages(groupId),
+        queryKey: QUERY_KEYS.community.groupMessages(groupId),
       });
     },
     onError: (error: unknown) => {
@@ -216,13 +216,13 @@ export function useJoinGroup() {
     },
     onSuccess: (_, groupId) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.groupMembers(groupId),
+        queryKey: QUERY_KEYS.community.groupMembers(groupId),
       });
       queryClient.invalidateQueries({
         queryKey: ["group-membership", groupId, activeProfile?.id],
       });
       queryClient.invalidateQueries({
-        queryKey: queryKeys.group(groupId),
+        queryKey: QUERY_KEYS.community.group(groupId),
       });
 
       toast.success("Você entrou no grupo!");
@@ -257,13 +257,13 @@ export function useLeaveGroup() {
     },
     onSuccess: (_, groupId) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.groupMembers(groupId),
+        queryKey: QUERY_KEYS.community.groupMembers(groupId),
       });
       queryClient.invalidateQueries({
         queryKey: ["group-membership", groupId, activeProfile?.id],
       });
       queryClient.invalidateQueries({
-        queryKey: queryKeys.group(groupId),
+        queryKey: QUERY_KEYS.community.group(groupId),
       });
 
       toast.success("Você saiu do grupo");
@@ -294,7 +294,7 @@ export function useUpdateGroupMemberRole() {
       return result;
     },
     onSuccess: (_, { groupId }) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.groupMembers(groupId) });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.community.groupMembers(groupId) });
     },
     onError: (error: unknown) => {
       toast.error(getErrorMessage(error, "Erro ao atualizar função"));
@@ -314,7 +314,7 @@ export function useDeleteGroupMessage() {
       return result;
     },
     onSuccess: (_, { groupId }) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.groupMessages(groupId) });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.community.groupMessages(groupId) });
     },
     onError: (error: unknown) => {
       toast.error(getErrorMessage(error, "Erro ao remover mensagem"));
@@ -342,7 +342,7 @@ export function useUpdateGroupMessage() {
       return result;
     },
     onSuccess: (_, { groupId }) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.groupMessages(groupId) });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.community.groupMessages(groupId) });
       toast.success("Mensagem atualizada");
     },
     onError: (error: unknown) => {

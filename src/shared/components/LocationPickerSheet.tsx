@@ -9,9 +9,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/shared/components/ui/sheet';
 import { Button } from '@/shared/components/ui/button';
 import { MapPin, Navigation, Check } from 'lucide-react';
-const DEFAULT_TILE_STYLE_URL = "https://demotiles.maplibre.org/style.json";
-
-const DEFAULT_CENTER: [number, number] = [-38.4825, -12.987]; // [lng, lat] Salvador
+import { DEFAULT_TILE_STYLE, MAP_DEFAULT_CENTER_LNGLAT } from '@/shared/config/mapDefaults';
 
 interface LocationPickerSheetProps {
   open: boolean;
@@ -26,7 +24,9 @@ export function LocationPickerSheet({ open, onOpenChange, onConfirm, initialLat,
   const mapRef       = useRef<maplibregl.Map | null>(null);
   const markerRef    = useRef<maplibregl.Marker | null>(null);
   const [position, setPosition] = useState<[number, number]>(
-    initialLat && initialLng ? [initialLat, initialLng] : [-12.987, -38.4825]
+    initialLat && initialLng
+      ? [initialLat, initialLng]
+      : [MAP_DEFAULT_CENTER_LNGLAT[1], MAP_DEFAULT_CENTER_LNGLAT[0]],
   );
   const [ready, setReady] = useState(false);
 
@@ -42,12 +42,12 @@ export function LocationPickerSheet({ open, onOpenChange, onConfirm, initialLat,
     const timer = setTimeout(() => {
       if (!containerRef.current || mapRef.current) return;
 
-      const startLat = initialLat ?? -12.987;
-      const startLng = initialLng ?? -38.4825;
+      const startLat = initialLat ?? MAP_DEFAULT_CENTER_LNGLAT[1];
+      const startLng = initialLng ?? MAP_DEFAULT_CENTER_LNGLAT[0];
 
       const map = new maplibregl.Map({
         container: containerRef.current,
-        style: DEFAULT_TILE_STYLE_URL,
+        style: DEFAULT_TILE_STYLE.styleUrl,
         center: [startLng, startLat],
         zoom: 16,
         attributionControl: false,
@@ -57,9 +57,15 @@ export function LocationPickerSheet({ open, onOpenChange, onConfirm, initialLat,
 
       map.on('load', () => {
         const el = document.createElement('div');
-        el.style.cssText = 'font-size:32px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));cursor:grab;user-select:none;';
-        el.textContent = '📍';
-
+        el.style.cssText = [
+          'width:28px',
+          'height:28px',
+          'border-radius:9999px',
+          'background:#0f766e',
+          'border:3px solid #ffffff',
+          'box-shadow:0 10px 24px rgba(15,118,110,0.35)',
+          'cursor:grab',
+        ].join(';');
         const marker = new maplibregl.Marker({ element: el, draggable: true, anchor: 'bottom' })
           .setLngLat([startLng, startLat])
           .addTo(map);

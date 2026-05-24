@@ -107,13 +107,14 @@ export function LeaderboardList({ ranking }: LeaderboardListProps) {
                 <div className="flex gap-1 mt-1.5">
                   {entry.badges.slice(0, 4).map((bId) => {
                     const badge = badges.find((x) => x.id === bId);
+                    const BadgeIcon = badge?.icone;
                     return badge ? (
                       <span
                         key={badge.id}
-                        className="text-xs"
+                        className="inline-flex h-4 w-4 items-center justify-center"
                         title={badge.name}
                       >
-                        {badge.icone}
+                        {BadgeIcon && <BadgeIcon className="h-3 w-3 text-primary" aria-hidden="true" />}
                       </span>
                     ) : null;
                   })}

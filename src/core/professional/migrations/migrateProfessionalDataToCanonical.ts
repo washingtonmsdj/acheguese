@@ -1,12 +1,12 @@
 /**
  * Script de migração: professional_data (legado) → modelo canônico
- * 
+ *
  * Estratégia:
  * 1. Preservar location_id válido existente
  * 2. Resolver location_id por cidade/bairro de metadata.location quando ausente
  * 3. Criar address_id apenas quando houver endereço físico suficiente
  * 4. Reaproveitar latitude/longitude válidos de metadata.location
- * 
+ *
  * Segurança:
  * - Não inventa dados
  * - Não chuta ambiguidades
@@ -20,7 +20,7 @@ import type { CreateAddressInput } from '@/core/address/types';
 
 const addressService = new AddressService();
 
-interface LegacyProfessional {
+interface ImportedProfessional {
   id: string;
   profile_id: string;
   professional_name: string;
@@ -99,7 +99,7 @@ export async function migrateProfessionalDataToCanonical(): Promise<MigrationRes
   result.total = professionals.length;
 
   // Migrar cada profissional
-  for (const professional of professionals as LegacyProfessional[]) {
+  for (const professional of professionals as ImportedProfessional[]) {
     try {
       await migrateProfessional(professional, result);
     } catch (error) {
@@ -120,7 +120,7 @@ export async function migrateProfessionalDataToCanonical(): Promise<MigrationRes
 }
 
 async function migrateProfessional(
-  professional: LegacyProfessional,
+  professional: ImportedProfessional,
   result: MigrationResult
 ): Promise<void> {
   // Skip se já migrado completamente
@@ -206,13 +206,13 @@ async function migrateProfessional(
 
   if (hasPhysicalAddress(professional)) {
     const location = professional.metadata?.location;
-    
+
     const addressInput: CreateAddressInput = {
       location_id: resolvedLocationId,
       street: location?.address || undefined,
       postal_code: location?.cep || undefined,
       address_type: determineAddressType(professional),
-      geocoding_source: 'migration_legacy',
+      geocoding_source: 'migration_import',
       geocoding_confidence: 0.7,
     };
 
@@ -260,13 +260,13 @@ async function resolveCityByName(cityName: string): Promise<string | null> {
 
   if (error || !cities) return null;
 
-  const matches = cities.filter((city: any) => 
+  const matches = cities.filter((city: any) =>
     normalizeText(city.name) === normalized ||
     normalizeText(city.slug) === normalized
   );
 
   if (matches.length === 1) return matches[0].id;
-  
+
   // Se múltiplas, tentar aliases
   if (matches.length === 0) {
     const { data: aliases } = await supabase
@@ -294,7 +294,7 @@ async function resolveDistrictByName(districtName: string, cityId: string): Prom
 
   if (error || !districts) return null;
 
-  const matches = districts.filter((district: any) => 
+  const matches = districts.filter((district: any) =>
     normalizeText(district.name) === normalized ||
     normalizeText(district.slug) === normalized
   );
@@ -340,18 +340,18 @@ async function validateLocationId(locationId: string): Promise<boolean> {
   return true;
 }
 
-function hasPhysicalAddress(professional: LegacyProfessional): boolean {
+function hasPhysicalAddress(professional: ImportedProfessional): boolean {
   const location = professional.metadata?.location;
   const address = location?.address?.trim() || '';
-  
+
   // Tem endereço físico se address tem conteúdo utilizável
   return address.length > 5;
 }
 
-function determineAddressType(professional: LegacyProfessional): 'exact' | 'approximate' | 'landmark' {
+function determineAddressType(professional: ImportedProfessional): 'exact' | 'approximate' | 'landmark' {
   const location = professional.metadata?.location;
   const address = location?.address?.trim() || '';
-  
+
   // Se tem número na string, considerar exact
   if (/\d+/.test(address) && address.length > 10) {
     return 'exact';
@@ -420,7 +420,7 @@ export function formatMigrationReport(result: MigrationResult): string {
 
   lines.push('## Taxa de Sucesso');
   const successCount = result.location_id_already_valid + result.location_id_resolved;
-  const successRate = result.total > 0 
+  const successRate = result.total > 0
     ? ((successCount / result.total) * 100).toFixed(2)
     : '0.00';
   lines.push(`${successRate}% (${successCount}/${result.total})`);

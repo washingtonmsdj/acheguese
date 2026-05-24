@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
+import { adminRolesService } from "@/core/admin/services/AdminRolesService";
 import type { Profile, ProfileContext } from "./types";
 import type { ProfilePermissions, ProfileStatus } from "@/core/profiles/contracts/ProfileRuntimeContracts";
 import type { BannedUserLike } from "./profile.service.types";
@@ -42,7 +43,6 @@ async function calculatePermissions(
 
   let canModerate = false;
   try {
-    const { adminRolesService } = await import("@/core/admin/services/AdminRolesService");
     const roles = await adminRolesService.getUserRoles(profile.user_id);
     canModerate = roles.some((r) => ["admin", "moderator"].includes(r.role) && r.is_active);
   } catch {

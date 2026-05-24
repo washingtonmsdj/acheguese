@@ -106,7 +106,7 @@ const UnifiedPostCardComponent = ({
     return (foundNewType as PostType) || post.type;
   }, [post.type, post.tags]);
 
-  // Memoizar configuracao do tipo
+  // Memoizar configuração do tipo
   const typeConfig = useMemo(
     () =>
       Object.entries(POST_TYPE_CONFIG).find(([key]) => key === effectiveType)?.[1] ??
@@ -324,11 +324,11 @@ const UnifiedPostCardComponent = ({
   );
 };
 
-// Memoizar componente para evitar re-renders desnecessarios
+// Memoizar componente para evitar re-renders desnecessários
 export const UnifiedPostCard = memo(UnifiedPostCardComponent);
 
 // Adicionar displayName para debugging
 UnifiedPostCard.displayName = "UnifiedPostCard";
 
-// Exportar sub-componentes para uso individual se necessario
+// Exportar subcomponentes para uso individual se necessário
 export { PostHeader, PostBadges, PostContent, AlertConfirmation, PostActions };

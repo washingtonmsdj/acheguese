@@ -37,7 +37,8 @@ export function TopUsersWidget() {
       const neighborhoodName =
         filters.locationScope === "neighborhood" &&
         territorialContext.resolved.kind === "location" &&
-        territorialContext.resolved.location.type === LocationType.DISTRICT
+        (territorialContext.resolved.location.type === LocationType.NEIGHBORHOOD ||
+          territorialContext.resolved.location.type === LocationType.DISTRICT)
           ? territorialContext.resolved.location.name
           : null;
 
@@ -50,7 +51,8 @@ export function TopUsersWidget() {
     if (activeLocation) {
       const cityState = getCityStateFromLocation(activeLocation);
       const neighborhoodName =
-        filters.locationScope === "neighborhood" && activeLocation.type === LocationType.DISTRICT
+        filters.locationScope === "neighborhood" &&
+        (activeLocation.type === LocationType.NEIGHBORHOOD || activeLocation.type === LocationType.DISTRICT)
           ? activeLocation.name
           : null;
 
@@ -80,7 +82,7 @@ export function TopUsersWidget() {
       <CardHeader>
         <CardTitle className="text-sm flex items-center gap-2">
           <Trophy className="w-4 h-4 text-yellow-500" />
-          Usuarios Destaque
+          Usuários Destaque
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">

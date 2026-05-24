@@ -1,4 +1,4 @@
-﻿export type ChannelKind =
+export type ChannelKind =
   | "tv_bairro"
   | "radio"
   | "portal"

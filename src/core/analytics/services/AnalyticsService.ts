@@ -4,7 +4,7 @@ import {
   type AnalyticsEventType,
 } from "@/core/analytics/AnalyticsService";
 
-interface LegacyAnalyticsEvent {
+interface AnalyticsTrackingInput {
   event_type: AnalyticsEventType;
   business_id?: string;
   user_id?: string;
@@ -15,7 +15,7 @@ function isNonEmptyString(value: unknown): value is string {
   return typeof value === "string" && value.length > 0;
 }
 
-function resolveLegacyEntity(event: LegacyAnalyticsEvent): { entityType: string; entityId: string } | null {
+function resolveAnalyticsEntity(event: AnalyticsTrackingInput): { entityType: string; entityId: string } | null {
   if (isNonEmptyString(event.business_id)) {
     return { entityType: "business", entityId: event.business_id };
   }
@@ -35,9 +35,9 @@ function resolveLegacyEntity(event: LegacyAnalyticsEvent): { entityType: string;
   return null;
 }
 
-class AnalyticsServiceCompatibility {
-  async trackEvent(event: LegacyAnalyticsEvent): Promise<void> {
-    const resolvedEntity = resolveLegacyEntity(event);
+class AnalyticsTrackingService {
+  async trackEvent(event: AnalyticsTrackingInput): Promise<void> {
+    const resolvedEntity = resolveAnalyticsEntity(event);
     if (!resolvedEntity) return;
 
     await canonicalAnalyticsService.trackEvent({
@@ -83,4 +83,4 @@ class AnalyticsServiceCompatibility {
   }
 }
 
-export const analyticsService = new AnalyticsServiceCompatibility();
+export const analyticsService = new AnalyticsTrackingService();

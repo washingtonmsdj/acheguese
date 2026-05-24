@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { memo } from "react";
-import { Trophy, TrendingUp, ExternalLink } from "lucide-react";
+import { Medal, Trophy, TrendingUp, ExternalLink, type LucideIcon } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { Button } from "@/shared/components/ui/button";
 import { useRankingUsers } from "../../hooks/useRankingUsers";
@@ -26,11 +26,11 @@ export const RankingWidget = memo(() => {
     return null;
   }
 
-  const getMedal = (position: number) => {
+  const getMedal = (position: number): LucideIcon | null => {
     switch (position) {
-      case 1: return "🥇";
-      case 2: return "🥈";
-      case 3: return "🥉";
+      case 1: return Trophy;
+      case 2: return Medal;
+      case 3: return Medal;
       default: return null;
     }
   };
@@ -69,7 +69,7 @@ export const RankingWidget = memo(() => {
       <div className="space-y-1.5">
         {users.map((user) => {
           const isCurrentUser = activeProfile?.id === user.id;
-          const medal = getMedal(user.position);
+          const MedalIcon = getMedal(user.position);
           
           return (
             <Link
@@ -83,7 +83,11 @@ export const RankingWidget = memo(() => {
             >
               {/* Posição ou Medalha */}
               <div className="flex-shrink-0 w-7 h-7 rounded-md bg-background flex items-center justify-center font-bold text-xs">
-                {medal || user.position}
+                {MedalIcon ? (
+                  <MedalIcon className="h-4 w-4 text-primary" aria-hidden="true" />
+                ) : (
+                  user.position
+                )}
               </div>
 
               {/* Avatar */}

@@ -9,8 +9,6 @@ import type {
   CreateLocationVersionInput,
   LocationAlias,
   CreateLocationAliasInput,
-  SlugRedirect,
-  CreateSlugRedirectInput,
   TerritoryChangeEvent,
   CreateTerritoryChangeEventInput,
   PostalCodeHistory,
@@ -27,11 +25,6 @@ export interface IGovernanceRepository {
   createLocationAlias(data: CreateLocationAliasInput): Promise<LocationAlias>;
   findLocationByAlias(aliasValue: string, aliasType?: string): Promise<string | null>;
   listAliasesForLocation(locationId: string): Promise<LocationAlias[]>;
-  
-  // Slug Redirects
-  createSlugRedirect(data: CreateSlugRedirectInput): Promise<SlugRedirect>;
-  findRedirectByOldSlug(oldSlug: string): Promise<SlugRedirect | null>;
-  listRedirectsForLocation(locationId: string): Promise<SlugRedirect[]>;
   
   // Territory Change Events
   createTerritoryChangeEvent(data: CreateTerritoryChangeEventInput): Promise<TerritoryChangeEvent>;

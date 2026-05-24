@@ -204,7 +204,7 @@ export interface DistanceMatrixResponse {
 /**
  * Interface de provider de roteamento
  * 
- * Implementações: MockRoutingProvider, OSRMProvider, ValhallaProvider, etc.
+ * Implementações: OSRMProvider, ValhallaProvider, GraphHopperProvider, etc.
  */
 export interface RoutingProvider {
   /**

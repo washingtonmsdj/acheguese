@@ -273,7 +273,7 @@ export function ServiceAreasManager({ profileId }: ServiceAreasManagerProps) {
               <Input
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
-                placeholder="Ex: Salvador"
+                placeholder="Ex: cidade atendida"
               />
             </div>
 
@@ -282,7 +282,7 @@ export function ServiceAreasManager({ profileId }: ServiceAreasManagerProps) {
               <Input
                 value={neighborhoods}
                 onChange={(e) => setNeighborhoods(e.target.value)}
-                placeholder="Ex: Pituba, Itaigara, Caminho das Árvores"
+                placeholder="Ex: Centro, Zona Norte, bairros atendidos"
               />
               <p className="text-xs text-muted-foreground mt-1">
                 Separe por vírgula. Deixe vazio para atender toda a cidade.

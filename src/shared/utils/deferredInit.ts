@@ -1,16 +1,16 @@
 ﻿import { logger } from "@/shared/utils/logger";
 
 /**
- * ðŸš€ DEFERRED INITIALIZATION - OtimizaÃ§Ã£o de Performance
+ * 🚀 DEFERRED INITIALIZATION - Otimização de Performance
  *
- * UtilitÃ¡rios para inicializaÃ§Ã£o nÃ£o-bloqueante de serviÃ§os.
- * Deferir inicializaÃ§Ãµes pesadas melhora FCP/LCP significativamente.
+ * Utilitários para inicialização não-bloqueante de serviços.
+ * Deferir inicializações pesadas melhora FCP/LCP significativamente.
  *
  * @version 1.0.0
  */
 
 /**
- * Executa callback apÃ³s o prÃ³ximo frame (desbloqueia render)
+ * Executa callback após o próximo frame (desbloqueia render)
  */
 export function deferFrame(callback: () => void): void {
   if (typeof requestAnimationFrame !== 'undefined') {
@@ -23,7 +23,7 @@ export function deferFrame(callback: () => void): void {
 }
 
 /**
- * Executa callback quando a pÃ¡gina estiver ociosa
+ * Executa callback quando a página estiver ociosa
  * Usa requestIdleCallback com fallback para setTimeout
  */
 export function deferIdle(callback: () => void, timeout = 2000): void {
@@ -46,7 +46,7 @@ export function deferLoad(callback: () => void): void {
 }
 
 /**
- * Executa callback apÃ³s FCP (First Contentful Paint)
+ * Executa callback após FCP (First Contentful Paint)
  * Usa Performance Observer para detectar FCP
  */
 export function deferAfterFCP(callback: () => void): void {
@@ -68,7 +68,7 @@ export function deferAfterFCP(callback: () => void): void {
   try {
     observer.observe({ entryTypes: ['paint'] });
     
-    // Fallback: se FCP jÃ¡ aconteceu ou nÃ£o detectar em 3s
+    // Fallback: se FCP já aconteceu ou não detectar em 3s
     setTimeout(() => {
       observer.disconnect();
       deferFrame(callback);
@@ -79,7 +79,7 @@ export function deferAfterFCP(callback: () => void): void {
 }
 
 /**
- * Executa callback apÃ³s LCP (Largest Contentful Paint)
+ * Executa callback após LCP (Largest Contentful Paint)
  */
 export function deferAfterLCP(callback: () => void): void {
   if (typeof PerformanceObserver === 'undefined') {
@@ -109,8 +109,8 @@ export function deferAfterLCP(callback: () => void): void {
 }
 
 /**
- * Batcher para agrupar mÃºltiplas inicializaÃ§Ãµes deferidas
- * Evita mÃºltiplas callbacks que possam causar jank
+ * Batcher para agrupar múltiplas inicializações deferidas
+ * Evita múltiplas callbacks que possam causar jank
  */
 export class DeferredBatch {
   private callbacks: Array<() => void> = [];
@@ -159,8 +159,8 @@ export class DeferredBatch {
 }
 
 /**
- * Cria uma versÃ£o lazy de um mÃ³dulo
- * SÃ³ executa a inicializaÃ§Ã£o quando realmente necessÃ¡rio
+ * Cria uma versão lazy de um módulo
+ * Só executa a inicialização quando realmente necessário
  */
 export function createLazyInitializer<T>(
   factory: () => T,

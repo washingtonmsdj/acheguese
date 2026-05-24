@@ -6,9 +6,9 @@ import { useActiveTerritory } from '@/core/location/hooks/useActiveTerritory';
 import {
   MapPin, ChevronRight, Loader2, Globe, Building2,
   Star, TrendingUp, Users, ArrowRight, Sparkles,
-  Map, Camera, Phone, Mail, Shield, Landmark,
+  Map, Phone, Mail, Shield, Landmark,
   GraduationCap, Heart, TreePine, Bus, Clock,
-  ExternalLink, Vote, MapPinned, AlertTriangle,
+  ExternalLink, MapPinned, AlertTriangle,
   Ambulance, Flame, Award, Flag, Mountain,
   Instagram, Facebook, Twitter, Youtube,
   Search, Store, BadgeCheck,
@@ -16,6 +16,7 @@ import {
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { BusinessLogo } from '@/shared/components/ui/business-logo';
+import { buildMailtoUrl, buildTelUrl } from '@/shared/utils/contactLinks';
 import { useNationalFeatured } from '@/core/landing/hooks/useNationalFeatured';
 import { useAppUrls } from '@/core/routing/hooks/useAppUrls';
 import {
@@ -25,8 +26,6 @@ import {
   CONTATOS_UTILIDADE,
   GOV_FEDERAL,
   NAV_LINKS,
-  PONTOS_TURISTICOS,
-  PRESIDENCIA,
 } from './BrasilShowcaseData';
 import {
   buildBrasilSearchUrl,
@@ -192,7 +191,6 @@ export function BrasilShowcasePage() {
               <div className="flex flex-wrap gap-2">
                 {[
                   { icon: MapPinned, label: 'Números', target: '#numeros' },
-                  { icon: Camera, label: 'Turismo', target: '#turismo' },
                   { icon: Map, label: 'Territórios', target: '#territorios' },
                   { icon: Phone, label: 'Contatos', target: '#contatos' },
                 ].map(chip => (
@@ -437,44 +435,6 @@ export function BrasilShowcasePage() {
           )}
         </section>
 
-        {/* ── C. PONTOS TURÍSTICOS ────────────────────────────────── */}
-        <section id="turismo" className="max-w-7xl mx-auto px-4 sm:px-6 py-10 md:py-14 w-full">
-          <div className="text-center mb-8">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <Camera className="h-5 w-5 text-warning" />
-              <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">Pontos Turísticos</h2>
-            </div>
-            <p className="text-sm text-muted-foreground">Descubra as belezas do Brasil</p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {PONTOS_TURISTICOS.map((ponto, i) => (
-              <motion.div
-                key={ponto.nome}
-                {...fadeUp}
-                transition={{ delay: i * 0.05 }}
-                className={`bg-card border rounded-2xl p-5 hover:shadow-xl transition-all ${
-                  ponto.destaque
-                    ? 'border-warning/30 hover:border-warning/50'
-                    : 'border-border hover:border-primary/30'
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  <span className="text-3xl">{ponto.emoji}</span>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="text-sm font-bold text-foreground">{ponto.nome}</h3>
-                      {ponto.destaque && <Star className="h-3 w-3 text-warning fill-warning" />}
-                    </div>
-                    <p className="text-[10px] text-primary font-semibold mb-1">{ponto.cidade}</p>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{ponto.descricao}</p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </section>
-
         {/* ── D. ESTADOS DO BRASIL ────────────────────────────────── */}
         <section id="estados" className="max-w-7xl mx-auto px-4 sm:px-6 py-10 md:py-14 w-full">
           <div className="text-center mb-8">
@@ -619,37 +579,6 @@ export function BrasilShowcasePage() {
           </div>
         </section>
 
-        {/* ── F. REPRESENTANTES ───────────────────────────────────── */}
-        <section className="w-full bg-secondary/30 border-b border-border">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 md:py-16">
-            <div className="text-center mb-8">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <Vote className="h-5 w-5 text-primary" />
-                <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">Representantes Eleitos</h2>
-              </div>
-              <p className="text-sm text-muted-foreground">Poder executivo e legislativo do Brasil</p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {Object.values(PRESIDENCIA).map((pol, i) => (
-                <motion.div
-                  key={pol.nome}
-                  {...fadeUp}
-                  transition={{ delay: i * 0.1 }}
-                  className="bg-card border border-border rounded-2xl p-5 text-center hover:shadow-lg hover:border-primary/30 transition-all"
-                >
-                  <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
-                    <Landmark className="h-7 w-7 text-primary" />
-                  </div>
-                  <h3 className="text-sm font-bold text-foreground">{pol.nome}</h3>
-                  <p className="text-xs text-primary font-semibold mt-0.5">{pol.cargo}</p>
-                  <p className="text-[10px] text-muted-foreground mt-1">{pol.partido} · {pol.mandato}</p>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
-
         {/* ── G. CONTATOS ÚTEIS ───────────────────────────────────── */}
         <section id="contatos" className="max-w-7xl mx-auto px-4 sm:px-6 py-12 md:py-16 w-full">
           <div className="text-center mb-8">
@@ -670,7 +599,7 @@ export function BrasilShowcasePage() {
               {CONTATOS_EMERGENCIA.map(c => (
                 <a
                   key={c.nome}
-                  href={`tel:${c.telefone}`}
+                  href={buildTelUrl(c.telefone) ?? undefined}
                   className="bg-card border border-border rounded-2xl p-4 text-center hover:shadow-lg hover:border-destructive/30 transition-all group"
                 >
                   <div className="flex justify-center mb-2">
@@ -695,7 +624,7 @@ export function BrasilShowcasePage() {
               {CONTATOS_UTILIDADE.map(c => (
                 <a
                   key={c.nome}
-                  href={`tel:${c.telefone}`}
+                  href={buildTelUrl(c.telefone) ?? undefined}
                   className="flex items-center gap-3 bg-card border border-border rounded-xl p-4 hover:border-primary/30 transition-all"
                 >
                   <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -763,11 +692,11 @@ export function BrasilShowcasePage() {
               <div>
                 <h3 className="text-sm font-bold text-foreground mb-4">Contato</h3>
                 <div className="space-y-2.5">
-                  <a href={`tel:${GOV_FEDERAL.telefone}`} className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors">
+                  <a href={buildTelUrl(GOV_FEDERAL.telefone) ?? undefined} className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors">
                     <Phone className="h-3.5 w-3.5 text-primary" />
                     {GOV_FEDERAL.telefone}
                   </a>
-                  <a href={`mailto:${GOV_FEDERAL.email}`} className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors">
+                  <a href={buildMailtoUrl(GOV_FEDERAL.email) ?? undefined} className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors">
                     <Mail className="h-3.5 w-3.5 text-primary" />
                     {GOV_FEDERAL.email}
                   </a>
@@ -819,5 +748,3 @@ export function BrasilShowcasePage() {
     </>
   );
 }
-
-

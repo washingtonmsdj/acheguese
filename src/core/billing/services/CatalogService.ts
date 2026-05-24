@@ -28,6 +28,8 @@ export interface EligibilityContext {
 
 export interface CatalogItem {
   id: string;
+  code: string;
+  name: string;
   item_code: string;
   item_name: string;
   item_type: 'base_plan' | 'vertical_package' | 'addon';
@@ -71,15 +73,40 @@ type CatalogRow = {
   entity_family: string;
   vertical: string;
   pricing_model: 'free' | 'subscription' | 'transactional' | 'hybrid';
-  status: string;
+  commercial_catalog_version?: { version_code: string; status: string } | Array<{ version_code: string; status: string }> | null;
   catalog_entitlement_policy?: CatalogItem['entitlement_policy'][];
   catalog_pricing_policy?: CatalogItem['pricing_policy'][];
 };
 
 export interface EligibleCatalog {
+  version: string;
+  items: CatalogItem[];
   base_plans: CatalogItem[];
   vertical_packages: CatalogItem[];
   addons: CatalogItem[];
+}
+
+const EMPTY_CATALOG_VERSION = '0.0.0';
+
+function getCatalogVersion(row?: CatalogRow | null): { version_code: string; status: string } {
+  const version = Array.isArray(row?.commercial_catalog_version)
+    ? row?.commercial_catalog_version[0]
+    : row?.commercial_catalog_version;
+
+  return {
+    version_code: version?.version_code ?? EMPTY_CATALOG_VERSION,
+    status: version?.status ?? 'published',
+  };
+}
+
+function emptyCatalog(): EligibleCatalog {
+  return {
+    version: EMPTY_CATALOG_VERSION,
+    items: [],
+    base_plans: [],
+    vertical_packages: [],
+    addons: [],
+  };
 }
 
 // ─── Service ──────────────────────────────────────────────────────────────────
@@ -108,7 +135,10 @@ export class CatalogService {
           entity_family,
           vertical,
           pricing_model,
-          status,
+          commercial_catalog_version!inner (
+            version_code,
+            status
+          ),
           catalog_entitlement_policy (
             can_use_premium_public_page,
             can_use_short_premium_link,
@@ -133,21 +163,24 @@ export class CatalogService {
         `)
         .eq('entity_family', context.entity_family)
         .eq('vertical', context.vertical)
-        .eq('status', 'published')
+        .eq('commercial_catalog_version.status', 'published')
         .order('plan_tier', { ascending: true });
       
       if (error) {
         logger.error('[CatalogService] Erro ao buscar catálogo:', error);
-        return { base_plans: [], vertical_packages: [], addons: [] };
+        return emptyCatalog();
       }
       
       // Separar por tipo
       const typedItems = (items || []) as CatalogRow[];
+      const mappedItems = typedItems.map(this.mapCatalogItem);
       const base_plans = typedItems.filter(i => i.item_type === 'base_plan');
       const vertical_packages = typedItems.filter(i => i.item_type === 'vertical_package');
       const addons = typedItems.filter(i => i.item_type === 'addon');
       
       return {
+        version: getCatalogVersion(typedItems[0]).version_code,
+        items: mappedItems,
         base_plans: base_plans.map(this.mapCatalogItem),
         vertical_packages: vertical_packages.map(this.mapCatalogItem),
         addons: addons.map(this.mapCatalogItem),
@@ -155,7 +188,7 @@ export class CatalogService {
       
     } catch (error) {
       logger.error('[CatalogService] Erro ao buscar catálogo:', error);
-      return { base_plans: [], vertical_packages: [], addons: [] };
+      return emptyCatalog();
     }
   }
   
@@ -175,7 +208,10 @@ export class CatalogService {
           entity_family,
           vertical,
           pricing_model,
-          status,
+          commercial_catalog_version!inner (
+            version_code,
+            status
+          ),
           catalog_entitlement_policy (
             can_use_premium_public_page,
             can_use_short_premium_link,
@@ -199,7 +235,7 @@ export class CatalogService {
           )
         `)
         .eq('item_code', planCode)
-        .eq('status', 'published')
+        .eq('commercial_catalog_version.status', 'published')
         .maybeSingle();
       
       if (error) {
@@ -231,7 +267,10 @@ export class CatalogService {
           entity_family,
           vertical,
           pricing_model,
-          status,
+          commercial_catalog_version!inner (
+            version_code,
+            status
+          ),
           catalog_entitlement_policy (
             can_use_premium_public_page,
             can_use_short_premium_link,
@@ -256,7 +295,7 @@ export class CatalogService {
         `)
         .eq('item_type', 'addon')
         .eq('vertical', vertical)
-        .eq('status', 'published');
+        .eq('commercial_catalog_version.status', 'published');
       
       if (error) {
         logger.error('[CatalogService] Erro ao buscar addons:', error);
@@ -281,15 +320,16 @@ export class CatalogService {
     try {
       const { data: item, error } = await catalogDb
         .from('catalog_item')
-        .select('entity_family, vertical, status')
+        .select('entity_family, vertical, commercial_catalog_version!inner (version_code, status)')
         .eq('id', itemId)
+        .eq('commercial_catalog_version.status', 'published')
         .maybeSingle();
       
       if (error || !item) {
         return { eligible: false, reason: 'Item não encontrado' };
       }
       
-      if (item.status !== 'published') {
+      if (getCatalogVersion(item as CatalogRow).status !== 'published') {
         return { eligible: false, reason: 'Item não está disponível' };
       }
       
@@ -315,6 +355,8 @@ export class CatalogService {
   private static mapCatalogItem(item: CatalogRow): CatalogItem {
     return {
       id: item.id,
+      code: item.item_code,
+      name: item.item_name,
       item_code: item.item_code,
       item_name: item.item_name,
       item_type: item.item_type,
@@ -322,7 +364,7 @@ export class CatalogService {
       entity_family: item.entity_family,
       vertical: item.vertical,
       pricing_model: item.pricing_model,
-      status: item.status,
+      status: getCatalogVersion(item).status,
       entitlement_policy: item.catalog_entitlement_policy?.[0] || undefined,
       pricing_policy: item.catalog_pricing_policy?.[0] || undefined,
     };

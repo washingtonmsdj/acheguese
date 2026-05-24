@@ -9,7 +9,7 @@ import { NotificationService } from "@/core/notifications/services/NotificationS
 import type {
   NotificationType,
 } from "@/core/notifications/services/NotificationService";
-import { commentService } from "@/core/comments/services";
+import { CommentService } from "@/core/comments/services";
 import { postService } from "@/core/posts/services";
 import { AuthorizationEngine } from "@/core/authorization/services/AuthorizationEngine";
 import { profileService } from "@/core/profiles/services/ProfileService";
@@ -162,7 +162,7 @@ export async function createReplyNotification(
   _supabaseClient?: unknown,
 ): Promise<void> {
   try {
-    const parentComment = await commentService.getCommentById(parentCommentId);
+    const parentComment = await CommentService.getCommentById(parentCommentId);
     if (!parentComment) {
       logger.warn("Parent comment not found for reply notification", {
         parentCommentId,
@@ -180,13 +180,13 @@ export async function createReplyNotification(
       user_id: parentComment.author_profile_id,
       type: "info" as NotificationType,
       category: "social",
-      title: "Nova resposta no comentario",
-      message: `${actor?.name || "Alguem"} respondeu seu comentario`,
+      title: "Nova resposta no comentário",
+      message: `${actor?.name || "Alguém"} respondeu seu comentário`,
       metadata: {
         post_id: postId,
         parent_comment_id: parentCommentId,
         actor_id: actorId,
-        actor_name: actor?.name || "Usuario",
+        actor_name: actor?.name || "Usuário",
         content_preview: replyContent.substring(0, 100),
       },
     });

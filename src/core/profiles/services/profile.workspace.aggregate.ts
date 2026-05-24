@@ -3,6 +3,7 @@ import { logger } from "@/shared/utils/logger";
 import { getFavoriteStats } from "@/core/favorites/services";
 import { getServicesByProfile } from "@/core/professional/services/professional.queries";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
+import { getEligibleVerticals } from "@/core/verticals/config";
 import type {
   Profile,
   ProfileContext,
@@ -200,12 +201,10 @@ export async function getPrivateWorkspaceAggregate(
       businesses.map(async (business) => {
         const [
           { SubscriptionService, EntitlementsService, PlanTier },
-          { getEligibleVerticals },
           { QrCodeService },
           { QrEntityType },
         ] = await Promise.all([
           import("@/core/billing"),
-          import("@/core/verticals/config"),
           import("@/core/qr"),
           import("@/core/qr/types"),
         ]);

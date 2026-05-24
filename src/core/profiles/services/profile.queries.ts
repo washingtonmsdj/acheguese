@@ -61,25 +61,6 @@ export async function getProfileById(profileId: string): Promise<Profile | null>
   return (data as Profile) ?? null;
 }
 
-export async function getProfileByIdLegacy(profileId: string): Promise<Profile | null> {
-  const { data, error } = await supabase
-    .from(TABLE)
-    .select("*")
-    .eq("id", profileId)
-    .limit(1);
-
-  if (error) {
-    trackError(new Error("Error fetching profile"), {
-      component: "profile.queries",
-      action: "getProfileByIdLegacy",
-      metadata: { profileId, error },
-    });
-    return null;
-  }
-
-  return data && data.length > 0 ? ((data[0] as unknown) as Profile) : null;
-}
-
 /**
  * Busca perfil ativo do usuário
  */
@@ -169,33 +150,6 @@ export async function getProfilesByUserId(userId?: string): Promise<Profile[]> {
   return ((data || []) as Profile[]);
 }
 
-export async function getProfilesByUserIdLegacy(userId?: string): Promise<Profile[]> {
-  let targetUserId = userId;
-
-  if (!targetUserId) {
-    const user = await SessionService.getCurrentUser();
-    if (!user) return [];
-    targetUserId = user.id;
-  }
-
-  const { data, error } = await supabase
-    .from(TABLE)
-    .select("*")
-    .eq("user_id", targetUserId)
-    .order("created_at", { ascending: true });
-
-  if (error) {
-    trackError(new Error("Error fetching profiles"), {
-      component: "profile.queries",
-      action: "getProfilesByUserIdLegacy",
-      metadata: { userId: targetUserId, error },
-    });
-    return [];
-  }
-
-  return ((data || []) as unknown) as Profile[];
-}
-
 /**
  * Busca profile por tipo
  */
@@ -219,30 +173,6 @@ export async function getProfileByType(
   }
 
   return (data as Profile) || null;
-}
-
-export async function getProfileByTypeLegacy(
-  userId: string,
-  profileType: "personal" | "driver" | "business" | "professional",
-): Promise<Profile | null> {
-  const { data, error } = await supabase
-    .from(TABLE)
-    .select("*")
-    .eq("user_id", userId)
-    .eq("profile_type", profileType)
-    .order("created_at", { ascending: true })
-    .limit(1);
-
-  if (error) {
-    trackError(new Error("Error fetching profile by type"), {
-      component: "profile.queries",
-      action: "getProfileByTypeLegacy",
-      metadata: { userId, profileType, error },
-    });
-    return null;
-  }
-
-  return data && data.length > 0 ? ((data[0] as unknown) as Profile) : null;
 }
 
 /**

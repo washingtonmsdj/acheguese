@@ -60,7 +60,7 @@ export interface UserNotificationSettings {
   weekly_digest: boolean;
 }
 
-// Legacy compatibility aliases used by older community flows
+// Public aliases used by community flows.
 export type NotificationType = CreateNotificationInput["type"];
 export type NotificationPriority = "low" | "medium" | "high";
 

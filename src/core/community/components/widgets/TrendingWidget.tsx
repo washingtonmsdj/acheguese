@@ -1,5 +1,6 @@
 import React from "react";
 import { memo } from "react";
+import { Flame } from "lucide-react";
 import { useTrendingTopics } from "../../hooks/useTrendingTopics";
 import { WidgetSkeleton } from "./WidgetSkeleton";
 export const TrendingWidget = memo(() => {
@@ -17,7 +18,7 @@ export const TrendingWidget = memo(() => {
     <div className="bg-white/5 rounded-lg p-2 border border-white/10 flex-shrink-0">
       <div className="flex items-center gap-1.5 mb-1.5">
         <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center">
-          <span className="text-sm">🔥</span>
+          <Flame className="h-4 w-4 text-orange-400" aria-hidden="true" />
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="text-[0.65rem] font-bold text-white tracking-tight leading-tight">

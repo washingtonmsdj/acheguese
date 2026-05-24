@@ -57,7 +57,7 @@ export default function GrupoDetailPage() {
       await navigator.clipboard.writeText(shareUrl);
       toast.success("Link do grupo copiado");
     } catch {
-      toast.error("Nao foi possivel compartilhar o link do grupo");
+      toast.error("Não foi possível compartilhar o link do grupo");
     }
   };
 
@@ -71,7 +71,7 @@ export default function GrupoDetailPage() {
       toast.success("Você entrou no grupo!");
       refetch();
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Error entrar");
+      toast.error(err instanceof Error ? err.message : "Erro ao entrar");
     }
   };
 
@@ -81,7 +81,7 @@ export default function GrupoDetailPage() {
       toast.success("Você saiu do grupo");
       refetch();
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Error sair");
+      toast.error(err instanceof Error ? err.message : "Erro ao sair");
     }
   };
 
@@ -91,7 +91,7 @@ export default function GrupoDetailPage() {
   ) => {
     if (!id) return;
     await updateRoleMutation.mutateAsync({ groupId: id, memberProfileId, role });
-    toast.success("Funcao atualizada");
+    toast.success("Função atualizada");
     refetch();
   };
 

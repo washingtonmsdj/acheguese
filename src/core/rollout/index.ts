@@ -44,6 +44,5 @@ export { RolloutErrorCode, ROLLOUT_PAGINATION } from './types';
 export type { IRolloutService } from './services/IRolloutService';
 export type { IRolloutRepository } from './repositories/IRolloutRepository';
 
-export { RolloutRepositoryMock } from './repositories/RolloutRepositoryMock';
 export { RolloutRepositorySupabase } from './repositories/RolloutRepositorySupabase';
 export { createRolloutRepository } from './repositories/createRolloutRepository';

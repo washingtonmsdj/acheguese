@@ -1,13 +1,8 @@
-/**
- * @deprecated Use useAddComment ou useDeleteComment do core/comments/hooks
- * Este hook será removido em breve - mantido apenas para compatibilidade
- */
-
 import { useState } from "react";
 import { toast } from "sonner";
 import { useCommunityInteractions } from "@/core/social/hooks/useCommunityInteractions";
 import { logger } from "@/shared/utils/logger";
-import { commentService } from "@/core/comments/services";
+import { CommentService } from "@/core/comments/services";
 import { profileService } from "@/core/profiles/services/ProfileService";
 
 interface Comment {
@@ -45,11 +40,11 @@ export function useCommentActions(
     try {
       const context = await profileService.getProfileContext(userId);
       if (!context) {
-        toast.error("Profile não encontrado");
+        toast.error("Perfil não encontrado");
         return null;
       }
 
-      const createdComment = await commentService.createComment({
+      const createdComment = await CommentService.createComment({
         content: content.trim(),
         parent_id: parentId || undefined,
         post_id: postId,
@@ -97,7 +92,7 @@ export function useCommentActions(
 
   const deleteComment = async (commentId: string): Promise<boolean> => {
     try {
-      await commentService.deleteComment(commentId);
+      await CommentService.deleteComment(commentId);
       toast.success("Comentário excluído");
       return true;
     } catch (error) {
@@ -112,25 +107,25 @@ export function useCommentActions(
     content: string,
   ): Promise<boolean> => {
     if (!content.trim()) {
-      toast.error("Comentario nao pode ficar vazio");
+      toast.error("Comentário não pode ficar vazio");
       return false;
     }
 
     try {
-      const updated = await commentService.updateComment(commentId, {
+      const updated = await CommentService.updateComment(commentId, {
         content: content.trim(),
       });
 
       if (!updated) {
-        toast.error("Erro ao atualizar comentario");
+        toast.error("Erro ao atualizar comentário");
         return false;
       }
 
-      toast.success("Comentario atualizado");
+      toast.success("Comentário atualizado");
       return true;
     } catch (error) {
       logger.error("Error updating comment:", error);
-      toast.error("Erro ao atualizar comentario");
+      toast.error("Erro ao atualizar comentário");
       return false;
     }
   };

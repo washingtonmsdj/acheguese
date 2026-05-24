@@ -1,12 +1,13 @@
 /**
  * Email Service
- * 
+ *
  * Handles all email sending operations using Resend API.
  * Respects user preferences and quiet hours.
  */
 
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase/supabase';
+import { buildPublicAbsoluteUrl } from '@/shared/config/publicAppOrigin';
 export interface EmailTemplate {
   subject: string;
   html: string;
@@ -215,7 +216,7 @@ export class EmailService {
 
   private static getWelcomeEmailTemplate(name: string): EmailTemplate {
     return {
-      subject: 'Bem-vindo ao Nosso App! 🎉',
+      subject: 'Bem-vindo ao Nosso App! ',
       html: `
         <!DOCTYPE html>
         <html>
@@ -226,14 +227,14 @@ export class EmailService {
         </head>
         <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-            <h1 style="color: white; margin: 0;">Bem-vindo! 🎉</h1>
+            <h1 style="color: white; margin: 0;">Bem-vindo! </h1>
           </div>
-          
+
           <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
             <p style="font-size: 16px;">Olá <strong>${name}</strong>,</p>
-            
+
             <p>Estamos muito felizes em ter você conosco! Sua conta foi criada com sucesso.</p>
-            
+
             <h2 style="color: #667eea; margin-top: 30px;">Próximos Passos</h2>
             <ul style="line-height: 2;">
               <li>Complete seu perfil</li>
@@ -241,11 +242,11 @@ export class EmailService {
               <li>Configure suas preferências</li>
               <li>Comece a usar o app!</li>
             </ul>
-            
+
             <div style="text-align: center; margin: 30px 0;">
               <a href="${window.location.origin}/dashboard" style="background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">Acessar Dashboard</a>
             </div>
-            
+
             <p style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 14px;">
               Se você tiver alguma dúvida, não hesite em nos contatar.<br>
               Equipe de Suporte
@@ -260,7 +261,7 @@ export class EmailService {
 
   private static getPasswordResetTemplate(resetToken: string): EmailTemplate {
     const resetUrl = `${window.location.origin}/reset-password?token=${resetToken}`;
-    
+
     return {
       subject: 'Redefinir sua senha',
       html: `
@@ -274,24 +275,24 @@ export class EmailService {
         <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="background: #f9f9f9; padding: 30px; border-radius: 10px;">
             <h1 style="color: #333; margin-top: 0;">Redefinir sua senha</h1>
-            
+
             <p>Você solicitou a redefinição de sua senha. Clique no botão abaixo para criar uma nova senha:</p>
-            
+
             <div style="text-align: center; margin: 30px 0;">
               <a href="${resetUrl}" style="background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">Redefinir Senha</a>
             </div>
-            
+
             <p style="color: #666; font-size: 14px;">
               Este link é válido por <strong>1 hora</strong>.
             </p>
-            
+
             <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0;">
               <p style="margin: 0; color: #856404;">
-                <strong>⚠️ Aviso de Segurança:</strong><br>
+                <strong> Aviso de Segurança:</strong><br>
                 Se você não solicitou esta redefinição, ignore este email. Sua senha permanecerá inalterada.
               </p>
             </div>
-            
+
             <p style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 14px;">
               Se o botão não funcionar, copie e cole este link no seu navegador:<br>
               <a href="${resetUrl}" style="color: #667eea; word-break: break-all;">${resetUrl}</a>
@@ -306,7 +307,7 @@ export class EmailService {
 
   private static getMFASetupTemplate(backupCodes: string[]): EmailTemplate {
     return {
-      subject: 'Autenticação de Dois Fatores Ativada ✅',
+      subject: 'Autenticação de Dois Fatores Ativada ',
       html: `
         <!DOCTYPE html>
         <html>
@@ -317,30 +318,30 @@ export class EmailService {
         </head>
         <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="background: #d4edda; border-left: 4px solid #28a745; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
-            <h1 style="color: #155724; margin-top: 0;">✅ MFA Ativado com Sucesso</h1>
+            <h1 style="color: #155724; margin-top: 0;"> MFA Ativado com Sucesso</h1>
           </div>
-          
+
           <div style="background: #f9f9f9; padding: 30px; border-radius: 10px;">
             <p>A autenticação de dois fatores (MFA) foi ativada em sua conta.</p>
-            
+
             <h2 style="color: #667eea;">Códigos de Backup</h2>
             <p>Guarde estes códigos em um local seguro. Você pode usá-los para acessar sua conta se perder acesso ao seu dispositivo de autenticação:</p>
-            
+
             <div style="background: white; padding: 20px; border-radius: 5px; font-family: monospace; margin: 20px 0;">
               ${backupCodes.map(code => `<div style="padding: 5px 0;">${code}</div>`).join('')}
             </div>
-            
+
             <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0;">
               <p style="margin: 0; color: #856404;">
-                <strong>⚠️ Importante:</strong><br>
+                <strong> Importante:</strong><br>
                 • Cada código pode ser usado apenas uma vez<br>
                 • Guarde-os em um local seguro<br>
                 • Não compartilhe com ninguém
               </p>
             </div>
-            
+
             <p style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 14px;">
-              Sua conta agora está mais segura! 🔒
+              Sua conta agora está mais segura!
             </p>
           </div>
         </body>
@@ -357,7 +358,7 @@ export class EmailService {
     timestamp: string;
   }): EmailTemplate {
     return {
-      subject: '🔐 Novo Login Detectado',
+      subject: ' Novo Login Detectado',
       html: `
         <!DOCTYPE html>
         <html>
@@ -368,12 +369,12 @@ export class EmailService {
         </head>
         <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
-            <h1 style="color: #856404; margin-top: 0;">🔐 Novo Login Detectado</h1>
+            <h1 style="color: #856404; margin-top: 0;"> Novo Login Detectado</h1>
           </div>
-          
+
           <div style="background: #f9f9f9; padding: 30px; border-radius: 10px;">
             <p>Detectamos um login em sua conta a partir de um novo dispositivo:</p>
-            
+
             <div style="background: white; padding: 20px; border-radius: 5px; margin: 20px 0;">
               <table style="width: 100%; border-collapse: collapse;">
                 <tr>
@@ -394,10 +395,10 @@ export class EmailService {
                 </tr>
               </table>
             </div>
-            
+
             <div style="background: #f8d7da; border-left: 4px solid #dc3545; padding: 15px; margin: 20px 0;">
               <p style="margin: 0; color: #721c24;">
-                <strong>⚠️ Não foi você?</strong><br>
+                <strong> Não foi você?</strong><br>
                 Se você não reconhece este login, sua conta pode estar comprometida. Recomendamos:
               </p>
               <ul style="color: #721c24; margin: 10px 0 0 0;">
@@ -406,7 +407,7 @@ export class EmailService {
                 <li>Ativar autenticação de dois fatores</li>
               </ul>
             </div>
-            
+
             <div style="text-align: center; margin: 30px 0;">
               <a href="${window.location.origin}/settings/sessions" style="background: #dc3545; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">Revisar Sessões</a>
             </div>
@@ -431,7 +432,7 @@ export class EmailService {
     }).format(payment.amount / 100);
 
     return {
-      subject: '✅ Pagamento Confirmado',
+      subject: ' Pagamento Confirmado',
       html: `
         <!DOCTYPE html>
         <html>
@@ -442,12 +443,12 @@ export class EmailService {
         </head>
         <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="background: #d4edda; border-left: 4px solid #28a745; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
-            <h1 style="color: #155724; margin-top: 0;">✅ Pagamento Confirmado</h1>
+            <h1 style="color: #155724; margin-top: 0;"> Pagamento Confirmado</h1>
           </div>
-          
+
           <div style="background: #f9f9f9; padding: 30px; border-radius: 10px;">
             <p>Seu pagamento foi processado com sucesso!</p>
-            
+
             <div style="background: white; padding: 20px; border-radius: 5px; margin: 20px 0;">
               <table style="width: 100%; border-collapse: collapse;">
                 <tr>
@@ -464,13 +465,13 @@ export class EmailService {
                 </tr>
               </table>
             </div>
-            
+
             <div style="text-align: center; margin: 30px 0;">
               <a href="${payment.invoiceUrl}" style="background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">Ver Fatura</a>
             </div>
-            
+
             <p style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 14px;">
-              Obrigado por sua assinatura! 🎉
+              Obrigado por sua assinatura!
             </p>
           </div>
         </body>
@@ -482,9 +483,10 @@ export class EmailService {
 
   private static getSubscriptionExpiringTemplate(expiresAt: Date, plan: string): EmailTemplate {
     const daysLeft = Math.ceil((expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-    
+    const renewalUrl = buildPublicAbsoluteUrl('/planos');
+
     return {
-      subject: `⚠️ Sua assinatura expira em ${daysLeft} dias`,
+      subject: ` Sua assinatura expira em ${daysLeft} dias`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -495,25 +497,25 @@ export class EmailService {
         </head>
         <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
-            <h1 style="color: #856404; margin-top: 0;">⚠️ Assinatura Expirando</h1>
+            <h1 style="color: #856404; margin-top: 0;"> Assinatura Expirando</h1>
           </div>
-          
+
           <div style="background: #f9f9f9; padding: 30px; border-radius: 10px;">
             <p>Sua assinatura do plano <strong>${plan}</strong> expira em <strong>${daysLeft} dias</strong>.</p>
-            
+
             <p>Data de expiração: <strong>${expiresAt.toLocaleDateString('pt-BR')}</strong></p>
-            
+
             <h2 style="color: #667eea;">O que acontece quando expirar?</h2>
             <ul>
               <li>Você perderá acesso aos recursos premium</li>
               <li>Sua conta será rebaixada para o plano gratuito</li>
               <li>Seus dados serão preservados</li>
             </ul>
-            
+
             <div style="text-align: center; margin: 30px 0;">
-              <a href="${window.location.origin}/pricing" style="background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">Renovar Assinatura</a>
+              <a href="${renewalUrl}" style="background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">Renovar Assinatura</a>
             </div>
-            
+
             <p style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 14px;">
               Não perca acesso aos seus recursos favoritos!
             </p>
@@ -521,7 +523,7 @@ export class EmailService {
         </body>
         </html>
       `,
-      text: `Assinatura Expirando\n\nSua assinatura do plano ${plan} expira em ${daysLeft} dias.\n\nData de expiração: ${expiresAt.toLocaleDateString('pt-BR')}\n\nRenovar: ${window.location.origin}/pricing`,
+      text: `Assinatura Expirando\n\nSua assinatura do plano ${plan} expira em ${daysLeft} dias.\n\nData de expiração: ${expiresAt.toLocaleDateString('pt-BR')}\n\nRenovar: ${renewalUrl}`,
     };
   }
 
@@ -532,7 +534,7 @@ export class EmailService {
     action: string;
   }): EmailTemplate {
     return {
-      subject: '🚨 Alerta de Segurança',
+      subject: ' Alerta de Segurança',
       html: `
         <!DOCTYPE html>
         <html>
@@ -543,25 +545,25 @@ export class EmailService {
         </head>
         <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="background: #f8d7da; border-left: 4px solid #dc3545; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
-            <h1 style="color: #721c24; margin-top: 0;">🚨 Alerta de Segurança</h1>
+            <h1 style="color: #721c24; margin-top: 0;"> Alerta de Segurança</h1>
           </div>
-          
+
           <div style="background: #f9f9f9; padding: 30px; border-radius: 10px;">
             <p><strong>Tipo:</strong> ${alert.type}</p>
             <p><strong>Descrição:</strong> ${alert.description}</p>
             <p><strong>Data/Hora:</strong> ${alert.timestamp}</p>
-            
+
             <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0;">
               <p style="margin: 0; color: #856404;">
                 <strong>Ação Recomendada:</strong><br>
                 ${alert.action}
               </p>
             </div>
-            
+
             <div style="text-align: center; margin: 30px 0;">
               <a href="${window.location.origin}/settings/security" style="background: #dc3545; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">Revisar Segurança</a>
             </div>
-            
+
             <p style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 14px;">
               Se você não reconhece esta atividade, entre em contato conosco imediatamente.
             </p>
@@ -573,4 +575,3 @@ export class EmailService {
     };
   }
 }
-

@@ -63,10 +63,10 @@ export function useRecomendacoes({
 
   const fetchPage = useCallback(
     async (pageNum: number) => {
-      const resolvedTerritoryFilter = activeTerritoryFilterRef.current;
+      const territoryFilter = activeTerritoryFilterRef.current;
 
       // Não buscar sem território resolvido
-      if (resolvedTerritoryFilter.scope === 'none') {
+      if (territoryFilter.scope === 'none') {
         setInitialLoading(false);
         return;
       }
@@ -79,9 +79,9 @@ export function useRecomendacoes({
         limit: PAGE_SIZE,
         offset: from,
         // Filtro territorial
-        ...(resolvedTerritoryFilter.scope === 'location'
-          ? { location_id: resolvedTerritoryFilter.location_id }
-          : { location_ids: resolvedTerritoryFilter.location_ids }),
+        ...(territoryFilter.scope === 'location'
+          ? { location_id: territoryFilter.location_id }
+          : { location_ids: territoryFilter.location_ids }),
       };
 
       const data = await CommunityQAService.getQuestions(filters);

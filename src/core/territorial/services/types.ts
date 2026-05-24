@@ -16,7 +16,7 @@ export interface TerritoryNode {
   id: string;
   name: string;
   slug: string;
-  type: 'country' | 'state' | 'city' | 'district' | 'group';
+  type: 'country' | 'state' | 'city' | 'neighborhood' | 'district' | 'group';
   parent_id: string | null;
   geographic_path?: string;
   status: string;

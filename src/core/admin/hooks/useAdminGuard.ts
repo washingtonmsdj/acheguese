@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSessionContext } from "@/core/session";
-import { AuthorizationEngine } from "@/core/authorization";
+import { AuthorizationEngine } from "@/core/authorization/services/AuthorizationEngine";
 
 export function useAdminGuard() {
   const { activeProfile, isLoading: sessionLoading } = useSessionContext();

@@ -52,6 +52,10 @@ export class TerritorialGroupService {
     this.locationRepository = locationRepository ?? createLocationRepository();
   }
 
+  private isSelectableLocality(location: Location): boolean {
+    return location.type === LocationType.NEIGHBORHOOD || location.type === LocationType.DISTRICT;
+  }
+
   /**
    * Buscar grupo por ID
    */
@@ -277,8 +281,8 @@ export class TerritorialGroupService {
         throw new Error(`Location ${locationId} not found`);
       }
       
-      if (location.type !== LocationType.DISTRICT) {
-        throw new Error(`Location ${locationId} must be a district, got ${location.type}`);
+      if (!this.isSelectableLocality(location)) {
+        throw new Error(`Location ${locationId} must be a neighborhood or district, got ${location.type}`);
       }
       
       if (location.parent_id !== group.anchor_city_id) {
@@ -337,8 +341,8 @@ export class TerritorialGroupService {
           throw new Error(`Location ${locationId} not found`);
         }
         
-        if (location.type !== LocationType.DISTRICT) {
-          throw new Error(`Location ${locationId} must be a district, got ${location.type}`);
+        if (!this.isSelectableLocality(location)) {
+          throw new Error(`Location ${locationId} must be a neighborhood or district, got ${location.type}`);
         }
         
         if (location.parent_id !== group.anchor_city_id) {

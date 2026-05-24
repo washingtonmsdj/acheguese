@@ -22,6 +22,7 @@ export function BadgesSection({
       <div className="grid grid-cols-2 gap-2">
         {badges.map((badge, i) => {
           const earned = currentUserRank?.badges?.includes(badge.id);
+          const BadgeIcon = badge.icone;
 
           return (
             <motion.button
@@ -37,14 +38,14 @@ export function BadgesSection({
                   : "bg-muted/50 border-border/50 opacity-50",
               )}
             >
-              <span className="text-2xl mb-1">{badge.icone}</span>
+              <BadgeIcon className="mb-1 h-6 w-6 text-primary" aria-hidden="true" />
               <span className="text-xs font-semibold">{badge.name}</span>
               <span className="text-[10px] text-muted-foreground">
                 {badge.criterio}
               </span>
               {earned && (
                 <span className="text-[9px] text-success font-medium mt-1">
-                  ✓ Conquistado
+                  Conquistado
                 </span>
               )}
             </motion.button>

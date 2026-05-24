@@ -1,12 +1,12 @@
-import { IdentityField, type IdentityFieldProps } from '../IdentityField';
+import { IdentityField, type IdentityFieldProps } from "../IdentityField";
 
-type BusinessIdentityFieldProps = Omit<IdentityFieldProps, 'entityType' | 'label'> & {
+type BusinessIdentityFieldProps = Omit<IdentityFieldProps, "entityType" | "label"> & {
   label?: string;
   isPremium?: boolean;
 };
 
 export function BusinessIdentityField({
-  label = 'Escolha o final do seu link publico',
+  label = "Escolha o final do seu link público",
   isPremium = false,
   previewFn,
   showHistory = true,
@@ -14,8 +14,8 @@ export function BusinessIdentityField({
   ...props
 }: BusinessIdentityFieldProps) {
   const defaultPreviewFn = isPremium
-    ? (slug: string) => (slug ? `/p/${slug}` : '')
-    : (slug: string) => (slug ? `/empresas/seu-estado/sua-cidade/seu-bairro/${slug}` : '');
+    ? (slug: string) => (slug ? `/p/${slug}` : "")
+    : (slug: string) => (slug ? `/empresas/:uf/:cidade/:bairro/${slug}` : "");
 
   return (
     <IdentityField

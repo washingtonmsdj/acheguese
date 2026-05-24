@@ -12,7 +12,6 @@ import {
 export const POST_TYPES = {
   discussao: {
     label: "Discussão",
-    emoji: "💬",
     icon: Heart,
     color: "#3B82F6",
     category: "Social",
@@ -20,7 +19,6 @@ export const POST_TYPES = {
   },
   pergunta: {
     label: "Pergunta",
-    emoji: "❓",
     icon: HelpCircle,
     color: "#F59E0B",
     category: "Social",
@@ -28,7 +26,6 @@ export const POST_TYPES = {
   },
   enquete: {
     label: "Enquete",
-    emoji: "📊",
     icon: BarChart3,
     color: "#8B5CF6",
     category: "Social",
@@ -36,7 +33,6 @@ export const POST_TYPES = {
   },
   evento: {
     label: "Evento",
-    emoji: "📅",
     icon: Calendar,
     color: "#EC4899",
     category: "Social",
@@ -44,7 +40,6 @@ export const POST_TYPES = {
   },
   achados: {
     label: "Achados",
-    emoji: "🔍",
     icon: Search,
     color: "#06B6D4",
     category: "Utilidade",
@@ -52,7 +47,6 @@ export const POST_TYPES = {
   },
   alerta: {
     label: "Alerta",
-    emoji: "⚠️",
     icon: Bell,
     color: "#EF4444",
     category: "Utilidade",
@@ -60,7 +54,6 @@ export const POST_TYPES = {
   },
   favor: {
     label: "Favor",
-    emoji: "🤝",
     icon: Users,
     color: "#84CC16",
     category: "Ajuda/Trocas",
@@ -68,7 +61,6 @@ export const POST_TYPES = {
   },
   desapego: {
     label: "Desapego",
-    emoji: "🎁",
     icon: Gift,
     color: "#F97316",
     category: "Ajuda/Trocas",
@@ -76,7 +68,6 @@ export const POST_TYPES = {
   },
   recomendacao: {
     label: "Recomendação",
-    emoji: "⭐",
     icon: Heart,
     color: "#10B981",
     category: "Ajuda/Trocas",

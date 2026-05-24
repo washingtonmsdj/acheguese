@@ -45,9 +45,9 @@ export function useBusinessNavigation() {
         return BusinessUrlService.getCanonicalUrl(resolvedBySlug);
       }
 
-      return business.is_premium
-        ? `/p/${business.slug}`
-        : `/business/${business.slug}`;
+      if (business.is_premium) {
+        return `/p/${business.slug}`;
+      }
     }
 
     return null;
@@ -86,9 +86,15 @@ export function useBusinessNavigation() {
     }
 
     if (business.slug) {
-      return business.is_premium
-        ? `/p/${business.slug}`
-        : `/business/${business.slug}`;
+      if (business.is_premium) {
+        return `/p/${business.slug}`;
+      }
+
+      logger.warn(
+        "[useBusinessNavigation] Empresa sem geographic_path para URL canônica:",
+        business.id,
+      );
+      return businessUrls.list;
     }
 
     logger.warn("[useBusinessNavigation] Empresa sem slug:", business.id);

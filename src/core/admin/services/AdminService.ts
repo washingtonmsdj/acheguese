@@ -1,15 +1,15 @@
-﻿/**
- * AdminService â€” SSOT canÃ´nico de administraÃ§Ã£o
+/**
+ * AdminService - SSOT canonico de administracao
  *
- * Centraliza toda a lÃ³gica de negÃ³cio de administraÃ§Ã£o.
- * Hooks e componentes NÃƒO acessam Supabase diretamente â€” consomem este service.
+ * Centraliza toda a logica de negocio de administracao.
+ * Hooks e componentes NAO acessam Supabase diretamente - consomem este service.
  *
  * Responsabilidades:
- * - GestÃ£o de empresas
- * - GestÃ£o de perfis
- * - GestÃ£o de planos
+ * - Gestao de empresas
+ * - Gestao de perfis
+ * - Gestao de planos
  * - Auditoria
- * - RelatÃ³rios
+ * - Relatorios
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
@@ -18,8 +18,6 @@ import { MobilityService } from '@/core/mobility/services/runtime';
 
 const supabaseTyped = supabase as unknown as AdminSupabaseClient;
 const db = supabase as any;
-
-// â”€â”€ Tipos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export interface ServiceResult<T> {
   data: T | null;
@@ -81,16 +79,9 @@ type PlanUsageSubscriptionRow = {
   business_data?: { name?: string | null } | null;
 };
 
-// â”€â”€ Service â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
 export const AdminService = {
-  
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-  // GESTÃƒO DE EMPRESAS
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-  
   /**
-   * Lista todas as empresas com resumo
+   * Lista todas as empresas com resumo.
    */
   async listBusinesses(filters?: {
     plan_tier?: string;
@@ -129,26 +120,21 @@ export const AdminService = {
         return { data: null, error: error.message };
       }
 
-      // Busca plano e estatÃ­sticas de cada empresa
       const businessesWithStats = await Promise.all(
         (businesses || []).map(async (business) => {
-          // Busca plano
           const { data: subscription } = await db
             .from('business_subscriptions')
             .select('plan_tier')
             .eq('business_id', business.id)
             .single();
 
-          // Busca estatÃ­sticas de pedidos
           const { data: orderStats } = await db
             .from('orders')
             .select('total')
             .eq('business_id', business.id)
             .eq('status', 'completed');
 
-          // Busca estatÃ­sticas de entregas
           const totalDeliveries = await MobilityService.countDeliveredBySource('business', business.id);
-
           const totalOrders = orderStats?.length || 0;
           const totalRevenue =
             (orderStats as Array<{ total?: number | null }> | null)?.reduce(
@@ -163,7 +149,7 @@ export const AdminService = {
             total_revenue: totalRevenue,
             total_deliveries: totalDeliveries,
           };
-        })
+        }),
       );
 
       return { data: businessesWithStats as BusinessSummary[], error: null };
@@ -174,11 +160,11 @@ export const AdminService = {
   },
 
   /**
-   * Ativa/desativa uma empresa
+   * Ativa/desativa uma empresa.
    */
   async toggleBusinessStatus(
     businessId: string,
-    isActive: boolean
+    isActive: boolean,
   ): Promise<ServiceResult<boolean>> {
     try {
       const { error } = await db
@@ -198,12 +184,8 @@ export const AdminService = {
     }
   },
 
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-  // GESTÃƒO DE PERFIS
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-
   /**
-   * Lista todos os perfis com resumo
+   * Lista todos os perfis com resumo.
    */
   async listProfiles(filters?: {
     search?: string;
@@ -236,7 +218,6 @@ export const AdminService = {
         return { data: null, error: error.message };
       }
 
-      // Busca email e total de empresas de cada perfil
       const profilesWithStats = await Promise.all(
         ((profiles as ProfileListRow[] | null) || []).map(async (profile) => {
           const { data: businesses } = await db
@@ -250,7 +231,7 @@ export const AdminService = {
             email: profile.email || '',
             total_businesses: businesses?.length || 0,
           };
-        })
+        }),
       );
 
       return { data: profilesWithStats as ProfileSummary[], error: null };
@@ -260,12 +241,8 @@ export const AdminService = {
     }
   },
 
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-  // GESTÃƒO DE PLANOS
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-
   /**
-   * Lista uso de planos
+   * Lista uso de planos.
    */
   async listPlanUsage(): Promise<ServiceResult<PlanUsage[]>> {
     try {
@@ -284,17 +261,14 @@ export const AdminService = {
         return { data: null, error: error.message };
       }
 
-      // Busca estatÃ­sticas de cada empresa
       const usageData = await Promise.all(
         ((subscriptions as PlanUsageSubscriptionRow[] | null) || []).map(async (sub) => {
-          // Busca pedidos
           const { data: orders } = await db
             .from('orders')
             .select('total')
             .eq('business_id', sub.business_id)
             .eq('status', 'completed');
 
-          // Busca analytics
           const { data: analytics } = await db.rpc('get_analytics_metrics', {
             p_entity_type: 'business',
             p_entity_id: sub.business_id,
@@ -313,7 +287,7 @@ export const AdminService = {
             total_qr_scans: metrics.qr_scans || 0,
             total_views: metrics.total_views || 0,
           };
-        })
+        }),
       );
 
       return { data: usageData as PlanUsage[], error: null };
@@ -324,11 +298,11 @@ export const AdminService = {
   },
 
   /**
-   * Atualiza plano de uma empresa
+   * Atualiza plano de uma empresa.
    */
   async updateBusinessPlan(
     businessId: string,
-    planTier: string
+    planTier: string,
   ): Promise<ServiceResult<boolean>> {
     try {
       const { error } = await db
@@ -348,12 +322,8 @@ export const AdminService = {
     }
   },
 
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-  // RELATÃ“RIOS E ESTATÃSTICAS
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-
   /**
-   * Busca estatÃ­sticas gerais da plataforma
+   * Busca estatisticas gerais da plataforma.
    */
   async getPlatformStats(): Promise<ServiceResult<{
     total_businesses: number;
@@ -365,44 +335,38 @@ export const AdminService = {
     plan_distribution: Record<string, number>;
   }>> {
     try {
-      // Total de empresas
       const { count: totalBusinesses } = await db
         .from('business_data')
         .select('*', { count: 'exact', head: true });
 
-      // Empresas ativas
       const { count: activeBusinesses } = await db
         .from('business_data')
         .select('*', { count: 'exact', head: true })
         .eq('is_active', true);
 
-      // Total de usuÃ¡rios
       const { count: totalUsers } = await db
         .from('profile_complete')
         .select('*', { count: 'exact', head: true });
 
-      // Total de pedidos
       const { data: orders } = await db
         .from('orders')
         .select('total, status');
 
       const completedOrders =
         ((orders as Array<{ status?: string; total?: number | null }> | null) || []).filter(
-          (o) => o.status === "completed",
+          (o) => o.status === 'completed',
         );
       const totalOrders = completedOrders.length;
       const totalRevenue = completedOrders.reduce((sum, o) => sum + (o.total || 0), 0);
 
-      // Total de entregas
       const totalDeliveries = await MobilityService.countDeliveredMotoboyRides();
 
-      // DistribuiÃ§Ã£o de planos
       const { data: subscriptions } = await db
         .from('business_subscriptions')
         .select('plan_tier');
 
       const planDistribution = ((subscriptions as Array<{ plan_tier?: string }> | null) || []).reduce((acc, sub) => {
-        const tier = sub.plan_tier || "free";
+        const tier = sub.plan_tier || 'free';
         acc[tier] = (acc[tier] || 0) + 1;
         return acc;
       }, {} as Record<string, number>);

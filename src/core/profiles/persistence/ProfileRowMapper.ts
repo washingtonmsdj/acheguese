@@ -1,47 +1,47 @@
 /**
  * ProfileRowMapper — Mapper entre Persistência e Domínio
- * 
+ *
  * Converte entre ProfileRow (snake_case do banco) e Profile (camelCase do domínio).
- * 
+ *
  * ── NORMALIZAÇÃO DE INVARIANTES ──────────────────────────────────────────
- * 
+ *
  * O banco permite null em vários campos que o domain trata como não-null.
  * Este mapper é responsável por garantir as invariantes do domain:
- * 
+ *
  * - displayName: string  → row.display_name ?? row.name
  *   (display_name é nullable; name é NOT NULL — garante fallback)
- * 
+ *
  * - name: string         → row.name
  *   (NOT NULL no banco — sempre presente)
- * 
+ *
  * - slug: string         → row.slug ?? row.username ?? row.id
- *   (slug pode ser null em perfis legados)
- * 
+ *   (slug pode ser null em perfis antigos)
+ *
  * - handle: string|null  → row.handle
- *   (null permitido — perfis pessoais legados podem não ter)
- * 
+ *   (null permitido — perfis pessoais antigos podem não ter)
+ *
  * - username: string|null → row.username
  *   (null permitido — opcional)
- * 
+ *
  * ── CAMPOS NÃO MAPEADOS PARA O DOMAIN ───────────────────────────────────
- * 
+ *
  * Snapshots territoriais (desnormalizados de location_id):
  *   city, neighborhood, state, street, country, location
  *   → ficam em ProfileRow, não entram no domain
  *   → populados pelo service ao persistir (não pelo mapper)
- * 
- * Aliases legados (mesmo valor, nome diferente):
+ *
+ * Aliases de colunas antigas (mesmo valor, nome diferente):
  *   telefone → phone, suspended → is_suspended,
  *   reputation_score/pontos → reputation, is_verified → verified
  *   → mapper lê o campo canônico, ignora o alias
- * 
+ *
  * Campos de outros domínios:
  *   active_ride_id (Mobility), requires_pin_for_* (Delivery/Mobility)
  *   → ficam em ProfileRow, não entram no domain
- * 
+ *
  * Derived-persisted:
  *   trust_score → calculado por trigger SQL, não gerenciado pelo domain
- * 
+ *
  * @version 3.0.0
  */
 
@@ -51,11 +51,11 @@ import type { ProfileType } from '../domain/ProfileType';
 
 /**
  * Converte ProfileRow (banco) para Profile (domínio)
- * 
+ *
  * Normaliza invariantes: display_name ?? name, slug ?? username ?? id, etc.
  */
 export function rowToDomain(row: ProfileRow): Profile {
-  const legacyRow = row as any;
+  const rowExtras = row as any;
   return {
     id: row.id,
     userId: row.user_id,
@@ -75,7 +75,7 @@ export function rowToDomain(row: ProfileRow): Profile {
     // Informações básicas
     bio: row.bio ?? null,
     avatarUrl: row.avatar_url ?? null,
-    coverUrl: legacyRow.cover_url ?? null,
+    coverUrl: rowExtras.cover_url ?? null,
 
     // Localização
     locationId: row.location_id ?? null,
@@ -114,13 +114,13 @@ export function rowToDomain(row: ProfileRow): Profile {
     updatedAt: row.updated_at,
 
     // Metadata
-    metadata: (legacyRow.metadata as Record<string, unknown>) ?? {},
+    metadata: (rowExtras.metadata as Record<string, unknown>) ?? {},
   };
 }
 
 /**
  * Converte Profile (domínio) para ProfileInsert (banco)
- * 
+ *
  * Snapshots territoriais (city, neighborhood, etc.) NÃO são populados aqui.
  * Use domainToInsertWithSnapshots() quando precisar persistir snapshots.
  */
@@ -162,7 +162,7 @@ export function domainToInsert(profile: Omit<Profile, 'id' | 'createdAt' | 'upda
 
 /**
  * Converte Profile (domínio) para ProfileInsert com snapshots territoriais
- * 
+ *
  * Responsabilidade do service — não do mapper puro.
  * Snapshots são desnormalizados de location_id para performance.
  */

@@ -1,1 +1,1 @@
-﻿export { RequestMotoboyButton } from '@/modules/mobility/components/RequestMotoboyButton';
+export { RequestMotoboyButton } from '@/modules/mobility/components/RequestMotoboyButton';

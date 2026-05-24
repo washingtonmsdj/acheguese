@@ -1,1 +1,1 @@
-﻿export { useDriverProfileIdentity } from '@/modules/mobility/hooks/useDriverProfileIdentity';
+export { useDriverProfileIdentity } from '@/modules/mobility/hooks/useDriverProfileIdentity';

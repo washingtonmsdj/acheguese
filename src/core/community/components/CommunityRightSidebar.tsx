@@ -1,143 +1,368 @@
-import React, { memo } from "react";
-import { AlertTriangle, BriefcaseBusiness, Building2, CalendarDays, ChevronRight, CloudSun, Droplets, ShieldAlert, UtensilsCrossed, Wrench } from "lucide-react";
+import React, { memo, useMemo } from "react";
+import { Link } from "react-router-dom";
+import {
+  AlertTriangle,
+  BriefcaseBusiness,
+  Building2,
+  CalendarDays,
+  ChevronRight,
+  Compass,
+  MapPinned,
+  ShieldAlert,
+  Store,
+  UtensilsCrossed,
+  Wrench,
+} from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { useQuery } from "@tanstack/react-query";
+import { BusinessService } from "@/core/business/services/BusinessService";
+import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
+import { usePublicBrowsingCity } from "@/core/location/hooks/usePublicBrowsingCity";
+import {
+  isTerritoryFilterReady,
+  territoryFilterKey,
+} from "@/core/location/hooks/useTerritoryFilter";
+import { useFriendlyModuleUrls } from "@/core/routing/hooks/useFriendlyModuleUrls";
+import { communityEventsRuntimeService } from "@/core/community/services/CommunityEventsRuntimeService";
+import { communityAlertService } from "@/core/community/alerts";
+import type { Business } from "@/core/business/types/Business";
+import type { TerritoryFilter } from "@/core/location";
+import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 
-const shortcuts = [
-  { icon: Building2, label: "Empresas em destaque" },
-  { icon: UtensilsCrossed, label: "Restaurantes" },
-  { icon: Wrench, label: "Prestadores de serviço" },
-  { icon: BriefcaseBusiness, label: "Vagas de emprego" },
-  { icon: CalendarDays, label: "Classificados recentes" },
-];
+interface CommunityRightSidebarProps {
+  resolved?: ResolvedTerritory;
+  territoryFilter: TerritoryFilter;
+}
 
-const events = [
-  { day: "18", month: "MAI", title: "Feira de Artesanato e Gastronomia", date: "Sábado, 18 de maio", time: "9h às 16h" },
-  { day: "19", month: "MAI", title: "Aulão de Funcional na Orla", date: "Domingo, 19 de maio", time: "7h às 8h" },
-  { day: "25", month: "MAI", title: "Show de MPB na Praça", date: "Sábado, 25 de maio", time: "18h às 22h" },
-];
-
-const featuredBusinesses = [
-  { initials: "PJ", name: "Pizzaria do João", type: "Restaurante", rating: "4,8", reviews: "612" },
-  { initials: "MB", name: "Mercado Bom Preço", type: "Mercado", rating: "4,6", reviews: "248" },
-  { initials: "SP", name: "Studio Pilates Pituba", type: "Saúde e Bem-estar", rating: "4,9", reviews: "128" },
-  { initials: "PA", name: "Pet Shop Amigo Fiel", type: "Pet Shop", rating: "4,7", reviews: "93" },
-];
-
-const neighborhoodAlerts = [
-  { icon: ShieldAlert, title: "Atenção com furtos de bicicleta na orla. Fique atento!", meta: "Segurança • 1 h" },
-  { icon: AlertTriangle, title: "Interdição na Rua Paraíba neste domingo (18/05).", meta: "Trânsito • 2 h" },
-  { icon: Droplets, title: "Manutenção programada: falta d'água no sábado (18/05) das 8h às 14h.", meta: "Saneamento • 3 h" },
-];
-
-function SidebarSection({ title, actionLabel, children }: { title: string; actionLabel: string; children: React.ReactNode }) {
+function SidebarSection({
+  title,
+  actionHref,
+  actionLabel,
+  children,
+}: {
+  title: string;
+  actionHref?: string;
+  actionLabel?: string;
+  children: React.ReactNode;
+}) {
   return (
     <section className="rounded-2xl border border-border bg-card p-4">
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-3 flex items-center justify-between gap-3">
         <h3 className="text-sm font-semibold text-foreground">{title}</h3>
-        <button type="button" className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors">
-          {actionLabel}
-        </button>
+        {actionHref && actionLabel && (
+          <Link
+            to={actionHref}
+            className="shrink-0 text-xs font-semibold text-primary transition-colors hover:text-primary/80"
+          >
+            {actionLabel}
+          </Link>
+        )}
       </div>
       {children}
     </section>
   );
 }
 
-export const CommunityRightSidebar = memo(() => {
+function EmptyState({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex w-full flex-col gap-3">
-      <section className="rounded-2xl border border-border bg-card p-4">
-        <div className="flex items-start justify-between">
+    <p className="rounded-xl border border-dashed border-border bg-muted/30 px-3 py-3 text-sm text-muted-foreground">
+      {children}
+    </p>
+  );
+}
+
+function formatSlugLabel(value: string): string {
+  return value
+    .split("-")
+    .filter(Boolean)
+    .map((part) => part[0]?.toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function buildBusinessHref(business: Business): string | null {
+  if (!business.slug) return null;
+
+  const geographicPath = business.geographic_path ?? business.location?.geographic_path;
+  if (!geographicPath) return null;
+
+  try {
+    return BusinessUrlService.getCanonicalUrl({
+      id: business.id,
+      slug: business.slug,
+      is_premium: business.is_premium,
+      geographic_path: geographicPath,
+    });
+  } catch {
+    return null;
+  }
+}
+
+function formatEventDate(value: string): { day: string; month: string; date: string; time: string } {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return {
+      day: "--",
+      month: "--",
+      date: "Data a confirmar",
+      time: "Horario a confirmar",
+    };
+  }
+
+  return {
+    day: format(date, "dd", { locale: ptBR }),
+    month: format(date, "MMM", { locale: ptBR }).replace(".", "").toUpperCase(),
+    date: format(date, "dd 'de' MMMM", { locale: ptBR }),
+    time: format(date, "HH'h'mm", { locale: ptBR }),
+  };
+}
+
+function normalizeCategoryLabel(value?: string | null): string {
+  if (!value) return "Local";
+  return value.replace(/[_-]/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+export const CommunityRightSidebar = memo(
+  ({ resolved, territoryFilter }: CommunityRightSidebarProps) => {
+    const { active } = usePublicBrowsingCity();
+    const moduleUrls = useFriendlyModuleUrls();
+    const filterReady = isTerritoryFilterReady(territoryFilter);
+    const filterKey = territoryFilterKey(territoryFilter);
+    const cityLabel = formatSlugLabel(active.city);
+    const stateLabel = active.state.toUpperCase();
+    const territoryLabel =
+      resolved?.kind === "group"
+        ? resolved.group.name
+        : resolved?.kind === "location"
+          ? resolved.location.name
+          : moduleUrls.territoryName ?? cityLabel;
+
+    const shortcuts = useMemo(
+      () => [
+        { icon: Building2, label: "Empresas", href: moduleUrls.business },
+        { icon: UtensilsCrossed, label: "Gastronomia", href: moduleUrls.gastronomy },
+        { icon: Wrench, label: "Serviços", href: moduleUrls.services },
+        { icon: CalendarDays, label: "Classificados", href: moduleUrls.classifieds },
+        { icon: BriefcaseBusiness, label: "Vagas", href: moduleUrls.jobs },
+      ],
+      [moduleUrls.business, moduleUrls.classifieds, moduleUrls.gastronomy, moduleUrls.jobs, moduleUrls.services],
+    );
+
+    const { data: businesses = [], isLoading: loadingBusinesses } = useQuery({
+      queryKey: ["community-sidebar", "businesses", filterKey],
+      queryFn: async () => {
+        const result = await BusinessService.getBusinessesList({
+          filter: territoryFilter,
+          pageSize: 4,
+          sortBy: "rating",
+        });
+        return result.businesses;
+      },
+      enabled: filterReady,
+      staleTime: 5 * 60 * 1000,
+    });
+
+    const { data: events = [], isLoading: loadingEvents } = useQuery({
+      queryKey: ["community-sidebar", "events", filterKey],
+      queryFn: async () => {
+        const result = await communityEventsRuntimeService.getEventsPage({
+          territoryFilter,
+          upcoming: true,
+          status: "upcoming",
+          pageSize: 3,
+          sortBy: "date",
+          sortOrder: "asc",
+        });
+        return result.items;
+      },
+      enabled: filterReady,
+      staleTime: 5 * 60 * 1000,
+    });
+
+    const { data: alerts = [], isLoading: loadingAlerts } = useQuery({
+      queryKey: ["community-sidebar", "alerts", filterKey],
+      queryFn: () => communityAlertService.getByTerritory(territoryFilter, { limit: 3 }),
+      enabled: filterReady && territoryFilter.scope !== "none",
+      staleTime: 60 * 1000,
+    });
+
+    return (
+      <div className="flex w-full flex-col gap-3">
+        <section className="rounded-2xl border border-border bg-card p-4">
           <div className="flex items-start gap-3">
-            <CloudSun className="mt-0.5 h-8 w-8 text-primary" />
-            <div>
-              <p className="text-3xl font-bold leading-none text-foreground">28°C</p>
-              <p className="mt-1 text-sm font-medium text-foreground">Ensolarado</p>
-              <p className="text-xs text-muted-foreground">Salvador, BA</p>
+            <Compass className="mt-0.5 h-8 w-8 text-primary" />
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Território
+              </p>
+              <h3 className="mt-1 truncate text-base font-bold text-foreground">{territoryLabel}</h3>
+              <p className="text-xs text-muted-foreground">
+                {cityLabel}, {stateLabel}
+              </p>
             </div>
           </div>
-          <span className="text-xs font-medium text-muted-foreground">Hoje</span>
-        </div>
-        <button type="button" className="mt-4 text-sm font-semibold text-primary hover:text-primary/80 transition-colors">
-          Ver previsão completa
-        </button>
-      </section>
+          <Link
+            to={moduleUrls.map}
+            className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-primary transition-colors hover:text-primary/80"
+          >
+            <MapPinned className="h-4 w-4" />
+            Ver mapa territorial
+          </Link>
+        </section>
 
-      <SidebarSection title="Atalhos populares" actionLabel="Ver todos">
-        <div className="space-y-1">
-          {shortcuts.map((shortcut) => {
-            const Icon = shortcut.icon;
-            return (
-              <button
-                type="button"
-                key={shortcut.label}
-                className="flex w-full items-center gap-3 rounded-xl px-2 py-2.5 text-left transition-colors hover:bg-accent"
-              >
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-primary">
-                  <Icon className="h-4.5 w-4.5" />
-                </div>
-                <p className="min-w-0 flex-1 text-sm font-semibold text-foreground">{shortcut.label}</p>
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </button>
-            );
-          })}
-        </div>
-      </SidebarSection>
+        <SidebarSection title="Atalhos locais">
+          <div className="space-y-1">
+            {shortcuts.map((shortcut) => {
+              const Icon = shortcut.icon;
+              return (
+                <Link
+                  to={shortcut.href}
+                  key={shortcut.label}
+                  className="flex w-full items-center gap-3 rounded-xl px-2 py-2.5 text-left transition-colors hover:bg-accent"
+                >
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-primary">
+                    <Icon className="h-4.5 w-4.5" />
+                  </div>
+                  <p className="min-w-0 flex-1 text-sm font-semibold text-foreground">
+                    {shortcut.label}
+                  </p>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </Link>
+              );
+            })}
+          </div>
+        </SidebarSection>
 
-      <SidebarSection title="Próximos eventos" actionLabel="Ver todos">
-        <div className="space-y-1">
-          {events.map((event) => (
-            <div key={`${event.title}-${event.day}`} className="flex items-start gap-3 border-b border-border py-2.5 last:border-b-0">
-              <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl border border-border bg-accent">
-                <span className="text-base font-bold leading-none text-foreground">{event.day}</span>
-                <span className="text-[10px] font-semibold text-muted-foreground">{event.month}</span>
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold leading-tight text-foreground">{event.title}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{event.date}</p>
-                <p className="text-xs text-muted-foreground">{event.time}</p>
-              </div>
+        <SidebarSection title="Próximos eventos" actionHref={moduleUrls.events} actionLabel="Ver todos">
+          {loadingEvents ? (
+            <EmptyState>Carregando eventos do território...</EmptyState>
+          ) : events.length === 0 ? (
+            <EmptyState>Nenhum evento público cadastrado neste território.</EmptyState>
+          ) : (
+            <div className="space-y-1">
+              {events.map((event) => {
+                const eventDate = formatEventDate(event.date);
+                return (
+                  <Link
+                    key={event.id}
+                    to={`${moduleUrls.events}/${event.id}`}
+                    className="flex items-start gap-3 border-b border-border py-2.5 transition-colors hover:bg-accent/50 last:border-b-0"
+                  >
+                    <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl border border-border bg-accent">
+                      <span className="text-base font-bold leading-none text-foreground">
+                        {eventDate.day}
+                      </span>
+                      <span className="text-[10px] font-semibold text-muted-foreground">
+                        {eventDate.month}
+                      </span>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="line-clamp-2 text-sm font-semibold leading-tight text-foreground">
+                        {event.title}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">{eventDate.date}</p>
+                      <p className="text-xs text-muted-foreground">{eventDate.time}</p>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
-          ))}
-        </div>
-      </SidebarSection>
+          )}
+        </SidebarSection>
 
-      <SidebarSection title="Empresas em destaque" actionLabel="Ver todas">
-        <div className="space-y-2">
-          {featuredBusinesses.map((business) => (
-            <div key={business.name} className="flex items-center gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-accent">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold text-foreground">
-                {business.initials}
-              </div>
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-foreground">{business.name}</p>
-                <p className="text-xs text-muted-foreground">{business.type}</p>
-                <p className="text-xs text-primary">★ {business.rating} ({business.reviews})</p>
-              </div>
+        <SidebarSection title="Empresas do território" actionHref={moduleUrls.business} actionLabel="Ver todas">
+          {loadingBusinesses ? (
+            <EmptyState>Carregando empresas reais do território...</EmptyState>
+          ) : businesses.length === 0 ? (
+            <EmptyState>Nenhuma empresa ativa cadastrada neste território.</EmptyState>
+          ) : (
+            <div className="space-y-2">
+              {businesses.map((business) => {
+                const href = buildBusinessHref(business);
+                const rating =
+                  typeof business.rating === "number" && business.rating > 0
+                    ? business.rating.toFixed(1).replace(".", ",")
+                    : null;
+                const content = (
+                  <>
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold text-foreground">
+                      {business.logo_url ? (
+                        <img
+                          src={business.logo_url}
+                          alt=""
+                          className="h-full w-full rounded-full object-cover"
+                        />
+                      ) : (
+                        <Store className="h-4 w-4" />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-foreground">{business.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {normalizeCategoryLabel(business.category)}
+                      </p>
+                      <p className="text-xs text-primary">
+                        {rating ? `${rating} (${business.total_reviews ?? 0})` : "Sem avaliações"}
+                      </p>
+                    </div>
+                  </>
+                );
+
+                return href ? (
+                  <Link
+                    key={business.id}
+                    to={href}
+                    className="flex items-center gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-accent"
+                  >
+                    {content}
+                  </Link>
+                ) : (
+                  <div
+                    key={business.id}
+                    className="flex items-center gap-3 rounded-lg px-2 py-1.5"
+                  >
+                    {content}
+                  </div>
+                );
+              })}
             </div>
-          ))}
-        </div>
-      </SidebarSection>
+          )}
+        </SidebarSection>
 
-      <SidebarSection title="Alertas do bairro" actionLabel="Ver todos">
-        <div className="space-y-1">
-          {neighborhoodAlerts.map((alert) => {
-            const Icon = alert.icon;
-            return (
-              <div key={alert.title} className="flex items-start gap-3 border-b border-border py-2.5 last:border-b-0">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent text-primary">
-                  <Icon className="h-4.5 w-4.5" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm leading-snug text-foreground">{alert.title}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{alert.meta}</p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </SidebarSection>
-    </div>
-  );
-});
+        <SidebarSection title="Alertas do bairro" actionHref={moduleUrls.community} actionLabel="Ver feed">
+          {loadingAlerts ? (
+            <EmptyState>Carregando alertas ativos...</EmptyState>
+          ) : alerts.length === 0 ? (
+            <EmptyState>Nenhum alerta ativo neste território.</EmptyState>
+          ) : (
+            <div className="space-y-1">
+              {alerts.map((alert) => {
+                const Icon = alert.category === "risco_na_via" ? AlertTriangle : ShieldAlert;
+                return (
+                  <div
+                    key={alert.id}
+                    className="flex items-start gap-3 border-b border-border py-2.5 last:border-b-0"
+                  >
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent text-primary">
+                      <Icon className="h-4.5 w-4.5" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="line-clamp-2 text-sm leading-snug text-foreground">
+                        {alert.description}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {normalizeCategoryLabel(alert.category)}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </SidebarSection>
+      </div>
+    );
+  },
+);
 
 CommunityRightSidebar.displayName = "CommunityRightSidebar";

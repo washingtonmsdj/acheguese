@@ -1,8 +1,7 @@
-import React from "react";
-import { lazy, Suspense, memo } from "react";
-import { WidgetSkeleton } from "./widgets/WidgetSkeleton";
+import React, { lazy, memo, Suspense } from "react";
 import { WidgetErrorBoundary } from "./WidgetErrorBoundary";
-// Lazy load dos widgets para code splitting
+import { WidgetSkeleton } from "./widgets/WidgetSkeleton";
+
 const TrendingWidget = lazy(() =>
   import("./widgets/TrendingWidget").then((module) => ({
     default: module.TrendingWidget,
@@ -16,13 +15,11 @@ const SponsoredWidget = lazy(() =>
 );
 
 /**
- * Sidebar direita com lazy loading
- * Otimiza bundle inicial carregando widgets sob demanda
- * Inclui error boundaries para resiliência
+ * Sidebar direita com lazy loading.
  */
 export const CommunityRightSidebar = memo(() => {
   return (
-    <div className="flex flex-col gap-2 w-full">
+    <div className="flex w-full flex-col gap-2">
       <WidgetErrorBoundary widgetName="TrendingWidget">
         <Suspense fallback={<WidgetSkeleton hasHeader itemCount={3} />}>
           <TrendingWidget />

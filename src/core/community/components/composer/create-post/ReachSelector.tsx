@@ -18,7 +18,7 @@ const REACH_OPTIONS = [
     icon: Home,
     color: "#FBBF24",
     borderColor: "yellow-400",
-    description: "🏠 Somente vizinhos da sua rua",
+    description: "Somente vizinhos da sua rua",
   },
   {
     value: "neighborhood" as const,
@@ -26,7 +26,7 @@ const REACH_OPTIONS = [
     icon: MapPin,
     color: "#4FD1C5",
     borderColor: "teal-400",
-    description: "📍 Moradores do seu bairro",
+    description: "Moradores do seu bairro",
   },
   {
     value: "city" as const,
@@ -34,7 +34,7 @@ const REACH_OPTIONS = [
     icon: Building2,
     color: "#60A5FA",
     borderColor: "blue-400",
-    description: "🏙️ Toda a cidade",
+    description: "Toda a cidade",
   },
 ];
 
@@ -93,7 +93,7 @@ export function ReachSelector({
             color: "#FBBF24",
           }}
         >
-          🔒 Nível {userLevel.toUpperCase()}: Posts para cidade requerem nível
+          Nível {userLevel.toUpperCase()}: Posts para cidade requerem nível
           Ouro (100+ reputação) ou verificação
         </p>
       )}

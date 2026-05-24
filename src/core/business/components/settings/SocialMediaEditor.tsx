@@ -6,7 +6,7 @@
  */
 
 import { useState } from "react";
-import { ExternalLink, Check, X } from "lucide-react";
+import { ExternalLink, Check, Lightbulb, X } from "lucide-react";
 import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/utils/cn";
@@ -176,7 +176,10 @@ export function SocialMediaEditor({
 
       {/* Help text */}
       <div className="bg-secondary/50 rounded-lg p-3 text-xs text-muted-foreground">
-        <p className="font-medium mb-1">💡 Dicas:</p>
+        <p className="mb-1 flex items-center gap-1.5 font-medium">
+          <Lightbulb className="h-3.5 w-3.5" />
+          Dicas:
+        </p>
         <ul className="space-y-1 ml-4 list-disc">
           <li>Digite apenas o nome de usuário, sem @ ou URL completa</li>
           <li>Exemplo: para @minhaempresa, digite apenas "minhaempresa"</li>

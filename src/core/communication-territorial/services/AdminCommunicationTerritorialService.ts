@@ -14,8 +14,10 @@ import type {
   CommunicationChannel,
   CommunicationChannelTerritory,
   CommunicationChannelRequest,
+  RequestStatus,
 } from "../types";
 import { CommunicationTerritorialService } from "./CommunicationTerritorialService";
+import { COMMUNICATION_REQUEST_STATUS } from "../constants/requestStatus";
 
 type RpcResult<T> = { data: T | null; error: { message?: string } | null };
 
@@ -92,7 +94,7 @@ export class AdminCommunicationTerritorialService {
   }
 
   static async listRequests(
-    status: "pending" | "approved" | "rejected" | "cancelled" = "pending",
+    status: RequestStatus = COMMUNICATION_REQUEST_STATUS.PENDING,
   ): Promise<CommunicationChannelRequest[]> {
     return selectRows<CommunicationChannelRequest>("communication_channel_requests", {
       filters: [{ op: "eq", column: "status", value: status }],

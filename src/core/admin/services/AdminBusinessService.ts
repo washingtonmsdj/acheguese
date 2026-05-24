@@ -11,6 +11,7 @@ import { BusinessService } from "@/core/business/services/BusinessService";
 import { ReviewsService } from "@/core/reviews/services/ReviewsService";
 import { ADMIN_PLACEHOLDER_IDS } from "@/core/admin/config/identifiers";
 import { profileService } from "@/core/profiles/services/ProfileService";
+import { BUSINESS_STATUS } from "@/core/business/constants/statuses";
 
 export interface AdminBusinessData {
   id: string;
@@ -301,7 +302,7 @@ class AdminBusinessServiceClass {
       // 3. Criar business_data usando BusinessService
       await BusinessService.createBusiness({
         ...businessData,
-        status: "pending",
+        status: BUSINESS_STATUS.PENDING,
         neighborhood: ADMIN_PLACEHOLDER_IDS.EMPTY_LOCATION_ID,
       } as any, userId);
 

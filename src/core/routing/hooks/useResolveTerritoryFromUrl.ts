@@ -2,19 +2,19 @@
 /**
  * useResolveTerritoryFromUrl
  *
- * Resolve o territorio ativo a partir dos params da URL.
+ * Resolve o territ?rio ativo a partir dos params da URL.
  *
- * Padroes canonicos:
+ * Padr?es can?nicos:
  *   /:state/:city                         -> Location city
  *   /:state/:city/:district               -> Location district
  *   /:state/:city/:groupSlug              -> TerritorialGroup
  *   /[modulo]/:state/:city/:district?     -> Location city/district
  *   /[modulo]/:state/:city/:groupSlug     -> TerritorialGroup
- *   /comunidade/:state/:city/:territorySlug -> Resolver por slug publico de comunidade
+ *   /comunidade/:state/:city/:territorySlug -> Resolver por slug p?blico de comunidade
  *
  * Em /comunidade, o slug pode resolver para grupo territorial quando houver
- * configuracao publica da comunidade ou quando o bairro pertencer de forma
- * univoca a um grupo ativo/navegavel.
+ * configura??o p?blica da comunidade ou quando o bairro pertencer de forma
+ * un?voca a um grupo ativo/naveg?vel.
  */
 
 import { useEffect, useState } from 'react';
@@ -93,7 +93,7 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
         const cityLocation = await locationRepo.findByPath(cityPath);
 
         if (!cityLocation) {
-          if (!cancelled) setResult({ status: TERRITORY_RESOLVE_STATUS.NOT_FOUND, resolved: null, error: `Cidade nao encontrada: ${cityPath}` });
+          if (!cancelled) setResult({ status: TERRITORY_RESOLVE_STATUS.NOT_FOUND, resolved: null, error: `Cidade n?o encontrada: ${cityPath}` });
           return;
         }
 
@@ -107,7 +107,7 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
               setResult({
                 status: TERRITORY_RESOLVE_STATUS.RESTRICTED,
                 resolved: null,
-                error: `${cityLocation.name} nao esta disponivel para navegacao publica no momento.`,
+                error: `${cityLocation.name} n?o est? dispon?vel para navega??o p?blica no momento.`,
               });
             }
             return;
@@ -121,7 +121,7 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
           const group = await groupRepo.findBySlugAndCity(groupSlug, cityLocation.id);
 
           if (!group) {
-            if (!cancelled) setResult({ status: TERRITORY_RESOLVE_STATUS.NOT_FOUND, resolved: null, error: `Grupo nao encontrado: ${groupSlug}` });
+            if (!cancelled) setResult({ status: TERRITORY_RESOLVE_STATUS.NOT_FOUND, resolved: null, error: `Grupo n?o encontrado: ${groupSlug}` });
             return;
           }
           if (group.status !== 'active') {
@@ -132,7 +132,7 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
             if (!cancelled) setResult({
               status: TERRITORY_RESOLVE_STATUS.RESTRICTED,
               resolved: null,
-              error: `${group.name} nao esta disponivel para navegacao publica no momento.`,
+              error: `${group.name} n?o est? dispon?vel para navega??o p?blica no momento.`,
             });
             return;
           }
@@ -151,7 +151,7 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
             setResult({
               status: TERRITORY_RESOLVE_STATUS.RESTRICTED,
               resolved: null,
-              error: `${cityLocation.name} nao esta disponivel para navegacao publica no momento.`,
+              error: `${cityLocation.name} n?o est? dispon?vel para navega??o p?blica no momento.`,
             });
           }
           return;
@@ -216,7 +216,7 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
         const districtLocation = await locationRepo.findByPath(districtPath);
 
         if (!districtLocation) {
-          // Em rotas de módulo, aceita slug de grupo no padrão público limpo.
+          // Em rotas de m?dulo, aceita slug de grupo no padr?o p?blico limpo.
           if (!isCommunityRoute) {
             const groupRepo = createTerritorialGroupRepository();
             const groupBySlug = await groupRepo.findBySlugAndCity(districtSlug!, cityLocation.id);
@@ -244,7 +244,7 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
             return;
           }
 
-          if (!cancelled) setResult({ status: TERRITORY_RESOLVE_STATUS.NOT_FOUND, resolved: null, error: `Local nao encontrado: ${districtPath}` });
+          if (!cancelled) setResult({ status: TERRITORY_RESOLVE_STATUS.NOT_FOUND, resolved: null, error: `Local n?o encontrado: ${districtPath}` });
           return;
         }
 
@@ -254,7 +254,7 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
         }
 
         if (districtLocation.parent_id !== cityLocation.id) {
-          if (!cancelled) setResult({ status: TERRITORY_RESOLVE_STATUS.NOT_FOUND, resolved: null, error: `Bairro ${districtSlug} nao pertence a ${city}` });
+          if (!cancelled) setResult({ status: TERRITORY_RESOLVE_STATUS.NOT_FOUND, resolved: null, error: `Bairro ${districtSlug} n?o pertence a ${city}` });
           return;
         }
 
@@ -262,7 +262,7 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
           if (!cancelled) setResult({
             status: TERRITORY_RESOLVE_STATUS.RESTRICTED,
             resolved: null,
-            error: `${districtLocation.name} nao esta disponivel para navegacao publica no momento.`,
+            error: `${districtLocation.name} n?o est? dispon?vel para navega??o p?blica no momento.`,
           });
           return;
         }
@@ -277,7 +277,7 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
               isTerritoryPubliclyNavigable(group.metadata),
           );
 
-          // Evita ambiguidade: promove para grupo apenas quando há associação única.
+          // Evita ambiguidade: promove para grupo apenas quando h? associa??o ?nica.
           if (eligibleGroups.length === 1) {
             const withMembers = await groupRepo.findWithMembers(eligibleGroups[0].id);
             if (withMembers && withMembers.status === 'active' && isTerritoryPubliclyNavigable(withMembers.metadata)) {

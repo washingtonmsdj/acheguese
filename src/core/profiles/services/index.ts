@@ -1,11 +1,9 @@
 /**
- * 👤 PROFILE SERVICES - SSOT v2.0 Exports
- *
- * @version 2.0.0 - Refatoração SSOT
+ * Profile services - SSOT exports.
  */
 
 // ============================================================
-// 🏛️ FACADE - Interface unificada SSOT v2.0
+// Facade
 // ============================================================
 export {
   ProfileFacade,
@@ -14,7 +12,7 @@ export {
 } from "./ProfileService";
 
 // ============================================================
-// 🎯 QUERIES - Operações de leitura
+// Queries
 // ============================================================
 export {
   getProfileById,
@@ -37,7 +35,7 @@ export {
 } from "./profile.queries";
 
 // ============================================================
-// ✏️ MUTATIONS - Operações de escrita
+// Mutations
 // ============================================================
 export {
   createProfile,
@@ -51,19 +49,15 @@ export {
 } from "./profile.mutations";
 
 // ============================================================
-// 🔧 ADAPTERS E SERVICES ESPECIALIZADOS
+// Specialized services
 // ============================================================
-export {
-  profileMobilityAdapter,
-  ProfileMobilityAdapter,
-} from "./ProfileMobilityAdapter";
 export {
   ProfileVerificationAdminService,
   profileVerificationAdminService,
 } from "./ProfileVerificationAdminService";
 
 // ============================================================
-// 📦 TYPES
+// Types
 // ============================================================
 export type {
   Profile,

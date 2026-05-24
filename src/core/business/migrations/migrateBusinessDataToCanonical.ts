@@ -32,7 +32,7 @@ export interface MigrationResult {
  * Todos os registros de business_data já possuem location_id canônico.
  */
 export async function migrateBusinessDataToCanonical(): Promise<MigrationResult> {
-  console.warn('⚠️  migrateBusinessDataToCanonical: migração já executada na ETAPA 6. Nenhuma ação necessária.');
+  console.warn('  migrateBusinessDataToCanonical: migração já executada na ETAPA 6. Nenhuma ação necessária.');
   return {
     total: 0,
     location_id_already_valid: 0,

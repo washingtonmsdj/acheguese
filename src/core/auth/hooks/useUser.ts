@@ -1,8 +1,7 @@
 /**
- * useUser — compatibility shim
+ * useUser — SSOT hook
  *
  * Reads from SessionState (SSOT). No onAuthStateChange listener.
- * New code should use useSessionContext() instead.
  */
 import { useState, useEffect } from "react";
 import { SessionState } from "@/core/session/state/SessionState";

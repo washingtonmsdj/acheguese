@@ -9,6 +9,22 @@ import {
   Users,
   Crown,
   Sparkles,
+  FileText,
+  MessageCircle,
+  ThumbsUp,
+  Calendar,
+  Building2,
+  Wrench,
+  Car,
+  CheckCircle2,
+  Lightbulb,
+  Gem,
+  Flame,
+  Home,
+  Handshake,
+  PenLine,
+  ShieldCheck,
+  type LucideIcon,
 } from "lucide-react";
 import { Card } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
@@ -31,6 +47,10 @@ import { LAUNCH_URLS } from "@/config/territory";
 
 export default function GamificacaoPage() {
   const { profile, badges, stats, loading } = useCommunityProfile();
+
+  const renderBadgeIcon = (Icon: LucideIcon) => (
+    <Icon className="h-6 w-6" aria-hidden="true" />
+  );
 
   return (
     <div className="container max-w-6xl py-8">
@@ -158,41 +178,47 @@ export default function GamificacaoPage() {
 
             <div className="space-y-3">
               {[
-                { action: "Criar post na comunidade", points: 10, icon: "📝" },
-                { action: "Adicionar comentário", points: 5, icon: "💬" },
-                { action: "Voto útil em comentário", points: 2, icon: "👍" },
-                { action: "Escrever avaliação", points: 15, icon: "⭐" },
-                { action: "Fazer recomendação", points: 8, icon: "🎯" },
-                { action: "Participar de evento", points: 12, icon: "📅" },
-                { action: "Criar empresa", points: 50, icon: "🏢" },
-                { action: "Oferecer serviço", points: 30, icon: "🛠️" },
+                { action: "Criar post na comunidade", points: 10, icon: FileText },
+                { action: "Adicionar comentário", points: 5, icon: MessageCircle },
+                { action: "Voto útil em comentário", points: 2, icon: ThumbsUp },
+                { action: "Escrever avaliação", points: 15, icon: Star },
+                { action: "Fazer recomendação", points: 8, icon: Target },
+                { action: "Participar de evento", points: 12, icon: Calendar },
+                { action: "Criar empresa", points: 50, icon: Building2 },
+                { action: "Oferecer serviço", points: 30, icon: Wrench },
                 {
                   action: "Completar corrida (motorista)",
                   points: 20,
-                  icon: "🚗",
+                  icon: Car,
                 },
-                { action: "Completar perfil", points: 25, icon: "✅" },
-              ].map((item, index) => (
+                { action: "Completar perfil", points: 25, icon: CheckCircle2 },
+              ].map((item, index) => {
+                const ActionIcon = item.icon;
+                return (
                 <div
                   key={index}
                   className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">{item.icon}</span>
+                    <ActionIcon className="h-5 w-5 text-primary" aria-hidden="true" />
                     <span className="font-medium">{item.action}</span>
                   </div>
                   <Badge variant="secondary" className="text-base font-bold">
                     +{item.points} pts
                   </Badge>
                 </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="mt-6 p-4 rounded-lg bg-muted">
-              <p className="text-sm text-muted-foreground">
-                💡 <strong>Dica:</strong> Quanto mais você participa, mais
-                pontos acumula! Seja ativo, ajude outros membros e contribua com
-                conteúdo de qualidade.
+              <p className="flex items-start gap-2 text-sm text-muted-foreground">
+                <Lightbulb className="h-4 w-4 mt-0.5 shrink-0" aria-hidden="true" />
+                <span>
+                  <strong>Dica:</strong> Quanto mais você participa, mais
+                  pontos acumula. Seja ativo, ajude outros membros e contribua com
+                  conteúdo de qualidade.
+                </span>
               </p>
             </div>
           </Card>
@@ -223,35 +249,35 @@ export default function GamificacaoPage() {
                     {
                       name: "Membro Bronze",
                       description: "Nível Bronze alcançado",
-                      icon: "🥉",
+                      icon: Award,
                       requirement: "0 pontos",
                       color: "#CD7F32",
                     },
                     {
                       name: "Membro Prata",
                       description: "Nível Prata alcançado",
-                      icon: "🥈",
+                      icon: Award,
                       requirement: "100 pontos",
                       color: "#C0C0C0",
                     },
                     {
                       name: "Membro Ouro",
                       description: "Nível Ouro alcançado",
-                      icon: "🥇",
+                      icon: Crown,
                       requirement: "500 pontos",
                       color: "#FFD700",
                     },
                     {
                       name: "Membro Platina",
                       description: "Nível Platina alcançado",
-                      icon: "💎",
+                      icon: Gem,
                       requirement: "1000 pontos",
                       color: "#E5E4E2",
                     },
                     {
                       name: "Membro Diamante",
                       description: "Nível Diamante alcançado",
-                      icon: "💎",
+                      icon: Gem,
                       requirement: "5000 pontos",
                       color: "#B9F2FF",
                     },
@@ -265,7 +291,7 @@ export default function GamificacaoPage() {
                         className="flex items-center justify-center w-12 h-12 rounded-full text-2xl flex-shrink-0"
                         style={{ backgroundColor: `${badge.color}20` }}
                       >
-                        {badge.icon}
+                        {renderBadgeIcon(badge.icon)}
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4
@@ -300,21 +326,21 @@ export default function GamificacaoPage() {
                     {
                       name: "Influencer da Comunidade",
                       description: "Mais de 100 seguidores e alta interação",
-                      icon: "💫",
+                      icon: Sparkles,
                       requirement: "Verificação manual",
                       color: "#E91E63",
                     },
                     {
                       name: "Celebridade Local",
                       description: "Reconhecido por toda a comunidade",
-                      icon: "🌟",
+                      icon: Star,
                       requirement: "Verificação manual",
                       color: "#9C27B0",
                     },
                     {
                       name: "Formador de Opinião",
                       description: "Posts com alta taxa de engajamento",
-                      icon: "🔥",
+                      icon: Flame,
                       requirement: "Verificação manual",
                       color: "#FF5722",
                     },
@@ -328,7 +354,7 @@ export default function GamificacaoPage() {
                         className="flex items-center justify-center w-12 h-12 rounded-full text-2xl flex-shrink-0"
                         style={{ backgroundColor: `${badge.color}20` }}
                       >
-                        {badge.icon}
+                        {renderBadgeIcon(badge.icon)}
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4
@@ -363,21 +389,21 @@ export default function GamificacaoPage() {
                     {
                       name: "Top Avaliado",
                       description: "Entre os 10 usuários mais bem avaliados",
-                      icon: "⭐",
+                      icon: Star,
                       requirement: "Top 10 ranking",
                       color: "#FFD700",
                     },
                     {
                       name: "Profissional 5 Estrelas",
                       description: "Mantém média 5.0 em avaliações",
-                      icon: "🌟",
+                      icon: Sparkles,
                       requirement: "Média 5.0",
                       color: "#FFD700",
                     },
                     {
                       name: "Altamente Recomendado",
                       description: "Mais de 50 avaliações positivas",
-                      icon: "👍",
+                      icon: ThumbsUp,
                       requirement: "50+ avaliações",
                       color: "#4CAF50",
                     },
@@ -391,7 +417,7 @@ export default function GamificacaoPage() {
                         className="flex items-center justify-center w-12 h-12 rounded-full text-2xl flex-shrink-0"
                         style={{ backgroundColor: `${badge.color}20` }}
                       >
-                        {badge.icon}
+                        {renderBadgeIcon(badge.icon)}
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4
@@ -426,43 +452,43 @@ export default function GamificacaoPage() {
                     {
                       name: "Morador Verificado",
                       description: "Residência verificada pela administração",
-                      icon: "🏠",
+                      icon: Home,
                       requirement: "Verificar residência",
                     },
                     {
                       name: "Vizinho Prestativo",
                       description: "Ajudou outros moradores 10+ vezes",
-                      icon: "🤝",
+                      icon: Handshake,
                       requirement: "10 votos úteis",
                     },
                     {
                       name: "Membro Ativo",
                       description: "Mais de 50 interações na comunidade",
-                      icon: "⭐",
+                      icon: Star,
                       requirement: "50 interações",
                     },
                     {
                       name: "Avaliador Confiável",
                       description: "Escreveu 5+ avaliações detalhadas",
-                      icon: "✅",
+                      icon: ShieldCheck,
                       requirement: "5 avaliações",
                     },
                     {
                       name: "Especialista em Avaliações",
                       description: "Mais de 100 avaliações escritas",
-                      icon: "📝",
+                      icon: FileText,
                       requirement: "100 avaliações",
                     },
                     {
                       name: "Criador de Conteúdo",
                       description: "Mais de 100 posts criados",
-                      icon: "✍️",
+                      icon: PenLine,
                       requirement: "100 posts",
                     },
                     {
                       name: "Super Ajudante",
                       description: "Mais de 100 votos úteis recebidos",
-                      icon: "🦸",
+                      icon: ThumbsUp,
                       requirement: "100 votos úteis",
                     },
                   ].map((badge, index) => (
@@ -471,7 +497,7 @@ export default function GamificacaoPage() {
                       className="flex items-start gap-4 p-4 rounded-lg border bg-card"
                     >
                       <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-2xl flex-shrink-0">
-                        {badge.icon}
+                        {renderBadgeIcon(badge.icon)}
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="font-semibold mb-1">{badge.name}</h4>

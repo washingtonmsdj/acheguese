@@ -170,8 +170,14 @@ export class TrackingService {
 
       // GATE 5: Atualizar last_seen_at para motoristas
       if (entityType === 'driver') {
-        const { DriverAvailabilityService } = await import('@/core/mobility/services/runtime');
-        await DriverAvailabilityService.markLastSeen(entityId);
+        void import('@/core/mobility/services/runtime')
+          .then(({ DriverAvailabilityService }) => DriverAvailabilityService.markLastSeen(entityId))
+          .catch((error) => {
+            logger.warn('[TrackingService] Failed to update driver last_seen_at after position update', {
+              entityId,
+              error,
+            });
+          });
       }
     } catch (error) {
       logger.error('[TrackingService] Error updating position:', error);

@@ -51,13 +51,13 @@ export function getOpportunityTypeLabel(type?: WorkOpportunityType): string {
     case "looking_for_work":
       return "Procuro trabalho";
     case "offering_work":
-      return "Ofereco trabalho";
+      return "Ofereço trabalho";
     case "freelance":
       return "Freela";
     case "quick_job":
-      return "Diaria rapida";
+      return "Diária rápida";
     case "service_availability":
-      return "Disponivel para servicos";
+      return "Disponível para serviços";
     default:
       return "Oportunidade";
   }
@@ -68,29 +68,12 @@ export function getOpportunityUrgencyLabel(urgency?: WorkOpportunityUrgency): st
     case "hoje":
       return "Hoje";
     case "24h":
-      return "Proximas 24h";
+      return "Próximas 24h";
     case "semana":
       return "Esta semana";
     case "flexivel":
-      return "Flexivel";
+      return "Flexível";
     default:
-      return "Sem urgencia definida";
-  }
-}
-
-export function getOpportunityTypeEmoji(type?: WorkOpportunityType): string {
-  switch (type) {
-    case "looking_for_work":
-      return "??";
-    case "offering_work":
-      return "??";
-    case "freelance":
-      return "?";
-    case "quick_job":
-      return "???";
-    case "service_availability":
-      return "??";
-    default:
-      return "??";
+      return "Sem urgência definida";
   }
 }

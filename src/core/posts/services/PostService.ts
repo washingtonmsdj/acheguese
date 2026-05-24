@@ -44,6 +44,7 @@ export {
 // MUTATIONS - Write operations
 // ============================================================
 export {
+  CREATE_POST_LOCATION_REQUIRED_CODE,
   createPost,
   updatePost,
   deletePost,
@@ -81,4 +82,4 @@ export const PostsFacade = {
   },
 } as const;
 
-export { PostService, postService } from "./PostServiceLegacy";
+export { PostService, postService } from "./post.service.runtime";

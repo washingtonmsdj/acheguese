@@ -5,8 +5,7 @@ import type { AIProvider, IntentParserInput } from "../domain/types";
  * Provider real isolado do frontend.
  *
  * A chave de IA nunca fica no bundle: a chamada passa por Edge Function.
- * Esta Fase 1 usa MockAIProvider por padrão; este provider fica pronto para
- * quando a function `ai-intent-parse` existir.
+ * A function `ai-intent-parse` valida autenticação, quota e payload no backend.
  */
 export class OpenAIProvider implements AIProvider {
   async parseIntent(input: IntentParserInput): Promise<unknown> {

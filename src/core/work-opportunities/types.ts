@@ -1,4 +1,4 @@
-﻿export type WorkOpportunityType =
+export type WorkOpportunityType =
   | "looking_for_work"
   | "offering_work"
   | "freelance"

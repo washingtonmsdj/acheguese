@@ -8,8 +8,8 @@ function normalizePriority(value: unknown): NotificationPriority {
     : "medium";
 }
 
-function normalizeMetadata(value: unknown, legacyValue: unknown): NotificationMetadata {
-  const candidate = value ?? legacyValue;
+function normalizeMetadata(value: unknown, alternateValue: unknown): NotificationMetadata {
+  const candidate = value ?? alternateValue;
   if (candidate && typeof candidate === "object" && !Array.isArray(candidate)) {
     return candidate as NotificationMetadata;
   }

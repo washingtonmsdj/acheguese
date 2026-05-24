@@ -1,57 +1,51 @@
 /**
- * 📦 POSTS SERVICES - Barrel Export
+ * Posts services barrel.
  *
- * SSOT para todos os serviços de posts.
+ * SSOT para todos os servicos de posts.
  * Organizado em queries, mutations, polls e helpers.
  *
- * @version 2.0.0 - Refatoração SSOT
+ * @version 2.0.0 - Refatoracao SSOT
  */
 
 // ============================================================
-// 🎯 FACADE PRINCIPAL (Recomendado)
+// FACADE PRINCIPAL
 // ============================================================
 export { PostsFacade } from "./PostService";
 
 // ============================================================
-// 📦 QUERIES - Operações de Leitura (SSOT)
+// QUERIES - Operacoes de leitura
 // ============================================================
 export {
-  // Busca de posts
   getPostById,
   getFeed,
   getPostsByProfile,
   getPostsByType,
-  // Estatísticas
   getPostStats,
   getPostsCountByAuthor,
   getPostsCountByAuthorToday,
   getPostsLikesReceivedByAuthor,
   getTotalPostsCount,
   getRecentPosts,
-  // Auxiliares
   getPostBasicInfo,
   getPostAuthorId,
-  // Trending
   getTopPosts,
   getPopularTags,
 } from "./posts.queries";
 
 // ============================================================
-// ✏️ MUTATIONS - Operações de Escrita (SSOT)
+// MUTATIONS - Operacoes de escrita
 // ============================================================
 export {
-  // CRUD
   createPost,
   updatePost,
   deletePost,
   deletePostByAuthor,
-  // Engagement
   incrementSharesCount,
   incrementUserReputation,
 } from "./posts.mutations";
 
 // ============================================================
-// 🗳️ POLLS QUERIES - Enquetes (SSOT)
+// POLLS QUERIES
 // ============================================================
 export {
   getPollById,
@@ -59,7 +53,7 @@ export {
 } from "./polls.queries";
 
 // ============================================================
-// 🗳️ POLLS MUTATIONS - Enquetes (SSOT)
+// POLLS MUTATIONS
 // ============================================================
 export {
   createPoll,
@@ -68,7 +62,7 @@ export {
 } from "./polls.mutations";
 
 // ============================================================
-// 🔧 LEGACY - PostService original (mantido para compatibilidade)
+// RUNTIME SERVICE
 // ============================================================
 export { PostService } from "./PostService";
 export { postService } from "./PostService";

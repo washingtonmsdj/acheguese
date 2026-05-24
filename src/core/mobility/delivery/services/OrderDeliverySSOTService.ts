@@ -1,1 +1,1 @@
-﻿export { OrderDeliverySSOTService } from '@/modules/mobility/delivery/services/OrderDeliverySSOTService';
+export { OrderDeliverySSOTService } from '@/modules/mobility/delivery/services/OrderDeliverySSOTService';

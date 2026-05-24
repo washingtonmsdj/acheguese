@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -168,8 +168,8 @@ export function CommentsModal({
         onOpenChange={(dialogOpen) => {
           if (!dialogOpen) setDeleteCommentId(null);
         }}
-        title="Excluir comentario?"
-        description="Essa acao remove o comentario e suas respostas vinculadas. Nao e possivel desfazer."
+        title="Excluir comentário?"
+        description="Essa ação remove o comentário e suas respostas vinculadas. Não é possível desfazer."
         confirmLabel="Excluir"
         cancelLabel="Cancelar"
         onConfirm={handleConfirmDeleteComment}

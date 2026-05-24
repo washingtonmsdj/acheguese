@@ -12,8 +12,7 @@ import {
   residentialLocalityService,
   type ResidentialLocality,
 } from "@/core/location";
-import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
-import { LocationStatus, LocationType } from "@/core/location/types";
+import { findSelectableLocalities } from "@/core/location/helpers/territorialResolver";
 import { locationGeocodingService } from "@/core/location/services/LocationGeocodingService";
 import type { LocationGeocodingResult } from "@/core/location/services/LocationGeocodingService";
 import { toast } from "sonner";
@@ -238,14 +237,8 @@ export function ResidenceManager() {
         if (candidateCityId && resolvedNeighborhood && !territoryTouched) {
           void (async () => {
             try {
-              const locationRepository = createLocationRepository();
-              const districts = await locationRepository.findChildren(candidateCityId, {
-                type: LocationType.DISTRICT,
-                status: LocationStatus.ACTIVE,
-                page: 1,
-                page_size: 500,
-              });
-              const matchedDistrict = districts.locations.find((district) =>
+              const localities = await findSelectableLocalities(candidateCityId);
+              const matchedDistrict = localities.find((district) =>
                 tryMatchDistrictName(resolvedNeighborhood, district.name),
               );
               if (matchedDistrict) {
@@ -521,15 +514,9 @@ export function ResidenceManager() {
         safeLocalNeighborhood.length > 0
       ) {
         try {
-          const locationRepository = createLocationRepository();
-          const districts = await locationRepository.findChildren(cityLocationId, {
-            type: LocationType.DISTRICT,
-            status: LocationStatus.ACTIVE,
-            page: 1,
-            page_size: 500,
-          });
+          const localities = await findSelectableLocalities(cityLocationId);
 
-          const matchedDistrict = districts.locations.find((district) =>
+          const matchedDistrict = localities.find((district) =>
             tryMatchDistrictName(safeLocalNeighborhood, district.name),
           );
 

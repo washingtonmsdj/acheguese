@@ -26,7 +26,7 @@ export function useEmergencyAlert() {
     onSuccess: (result) => {
       if (result.success) {
         queryClient.invalidateQueries({ queryKey: ['emergency-alerts'] });
-        toast.error('🚨 ALERTA DE EMERGÊNCIA ENVIADO!', {
+        toast.error('Alerta de emergência enviado', {
           description: 'Sua localização e dados foram salvos.',
           duration: 8000,
         });

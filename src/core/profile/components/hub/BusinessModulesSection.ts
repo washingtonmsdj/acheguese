@@ -1,1 +1,1 @@
-﻿export { BusinessModulesSection } from '@/modules/profile/components/hub/BusinessModulesSection';
+export { BusinessModulesSection } from '@/modules/profile/components/hub/BusinessModulesSection';

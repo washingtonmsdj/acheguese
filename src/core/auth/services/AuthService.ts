@@ -1,5 +1,5 @@
 /**
- * 🏆 AUTH SERVICE - Verificações de Autenticação Centralizadas
+ *  AUTH SERVICE - Verificações de Autenticação Centralizadas
  *
  * Verificação de admin centralizada
  * Cache de permissões
@@ -9,11 +9,10 @@
 import { supabase } from "@/integrations/supabase";
 import { SessionService } from "@/core/session/services/SessionService";
 import { logger } from "@/shared/utils/logger";
-import { USER_ROLE } from "@/shared/types/constants";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { mediaService } from "@/core/media/services/MediaService";
+import { RoleService } from "@/core/authorization/services/RoleService";
 import type { User, Session, AuthChangeEvent, Subscription } from "@supabase/supabase-js";
-import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
 
 function parseAuthIdentifier(input: string): { kind: "email" | "username"; value: string } | null {
   const value = input.trim();
@@ -115,7 +114,7 @@ export class AuthService {
   }
 
   /**
-   * 🔐 VERIFICAR SE USUÁRIO É ADMIN
+   *  VERIFICAR SE USUÁRIO É ADMIN
    */
   static async isAdmin(userId: string): Promise<boolean> {
     if (!userId) return false;
@@ -128,18 +127,7 @@ export class AuthService {
     }
 
     try {
-      const { data, error } = await (supabase as unknown as AdminSupabaseClient)
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId)
-        .eq("role", USER_ROLE.ADMIN)
-        .maybeSingle();
-
-      if (error) {
-        logger.warn("AuthService.isAdmin query error", { userId, error: error.message });
-      }
-
-      const isAdmin = !!data && !error;
+      const isAdmin = await RoleService.isAdmin(userId);
 
       this.adminCache.set(userId, isAdmin);
       this.cacheExpiry.set(userId, Date.now() + this.CACHE_DURATION);
@@ -152,7 +140,7 @@ export class AuthService {
   }
 
   /**
-   * 🧹 LIMPAR CACHE DE ADMIN
+   *  LIMPAR CACHE DE ADMIN
    */
   static clearAdminCache(userId?: string): void {
     if (userId) {
@@ -165,7 +153,7 @@ export class AuthService {
   }
 
   /**
-   * 🔑 OBTER USER.ID PARA CONTEXTO ADMINISTRATIVO
+   *  OBTER USER.ID PARA CONTEXTO ADMINISTRATIVO
    * USO RESTRITO: Apenas para ações de moderação/admin
    * Para contexto social, use ProfileService.getRequiredActiveProfile()
    */
@@ -217,14 +205,14 @@ export class AuthService {
   }
 
   /**
-   * 👤 VERIFICAR SE USUÁRIO É PROPRIETÁRIO
+   *  VERIFICAR SE USUÁRIO É PROPRIETÁRIO
    */
   static isOwner(userId: string, resourceOwnerId: string): boolean {
     return userId === resourceOwnerId;
   }
 
   /**
-   * 🛡️ VERIFICAR PERMISSÕES COMBINADAS
+   *  VERIFICAR PERMISSÕES COMBINADAS
    */
   static async canManageResource(
     userId: string,
@@ -285,7 +273,7 @@ export class AuthService {
     if (error) {
       // Log apenas em desenvolvimento
       if (import.meta.env.DEV) {
-        logger.error('❌ Erro no login:', {
+        logger.error(' Erro no login:', {
           message: error.message,
           status: error.status,
           code: error.code,
@@ -296,7 +284,7 @@ export class AuthService {
   }
 
   /**
-   * 🔑 LOGIN POR USERNAME
+   *  LOGIN POR USERNAME
    * Resolve o email via RPC SECURITY DEFINER (acessa auth.users server-side).
    * O email nunca trafega como dado visível — é usado apenas pelo SDK internamente.
    */
@@ -363,7 +351,7 @@ export class AuthService {
   }
 
   /**
-   * 📸 UPLOAD DE AVATAR
+   *  UPLOAD DE AVATAR
    * Faz upload da imagem para o storage e atualiza o perfil
    */
   static async uploadAvatar(userId: string, file: File): Promise<string> {
@@ -377,7 +365,7 @@ export class AuthService {
   }
 
   /**
-   * 🗑️ DELETAR IMAGEM DO STORAGE
+   *  DELETAR IMAGEM DO STORAGE
    * Remove uma imagem do storage community-posts
    */
   static async deleteStorageImage(
@@ -404,7 +392,7 @@ export class AuthService {
   }
 
   /**
-   * 📤 UPLOAD DE IMAGEM PARA STORAGE
+   *  UPLOAD DE IMAGEM PARA STORAGE
    * Upload genérico de imagem para um bucket específico
    */
   static async uploadImage(

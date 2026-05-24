@@ -5,24 +5,6 @@
  */
 
 /**
- * Configuração para criar usuário admin
- */
-export interface AdminUserConfig {
-  email: string;
-  password: string;
-  name?: string;
-}
-
-/**
- * Resultado da criação de usuário admin
- */
-export interface AdminUserResult {
-  success: boolean;
-  message: string;
-  userId?: string;
-}
-
-/**
  * Métricas em tempo real do sistema
  */
 export interface RealtimeMetrics {

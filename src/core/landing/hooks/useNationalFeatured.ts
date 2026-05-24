@@ -1,1 +1,1 @@
-﻿export { useNationalFeatured } from '@/app/features/landing/hooks/useNationalFeatured';
+export { useNationalFeatured } from '@/app/features/landing/hooks/useNationalFeatured';

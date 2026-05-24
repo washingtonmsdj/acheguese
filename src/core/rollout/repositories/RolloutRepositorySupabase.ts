@@ -3,10 +3,9 @@
  *
  * Implementação real de IRolloutRepository usando Supabase.
  *
- * STATUS: implementado, NÃO validado em runtime — banco desligado.
- * Validar quando VITE_USE_MOCK_DATA=false e tabela module_rollouts existir.
+ * STATUS: implementação canônica; depende da migration de module_rollouts no ambiente.
  *
- * Migration necessária: src/core/rollout/sql/001_rollout_table.sql (a criar)
+ * Schema versionado exclusivamente em supabase/migrations.
  */
 
 import { supabase } from '@/integrations/supabase';

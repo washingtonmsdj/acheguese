@@ -1,5 +1,5 @@
-﻿import { useState } from "react";
-import { profileService } from "@/core/profiles/services/ProfileService"; // âœ… SSOT
+import { useState } from "react";
+import { profileService } from "@/core/profiles/services/ProfileService"; // SSOT
 import { useDirectMessages } from "@/core/community/hooks/useDirectMessages";
 import type { UnifiedPost } from "@/shared/types/posts";
 import type { DirectMessageRecipientView } from "@/core/profiles/views/DirectMessageRecipientView";
@@ -37,7 +37,7 @@ export function useMessageModal(currentUserId?: string) {
     if (!currentUserId) return;
 
     try {
-      // âœ… SSOT â€” ProfileService para buscar dados do perfil
+      // SSOT: ProfileService para buscar dados do perfil
       const profileData =
         await profileService.getProfileById(recipientProfileId);
 

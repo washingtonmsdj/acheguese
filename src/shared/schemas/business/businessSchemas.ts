@@ -5,17 +5,9 @@
  */
 
 import { z } from "zod";
+import { BUSINESS_CATEGORIES } from "@/shared/taxonomy/businessCategories";
 
-export const BUSINESS_CATEGORIES = [
-  "restaurante",
-  "mercado",
-  "farmacia",
-  "saude",
-  "educacao",
-  "servicos",
-  "lazer",
-  "outros",
-] as const;
+export { BUSINESS_CATEGORIES } from "@/shared/taxonomy/businessCategories";
 
 export const BUSINESS_COMPANY_TYPES = [
   "mei",

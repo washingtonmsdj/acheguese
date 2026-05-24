@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { TerritorialGroupService } from "@/core/location/services/TerritorialGroupService";
+import { TerritorialGroupService } from "@/core/territorial/services/TerritorialGroupService";
 import { selectLooseRows } from "@/integrations/supabase/services/supabaseHelpers";
 import { CommunicationTerritorialService } from "../services/CommunicationTerritorialService";
 
@@ -51,13 +51,13 @@ describe("CommunicationTerritorialService", () => {
       .spyOn(CommunicationTerritorialService, "listPublications")
       .mockResolvedValue([]);
 
-    vi.spyOn(TerritorialGroupService.prototype, "findBySlugAndCity").mockResolvedValue({
+    vi.spyOn(TerritorialGroupService.prototype, "getGroupBySlugAndCity").mockResolvedValue({
       id: "group-1",
       name: "Complexo",
       slug: "complexo",
       status: "active",
     } as never);
-    vi.spyOn(TerritorialGroupService.prototype, "listMembers").mockResolvedValue([
+    vi.spyOn(TerritorialGroupService.prototype, "listAllMembers").mockResolvedValue([
       { id: "loc-a", name: "A" },
       { id: "loc-b", name: "B" },
       { id: "loc-a", name: "A repetido" },

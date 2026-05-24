@@ -324,7 +324,7 @@ export interface MapBounds {
 
 // ── Marker Config ──────────────────────────
 export interface MarkerConfig {
-  emoji: string;
+  abbr: string;
   label: string;
   color: string;
   hsl: string;

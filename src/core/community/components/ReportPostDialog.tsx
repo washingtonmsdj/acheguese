@@ -16,10 +16,10 @@ import { ModerationService } from "@/core/moderation";
 import { Loader2 } from "lucide-react";
 
 const motivos = [
-  { id: "spam", label: "🚫 Spam" },
-  { id: "ofensivo", label: "🤬 Conteúdo ofensivo" },
-  { id: "fora_tema", label: "📌 Fora do tema do neighborhood" },
-  { id: "falso", label: "❌ Informação falsa" },
+  { id: "spam", label: "Spam" },
+  { id: "ofensivo", label: "Conteúdo ofensivo" },
+  { id: "fora_tema", label: "Fora do tema do bairro" },
+  { id: "falso", label: "Informação falsa" },
 ];
 
 interface Props {

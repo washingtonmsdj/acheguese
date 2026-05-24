@@ -189,7 +189,7 @@ export function useGrupos(options: UseGruposOptions = {}) {
 
   const handleJoin = useCallback(async (groupId: string) => {
     if (!activeProfile) {
-      toast.error("Faca login para entrar no grupo");
+      toast.error("Faça login para entrar no grupo");
       return;
     }
 
@@ -199,7 +199,7 @@ export function useGrupos(options: UseGruposOptions = {}) {
       return;
     }
 
-    toast.success("Voce entrou no grupo");
+    toast.success("Você entrou no grupo");
     queryClient.invalidateQueries({ queryKey: ["grupos"] });
     queryClient.invalidateQueries({ queryKey: ["groups"] });
     queryClient.invalidateQueries({ queryKey: ["user-group-ids"] });

@@ -1,5 +1,19 @@
 /* eslint-disable react-refresh/only-export-components */
 import React from "react";
+import {
+  Bell,
+  Calendar,
+  Car,
+  HelpCircle,
+  Lightbulb,
+  List,
+  PawPrint,
+  Search,
+  Shield,
+  ShoppingCart,
+  Tag,
+  type LucideIcon,
+} from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 
 export type FeedCategory =
@@ -15,19 +29,19 @@ export type FeedCategory =
   | "animais"
   | "transito";
 
-export const categories: { id: FeedCategory; label: string; emoji: string }[] =
+export const categories: { id: FeedCategory; label: string; icon: LucideIcon }[] =
   [
-    { id: "todos", label: "Todos", emoji: "📋" },
-    { id: "evento", label: "Evento", emoji: "🎉" },
-    { id: "promoção", label: "Promoção", emoji: "🏷️" },
-    { id: "dica", label: "Dica", emoji: "💡" },
-    { id: "segurança", label: "Segurança", emoji: "🔒" },
-    { id: "aviso", label: "Avisos", emoji: "📢" },
-    { id: "pergunta", label: "Pergunta", emoji: "❓" },
-    { id: "compra_venda", label: "Compra/Venda", emoji: "🛒" },
-    { id: "achados_perdidos", label: "Achados", emoji: "🔍" },
-    { id: "animais", label: "Animais", emoji: "🐾" },
-    { id: "transito", label: "Trânsito", emoji: "🚗" },
+    { id: "todos", label: "Todos", icon: List },
+    { id: "evento", label: "Evento", icon: Calendar },
+    { id: "promoção", label: "Promoção", icon: Tag },
+    { id: "dica", label: "Dica", icon: Lightbulb },
+    { id: "segurança", label: "Segurança", icon: Shield },
+    { id: "aviso", label: "Avisos", icon: Bell },
+    { id: "pergunta", label: "Pergunta", icon: HelpCircle },
+    { id: "compra_venda", label: "Compra/Venda", icon: ShoppingCart },
+    { id: "achados_perdidos", label: "Achados", icon: Search },
+    { id: "animais", label: "Animais", icon: PawPrint },
+    { id: "transito", label: "Trânsito", icon: Car },
   ];
 
 export const categoryColors: Record<string, string> = {
@@ -52,20 +66,25 @@ interface Props {
 export function FeedCategoryFilter({ filter, onFilterChange }: Props) {
   return (
     <div className="flex max-w-full flex-wrap gap-2 overflow-hidden px-4 py-3">
-      {categories.map((cat) => (
-        <button
-          key={cat.id}
-          onClick={() => onFilterChange(cat.id)}
-          className={cn(
-            "max-w-full px-3 py-1.5 rounded-full text-xs font-medium whitespace-normal border transition-all",
-            filter === cat.id
-              ? "bg-primary text-primary-foreground border-primary"
-              : "bg-secondary text-secondary-foreground border-border",
-          )}
-        >
-          {cat.emoji} {cat.label}
-        </button>
-      ))}
+      {categories.map((cat) => {
+        const Icon = cat.icon;
+
+        return (
+          <button
+            key={cat.id}
+            onClick={() => onFilterChange(cat.id)}
+            className={cn(
+              "max-w-full px-3 py-1.5 rounded-full text-xs font-medium whitespace-normal border transition-all inline-flex items-center gap-1.5",
+              filter === cat.id
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-secondary text-secondary-foreground border-border",
+            )}
+          >
+            <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+            {cat.label}
+          </button>
+        );
+      })}
     </div>
   );
 }

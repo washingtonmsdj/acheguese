@@ -1,3 +1,5 @@
+import { isBusinessCategory, type BusinessCategory } from "@/shared/taxonomy/businessCategories";
+
 /**
  * Validadores para Business Service
  * 
@@ -90,23 +92,8 @@ export function isValidSlug(slug: unknown): slug is string {
 /**
  * Valida categoria de negócio
  */
-export function isValidBusinessCategory(category: unknown): category is string {
-  if (typeof category !== 'string') {
-    return false;
-  }
-
-  const validCategories = [
-    'restaurante',
-    'mercado',
-    'farmacia',
-    'saude',
-    'educacao',
-    'servicos',
-    'lazer',
-    'outros',
-  ];
-
-  return validCategories.includes(category);
+export function isValidBusinessCategory(category: unknown): category is BusinessCategory {
+  return isBusinessCategory(category);
 }
 
 /**

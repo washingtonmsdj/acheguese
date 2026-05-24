@@ -141,7 +141,7 @@ export class ProfessionalUrlService {
       let extractedState = '';
       let extractedCity = '';
 
-      if (location.type === 'district') {
+      if ((location.type === 'neighborhood' || location.type === 'district')) {
         // location é bairro → parent é cidade → parent.parent é estado
         extractedCity = location.parent?.name || '';
         extractedState = location.parent?.parent?.name || '';
@@ -185,7 +185,7 @@ export class ProfessionalUrlService {
 
   /**
    * Resolve profissional por ID (profile_id), retornando o contexto completo de URL.
-   * Usado para redirect de rotas legado.
+   * Usado por componentes internos que recebem apenas o identificador do perfil.
    */
   static async resolveById(id: string): Promise<ProfessionalUrlContext | null> {
     try {
@@ -228,7 +228,7 @@ export class ProfessionalUrlService {
       let state = '';
       let city = '';
 
-      if (location.type === 'district') {
+      if ((location.type === 'neighborhood' || location.type === 'district')) {
         city = location.parent?.name || '';
         state = location.parent?.parent?.name || '';
       } else if (location.type === 'city') {

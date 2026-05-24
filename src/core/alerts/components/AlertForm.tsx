@@ -1,22 +1,12 @@
 import React from "react";
 import { useState } from "react";
 import type { CreateAlertData, AlertType } from "@/core/alerts/types";
+import { ALERT_TYPE_OPTIONS } from "@/core/alerts/constants/alertTypes";
 interface AlertFormProps {
   onSubmit: (date: CreateAlertData) => void;
   defaultCity?: string;
   defaultNeighborhood?: string;
 }
-
-const alertTypes: { value: AlertType; label: string; icon: string }[] = [
-  { value: "crime", label: "Crime", icon: "🚨" },
-  { value: "accident", label: "Acidente", icon: "🚗" },
-  { value: "fire", label: "Incêndio", icon: "🔥" },
-  { value: "flood", label: "Alagamento", icon: "🌊" },
-  { value: "power_outage", label: "Falta de Luz", icon: "⚡" },
-  { value: "water_outage", label: "Falta de Água", icon: "💧" },
-  { value: "road_closure", label: "Via Bloqueada", icon: "🚧" },
-  { value: "other", label: "Outro", icon: "⚠️" },
-];
 
 export function AlertForm({
   onSubmit,
@@ -49,9 +39,9 @@ export function AlertForm({
           className="w-full border rounded px-3 py-2"
           required
         >
-          {alertTypes.map((type) => (
+          {ALERT_TYPE_OPTIONS.map((type) => (
             <option key={type.value} value={type.value}>
-              {type.icon} {type.label}
+              {type.label}
             </option>
           ))}
         </select>

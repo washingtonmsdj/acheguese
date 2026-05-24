@@ -11,8 +11,6 @@ import type {
   CreateLocationVersionInput,
   LocationAlias,
   CreateLocationAliasInput,
-  SlugRedirect,
-  CreateSlugRedirectInput,
   TerritoryChangeEvent,
   CreateTerritoryChangeEventInput,
   PostalCodeHistory,
@@ -132,52 +130,6 @@ export class GovernanceRepositorySupabase implements IGovernanceRepository {
 
     if (error) throw error;
     return (data as LocationAlias[]) ?? [];
-  }
-
-  // ============================================
-  // SLUG REDIRECTS
-  // ============================================
-
-  async createSlugRedirect(data: CreateSlugRedirectInput): Promise<SlugRedirect> {
-    const { data: redirect, error } = await this.db
-      .from('slug_redirects')
-      .insert({
-        location_id: data.location_id,
-        old_slug: data.old_slug,
-        new_slug: data.new_slug,
-        redirect_type: data.redirect_type ?? 'permanent',
-        reason: data.reason,
-        expires_at: data.expires_at,
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-    return redirect as SlugRedirect;
-  }
-
-  async findRedirectByOldSlug(oldSlug: string): Promise<SlugRedirect | null> {
-    const { data, error } = await this.db
-      .from('slug_redirects')
-      .select('*')
-      .eq('old_slug', oldSlug)
-      .or('expires_at.is.null,expires_at.gt.' + new Date().toISOString())
-      .limit(1)
-      .maybeSingle();
-
-    if (error) throw error;
-    return (data as SlugRedirect | null) ?? null;
-  }
-
-  async listRedirectsForLocation(locationId: string): Promise<SlugRedirect[]> {
-    const { data, error } = await this.db
-      .from('slug_redirects')
-      .select('*')
-      .eq('location_id', locationId)
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    return (data as SlugRedirect[]) ?? [];
   }
 
   // ============================================

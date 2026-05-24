@@ -47,13 +47,13 @@ export function LostFoundMiniMap({
 
     map.on("load", () => {
       const color = tipo === "perdido" ? "#EF4444" : "#10B981";
-      const emoji = tipo === "perdido" ? "😢" : "🤗";
+      const markerAbbr = tipo === "perdido" ? "P" : "E";
 
       const el = document.createElement("div");
       el.style.cssText = `width:36px;height:36px;background:${color};border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;`;
       const inner = document.createElement("span");
-      inner.style.cssText = "transform:rotate(45deg);font-size:16px;line-height:1;";
-      inner.textContent = emoji;
+      inner.style.cssText = "transform:rotate(45deg);font-size:12px;line-height:1;font-weight:800;color:white;font-family:Arial,sans-serif;";
+      inner.textContent = markerAbbr;
       el.appendChild(inner);
 
       markerRef.current = new maplibregl.Marker({ element: el, anchor: "bottom" })

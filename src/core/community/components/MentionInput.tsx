@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { useState, useEffect, useRef } from "react";
 import { Search, X, User } from "lucide-react";
 import {
@@ -11,7 +11,7 @@ import { Input } from "@/shared/components/ui/input";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services";
 import type { MentionableProfileView } from "@/core/profiles/views/MentionableProfileView";
-import type { Profile } from "@/core/profiles/services/types";
+import type { ProfileRow } from "@/core/profiles/persistence/ProfileRow";
 
 interface MentionInputProps {
   onMentionSelect: (profile: MentionableProfileView) => void;
@@ -55,19 +55,19 @@ export function MentionInput({
 
       setIsSearching(true);
       try {
-        // ✅ SSOT - Buscar perfis por nome usando ProfileService
+        // SSOT - Buscar perfis por nome usando ProfileService
         const rawProfiles = await profileService.searchProfilesByName(
           searchQuery,
           10,
         );
 
         // Mapear para MentionableProfileView (camelCase, sem shape legado)
-        const profiles: MentionableProfileView[] = (rawProfiles as Profile[]).map((p) => ({
+        const profiles: MentionableProfileView[] = (rawProfiles as ProfileRow[]).map((p) => ({
           id: p.id,
           displayName: p.display_name ?? p.name,
           avatarUrl: p.avatar_url ?? null,
           publicNeighborhood:
-            (p as Profile & { public_neighborhood?: string | null }).public_neighborhood ?? null,
+            (p as ProfileRow & { public_neighborhood?: string | null }).public_neighborhood ?? null,
           profileType: p.profile_type ?? null,
         }));
 

@@ -1,4 +1,4 @@
-﻿// Hook profissional para chat de grupos
+// Hook profissional para chat de grupos
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useSessionContext } from "@/core/session";
 import { realtimeService } from "@/core/realtime";
@@ -13,15 +13,15 @@ import {
   useLeaveGroup,
 } from "@/core/community/hooks/useGroupQueries";
 import { logger } from "@/shared/utils/logger";
-import { SocialInteractionsService } from "@/core/social/services/SocialInteractionsService"; // âœ… SSOT
-import { GroupService } from "@/core/social/services/GroupService"; // âœ… SSOT
+import { SocialInteractionsService } from "@/core/social/services/SocialInteractionsService"; // SSOT
+import { GroupService } from "@/core/social/services/GroupService"; // SSOT
 
 type SubscriptionHandle = { unsubscribe: () => void };
 
 export interface GroupMessage {
   id: string;
   group_id: string;
-  sender_profile_id: string; // âœ… GATE 3 FASE 3C - Atualizado para novo modelo
+  sender_profile_id: string; // GATE 3 FASE 3C - Atualizado para novo modelo
   content: string;
   message_type?: "text" | "image" | "audio" | "poll" | "system";
   media_url?: string | null;
@@ -47,7 +47,7 @@ export function useGroupChat(groupId: string | undefined) {
     if (!groupId) return;
     setLoading(true);
     try {
-      // âœ… GATE 3 FASE 3C - Usar SocialInteractionsService
+      // GATE 3 FASE 3C - Usar SocialInteractionsService
       const messagesData = await SocialInteractionsService.getGroupMessages(
         groupId,
         100,
@@ -66,11 +66,11 @@ export function useGroupChat(groupId: string | undefined) {
     if (!groupId) return;
     loadMessages();
 
-    // âœ… SSOT - Usar RealtimeService
+    // SSOT - Usar RealtimeService
     const subscription = realtimeService.subscribeToGroupMessages(
       groupId,
       async (newMessage) => {
-        // âœ… SSOT â€” GroupService busca mensagem completa
+        // SSOT: GroupService busca mensagem completa
         const data = await GroupService.getGroupMessageById(newMessage.id);
         if (data) {
           setMessages((prev) => {
@@ -95,7 +95,7 @@ export function useGroupChat(groupId: string | undefined) {
       if (!groupId || !user || !activeProfile || !content.trim()) return;
       setSending(true);
       try {
-        // âœ… GATE 3 FASE 3C - Usar SocialInteractionsService
+        // GATE 3 FASE 3C - Usar SocialInteractionsService
         const result = await SocialInteractionsService.sendGroupMessage(
           {
             groupId,
@@ -119,7 +119,7 @@ export function useGroupChat(groupId: string | undefined) {
 
   const deleteMessage = useCallback(
     async (messageId: string) => {
-      // âœ… GATE 3 FASE 3C - Usar SocialInteractionsService
+      // GATE 3 FASE 3C - Usar SocialInteractionsService
       const result = await SocialInteractionsService.deleteGroupMessage(
         messageId,
         activeProfile?.id,

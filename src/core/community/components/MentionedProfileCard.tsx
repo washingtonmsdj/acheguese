@@ -10,6 +10,7 @@ import { Star, MapPin, Phone, MessageCircle, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
 import { DisputeMentionModal } from "./DisputeMentionModal";
 import { buildPublicProfileUrl } from "@/core/profiles/utils/publicProfileUrl";
+import { buildTelUrl, openContactUrl } from "@/shared/utils/contactLinks";
 interface MentionedProfile {
   id: string;
   name: string;
@@ -52,22 +53,19 @@ export function MentionedProfileCard({
   const getRankBadge = (position: number) => {
     const badges = {
       1: {
-        emoji: "🥇",
         color:
           "from-yellow-500/20 to-yellow-600/20 border-yellow-500/40 text-yellow-400",
-        label: "1º Mais Votado",
+        label: "1\u00ba Mais votado",
       },
       2: {
-        emoji: "🥈",
         color:
           "from-gray-400/20 to-gray-500/20 border-gray-400/40 text-gray-300",
-        label: "2º Mais Votado",
+        label: "2\u00ba Mais votado",
       },
       3: {
-        emoji: "🥉",
         color:
           "from-orange-600/20 to-orange-700/20 border-orange-600/40 text-orange-400",
-        label: "3º Mais Votado",
+        label: "3\u00ba Mais votado",
       },
     };
     return badges[position as keyof typeof badges];
@@ -105,7 +103,7 @@ export function MentionedProfileCard({
               <span
                 className={`text-[10px] px-2 py-0.5 rounded-full bg-gradient-to-r ${rankBadge.color} border flex-shrink-0 font-bold`}
               >
-                {rankBadge.emoji} {rankBadge.label}
+                {rankBadge.label}
               </span>
             )}
             {!rank && mentionType === "recommendation" && (
@@ -149,7 +147,8 @@ export function MentionedProfileCard({
               <button
                 onClick={(e) => {
                   e.preventDefault();
-                  window.open(`tel:${profile.telefone}`);
+                  const url = buildTelUrl(profile.telefone);
+                  openContactUrl(url);
                 }}
                 className="flex items-center gap-1 px-2 py-1 rounded text-xs bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
               >

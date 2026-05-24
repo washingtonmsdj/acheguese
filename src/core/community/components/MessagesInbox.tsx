@@ -402,11 +402,11 @@ export function MessagesInbox({ currentUserId }: MessagesInboxProps) {
                 conversations.find((c) => c.id === selectedConversation)!,
               ) || {
                 id: "",
-                name: "Usuário",
+                name: "Usuario",
               };
             return {
               id: recipient.id,
-              displayName: recipient.name ?? "Usuário",
+              displayName: recipient.name ?? "Usuario",
               avatarUrl: recipient.avatar_url ?? null,
               verified: Boolean(recipient.is_verified),
             };
@@ -419,4 +419,3 @@ export function MessagesInbox({ currentUserId }: MessagesInboxProps) {
     </div>
   );
 }
-

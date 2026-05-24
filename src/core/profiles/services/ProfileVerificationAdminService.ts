@@ -7,6 +7,10 @@
  */
 import { logger } from '@/shared/utils/logger';
 import { profileService } from '@/core/profiles/services/ProfileService';
+import {
+  PROFILE_WORKFLOW_VERIFICATION_STATUS,
+  type ProfileWorkflowVerificationStatus,
+} from '@/core/profiles/constants/verificationWorkflowStatus';
 
 export interface PendingVerification {
   id: string;
@@ -15,7 +19,7 @@ export interface PendingVerification {
   avatar_url: string | null;
   requested_at: string;
   type: string;
-  status?: "pending" | "verified" | "rejected" | "none";
+  status?: ProfileWorkflowVerificationStatus;
   decision_at?: string | null;
   decision_by?: string | null;
   rejection_reason?: string | null;
@@ -46,7 +50,7 @@ type VerificationProfileRow = {
 export class ProfileVerificationAdminService {
   static async getPendingVerifications(): Promise<PendingVerification[]> {
     try {
-      const profiles = await profileService.getProfilesByVerificationStatus('pending');
+      const profiles = await profileService.getProfilesByVerificationStatus(PROFILE_WORKFLOW_VERIFICATION_STATUS.PENDING);
       return (profiles as VerificationProfileRow[]).map((p) => ({
         id: p.id,
         profile_id: p.id,
@@ -54,7 +58,7 @@ export class ProfileVerificationAdminService {
         avatar_url: p.avatar_url,
         requested_at: p.verification_requested_at || p.updated_at,
         type: 'profile',
-        status: "pending",
+        status: PROFILE_WORKFLOW_VERIFICATION_STATUS.PENDING,
         decision_at: p.verified_at ?? null,
         decision_by: p.verified_by ?? null,
         rejection_reason: p.verification_rejection_reason ?? null,
@@ -67,7 +71,7 @@ export class ProfileVerificationAdminService {
 
   static async getVerifiedProfiles(): Promise<PendingVerification[]> {
     try {
-      const profiles = await profileService.getProfilesByVerificationStatus('verified');
+      const profiles = await profileService.getProfilesByVerificationStatus(PROFILE_WORKFLOW_VERIFICATION_STATUS.VERIFIED);
       return (profiles as VerificationProfileRow[]).map((p) => ({
         id: p.id,
         profile_id: p.id,
@@ -75,7 +79,7 @@ export class ProfileVerificationAdminService {
         avatar_url: p.avatar_url,
         requested_at: p.updated_at,
         type: 'profile',
-        status: "verified",
+        status: PROFILE_WORKFLOW_VERIFICATION_STATUS.VERIFIED,
         decision_at: p.verified_at ?? p.updated_at ?? null,
         decision_by: p.verified_by ?? null,
         rejection_reason: p.verification_rejection_reason ?? null,
@@ -88,7 +92,7 @@ export class ProfileVerificationAdminService {
 
   static async getRejectedProfiles(): Promise<PendingVerification[]> {
     try {
-      const profiles = await profileService.getProfilesByVerificationStatus('rejected');
+      const profiles = await profileService.getProfilesByVerificationStatus(PROFILE_WORKFLOW_VERIFICATION_STATUS.REJECTED);
       return (profiles as VerificationProfileRow[]).map((p) => ({
         id: p.id,
         profile_id: p.id,
@@ -96,7 +100,7 @@ export class ProfileVerificationAdminService {
         avatar_url: p.avatar_url,
         requested_at: p.updated_at,
         type: 'profile',
-        status: "rejected",
+        status: PROFILE_WORKFLOW_VERIFICATION_STATUS.REJECTED,
         decision_at: p.updated_at ?? null,
         decision_by: p.verified_by ?? null,
         rejection_reason: p.verification_rejection_reason ?? null,

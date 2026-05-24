@@ -2,32 +2,32 @@
  * VERTICAL CONFIG - SSOT de taxonomia vertical.
  *
  * Regras oficiais:
- * - `business`/`empresas` e dominio base horizontal de entidades empresariais.
- * - `business` nao e vertical.
- * - Apenas chaves presentes em `VerticalKey` sao verticais oficiais.
- * - Estado atual: somente `gastronomy` e vertical oficial.
- * - Verticais futuros so existem quando declarados neste arquivo.
+ * - `business`/`empresas` é domínio base horizontal de entidades empresariais.
+ * - `business` não é vertical.
+ * - Apenas chaves presentes em `VerticalKey` são verticais oficiais.
+ * - Estado atual: `gastronomy` e `education` são verticais oficiais.
+ * - Verticais futuros só existem quando declarados neste arquivo.
  *
- * Padrao estrutural:
+ * Padrão estrutural:
  * - business base + profile vertical opcional 1:1
  */
 
 import type { BusinessCategory } from "@/core/business/types/Business";
 
-// Identificadores canonicos de vertical (estado atual do projeto)
+// Identificadores canônicos de vertical (estado atual do projeto)
 export type VerticalKey = "gastronomy" | "education";
 
 export interface VerticalConfig {
   key: VerticalKey;
   label: string;
   description: string;
-  /** Categorias de business_data elegiveis para este vertical */
+  /** Categorias de business_data elegíveis para este vertical */
   eligibleCategories: BusinessCategory[];
-  /** Categoria canonica usada quando a criacao nasce dentro do vertical */
+  /** Categoria canônica usada quando a criação nasce dentro do vertical */
   defaultCategory: BusinessCategory;
-  /** Slugs aceitos para entrada contextual de criacao */
+  /** Slugs aceitos para entrada contextual de criação */
   createSlugs: string[];
-  /** Copy oficial da criacao contextual, sem duplicar formularios por modulo */
+  /** Copy oficial da criação contextual, sem duplicar formulários por módulo */
   createCopy: {
     title: string;
     subtitle: string;
@@ -36,7 +36,7 @@ export interface VerticalConfig {
     namePlaceholder: string;
     descriptionPlaceholder: string;
   };
-  /** Rota de setup apos criacao da empresa */
+  /** Rota de setup após criação da empresa */
   setupRoute: (businessId: string) => string;
   /** Rota do painel no dashboard */
   dashboardRoute: (businessId: string) => string;
@@ -46,35 +46,35 @@ export const VERTICAL_CONFIGS: Record<VerticalKey, VerticalConfig> = {
   gastronomy: {
     key: "gastronomy",
     label: "Gastronomia",
-    description: "Cardapio, delivery, reservas e gestao gastronomica",
+    description: "Cardápio, delivery, reservas e gestão gastronômica",
     eligibleCategories: ["restaurante", "lazer"], // lazer inclui bares, cafeterias, sorveterias, etc.
     defaultCategory: "restaurante",
-    createSlugs: ["gastronomia", "gastronomy"],
+    createSlugs: ["gastronomia"],
     createCopy: {
-      title: "Cadastrar negocio de gastronomia",
-      subtitle: "Primeiro criamos a empresa base; em seguida voce configura cardapio, horarios e operacao gastronomica.",
-      categoryLockedHelp: "Esta entrada veio do modulo Gastronomia. A categoria base fica alinhada ao vertical para liberar o setup correto.",
-      nameLabel: "Nome do negocio",
-      namePlaceholder: "Ex: Restaurante da Praca",
-      descriptionPlaceholder: "Explique a cozinha, o tipo de atendimento e o diferencial do negocio.",
+      title: "Cadastrar negócio de gastronomia",
+      subtitle: "Primeiro criamos a empresa base; em seguida você configura cardápio, horários e operação gastronômica.",
+      categoryLockedHelp: "Esta entrada veio do módulo Gastronomia. A categoria base fica alinhada ao vertical para liberar o setup correto.",
+      nameLabel: "Nome do negócio",
+      namePlaceholder: "Ex: Restaurante da Praça",
+      descriptionPlaceholder: "Explique a cozinha, o tipo de atendimento e o diferencial do negócio.",
     },
     setupRoute: (businessId) => `/central/empresas/${businessId}/gastronomia/setup`,
     dashboardRoute: (businessId) => `/central/empresas/${businessId}/gastronomia`,
   },
   education: {
     key: "education",
-    label: "Educacao",
-    description: "Gestao de instituicoes de ensino, programas, leads e eventos",
+    label: "Educação",
+    description: "Gestão de instituições de ensino, programas, leads e eventos",
     eligibleCategories: ["educacao"],
     defaultCategory: "educacao",
-    createSlugs: ["educacao", "education"],
+    createSlugs: ["educacao"],
     createCopy: {
-      title: "Cadastrar instituicao de ensino",
-      subtitle: "Primeiro criamos a instituicao no cadastro base; em seguida voce completa os dados educacionais do modulo.",
-      categoryLockedHelp: "Esta entrada veio do modulo Educacao. A categoria base fica travada para manter o cadastro compativel com o setup educacional.",
-      nameLabel: "Nome da instituicao",
-      namePlaceholder: "Ex: Escola Municipal Maria Quiteria",
-      descriptionPlaceholder: "Explique o tipo de ensino, publico atendido, diferenciais e informacoes institucionais relevantes.",
+      title: "Cadastrar instituição de ensino",
+      subtitle: "Primeiro criamos a instituição no cadastro base; em seguida você completa os dados educacionais do módulo.",
+      categoryLockedHelp: "Esta entrada veio do módulo Educação. A categoria base fica travada para manter o cadastro compatível com o setup educacional.",
+      nameLabel: "Nome da instituição",
+      namePlaceholder: "Ex: Escola Municipal Maria Quitéria",
+      descriptionPlaceholder: "Explique o tipo de ensino, público atendido, diferenciais e informações institucionais relevantes.",
     },
     setupRoute: (businessId) => `/central/empresas/${businessId}/educacao/setup`,
     dashboardRoute: (businessId) => `/central/empresas/${businessId}/educacao`,
@@ -82,7 +82,7 @@ export const VERTICAL_CONFIGS: Record<VerticalKey, VerticalConfig> = {
 };
 
 /**
- * Retorna os verticais elegiveis para uma categoria de empresa.
+ * Retorna os verticais elegíveis para uma categoria de empresa.
  */
 export function getEligibleVerticals(category: BusinessCategory): VerticalConfig[] {
   return Object.values(VERTICAL_CONFIGS).filter((v) =>
@@ -109,7 +109,7 @@ export function getBusinessCreateRoute(vertical?: VerticalKey): string {
 }
 
 /**
- * Verifica se uma categoria e elegivel para um vertical especifico.
+ * Verifica se uma categoria é elegível para um vertical específico.
  */
 export function isEligibleForVertical(
   category: BusinessCategory,

@@ -5,7 +5,7 @@ import { useAuth } from "@/core/auth/hooks/useAuth";
 import { useSessionContext } from "@/core/session";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/shared/components/ui/dropdown-menu";
-import { Check, Copy, Flag, Image, Loader2, MessageCircle, Mic, MoreVertical, Pencil, Reply, Send, Trash2 } from "lucide-react";
+import { Check, Copy, Flag, Loader2, MessageCircle, MoreVertical, Pencil, Reply, Send, Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useDeleteGroupMessage, useGroupMessages, useReportGroupMessage, useSendGroupMessage, useUpdateGroupMessage } from "@/core/community/hooks/useGroupQueries";
@@ -27,7 +27,6 @@ export function GrupoDetailChat({
   const { activeProfile } = useSessionContext();
   const { data: messages, isLoading } = useGroupMessages(groupId);
   const [text, setText] = useState("");
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [reportingMessageId, setReportingMessageId] = useState<string | null>(null);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const [replyTo, setReplyTo] = useState<GroupMessageItem | null>(null);
@@ -39,7 +38,6 @@ export function GrupoDetailChat({
   const sending = sendMessageMutation.isPending;
   const scrollRef = useRef<HTMLDivElement>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
-  const emojiPickerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -54,21 +52,10 @@ export function GrupoDetailChat({
     el.style.height = `${Math.min(el.scrollHeight, 96)}px`;
   }, [text]);
 
-  useEffect(() => {
-    if (!showEmojiPicker) return;
-    const onPointerDown = (event: MouseEvent) => {
-      if (!emojiPickerRef.current) return;
-      if (!emojiPickerRef.current.contains(event.target as Node)) {
-        setShowEmojiPicker(false);
-      }
-    };
-    document.addEventListener("mousedown", onPointerDown);
-    return () => document.removeEventListener("mousedown", onPointerDown);
-  }, [showEmojiPicker]);
 
   const handleSend = async () => {
     if (!canPost) {
-      toast.error("Este grupo limita postagens para sua função");
+      toast.error("Este grupo limita postagens para sua funcao");
       return;
     }
     if (!text.trim()) return;
@@ -124,45 +111,6 @@ export function GrupoDetailChat({
     }
   };
 
-  const handleSendMockImage = async () => {
-    try {
-      await sendMessageMutation.mutateAsync({
-        groupId,
-        content: text.trim() || "Imagem compartilhada no grupo",
-        messageType: "image",
-        mediaUrl:
-          "https://images.unsplash.com/photo-1516738901171-8eb4fc13bd20?w=1200&q=80&auto=format&fit=crop",
-        mediaMimeType: "image/jpeg",
-      });
-      setText("");
-    } catch {
-      toast.error("Nao foi possivel enviar imagem");
-    }
-  };
-
-  const handleSendMockAudio = async () => {
-    try {
-      await sendMessageMutation.mutateAsync({
-        groupId,
-        content: text.trim() || "Audio da comunidade",
-        messageType: "audio",
-        mediaUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
-        mediaMimeType: "audio/mpeg",
-        audioDurationSeconds: 23,
-      });
-      setText("");
-    } catch {
-      toast.error("Nao foi possivel enviar audio");
-    }
-  };
-
-  const handleInsertEmoji = (emoji: string) => {
-    setText((prev) => `${prev}${emoji}`);
-    setShowEmojiPicker(false);
-    setTimeout(() => {
-      textAreaRef.current?.focus();
-    }, 0);
-  };
 
   const handleCopyMessage = async (msg: GroupMessageItem) => {
     try {
@@ -171,7 +119,7 @@ export function GrupoDetailChat({
       setTimeout(() => setCopiedMessageId(null), 1500);
       toast.success("Mensagem copiada");
     } catch {
-      toast.error("Nao foi possivel copiar");
+      toast.error("Não foi possível copiar");
     }
   };
 
@@ -264,7 +212,7 @@ export function GrupoDetailChat({
             <MessageCircle className="w-12 h-12 text-gray-600 mx-auto mb-3" />
             <p className="text-sm text-gray-400">Nenhuma mensagem ainda</p>
             <p className="text-xs text-gray-500 mt-1">
-              Seja o primeiro a dizer olá!
+              Seja o primeiro a dizer ola!
             </p>
           </div>
         )}
@@ -301,7 +249,7 @@ export function GrupoDetailChat({
                   <p
                     className={`mb-0.5 text-[9px] text-gray-500 ${isOwn ? "text-right" : ""}`}
                   >
-                    {msg.profile?.name || "Usuário"}
+                    {msg.profile?.name || "Usuario"}
                   </p>
                 )}
                 <div className={`mt-0.5 flex w-full min-w-0 items-end gap-1.5 ${isOwn ? "justify-end" : "justify-start"}`}>
@@ -311,7 +259,7 @@ export function GrupoDetailChat({
                         <button
                           type="button"
                           className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/5 text-gray-300 hover:bg-white/10"
-                          aria-label="Abrir ações da mensagem"
+                          aria-label="Abrir acoes da mensagem"
                         >
                           <MoreVertical className="h-3 w-3" />
                         </button>
@@ -352,7 +300,7 @@ export function GrupoDetailChat({
                         <button
                           type="button"
                           className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/5 text-gray-300 hover:bg-white/10"
-                          aria-label="Abrir ações da mensagem"
+                          aria-label="Abrir acoes da mensagem"
                         >
                           <MoreVertical className="h-3 w-3" />
                         </button>
@@ -411,7 +359,7 @@ export function GrupoDetailChat({
                 ) : (
                   <>
                     <p className="text-[10px] text-teal-300">
-                      Respondendo {replyTo.profile?.name || "Usuário"}
+                      Respondendo {replyTo.profile?.name || "Usuario"}
                     </p>
                     <p className="truncate text-xs text-gray-300">
                       {replyTo.content || "Mensagem"}
@@ -432,43 +380,7 @@ export function GrupoDetailChat({
               </button>
             </div>
           ) : null}
-          <div className="relative grid grid-cols-[auto_auto_minmax(0,1fr)_auto_auto] items-end gap-1.5 sm:gap-2">
-            <button
-              type="button"
-              title="Enviar imagem"
-              onClick={handleSendMockImage}
-              disabled={sending}
-              className="h-8 w-8 flex-shrink-0 rounded-full bg-white/5 transition-colors hover:bg-white/10 sm:h-9 sm:w-9"
-            >
-              <Image className="w-4 h-4 text-gray-300" />
-            </button>
-            <button
-              type="button"
-              title="Emoji"
-              onClick={() => setShowEmojiPicker((prev) => !prev)}
-              className="h-8 w-8 flex-shrink-0 rounded-full bg-white/5 text-sm transition-colors hover:bg-white/10 sm:h-9 sm:w-9 sm:text-base"
-            >
-              ??
-            </button>
-            {showEmojiPicker ? (
-              <div
-                ref={emojiPickerRef}
-                className="absolute bottom-11 left-10 z-20 w-[220px] rounded-xl border border-white/10 bg-[#11181D] p-2 shadow-xl"
-              >
-                <div className="grid grid-cols-8 gap-1">
-                  {["??", "??", "??", "??", "??", "??", "??", "??", "??", "??", "??", "??", "??", "??", "?", "??"].map((emoji) => (
-                    <button
-                      key={emoji}
-                      type="button"
-                      onClick={() => handleInsertEmoji(emoji)}
-                      className="h-7 w-7 rounded-md text-base hover:bg-white/10"
-                    >
-                      {emoji}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : null}
+          <div className="relative grid grid-cols-[minmax(0,1fr)_auto] items-end gap-1.5 sm:gap-2">
             <textarea
               ref={textAreaRef}
               value={text}
@@ -487,14 +399,6 @@ export function GrupoDetailChat({
             />
             <button
               type="button"
-              title="Gravar audio"
-              onClick={handleSendMockAudio}
-              className="h-9 w-9 flex-shrink-0 rounded-full bg-white/5 transition-colors hover:bg-white/10 sm:h-10 sm:w-10"
-            >
-              <Mic className="w-4 h-4 text-gray-300" />
-            </button>
-            <button
-              type="button"
               onClick={handleSend}
               disabled={!text.trim() || sending || !canPost}
               className="h-9 w-9 flex-shrink-0 rounded-full bg-teal-500 transition-colors hover:bg-teal-600 disabled:opacity-30 sm:h-10 sm:w-10"
@@ -508,7 +412,7 @@ export function GrupoDetailChat({
           </div>
           {!canPost ? (
             <p className="mt-2 text-xs text-amber-300/90">
-              Este grupo permite postagem apenas para o papel configurado na governança.
+              Este grupo permite postagem apenas para o papel configurado na governanca.
             </p>
           ) : null}
         </div>

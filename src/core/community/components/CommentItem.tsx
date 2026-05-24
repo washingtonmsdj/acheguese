@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { useState } from "react";
 import {
   Avatar,
@@ -292,8 +292,8 @@ export function CommentItem({ comment, maxDepth = 5 }: CommentItemProps) {
       <ConfirmActionDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        title="Excluir comentario?"
-        description="Essa acao remove o comentario e suas respostas vinculadas. Nao e possivel desfazer."
+        title="Excluir comentário?"
+        description="Essa ação remove o comentário e suas respostas vinculadas. Não é possível desfazer."
         confirmLabel="Excluir"
         cancelLabel="Cancelar"
         onConfirm={handleConfirmDelete}

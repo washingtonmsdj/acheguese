@@ -135,7 +135,7 @@ function buildDefaultCityMetadata(state: string, city: string): CityMetadata {
 export class CityService {
   /**
    * Busca metadados de uma cidade
-   * âœ… SSOT para city_metadata
+   * ✅ SSOT para city_metadata
    */
   static async getCityMetadata(state: string, city: string): Promise<CityMetadata> {
     const fallback = buildDefaultCityMetadata(state, city);
@@ -195,7 +195,7 @@ export class CityService {
 
   /**
    * Busca metadados de uma cidade por ID
-   * âœ… SSOT para city_metadata
+   * ✅ SSOT para city_metadata
    */
   static async getCityMetadataById(cityId: string): Promise<CityMetadata | null> {
     try {
@@ -224,7 +224,7 @@ export class CityService {
 
   /**
    * Atualiza metadados de uma cidade (admin)
-   * âœ… SSOT para city_metadata updates
+   * ✅ SSOT para city_metadata updates
    */
   static async updateCityMetadata(
     cityId: string,
@@ -255,7 +255,7 @@ export class CityService {
 
   /**
    * Lista todas as cidades cadastradas
-   * âœ… SSOT para city_metadata list
+   * ✅ SSOT para city_metadata list
    */
   static async listCities(): Promise<CityMetadata[]> {
     try {

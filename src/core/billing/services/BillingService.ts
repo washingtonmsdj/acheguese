@@ -12,6 +12,12 @@
 
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase/supabase';
+import { SECURITY_DOMAINS } from '@/config/security.config';
+import {
+  getAllowedRedirectOriginsFromEnv,
+  navigateToSafeRedirect,
+} from '@/shared/utils/safeRedirect';
+
 export interface CreateCheckoutParams {
   planCode: string;
   successUrl: string;
@@ -26,6 +32,14 @@ export interface CreateCheckoutResponse {
 export interface CreatePortalResponse {
   url: string;
 }
+
+const BILLING_REDIRECT_ORIGINS = getAllowedRedirectOriginsFromEnv(
+  'VITE_ALLOWED_BILLING_REDIRECT_ORIGINS',
+  [
+    SECURITY_DOMAINS.STRIPE_CHECKOUT.url,
+    SECURITY_DOMAINS.STRIPE_BILLING_PORTAL.url,
+  ],
+);
 
 export class BillingService {
   /**
@@ -67,7 +81,15 @@ export class BillingService {
    */
   static async redirectToCheckout(params: CreateCheckoutParams): Promise<void> {
     const { url } = await this.createCheckoutSession(params);
-    window.location.href = url;
+    const redirected = navigateToSafeRedirect(url, {
+      allowedOrigins: BILLING_REDIRECT_ORIGINS,
+      allowRelative: false,
+      context: 'billing-checkout',
+    });
+
+    if (!redirected) {
+      throw new Error('URL de checkout bloqueada pela politica de seguranca');
+    }
   }
 
   /**
@@ -75,7 +97,15 @@ export class BillingService {
    */
   static async redirectToPortal(returnUrl: string): Promise<void> {
     const { url } = await this.createPortalSession(returnUrl);
-    window.location.href = url;
+    const redirected = navigateToSafeRedirect(url, {
+      allowedOrigins: BILLING_REDIRECT_ORIGINS,
+      allowRelative: false,
+      context: 'billing-portal',
+    });
+
+    if (!redirected) {
+      throw new Error('URL do portal bloqueada pela politica de seguranca');
+    }
   }
 
   /**

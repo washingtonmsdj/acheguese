@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { useState } from "react";
 import { Button } from "@/shared/components/ui/button";
 import { Heart, MessageSquare, Bookmark, Share2, Flag } from "lucide-react";

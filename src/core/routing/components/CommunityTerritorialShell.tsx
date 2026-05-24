@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useState } from "react";
+﻿import { useEffect, useLayoutEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import {
@@ -8,7 +8,9 @@ import { Button } from "@/shared/components/ui/button";
 import { useCommunityScopeResolver } from "@/core/community/hooks/useCommunityScopeResolver";
 import { useCommunityProfile } from "@/core/community-experience/hooks/useCommunityProfile";
 import { TerritorialLayout } from "./TerritorialLayout";
+import { TerritorialNotFound } from "./TerritorialNotFound";
 import { buildCommunityTerritoryUrl, MODULE_SLUGS } from "@/core/routing/utils/territoryUrls";
+import { isReservedSlug } from "@/core/routing/reservedSlugs";
 import { resolveSeoPolicy } from "@/core/routing/seo/territorialSeoPolicy";
 
 const TRANSITION_MS = 720;
@@ -79,11 +81,20 @@ export function CommunityTerritorialShell() {
   const [transitionMessage, setTransitionMessage] = useState<string | null>(null);
   const communityProfileQuery = useCommunityProfile(resolved);
 
-  const state = params.state ?? "ba";
-  const city = params.city ?? "salvador";
-  const territorySlug = params.territorySlug ?? city;
-  const territoryBase = resolveCommunityTerritoryBase(location.pathname, state, city);
-  const communityBase = buildCommunityTerritoryUrl(territoryBase);
+  const state = params.state?.trim() ?? "";
+  const city = params.city?.trim() ?? "";
+  const territorySlug = params.territorySlug?.trim() ?? "";
+  const hasInvalidRouteParams = !state || !city || !territorySlug;
+  const hasInvalidTerritorySlug =
+    hasInvalidRouteParams ||
+    params.territorySlug === "area" ||
+    isReservedSlug(params.territorySlug ?? "");
+  const territoryBase = hasInvalidTerritorySlug
+    ? `/${state}/${city}/${territorySlug}`
+    : resolveCommunityTerritoryBase(location.pathname, state, city);
+  const communityBase = hasInvalidTerritorySlug
+    ? `/${MODULE_SLUGS.community}${territoryBase}`
+    : buildCommunityTerritoryUrl(territoryBase);
   const cityHref = `/${state}/${city}`;
   const territoryName = resolved
     ? resolved.kind === "group"
@@ -106,6 +117,18 @@ export function CommunityTerritorialShell() {
     : seoPolicy.canonicalPath;
   useCommunitySeoHead(canonicalHref, seoPolicy.robots);
 
+  if (hasInvalidTerritorySlug) {
+    return (
+      <>
+        <Helmet>
+          <link rel="canonical" href={canonicalHref} />
+          <meta name="robots" content="noindex, follow" />
+        </Helmet>
+        <TerritorialNotFound message="A comunidade precisa de um território válido na URL." />
+      </>
+    );
+  }
+
   if (communityProfileQuery.isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#081114] text-white">
@@ -117,9 +140,9 @@ export function CommunityTerritorialShell() {
   if (communityStatus === "inactive") {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#081114] px-4 py-10 text-center text-white">
-        <h1 className="text-2xl font-bold sm:text-3xl">Comunidade indisponivel neste momento</h1>
+        <h1 className="text-2xl font-bold sm:text-3xl">Comunidade indisponível neste momento</h1>
         <p className="mt-3 max-w-xl text-sm text-white/70 sm:text-base">
-          Esta area ainda nao esta ativa para experiencia comunitaria. Voce pode navegar pela cidade ou acessar a comunidade principal.
+          Esta área ainda não está ativa para experiência comunitária. Você pode navegar pela cidade ou acessar a comunidade principal.
         </p>
         <div className="mt-6 flex w-full max-w-xl flex-col gap-3 sm:flex-row sm:justify-center">
           <Button className="w-full sm:w-auto" onClick={() => navigate(cityHref)}>Navegar por {cityName}</Button>
@@ -141,11 +164,11 @@ export function CommunityTerritorialShell() {
         </Helmet>
         <div className="min-h-screen bg-[#081114] px-4 py-10 text-white sm:py-14">
           <div className="mx-auto max-w-3xl rounded-2xl border border-white/10 bg-white/5 p-6 sm:p-8">
-            <p className="text-xs uppercase tracking-wide text-primary">Proxima comunidade</p>
-            <h1 className="mt-2 text-2xl font-bold sm:text-3xl">{profile?.hero_title ?? `A comunidade de ${territoryName} esta chegando`}</h1>
+            <p className="text-xs uppercase tracking-wide text-primary">Próxima comunidade</p>
+            <h1 className="mt-2 text-2xl font-bold sm:text-3xl">{profile?.hero_title ?? `A comunidade de ${territoryName} está chegando`}</h1>
             <p className="mt-3 text-sm text-white/75 sm:text-base">{profile?.hero_subtitle ?? profile?.description}</p>
             <p className="mt-2 text-sm text-white/60 sm:text-base">
-              Enquanto esta comunidade estiver em preparacao, voce pode navegar pela cidade e registrar interesse para o lancamento.
+              Enquanto esta comunidade estiver em preparação, você pode navegar pela cidade e registrar interesse para o lançamento.
             </p>
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
               <Button className="w-full" onClick={() => navigate(interestPath)}>
@@ -155,9 +178,9 @@ export function CommunityTerritorialShell() {
                 {profile?.secondary_cta_label ?? "Quero minha empresa aqui"}
               </Button>
               <Button className="w-full" variant="outline" onClick={() => navigate(interestPath)}>
-                Indicar comercio ou servico da regiao
+                Indicar comércio ou serviço da região
               </Button>
-              <Button className="w-full" variant="outline" onClick={() => navigate(`${communityBase}/eventos`)}>Cadastrar evento da regiao</Button>
+              <Button className="w-full" variant="outline" onClick={() => navigate(`${communityBase}/eventos`)}>Cadastrar evento da região</Button>
             </div>
           </div>
         </div>
@@ -182,7 +205,7 @@ export function CommunityTerritorialShell() {
             </p>
             <h2 className="mt-2 text-xl font-bold text-foreground">{transitionMessage}</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Carregando a experiencia local do territorio.
+              Carregando a experiência local do território.
             </p>
             <div className="mt-5 h-1 overflow-hidden rounded-full bg-muted">
               <div className="h-full w-2/3 animate-pulse rounded-full bg-primary" />

@@ -35,23 +35,23 @@ const disputeTypes: {
 }[] = [
   {
     value: "defamation",
-    label: "Difamacao",
-    description: "Informacoes falsas que prejudicam minha reputacao",
+    label: "Difamação",
+    description: "Informações falsas que prejudicam minha reputação",
   },
   {
     value: "false_info",
-    label: "Informacao Falsa",
-    description: "Dados incorretos sobre meu servico ou negocio",
+    label: "Informação Falsa",
+    description: "Dados incorretos sobre meu serviço ou negócio",
   },
   {
     value: "harassment",
-    label: "Assedio",
-    description: "Mencao indevida ou perseguicao",
+    label: "Assédio",
+    description: "Menção indevida ou perseguição",
   },
   {
     value: "other",
     label: "Outro",
-    description: "Outro motivo nao listado acima",
+    description: "Outro motivo não listado acima",
   },
 ];
 
@@ -77,7 +77,7 @@ export function DisputeMentionModal({
 
   const handleSubmit = async () => {
     if (!activeProfile?.id) {
-      toast.error("Perfil ativo obrigatorio para contestar mencao.");
+      toast.error("Perfil ativo obrigatório para contestar menção.");
       return;
     }
 
@@ -116,14 +116,14 @@ export function DisputeMentionModal({
       }
 
       toast.success(
-        "Contestacao enviada. O conteudo foi sinalizado para analise administrativa.",
+        "Contestação enviada. O conteúdo foi sinalizado para análise administrativa.",
       );
       onOpenChange(false);
       setReason("");
       setDisputeType("defamation");
     } catch (error) {
       logger.error("Error sending mention dispute:", error);
-      toast.error("Erro ao enviar contestacao. Tente novamente.");
+      toast.error("Erro ao enviar contestação. Tente novamente.");
     } finally {
       setSubmitting(false);
     }
@@ -148,10 +148,10 @@ export function DisputeMentionModal({
             <span id="dialog-description" className="sr-only">Conteudo do dialogo</span>
           </div>
           <p className="text-xs mt-1" style={INLINE_STYLES.textSecondary}>
-            Voce foi mencionado como <strong>{mentionedProfileName}</strong>
+            Você foi mencionado como <strong>{mentionedProfileName}</strong>
           </p>
         </DialogHeader>
-        <DialogDescription className="sr-only">Conteste uma mencao indevida</DialogDescription>
+        <DialogDescription className="sr-only">Conteste uma menção indevida</DialogDescription>
 
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
           <div
@@ -160,16 +160,16 @@ export function DisputeMentionModal({
           >
             <AlertTriangle className="w-5 h-5 text-orange-400 flex-shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold mb-1 text-orange-400">Acao importante</p>
+              <p className="text-xs font-bold mb-1 text-orange-400">Ação importante</p>
               <p className="text-[11px] leading-relaxed" style={INLINE_STYLES.textSecondary}>
-                A contestacao aciona revisao administrativa com prioridade.
+                A contestação aciona revisão administrativa com prioridade.
               </p>
             </div>
           </div>
 
           <div className="space-y-2">
             <Label className="text-xs font-bold" style={INLINE_STYLES.textPrimary}>
-              Motivo da contestacao
+              Motivo da contestação
             </Label>
             <RadioGroup value={disputeType} onValueChange={(v) => setDisputeType(v as DisputeType)}>
               <div className="space-y-2">
@@ -206,7 +206,7 @@ export function DisputeMentionModal({
               id="reason"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="Explique detalhadamente por que voce esta contestando esta mencao."
+              placeholder="Explique detalhadamente por que você está contestando esta menção."
               rows={5}
               className="resize-none rounded-lg border-0 text-sm"
               style={{ backgroundColor: "#12181B", color: "#FFFFFF" }}
@@ -225,9 +225,9 @@ export function DisputeMentionModal({
             <div className="flex-1 min-w-0">
               <p className="text-xs font-bold mb-1 text-teal-400">Fluxo</p>
               <ul className="text-[11px] leading-relaxed space-y-1" style={INLINE_STYLES.textSecondary}>
-                <li>- Contestacao registrada para moderacao</li>
+                <li>- Contestação registrada para moderação</li>
                 <li>- Revisao administrativa no painel central</li>
-                <li>- Decisao e acao disciplinar, se aplicavel</li>
+                <li>- Decisão e ação disciplinar, se aplicável</li>
               </ul>
             </div>
           </div>
@@ -258,7 +258,7 @@ export function DisputeMentionModal({
               color: "#FFFFFF",
             }}
           >
-            {submitting ? "Enviando..." : "Enviar contestacao"}
+            {submitting ? "Enviando..." : "Enviar contestação"}
           </Button>
         </div>
       </DialogContent>

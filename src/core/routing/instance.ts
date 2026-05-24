@@ -17,7 +17,7 @@ import { osrmProvider } from '@/integrations/maps/providers/OSRMProvider';
 /**
  * Instância singleton do RoutingService
  * 
- * GATE 1: Agora usa OSRM real ao invés de MockProvider
+ * GATE 1: usa OSRM real para rotas públicas e operacionais
  */
 export const routingService = createRoutingService(osrmProvider, 'car');
 
@@ -44,8 +44,7 @@ osrmProvider.validate().then((isValid) => {
 /**
  * Reconfigurar provider do RoutingService
  * 
- * Útil para trocar de MockRoutingProvider para provider real
- * sem quebrar consumidores.
+ * Útil para trocar provider real sem quebrar consumidores.
  * 
  * @example
  * ```ts

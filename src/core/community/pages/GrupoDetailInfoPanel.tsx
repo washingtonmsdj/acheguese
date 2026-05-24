@@ -8,6 +8,7 @@ import {
   MessageCircle,
   Mic,
   ShieldCheck,
+  Users,
   UserCog,
   type LucideIcon,
 } from "lucide-react";
@@ -20,6 +21,7 @@ import {
   useGroupMessageReports,
   useUpdateGroupMessageReportStatus,
 } from "@/core/community/hooks/useGroupQueries";
+import type { GroupMessageReportStatus } from "@/core/community/types/groupReports";
 import { useState } from "react";
 
 interface GroupInfoPanelGroup {
@@ -52,7 +54,7 @@ interface GroupMessageReportItem {
   message_id: string;
   reason: string;
   details?: string | null;
-  status: "pending" | "reviewing" | "resolved" | "dismissed";
+  status: GroupMessageReportStatus;
   created_at: string;
   message?: {
     content?: string | null;
@@ -132,11 +134,11 @@ export function GrupoDetailInfoPanel({
               className="w-full h-full rounded-2xl object-cover"
             />
           ) : (
-            "👥"
+            <Users className="h-10 w-10 text-teal-200" aria-hidden="true" />
           )}
         </div>
         <h2 className="text-xl font-bold text-white mb-1">{group.name}</h2>
-        <p className="text-sm text-gray-400">{group.description || "Sem descricao"}</p>
+        <p className="text-sm text-gray-400">{group.description || "Sem descrição"}</p>
         <div className="mt-3 flex flex-wrap justify-center gap-2">
           {capabilityItems.map((item) => (
             <span
@@ -171,7 +173,7 @@ export function GrupoDetailInfoPanel({
                 <Lock className="w-3 h-3" /> Privado
               </>
             ) : (
-              "Publico"
+              "Público"
             )}
           </span>
         </div>
@@ -179,7 +181,7 @@ export function GrupoDetailInfoPanel({
           label="Entrada"
           value={
             group.join_policy === "approval"
-              ? "Por aprovacao"
+              ? "Por aprovação"
               : group.join_policy === "invite"
                 ? "Por convite"
                 : "Livre para moradores"
@@ -202,9 +204,9 @@ export function GrupoDetailInfoPanel({
           <span className="min-w-0 flex items-center gap-1 text-right text-xs sm:text-sm text-white">
             {group.member_visibility === "hidden" ? <EyeOff className="h-3 w-3" /> : null}
             {group.member_visibility === "public"
-              ? "Lista publica"
+              ? "Lista pública"
               : group.member_visibility === "members"
-                ? "Visivel para membros"
+                ? "Visível para membros"
                 : group.member_visibility === "hidden"
                   ? "Oculto"
                   : "Mostra apenas quantidade"}
@@ -248,7 +250,7 @@ export function GrupoDetailInfoPanel({
       <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
         <div className="mb-3 flex items-center gap-2">
           <ShieldCheck className="h-4 w-4 text-teal-300" />
-          <h3 className="text-sm font-semibold text-white">Regras e moderacao</h3>
+          <h3 className="text-sm font-semibold text-white">Regras e moderação</h3>
         </div>
         <ol className="space-y-2">
           {ruleLines.map((rule, index) => (
@@ -313,21 +315,21 @@ function ModerationReports({
       <div className="flex items-center justify-between gap-3 rounded-xl border border-amber-400/20 bg-amber-400/5 px-3 py-2">
         <span className="flex items-center gap-2 text-sm text-amber-200">
           <ShieldCheck className="h-4 w-4" />
-          Fila de moderacao
+          Fila de moderação
         </span>
         <span className="text-right text-sm text-amber-100">
-          {pendingReportsCount} denuncia(s) pendente(s)
+          {pendingReportsCount} denúncia(s) pendente(s)
         </span>
       </div>
       <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
         <div className="mb-2 flex items-center justify-between gap-2">
-          <p className="text-sm font-semibold text-white">Denuncias recentes</p>
+          <p className="text-sm font-semibold text-white">Denúncias recentes</p>
           <span className="text-xs text-gray-400">{messageReports.length} no total</span>
         </div>
         <div className="mb-3 flex items-center gap-1 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {[
             { key: "pending", label: "Pendentes" },
-            { key: "reviewing", label: "Em analise" },
+            { key: "reviewing", label: "Em análise" },
             { key: "resolved", label: "Resolvidas" },
             { key: "dismissed", label: "Dispensadas" },
             { key: "all", label: "Todas" },
@@ -369,14 +371,14 @@ function ModerationReports({
                 Ver detalhe
               </button>
               <div className="mt-2 flex flex-wrap gap-1">
-                <ReportAction label="Em analise" onClick={() => onUpdateReportStatus(report.id, "reviewing")} />
+                <ReportAction label="Em análise" onClick={() => onUpdateReportStatus(report.id, "reviewing")} />
                 <ReportAction label="Resolver" tone="success" onClick={() => onUpdateReportStatus(report.id, "resolved")} />
                 <ReportAction label="Dispensar" tone="muted" onClick={() => onUpdateReportStatus(report.id, "dismissed")} />
               </div>
             </div>
           ))}
           {filteredReports.length === 0 ? (
-            <p className="text-xs text-gray-500">Sem denuncias no momento.</p>
+            <p className="text-xs text-gray-500">Sem denúncias no momento.</p>
           ) : null}
         </div>
         {selectedReport ? (
@@ -418,7 +420,7 @@ function ReportDetail({ report }: { report: GroupMessageReportItem }) {
     <div className="mt-3 rounded-lg border border-white/10 bg-black/20 p-3">
       <div className="mb-1 flex items-center gap-2 text-xs text-gray-300">
         <Filter className="h-3.5 w-3.5 text-teal-300" />
-        Detalhe da denuncia
+        Detalhe da denúncia
       </div>
       <p className="text-xs text-white">{report.reason}</p>
       <p className="mt-1 text-[11px] text-gray-400">ID da mensagem: {report.message_id}</p>
@@ -433,7 +435,7 @@ function ReportDetail({ report }: { report: GroupMessageReportItem }) {
           <p className="text-[10px] uppercase text-gray-400">Mensagem original</p>
           <p className="mt-1 text-xs text-white">{report.message.content || "(sem texto)"}</p>
           <p className="mt-1 text-[11px] text-gray-400">
-            Autor: {report.message.profile?.name || "Usuario"}
+            Autor: {report.message.profile?.name || "Usuário"}
           </p>
           <p className="text-[11px] text-gray-500">
             Tipo: {report.message.message_type || "text"}
@@ -441,10 +443,10 @@ function ReportDetail({ report }: { report: GroupMessageReportItem }) {
         </div>
       ) : null}
       <div className="mt-2">
-        <p className="text-[10px] uppercase text-gray-400">Historico de moderacao</p>
+        <p className="text-[10px] uppercase text-gray-400">Histórico de moderação</p>
         <div className="mt-1 space-y-1">
           {(report.moderation_history || []).length === 0 ? (
-            <p className="text-[11px] text-gray-500">Sem acoes registradas.</p>
+            <p className="text-[11px] text-gray-500">Sem ações registradas.</p>
           ) : (
             (report.moderation_history || []).map((event, idx) => (
               <p key={`${event.at}-${idx}`} className="text-[11px] text-gray-300">

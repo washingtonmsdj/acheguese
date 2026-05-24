@@ -1,4 +1,5 @@
 import { useParams } from "react-router-dom";
+import { LAUNCH_URLS } from "@/config/territory";
 import { isReservedSlug } from "@/core/routing/reservedSlugs";
 import { buildCommunityTerritoryUrl, buildModuleTerritoryUrl, MODULE_SLUGS } from "@/core/routing/utils/territoryUrls";
 import { usePublicBrowsingCity } from "@/core/location/hooks/usePublicBrowsingCity";
@@ -53,11 +54,13 @@ export function useFriendlyModuleUrls(): FriendlyModuleUrls {
 }
 
 function buildTerritorialUrls(basePath: string, territoryName: string | null): FriendlyModuleUrls {
+  const hasCommunityTerritorySlug = basePath.split("/").filter(Boolean).length >= 3;
+
   return {
     base: basePath,
     landing: basePath,
     territoryName,
-    community: buildCommunityTerritoryUrl(basePath),
+    community: hasCommunityTerritorySlug ? buildCommunityTerritoryUrl(basePath) : LAUNCH_URLS.community,
     business: buildModuleTerritoryUrl(MODULE_SLUGS.business, basePath),
     services: buildModuleTerritoryUrl(MODULE_SLUGS.services, basePath),
     classifieds: buildModuleTerritoryUrl(MODULE_SLUGS.classifieds, basePath),

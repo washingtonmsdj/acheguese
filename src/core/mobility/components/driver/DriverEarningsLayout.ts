@@ -1,1 +1,1 @@
-﻿export { DriverEarningsLayout } from '@/modules/mobility/components/driver/DriverEarningsLayout';
+export { DriverEarningsLayout } from '@/modules/mobility/components/driver/DriverEarningsLayout';

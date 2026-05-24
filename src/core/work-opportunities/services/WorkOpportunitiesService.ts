@@ -16,6 +16,7 @@ import type {
   WorkOpportunityFilters,
   WorkOpportunityType,
 } from "../types";
+import { WORK_OPPORTUNITY_STATUS } from "../constants/statuses";
 
 const DEFAULT_DISTRIBUTION_CHANNELS = ["oportunidades", "moradores", "para_voce", "todos"];
 
@@ -157,13 +158,13 @@ class WorkOpportunitiesServiceClass {
       case "looking_for_work":
         return "Procuro trabalho";
       case "offering_work":
-        return "Ofereco trabalho";
+        return "Ofereço trabalho";
       case "freelance":
         return "Freela";
       case "quick_job":
-        return "Diaria rapida";
+        return "Diária rápida";
       case "service_availability":
-        return "Disponivel para servicos";
+        return "Disponível para serviços";
       default:
         return "Oportunidade";
     }
@@ -252,12 +253,12 @@ class WorkOpportunitiesServiceClass {
     const trimmedCategory = input.professionalCategory.trim().toLowerCase();
 
     if (!trimmedTitle || !trimmedDescription || !trimmedCategory) {
-      throw new Error("Campos obrigatorios da oportunidade nao preenchidos.");
+      throw new Error("Campos obrigatórios da oportunidade não preenchidos.");
     }
 
     try {
       const user = await SessionService.getCurrentUser();
-      if (!user) throw new Error("Usuario nao autenticado.");
+      if (!user) throw new Error("Usuário não autenticado.");
 
       if (input.professionalId) {
         const { data: linkedProfessional, error: linkedProfessionalError } = await (supabase as any)
@@ -272,7 +273,7 @@ class WorkOpportunitiesServiceClass {
         }
 
         if (!linkedProfessional) {
-          throw new Error("Perfil profissional vinculado nao pertence ao usuario atual.");
+          throw new Error("Perfil profissional vinculado não pertence ao usuário atual.");
         }
       }
 
@@ -292,7 +293,7 @@ class WorkOpportunitiesServiceClass {
           compensation_notes: input.compensationNotes?.trim() || null,
           contact_notes: input.contactNotes?.trim() || null,
           visibility: input.visibility ?? "public_listed",
-          status: "active",
+          status: WORK_OPPORTUNITY_STATUS.ACTIVE,
           is_feed_distributed: true,
           matching_metadata: {
             schema_version: "work-opportunity.v1",
@@ -811,7 +812,7 @@ class WorkOpportunitiesServiceClass {
           category: "transactional",
           title: `Nova oportunidade para ${opportunity.professional_category}`,
           message: `${opportunity.headline} na sua regiao.`,
-          action_url: opportunity.post_id ? `/comunidade/feed?post=${opportunity.post_id}` : "/comunidade",
+          action_url: `/oportunidades/${opportunity.id}`,
           action_label: "Ver oportunidade",
           metadata: {
             domain: "work_opportunities",

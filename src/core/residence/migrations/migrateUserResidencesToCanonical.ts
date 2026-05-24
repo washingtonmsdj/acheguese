@@ -1,12 +1,12 @@
 /**
  * Script de migração: user_residences (legado) → modelo canônico
- * 
+ *
  * Estratégia:
  * 1. Resolver cidade por texto
  * 2. Resolver bairro por texto dentro da cidade
  * 3. Criar address canônico
  * 4. Atualizar user_residence com address_id + location_id
- * 
+ *
  * Segurança:
  * - Não inventa dados
  * - Não chuta ambiguidades
@@ -20,7 +20,7 @@ import type { CreateAddressInput } from '@/core/address/types';
 
 const addressService = new AddressService();
 
-interface LegacyResidence {
+interface ImportedResidence {
   id: string;
   user_id: string;
   street: string;
@@ -85,7 +85,7 @@ export async function migrateUserResidencesToCanonical(): Promise<MigrationResul
   result.total = residences.length;
 
   // Migrar cada residência
-  for (const residence of (residences as unknown as LegacyResidence[])) {
+  for (const residence of (residences as unknown as ImportedResidence[])) {
     // Skip se já migrado
     if (residence.address_id && residence.location_id) {
       result.skipped_already_migrated++;
@@ -112,7 +112,7 @@ export async function migrateUserResidencesToCanonical(): Promise<MigrationResul
 }
 
 async function migrateResidence(
-  residence: LegacyResidence,
+  residence: ImportedResidence,
   result: MigrationResult
 ): Promise<void> {
   // Validar dados mínimos
@@ -167,7 +167,7 @@ async function migrateResidence(
     number: residence.number || undefined,
     complement: residence.complement || undefined,
     address_type: determineAddressType(residence),
-    geocoding_source: 'migration_legacy',
+    geocoding_source: 'migration_import',
     geocoding_confidence: 0.7, // Migração de dados legados
   };
 
@@ -202,7 +202,7 @@ async function resolveCityByName(cityName: string, stateName: string): Promise<s
   if (error || !cities) return null;
 
   // Filtrar por nome normalizado
-  const matches = cities.filter((city: any) => 
+  const matches = cities.filter((city: any) =>
     normalizeText(city.name) === normalized
   );
 
@@ -211,10 +211,10 @@ async function resolveCityByName(cityName: string, stateName: string): Promise<s
 
   // Se múltiplas cidades com mesmo nome, tentar filtrar por estado
   const stateNormalized = normalizeText(stateName);
-  
+
   for (const city of matches) {
     if (!city.parent_id) continue;
-    
+
     const { data: state } = await supabase
       .from('locations')
       .select('name, slug')
@@ -248,7 +248,7 @@ async function resolveDistrictByName(districtName: string, cityId: string): Prom
   if (error || !districts) return null;
 
   // Filtrar por nome normalizado
-  const matches = districts.filter((district: any) => 
+  const matches = districts.filter((district: any) =>
     normalizeText(district.name) === normalized ||
     normalizeText(district.slug) === normalized
   );
@@ -290,9 +290,9 @@ function normalizeText(text: string): string {
     .replace(/[\u0300-\u036f]/g, ''); // Remove acentos
 }
 
-function determineAddressType(residence: LegacyResidence): 'exact' | 'approximate' | 'landmark' {
+function determineAddressType(residence: ImportedResidence): 'exact' | 'approximate' | 'landmark' {
   // Se tem rua e número, é exact
-  if (residence.street && residence.street.trim() !== '' && 
+  if (residence.street && residence.street.trim() !== '' &&
       residence.number && residence.number.trim() !== '') {
     return 'exact';
   }
@@ -340,7 +340,7 @@ export function formatMigrationReport(result: MigrationResult): string {
   }
 
   lines.push('## Taxa de Sucesso');
-  const successRate = result.total > 0 
+  const successRate = result.total > 0
     ? ((result.migrated / result.total) * 100).toFixed(2)
     : '0.00';
   lines.push(`${successRate}% (${result.migrated}/${result.total})`);

@@ -172,6 +172,8 @@ export interface Professional {
   email?: string;
 
   // Location
+  /** FK canonica para locations.id. Define o territorio principal do profissional. */
+  location_id?: string;
   address?: string;
   neighborhood?: string;
   city?: string;
@@ -517,7 +519,7 @@ export interface CreateProfessionalLeadInput {
   preferredTimeWindow?: string;
   neighborhood?: string;
   locationId?: string;
-  sourceChannel?: "public_profile" | "legacy_detail" | "central" | string;
+  sourceChannel?: "public_profile" | "service_profile" | "central" | string;
   priority?: ProfessionalLeadPriority;
   metadata?: Record<string, unknown>;
 }

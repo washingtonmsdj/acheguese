@@ -23,6 +23,7 @@ import { TERRITORY_CONFIG } from '@/config/territory';
 export const MODULE_SLUGS = {
   community:    'comunidade',
   business:     'empresas',
+  education:    'educacao',
   services:     'servicos',
   classifieds:  'classificados',
   mobility:     'mobilidade',
@@ -153,7 +154,6 @@ export function buildModuleTerritoryUrl(module: ModuleSlug, territoryBaseUrl: st
  * nunca exposto na URL pública.
  *
  * Aceita base territorial pública no formato:
- *   /:state/:city
  *   /:state/:city/:territorySlug
  * Nunca usar /area/ em URLs públicas de comunidade.
  *
@@ -167,6 +167,9 @@ export function buildModuleTerritoryUrl(module: ModuleSlug, territoryBaseUrl: st
 export function buildCommunityTerritoryUrl(territoryBaseUrl: string, suffix = ''): string {
   const normalizedBase = normalizePublicTerritoryPath(territoryBaseUrl);
   const parts = normalizedBase.split('/').filter(Boolean);
+  if (parts.length < 3) {
+    throw new Error('buildCommunityTerritoryUrl exige /:state/:city/:territorySlug.');
+  }
   if (parts.length >= 3 && parts[2] === 'area') {
     throw new Error('buildCommunityTerritoryUrl nao aceita /area/. Use /:state/:city/:territorySlug.');
   }
@@ -178,20 +181,14 @@ export type CommunityTabSuffix = 'feed' | 'grupos';
 
 /**
  * Deriva URL canônica de aba da comunidade a partir de uma rota territorial atual.
- * Suporta:
- * - /comunidade/:state/:city
- * - /comunidade/:state/:city/:district
- * - /comunidade/:state/:city/:territorySlug
- * e seus subcaminhos.
+ * Suporta apenas /comunidade/:state/:city/:territorySlug e seus subcaminhos.
  */
 export function buildCommunityTabUrlFromPath(pathname: string, tab: CommunityTabSuffix): string | null {
   const parts = pathname.split('/').filter(Boolean);
-  if (parts[0] !== MODULE_SLUGS.community || parts.length < 3) return null;
+  if (parts[0] !== MODULE_SLUGS.community || parts.length < 4) return null;
+  if (['feed', 'grupos', 'alertas', 'problemas', 'achados-e-perdidos'].includes(parts[3])) return null;
 
-  const base = ['comunidade', parts[1], parts[2]];
-  if (parts[3] && !['feed', 'grupos', 'alertas', 'problemas', 'achados-e-perdidos'].includes(parts[3])) {
-    base.push(parts[3]);
-  }
+  const base = ['comunidade', parts[1], parts[2], parts[3]];
 
   return `/${base.join('/')}/${tab}`;
 }
@@ -205,7 +202,7 @@ export function buildCommunityTabUrlFromPath(pathname: string, tab: CommunityTab
  *   /empresas/ba/salvador/categoria/restaurantes → { module: 'empresas', suffix: '/categoria/restaurantes' }
  *   /empresas/ba/salvador/pituba/categoria/saude → { module: 'empresas', suffix: '/categoria/saude' }
  *   /empresas/ba/salvador → { module: 'empresas', suffix: '' }
- *   /comunidade/ba/salvador → { module: 'comunidade', suffix: '' }
+ *   /comunidade/ba/salvador/pituba → { module: 'comunidade', suffix: '' }
  *   /ba/salvador → { module: null, suffix: '' }
  * 
  * @param pathname - pathname da URL atual (ex: location.pathname)

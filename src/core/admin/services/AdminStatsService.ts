@@ -15,7 +15,7 @@ import { BusinessService } from "@/core/business/services/BusinessService";
 import { ProfessionalService } from "@/core/professional/services/ProfessionalService";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { postService } from "@/core/posts/services/PostService";
-import { commentService } from "@/core/comments/services/CommentService";
+import { CommentService } from "@/core/comments/services/CommentService";
 import { adminClassifiedsService } from "@/core/admin/services/AdminClassifiedsService";
 import { adminEventsRuntimeService } from "@/core/admin/services/AdminEventsRuntimeService";
 import { adminMobilityService } from "@/core/admin/services/AdminMobilityService";
@@ -135,7 +135,7 @@ class AdminStatsService {
         adminEventsRuntimeService.getTotalEventsCount(),
         postService.getTotalPostsCount(),
         profileService.getTotalProfilesCount(),
-        commentService.getTotalCommentsCount(),
+        CommentService.getTotalCommentsCount(),
         adminMobilityService.getMobilityStats(),
       ]);
 
@@ -323,7 +323,7 @@ class AdminStatsService {
           adminEventsRuntimeService.getRecentEvents(10),
           adminClassifiedsService.getRecentClassifieds(10),
           profileService.getRecentProfiles(5),
-          commentService.getRecentComments(5),
+          CommentService.getRecentComments(5),
         ]);
 
       // Adicionar businesses

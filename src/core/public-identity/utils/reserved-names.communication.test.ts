@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { isReservedForEntityType } from "./reserved-names";
 
 describe("communication channel reserved names", () => {

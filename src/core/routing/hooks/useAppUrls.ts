@@ -73,6 +73,7 @@ export interface AppUrls {
     home: string;
     businesses: string;
     billing: string;
+    addresses: string;
       mobilidade: {
         home: string;
         motorista: {
@@ -199,6 +200,7 @@ export function useAppUrls(routeResolved?: ResolvedTerritory | null): AppUrls {
       home: '/conta',
       businesses: businessManagementRoutes.list(),
       billing: '/conta',
+      addresses: '/conta/enderecos',
       mobilidade: {
         home: '/central',
         motorista: mobility.motorista,

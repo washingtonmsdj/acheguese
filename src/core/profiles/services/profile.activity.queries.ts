@@ -1,9 +1,9 @@
-import { supabase } from "@/integrations/supabase";
+﻿import { supabase } from "@/integrations/supabase";
 import type {
   ProfileLikeActivityRecord,
   ProfilePollVoteActivityRecord,
   ProfileSaveActivityRecord,
-} from "./types";
+} from "@/core/profiles/views/ProfileActivityRecords";
 import type { MentionRow } from "./profile.service.types";
 
 export async function getUserMentionsQuery(

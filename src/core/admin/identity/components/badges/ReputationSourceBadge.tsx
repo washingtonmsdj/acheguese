@@ -12,8 +12,8 @@ export function ReputationSourceBadge({ source }: ReputationSourceBadgeProps) {
     return <Badge className="bg-sky-600 hover:bg-sky-600">Canonico</Badge>;
   }
 
-  if (source.status === "legacy") {
-    return <Badge className="bg-amber-600 hover:bg-amber-600">Legado controlado</Badge>;
+  if (source.status === "historical") {
+    return <Badge className="bg-amber-600 hover:bg-amber-600">Histórico controlado</Badge>;
   }
 
   if (source.status === "derived") {

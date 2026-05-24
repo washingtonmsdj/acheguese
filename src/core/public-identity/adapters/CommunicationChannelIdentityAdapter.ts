@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Communication Channel Identity Adapter
  * Implementacao de identidade publica para communication_channels.
  */

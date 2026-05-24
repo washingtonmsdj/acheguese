@@ -17,6 +17,18 @@ import { PostError } from "../types";
 import * as queries from "./posts.queries";
 import type { Json } from "@/integrations/supabase/types";
 
+export type CreatePostTerritoryPolicy = {
+  allowedLocationTypes?: readonly LocationType[];
+  invalidLocationTypeCode?: string;
+};
+
+export const CREATE_POST_LOCATION_REQUIRED_CODE = "LOCATION_REQUIRED";
+
+const DEFAULT_CREATE_POST_TERRITORY_POLICY: Required<CreatePostTerritoryPolicy> = {
+  allowedLocationTypes: [LocationType.CITY, LocationType.DISTRICT, LocationType.NEIGHBORHOOD],
+  invalidLocationTypeCode: "INVALID_LOCATION_TYPE",
+};
+
 // ============================================================================
 // 📝 POST MUTATIONS - CRUD de posts
 // ============================================================================
@@ -36,11 +48,11 @@ export async function createPost(data: {
   display_format?: string;
   distribution_channels?: string[];
   content_payload?: Record<string, unknown>;
-}): Promise<Post> {
+}, policy: CreatePostTerritoryPolicy = DEFAULT_CREATE_POST_TERRITORY_POLICY): Promise<Post> {
   try {
     // 1. Validar location_id obrigatório
     if (!data.location_id) {
-      throw new PostError("location_id é obrigatório", "LOCATION_REQUIRED");
+      throw new PostError("location_id é obrigatório", CREATE_POST_LOCATION_REQUIRED_CODE);
     }
 
     // 2. Validar que location existe
@@ -58,15 +70,16 @@ export async function createPost(data: {
       throw new PostError("Localização inválida", "INVALID_LOCATION");
     }
 
-    // 3. Validar tipo (apenas city ou district)
-    if (![LocationType.CITY, LocationType.DISTRICT].includes(location.type as any)) {
+    // 3. Validar tipo (cidade, bairro municipal ou distrito IBGE)
+    const allowedLocationTypes = policy.allowedLocationTypes ?? DEFAULT_CREATE_POST_TERRITORY_POLICY.allowedLocationTypes;
+    if (!allowedLocationTypes.includes(location.type as LocationType)) {
       logger.error("[posts.mutations] Invalid location type:", {
         location_id: data.location_id,
         type: location.type,
       });
       throw new PostError(
         "Posts só podem ser criados em cidades ou bairros",
-        "INVALID_LOCATION_TYPE",
+        policy.invalidLocationTypeCode ?? DEFAULT_CREATE_POST_TERRITORY_POLICY.invalidLocationTypeCode,
       );
     }
 

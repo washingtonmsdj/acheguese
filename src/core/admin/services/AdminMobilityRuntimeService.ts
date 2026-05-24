@@ -1,4 +1,4 @@
-﻿import { supabase } from "@/integrations/supabase";
+import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { RolloutService } from "@/core/rollout/services/RolloutService";
 import { createRolloutRepository } from "@/core/rollout/repositories/createRolloutRepository";

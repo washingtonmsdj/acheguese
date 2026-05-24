@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { LocationFilter } from "./LocationFilter";
 import { SortSelector } from "./SortSelector";
 import { CreatePostButton } from "./CreatePostButton";

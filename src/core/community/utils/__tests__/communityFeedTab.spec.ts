@@ -28,7 +28,7 @@ describe("communityFeedTab SSOT", () => {
 
   it("keeps header filter order and labels aligned with unified feed tabs", () => {
     expect(COMMUNITY_FEED_HEADER_FILTERS).toEqual([
-      { id: "para_voce", label: "Para voce" },
+      { id: "para_voce", label: "Para você" },
       { id: "alertas", label: "Alertas" },
       { id: "empresas", label: "Empresas" },
       { id: "eventos", label: "Eventos" },
@@ -47,7 +47,7 @@ describe("communityFeedTab SSOT", () => {
   it("keeps composer actions stable", () => {
     expect(COMMUNITY_FEED_COMPOSER_ACTIONS).toEqual([
       { id: "text", label: "Texto" },
-      { id: "media", label: "Foto/video" },
+      { id: "media", label: "Foto/vídeo" },
       { id: "poll", label: "Enquete" },
       { id: "alert", label: "Aviso" },
       { id: "file", label: "Arquivo" },

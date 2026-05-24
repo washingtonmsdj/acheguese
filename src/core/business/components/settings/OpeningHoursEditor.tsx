@@ -6,7 +6,7 @@
  */
 
 import { useState } from "react";
-import { Clock, Copy, X, Check } from "lucide-react";
+import { Clock, Copy, Lightbulb, X, Check } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Switch } from "@/shared/components/ui/switch";
@@ -259,7 +259,10 @@ export function OpeningHoursEditor({
 
       {/* Help text */}
       <div className="bg-secondary/50 rounded-lg p-3 text-xs text-muted-foreground">
-        <p className="font-medium mb-1">💡 Dicas:</p>
+        <p className="mb-1 flex items-center gap-1.5 font-medium">
+          <Lightbulb className="h-3.5 w-3.5" />
+          Dicas:
+        </p>
         <ul className="space-y-1 ml-4 list-disc">
           <li>Use o botão <Copy className="h-3 w-3 inline-block" /> para copiar o horário de um dia para todos</li>
           <li>Desative o switch para marcar um dia como fechado</li>

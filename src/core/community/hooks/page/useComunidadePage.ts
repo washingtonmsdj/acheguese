@@ -1,4 +1,4 @@
-﻿/**
+/**
  * useComunidadePage - Hook principal da página de comunidade
  * 
  * SSOT - Usa services via hooks especializados
@@ -69,7 +69,7 @@ function toCommunityActorProfile(input: unknown): CommunityActorProfile | null {
     (typeof record.display_name === "string" && record.display_name) ||
     (typeof record.displayName === "string" && record.displayName) ||
     (typeof record.name === "string" && record.name) ||
-    "Usuario";
+    "Usuário";
 
   const city =
     (typeof record.city === "string" && record.city) ||
@@ -127,7 +127,7 @@ export function useComunidadePage() {
 
     // Verificar se pode criar conteúdo
     if (!canCreatePost) {
-      toast.error("Selecione uma localizacao no filtro ou atualize seu bairro no perfil");
+      toast.error("Selecione uma localização no filtro ou atualize seu bairro no perfil");
       return;
     }
 
@@ -267,7 +267,7 @@ export function useComunidadePage() {
     reportPost({
       postId,
       reason: "inappropriate_content",
-      description: "Denuncia enviada pelo fluxo da comunidade",
+      description: "Denúncia enviada pelo fluxo da comunidade",
     });
   }, [reportPost]);
 
@@ -289,7 +289,7 @@ export function useComunidadePage() {
     try {
       const post = await postService.getPostById(postId);
       if (!post) {
-        toast.error("Post nao encontrado");
+        toast.error("Post não encontrado");
         return;
       }
 
@@ -304,7 +304,7 @@ export function useComunidadePage() {
       });
     } catch (error) {
       logger.error("Error opening edit post modal", error as Error, { postId });
-      toast.error("Nao foi possivel abrir edicao do post");
+      toast.error("Não foi possível abrir edição do post");
     }
   }, []);
 

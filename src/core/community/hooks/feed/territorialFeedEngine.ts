@@ -66,45 +66,6 @@ function getTokens(post: UnifiedPost): string[] {
   return [typeToken, intentToken, ...dist, ...tags, ...contentTokens];
 }
 
-function inferLegacyChannels(post: UnifiedPost): Set<TerritorialFeedChannel> {
-  const channels = new Set<TerritorialFeedChannel>();
-  const tokens = getTokens(post);
-
-  const isAlert =
-    (post.type as string) === "alerta" ||
-    includesAny(tokens, ["alerta", "urgente", "seguranca", "risco", "transito", "utilidade"]);
-  const isEvent =
-    (post.type as string) === "evento" ||
-    includesAny(tokens, ["evento", "programacao", "agenda", "oficina", "show", "encontro"]);
-  const isJob = includesAny(tokens, ["vaga", "emprego", "oportunidade", "contrata", "curriculo", "trabalho"]);
-  const isClassified = includesAny(tokens, ["classificado", "compra", "venda", "aluga", "servico", "frete", "desapego"]);
-  const isBusiness =
-    includesAny(tokens, ["empresa", "comercio", "negocio", "loj", "restaurante", "promocao", "delivery"]) ||
-    isJob ||
-    isClassified;
-
-  if (isAlert) channels.add("alertas");
-  if (isEvent) channels.add("eventos");
-  if (isJob) {
-    channels.add("oportunidades");
-    channels.add("vagas");
-  }
-  if (isClassified) channels.add("classificados");
-  if (isBusiness) channels.add("empresas");
-
-  if (
-    !isBusiness ||
-    (post.type as string) === "discussao" ||
-    (post.type as string) === "pergunta" ||
-    (post.type as string) === "recomendacao" ||
-    (post.type as string) === "enquete"
-  ) {
-    channels.add("moradores");
-  }
-
-  return channels;
-}
-
 function inferChannels(post: UnifiedPost): Set<TerritorialFeedChannel> {
   const channels = new Set<TerritorialFeedChannel>(["todos", "para_voce"]);
 
@@ -128,13 +89,6 @@ function inferChannels(post: UnifiedPost): Set<TerritorialFeedChannel> {
   const intent = norm(post.content_intent ?? "");
   for (const channel of INTENT_TO_CHANNELS[intent] ?? []) {
     channels.add(channel);
-  }
-
-  // fallback para posts legados sem schema estruturado
-  if (channels.size <= 2) {
-    for (const channel of inferLegacyChannels(post)) {
-      channels.add(channel);
-    }
   }
 
   return channels;

@@ -1,12 +1,12 @@
-/**
- * BusinessCanonicalRoute - rota publica canonica de empresa.
+﻿/**
+ * BusinessCanonicalRoute - rota pública canônica de empresa.
  *
  * URL: /empresas/:uf/:cidade/:bairro/:slug
  */
 import { logger } from '@/shared/utils/logger';
 import { useEffect, useState } from 'react';
 import type { ComponentType } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
 import { Loader2 } from 'lucide-react';
 import { logPageNotFound } from '@/core/public-identity/utils/identity-logger';
@@ -24,55 +24,52 @@ export default function BusinessCanonicalRoute({
     district: string;
     slug: string;
   }>();
-  const navigate = useNavigate();
   const [businessId, setBusinessId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState<'loading' | 'found' | 'not-found'>('loading');
 
   useEffect(() => {
     if (!state || !city || !district || !slug) {
-      navigate('/404', { replace: true });
+      setStatus('not-found');
       return;
     }
 
     async function resolve() {
       try {
         const ctx = await BusinessUrlService.resolveByTerritoryAndSlug(
-          state!,
-          city!,
-          district!,
-          slug!,
+          state,
+          city,
+          district,
+          slug,
         );
 
         if (!ctx) {
           if (import.meta.env.DEV) {
             logger.info(
-              `[BusinessCanonicalRoute] Nao encontrada: /empresas/${state}/${city}/${district}/${slug}`,
+              `[BusinessCanonicalRoute] Não encontrada: /empresas/${state}/${city}/${district}/${slug}`,
             );
           }
 
           logPageNotFound({
             entityType: 'business',
-            identifier: slug!,
+            identifier: slug,
             attemptedUrl: `/empresas/${state}/${city}/${district}/${slug}`,
           });
-
-          navigate('/404', { replace: true });
+          setStatus('not-found');
           return;
         }
 
         setBusinessId(ctx.id);
+        setStatus('found');
       } catch (err) {
         logger.error('[BusinessCanonicalRoute] Erro:', err);
-        navigate('/404', { replace: true });
-      } finally {
-        setLoading(false);
+        setStatus('not-found');
       }
     }
 
     resolve();
-  }, [state, city, district, slug, navigate]);
+  }, [state, city, district, slug]);
 
-  if (loading) {
+  if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -80,10 +77,25 @@ export default function BusinessCanonicalRoute({
     );
   }
 
-  if (!businessId) return null;
+  if (status === 'not-found' || !businessId) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <div className="max-w-md text-center">
+          <p className="text-4xl font-bold text-muted-foreground">404</p>
+          <p className="mt-2 text-lg font-semibold text-foreground">Empresa não encontrada</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            A URL informada não corresponde a uma empresa ativa neste território.
+          </p>
+          <a href="/empresas" className="mt-4 inline-block text-sm text-primary underline">
+            Voltar para empresas
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   if (!BusinessDetailComponent) {
-    logger.error('[BusinessCanonicalRoute] BusinessDetailComponent nao informado.');
+    logger.error('[BusinessCanonicalRoute] BusinessDetailComponent não informado.');
     return null;
   }
 

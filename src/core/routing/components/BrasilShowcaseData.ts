@@ -39,25 +39,6 @@ export const BRASIL_STATS = [
   { icon: Landmark, value: BRASIL_INFO.capital, label: "Capital", color: "text-rose-500", bg: "bg-rose-500/10", border: "border-rose-500/20" },
 ];
 
-export const PONTOS_TURISTICOS = [
-  { nome: "Cristo Redentor", cidade: "Rio de Janeiro, RJ", emoji: "🗽", descricao: "Uma das Sete Maravilhas do Mundo Moderno, no topo do Corcovado.", destaque: true },
-  { nome: "Pelourinho", cidade: "Salvador, BA", emoji: "🏛️", descricao: "Centro historico tombado pela UNESCO, berco da cultura afro-brasileira.", destaque: true },
-  { nome: "Cataratas do Iguacu", cidade: "Foz do Iguacu, PR", emoji: "💧", descricao: "Conjunto de 275 quedas d'agua, patrimonio natural da humanidade.", destaque: true },
-  { nome: "Chapada Diamantina", cidade: "Bahia", emoji: "⛰️", descricao: "Parque nacional com cachoeiras, grutas e trilhas espetaculares." },
-  { nome: "Fernando de Noronha", cidade: "Pernambuco", emoji: "🏝️", descricao: "Arquipelago paradisiaco com as praias mais bonitas do Brasil." },
-  { nome: "Lencois Maranhenses", cidade: "Maranhao", emoji: "🏜️", descricao: "Dunas de areia branca com lagoas cristalinas de agua doce." },
-  { nome: "Amazonia", cidade: "Regiao Norte", emoji: "🌳", descricao: "A maior floresta tropical do mundo, pulmao do planeta." },
-  { nome: "Pantanal", cidade: "MT / MS", emoji: "🐊", descricao: "Maior planicie alagavel do mundo, santuario da biodiversidade." },
-  { nome: "Ouro Preto", cidade: "Minas Gerais", emoji: "⛪", descricao: "Cidade historica barroca, patrimonio mundial da UNESCO." },
-];
-
-export const PRESIDENCIA = {
-  presidente: { nome: "Luiz Inacio Lula da Silva", cargo: "Presidente da Republica", partido: "PT", mandato: "2023-2026" },
-  vice: { nome: "Geraldo Alckmin", cargo: "Vice-Presidente", partido: "PSB", mandato: "2023-2026" },
-  camara: { nome: "Hugo Motta", cargo: "Presidente da Camara", partido: "Republicanos", mandato: "2025-2027" },
-  senado: { nome: "Davi Alcolumbre", cargo: "Presidente do Senado", partido: "Uniao Brasil", mandato: "2025-2027" },
-};
-
 export const CONTATOS_EMERGENCIA = [
   { nome: "SAMU", telefone: "192", icone: Ambulance, cor: "text-destructive" },
   { nome: "Bombeiros", telefone: "193", icone: Flame, cor: "text-warning" },
@@ -89,7 +70,6 @@ export const NAV_LINKS = [
   { label: "Inicio", path: "home" },
   { label: "Numeros", path: "#numeros" },
   { label: "Sobre", path: "#sobre" },
-  { label: "Turismo", path: "#turismo" },
   { label: "Empresas", path: "#empresas" },
   { label: "Estados", path: "#estados" },
   { label: "Territorios", path: "#territorios" },

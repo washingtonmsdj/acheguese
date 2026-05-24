@@ -179,7 +179,7 @@ export class SafetyService {
       await this.sendSafetyNotification(
         input.profileId,
         'alert',
-        '🚨 Alerta de Emergência Acionado',
+        'Alerta de emergência acionado',
         `Seu alerta de emergência foi registrado e está sendo processado.`,
         { alertId: alert.id, alertType: input.alertType }
       );
@@ -384,7 +384,7 @@ export class SafetyService {
       await this.sendSafetyNotification(
         input.reportedBy,
         'incident',
-        '⚠️ Incidente de Segurança Registrado',
+        'Incidente de segurança registrado',
         `Seu relato de incidente foi registrado. Tipo: ${input.incidentType}`,
         { incidentId: incident.id, incidentType: input.incidentType, severity: input.severity }
       );

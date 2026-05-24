@@ -1,7 +1,7 @@
-﻿import { CommunityService } from "@/core/community/services/CommunityService";
+import { CommunityService } from "@/core/community/services/CommunityService";
 import { Card } from "@/shared/components/ui/card";
 import { Progress } from "@/shared/components/ui/progress";
-import { TrendingUp } from "lucide-react";
+import { Award, Crown, Gem, Medal, Sparkles, TrendingUp, type LucideIcon } from "lucide-react";
 
 interface UserLevelBadgeProps {
   totalPoints: number;
@@ -15,6 +15,14 @@ export function UserLevelBadge({
   showProgress = true,
 }: UserLevelBadgeProps) {
   const levelInfo = CommunityService.getUserLevel(totalPoints);
+  const levelIcons: Record<string, LucideIcon> = {
+    bronze: Medal,
+    silver: Medal,
+    gold: Crown,
+    platinum: Award,
+    diamond: Gem,
+  };
+  const LevelIcon = levelIcons[levelInfo.level] || Award;
 
   const sizeClasses = {
     sm: {
@@ -60,7 +68,7 @@ export function UserLevelBadge({
           className="flex items-center justify-center w-12 h-12 rounded-full"
           style={{ backgroundColor: `${levelInfo.color}20` }}
         >
-          <span className={classes.icon}>{levelInfo.icon}</span>
+          <LevelIcon className={`${classes.icon} text-current`} aria-hidden="true" />
         </div>
         <div className="flex-1">
           <p className={`${classes.title} text-muted-foreground font-medium`}>
@@ -104,8 +112,9 @@ export function UserLevelBadge({
 
       {levelInfo.level === "diamond" && (
         <div className="text-center py-2">
-          <p className="text-xs text-muted-foreground font-medium">
-            🎉 Nível Máximo Alcançado!
+          <p className="inline-flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+            <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+            Nível máximo alcançado
           </p>
         </div>
       )}

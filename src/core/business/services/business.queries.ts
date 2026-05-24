@@ -1,5 +1,5 @@
 /**
- * 🔍 BUSINESS QUERIES — Leitura de dados
+ *  BUSINESS QUERIES — Leitura de dados
  *
  * Responsabilidade única: todas as operações de consulta (SELECT)
  * - Sem escritas (INSERT/UPDATE/DELETE)
@@ -51,7 +51,7 @@ export async function getBusinesses(
 
     if (checkError) {
       logger.warn(
-        "⚠️ business_data table not accessible, returning empty array:",
+        " business_data table not accessible, returning empty array:",
         (checkError as { message?: string }).message,
       );
       return [];
@@ -139,7 +139,7 @@ export async function getBusinesses(
     const { data, error } = await query;
 
     if (error) {
-      logger.warn("⚠️ Error fetching businesses:", (error as { message?: string }).message);
+      logger.warn(" Error fetching businesses:", (error as { message?: string }).message);
       return [];
     }
 
@@ -174,7 +174,7 @@ export async function getBusinesses(
     return businesses;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    logger.warn("⚠️ Unexpected error in getBusinesses:", message);
+    logger.warn(" Unexpected error in getBusinesses:", message);
     return [];
   }
 }
@@ -218,7 +218,7 @@ export async function getBusinessesList(params: {
       .limit(1);
 
     if (checkResult.error) {
-      logger.warn("⚠️ public_business_search view not accessible:", checkResult.error.message);
+      logger.warn(" public_business_search view not accessible:", checkResult.error.message);
       return { businesses: [], nextPage: undefined };
     }
 
@@ -303,7 +303,7 @@ export async function getBusinessesList(params: {
     const { data, error } = await query;
 
     if (error) {
-      logger.warn("⚠️ Error fetching businesses list:", (error as { message?: string }).message);
+      logger.warn(" Error fetching businesses list:", (error as { message?: string }).message);
       return { businesses: [], nextPage: undefined };
     }
 
@@ -335,7 +335,7 @@ export async function getBusinessesList(params: {
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    logger.warn("⚠️ Unexpected error in getBusinessesList:", message);
+    logger.warn(" Unexpected error in getBusinessesList:", message);
     return { businesses: [], nextPage: undefined };
   }
 }

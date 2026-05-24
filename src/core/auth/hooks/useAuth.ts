@@ -1,11 +1,10 @@
 /**
- * useAuth — compatibility shim
+ * useAuth — SSOT hook
  *
  * Reads directly from SessionState (SSOT). No onAuthStateChange listener.
  * No local state. Re-renders whenever SessionState notifies.
  *
  * Consumers that only need `user` (id, email) continue to work unchanged.
- * New code should use useSessionContext() instead.
  */
 import { useState, useEffect, useCallback } from "react";
 import { SessionService } from "@/core/session/services/SessionService";
@@ -37,26 +36,26 @@ interface UseAuthReturn {
 }
 
 export function useAuth(): UseAuthReturn {
-  // Derive user from SessionState — no independent listener
+  // Derive user from SessionState - no independent listener
   const [sessionData, setSessionData] = useState(() => SessionState.getState());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<AuthError | null>(null);
 
   useEffect(() => {
-    // Subscribe to SessionState changes only — session observer is managed by SessionService
+    // Subscribe to SessionState changes only - session observer is managed by SessionService
     const unsubscribe = SessionState.subscribe(() => {
       setSessionData(SessionState.getState());
     });
     return unsubscribe;
   }, []);
 
-  // Map SessionState.user → AuthUser shape (with user_metadata for legacy consumers)
+  // Map SessionState.user to AuthUser shape for consumers that read user_metadata.
   const user = sessionData.user
     ? {
         id: sessionData.user.id,
         email: sessionData.user.email,
         emailConfirmed: sessionData.user.emailConfirmed,
-        // Provide user_metadata from activeProfile for legacy consumers that read
+        // Provide user_metadata from activeProfile for consumers that read
         // user.user_metadata.city / neighborhood
         user_metadata: {
           city: sessionData.activeProfile?.city ?? "",

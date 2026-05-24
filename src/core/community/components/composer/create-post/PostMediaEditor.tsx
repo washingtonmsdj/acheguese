@@ -33,7 +33,7 @@ export function PostMediaEditor({
   return (
     <div className="h-full flex flex-col px-4 overflow-hidden">
       <div className="text-center py-2 flex-shrink-0">
-        <h2 className="text-base font-semibold">📸 Mídia & Tags</h2>
+        <h2 className="text-base font-semibold">Mídia & Tags</h2>
         <p className="text-muted-foreground text-xs">
           Adicione fotos, localização e tags (opcional)
         </p>
@@ -110,7 +110,7 @@ export function PostMediaEditor({
               <div className="flex-1 text-left">
                 <p className="font-medium text-sm">
                   {location
-                    ? "📍 Localização Adicionada"
+                    ? "Localização adicionada"
                     : "Adicionar Localização"}
                 </p>
                 <p className="text-xs text-muted-foreground">

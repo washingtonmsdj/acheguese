@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase";
 import { PublicIdentityService } from "@/core/public-identity";
+import { profileService } from "@/core/profiles/services/ProfileService";
 import {
   evaluateProfessionalSlugSafety,
   isProfessionalSlugSafetyBypassAllowed,
@@ -236,7 +237,6 @@ export async function createProfessionalWithProfile(
     throw new Error("location_id e obrigatorio para cadastrar profissional.");
   }
 
-  const { profileService } = await import("@/core/profiles/services/ProfileService");
   const profile = await profileService.createProfile({
     profile_type: "professional",
     name: validatedInput.name,
@@ -305,7 +305,6 @@ export async function updateProfessionalWithProfile(
   };
   delete updatePayload.slug;
 
-  const { profileService } = await import("@/core/profiles/services/ProfileService");
   if (validatedInput.name) {
     await profileService.updateProfile(currentProfessional.profile_id, {
       name: validatedInput.name,
@@ -376,7 +375,6 @@ export async function deleteProfessionalWithProfile(id: string): Promise<void> {
   if (resolveError) throw resolveError;
   if (!professional) throw new Error("Profissional nao encontrado");
 
-  const { profileService } = await import("@/core/profiles/services/ProfileService");
   const { error } = await (supabase as any)
     .from("professional_data")
     .update({

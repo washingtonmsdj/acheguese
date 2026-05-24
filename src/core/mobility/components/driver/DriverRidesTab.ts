@@ -1,1 +1,1 @@
-﻿export { DriverRidesTab } from '@/modules/mobility/components/driver/DriverRidesTab';
+export { DriverRidesTab } from '@/modules/mobility/components/driver/DriverRidesTab';

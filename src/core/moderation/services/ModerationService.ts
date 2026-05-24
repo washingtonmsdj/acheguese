@@ -1,4 +1,4 @@
-﻿/**
+/**
  * MODERATION SERVICE - SSOT para Sistema de Moderacao
  */
 

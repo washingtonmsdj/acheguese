@@ -20,7 +20,7 @@ const MODULE_ROUTES: Record<string, ProfileType> = {
   '/central/empresas/nova': 'business',
   '/edit-business': 'business',
   '/empresas': 'business',  // rotas territoriais de empresas
-  '/services/cadastrar': 'professional',
+  '/servicos/cadastrar': 'professional',
   '/servicos': 'professional',  // rotas territoriais de serviços
   '/mobilidade/motorista': 'driver',
   '/central/motorista': 'driver',
@@ -139,5 +139,4 @@ export function ModuleContextSync() {
 }
 
 export type { MultiProfileContextValue } from './multiProfileContext.shared';
-
 

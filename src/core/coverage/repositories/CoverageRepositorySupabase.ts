@@ -3,8 +3,7 @@
  *
  * Implementação real de ICoverageRepository usando Supabase.
  *
- * STATUS: implementado, NÃO validado em runtime — banco desligado.
- * Validar quando VITE_USE_MOCK_DATA=false e tabela service_areas existir.
+ * STATUS: implementação canônica; depende da migration de service_areas no ambiente.
  *
  * Migration necessária: src/core/coverage/sql/001_coverage_table.sql (a criar)
  */

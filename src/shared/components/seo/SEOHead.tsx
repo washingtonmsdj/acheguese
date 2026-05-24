@@ -16,6 +16,7 @@
  */
 
 import { Helmet } from 'react-helmet-async';
+import { PLATFORM_BRAND } from '@/shared/config/brand';
 
 export interface SEOProps {
   // Basic meta
@@ -62,16 +63,16 @@ export interface SEOProps {
 }
 
 const DEFAULT_SEO = {
-  title: 'Ordax — Plataforma Completa para Sua Cidade',
+  title: `${PLATFORM_BRAND.name} - Plataforma completa para sua cidade`,
   description: 'Conecte-se com negócios locais, peça delivery, encontre serviços, participe da comunidade e muito mais. Tudo em um só lugar.',
-  keywords: ['ordax', 'delivery', 'gastronomia', 'mobilidade', 'comunidade', 'classificados', 'eventos', 'cidade'],
+  keywords: ['achegue-se', 'delivery', 'gastronomia', 'mobilidade', 'comunidade', 'classificados', 'eventos', 'cidade'],
   ogType: 'website' as const,
   ogImage: '/og-image.jpg',
-  ogImageAlt: 'Ordax — Plataforma Completa para Sua Cidade',
+  ogImageAlt: `${PLATFORM_BRAND.name} - Plataforma completa para sua cidade`,
   ogImageWidth: 1200,
   ogImageHeight: 630,
   twitterCard: 'summary_large_image' as const,
-  twitterSite: '@ordaxbr',
+  twitterSite: PLATFORM_BRAND.twitterSite,
   language: 'pt-BR',
 };
 
@@ -102,7 +103,7 @@ export function SEOHead({
   noFollow = false,
 }: SEOProps) {
   // Build full title
-  const fullTitle = title === DEFAULT_SEO.title ? title : `${title} | Ordax`;
+  const fullTitle = title === DEFAULT_SEO.title ? title : `${title} | ${PLATFORM_BRAND.name}`;
   
   // Build canonical URL
   const canonicalUrl = canonical || (typeof window !== 'undefined' ? window.location.href : '');
@@ -143,7 +144,7 @@ export function SEOHead({
       <meta property="og:image:width" content={String(ogImageWidth)} />
       <meta property="og:image:height" content={String(ogImageHeight)} />
       <meta property="og:locale" content={language} />
-      <meta property="og:site_name" content="Ordax" />
+      <meta property="og:site_name" content={PLATFORM_BRAND.name} />
       
       {/* Article specific OG tags */}
       {ogType === 'article' && (

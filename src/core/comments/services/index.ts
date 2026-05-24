@@ -1,15 +1,11 @@
 /**
- * 💬 COMMENTS SERVICES - SSOT v2.0 Exports
- *
- * @version 2.0.0 - Refatoração SSOT
+ * Comments services - SSOT exports.
  */
 
-// ============================================================
-// 🎯 QUERIES - Operações de leitura
-// ============================================================
 export {
   getCommentsByPost,
   getCommentById,
+  getAllComments,
   getCommentsCount,
   getCommentCountByAuthor,
   getCommentsByAuthor,
@@ -18,9 +14,6 @@ export {
   getCommentsCreatedInPeriod,
 } from "./comments.queries";
 
-// ============================================================
-// 📝 MUTATIONS - Operações de escrita
-// ============================================================
 export {
   createComment,
   updateComment,
@@ -30,14 +23,8 @@ export {
   CommentError,
 } from "./comments.mutations";
 
-// ============================================================
-// 🏛️ FACADE - Interface unificada SSOT v2.0
-// ============================================================
-export { CommentsFacade, CommentService, commentService } from "./CommentService";
+export { CommentService } from "./CommentService";
 
-// ============================================================
-// 📦 LEGACY - Re-exports de types
-// ============================================================
 export type {
   Comment,
   CreateCommentData,

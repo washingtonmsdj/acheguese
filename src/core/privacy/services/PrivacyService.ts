@@ -17,6 +17,7 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase/supabase';
 import { DPO_REQUEST_STATUS } from '@/core/privacy/constants/dpoRequestStatus';
+import { getDpoEmail } from '@/shared/config/privacyContacts';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -90,7 +91,7 @@ export class PrivacyService {
     try {
       await supabase.functions.invoke('send-email', {
         body: {
-          to: 'dpo@acheguese.com.br',
+          to: getDpoEmail(),
           subject: `[DPO] ${params.subject}`,
           template: 'dpo-request',
           data: {

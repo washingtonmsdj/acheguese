@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Communication Channel Identity Policy
  * Politica para canais de comunicacao: slug em kebab-case.
  */

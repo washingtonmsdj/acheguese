@@ -398,11 +398,11 @@ class CommunityGamificationServiceClass {
 
   getUserLevel(totalPoints: number): UserLevel {
     const levels = [
-      { level: "bronze", name: "Bronze", icon: "🥉", color: "#CD7F32", minPoints: 0, maxPoints: 100 },
-      { level: "silver", name: "Prata", icon: "🥈", color: "#C0C0C0", minPoints: 100, maxPoints: 500 },
-      { level: "gold", name: "Ouro", icon: "🥇", color: "#FFD700", minPoints: 500, maxPoints: 1000 },
-      { level: "platinum", name: "Platina", icon: "💎", color: "#E5E4E2", minPoints: 1000, maxPoints: 5000 },
-      { level: "diamond", name: "Diamante", icon: "💎", color: "#B9F2FF", minPoints: 5000, maxPoints: Infinity },
+      { level: "bronze", name: "Bronze", icon: "bronze", color: "#CD7F32", minPoints: 0, maxPoints: 100 },
+      { level: "silver", name: "Prata", icon: "silver", color: "#C0C0C0", minPoints: 100, maxPoints: 500 },
+      { level: "gold", name: "Ouro", icon: "gold", color: "#FFD700", minPoints: 500, maxPoints: 1000 },
+      { level: "platinum", name: "Platina", icon: "platinum", color: "#E5E4E2", minPoints: 1000, maxPoints: 5000 },
+      { level: "diamond", name: "Diamante", icon: "diamond", color: "#B9F2FF", minPoints: 5000, maxPoints: Infinity },
     ];
 
     const currentLevel =

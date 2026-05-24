@@ -9,6 +9,7 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { logger } from '@/shared/utils/logger';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
+import { navigateToSafeRedirect } from '@/shared/utils/safeRedirect';
 
 interface Props {
   children: ReactNode;
@@ -56,7 +57,7 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   handleGoHome = () => {
-    window.location.href = '/';
+    navigateToSafeRedirect('/', { context: 'shared-error-boundary-home' });
   };
 
   render() {

@@ -7,7 +7,7 @@
 import { useEffect, useRef } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-const DEFAULT_TILE_STYLE_URL = "https://demotiles.maplibre.org/style.json";
+import { DEFAULT_TILE_STYLE } from '@/shared/config/mapDefaults';
 
 export interface MiniMapProps {
   latitude: number;
@@ -31,7 +31,7 @@ export function MiniMap({
   zoom = 15,
   height = '280px',
   markerColor = '#10b981',
-  markerIcon = '📍',
+  markerIcon = '',
   className = '',
   showControls = true,
   interactive = true,
@@ -46,7 +46,7 @@ export function MiniMap({
     // Inicializar mapa
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: DEFAULT_TILE_STYLE_URL,
+      style: DEFAULT_TILE_STYLE.styleUrl,
       center: [longitude, latitude],
       zoom: zoom,
       attributionControl: false,
@@ -112,17 +112,18 @@ export function MiniMap({
     innerCircle.setAttribute('stroke', 'white');
     innerCircle.setAttribute('stroke-width', '3');
     
-    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    text.setAttribute('x', '20');
-    text.setAttribute('y', '24');
-    text.setAttribute('text-anchor', 'middle');
-    text.setAttribute('font-size', '16');
-    text.setAttribute('fill', 'white');
-    text.textContent = markerIcon;
-    
     svg.appendChild(outerCircle);
     svg.appendChild(innerCircle);
-    svg.appendChild(text);
+    if (markerIcon) {
+      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      text.setAttribute('x', '20');
+      text.setAttribute('y', '24');
+      text.setAttribute('text-anchor', 'middle');
+      text.setAttribute('font-size', '16');
+      text.setAttribute('fill', 'white');
+      text.textContent = markerIcon;
+      svg.appendChild(text);
+    }
     el.appendChild(svg);
 
     // Criar popup se houver título ou descrição

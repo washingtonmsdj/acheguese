@@ -169,7 +169,7 @@ export function useGrantAchievement() {
     }) => GamificationService.grantAchievement(userId, achievementCode),
     onSuccess: (success, variables) => {
       if (success) {
-        toast.success("Achievement desbloqueado! 🏆");
+        toast.success("Achievement desbloqueado!");
 
         // Invalidar queries relacionadas
         queryClient.invalidateQueries({
@@ -209,7 +209,7 @@ export function useProcessUserAction() {
 
       if (result.achievements.length > 0) {
         result.achievements.forEach((achievement) => {
-          toast.success(`Achievement desbloqueado: ${achievement} 🏆`);
+          toast.success(`Achievement desbloqueado: ${achievement}`);
         });
       }
 

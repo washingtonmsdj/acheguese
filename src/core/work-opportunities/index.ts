@@ -16,7 +16,6 @@ export type {
 
 export {
   extractOpportunityPayload,
-  getOpportunityTypeEmoji,
   getOpportunityTypeLabel,
   getOpportunityUrgencyLabel,
 } from "./utils/opportunityPayload";

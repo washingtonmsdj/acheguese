@@ -1,4 +1,4 @@
-﻿import { supabase } from "@/integrations/supabase";
+import { supabase } from "@/integrations/supabase";
 import { MobilityService } from "@/core/mobility/services/runtime";
 
 export interface AdminMotoboyDelivery {

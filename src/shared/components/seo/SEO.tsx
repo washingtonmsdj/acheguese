@@ -1,11 +1,12 @@
-/**
- * SEO - Componente global de metadados padrao.
+﻿/**
+ * SEO - Componente global de metadados padrão.
  *
- * Usado em rotas nao-territoriais. Rotas territoriais usam TerritorialSEO.
- * Quando `url` nao for passado, nao emite canonical.
+ * Usado em rotas não-territoriais. Rotas territoriais usam TerritorialSEO.
+ * Quando `url` não for passado, não emite canonical.
  */
 
 import { Helmet } from "react-helmet-async";
+import { buildPublicAbsoluteUrl } from "@/shared/config/publicAppOrigin";
 
 export interface SEOProps {
   title?: string;
@@ -21,18 +22,24 @@ export interface SEOProps {
 }
 
 const BRAND = "Achegue-se";
-const SITE_URL = "https://acheguese.com.br";
 const DEFAULT_OG_IMAGE = "/og-image.png";
 
 const DEFAULT_SEO = {
   title: `${BRAND} - Comunidade hiperlocal`,
   description:
-    "Conecte-se com sua comunidade local. Descubra empresas, servicos, mobilidade e muito mais no seu bairro.",
+    "Conecte-se com sua comunidade local. Descubra empresas, serviços, mobilidade e muito mais no seu bairro.",
   keywords:
-    "comunidade local, bairro, empresas locais, servicos, mobilidade urbana, hiperlocal",
-  image: `${SITE_URL}${DEFAULT_OG_IMAGE}`,
+    "comunidade local, bairro, empresas locais, serviços, mobilidade urbana, hiperlocal",
   type: "website" as const,
 };
+
+function isAbsoluteUrl(value: string): boolean {
+  return /^https?:\/\//i.test(value);
+}
+
+function toAbsoluteUrl(value: string): string {
+  return isAbsoluteUrl(value) ? value : buildPublicAbsoluteUrl(value);
+}
 
 export function SEO({
   title,
@@ -48,8 +55,8 @@ export function SEO({
 }: SEOProps) {
   const resolvedTitle = title ? `${title} | ${BRAND}` : DEFAULT_SEO.title;
   const resolvedDescription = description || DEFAULT_SEO.description;
-  const resolvedImage = image || DEFAULT_SEO.image;
-  const resolvedUrl = url ? `${SITE_URL}${url.startsWith("/") ? url : `/${url}`}` : undefined;
+  const resolvedImage = image ? toAbsoluteUrl(image) : buildPublicAbsoluteUrl(DEFAULT_OG_IMAGE);
+  const resolvedUrl = url ? toAbsoluteUrl(url) : undefined;
 
   return (
     <Helmet>
@@ -79,10 +86,7 @@ export function SEO({
         <meta property="article:modified_time" content={modifiedTime} />
       )}
 
-      <meta
-        name="robots"
-        content={noIndex ? "noindex, nofollow" : "index, follow"}
-      />
+      <meta name="robots" content={noIndex ? "noindex, nofollow" : "index, follow"} />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <meta httpEquiv="Content-Type" content="text/html; charset=utf-8" />
       <meta name="language" content="Portuguese" />

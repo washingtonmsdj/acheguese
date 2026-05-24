@@ -157,7 +157,10 @@ export function PollCard({ pollId, poll, className }: PollCardProps) {
         </span>
 
         {hasVoted && !isExpired && (
-          <span style={INLINE_STYLES.textCyan}>✓ Você votou</span>
+          <span className="inline-flex items-center gap-1" style={INLINE_STYLES.textCyan}>
+            <Check className="h-3.5 w-3.5" aria-hidden="true" />
+            Você votou
+          </span>
         )}
 
         {isExpired && (

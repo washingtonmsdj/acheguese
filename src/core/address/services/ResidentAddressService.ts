@@ -151,7 +151,7 @@ export class ResidentAddressService {
 
   async lookupCep(cep: string): Promise<LocationPostalCodeLookupResult | null> {
     logger.warn(
-      '⚠️ ResidentAddressService.lookupCep() is deprecated. ' +
+      ' ResidentAddressService.lookupCep() is deprecated. ' +
         'Use locationGeocodingService.lookupPostalCode() from @/core/location',
     );
 

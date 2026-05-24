@@ -73,11 +73,12 @@ export function PostContentEditor({
   const maxChars = 2000;
   const minChars = 20;
   const postType = getPostTypeConfig(tipo);
+  const PostTypeIcon = postType.icon;
 
   return (
     <div className="h-full flex flex-col px-4 overflow-hidden">
       <div className="text-center py-3 flex-shrink-0">
-        <h2 className="text-base font-semibold">✍️ Escreva seu Post</h2>
+        <h2 className="text-base font-semibold">Escreva seu post</h2>
         <p className="text-muted-foreground text-xs">
           O que você quer compartilhar com a comunidade?
         </p>
@@ -94,8 +95,9 @@ export function PostContentEditor({
           <div className="flex-1 min-w-0">
             <p className="font-medium text-xs leading-tight">{profileName}</p>
             <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-              <span>
-                {postType.emoji} {postType.label}
+              <span className="inline-flex items-center gap-1">
+                <PostTypeIcon className="h-3 w-3" aria-hidden="true" />
+                {postType.label}
               </span>
             </div>
           </div>
@@ -105,7 +107,7 @@ export function PostContentEditor({
           <Textarea
             value={texto}
             onChange={(e) => onTextoChange(e.target.value.slice(0, maxChars))}
-            placeholder={`${postType.emoji} ${postType.description}... Use #hashtags para marcar o assunto!`}
+            placeholder={`${postType.description}... Use #hashtags para marcar o assunto!`}
             className="flex-1 min-h-0 text-sm resize-none border focus:border-primary"
             autoFocus
           />

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { logger } from "@/shared/utils/logger";
-import { commentService } from "@/core/comments/services";
+import { CommentService } from "@/core/comments/services";
 
 interface Comment {
   id: string;
@@ -60,7 +60,7 @@ export function useComments(postId: string | null, _userId?: string) {
 
     setLoading(true);
     try {
-      const commentsWithReplies = await commentService.getCommentsByPost(postId);
+      const commentsWithReplies = await CommentService.getCommentsByPost(postId);
       const formattedComments = (commentsWithReplies as RawComment[]).map(mapRawComment);
 
       setComments(formattedComments);

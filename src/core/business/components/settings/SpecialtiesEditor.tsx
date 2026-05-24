@@ -6,7 +6,7 @@
  */
 
 import { useState } from "react";
-import { Award, Plus, X, Sparkles } from "lucide-react";
+import { Award, Lightbulb, Plus, X, Sparkles } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Badge } from "@/shared/components/ui/badge";
@@ -188,7 +188,10 @@ export function SpecialtiesEditor({
       {/* Help text */}
       {specialties.length === 0 && (
         <div className="bg-secondary/50 rounded-lg p-3 text-xs text-muted-foreground">
-          <p className="font-medium mb-1">💡 Dica:</p>
+          <p className="mb-1 flex items-center gap-1.5 font-medium">
+            <Lightbulb className="h-3.5 w-3.5" />
+            Dica:
+          </p>
           <p>
             Especialidades ajudam clientes a encontrar sua empresa. 
             Adicione pratos, serviços ou produtos que você oferece.

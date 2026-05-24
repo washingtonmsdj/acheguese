@@ -106,7 +106,7 @@ export function CommunityFeed({
     reportPost({
       postId,
       reason: "inappropriate_content",
-      description: "Denuncia enviada pelo fluxo principal do feed",
+      description: "Denúncia enviada pelo fluxo principal do feed",
     });
   }, [reportPost]);
 
@@ -115,7 +115,7 @@ export function CommunityFeed({
   }, [onTagClick]);
 
   const handleUpvoteReport = useCallback((_reportId: string) => {}, []);
-  const profileName = activeProfile?.name?.trim() || "Usuario";
+  const profileName = activeProfile?.name?.trim() || "Usuário";
   const profileAvatar =
     (activeProfile as { avatar_url?: string | null } | null)?.avatar_url ??
     activeProfile?.avatarUrl ??

@@ -166,7 +166,7 @@ class LostFoundServiceClass {
         .range(from, to);
 
       if (filters.tipo && filters.tipo !== "todos") query = (query as any).eq("tipo", filters.tipo as LostFoundPost["tipo"]);
-      if (filters.categoria && filters.categoria !== "todos") query = (query as any).eq("category", filters.categoria);
+      if (filters.categoria && filters.categoria !== "todos") query = (query as any).eq("categoria", filters.categoria);
       if (filters.territoryFilter?.scope === "location") {
         query = query.eq("location_id", filters.territoryFilter.location_id);
       } else if (filters.territoryFilter?.scope === "group" && filters.territoryFilter.location_ids.length > 0) {

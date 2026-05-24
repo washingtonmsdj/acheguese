@@ -120,7 +120,7 @@ export default function AdminMotoristasPage() {
   const handleSuspendDriver = (driver: DriverRequest) => {
     setConfirmDialog({
       open: true,
-      title: "🚫 Suspender Motorista",
+      title: "Suspender motorista",
       description: `Tem certeza que deseja suspender ${driver.name ?? "este motorista"}? Esta ação bloqueará o acesso dele e ele não poderá aceitar corridas. Você poderá reativá-lo depois.`,
       variant: "destructive",
       action: () => executeSuspend(driver),
@@ -135,7 +135,7 @@ export default function AdminMotoristasPage() {
   const handleReactivateDriver = (driver: DriverRequest) => {
     setConfirmDialog({
       open: true,
-      title: "✅ Reativar Motorista",
+      title: "Reativar motorista",
       description: `Tem certeza que deseja reativar ${driver.name ?? "este motorista"}? Ele poderá voltar a aceitar corridas na plataforma.`,
       variant: "default",
       action: () => executeReactivate(driver),

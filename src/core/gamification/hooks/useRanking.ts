@@ -1,5 +1,5 @@
 /**
- * ✅ SSOT - Hook useRanking
+ *  SSOT - Hook useRanking
  */
 
 import { useState, useEffect } from "react";
@@ -65,7 +65,7 @@ export function useRanking() {
           }
         }
       } catch (err) {
-        logger.error("❌ Erro ao carregar ranking:", err);
+        logger.error(" Erro ao carregar ranking:", err);
         setRanking([]);
       } finally {
         setLoading(false);

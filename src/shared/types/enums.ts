@@ -65,6 +65,9 @@ export enum LocationType {
   
   /** Bairro/Distrito */
   DISTRICT = 'district',
+
+  /** Bairro municipal oficial */
+  NEIGHBORHOOD = 'neighborhood',
 }
 
 /**

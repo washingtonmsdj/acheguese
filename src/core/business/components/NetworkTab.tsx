@@ -1,5 +1,6 @@
 import React from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Building2, Plus, Star, MapPin, Loader2, AlertCircle, GitBranch, ExternalLink } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
@@ -73,6 +74,7 @@ export default function NetworkTab({
 // ─── Painel: Converter standalone → rede ─────────────────────────────────────
 
 function ConvertToNetworkPanel({ profileId, businessId, locationId, toast }: ConvertToNetworkPanelProps) {
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [brandName, setBrandName] = useState('');
   const [unitName, setUnitName] = useState('Unidade Principal');
@@ -92,7 +94,7 @@ function ConvertToNetworkPanel({ profileId, businessId, locationId, toast }: Con
       });
       setOpen(false);
       setTimeout(() => {
-        window.location.href = businessManagementRoutes.overview(result.brand_hub_id);
+        navigate(businessManagementRoutes.overview(result.brand_hub_id));
       }, 500);
     } catch (err) {
       toast({ title: 'Erro ao criar rede', description: (err as Error).message, variant: 'destructive' });
@@ -130,7 +132,7 @@ function ConvertToNetworkPanel({ profileId, businessId, locationId, toast }: Con
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Nome da marca</label>
               <Input
-                placeholder="Ex: Sabor da Bahia"
+                placeholder="Ex: Marca principal"
                 value={brandName}
                 onChange={(e) => setBrandName(e.target.value)}
               />
@@ -139,7 +141,7 @@ function ConvertToNetworkPanel({ profileId, businessId, locationId, toast }: Con
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Nome desta unidade</label>
               <Input
-                placeholder="Ex: Unidade Pituba"
+                placeholder="Ex: Unidade Centro"
                 value={unitName}
                 onChange={(e) => setUnitName(e.target.value)}
               />
@@ -355,7 +357,7 @@ function CreateBranchDialog({ open, onClose, brandHubId, profileId, toast, onCre
   // Preview da URL pública final
   const urlPreview = useMemo(() => {
     if (!selectedDistrict?.geographic_path || !form.slug) return null;
-    // Usar geoPathToPublicUrl para converter /br/ba/salvador/pituba → /ba/salvador/pituba
+    // Usar geoPathToPublicUrl para converter o geographic_path interno em URL pública.
     const publicPath = geoPathToPublicUrl(selectedDistrict.geographic_path);
     return `/empresas${publicPath}/${form.slug}`;
   }, [selectedDistrict, form.slug]);

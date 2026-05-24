@@ -1,4 +1,4 @@
-﻿export interface ReviewAggregateSummary {
+export interface ReviewAggregateSummary {
   count: number;
   average: number | null;
 }

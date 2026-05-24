@@ -1,1 +1,1 @@
-﻿export { useProfileHub } from '@/modules/profile/hooks/useProfileHub';
+export { useProfileHub } from '@/modules/profile/hooks/useProfileHub';

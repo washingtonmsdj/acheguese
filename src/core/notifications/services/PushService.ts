@@ -252,7 +252,7 @@ export class PushService {
    */
   static async sendTestNotification(userId: string): Promise<{ success: boolean; error?: string }> {
     return this.sendToUser(userId, {
-      title: 'Notificação de Teste 🎉',
+      title: 'Notificação de Teste ',
       body: 'Se você está vendo isso, as notificações push estão funcionando!',
       icon: '/icon-192x192.png',
       badge: '/badge-72x72.png',

@@ -1,1 +1,1 @@
-﻿export { RideTrackingMap } from '@/modules/mobility/components/RideTrackingMap';
+export { RideTrackingMap } from '@/modules/mobility/components/RideTrackingMap';

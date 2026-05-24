@@ -1,4 +1,4 @@
-﻿import { buildPublicProfileUrl } from "@/core/profiles/utils/publicProfileUrl";
+import { buildPublicProfileUrl } from "@/core/profiles/utils/publicProfileUrl";
 import {
   buildIdentityIssues,
   normalizeBoolean,
@@ -294,7 +294,7 @@ export function buildReputationSources(payload: {
     {
       origin: "passenger_mobility",
       label: "Mobilidade - passageiro",
-      status: hasPassengerSignal ? "legacy" : "missing",
+      status: hasPassengerSignal ? "historical" : "missing",
       score: passengerScore,
       volume: passengerCompletedRides,
       visibility: resolveReputationVisibility(profile.show_passenger_rating_public, "private"),

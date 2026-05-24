@@ -1,1 +1,1 @@
-﻿export { BottomNav } from '@/app/components/BottomNav';
+export { BottomNav } from '@/app/components/BottomNav';

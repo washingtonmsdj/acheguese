@@ -1,1 +1,1 @@
-﻿export * from '@/modules/mobility/types/types';
+export * from '@/modules/mobility/types/types';

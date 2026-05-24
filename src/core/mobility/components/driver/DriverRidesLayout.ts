@@ -1,1 +1,1 @@
-﻿export { DriverRidesLayout } from '@/modules/mobility/components/driver/DriverRidesLayout';
+export { DriverRidesLayout } from '@/modules/mobility/components/driver/DriverRidesLayout';

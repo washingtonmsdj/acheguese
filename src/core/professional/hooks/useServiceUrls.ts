@@ -36,8 +36,8 @@ export function useServiceUrls(routeResolved?: ResolvedTerritory | null): Servic
 
   return {
     list: listUrl,
-    detail: (id: string) => `/services/${id}`,
-    register: "/services/cadastrar",
-    edit: (id: string) => `/services/${id}/editar`,
+    detail: (id: string) => `/servicos/${id}`,
+    register: "/servicos/cadastrar",
+    edit: (id: string) => `/servicos/${id}/editar`,
   };
 }

@@ -2,13 +2,13 @@
  * createGeospatialPort
  *
  * Factory que retorna a implementação de IGeospatialPort.
- * Usa GeospatialServiceMock como implementação padrão.
+ * Usa HaversineGeospatialPort com coordenadas canônicas de locations.
  */
 
-import { GeospatialServiceMock } from '@/integrations/maps/services/GeospatialServiceMock';
+import { HaversineGeospatialPort } from '@/integrations/maps/services/HaversineGeospatialPort';
 import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
 import type { IGeospatialPort } from './IGeospatialPort';
 
 export function createGeospatialPort(): IGeospatialPort {
-  return new GeospatialServiceMock(createLocationRepository());
+  return new HaversineGeospatialPort(createLocationRepository());
 }

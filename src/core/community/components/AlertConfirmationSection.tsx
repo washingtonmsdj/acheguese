@@ -126,10 +126,11 @@ export function AlertConfirmationSection({
       {/* Mensagens de status */}
       {isVerified ? (
         <p
-          className="text-xs leading-relaxed"
+          className="flex items-center gap-1 text-xs leading-relaxed"
           style={INLINE_STYLES.textSecondary}
         >
-          ✓ Este alerta foi verificado por 5 ou mais membros da comunidade
+          <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+          Este alerta foi verificado por 5 ou mais membros da comunidade
         </p>
       ) : confirmationsCount >= 3 ? (
         <p

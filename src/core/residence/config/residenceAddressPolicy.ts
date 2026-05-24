@@ -3,7 +3,7 @@
  *
  * Regra atual:
  * - referencia/localidade complementar so eh permitida em cidades aprovadas.
- * - em Salvador, deve permanecer desabilitada.
+ * - fora das cidades aprovadas, deve permanecer desabilitada.
  */
 const CITIES_WITH_LOCAL_REFERENCE = new Set<string>([
   "conceicao do jacuipe",

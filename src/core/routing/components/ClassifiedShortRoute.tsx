@@ -1,28 +1,30 @@
-/**
- * ClassifiedShortRoute — Rota curta de compartilhamento
+﻿/**
+ * ClassifiedShortRoute - Rota curta de compartilhamento
  *
  * Resolve classificado pela URL curta:
  * /c/:publicId
  *
  * Comportamento:
  * - Resolve pelo public_id
- * - Redirect 308 para canonical atual
- * - 404 se não encontrado
+ * - Renderiza o detalhe diretamente sem redirect
+ * - 404 visível se não encontrado
  *
  * @version 1.0.0
  */
 import { logger } from '@/shared/utils/logger';
-import { useEffect, useState } from 'react';
-import { useParams, Navigate } from 'react-router-dom';
+import { lazy, Suspense, useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { classifiedUrlService } from '@/shared/services/classifieds';
 import { FullScreenLoader } from '@/shared/components/loading/PageLoader';
+
+const ClassificadoDetailPage = lazy(() => import('@/modules/classifieds/pages/ClassificadoDetailPage'));
 
 export default function ClassifiedShortRoute() {
   const { publicId } = useParams<{ publicId: string }>();
 
   const [resolution, setResolution] = useState<{
-    status: 'loading' | 'redirect' | 'not-found';
-    redirectTo?: string;
+    status: 'loading' | 'found' | 'not-found';
+    classifiedId?: string;
   }>({ status: 'loading' });
 
   useEffect(() => {
@@ -41,11 +43,10 @@ export default function ClassifiedShortRoute() {
           return;
         }
 
-        // Sempre redireciona para canonical
-        logger.info('[ClassifiedShortRoute] Redirect para canonical:', result.current_canonical);
+        logger.info('[ClassifiedShortRoute] Classificado resolvido pelo public_id:', publicId);
         setResolution({
-          status: 'redirect',
-          redirectTo: result.current_canonical,
+          status: 'found',
+          classifiedId: result.id,
         });
       } catch (error) {
         logger.error('[ClassifiedShortRoute] Erro ao resolver:', error);
@@ -60,10 +61,26 @@ export default function ClassifiedShortRoute() {
     return <FullScreenLoader />;
   }
 
-  if (resolution.status === 'redirect' && resolution.redirectTo) {
-    return <Navigate to={resolution.redirectTo} replace />;
+  if (resolution.status === 'not-found') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <div className="max-w-md text-center">
+          <p className="text-4xl font-bold text-muted-foreground">404</p>
+          <p className="mt-2 text-lg font-semibold text-foreground">Classificado não encontrado</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Este link curto não aponta para um classificado ativo.
+          </p>
+          <a href="/classificados" className="mt-4 inline-block text-sm text-primary underline">
+            Voltar para classificados
+          </a>
+        </div>
+      </div>
+    );
   }
 
-  return <Navigate to="/404" replace />;
+  return (
+    <Suspense fallback={<FullScreenLoader />}>
+      <ClassificadoDetailPage classifiedId={resolution.classifiedId} />
+    </Suspense>
+  );
 }
-

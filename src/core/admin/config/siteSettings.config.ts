@@ -1,3 +1,5 @@
+import { PLATFORM_BRAND } from "@/shared/config/brand";
+
 /**
  * Site Settings Configuration - SSOT
  * 
@@ -65,8 +67,8 @@ export const SITE_SETTINGS_DEFAULTS = {
   [SITE_SETTING_KEYS.FAVICON_URL]: '',
   [SITE_SETTING_KEYS.PRIMARY_COLOR]: '#3b82f6',
   [SITE_SETTING_KEYS.SECONDARY_COLOR]: '#8b5cf6',
-  [SITE_SETTING_KEYS.SITE_NAME]: 'Achegue-se',
-  [SITE_SETTING_KEYS.SITE_TAGLINE]: 'Super App de Bairro',
+  [SITE_SETTING_KEYS.SITE_NAME]: PLATFORM_BRAND.name,
+  [SITE_SETTING_KEYS.SITE_TAGLINE]: PLATFORM_BRAND.tagline,
 } as const;
 
 /**

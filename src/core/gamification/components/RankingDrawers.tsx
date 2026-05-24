@@ -38,18 +38,21 @@ export function RankingDrawers({
             </DrawerTitle>
           </DrawerHeader>
           <div className="px-4 pb-6 space-y-3">
-            {pontosRegras.map((rule) => (
-              <div
-                key={rule.acao}
-                className="flex items-center gap-3 p-3 rounded-xl bg-secondary"
-              >
-                <span className="text-xl">{rule.icone}</span>
-                <span className="text-sm flex-1">{rule.acao}</span>
-                <Badge variant="outline" className="text-xs font-bold">
-                  +{rule.pontos} pts
-                </Badge>
-              </div>
-            ))}
+            {pontosRegras.map((rule) => {
+              const RuleIcon = rule.icone;
+              return (
+                <div
+                  key={rule.acao}
+                  className="flex items-center gap-3 p-3 rounded-xl bg-secondary"
+                >
+                  <RuleIcon className="h-5 w-5 text-primary" aria-hidden="true" />
+                  <span className="text-sm flex-1">{rule.acao}</span>
+                  <Badge variant="outline" className="text-xs font-bold">
+                    +{rule.pontos} pts
+                  </Badge>
+                </div>
+              );
+            })}
           </div>
         </DrawerContent>
       </Drawer>
@@ -62,9 +65,11 @@ export function RankingDrawers({
         }}
       >
         <DrawerContent>
-          {selectedBadge && (
-            <div className="px-4 py-6 text-center">
-              <span className="text-5xl mb-3 block">{selectedBadge.icone}</span>
+          {selectedBadge && (() => {
+            const SelectedBadgeIcon = selectedBadge.icone;
+            return (
+              <div className="px-4 py-6 text-center">
+                <SelectedBadgeIcon className="mx-auto mb-3 h-12 w-12 text-primary" aria-hidden="true" />
               <h3 className="text-lg font-bold font-display">
                 {selectedBadge.name}
               </h3>
@@ -79,7 +84,7 @@ export function RankingDrawers({
               </Badge>
               {currentUserRank?.badges?.includes(selectedBadge.id) ? (
                 <p className="text-sm text-success font-medium mt-4">
-                  ✓ Você já conquistou!
+                  Você já conquistou!
                 </p>
               ) : (
                 <p className="text-sm text-muted-foreground mt-4">
@@ -87,7 +92,8 @@ export function RankingDrawers({
                 </p>
               )}
             </div>
-          )}
+            );
+          })()}
         </DrawerContent>
       </Drawer>
     </>

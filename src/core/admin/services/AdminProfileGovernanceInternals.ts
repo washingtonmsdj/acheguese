@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Internal facade for admin profile governance helpers.
  * Implementations live in focused files to keep loaders and mappers isolated.
  */

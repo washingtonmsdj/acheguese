@@ -27,13 +27,13 @@ type ConversationRow = Conversation;
 class MessagingService {
   private readonly db = supabase as any;
   /**
-   * Busca conversas de um usuÃ¡rio com detalhes
+   * Busca conversas de um usuário com detalhes
    */
   async getConversationPreviews(
     userId: string,
   ): Promise<ConversationPreview[]> {
     try {
-      // Buscar conversas do usuÃ¡rio
+      // Buscar conversas do usuário
       const { data: conversations, error } = await supabase
         .from("conversations")
         .select("*")
@@ -43,7 +43,7 @@ class MessagingService {
       if (error) throw error;
       if (!conversations || conversations.length === 0) return [];
 
-      // Coletar IDs Ãºnicos
+      // Coletar IDs únicos
       const classifiedIds = [
         ...new Set(conversations.map((c) => c.classified_id)),
       ] as string[];
@@ -68,7 +68,7 @@ class MessagingService {
       // Criar previews com dados completos
       const previews: ConversationPreview[] = await Promise.all(
         conversations.map(async (conv) => {
-          // Buscar Ãºltima mensagem e contagem de nÃ£o lidas
+          // Buscar última mensagem e contagem de não lidas
           const [lastMessage, unreadCount] = await Promise.all([
             this.getLastMessage(conv.id),
             this.getUnreadCount(conv.id, userId),
@@ -122,7 +122,7 @@ class MessagingService {
       if (error) throw error;
       if (!conversation) return null;
 
-      // Buscar dados do classificado e do outro usuÃ¡rio
+      // Buscar dados do classificado e do outro usuário
       const [classified, otherProfile] = await Promise.all([
         this.getClassifiedById(conversation.classified_id),
         (() => {
@@ -176,7 +176,7 @@ class MessagingService {
   }
 
   /**
-   * Busca Ãºltima mensagem de uma conversa
+   * Busca última mensagem de uma conversa
    */
   async getLastMessage(conversationId: string): Promise<Message | null> {
     try {
@@ -197,7 +197,7 @@ class MessagingService {
   }
 
   /**
-   * Conta mensagens nÃ£o lidas de uma conversa
+   * Conta mensagens não lidas de uma conversa
    */
   async getUnreadCount(
     conversationId: string,
@@ -220,11 +220,11 @@ class MessagingService {
   }
 
   /**
-   * Conta total de mensagens nÃ£o lidas de um usuÃ¡rio
+   * Conta total de mensagens não lidas de um usuário
    */
   async getTotalUnreadCount(userId: string): Promise<number> {
     try {
-      // Buscar todas as conversas do usuÃ¡rio
+      // Buscar todas as conversas do usuário
       const { data: conversations, error: convError } = await supabase
         .from("conversations")
         .select("id")
@@ -233,7 +233,7 @@ class MessagingService {
       if (convError) throw convError;
       if (!conversations || conversations.length === 0) return 0;
 
-      // Contar mensagens nÃ£o lidas em todas as conversas
+      // Contar mensagens não lidas em todas as conversas
       const { count, error } = await supabase
         .from("messages")
         .select("*", { count: "exact", head: true })
@@ -253,14 +253,14 @@ class MessagingService {
   }
 
   /**
-   * Conta mensagens nÃ£o lidas de um usuÃ¡rio (alias para compatibilidade)
+   * Conta mensagens não lidas de um usuário (alias para compatibilidade)
    */
   async getUnreadMessagesCount(userId: string): Promise<number> {
     return this.getTotalUnreadCount(userId);
   }
 
   /**
-   * Subscreve a mudanÃ§as em mensagens para um usuÃ¡rio
+   * Subscreve a mudanças em mensagens para um usuário
    */
   subscribeToMessages(userId: string, callback: () => void): RealtimeChannel | null {
     try {
@@ -285,7 +285,7 @@ class MessagingService {
   }
 
   /**
-   * Subscreve mensagens de uma conversa especÃ­fica
+   * Subscreve mensagens de uma conversa específica
    */
   subscribeToConversationMessages(
     conversationId: string,
@@ -316,7 +316,7 @@ class MessagingService {
   }
 
   /**
-   * Remove subscriÃ§Ã£o de mensagens
+   * Remove subscrição de mensagens
    */
   unsubscribeFromMessages(subscription: RealtimeChannel | null): void {
     try {
@@ -367,7 +367,7 @@ class MessagingService {
   }
 
   /**
-   * Busca ou cria uma conversa entre dois usuÃ¡rios para um classificado
+   * Busca ou cria uma conversa entre dois usuários para um classificado
    */
   async findOrCreateConversation(
     classifiedId: string,
@@ -517,7 +517,7 @@ class MessagingService {
 
   /**
    * Fecha/desativa uma conversa (is_active = false)
-   * âœ… LOTE 7 - Boundary canÃ´nico para encerramento de conversa de mobilidade
+   * ✅ LOTE 7 - Boundary canônico para encerramento de conversa de mobilidade
    */
   async closeConversation(conversationId: string): Promise<void> {
     try {
@@ -538,7 +538,7 @@ class MessagingService {
   }
 
   /**
-   * Verifica se uma conversa estÃ¡ bloqueada
+   * Verifica se uma conversa está bloqueada
    */
   async isConversationBlocked(conversationId: string): Promise<boolean> {
     try {
@@ -558,7 +558,7 @@ class MessagingService {
 
   /**
    * Desbloqueia uma conversa (admin only)
-   * âœ… SSOT - Boundary canÃ´nico para desbloqueio de conversa
+   * ✅ SSOT - Boundary canônico para desbloqueio de conversa
    */
   async unblockConversation(conversationId: string): Promise<void> {
     try {
@@ -585,7 +585,7 @@ class MessagingService {
 
   /**
    * Reabre uma conversa (is_active = true)
-   * âœ… SSOT - Boundary canÃ´nico para reabertura de conversa
+   * ✅ SSOT - Boundary canônico para reabertura de conversa
    */
   async reopenConversation(conversationId: string): Promise<void> {
     try {
@@ -608,7 +608,7 @@ class MessagingService {
 
   /**
    * Deleta uma conversa (hard delete - admin only)
-   * âœ… SSOT - Boundary canÃ´nico para exclusÃ£o de conversa
+   * ✅ SSOT - Boundary canônico para exclusão de conversa
    */
   async deleteConversation(conversationId: string): Promise<void> {
     try {
@@ -663,11 +663,11 @@ class MessagingService {
   }
 
   /**
-   * MÃ©todos auxiliares privados para buscar classificados via ClassifiedService
+   * Métodos auxiliares privados para buscar classificados via ClassifiedService
    */
   private async getClassifiedById(id: string): Promise<ClassifiedSummary | null> {
     try {
-      // âœ… SSOT â€” usa queries diretas
+      // ✅ SSOT — usa queries diretas
       return await getClassifiedById(id);
     } catch (error) {
       logger.error("Error fetching classified:", error);
@@ -677,7 +677,7 @@ class MessagingService {
 
   private async getClassifiedsByIds(ids: string[]): Promise<ClassifiedSummary[]> {
     try {
-      // âœ… SSOT â€” usa queries diretas
+      // SSOT: usa queries diretas.
       const results = await Promise.all(
         ids.map((id) => getClassifiedById(id)),
       );

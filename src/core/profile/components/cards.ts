@@ -1,1 +1,1 @@
-﻿export * from '@/modules/profile/components/cards';
+export * from '@/modules/profile/components/cards';

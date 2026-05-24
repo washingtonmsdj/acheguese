@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { Image, X, MapPin } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";

@@ -1,8 +1,7 @@
-import React from "react";
-import { lazy, Suspense, memo } from "react";
-import { WidgetSkeleton } from "./widgets/WidgetSkeleton";
+import React, { lazy, memo, Suspense } from "react";
 import { WidgetErrorBoundary } from "./WidgetErrorBoundary";
-// Lazy load dos widgets para code splitting
+import { WidgetSkeleton } from "./widgets/WidgetSkeleton";
+
 const RankingWidget = lazy(() =>
   import("./widgets/RankingWidget").then((module) => ({
     default: module.RankingWidget,
@@ -10,19 +9,16 @@ const RankingWidget = lazy(() =>
 );
 
 /**
- * Sidebar esquerda com lazy loading
- * Otimiza bundle inicial carregando widgets sob demanda
- * Inclui error boundaries para resiliência
+ * Sidebar esquerda com lazy loading.
  */
 export const CommunityLeftSidebar = memo(() => {
   return (
-    <div className="space-y-2 w-full">
+    <div className="w-full space-y-2">
       <WidgetErrorBoundary widgetName="RankingWidget">
         <Suspense fallback={<WidgetSkeleton hasHeader itemCount={3} />}>
           <RankingWidget />
         </Suspense>
       </WidgetErrorBoundary>
-
     </div>
   );
 });

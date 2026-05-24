@@ -1,4 +1,4 @@
-﻿// Re-export de tipos de business do modulo
+// Re-export de tipos de business do modulo
 // Isso permite que core e outros modulos acessem tipos sem depender do modulo business
 
 export type {

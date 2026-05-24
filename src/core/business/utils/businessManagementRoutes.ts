@@ -34,10 +34,10 @@ export const businessManagementRoutes = {
 export function getBusinessManagementSectionLabel(pathname: string) {
   if (/\/dados$/.test(pathname)) return "Dados da empresa";
   if (/\/gastronomia(\/|$)/.test(pathname)) return "Gastronomia";
-  if (/\/educacao(\/|$)/.test(pathname)) return "Educacao";
+  if (/\/educacao(\/|$)/.test(pathname)) return "Educação";
   if (/\/planos$/.test(pathname)) return "Planos";
   if (/\/link-premium$/.test(pathname)) return "Link premium";
   if (/\/analytics$/.test(pathname)) return "Analytics";
-  if (/\/configuracoes$/.test(pathname)) return "Configuracoes";
-  return "Visao geral";
+  if (/\/configuracoes$/.test(pathname)) return "Configurações";
+  return "Visão geral";
 }

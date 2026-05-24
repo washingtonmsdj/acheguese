@@ -1,10 +1,11 @@
-import { useMemo } from "react";
+﻿import { useMemo } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/shared/components/ui/button";
 import { useResolveTerritoryFromUrl } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { useCommunityProfile } from "@/core/community-experience/hooks/useCommunityProfile";
 import { buildCommunityTerritoryUrl } from "@/core/routing/utils/territoryUrls";
+import { TerritorialNotFound } from "./TerritorialNotFound";
 
 function titleCaseFromSlug(value?: string): string {
   if (!value) return "Comunidade local";
@@ -17,27 +18,36 @@ function titleCaseFromSlug(value?: string): string {
 
 export function CommunityInterestPage() {
   const navigate = useNavigate();
-  const { state = "ba", city = "salvador", territorySlug } = useParams<{
+  const { state, city, territorySlug } = useParams<{
     state?: string;
     city?: string;
     territorySlug?: string;
   }>();
+  const normalizedState = state?.trim() ?? "";
+  const normalizedCity = city?.trim() ?? "";
   const { resolved } = useResolveTerritoryFromUrl();
   const { data: profile } = useCommunityProfile(resolved);
   const communityBase = useMemo(() => {
-    if (!resolved) return `/${state}/${city}`;
-    if (resolved.kind === "group") return `/${state}/${city}/${resolved.group.slug}`;
-    return `/${state}/${city}/${resolved.location.slug}`;
-  }, [city, resolved, state]);
-  const eventsPath = useMemo(() => buildCommunityTerritoryUrl(communityBase, "eventos"), [communityBase]);
+    if (!normalizedState || !normalizedCity) return null;
+    if (!resolved) return `/${normalizedState}/${normalizedCity}`;
+    if (resolved.kind === "group") return `/${normalizedState}/${normalizedCity}/${resolved.group.slug}`;
+    return `/${normalizedState}/${normalizedCity}/${resolved.location.slug}`;
+  }, [normalizedCity, normalizedState, resolved]);
+  const eventsPath = useMemo(
+    () => (communityBase ? buildCommunityTerritoryUrl(communityBase, "eventos") : null),
+    [communityBase],
+  );
 
   const territoryName = useMemo(() => {
     if (resolved?.kind === "group") return resolved.group.name;
     if (resolved?.kind === "location") return resolved.location.name;
     return titleCaseFromSlug(territorySlug);
   }, [resolved, territorySlug]);
+  if (!communityBase || !eventsPath) {
+    return <TerritorialNotFound message="A URL de interesse precisa informar estado e cidade válidos." />;
+  }
 
-  const contactQuery = `?cidade=${encodeURIComponent(titleCaseFromSlug(city))}&territorio=${encodeURIComponent(
+  const contactQuery = `?cidade=${encodeURIComponent(titleCaseFromSlug(normalizedCity))}&territorio=${encodeURIComponent(
     territoryName,
   )}&origem=comunidade-interesse`;
 
@@ -72,8 +82,8 @@ export function CommunityInterestPage() {
 
         <div className="mt-6 border-t pt-4 text-sm text-muted-foreground">
           Enquanto isso, você pode navegar pela cidade em{" "}
-          <button className="font-medium text-primary hover:underline" onClick={() => navigate(`/${state}/${city}`)}>
-            {titleCaseFromSlug(city)}
+          <button className="font-medium text-primary hover:underline" onClick={() => navigate(`/${normalizedState}/${normalizedCity}`)}>
+            {titleCaseFromSlug(normalizedCity)}
           </button>
           .
         </div>

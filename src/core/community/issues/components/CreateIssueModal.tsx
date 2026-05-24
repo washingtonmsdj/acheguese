@@ -1,5 +1,5 @@
 /**
- * CreateIssueModal - Modal de criacao de problema urbano
+ * CreateIssueModal - Modal de criação de problema urbano
  */
 
 import { useEffect } from "react";
@@ -110,10 +110,10 @@ export function CreateIssueModal({
         <DialogHeader>
           <DialogTitle>Reportar problema urbano</DialogTitle>
           <DialogDescription>
-            Use para problemas persistentes que requerem acao da prefeitura ou concessionaria.
+            Use para problemas persistentes que requerem ação da prefeitura ou concessionária.
           </DialogDescription>
           <p className="text-xs text-muted-foreground">
-            Local: <strong>{neighborhood ? `${neighborhood}, ${city}` : city || "Nao definido"}</strong>
+            Local: <strong>{neighborhood ? `${neighborhood}, ${city}` : city || "Não definido"}</strong>
           </p>
         </DialogHeader>
 
@@ -151,9 +151,9 @@ export function CreateIssueModal({
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Titulo</FormLabel>
+                  <FormLabel>Título</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ex: Buraco proximo ao mercado central" {...field} />
+                    <Input placeholder="Ex: Buraco próximo ao mercado central" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -165,10 +165,10 @@ export function CreateIssueModal({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Descricao</FormLabel>
+                  <FormLabel>Descrição</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Descreva o problema com detalhes observaveis."
+                      placeholder="Descreva o problema com detalhes observáveis."
                       rows={4}
                       {...field}
                     />
@@ -183,9 +183,9 @@ export function CreateIssueModal({
               name="address_reference"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Referencia de localizacao (opcional)</FormLabel>
+                  <FormLabel>Referência de localização (opcional)</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ex: Em frente ao mercado, perto da praca..." {...field} />
+                    <Input placeholder="Ex: Em frente ao mercado, perto da praça..." {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -194,7 +194,7 @@ export function CreateIssueModal({
 
             {!canSubmit && (
               <p className="text-xs text-amber-600">
-                Selecione um bairro valido para registrar o problema.
+                Selecione um bairro válido para registrar o problema.
               </p>
             )}
 

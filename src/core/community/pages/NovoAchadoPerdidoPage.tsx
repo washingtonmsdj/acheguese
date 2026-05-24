@@ -1,10 +1,17 @@
-import React from "react";
-import { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { mediaService } from "@/core/media/services/MediaService";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Upload, Loader2, CalendarIcon, MapPin } from "lucide-react";
+import {
+  ArrowLeft,
+  Upload,
+  Loader2,
+  CalendarIcon,
+  MapPin,
+  Search,
+  HeartHandshake,
+} from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
@@ -27,50 +34,31 @@ import { LocationPickerSheet } from "@/shared/components/LocationPickerSheet";
 import { useToast } from "@/shared/hooks/use-toast";
 import { lostFoundRuntimeService as lostFoundService } from "@/core/community/services/LostFoundRuntimeService";
 import { useAuth } from "@/core/auth/hooks/useAuth";
+import {
+  useCityLocalities,
+  type LocationOption,
+} from "@/core/location/hooks/useLocationCascade";
+import { LocationType } from "@/core/location/types";
 import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
 import { cn } from "@/shared/utils/cn";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { InlineFieldError } from "@/shared/components/ui/InlineFieldError";
 import {
+  LOST_FOUND_CATEGORY_OPTIONS,
   NovoAchadoPerdidoSchema,
   type NovoAchadoPerdidoInput,
 } from "@/shared/validation/schemas/lostfound.schema";
-const CATEGORIAS = [
-  { id: "animal", label: "Animal perdido", icon: "🐾" },
-  { id: "celular", label: "Celular", icon: "📱" },
-  { id: "documentos", label: "Documentos", icon: "📄" },
-  { id: "chaves", label: "Chaves", icon: "🔑" },
-  { id: "carteira", label: "Carteira", icon: "👛" },
-  { id: "objetos", label: "Objetos diversos", icon: "📦" },
-  { id: "outro", label: "Outro", icon: "❓" },
-];
 
-const BAIRROS = [
-  "Nova Holanda",
-  "Parque União",
-  "Rubens Vaz",
-  "Parque Maré",
-  "Baixa do Sapateiro",
-  "Morro do Timbau",
-  "Parque Roquete Pinto",
-  "Praia de Ramos",
-  "Conjunto Esperança",
-  "Vila do João",
-  "Salsa e Merengue",
-  "Marcílio Dias",
-  "Bento Ribeiro Dantas",
-  "Conjunto Pinheiros",
-  "Vila dos Pinheiros",
-  "Novo Pinheiros",
-];
+type TerritorySelectOption = Pick<LocationOption, "id" | "name" | "type">;
 
 export default function NovoAchadoPerdidoPage() {
   const navigate = useNavigate();
   const appUrls = useAppUrls(); // ✅ SSOT URLs
   const { toast } = useToast();
   const { user } = useAuth();
-  const { homeDistrict, loading: territoryLoading } = useUserTerritory();
+  const { homeDistrict, homeCity, hasHome, loading: territoryLoading } = useUserTerritory();
+  const { localities, loadingLocalities } = useCityLocalities(homeCity?.id ?? null);
   const [loading, setLoading] = useState(false);
   const [photoPreview, setFotoPreview] = useState<string | null>(null);
   const [photoFile, setFotoFile] = useState<File | null>(null);
@@ -92,6 +80,7 @@ export default function NovoAchadoPerdidoPage() {
       titulo: "",
       description: "",
       neighborhood: "",
+      location_id: undefined,
       localizacaoAprox: "",
       dateOcorrido: new Date(),
       latitude: null,
@@ -102,6 +91,45 @@ export default function NovoAchadoPerdidoPage() {
   const watchTipo = watch("tipo");
   const watchLatitude = watch("latitude");
   const watchLongitude = watch("longitude");
+  const selectedLocationId = watch("location_id");
+
+  const territoryOptions = useMemo<TerritorySelectOption[]>(() => {
+    const options = localities.map(({ id, name, type }) => ({ id, name, type }));
+
+    if (homeDistrict && !options.some((option) => option.id === homeDistrict.id)) {
+      options.unshift({
+        id: homeDistrict.id,
+        name: homeDistrict.name,
+        type: LocationType.NEIGHBORHOOD,
+      });
+    }
+
+    return options;
+  }, [homeDistrict, localities]);
+
+  const selectedTerritoryName = useMemo(() => {
+    return (
+      territoryOptions.find((option) => option.id === selectedLocationId)?.name ??
+      homeDistrict?.name ??
+      homeCity?.name ??
+      "sua região"
+    );
+  }, [homeCity?.name, homeDistrict?.name, selectedLocationId, territoryOptions]);
+
+  useEffect(() => {
+    if (selectedLocationId) return;
+    if (homeDistrict?.id) {
+      setValue("location_id", homeDistrict.id, { shouldValidate: true });
+      setValue("neighborhood", homeDistrict.name, { shouldValidate: false });
+      return;
+    }
+
+    if (territoryOptions.length === 1) {
+      const [onlyOption] = territoryOptions;
+      setValue("location_id", onlyOption.id, { shouldValidate: true });
+      setValue("neighborhood", onlyOption.name, { shouldValidate: false });
+    }
+  }, [homeDistrict?.id, homeDistrict?.name, selectedLocationId, setValue, territoryOptions]);
 
   const handleFotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -120,9 +148,21 @@ export default function NovoAchadoPerdidoPage() {
       return;
     }
 
-    if (!homeDistrict?.id) {
-      toast({ title: "Escolha seu bairro antes de publicar", variant: "destructive" });
+    if (!hasHome || (!homeDistrict?.id && !homeCity?.id)) {
+      toast({ title: "Escolha seu território antes de publicar", variant: "destructive" });
       navigate(appUrls.community.feed);
+      return;
+    }
+
+    const publicationLocationId = data.location_id ?? homeDistrict?.id ?? homeCity?.id ?? null;
+
+    if (!publicationLocationId) {
+      toast({ title: "Selecione o bairro ou região do item", variant: "destructive" });
+      return;
+    }
+
+    if (territoryOptions.length > 0 && !data.location_id) {
+      toast({ title: "Selecione o bairro ou região do item", variant: "destructive" });
       return;
     }
 
@@ -145,13 +185,13 @@ export default function NovoAchadoPerdidoPage() {
         imagens: photoUrl ? [photoUrl] : [],
         local_perdido: data.localizacaoAprox?.trim() ?? "",
         data_perdido: format(data.dateOcorrido, "yyyy-MM-dd"),
-        location_id: homeDistrict.id,
+        location_id: publicationLocationId,
         resolvido: false,
       });
 
       if (!result) throw new Error("Erro ao criar post");
       toast({ title: "Publicação criada!" });
-      navigate(`/achados-perdidos/${result.id}`);
+      navigate(appUrls.community.lostAndFoundDetail(result.id));
     } catch {
       toast({ title: "Erro ao publicar", variant: "destructive" });
     } finally {
@@ -190,7 +230,7 @@ export default function NovoAchadoPerdidoPage() {
                       : "border-border bg-card hover:bg-secondary/50",
                   )}
                 >
-                  <span className="text-3xl">😢</span>
+                  <Search className="h-7 w-7" aria-hidden="true" />
                   <span className="text-sm font-bold">Perdi algo</span>
                   <span className="text-[10px] text-muted-foreground">
                     Preciso de ajuda para encontrar
@@ -206,7 +246,7 @@ export default function NovoAchadoPerdidoPage() {
                       : "border-border bg-card hover:bg-secondary/50",
                   )}
                 >
-                  <span className="text-3xl">🤗</span>
+                  <HeartHandshake className="h-7 w-7" aria-hidden="true" />
                   <span className="text-sm font-bold">Encontrei algo</span>
                   <span className="text-[10px] text-muted-foreground">
                     Quero devolver ao dono
@@ -226,7 +266,7 @@ export default function NovoAchadoPerdidoPage() {
             control={control}
             render={({ field }) => (
               <div className="grid grid-cols-2 gap-2">
-                {CATEGORIAS.map((cat) => (
+                {LOST_FOUND_CATEGORY_OPTIONS.map((cat) => (
                   <button
                     key={cat.id}
                     type="button"
@@ -238,8 +278,7 @@ export default function NovoAchadoPerdidoPage() {
                         : "bg-card border-border hover:bg-secondary/50",
                     )}
                   >
-                    <span className="text-lg">{cat.icon}</span>
-                    <span className="font-medium text-xs">{cat.label}</span>
+                    <span className="font-medium text-xs">{cat.createLabel}</span>
                   </button>
                 ))}
               </div>
@@ -268,7 +307,7 @@ export default function NovoAchadoPerdidoPage() {
               <div className="w-full h-32 rounded-xl bg-secondary border-2 border-dashed border-muted-foreground flex flex-col items-center justify-center">
                 <Upload className="h-6 w-6 text-muted-foreground" />
                 <span className="text-xs text-muted-foreground mt-1">
-                  Toque para add photo
+                  Toque para adicionar foto
                 </span>
               </div>
             )}
@@ -280,7 +319,7 @@ export default function NovoAchadoPerdidoPage() {
           <Label>Título *</Label>
           <Input
             {...register("titulo")}
-            placeholder="Ex: Cachorro perdido na Nova Holanda"
+            placeholder={`Ex: Chave perdida em ${selectedTerritoryName}`}
             maxLength={150}
           />
           <InlineFieldError message={errors.titulo?.message} />
@@ -291,40 +330,64 @@ export default function NovoAchadoPerdidoPage() {
           <Label>Descrição</Label>
           <Textarea
             {...register("description")}
-            placeholder="Descreva o item com o máximo de detalhes: cor, tamanho, características..."
+            placeholder="Descreva o item com detalhes úteis: cor, tamanho, marca, características e como reconhecer."
             rows={3}
             maxLength={1000}
           />
           <InlineFieldError message={errors.description?.message} />
         </div>
 
-        {/* Bairro */}
+        {/* Território */}
         <div className="space-y-1.5">
-          <Label>Bairro</Label>
+          <Label>Bairro ou região</Label>
           <Controller
-            name="neighborhood"
+            name="location_id"
             control={control}
             render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
+              <Select
+                value={field.value ?? ""}
+                onValueChange={(value) => {
+                  field.onChange(value);
+                  const selected = territoryOptions.find((option) => option.id === value);
+                  setValue("neighborhood", selected?.name ?? "", { shouldValidate: false });
+                }}
+                disabled={territoryLoading || loadingLocalities || territoryOptions.length === 0}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione o bairro" />
+                  <SelectValue
+                    placeholder={
+                      loadingLocalities
+                        ? "Carregando bairros e regiões..."
+                        : "Selecione o bairro ou região"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
-                  {BAIRROS.map((b) => (
-                    <SelectItem key={b} value={b}>
-                      {b}
+                  {territoryOptions.map((territory) => (
+                    <SelectItem key={territory.id} value={territory.id}>
+                      {territory.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             )}
           />
+          {territoryOptions.length === 0 && !loadingLocalities && (
+            <p className="text-xs text-muted-foreground">
+              Não há bairros/regiões carregados para {homeCity?.name ?? "sua cidade"}. A publicação
+              será vinculada ao território residencial disponível.
+            </p>
+          )}
+          <InlineFieldError message={errors.location_id?.message} />
         </div>
 
         {/* Localização aprox */}
         <div className="space-y-1.5">
           <Label>Localização aproximada</Label>
-          <Input {...register("localizacaoAprox")} placeholder="Ex: Perto da praça principal" />
+          <Input
+            {...register("localizacaoAprox")}
+            placeholder="Ex: perto da praça, ponto de ônibus, escola ou comércio de referência"
+          />
         </div>
 
         {/* Localização Exata no Mapa */}
@@ -343,7 +406,7 @@ export default function NovoAchadoPerdidoPage() {
           >
             <MapPin className="h-4 w-4 mr-2" />
             {watchLatitude && watchLongitude
-              ? `📍 Localização marcada (${watchLatitude.toFixed(4)}, ${watchLongitude.toFixed(4)})`
+              ? `Localização marcada (${watchLatitude.toFixed(4)}, ${watchLongitude.toFixed(4)})`
               : "Marcar no Mapa"}
           </Button>
           {watchLatitude && watchLongitude && (
@@ -402,7 +465,7 @@ export default function NovoAchadoPerdidoPage() {
         <Button
           type="submit"
           className="w-full"
-          disabled={loading || territoryLoading}
+          disabled={loading || territoryLoading || loadingLocalities}
         >
           {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
           Publicar

@@ -1,19 +1,13 @@
-﻿/**
+import type { BusinessCategory as CanonicalBusinessCategory } from "@/shared/taxonomy/businessCategories";
+
+/**
  * BUSINESS TYPES - Tipos Compartilhados SSOT
  *
  * Tipos basicos de Business usados transversalmente na aplicacao.
  * Para tipos especificos do dominio business, veja os tipos locais do core.
  */
 
-export type BusinessCategory =
-  | "restaurante"
-  | "mercado"
-  | "farmacia"
-  | "saude"
-  | "educacao"
-  | "servicos"
-  | "lazer"
-  | "outros";
+export type BusinessCategory = CanonicalBusinessCategory;
 
 export type BusinessCompanyType =
   | "mei"

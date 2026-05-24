@@ -1,9 +1,9 @@
-﻿/**
- * 🎉 EVENTOS PAGE - REDESIGN COMPLETO v3.0
+/**
+ *  EVENTOS PAGE - REDESIGN COMPLETO v3.0
  *
  * Nova experiência visual premium para eventos comunitários
  *
- * ✨ FEATURES v3.0:
+ *  FEATURES v3.0:
  * - Hero section com gradiente animado
  * - Tabs de visualização (Lista/Grade/Mapa)
  * - Filtros avançados com chips animados
@@ -47,25 +47,13 @@ import { useCommunityUrls } from "@/core/community/hooks/useCommunityUrls";
 import { ModuleLocationDialog } from "@/core/location/components/ModuleLocationDialog";
 import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
 import { useTerritoryFilter } from "@/core/location/hooks/useTerritoryFilter";
+import { EVENT_LIST_CATEGORY_OPTIONS } from "@/shared/taxonomy/events";
 import { EventGrid } from "@/shared/components/eventos/EventGrid";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Badge } from "@/shared/components/ui/badge";
 import { cn } from "@/shared/utils/cn";
 type RouteResolved = any;
-
-// ============================================================================
-// CONSTANTS
-// ============================================================================
-
-const CATEGORIAS = [
-  { id: "todos", name: "Todos", icon: "📋", color: "from-slate-500 to-slate-600" },
-  { id: "cultural", name: "Cultural", icon: "🎭", color: "from-purple-500 to-pink-500" },
-  { id: "esportivo", name: "Esportivo", icon: "⚽", color: "from-green-500 to-emerald-500" },
-  { id: "social", name: "Social", icon: "🤝", color: "from-blue-500 to-cyan-500" },
-  { id: "religioso", name: "Religioso", icon: "🙏", color: "from-amber-500 to-orange-500" },
-  { id: "educacional", name: "Educacional", icon: "📚", color: "from-indigo-500 to-violet-500" },
-];
 
 type ViewMode = "list" | "grid" | "map";
 
@@ -439,7 +427,7 @@ export default function EventosPage({ resolved, activeMemberIds }: EventosPagePr
                       Categorias
                     </p>
                     <div className="flex flex-wrap gap-2">
-                      {CATEGORIAS.map((cat) => {
+                      {EVENT_LIST_CATEGORY_OPTIONS.map((cat) => {
                         const isActive = category === cat.id;
                         return (
                           <motion.button
@@ -455,7 +443,6 @@ export default function EventosPage({ resolved, activeMemberIds }: EventosPagePr
                             )}
                           >
                             <span className="relative z-10 flex items-center gap-1.5">
-                              <span>{cat.icon}</span>
                               <span>{cat.name}</span>
                             </span>
                             {isActive && (

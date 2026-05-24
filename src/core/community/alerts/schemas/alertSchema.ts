@@ -1,5 +1,5 @@
 /**
- * Community Alerts - Schemas de validacao Zod
+ * Community Alerts - Schemas de validação Zod
  */
 
 import { z } from "zod";
@@ -42,50 +42,50 @@ function containsBlockedTerm(text: string): boolean {
 export const createAlertSchema = z
   .object({
     category: z.enum(VALID_CATEGORIES, {
-      errorMap: () => ({ message: "Selecione uma categoria valida." }),
+      errorMap: () => ({ message: "Selecione uma categoria válida." }),
     }),
 
-    location_id: z.string().uuid("Localizacao invalida."),
+    location_id: z.string().uuid("Localização inválida."),
 
     location_reference: z
       .string()
-      .max(120, "Referencia muito longa.")
+      .max(120, "Referência muito longa.")
       .optional()
-      .refine((val) => !val || !containsBlockedTerm(val), "A referencia contem conteudo nao permitido."),
+      .refine((val) => !val || !containsBlockedTerm(val), "A referência contém conteúdo não permitido."),
 
     description: z
       .string()
       .min(
         ALERT_RULES.DESCRIPTION_MIN_LENGTH,
-        `Descricao deve ter pelo menos ${ALERT_RULES.DESCRIPTION_MIN_LENGTH} caracteres.`
+        `Descrição deve ter pelo menos ${ALERT_RULES.DESCRIPTION_MIN_LENGTH} caracteres.`
       )
       .max(
         ALERT_RULES.DESCRIPTION_MAX_LENGTH,
-        `Descricao deve ter no maximo ${ALERT_RULES.DESCRIPTION_MAX_LENGTH} caracteres.`
+        `Descrição deve ter no máximo ${ALERT_RULES.DESCRIPTION_MAX_LENGTH} caracteres.`
       )
-      .refine((val) => !containsBlockedTerm(val), "A descricao contem conteudo nao permitido neste recurso."),
+      .refine((val) => !containsBlockedTerm(val), "A descrição contém conteúdo não permitido neste recurso."),
 
     seen_personally: z.boolean(),
 
     started_at_approx: z.enum(VALID_STARTED_APPROX, {
-      errorMap: () => ({ message: "Selecione quando o evento comecou." }),
+      errorMap: () => ({ message: "Selecione quando o evento começou." }),
     }),
 
     is_happening_now: z.boolean(),
     still_risky: z.boolean(),
 
     confirm_real: z.literal(true, {
-      errorMap: () => ({ message: "Confirmacao obrigatoria." }),
+      errorMap: () => ({ message: "Confirmação obrigatória." }),
     }),
     confirm_no_ops: z.literal(true, {
-      errorMap: () => ({ message: "Confirmacao obrigatoria." }),
+      errorMap: () => ({ message: "Confirmação obrigatória." }),
     }),
     confirm_consequences: z.literal(true, {
-      errorMap: () => ({ message: "Confirmacao obrigatoria." }),
+      errorMap: () => ({ message: "Confirmação obrigatória." }),
     }),
   })
   .refine((data) => !(data.is_happening_now === true && data.still_risky === false), {
-    message: "Se o evento esta acontecendo agora, ele ainda representa risco.",
+    message: "Se o evento está acontecendo agora, ele ainda representa risco.",
     path: ["still_risky"],
   })
   .refine(
@@ -103,7 +103,7 @@ export const updateAlertSchema = z.object({
     .string()
     .min(ALERT_RULES.DESCRIPTION_MIN_LENGTH)
     .max(ALERT_RULES.DESCRIPTION_MAX_LENGTH)
-    .refine((val) => !containsBlockedTerm(val), "Conteudo nao permitido.")
+    .refine((val) => !containsBlockedTerm(val), "Conteúdo não permitido.")
     .optional(),
   still_risky: z.boolean().optional(),
 });
@@ -111,7 +111,7 @@ export const updateAlertSchema = z.object({
 export type UpdateAlertFormData = z.infer<typeof updateAlertSchema>;
 
 export const createAlertReportSchema = z.object({
-  alert_id: z.string().uuid("ID de alerta invalido."),
+  alert_id: z.string().uuid("ID de alerta inválido."),
   reason: z.enum(VALID_REPORT_REASONS, {
     errorMap: () => ({ message: "Selecione um motivo." }),
   }),

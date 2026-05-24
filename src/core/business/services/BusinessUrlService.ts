@@ -1,21 +1,21 @@
 /**
- * BusinessUrlService â€” Camada autorizada SSOT para URLs pÃºblicas de empresas.
+ * BusinessUrlService — Camada autorizada SSOT para URLs públicas de empresas.
  *
  * REGRAS ARQUITETURAIS:
- *   - Nenhum componente, hook ou pÃ¡gina monta URL de empresa manualmente.
- *   - Toda geraÃ§Ã£o, resoluÃ§Ã£o e validaÃ§Ã£o de URL passa por aqui.
+ *   - Nenhum componente, hook ou página monta URL de empresa manualmente.
+ *   - Toda geração, resolução e validação de URL passa por aqui.
  *   - Hooks apenas consomem este service.
  *
- * PADRÃƒO OFICIAL DE URLs:
- *   CanÃ´nica pÃºblica:  /empresas/:uf/:cidade/:slug
- *   Premium (curta):   /p/:slug  â†’ mini-site premium isolado
+ * PADRÃO OFICIAL DE URLs:
+ *   Canônica pública:  /empresas/:uf/:cidade/:slug
+ *   Premium (curta):   /p/:slug  → mini-site premium isolado
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import { PublicIdentityService } from '@/core/public-identity/services/PublicIdentityService';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 
-// â”€â”€â”€ Tipos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Tipos ────────────────────────────────────────────────────────────────────
 
 export interface BusinessUrlContext {
   /** profile_id da empresa */
@@ -28,24 +28,24 @@ export interface BusinessUrlContext {
 
 
 export interface ResolvedBusinessUrl {
-  /** URL canÃ´nica pÃºblica: /empresas/ba/salvador/pituba/tonecos-studios */
+  /** URL canônica pública: /empresas/ba/salvador/pituba/tonecos-studios */
   canonical: string;
-  /** URL premium curta (sÃ³ para is_premium): /p/tonecos-studios */
+  /** URL premium curta (só para is_premium): /p/tonecos-studios */
   premium: string | null;
 
   /** URL interna de gestao: /central/empresas/:id */
   dashboard: string;
 }
 
-// â”€â”€â”€ Helpers internos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Helpers internos ─────────────────────────────────────────────────────────
 
 /**
  * Extrai segmentos UF, cidade e bairro de um geographic_path.
- * OBRIGATÃ“RIO: geographic_path deve ter 4 segmentos (paÃ­s/estado/cidade/bairro).
+ * OBRIGATÓRIO: geographic_path deve ter 4 segmentos (país/estado/cidade/bairro).
  *
- * Ex: '/br/ba/salvador/pituba' â†’ { uf: 'ba', cidade: 'salvador', bairro: 'pituba' }
+ * Ex: '/br/ba/salvador/pituba' → { uf: 'ba', cidade: 'salvador', bairro: 'pituba' }
  *
- * Retorna null se nÃ£o tiver bairro (empresa invÃ¡lida).
+ * Retorna null se não tiver bairro (empresa inválida).
  */
 function extractTerritorySegments(
   geoPath: string,
@@ -55,7 +55,7 @@ function extractTerritorySegments(
   // Esperado: [country, state, city, district]
   if (parts.length < 4) {
     logger.error(
-      `[BusinessUrlService] geographic_path invÃ¡lido (sem bairro): "${geoPath}". ` +
+      `[BusinessUrlService] geographic_path inválido (sem bairro): "${geoPath}". ` +
       `Empresas devem ter location_id apontando para bairro/district.`
     );
     return null;
@@ -63,14 +63,14 @@ function extractTerritorySegments(
   return { uf: parts[1], cidade: parts[2], bairro: parts[3] };
 }
 
-// â”€â”€â”€ Service â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Service ──────────────────────────────────────────────────────────────────
 
 export class BusinessUrlService {
   /**
-   * Gera todas as URLs para uma empresa a partir do contexto mÃ­nimo.
+   * Gera todas as URLs para uma empresa a partir do contexto mínimo.
    *
-   * OBRIGATÃ“RIO: geographic_path deve incluir bairro.
-   * Empresas sem bairro sÃ£o invÃ¡lidas e retornam erro.
+   * OBRIGATÓRIO: geographic_path deve incluir bairro.
+   * Empresas sem bairro são inválidas e retornam erro.
    *
    * @param ctx - Contexto da empresa
    */
@@ -88,7 +88,7 @@ export class BusinessUrlService {
 
     if (!territory) {
       throw new Error(
-        `[BusinessUrlService] Empresa ${id} com geographic_path invÃ¡lido: "${geographic_path}". ` +
+        `[BusinessUrlService] Empresa ${id} com geographic_path inválido: "${geographic_path}". ` +
         `Esperado formato: /br/:uf/:cidade/:bairro`
       );
     }
@@ -105,7 +105,7 @@ export class BusinessUrlService {
   }
 
   /**
-   * Gera apenas a URL canÃ´nica pÃºblica.
+   * Gera apenas a URL canônica pública.
    * Uso: links em cards, SEO, compartilhamento.
    */
   static getCanonicalUrl(ctx: BusinessUrlContext): string {
@@ -113,10 +113,10 @@ export class BusinessUrlService {
   }
 
   /**
-   * Gera a URL premium curta, ou a canÃ´nica se nÃ£o for premium.
-   * Uso: botÃ£o "compartilhar" para empresas premium.
+   * Gera a URL premium curta, ou a canônica se não for premium.
+   * Uso: botão "compartilhar" para empresas premium.
    *
-   * IMPORTANTE: is_premium deve vir de entitlement resolvido, nÃ£o de flag isolada.
+   * IMPORTANTE: is_premium deve vir de entitlement resolvido, não de flag isolada.
    * Para uso correto, consultar EntitlementResolver.hasShortPremiumLink()
    */
   static getShareUrl(ctx: BusinessUrlContext): string {
@@ -126,7 +126,7 @@ export class BusinessUrlService {
 
   /**
    * Gera a URL de compartilhamento baseada em entitlement.
-   * VersÃ£o SSOT que consulta o resolver de entitlements.
+   * Versão SSOT que consulta o resolver de entitlements.
    *
    * @param ctx - Contexto da empresa
    * @param hasShortLinkEntitlement - Resultado de EntitlementResolver.hasShortPremiumLink()
@@ -143,7 +143,7 @@ export class BusinessUrlService {
    * Resolve empresa por slug, retornando o contexto completo de URL.
    * Faz join com locations para obter geographic_path.
    *
-   * Retorna null se nÃ£o encontrada ou inativa.
+   * Retorna null se não encontrada ou inativa.
    */
   static async resolveBySlug(slug: string): Promise<BusinessUrlContext | null> {
     try {
@@ -178,7 +178,7 @@ export class BusinessUrlService {
 
   /**
    * Resolve empresa por slug curto premium (/p/:slug) usando business_premium_links.
-   * Prioriza o mapeamento explÃ­cito de assinantes elegÃ­veis.
+   * Prioriza o mapeamento explícito de assinantes elegíveis.
    */
   static async resolveByPremiumSlug(slug: string): Promise<BusinessUrlContext | null> {
     try {
@@ -240,7 +240,7 @@ export class BusinessUrlService {
 
   /**
    * Resolve empresa por ID (profile_id), retornando o contexto completo de URL.
-   * Usado para redirect de rotas legado /business/:uuid.
+   * Usado por componentes internos que recebem apenas o identificador da empresa.
    */
   static async resolveById(id: string): Promise<BusinessUrlContext | null> {
     try {
@@ -274,10 +274,10 @@ export class BusinessUrlService {
   }
 
   /**
-   * Resolve empresa por UF + cidade + bairro + slug (rota canÃ´nica territorial).
-   * Valida que a empresa pertence ao territÃ³rio informado.
+   * Resolve empresa por UF + cidade + bairro + slug (rota canônica territorial).
+   * Valida que a empresa pertence ao território informado.
    *
-   * Retorna null se nÃ£o encontrada, inativa, ou territÃ³rio nÃ£o bate.
+   * Retorna null se não encontrada, inativa, ou território não bate.
    */
   static async resolveByTerritoryAndSlug(
     uf: string,
@@ -305,10 +305,10 @@ export class BusinessUrlService {
 
       const geoPath: string = data.location?.geographic_path ?? '';
 
-      // Valida que o geographic_path bate exatamente com o territÃ³rio esperado
+      // Valida que o geographic_path bate exatamente com o território esperado
       if (geoPath !== expectedPathPrefix) {
         logger.warn(
-          `[BusinessUrlService] Empresa "${slug}" encontrada mas territÃ³rio nÃ£o bate. ` +
+          `[BusinessUrlService] Empresa "${slug}" encontrada mas território não bate. ` +
             `Esperado: ${expectedPathPrefix}, Atual: ${geoPath}`,
         );
         return null;
@@ -327,8 +327,8 @@ export class BusinessUrlService {
   }
 
   /**
-   * Valida se um slug pode ser usado como identificador pÃºblico de empresa.
-   * Usa PublicIdentityService para validaÃ§Ã£o consistente.
+   * Valida se um slug pode ser usado como identificador público de empresa.
+   * Usa PublicIdentityService para validação consistente.
    */
   static isValidSlug(slug: string): boolean {
     // Valida formato
@@ -343,15 +343,15 @@ export class BusinessUrlService {
 
   /**
    * Gera slug a partir de um nome de empresa.
-   * Usa PublicIdentityService para normalizaÃ§Ã£o consistente.
+   * Usa PublicIdentityService para normalização consistente.
    */
   static generateSlug(name: string): string {
     return PublicIdentityService.normalize(name, 'business');
   }
 
   /**
-   * Gera slug Ãºnico verificando disponibilidade via PublicIdentityService.
-   * Adiciona sufixo numÃ©rico se necessÃ¡rio.
+   * Gera slug único verificando disponibilidade via PublicIdentityService.
+   * Adiciona sufixo numérico se necessário.
    */
   static async generateUniqueSlug(name: string): Promise<string> {
     const slug = this.generateSlug(name);
@@ -362,12 +362,12 @@ export class BusinessUrlService {
       entityType: 'business',
     });
 
-    // Se disponÃ­vel, retorna
+    // Se disponível, retorna
     if (availability.status === 'available') {
       return slug;
     }
 
-    // Se nÃ£o disponÃ­vel, usa sugestÃ£o
+    // Se não disponível, usa sugestão
     if (availability.suggestion) {
       return availability.suggestion;
     }

@@ -24,7 +24,7 @@ import {
 } from "../styles/communityDesignSystem";
 import { Send } from "lucide-react";
 import { logger } from "@/shared/utils/logger";
-import { commentService } from "@/core/comments/services/CommentService";
+import { CommentService } from "@/core/comments/services/CommentService";
 import { useSessionContext } from "@/core/session";
 import { toast } from "sonner";
 
@@ -101,29 +101,29 @@ export function PostDetailModal({
     const diffDays = Math.floor(diffMs / 86400000);
 
     if (diffMins < 1) return "agora";
-    if (diffMins < 60) return `ha ${diffMins} minuto${diffMins > 1 ? "s" : ""}`;
-    if (diffHours < 24) return `ha ${diffHours} hora${diffHours > 1 ? "s" : ""}`;
-    if (diffDays < 7) return `ha ${diffDays} dia${diffDays > 1 ? "s" : ""}`;
+    if (diffMins < 60) return `há ${diffMins} minuto${diffMins > 1 ? "s" : ""}`;
+    if (diffHours < 24) return `há ${diffHours} hora${diffHours > 1 ? "s" : ""}`;
+    if (diffDays < 7) return `há ${diffDays} dia${diffDays > 1 ? "s" : ""}`;
     return date.toLocaleDateString("pt-BR");
   };
 
   const handleSubmitComment = async () => {
     if (!commentText.trim() || isSubmitting) return;
     if (!activeProfile?.id) {
-      toast.error("Voce precisa estar logado para comentar.");
+      toast.error("Você precisa estar logado para comentar.");
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const createdComment = await commentService.createComment({
+      const createdComment = await CommentService.createComment({
         post_id: post.id,
         author_profile_id: activeProfile.id,
         content: commentText.trim(),
       });
 
       if (!createdComment) {
-        toast.error("Nao foi possivel enviar o comentario.");
+        toast.error("Não foi possível enviar o comentário.");
         return;
       }
 
@@ -134,7 +134,7 @@ export function PostDetailModal({
           author_name:
             ((activeProfile as { display_name?: string } | null)?.display_name ??
               activeProfile.displayName ??
-              "Usuario")
+              "Usuário")
               .trim(),
           author_avatar:
             (activeProfile as { avatar_url?: string | null } | null)?.avatar_url ??
@@ -146,10 +146,10 @@ export function PostDetailModal({
         },
       ]);
       setCommentText("");
-      toast.success("Comentario enviado.");
+      toast.success("Comentário enviado.");
     } catch (error) {
       logger.error("Error sending comment:", error);
-      toast.error("Erro ao enviar comentario.");
+      toast.error("Erro ao enviar comentário.");
     } finally {
       setIsSubmitting(false);
     }
@@ -164,9 +164,9 @@ export function PostDetailModal({
       >
         <DialogHeader className="p-4 pb-0">
           <DialogTitle style={INLINE_STYLES.textPrimary}>Detalhes do Post</DialogTitle>
-          <span id="dialog-description" className="sr-only">Conteudo do dialogo</span>
+          <span id="dialog-description" className="sr-only">Conteúdo do diálogo</span>
         </DialogHeader>
-        <DialogDescription className="sr-only">Detalhes completos da publicacao</DialogDescription>
+        <DialogDescription className="sr-only">Detalhes completos da publicação</DialogDescription>
 
         <ScrollArea className="flex-1 px-4">
           <div className={SPACING.sectionGap}>
@@ -211,12 +211,12 @@ export function PostDetailModal({
 
             <div className="space-y-3 pb-4">
               <h3 className="font-bold text-sm" style={INLINE_STYLES.textPrimary}>
-                Comentarios ({localComments.length})
+                Comentários ({localComments.length})
               </h3>
 
               {localComments.length === 0 ? (
                 <p className="text-sm text-center py-6" style={INLINE_STYLES.textSecondary}>
-                  Nenhum comentario ainda. Seja o primeiro!
+                  Nenhum comentário ainda. Seja o primeiro!
                 </p>
               ) : (
                 localComments.map((comment) => (
@@ -251,7 +251,7 @@ export function PostDetailModal({
             <Textarea
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
-              placeholder="Escreva um comentario..."
+              placeholder="Escreva um comentário..."
               className="flex-1 min-h-[80px] resize-none border-white/10"
               style={{ backgroundColor: "rgba(255, 255, 255, 0.05)", color: "#FFFFFF" }}
               disabled={isSubmitting}

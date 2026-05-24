@@ -14,13 +14,14 @@ import {
   Accessibility, Globe, CalendarCheck, DollarSign, MapPin, Flame,
   BadgeCheck, Phone, Layers,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import type { BusinessCategory } from "@/core/business/types/Business";
 
 // ── Filter Option ────────────────────────────────────────────────────
 export interface FilterOption {
   id: string;
   label: string;
-  icon: React.ElementType;
+  icon: LucideIcon;
   /** Filter logic key — mapped in the page component */
   filterKey: string;
 }
@@ -37,7 +38,7 @@ export interface CategoryConfig {
   label: string;
   labelPlural: string;
   description: string;
-  icon: React.ElementType;
+  icon: LucideIcon;
   color: string;         // Tailwind text class token
   bg: string;            // Tailwind bg class token
   accentGradient: string; // gradient for hero
@@ -47,8 +48,6 @@ export interface CategoryConfig {
   showOpenStatus: boolean;
   /** Show delivery badge */
   showDeliveryBadge: boolean;
-  /** Emoji for empty state */
-  emptyEmoji: string;
 }
 
 // ── Common filters (shared across niches) ────────────────────────────
@@ -79,7 +78,6 @@ const RESTAURANTE_CONFIG: CategoryConfig = {
   accentGradient: "from-orange-500/20 via-card to-amber-500/10",
   showOpenStatus: true,
   showDeliveryBadge: true,
-  emptyEmoji: "🍽️",
   filters: [
     ...COMMON_FILTERS,
     { id: "delivery", label: "Delivery", icon: Truck, filterKey: "delivery" },
@@ -104,7 +102,6 @@ const MERCADO_CONFIG: CategoryConfig = {
   accentGradient: "from-emerald-500/20 via-card to-green-500/10",
   showOpenStatus: true,
   showDeliveryBadge: true,
-  emptyEmoji: "🛒",
   filters: [
     ...COMMON_FILTERS,
     { id: "delivery", label: "Delivery", icon: Truck, filterKey: "delivery" },
@@ -124,7 +121,6 @@ const FARMACIA_CONFIG: CategoryConfig = {
   accentGradient: "from-rose-500/20 via-card to-pink-500/10",
   showOpenStatus: true,
   showDeliveryBadge: true,
-  emptyEmoji: "💊",
   filters: [
     ...COMMON_FILTERS,
     { id: "delivery", label: "Delivery", icon: Truck, filterKey: "delivery" },
@@ -144,7 +140,6 @@ const SAUDE_CONFIG: CategoryConfig = {
   accentGradient: "from-sky-500/20 via-card to-cyan-500/10",
   showOpenStatus: true,
   showDeliveryBadge: false,
-  emptyEmoji: "🏥",
   filters: [
     ...COMMON_FILTERS,
     { id: "accessibility", label: "Acessibilidade", icon: Accessibility, filterKey: "accessibility" },
@@ -167,7 +162,6 @@ const EDUCACAO_CONFIG: CategoryConfig = {
   accentGradient: "from-violet-500/20 via-card to-purple-500/10",
   showOpenStatus: false,
   showDeliveryBadge: false,
-  emptyEmoji: "📚",
   filters: [
     ...COMMON_FILTERS,
     { id: "online", label: "Online / EAD", icon: Globe, filterKey: "online" },
@@ -187,7 +181,6 @@ const SERVICOS_CONFIG: CategoryConfig = {
   accentGradient: "from-amber-500/20 via-card to-yellow-500/10",
   showOpenStatus: true,
   showDeliveryBadge: false,
-  emptyEmoji: "🔧",
   filters: [
     ...COMMON_FILTERS,
     { id: "delivery", label: "Atende a domicílio", icon: Truck, filterKey: "delivery" },
@@ -207,7 +200,6 @@ const LAZER_CONFIG: CategoryConfig = {
   accentGradient: "from-teal-500/20 via-card to-emerald-500/10",
   showOpenStatus: true,
   showDeliveryBadge: false,
-  emptyEmoji: "🎯",
   filters: [
     ...COMMON_FILTERS,
     { id: "pets", label: "Pet friendly", icon: Dog, filterKey: "pets" },
@@ -227,7 +219,6 @@ const OUTROS_CONFIG: CategoryConfig = {
   accentGradient: "from-secondary via-card to-muted",
   showOpenStatus: true,
   showDeliveryBadge: false,
-  emptyEmoji: "🏪",
   filters: COMMON_FILTERS,
   sortOptions: COMMON_SORTS,
 };

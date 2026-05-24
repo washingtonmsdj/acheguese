@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
@@ -19,6 +19,7 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import { TooltipProvider } from "@/shared/components/ui/tooltip";
 import { useAppUrls } from "@/core/routing/hooks"; // ✅ SSOT URLs
 import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
+import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
 import { useSessionContext } from "@/core/session";
 import {
   Select,
@@ -36,17 +37,10 @@ import {
   usePaginatedState,
 } from "@/shared/hooks/useInfiniteScroll";
 import { lostFoundRuntimeService as lostFoundService } from "@/core/community/services/LostFoundRuntimeService";
-
-const CATEGORIAS = [
-  { id: "todos", label: "Todos", icon: "🔍" },
-  { id: "animal", label: "Animal", icon: "🐾" },
-  { id: "celular", label: "Celular", icon: "📱" },
-  { id: "documentos", label: "Documentos", icon: "📄" },
-  { id: "chaves", label: "Chaves", icon: "🔑" },
-  { id: "carteira", label: "Carteira", icon: "👛" },
-  { id: "objetos", label: "Objetos", icon: "📦" },
-  { id: "outro", label: "Outro", icon: "❓" },
-];
+import {
+  getLostFoundCategoryLabel,
+  LOST_FOUND_FILTER_OPTIONS,
+} from "@/shared/validation/schemas/lostfound.schema";
 type LostFoundTipoFilter = "todos" | "perdido" | "achado";
 
 interface LostFoundItem {
@@ -57,6 +51,7 @@ interface LostFoundItem {
   descricao: string;
   foto_url: string;
   bairro_publico: string;
+  location_id: string | null;
   data_ocorrido: string;
   resolvido: boolean;
   created_at: string;
@@ -68,6 +63,7 @@ export default function AchadosPerdidosPage() {
   const [search, setSearch] = useState("");
   const [filterTipo, setFilterTipo] = useState<LostFoundTipoFilter>("todos");
   const [filterCategoria, setFilterCategoria] = useState("todos");
+  const [locationLabels, setLocationLabels] = useState<Record<string, string>>({});
 
   // ✅ Verificação de autenticação
   const { activeProfile } = useSessionContext();
@@ -119,6 +115,7 @@ export default function AchadosPerdidosPage() {
             descricao: p.descricao || "",
             foto_url: p.imagens?.[0] || "",
             bairro_publico: "",
+            location_id: p.location_id ?? null,
             data_ocorrido: p.data_perdido || "",
             resolvido: p.resolvido || false,
             created_at: p.created_at || "",
@@ -147,11 +144,51 @@ export default function AchadosPerdidosPage() {
     }
   }, [page, filterTipo, filterCategoria, territoryLocationId, fetchPage]);
 
+  useEffect(() => {
+    const missingLocationIds = Array.from(
+      new Set(
+        items
+          .map((item) => item.location_id)
+          .filter((id): id is string => Boolean(id) && !locationLabels[id]),
+      ),
+    );
+
+    if (missingLocationIds.length === 0) return;
+
+    let cancelled = false;
+    const repo = createLocationRepository();
+
+    Promise.all(
+      missingLocationIds.map(async (id) => {
+        const location = await repo.findById(id);
+        return [id, location?.name ?? "Território não informado"] as const;
+      }),
+    ).then((entries) => {
+      if (cancelled) return;
+      setLocationLabels((current) => ({
+        ...current,
+        ...Object.fromEntries(entries),
+      }));
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [items, locationLabels]);
+
   const { sentinelRef } = useInfiniteScroll({
     hasMore,
     loading,
     onLoadMore: nextPage,
   });
+
+  const resolveItemTerritoryLabel = (item: LostFoundItem) => {
+    if (item.location_id) {
+      return locationLabels[item.location_id] ?? "Carregando território...";
+    }
+
+    return item.bairro_publico || "Território não informado";
+  };
 
   const searchLower = search.toLowerCase();
   const filtered = items.filter(
@@ -159,11 +196,8 @@ export default function AchadosPerdidosPage() {
       !search ||
       p.titulo.toLowerCase().includes(searchLower) ||
       p.descricao.toLowerCase().includes(searchLower) ||
-      p.bairro_publico.toLowerCase().includes(searchLower),
+      resolveItemTerritoryLabel(p).toLowerCase().includes(searchLower),
   );
-
-  const getCatIcon = (cat: string) =>
-    CATEGORIAS.find((c) => c.id === cat)?.icon || "❓";
 
   // Bloquear se não estiver logado
   if (!activeProfile) {
@@ -249,8 +283,8 @@ export default function AchadosPerdidosPage() {
       <div className="flex gap-2 px-4 py-2">
         {[
           { id: "todos", label: "Todos", color: "" },
-          { id: "perdido", label: "🔴 Perdido", color: "text-destructive" },
-          { id: "achado" as const, label: "🟢 Encontrado", color: "text-success" },
+          { id: "perdido", label: "Perdidos", color: "text-destructive" },
+          { id: "achado" as const, label: "Encontrados", color: "text-success" },
         ].map((t) => (
           <button
             key={t.id}
@@ -269,7 +303,7 @@ export default function AchadosPerdidosPage() {
 
       {/* Categoria filter */}
       <div className="flex gap-2 px-4 pb-2 overflow-x-auto">
-        {CATEGORIAS.map((cat) => (
+        {LOST_FOUND_FILTER_OPTIONS.map((cat) => (
           <button
             key={cat.id}
             onClick={() => setFilterCategoria(cat.id)}
@@ -280,7 +314,7 @@ export default function AchadosPerdidosPage() {
                 : "bg-card border-border",
             )}
           >
-            {cat.icon} {cat.label}
+            {cat.label}
           </button>
         ))}
       </div>
@@ -293,7 +327,7 @@ export default function AchadosPerdidosPage() {
           ))
         ) : filtered.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-4xl mb-3">🔎</p>
+            <Search className="h-10 w-10 mx-auto mb-3 text-muted-foreground" aria-hidden="true" />
             <p className="text-sm text-muted-foreground mb-3">
               Nenhum item publicado ainda.
             </p>
@@ -311,7 +345,7 @@ export default function AchadosPerdidosPage() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: Math.min(i, 5) * 0.04 }}
-              onClick={() => navigate(`/achados-perdidos/${item.id}`)}
+              onClick={() => navigate(appUrls.community.lostAndFoundDetail(item.id))}
               className={cn(
                 "flex gap-3 bg-card rounded-xl border p-3 cursor-pointer hover:shadow-md transition-shadow",
                 item.resolvido && "opacity-60",
@@ -325,8 +359,10 @@ export default function AchadosPerdidosPage() {
                   loading="lazy"
                 />
               ) : (
-                <div className="h-20 w-20 rounded-xl bg-secondary flex items-center justify-center text-3xl flex-shrink-0">
-                  {getCatIcon(item.categoria)}
+                <div className="h-20 w-20 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0 px-2 text-center">
+                  <span className="text-[11px] font-semibold leading-tight text-muted-foreground">
+                    {getLostFoundCategoryLabel(item.categoria)}
+                  </span>
                 </div>
               )}
               <div className="flex-1 min-w-0">
@@ -355,7 +391,7 @@ export default function AchadosPerdidosPage() {
                 <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground">
                   <span className="flex items-center gap-0.5">
                     <MapPin className="h-3 w-3" />
-                    {item.bairro_publico || "Não informado"}
+                    {resolveItemTerritoryLabel(item)}
                   </span>
                   {item.data_ocorrido && (
                     <span>
@@ -380,4 +416,3 @@ export default function AchadosPerdidosPage() {
     </div>
   );
 }
-

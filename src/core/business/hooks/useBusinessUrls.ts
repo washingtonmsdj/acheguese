@@ -20,7 +20,7 @@ import { businessManagementRoutes } from '@/core/business/utils/businessManageme
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
 
 export interface BusinessUrls {
-  /** Lista de empresas: /empresas/ba/salvador ou /empresas/ba/salvador/area/complexo-do-nordeste */
+  /** Lista de empresas: /empresas/ba/salvador ou /empresas/ba/salvador/complexo-do-nordeste */
   list: string;
   /**
    * URL canônica pública da empresa: /empresas/:uf/:cidade/:slug
@@ -48,7 +48,7 @@ export function useBusinessUrls(routeResolved?: ResolvedTerritory | null): Busin
   
   if (routeResolved) {
     if (routeResolved.kind === 'group') {
-      // Grupo: /empresas/ba/salvador/area/complexo-do-nordeste-de-amaralina
+      // Grupo: /empresas/ba/salvador/complexo-do-nordeste-de-amaralina
       const firstMember = routeResolved.group.members[0];
       if (firstMember?.geographic_path) {
         const parts = firstMember.geographic_path.split('/').filter(Boolean);

@@ -13,6 +13,9 @@
  * @version 1.0.0
  */
 
+import { LAUNCH_CITY_PATH, LAUNCH_COMMUNITY_TERRITORY_PATH, LAUNCH_URLS } from '@/config/territory';
+import { getPublicSiteOrigin } from '@/shared/config/brand';
+
 export interface SitemapURL {
   loc: string;
   lastmod?: string;
@@ -50,37 +53,32 @@ const STATIC_PAGES: SitemapURL[] = [
     priority: 0.8,
   },
   {
-    loc: '/comunidade',
+    loc: LAUNCH_URLS.community,
     changefreq: 'hourly',
     priority: 0.8,
   },
   {
-    loc: '/ba/salvador',
+    loc: LAUNCH_CITY_PATH,
     changefreq: 'daily',
     priority: 0.9,
   },
   {
-    loc: '/ba/salvador/nordeste-de-amaralina',
-    changefreq: 'daily',
-    priority: 0.8,
-  },
-  {
-    loc: '/ba/salvador/area/complexo-do-nordeste-de-amaralina',
+    loc: LAUNCH_COMMUNITY_TERRITORY_PATH,
     changefreq: 'daily',
     priority: 0.9,
   },
   {
-    loc: '/empresas/ba/salvador/area/complexo-do-nordeste-de-amaralina',
+    loc: `/empresas${LAUNCH_COMMUNITY_TERRITORY_PATH}`,
     changefreq: 'daily',
     priority: 0.8,
   },
   {
-    loc: '/servicos/ba/salvador/area/complexo-do-nordeste-de-amaralina',
+    loc: `/servicos${LAUNCH_COMMUNITY_TERRITORY_PATH}`,
     changefreq: 'daily',
     priority: 0.8,
   },
   {
-    loc: '/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/feed',
+    loc: `${LAUNCH_URLS.community}/feed`,
     changefreq: 'hourly',
     priority: 0.8,
   },
@@ -119,7 +117,7 @@ const STATIC_PAGES: SitemapURL[] = [
 /**
  * Generate sitemap XML
  */
-export function generateSitemapXML(urls: SitemapURL[], baseUrl: string = 'https://ordax.com.br'): string {
+export function generateSitemapXML(urls: SitemapURL[], baseUrl: string = getPublicSiteOrigin()): string {
   const urlEntries = urls.map((url) => {
     const loc = `${baseUrl}${url.loc}`;
     const lastmod = url.lastmod ? `<lastmod>${url.lastmod}</lastmod>` : '';
@@ -188,7 +186,7 @@ export function generateClassifiedURLs(classifieds: Array<{ id: string; updated_
  * Combines static and dynamic URLs.
  */
 export async function generateCompleteSitemap(
-  baseUrl: string = 'https://ordax.com.br'
+  baseUrl: string = getPublicSiteOrigin()
 ): Promise<string> {
   const urls: SitemapURL[] = [
     ...getStaticPages(),
@@ -206,7 +204,10 @@ export async function generateCompleteSitemap(
  * 
  * For large sites with multiple sitemaps.
  */
-export function generateSitemapIndex(sitemaps: Array<{ loc: string; lastmod?: string }>, baseUrl: string = 'https://ordax.com.br'): string {
+export function generateSitemapIndex(
+  sitemaps: Array<{ loc: string; lastmod?: string }>,
+  baseUrl: string = getPublicSiteOrigin(),
+): string {
   const sitemapEntries = sitemaps.map((sitemap) => {
     const loc = `${baseUrl}${sitemap.loc}`;
     const lastmod = sitemap.lastmod ? `<lastmod>${sitemap.lastmod}</lastmod>` : '';

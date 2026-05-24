@@ -37,21 +37,21 @@ export const createIssueSchema = z.object({
 
   title: z
     .string()
-    .min(ISSUE_RULES.TITLE_MIN_LENGTH, `Titulo deve ter pelo menos ${ISSUE_RULES.TITLE_MIN_LENGTH} caracteres.`)
-    .max(ISSUE_RULES.TITLE_MAX_LENGTH, `Titulo deve ter no maximo ${ISSUE_RULES.TITLE_MAX_LENGTH} caracteres.`),
+    .min(ISSUE_RULES.TITLE_MIN_LENGTH, `Título deve ter pelo menos ${ISSUE_RULES.TITLE_MIN_LENGTH} caracteres.`)
+    .max(ISSUE_RULES.TITLE_MAX_LENGTH, `Título deve ter no máximo ${ISSUE_RULES.TITLE_MAX_LENGTH} caracteres.`),
 
   description: z
     .string()
     .min(
       ISSUE_RULES.DESCRIPTION_MIN_LENGTH,
-      `Descricao deve ter pelo menos ${ISSUE_RULES.DESCRIPTION_MIN_LENGTH} caracteres.`
+      `Descrição deve ter pelo menos ${ISSUE_RULES.DESCRIPTION_MIN_LENGTH} caracteres.`
     )
     .max(
       ISSUE_RULES.DESCRIPTION_MAX_LENGTH,
-      `Descricao deve ter no maximo ${ISSUE_RULES.DESCRIPTION_MAX_LENGTH} caracteres.`
+      `Descrição deve ter no máximo ${ISSUE_RULES.DESCRIPTION_MAX_LENGTH} caracteres.`
     ),
 
-  address_reference: z.string().max(150, "Referencia muito longa.").optional(),
+  address_reference: z.string().max(150, "Referência muito longa.").optional(),
 
   priority: z.enum(VALID_PRIORITIES).optional(),
 });

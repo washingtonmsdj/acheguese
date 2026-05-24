@@ -13,7 +13,7 @@ export type PostType =
   | "achado_perdido"
   | "evento"
   | "enquete"
-  // legacy compatibility
+  // imported post categories still normalized at service boundary
   | "discussao"
   | "pergunta"
   | "classificado"

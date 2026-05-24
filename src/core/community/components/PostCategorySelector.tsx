@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/shared/utils/cn";
 import { categories } from "@/core/community/components/FeedCategoryFilter";
@@ -19,27 +19,30 @@ export function PostCategorySelector({
     <div className="px-4 py-3 border-b">
       <p className="text-sm font-medium mb-3">Categoria do post</p>
       <div className="flex flex-wrap gap-2">
-        {postCategories.map((cat) => (
-          <motion.button
-            key={cat.id}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => onCategoryChange(cat.id as FeedCategory)}
-            className={cn(
-              "px-3 py-1.5 rounded-full text-sm font-medium transition-colors",
-              selectedCategory === cat.id
-                ? "bg-primary text-primary-foreground"
-                : "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-            )}
-            aria-pressed={selectedCategory === cat.id}
-            aria-label={`Selecionar categoria ${cat.label}`}
-          >
-            <span className="mr-1.5">{cat.emoji}</span>
-            {cat.label}
-          </motion.button>
-        ))}
+        {postCategories.map((cat) => {
+          const Icon = cat.icon;
+
+          return (
+            <motion.button
+              key={cat.id}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => onCategoryChange(cat.id as FeedCategory)}
+              className={cn(
+                "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors",
+                selectedCategory === cat.id
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+              )}
+              aria-pressed={selectedCategory === cat.id}
+              aria-label={`Selecionar categoria ${cat.label}`}
+            >
+              <Icon className="h-4 w-4" aria-hidden="true" />
+              {cat.label}
+            </motion.button>
+          );
+        })}
       </div>
     </div>
   );
 }
-

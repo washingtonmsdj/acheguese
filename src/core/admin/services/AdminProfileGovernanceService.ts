@@ -8,7 +8,7 @@
 
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
-import { profileService, ProfileServiceLegacy } from "@/core/profiles/services/ProfileService";
+import { profileService, ProfileService } from "@/core/profiles/services/ProfileService";
 import { adminNotificationsService } from "./AdminNotificationsService";
 import type {
   AdminProfileIdentityDetail,
@@ -363,7 +363,7 @@ class AdminProfileGovernanceService {
         // ✅ SSOT: Usar profileService.getDriverData
         profileService.getDriverData(profileId).then((data: unknown) => ({ data, error: null })),
         adminNotificationsService.getUserSettings(userId),
-        ProfileServiceLegacy.getUsernameHistory(profileId),
+        ProfileService.getUsernameHistory(profileId),
         loadAuthSummary(userId),
         loadEffectiveContext(userId),
         loadDriverReputationMap([profileId]),

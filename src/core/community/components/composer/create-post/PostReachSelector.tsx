@@ -1,4 +1,12 @@
 import { toast } from "sonner";
+import {
+  Building2,
+  Check,
+  FileText,
+  Home,
+  MapPin,
+  type LucideIcon,
+} from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import {
   Avatar,
@@ -20,28 +28,28 @@ interface PostReachSelectorProps {
   profileAvatar: string;
 }
 
-function getPostTypeSummary(tipo: UnifiedPostType): { emoji: string; label: string } {
+function getPostTypeSummary(tipo: UnifiedPostType): { icon: LucideIcon; label: string } {
   switch (tipo) {
     case "discussao":
-      return { emoji: POST_TYPES.discussao.emoji, label: POST_TYPES.discussao.label };
+      return { icon: POST_TYPES.discussao.icon, label: POST_TYPES.discussao.label };
     case "pergunta":
-      return { emoji: POST_TYPES.pergunta.emoji, label: POST_TYPES.pergunta.label };
+      return { icon: POST_TYPES.pergunta.icon, label: POST_TYPES.pergunta.label };
     case "enquete":
-      return { emoji: POST_TYPES.enquete.emoji, label: POST_TYPES.enquete.label };
+      return { icon: POST_TYPES.enquete.icon, label: POST_TYPES.enquete.label };
     case "evento":
-      return { emoji: POST_TYPES.evento.emoji, label: POST_TYPES.evento.label };
+      return { icon: POST_TYPES.evento.icon, label: POST_TYPES.evento.label };
     case "achados":
-      return { emoji: POST_TYPES.achados.emoji, label: POST_TYPES.achados.label };
+      return { icon: POST_TYPES.achados.icon, label: POST_TYPES.achados.label };
     case "alerta":
-      return { emoji: POST_TYPES.alerta.emoji, label: POST_TYPES.alerta.label };
+      return { icon: POST_TYPES.alerta.icon, label: POST_TYPES.alerta.label };
     case "favor":
-      return { emoji: POST_TYPES.favor.emoji, label: POST_TYPES.favor.label };
+      return { icon: POST_TYPES.favor.icon, label: POST_TYPES.favor.label };
     case "desapego":
-      return { emoji: POST_TYPES.desapego.emoji, label: POST_TYPES.desapego.label };
+      return { icon: POST_TYPES.desapego.icon, label: POST_TYPES.desapego.label };
     case "recomendacao":
-      return { emoji: POST_TYPES.recomendacao.emoji, label: POST_TYPES.recomendacao.label };
+      return { icon: POST_TYPES.recomendacao.icon, label: POST_TYPES.recomendacao.label };
     default:
-      return { emoji: "📝", label: "Publicação" };
+      return { icon: FileText, label: "Publicação" };
   }
 }
 
@@ -59,12 +67,15 @@ export function PostReachSelector({
   const charCount = texto.length;
   const tagsCount = tagsInput.split(",").filter((t) => t.trim()).length;
   const postTypeSummary = getPostTypeSummary(tipo);
+  const PostTypeIcon = postTypeSummary.icon;
+  const ReachIcon = alcance === "rua" ? Home : alcance === "neighborhood" ? MapPin : Building2;
+  const reachLabel = alcance === "rua" ? "Rua" : alcance === "neighborhood" ? "Bairro" : "Cidade";
   const avatarInitial = profileName.charAt(0);
 
   return (
     <div className="h-full flex flex-col px-4 overflow-hidden">
       <div className="text-center py-3 flex-shrink-0">
-        <h2 className="text-base font-semibold">✅ Publicar</h2>
+        <h2 className="text-base font-semibold">Publicar</h2>
         <p className="text-muted-foreground text-xs">Escolha o alcance</p>
       </div>
 
@@ -80,7 +91,7 @@ export function PostReachSelector({
             )}
           >
             <div className="flex items-center gap-2">
-              <span className="text-base">🏠</span>
+              <Home className="h-4 w-4 text-yellow-600" aria-hidden="true" />
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-sm leading-tight">Rua</h3>
                 <p className="text-xs text-muted-foreground leading-tight">
@@ -89,7 +100,7 @@ export function PostReachSelector({
               </div>
               {alcance === "rua" && (
                 <div className="w-5 h-5 rounded-full bg-yellow-500 flex items-center justify-center">
-                  <span className="text-white text-xs">✓</span>
+                  <Check className="h-3 w-3 text-white" aria-hidden="true" />
                 </div>
               )}
             </div>
@@ -105,7 +116,7 @@ export function PostReachSelector({
             )}
           >
             <div className="flex items-center gap-2">
-              <span className="text-base">📍</span>
+              <MapPin className="h-4 w-4 text-blue-600" aria-hidden="true" />
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-sm leading-tight">Bairro</h3>
                 <p className="text-xs text-muted-foreground leading-tight">
@@ -114,7 +125,7 @@ export function PostReachSelector({
               </div>
               {alcance === "neighborhood" && (
                 <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
-                  <span className="text-white text-xs">✓</span>
+                  <Check className="h-3 w-3 text-white" aria-hidden="true" />
                 </div>
               )}
             </div>
@@ -138,7 +149,7 @@ export function PostReachSelector({
             )}
           >
             <div className="flex items-center gap-2">
-              <span className="text-base">🏙️</span>
+              <Building2 className="h-4 w-4 text-green-600" aria-hidden="true" />
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-sm leading-tight">Cidade</h3>
                 <p className="text-xs text-muted-foreground leading-tight">
@@ -147,7 +158,7 @@ export function PostReachSelector({
               </div>
               {alcance === "city" && (
                 <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
-                  <span className="text-white text-xs">✓</span>
+                  <Check className="h-3 w-3 text-white" aria-hidden="true" />
                 </div>
               )}
             </div>
@@ -171,16 +182,14 @@ export function PostReachSelector({
                 {profileName}
               </p>
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <span>
-                  {postTypeSummary.emoji} {postTypeSummary.label}
+                <span className="inline-flex items-center gap-1">
+                  <PostTypeIcon className="h-3 w-3" aria-hidden="true" />
+                  {postTypeSummary.label}
                 </span>
-                <span>•</span>
-                <span>
-                  {alcance === "rua"
-                    ? "🏠 Rua"
-                    : alcance === "neighborhood"
-                      ? "📍 Bairro"
-                      : "🏙️ Cidade"}
+                <span aria-hidden="true">/</span>
+                <span className="inline-flex items-center gap-1">
+                  <ReachIcon className="h-3 w-3" aria-hidden="true" />
+                  {reachLabel}
                 </span>
               </div>
             </div>

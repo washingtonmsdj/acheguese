@@ -1,4 +1,4 @@
-﻿/**
+/**
  * CommunityAlertService - SSOT for community alerts data access.
  *
  * Rules:
