@@ -1,2 +1,0 @@
-ALTER TABLE banners ADD COLUMN IF NOT EXISTS priority INTEGER NOT NULL DEFAULT 0;
-CREATE INDEX IF NOT EXISTS idx_banners_priority ON banners(priority DESC);
