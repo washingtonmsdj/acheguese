@@ -1,12 +1,12 @@
 /**
- * RideReportsService - Serviço para gestão de reports de corridas
+ * RideReportsService - Servico para gestao de reports de corridas
  * 
- * SSOT: ride_reports como fonte única de reports
+ * SSOT: ride_reports como fonte unica de reports
  * Funcionalidades:
  * - Criar report (passenger/driver)
- * - Listar reports (admin/próprios)
+ * - Listar reports (admin/proprios)
  * - Atualizar status (admin)
- * - Adicionar notas de resolução (admin)
+ * - Adicionar notas de resolucao (admin)
  */
 
 import { supabase } from "@/core/infrastructure/supabase/supabase";
@@ -110,7 +110,7 @@ export class RideReportsService {
   }
 
   /**
-   * Listar reports (admin ou próprios)
+   * Listar reports (admin ou proprios)
    */
   static async listReports(filters?: {
     status?: ReportStatus;
@@ -242,7 +242,7 @@ export class RideReportsService {
   }
 
   /**
-   * Obter estatísticas de reports
+   * Obter estatisticas de reports
    */
   static async getReportStats(): Promise<{
     total: number;
@@ -329,7 +329,6 @@ export class RideReportsService {
     }
   }
 }
-
 
 
 

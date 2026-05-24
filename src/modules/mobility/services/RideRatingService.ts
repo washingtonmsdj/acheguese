@@ -1,4 +1,4 @@
-﻿import { supabase } from "@/core/infrastructure/supabase";
+import { supabase } from "@/core/infrastructure/supabase";
 
 export interface CreateRideRatingInput {
   rideId: string;

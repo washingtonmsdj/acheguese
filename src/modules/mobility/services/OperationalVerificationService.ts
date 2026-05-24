@@ -1,4 +1,4 @@
-﻿/**
+/**
  * GATE 7: OPERATIONAL VERIFICATION SERVICE
  * 
  * Service para gerenciar verificações operacionais (PIN) de corridas e entregas.
@@ -23,7 +23,6 @@ import type {
   CreateVerificationResult,
   VerifyPINParams,
   VerifyPINResult,
-  CheckPINRequiredParams,
   VerificationStatusSummary,
   PIN_CONFIG,
   VERIFICATION_ERRORS,
@@ -446,35 +445,6 @@ export class OperationalVerificationService {
         requiredBy: null,
         reason: 'Error checking PIN requirement',
       };
-    }
-  }
-
-  /**
-   * @deprecated Use resolveRidePINRequirement() or resolveDeliveryPINRequirement()
-   */
-  static async isPINRequired(
-    params: CheckPINRequiredParams
-  ): Promise<boolean> {
-    try {
-      const { rideMode, passengerId, driverProfileId, senderProfileId } = params;
-
-      if (rideMode === 'ride' && passengerId) {
-        const result = await this.resolveRidePINRequirement({
-          passengerId,
-          driverProfileId,
-        });
-        return result.isRequired;
-      } else if (rideMode === 'motoboy' && senderProfileId) {
-        const result = await this.resolveDeliveryPINRequirement({
-          senderProfileId,
-        });
-        return result.isRequired;
-      }
-
-      return false;
-    } catch (error) {
-      logger.error('Error checking if PIN is required:', error);
-      return false;
     }
   }
 

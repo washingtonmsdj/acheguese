@@ -1,8 +1,7 @@
 /**
  * Mobility runtime service (singleton).
  *
- * Runtime/write operations extracted from MobilityService.impl
- * to keep static/admin queries isolated.
+ * Centralizes write/runtime operations and keeps static/admin reads isolated.
  */
 
 import { supabase } from "@/core/infrastructure/supabase";
@@ -59,7 +58,7 @@ class MobilityServiceInstance {
 
       if (error) throw error;
 
-      // Normalizar campos de endereço para compatibilidade com DriverRidesList
+      // Expose denormalized address fields consumed by ride list components.
       type RideWithAddress = RideRequestRecord & {
         pickup_address?: { street: string | null; latitude: number | null; longitude: number | null } | null;
         dropoff_address?: { street: string | null; latitude: number | null; longitude: number | null } | null;

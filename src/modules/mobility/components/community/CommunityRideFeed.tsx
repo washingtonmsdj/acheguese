@@ -3,7 +3,7 @@ import { CommunityRidePost, CommunityRidePostData } from "./CommunityRidePost";
 import { PostToRideModal } from "./PostToRideModal";
 import { ReportPostModal } from "./ReportPostModal";
 import { Button } from "@/shared/components/ui/button";
-import { Plus, Car, Users, RefreshCw, Sparkles, Loader2 } from "lucide-react";
+import { AlertTriangle, Lightbulb, Plus, Car, Users, RefreshCw, Sparkles, Loader2 } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import { toast } from "sonner";
 import {
@@ -15,6 +15,9 @@ type FeedFilter = "all" | "offering" | "requesting";
 
 interface CommunityRideFeedProps {
   currentUserId?: string;
+  locationId?: string;
+  authorNeighborhood?: string;
+  authorVerified?: boolean;
   onCreateRide?: (post: CommunityRidePostData) => void;
 }
 
@@ -25,6 +28,9 @@ type PublishPayload = Omit<
 
 export function CommunityRideFeed({
   currentUserId,
+  locationId,
+  authorNeighborhood,
+  authorVerified = false,
   onCreateRide,
 }: CommunityRideFeedProps) {
   const [filter, setFilter] = useState<FeedFilter>("all");
@@ -37,9 +43,14 @@ export function CommunityRideFeed({
     useCommunityPosts(filter !== "all" ? { category: filter } : undefined);
 
   const handlePublish = async (data: PublishPayload) => {
+    if (!currentUserId || !locationId) {
+      toast.error("Selecione um perfil e um território antes de publicar.");
+      return;
+    }
+
     await createPost({
       author_profile_id: currentUserId,
-      location_id: undefined,
+      location_id: locationId,
       reach: 'neighborhood',
       content: data.content,
     });
@@ -119,18 +130,21 @@ export function CommunityRideFeed({
       </div>
 
       <div className="p-3 rounded-xl bg-gradient-to-r from-teal-500/5 to-cyan-500/5 border border-teal-500/10">
-        <p className="text-[0.65rem] text-gray-400 leading-relaxed">
-          💡 <span className="text-teal-400 font-semibold">Como funciona:</span>{" "}
-          Poste no feed dizendo que vai a algum lugar. Vizinhos podem solicitar
-          carona!
-        </p>
+        <div className="flex items-start gap-2 text-[0.65rem] text-gray-400 leading-relaxed">
+          <Lightbulb className="h-3.5 w-3.5 mt-0.5 shrink-0 text-teal-400" aria-hidden="true" />
+          <p>
+            <span className="text-teal-400 font-semibold">Como funciona:</span>{" "}
+            Poste no feed dizendo que vai a algum lugar. Vizinhos podem solicitar
+            carona.
+          </p>
+        </div>
       </div>
 
       <div className="flex items-center gap-2">
         {[
           { key: "all", label: "Todos", count: posts.length },
-          { key: "offering", label: "🚗 Oferecendo", count: 0 },
-          { key: "requesting", label: "🙋 Precisando", count: 0 },
+          { key: "offering", label: "Oferecendo", count: 0 },
+          { key: "requesting", label: "Precisando", count: 0 },
         ].map((tab) => (
           <button
             key={tab.key}
@@ -164,8 +178,9 @@ export function CommunityRideFeed({
 
       {error && (
         <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20">
-          <p className="text-sm text-red-400">
-            ❌ Erro ao carregar postagens: {String(error)}
+          <p className="flex items-start gap-2 text-sm text-red-400">
+            <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" aria-hidden="true" />
+            <span>Erro ao carregar postagens: {String(error)}</span>
           </p>
           <Button
             size="sm"
@@ -222,6 +237,8 @@ export function CommunityRideFeed({
         open={isPostModalOpen}
         onOpenChange={setIsPostModalOpen}
         onPublish={handlePublish}
+        authorNeighborhood={authorNeighborhood}
+        isVerified={authorVerified}
       />
       <ReportPostModal
         open={!!reportingPost}

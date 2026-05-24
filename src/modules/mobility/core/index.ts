@@ -1,4 +1,4 @@
-﻿/**
+/**
  * MOBILITY CORE - Motor Operacional
  * 
  * Exporta serviços centralizados do motor operacional de corridas

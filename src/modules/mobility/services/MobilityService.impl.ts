@@ -1,11 +1,11 @@
 /**
- * MobilityService - SSOT core/mobility
+ * MobilityService - SSOT de mobilidade.
  *
- * Único ponto de acesso ao banco para operações de mobilidade.
+ * Ponto de acesso a leituras administrativas e operacoes runtime de mobilidade.
  *
  * Exporta:
- *   - MobilityService (classe estática) -> leitura / admin
- *   - mobilityService (instância singleton) -> escrita / runtime
+ * - MobilityService: classe estatica para leitura/admin.
+ * - mobilityService: instancia singleton para escrita/runtime.
  */
 
 import { supabase } from "@/core/infrastructure/supabase";
@@ -21,7 +21,7 @@ type DriverCompleteProfileRecord = Tables<"driver_complete_profile">;
 type MobilityConversationRecord = Record<string, unknown>;
 type MobilityMessageRecord = Record<string, unknown>;
 
-// --- Static (leitura / admin) ------------------------------------------------
+// --- Static read/admin API ---------------------------------------------------
 
 export class MobilityService {
   static async getLatestRideBySource(sourceType: string, sourceId: string): Promise<unknown | null> {

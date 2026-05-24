@@ -61,7 +61,7 @@ export const DriverLocationSender = memo(
 
       if (isDriverOnline) {
         if (import.meta.env.DEV) {
-          logger.info("🚀 Iniciando rastreamento para driverProfileId:", driverProfileId);
+          logger.info(" Iniciando rastreamento para driverProfileId:", driverProfileId);
         }
         startTracking();
       } else {

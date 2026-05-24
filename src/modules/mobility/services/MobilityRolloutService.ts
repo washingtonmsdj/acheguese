@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mobility Rollout Service
  *
  * Verifica se o modulo mobility esta ativo no territorio corrente.

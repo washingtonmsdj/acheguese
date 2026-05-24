@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 🔒 MOBILITY VALIDATORS - Validação Centralizada
  * 
  * ✅ Validadores reutilizáveis para todo o módulo Mobility

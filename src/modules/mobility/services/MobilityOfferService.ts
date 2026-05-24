@@ -2,9 +2,9 @@
  * MOBILITY OFFER SERVICE
  * 
  * SSOT para gerenciamento de ofertas de corrida
- * Implementa modelo híbrido:
+ * Implementa modelo hibrido:
  * - Exclusive Offer: 1 motorista por vez
- * - Open Board: múltiplos motoristas
+ * - Open Board: multiplos motoristas
  * - Reservation Board: agendamentos
  */
 import { logger } from '@/shared/utils/logger';
@@ -101,7 +101,7 @@ export class MobilityOfferService {
   }
 
   /**
-   * Busca oferta exclusiva para motorista específico
+   * Busca oferta exclusiva para motorista especifico
    * Usado em: Corrida imediata de passageiro
    */
   static async getExclusiveOffer(
@@ -124,7 +124,7 @@ export class MobilityOfferService {
       }
       const trustMetadata = this.getTrustOfferMetadata(trustGate.decision);
 
-      // Calcular expiração
+      // Calcular expiracao
       const config = MobilityDispatchConfigService.getConfig('exclusive_offer');
       const assignedAt = new Date(ride.driver_assigned_at || ride.created_at);
       const expiresAt = new Date(assignedAt.getTime() + config.offerTimeoutSeconds * 1000);
@@ -153,11 +153,11 @@ export class MobilityOfferService {
       const passengerTrustMetadata =
         this.getPassengerTrustOfferMetadata(passengerTrustDecision);
 
-      // Extrair bairros (proteger endereços completos)
+      // Extrair bairros (proteger enderecos completos)
       const originNeighborhood = this.extractNeighborhood(ride.origin);
       const destinationNeighborhood = this.extractNeighborhood(ride.destination);
 
-      // Calcular distância estimada (se tiver coordenadas)
+      // Calcular distancia estimada (se tiver coordenadas)
       let estimatedDistance = 0;
       let estimatedDuration = 0;
       if (ride.origin_lat && ride.origin_lng && ride.destination_lat && ride.destination_lng) {
@@ -179,7 +179,7 @@ export class MobilityOfferService {
         attemptNumber: 1, // TODO: buscar do audit
         status: DISPATCH_ATTEMPT_STATUS.PENDING,
         
-        // Dados protegidos (apenas após aceite)
+        // Dados protegidos (apenas apos aceite)
         origin: ride.origin,
         destination: ride.destination,
         originLat: ride.origin_lat ?? undefined,
@@ -187,7 +187,7 @@ export class MobilityOfferService {
         destinationLat: ride.destination_lat ?? undefined,
         destinationLng: ride.destination_lng ?? undefined,
         
-        // Dados públicos (antes do aceite)
+        // Dados publicos (antes do aceite)
         originNeighborhood,
         destinationNeighborhood,
         estimatedDistance,
@@ -236,7 +236,7 @@ export class MobilityOfferService {
         return [];
       }
 
-      // Buscar localização atual do motorista
+      // Buscar localizacao atual do motorista
       const driverStatus = await DriverAvailabilityService.getStatus(driverProfileId);
       if (!driverStatus?.currentLocation) {
         logger.warn('Driver has no location', { driverProfileId });
@@ -263,10 +263,10 @@ export class MobilityOfferService {
 
       for (const ride of rides) {
         if (!ride.origin_lat || !ride.origin_lng || !ride.destination_lat || !ride.destination_lng) {
-          continue; // Pular se não tiver coordenadas
+          continue; // Pular se nao tiver coordenadas
         }
 
-        // Calcular distância do motorista até origem
+        // Calcular distancia do motorista ate origem
         const distanceToOrigin = this.calculateDistance(
           lat,
           lng,
@@ -274,12 +274,12 @@ export class MobilityOfferService {
           ride.origin_lng
         );
 
-        // Filtrar por distância máxima
+        // Filtrar por distancia maxima
         if (filters?.maxDistance && distanceToOrigin > filters.maxDistance) {
           continue;
         }
 
-        // Calcular distância da corrida
+        // Calcular distancia da corrida
         const estimatedDistance = this.calculateDistance(
           ride.origin_lat,
           ride.origin_lng,
@@ -307,7 +307,7 @@ export class MobilityOfferService {
         const customerTrustMetadata =
           this.getCustomerTrustOfferMetadata(customerTrustDecision);
 
-        // Calcular expiração
+        // Calcular expiracao
         const config = MobilityDispatchConfigService.getConfig('open_board');
         const createdAt = new Date(ride.created_at);
         const expiresAt = new Date(createdAt.getTime() + config.offerTimeoutSeconds * 1000);
@@ -325,7 +325,7 @@ export class MobilityOfferService {
           createdAt: ride.created_at,
           expiresAt: expiresAt.toISOString(),
           
-          // Dados completos (visíveis antes do aceite)
+          // Dados completos (visiveis antes do aceite)
           origin: ride.origin,
           destination: ride.destination,
           originLat: ride.origin_lat,
@@ -406,7 +406,7 @@ export class MobilityOfferService {
           continue;
         }
 
-        // Calcular distância
+        // Calcular distancia
         const estimatedDistance = this.calculateDistance(
           ride.origin_lat,
           ride.origin_lng,
@@ -480,7 +480,7 @@ export class MobilityOfferService {
   }
 
   /**
-   * Aceita oferta (com controle de concorrência)
+   * Aceita oferta (com controle de concorrencia)
    */
   static async acceptOffer(
     rideId: string,
@@ -500,7 +500,7 @@ export class MobilityOfferService {
         };
       }
 
-      // Tentar aceitar com lock atômico
+      // Tentar aceitar com lock atomico
       const { data, error } = await (supabase as any).rpc('accept_ride_atomic', {
         p_ride_id: rideId,
         p_driver_profile_id: driverProfileId,
@@ -579,10 +579,10 @@ export class MobilityOfferService {
         return { isEligible: false, reasons };
       }
 
-      // Obter configuração
+      // Obter configuracao
       const config = MobilityDispatchConfigService.getConfig(strategy);
 
-      // Validações obrigatórias
+      // Validacoes obrigatorias
       if (config.requiresVerification && !driverData.is_verified) {
         reasons.push('Driver not verified');
       }
@@ -603,12 +603,12 @@ export class MobilityOfferService {
         reasons.push('Driver has active ride');
       }
 
-      // Validações opcionais
+      // Validacoes opcionais
       if (config.requiresSubscription && !driverData.subscription_active) {
         reasons.push('Driver subscription is not active');
       }
 
-      // Validação específica para motoboy
+      // Validacao especifica para motoboy
       if (strategy === 'open_board' && !driverData.can_do_delivery) {
         reasons.push('Driver cannot do deliveries');
       }
@@ -643,17 +643,17 @@ export class MobilityOfferService {
   // ============================================
 
   /**
-   * Extrai bairro do endereço completo
+   * Extrai bairro do endereco completo
    */
   private static extractNeighborhood(address: string): string {
-    // TODO: Implementar extração inteligente de bairro
+    // TODO: Implementar extracao inteligente de bairro
     // Por enquanto, retorna primeiras palavras
     const parts = address.split(',');
     return parts[parts.length - 2]?.trim() || 'Regiao';
   }
 
   /**
-   * Calcula distância Haversine
+   * Calcula distancia Haversine
    */
   private static calculateDistance(
     lat1: number,
@@ -679,10 +679,10 @@ export class MobilityOfferService {
   }
 
   /**
-   * Estima duração baseada na distância
+   * Estima duracao baseada na distancia
    */
   private static estimateDuration(distanceKm: number): number {
-    // Velocidade média: 30 km/h em cidade
+    // Velocidade media: 30 km/h em cidade
     const avgSpeedKmh = 30;
     return Math.ceil((distanceKm / avgSpeedKmh) * 60); // minutos
   }
@@ -693,7 +693,6 @@ export class MobilityOfferService {
     return getDriverOfferCapabilities(driverProfileId);
   }
 }
-
 
 
 

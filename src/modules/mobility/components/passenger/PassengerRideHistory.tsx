@@ -10,6 +10,7 @@ import {
   Filter,
   Calendar,
   Search,
+  ArrowRight,
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
@@ -428,7 +429,7 @@ export function PassengerRideHistory({
                   <span className="text-foreground font-medium">
                     {ride.origin}
                   </span>
-                  <span>→</span>
+                  <ArrowRight className="h-3 w-3" aria-hidden="true" />
                   <span className="text-foreground font-medium">
                     {ride.destination}
                   </span>

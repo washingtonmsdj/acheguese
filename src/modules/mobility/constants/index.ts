@@ -1,7 +1,7 @@
 /**
- * MOBILITY MODULE CONSTANTS
- * 
- * Centralização de todos os hardcodes do módulo de mobilidade
+ * Mobility module constants.
+ *
+ * Centraliza os contratos compartilhados do modulo de mobilidade.
  */
 
 // ============================================
@@ -13,19 +13,19 @@ export const RIDE_STATUS = {
   REQUESTED: 'requested', 
   SEARCHING_DRIVER: 'searching_driver',
   
-  // Estados de atribuição
+  // Estados de atribuicao
   DRIVER_ASSIGNED: 'driver_assigned',
   DRIVER_ACCEPTED: 'driver_accepted',
   DRIVER_ARRIVING: 'driver_arriving',
   DRIVER_ON_THE_WAY: 'driver_on_the_way',
   DRIVER_ARRIVED: 'driver_arrived',
   
-  // Estados de execução (corrida de passageiro)
+  // Estados de execucao (corrida de passageiro)
   PASSENGER_BOARDED: 'passenger_boarded',
   PASSENGER_ON_BOARD: 'passenger_on_board',
   IN_PROGRESS: 'in_progress',
 
-  // Estados de execução (motoboy/entrega)
+  // Estados de execucao (motoboy/entrega)
   PICKUP_CONFIRMED: 'pickup_confirmed',   // Motoboy coletou o pacote
   IN_DELIVERY: 'in_delivery',             // Em rota de entrega
   DELIVERED: 'delivered',                 // Entregue com sucesso
@@ -42,12 +42,12 @@ export const RIDE_STATUS = {
 
 export type RideStatus = typeof RIDE_STATUS[keyof typeof RIDE_STATUS];
 
-// Labels de Status de Corridas
+// Labels de status de corridas.
 export const RIDE_STATUS_LABELS: Record<string, string> = {
   [RIDE_STATUS.PENDING]: "Aguardando motorista",
   [RIDE_STATUS.REQUESTED]: "Solicitada",
   [RIDE_STATUS.SEARCHING_DRIVER]: "Procurando motorista",
-  [RIDE_STATUS.DRIVER_ASSIGNED]: "Motorista atribuído",
+  [RIDE_STATUS.DRIVER_ASSIGNED]: "Motorista atribuido",
   [RIDE_STATUS.DRIVER_ACCEPTED]: "Motorista aceitou",
   [RIDE_STATUS.DRIVER_ARRIVING]: "Motorista chegando",
   [RIDE_STATUS.DRIVER_ON_THE_WAY]: "Motorista a caminho",
@@ -59,7 +59,7 @@ export const RIDE_STATUS_LABELS: Record<string, string> = {
   [RIDE_STATUS.IN_DELIVERY]: "Em entrega",
   [RIDE_STATUS.DELIVERED]: "Entregue",
   [RIDE_STATUS.FAILED_DELIVERY]: "Falha na entrega",
-  [RIDE_STATUS.COMPLETED]: "Concluída",
+  [RIDE_STATUS.COMPLETED]: "Concluida",
   [RIDE_STATUS.CANCELLED]: "Cancelada",
   [RIDE_STATUS.CANCELLED_BY_PASSENGER]: "Cancelada pelo passageiro",
   [RIDE_STATUS.CANCELLED_BY_DRIVER]: "Cancelada pelo motorista",
@@ -67,7 +67,7 @@ export const RIDE_STATUS_LABELS: Record<string, string> = {
   [RIDE_STATUS.FAILED]: "Falhou",
 };
 
-// Cores de Status de Corridas
+// Cores de status de corridas.
 export const RIDE_STATUS_COLORS: Record<string, string> = {
   [RIDE_STATUS.PENDING]: "#F59E0B", // amber-500
   [RIDE_STATUS.REQUESTED]: "#F59E0B", // amber-500
@@ -93,7 +93,7 @@ export const RIDE_STATUS_COLORS: Record<string, string> = {
 };
 
 // ============================================
-// RIDE MODE - Modo da solicitação
+// RIDE MODE - Modo da solicitacao
 // ============================================
 export const RIDE_MODE = {
   RIDE: 'ride',       // Corrida de passageiro
@@ -304,7 +304,7 @@ export const FILTER_TYPES = {
 } as const;
 
 // ============================================
-// EXPORTS - Re-exports para compatibilidade
+// TYPE EXPORTS
 // ============================================
 export type UserType = typeof USER_TYPES[keyof typeof USER_TYPES];
 export type RideType = typeof RIDE_TYPES[keyof typeof RIDE_TYPES];
@@ -317,7 +317,7 @@ export type ReportSeverity = typeof REPORT_SEVERITY[keyof typeof REPORT_SEVERITY
 export type ReportType = typeof REPORT_TYPE[keyof typeof REPORT_TYPE];
 
 // ============================================
-// VALIDATORS - Funções de validação
+// VALIDATORS - Funcoes de validacao
 // ============================================
 export function isValidRideStatus(status: string): status is RideStatus {
   return Object.values(RIDE_STATUS).includes(status as RideStatus);

@@ -5,7 +5,6 @@
  * Mantém foco principal em origem/destino, escondendo opções secundárias.
  * 
  * @module mobility/components/ride-request/AdvancedOptions
- * @version 2.0.0 (AAA)
  */
 
 import React, { memo, useCallback } from 'react';

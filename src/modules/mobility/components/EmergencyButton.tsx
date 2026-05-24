@@ -96,7 +96,7 @@ export function EmergencyButton({
       setTriggered(true);
       setIsOpen(false);
 
-      toast.error("🚨 ALERTA DE EMERGÊNCIA ENVIADO!", {
+      toast.error("Alerta de emergência enviado", {
         description: location
           ? "Sua localização GPS e dados da corrida foram salvos."
           : "Dados da corrida foram salvos. GPS não disponível.",
@@ -114,7 +114,7 @@ export function EmergencyButton({
 
   const handleShareRide = () => {
     const text = ride
-      ? `🚗 Estou em uma viagem com ${ride.driver?.name || "motorista"}\n` +
+      ? `Estou em uma viagem com ${ride.driver?.name || "motorista"}\n` +
         `Placa: ${ride.driver?.vehicle_plate || "N/A"}\n` +
         `De: ${ride.origin}\n` +
         `Para: ${ride.destination}`
@@ -206,8 +206,8 @@ export function EmergencyButton({
                   {ride.driver?.name || "Motorista"}
                 </p>
                 <p className="text-[0.6rem] text-gray-500 truncate">
-                  {ride.driver?.vehicle_model} · {ride.driver?.vehicle_plate}
-                  {ride.driver?.is_verified && " · ✓ Verificado"}
+                  {ride.driver?.vehicle_model} - {ride.driver?.vehicle_plate}
+                  {ride.driver?.is_verified && " - Verificado"}
                 </p>
               </div>
             </div>
@@ -219,7 +219,7 @@ export function EmergencyButton({
           className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 font-bold text-sm hover:bg-red-500/20 transition-all"
         >
           <AlertTriangle className="h-4 w-4" />
-          🆘 Botão de Emergência
+          Botão de Emergência
         </button>
       </div>
 
@@ -299,10 +299,10 @@ function EmergencyDialog({
                   Enviando...
                 </>
               ) : (
-                <>
-                  <AlertTriangle className="h-5 w-5 mr-2" />
-                  🆘 ACIONAR EMERGÊNCIA
-                </>
+                  <>
+                    <AlertTriangle className="h-5 w-5 mr-2" />
+                    ACIONAR EMERGÊNCIA
+                  </>
               )}
             </Button>
 
@@ -319,7 +319,7 @@ function EmergencyDialog({
               onClick={() => onOpenChange(false)}
               className="w-full py-2 text-sm text-gray-500 hover:text-gray-300 transition-colors"
             >
-              Cancelar — Estou bem
+              Cancelar. Estou bem
             </button>
           </div>
         </div>

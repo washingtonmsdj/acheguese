@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mobility Location Service
  *
  * Integra o módulo mobility com a fundação geográfica.
@@ -9,7 +9,7 @@
  * - "Localização operacional da corrida" → coordenadas GPS (lat/lng) em tempo real
  *   Domínio interno da corrida, NÃO toca na fundação geográfica
  *
- * REGRA DE ESCOPO OPERACIONAL (aplicada neste serviço, não delegada ao backend):
+ * REGRA DE ESCOPO OPERACIONAL (resolvida neste serviço, sem depender do backend):
  * - Mobility opera por CITY. Rotas cruzam bairros.
  * - Se activeLocation for CITY → usa city_id diretamente
  * - Se activeLocation for DISTRICT → resolve para city_parent_id via LocationService
@@ -30,7 +30,7 @@ export class MobilityLocationService extends BaseLocationService {
    * - DISTRICT ativo → resolve para city (parent_id) via LocationService
    *
    * A promoção district → city vive aqui, no MobilityLocationService.
-   * Não é delegada ao backend/view.
+   * A resolucao nao depende de backend/view.
    */
   async getOperationalLocationId(): Promise<string | null> {
     const location = this.getActiveLocation();
@@ -42,7 +42,11 @@ export class MobilityLocationService extends BaseLocationService {
     }
 
     // É distrito — resolve para a cidade pai
-    if (location.type === LocationType.DISTRICT && location.parent_id) {
+    if (
+      (location.type === LocationType.DISTRICT ||
+        location.type === LocationType.NEIGHBORHOOD) &&
+      location.parent_id
+    ) {
       try {
         const output = await this.locationService.getLocationById({
           id: location.parent_id

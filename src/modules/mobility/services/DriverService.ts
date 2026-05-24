@@ -1,7 +1,7 @@
-﻿/**
+/**
  * DriverService - public API
  *
- * Re-export canonical implementation from DriverService.impl.
+ * Public export for the canonical driver implementation.
  */
 
 export { DriverService, driverService } from './DriverService.impl';

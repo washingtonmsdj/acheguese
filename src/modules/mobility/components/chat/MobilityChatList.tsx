@@ -10,6 +10,7 @@ import {
   Clock,
   Phone,
   ChevronRight,
+  ArrowRight,
   Star,
   Package,
   CheckCircle2,
@@ -405,8 +406,10 @@ export function MobilityChatList({ role }: MobilityChatListProps) {
                       {/* Route info */}
                       <div className="flex items-center gap-1 mb-1">
                         <MapPin className="h-2.5 w-2.5 text-gray-500 shrink-0" />
-                        <p className="text-[10px] text-gray-500 truncate">
-                          {chat.ride_origin} → {chat.ride_destination}
+                        <p className="flex items-center gap-1 text-[10px] text-gray-500 truncate">
+                          <span className="truncate">{chat.ride_origin}</span>
+                          <ArrowRight className="h-2.5 w-2.5 shrink-0" aria-hidden="true" />
+                          <span className="truncate">{chat.ride_destination}</span>
                         </p>
                       </div>
 

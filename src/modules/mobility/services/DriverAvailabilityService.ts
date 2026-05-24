@@ -193,7 +193,7 @@ export class DriverAvailabilityService {
     } catch (error) {
       const errorDetails = this.getErrorDetails(error);
       // Log detalhado do erro
-      logger.error('❌ [ERROR] DriverAvailabilityService.goOnline |', {
+      logger.error('DriverAvailabilityService.goOnline detailed error', {
         driverProfileId,
         error: error,
         ...errorDetails,
@@ -357,7 +357,7 @@ export class DriverAvailabilityService {
     } catch (error) {
       const errorDetails = this.getErrorDetails(error);
       // Log detalhado do erro
-      logger.error('❌ [ERROR] DriverAvailabilityService.setBusy |', {
+      logger.error('DriverAvailabilityService.setBusy detailed error', {
         driverProfileId,
         rideId,
         rideMode,
@@ -382,29 +382,20 @@ export class DriverAvailabilityService {
     rideId: string
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      // GATE 5: Transação atômica - só succeed se is_online = true AND is_available = false AND active_ride_id = rideId
-      const { data, error } = await supabase
-        .from('driver_availability')
-        .update({
-          is_available: true,
-          active_ride_id: null,
-          busy_since: null,
-          active_ride_mode: null,
-          last_seen_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .eq('profile_id', driverProfileId)
-        .eq('is_online', true) // Condição atômica
-        .eq('is_available', false) // Condição atômica
-        .eq('active_ride_id', rideId) // Condição atômica - validação de corrida correta
-        .select();
+      const { data, error } = await (supabase as any).rpc(
+        'release_driver_availability_for_ride',
+        {
+          p_driver_profile_id: driverProfileId,
+          p_ride_id: rideId,
+        },
+      );
 
       if (error) throw error;
 
-      if (!data || data.length === 0) {
+      if (data !== true) {
         return {
           success: false,
-          error: 'Driver must be busy with the specified ride to be released',
+          error: 'Driver was not busy with the specified ride or was already released',
         };
       }
 
@@ -497,7 +488,7 @@ export class DriverAvailabilityService {
       const now = Date.now();
       const threshold = new Date(now - staleThresholdMinutes * 60 * 1000);
 
-      logger.debug('🔍 [DEBUG] markStaleDrivers |', {
+      logger.debug('DriverAvailabilityService.markStaleDrivers debug', {
         now: new Date(now).toISOString(),
         threshold: threshold.toISOString(),
         staleThresholdMinutes,
@@ -511,7 +502,7 @@ export class DriverAvailabilityService {
         .not('last_seen_at', 'is', null) // GATE 5: Garantir que last_seen_at não é NULL
         .lt('last_seen_at', threshold.toISOString());
 
-      logger.debug('🔍 [DEBUG] markStaleDrivers query result |', {
+      logger.debug('DriverAvailabilityService.markStaleDrivers query result', {
         found: staleDrivers?.length || 0,
         error: error?.message,
         drivers: staleDrivers?.map(d => ({
@@ -546,7 +537,7 @@ export class DriverAvailabilityService {
 
           if (data && data.length > 0) {
             markedOffline++;
-            logger.debug('✅ [DEBUG] Driver marked offline |', {
+            logger.debug('Driver marked offline by stale availability check', {
               profileId: driver.profile_id,
               lastSeen: driver.last_seen_at,
             });
@@ -558,7 +549,7 @@ export class DriverAvailabilityService {
         } else if (driver.active_ride_id) {
           // BUSY: apenas registrar problema
           staleBusy++;
-          logger.debug('⚠️ [DEBUG] Driver stale but busy |', {
+          logger.debug('Driver stale but busy', {
             profileId: driver.profile_id,
             rideId: driver.active_ride_id,
             lastSeen: driver.last_seen_at,
@@ -573,7 +564,7 @@ export class DriverAvailabilityService {
         }
       }
 
-      logger.debug('📊 [DEBUG] markStaleDrivers result |', {
+      logger.debug('DriverAvailabilityService.markStaleDrivers result', {
         markedOffline,
         staleBusy,
       });
@@ -586,7 +577,7 @@ export class DriverAvailabilityService {
 
       return { markedOffline, staleBusy };
     } catch (error) {
-      logger.error('❌ [ERROR] markStaleDrivers |', error);
+      logger.error('DriverAvailabilityService.markStaleDrivers error', error);
       logger.error('DriverAvailabilityService.markStaleDrivers', error as Error);
       return { markedOffline: 0, staleBusy: 0 };
     }
@@ -751,7 +742,7 @@ export class DriverAvailabilityService {
       return available;
     } catch (error) {
       const errorDetails = this.getErrorDetails(error);
-      logger.error('❌ [ERROR] DriverAvailabilityService.findAvailableDrivers |', {
+      logger.error('DriverAvailabilityService.findAvailableDrivers detailed error', {
         error: error,
         ...errorDetails,
       });
@@ -786,4 +777,3 @@ export class DriverAvailabilityService {
     return (degrees * Math.PI) / 180;
   }
 }
-

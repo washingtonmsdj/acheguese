@@ -13,6 +13,7 @@ import {
   Phone,
   MessageCircle,
 } from "lucide-react";
+import { buildTelUrl, openContactUrl } from "@/shared/utils/contactLinks";
 
 interface DriverRideActionsProps {
   rideId: string;
@@ -26,6 +27,15 @@ interface DriverRideActionsProps {
   onCancel?: (id: string) => void;
   onContact?: () => void;
   onOpenCompleteDialog?: () => void;
+}
+
+function callPassenger(ride: RideRequest | undefined, fallback?: () => void): void {
+  const url = buildTelUrl(ride?.passenger?.phone);
+  if (url) {
+    openContactUrl(url);
+    return;
+  }
+  fallback?.();
 }
 
 export function DriverRideActions({
@@ -56,11 +66,7 @@ export function DriverRideActions({
             </Button>
             <Button
               onClick={() => {
-                if (ride.passenger?.phone) {
-                  window.location.href = `tel:${ride.passenger.phone}`;
-                } else {
-                  onContact();
-                }
+                callPassenger(ride, onContact);
               }}
               size="sm"
               className="bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 rounded-xl text-xs h-9"
@@ -107,11 +113,7 @@ export function DriverRideActions({
             </Button>
             <Button
               onClick={() => {
-                if (ride.passenger?.phone) {
-                  window.location.href = `tel:${ride.passenger.phone}`;
-                } else {
-                  onContact();
-                }
+                callPassenger(ride, onContact);
               }}
               size="sm"
               className="bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 rounded-xl text-xs h-9"
@@ -122,7 +124,7 @@ export function DriverRideActions({
         )}
         <div className="px-3 py-2 rounded-xl bg-blue-500/10 border border-blue-500/20 text-center">
           <p className="text-xs text-blue-400 font-semibold">
-            🚗 Indo buscar o passageiro
+            Indo buscar o passageiro
           </p>
         </div>
         <div className="grid grid-cols-2 gap-2">
@@ -163,11 +165,7 @@ export function DriverRideActions({
             </Button>
             <Button
               onClick={() => {
-                if (ride.passenger?.phone) {
-                  window.location.href = `tel:${ride.passenger.phone}`;
-                } else {
-                  onContact();
-                }
+                callPassenger(ride, onContact);
               }}
               size="sm"
               className="bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 rounded-xl text-xs h-9"
@@ -178,7 +176,7 @@ export function DriverRideActions({
         )}
         <div className="px-3 py-2 rounded-xl bg-green-500/10 border border-green-500/20 text-center">
           <p className="text-xs text-green-400 font-semibold">
-            ✅ Aguardando passageiro embarcar
+            Aguardando passageiro embarcar
           </p>
         </div>
         <div className="grid grid-cols-2 gap-2">
@@ -210,7 +208,7 @@ export function DriverRideActions({
       <div className="space-y-2">
         <div className="px-3 py-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-center">
           <p className="text-xs text-indigo-400 font-semibold">
-            👤 Passageiro a bordo
+            Passageiro a bordo
           </p>
         </div>
         {onStartRide && (
@@ -231,7 +229,7 @@ export function DriverRideActions({
       <div className="space-y-2">
         <div className="px-3 py-2 rounded-xl bg-blue-500/10 border border-blue-500/20 text-center">
           <p className="text-xs text-blue-400 font-semibold">
-            🚗 Viagem em andamento
+            Viagem em andamento
           </p>
         </div>
         {onOpenCompleteDialog && (
@@ -249,9 +247,10 @@ export function DriverRideActions({
   // Status: completed - Corrida finalizada
   if (status === RIDE_STATUS.COMPLETED) {
     return (
-      <div className="px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center">
-        <p className="text-xs text-emerald-400 font-semibold">
-          ✅ Corrida concluída
+      <div className="px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+        <p className="flex items-center justify-center gap-2 text-xs text-emerald-400 font-semibold">
+          <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+          Corrida concluída
         </p>
       </div>
     );
@@ -264,9 +263,10 @@ export function DriverRideActions({
     String(status) === RIDE_STATUS.CANCELLED_BY_PASSENGER
   ) {
     return (
-      <div className="px-3 py-2 rounded-xl bg-red-500/10 border border-red-500/20 text-center">
-        <p className="text-xs text-red-400 font-semibold">
-          ❌ Corrida cancelada
+      <div className="px-3 py-2 rounded-xl bg-red-500/10 border border-red-500/20">
+        <p className="flex items-center justify-center gap-2 text-xs text-red-400 font-semibold">
+          <XCircle className="h-3.5 w-3.5" aria-hidden="true" />
+          Corrida cancelada
         </p>
       </div>
     );

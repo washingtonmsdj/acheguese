@@ -36,6 +36,7 @@ function normalizeSnapshot(snapshot?: OrderItemSnapshot): OrderItemSnapshot {
     addons,
     special_instructions: snapshot?.special_instructions ?? null,
     description: snapshot?.description ?? null,
+    structured_item: snapshot?.structured_item ?? null,
   };
 }
 

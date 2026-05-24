@@ -1,12 +1,12 @@
 /**
- * Fachada canônica de mobilidade para consumo cross-domain.
+ *  Fachada cannica de mobilidade para consumo cross-domain.
  *
- * SSOT v2.0: Exporta funções de queries e mutations diretamente.
+ *  SSOT: Exporta funes de queries e mutations diretamente.
  */
 
-// ============================================================
-// QUERIES - Operações de Leitura (SSOT)
-// ============================================================
+//  ============================================================
+//  QUERIES - Operaes de Leitura (SSOT)
+//  ============================================================
 export {
   getRideById,
   getActiveRide,
@@ -25,9 +25,9 @@ export {
   getMobilityStats,
 } from "@/modules/mobility/services/mobility.queries";
 
-// ============================================================
-// MUTATIONS - Operações de Escrita (SSOT)
-// ============================================================
+//  ============================================================
+//  MUTATIONS - Operaes de Escrita (SSOT)
+//  ============================================================
 export {
   createRide,
   updateRide,
@@ -41,9 +41,9 @@ export {
   deleteDriverServiceArea,
 } from "@/modules/mobility/services/mobility.mutations";
 
-// ============================================================
-// SERVICES ESPECIALIZADOS
-// ============================================================
+//  ============================================================
+//  SERVICES ESPECIALIZADOS
+//  ============================================================
 export {
   MobilityAdminQueryService,
 } from "@/modules/mobility/services/MobilityAdminQueryService";
@@ -95,13 +95,12 @@ export type {
   DriverPresenceStats,
 } from "@/modules/mobility/services/DriverPresenceService";
 
-// ============================================================
-// FACADE UNIFICADA (Recomendado)
-// ============================================================
+//  ============================================================
+//  FACADE UNIFICADA (Recomendado)
+//  ============================================================
 export {
   MobilityService,
   MobilityFacade,
   UnifiedMobilityService,
 } from "@/modules/mobility/services/MobilityService";
 export { mobilityService } from "@/modules/mobility/services/MobilityService.impl";
-

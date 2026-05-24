@@ -89,11 +89,11 @@ export function DriverQuickActions() {
     if (item.route) {
       navigate(item.route);
     } else if (item.action === "sos") {
-      toast.error("🚨 SOS ativado! Contatos de emergência serão notificados.");
+      toast.error("SOS ativado. Contatos de emergência serão notificados.");
     } else if (item.action === "docs") {
-      toast.info("📄 Seção de documentos em breve!");
+      toast.info("Seção de documentos em breve.");
     } else if (item.action === "help") {
-      toast.info("💬 Suporte ao motorista em breve!");
+      toast.info("Suporte ao motorista em breve.");
     }
   };
 

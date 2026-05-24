@@ -1,7 +1,7 @@
 /**
- * Chat Mutations - SSOT v2.0
+ * Chat Mutations - SSOT
  *
- * Fun��es de escrita para chat de corridas
+ * Funcoes de escrita para chat de corridas
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/core/infrastructure/supabase';
@@ -51,7 +51,7 @@ export async function sendMessage(input: SendMessageInput): Promise<ChatMessage>
  * Marcar mensagens como lidas
  *
  * @param chatId - ID do chat
- * @param userId - ID do usu�rio que est� lendo
+ * @param userId - ID do usuario que esta lendo
  */
 export async function markMessagesAsRead(chatId: string, userId: string): Promise<void> {
   try {
@@ -73,7 +73,7 @@ export async function markMessagesAsRead(chatId: string, userId: string): Promis
     });
   } catch (error) {
     logger.error('chat.mutations.markMessagesAsRead', error);
-    // N�o lan�ar erro - marcar como lido � opera��o n�o cr�tica
+    // Nao lancar erro - marcar como lido e operacao nao critica
   }
 }
 

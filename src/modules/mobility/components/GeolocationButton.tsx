@@ -110,7 +110,7 @@ export function GeolocationButton({
       {showCoordinates && coordinates && captured && (
         <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
           <p className="text-[0.65rem] text-emerald-300 font-mono">
-            📍 {coordinates.latitude.toFixed(6)},{" "}
+            {coordinates.latitude.toFixed(6)},{" "}
             {coordinates.longitude.toFixed(6)}
           </p>
           <p className="text-[0.6rem] text-emerald-400/60 mt-0.5">

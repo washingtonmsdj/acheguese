@@ -98,6 +98,7 @@ export class GastronomyOrderOriginAdapter {
           ),
         })),
         special_instructions: item.special_instructions ?? null,
+        structured_item: item.structured_item ?? null,
       },
     };
   }

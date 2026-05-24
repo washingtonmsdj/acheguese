@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Script de Validao - Dispatch Automtico
  * 
  * Valida que todos os componentes do dispatch automtico esto funcionando

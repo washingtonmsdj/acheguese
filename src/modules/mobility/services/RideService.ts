@@ -1,4 +1,4 @@
-﻿/**
+/**
  * RideService - public API
  *
  * Re-export canonical implementation from RideService.impl.

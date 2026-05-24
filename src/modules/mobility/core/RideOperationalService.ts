@@ -364,9 +364,29 @@ export class RideOperationalService {
         driverProfileId: ride.driver_profile_id
       });
 
-      // GATE 3: IDEMPOTENCIA - Se ja esta cancelado, retornar sucesso
+      const requestedCancelledState =
+        input.cancelledBy === 'passenger'
+          ? RIDE_STATE.CANCELLED_BY_PASSENGER
+          : RIDE_STATE.CANCELLED_BY_DRIVER;
+
+      // GATE 3: IDEMPOTENCIA - apenas a mesma operacao repetida retorna sucesso.
       if (currentState === RIDE_STATE.CANCELLED_BY_PASSENGER ||
           currentState === RIDE_STATE.CANCELLED_BY_DRIVER) {
+        if (currentState !== requestedCancelledState) {
+          logger.warn('Ride already cancelled by another actor', {
+            rideId: input.rideId,
+            currentState,
+            cancelledBy: input.cancelledBy
+          });
+          return {
+            success: false,
+            rideId: input.rideId,
+            fromState: currentState,
+            toState: currentState,
+            error: `Ride already cancelled: ${currentState}`,
+          };
+        }
+
         logger.info('Ride already cancelled (idempotent)', {
           rideId: input.rideId,
           currentState,
@@ -449,7 +469,7 @@ export class RideOperationalService {
       let newState: RideState;
 
       if (input.cancelledBy === 'passenger') {
-        newState = RIDE_STATE.CANCELLED_BY_PASSENGER;
+        newState = requestedCancelledState;
       } else {
         // Motorista cancelando
         // Se est em IN_DELIVERY, isso  FALHA operacional, no cancelamento simples
@@ -459,7 +479,7 @@ export class RideOperationalService {
             error: 'Cannot cancel during delivery. Use failDelivery() instead to register operational failure.',
           };
         }
-        newState = RIDE_STATE.CANCELLED_BY_DRIVER;
+        newState = requestedCancelledState;
       }
 
       // Executar cancelamento

@@ -32,7 +32,7 @@ Diferenca arquitetural:
 - `modules/delivery`: pedido do merchant, frota propria do merchant e controle operacional do estabelecimento. Preparado para `platform_checkout` e `platform_courier_network`, sem ativacao.
 - `modules/mobility`: dispatch operacional da plataforma, oferta/aceite de motorista ou motoboy em rede e runtime de corrida/entrega sob regras de mobilidade.
 
-## Regra De Compatibilidade
+## Regra De Boundary
 
 Enquanto o produto estiver em `merchant_own_fleet`, o app nao deve reutilizar runtime de `mobility` como SSOT de pedidos.
 

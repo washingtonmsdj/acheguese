@@ -15,7 +15,6 @@
  * - Responsividade completa
  * - Skeleton loading state
  *
- * @version 2.0.0 - Redesign Completo AAA
  * @author Kiro AI
  * @date 2026-04-15
  */

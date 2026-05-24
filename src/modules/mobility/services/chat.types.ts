@@ -1,5 +1,5 @@
-﻿/**
- * Chat Types - SSOT v2.0
+/**
+ * Chat Types - SSOT
  * 
  * Tipos compartilhados para chat de corridas
  */

@@ -1,4 +1,4 @@
-﻿import { supabase } from "@/core/infrastructure/supabase";
+import { supabase } from "@/core/infrastructure/supabase";
 import { logger } from "@/shared/utils/logger";
 import type { SourceType } from "../constants";
 import { profileService } from "@/core/profiles/services/ProfileService";
@@ -76,20 +76,7 @@ export class MotoboySourceResolverService {
       return currentPlan.plan_tier;
     }
 
-    const { data: legacyPlan, error: legacyPlanError } = await supabase
-      .from("gastronomy_subscriptions")
-      .select("plan_tier")
-      .eq("business_id", businessDataId)
-      .order("updated_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (legacyPlanError) {
-      logger.warn("MotoboySourceResolverService.resolvePlanTier.gastronomySubscriptions", legacyPlanError);
-      return undefined;
-    }
-
-    return legacyPlan?.plan_tier;
+    return undefined;
   }
 
   static async resolveLocationIdFromSource(

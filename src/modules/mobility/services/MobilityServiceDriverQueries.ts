@@ -5,12 +5,6 @@ import { RIDE_STATUS } from "../constants";
 
 const supabaseClient = supabase as any;
 
-function isMissingColumnError(error: unknown): boolean {
-  if (!error || typeof error !== "object") return false;
-  const typed = error as { code?: string; message?: string };
-  return typed.code === "42703" || typed.message?.toLowerCase().includes("column") === true;
-}
-
 function isProfileSuspended(profile: Record<string, unknown> | null): boolean {
   const suspended = Boolean(profile?.is_suspended ?? profile?.suspended ?? false);
   if (!suspended) return false;
@@ -41,37 +35,18 @@ export async function getDriverOfferCapabilities(
     .eq("profile_id", driverProfileId)
     .maybeSingle();
 
-  if (!queryWithRideCapability.error) {
-    const profile = await profilePromise;
-    return {
-      ...(queryWithRideCapability.data as Omit<DriverOfferCapabilitiesRow, "is_suspended">),
-      is_suspended: isProfileSuspended(profile as Record<string, unknown> | null),
-    };
-  }
-
-  if (!isMissingColumnError(queryWithRideCapability.error)) {
-    throw queryWithRideCapability.error;
-  }
-
-  const legacyQuery = await supabaseClient
-    .from("driver_data")
-    .select("is_verified, subscription_active, can_do_delivery")
-    .eq("profile_id", driverProfileId)
-    .maybeSingle();
-
-  if (legacyQuery.error) throw legacyQuery.error;
-  if (!legacyQuery.data) return null;
+  if (queryWithRideCapability.error) throw queryWithRideCapability.error;
+  if (!queryWithRideCapability.data) return null;
 
   const profile = await profilePromise;
   return {
-    ...(legacyQuery.data as Omit<DriverOfferCapabilitiesRow, "can_do_rides" | "is_suspended">),
-    can_do_rides: true,
+    ...(queryWithRideCapability.data as Omit<DriverOfferCapabilitiesRow, "is_suspended">),
     is_suspended: isProfileSuspended(profile as Record<string, unknown> | null),
   };
 }
 
 /**
- * Buscar perfis de motoristas
+ *  Buscar perfis de motoristas
  */
 export async function getDriverProfiles(): Promise<{ data: unknown[]; error: unknown }> {
   try {
@@ -87,7 +62,7 @@ export async function getDriverProfiles(): Promise<{ data: unknown[]; error: unk
 }
 
 /**
- * Buscar dados de motorista por IDs de perfil
+ *  Buscar dados de motorista por IDs de perfil
  */
 export async function getDriverDataByProfileIds(profileIds: string[]): Promise<unknown[]> {
   if (!profileIds.length) return [];
@@ -97,33 +72,7 @@ export async function getDriverDataByProfileIds(profileIds: string[]): Promise<u
     .select("profile_id, rating, can_do_delivery, can_do_rides, is_verified, subscription_active")
     .in("profile_id", profileIds);
 
-  if (!queryWithRideCapability.error) {
-    const profiles = await Promise.all(
-      profileIds.map((profileId) => profileService.getProfileById(profileId).catch(() => null)),
-    );
-    const suspensionMap = new Map(
-      profileIds.map((profileId, index) => [
-        profileId,
-        isProfileSuspended(profiles[index] as Record<string, unknown> | null),
-      ]),
-    );
-
-    return (queryWithRideCapability.data || []).map((row: { [key: string]: unknown }) => ({
-      ...row,
-      is_suspended: suspensionMap.get(String(row.profile_id)) ?? false,
-    }));
-  }
-
-  if (!isMissingColumnError(queryWithRideCapability.error)) {
-    throw queryWithRideCapability.error;
-  }
-
-  const legacyQuery = await supabaseClient
-    .from("driver_data")
-    .select("profile_id, rating, can_do_delivery, is_verified, subscription_active")
-    .in("profile_id", profileIds);
-
-  if (legacyQuery.error) throw legacyQuery.error;
+  if (queryWithRideCapability.error) throw queryWithRideCapability.error;
 
   const profiles = await Promise.all(
     profileIds.map((profileId) => profileService.getProfileById(profileId).catch(() => null)),
@@ -135,15 +84,14 @@ export async function getDriverDataByProfileIds(profileIds: string[]): Promise<u
     ]),
   );
 
-  return (legacyQuery.data || []).map((row: { [key: string]: unknown }) => ({
+  return (queryWithRideCapability.data || []).map((row: { [key: string]: unknown }) => ({
     ...row,
-    can_do_rides: true,
     is_suspended: suspensionMap.get(String(row.profile_id)) ?? false,
   }));
 }
 
 /**
- * Buscar top motoristas
+ *  Buscar top motoristas
  */
 export async function getTopDrivers(opts: { minRides?: number; limit?: number } = {}): Promise<unknown[]> {
   try {
@@ -173,7 +121,7 @@ export async function getTopDrivers(opts: { minRides?: number; limit?: number } 
 }
 
 /**
- * Estat�sticas de mobilidade
+ *  Estatisticas de mobilidade
  */
 export async function getMobilityStats(): Promise<{ total_drivers: number; total_rides: number }> {
   try {
@@ -193,7 +141,7 @@ export async function getMobilityStats(): Promise<{ total_drivers: number; total
 }
 
 /**
- * Ganhos do motorista (corridas conclu�das)
+ *  Ganhos do motorista (corridas concludas)
  */
 export async function getDriverEarnings(driverProfileId: string): Promise<unknown[]> {
   try {
@@ -219,7 +167,7 @@ export async function getDriverEarnings(driverProfileId: string): Promise<unknow
 }
 
 /**
- * Pagamentos de corridas conclu�das por motorista
+ *  Pagamentos de corridas concludas por motorista
  */
 export async function getCompletedRidePaymentsByDriver(
   driverProfileId: string,
@@ -241,7 +189,7 @@ export async function getCompletedRidePaymentsByDriver(
 }
 
 /**
- * Perfil completo do motorista
+ *  Perfil completo do motorista
  */
 export async function getDriverCompleteProfile(profileId: string): Promise<{
   display_name: string;
@@ -266,7 +214,7 @@ export async function getDriverCompleteProfile(profileId: string): Promise<{
 }
 
 /**
- * Rating medio do passageiro
+ *  Rating medio do passageiro
  */
 export async function getPassengerRating(profileId: string): Promise<number> {
   try {

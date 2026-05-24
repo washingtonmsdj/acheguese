@@ -5,6 +5,7 @@ import { MessageCircle, Phone, Star, Navigation } from "lucide-react";
 import { ShareRideButton } from "../../ShareRideButton";
 import { EmergencyButton } from "../../EmergencyButton";
 import type { RideRequest } from "@/modules/mobility/types";
+import { buildTelUrl, openContactUrl } from "@/shared/utils/contactLinks";
 
 interface DriverInfoProps {
   driver: {
@@ -69,8 +70,9 @@ export const DriverInfo = ({
         </Button>
         <Button
           onClick={() => {
-            if (driver.phone) {
-              window.location.href = `tel:${driver.phone}`;
+            const url = buildTelUrl(driver.phone);
+            if (openContactUrl(url)) {
+              return;
             } else {
               onContact();
             }

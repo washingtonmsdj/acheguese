@@ -16,6 +16,7 @@ import {
   validateFailedDeliveryResolution,
   validateFailedDeliverySnapshot,
 } from "./RideOperationalGuards";
+import { logRideStateChange } from "./RideOperationalPostTransition";
 
 type TransitionFn = (
   rideId: string,
@@ -123,6 +124,7 @@ export async function createDeliveryOperation(
     })) as { id: string };
 
     logger.info("RideOperationalService.createDelivery - success", { rideId: ride.id });
+    await logRideStateChange(ride.id, null, RIDE_STATE.REQUESTED, input.passengerProfileId, "Delivery created");
 
     await OperationalVerificationService.resolveDeliveryPINRequirement({
       senderProfileId: input.passengerProfileId,
@@ -175,7 +177,7 @@ export async function confirmPickupOperation(
     );
     if (rideValidation) return rideValidation;
 
-    const operatorBlock = await ensureMotoboyCanOperate(driverProfileId);
+    const operatorBlock = await ensureMotoboyCanOperate(driverProfileId, rideId);
     if (operatorBlock) return operatorBlock;
 
     await updateRideMutation(rideId, { pickup_confirmed_at: new Date().toISOString() });
@@ -200,7 +202,7 @@ export async function startDeliveryOperation(
     );
     if (rideValidation) return rideValidation;
 
-    const operatorBlock = await ensureMotoboyCanOperate(driverProfileId);
+    const operatorBlock = await ensureMotoboyCanOperate(driverProfileId, rideId);
     if (operatorBlock) return operatorBlock;
 
     return await transitionTo(rideId, RIDE_STATE.IN_DELIVERY, driverProfileId, "Delivery started");
@@ -231,7 +233,7 @@ export async function confirmDeliveryOperation(
     );
     if (rideValidation) return rideValidation;
 
-    const operatorBlock = await ensureMotoboyCanOperate(driverProfileId);
+    const operatorBlock = await ensureMotoboyCanOperate(driverProfileId, rideId);
     if (operatorBlock) return operatorBlock;
 
     const verification = await OperationalVerificationService.getVerificationStatus(rideId);
@@ -284,7 +286,7 @@ export async function failDeliveryOperation(
     );
     if (rideValidation) return rideValidation;
 
-    const operatorBlock = await ensureMotoboyCanOperate(driverProfileId);
+    const operatorBlock = await ensureMotoboyCanOperate(driverProfileId, rideId);
     if (operatorBlock) return operatorBlock;
 
     validateFailedDeliverySnapshot(metadata);

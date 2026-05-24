@@ -28,8 +28,11 @@ export async function ensureProfileCanRequest(profileId: string): Promise<Transi
   return null;
 }
 
-export async function ensureMotoboyCanOperate(driverProfileId: string): Promise<TransitionResult | null> {
-  const authorization = await MotoboyAuthorizationService.canOperateDelivery(driverProfileId);
+export async function ensureMotoboyCanOperate(
+  driverProfileId: string,
+  activeRideId?: string,
+): Promise<TransitionResult | null> {
+  const authorization = await MotoboyAuthorizationService.canOperateDelivery(driverProfileId, activeRideId);
   if (!authorization.allowed) {
     return { success: false, error: authorization.reason ?? "Motoboy nao autorizado para operar." };
   }

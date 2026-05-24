@@ -1,13 +1,9 @@
-﻿/**
+/**
  * CreateDeliveryModal - modal de solicitacao de motoboy.
  *
  * Regras SSOT:
  * - Enderecos precisam ser reconciliados com location_id valido.
  * - Sem location_id reconciliado nao envia solicitacao.
- *
- * Compatibilidade:
- * - API nova: open/onOpenChange/onSubmit/defaultPickup
- * - API legada: isOpen/onClose/sourceType/sourceId
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
@@ -39,7 +35,7 @@ import { cn } from "@/shared/utils/cn";
 import { toast } from "sonner";
 import { usePriceEstimate } from "@/core/pricing/hooks/usePriceEstimate";
 import { AddressService } from "@/core/address/services/AddressService";
-import { geocodingService } from "@/core/maps/services/GeocodingService";
+import { geocodingService } from "@/core/maps/services/MapGeocodingAdapter";
 import { logger } from "@/shared/utils/logger";
 import type { CreateDeliveryData } from "../hooks/useDelivery";
 import { useDelivery } from "../hooks/useDelivery";
@@ -56,19 +52,14 @@ interface PickupPoint {
 }
 
 interface CreateDeliveryModalProps {
-  // API nova (controlada)
+  // API controlada.
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   onSubmit?: (data: CreateDeliveryData) => Promise<{ success: boolean; error?: string }>;
   defaultPickup?: PickupPoint;
   isSubmitting?: boolean;
-
-  // API legada (compat)
-  isOpen?: boolean;
-  onClose?: () => void;
   businessName?: string;
 
-  // Comum
   sourceType: SourceType;
   sourceId?: string;
 }
@@ -116,8 +107,6 @@ export function CreateDeliveryModal({
   onSubmit,
   defaultPickup,
   isSubmitting = false,
-  isOpen,
-  onClose,
   businessName,
   sourceType,
   sourceId,
@@ -130,23 +119,19 @@ export function CreateDeliveryModal({
     sourceId,
   );
 
-  const modalOpen = typeof open === "boolean" ? open : Boolean(isOpen);
+  const modalOpen = Boolean(open);
 
   const closeModal = useCallback(() => {
     if (onOpenChange) onOpenChange(false);
-    if (onClose) onClose();
-  }, [onClose, onOpenChange]);
+  }, [onOpenChange]);
 
   const setModalOpen = useCallback(
     (nextOpen: boolean) => {
       if (onOpenChange) {
         onOpenChange(nextOpen);
       }
-      if (!nextOpen && onClose) {
-        onClose();
-      }
     },
-    [onClose, onOpenChange],
+    [onOpenChange],
   );
 
   const submitDelivery = onSubmit ?? fallbackCreateDelivery;

@@ -1,7 +1,7 @@
 /**
- * Chat Queries - SSOT v2.0
+ * Chat Queries - SSOT
  * 
- * Funções de leitura para chat de corridas
+ * FunÃ§Ãµes de leitura para chat de corridas
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/core/infrastructure/supabase';
@@ -11,7 +11,7 @@ import type { RideChat, ChatMessage } from './chat.types';
  * Buscar chat de uma corrida
  * 
  * @param rideId - ID da corrida
- * @returns Chat da corrida ou null se não existir
+ * @returns Chat da corrida ou null se nÃ£o existir
  */
 export async function getChatByRideId(rideId: string): Promise<RideChat | null> {
   try {
@@ -58,5 +58,3 @@ export async function getMessages(chatId: string): Promise<ChatMessage[]> {
     throw error;
   }
 }
-
-

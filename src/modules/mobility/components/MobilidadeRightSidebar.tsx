@@ -27,46 +27,16 @@ export function MobilidadeRightSidebar({
 
   return (
     <div className="space-y-3 w-full">
-      {/* Mini Map Placeholder */}
       <div className="rounded-2xl border border-white/10 bg-[#1E2529] overflow-hidden">
-        <div className="relative h-48 bg-gradient-to-br from-[#12181B] to-[#1E2529] flex items-center justify-center">
-          {/* Simulated map grid */}
-          <div className="absolute inset-0 opacity-10">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div
-                key={`h-${i}`}
-                className="absolute w-full border-t border-teal-400/20"
-                style={{ top: `${(i + 1) * 12.5}%` }}
-              />
-            ))}
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div
-                key={`v-${i}`}
-                className="absolute h-full border-l border-teal-400/20"
-                style={{ left: `${(i + 1) * 12.5}%` }}
-              />
-            ))}
-          </div>
-
-          {/* Simulated drivers on map */}
-          <div className="absolute top-[25%] left-[30%] w-6 h-6 rounded-full bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center animate-pulse">
-            <Car className="h-3 w-3 text-emerald-400" />
-          </div>
-          <div className="absolute top-[55%] left-[65%] w-6 h-6 rounded-full bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center">
-            <Car className="h-3 w-3 text-emerald-400" />
-          </div>
-          <div className="absolute top-[70%] left-[40%] w-6 h-6 rounded-full bg-teal-500/20 border-2 border-teal-400 flex items-center justify-center">
-            <MapPin className="h-3 w-3 text-teal-400" />
-          </div>
-
-          {/* Map label */}
-          <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
-            <span className="text-[0.6rem] text-gray-500 bg-[#12181B]/80 px-2 py-0.5 rounded-full">
+        <div className="relative flex min-h-48 items-center justify-center bg-gradient-to-br from-[#12181B] to-[#1E2529] p-4">
+          <div className="w-full rounded-2xl border border-dashed border-teal-400/20 bg-[#12181B]/70 p-4 text-center">
+            <MapPin className="mx-auto mb-3 h-6 w-6 text-teal-400" />
+            <p className="text-sm font-semibold text-white">
               {territoryLabels.mapLabel}
-            </span>
-            <span className="text-[0.6rem] text-teal-400 bg-[#12181B]/80 px-2 py-0.5 rounded-full font-medium">
-              Em breve: mapa real
-            </span>
+            </p>
+            <p className="mt-1 text-xs text-gray-500">
+              O mapa operacional sera exibido quando houver coordenadas reais de motoristas e pedidos.
+            </p>
           </div>
         </div>
 
@@ -120,7 +90,7 @@ export function MobilidadeRightSidebar({
                     {ride.passenger?.name || "Passageiro"}
                   </p>
                   <p className="text-[0.6rem] text-gray-500 truncate">
-                    {ride.origin} → {ride.destination}
+                    {ride.origin} - {ride.destination}
                   </p>
                 </div>
               </div>
@@ -138,14 +108,14 @@ export function MobilidadeRightSidebar({
           <div className="p-2.5 rounded-xl border border-white/10 bg-white/5">
             <div className="flex items-center gap-1.5 mb-1">
               <Car className="h-3 w-3 text-teal-400" />
-              <span className="text-xs font-semibold text-white">Padrão</span>
+              <span className="text-xs font-semibold text-white">Padrao</span>
             </div>
             <ul className="space-y-0.5">
               <li className="text-[0.6rem] text-gray-400">
-                • Visualizar pedidos
+                Visualizar pedidos
               </li>
               <li className="text-[0.6rem] text-gray-400">
-                • Aceitar corridas
+                Aceitar corridas
               </li>
             </ul>
           </div>
@@ -153,7 +123,7 @@ export function MobilidadeRightSidebar({
             <div className="flex items-center gap-1.5 mb-1">
               <Zap className="h-3 w-3 text-amber-400" />
               <span className="text-xs font-semibold text-amber-400">
-                Prioritário
+                Prioritario
               </span>
               <Badge className="bg-amber-500/20 text-amber-400 text-[0.5rem] px-1 py-0 rounded-full ml-auto">
                 PRO
@@ -161,13 +131,13 @@ export function MobilidadeRightSidebar({
             </div>
             <ul className="space-y-0.5">
               <li className="text-[0.6rem] text-gray-400">
-                • Notificações primeiro
+                Notificacoes primeiro
               </li>
               <li className="text-[0.6rem] text-gray-400">
-                • Destaque no mapa
+                Destaque no mapa
               </li>
               <li className="text-[0.6rem] text-gray-400">
-                • Destaque na lista
+                Destaque na lista
               </li>
             </ul>
           </div>

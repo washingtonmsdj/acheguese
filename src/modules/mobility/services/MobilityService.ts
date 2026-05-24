@@ -1,25 +1,24 @@
-﻿/**
- * 🏆 MOBILITY SERVICE - FACHADA SSOT
+/**
+ *  MobilityService - facade SSOT de mobilidade.
  *
- * ✅ Ponto único de entrada para operações de mobilidade
- * ✅ Mantém compatibilidade com código existente
- * ✅ Delega para módulos especializados por responsabilidade
+ *  Ponto de entrada publico para operacoes de mobilidade.
+ *  Delega para modulos especializados por responsabilidade.
  *
- * REFATORAÇÃO v5.0.0:
- * - Queries → mobility.queries.ts
- * - Mutations → mobility.mutations.ts
- * - Helpers → mobility.helpers.ts
- * - Admin/Verification/Availability → mantidos como estão
+ *  Contratos internos:
+ *  - Queries: mobility.queries.ts
+ *  - Mutations: mobility.mutations.ts
+ *  - Helpers: mobility.helpers.ts
+ *  - Runtime/admin: MobilityService.impl.ts e MobilityRuntimeService.ts
  *
- * ⚠️ NÃO adicionar lógica diretamente neste arquivo.
- * Use os módulos especializados acima.
+ *  Nao adicionar logica de negocio diretamente neste arquivo.
+ *  Use os modulos especializados acima.
  */
 
-// ============================================================
-// RE-EXPORTS DAS NOVAS QUERIES
-// ============================================================
+//  ============================================================
+//  RE-EXPORTS DAS NOVAS QUERIES
+//  ============================================================
 export {
-  // Rides
+  //  Rides
   getActiveRides,
   getRideById,
   getAllRideRequests,
@@ -34,30 +33,27 @@ export {
   getRideByShareToken,
   getUserRides,
   getRideAvailableSeats,
-  // Drivers
+  //  Drivers
   getDriverProfiles,
   getDriverDataByProfileIds,
   getTopDrivers,
   getDriverEarnings,
   getCompletedRidePaymentsByDriver,
   getDriverCompleteProfile,
-  // Stats
+  //  Stats
   getMobilityStats,
   getPassengerRating,
-  // Chat
+  //  Chat
   getMobilityConversations,
   getLastMessage,
   getUnreadCount,
-  // Deprecated stubs
-  getRideHistory,
-  getDriverLocation,
 } from "./mobility.queries";
 
-// ============================================================
-// RE-EXPORTS DAS NOVAS MUTATIONS
-// ============================================================
+//  ============================================================
+//  RE-EXPORTS DAS NOVAS MUTATIONS
+//  ============================================================
 export {
-  // Rides
+  //  Rides
   createRide,
   createRideRequest,
   updateRide,
@@ -71,21 +67,19 @@ export {
   createEmergencyAlert,
   incrementRideViewCount,
   decrementRideSeats,
-  // Driver areas
+  //  Driver areas
   deleteDriverNeighborhood,
   deleteDriverServiceArea,
-  // Driver management
+  //  Driver management
   createAdminDriverProfile,
   updateDriverOnlineStatus,
   updateDriverData,
   checkSuspensionExpiry,
-  // Location
-  updateDriverLocation,
 } from "./mobility.mutations";
 
-// ============================================================
-// RE-EXPORTS DOS HELPERS
-// ============================================================
+//  ============================================================
+//  RE-EXPORTS DOS HELPERS
+//  ============================================================
 export {
   isRideActive,
   canAcceptRide,
@@ -104,19 +98,19 @@ export {
   getRideStatusColor,
 } from "./mobility.helpers";
 
-// ============================================================
-// RE-EXPORTS LEGADOS (mantidos para compatibilidade)
-// ============================================================
+//  ============================================================
+//  SERVICE READ/WRITE EXPORTS
+//  ============================================================
 export {
-  // Classe estática (queries antigas)
+  //  Classe estatica de leitura/admin.
   MobilityService,
-  // Instância (mutations e operações runtime)
+  //  Instancia singleton de escrita/runtime.
   mobilityService,
 } from "./MobilityService.impl";
 
-// ============================================================
-// RE-EXPORTS DE SERVICES ESPECIALIZADOS
-// ============================================================
+//  ============================================================
+//  RE-EXPORTS DE SERVICES ESPECIALIZADOS
+//  ============================================================
 export {
   DriverAvailabilityService,
   AVAILABILITY_CONFIG,
@@ -152,26 +146,26 @@ export {
   type UpdateRideData,
 } from "./RideService.impl";
 
-// ============================================================
-// CHAT SERVICE - SSOT v2.0
-// ============================================================
+//  ============================================================
+//  CHAT SERVICE - SSOT
+//  ============================================================
 export {
-  // Queries
+  //  Queries
   getChatByRideId,
   getMessages,
-  // Mutations
+  //  Mutations
   sendMessage,
   markMessagesAsRead,
   createChat,
-  // Types
+  //  Types
   type RideChat,
   type ChatMessage,
   type SendMessageInput,
-  // Legacy facade
+  //  Facade de chat.
   ChatFacade,
 } from "./ChatService";
 
-// Legacy compatibility exports
+//  Runtime chat service exports.
 export {
   ChatService,
   chatService,
@@ -182,27 +176,26 @@ export { MobilityLocationService } from "./MobilityLocationService";
 export { MobilityRolloutService } from "./MobilityRolloutService";
 export { MobilityAuditService } from "./MobilityAuditService";
 
-// ============================================================
-// RE-EXPORTS DE VALIDATORS E ADAPTERS
-// ============================================================
+//  ============================================================
+//  RE-EXPORTS DE VALIDATORS E ADAPTERS
+//  ============================================================
 export * from "./validators";
 export * from "./RideCanonicalAdapter";
 
-// ============================================================
-// FACHADA UNIFICADA (classe para uso direto nos hooks)
-// ============================================================
+//  ============================================================
+//  FACADE AGREGADA DO MODULO
+//  ============================================================
 
 import * as MobilityQueries from "./mobility.queries";
 import * as MobilityMutations from "./mobility.mutations";
 import * as MobilityHelpers from "./mobility.helpers";
 
 /**
- * @deprecated Use os exports diretos dos módulos.
- * MobilityFacade como classe estática mantida para compatibilidade.
- * Todos os métodos delegam para queries/mutations/helpers.
+ *  Facade agregada para os hooks de mobilidade.
+ *  Todos os metodos delegam para queries, mutations e helpers especializados.
  */
 export class MobilityFacade {
-  // ===== QUERIES =====
+  //  ===== QUERIES =====
   static getActiveRides = MobilityQueries.getActiveRides;
   static getRideById = MobilityQueries.getRideById;
   static getAllRideRequests = MobilityQueries.getAllRideRequests;
@@ -228,10 +221,7 @@ export class MobilityFacade {
   static getRideBasicInfo = MobilityQueries.getRideBasicInfo;
   static getRideByShareToken = MobilityQueries.getRideByShareToken;
   static getRideAvailableSeats = MobilityQueries.getRideAvailableSeats;
-  static getRideHistory = MobilityQueries.getRideHistory;
-  static getDriverLocation = MobilityQueries.getDriverLocation;
-
-  // ===== MUTATIONS =====
+  //  ===== MUTATIONS =====
   static createRide = MobilityMutations.createRide;
   static createRideRequest = MobilityMutations.createRideRequest;
   static updateRide = MobilityMutations.updateRide;
@@ -251,9 +241,7 @@ export class MobilityFacade {
   static updateDriverOnlineStatus = MobilityMutations.updateDriverOnlineStatus;
   static updateDriverData = MobilityMutations.updateDriverData;
   static checkSuspensionExpiry = MobilityMutations.checkSuspensionExpiry;
-  static updateDriverLocation = MobilityMutations.updateDriverLocation;
-
-  // ===== HELPERS =====
+  //  ===== HELPERS =====
   static isRideActive = MobilityHelpers.isRideActive;
   static canAcceptRide = MobilityHelpers.canAcceptRide;
   static canStartRide = MobilityHelpers.canStartRide;
@@ -271,6 +259,5 @@ export class MobilityFacade {
   static getRideStatusColor = MobilityHelpers.getRideStatusColor;
 }
 
-// Alias para compatibilidade com código que importa diretamente
+//  Alias publico do facade unificado.
 export { MobilityFacade as UnifiedMobilityService };
-

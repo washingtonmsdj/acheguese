@@ -1,8 +1,7 @@
-﻿/**
- * DriverService - canonical implementation
+/**
+ * DriverService - canonical implementation.
  *
- * Compatibility facade over the canonical driver aggregate:
- * `profiles (driver)` + MobilityService.
+ * Driver aggregate over `profiles (driver)` and MobilityService.
  */
 
 import type { Tables } from "@/core/infrastructure/supabase/types.generated";

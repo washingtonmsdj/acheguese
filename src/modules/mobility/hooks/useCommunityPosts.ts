@@ -27,9 +27,9 @@ export interface CommunityPost {
 }
 
 interface CreateCommunityPostInput {
-  author_profile_id?: string;
+  author_profile_id: string;
   content: string;
-  location_id?: string;
+  location_id: string;
   reach?: 'city' | 'neighborhood' | 'street';
 }
 
@@ -49,13 +49,11 @@ export function useCommunityPosts(filters?: {
   });
 
   const createPost = async (postData: CreateCommunityPostInput) => {
-    // ✅ CLEANUP PÓS-SPRINT2: createPost() com location_id do postData
-    // postData deve incluir author_profile_id e location_id
     await postService.createPost({
-      author_profile_id: postData.author_profile_id ?? 'unknown',
+      author_profile_id: postData.author_profile_id,
       content: postData.content,
       type: "ride_share",
-      location_id: postData.location_id ?? 'unknown',
+      location_id: postData.location_id,
       reach: postData.reach || 'neighborhood',
     });
     refetch();
@@ -67,12 +65,16 @@ export function useCommunityPosts(filters?: {
     refetch();
   };
 
-  const commentOnPost = async (postId: string, content: string) => {
+  const commentOnPost = async (postId: string, content: string, authorProfileId: string) => {
+    if (!authorProfileId) {
+      throw new Error("authorProfileId is required to comment on a ride-share post");
+    }
+
     // ✅ LOTE 7 - CommentService.createComment
     await CommentService.createComment({
       post_id: postId,
       content,
-      author_profile_id: "unknown",
+      author_profile_id: authorProfileId,
     });
     refetch();
   };

@@ -55,19 +55,18 @@ export { driverService } from "./services/DriverService";
 export { chatService } from "./services/ChatService";
 export { MobilityService, mobilityService } from "./services/MobilityService";
 
-// Hooks - Rides (exports básicos apenas)
+// Hooks - Rides
 export { useActiveRide } from "./hooks/useActiveRide";
 export { useRideHistory } from "./hooks/useRideHistory";
 export { useDelivery } from "./hooks/useDelivery";
 export { useMotoboy } from "./hooks/useMotoboy";
 export type { CreateDeliveryData, DeliveryProof } from "./hooks/useDelivery";
 
-// Hooks - Driver (exports básicos apenas)
+// Hooks - Driver
 export { useDriverProfile } from "./hooks/useDriverProfile";
 export { useDriverLocation } from "./hooks/useDriverLocation";
 
-// Hooks - Chat (stub - export básico apenas)
-export { useChat } from "./hooks/useChat";
+// Hooks - Chat
 export { useRideChat } from "./hooks/useRideChat";
 
 // Pages

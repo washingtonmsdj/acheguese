@@ -30,6 +30,7 @@ import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services";
 import { mobilityService } from "@/modules/mobility/services/MobilityService";
 import { DriverTrustFeedbackPanel } from "./DriverTrustFeedbackPanel";
+import { buildTelUrl, openContactUrl } from "@/shared/utils/contactLinks";
 
 const TRUST_RISK_LABELS: Record<string, string> = {
   trusted: "Confiavel",
@@ -141,7 +142,7 @@ export function DriverRidesList({
         );
 
         if (!driver.is_verified) {
-          toast.error("❌ Motorista não verificado", {
+          toast.error("Motorista não verificado", {
             description:
               "Complete o processo de verificação para aceitar corridas.",
           });
@@ -149,14 +150,14 @@ export function DriverRidesList({
         }
 
         if (!driver.is_online) {
-          toast.error("❌ Você está offline", {
+          toast.error("Você está offline", {
             description: "Ative o modo online para aceitar corridas.",
           });
           return;
         }
 
         if (!driver.subscription_active) {
-          toast.error("❌ Assinatura inativa", {
+          toast.error("Assinatura inativa", {
             description: "Renove sua assinatura para aceitar corridas.",
           });
           return;
@@ -252,6 +253,8 @@ export function DriverRidesList({
         const passengerTrust = getPassengerTrustInfo(ride);
         const isEntrega = ride.ride_mode === "motoboy" || ride.type === "entrega";
         const isActionLoading = loadingAction === ride.id;
+        const passengerPhone =
+          typeof ride.passenger?.phone === "string" ? ride.passenger.phone : null;
         const canStartStatuses: string[] = [
           RIDE_STATUS.DRIVER_ASSIGNED,
           RIDE_STATUS.DRIVER_ACCEPTED,
@@ -425,12 +428,13 @@ export function DriverRidesList({
                   >
                     <MessageCircle className="h-3.5 w-3.5 mr-1.5" /> Chat
                   </Button>
-                  {ride.passenger?.phone && (
+                  {passengerPhone && (
                     <Button
                       size="sm"
-                      onClick={() =>
-                        window.open(`tel:${ride.passenger?.phone as string}`, "_self")
-                      }
+                      onClick={() => {
+                        const url = buildTelUrl(passengerPhone);
+                        openContactUrl(url);
+                      }}
                       className="bg-success/15 text-success hover:bg-success/25 rounded-xl text-xs h-9"
                     >
                       <Phone className="h-3.5 w-3.5 mr-1.5" /> Ligar

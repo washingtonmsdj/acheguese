@@ -210,7 +210,7 @@ export function DriverStatsCard() {
             </span>
             {!isCompletionGood && (
               <span className="text-yellow-600 font-medium">
-                ⚠️ Mantenha acima de 85%
+                Mantenha acima de 85%
               </span>
             )}
           </div>
@@ -248,7 +248,7 @@ export function DriverStatsCard() {
             </span>
             {!isCancellationGood && (
               <span className="text-red-600 font-medium">
-                ⚠️ Mantenha abaixo de 15%
+                Mantenha abaixo de 15%
               </span>
             )}
           </div>
@@ -339,7 +339,7 @@ export function DriverStatsCard() {
               <Award className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
               <div className="text-xs space-y-1">
                 <p className="font-medium text-green-600">
-                  Excelente desempenho! 🎉
+                  Excelente desempenho!
                 </p>
                 <p className="text-muted-foreground">
                   Você tem prioridade máxima no sistema de match. Continue

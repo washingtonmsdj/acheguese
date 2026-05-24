@@ -1,4 +1,4 @@
-﻿/**
+/**
  * RequestMotoboyButton
  *
  * CTA para solicitar motoboy usando autorizacao centralizada.
@@ -122,8 +122,8 @@ export function RequestMotoboyButton({
       </Button>
 
       <CreateDeliveryModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
         sourceType={sourceType}
         sourceId={sourceId}
         businessName={businessName}

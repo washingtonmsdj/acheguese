@@ -1,4 +1,4 @@
-﻿/**
+/**
  * DISPATCH TYPES - Tipos para sistema de dispatch híbrido
  * 
  * Modelo Híbrido:

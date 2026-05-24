@@ -10,6 +10,7 @@ import {
   Package,
   Calendar,
   Flag,
+  type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
@@ -68,11 +69,11 @@ const intentConfig = {
   },
 };
 
-const rideTypeLabels: Record<string, string> = {
-  viagem: "🚗 Corrida",
-  carona_compartilhada: "👥 Carona Compartilhada",
-  entrega: "📦 Entrega",
-  agendada: "📅 Agendada",
+const rideTypeConfig: Record<string, { label: string; icon: LucideIcon }> = {
+  viagem: { label: "Corrida", icon: Car },
+  carona_compartilhada: { label: "Carona compartilhada", icon: Users },
+  entrega: { label: "Entrega", icon: Package },
+  agendada: { label: "Agendada", icon: Calendar },
 };
 
 function formatTime(iso?: string) {
@@ -114,6 +115,8 @@ export function CommunityRidePost({
 
   const cfg = intentConfig[post.intent];
   const IntentIcon = cfg.icon;
+  const RideTypeIcon = post.rideType ? rideTypeConfig[post.rideType]?.icon : null;
+  const rideTypeLabel = post.rideType ? rideTypeConfig[post.rideType]?.label : null;
 
   const handleJoin = () => {
     if (!currentUserId) {
@@ -128,8 +131,8 @@ export function CommunityRidePost({
     setInterested((p) => p + 1);
     toast.success(
       post.intent === "offering"
-        ? "✅ Interesse registrado! O motorista entrará em contato."
-        : "✅ Oferta registrada! O passageiro será notificado.",
+        ? "Interesse registrado. O motorista entrará em contato."
+        : "Oferta registrada. O passageiro será notificado.",
     );
     onJoin?.(post.id);
   };
@@ -173,8 +176,9 @@ export function CommunityRidePost({
             {cfg.label}
           </span>
           {post.rideType && (
-            <span className="text-[0.6rem] text-gray-500">
-              {rideTypeLabels[post.rideType]}
+            <span className="flex items-center gap-1 text-[0.6rem] text-gray-500">
+              {RideTypeIcon && <RideTypeIcon className="h-3 w-3" aria-hidden="true" />}
+              {rideTypeLabel}
             </span>
           )}
         </div>
@@ -215,7 +219,7 @@ export function CommunityRidePost({
               )}
             </div>
             <p className="text-[0.65rem] text-gray-500">
-              {post.authorNeighborhood && `${post.authorNeighborhood} · `}
+              {post.authorNeighborhood && `${post.authorNeighborhood} - `}
               {timeAgo(post.createdAt)}
             </p>
           </div>
@@ -241,7 +245,7 @@ export function CommunityRidePost({
             <div className="flex items-center gap-1.5 flex-1 min-w-0">
               <MapPin className="h-3.5 w-3.5 text-amber-400 flex-shrink-0" />
               <span className="text-xs text-gray-300 truncate">
-                {post.destination || "—"}
+                {post.destination || "Destino"}
               </span>
             </div>
           </div>

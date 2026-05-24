@@ -1,10 +1,10 @@
-﻿/**
+/**
  * RideCanonicalAdapter
  * 
- * Camada de compatibilidade transitória para ride_requests
- * Suporta modelo canônico (address_id + location_id) e legado (JSONB)
+ * Adapter canonico para leitura de localizacao em ride_requests
+ * Combina FKs canonicas (address_id/location_id) com snapshots JSONB da propria corrida
  * 
- * ETAPA 8: Não refatora MobilityService inteiro, apenas adiciona helpers
+ * Mantem a formatacao de rota centralizada fora de pages/hooks
  */
 
 import type { Address } from '@/core/address/types';
@@ -19,7 +19,7 @@ type RideRequestWithRelations = RideRequestRecord & {
   dropoff_location?: Location | Record<string, unknown> | null;
 };
 
-type LegacyLocationLike = {
+type SerializedRideLocation = {
   address?: string;
   neighborhood?: string;
   city?: string;
@@ -32,9 +32,9 @@ type LegacyLocationLike = {
   lon?: number;
 };
 
-type LegacyRideLike = {
-  origin?: LegacyLocationLike;
-  destination?: LegacyLocationLike;
+type RideRequestSerializedRoute = {
+  origin?: SerializedRideLocation;
+  destination?: SerializedRideLocation;
 };
 
 /**
@@ -64,14 +64,14 @@ export function hasDropoffAddress(ride: RideRequestRecord): boolean {
 }
 
 /**
- * Obter endereço formatado de origem (compatível com legado)
+ * Obter endereço formatado de origem (snapshot de rota)
  */
 export function getFormattedPickupAddress(ride: RideRequestRecord): string {
-  const legacyRide = ride as unknown as LegacyRideLike & Record<string, unknown>;
+  const serializedRide = ride as unknown as RideRequestSerializedRoute & Record<string, unknown>;
   const parts: string[] = [];
   
   // Tentar pickup_location primeiro
-  const pickup = legacyRide.pickup_location as LegacyLocationLike | null | undefined;
+  const pickup = serializedRide.pickup_location as SerializedRideLocation | null | undefined;
   if (pickup && typeof pickup === 'object') {
     if (pickup.address) parts.push(pickup.address);
     if (pickup.neighborhood) parts.push(pickup.neighborhood);
@@ -80,8 +80,8 @@ export function getFormattedPickupAddress(ride: RideRequestRecord): string {
     if (pickup.cep) parts.push(`CEP ${pickup.cep}`);
   }
   
-  // Fallback para origin
-  const origin = legacyRide.origin;
+  // Fallback para origin serializado
+  const origin = serializedRide.origin;
   if (parts.length === 0 && origin && typeof origin === 'object') {
     if (origin.address) parts.push(origin.address);
     if (origin.neighborhood) parts.push(origin.neighborhood);
@@ -93,14 +93,14 @@ export function getFormattedPickupAddress(ride: RideRequestRecord): string {
 }
 
 /**
- * Obter endereço formatado de destino (compatível com legado)
+ * Obter endereço formatado de destino (snapshot de rota)
  */
 export function getFormattedDropoffAddress(ride: RideRequestRecord): string {
-  const legacyRide = ride as unknown as LegacyRideLike & Record<string, unknown>;
+  const serializedRide = ride as unknown as RideRequestSerializedRoute & Record<string, unknown>;
   const parts: string[] = [];
   
   // Tentar dropoff_location primeiro
-  const dropoff = legacyRide.dropoff_location as LegacyLocationLike | null | undefined;
+  const dropoff = serializedRide.dropoff_location as SerializedRideLocation | null | undefined;
   if (dropoff && typeof dropoff === 'object') {
     if (dropoff.address) parts.push(dropoff.address);
     if (dropoff.neighborhood) parts.push(dropoff.neighborhood);
@@ -109,8 +109,8 @@ export function getFormattedDropoffAddress(ride: RideRequestRecord): string {
     if (dropoff.cep) parts.push(`CEP ${dropoff.cep}`);
   }
   
-  // Fallback para destination
-  const destination = legacyRide.destination;
+  // Fallback para destination serializado
+  const destination = serializedRide.destination;
   if (parts.length === 0 && destination && typeof destination === 'object') {
     if (destination.address) parts.push(destination.address);
     if (destination.neighborhood) parts.push(destination.neighborhood);
@@ -122,7 +122,7 @@ export function getFormattedDropoffAddress(ride: RideRequestRecord): string {
 }
 
 /**
- * Obter coordenadas de origem (preferindo address canônico, fallback para legado)
+ * Obter coordenadas de origem (preferindo address canônico, fallback para snapshot)
  */
 export function getPickupCoordinates(
   ride: RideRequestWithRelations
@@ -135,8 +135,8 @@ export function getPickupCoordinates(
     };
   }
 
-  // Fallback para pickup_location legado
-  const pickup = ride.pickup_location as LegacyLocationLike | null;
+  // Fallback para pickup_location serializado
+  const pickup = ride.pickup_location as SerializedRideLocation | null;
   if (pickup && typeof pickup === 'object') {
     const lat = pickup.latitude || pickup.lat;
     const lng = pickup.longitude || pickup.lng || pickup.lon;
@@ -145,8 +145,8 @@ export function getPickupCoordinates(
     }
   }
 
-  // Fallback para origin legado
-  const origin = (ride as LegacyRideLike).origin;
+  // Fallback para origin serializado serializado
+  const origin = (ride as RideRequestSerializedRoute).origin;
   if (origin && typeof origin === 'object') {
     const lat = origin.latitude || origin.lat;
     const lng = origin.longitude || origin.lng || origin.lon;
@@ -159,7 +159,7 @@ export function getPickupCoordinates(
 }
 
 /**
- * Obter coordenadas de destino (preferindo address canônico, fallback para legado)
+ * Obter coordenadas de destino (preferindo address canônico, fallback para snapshot)
  */
 export function getDropoffCoordinates(
   ride: RideRequestWithRelations
@@ -172,8 +172,8 @@ export function getDropoffCoordinates(
     };
   }
 
-  // Fallback para dropoff_location legado
-  const dropoff = ride.dropoff_location as LegacyLocationLike | null;
+  // Fallback para dropoff_location serializado
+  const dropoff = ride.dropoff_location as SerializedRideLocation | null;
   if (dropoff && typeof dropoff === 'object') {
     const lat = dropoff.latitude || dropoff.lat;
     const lng = dropoff.longitude || dropoff.lng || dropoff.lon;
@@ -182,8 +182,8 @@ export function getDropoffCoordinates(
     }
   }
 
-  // Fallback para destination legado
-  const destination = (ride as LegacyRideLike).destination;
+  // Fallback para destination serializado serializado
+  const destination = (ride as RideRequestSerializedRoute).destination;
   if (destination && typeof destination === 'object') {
     const lat = destination.latitude || destination.lat;
     const lng = destination.longitude || destination.lng || destination.lon;
@@ -210,7 +210,7 @@ export function getDropoffTerritory(ride: RideRequestRecord): string | null {
 }
 
 /**
- * Obter nome do território de origem (preferindo location canônico, fallback para legado)
+ * Obter nome do território de origem (preferindo location canônico, fallback para snapshot)
  */
 export function getPickupTerritoryName(
   ride: RideRequestWithRelations
@@ -220,15 +220,15 @@ export function getPickupTerritoryName(
     return (ride.pickup_location as Location).name;
   }
 
-  // Fallback para pickup_location legado
-  const pickup = ride.pickup_location as LegacyLocationLike | null;
+  // Fallback para pickup_location serializado
+  const pickup = ride.pickup_location as SerializedRideLocation | null;
   if (pickup && typeof pickup === 'object') {
     if (pickup.city) return pickup.city;
     if (pickup.neighborhood) return pickup.neighborhood;
   }
 
-  // Fallback para origin legado
-  const origin = (ride as LegacyRideLike).origin;
+  // Fallback para origin serializado serializado
+  const origin = (ride as RideRequestSerializedRoute).origin;
   if (origin && typeof origin === 'object') {
     if (origin.city) return origin.city;
     if (origin.neighborhood) return origin.neighborhood;
@@ -238,7 +238,7 @@ export function getPickupTerritoryName(
 }
 
 /**
- * Obter nome do território de destino (preferindo location canônico, fallback para legado)
+ * Obter nome do território de destino (preferindo location canônico, fallback para snapshot)
  */
 export function getDropoffTerritoryName(
   ride: RideRequestWithRelations
@@ -248,15 +248,15 @@ export function getDropoffTerritoryName(
     return (ride.dropoff_location as Location).name;
   }
 
-  // Fallback para dropoff_location legado
-  const dropoff = ride.dropoff_location as LegacyLocationLike | null;
+  // Fallback para dropoff_location serializado
+  const dropoff = ride.dropoff_location as SerializedRideLocation | null;
   if (dropoff && typeof dropoff === 'object') {
     if (dropoff.city) return dropoff.city;
     if (dropoff.neighborhood) return dropoff.neighborhood;
   }
 
-  // Fallback para destination legado
-  const destination = (ride as LegacyRideLike).destination;
+  // Fallback para destination serializado serializado
+  const destination = (ride as RideRequestSerializedRoute).destination;
   if (destination && typeof destination === 'object') {
     if (destination.city) return destination.city;
     if (destination.neighborhood) return destination.neighborhood;

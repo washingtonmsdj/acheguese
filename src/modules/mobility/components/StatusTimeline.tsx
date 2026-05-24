@@ -2,6 +2,7 @@ import { RIDE_STATUS } from "@/shared/types/constants";
 import { RideRequest } from "@/modules/mobility/types";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { Car, CheckCircle2, FileText, MapPin, User, XCircle, type LucideIcon } from "lucide-react";
 
 type TimelineRide = RideRequest & {
   driver_assigned_at?: string | null;
@@ -21,7 +22,7 @@ interface StatusTimelineProps {
 interface TimelineStep {
   status: string;
   label: string;
-  icon: string;
+  icon: LucideIcon;
   timestamp?: string;
   completed: boolean;
   current: boolean;
@@ -32,7 +33,7 @@ export function StatusTimeline({ ride }: StatusTimelineProps) {
     {
       status: RIDE_STATUS.PENDING,
       label: "Pedido Criado",
-      icon: "📝",
+      icon: FileText,
       timestamp: ride.created_at,
       completed: true,
       current: ride.status === RIDE_STATUS.PENDING,
@@ -40,7 +41,7 @@ export function StatusTimeline({ ride }: StatusTimelineProps) {
     {
       status: RIDE_STATUS.DRIVER_ASSIGNED,
       label: "Motorista Aceitou",
-      icon: "✅",
+      icon: CheckCircle2,
       timestamp: ride.driver_assigned_at,
       completed: !!ride.driver_assigned_at,
       current: ride.status === RIDE_STATUS.DRIVER_ASSIGNED,
@@ -48,7 +49,7 @@ export function StatusTimeline({ ride }: StatusTimelineProps) {
     {
       status: RIDE_STATUS.DRIVER_ON_THE_WAY,
       label: "A Caminho",
-      icon: "🚗",
+      icon: Car,
       timestamp: ride.driver_on_the_way_at,
       completed: !!ride.driver_on_the_way_at,
       current: ride.status === RIDE_STATUS.DRIVER_ON_THE_WAY,
@@ -56,7 +57,7 @@ export function StatusTimeline({ ride }: StatusTimelineProps) {
     {
       status: RIDE_STATUS.DRIVER_ARRIVED,
       label: "Motorista Chegou",
-      icon: "📍",
+      icon: MapPin,
       timestamp: ride.driver_arrived_at,
       completed: !!ride.driver_arrived_at,
       current: ride.status === RIDE_STATUS.DRIVER_ARRIVED,
@@ -64,7 +65,7 @@ export function StatusTimeline({ ride }: StatusTimelineProps) {
     {
       status: RIDE_STATUS.PASSENGER_ON_BOARD,
       label: "Passageiro Embarcou",
-      icon: "👤",
+      icon: User,
       timestamp: ride.passenger_on_board_at,
       completed: !!ride.passenger_on_board_at,
       current: ride.status === RIDE_STATUS.PASSENGER_ON_BOARD,
@@ -72,7 +73,7 @@ export function StatusTimeline({ ride }: StatusTimelineProps) {
     {
       status: RIDE_STATUS.IN_PROGRESS,
       label: "Em Viagem",
-      icon: "🚗",
+      icon: Car,
       timestamp: ride.started_at,
       completed: !!ride.started_at,
       current: ride.status === RIDE_STATUS.IN_PROGRESS,
@@ -80,7 +81,7 @@ export function StatusTimeline({ ride }: StatusTimelineProps) {
     {
       status: RIDE_STATUS.COMPLETED,
       label: "Concluída",
-      icon: "✅",
+      icon: CheckCircle2,
       timestamp: ride.completed_at,
       completed: !!ride.completed_at,
       current: ride.status === RIDE_STATUS.COMPLETED,
@@ -108,7 +109,7 @@ export function StatusTimeline({ ride }: StatusTimelineProps) {
                     : "border-gray-300 bg-gray-50"
               }`}
             >
-              {step.icon}
+              <step.icon className="h-4 w-4" aria-hidden="true" />
             </div>
             {index < relevantSteps.length - 1 && (
               <div
@@ -154,7 +155,7 @@ export function StatusTimeline({ ride }: StatusTimelineProps) {
       {ride.status === RIDE_STATUS.CANCELLED && (
         <div className="flex gap-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-red-500 bg-red-50 text-sm">
-            ❌
+            <XCircle className="h-4 w-4 text-red-600" aria-hidden="true" />
           </div>
           <div className="flex-1">
             <p className="font-medium text-red-600">Cancelada</p>

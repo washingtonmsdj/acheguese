@@ -1,4 +1,4 @@
-﻿import { useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useIsAdmin } from "@/core/auth/hooks/useIsAdmin";
 import { useSessionContext } from "@/core/session";
 import type { Tables } from "@/core/infrastructure/supabase/types.generated";

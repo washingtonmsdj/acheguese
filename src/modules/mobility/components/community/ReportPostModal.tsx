@@ -10,38 +10,43 @@ import {
 import { Button } from "@/shared/components/ui/button";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Label } from "@/shared/components/ui/label";
-import { Flag, AlertTriangle } from "lucide-react";
+import { Ban, FileText, Flag, AlertTriangle, ShieldAlert, XCircle, type LucideIcon } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 
-const FLAG_REASONS = [
+const FLAG_REASONS: Array<{
+  value: string;
+  label: string;
+  icon: LucideIcon;
+  description: string;
+}> = [
   {
     value: "spam",
     label: "Spam ou Propaganda",
-    icon: "🚫",
+    icon: Ban,
     description: "Conteúdo promocional não solicitado",
   },
   {
     value: "inappropriate",
     label: "Conteúdo Inapropriado",
-    icon: "⚠️",
+    icon: AlertTriangle,
     description: "Linguagem ofensiva ou inadequada",
   },
   {
     value: "fake",
     label: "Informação Falsa",
-    icon: "❌",
+    icon: XCircle,
     description: "Informações enganosas ou falsas",
   },
   {
     value: "offensive",
     label: "Ofensivo",
-    icon: "😡",
+    icon: ShieldAlert,
     description: "Conteúdo ofensivo ou discriminatório",
   },
   {
     value: "other",
     label: "Outro Motivo",
-    icon: "📝",
+    icon: FileText,
     description: "Outro problema não listado",
   },
 ];
@@ -98,37 +103,40 @@ export function ReportPostModal({
               Motivo da denúncia *
             </Label>
             <div className="space-y-2">
-              {FLAG_REASONS.map((reason) => (
-                <button
-                  key={reason.value}
-                  onClick={() => setSelectedReason(reason.value)}
-                  className={cn(
-                    "w-full p-3 rounded-xl border-2 transition-all text-left",
-                    selectedReason === reason.value
-                      ? "border-red-400 bg-red-400/10"
-                      : "border-white/10 hover:border-white/20 bg-white/5",
-                  )}
-                >
-                  <div className="flex items-start gap-3">
-                    <span className="text-xl flex-shrink-0">{reason.icon}</span>
-                    <div className="flex-1 min-w-0">
-                      <p
-                        className={cn(
-                          "text-sm font-semibold",
-                          selectedReason === reason.value
-                            ? "text-red-400"
-                            : "text-white",
-                        )}
-                      >
-                        {reason.label}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-0.5">
-                        {reason.description}
-                      </p>
+              {FLAG_REASONS.map((reason) => {
+                const ReasonIcon = reason.icon;
+                return (
+                  <button
+                    key={reason.value}
+                    onClick={() => setSelectedReason(reason.value)}
+                    className={cn(
+                      "w-full p-3 rounded-xl border-2 transition-all text-left",
+                      selectedReason === reason.value
+                        ? "border-red-400 bg-red-400/10"
+                        : "border-white/10 hover:border-white/20 bg-white/5",
+                    )}
+                  >
+                    <div className="flex items-start gap-3">
+                      <ReasonIcon className="h-5 w-5 flex-shrink-0 text-red-300" aria-hidden="true" />
+                      <div className="flex-1 min-w-0">
+                        <p
+                          className={cn(
+                            "text-sm font-semibold",
+                            selectedReason === reason.value
+                              ? "text-red-400"
+                              : "text-white",
+                          )}
+                        >
+                          {reason.label}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          {reason.description}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                </button>
-              ))}
+                  </button>
+                );
+              })}
             </div>
           </div>
 

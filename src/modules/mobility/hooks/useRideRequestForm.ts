@@ -5,7 +5,6 @@
  * Consolida 18 estados locais em um único reducer para melhor performance e manutenibilidade.
  * 
  * @module mobility/hooks/useRideRequestForm
- * @version 2.0.0 (AAA)
  */
 
 import { useReducer, useCallback, useMemo } from 'react';

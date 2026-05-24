@@ -1,4 +1,4 @@
-﻿/**
+/**
  * RideService - canonical implementation
  *
  * SSOT owner for ride lifecycle operations in mobility module.

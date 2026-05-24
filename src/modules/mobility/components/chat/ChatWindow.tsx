@@ -107,8 +107,8 @@ export function ChatWindow({
             {rideInfo && (
               <p className="text-xs text-gray-400">
                 {rideInfo.status === RIDE_STATUS.IN_PROGRESS
-                  ? "🚗 Em viagem"
-                  : "✅ Viagem aceita"}
+                  ? "Em viagem"
+                  : "Viagem aceita"}
               </p>
             )}
           </div>
@@ -151,7 +151,7 @@ export function ChatWindow({
           <div className="flex items-center gap-2 text-xs text-gray-300">
             <MapPin className="h-3 w-3 text-teal-400" />
             <span className="truncate">{rideInfo.origin}</span>
-            <span className="text-gray-600">→</span>
+            <span className="text-gray-600">para</span>
             <span className="truncate">{rideInfo.destination}</span>
           </div>
         </div>

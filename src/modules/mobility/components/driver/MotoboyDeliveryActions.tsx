@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { RIDE_STATUS } from "../../constants";
 import type { DeliveryProof } from "../../hooks/useDelivery";
+import { buildTelUrl } from "@/shared/utils/contactLinks";
 
 interface MotoboyDeliveryActionsProps {
   ride: {
@@ -145,7 +146,7 @@ export function MotoboyDeliveryActions({
         {ride.recipient_phone && (
           <div className="flex items-center gap-2 text-sm">
             <Phone className="h-4 w-4 text-muted-foreground" />
-            <a href={`tel:${ride.recipient_phone}`} className="text-primary font-medium">
+            <a href={buildTelUrl(ride.recipient_phone) ?? undefined} className="text-primary font-medium">
               {ride.recipient_phone}
             </a>
           </div>

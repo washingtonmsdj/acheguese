@@ -16,7 +16,7 @@ import {
   MapPin,
   DollarSign,
   Clock,
-  User,
+  Star,
 } from "lucide-react";
 import { RideRequest } from "@/modules/mobility/types";
 import {
@@ -122,9 +122,10 @@ export function RideCompletionConfirmation({
                     {ride.driver?.rating && (
                       <Badge
                         variant="outline"
-                        className="text-[0.65rem] h-4 px-1 border-warning/30 text-warning"
+                        className="text-[0.65rem] h-4 px-1 border-warning/30 text-warning gap-1"
                       >
-                        ⭐ {ride.driver.rating.toFixed(1)}
+                        <Star className="h-3 w-3 fill-current" aria-hidden="true" />
+                        {ride.driver.rating.toFixed(1)}
                       </Badge>
                     )}
                   </div>
@@ -183,7 +184,7 @@ export function RideCompletionConfirmation({
               {/* Info Box */}
               <div className="p-3 rounded-lg bg-accent/10 border border-accent/20">
                 <p className="text-xs text-accent">
-                  ℹ️ Ao confirmar, você atesta que a corrida foi concluída
+                  Ao confirmar, você atesta que a corrida foi concluída
                   conforme esperado. Se houve algum problema, por favor reporte.
                 </p>
               </div>
@@ -248,7 +249,7 @@ export function RideCompletionConfirmation({
 
               <div className="p-3 rounded-lg bg-warning/10 border border-warning/20">
                 <p className="text-xs text-warning">
-                  ⚠️ Reportes falsos podem resultar em suspensão da conta. Use
+                  Reportes falsos podem resultar em suspensão da conta. Use
                   este recurso apenas para problemas reais.
                 </p>
               </div>

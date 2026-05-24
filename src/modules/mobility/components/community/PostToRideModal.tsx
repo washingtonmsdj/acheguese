@@ -56,6 +56,8 @@ interface PostToRideModalProps {
     >,
   ) => void;
   authorName?: string;
+  authorNeighborhood?: string;
+  isVerified?: boolean;
 }
 
 export function PostToRideModal({
@@ -63,6 +65,8 @@ export function PostToRideModal({
   onOpenChange,
   onPublish,
   authorName,
+  authorNeighborhood,
+  isVerified = false,
 }: PostToRideModalProps) {
   const [intent, setIntent] = useState<CommunityRideIntent>("offering");
   const [content, setContent] = useState("");
@@ -104,8 +108,8 @@ export function PostToRideModal({
       seatsAvailable: intent === "offering" ? parseInt(seats) : undefined,
       rideType,
       price: price ? parseFloat(price) : undefined,
-      authorNeighborhood: "Nordeste de Amaralina",
-      isVerified: false,
+      authorNeighborhood: authorNeighborhood || "Comunidade local",
+      isVerified,
     });
     reset();
     onOpenChange(false);

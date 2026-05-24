@@ -9,7 +9,6 @@
  * - Acessibilidade WCAG AAA
  * 
  * @module mobility/components/ride-request/AddressInput
- * @version 2.0.0 (AAA)
  */
 import { logger } from '@/shared/utils/logger';
 import React, { memo, useCallback, forwardRef } from 'react';

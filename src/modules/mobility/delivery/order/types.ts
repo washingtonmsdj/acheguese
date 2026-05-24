@@ -53,6 +53,7 @@ export interface OrderItemSnapshot {
   addons?: OrderItemAddonSnapshot[];
   special_instructions?: string | null;
   description?: string | null;
+  structured_item?: unknown;
 }
 
 export interface OrderItemRecord {

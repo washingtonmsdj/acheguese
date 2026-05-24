@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Tipos para o sistema de mobilidade
  */
 

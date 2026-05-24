@@ -28,7 +28,7 @@ export const BUSCANDO_MOTORISTA_PAGE_LABELS = {
   LEGEND_DESTINATION: "Destino",
 
   // Toast Messages
-  TOAST_DRIVER_FOUND: "Motorista encontrado! 🎉",
+  TOAST_DRIVER_FOUND: "Motorista encontrado!",
 
   // Console Logs (para debug)
   LOG_NO_ROUTE: "[BuscandoMotoristaPage] Nenhuma rota retornada",

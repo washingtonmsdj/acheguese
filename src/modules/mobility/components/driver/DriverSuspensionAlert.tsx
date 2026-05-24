@@ -284,7 +284,7 @@ export function DriverSuspensionAlert() {
               </div>
               <div className="p-3 bg-warning/10 rounded-lg border border-warning/20">
                 <p className="text-xs text-warning font-semibold mb-1">
-                  ⚠️ Atenção
+                  Atenção
                 </p>
                 <p className="text-xs text-muted-foreground">
                   Se sua taxa ultrapassar 30%, sua conta será suspensa

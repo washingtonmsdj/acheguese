@@ -10,12 +10,11 @@
  * 5. Opções avançadas (accordion)
  * 
  * @module mobility/components/ride-request/RideRequestForm
- * @version 2.0.0 (AAA)
  */
 import { logger } from '@/shared/utils/logger';
 import React, { memo, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, MapPin } from 'lucide-react';
+import { AlertTriangle, Calendar, Car, Loader2, MapPin, Package, Users } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/utils/cn';
 import { toast } from 'sonner';
@@ -141,7 +140,7 @@ export const RideRequestForm = memo<RideRequestFormProps>(function RideRequestFo
 
       try {
         const finalOrigin = state.selectedBoardingPoint
-          ? `${state.selectedBoardingPoint.name} — ${state.selectedBoardingPoint.address}`
+          ? `${state.selectedBoardingPoint.name} - ${state.selectedBoardingPoint.address}`
           : state.origin.text;
 
         // Criar addresses canônicos
@@ -231,7 +230,7 @@ export const RideRequestForm = memo<RideRequestFormProps>(function RideRequestFo
               onClick={() => setShowBoardingPoints(false)}
               className="w-full mt-2 text-muted-foreground rounded-xl"
             >
-              ← Voltar
+              Voltar
             </Button>
           </motion.div>
         )}
@@ -279,10 +278,10 @@ export const RideRequestForm = memo<RideRequestFormProps>(function RideRequestFo
               <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
               {state.selectedBoardingPoint ? (
                 <span className="font-medium">
-                  {state.selectedBoardingPoint.name} — {state.selectedBoardingPoint.address}
+                  {state.selectedBoardingPoint.name} - {state.selectedBoardingPoint.address}
                 </span>
               ) : (
-                <span>Ou escolher ponto de embarque do bairro →</span>
+                <span>Ou escolher ponto de embarque do bairro</span>
               )}
             </motion.button>
           )}
@@ -338,8 +337,9 @@ export const RideRequestForm = memo<RideRequestFormProps>(function RideRequestFo
                   variant="compact"
                 />
                 {priceEstimate.metadata.peakHourMultiplier > 1 && (
-                  <p className="text-xs text-warning mt-1">
-                    ⚠️ Horário de pico ({priceEstimate.metadata.peakHourMultiplier}x)
+                  <p className="flex items-center gap-1 text-xs text-warning mt-1">
+                    <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
+                    Horário de pico ({priceEstimate.metadata.peakHourMultiplier}x)
                   </p>
                 )}
               </motion.div>
@@ -397,10 +397,10 @@ export const RideRequestForm = memo<RideRequestFormProps>(function RideRequestFo
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <>
-                {selectedRideType === 'viagem' && '🚗'}
-                {selectedRideType === 'entrega' && '📦'}
-                {selectedRideType === 'agendada' && '📅'}
-                {selectedRideType === 'carona_compartilhada' && '👥'}
+                {selectedRideType === 'viagem' && <Car className="h-4 w-4" aria-hidden="true" />}
+                {selectedRideType === 'entrega' && <Package className="h-4 w-4" aria-hidden="true" />}
+                {selectedRideType === 'agendada' && <Calendar className="h-4 w-4" aria-hidden="true" />}
+                {selectedRideType === 'carona_compartilhada' && <Users className="h-4 w-4" aria-hidden="true" />}
               </>
             )}
             <span className="ml-2">
@@ -424,4 +424,3 @@ export const RideRequestForm = memo<RideRequestFormProps>(function RideRequestFo
 });
 
 RideRequestForm.displayName = 'RideRequestForm';
-

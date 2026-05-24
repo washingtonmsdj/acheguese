@@ -1,4 +1,4 @@
-﻿/**
+/**
  * MotoboyAuthorizationService
  *
  * SSOT para autorizacao de solicitacao/operacao de motoboy.
@@ -15,6 +15,7 @@ import { profileService } from "@/core/profiles/services/ProfileService";
 import { logger } from "@/shared/utils/logger";
 import { mobilityRolloutService } from "./MobilityRolloutService";
 import { MobilityService, mobilityService } from "./MobilityService.impl";
+import { DriverAvailabilityService } from "./DriverAvailabilityService";
 
 const supabaseAny = supabase as any;
 const MODERATOR_ROLES = ["owner", "admin"] as const;
@@ -120,7 +121,10 @@ export class MotoboyAuthorizationService {
     }
   }
 
-  static async canOperateDelivery(driverProfileId: string): Promise<AuthorizationResult> {
+  static async canOperateDelivery(
+    driverProfileId: string,
+    activeRideId?: string,
+  ): Promise<AuthorizationResult> {
     try {
       const [driverData, profile] = await Promise.all([
         mobilityService.getDriverData(driverProfileId),
@@ -150,11 +154,28 @@ export class MotoboyAuthorizationService {
         };
       }
 
-      if (!driverData.is_online) {
+      const availability = await DriverAvailabilityService.getStatus(driverProfileId);
+      if (!availability?.isOnline) {
         return {
           allowed: false,
           reason: "Motorista offline.",
           code: "DRIVER_OFFLINE",
+        };
+      }
+
+      if (activeRideId && availability.activeRideId !== activeRideId) {
+        return {
+          allowed: false,
+          reason: "Motorista nao esta vinculado operacionalmente a esta entrega.",
+          code: "NOT_ASSIGNED_DRIVER",
+        };
+      }
+
+      if (availability.activeRideMode && availability.activeRideMode !== "motoboy") {
+        return {
+          allowed: false,
+          reason: "Motorista esta vinculado a uma operacao que nao e de entrega.",
+          code: "DRIVER_NOT_ELIGIBLE",
         };
       }
 
@@ -681,22 +702,7 @@ export class MotoboyAuthorizationService {
       return currentSubscription.plan_tier;
     }
 
-    const { data: legacySubscription, error: legacySubscriptionError } = await supabaseAny
-      .from("gastronomy_subscriptions")
-      .select("plan_tier")
-      .in("business_id", businessIds)
-      .order("updated_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (legacySubscriptionError) {
-      logger.warn("MotoboyAuthorizationService.resolvePlanTierByBusinessIds.gastronomy_subscriptions", {
-        businessIds,
-        error: legacySubscriptionError,
-      });
-      return undefined;
-    }
-
-    return legacySubscription?.plan_tier;
+    return undefined;
   }
 
   private static async checkServiceAssociation(
@@ -711,4 +717,3 @@ export class MotoboyAuthorizationService {
     }
   }
 }
-

@@ -6,7 +6,6 @@
  * - Modal tradicional em desktop (≥768px)
  * 
  * @module mobility/components/ride-request/RideRequestSheet
- * @version 2.0.0 (AAA)
  */
 
 import React, { memo, useCallback } from 'react';

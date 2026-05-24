@@ -1,9 +1,9 @@
-﻿/**
- * MOBILITY QUERIES - Leitura de dados
- * 
- * Responsabilidade �nica: todas as opera��es de consulta (SELECT)
- * - Sem escritas (INSERT/UPDATE/DELETE)
- * - Sem l�gica de neg�cio complexa
+/**
+ *  MOBILITY QUERIES - Leitura de dados
+ *
+ *  Responsabilidade nica: todas as operacoes de consulta (SELECT)
+ *  - Sem escritas (INSERT/UPDATE/DELETE)
+ *  - Sem lgica de negcio complexa
  */
 
 import { supabase } from "@/core/infrastructure/supabase";
@@ -105,7 +105,7 @@ export interface MotoboyRuntimeDatabaseChecks {
 }
 
 /**
- * Buscar corridas ativas (status em andamento)
+ *  Buscar corridas ativas (status em andamento)
  */
 export async function getActiveRides(): Promise<unknown[]> {
   try {
@@ -135,7 +135,7 @@ export async function getActiveRides(): Promise<unknown[]> {
 }
 
 /**
- * Buscar corrida por ID
+ *  Buscar corrida por ID
  */
 export async function getRideById(id: string): Promise<unknown | null> {
   try {
@@ -154,7 +154,7 @@ export async function getRideById(id: string): Promise<unknown | null> {
 }
 
 /**
- * Buscar todas as solicita��es de corrida
+ *  Buscar todas as solicitaes de corrida
  */
 export async function getAllRideRequests(): Promise<unknown[]> {
   const { data, error } = await supabaseClient
@@ -167,7 +167,7 @@ export async function getAllRideRequests(): Promise<unknown[]> {
 }
 
 /**
- * Buscar corridas por passageiro
+ *  Buscar corridas por passageiro
  */
 export async function getRidesByPassenger(passengerProfileId: string): Promise<unknown[]> {
   const { data, error } = await supabaseClient
@@ -181,7 +181,7 @@ export async function getRidesByPassenger(passengerProfileId: string): Promise<u
 }
 
 /**
- * Buscar corridas por motorista
+ *  Buscar corridas por motorista
  */
 export async function getRidesByDriverProfile(driverProfileId: string): Promise<unknown[]> {
   const { data, error } = await supabaseClient
@@ -195,7 +195,7 @@ export async function getRidesByDriverProfile(driverProfileId: string): Promise<
 }
 
 /**
- * Buscar corrida ativa por perfil de motorista
+ *  Buscar corrida ativa por perfil de motorista
  */
 export async function getActiveRideByDriverProfile(
   driverProfileId: string,
@@ -218,7 +218,7 @@ export async function getActiveRideByDriverProfile(
 }
 
 /**
- * Buscar corrida ativa do usu�rio (passageiro ou motorista)
+ *  Buscar corrida ativa do usurio (passageiro ou motorista)
  */
 export async function getActiveRide(userProfileId: string): Promise<unknown | null> {
   const { data, error } = await supabaseClient
@@ -235,7 +235,7 @@ export async function getActiveRide(userProfileId: string): Promise<unknown | nu
 }
 
 /**
- * Buscar dados de dispatch da corrida
+ *  Buscar dados de dispatch da corrida
  */
 export async function getRideDispatchData(rideId: string): Promise<unknown | null> {
   const { data, error } = await supabaseClient
@@ -395,28 +395,17 @@ export async function getReservationOfferRides(
 }
 
 /**
- * Corridas dispon�veis (para motoristas)
- * 
- * @deprecated Use MobilityOfferService ao inv�s desta fun��o gen�rica
- * 
- * PROBLEMA: Esta fun��o retorna TODAS as corridas sem considerar:
- * - Estrat�gia de dispatch (exclusive vs open board)
- * - Elegibilidade do motorista
- * - Prote��o de dados sens�veis
- * - Scoring e ordena��o
- * 
- * SOLU��O: Use MobilityOfferService.getExclusiveOffer() ou getOpenBoardOffers()
- * 
- * Mantido apenas para compatibilidade tempor�ria
+ * Generic open-board query for unassigned rides.
+ *
+ * Driver dashboards should use MobilityOfferService because it applies
+ * dispatch strategy, eligibility and scoring.
  */
 export async function getAvailableRides(limit: number = 10): Promise<unknown[]> {
-  logger.warn('getAvailableRides is deprecated. Use MobilityOfferService instead.');
-  
   try {
     const { data, error } = await supabaseClient
       .from("ride_requests" as any)
       .select(`
-        *,
+        * ,
         pickup_address:addresses!pickup_address_id(street, latitude, longitude),
         dropoff_address:addresses!dropoff_address_id(street, latitude, longitude)
       `)
@@ -454,7 +443,7 @@ export async function getAvailableRides(limit: number = 10): Promise<unknown[]> 
 }
 
 /**
- * Buscar corridas do usu�rio (passageiro ou motorista)
+ *  Buscar corridas do usurio (passageiro ou motorista)
  */
 export async function getUserRides(userId: string): Promise<unknown[]> {
   try {
@@ -477,7 +466,7 @@ export async function getUserRides(userId: string): Promise<unknown[]> {
 
 
 /**
- * Buscar dados do motorista por ID de perfil
+ *  Buscar dados do motorista por ID de perfil
  */
 export async function getDriverData(profileId: string): Promise<unknown | null> {
   try {
@@ -500,7 +489,7 @@ export async function getDriverData(profileId: string): Promise<unknown | null> 
 }
 
 /**
- * Buscar estat�sticas detalhadas do motorista
+ *  Buscar Estatisticas detalhadas do motorista
  */
 export async function getDriverStatsDetailed(driverProfileId: string): Promise<unknown | null> {
   try {
@@ -593,22 +582,4 @@ export async function getMotoboyRuntimeDatabaseChecks(): Promise<MotoboyRuntimeD
     motoboyEnabledDrivers: (motoboyDriversResult as { count?: number | null }).count ?? 0,
     details,
   };
-}
-
-/**
- * Hist�rico de corridas do usu�rio
- * @deprecated Use getUserRides() - mesmo comportamento
- */
-export async function getRideHistory(
-  userId: string,
-  _filters?: Record<string, unknown>,
-): Promise<unknown[]> {
-  // Delega para getUserRides (mesma funcionalidade)
-  return getUserRides(userId);
-}
-
-/** @deprecated N�o implementado - usar GPS tracking diretamente. */
-export async function getDriverLocation(_driverProfileId: string): Promise<unknown | null> {
-  logger.warn("MobilityQueries.getDriverLocation - nao implementado, usar GPS tracking");
-  return null;
 }

@@ -42,7 +42,7 @@ export const PASSENGER_PAGE_LABELS = {
   SEARCHING_TITLE: "Buscando motorista...",
   SEARCHING_SUBTITLE: "Aguarde enquanto encontramos o motorista mais próximo",
   SEARCHING_CANCEL_BUTTON: "Cancelar solicitação",
-  SEARCHING_ROUTE_SEPARATOR: "→",
+  SEARCHING_ROUTE_SEPARATOR: "para",
 
   // Error States
   ERROR_TITLE: "Erro ao carregar viagens",

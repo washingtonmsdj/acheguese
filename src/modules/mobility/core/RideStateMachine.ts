@@ -1,4 +1,4 @@
-﻿/**
+/**
  * RIDE STATE MACHINE - Motor Operacional da Corrida
  * 
  * Centraliza toda a lógica de transições de estado da corrida.

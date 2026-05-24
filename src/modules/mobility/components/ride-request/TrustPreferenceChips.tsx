@@ -5,7 +5,6 @@
  * Reduz de ~200px (3 botões verticais) para ~40px (chips horizontais).
  * 
  * @module mobility/components/ride-request/TrustPreferenceChips
- * @version 2.0.0 (AAA)
  */
 
 import React, { memo, useCallback } from 'react';

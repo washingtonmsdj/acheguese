@@ -1,15 +1,15 @@
 /**
- * ChatService - SSOT para chat de corridas
+ *  ChatService - SSOT para chat de corridas
  *
- * IMPLEMENTA��O REAL - N�o importar diretamente
- * Use: import { ChatService } from './ChatService'
+ *  IMPLEMENTAO REAL - No importar diretamente
+ *  Use: import { ChatService } from './ChatService'
  *
- * Responsabilidades:
- * - Gerenciar chats de corridas
- * - Enviar e receber mensagens
- * - Marcar mensagens como lidas
+ *  Responsabilidades:
+ *  - Gerenciar chats de corridas
+ *  - Enviar e receber mensagens
+ *  - Marcar mensagens como lidas
  *
- * @module modules/mobility/services
+ *  @module modules/mobility/services
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/core/infrastructure/supabase';
@@ -42,10 +42,10 @@ export interface SendMessageInput {
 
 export class ChatService {
   /**
-   * Buscar chat de uma corrida
+   *  Buscar chat de uma corrida
    *
-   * @param rideId - ID da corrida
-   * @returns Chat da corrida ou null se n�o existir
+   *  @param rideId - ID da corrida
+   *  @returns Chat da corrida ou null se no existir
    */
   static async getChatByRideId(rideId: string): Promise<RideChat | null> {
     try {
@@ -68,10 +68,10 @@ export class ChatService {
   }
 
   /**
-   * Buscar mensagens de um chat
+   *  Buscar mensagens de um chat
    *
-   * @param chatId - ID do chat
-   * @returns Array de mensagens ordenadas por data
+   *  @param chatId - ID do chat
+   *  @returns Array de mensagens ordenadas por data
    */
   static async getMessages(chatId: string): Promise<ChatMessage[]> {
     try {
@@ -94,10 +94,10 @@ export class ChatService {
   }
 
   /**
-   * Enviar mensagem em um chat
+   *  Enviar mensagem em um chat
    *
-   * @param input - Dados da mensagem
-   * @returns Mensagem criada
+   *  @param input - Dados da mensagem
+   *  @returns Mensagem criada
    */
   static async sendMessage(input: SendMessageInput): Promise<ChatMessage> {
     try {
@@ -134,10 +134,10 @@ export class ChatService {
   }
 
   /**
-   * Marcar mensagens como lidas
+   *  Marcar mensagens como lidas
    *
-   * @param chatId - ID do chat
-   * @param userId - ID do usu�rio que est� lendo
+   *  @param chatId - ID do chat
+   *  @param userId - ID do usurio que est lendo
    */
   static async markMessagesAsRead(chatId: string, userId: string): Promise<void> {
     try {
@@ -159,15 +159,15 @@ export class ChatService {
       });
     } catch (error) {
       logger.error('ChatService.markMessagesAsRead', error);
-      // N�o lan�ar erro - marcar como lido � opera��o n�o cr�tica
+      //  No lanar erro - marcar como lido operao no crtica
     }
   }
 
   /**
-   * Criar chat para uma corrida
+   *  Criar chat para uma corrida
    *
-   * @param rideId - ID da corrida
-   * @returns Chat criado
+   *  @param rideId - ID da corrida
+   *  @returns Chat criado
    */
   static async createChat(rideId: string): Promise<RideChat> {
     try {

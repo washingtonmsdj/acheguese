@@ -23,6 +23,7 @@ import {
   Navigation,
   X,
   Loader2,
+  AlertTriangle,
 } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import { toast } from "sonner";
@@ -36,7 +37,7 @@ import { AddressService } from "@/core/address/services/AddressService";
 import { logger } from "@/shared/utils/logger";
 import { usePriceEstimate } from "@/core/pricing/hooks/usePriceEstimate";
 import type { PriceEstimateRequest } from "@/core/pricing/types";
-import { geocodingService } from "@/core/maps/services/GeocodingService";
+import { geocodingService } from "@/core/maps/services/MapGeocodingAdapter";
 import type { CreateRideRequestData } from "@/modules/mobility/hooks/useMobilidade";
 
 const rideTypeOptions: {
@@ -271,7 +272,7 @@ export function CreateRideModal({ open, onOpenChange, onSubmit, initialType = "v
     e.preventDefault();
 
     const finalOrigin = selectedPoint
-      ? `${selectedPoint.name} — ${selectedPoint.address}`
+      ? `${selectedPoint.name} - ${selectedPoint.address}`
       : origin;
 
     if (!finalOrigin.trim() || !destination.trim()) return;
@@ -366,7 +367,7 @@ export function CreateRideModal({ open, onOpenChange, onSubmit, initialType = "v
       <DialogContent className="bg-card border-border text-foreground max-w-md max-h-[95vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-lg font-bold text-foreground">
-            {showPointSelector ? "📍 Ponto de Embarque" : "Nova Solicitação"}
+            {showPointSelector ? "Ponto de embarque" : "Nova solicitação"}
           </DialogTitle>
         </DialogHeader>
         <DialogDescription className="sr-only">Solicite uma nova corrida</DialogDescription>
@@ -379,7 +380,7 @@ export function CreateRideModal({ open, onOpenChange, onSubmit, initialType = "v
               onSelect={(point) => { setSelectedPoint(point); setShowPointSelector(false); }}
             />
             <Button variant="ghost" onClick={() => setShowPointSelector(false)} className="w-full text-muted-foreground rounded-xl">
-              ← Voltar
+              Voltar
             </Button>
           </div>
         ) : (
@@ -408,19 +409,22 @@ export function CreateRideModal({ open, onOpenChange, onSubmit, initialType = "v
 
             {/* Banners informativos */}
             {type === "carona_compartilhada" && (
-              <p className="text-xs text-muted-foreground p-3 rounded-xl bg-secondary/50 border border-border">
-                💡 O sistema busca passageiros com destinos próximos para dividir a corrida.
-              </p>
+              <div className="flex items-start gap-2 text-xs text-muted-foreground p-3 rounded-xl bg-secondary/50 border border-border">
+                <Users className="h-3.5 w-3.5 mt-0.5 shrink-0" aria-hidden="true" />
+                <p>O sistema busca passageiros com destinos próximos para dividir a corrida.</p>
+              </div>
             )}
             {type === "agendada" && (
-              <p className="text-xs text-accent p-3 rounded-xl bg-accent/10 border border-accent/20">
-                📅 Pedido disponível antecipadamente para motoristas. Ideal para aeroporto e consultas.
-              </p>
+              <div className="flex items-start gap-2 text-xs text-accent p-3 rounded-xl bg-accent/10 border border-accent/20">
+                <Calendar className="h-3.5 w-3.5 mt-0.5 shrink-0" aria-hidden="true" />
+                <p>Pedido disponível antecipadamente para motoristas. Ideal para aeroporto e consultas.</p>
+              </div>
             )}
             {type === "entrega" && (
-              <p className="text-xs text-warning p-3 rounded-xl bg-warning/10 border border-warning/20">
-                📦 Envie documentos, compras, medicamentos e pequenas encomendas.
-              </p>
+              <div className="flex items-start gap-2 text-xs text-warning p-3 rounded-xl bg-warning/10 border border-warning/20">
+                <Package className="h-3.5 w-3.5 mt-0.5 shrink-0" aria-hidden="true" />
+                <p>Envie documentos, compras, medicamentos e pequenas encomendas.</p>
+              </div>
             )}
 
             {/* ── ORIGEM ── */}
@@ -473,7 +477,7 @@ export function CreateRideModal({ open, onOpenChange, onSubmit, initialType = "v
                     aria-label="Usar minha localização"
                   >
                     <Navigation className="h-3 w-3" />
-                    {originCoords ? "GPS ✓" : "GPS"}
+                    {originCoords ? "GPS ativo" : "GPS"}
                   </button>
                 </div>
               </div>
@@ -492,8 +496,8 @@ export function CreateRideModal({ open, onOpenChange, onSubmit, initialType = "v
                 >
                   <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
                   {selectedPoint
-                    ? <span className="font-medium">{selectedPoint.name} — {selectedPoint.address}</span>
-                    : <span>Ou escolher ponto de embarque do bairro →</span>
+                    ? <span className="font-medium">{selectedPoint.name} - {selectedPoint.address}</span>
+                    : <span>Ou escolher ponto de embarque do bairro</span>
                   }
                   {selectedPoint && (
                     <X
@@ -565,7 +569,10 @@ export function CreateRideModal({ open, onOpenChange, onSubmit, initialType = "v
                   variant="compact"
                 />
                 {priceEstimate.metadata.peakHourMultiplier > 1 && (
-                  <p className="text-[0.6rem] text-warning">⚠️ Horário de pico ({priceEstimate.metadata.peakHourMultiplier}x)</p>
+                  <p className="flex items-center gap-1 text-[0.6rem] text-warning">
+                    <AlertTriangle className="h-3 w-3" aria-hidden="true" />
+                    Horário de pico ({priceEstimate.metadata.peakHourMultiplier}x)
+                  </p>
                 )}
               </div>
             )}

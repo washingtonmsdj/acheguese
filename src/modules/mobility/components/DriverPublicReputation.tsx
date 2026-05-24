@@ -33,11 +33,11 @@ export function DriverPublicReputation({
 }: DriverPublicReputationProps) {
   // Determinar badge de pontualidade
   const getPunctualityBadge = (rate: number) => {
-    if (rate >= 95) return { label: "⚡ Super Pontual", color: "bg-green-500" };
-    if (rate >= 85) return { label: "✅ Pontual", color: "bg-blue-500" };
+    if (rate >= 95) return { label: "Super pontual", color: "bg-green-500" };
+    if (rate >= 85) return { label: "Pontual", color: "bg-blue-500" };
     if (rate >= 70)
-      return { label: "⏰ Geralmente Pontual", color: "bg-yellow-500" };
-    return { label: "⚠️ Atrasos Frequentes", color: "bg-red-500" };
+      return { label: "Geralmente pontual", color: "bg-yellow-500" };
+    return { label: "Atrasos frequentes", color: "bg-red-500" };
   };
 
   // Determinar nível de reputação

@@ -8,12 +8,11 @@
  * - Feedback visual
  * 
  * @module mobility/hooks/useAddressInput
- * @version 2.0.0 (AAA)
  */
 import { logger } from '@/shared/utils/logger';
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
-import { geocodingService } from '@/core/maps/services/GeocodingService';
+import { geocodingService } from '@/core/maps/services/MapGeocodingAdapter';
 import type { GeolocationCoordinates } from '@/modules/mobility/hooks/useGeolocation';
 
 export interface AddressInputResult {

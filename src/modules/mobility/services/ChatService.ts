@@ -1,7 +1,7 @@
-﻿/**
- * Compatibility facade for mobility chat service.
+/**
+ * Mobility chat public API.
  *
- * Canonical implementations live in chat.queries/chat.mutations/ChatService.impl.
+ * Implementations live in chat.queries/chat.mutations/ChatService.impl.
  */
 
 export {

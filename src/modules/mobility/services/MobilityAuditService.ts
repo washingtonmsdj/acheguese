@@ -1,4 +1,4 @@
-﻿import { supabase } from "@/core/infrastructure/supabase";
+import { supabase } from "@/core/infrastructure/supabase";
 import { logger } from "@/shared/utils/logger";
 
 export interface RideStateAuditInput {
@@ -85,19 +85,16 @@ export class MobilityAuditService {
 
   async cancelPendingOffers(rideId: string): Promise<void> {
     try {
-      await supabase
-        .from("ride_offers")
-        .update({
-          status: "cancelled",
-          updated_at: new Date().toISOString(),
-        })
-        .eq("ride_id", rideId)
-        .in("status", ["pending", "sent"]);
+      const { error } = await (supabase as any).rpc("cancel_pending_ride_offers", {
+        p_ride_id: rideId,
+      });
+
+      if (error) throw error;
     } catch (error) {
       logger.error("MobilityAuditService.cancelPendingOffers", error as Error, { rideId });
+      throw error;
     }
   }
 }
 
 export const mobilityAuditService = new MobilityAuditService();
-

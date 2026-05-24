@@ -5,7 +5,6 @@
  * Reduz de ~120px (grid 2x2) para ~48px (tabs 1 linha).
  * 
  * @module mobility/components/ride-request/RideTypeSelector
- * @version 2.0.0 (AAA)
  */
 
 import React, { memo, useCallback } from 'react';

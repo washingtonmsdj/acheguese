@@ -1,4 +1,4 @@
-﻿/**
+/**
  * GATE 3: Failed Delivery Metadata Types
  * 
  * Tipos para rastreamento de item em falhas de entrega motoboy
