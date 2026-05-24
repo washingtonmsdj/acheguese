@@ -4,6 +4,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { buildPublicAbsoluteUrl } from "@/shared/config/publicAppOrigin";
+import { buildMailtoUrl } from "@/shared/utils/contactLinks";
 import { CommunicationPageShell, PublicationCard } from "../components/CommunicationBlocks";
 import { useCommunicationChannelPublicPage } from "../hooks";
 import {
@@ -165,7 +166,7 @@ export default function CommunicationChannelPage() {
                 {channel.contact_email ? (
                   <p>
                     Email:{" "}
-                    <a href={`mailto:${channel.contact_email}`} className="font-medium text-primary hover:underline">
+                    <a href={buildMailtoUrl(channel.contact_email) ?? undefined} className="font-medium text-primary hover:underline">
                       {channel.contact_email}
                     </a>
                   </p>

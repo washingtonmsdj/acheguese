@@ -30,6 +30,21 @@ function getTerritoryName(resolved: ResolvedTerritory): string {
   return resolved.group.name;
 }
 
+function getTerritorySlug(resolved: ResolvedTerritory): string {
+  if (!resolved) return "territorio";
+  if (resolved.kind === "location") return resolved.location.slug;
+  return resolved.group.slug;
+}
+
+function parseStateCityFromTerritory(resolved: ResolvedTerritory): { state?: string; city?: string } {
+  const path =
+    resolved?.kind === "location"
+      ? resolved.location.geographic_path
+      : resolved?.group.members[0]?.geographic_path;
+  const [, state, city] = (path ?? "").split("/").filter(Boolean);
+  return { state, city };
+}
+
 function formatDate(value?: string | null): string {
   if (!value) return "Publicado recentemente";
   return new Intl.DateTimeFormat("pt-BR", {
@@ -109,11 +124,13 @@ export default function CommunityCommunicationTabPage({ resolved }: CommunityCom
   const params = useParams<{ state?: string; city?: string; territorySlug?: string }>();
   const locationIds = useMemo(() => getLocationIds(resolved), [resolved]);
   const territoryName = getTerritoryName(resolved);
-  const routeParams = {
-    state: params.state ?? "ba",
-    city: params.city ?? "salvador",
-    territorySlug: params.territorySlug ?? "territorio",
-  };
+  const routeTerritory = parseStateCityFromTerritory(resolved);
+  const state = params.state ?? routeTerritory.state;
+  const city = params.city ?? routeTerritory.city;
+  const territorySlug = params.territorySlug ?? getTerritorySlug(resolved);
+  const canonicalCommunicationHref = state && city && territorySlug
+    ? `/comunicacao/${state}/${city}/${territorySlug}`
+    : null;
 
   const feed = useCommunityCommunicationFeed(locationIds);
 
@@ -123,7 +140,7 @@ export default function CommunityCommunicationTabPage({ resolved }: CommunityCom
         <title>Comunicacao em {territoryName} | Achegue-se</title>
         <meta
           name="description"
-          content={`Publicações de portais, rádios, coletivos e canais comunitários em ${territoryName}.`}
+          content={`Publicacoes de portais, radios, coletivos e canais comunitarios em ${territoryName}.`}
         />
       </Helmet>
 
@@ -136,21 +153,21 @@ export default function CommunityCommunicationTabPage({ resolved }: CommunityCom
               </p>
               <h1 className="mt-2 text-3xl font-bold">Comunicacao em {territoryName}</h1>
               <p className="mt-2 max-w-2xl text-sm text-white/70">
-                Conteúdos publicados por portais locais, rádios, coletivos, jornais regionais e comunicadores
-                autorizados neste território.
+                Conteudos publicados por portais locais, radios, coletivos, jornais regionais e comunicadores
+                autorizados neste territorio.
               </p>
             </div>
-            <Button asChild variant="outline" className="border-white/15 bg-white/5 text-white hover:bg-white/10">
-              <Link to={`/comunicacao/${routeParams.state}/${routeParams.city}/${routeParams.territorySlug}`}>
-                Ver canais do território
-              </Link>
-            </Button>
+            {canonicalCommunicationHref ? (
+              <Button asChild variant="outline" className="border-white/15 bg-white/5 text-white hover:bg-white/10">
+                <Link to={canonicalCommunicationHref}>Ver canais do territorio</Link>
+              </Button>
+            ) : null}
           </div>
         </section>
 
         {feed.isLoading ? (
           <Card className="border-white/10 bg-white/[0.03] text-white">
-            <CardContent className="py-10 text-sm text-white/60">Carregando publicações de comunicação...</CardContent>
+            <CardContent className="py-10 text-sm text-white/60">Carregando publicacoes de comunicacao...</CardContent>
           </Card>
         ) : null}
 
@@ -160,9 +177,9 @@ export default function CommunityCommunicationTabPage({ resolved }: CommunityCom
               <div className="flex items-start gap-3">
                 <Newspaper className="mt-1 h-5 w-5 text-primary" />
                 <div>
-                  <p className="font-medium">Ainda não há publicações de canais neste território.</p>
+                  <p className="font-medium">Ainda nao ha publicacoes de canais neste territorio.</p>
                   <p className="mt-1 text-sm text-white/60">
-                    Quando um canal autorizado publicar, o conteúdo aparecerá aqui e continuará canônico em `/comunicacao`.
+                    Quando um canal autorizado publicar, o conteudo aparecera aqui e continuara canonico em `/comunicacao`.
                   </p>
                 </div>
               </div>
@@ -171,9 +188,15 @@ export default function CommunityCommunicationTabPage({ resolved }: CommunityCom
         ) : null}
 
         <section className="grid gap-4">
-          {(feed.data ?? []).map((distribution) => (
-            <CommunicationCard key={distribution.id} distribution={distribution} routeParams={routeParams} />
-          ))}
+          {(feed.data ?? []).map((distribution) =>
+            state && city && territorySlug ? (
+              <CommunicationCard
+                key={distribution.id}
+                distribution={distribution}
+                routeParams={{ state, city, territorySlug }}
+              />
+            ) : null,
+          )}
         </section>
       </div>
     </div>

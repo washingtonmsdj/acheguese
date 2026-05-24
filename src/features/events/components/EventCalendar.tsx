@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/utils/cn';
+import { openSafeExternalUrl } from '@/shared/utils/safeRedirect';
 import type { Event } from '../types';
 
 interface EventCalendarProps {
@@ -87,7 +88,7 @@ export function EventCalendar({ events, onEventClick }: EventCalendarProps) {
     url.searchParams.append('details', event.description);
     url.searchParams.append('location', event.location.address || '');
 
-    window.open(url.toString(), '_blank');
+    openSafeExternalUrl(url.toString(), { context: "event-google-calendar" });
   };
 
   const exportToICalendar = (event: Event) => {

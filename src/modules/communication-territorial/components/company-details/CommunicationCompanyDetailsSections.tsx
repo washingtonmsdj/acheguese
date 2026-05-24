@@ -12,9 +12,10 @@ import {
   Tv,
   Users,
 } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
 import { Badge } from "@/shared/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import { buildMailtoUrl } from "@/shared/utils/contactLinks";
 import { PublicationCard } from "../CommunicationBlocks";
 import {
   CHANNEL_KIND_LABELS,
@@ -65,7 +66,6 @@ export function CompanyDetailsHero({
         <div className="flex flex-col gap-4 sm:flex-row sm:gap-6">
           <div className="relative">
             <Avatar className="h-24 w-24 border-4 border-background shadow-xl sm:h-32 sm:w-32">
-              <AvatarImage src={`https://api.dicebear.com/7.x/shapes/svg?seed=${channel.id}`} />
               <AvatarFallback className="text-2xl font-bold sm:text-3xl">
                 {channel.public_name.charAt(0)}
               </AvatarFallback>
@@ -193,7 +193,7 @@ export function CompanyDetailsAboutTab({
                   <div>
                     <p className="font-medium">Email</p>
                     <a
-                      href={`mailto:${channel.contact_email}`}
+                      href={buildMailtoUrl(channel.contact_email) ?? undefined}
                       className="text-primary hover:underline"
                     >
                       {channel.contact_email}

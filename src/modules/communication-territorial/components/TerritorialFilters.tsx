@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { MapPin, Filter, Search } from "lucide-react";
+import { Filter, MapPin, Search } from "lucide-react";
+import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import {
@@ -9,66 +10,51 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
-import { Badge } from "@/shared/components/ui/badge";
+import { CHANNEL_KIND_LABELS } from "../types";
+import type { CommunicationLocation } from "@/core/communication-territorial/types";
 
-/**
- * TerritorialFilters - Filtros por território, categoria e descoberta
- */
-export function TerritorialFilters() {
+type TerritorialFiltersProps = {
+  locations?: CommunicationLocation[];
+};
+
+export function TerritorialFilters({ locations = [] }: TerritorialFiltersProps) {
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
-
-  const categories = [
-    "Todos",
-    "Portais Locais",
-    "Rádios",
-    "Coletivos",
-    "Jornais",
-    "TV Comunitária",
-    "Páginas de Bairro",
-    "Influenciadores",
-  ];
-
-  const territories = [
-    "Todos os territórios",
-    "Nordeste de Amaralina",
-    "Barra",
-    "Pelourinho",
-    "Rio Vermelho",
-    "Itapuã",
-  ];
+  const categories = ["Todos", ...Object.values(CHANNEL_KIND_LABELS)];
+  const territories = locations
+    .filter((location) => ["city", "district", "neighborhood"].includes(location.type))
+    .slice(0, 20);
 
   return (
-    <div className="py-3 sm:py-4 space-y-3 sm:space-y-4">
-      {/* Search Bar */}
-      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+    <div className="space-y-3 py-3 sm:space-y-4 sm:py-4">
+      <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input 
-            placeholder="Buscar canais, publicações..." 
-            className="pl-10 h-10 sm:h-11 text-sm sm:text-base"
+          <Input
+            placeholder="Buscar canais e publicações..."
+            className="h-10 pl-10 text-sm sm:h-11 sm:text-base"
           />
         </div>
         <div className="flex gap-2">
           <Select defaultValue="all-territories">
-            <SelectTrigger className="w-full sm:w-[180px] lg:w-[200px] h-10 sm:h-11 text-sm sm:text-base">
-              <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
+            <SelectTrigger className="h-10 w-full text-sm sm:h-11 sm:w-[180px] sm:text-base lg:w-[200px]">
+              <MapPin className="mr-2 h-4 w-4 flex-shrink-0" />
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="all-territories">Todos os territórios</SelectItem>
               {territories.map((territory) => (
-                <SelectItem key={territory} value={territory.toLowerCase().replace(/\s+/g, '-')}>
-                  {territory}
+                <SelectItem key={territory.id} value={territory.id}>
+                  {territory.full_name ?? territory.name}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          <Button variant="outline" size="icon" className="h-10 w-10 sm:h-11 sm:w-11 flex-shrink-0">
+          <Button variant="outline" size="icon" className="h-10 w-10 flex-shrink-0 sm:h-11 sm:w-11">
             <Filter className="h-4 w-4" />
           </Button>
         </div>
       </div>
 
-      {/* Category Pills */}
       <div className="flex flex-wrap gap-1.5 sm:gap-2">
         {categories.map((category) => {
           const isActive = activeFilters.includes(category) || (activeFilters.length === 0 && category === "Todos");
@@ -80,13 +66,13 @@ export function TerritorialFilters() {
               onClick={() => {
                 if (category === "Todos") {
                   setActiveFilters([]);
-                } else {
-                  setActiveFilters(prev => 
-                    prev.includes(category) 
-                      ? prev.filter(f => f !== category)
-                      : [...prev.filter(f => f !== "Todos"), category]
-                  );
+                  return;
                 }
+                setActiveFilters((prev) =>
+                  prev.includes(category)
+                    ? prev.filter((filter) => filter !== category)
+                    : [...prev.filter((filter) => filter !== "Todos"), category],
+                );
               }}
             >
               {category}
@@ -95,20 +81,19 @@ export function TerritorialFilters() {
         })}
       </div>
 
-      {/* Active Filters Summary */}
-      {activeFilters.length > 0 && (
+      {activeFilters.length > 0 ? (
         <div className="flex items-center gap-2 text-xs text-muted-foreground sm:text-sm">
           <span>{activeFilters.length} filtro(s) ativo(s)</span>
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setActiveFilters([])}
-            className="h-6 sm:h-7 text-xs"
+            className="h-6 text-xs sm:h-7"
           >
             Limpar filtros
           </Button>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

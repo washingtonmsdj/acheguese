@@ -1,82 +1,98 @@
-﻿import { Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Clock } from "lucide-react";
-import { Card, CardContent } from "@/shared/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
 import { Badge } from "@/shared/components/ui/badge";
+import { Card, CardContent } from "@/shared/components/ui/card";
 import { PUBLICATION_TYPE_LABELS, type CommunicationPublication } from "../types";
 
 type LatestPublicationsSectionProps = {
   publications?: CommunicationPublication[];
 };
 
-const mockPublications = [
-    { id: 1, channel: "Portal Nordeste", avatar: "https://api.dicebear.com/7.x/shapes/svg?seed=p1", title: "Mutirão de limpeza mobiliza comunidade", category: "Ação Social", time: "há 15 min" },
-    { id: 2, channel: "Rádio Comunitária", avatar: "https://api.dicebear.com/7.x/shapes/svg?seed=p2", title: "Entrevista com artista local sobre novo projeto", category: "Cultura", time: "há 30 min" },
-    { id: 3, channel: "Jornal do Bairro", avatar: "https://api.dicebear.com/7.x/shapes/svg?seed=p3", title: "Novo posto de saúde será inaugurado em agosto", category: "Saúde", time: "há 1 hora" },
-    { id: 4, channel: "Coletivo Cultural", avatar: "https://api.dicebear.com/7.x/shapes/svg?seed=p4", title: "Oficina gratuita de grafite para jovens", category: "Educação", time: "há 2 horas" },
-    { id: 5, channel: "TV Comunitária", avatar: "https://api.dicebear.com/7.x/shapes/svg?seed=p5", title: "Reportagem especial sobre mobilidade urbana", category: "Mobilidade", time: "há 3 horas" },
-    { id: 6, channel: "Página do Bairro", avatar: "https://api.dicebear.com/7.x/shapes/svg?seed=p6", title: "Feira de economia solidária acontece no fim de semana", category: "Economia", time: "há 4 horas" },
-];
-
 function formatTimeAgo(value?: string | null): string {
   if (!value) return "agora";
-  const ms = Date.now() - new Date(value).getTime();
+  const time = new Date(value).getTime();
+  if (Number.isNaN(time)) return "data indisponível";
+
+  const ms = Date.now() - time;
   const minutes = Math.max(1, Math.floor(ms / 60000));
   if (minutes < 60) return `há ${minutes} min`;
   const hours = Math.floor(minutes / 60);
-  return `há ${hours} hora${hours > 1 ? "s" : ""}`;
+  if (hours < 24) return `há ${hours} hora${hours > 1 ? "s" : ""}`;
+  const days = Math.floor(hours / 24);
+  return `há ${days} dia${days > 1 ? "s" : ""}`;
 }
 
-export function LatestPublicationsSection({ publications: ssotPublications }: LatestPublicationsSectionProps) {
-  const publications = (ssotPublications ?? []).length
-    ? (ssotPublications ?? []).slice(0, 6).map((pub) => ({
-        id: pub.id,
-        channel: pub.channel?.public_name ?? "Canal",
-        avatar: `https://api.dicebear.com/7.x/shapes/svg?seed=${pub.channel?.slug || pub.channel_id}`,
-        title: pub.title,
-        category: PUBLICATION_TYPE_LABELS[pub.publication_type],
-        time: formatTimeAgo(pub.published_at ?? pub.created_at),
-      }))
-    : mockPublications;
+export function LatestPublicationsSection({ publications = [] }: LatestPublicationsSectionProps) {
+  const latestPublications = publications.slice(0, 6).map((publication) => ({
+    id: publication.id,
+    channelName: publication.channel?.public_name ?? "Canal",
+    channelSlug: publication.channel?.slug,
+    title: publication.title,
+    summary: publication.summary ?? publication.body,
+    category: PUBLICATION_TYPE_LABELS[publication.publication_type],
+    time: formatTimeAgo(publication.published_at ?? publication.created_at),
+  }));
 
   return (
     <section className="space-y-4 sm:space-y-5 md:space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <div className="mb-1.5 sm:mb-2 flex items-center gap-2">
-            <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">Últimas Publicações</h2>
+          <div className="mb-1.5 flex items-center gap-2 sm:mb-2">
+            <Clock className="h-5 w-5 text-primary sm:h-6 sm:w-6" />
+            <h2 className="text-xl font-bold text-foreground sm:text-2xl md:text-3xl">Últimas publicações</h2>
           </div>
-          <p className="text-sm sm:text-base text-muted-foreground">Conteúdo mais recente dos canais do seu território</p>
+          <p className="text-sm text-muted-foreground sm:text-base">
+            Conteúdo publicado por canais reais no escopo territorial selecionado.
+          </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {publications.map((pub) => (
-          <Link key={pub.id} to={`/comunicacao/post/${pub.id}`}>
-            <Card className="group h-full transition-all duration-300 hover:border-primary/40 hover:shadow-lg">
-              <CardContent className="space-y-2 sm:space-y-2.5 md:space-y-3 p-3 sm:p-4">
-                <div className="flex items-center gap-2">
-                  <Avatar className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 flex-shrink-0">
-                    <AvatarImage src={pub.avatar} />
-                    <AvatarFallback>{pub.channel.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-xs sm:text-sm font-medium text-foreground">{pub.channel}</p>
-                    <p className="text-xs text-muted-foreground">{pub.time}</p>
+      {latestPublications.length ? (
+        <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {latestPublications.map((publication) => {
+            const content = (
+              <Card className="group h-full transition-all duration-300 hover:border-primary/40 hover:shadow-lg">
+                <CardContent className="space-y-2 p-3 sm:space-y-2.5 sm:p-4 md:space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Avatar className="h-8 w-8 flex-shrink-0 sm:h-9 sm:w-9 md:h-10 md:w-10">
+                      <AvatarFallback>{publication.channelName.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-xs font-medium text-foreground sm:text-sm">{publication.channelName}</p>
+                      <p className="text-xs text-muted-foreground">{publication.time}</p>
+                    </div>
                   </div>
-                </div>
-                <h3 className="line-clamp-2 text-sm sm:text-base font-semibold text-foreground transition-colors group-hover:text-primary min-h-[2.5rem] sm:min-h-[3rem]">
-                  {pub.title}
-                </h3>
-                <Badge variant="secondary" className="text-xs">{pub.category}</Badge>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
-      </div>
+                  <h3 className="line-clamp-2 min-h-[2.5rem] text-sm font-semibold text-foreground transition-colors group-hover:text-primary sm:min-h-[3rem] sm:text-base">
+                    {publication.title}
+                  </h3>
+                  <p className="line-clamp-2 text-xs text-muted-foreground">{publication.summary}</p>
+                  <Badge variant="secondary" className="text-xs">
+                    {publication.category}
+                  </Badge>
+                </CardContent>
+              </Card>
+            );
+
+            if (!publication.channelSlug) {
+              return <article key={publication.id}>{content}</article>;
+            }
+
+            return (
+              <Link key={publication.id} to={`/comunicacao/agente/${publication.channelSlug}`}>
+                {content}
+              </Link>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-dashed bg-card p-6 text-center">
+          <p className="text-sm font-medium text-foreground">Nenhuma publicação encontrada.</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Publicações aprovadas aparecerão aqui sem dados de exemplo.
+          </p>
+        </div>
+      )}
     </section>
   );
 }
-
-

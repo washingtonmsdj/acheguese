@@ -1,4 +1,4 @@
-﻿import { Helmet } from "react-helmet-async";
+import { Helmet } from "react-helmet-async";
 import { useMemo } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useCommunicationAgentDashboardData } from "../hooks";
@@ -180,7 +180,10 @@ export default function CommunicationAgentDashboard() {
                     publications={(publications ?? []) as never}
                     territories={(territories ?? []) as never}
                   />
-                  <DashboardSidebarActivity channel={selectedChannel as never} />
+                  <DashboardSidebarActivity
+                    channel={selectedChannelView}
+                    publications={[...(publications ?? []), ...(drafts ?? [])]}
+                  />
                   <DashboardSidebarQuickLinks channel={selectedChannel as never} />
                   <DashboardSidebarHelp />
                 </div>

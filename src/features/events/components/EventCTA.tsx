@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/utils/cn';
+import { openSafeExternalUrl } from '@/shared/utils/safeRedirect';
 import type { EventCTA as EventCTAType } from '../types';
 
 interface EventCTAProps {
@@ -30,6 +31,14 @@ interface EventCTAProps {
   disabled?: boolean;
   onAction: () => void;
   className?: string;
+}
+
+function normalizePhone(value: string): string {
+  return value.replace(/[^\d+]/g, '');
+}
+
+function normalizeInstagram(value: string): string {
+  return value.replace(/^@/, '').replace(/[^a-zA-Z0-9._]/g, '');
 }
 
 export function EventCTA({ 
@@ -83,7 +92,10 @@ export function EventCTA({
                     variant="outline"
                     size="lg"
                     className="gap-2"
-                    onClick={() => window.open(`https://wa.me/${cta.contact_methods!.whatsapp}`, '_blank')}
+                    onClick={() => {
+                      const phone = normalizePhone(cta.contact_methods!.whatsapp!);
+                      openSafeExternalUrl(`https://wa.me/${phone}`, { context: 'event-cta-whatsapp' });
+                    }}
                   >
                     <MessageCircle className="h-5 w-5" />
                     <span className="hidden sm:inline">WhatsApp</span>
@@ -94,7 +106,10 @@ export function EventCTA({
                     variant="outline"
                     size="lg"
                     className="gap-2"
-                    onClick={() => window.open(`https://instagram.com/${cta.contact_methods!.instagram}`, '_blank')}
+                    onClick={() => {
+                      const username = normalizeInstagram(cta.contact_methods!.instagram!);
+                      openSafeExternalUrl(`https://instagram.com/${username}`, { context: 'event-cta-instagram' });
+                    }}
                   >
                     <Instagram className="h-5 w-5" />
                     <span className="hidden sm:inline">Instagram</span>
@@ -105,7 +120,7 @@ export function EventCTA({
                     variant="outline"
                     size="lg"
                     className="gap-2"
-                    onClick={() => window.location.href = `mailto:${cta.contact_methods!.email}`}
+                    onClick={() => window.location.assign(`mailto:${encodeURIComponent(cta.contact_methods!.email!)}`)}
                   >
                     <Mail className="h-5 w-5" />
                     <span className="hidden sm:inline">E-mail</span>
@@ -116,7 +131,7 @@ export function EventCTA({
                     variant="outline"
                     size="lg"
                     className="gap-2"
-                    onClick={() => window.location.href = `tel:${cta.contact_methods!.phone}`}
+                    onClick={() => window.location.assign(`tel:${normalizePhone(cta.contact_methods!.phone!)}`)}
                   >
                     <Phone className="h-5 w-5" />
                     <span className="hidden sm:inline">Telefone</span>
@@ -127,7 +142,7 @@ export function EventCTA({
                     variant="outline"
                     size="lg"
                     className="gap-2"
-                    onClick={() => window.open(cta.contact_methods!.website, '_blank')}
+                    onClick={() => openSafeExternalUrl(cta.contact_methods!.website!, { context: 'event-cta-website' })}
                   >
                     <Globe className="h-5 w-5" />
                     <span className="hidden sm:inline">Site</span>

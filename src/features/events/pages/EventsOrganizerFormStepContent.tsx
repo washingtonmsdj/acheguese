@@ -225,7 +225,7 @@ export function EventsOrganizerFormStepContent({
                       id="city"
                       value={formData.city}
                       onChange={(e) => onFieldChange('city', e.target.value)}
-                      placeholder="Salvador"
+                      placeholder="Cidade do evento"
                       className="mt-2"
                     />
                   </div>

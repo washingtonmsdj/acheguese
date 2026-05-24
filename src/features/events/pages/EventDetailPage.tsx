@@ -54,6 +54,8 @@ import { useToast } from '@/shared/hooks/use-toast';
 import { useSessionContext } from '@/core/session';
 import { useFavorites } from '../hooks/useFavorites';
 import { cn } from '@/shared/utils/cn';
+import { buildGoogleMapsSearchUrl } from '@/shared/utils/contactLinks';
+import { openSafeExternalUrl } from '@/shared/utils/safeRedirect';
 import { communityEventsRuntimeService } from '@/core/community/services/CommunityEventsRuntimeService';
 import { mapCommunityEventToEvent } from '../utils/eventAdapters';
 
@@ -462,10 +464,12 @@ export default function EventDetailPage() {
                       <Button
                         variant="outline"
                         className="w-full gap-2"
-                        onClick={() => window.open(
-                          `https://www.google.com/maps/search/?api=1&query=${event.location.latitude},${event.location.longitude}`,
-                          '_blank'
-                        )}
+                        onClick={() =>
+                          openSafeExternalUrl(
+                            buildGoogleMapsSearchUrl(`${event.location.latitude},${event.location.longitude}`),
+                            { context: "event-detail-map" },
+                          )
+                        }
                       >
                         <ExternalLink className="h-4 w-4" />
                         Ver no Google Maps

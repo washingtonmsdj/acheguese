@@ -70,16 +70,16 @@ export function EventsOrganizerStatsSection({ stats }: EventsOrganizerStatsSecti
             iconClassName="bg-green-500/10"
             label="Participantes"
             value={stats.totalParticipants.toLocaleString('pt-BR')}
-            helper="+12% este mês"
+            helper="+12% este mes"
             helperClassName="text-green-600"
           />
           <OrganizerStatCard
             delay={0.3}
             icon={<Eye className="h-6 w-6 text-blue-600" />}
             iconClassName="bg-blue-500/10"
-            label="Visualizações"
+            label="Visualizacoes"
             value={stats.totalViews.toLocaleString('pt-BR')}
-            helper="+8% este mês"
+            helper="+8% este mes"
             helperClassName="text-blue-600"
           />
           <OrganizerStatCard
@@ -88,7 +88,7 @@ export function EventsOrganizerStatsSection({ stats }: EventsOrganizerStatsSecti
             iconClassName="bg-amber-500/10"
             label="Receita Total"
             value={`R$ ${stats.totalRevenue.toLocaleString('pt-BR')}`}
-            helper="+15% este mês"
+            helper="+15% este mes"
             helperClassName="text-amber-600"
           />
         </div>
@@ -299,7 +299,7 @@ function OrganizerEventRow({
               </div>
               <div className="flex items-center gap-1">
                 <Eye className="h-3 w-3" />
-                {event.views_count} visualizações
+                {event.views_count} visualizacoes
               </div>
             </div>
           </div>

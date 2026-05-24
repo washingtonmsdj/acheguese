@@ -35,6 +35,7 @@ import {
 import { cn } from '@/shared/utils/cn';
 import { useFavorites } from '../hooks/useFavorites';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
+import { buildCommunityTerritoryUrl, geoPathToPublicUrl } from '@/core/routing/utils/territoryUrls';
 import { useTerritoryFilter } from '@/core/location/hooks/useTerritoryFilter';
 import { communityEventsRuntimeService } from '@/core/community/services/CommunityEventsRuntimeService';
 import { mapCommunityEventToEvent } from '../utils/eventAdapters';
@@ -194,8 +195,8 @@ export default function EventsListPage({ resolved, activeMemberIds }: EventsList
                 <>
                   {resolved.kind === 'location' && (
                     <>
-                      <Link 
-                        to={`/${resolved.location.geographic_path.split('/').filter(Boolean).join('/')}`}
+                      <Link
+                        to={geoPathToPublicUrl(resolved.location.geographic_path)}
                         className="transition-colors hover:text-foreground"
                       >
                         {resolved.location.name}
@@ -205,8 +206,10 @@ export default function EventsListPage({ resolved, activeMemberIds }: EventsList
                   )}
                   {resolved.kind === 'group' && (
                     <>
-                      <Link 
-                        to={`/comunidade/${resolved.group.members[0]?.geographic_path.split('/').filter(Boolean).join('/')}/${resolved.group.slug}`}
+                      <Link
+                        to={buildCommunityTerritoryUrl(
+                          `${geoPathToPublicUrl(resolved.group.members[0].geographic_path)}/${resolved.group.slug}`,
+                        )}
                         className="transition-colors hover:text-foreground"
                       >
                         {resolved.group.name}

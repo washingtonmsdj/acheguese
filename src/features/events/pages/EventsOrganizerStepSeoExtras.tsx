@@ -68,7 +68,7 @@ export function EventsOrganizerStepSeoExtras({ formData, onFieldChange }: Events
               id="metaKeywords"
               value={(formData.metaKeywords as string) || ''}
               onChange={(e) => onFieldChange('metaKeywords', e.target.value)}
-              placeholder="evento, música, festival, salvador"
+              placeholder="evento, música, festival, comunidade local"
               className="mt-2"
             />
           </div>

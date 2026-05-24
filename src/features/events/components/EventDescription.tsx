@@ -7,6 +7,7 @@
 
 import { motion } from 'framer-motion';
 import { FileText, CheckCircle2, Package, AlertCircle, Users2 } from 'lucide-react';
+import { SafeHtml } from '@/shared/components/security/SafeHtml';
 import { cn } from '@/shared/utils/cn';
 import type { Event } from '../types';
 
@@ -38,9 +39,9 @@ export function EventDescription({ event, className }: EventDescriptionProps) {
 
           {/* Description */}
           <div className="prose prose-lg max-w-none mb-8">
-            <div 
+            <SafeHtml
+              content={event.description}
               className="text-foreground leading-relaxed whitespace-pre-wrap"
-              dangerouslySetInnerHTML={{ __html: event.description }}
             />
           </div>
 

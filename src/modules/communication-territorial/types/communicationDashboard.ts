@@ -1,8 +1,3 @@
-export type CommunicationDashboardView =
-  | "overview"
-  | "publications"
-  | "drafts"
-  | "analytics"
-  | "territories"
-  | "schedule"
-  | "team";
+export type {
+  CommunicationDashboardView,
+} from "@/core/communication-territorial/types/communicationDashboard";

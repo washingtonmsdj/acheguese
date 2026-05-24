@@ -1,5 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import { Link, useParams } from "react-router-dom";
+import { LAUNCH_URLS, TERRITORY_CONFIG } from "@/config/territory";
 import { buildPublicAbsoluteUrl } from "@/shared/config/publicAppOrigin";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
@@ -9,7 +10,6 @@ import { useCommunicationCityHub } from "../hooks";
 import {
   buildCommunicationChannelPath,
   buildCommunicationCityPath,
-  buildCommunicationTerritoryPath,
 } from "../services";
 
 export default function CommunicationCityPage() {
@@ -18,16 +18,13 @@ export default function CommunicationCityPage() {
 
   const cityPath = buildCommunicationCityPath(state, city);
   const canonicalUrl = buildPublicAbsoluteUrl(cityPath);
-  const fallbackTerritoryPath = buildCommunicationTerritoryPath(
-    state,
-    city,
-    "complexo-do-nordeste-de-amaralina",
-  );
+  const isLaunchCity = state === TERRITORY_CONFIG.launch.state && city === TERRITORY_CONFIG.launch.city;
+  const communityPath = isLaunchCity ? LAUNCH_URLS.community : `/${state}/${city}`;
 
   return (
     <CommunicationPageShell>
       <Helmet>
-        <title>{data?.title ?? "Comunicacao Territorial"} | Achegue-se</title>
+        <title>{data?.title ?? "Comunicação Territorial"} | Achegue-se</title>
         <meta
           name="description"
           content="Diretorio editorial da cidade com canais locais, coberturas territoriais e publicacoes recentes."
@@ -39,10 +36,10 @@ export default function CommunicationCityPage() {
         <div className="space-y-2">
           <p className="text-sm font-medium text-primary">/comunicacao/{state}/{city}</p>
           <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-            {data?.title ?? "Comunicacao Territorial"}
+            {data?.title ?? "Comunicação Territorial"}
           </h1>
           <p className="max-w-3xl text-sm text-muted-foreground sm:text-base">
-            Canais editoriais da cidade. Abra um territorio para navegar em contexto local.
+            Canais editoriais da cidade. Abra um território para navegar em contexto local.
           </p>
         </div>
         <Button asChild variant="outline">
@@ -53,7 +50,7 @@ export default function CommunicationCityPage() {
       {isLoading ? (
         <div className="space-y-6">
           <div className="grid gap-4 md:grid-cols-3">
-            {Array.from({ length: 3 }).map((_, index) => (
+            {[0, 1, 2].map((index) => (
               <Card key={index} className="border-border">
                 <CardContent className="space-y-3 p-5">
                   <div className="h-5 w-1/2 animate-pulse rounded bg-muted" />
@@ -88,8 +85,8 @@ export default function CommunicationCityPage() {
 
           <section className="mt-8 space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="text-xl font-semibold sm:text-2xl">Cobertura por territorio</h2>
-              <Badge variant="outline">{data?.publications?.length ?? 0} publicacoes</Badge>
+              <h2 className="text-xl font-semibold sm:text-2xl">Cobertura por território</h2>
+              <Badge variant="outline">{data?.publications?.length ?? 0} publicações</Badge>
             </div>
             {(data?.publications ?? []).length ? (
               (data?.publications ?? []).map((publication) => {
@@ -114,7 +111,7 @@ export default function CommunicationCityPage() {
             ) : (
               <Card className="border-border">
                 <CardContent className="py-8 text-sm text-muted-foreground">
-                  Ainda nao ha publicacoes neste recorte de cidade.
+                  Ainda não há publicações neste recorte de cidade.
                 </CardContent>
               </Card>
             )}
@@ -122,9 +119,9 @@ export default function CommunicationCityPage() {
 
           <section className="mt-8 rounded-xl border border-border p-4">
             <p className="text-sm text-muted-foreground">
-              Quer abrir um hub territorial de referencia?{" "}
-              <Link className="font-medium text-primary hover:underline" to={fallbackTerritoryPath}>
-                Acesse o modelo territorial de Salvador
+              Quer navegar por bairros e grupos desta cidade?{" "}
+              <Link className="font-medium text-primary hover:underline" to={communityPath}>
+                {isLaunchCity ? "Abrir comunidade territorial" : "Ver pagina da cidade"}
               </Link>
               .
             </p>

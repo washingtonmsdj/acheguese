@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
+import { MAP_DEFAULT_COORDINATES, MAP_DEFAULT_ZOOM } from '@/shared/config/mapDefaults';
 import { cn } from '@/shared/utils/cn';
 import type { Event } from '../types';
 
@@ -44,8 +45,11 @@ export function EventsMap({
   userLocation 
 }: EventsMapProps) {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [mapCenter, setMapCenter] = useState(userLocation || { lat: -12.9714, lng: -38.5014 }); // Salvador default
-  const [zoom, setZoom] = useState(12);
+  const [mapCenter, setMapCenter] = useState(userLocation || {
+    lat: MAP_DEFAULT_COORDINATES.latitude,
+    lng: MAP_DEFAULT_COORDINATES.longitude,
+  });
+  const [zoom, setZoom] = useState(MAP_DEFAULT_ZOOM);
   const [showClusters, setShowClusters] = useState(true);
 
   // Calculate distance between two points (Haversine formula)

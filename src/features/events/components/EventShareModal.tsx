@@ -25,6 +25,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { cn } from '@/shared/utils/cn';
 import QRCode from 'qrcode';
+import { openSafeExternalUrl } from '@/shared/utils/safeRedirect';
 
 interface EventShareModalProps {
   isOpen: boolean;
@@ -82,7 +83,7 @@ export function EventShareModal({
       color: 'bg-green-500 hover:bg-green-600',
       action: () => {
         const url = `https://wa.me/?text=${encodeURIComponent(`${shareText}\n${fullUrl}`)}`;
-        window.open(url, '_blank');
+        openSafeExternalUrl(url, { context: 'event-share-whatsapp' });
       },
     },
     {
@@ -91,7 +92,7 @@ export function EventShareModal({
       color: 'bg-blue-600 hover:bg-blue-700',
       action: () => {
         const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(fullUrl)}`;
-        window.open(url, '_blank', 'width=600,height=400');
+        openSafeExternalUrl(url, { context: 'event-share-facebook' });
       },
     },
     {
@@ -100,7 +101,7 @@ export function EventShareModal({
       color: 'bg-sky-500 hover:bg-sky-600',
       action: () => {
         const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(fullUrl)}`;
-        window.open(url, '_blank', 'width=600,height=400');
+        openSafeExternalUrl(url, { context: 'event-share-twitter' });
       },
     },
     {
@@ -110,7 +111,7 @@ export function EventShareModal({
       action: () => {
         const subject = encodeURIComponent(eventTitle);
         const body = encodeURIComponent(`${eventDescription || shareText}\n\n${fullUrl}`);
-        window.location.href = `mailto:?subject=${subject}&body=${body}`;
+        window.location.assign(`mailto:?subject=${subject}&body=${body}`);
       },
     },
   ];

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Communication Components - Barrel Export
  * 
  * Centraliza exports dos componentes auxiliares da comunicação territorial

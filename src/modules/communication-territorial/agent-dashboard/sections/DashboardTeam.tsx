@@ -9,19 +9,15 @@ interface DashboardTeamProps {
 }
 
 export function DashboardTeam({ channel }: DashboardTeamProps) {
-  // Mock team members (future implementation will fetch from database)
   const teamMembers: DashboardTeamMemberView[] = [];
+  const channelName = channel.public_name || channel.name || "canal";
 
   return (
     <div className="space-y-6">
-      
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold text-foreground">Equipe</h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Gerencie editores e colaboradores
-          </p>
+          <p className="mt-1 text-sm text-muted-foreground">Gerencie editores e colaboradores de {channelName}</p>
         </div>
         <Button className="w-full sm:w-auto">
           <UserPlus className="h-4 w-4 mr-2" />
@@ -29,46 +25,40 @@ export function DashboardTeam({ channel }: DashboardTeamProps) {
         </Button>
       </div>
 
-      {/* Roles Info */}
       <Card>
         <CardHeader>
-          <CardTitle>Funções e Permissões</CardTitle>
-          <CardDescription>Entenda as diferentes funções da equipe</CardDescription>
+          <CardTitle>Funcoes e permissoes</CardTitle>
+          <CardDescription>Entenda as diferentes funcoes da equipe</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 rounded-lg border bg-card">
-              <div className="flex items-center gap-2 mb-2">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className="rounded-lg border bg-card p-4">
+              <div className="mb-2 flex items-center gap-2">
                 <Shield className="h-5 w-5 text-primary" />
                 <h4 className="font-semibold text-foreground">Administrador</h4>
               </div>
               <p className="text-sm text-muted-foreground">
-                Acesso total, incluindo configurações e gestão de equipe
+                Acesso total, incluindo configuracoes e gestao de equipe
               </p>
             </div>
-            <div className="p-4 rounded-lg border bg-card">
-              <div className="flex items-center gap-2 mb-2">
+            <div className="rounded-lg border bg-card p-4">
+              <div className="mb-2 flex items-center gap-2">
                 <Edit className="h-5 w-5 text-primary" />
                 <h4 className="font-semibold text-foreground">Editor</h4>
               </div>
-              <p className="text-sm text-muted-foreground">
-                Pode criar, editar e publicar conteúdo
-              </p>
+              <p className="text-sm text-muted-foreground">Pode criar, editar e publicar conteudo</p>
             </div>
-            <div className="p-4 rounded-lg border bg-card">
-              <div className="flex items-center gap-2 mb-2">
+            <div className="rounded-lg border bg-card p-4">
+              <div className="mb-2 flex items-center gap-2">
                 <Users className="h-5 w-5 text-primary" />
                 <h4 className="font-semibold text-foreground">Colaborador</h4>
               </div>
-              <p className="text-sm text-muted-foreground">
-                Pode criar rascunhos que precisam de aprovação
-              </p>
+              <p className="text-sm text-muted-foreground">Pode criar rascunhos que precisam de aprovacao</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Team Members */}
       <Card>
         <CardHeader>
           <CardTitle>Membros da Equipe</CardTitle>
@@ -80,7 +70,7 @@ export function DashboardTeam({ channel }: DashboardTeamProps) {
               <Users className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
               <h3 className="text-lg font-semibold text-foreground mb-2">Nenhum membro adicional</h3>
               <p className="text-sm text-muted-foreground mb-6">
-                Convide editores e colaboradores para ajudar na gestão do canal
+                Convide editores e colaboradores para ajudar na gestao do canal
               </p>
               <Button>
                 <UserPlus className="h-4 w-4 mr-2" />
@@ -110,7 +100,6 @@ export function DashboardTeam({ channel }: DashboardTeamProps) {
           )}
         </CardContent>
       </Card>
-
     </div>
   );
 }

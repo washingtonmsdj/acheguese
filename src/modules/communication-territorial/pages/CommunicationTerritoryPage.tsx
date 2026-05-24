@@ -44,7 +44,7 @@ export default function CommunicationTerritoryPage() {
       {isLoading ? (
         <div className="space-y-6">
           <div className="grid gap-4 md:grid-cols-3">
-            {Array.from({ length: 3 }).map((_, index) => (
+            {[0, 1, 2].map((index) => (
               <Card key={index} className="border-border">
                 <CardContent className="space-y-3 p-5">
                   <div className="h-5 w-1/2 animate-pulse rounded bg-muted" />
