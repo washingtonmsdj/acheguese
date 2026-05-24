@@ -48,7 +48,7 @@ function main(): void {
   }
 
   console.error("\nAllowed in root: README.md, SECURITY.md");
-  console.error("Move other markdown files to docs/ or docs/archive/.");
+  console.error("Move active markdown files to docs/ or to the owning module folder.");
   process.exit(1);
 }
 

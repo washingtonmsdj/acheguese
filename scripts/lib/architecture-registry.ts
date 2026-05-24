@@ -179,7 +179,7 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
   {
     id: "business",
     label: "business",
-    sourceRoots: ["src/core/business", "src/modules/business", "src/app/features/dashboard"],
+    sourceRoots: ["src/core/business", "src/modules/business"],
     docsPaths: ["src/core/business/README.md", "src/modules/business/README.md"],
     ssotPaths: [
       "src/core/business/services/BusinessService.ts",
@@ -334,7 +334,7 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
       "src/core/comments/services/CommentService.ts",
     ],
     routePrefixes: [
-      "/comunidade/:state/:city",
+      "/comunidade/:state/:city/:territorySlug",
       "/novo-post",
     ],
     adminRoutePrefixes: ["/admin/moderacao", "/admin/moderacao-completa", "/admin/zeladoria"],
@@ -344,9 +344,9 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     adminSummary:
       "Parcial. Moderacao existe, mas a gestao administrativa do ciclo de posts, grupos, recomendacoes, eventos e achados/perdidos nao esta consolidada numa cobertura unica.",
     docsSummary:
-      "Parcial. Ha README do modulo e pastas em docs/posts e docs/qa, mas falta documento mestre do dominio comunidade com SSOT, ownership e backlog de legado.",
+      "Parcial. Ha README do modulo e pastas em docs/posts e docs/qa, mas falta documento mestre do dominio comunidade com SSOT e ownership.",
     ssotSummary:
-      "Feed transversal usa core/posts, core/comments, core/social e core/feed. O legado em core/community ainda precisa ser drenado para contratos de core, mas modules/community-feed e o ponto canonico de UI.",
+      "Feed transversal usa core/posts, core/comments, core/social e core/feed. A UI canonica fica em modules/community-feed e as rotas publicas exigem territorio canonico.",
   },
   {
     id: "community-alerts",
@@ -361,7 +361,7 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
       "src/core/alerts/services/AlertService.ts",
       "src/core/community/alerts/services/CommunityAlertService.ts",
     ],
-    routePrefixes: ["/comunidade/:state/:city/alertas"],
+    routePrefixes: ["/comunidade/:state/:city/:territorySlug/feed?tab=alertas"],
     adminRoutePrefixes: ["/admin/community-alerts", "/admin/alertas"],
     criticality: "high",
     canonicalServiceBasenames: [
@@ -387,7 +387,7 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     ssotPaths: [
       "src/core/community/issues/services/CommunityIssueService.ts",
     ],
-    routePrefixes: ["/comunidade/:state/:city/problemas"],
+    routePrefixes: ["/comunidade/:state/:city/:territorySlug/problemas"],
     adminRoutePrefixes: ["/admin/community-issues"],
     criticality: "high",
     canonicalServiceBasenames: ["CommunityIssueService.ts"],
@@ -405,7 +405,10 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     sourceRoots: ["src/core/social", "src/modules/community-groups"],
     docsPaths: ["src/modules/community-groups/README.md"],
     ssotPaths: ["src/core/social/services/GroupService.ts"],
-    routePrefixes: ["/grupos", "/grupos/:id"],
+    routePrefixes: [
+      "/comunidade/:state/:city/:territorySlug/grupos",
+      "/comunidade/:state/:city/:territorySlug/grupos/:id",
+    ],
     adminRoutePrefixes: [],
     criticality: "medium",
     canonicalServiceBasenames: ["GroupService.ts"],
@@ -521,9 +524,9 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     adminSummary:
       "Boa cobertura para catalogo e denuncias, mas ainda sem matriz de gestao de categorias, subcategorias, vendedor e historico de URL em um so lugar.",
     docsSummary:
-      "Fraca. A documentacao ativa do dominio praticamente inexiste fora do README de dados mock e de relatorios historicos arquivados.",
+      "Fraca. A documentacao ativa do dominio ainda precisa de contrato vivo para categorias, publicacao, denuncia, vendedor e historico de URL.",
     ssotSummary:
-      "ClassifiedService e ClassifiedUrlService formam o nucleo atual. O dominio ainda carrega paginas e hooks legados, inclusive rotas antigas convivendo com a URL canonica.",
+      "ClassifiedService e ClassifiedUrlService formam o nucleo atual. O dominio ainda precisa consolidar paginas, hooks e rotas em torno da URL canonica.",
   },
   {
     id: "mobility",
@@ -604,10 +607,10 @@ export const CRITICAL_SHARED_COMPONENTS = [
 ];
 
 export const DOC_OBSERVATIONS = [
-  "docs/README.md, docs/DOCUMENTATION_INDEX.md e docs/CANONICAL_MAP.md ainda se sobrepoem como porta de entrada e mapa canonico.",
-  "docs/CURRENT_RULES.md referencia documentos que nao existem mais e ainda menciona caminhos antigos de arquitetura.",
+  "docs/README.md, docs/INDEX_CANONICO.md e docs/CANONICAL_MAP.md devem permanecer sincronizados como entrada documental.",
+  "docs/CURRENT_RULES.md e o contrato vigente para fronteiras, SSOT e schema.",
   "Documentacao de dominio continua misturada entre docs/, src/*/README.md e src/*/docs/, sem indice unico por dominio.",
-  "docs/archive/ e docs/historico/ ja absorveram o legado, mas faltava indexacao executiva para separar historico, auditoria, arquitetura e operacao.",
+  "documentacao datada e historica foi removida do repositorio principal para manter apenas contratos vivos e auditorias acionaveis.",
 ];
 
 export const GOVERNANCE_ALLOWED_DB_PATH_MARKERS = [
@@ -620,11 +623,10 @@ export const GOVERNANCE_ALLOWED_DB_PATH_MARKERS = [
 
 export const GOVERNANCE_SERVICE_FACADE_HINTS = [
   "compatibility facade",
-  "legacy compatibility facade",
-  "wrapper do módulo",
-  "wrapper do modulo",
+
+
+
   "canonical implementation moved",
   "re-export público",
   "re-export publico",
 ];
-

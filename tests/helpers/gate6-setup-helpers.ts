@@ -1,6 +1,6 @@
 /**
  * GATE 6: HELPERS DE SETUP DETERMINÍSTICO
- * 
+ *
  * Garante que motoristas estão REALMENTE disponíveis antes de criar corrida.
  * Valida estado no banco, não confia apenas em retorno de API.
  */
@@ -8,6 +8,18 @@
 import { DriverAvailabilityService } from '@/modules/mobility/services/DriverAvailabilityService';
 import { authenticateAsProfile } from './auth-helper';
 import { validateDriverAvailable } from './gate6-polling-helpers';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseAdmin = createClient(
+  process.env.VITE_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  }
+);
 
 interface SetupDriverResult {
   success: boolean;
@@ -18,14 +30,14 @@ interface SetupDriverResult {
 
 /**
  * Setup completo de motorista disponível com validação no banco
- * 
+ *
  * Executa:
  * 0. Limpa estado anterior (goOffline se necessário)
  * 1. Autentica como motorista
  * 2. goOnline()
  * 3. setAvailable() com coordenadas
  * 4. VALIDA no banco que está realmente disponível
- * 
+ *
  * Falha imediatamente se qualquer etapa falhar
  */
 export async function setupDriverAvailable(
@@ -34,9 +46,28 @@ export async function setupDriverAvailable(
   lng: number
 ): Promise<SetupDriverResult> {
   try {
+    const { error: capabilityError } = await supabaseAdmin
+      .from('driver_data')
+      .upsert({
+        profile_id: driverProfileId,
+        is_verified: true,
+        subscription_active: true,
+        can_do_delivery: true,
+        can_do_rides: true,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'profile_id' });
+
+    if (capabilityError) {
+      return {
+        success: false,
+        driverProfileId,
+        error: `driver_data fixture falhou: ${capabilityError.message}`,
+      };
+    }
+
     // 0. Autenticar e limpar estado anterior
     await authenticateAsProfile(driverProfileId);
-    
+
     // Tentar ir offline primeiro (ignora erro se já estiver offline)
     try {
       await DriverAvailabilityService.goOffline(driverProfileId);
@@ -46,7 +77,7 @@ export async function setupDriverAvailable(
       // Ignorar erro se já estiver offline
       console.log(`Driver ${driverProfileId} já estava offline ou sem registro`);
     }
-    
+
     // 1. goOnline()
     const onlineResult = await DriverAvailabilityService.goOnline(driverProfileId);
     if (!onlineResult.success) {
@@ -56,7 +87,7 @@ export async function setupDriverAvailable(
         error: `goOnline() falhou: ${onlineResult.error}`,
       };
     }
-    
+
     // 2. setAvailable() com coordenadas
     const availableResult = await DriverAvailabilityService.setAvailable(
       driverProfileId,
@@ -69,7 +100,7 @@ export async function setupDriverAvailable(
         error: `setAvailable() falhou: ${availableResult.error}`,
       };
     }
-    
+
     // 3. VALIDAR no banco que está realmente disponível
     const validation = await validateDriverAvailable(driverProfileId);
     if (!validation.valid) {
@@ -80,7 +111,7 @@ export async function setupDriverAvailable(
         state: validation.state,
       };
     }
-    
+
     return {
       success: true,
       driverProfileId,
@@ -103,11 +134,11 @@ export async function setupMultipleDriversAvailable(
   drivers: Array<{ id: string; lat: number; lng: number }>
 ): Promise<{ success: boolean; results: SetupDriverResult[] }> {
   const results: SetupDriverResult[] = [];
-  
+
   for (const driver of drivers) {
     const result = await setupDriverAvailable(driver.id, driver.lat, driver.lng);
     results.push(result);
-    
+
     if (!result.success) {
       // Falha imediata no primeiro erro
       return {
@@ -116,7 +147,7 @@ export async function setupMultipleDriversAvailable(
       };
     }
   }
-  
+
   return {
     success: true,
     results,

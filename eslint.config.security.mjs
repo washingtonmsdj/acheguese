@@ -16,8 +16,6 @@ export default [
     ignores: [
       "dist/**",
       ".archive/**",
-      "docs/archive/**",
-      "docs/historico/**",
       "testsprite_tests/**",
       "coverage/**",
       "templates/**",

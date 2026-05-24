@@ -4,9 +4,9 @@ import { dirname, resolve } from "node:path";
 const LIVE_DOCS = [
   "docs/README.md",
   "docs/INDEX_CANONICO.md",
-  "docs/DOCUMENTATION_INDEX.md",
-  "docs/STATUS.md",
-  "docs/VALIDACAO_FINAL_E_PROXIMOS_PASSOS.md",
+  "docs/CURRENT_RULES.md",
+  "docs/CANONICAL_MAP.md",
+  "docs/STATUS_ATUAL.md",
 ] as const;
 
 function extractRelativeLinks(markdown: string): string[] {

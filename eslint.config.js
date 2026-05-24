@@ -377,7 +377,7 @@ export default tseslint.config(
       "src/modules/gastronomy/services/review.queries.ts",
       "src/modules/gastronomy/components/GastronomyOwnerDashboard.tsx", // Dashboard com acesso direto necessário
     ],
-    rules: { 
+    rules: {
       "ssot/no-direct-reviews-access": "off",
       "ssot/no-direct-business-access": "off",
     },
@@ -386,6 +386,7 @@ export default tseslint.config(
   {
     files: [
       "src/core/business/services/business.admin.ts",
+      "src/core/business/services/business-analytics.service.ts",
       "src/core/business/services/business.legacy.ts",
       "src/core/business/services/business.mutations.ts",
       "src/core/business/services/business.queries.ts",

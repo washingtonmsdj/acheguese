@@ -78,7 +78,6 @@ const REQUIRED_NESTED_PATHS = [
   "src/modules/professionals/services",
   "src/app/features/landing",
   "src/app/features/business-landing",
-  "src/app/features/dashboard",
   "src/app/features/onboarding",
 ] as const;
 

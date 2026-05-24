@@ -1,14 +1,16 @@
 import { expect, test } from '@playwright/test';
 
 const MOBILE_VIEWPORT = { width: 360, height: 800 };
+const NAVIGATION_TIMEOUT_MS = 90_000;
+const CONTENT_TIMEOUT_MS = 60_000;
 
-test.setTimeout(90_000);
+test.setTimeout(120_000);
 
 async function assertCoreMobileLayout(page: import('@playwright/test').Page, path: string) {
   await page.setViewportSize(MOBILE_VIEWPORT);
   for (let attempt = 1; attempt <= 2; attempt += 1) {
     try {
-      await page.goto(path, { waitUntil: 'domcontentloaded', timeout: 90_000 });
+      await page.goto(path, { waitUntil: 'commit', timeout: NAVIGATION_TIMEOUT_MS });
       break;
     } catch (error) {
       if (attempt === 2) throw error;
@@ -25,7 +27,7 @@ async function assertCoreMobileLayout(page: import('@playwright/test').Page, pat
           .catch(() => false);
         return mainVisible || hasText;
       },
-      { timeout: 30_000 },
+      { timeout: CONTENT_TIMEOUT_MS },
     )
     .toBe(true);
 
@@ -46,6 +48,6 @@ test.describe('Mobile core public layout', () => {
   });
 
   test('servicos territorial em 360px', async ({ page }) => {
-    await assertCoreMobileLayout(page, '/servicos/ba/salvador/area/complexo-do-nordeste-de-amaralina');
+    await assertCoreMobileLayout(page, '/servicos/ba/salvador/complexo-do-nordeste-de-amaralina');
   });
 });

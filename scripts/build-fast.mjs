@@ -1,46 +1,42 @@
 #!/usr/bin/env node
 
-/**
- * Build rápido para desenvolvimento
- * Desabilita otimizações pesadas para builds mais rápidos
- */
+import { spawn } from "node:child_process";
 
-import { exec } from 'child_process';
-import { promisify } from 'util';
+console.log("Build rapido (desenvolvimento)\n");
+console.log("Otimizacoes pesadas desabilitadas para velocidade");
+console.log("Para build de producao, use: npm run build\n");
 
-const execAsync = promisify(exec);
+const startTime = Date.now();
+const child = spawn(
+  "node",
+  ["node_modules/vite/bin/vite.js", "build", "--mode", "development", "--minify", "false", "--sourcemap", "false"],
+  {
+    cwd: process.cwd(),
+    stdio: "inherit",
+    env: {
+      ...process.env,
+      VITE_SKIP_SOURCEMAP: "true",
+      VITE_SKIP_COMPRESSED_SIZE: "true",
+    },
+  },
+);
 
-console.log('⚡ Build rápido (desenvolvimento)\n');
-console.log('💡 Otimizações desabilitadas para velocidade');
-console.log('   Para build de produção, use: npm run build\n');
-
-async function buildFast() {
-  const startTime = Date.now();
-  
-  try {
-    console.log('📦 Compilando...\n');
-    
-    // Build sem minificação e sem source maps para velocidade
-    await execAsync('vite build --mode development --minify false', {
-      cwd: process.cwd(),
-      stdio: 'inherit',
-      env: {
-        ...process.env,
-        VITE_SKIP_SOURCEMAP: 'true'
-      }
-    });
-    
-    const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-    console.log(`\n✅ Build concluído em ${duration}s\n`);
-    console.log('💡 Este build é apenas para testes locais');
-    console.log('   Para produção, use: npm run build\n');
-    
+child.on("exit", (code) => {
+  const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+  if (code === 0) {
+    console.log(`\nBuild concluido em ${duration}s\n`);
+    console.log("Este build e apenas para testes locais");
+    console.log("Para producao, use: npm run build\n");
     process.exit(0);
-  } catch (error) {
-    const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-    console.log(`\n❌ Build falhou após ${duration}s\n`);
-    process.exit(1);
   }
-}
 
-buildFast();
+  console.error(`\nBuild falhou apos ${duration}s\n`);
+  process.exit(code ?? 1);
+});
+
+child.on("error", (error) => {
+  const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+  console.error(`\nBuild falhou apos ${duration}s`);
+  console.error(error);
+  process.exit(1);
+});
