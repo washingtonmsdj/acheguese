@@ -494,6 +494,37 @@ export async function hidePost(postId: string): Promise<void> {
   }
 }
 
+export async function updatePostModerationState(
+  postId: string,
+  state: {
+    is_hidden?: boolean;
+    is_removed?: boolean;
+    is_published?: boolean;
+    removed_reason?: string | null;
+    removed_by?: string | null;
+    removed_at?: string | null;
+  },
+): Promise<void> {
+  try {
+    const { error } = await (supabase as any)
+      .from("posts")
+      .update(state)
+      .eq("id", postId);
+
+    if (error) {
+      throw new PostError(error.message, error.code || "MODERATION_UPDATE_FAILED");
+    }
+  } catch (error) {
+    if (error instanceof PostError) throw error;
+    trackError(error as Error, {
+      component: "posts.mutations",
+      action: "updatePostModerationState",
+      metadata: { postId, state },
+    });
+    throw new PostError("Unexpected error updating post moderation state", "UNKNOWN_ERROR");
+  }
+}
+
 export async function confirmAlert(
   postId: string,
   userId: string,

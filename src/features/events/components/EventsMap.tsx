@@ -7,6 +7,7 @@ import { MAP_DEFAULT_COORDINATES, MAP_DEFAULT_ZOOM } from '@/shared/config/mapDe
 import {
   DEFAULT_TILE_STYLE,
   MapLibreAdapter,
+  mapEntityProjection,
   type MapLibreAdapterHandle,
   type MapMarker,
 } from '@/core/maps';
@@ -81,25 +82,36 @@ export function EventsMap({
 
   const mapMarkers = useMemo<MapMarker[]>(
     () =>
-      eventMarkers.map((marker) => ({
-        id: marker.event.id,
-        type: 'event',
-        coordinates: {
-          latitude: marker.lat,
-          longitude: marker.lng,
-        },
-        title: marker.event.title,
-        subtitle: marker.event.location.neighborhood || marker.event.location.city,
-        status:
-          marker.event.status === 'cancelado' || marker.event.status === 'finalizado'
-            ? 'inactive'
-            : 'active',
-        isPremium: marker.event.ticket_type === 'pago',
-        metadata: {
-          distance: marker.distance,
-          category: marker.event.category,
-        },
-      })),
+      eventMarkers
+        .map((marker): MapMarker | null => {
+          const projected = mapEntityProjection.projectEvent(
+            {
+              id: marker.event.id,
+              name: marker.event.title,
+              latitude: marker.lat,
+              longitude: marker.lng,
+              subtitle: marker.event.location.neighborhood || marker.event.location.city,
+              status:
+                marker.event.status === 'cancelado' || marker.event.status === 'finalizado'
+                  ? 'inactive'
+                  : 'active',
+              isPremium: marker.event.ticket_type === 'pago',
+              category: marker.event.category,
+              distance: marker.distance,
+            },
+            { includeMetadata: true },
+          );
+
+          if (!projected) return null;
+          return {
+            ...projected,
+            metadata: {
+              ...projected.metadata,
+              distance: marker.distance,
+            },
+          };
+        })
+        .filter((marker): marker is MapMarker => marker !== null),
     [eventMarkers],
   );
 

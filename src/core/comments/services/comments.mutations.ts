@@ -144,6 +144,38 @@ export async function deleteComment(commentId: string): Promise<boolean> {
  * Curte um comentário
  * ✅ LOTE 7 - Boundary canônico para comment_likes
  */
+/**
+ * Remove um comentario por moderacao sem apagar o registro.
+ */
+export async function removeCommentForModeration(
+  commentId: string,
+  reason = "Moderacao",
+  moderatorProfileId?: string | null,
+): Promise<void> {
+  try {
+    const { error } = await commentsDb
+      .from(TABLE)
+      .update({
+        is_removed: true,
+        is_hidden: true,
+        content: "[comentario removido pela moderacao]",
+        removed_reason: reason,
+        removed_by: moderatorProfileId ?? null,
+        removed_at: new Date().toISOString(),
+      })
+      .eq("id", commentId);
+
+    if (error) throw error;
+  } catch (error) {
+    trackError(error as Error, {
+      component: "comments.mutations",
+      action: "removeCommentForModeration",
+      metadata: { commentId, moderatorProfileId },
+    });
+    throw new CommentError("Erro ao remover comentario", "MODERATION_REMOVE_ERROR");
+  }
+}
+
 export async function likeComment(
   commentId: string,
   userId: string,

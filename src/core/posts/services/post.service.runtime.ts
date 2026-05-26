@@ -437,6 +437,30 @@ export class PostService {
     }
   }
 
+  async updatePostModerationState(
+    postId: string,
+    state: {
+      is_hidden?: boolean;
+      is_removed?: boolean;
+      is_published?: boolean;
+      removed_reason?: string | null;
+      removed_by?: string | null;
+      removed_at?: string | null;
+    },
+  ): Promise<void> {
+    try {
+      await mutations.updatePostModerationState(postId, state);
+    } catch (error) {
+      if (error instanceof PostError) throw error;
+      trackError(error as Error, {
+        component: "PostService",
+        action: "updatePostModerationState",
+        metadata: { postId, state },
+      });
+      throw new PostError("Unexpected error updating post moderation state", "UNKNOWN_ERROR");
+    }
+  }
+
   // ============================================================================
   // WIDGETS E ANALYTICS
   // ============================================================================

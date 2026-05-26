@@ -154,6 +154,11 @@ export class ProfileService {
   async getProfileById(profileId: string): Promise<Profile | null> { return getProfileByIdQuery(profileId); }
   async getActiveProfile(userId?: string): Promise<Profile | null> { return getActiveProfileRpc(userId); }
   async getProfilesByUserId(userId?: string): Promise<Profile[]> { return getProfilesByUserIdQuery(userId); }
+  async resolveProfileId(identifier: string): Promise<string | null> {
+    const directProfile = await this.getProfileById(identifier);
+    if (directProfile?.id) return directProfile.id;
+    return this.resolveProfileIdByUserId(identifier);
+  }
   async getProfileByType(userId: string, profileType: "personal" | "driver" | "business" | "professional"): Promise<Profile | null> {
     return getProfileByTypeQuery(userId, profileType);
   }

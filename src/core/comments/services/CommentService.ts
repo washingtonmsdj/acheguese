@@ -21,6 +21,7 @@ export {
   createComment,
   updateComment,
   deleteComment,
+  removeCommentForModeration,
   likeComment,
   unlikeComment,
   CommentError,
@@ -49,6 +50,7 @@ export const CommentService = {
   createComment: CommentsMutations.createComment,
   updateComment: CommentsMutations.updateComment,
   deleteComment: CommentsMutations.deleteComment,
+  removeCommentForModeration: CommentsMutations.removeCommentForModeration,
   likeComment: CommentsMutations.likeComment,
   unlikeComment: CommentsMutations.unlikeComment,
 } as const;

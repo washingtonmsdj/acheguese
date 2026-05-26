@@ -15,6 +15,7 @@
 
 import { LAUNCH_CITY_PATH, LAUNCH_COMMUNITY_TERRITORY_PATH, LAUNCH_URLS } from '@/config/territory';
 import { supabase } from '@/integrations/supabase';
+import { getAllClassifieds } from '@/modules/classifieds/services';
 import { getPublicSiteOrigin } from '@/shared/config/brand';
 
 export interface SitemapURL {
@@ -212,14 +213,12 @@ async function fetchEventURLs(): Promise<SitemapURL[]> {
 }
 
 async function fetchClassifiedURLs(): Promise<SitemapURL[]> {
-  const { data, error } = await (supabase as any)
-    .from('classifieds')
-    .select('id, public_id, updated_at')
-    .eq('status', 'active')
-    .limit(500);
-
-  if (error) throw error;
-  return generateClassifiedURLs((data ?? []) as Array<{ id: string; public_id?: string | null; updated_at: string | null }>);
+  const classifieds = await getAllClassifieds({ scope: 'none' });
+  return generateClassifiedURLs(
+    classifieds
+      .filter((classified) => classified.status === undefined || classified.status === 'active')
+      .slice(0, 500),
+  );
 }
 
 /**

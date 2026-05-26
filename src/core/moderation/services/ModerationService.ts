@@ -5,6 +5,9 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { MODERATION_REPORT_STATUS } from "@/core/moderation/constants/reportStatus";
+import { CommentService } from "@/core/comments/services/CommentService";
+import { postService } from "@/core/posts/services/PostService";
+import { profileService } from "@/core/profiles/services/ProfileService";
 
 interface ReportContentInput {
   targetType: "post" | "comment" | "profile";
@@ -30,12 +33,6 @@ type SupabaseErrorLike = {
 };
 
 class ModerationServiceClass {
-  private tableMap = {
-    post: "posts",
-    comment: "comments",
-    profile: "profiles",
-  } as const;
-
   private db(): any {
     return supabase as any;
   }
@@ -47,37 +44,8 @@ class ModerationServiceClass {
     return fallback;
   }
 
-  private getTableByTarget(targetType: ModerationTarget): string {
-    switch (targetType) {
-      case "post":
-        return this.tableMap.post;
-      case "comment":
-        return this.tableMap.comment;
-      case "profile":
-        return this.tableMap.profile;
-      default:
-        return this.tableMap.post;
-    }
-  }
-
   private async resolveProfileId(identifier: string): Promise<string | null> {
-    const { data: byProfileId } = await this.db()
-      .from("profiles")
-      .select("id")
-      .eq("id", identifier)
-      .maybeSingle();
-
-    if (byProfileId?.id) return byProfileId.id;
-
-    const { data: byUserId } = await this.db()
-      .from("profiles")
-      .select("id")
-      .eq("user_id", identifier)
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle();
-
-    return byUserId?.id ?? null;
+    return profileService.resolveProfileId(identifier);
   }
 
   private async resolveTargetAuthorProfileId(
@@ -86,15 +54,11 @@ class ModerationServiceClass {
   ): Promise<string> {
     if (targetType === "profile") return targetId;
 
-    const table = this.getTableByTarget(targetType);
-    const { data, error } = await this.db()
-      .from(table)
-      .select("author_profile_id")
-      .eq("id", targetId)
-      .maybeSingle();
+    const authorProfileId =
+      targetType === "post"
+        ? await postService.getPostAuthorId(targetId)
+        : (await CommentService.getCommentById(targetId))?.author_profile_id;
 
-    if (error) throw error;
-    const authorProfileId = data?.author_profile_id;
     if (!authorProfileId) throw new Error("Conteudo denunciado nao encontrado");
     return authorProfileId;
   }
@@ -265,16 +229,7 @@ class ModerationServiceClass {
 
   async removeComment(commentId: string): Promise<void> {
     try {
-      const { error } = await this.db()
-        .from("comments")
-        .update({
-          is_removed: true,
-          content: "[comentario removido pela moderacao]",
-          removed_at: new Date().toISOString(),
-        })
-        .eq("id", commentId);
-
-      if (error) throw error;
+      await CommentService.removeCommentForModeration(commentId);
     } catch (error: unknown) {
       logger.error("Error removing comment:", error);
       throw new Error(`Erro ao remover comentario: ${this.getErrorMessage(error, "erro desconhecido")}`);
@@ -289,20 +244,15 @@ class ModerationServiceClass {
   ): Promise<void> {
     try {
       if (action === "delete") {
-        const { error } = await this.db()
-          .from("posts")
-          .update({
-            is_published: false,
-            is_removed: true,
-            removed_reason: reason || "Moderacao",
-            removed_at: new Date().toISOString(),
-            removed_by: await this.resolveProfileId(moderatedBy),
-          })
-          .eq("id", postId);
-        if (error) throw error;
+        await postService.removePost(
+          postId,
+          reason || "Moderacao",
+          (await this.resolveProfileId(moderatedBy)) || moderatedBy,
+        );
         return;
       }
 
+      const moderatorProfileId = await this.resolveProfileId(moderatedBy);
       const updateData =
         action === "approve"
           ? {
@@ -317,15 +267,10 @@ class ModerationServiceClass {
               is_hidden: true,
               is_published: false,
               removed_reason: reason || null,
-              removed_by: await this.resolveProfileId(moderatedBy),
+              removed_by: moderatorProfileId,
             };
 
-      const { error } = await this.db()
-        .from("posts")
-        .update(updateData)
-        .eq("id", postId);
-
-      if (error) throw error;
+      await postService.updatePostModerationState(postId, updateData);
     } catch (error: unknown) {
       logger.error("Error moderating post:", error);
       throw new Error(`Erro ao moderar postagem: ${this.getErrorMessage(error, "erro desconhecido")}`);
@@ -334,14 +279,7 @@ class ModerationServiceClass {
 
   async getCommentAuthorId(commentId: string): Promise<string | null> {
     try {
-      const { data, error } = await this.db()
-        .from("comments")
-        .select("author_profile_id")
-        .eq("id", commentId)
-        .single();
-
-      if (error) throw error;
-      return (data as { author_profile_id?: string } | null)?.author_profile_id || null;
+      return (await CommentService.getCommentById(commentId))?.author_profile_id || null;
     } catch (error: unknown) {
       logger.error("Error fetching comment author:", error);
       return null;
