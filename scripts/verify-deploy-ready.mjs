@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 
 const REQUIRED_FILES = [
   'package.json',
@@ -69,6 +69,25 @@ function fail(message) {
 
 function readJson(file) {
   return JSON.parse(readFileSync(file, 'utf-8'));
+}
+
+function collectSourceFiles(root, extensions = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs'])) {
+  if (!existsSync(root)) return [];
+
+  const files = [];
+  for (const entry of readdirSync(root)) {
+    const fullPath = `${root}/${entry}`;
+    const stat = statSync(fullPath);
+    if (stat.isDirectory()) {
+      files.push(...collectSourceFiles(fullPath, extensions));
+      continue;
+    }
+
+    const extension = entry.slice(entry.lastIndexOf('.'));
+    if (extensions.has(extension)) files.push(fullPath);
+  }
+
+  return files;
 }
 
 console.log('Verificando preparacao para deploy...\n');
@@ -145,6 +164,37 @@ console.log();
 console.log('Billing canonico');
 for (const file of FORBIDDEN_BILLING_ARTIFACTS) {
   existsSync(file) ? fail(`${file} nao deve existir`) : ok(`${file} removido`);
+}
+console.log();
+
+console.log('Higiene de runtime');
+try {
+  const sourceFiles = collectSourceFiles('src');
+  const nativeDialogPattern = /\b(?:window\.)?(alert|prompt)\s*\(|window\.confirm\s*\(|\bconfirm\s*\(\s*["']/;
+  const nativeDialogAllowlist = new Set([
+    'src/shared/hooks/useConfirmActionDialog.tsx',
+  ]);
+  const nativeDialogFindings = sourceFiles.filter((file) => {
+    if (nativeDialogAllowlist.has(file)) return false;
+    const content = readFileSync(file, 'utf-8');
+    return nativeDialogPattern.test(content);
+  });
+
+  nativeDialogFindings.length === 0
+    ? ok('sem dialogos nativos de navegador no runtime')
+    : fail(`dialogos nativos encontrados: ${nativeDialogFindings.join(', ')}`);
+
+  const eventFiles = collectSourceFiles('src/features/events');
+  const eventPlaceholderPattern = /\bTODO\b|\bFIXME\b|sera implementado|será implementado/i;
+  const eventPlaceholderFindings = eventFiles.filter((file) =>
+    eventPlaceholderPattern.test(readFileSync(file, 'utf-8')),
+  );
+
+  eventPlaceholderFindings.length === 0
+    ? ok('eventos sem placeholders operacionais')
+    : fail(`placeholders operacionais em eventos: ${eventPlaceholderFindings.join(', ')}`);
+} catch (error) {
+  fail(`erro ao verificar higiene de runtime: ${error.message}`);
 }
 console.log();
 

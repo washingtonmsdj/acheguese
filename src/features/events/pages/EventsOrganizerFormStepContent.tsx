@@ -7,7 +7,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { cn } from '@/shared/utils/cn';
 import { EVENT_CATEGORY_OPTIONS } from '../constants';
 import { EventsOrganizerStepSeoExtras } from './EventsOrganizerStepSeoExtras';
-import type { EventsOrganizerFieldChange, EventsOrganizerFormData } from './EventsOrganizerForm.model';
+import type {
+  EventsOrganizerFaqItem,
+  EventsOrganizerFieldChange,
+  EventsOrganizerFormData,
+  EventsOrganizerGalleryItem,
+  EventsOrganizerScheduleItem,
+} from './EventsOrganizerForm.model';
 
 interface EventsOrganizerFormStepContentProps {
   currentStep: number;
@@ -15,11 +21,80 @@ interface EventsOrganizerFormStepContentProps {
   onFieldChange: EventsOrganizerFieldChange;
 }
 
+function createFormItemId(prefix: string): string {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+    return `${prefix}-${crypto.randomUUID()}`;
+  }
+
+  return `${prefix}-${Date.now()}`;
+}
+
 export function EventsOrganizerFormStepContent({
   currentStep,
   formData,
   onFieldChange,
 }: EventsOrganizerFormStepContentProps) {
+  const addGalleryItem = () => {
+    onFieldChange('gallery', [
+      ...formData.gallery,
+      { id: createFormItemId('gallery'), url: '', caption: '' },
+    ]);
+  };
+
+  const updateGalleryItem = (id: string, updates: Partial<EventsOrganizerGalleryItem>) => {
+    onFieldChange(
+      'gallery',
+      formData.gallery.map((item) => (item.id === id ? { ...item, ...updates } : item)),
+    );
+  };
+
+  const removeGalleryItem = (id: string) => {
+    onFieldChange('gallery', formData.gallery.filter((item) => item.id !== id));
+  };
+
+  const addScheduleItem = () => {
+    onFieldChange('schedule', [
+      ...formData.schedule,
+      {
+        id: createFormItemId('schedule'),
+        time: '',
+        title: '',
+        description: '',
+        speaker: '',
+        location: '',
+      },
+    ]);
+  };
+
+  const updateScheduleItem = (id: string, updates: Partial<EventsOrganizerScheduleItem>) => {
+    onFieldChange(
+      'schedule',
+      formData.schedule.map((item) => (item.id === id ? { ...item, ...updates } : item)),
+    );
+  };
+
+  const removeScheduleItem = (id: string) => {
+    onFieldChange('schedule', formData.schedule.filter((item) => item.id !== id));
+  };
+
+  const addFaqItem = () => {
+    onFieldChange('faq', [
+      ...formData.faq,
+      { id: createFormItemId('faq'), question: '', answer: '' },
+    ]);
+  };
+
+  const updateFaqItem = (id: string, updates: Partial<EventsOrganizerFaqItem>) => {
+    onFieldChange(
+      'faq',
+      formData.faq.map((item) => (item.id === id ? { ...item, ...updates } : item)),
+    );
+  };
+
+  const removeFaqItem = (id: string) => {
+    onFieldChange('faq', formData.faq.filter((item) => item.id !== id));
+  };
+
   switch (currentStep) {
       case 1:
         return (
@@ -353,11 +428,18 @@ export function EventsOrganizerFormStepContent({
 
             {/* Ticket Types (if paid) */}
             {!formData.isFree && (
-              <div className="rounded-lg border border-border bg-muted/30 p-4">
-                <p className="text-sm text-muted-foreground">
-                  Observacao: A configuracao detalhada de ingressos pagos sera implementada em breve.
-                  Por enquanto, voce pode criar o evento e adicionar os ingressos depois.
-                </p>
+              <div>
+                <Label htmlFor="ticketPrice">Valor do ingresso (R$) *</Label>
+                <Input
+                  id="ticketPrice"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.ticketPrice}
+                  onChange={(e) => onFieldChange('ticketPrice', parseFloat(e.target.value) || 0)}
+                  placeholder="0.00"
+                  className="mt-2"
+                />
               </div>
             )}
           </div>
@@ -520,10 +602,48 @@ export function EventsOrganizerFormStepContent({
               <p className="mt-1 text-xs text-muted-foreground">
                 Adicione fotos adicionais do evento
               </p>
-              <div className="mt-2 rounded-lg border border-border bg-muted/30 p-4">
-                <p className="text-sm text-muted-foreground">
-                  Observacao: Upload de galeria sera implementado em breve
-                </p>
+              <div className="mt-3 space-y-3">
+                {formData.gallery.length === 0 ? (
+                  <div className="rounded-lg border border-dashed border-border bg-muted/30 p-4 text-sm text-muted-foreground">
+                    Nenhuma imagem adicional cadastrada
+                  </div>
+                ) : (
+                  formData.gallery.map((image, index) => (
+                    <div key={image.id} className="rounded-lg border border-border bg-muted/30 p-4">
+                      <div className="mb-3 flex items-center justify-between">
+                        <span className="text-sm font-medium text-foreground">
+                          Imagem {index + 1}
+                        </span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeGalleryItem(image.id)}
+                          className="h-8 px-2 text-destructive hover:text-destructive"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+                        <Input
+                          type="url"
+                          value={image.url}
+                          onChange={(e) => updateGalleryItem(image.id, { url: e.target.value })}
+                          placeholder="URL da imagem"
+                        />
+                        <Input
+                          value={image.caption}
+                          onChange={(e) => updateGalleryItem(image.id, { caption: e.target.value })}
+                          placeholder="Legenda opcional"
+                        />
+                      </div>
+                    </div>
+                  ))
+                )}
+                <Button type="button" variant="outline" onClick={addGalleryItem} className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Adicionar imagem
+                </Button>
               </div>
             </div>
           </div>
@@ -542,22 +662,69 @@ export function EventsOrganizerFormStepContent({
               </p>
             </div>
 
-            <div className="rounded-lg border border-border bg-muted/30 p-6 text-center">
-              <Calendar className="mx-auto mb-3 h-12 w-12 text-muted-foreground" />
-              <h4 className="mb-2 font-semibold text-foreground">
-                Gerenciador de Programacao
-              </h4>
-              <p className="mb-4 text-sm text-muted-foreground">
-                Adicione horarios, palestras, atividades e palestrantes
-              </p>
-              <Button variant="outline" className="gap-2">
+            <div className="space-y-3">
+              {formData.schedule.length === 0 ? (
+                <div className="rounded-lg border border-dashed border-border bg-muted/30 p-6 text-center">
+                  <Calendar className="mx-auto mb-3 h-12 w-12 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">
+                    Nenhum item de programacao cadastrado
+                  </p>
+                </div>
+              ) : (
+                formData.schedule.map((item, index) => (
+                  <div key={item.id} className="rounded-lg border border-border bg-card p-4">
+                    <div className="mb-3 flex items-center justify-between">
+                      <span className="text-sm font-medium text-foreground">
+                        Item {index + 1}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeScheduleItem(item.id)}
+                        className="h-8 px-2 text-destructive hover:text-destructive"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-[120px_minmax(0,1fr)]">
+                      <Input
+                        value={item.time}
+                        onChange={(e) => updateScheduleItem(item.id, { time: e.target.value })}
+                        placeholder="14:00"
+                      />
+                      <Input
+                        value={item.title}
+                        onChange={(e) => updateScheduleItem(item.id, { title: e.target.value })}
+                        placeholder="Titulo da atividade"
+                      />
+                    </div>
+                    <Textarea
+                      value={item.description}
+                      onChange={(e) => updateScheduleItem(item.id, { description: e.target.value })}
+                      placeholder="Descricao opcional da atividade"
+                      rows={2}
+                      className="mt-3"
+                    />
+                    <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                      <Input
+                        value={item.speaker}
+                        onChange={(e) => updateScheduleItem(item.id, { speaker: e.target.value })}
+                        placeholder="Responsavel ou palestrante"
+                      />
+                      <Input
+                        value={item.location}
+                        onChange={(e) => updateScheduleItem(item.id, { location: e.target.value })}
+                        placeholder="Local dentro do evento"
+                      />
+                    </div>
+                  </div>
+                ))
+              )}
+              <Button type="button" variant="outline" onClick={addScheduleItem} className="gap-2">
                 <Plus className="h-4 w-4" />
                 Adicionar item a programacao
               </Button>
-            </div>
-
-            <div className="text-xs text-muted-foreground">
-              Observacao: <strong>Dica:</strong> Uma programacao bem detalhada aumenta a confianca dos participantes!
             </div>
           </div>
         );
@@ -575,17 +742,49 @@ export function EventsOrganizerFormStepContent({
               </p>
             </div>
 
-            <div className="rounded-lg border border-border bg-muted/30 p-6 text-center">
-              <HelpCircle className="mx-auto mb-3 h-12 w-12 text-muted-foreground" />
-              <h4 className="mb-2 font-semibold text-foreground">
-                Gerenciador de FAQ
-              </h4>
-              <p className="mb-4 text-sm text-muted-foreground">
-                Adicione perguntas e respostas para esclarecer duvidas
-              </p>
-              <Button variant="outline" className="gap-2">
+            <div className="space-y-3">
+              {formData.faq.length === 0 ? (
+                <div className="rounded-lg border border-dashed border-border bg-muted/30 p-6 text-center">
+                  <HelpCircle className="mx-auto mb-3 h-12 w-12 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">
+                    Nenhuma pergunta frequente cadastrada
+                  </p>
+                </div>
+              ) : (
+                formData.faq.map((item, index) => (
+                  <div key={item.id} className="rounded-lg border border-border bg-card p-4">
+                    <div className="mb-3 flex items-center justify-between">
+                      <span className="text-sm font-medium text-foreground">
+                        Pergunta {index + 1}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeFaqItem(item.id)}
+                        className="h-8 px-2 text-destructive hover:text-destructive"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <Input
+                      value={item.question}
+                      onChange={(e) => updateFaqItem(item.id, { question: e.target.value })}
+                      placeholder="Pergunta"
+                    />
+                    <Textarea
+                      value={item.answer}
+                      onChange={(e) => updateFaqItem(item.id, { answer: e.target.value })}
+                      placeholder="Resposta"
+                      rows={3}
+                      className="mt-3"
+                    />
+                  </div>
+                ))
+              )}
+              <Button type="button" variant="outline" onClick={addFaqItem} className="gap-2">
                 <Plus className="h-4 w-4" />
-                Adicionar Pergunta
+                Adicionar pergunta
               </Button>
             </div>
 

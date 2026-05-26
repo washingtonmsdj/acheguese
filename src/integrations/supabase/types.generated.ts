@@ -5924,76 +5924,166 @@ export type Database = {
       }
       events: {
         Row: {
+          accessibility_info: string | null
+          address: string | null
+          age_restriction: string | null
+          banner_image_url: string | null
           category: string | null
           coordinate_source: string | null
           created_at: string
           current_participants: number
           date: string
           description: string | null
+          dress_code: string | null
+          duration_minutes: number | null
           end_date: string | null
           event_date: string | null
+          faq: Json
+          features: Json
+          gallery: Json
           id: string
           image_url: string | null
           is_free: boolean
           latitude: number | null
           location: string | null
           location_id: string | null
+          location_instructions: string | null
+          location_type: string | null
           longitude: number | null
           max_participants: number | null
+          meta_description: string | null
+          meta_keywords: string[] | null
+          meta_title: string | null
+          neighborhood: string | null
+          online_platform: string | null
+          online_url: string | null
+          organizer_contact: Json
           organizer_profile_id: string
           point: unknown
           price: number | null
+          published_at: string | null
+          requirements: string[] | null
+          schedule: Json
+          state: string | null
           status: string
+          subtitle: string | null
+          tags: string[] | null
           title: string
+          timezone: string | null
           updated_at: string
+          venue_name: string | null
+          video_url: string | null
+          waitlist_enabled: boolean
+          what_to_bring: string[] | null
+          zipcode: string | null
         }
         Insert: {
+          accessibility_info?: string | null
+          address?: string | null
+          age_restriction?: string | null
+          banner_image_url?: string | null
           category?: string | null
           coordinate_source?: string | null
           created_at?: string
           current_participants?: number
           date: string
           description?: string | null
+          dress_code?: string | null
+          duration_minutes?: number | null
           end_date?: string | null
           event_date?: string | null
+          faq?: Json
+          features?: Json
+          gallery?: Json
           id?: string
           image_url?: string | null
           is_free?: boolean
           latitude?: number | null
           location?: string | null
           location_id?: string | null
+          location_instructions?: string | null
+          location_type?: string | null
           longitude?: number | null
           max_participants?: number | null
+          meta_description?: string | null
+          meta_keywords?: string[] | null
+          meta_title?: string | null
+          neighborhood?: string | null
+          online_platform?: string | null
+          online_url?: string | null
+          organizer_contact?: Json
           organizer_profile_id: string
           point?: unknown
           price?: number | null
+          published_at?: string | null
+          requirements?: string[] | null
+          schedule?: Json
+          state?: string | null
           status?: string
+          subtitle?: string | null
+          tags?: string[] | null
           title: string
+          timezone?: string | null
           updated_at?: string
+          venue_name?: string | null
+          video_url?: string | null
+          waitlist_enabled?: boolean
+          what_to_bring?: string[] | null
+          zipcode?: string | null
         }
         Update: {
+          accessibility_info?: string | null
+          address?: string | null
+          age_restriction?: string | null
+          banner_image_url?: string | null
           category?: string | null
           coordinate_source?: string | null
           created_at?: string
           current_participants?: number
           date?: string
           description?: string | null
+          dress_code?: string | null
+          duration_minutes?: number | null
           end_date?: string | null
           event_date?: string | null
+          faq?: Json
+          features?: Json
+          gallery?: Json
           id?: string
           image_url?: string | null
           is_free?: boolean
           latitude?: number | null
           location?: string | null
           location_id?: string | null
+          location_instructions?: string | null
+          location_type?: string | null
           longitude?: number | null
           max_participants?: number | null
+          meta_description?: string | null
+          meta_keywords?: string[] | null
+          meta_title?: string | null
+          neighborhood?: string | null
+          online_platform?: string | null
+          online_url?: string | null
+          organizer_contact?: Json
           organizer_profile_id?: string
           point?: unknown
           price?: number | null
+          published_at?: string | null
+          requirements?: string[] | null
+          schedule?: Json
+          state?: string | null
           status?: string
+          subtitle?: string | null
+          tags?: string[] | null
           title?: string
+          timezone?: string | null
           updated_at?: string
+          venue_name?: string | null
+          video_url?: string | null
+          waitlist_enabled?: boolean
+          what_to_bring?: string[] | null
+          zipcode?: string | null
         }
         Relationships: [
           {
