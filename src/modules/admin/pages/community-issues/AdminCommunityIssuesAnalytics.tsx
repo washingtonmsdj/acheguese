@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui
 import {
   ISSUE_CATEGORY_LABELS,
   type IssueCategory,
-} from "@/shared/services/communityIssues";
+} from "@/core/community/issues";
 import type {
   IssueAdminItem,
   IssueResolutionRate,

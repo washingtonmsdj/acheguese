@@ -1,4 +1,4 @@
-import { DriverRidesLayout } from "@/core/mobility/components/driver/DriverRidesLayout";
+import { DriverRidesLayout } from "@/core/mobility/components/driver";
 
 /**
  * CentralMotoristaCorridasPage

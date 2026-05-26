@@ -6,7 +6,7 @@ import {
   ISSUE_CATEGORY_LABELS,
   ISSUE_REPORT_REASON_LABELS,
   type IssueCategory,
-} from "@/shared/services/communityIssues";
+} from "@/core/community/issues";
 import { getPriorityBadge } from "./AdminCommunityIssueBadges";
 import type { IssueAdminItem } from "./AdminCommunityIssues.types";
 

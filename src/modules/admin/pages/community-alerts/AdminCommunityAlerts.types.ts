@@ -1,8 +1,8 @@
 import type {
   AlertCategory,
   AlertStatus,
-} from "@/shared/services/communityAlerts";
-import type { ALERT_REPORT_REASON_LABELS } from "@/shared/services/communityAlerts";
+} from "@/core/community/alerts";
+import type { ALERT_REPORT_REASON_LABELS } from "@/core/community/alerts";
 
 export type AlertAdminItem = {
   id: string;

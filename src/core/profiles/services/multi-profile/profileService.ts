@@ -21,6 +21,7 @@ import { BusinessService } from './businessService';
 import { ProfessionalService } from './professionalService';
 import { DriverService } from './driverService';
 import { ProfileMembersService } from './profileMembersService';
+import { MultiProfileRuntimeService } from './runtimeProfileService';
 import type {
   Profile,
   CreateProfileInput,
@@ -221,14 +222,7 @@ export class MultiProfileService {
         (await SessionService.getCurrentUser())?.id;
       if (!resolvedUserId) return [];
 
-      const { data, error } = await selectLooseRows<Profile>('profiles', {
-        filters: [{ op: 'eq', column: 'user_id', value: resolvedUserId }],
-        orderBy: { column: 'created_at', ascending: true },
-      });
-
-      if (error) throw error;
-
-      return (data || []) as Profile[];
+      return MultiProfileRuntimeService.getMyProfiles(resolvedUserId);
     } catch (error: unknown) {
       logger.error('Error fetching my profiles:', error);
       return [];

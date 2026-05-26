@@ -667,7 +667,6 @@ class MessagingService {
    */
   private async getClassifiedById(id: string): Promise<ClassifiedSummary | null> {
     try {
-      // ✅ SSOT — usa queries diretas
       return await getClassifiedById(id);
     } catch (error) {
       logger.error("Error fetching classified:", error);
@@ -677,7 +676,6 @@ class MessagingService {
 
   private async getClassifiedsByIds(ids: string[]): Promise<ClassifiedSummary[]> {
     try {
-      // SSOT: usa queries diretas.
       const results = await Promise.all(
         ids.map((id) => getClassifiedById(id)),
       );

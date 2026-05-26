@@ -9,7 +9,7 @@ import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { ptBR } from '@/shared/utils/dateLocale';
 import { AlertCircle, DollarSign, ExternalLink, Loader2, MapPin, Package, Phone, Plus, User, Clock } from 'lucide-react';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
@@ -27,8 +27,7 @@ import {
 } from '@/shared/components/ui/alert-dialog';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
-import { CreateDeliveryModal } from '@/shared/services/mobilityDelivery';
-import { useDelivery } from '@/shared/services/mobilityDelivery';
+import { CreateDeliveryModal, useDelivery } from '@/core/mobility/delivery/runtime';
 import { useLocationContext } from '@/core/location/hooks/useLocationContext';
 import { useOrders } from '../hooks/useOrders';
 import { OrderDeliveryLinkService } from '@/core/mobility/delivery/services/OrderDeliveryLinkService';

@@ -1,4 +1,4 @@
-import { DriverProfileLayout } from "@/core/mobility/components/driver/DriverProfileLayout";
+import { DriverProfileLayout } from "@/core/mobility/components/driver";
 
 /**
  * CentralMotoboyCadastroPage

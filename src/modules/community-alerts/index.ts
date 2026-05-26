@@ -1,1 +1,1 @@
-export * from "@/core/community-alerts";
+export * from "@/core/community/alerts";

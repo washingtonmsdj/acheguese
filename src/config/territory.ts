@@ -1,3 +1,5 @@
+import { APP_MODULE_SLUGS, buildAppModulePath } from "@/config/moduleSlugs";
+
 type PublicEnv = Partial<Record<string, string>>;
 
 const publicEnv = ((import.meta as ImportMeta & { env?: PublicEnv }).env ?? {}) as PublicEnv;
@@ -32,12 +34,12 @@ export const TERRITORY_CONFIG = {
 } as const;
 
 export const LAUNCH_URLS = {
-  community: `/comunidade${LAUNCH_COMMUNITY_TERRITORY_PATH}`,
-  business: `/empresas${LAUNCH_CITY_PATH}`,
-  services: `/servicos${LAUNCH_CITY_PATH}`,
-  classifieds: `/classificados${LAUNCH_CITY_PATH}`,
-  gastronomy: `/gastronomia${LAUNCH_CITY_PATH}`,
-  education: `/educacao${LAUNCH_CITY_PATH}`,
-  events: `/eventos${LAUNCH_COMMUNITY_TERRITORY_PATH}`,
-  jobs: `/vagas${LAUNCH_CITY_PATH}`,
+  community: buildAppModulePath(APP_MODULE_SLUGS.community, LAUNCH_COMMUNITY_TERRITORY_PATH),
+  business: buildAppModulePath(APP_MODULE_SLUGS.business, LAUNCH_CITY_PATH),
+  services: buildAppModulePath(APP_MODULE_SLUGS.services, LAUNCH_CITY_PATH),
+  classifieds: buildAppModulePath(APP_MODULE_SLUGS.classifieds, LAUNCH_CITY_PATH),
+  gastronomy: buildAppModulePath(APP_MODULE_SLUGS.gastronomy, LAUNCH_CITY_PATH),
+  education: buildAppModulePath(APP_MODULE_SLUGS.education, LAUNCH_CITY_PATH),
+  events: buildAppModulePath(APP_MODULE_SLUGS.events, LAUNCH_COMMUNITY_TERRITORY_PATH),
+  jobs: buildAppModulePath(APP_MODULE_SLUGS.jobs, LAUNCH_CITY_PATH),
 } as const;

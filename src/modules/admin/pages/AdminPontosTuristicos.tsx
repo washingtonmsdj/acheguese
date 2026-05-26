@@ -7,7 +7,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { TouristPointService } from '@/shared/services/guideTouristPoints';
+import { TouristPointService } from '@/core/guide/tourist-points';
 import {
   CATEGORY_LABELS,
   CATEGORY_ICONS,
@@ -15,7 +15,7 @@ import {
   TouristPointStatus,
   type TouristPoint,
   type CreateTouristPointInput,
-} from '@/shared/services/guideTouristPoints';
+} from '@/core/guide/tourist-points';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Textarea } from '@/shared/components/ui/textarea';

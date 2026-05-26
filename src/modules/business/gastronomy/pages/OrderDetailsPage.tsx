@@ -4,7 +4,7 @@
 
 import { useParams, useNavigate } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { ptBR } from '@/shared/utils/dateLocale';
 import {
   ArrowLeft,
   CheckCircle2,

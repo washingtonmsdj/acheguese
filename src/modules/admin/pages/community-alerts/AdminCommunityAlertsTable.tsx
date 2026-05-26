@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { ptBR } from "@/shared/utils/dateLocale";
 import { CheckCircle, Trash2, XCircle } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
@@ -15,7 +15,7 @@ import {
 import {
   ALERT_CATEGORY_LABELS,
   type AlertCategory,
-} from "@/shared/services/communityAlerts";
+} from "@/core/community/alerts";
 import { getAlertStatusBadge } from "./AdminCommunityAlertBadges";
 import type { AlertAdminItem } from "./AdminCommunityAlerts.types";
 

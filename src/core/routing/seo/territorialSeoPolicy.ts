@@ -14,7 +14,7 @@ export function resolveSeoPolicy(pathname: string): TerritorialSeoPolicy {
     MODULE_SLUGS.services,
     MODULE_SLUGS.classifieds,
     MODULE_SLUGS.gastronomy,
-    "educacao",
+    MODULE_SLUGS.education,
     MODULE_SLUGS.jobs,
     MODULE_SLUGS.events,
     MODULE_SLUGS.map,

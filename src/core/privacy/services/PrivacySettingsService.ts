@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/supabase";
+import { buildSupabaseFunctionUrl } from "@/shared/config/publicSupabase";
 
 export interface UserConsentRecord {
   id: string;
@@ -82,8 +83,8 @@ export class PrivacySettingsService {
     return accessToken;
   }
 
-  static async exportUserData(supabaseUrl: string, accessToken: string): Promise<Blob> {
-    const response = await fetch(`${supabaseUrl}/functions/v1/user-export-data`, {
+  static async exportUserData(accessToken: string): Promise<Blob> {
+    const response = await fetch(buildSupabaseFunctionUrl("user-export-data"), {
       method: "POST",
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -99,11 +100,10 @@ export class PrivacySettingsService {
   }
 
   static async requestAccountDeletion(input: {
-    supabaseUrl: string;
     accessToken: string;
     reason: string;
   }): Promise<{ days_until_purge: number }> {
-    const response = await fetch(`${input.supabaseUrl}/functions/v1/user-delete-account`, {
+    const response = await fetch(buildSupabaseFunctionUrl("user-delete-account"), {
       method: "POST",
       headers: {
         Authorization: `Bearer ${input.accessToken}`,

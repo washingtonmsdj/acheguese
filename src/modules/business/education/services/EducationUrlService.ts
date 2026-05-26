@@ -10,6 +10,7 @@
 import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
 import { MODULES } from '@/config/modules';
 import { TERRITORY_CONFIG } from '@/config/territory';
+import { getVerticalPublicUrl } from '@/core/verticals/publicUrls';
 
 // ============================================================
 // TIPOS
@@ -70,7 +71,7 @@ export const EducationUrlService = {
   async resolvePublicUrl(businessId: string): Promise<string | null> {
     const resolved = await BusinessUrlService.resolveById(businessId);
     if (resolved) {
-      return BusinessUrlService.getCanonicalUrl(resolved);
+      return getVerticalPublicUrl('education', resolved);
     }
 
     return null;

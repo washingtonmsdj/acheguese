@@ -21,7 +21,7 @@ import {
 } from "@/shared/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
 import { Textarea } from "@/shared/components/ui/textarea";
-import type { AlertCategory, AlertStatus } from "@/shared/services/communityAlerts";
+import type { AlertCategory, AlertStatus } from "@/core/community/alerts";
 import { AdminCommunityAlertsAnalytics } from "./community-alerts/AdminCommunityAlertsAnalytics";
 import { AdminCommunityAlertsBlockedTerms } from "./community-alerts/AdminCommunityAlertsBlockedTerms";
 import { AdminCommunityAlertsFilters } from "./community-alerts/AdminCommunityAlertsFilters";

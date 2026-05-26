@@ -7,32 +7,7 @@
  * @version 1.0.0
  */
 
-import { Routes, Route, Navigate, Outlet } from "react-router-dom";
-
-// Territorial Components (eager - critical for routing)
-import { TerritorialLayout } from "@/core/routing/components/TerritorialLayout";
-import { CommunityTerritorialShell } from "@/core/routing/components/CommunityTerritorialShell";
-import { CommunityInterestPage } from "@/core/routing/components/CommunityInterestPage";
-import { TerritorialIndexPage } from "@/core/routing/components/TerritorialIndexPage";
-import { StateLandingPage } from "@/core/routing/components/StateLandingPage";
-import { CountryLandingPage } from "@/core/routing/components/CountryLandingPage";
-import { BrasilShowcasePage } from "@/core/routing/components/BrasilShowcasePage";
-import {
-  TerritorialCommunityPage,
-  TerritorialCommunityEntryPage,
-  TerritorialCommunityIssuesPage,
-  TerritorialCommunityCommunicationPage,
-  TerritorialBusinessPage,
-  TerritorialServicesPage,
-  TerritorialClassificadosPage,
-  TerritorialEventosPage,
-  TerritorialGastronomyPage,
-  TerritorialEducationPage,
-  TerritorialMobilidadePage,
-  TerritorialVagasPage,
-  TerritorialCategoryBusinessPage,
-  TerritorialMapPage,
-} from "@/core/routing/components/TerritorialModulePages";
+import { Routes, Route } from "react-router-dom";
 
 // Lazy imports organizados por dominio
 import * as P from "./lazyImports";
@@ -245,38 +220,38 @@ export function AppRoutes() {
         <Route path="/pontos-turisticos/:id" element={<P.GuideTouristPointDetailPage />} />
 
         {/* Detalhe com distrito (4 segmentos): /pontos-turisticos/:state/:city/:district/:slug */}
-        <Route path="/pontos-turisticos/:state/:city/:groupSlugOrDistrict/:slug" element={<TerritorialLayout />}>
+        <Route path="/pontos-turisticos/:state/:city/:groupSlugOrDistrict/:slug" element={<P.TerritorialLayout />}>
           <Route index element={<P.GuideTouristPointDetailPage />} />
         </Route>
 
         {/* Rota ambigua (3 segmentos): pode ser listagem com district OU detalhe com slug */}
-        <Route path="/pontos-turisticos/:state/:city/:district" element={<TerritorialLayout />}>
+        <Route path="/pontos-turisticos/:state/:city/:district" element={<P.TerritorialLayout />}>
           <Route index element={<P.TouristPointRouteResolver />} />
         </Route>
 
         {/* Listagem cidade (2 segmentos): /pontos-turisticos/:state/:city */}
-        <Route path="/pontos-turisticos/:state/:city" element={<TerritorialLayout />}>
+        <Route path="/pontos-turisticos/:state/:city" element={<P.TerritorialLayout />}>
           <Route index element={<P.GuideTouristPointsPage />} />
         </Route>
 
         {/* Rotas territoriais genericas - DEVEM VIR DEPOIS DAS ESPECIFICAS */}
 
         {/* Landing territorial generico */}
-        <Route path="/:state/:city/:district" element={<TerritorialLayout />}>
+        <Route path="/:state/:city/:district" element={<P.TerritorialLayout />}>
           <Route
             index
             element={
-              <TerritorialIndexPage
+              <P.TerritorialIndexPage
                 CityLandingComponent={P.CidadeLandingPage}
               />
             }
           />
         </Route>
-        <Route path="/:state/:city" element={<TerritorialLayout />}>
+        <Route path="/:state/:city" element={<P.TerritorialLayout />}>
           <Route
             index
             element={
-              <TerritorialIndexPage
+              <P.TerritorialIndexPage
                 CityLandingComponent={P.CidadeLandingPage}
               />
             }
@@ -284,11 +259,11 @@ export function AppRoutes() {
         </Route>
 
         {/* Landing de estado - lista cidades ativas */}
-        <Route path="/:state" element={<StateLandingPage />} />
+        <Route path="/:state" element={<P.StateLandingPage />} />
 
         {/* Landing de pais - lista estados ativos */}
-        <Route path="/brasil" element={<BrasilShowcasePage />} />
-        <Route path="/br" element={<CountryLandingPage />} />
+        <Route path="/brasil" element={<P.BrasilShowcasePage />} />
+        <Route path="/br" element={<P.CountryLandingPage />} />
 
         {/* Modulo empresas - estrutura hierarquica clara */}
         {/* 5 segmentos = empresa especifica: /empresas/:uf/:cidade/:bairro/:slug */}
@@ -298,31 +273,31 @@ export function AppRoutes() {
         />
 
         {/* Categoria: /empresas/:uf/:cidade/categoria/:category */}
-        <Route path="/empresas/:state/:city/categoria/:category" element={<TerritorialLayout />}>
-          <Route index element={<TerritorialCategoryBusinessPage />} />
+        <Route path="/empresas/:state/:city/categoria/:category" element={<P.TerritorialLayout />}>
+          <Route index element={<P.TerritorialCategoryBusinessPage />} />
         </Route>
 
         {/* Categoria no bairro: /empresas/:uf/:cidade/:bairro/categoria/:category */}
-        <Route path="/empresas/:state/:city/:district/categoria/:category" element={<TerritorialLayout />}>
-          <Route index element={<TerritorialCategoryBusinessPage />} />
+        <Route path="/empresas/:state/:city/:district/categoria/:category" element={<P.TerritorialLayout />}>
+          <Route index element={<P.TerritorialCategoryBusinessPage />} />
         </Route>
 
         {/* 4 segmentos = hub do bairro: /empresas/:uf/:cidade/:bairro */}
-        <Route path="/empresas/:state/:city/:district" element={<TerritorialLayout />}>
+        <Route path="/empresas/:state/:city/:district" element={<P.TerritorialLayout />}>
           <Route index element={<P.EmpresasLandingPage />} />
         </Route>
 
         {/* 3 segmentos = hub da cidade: /empresas/:uf/:cidade */}
-        <Route path="/empresas/:state/:city" element={<TerritorialLayout />}>
+        <Route path="/empresas/:state/:city" element={<P.TerritorialLayout />}>
           <Route index element={<P.EmpresasLandingPage />} />
         </Route>
 
         {/* Rotas de servicos */}
-        <Route path="/servicos/:state/:city/:district" element={<TerritorialLayout />}>
-          <Route index element={<TerritorialServicesPage />} />
+        <Route path="/servicos/:state/:city/:district" element={<P.TerritorialLayout />}>
+          <Route index element={<P.TerritorialServicesPage />} />
         </Route>
-        <Route path="/servicos/:state/:city" element={<TerritorialLayout />}>
-          <Route index element={<TerritorialServicesPage />} />
+        <Route path="/servicos/:state/:city" element={<P.TerritorialLayout />}>
+          <Route index element={<P.TerritorialServicesPage />} />
         </Route>
 
         {/* Rotas de classificados */}
@@ -330,62 +305,62 @@ export function AppRoutes() {
         <Route path="/classificados/:uf/:cidade/:bairro/:categoria/:subcategoria/:slug/:publicId" element={<P.ClassifiedCanonicalRoute />} />
 
         {/* 5 segmentos = hub categoria no bairro: /classificados/:uf/:cidade/:bairro/:categoria/:subcategoria */}
-        <Route path="/classificados/:state/:city/:district/:category/:subcategory" element={<TerritorialLayout />}>
-          <Route index element={<TerritorialClassificadosPage />} />
+        <Route path="/classificados/:state/:city/:district/:category/:subcategory" element={<P.TerritorialLayout />}>
+          <Route index element={<P.TerritorialClassificadosPage />} />
         </Route>
 
         {/* 4 segmentos = hub categoria no bairro: /classificados/:uf/:cidade/:bairro/:categoria */}
-        <Route path="/classificados/:state/:city/:district/:category" element={<TerritorialLayout />}>
-          <Route index element={<TerritorialClassificadosPage />} />
+        <Route path="/classificados/:state/:city/:district/:category" element={<P.TerritorialLayout />}>
+          <Route index element={<P.TerritorialClassificadosPage />} />
         </Route>
 
         {/* 3 segmentos = hub do bairro: /classificados/:uf/:cidade/:bairro */}
-        <Route path="/classificados/:state/:city/:district" element={<TerritorialLayout />}>
-          <Route index element={<TerritorialClassificadosPage />} />
+        <Route path="/classificados/:state/:city/:district" element={<P.TerritorialLayout />}>
+          <Route index element={<P.TerritorialClassificadosPage />} />
         </Route>
 
         {/* 2 segmentos = hub da cidade: /classificados/:uf/:cidade */}
-        <Route path="/classificados/:state/:city" element={<TerritorialLayout />}>
-          <Route index element={<TerritorialClassificadosPage />} />
+        <Route path="/classificados/:state/:city" element={<P.TerritorialLayout />}>
+          <Route index element={<P.TerritorialClassificadosPage />} />
         </Route>
 
         {/* Rotas de eventos */}
-        <Route path="/eventos/:state/:city/:district" element={<TerritorialLayout />}>
-          <Route index element={<TerritorialEventosPage />} />
+        <Route path="/eventos/:state/:city/:district" element={<P.TerritorialLayout />}>
+          <Route index element={<P.TerritorialEventosPage />} />
         </Route>
-        <Route path="/eventos/:state/:city" element={<TerritorialLayout />}>
-          <Route index element={<TerritorialEventosPage />} />
+        <Route path="/eventos/:state/:city" element={<P.TerritorialLayout />}>
+          <Route index element={<P.TerritorialEventosPage />} />
         </Route>
 
         {/* Rotas do mapa - mesmo padrao territorial */}
-        <Route path="/mapa/:state/:city/:district" element={<TerritorialLayout />}>
-          <Route index element={<TerritorialMapPage />} />
+        <Route path="/mapa/:state/:city/:district" element={<P.TerritorialLayout />}>
+          <Route index element={<P.TerritorialMapPage />} />
         </Route>
-        <Route path="/mapa/:state/:city" element={<TerritorialLayout />}>
-          <Route index element={<TerritorialMapPage />} />
+        <Route path="/mapa/:state/:city" element={<P.TerritorialLayout />}>
+          <Route index element={<P.TerritorialMapPage />} />
         </Route>
 
         {/* Rotas de gastronomia */}
         <Route path="/gastronomia" element={<P.GastronomyLandingPage />} />
         {/* Detalhe premium: /gastronomia-premium/:uf/:cidade/:bairro/:slug */}
-        <Route path="/gastronomia-premium/:state/:city/:district/:slug" element={<TerritorialLayout />}>
+        <Route path="/gastronomia-premium/:state/:city/:district/:slug" element={<P.TerritorialLayout />}>
           <Route index element={<P.GastronomyPremiumDetailPage />} />
           <Route path="checkout" element={<P.GastronomyCheckoutPage />} />
         </Route>
 
         {/* Detalhe: /gastronomia/:uf/:cidade/:bairro/:slug */}
-        <Route path="/gastronomia/:state/:city/:district/:slug" element={<TerritorialLayout />}>
+        <Route path="/gastronomia/:state/:city/:district/:slug" element={<P.TerritorialLayout />}>
           <Route index element={<P.GastronomyDetailPage />} />
           <Route path="checkout" element={<P.GastronomyCheckoutPage />} />
         </Route>
 
         {/* Listagem bairro: /gastronomia/:uf/:cidade/:bairro */}
-        <Route path="/gastronomia/:state/:city/:district" element={<TerritorialLayout />}>
+        <Route path="/gastronomia/:state/:city/:district" element={<P.TerritorialLayout />}>
           <Route index element={<P.GastronomyLandingPage />} />
         </Route>
 
         {/* Listagem cidade: /gastronomia/:uf/:cidade */}
-        <Route path="/gastronomia/:state/:city" element={<TerritorialLayout />}>
+        <Route path="/gastronomia/:state/:city" element={<P.TerritorialLayout />}>
           <Route index element={<P.GastronomyLandingPage />} />
         </Route>
 
@@ -395,70 +370,70 @@ export function AppRoutes() {
 
         {/* Rotas de Education - publicas territoriais (vitrine premium consolidada) */}
         {/* Detalhe: /educacao/:uf/:cidade/:bairro/:slug */}
-        <Route path="/educacao/:state/:city/:district/:slug" element={<TerritorialLayout />}>
+        <Route path="/educacao/:state/:city/:district/:slug" element={<P.TerritorialLayout />}>
           <Route index element={<P.EducationDetailPage />} />
         </Route>
 
         {/* Listagem bairro: /educacao/:uf/:cidade/:bairro */}
-        <Route path="/educacao/:state/:city/:district" element={<TerritorialLayout />}>
+        <Route path="/educacao/:state/:city/:district" element={<P.TerritorialLayout />}>
           <Route index element={<P.EducationExplorerPage />} />
         </Route>
 
         {/* Listagem cidade: /educacao/:uf/:cidade */}
-        <Route path="/educacao/:state/:city" element={<TerritorialLayout />}>
+        <Route path="/educacao/:state/:city" element={<P.TerritorialLayout />}>
           <Route index element={<P.EducationExplorerPage />} />
         </Route>
 
         {/* Rotas de comunidade */}
-        <Route path="/comunidade/:state/:city/:territorySlug/interesse" element={<CommunityInterestPage />} />
-        <Route path="/comunidade/:state/:city/:territorySlug/problemas" element={<CommunityTerritorialShell />}>
-          <Route index element={<TerritorialCommunityIssuesPage />} />
+        <Route path="/comunidade/:state/:city/:territorySlug/interesse" element={<P.CommunityInterestPage />} />
+        <Route path="/comunidade/:state/:city/:territorySlug/problemas" element={<P.CommunityTerritorialShell />}>
+          <Route index element={<P.TerritorialCommunityIssuesPage />} />
         </Route>
-        <Route path="/comunidade/:state/:city/:territorySlug/comunicacao" element={<CommunityTerritorialShell />}>
-          <Route index element={<TerritorialCommunityCommunicationPage />} />
+        <Route path="/comunidade/:state/:city/:territorySlug/comunicacao" element={<P.CommunityTerritorialShell />}>
+          <Route index element={<P.TerritorialCommunityCommunicationPage />} />
         </Route>
-        <Route path="/comunidade/:state/:city/:territorySlug/empresas" element={<CommunityTerritorialShell />}>
-          <Route index element={<TerritorialBusinessPage />} />
+        <Route path="/comunidade/:state/:city/:territorySlug/empresas" element={<P.CommunityTerritorialShell />}>
+          <Route index element={<P.TerritorialBusinessPage />} />
         </Route>
-        <Route path="/comunidade/:state/:city/:territorySlug/servicos" element={<CommunityTerritorialShell />}>
-          <Route index element={<TerritorialServicesPage />} />
+        <Route path="/comunidade/:state/:city/:territorySlug/servicos" element={<P.CommunityTerritorialShell />}>
+          <Route index element={<P.TerritorialServicesPage />} />
         </Route>
-        <Route path="/comunidade/:state/:city/:territorySlug/classificados" element={<CommunityTerritorialShell />}>
-          <Route index element={<TerritorialClassificadosPage />} />
+        <Route path="/comunidade/:state/:city/:territorySlug/classificados" element={<P.CommunityTerritorialShell />}>
+          <Route index element={<P.TerritorialClassificadosPage />} />
         </Route>
-        <Route path="/comunidade/:state/:city/:territorySlug/gastronomia" element={<CommunityTerritorialShell />}>
-          <Route index element={<TerritorialGastronomyPage />} />
+        <Route path="/comunidade/:state/:city/:territorySlug/gastronomia" element={<P.CommunityTerritorialShell />}>
+          <Route index element={<P.TerritorialGastronomyPage />} />
         </Route>
-        <Route path="/comunidade/:state/:city/:territorySlug/educacao" element={<CommunityTerritorialShell />}>
-          <Route index element={<TerritorialEducationPage />} />
+        <Route path="/comunidade/:state/:city/:territorySlug/educacao" element={<P.CommunityTerritorialShell />}>
+          <Route index element={<P.TerritorialEducationPage />} />
         </Route>
-        <Route path="/comunidade/:state/:city/:territorySlug/vagas" element={<CommunityTerritorialShell />}>
-          <Route index element={<TerritorialVagasPage />} />
+        <Route path="/comunidade/:state/:city/:territorySlug/vagas" element={<P.CommunityTerritorialShell />}>
+          <Route index element={<P.TerritorialVagasPage />} />
         </Route>
         <Route path="/comunidade/:state/:city/:territorySlug/vagas/publicar" element={<P.PublicarVagaPage />} />
-        <Route path="/comunidade/:state/:city/:territorySlug/eventos" element={<CommunityTerritorialShell />}>
-          <Route index element={<TerritorialEventosPage />} />
+        <Route path="/comunidade/:state/:city/:territorySlug/eventos" element={<P.CommunityTerritorialShell />}>
+          <Route index element={<P.TerritorialEventosPage />} />
         </Route>
-        <Route path="/comunidade/:state/:city/:territorySlug/mapa" element={<CommunityTerritorialShell />}>
-          <Route index element={<TerritorialMapPage />} />
+        <Route path="/comunidade/:state/:city/:territorySlug/mapa" element={<P.CommunityTerritorialShell />}>
+          <Route index element={<P.TerritorialMapPage />} />
         </Route>
-        <Route path="/comunidade/:state/:city/:territorySlug/mobilidade" element={<CommunityTerritorialShell />}>
-          <Route index element={<TerritorialMobilidadePage />} />
+        <Route path="/comunidade/:state/:city/:territorySlug/mobilidade" element={<P.CommunityTerritorialShell />}>
+          <Route index element={<P.TerritorialMobilidadePage />} />
         </Route>
-        <Route path="/comunidade/:state/:city/:territorySlug/feed" element={<CommunityTerritorialShell />}>
-          <Route index element={<TerritorialCommunityPage />} />
+        <Route path="/comunidade/:state/:city/:territorySlug/feed" element={<P.CommunityTerritorialShell />}>
+          <Route index element={<P.TerritorialCommunityPage />} />
         </Route>
-        <Route path="/comunidade/:state/:city/:territorySlug/grupos" element={<CommunityTerritorialShell />}>
-          <Route index element={<TerritorialCommunityPage />} />
+        <Route path="/comunidade/:state/:city/:territorySlug/grupos" element={<P.CommunityTerritorialShell />}>
+          <Route index element={<P.TerritorialCommunityPage />} />
         </Route>
-        <Route path="/comunidade/:state/:city/:territorySlug/grupos/:id" element={<CommunityTerritorialShell />}>
+        <Route path="/comunidade/:state/:city/:territorySlug/grupos/:id" element={<P.CommunityTerritorialShell />}>
           <Route index element={<P.GrupoDetailPage />} />
         </Route>
-        <Route path="/comunidade/:state/:city/:territorySlug/achados-e-perdidos" element={<CommunityTerritorialShell />}>
+        <Route path="/comunidade/:state/:city/:territorySlug/achados-e-perdidos" element={<P.CommunityTerritorialShell />}>
           <Route index element={<P.AchadosPerdidosPage />} />
         </Route>
-        <Route path="/comunidade/:state/:city/:territorySlug" element={<CommunityTerritorialShell />}>
-          <Route index element={<TerritorialCommunityEntryPage />} />
+        <Route path="/comunidade/:state/:city/:territorySlug" element={<P.CommunityTerritorialShell />}>
+          <Route index element={<P.TerritorialCommunityEntryPage />} />
         </Route>
 
         {/* Rotas de vagas */}
@@ -468,13 +443,13 @@ export function AppRoutes() {
         <Route path="/vagas/:state/:city/:slug" element={<P.VagaDetailPublicPage />} />
 
         {/* Listagem territorial: /vagas/:uf/:cidade/:bairro */}
-        <Route path="/vagas/:state/:city/:district" element={<TerritorialLayout />}>
-          <Route index element={<TerritorialVagasPage />} />
+        <Route path="/vagas/:state/:city/:district" element={<P.TerritorialLayout />}>
+          <Route index element={<P.TerritorialVagasPage />} />
         </Route>
 
         {/* Listagem territorial cidade: /vagas/:uf/:cidade */}
-        <Route path="/vagas/:state/:city" element={<TerritorialLayout />}>
-          <Route index element={<TerritorialVagasPage />} />
+        <Route path="/vagas/:state/:city" element={<P.TerritorialLayout />}>
+          <Route index element={<P.TerritorialVagasPage />} />
         </Route>
 
       </Route>

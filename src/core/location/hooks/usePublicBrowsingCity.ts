@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
+import { APP_MODULE_SLUGS } from "@/config/moduleSlugs";
 import { TERRITORY_CONFIG } from "@/config/territory";
 import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
 
@@ -17,17 +18,18 @@ interface StoredBrowsingCity {
 }
 
 const PUBLIC_MODULE_PREFIXES = new Set([
-  "empresas",
-  "servicos",
-  "gastronomia",
-  "eventos",
-  "classificados",
-  "vagas",
+  APP_MODULE_SLUGS.business,
+  APP_MODULE_SLUGS.services,
+  APP_MODULE_SLUGS.gastronomy,
+  APP_MODULE_SLUGS.events,
+  APP_MODULE_SLUGS.classifieds,
+  APP_MODULE_SLUGS.jobs,
+  APP_MODULE_SLUGS.search,
   "buscar",
-  "mapa",
-  "pontos-turisticos",
-  "educacao",
-  "comunidade",
+  APP_MODULE_SLUGS.map,
+  APP_MODULE_SLUGS.touristPoints,
+  APP_MODULE_SLUGS.education,
+  APP_MODULE_SLUGS.community,
 ]);
 
 function normalizeSlug(value: string): string {

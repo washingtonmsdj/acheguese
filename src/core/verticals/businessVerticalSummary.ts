@@ -12,7 +12,7 @@ export interface BusinessVerticalSummary {
   readonly verticalPublicUrls: Partial<Record<VerticalKey, string>>;
 }
 
-const PRIMARY_VERTICAL_ORDER: readonly VerticalKey[] = ['gastronomy'];
+const PRIMARY_VERTICAL_ORDER: readonly VerticalKey[] = ['gastronomy', 'education'];
 
 export function buildBusinessVerticalSummary(
   ctx: BusinessVerticalRouteContext | null,

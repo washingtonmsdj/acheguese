@@ -14,7 +14,7 @@ describe("gastronomy operational SSOT flow", () => {
   it("keeps customer order details reachable outside merchant Central", () => {
     const routesSource = readProjectFile("src/app/routes/AppRoutes.tsx");
     const notificationSource = readProjectFile(
-      "src/modules/mobility/delivery/services/OrderDeliveryNotificationService.ts",
+      "src/core/mobility/delivery/services/OrderDeliveryNotificationService.ts",
     );
 
     expect(routesSource).toContain('path="/gastronomia/pedidos/:orderId"');
@@ -106,7 +106,7 @@ describe("gastronomy operational SSOT flow", () => {
 
   it("enforces transactional notification category across delivery and trust flows", () => {
     const deliveryNotificationSource = readProjectFile(
-      "src/modules/mobility/delivery/services/OrderDeliveryNotificationService.ts",
+      "src/core/mobility/delivery/services/OrderDeliveryNotificationService.ts",
     );
     const notificationServiceSource = readProjectFile(
       "src/core/notifications/services/NotificationService.ts",

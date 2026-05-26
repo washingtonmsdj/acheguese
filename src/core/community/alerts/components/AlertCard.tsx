@@ -5,7 +5,7 @@
 
 import { useState } from "react";
 import { formatDistanceToNow, differenceInMinutes } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { ptBR } from "@/shared/utils/dateLocale";
 import { AlertTriangle, Clock, Eye, ThumbsDown, Flag, Info } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";

@@ -18,7 +18,7 @@ import {
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { ErrorBoundary, ErrorState } from "../components/ErrorBoundary";
-import { useMotoboyPage } from "@/core/mobility/hooks/useMotoboyPage";
+import { useMotoboyPage } from "@/modules/mobility/hooks/useMotoboyPage";
 import { useMobilityUrls } from "@/modules/mobility/hooks/useMobilityUrls";
 import { useUnifiedNotifications } from '@/core/notifications/useUnifiedNotifications';
 import { DriverSuspensionAlert } from "../components/driver/DriverSuspensionAlert";

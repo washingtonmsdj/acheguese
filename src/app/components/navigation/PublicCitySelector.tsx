@@ -8,35 +8,42 @@ import {
   PopoverTrigger,
 } from "@/shared/components/ui/popover";
 import { Input } from "@/shared/components/ui/input";
+import { APP_MODULE_SLUGS, buildAppModulePath, type AppModuleSlug } from "@/config/moduleSlugs";
 import { useLocations } from "@/core/location/hooks/useLocations";
 import { usePublicBrowsingCity } from "@/core/location/hooks/usePublicBrowsingCity";
 import { useCityMetadataList } from "@/core/city/hooks/useCityMetadataList";
 import { resolveFallbackCityStatus, type CityStatus } from "@/core/city/services/CityService";
 
 function buildModulePath(module: string, state: string, city: string): string {
-  return `/${module}/${state}/${city}`;
+  const territoryPath = `/${state}/${city}`;
+  return module === "buscar"
+    ? `/buscar${territoryPath}`
+    : buildAppModulePath(module as AppModuleSlug, territoryPath);
 }
+
+const PUBLIC_CITY_MODULES = [
+  APP_MODULE_SLUGS.business,
+  APP_MODULE_SLUGS.services,
+  APP_MODULE_SLUGS.gastronomy,
+  APP_MODULE_SLUGS.events,
+  APP_MODULE_SLUGS.classifieds,
+  APP_MODULE_SLUGS.jobs,
+  APP_MODULE_SLUGS.search,
+  "buscar",
+  APP_MODULE_SLUGS.map,
+  APP_MODULE_SLUGS.education,
+  APP_MODULE_SLUGS.touristPoints,
+  APP_MODULE_SLUGS.community,
+] as const;
+
+const PUBLIC_CITY_MODULE_SET = new Set<string>(PUBLIC_CITY_MODULES);
 
 function buildPathForCurrentContext(pathname: string, state: string, city: string): string {
   const parts = pathname.split("/").filter(Boolean);
   if (parts.length === 0) return `/${state}/${city}`;
 
   const module = parts[0];
-  const moduleSet = new Set([
-    "empresas",
-    "servicos",
-    "gastronomia",
-    "eventos",
-    "classificados",
-    "vagas",
-    "buscar",
-    "mapa",
-    "educacao",
-    "pontos-turisticos",
-    "comunidade",
-  ]);
-
-  if (moduleSet.has(module)) {
+  if (PUBLIC_CITY_MODULE_SET.has(module)) {
     return buildModulePath(module, state, city);
   }
 

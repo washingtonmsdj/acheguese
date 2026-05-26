@@ -1,1 +1,1 @@
-export { default } from "@/core/community-feed/pages/NovoPostPage";
+export { default } from "@/core/community/pages/NovoPostPage";

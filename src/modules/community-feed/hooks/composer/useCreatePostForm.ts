@@ -1,1 +1,1 @@
-export { useCreatePostForm } from "@/core/community-feed/hooks/composer/useCreatePostForm";
+export { useCreatePostForm } from "@/core/community/hooks/composer/useCreatePostForm";

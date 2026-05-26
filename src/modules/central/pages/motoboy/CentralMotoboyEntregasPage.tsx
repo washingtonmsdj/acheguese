@@ -1,4 +1,4 @@
-import { DriverDeliveriesLayout } from "@/core/mobility/components/driver/DriverDeliveriesLayout";
+import { DriverDeliveriesLayout } from "@/core/mobility/components/driver";
 
 /**
  * CentralMotoboyEntregasPage

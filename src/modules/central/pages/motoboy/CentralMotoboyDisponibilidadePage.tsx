@@ -1,4 +1,4 @@
-import { DriverAvailabilityLayout } from "@/core/mobility/components/driver/DriverAvailabilityLayout";
+import { DriverAvailabilityLayout } from "@/core/mobility/components/driver";
 
 /**
  * CentralMotoboyDisponibilidadePage

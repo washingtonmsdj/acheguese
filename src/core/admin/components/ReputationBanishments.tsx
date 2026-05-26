@@ -15,7 +15,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Ban, Shield, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { ptBR } from "@/shared/utils/dateLocale";
 import { logger } from "@/shared/utils/logger";
 import { adminMobilityService } from "@/core/admin"; // ✅ MIGRADO - Usa AdminMobilityService do core
 import { profileService } from "@/core/profiles/services";

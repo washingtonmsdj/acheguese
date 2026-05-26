@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { MapPin, MessageCircle, Package, Phone, Shield } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
-import { CLASSIFIED_STATUS, type ClassifiedStatusValue } from "@/modules/classifieds/constants/statuses";
+import { CLASSIFIED_STATUS, type ClassifiedStatusValue } from "@/core/classifieds/constants/statuses";
 import { cn } from "@/shared/utils/cn";
 import { getClassifiedStatusLabel } from "./ClassificadoDetailStatus";
 

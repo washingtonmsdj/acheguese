@@ -17,7 +17,7 @@ import { useNavigate } from "react-router-dom";
 import { CircleAlert, RefreshCw, Users } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 
-import { useProfileHub } from "@/core/profile/hooks/useProfileHub";
+import { useProfileHub } from "@/modules/profile/hooks/useProfileHub";
 import { ContaHubLayout } from "./ContaHubLayout";
 
 import {

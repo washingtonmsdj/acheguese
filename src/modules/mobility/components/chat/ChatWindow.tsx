@@ -15,7 +15,7 @@ import { cn } from "@/shared/utils/cn";
 import { RIDE_STATUS } from "@/shared/types/constants";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { ptBR } from "@/shared/utils/dateLocale";
 
 interface ChatWindowProps {
   conversationId: string;

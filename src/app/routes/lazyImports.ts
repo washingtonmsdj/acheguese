@@ -13,6 +13,61 @@ export const AppLayoutSidebar = lazy(() =>
 );
 
 // ============================================================
+// ROTEAMENTO TERRITORIAL
+// ============================================================
+export const TerritorialLayout = lazy(() =>
+  import("@/core/routing/components/TerritorialLayout").then((m) => ({ default: m.TerritorialLayout }))
+);
+export const CommunityTerritorialShell = lazy(() =>
+  import("@/core/routing/components/CommunityTerritorialShell").then((m) => ({ default: m.CommunityTerritorialShell }))
+);
+export const TerritorialIndexPage = lazy(() =>
+  import("@/core/routing/components/TerritorialIndexPage").then((m) => ({ default: m.TerritorialIndexPage }))
+);
+export const TerritorialCommunityPage = lazy(() =>
+  import("@/core/routing/components/TerritorialModulePages").then((m) => ({ default: m.TerritorialCommunityPage }))
+);
+export const TerritorialCommunityEntryPage = lazy(() =>
+  import("@/core/routing/components/TerritorialModulePages").then((m) => ({ default: m.TerritorialCommunityEntryPage }))
+);
+export const TerritorialCommunityIssuesPage = lazy(() =>
+  import("@/core/routing/components/TerritorialModulePages").then((m) => ({ default: m.TerritorialCommunityIssuesPage }))
+);
+export const TerritorialCommunityCommunicationPage = lazy(() =>
+  import("@/core/routing/components/TerritorialModulePages").then((m) => ({ default: m.TerritorialCommunityCommunicationPage }))
+);
+export const TerritorialBusinessPage = lazy(() =>
+  import("@/core/routing/components/TerritorialModulePages").then((m) => ({ default: m.TerritorialBusinessPage }))
+);
+export const TerritorialServicesPage = lazy(() =>
+  import("@/core/routing/components/TerritorialModulePages").then((m) => ({ default: m.TerritorialServicesPage }))
+);
+export const TerritorialClassificadosPage = lazy(() =>
+  import("@/core/routing/components/TerritorialModulePages").then((m) => ({ default: m.TerritorialClassificadosPage }))
+);
+export const TerritorialEventosPage = lazy(() =>
+  import("@/core/routing/components/TerritorialModulePages").then((m) => ({ default: m.TerritorialEventosPage }))
+);
+export const TerritorialGastronomyPage = lazy(() =>
+  import("@/core/routing/components/TerritorialModulePages").then((m) => ({ default: m.TerritorialGastronomyPage }))
+);
+export const TerritorialEducationPage = lazy(() =>
+  import("@/core/routing/components/TerritorialModulePages").then((m) => ({ default: m.TerritorialEducationPage }))
+);
+export const TerritorialMobilidadePage = lazy(() =>
+  import("@/core/routing/components/TerritorialModulePages").then((m) => ({ default: m.TerritorialMobilidadePage }))
+);
+export const TerritorialVagasPage = lazy(() =>
+  import("@/core/routing/components/TerritorialModulePages").then((m) => ({ default: m.TerritorialVagasPage }))
+);
+export const TerritorialCategoryBusinessPage = lazy(() =>
+  import("@/core/routing/components/TerritorialModulePages").then((m) => ({ default: m.TerritorialCategoryBusinessPage }))
+);
+export const TerritorialMapPage = lazy(() =>
+  import("@/core/routing/components/TerritorialModulePages").then((m) => ({ default: m.TerritorialMapPage }))
+);
+
+// ============================================================
 // PAGINAS PUBLICAS (Landing Pages)
 // ============================================================
 export const MainLandingPage = lazy(() => import("@/app/pages/MainLandingPage"));
@@ -28,6 +83,18 @@ export const NearbyPage = lazy(() => import("@/app/pages/NearbyPage"));
 export const NotFound = lazy(() => import("@/app/pages/NotFound"));
 export const StatusPage = lazy(() => import("@/app/pages/StatusPage"));
 export const VirtualTryOnPage = lazy(() => import("@/app/pages/VirtualTryOnPage"));
+export const CommunityInterestPage = lazy(() =>
+  import("@/core/routing/components/CommunityInterestPage").then((m) => ({ default: m.CommunityInterestPage }))
+);
+export const StateLandingPage = lazy(() =>
+  import("@/core/routing/components/StateLandingPage").then((m) => ({ default: m.StateLandingPage }))
+);
+export const CountryLandingPage = lazy(() =>
+  import("@/core/routing/components/CountryLandingPage").then((m) => ({ default: m.CountryLandingPage }))
+);
+export const BrasilShowcasePage = lazy(() =>
+  import("@/core/routing/components/BrasilShowcasePage").then((m) => ({ default: m.BrasilShowcasePage }))
+);
 
 // ============================================================
 // AUTENTICACAO E ONBOARDING
@@ -285,7 +352,7 @@ export const AdminClassificadosDenuncias = lazy(() => import("@/modules/admin/pa
 export const AdminVagas = lazy(() => import("@/modules/admin/pages/AdminVagas"));
 export const AdminEventos = lazy(() => import("@/modules/admin/pages/AdminEventos"));
 export const AdminUsuarios = lazy(() => import("@/modules/admin/pages/AdminUsuarios"));
-export const AdminMotoristas = lazy(() => import("@/modules/admin/pages/AdminMotoristas"));
+export const AdminMotoristas = lazy(() => import("@/core/admin/drivers/pages/AdminMotoristasPage"));
 export const AdminReportsPassageiros = lazy(() => import("@/modules/admin/pages/AdminReportsPassageiros"));
 export const AdminPontosEmbarque = lazy(() => import("@/modules/admin/pages/AdminPontosEmbarque"));
 export const AdminVerificacoes = lazy(() => import("@/core/verification/pages/AdminVerificationsPage"));
@@ -308,7 +375,7 @@ export const AdminNotifications = lazy(() => import("@/modules/admin/pages/Admin
 export const AdminCommunityAlerts = lazy(() => import("@/modules/admin/pages/AdminCommunityAlerts"));
 export const AdminCommunityIssues = lazy(() => import("@/modules/admin/pages/AdminCommunityIssues"));
 export const AdminComunicacao = lazy(() => import("@/modules/admin/pages/AdminComunicacao"));
-export const AdminIdentidade = lazy(() => import("@/modules/admin/pages/AdminIdentidade"));
+export const AdminIdentidade = lazy(() => import("@/core/admin/identity/pages/AdminIdentidadePage"));
 export const AdminMapa = lazy(() => import("@/modules/admin/pages/AdminMapa"));
 export const AdminConfiguracoes = lazy(() => import("@/modules/admin/pages/AdminConfiguracoes"));
 export const AdminOperacoes = lazy(() => import("@/modules/admin/pages/AdminOperacoes"));

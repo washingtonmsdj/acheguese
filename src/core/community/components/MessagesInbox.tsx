@@ -22,7 +22,7 @@ import {
 import { MessageCircle, Search, Filter, Clock, Shield } from "lucide-react";
 import { Input } from "@/shared/components/ui/input";
 import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { ptBR } from "@/shared/utils/dateLocale";
 import { useDirectMessages } from "../hooks/useDirectMessages";
 import { DirectMessageModal } from "./DirectMessageModal";
 

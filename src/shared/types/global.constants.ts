@@ -118,11 +118,11 @@ export type AlertSeverity =
   (typeof ALERT_SEVERITY)[keyof typeof ALERT_SEVERITY];
 
 // ============================================
-// RIDE STATUS - MOVED TO @/modules/mobility/constants
+// RIDE STATUS - MOVED TO @/shared/types/mobility.constants
 // ============================================
-// NOTA: RIDE_STATUS agora é mantido em @/modules/mobility/constants
+// NOTA: RIDE_STATUS agora e mantido em @/shared/types/mobility.constants
 // para evitar duplicação. Use:
-// import { RIDE_STATUS } from '@/modules/mobility/constants'
+// import { RIDE_STATUS } from '@/shared/types/mobility.constants'
 // ou
 // import { RIDE_STATUS } from '@/shared/types/constants'
 
@@ -241,7 +241,7 @@ export function isValidAlertStatus(status: string): status is AlertStatus {
   return Object.values(ALERT_STATUS).includes(status as AlertStatus);
 }
 
-// isValidRideStatus movido para @/modules/mobility/constants
+// isValidRideStatus movido para @/shared/types/mobility.constants
 
 export function isValidBusinessStatus(
   status: string,

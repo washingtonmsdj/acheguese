@@ -20,7 +20,7 @@ import type { ResolvedTerritory } from './useResolveTerritoryFromUrl';
 import { usePublicBrowsingCity } from '@/core/location/hooks/usePublicBrowsingCity';
 import { useActiveTerritory } from '@/core/location/hooks/useActiveTerritory';
 import { buildGroupBaseUrl, buildModuleTerritoryUrl, geoPathToPublicUrl, MODULE_SLUGS } from '@/core/routing/utils/territoryUrls';
-import { TERRITORY_CONFIG } from '@/config/territory';
+import { LAUNCH_URLS } from '@/config/territory';
 
 export interface AppUrls {
   // Módulos territoriais
@@ -138,12 +138,12 @@ export function useAppUrls(routeResolved?: ResolvedTerritory | null): AppUrls {
             const groupBase = buildGroupBaseUrl(routeResolved.group, `/${parts[0]}/${parts[1]}/${parts[2]}`);
             return buildModuleTerritoryUrl(MODULE_SLUGS.classifieds, groupBase);
           }
-          return `/classificados/${TERRITORY_CONFIG.launch.state}/${TERRITORY_CONFIG.launch.city}`;
+          return LAUNCH_URLS.classifieds;
         })()
-      : `/classificados${geoPathToPublicUrl(routeResolved.location.geographic_path)}`
+      : buildModuleTerritoryUrl(MODULE_SLUGS.classifieds, geoPathToPublicUrl(routeResolved.location.geographic_path))
     : activeLocation?.geographic_path
-      ? `/classificados${geoPathToPublicUrl(activeLocation.geographic_path)}`
-      : `/classificados/${TERRITORY_CONFIG.launch.state}/${TERRITORY_CONFIG.launch.city}`;
+      ? buildModuleTerritoryUrl(MODULE_SLUGS.classifieds, geoPathToPublicUrl(activeLocation.geographic_path))
+      : LAUNCH_URLS.classifieds;
   const classifieds = {
     list: classifiedsList,
     detail: (id: string) => `/classificados/${id}`,

@@ -1,4 +1,5 @@
 import { useParams } from "react-router-dom";
+import { APP_MODULE_SLUGS, buildAppModulePath } from "@/config/moduleSlugs";
 import { LAUNCH_URLS } from "@/config/territory";
 import { isReservedSlug } from "@/core/routing/reservedSlugs";
 import { buildCommunityTerritoryUrl, buildModuleTerritoryUrl, MODULE_SLUGS } from "@/core/routing/utils/territoryUrls";
@@ -68,7 +69,7 @@ function buildTerritorialUrls(basePath: string, territoryName: string | null): F
     gastronomyFavorites: "/gastronomia/favoritos",
     events: buildModuleTerritoryUrl(MODULE_SLUGS.events, basePath),
     jobs: buildModuleTerritoryUrl(MODULE_SLUGS.jobs, basePath),
-    touristPoints: `/pontos-turisticos${basePath}`,
+    touristPoints: buildAppModulePath(APP_MODULE_SLUGS.touristPoints, basePath),
     ranking: buildModuleTerritoryUrl(MODULE_SLUGS.ranking, basePath),
     map: buildModuleTerritoryUrl(MODULE_SLUGS.map, basePath),
   };

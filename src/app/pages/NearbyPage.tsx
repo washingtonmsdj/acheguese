@@ -32,6 +32,7 @@ import { useLocationContext } from '@/core/location/hooks/useLocationContext';
 import { useResolvedUserLocation } from '@/core/location/hooks/useResolvedUserLocation';
 import { useTerritoryLabels } from '@/core/location/hooks/useTerritoryLabels';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
+import { APP_MODULE_SLUGS, buildAppModulePath } from '@/config/moduleSlugs';
 import {
   MapPin, Navigation, Loader2, Store, Calendar, AlertTriangle,
   Landmark, Compass, ChevronRight, TrendingUp, Sparkles,
@@ -43,6 +44,11 @@ import {
 // ============================================================================
 
 const ALL_ENTITY_TYPES = ['business', 'event', 'alert', 'tourist_point'] as const;
+const BUSINESS_ROOT_PATH = buildAppModulePath(APP_MODULE_SLUGS.business);
+const GASTRONOMY_ROOT_PATH = buildAppModulePath(APP_MODULE_SLUGS.gastronomy);
+const SERVICES_ROOT_PATH = buildAppModulePath(APP_MODULE_SLUGS.services);
+const EVENTS_ROOT_PATH = buildAppModulePath(APP_MODULE_SLUGS.events);
+const TOURIST_POINTS_ROOT_PATH = buildAppModulePath(APP_MODULE_SLUGS.touristPoints);
 
 const CATEGORY_TO_TYPES: Record<QuickCategoryKey, typeof ALL_ENTITY_TYPES[number][]> = {
   all: [...ALL_ENTITY_TYPES],
@@ -352,7 +358,7 @@ export default function NearbyPage() {
               count={businesses.length}
               isEmpty={businesses.length === 0}
               isLoading={isLoading}
-              onSeeAll={businesses.length > 6 ? () => navigate('/empresas') : undefined}
+              onSeeAll={businesses.length > 6 ? () => navigate(BUSINESS_ROOT_PATH) : undefined}
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {businesses.slice(0, 6).map((e) => (
@@ -369,7 +375,7 @@ export default function NearbyPage() {
               iconColorClass="bg-orange-500/10 text-orange-500"
               count={businesses.filter((b) => b.metadata?.category === 'food' || b.metadata?.gastronomy_profile).length}
               isEmpty={businesses.filter((b) => b.metadata?.category === 'food' || b.metadata?.gastronomy_profile).length === 0}
-              onSeeAll={() => navigate('/gastronomia')}
+              onSeeAll={() => navigate(GASTRONOMY_ROOT_PATH)}
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {businesses
@@ -389,7 +395,7 @@ export default function NearbyPage() {
               iconColorClass="bg-indigo-500/10 text-indigo-500"
               count={businesses.filter((b) => b.metadata?.category === 'services').length}
               isEmpty={businesses.filter((b) => b.metadata?.category === 'services').length === 0}
-              onSeeAll={() => navigate('/servicos')}
+              onSeeAll={() => navigate(SERVICES_ROOT_PATH)}
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {businesses
@@ -419,7 +425,7 @@ export default function NearbyPage() {
               count={events.length}
               isEmpty={events.length === 0}
               isLoading={isLoading}
-              onSeeAll={events.length > 6 ? () => navigate('/eventos') : undefined}
+              onSeeAll={events.length > 6 ? () => navigate(EVENTS_ROOT_PATH) : undefined}
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {events.slice(0, 6).map((e) => (
@@ -437,7 +443,7 @@ export default function NearbyPage() {
               count={touristPoints.length}
               isEmpty={touristPoints.length === 0}
               isLoading={isLoading}
-              onSeeAll={touristPoints.length > 6 ? () => navigate('/pontos-turisticos') : undefined}
+              onSeeAll={touristPoints.length > 6 ? () => navigate(TOURIST_POINTS_ROOT_PATH) : undefined}
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {touristPoints.slice(0, 6).map((e) => (

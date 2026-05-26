@@ -6,6 +6,7 @@
  * @module integrations/maps/providers
  */
 import { logger } from '@/shared/utils/logger';
+import { PUBLIC_SUPABASE_CONFIG, buildSupabaseFunctionUrl } from '@/shared/config/publicSupabase';
 import type {
   GeocodingProvider,
   GeocodingOptions,
@@ -31,8 +32,8 @@ interface NominatimResult {
  * Provider de geocoding Nominatim
  */
 export class NominatimGeocodingProvider implements GeocodingProvider {
-  private readonly baseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/nominatim-proxy`;
-  private readonly apiKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || null;
+  private readonly baseUrl = buildSupabaseFunctionUrl('nominatim-proxy');
+  private readonly apiKey = PUBLIC_SUPABASE_CONFIG.publishableKey;
   private getAuthHeaders(): HeadersInit {
     if (!this.apiKey) {
       return {};

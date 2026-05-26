@@ -1,4 +1,4 @@
-import { DriverSettingsLayout } from "@/core/mobility/components/driver/DriverSettingsLayout";
+import { DriverSettingsLayout } from "@/core/mobility/components/driver";
 
 /**
  * CentralMotoristaConfiguracoesPage

@@ -13,8 +13,8 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
-import { RideReportsService } from "@/shared/services/mobilityAdmin";
-import type { RideReport, ReportStatus, ReportSeverity } from "@/shared/services/mobilityAdmin";
+import { RideReportsService } from "@/core/mobility/services/runtime";
+import type { RideReport, ReportStatus, ReportSeverity } from "@/core/mobility/services/runtime";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
@@ -25,7 +25,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { ptBR } from "@/shared/utils/dateLocale";
 import {
   AlertTriangle,
   Shield,

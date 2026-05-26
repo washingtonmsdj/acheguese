@@ -8,7 +8,7 @@
 import { Database, Download, Lock, Pause, Trash2 } from "lucide-react";
 
 import { SectionFrame, AccountHealthPanel } from "@/modules/profile/components/hub";
-import { SecurityActionCard } from "@/core/profile/components/cards";
+import { SecurityActionCard } from "@/modules/profile/components/cards";
 import { DataManagementDialogs } from "@/modules/profile/components/DataManagementDialogs";
 
 import type { SegurancaSectionProps } from "./types";

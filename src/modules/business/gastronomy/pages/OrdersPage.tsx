@@ -6,7 +6,7 @@ import { useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Package, RefreshCw, Search, Users } from 'lucide-react';
 import { formatDistanceToNowStrict } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { ptBR } from '@/shared/utils/dateLocale';
 import { useOrders } from '../hooks';
 import { OrderCard } from '../components/orders/OrderCard';
 import { OrderStatsWidget } from '../components/orders/OrderStatsWidget';

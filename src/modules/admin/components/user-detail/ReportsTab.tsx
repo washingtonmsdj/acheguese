@@ -7,7 +7,7 @@ import {
 } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { ptBR } from "@/shared/utils/dateLocale";
 import { cn } from "@/shared/utils/cn";
 import type { UserReport } from "@/core/admin/services/AdminUserDetailService";
 

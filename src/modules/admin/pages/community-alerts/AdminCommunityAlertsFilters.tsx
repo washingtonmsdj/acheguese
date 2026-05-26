@@ -12,7 +12,7 @@ import {
   ALERT_CATEGORY_LABELS,
   type AlertCategory,
   type AlertStatus,
-} from "@/shared/services/communityAlerts";
+} from "@/core/community/alerts";
 
 interface AdminCommunityAlertsFiltersProps {
   search: string;

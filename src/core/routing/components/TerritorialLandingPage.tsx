@@ -41,9 +41,9 @@ import { useLandingFeatured } from '@/core/landing/hooks/useLandingFeatured';
 import { useTerritorialHighlights } from '@/core/territorial/highlights/useTerritorialHighlights';
 import { useTerritoryStats } from '@/core/territorial/hooks/useTerritoryStats';
 import { getCityStateFromResolved, formatCityState } from '@/core/location/utils/territoryHelpers';
-import { MODULE_SLUGS } from '../utils/territoryUrls';
+import { MODULE_SLUGS, buildModuleTerritoryUrl } from '../utils/territoryUrls';
 import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
-import { classifiedUrlService } from '@/shared/services/classifieds';
+import { classifiedUrlService } from "@/core/classifieds/services";
 import type { FeaturedBusiness, FeaturedService, FeaturedClassified } from '@/core/landing/types';
 import type { TerritorialHighlight, HighlightType } from '@/core/territorial/highlights/types';
 import { TerritoryAIContentSection } from '@/core/territorial/components/TerritoryAIContentSection';
@@ -340,9 +340,9 @@ export function TerritorialLandingPage() {
 
   // URLs dos módulos (formato correto: /modulo/state/city)
   const moduleUrls = {
-    business: `/${MODULE_SLUGS.business}${baseUrl}`,
-    services: `/${MODULE_SLUGS.services}${baseUrl}`,
-    classifieds: `/${MODULE_SLUGS.classifieds}${baseUrl}`,
+    business: buildModuleTerritoryUrl(MODULE_SLUGS.business, baseUrl),
+    services: buildModuleTerritoryUrl(MODULE_SLUGS.services, baseUrl),
+    classifieds: buildModuleTerritoryUrl(MODULE_SLUGS.classifieds, baseUrl),
     community: `/${MODULE_SLUGS.community}${baseUrl}`,
   };
 

@@ -1,8 +1,11 @@
-import { Suspense } from "react";
+import { lazy, Suspense } from "react";
 import type { ComponentType } from "react";
-import { TerritorialLandingPage } from "./TerritorialLandingPage";
 import { useTerritorialContext } from "./TerritorialLayout";
 import { FullScreenLoader } from "@/shared/components/loading/PageLoader";
+
+const TerritorialLandingPage = lazy(() =>
+  import("./TerritorialLandingPage").then((module) => ({ default: module.TerritorialLandingPage })),
+);
 
 interface TerritorialIndexPageProps {
   CityLandingComponent?: ComponentType;
@@ -12,7 +15,13 @@ export function TerritorialIndexPage({ CityLandingComponent }: TerritorialIndexP
   const { resolved } = useTerritorialContext();
 
   if (resolved?.kind === "location" && resolved.location.type === "city") {
-    if (!CityLandingComponent) return <TerritorialLandingPage />;
+    if (!CityLandingComponent) {
+      return (
+        <Suspense fallback={<FullScreenLoader />}>
+          <TerritorialLandingPage />
+        </Suspense>
+      );
+    }
     return (
       <Suspense fallback={<FullScreenLoader />}>
         <CityLandingComponent />
@@ -20,5 +29,9 @@ export function TerritorialIndexPage({ CityLandingComponent }: TerritorialIndexP
     );
   }
 
-  return <TerritorialLandingPage />;
+  return (
+    <Suspense fallback={<FullScreenLoader />}>
+      <TerritorialLandingPage />
+    </Suspense>
+  );
 }

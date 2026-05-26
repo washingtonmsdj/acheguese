@@ -5,7 +5,7 @@ import {
   AvatarImage,
 } from "@/shared/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { ptBR } from "@/shared/utils/dateLocale";
 import type { ProfessionalReview } from "@/modules/professionals/services/hooks/useProfessionalReviews";
 
 interface ProfessionalReviewsListProps {

@@ -10,6 +10,7 @@
  */
 
 import { BaseGeocodingProvider } from './BaseGeocodingProvider';
+import { PUBLIC_SUPABASE_CONFIG, buildSupabaseFunctionUrl } from '@/shared/config/publicSupabase';
 import type {
   GeocodeRequest,
   GeocodeResult,
@@ -60,8 +61,8 @@ export class NominatimProvider extends BaseGeocodingProvider {
     super();
     
     // Usa proxy Supabase para evitar CORS
-    this.proxyUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/nominatim-proxy`;
-    this.apiKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || null;
+    this.proxyUrl = buildSupabaseFunctionUrl('nominatim-proxy');
+    this.apiKey = PUBLIC_SUPABASE_CONFIG.publishableKey;
     
     this.config.cacheTtlSeconds = 3600; // 1 hora para dados OSM
   }

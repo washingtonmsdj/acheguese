@@ -7,7 +7,7 @@ import React, {
   ReactNode,
 } from 'react';
 import { useLocation } from 'react-router-dom';
-import { MultiProfileService } from '../services/multi-profile';
+import { MultiProfileRuntimeService } from '../services/multi-profile/runtimeProfileService';
 import { SessionService } from '@/core/session/services/SessionService';
 import { SessionState } from '@/core/session/state/SessionState';
 import type { Profile, ProfileType } from '../services/multi-profile/types';
@@ -53,7 +53,7 @@ export function MultiProfileProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      const profiles = await MultiProfileService.getMyProfiles(currentUser.id);
+      const profiles = await MultiProfileRuntimeService.getMyProfiles(currentUser.id);
       setAllProfiles(profiles);
       allProfilesRef.current = profiles;
 
@@ -139,4 +139,3 @@ export function ModuleContextSync() {
 }
 
 export type { MultiProfileContextValue } from './multiProfileContext.shared';
-

@@ -13,4 +13,3 @@ export { UserProfileDropdown } from "./UserProfileDropdown";
 // Layout Components
 export { ErrorBoundary } from "./ErrorBoundary";
 export { SEO } from "./SEO";
-export { WebVitalsReporter } from "./WebVitalsReporter";

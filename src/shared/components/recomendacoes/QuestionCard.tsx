@@ -8,7 +8,7 @@ import {
 import { Badge } from "@/shared/components/ui/badge";
 import { CheckCircle2, Flag } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { ptBR } from "@/shared/utils/dateLocale";
 import { getRecommendationCategoryDetails } from "@/shared/taxonomy/recommendations";
 interface QuestionAuthor {
   name?: string | null;

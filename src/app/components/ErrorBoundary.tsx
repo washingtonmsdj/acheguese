@@ -1,24 +1,19 @@
 /**
- * GLOBAL ERROR BOUNDARY (NÍVEL AAA)
+ * GLOBAL ERROR BOUNDARY (NIVEL AAA)
  *
- * Captura erros em toda a aplicação e exibe UI amigável
- * Integrado com Sentry para tracking automático
+ * Captura erros em toda a aplicacao e exibe UI amigavel.
+ * O SDK do Sentry e carregado sob demanda para nao inflar o bundle inicial.
  *
- * Features:
- * - Captura erros de renderização
- * - Logging automático para Sentry
- * - UI de fallback profissional
- * - Botão de reload
- * - Informações de debug (dev only)
- * - Dialog de feedback do usuário (opcional)
- *
- * @version 2.0.0
+ * @version 2.1.0
  */
 
-import React, { ReactNode } from "react";
-import { ErrorBoundary as SentryErrorBoundary } from "@sentry/react";
+import React, { ErrorInfo, ReactNode } from "react";
 import { AlertTriangle, RefreshCw, Home } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
+import {
+  captureSentryException,
+  showSentryReportDialog,
+} from "@/shared/config/sentry.config";
 import { logger } from "@/shared/utils/logger";
 import { navigateToSafeRedirect } from "@/shared/utils/safeRedirect";
 
@@ -28,12 +23,27 @@ interface Props {
   showDialog?: boolean;
 }
 
-interface ErrorFallbackProps {
-  error: Error;
-  resetError: () => void;
+interface State {
+  error: Error | null;
 }
 
-function ErrorFallbackUI({ error, resetError }: ErrorFallbackProps) {
+const SENTRY_DIALOG_OPTIONS = {
+  title: "Algo deu errado",
+  subtitle: "Nossa equipe foi notificada.",
+  subtitle2: "Se você quiser nos ajudar, conte-nos o que aconteceu.",
+  labelName: "Nome",
+  labelEmail: "Email",
+  labelComments: "O que aconteceu?",
+  labelClose: "Fechar",
+  labelSubmit: "Enviar",
+  errorGeneric:
+    "Ocorreu um erro desconhecido ao enviar seu relatório. Por favor, tente novamente.",
+  errorFormEntry:
+    "Alguns campos são inválidos. Por favor, corrija os erros e tente novamente.",
+  successMessage: "Seu feedback foi enviado. Obrigado!",
+};
+
+function renderErrorFallbackUI(error: Error, resetError: () => void): ReactNode {
   const handleReload = () => {
     resetError();
     window.location.reload();
@@ -57,15 +67,13 @@ function ErrorFallbackUI({ error, resetError }: ErrorFallbackProps) {
         </h1>
 
         <p className="text-gray-600 mb-6">
-          Encontramos um erro inesperado. Nossa equipe foi notificada automaticamente.
-          Você pode tentar recarregar a página ou voltar para o início.
+          Encontramos um erro inesperado. Nossa equipe foi notificada
+          automaticamente. Você pode tentar recarregar a página ou voltar para o
+          início.
         </p>
 
         <div className="flex gap-3 justify-center mb-6">
-          <Button
-            onClick={handleReload}
-            className="flex items-center gap-2"
-          >
+          <Button onClick={handleReload} className="flex items-center gap-2">
             <RefreshCw className="w-4 h-4" />
             Recarregar
           </Button>
@@ -96,50 +104,45 @@ function ErrorFallbackUI({ error, resetError }: ErrorFallbackProps) {
   );
 }
 
-export function ErrorBoundary({ children, fallback, showDialog = false }: Props) {
-  return (
-    <SentryErrorBoundary
-      fallback={({ error, resetError }) => {
-        // Normalizar erro (Sentry pode passar unknown)
-        const normalizedError =
-          error instanceof Error
-            ? error
-            : new Error(typeof error === "string" ? error : JSON.stringify(error));
+export class ErrorBoundary extends React.Component<Props, State> {
+  state: State = { error: null };
 
-        // Log para console em desenvolvimento
-        if (import.meta.env.DEV) {
-          logger.error("Error Boundary caught an error:", normalizedError, {
-            component: "ErrorBoundary",
-            action: "componentDidCatch",
-          });
-        }
+  static getDerivedStateFromError(error: Error): State {
+    return { error };
+  }
 
-        // Usar fallback customizado se fornecido
-        if (fallback) {
-          return <>{fallback}</>;
-        }
+  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
+    const context = {
+      component: "ErrorBoundary",
+      action: "componentDidCatch",
+      componentStack: errorInfo.componentStack,
+    };
 
-        // Usar UI padrão
-        return <ErrorFallbackUI error={normalizedError} resetError={resetError} />;
-      }}
-      showDialog={showDialog}
-      dialogOptions={{
-        title: "Algo deu errado",
-        subtitle: "Nossa equipe foi notificada.",
-        subtitle2: "Se você quiser nos ajudar, conte-nos o que aconteceu.",
-        labelName: "Nome",
-        labelEmail: "Email",
-        labelComments: "O que aconteceu?",
-        labelClose: "Fechar",
-        labelSubmit: "Enviar",
-        errorGeneric:
-          "Ocorreu um erro desconhecido ao enviar seu relatório. Por favor, tente novamente.",
-        errorFormEntry:
-          "Alguns campos são inválidos. Por favor, corrija os erros e tente novamente.",
-        successMessage: "Seu feedback foi enviado. Obrigado!",
-      }}
-    >
-      {children}
-    </SentryErrorBoundary>
-  );
+    if (import.meta.env.DEV) {
+      logger.error("Error Boundary caught an error:", error, context);
+      return;
+    }
+
+    captureSentryException(error, context);
+
+    if (this.props.showDialog) {
+      showSentryReportDialog(SENTRY_DIALOG_OPTIONS);
+    }
+  }
+
+  resetError = (): void => {
+    this.setState({ error: null });
+  };
+
+  render(): ReactNode {
+    if (this.state.error) {
+      if (this.props.fallback) {
+        return <>{this.props.fallback}</>;
+      }
+
+      return renderErrorFallbackUI(this.state.error, this.resetError);
+    }
+
+    return <>{this.props.children}</>;
+  }
 }

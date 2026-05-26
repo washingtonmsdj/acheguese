@@ -16,7 +16,7 @@ import { useClassificadoDetail } from "@/modules/classifieds/hooks/useClassifica
 import { useClassificados } from "@/modules/classifieds/hooks/useClassificados";
 import { useSellerAds } from "@/modules/classifieds/hooks/useSellerAds";
 import { getCategoryLabel } from "@/modules/classifieds/constants/categories";
-import { CLASSIFIED_STATUS, type ClassifiedStatusValue } from "@/modules/classifieds/constants/statuses";
+import { CLASSIFIED_STATUS, type ClassifiedStatusValue } from "@/core/classifieds/constants/statuses";
 import { ClassifiedCommentsSection } from "@/modules/classifieds/components/detail/ClassifiedCommentsSection";
 import {
   ClassifiedStatusOwnerPanel,
@@ -39,7 +39,7 @@ import { cn } from "@/shared/utils/cn";
 import { buildWhatsAppUrl } from "@/shared/utils/contactLinks";
 import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
 import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { ptBR } from "@/shared/utils/dateLocale";
 import { messagingService } from "@/core/messaging";
 
 type ReportReason = "fraud" | "fake" | "inappropriate" | "spam" | "duplicate" | "wrong-category" | "sold" | "other";

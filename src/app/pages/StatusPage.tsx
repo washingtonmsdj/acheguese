@@ -11,6 +11,7 @@ import { CheckCircle2, XCircle, AlertCircle, Clock, Activity } from 'lucide-reac
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Badge } from '@/shared/components/ui/badge';
 import { PLATFORM_BRAND } from '@/shared/config/brand';
+import { PUBLIC_SUPABASE_CONFIG, buildSupabaseFunctionUrl } from '@/shared/config/publicSupabase';
 interface HealthCheck {
   status: 'healthy' | 'degraded' | 'unhealthy';
   timestamp: string;
@@ -50,10 +51,10 @@ export default function StatusPage() {
   async function checkHealth() {
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/health-check`,
+        buildSupabaseFunctionUrl('health-check'),
         {
           headers: {
-            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            'apikey': PUBLIC_SUPABASE_CONFIG.publishableKey,
           },
         }
       );

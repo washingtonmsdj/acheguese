@@ -20,6 +20,7 @@ import {
   Car,
   GraduationCap,
 } from 'lucide-react';
+import { APP_MODULE_SLUGS } from '@/config/moduleSlugs';
 
 export interface ModuleConfig {
   /** Identificador único do módulo */
@@ -60,7 +61,7 @@ export const MODULES: Record<string, ModuleConfig> = {
   communityFeed: {
     id: 'community-feed',
     name: 'Feed da Comunidade',
-    slug: 'comunidade',
+    slug: APP_MODULE_SLUGS.community,
     icon: Users,
     contextMessage: 'Comunidade de',
     color: 'hsl(var(--primary))',
@@ -72,7 +73,7 @@ export const MODULES: Record<string, ModuleConfig> = {
   communityAlerts: {
     id: 'community-alerts',
     name: 'Alertas da Comunidade',
-    slug: 'alertas',
+    slug: APP_MODULE_SLUGS.communityAlerts,
     icon: MapPin,
     contextMessage: 'Alertas de',
     color: 'hsl(var(--primary))',
@@ -84,7 +85,7 @@ export const MODULES: Record<string, ModuleConfig> = {
   communityIssues: {
     id: 'community-issues',
     name: 'Problemas Urbanos',
-    slug: 'problemas',
+    slug: APP_MODULE_SLUGS.communityIssues,
     icon: MapPin,
     contextMessage: 'Problemas de',
     color: 'hsl(var(--primary))',
@@ -96,7 +97,7 @@ export const MODULES: Record<string, ModuleConfig> = {
   communityGroups: {
     id: 'community-groups',
     name: 'Grupos',
-    slug: 'grupos',
+    slug: APP_MODULE_SLUGS.communityGroups,
     icon: Users,
     contextMessage: 'Grupos de',
     color: 'hsl(var(--primary))',
@@ -108,7 +109,7 @@ export const MODULES: Record<string, ModuleConfig> = {
   communityRecommendations: {
     id: 'community-recommendations',
     name: 'Recomendações',
-    slug: 'recomendacoes',
+    slug: APP_MODULE_SLUGS.communityRecommendations,
     icon: Users,
     contextMessage: 'Recomendações de',
     color: 'hsl(var(--primary))',
@@ -120,7 +121,7 @@ export const MODULES: Record<string, ModuleConfig> = {
   communityLostFound: {
     id: 'community-lost-found',
     name: 'Achados e Perdidos',
-    slug: 'achados-perdidos',
+    slug: APP_MODULE_SLUGS.communityLostFound,
     icon: Tag,
     contextMessage: 'Achados e perdidos de',
     color: 'hsl(var(--primary))',
@@ -132,7 +133,7 @@ export const MODULES: Record<string, ModuleConfig> = {
   business: {
     id: 'business',
     name: 'Empresas',
-    slug: 'empresas',
+    slug: APP_MODULE_SLUGS.business,
     icon: Building2,
     contextMessage: 'Exibindo empresas de',
     color: 'hsl(var(--primary))',
@@ -144,7 +145,7 @@ export const MODULES: Record<string, ModuleConfig> = {
   services: {
     id: 'services',
     name: 'Serviços',
-    slug: 'servicos',
+    slug: APP_MODULE_SLUGS.services,
     icon: Wrench,
     contextMessage: 'Exibindo serviços de',
     color: 'hsl(var(--primary))',
@@ -156,7 +157,7 @@ export const MODULES: Record<string, ModuleConfig> = {
   classifieds: {
     id: 'classifieds',
     name: 'Classificados',
-    slug: 'classificados',
+    slug: APP_MODULE_SLUGS.classifieds,
     icon: Tag,
     contextMessage: 'Exibindo anúncios de',
     color: 'hsl(var(--primary))',
@@ -168,7 +169,7 @@ export const MODULES: Record<string, ModuleConfig> = {
   events: {
     id: 'community-events',
     name: 'Eventos',
-    slug: 'eventos',
+    slug: APP_MODULE_SLUGS.events,
     icon: Calendar,
     contextMessage: 'Exibindo eventos de',
     color: 'hsl(var(--primary))',
@@ -180,7 +181,7 @@ export const MODULES: Record<string, ModuleConfig> = {
   jobs: {
     id: 'jobs',
     name: 'Vagas',
-    slug: 'vagas',
+    slug: APP_MODULE_SLUGS.jobs,
     icon: Briefcase,
     contextMessage: 'Exibindo vagas de',
     color: 'hsl(var(--primary))',
@@ -192,7 +193,7 @@ export const MODULES: Record<string, ModuleConfig> = {
   gastronomy: {
     id: 'gastronomy',
     name: 'Gastronomia',
-    slug: 'gastronomia',
+    slug: APP_MODULE_SLUGS.gastronomy,
     icon: UtensilsCrossed,
     contextMessage: 'Gastronomia de',
     color: 'hsl(var(--primary))',
@@ -204,7 +205,7 @@ export const MODULES: Record<string, ModuleConfig> = {
   touristPoints: {
     id: 'touristPoints',
     name: 'Pontos Turísticos',
-    slug: 'pontos-turisticos',
+    slug: APP_MODULE_SLUGS.touristPoints,
     icon: MapPin,
     contextMessage: 'Pontos turísticos de',
     color: 'hsl(var(--primary))',
@@ -216,7 +217,7 @@ export const MODULES: Record<string, ModuleConfig> = {
   mobility: {
     id: 'mobility',
     name: 'Mobilidade',
-    slug: 'mobilidade',
+    slug: APP_MODULE_SLUGS.mobility,
     icon: Car,
     contextMessage: 'Mobilidade em',
     color: 'hsl(var(--primary))',
@@ -228,7 +229,7 @@ export const MODULES: Record<string, ModuleConfig> = {
   education: {
     id: 'education',
     name: 'Educação',
-    slug: 'educacao',
+    slug: APP_MODULE_SLUGS.education,
     icon: GraduationCap,
     contextMessage: 'Educação em',
     color: 'hsl(var(--primary))',
@@ -240,7 +241,7 @@ export const MODULES: Record<string, ModuleConfig> = {
   map: {
     id: 'map',
     name: 'Mapa',
-    slug: 'mapa',
+    slug: APP_MODULE_SLUGS.map,
     icon: MapPin,
     contextMessage: 'Mapa de',
     color: 'hsl(var(--primary))',
@@ -252,7 +253,7 @@ export const MODULES: Record<string, ModuleConfig> = {
   search: {
     id: 'search',
     name: 'Busca',
-    slug: 'busca',
+    slug: APP_MODULE_SLUGS.search,
     icon: MapPin,
     contextMessage: 'Buscar em',
     color: 'hsl(var(--primary))',
@@ -264,7 +265,7 @@ export const MODULES: Record<string, ModuleConfig> = {
   ranking: {
     id: 'ranking',
     name: 'Ranking',
-    slug: 'ranking',
+    slug: APP_MODULE_SLUGS.ranking,
     icon: MapPin,
     contextMessage: 'Ranking de',
     color: 'hsl(var(--primary))',

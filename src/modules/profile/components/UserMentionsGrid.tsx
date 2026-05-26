@@ -12,7 +12,7 @@ import { EmptyStateProfile } from "./EmptyStateProfile";
 import { InfiniteScrollTrigger } from "@/shared/components/ui";
 import { Heart, MessageSquare, Eye, AtSign, Award } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { ptBR } from "@/shared/utils/dateLocale";
 interface UserMentionsGridProps {
   userId: string;
   onPostClick?: (postId: string) => void;

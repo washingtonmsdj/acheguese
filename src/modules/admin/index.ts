@@ -16,7 +16,7 @@ export { default as AdminDashboard } from "./pages/AdminDashboard";
 export { default as AdminUsuarios } from "./pages/AdminUsuarios";
 export { default as AdminModeracao } from "./pages/AdminModeracao";
 export { default as AdminAlertas } from "./pages/AdminAlertas";
-export { default as AdminMotoristas } from "./pages/AdminMotoristas";
+export { default as AdminMotoristas } from "@/core/admin/drivers/pages/AdminMotoristasPage";
 export { default as AdminEmpresas } from "./pages/AdminEmpresas";
 export { default as AdminServicos } from "./pages/AdminServicos";
 export { default as AdminClassificados } from "./pages/AdminClassificados";

@@ -24,7 +24,7 @@ import { cn } from "@/shared/utils/cn";
 import { useUnifiedNotifications } from '@/core/notifications/useUnifiedNotifications';
 import type { Notification } from '@/core/notifications/services/NotificationService';
 import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { ptBR } from "@/shared/utils/dateLocale";
 
 const typeConfig: Record<
   string,

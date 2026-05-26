@@ -155,10 +155,7 @@ export default function PrivacySettingsPage() {
     setIsExporting(true);
     try {
       const accessToken = await PrivacySettingsService.getAccessToken();
-      const blob = await PrivacySettingsService.exportUserData(
-        import.meta.env.VITE_SUPABASE_URL,
-        accessToken,
-      );
+      const blob = await PrivacySettingsService.exportUserData(accessToken);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -188,7 +185,6 @@ export default function PrivacySettingsPage() {
     try {
       const accessToken = await PrivacySettingsService.getAccessToken();
       const result = await PrivacySettingsService.requestAccountDeletion({
-        supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
         accessToken,
         reason: deleteReason,
       });

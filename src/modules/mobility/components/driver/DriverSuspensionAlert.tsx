@@ -12,7 +12,7 @@ import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-r
 import { profileService } from "@/core/profiles/services";
 import { mobilityService } from "@/modules/mobility";
 import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { ptBR } from "@/shared/utils/dateLocale";
 import { logger } from "@/shared/utils/logger";
 
 interface DriverStatus {

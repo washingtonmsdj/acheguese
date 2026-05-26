@@ -10,7 +10,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { MessageCircle, Phone } from "lucide-react";
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { ptBR } from "@/shared/utils/dateLocale";
 import { cn } from "@/shared/utils/cn";
 import type { AppointmentStatus } from "./constants";
 

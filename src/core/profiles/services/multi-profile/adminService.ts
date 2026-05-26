@@ -11,6 +11,7 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase/supabase';
 import { SessionService } from '@/core/session/services/SessionService';
+import { buildSupabaseFunctionUrl } from '@/shared/config/publicSupabase';
 import type { ServiceResponse } from './types';
 
 type ProfileAuditLogRecord = Record<string, unknown>;
@@ -40,9 +41,8 @@ export class AdminService {
         };
       }
 
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const response = await fetch(
-        `${supabaseUrl}/functions/v1/admin-verify-profile`,
+        buildSupabaseFunctionUrl('admin-verify-profile'),
         {
           method: 'POST',
           headers: {
@@ -103,9 +103,8 @@ export class AdminService {
         };
       }
 
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const response = await fetch(
-        `${supabaseUrl}/functions/v1/admin-suspend-profile`,
+        buildSupabaseFunctionUrl('admin-suspend-profile'),
         {
           method: 'POST',
           headers: {

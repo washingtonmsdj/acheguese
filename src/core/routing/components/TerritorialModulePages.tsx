@@ -14,7 +14,6 @@ import { lazy, Suspense, type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useTerritorialContext } from './TerritorialLayout';
-import { TerritorialLandingPage } from './TerritorialLandingPage';
 import { ModulePageLoader } from '@/shared/components/loading/PageLoader';
 import { useCityMetadata } from '@/core/city/hooks/useCityMetadata';
 import { resolveFallbackCityStatus, type CityStatus } from '@/core/city/services/CityService';
@@ -24,6 +23,9 @@ import { buildPublicAbsoluteUrl } from '@/shared/config/publicAppOrigin';
 // Lazy imports dos módulos existentes
 const ComunidadePage       = lazy(() => import('@/modules/community-feed/pages/ComunidadePage'));
 const CidadeLandingPage    = lazy(() => import('@/app/pages/CidadeLandingPage'));
+const TerritorialLandingPage = lazy(() =>
+  import('./TerritorialLandingPage').then((module) => ({ default: module.TerritorialLandingPage })),
+);
 const CommunityCommunicationTabPage = lazy(() => import('@/modules/communication-territorial/pages/CommunityCommunicationTabPage'));
 const ProblemasPage        = lazy(() => import('@/modules/community-issues/pages/ProblemasPage'));
 const EmpresasPage         = lazy(() => import('@/app/pages/EmpresasLandingPage'));
@@ -206,7 +208,11 @@ export function TerritorialCommunityHomePage() {
   const { resolved } = useTerritorialContext();
 
   if (resolved.kind === 'group') {
-    return <TerritorialLandingPage />;
+    return (
+      <Suspense fallback={<ModulePageLoader />}>
+        <TerritorialLandingPage />
+      </Suspense>
+    );
   }
 
   return (

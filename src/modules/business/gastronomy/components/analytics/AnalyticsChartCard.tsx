@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui
 import { useDailyMetrics } from '@/modules/business/gastronomy/hooks';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { ptBR } from '@/shared/utils/dateLocale';
 import {
   LineChart,
   Line,

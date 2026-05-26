@@ -3,3 +3,4 @@
  */
 
 export * from './sentry.config';
+export * from './publicSupabase';

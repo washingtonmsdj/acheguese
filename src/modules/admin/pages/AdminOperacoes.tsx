@@ -29,7 +29,7 @@ import { TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared
 import { useToast } from "@/shared/hooks/use-toast";
 import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
 import { useLocationContext } from "@/core/location";
-import { mobilityRolloutService } from "@/shared/services/mobilityAdmin";
+import { mobilityRolloutService } from "@/core/mobility/services/runtime";
 import { RolloutSource, RolloutStatus } from "@/core/rollout/types";
 import {
   operationalDiagnosticsService,

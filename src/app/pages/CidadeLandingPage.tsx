@@ -23,6 +23,7 @@ import { useCityMetadata } from "@/core/city/hooks/useCityMetadata";
 import { useCityFeatured } from "@/core/city/hooks/useCityFeatured";
 import { useHomeCommunityHref } from "@/core/routing/hooks/useHomeCommunityHref";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
+import { APP_MODULE_SLUGS, buildAppModulePath } from "@/config/moduleSlugs";
 import { classifiedUrlService } from "@/modules/classifieds/services/ClassifiedUrlService";
 import { useClassifiedUrls } from "@/modules/classifieds/hooks/useClassifiedUrls";
 import { useTouristPoints } from "@/modules/guide/tourist-points/hooks/useTouristPoints";
@@ -89,11 +90,13 @@ export default function CidadeLandingPage() {
   }
 
   const communityUrl = homeCommunityHref;
+  const cityPath = `/${state}/${city}`;
   const cityModuleUrls = {
-    business: `/empresas/${state}/${city}`,
-    services: `/servicos/${state}/${city}`,
-    classifieds: `/classificados/${state}/${city}`,
-    jobs: `/vagas/${state}/${city}`,
+    business: buildAppModulePath(APP_MODULE_SLUGS.business, cityPath),
+    services: buildAppModulePath(APP_MODULE_SLUGS.services, cityPath),
+    classifieds: buildAppModulePath(APP_MODULE_SLUGS.classifieds, cityPath),
+    jobs: buildAppModulePath(APP_MODULE_SLUGS.jobs, cityPath),
+    touristPoints: buildAppModulePath(APP_MODULE_SLUGS.touristPoints, cityPath),
   };
   const cityDisplayName = toDisplayName(city);
   const stateDisplayName = getStateByCode(state)?.name ?? state.toUpperCase();
@@ -641,7 +644,7 @@ export default function CidadeLandingPage() {
           </div>
           <Button
             variant="outline"
-            onClick={() => navigate(`/pontos-turisticos/${state}/${city}`)}
+            onClick={() => navigate(cityModuleUrls.touristPoints)}
             className="border-warning/30 text-warning hover:bg-warning/10 font-semibold text-sm rounded-lg hidden sm:flex"
           >
             Ver todos <ArrowRight className="h-4 w-4 ml-2" />
@@ -659,7 +662,7 @@ export default function CidadeLandingPage() {
                   ? "border-warning/30 hover:border-warning/50"
                   : "border-border hover:border-primary/30"
               }`}
-              onClick={() => navigate(`/pontos-turisticos/${state}/${city}/${ponto.slug}`)}
+              onClick={() => navigate(`${cityModuleUrls.touristPoints}/${ponto.slug}`)}
             >
               <div className="space-y-3">
                 {ponto.photo_url && (
@@ -696,7 +699,7 @@ export default function CidadeLandingPage() {
           <Button
             variant="outline"
             className="border-warning/30 text-warning hover:bg-warning/10 font-semibold rounded-lg"
-            onClick={() => navigate(`/pontos-turisticos/${state}/${city}`)}
+            onClick={() => navigate(cityModuleUrls.touristPoints)}
           >
             Ver todos os pontos <ArrowRight className="h-4 w-4 ml-2" />
           </Button>

@@ -13,8 +13,8 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { useSessionContext } from "@/core/session";
-import { useProfileHub } from "@/core/profile/hooks/useProfileHub";
-import { useDriverProfileIdentity } from "@/core/mobility/hooks/useDriverProfileIdentity";
+import { useProfileHub } from "@/core/profile/hooks";
+import { useDriverProfileIdentity } from "@/core/mobility/hooks";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
 import { centralRoutes } from "@/modules/central/routes/centralRoutes";
 

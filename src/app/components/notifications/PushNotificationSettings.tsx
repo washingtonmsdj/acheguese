@@ -18,7 +18,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { ptBR } from "@/shared/utils/dateLocale";
 
 export function PushNotificationSettings() {
   const { user } = useAuth();

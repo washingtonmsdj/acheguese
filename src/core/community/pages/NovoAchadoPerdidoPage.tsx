@@ -42,7 +42,7 @@ import { LocationType } from "@/core/location/types";
 import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
 import { cn } from "@/shared/utils/cn";
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { ptBR } from "@/shared/utils/dateLocale";
 import { InlineFieldError } from "@/shared/components/ui/InlineFieldError";
 import {
   LOST_FOUND_CATEGORY_OPTIONS,

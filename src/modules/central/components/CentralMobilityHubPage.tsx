@@ -3,7 +3,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Route, Settings2, Wallet } from "lucide-react";
-import { useDriverProfileIdentity } from "@/core/mobility/hooks/useDriverProfileIdentity";
+import { useDriverProfileIdentity } from "@/core/mobility/hooks";
 import { useNavigate } from "react-router-dom";
 
 type ActivationMode = "rides" | "delivery";

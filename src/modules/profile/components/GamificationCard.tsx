@@ -131,15 +131,17 @@ export function GamificationCard({
               {profileBadges.map((badgeId) => {
                 const badge = badges.find((b) => b.id === badgeId);
                 if (!badge) return null;
+                const BadgeIcon = badge.icone;
                 return (
                   <Badge
                     key={badge.id}
                     className={cn(
-                      "px-3 py-1.5 rounded-full text-xs font-medium border-0",
+                      "gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border-0",
                       badge.cor
                     )}
                   >
-                    {badge.icone} {badge.name}
+                    <BadgeIcon className="h-3.5 w-3.5" />
+                    {badge.name}
                   </Badge>
                 );
               })}

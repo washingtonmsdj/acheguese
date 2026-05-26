@@ -1,1 +1,1 @@
-export type { EducationProfileStatus } from '@/modules/business/education/types';
+export type EducationProfileStatus = "draft" | "published" | "paused";

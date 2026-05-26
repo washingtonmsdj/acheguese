@@ -15,7 +15,7 @@ import { Star, Users, Car } from "lucide-react";
 import { toast } from "sonner";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services/ProfileService"; // ✅ SSOT - Usa instância do ProfileService
-import { MobilityService } from "@/shared/services/mobilityAdmin"; // ✅ SSOT - Importa MobilityService correto
+import { MobilityService } from "@/core/mobility/services/runtime"; // ✅ SSOT - Importa MobilityService correto
 
 type TopPassenger = Awaited<ReturnType<typeof profileService.getTopPassengers>>[number];
 type TopDriver = Awaited<ReturnType<typeof MobilityService.getTopDrivers>>[number];

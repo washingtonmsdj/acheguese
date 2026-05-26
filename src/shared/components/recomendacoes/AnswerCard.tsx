@@ -7,7 +7,7 @@ import {
 } from "@/shared/components/ui/avatar";
 import { CheckCircle2, ThumbsUp, Flag, Star } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { ptBR } from "@/shared/utils/dateLocale";
 import { cn } from "@/shared/utils/cn";
 
 export type MentionedProfessional = {

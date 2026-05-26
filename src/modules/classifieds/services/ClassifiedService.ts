@@ -39,7 +39,7 @@ export type {
 
 import * as queries from "./classifieds.queries";
 import * as mutations from "./classifieds.mutations";
-import { CLASSIFIED_STATUS_VALUES } from "../constants/statuses";
+import { CLASSIFIED_STATUS_VALUES } from "@/core/classifieds/constants/statuses";
 
 export const ClassifiedsService = {
   queries,

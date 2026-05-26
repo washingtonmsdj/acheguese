@@ -19,7 +19,7 @@ import { AnalyticsChartCard } from '@/modules/business/gastronomy/components/ana
 import { AnalyticsEngagementCard } from '@/modules/business/gastronomy/components/analytics/AnalyticsEngagementCard';
 import { CalendarIcon, Download, Lightbulb } from 'lucide-react';
 import { format, subDays } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { ptBR } from '@/shared/utils/dateLocale';
 import { cn } from '@/shared/utils/cn';
 
 export default function AnalyticsPage() {

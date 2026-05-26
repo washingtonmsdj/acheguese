@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { ptBR } from "@/shared/utils/dateLocale";
 import { Mail } from "lucide-react";
 import type { AdminEmailDeliveryAuditResult } from "@/core/admin/services/AdminNotificationsService";
 import {

@@ -14,27 +14,10 @@ import { createClient } from "@supabase/supabase-js";
 import type { Database } from "./types.generated";
 import { createSecureStorage } from "./cookieStorage";
 import { AUTH_STORAGE_KEY } from "@/config/security.config";
+import { PUBLIC_SUPABASE_CONFIG } from "@/shared/config/publicSupabase";
 
 const viteEnv = typeof import.meta !== "undefined" ? import.meta.env : undefined;
 const nodeEnv = typeof process !== "undefined" ? process.env : undefined;
-
-function requireRuntimeEnv(value: string | undefined, name: string): string {
-  if (typeof value === "string" && value.trim().length > 0) {
-    return value.trim();
-  }
-
-  throw new Error(`[Supabase] Variavel de ambiente obrigatoria ausente: ${name}`);
-}
-
-// Validar variaveis de ambiente sem fallback fake.
-const SUPABASE_URL = requireRuntimeEnv(
-  viteEnv?.VITE_SUPABASE_URL || nodeEnv?.VITE_SUPABASE_URL,
-  "VITE_SUPABASE_URL",
-);
-const SUPABASE_KEY = requireRuntimeEnv(
-  viteEnv?.VITE_SUPABASE_PUBLISHABLE_KEY || nodeEnv?.VITE_SUPABASE_PUBLISHABLE_KEY,
-  "VITE_SUPABASE_PUBLISHABLE_KEY",
-);
 const DEBUG_BOOT =
   (viteEnv?.DEV ?? nodeEnv?.NODE_ENV !== "production") &&
   (viteEnv?.VITE_DEBUG_BOOT === "true" || nodeEnv?.VITE_DEBUG_BOOT === "true");
@@ -56,7 +39,7 @@ if (typeof window !== "undefined") {
 // Log de inicializacao (apenas em desenvolvimento)
 if (DEBUG_BOOT) {
   console.debug("[Supabase] initialized", {
-    url: SUPABASE_URL,
+    url: PUBLIC_SUPABASE_CONFIG.url,
   });
 }
 
@@ -75,13 +58,17 @@ if (DEBUG_BOOT) {
  *
  * Tipado com Database gerado automaticamente do schema do Supabase.
  */
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_KEY, {
-  auth: {
-    storage: typeof window !== "undefined" ? createSecureStorage() : undefined,
-    storageKey: AUTH_STORAGE_KEY,
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-    flowType: "implicit",
+export const supabase = createClient<Database>(
+  PUBLIC_SUPABASE_CONFIG.url,
+  PUBLIC_SUPABASE_CONFIG.publishableKey,
+  {
+    auth: {
+      storage: typeof window !== "undefined" ? createSecureStorage() : undefined,
+      storageKey: AUTH_STORAGE_KEY,
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      flowType: "implicit",
+    },
   },
-});
+);

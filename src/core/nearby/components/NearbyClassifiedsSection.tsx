@@ -5,11 +5,11 @@ import { Button } from "@/shared/components/ui/button";
 import { useTerritoryLabels } from "@/core/location";
 import { useModuleUrls } from "@/core/routing/hooks/useModuleUrls";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
+import { classifiedUrlService } from "@/core/classifieds/services";
 import {
-  classifiedUrlService,
   useClassificados,
   type ClassificadoWithVendedor,
-} from "@/shared/services/classifieds";
+} from "@/core/classifieds/hooks";
 import { NearbySection } from "./NearbySection";
 
 interface NearbyClassifiedsSectionProps {

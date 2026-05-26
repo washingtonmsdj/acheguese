@@ -28,7 +28,7 @@ import { useBilling } from '@/core/billing/hooks/useBilling';
 import { useSubscription } from '@/core/billing/hooks/useSubscription';
 import { buildPublicAbsoluteUrl } from '@/shared/config/publicAppOrigin';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { ptBR } from '@/shared/utils/dateLocale';
 export default function SubscriptionManagementPage() {
   const navigate = useNavigate();
   const { redirectToPortal, plans } = useBilling();

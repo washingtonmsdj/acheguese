@@ -2,6 +2,7 @@ import React from "react";
 import { AlertTriangle, Calendar, Clock, Landmark, MapPin, Navigation, Store } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Card } from "@/shared/components/ui/card";
+import { APP_MODULE_SLUGS, buildAppModulePath } from "@/config/moduleSlugs";
 import type { NearbyEntity } from "../hooks/useNearbyEntities";
 
 interface NearbyCardProps {
@@ -10,12 +11,12 @@ interface NearbyCardProps {
 }
 
 const ENTITY_CONFIG = {
-  business: { label: "Empresa", baseUrl: "/empresas", icon: Store, color: "bg-blue-500" },
-  event: { label: "Evento", baseUrl: "/eventos", icon: Calendar, color: "bg-green-500" },
-  alert: { label: "Alerta", baseUrl: "/alertas", icon: AlertTriangle, color: "bg-red-500" },
+  business: { label: "Empresa", baseUrl: buildAppModulePath(APP_MODULE_SLUGS.business), icon: Store, color: "bg-blue-500" },
+  event: { label: "Evento", baseUrl: buildAppModulePath(APP_MODULE_SLUGS.events), icon: Calendar, color: "bg-green-500" },
+  alert: { label: "Alerta", baseUrl: buildAppModulePath(APP_MODULE_SLUGS.communityAlerts), icon: AlertTriangle, color: "bg-red-500" },
   tourist_point: {
     label: "Ponto turistico",
-    baseUrl: "/pontos-turisticos",
+    baseUrl: buildAppModulePath(APP_MODULE_SLUGS.touristPoints),
     icon: Landmark,
     color: "bg-purple-500",
   },

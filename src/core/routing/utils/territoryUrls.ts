@@ -18,23 +18,10 @@
 
 import type { Location, TerritorialGroup } from '@/core/location/types';
 import { TERRITORY_CONFIG } from '@/config/territory';
+import { ROUTING_MODULE_SLUGS } from '@/config/moduleSlugs';
 
 // ── Slugs de módulo canônicos ────────────────────────────────────────────────
-export const MODULE_SLUGS = {
-  community:    'comunidade',
-  business:     'empresas',
-  education:    'educacao',
-  services:     'servicos',
-  classifieds:  'classificados',
-  mobility:     'mobilidade',
-  gastronomy:   'gastronomia',
-  events:       'eventos',
-  jobs:         'vagas',
-  alerts:       'alertas',
-  map:          'mapa',
-  guide:        'guia',
-  ranking:      'ranking',
-} as const;
+export const MODULE_SLUGS = ROUTING_MODULE_SLUGS;
 
 export type ModuleSlug = typeof MODULE_SLUGS[keyof typeof MODULE_SLUGS];
 
@@ -102,7 +89,7 @@ export function buildGroupBaseUrl(group: TerritorialGroup, cityPath: string): st
  * URL de um módulo dentro de um bairro.
  */
 export function buildLocationModuleUrl(location: Location, module: ModuleSlug): string {
-  return `${buildLocationBaseUrl(location)}/${module}`;
+  return buildModuleTerritoryUrl(module, buildLocationBaseUrl(location));
 }
 
 /**
@@ -113,7 +100,7 @@ export function buildGroupModuleUrl(
   cityPath: string,
   module: ModuleSlug,
 ): string {
-  return `${buildGroupBaseUrl(group, cityPath)}/${module}`;
+  return buildModuleTerritoryUrl(module, buildGroupBaseUrl(group, cityPath));
 }
 
 /**
@@ -139,7 +126,7 @@ export function buildTerritoryModuleUrl(
     | { kind: 'group'; group: TerritorialGroup; cityPath: string },
   module: ModuleSlug,
 ): string {
-  return `${buildTerritoryBaseUrl(territory)}/${module}`;
+  return buildModuleTerritoryUrl(module, buildTerritoryBaseUrl(territory));
 }
 
 export function buildModuleTerritoryUrl(module: ModuleSlug, territoryBaseUrl: string): string {
@@ -188,7 +175,7 @@ export function buildCommunityTabUrlFromPath(pathname: string, tab: CommunityTab
   if (parts[0] !== MODULE_SLUGS.community || parts.length < 4) return null;
   if (['feed', 'grupos', 'alertas', 'problemas', 'achados-e-perdidos'].includes(parts[3])) return null;
 
-  const base = ['comunidade', parts[1], parts[2], parts[3]];
+  const base = [MODULE_SLUGS.community, parts[1], parts[2], parts[3]];
 
   return `/${base.join('/')}/${tab}`;
 }

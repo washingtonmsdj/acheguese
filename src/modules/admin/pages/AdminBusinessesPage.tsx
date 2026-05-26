@@ -31,7 +31,7 @@ import { PlanChangeConfirmationModal } from '@/modules/admin/components/PlanChan
 import { Search, Building2, DollarSign, ShoppingCart, Bike } from 'lucide-react';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { ptBR } from '@/shared/utils/dateLocale';
 import { toast } from 'sonner';
 
 export function AdminBusinessesPage() {

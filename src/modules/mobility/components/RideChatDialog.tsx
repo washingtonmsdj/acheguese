@@ -15,7 +15,7 @@ import { useRideChat } from "@/modules/mobility/hooks/useRideChat";
 import { MessageCircle, Send, Loader2, AlertCircle } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { ptBR } from "@/shared/utils/dateLocale";
 
 interface RideChatDialogProps {
   open: boolean;

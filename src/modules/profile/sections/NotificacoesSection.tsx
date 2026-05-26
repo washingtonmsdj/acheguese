@@ -6,7 +6,7 @@
  */
 
 import { SectionFrame, NotificationsPanel } from "@/modules/profile/components/hub";
-import { NotificationStatCard } from "@/core/profile/components/cards";
+import { NotificationStatCard } from "@/modules/profile/components/cards";
 
 import type { NotificacoesSectionProps } from "./types";
 

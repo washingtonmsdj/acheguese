@@ -17,7 +17,7 @@ import { PendingComment } from "@/core/moderation/types";
 import { PRIORITY_COLORS, REPORT_TYPE_LABELS } from "@/shared/types/moderation";
 import { useModeration } from "@/core/moderation/hooks/useModeration";
 import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { ptBR } from "@/shared/utils/dateLocale";
 interface PendingCommentCardProps {
   comment: PendingComment;
 }

@@ -1,5 +1,5 @@
 import { Badge, type BadgeProps } from "@/shared/components/ui/badge";
-import type { AlertStatus } from "@/shared/services/communityAlerts";
+import type { AlertStatus } from "@/core/community/alerts";
 
 export function getAlertStatusBadge(status: AlertStatus) {
   const variants: Record<AlertStatus, { variant: BadgeProps["variant"]; label: string }> = {

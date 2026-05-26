@@ -230,10 +230,7 @@ export type EducationLeadStatus =
   | 'enrolled'
   | 'lost';
 
-export type EducationProfileStatus =
-  | 'draft'
-  | 'published'
-  | 'paused';
+export type { EducationProfileStatus } from "@/core/education/types";
 
 // Tipos de eventos escolares
 export type SchoolEventType =

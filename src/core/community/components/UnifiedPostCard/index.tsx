@@ -18,7 +18,7 @@ import {
   type PostUrgency,
 } from "@/shared/constants/statusConfig";
 import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { ptBR } from "@/shared/utils/dateLocale";
 import {
   SPACING,
 } from "../styles/communityDesignSystem";

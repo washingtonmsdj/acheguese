@@ -15,7 +15,7 @@ import {
   type IssueCategory,
   type IssuePriority,
   type IssueStatus,
-} from "@/shared/services/communityIssues";
+} from "@/core/community/issues";
 
 interface AdminCommunityIssuesFiltersProps {
   search: string;

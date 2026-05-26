@@ -122,13 +122,13 @@ export async function getPrivateWorkspaceAggregate(
     const { VerificationService } = await import(
       "@/core/verification/services/VerificationService"
     );
-    const { getUserClassifieds } = await import("@/shared/services/classifieds");
+    const { getUserClassifieds } = await import("@/core/classifieds/services");
     const { eventService } = await import(
-      "@/core/community-events/services/CommunityEventsRuntimeService"
+      "@/core/community/services/CommunityEventsRuntimeService"
     );
     const { communityAlertService } = await import("@/core/community/alerts");
     const { communityIssueService } = await import(
-      "@/core/community-issues/services/CommunityIssueService"
+      "@/core/community/issues/services/CommunityIssueService"
     );
     const { notificationService } = await import("@/core/notifications/services");
 

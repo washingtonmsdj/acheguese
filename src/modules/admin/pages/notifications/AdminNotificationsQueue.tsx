@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { ptBR } from "@/shared/utils/dateLocale";
 import { Eye, Filter } from "lucide-react";
 import type { AdminNotificationListResult, AdminNotificationRecord } from "@/core/admin/services/AdminNotificationsService";
 import {

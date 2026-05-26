@@ -103,6 +103,7 @@ export function ProgressSection({ profile }: ProgressSectionProps) {
               {badgeIds.map((bId) => {
                 const b = badges.find((x) => x.id === bId);
                 if (!b) return null;
+                const BadgeIcon = b.icone;
                 return (
                   <span
                     key={b.id}
@@ -111,7 +112,8 @@ export function ProgressSection({ profile }: ProgressSectionProps) {
                       b.cor,
                     )}
                   >
-                    {b.icone} {b.name}
+                    <BadgeIcon className="mr-1 inline h-3.5 w-3.5" aria-hidden="true" />
+                    {b.name}
                   </span>
                 );
               })}

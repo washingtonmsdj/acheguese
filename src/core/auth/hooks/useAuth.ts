@@ -9,7 +9,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { SessionService } from "@/core/session/services/SessionService";
 import { SessionState } from "@/core/session/state/SessionState";
-import { AuthService } from "@/core/auth/services";
+import { AuthService } from "@/core/auth/services/AuthService";
 import type {
   AuthUser,
   SignUpData,

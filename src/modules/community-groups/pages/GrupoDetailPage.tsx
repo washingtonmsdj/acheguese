@@ -1,1 +1,1 @@
-export { default } from "@/core/community-groups/pages/GrupoDetailPage";
+export { default } from "@/core/community/pages/GrupoDetailPage";

@@ -11,7 +11,7 @@ import { useEmail } from '@/core/notifications/hooks/useEmail';
 import { useAuth } from '@/core/auth/hooks/useAuth';
 import { Mail, RefreshCw, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { ptBR } from '@/shared/utils/dateLocale';
 
 export default function EmailLogsPage() {
   const { user } = useAuth();

@@ -6,7 +6,7 @@ import {
 } from "@/shared/components/ui/avatar";
 import { INLINE_STYLES } from "../styles/communityDesignSystem";
 import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { ptBR } from "@/shared/utils/dateLocale";
 
 interface Comment {
   id: string;

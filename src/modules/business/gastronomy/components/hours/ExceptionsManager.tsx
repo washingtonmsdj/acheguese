@@ -16,7 +16,7 @@ import { Textarea } from '@/shared/components/ui/textarea';
 import { ConfirmActionDialog } from '@/shared/components/ConfirmActionDialog';
 import { Calendar, Plus, Trash2, X } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { ptBR } from '@/shared/utils/dateLocale';
 
 interface ExceptionsManagerProps {
   businessId: string;

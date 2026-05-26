@@ -13,7 +13,7 @@
 
 import { useActiveTerritory } from '@/core/location/hooks/useActiveTerritory';
 import { buildGroupBaseUrl, buildModuleTerritoryUrl, geoPathToPublicUrl, MODULE_SLUGS } from '@/core/routing/utils/territoryUrls';
-import { TERRITORY_CONFIG } from '@/config/territory';
+import { LAUNCH_URLS } from '@/config/territory';
 import { classifiedUrlService } from '@/modules/classifieds/services';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
 import type { ClassifiedUrlContext } from '@/modules/classifieds/services/ClassifiedUrlService';
@@ -50,18 +50,18 @@ export function useClassifiedUrls(routeResolved?: ResolvedTerritory | null): Cla
         const groupBase = buildGroupBaseUrl(routeResolved.group, `/${parts[0]}/${parts[1]}/${parts[2]}`);
         listUrl = buildModuleTerritoryUrl(MODULE_SLUGS.classifieds, groupBase);
       } else {
-        listUrl = `/classificados/${TERRITORY_CONFIG.launch.state}/${TERRITORY_CONFIG.launch.city}`;
+        listUrl = LAUNCH_URLS.classifieds;
       }
     } else {
       // Location: /classificados/ba/salvador ou /classificados/ba/salvador/pituba
-      listUrl = `/classificados${geoPathToPublicUrl(routeResolved.location.geographic_path)}`;
+      listUrl = buildModuleTerritoryUrl(MODULE_SLUGS.classifieds, geoPathToPublicUrl(routeResolved.location.geographic_path));
     }
   } else if (activeLocation?.geographic_path) {
     // Fallback: store global (quando fora de rota territorial)
-    listUrl = `/classificados${geoPathToPublicUrl(activeLocation.geographic_path)}`;
+    listUrl = buildModuleTerritoryUrl(MODULE_SLUGS.classifieds, geoPathToPublicUrl(activeLocation.geographic_path));
   } else {
     // Default: cidade de lançamento
-    listUrl = `/classificados/${TERRITORY_CONFIG.launch.state}/${TERRITORY_CONFIG.launch.city}`;
+    listUrl = LAUNCH_URLS.classifieds;
   }
 
   return {

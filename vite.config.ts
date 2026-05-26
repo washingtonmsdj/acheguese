@@ -15,6 +15,14 @@ function getVendorChunk(id: string): string | undefined {
   }
 
   if (
+    id.includes("class-variance-authority") ||
+    id.includes("clsx") ||
+    id.includes("tailwind-merge")
+  ) {
+    return "vendor-utils";
+  }
+
+  if (
     id.includes("recharts") ||
     id.includes("victory-vendor") ||
     id.includes(`${path.sep}d3-`) ||
@@ -49,10 +57,6 @@ function getVendorChunk(id: string): string | undefined {
 
   if (id.includes("framer-motion")) {
     return "vendor-motion";
-  }
-
-  if (id.includes("lucide-react")) {
-    return "vendor-icons";
   }
 
   if (
@@ -147,6 +151,7 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         output: {
           manualChunks: (id) => getVendorChunk(id),
+          hoistTransitiveImports: false,
           chunkFileNames: "assets/[name]-[hash].js",
           entryFileNames: "assets/[name]-[hash].js",
           assetFileNames: "assets/[name]-[hash][extname]",

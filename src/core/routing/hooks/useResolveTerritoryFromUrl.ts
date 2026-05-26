@@ -1,4 +1,3 @@
-﻿/* eslint-disable react-hooks/exhaustive-deps */
 /**
  * useResolveTerritoryFromUrl
  *
@@ -22,6 +21,7 @@ import { useParams, useLocation } from 'react-router-dom';
 import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
 import { createTerritorialGroupRepository } from '@/core/location/repositories/createTerritorialGroupRepository';
 import { TerritoryCommunityRouteService } from '@/core/routing/services/TerritoryCommunityRouteService';
+import { APP_MODULE_SLUGS, isAppModulePath } from '@/config/moduleSlugs';
 import { TERRITORY_CONFIG } from '@/config/territory';
 import type { Location, TerritorialGroupWithMembers } from '@/core/location/types';
 import { isTerritoryPubliclyNavigable } from '../utils/territoryVisibility';
@@ -71,8 +71,10 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
   let districtSlug = params.territorySlug || params.district || params.groupSlugOrDistrict;
   if (districtSlug === '_') districtSlug = undefined;
 
-  const isGuideRoute = pathname.startsWith('/pontos-turisticos/') || pathname.startsWith('/guia/pontos-turisticos/');
-  const isCommunityRoute = pathname.startsWith('/comunidade/');
+  const isGuideRoute =
+    isAppModulePath(pathname, APP_MODULE_SLUGS.touristPoints) ||
+    pathname.startsWith(`/guia/${APP_MODULE_SLUGS.touristPoints}/`);
+  const isCommunityRoute = isAppModulePath(pathname, APP_MODULE_SLUGS.community);
 
   const [result, setResult] = useState<TerritoryResolveResult>({
     status: TERRITORY_RESOLVE_STATUS.IDLE,
@@ -303,7 +305,7 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
 
     resolve();
     return () => { cancelled = true; };
-  }, [country, state, city, groupSlug, districtSlug, isCommunityRoute]);
+  }, [country, state, city, groupSlug, districtSlug, isCommunityRoute, isGuideRoute]);
 
   return result;
 }

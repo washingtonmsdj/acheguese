@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui
 import {
   ALERT_CATEGORY_LABELS,
   type AlertCategory,
-} from "@/shared/services/communityAlerts";
+} from "@/core/community/alerts";
 import type { AlertAdminItem } from "./AdminCommunityAlerts.types";
 
 interface AdminCommunityAlertsAnalyticsProps {

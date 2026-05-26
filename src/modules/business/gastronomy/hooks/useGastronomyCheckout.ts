@@ -3,7 +3,7 @@ import { useShallow } from "zustand/react/shallow";
 
 import { locationGeocodingService } from "@/core/location/services/LocationGeocodingService";
 import { useSessionContext } from "@/core/session";
-import { useMotoboy } from "@/core/mobility/hooks/useMotoboy";
+import { useMotoboy } from "@/core/mobility/hooks";
 import { toast } from "sonner";
 import { useGastronomyCartStore } from "../cart/useGastronomyCartStore";
 import { DeliveryAreaService } from "../services/DeliveryAreaService";

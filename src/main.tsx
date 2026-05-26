@@ -2,7 +2,6 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
-import { initializeSentry } from "./shared/config/sentry.config.ts";
 import { deferFrame, deferIdle, deferLoad } from "./shared/utils/deferredInit.ts";
 
 // In local development, remove any previously registered SW/caches that can
@@ -34,7 +33,9 @@ deferFrame(() => {
 
 // Services that are useful but should not block page startup.
 deferIdle(() => {
-  initializeSentry();
+  import("./shared/config/sentry.config.ts").then(({ initializeSentry }) => {
+    initializeSentry();
+  });
 
   import("@/core/authorization/services/AuthorizationEngine").then(({ AuthorizationEngine }) => {
     AuthorizationEngine.initialize();

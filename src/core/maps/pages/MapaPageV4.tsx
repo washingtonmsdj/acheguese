@@ -22,12 +22,13 @@ import { DEFAULT_TILE_STYLE } from '../providers/MapProvider';
 import { MAP_DEFAULT_BOUNDS, MAP_DEFAULT_ZOOM } from '../config/defaultCoordinates';
 import { MAP_RUNTIME_LAYER_KEYS } from '../config/runtimeConfig';
 import { BusinessService } from '@/core/business/services/BusinessService';
-import { communityEventsRuntimeService, type CommunityEvent } from '@/core/community-events/services/CommunityEventsRuntimeService';
+import { communityEventsRuntimeService, type CommunityEvent } from '@/core/community/services/CommunityEventsRuntimeService';
 import { mapLayerRuntimeService } from '@/core/maps/services/MapLayerRuntimeService';
 import { useResolvedUserLocation } from '@/core/location/hooks/useResolvedUserLocation';
 import { useTerritoryFilter, territoryFilterKey } from '@/core/location/hooks/useTerritoryFilter';
 import { useTerritoryPolygon } from '../hooks/useTerritoryPolygon';
 import { useQuery } from '@tanstack/react-query';
+import { APP_MODULE_SLUGS, buildAppModulePath } from '@/config/moduleSlugs';
 import { spatialSearchService } from '@/core/geospatial/services/SpatialSearchService';
 import { EntityStatus } from '@/shared/types/enums';
 import type { BoundingBox, MapLayerKey, MapMarker, MapViewport } from '../types/core';
@@ -49,6 +50,10 @@ interface MapaPageV4Props {
 // Os avisos de sprite (office, swimming_pool, etc.) são suprimidos via
 // styleimagemissing no MapLibreAdapter — não trocamos de estilo por isso.
 const TILE_STYLE_URL = DEFAULT_TILE_STYLE.styleUrl;
+const BUSINESS_MAP_BASE_URL = buildAppModulePath(APP_MODULE_SLUGS.business);
+const EVENTS_MAP_BASE_URL = buildAppModulePath(APP_MODULE_SLUGS.events);
+const GASTRONOMY_MAP_BASE_URL = buildAppModulePath(APP_MODULE_SLUGS.gastronomy);
+const TOURIST_POINTS_MAP_BASE_URL = buildAppModulePath(APP_MODULE_SLUGS.touristPoints);
 
 // ─── Bounds e zoom iniciais vindos do SSOT de mapas ───────────────────────────
 const INITIAL_BOUNDS: BoundingBox = MAP_DEFAULT_BOUNDS;
@@ -97,7 +102,7 @@ function makeBusinessFetcher(territoryFilter: TerritoryFilter) {
           map_layer_key: 'businesses',
         })),
         'business',
-        { includeMetadata: true, calculateScore: true, baseUrl: '/empresas' },
+        { includeMetadata: true, calculateScore: true, baseUrl: BUSINESS_MAP_BASE_URL },
       );
     } catch {
       return [];
@@ -125,7 +130,7 @@ function makeEventFetcher(territoryFilter: TerritoryFilter) {
           map_layer_key: 'events',
         })),
         'event',
-        { includeMetadata: true, baseUrl: '/eventos' },
+        { includeMetadata: true, baseUrl: EVENTS_MAP_BASE_URL },
       );
     } catch {
       return [];
@@ -158,7 +163,7 @@ function makeGastronomyFetcher(territoryFilter: TerritoryFilter) {
           map_layer_key: 'gastronomy',
         })),
         'business',
-        { includeMetadata: true, calculateScore: true, baseUrl: '/gastronomia' },
+        { includeMetadata: true, calculateScore: true, baseUrl: GASTRONOMY_MAP_BASE_URL },
       );
     } catch {
       return [];
@@ -376,7 +381,7 @@ export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV
         },
       ],
       'business',
-      { includeMetadata: true, calculateScore: true, baseUrl: '/empresas' },
+      { includeMetadata: true, calculateScore: true, baseUrl: BUSINESS_MAP_BASE_URL },
     );
   }, [focusTarget]);
 
@@ -395,7 +400,7 @@ export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV
             map_layer_key: 'tourist_points',
           })),
           'tourist_point',
-          { includeMetadata: true, calculateScore: true, baseUrl: '/pontos-turisticos' },
+          { includeMetadata: true, calculateScore: true, baseUrl: TOURIST_POINTS_MAP_BASE_URL },
         )
       : [];
 
@@ -513,5 +518,3 @@ export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV
     </div>
   );
 }
-
-

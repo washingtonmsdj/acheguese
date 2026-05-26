@@ -41,7 +41,7 @@ import {
   UtensilsCrossed,
 } from "lucide-react";
 import { toast } from "sonner";
-import { CUISINE_TYPES } from "@/shared/services/gastronomyFacade";
+import { CUISINE_TYPES } from "@/core/verticals/gastronomy";
 import { openSafeUrlInNewTab } from "@/shared/utils/safeRedirect";
 
 const PAGE_SIZE = 20;

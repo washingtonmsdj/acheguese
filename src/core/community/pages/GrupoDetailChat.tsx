@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avat
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/shared/components/ui/dropdown-menu";
 import { Check, Copy, Flag, Loader2, MessageCircle, MoreVertical, Pencil, Reply, Send, Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { ptBR } from "@/shared/utils/dateLocale";
 import { useDeleteGroupMessage, useGroupMessages, useReportGroupMessage, useSendGroupMessage, useUpdateGroupMessage } from "@/core/community/hooks/useGroupQueries";
 import { getInitials } from "./GrupoDetailShared";
 import type { GroupMessageItem } from "./GrupoDetailShared";

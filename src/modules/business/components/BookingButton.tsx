@@ -32,7 +32,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { ptBR } from "@/shared/utils/dateLocale";
 import { cn } from "@/shared/utils/cn";
 import { toast } from "sonner";
 import { buildTelUrl, buildWhatsAppUrl, openContactUrl } from "@/shared/utils/contactLinks";

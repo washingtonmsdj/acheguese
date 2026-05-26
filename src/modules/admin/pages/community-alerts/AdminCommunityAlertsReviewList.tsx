@@ -6,7 +6,7 @@ import {
   ALERT_CATEGORY_LABELS,
   ALERT_REPORT_REASON_LABELS,
   type AlertCategory,
-} from "@/shared/services/communityAlerts";
+} from "@/core/community/alerts";
 import type { AlertAdminItem } from "./AdminCommunityAlerts.types";
 
 interface AdminCommunityAlertsReviewListProps {

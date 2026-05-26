@@ -27,7 +27,7 @@ import {
   NextActionsPanel,
 } from "@/modules/profile/components/hub";
 import { ProfileActiveRideCard } from "@/modules/profile/components/ProfileActiveRideCard";
-import { DashboardMetricCard } from "@/core/profile/components/cards";
+import { DashboardMetricCard } from "@/modules/profile/components/cards";
 
 import type { ResumoSectionProps } from "./types";
 import { getMobilityServiceStatus } from "@/core/profile/utils/mobilityServiceStatus";

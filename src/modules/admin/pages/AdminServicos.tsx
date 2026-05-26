@@ -45,7 +45,7 @@ import {
   AvatarImage,
 } from "@/shared/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { ptBR } from "@/shared/utils/dateLocale";
 import { adminCommunityService } from "@/core/admin/services/AdminCommunityService";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { ProfessionalService } from "@/core/professional/services/ProfessionalService";

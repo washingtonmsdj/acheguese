@@ -1,4 +1,4 @@
-import { DriverEarningsLayout } from "@/core/mobility/components/driver/DriverEarningsLayout";
+import { DriverEarningsLayout } from "@/core/mobility/components/driver";
 
 /**
  * CentralMotoristaGanhosPage

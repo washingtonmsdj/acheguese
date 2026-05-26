@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate, Outlet } from "react-router-dom";
-import { useDriverProfileIdentity } from "@/core/mobility/hooks/useDriverProfileIdentity";
+import { useDriverProfileIdentity } from "@/core/mobility/hooks";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { Car, Bike, Plus } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";

@@ -36,7 +36,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { ptBR } from "@/shared/utils/dateLocale";
 import { cn } from "@/shared/utils/cn";
 import { RIDE_STATUS, RIDE_MODE, MOBILITY_QUERY_KEYS } from "@/modules/mobility/constants";
 import type { RideRequest } from "@/modules/mobility/types/types";

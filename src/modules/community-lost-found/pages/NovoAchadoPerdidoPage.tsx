@@ -1,1 +1,1 @@
-export { default } from "@/core/community-lost-found/pages/NovoAchadoPerdidoPage";
+export { default } from "@/core/community/pages/NovoAchadoPerdidoPage";

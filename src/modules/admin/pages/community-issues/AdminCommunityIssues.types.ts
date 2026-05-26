@@ -2,8 +2,8 @@ import type {
   IssueCategory,
   IssuePriority,
   IssueStatus,
-} from "@/shared/services/communityIssues";
-import type { ISSUE_REPORT_REASON_LABELS } from "@/shared/services/communityIssues";
+} from "@/core/community/issues";
+import type { ISSUE_REPORT_REASON_LABELS } from "@/core/community/issues";
 
 export type IssueAdminItem = {
   id: string;

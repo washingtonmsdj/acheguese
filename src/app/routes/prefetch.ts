@@ -5,6 +5,7 @@
  * reduzindo latência percebida no primeiro clique dos atalhos.
  */
 
+import { APP_MODULE_SLUGS, buildAppModulePath, isAppModulePath } from "@/config/moduleSlugs";
 import { LAUNCH_URLS } from "@/config/territory";
 
 const PREFETCHERS: Array<{ test: (path: string) => boolean; load: () => Promise<unknown> }> = [
@@ -13,52 +14,52 @@ const PREFETCHERS: Array<{ test: (path: string) => boolean; load: () => Promise<
     load: () => import("@/app/pages/MainLandingPage"),
   },
   {
-    test: (path) => path.startsWith("/empresas"),
+    test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.business),
     load: () => import("@/app/pages/EmpresasLandingPage"),
   },
   {
-    test: (path) => path.startsWith("/servicos"),
+    test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.services),
     load: () => import("@/modules/professionals/services/pages/ServicosLandingPage"),
   },
   {
-    test: (path) => path.startsWith("/classificados"),
+    test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.classifieds),
     load: () => import("@/modules/classifieds/pages/ClassificadosPage"),
   },
   {
-    test: (path) => path.startsWith("/gastronomia"),
+    test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.gastronomy),
     load: () => import("@/modules/business/gastronomy/pages/GastronomyLandingPage"),
   },
   {
-    test: (path) => path.startsWith("/eventos"),
+    test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.events),
     load: () => import("@/features/events/pages/EventsListPage"),
   },
   {
-    test: (path) => path.startsWith("/vagas"),
+    test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.jobs),
     load: () => import("@/modules/classifieds/jobs/pages/VagasPublicPage"),
   },
   {
-    test: (path) => path.startsWith("/comunidade"),
-    load: () => import("@/core/community-feed/pages/ComunidadePage"),
+    test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.community),
+    load: () => import("@/modules/community-feed/pages/ComunidadePage"),
   },
   {
-    test: (path) => path.startsWith("/mapa"),
+    test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.map),
     load: () => import("@/core/maps/pages/MapaPageV4"),
   },
   {
-    test: (path) => path.startsWith("/servicos"),
-    load: () => import("@/modules/professionals/services/pages/ServicosLandingPage"),
-  },
-  {
-    test: (path) => path.startsWith("/busca"),
+    test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.search),
     load: () => import("@/app/pages/BuscaPage"),
   },
   {
-    test: (path) => path.startsWith("/mobilidade"),
+    test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.mobility),
     load: () => import("@/modules/mobility/pages/MobilidadeLandingPage"),
   },
   {
-    test: (path) => path.startsWith("/ranking"),
+    test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.ranking),
     load: () => import("@/core/gamification/pages/RankingPage"),
+  },
+  {
+    test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.touristPoints),
+    load: () => import("@/modules/guide/pages/TouristPointsPage"),
   },
   {
     test: (path) => path.startsWith("/mensagens") || path.startsWith("/chat/"),
@@ -117,17 +118,18 @@ export function scheduleIdleRouteWarmup(): void {
 
   runIdle(() => {
     [
-      "/empresas",
-      "/gastronomia",
-      "/eventos",
-      "/classificados",
-      "/vagas",
+      buildAppModulePath(APP_MODULE_SLUGS.business),
+      buildAppModulePath(APP_MODULE_SLUGS.gastronomy),
+      buildAppModulePath(APP_MODULE_SLUGS.events),
+      buildAppModulePath(APP_MODULE_SLUGS.classifieds),
+      buildAppModulePath(APP_MODULE_SLUGS.jobs),
       LAUNCH_URLS.community,
-      "/servicos",
-      "/mapa",
-      "/busca",
-      "/mobilidade",
-      "/ranking",
+      buildAppModulePath(APP_MODULE_SLUGS.services),
+      buildAppModulePath(APP_MODULE_SLUGS.map),
+      buildAppModulePath(APP_MODULE_SLUGS.search),
+      buildAppModulePath(APP_MODULE_SLUGS.mobility),
+      buildAppModulePath(APP_MODULE_SLUGS.ranking),
+      buildAppModulePath(APP_MODULE_SLUGS.touristPoints),
       "/mensagens",
       "/notifications",
       "/conta",

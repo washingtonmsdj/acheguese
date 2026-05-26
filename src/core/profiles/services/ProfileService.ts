@@ -499,7 +499,7 @@ export class ProfileService {
   }
   async getDriverData(profileId: string): Promise<unknown | null> {
     try {
-      const { mobilityService } = await import("@/modules/mobility/services");
+      const { mobilityService } = await import("@/core/mobility/services/runtime");
       return await mobilityService.getDriverData(profileId);
     } catch (error) {
       logger.error("Error in getDriverData:", error);

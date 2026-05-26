@@ -16,7 +16,7 @@ import { useToast } from "@/shared/hooks/use-toast";
 import { Settings, MapPin, TrendingUp, Save, RefreshCw } from "lucide-react";
 import { logger } from "@/shared/utils/logger";
 import { useLocationContext } from "@/core/location";
-import { mobilityRolloutService } from "@/shared/services/mobilityAdmin";
+import { mobilityRolloutService } from "@/core/mobility/services/runtime";
 
 interface MobilitySettings {
   prioritize_destination_residents: {

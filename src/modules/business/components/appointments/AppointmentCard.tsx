@@ -12,7 +12,7 @@ import {
   Eye,
 } from "lucide-react";
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { ptBR } from "@/shared/utils/dateLocale";
 import { cn } from "@/shared/utils/cn";
 import { APPOINTMENT_STATUSES, type AppointmentStatus } from "./constants";
 

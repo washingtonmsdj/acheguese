@@ -1,25 +1,41 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { WifiOff, Wifi, Download } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import { DRIVER_STATUS } from "@/shared/types/constants";
 import { logger } from "@/shared/utils/logger";
 
+function isNavigatorOnline(): boolean {
+  return typeof navigator === "undefined" ? true : navigator.onLine;
+}
+
 export function OfflineIndicator() {
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [showIndicator, setShowIndicator] = useState(false);
+  const [isOnline, setIsOnline] = useState(isNavigatorOnline);
+  const [showIndicator, setShowIndicator] = useState(!isNavigatorOnline());
+  const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    const clearHideTimeout = () => {
+      if (!hideTimeoutRef.current) return;
+      clearTimeout(hideTimeoutRef.current);
+      hideTimeoutRef.current = null;
+    };
+
+    const scheduleHide = () => {
+      clearHideTimeout();
+      hideTimeoutRef.current = setTimeout(() => {
+        setShowIndicator(false);
+        hideTimeoutRef.current = null;
+      }, 3000);
+    };
+
     const handleOnline = () => {
       setIsOnline(true);
       setShowIndicator(true);
-
-      // Esconder após 3 segundos
-      setTimeout(() => setShowIndicator(false), 3000);
+      scheduleHide();
     };
 
     const handleOffline = () => {
+      clearHideTimeout();
       setIsOnline(false);
       setShowIndicator(true);
     };
@@ -27,48 +43,44 @@ export function OfflineIndicator() {
     window.addEventListener(DRIVER_STATUS.ONLINE, handleOnline);
     window.addEventListener(DRIVER_STATUS.OFFLINE, handleOffline);
 
-    // Mostrar indicador se já estiver offline
-    if (!navigator.onLine) {
+    if (!isNavigatorOnline()) {
       setShowIndicator(true);
     }
 
     return () => {
+      clearHideTimeout();
       window.removeEventListener(DRIVER_STATUS.ONLINE, handleOnline);
       window.removeEventListener(DRIVER_STATUS.OFFLINE, handleOffline);
     };
   }, []);
 
+  if (!showIndicator) return null;
+
   return (
-    <AnimatePresence>
-      {showIndicator && (
-        <motion.div
-          initial={{ y: -100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: -100, opacity: 0 }}
-          transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full shadow-lg flex items-center gap-2 ${
-            isOnline ? "bg-green-500 text-white" : "bg-red-500 text-white"
-          }`}
-        >
-          {isOnline ? (
-            <>
-              <Wifi className="w-4 h-4" />
-              <span className="text-sm font-medium">Conexão restaurada</span>
-            </>
-          ) : (
-            <>
-              <WifiOff className="w-4 h-4" />
-              <span className="text-sm font-medium">Você está offline</span>
-            </>
-          )}
-        </motion.div>
+    <div
+      className={`fixed top-4 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full px-4 py-2 text-white shadow-lg transition-[opacity,transform] duration-200 ${
+        isOnline ? "bg-green-500" : "bg-red-500"
+      }`}
+      role="status"
+      aria-live="polite"
+    >
+      {isOnline ? (
+        <>
+          <Wifi className="h-4 w-4" />
+          <span className="text-sm font-medium">Conexão restaurada</span>
+        </>
+      ) : (
+        <>
+          <WifiOff className="h-4 w-4" />
+          <span className="text-sm font-medium">Você está offline</span>
+        </>
       )}
-    </AnimatePresence>
+    </div>
   );
 }
 
 export function OfflineBanner() {
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [isOnline, setIsOnline] = useState(isNavigatorOnline);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -86,17 +98,17 @@ export function OfflineBanner() {
   if (isOnline) return null;
 
   return (
-    <div className="bg-yellow-500/10 border-b border-yellow-500/30 px-4 py-2">
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
+    <div className="border-b border-yellow-500/30 bg-yellow-500/10 px-4 py-2">
+      <div className="mx-auto flex max-w-7xl items-center justify-between">
         <div className="flex items-center gap-2">
-          <WifiOff className="w-4 h-4 text-yellow-500" />
-          <span className="text-sm text-yellow-500 font-medium">
+          <WifiOff className="h-4 w-4 text-yellow-500" />
+          <span className="text-sm font-medium text-yellow-500">
             Modo Offline - Alguns recursos podem estar limitados
           </span>
         </div>
         <button
           onClick={() => window.location.reload()}
-          className="text-xs text-yellow-500 hover:text-yellow-400 underline"
+          className="text-xs text-yellow-500 underline hover:text-yellow-400"
         >
           Tentar reconectar
         </button>
@@ -120,7 +132,6 @@ export function OfflineDataStatus() {
 
       setHasCachedData(keys.length > 0);
 
-      // Estimar tamanho do cache
       if ("storage" in navigator && "estimate" in navigator.storage) {
         const estimate = await navigator.storage.estimate();
         const usage = estimate.usage || 0;
@@ -136,12 +147,12 @@ export function OfflineDataStatus() {
     const k = 1024;
     const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
+    return `${Math.round((bytes / Math.pow(k, i)) * 100) / 100} ${sizes[i]}`;
   };
 
   return (
     <div className="flex items-center gap-2 text-sm text-muted-foreground">
-      <Download className="w-4 h-4" />
+      <Download className="h-4 w-4" />
       <span>
         {hasCachedData ? (
           <>Dados offline: {cacheSize}</>
@@ -152,4 +163,3 @@ export function OfflineDataStatus() {
     </div>
   );
 }
-

@@ -10,7 +10,7 @@ import { PostBadge, PostType } from "../PostBadge";
 import { Construction, MapPin, Clock } from "lucide-react";
 import { INLINE_STYLES } from "../styles/communityDesignSystem";
 import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { ptBR } from "@/shared/utils/dateLocale";
 
 interface CivicReportHeaderProps {
   authorName: string;

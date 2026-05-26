@@ -1,10 +1,1 @@
-/**
- * Domínio interno: proof of delivery
- */
-
-export interface DeliveryProof {
-  photo_url?: string;
-  code?: string;
-  observation?: string;
-  signed_at?: string;
-}
+export * from "@/core/mobility/delivery/proof-of-delivery/types";

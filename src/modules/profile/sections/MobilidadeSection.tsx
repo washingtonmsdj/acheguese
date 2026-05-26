@@ -9,7 +9,7 @@ import { ProfileActiveRideCard } from "@/modules/profile/components/ProfileActiv
 import {
   DriverOperationalSnapshotCard,
   DriverVehicleDetailsCard,
-} from "@/core/profile/components/cards";
+} from "@/modules/profile/components/cards";
 
 import type { MobilidadeSectionProps } from "./types";
 import type { Tables } from "@/core/infrastructure/supabase";

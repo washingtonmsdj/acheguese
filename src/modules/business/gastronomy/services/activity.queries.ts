@@ -6,7 +6,7 @@ import type {
   ActivityType,
 } from '../types/gastronomy';
 import { formatDistanceToNow } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { ptBR } from '@/shared/utils/dateLocale';
 
 function formatTimeAgo(timestamp: string): string {
   try {

@@ -8,9 +8,10 @@
 import { useActiveTerritory } from '@/core/location/hooks/useActiveTerritory';
 import { buildGroupBaseUrl, geoPathToPublicUrl } from '@/core/routing/utils/territoryUrls';
 import { TERRITORY_CONFIG } from '@/config/territory';
+import { APP_MODULE_SLUGS, buildAppModulePath } from '@/config/moduleSlugs';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
 
-export const TOURIST_POINTS_SLUG = 'pontos-turisticos';
+export const TOURIST_POINTS_SLUG = APP_MODULE_SLUGS.touristPoints;
 
 export interface GuideUrls {
   /** /pontos-turisticos/ba/salvador ou /pontos-turisticos/ba/salvador/barra */
@@ -20,7 +21,7 @@ export interface GuideUrls {
 }
 
 function buildGuideUrls(territoryPublicPath: string): GuideUrls {
-  const base = `/${TOURIST_POINTS_SLUG}${territoryPublicPath}`;
+  const base = buildAppModulePath(TOURIST_POINTS_SLUG, territoryPublicPath);
   return {
     touristPoints: base,
     touristPointDetail: (slug: string) => `${base}/${slug}`,
@@ -65,8 +66,11 @@ export function buildTouristPointDetailUrl(
 ): string {
   if (pointLocation?.geographic_path) {
     const publicPath = geoPathToPublicUrl(pointLocation.geographic_path);
-    return `/${TOURIST_POINTS_SLUG}${publicPath}/${slug}`;
+    return `${buildAppModulePath(TOURIST_POINTS_SLUG, publicPath)}/${slug}`;
   }
   // Fallback: usa o território de lançamento
-  return `/${TOURIST_POINTS_SLUG}/${TERRITORY_CONFIG.launch.state}/${TERRITORY_CONFIG.launch.city}/${slug}`;
+  return `${buildAppModulePath(
+    TOURIST_POINTS_SLUG,
+    `/${TERRITORY_CONFIG.launch.state}/${TERRITORY_CONFIG.launch.city}`,
+  )}/${slug}`;
 }

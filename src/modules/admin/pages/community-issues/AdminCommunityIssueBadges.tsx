@@ -4,7 +4,7 @@ import {
   ISSUE_PRIORITY_LABELS,
   type IssuePriority,
   type IssueStatus,
-} from "@/shared/services/communityIssues";
+} from "@/core/community/issues";
 import type { LucideIcon } from "lucide-react";
 
 export function getStatusBadge(status: IssueStatus) {

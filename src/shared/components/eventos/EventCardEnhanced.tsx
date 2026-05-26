@@ -30,7 +30,7 @@ import { cn } from '@/shared/utils/cn';
 import { buildGoogleMapsSearchUrl } from '@/shared/utils/contactLinks';
 import { openSafeExternalUrl } from '@/shared/utils/safeRedirect';
 import { format, formatDistanceToNow, isToday, isTomorrow, isPast } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { ptBR } from '@/shared/utils/dateLocale';
 
 interface Event {
   id: string;

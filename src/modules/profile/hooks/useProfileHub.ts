@@ -32,9 +32,10 @@ import { useAuth } from '@/core/auth/hooks/useAuth';
 import { useMultiProfileContext } from '@/core/profiles/contexts/multi-profile-runtime-context';
 import { useAppUrls } from '@/core/routing/hooks/useAppUrls';
 import { useHomeCommunityHref } from '@/core/routing/hooks/useHomeCommunityHref';
+import { APP_MODULE_SLUGS, buildAppModulePath } from '@/config/moduleSlugs';
 import { LAUNCH_URLS } from '@/config/territory';
 import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
-import { useDriverProfileIdentity } from '@/core/mobility/hooks/useDriverProfileIdentity';
+import { useDriverProfileIdentity } from '@/core/mobility/hooks';
 import { useContaWorkspace } from './usePerfilPageV3';
 import { buildProfileEditUrl, buildPublicProfileUrl } from '@/core/profiles/utils/publicProfileUrl';
 import { canProfileHaveMembers, isProfileVerified } from '../utils/profileDomainRules';
@@ -42,15 +43,15 @@ import { canProfileHaveMembers, isProfileVerified } from '../utils/profileDomain
 import type { ProfileAssociatedBusiness } from '@/core/profiles/services/ProfileBusinessTypes';
 
 const GLOBAL_MODULE_URLS = {
-  business: '/empresas',
-  services: '/servicos',
-  gastronomy: '/gastronomia',
-  gastronomyFavorites: '/gastronomia/favoritos',
+  business: buildAppModulePath(APP_MODULE_SLUGS.business),
+  services: buildAppModulePath(APP_MODULE_SLUGS.services),
+  gastronomy: buildAppModulePath(APP_MODULE_SLUGS.gastronomy),
+  gastronomyFavorites: buildAppModulePath(APP_MODULE_SLUGS.gastronomy, "/favoritos"),
   community: LAUNCH_URLS.community,
-  jobs: '/vagas',
-  events: '/eventos',
-  touristPoints: '/pontos-turisticos',
-  ranking: '/ranking',
+  jobs: buildAppModulePath(APP_MODULE_SLUGS.jobs),
+  events: buildAppModulePath(APP_MODULE_SLUGS.events),
+  touristPoints: buildAppModulePath(APP_MODULE_SLUGS.touristPoints),
+  ranking: buildAppModulePath(APP_MODULE_SLUGS.ranking),
   analytics: '/analytics',
 } as const;
 

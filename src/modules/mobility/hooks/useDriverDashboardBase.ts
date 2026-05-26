@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { useIsAdmin } from "@/core/auth/hooks/useIsAdmin";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { useDriverOperationalStatus } from "@/modules/mobility/hooks/useDriverOperationalStatus";
-import { useDriverProfileIdentity } from "@/core/mobility/hooks/useDriverProfileIdentity";
+import { useDriverProfileIdentity } from "@/modules/mobility/hooks/useDriverProfileIdentity";
 import { useMobilityUrls } from "@/modules/mobility/hooks/useMobilityUrls";
 import { useRideRealtime } from "@/modules/mobility/hooks/useRideRealtime";
 import {

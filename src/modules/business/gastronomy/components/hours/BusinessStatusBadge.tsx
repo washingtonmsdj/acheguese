@@ -9,7 +9,7 @@ import { useBusinessStatus } from '../../hooks';
 import { Badge } from '@/shared/components/ui/badge';
 import { Clock } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { ptBR } from '@/shared/utils/dateLocale';
 
 interface BusinessStatusBadgeProps {
   businessId: string;

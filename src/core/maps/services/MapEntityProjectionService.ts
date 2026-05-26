@@ -16,6 +16,7 @@
  * @module core/maps/services
  */
 import { logger } from '@/shared/utils/logger';
+import { APP_MODULE_SLUGS, buildAppModulePath } from '@/config/moduleSlugs';
 import type { MapMarker, MapEntityType, MapEntityStatus, Coordinates } from '../types';
 import { isValidCoordinates } from '../types';
 // ============================================
@@ -128,7 +129,7 @@ export class MapEntityProjectionService {
   projectBusiness(business: MappableEntity, options: ProjectionOptions = {}): MapMarker | null {
     return this.projectEntity(business, 'business', {
       ...options,
-      baseUrl: options.baseUrl || '/empresas',
+      baseUrl: options.baseUrl || buildAppModulePath(APP_MODULE_SLUGS.business),
     });
   }
 
@@ -138,7 +139,7 @@ export class MapEntityProjectionService {
   projectService(service: MappableEntity, options: ProjectionOptions = {}): MapMarker | null {
     return this.projectEntity(service, 'service', {
       ...options,
-      baseUrl: options.baseUrl || '/servicos',
+      baseUrl: options.baseUrl || buildAppModulePath(APP_MODULE_SLUGS.services),
     });
   }
 
@@ -151,7 +152,7 @@ export class MapEntityProjectionService {
   ): MapMarker | null {
     return this.projectEntity(classified, 'classified', {
       ...options,
-      baseUrl: options.baseUrl || '/classificados',
+      baseUrl: options.baseUrl || buildAppModulePath(APP_MODULE_SLUGS.classifieds),
     });
   }
 
@@ -161,7 +162,7 @@ export class MapEntityProjectionService {
   projectEvent(event: MappableEntity, options: ProjectionOptions = {}): MapMarker | null {
     return this.projectEntity(event, 'event', {
       ...options,
-      baseUrl: options.baseUrl || '/eventos',
+      baseUrl: options.baseUrl || buildAppModulePath(APP_MODULE_SLUGS.events),
     });
   }
 
@@ -171,7 +172,7 @@ export class MapEntityProjectionService {
   projectAlert(alert: MappableEntity, options: ProjectionOptions = {}): MapMarker | null {
     return this.projectEntity(alert, 'alert', {
       ...options,
-      baseUrl: options.baseUrl || '/alertas',
+      baseUrl: options.baseUrl || buildAppModulePath(APP_MODULE_SLUGS.communityAlerts),
     });
   }
 
@@ -197,7 +198,7 @@ export class MapEntityProjectionService {
   ): MapMarker | null {
     return this.projectEntity(point, 'tourist_point', {
       ...options,
-      baseUrl: options.baseUrl || '/pontos-turisticos',
+      baseUrl: options.baseUrl || buildAppModulePath(APP_MODULE_SLUGS.touristPoints),
     });
   }
 

@@ -13,7 +13,7 @@
 
 import { useActiveTerritory } from '@/core/location/hooks/useActiveTerritory';
 import { buildGroupBaseUrl, buildModuleTerritoryUrl, geoPathToPublicUrl, MODULE_SLUGS } from '@/core/routing/utils/territoryUrls';
-import { TERRITORY_CONFIG } from '@/config/territory';
+import { LAUNCH_URLS } from '@/config/territory';
 import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
 import type { BusinessUrlContext } from '@/core/business/services/BusinessUrlService';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
@@ -55,18 +55,18 @@ export function useBusinessUrls(routeResolved?: ResolvedTerritory | null): Busin
         const groupBase = buildGroupBaseUrl(routeResolved.group, `/${parts[0]}/${parts[1]}/${parts[2]}`);
         listUrl = buildModuleTerritoryUrl(MODULE_SLUGS.business, groupBase);
       } else {
-        listUrl = `/empresas/${TERRITORY_CONFIG.launch.state}/${TERRITORY_CONFIG.launch.city}`;
+        listUrl = LAUNCH_URLS.business;
       }
     } else {
       // Location: /empresas/ba/salvador ou /empresas/ba/salvador/pituba
-      listUrl = `/empresas${geoPathToPublicUrl(routeResolved.location.geographic_path)}`;
+      listUrl = buildModuleTerritoryUrl(MODULE_SLUGS.business, geoPathToPublicUrl(routeResolved.location.geographic_path));
     }
   } else if (activeLocation?.geographic_path) {
     // Fallback: store global (quando fora de rota territorial)
-    listUrl = `/empresas${geoPathToPublicUrl(activeLocation.geographic_path)}`;
+    listUrl = buildModuleTerritoryUrl(MODULE_SLUGS.business, geoPathToPublicUrl(activeLocation.geographic_path));
   } else {
     // Default: cidade de lançamento
-    listUrl = `/empresas/${TERRITORY_CONFIG.launch.state}/${TERRITORY_CONFIG.launch.city}`;
+    listUrl = LAUNCH_URLS.business;
   }
 
   return {

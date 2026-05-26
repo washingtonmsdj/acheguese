@@ -4,7 +4,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { ServiceCardEnhanced } from "./ServiceCardEnhanced";
 import { useServicesAd } from "@/modules/professionals/services/hooks/useServicesAd";
-import { SponsoredAdCard } from "@/shared/services/promotions";
+import { SponsoredAdCard } from "@/core/business/promotions";
 import type { ProfessionalItem } from "@/modules/professionals/services/hooks/useServicos";
 
 interface ServicesListProps {

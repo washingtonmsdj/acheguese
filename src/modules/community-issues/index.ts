@@ -1,1 +1,1 @@
-export * from "@/core/community-issues";
+export * from "@/core/community/issues";
