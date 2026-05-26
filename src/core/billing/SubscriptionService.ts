@@ -285,8 +285,8 @@ export class SubscriptionService {
         .from("user_subscriptions")
         .update({
           cancel_at_period_end: false,
-          status: "active",
-          status_v2: "active",
+          status: BILLING_SUBSCRIPTION_STATUS.ACTIVE,
+          status_v2: BILLING_SUBSCRIPTION_STATUS.ACTIVE,
           active: true,
           updated_at: new Date().toISOString(),
         })

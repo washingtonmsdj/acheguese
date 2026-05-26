@@ -3,7 +3,10 @@ import { BillingService } from "@/core/billing/services/BillingService";
 import type { PlanTier } from "@/core/billing";
 import { PlanTier as BillingPlanTier } from "@/core/billing";
 import { logger } from "@/shared/utils/logger";
-import type { GastronomySubscriptionStatus } from "../constants/subscription-status";
+import {
+  GASTRONOMY_SUBSCRIPTION_STATUSES,
+  type GastronomySubscriptionStatus,
+} from "../constants/subscription-status";
 
 export interface GastronomySubscription {
   id: string;
@@ -112,7 +115,7 @@ function createDefaultSubscription(
     id: `free-${businessId}`,
     business_id: businessId,
     plan_tier: BillingPlanTier.FREE,
-    status: "active",
+    status: GASTRONOMY_SUBSCRIPTION_STATUSES.ACTIVE,
     current_period_start: now,
     current_period_end: distantFuture.toISOString(),
     cancel_at_period_end: false,
