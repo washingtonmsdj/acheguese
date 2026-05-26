@@ -385,6 +385,26 @@ export function AppRoutes() {
         </Route>
 
         {/* Rotas de comunidade */}
+        <Route path="/comunidade/:state/:city/area/:groupSlug/interesse" element={<P.CommunityInterestPage />} />
+        <Route path="/comunidade/:state/:city/area/:groupSlug" element={<P.CommunityTerritorialShell />}>
+          <Route index element={<P.TerritorialCommunityEntryPage />} />
+          <Route path="problemas" element={<P.TerritorialCommunityIssuesPage />} />
+          <Route path="comunicacao" element={<P.TerritorialCommunityCommunicationPage />} />
+          <Route path="empresas" element={<P.TerritorialBusinessPage />} />
+          <Route path="servicos" element={<P.TerritorialServicesPage />} />
+          <Route path="classificados" element={<P.TerritorialClassificadosPage />} />
+          <Route path="gastronomia" element={<P.TerritorialGastronomyPage />} />
+          <Route path="educacao" element={<P.TerritorialEducationPage />} />
+          <Route path="vagas" element={<P.TerritorialVagasPage />} />
+          <Route path="vagas/publicar" element={<P.PublicarVagaPage />} />
+          <Route path="eventos" element={<P.TerritorialEventosPage />} />
+          <Route path="mapa" element={<P.TerritorialMapPage />} />
+          <Route path="mobilidade" element={<P.TerritorialMobilidadePage />} />
+          <Route path="feed" element={<P.TerritorialCommunityPage />} />
+          <Route path="grupos" element={<P.TerritorialCommunityPage />} />
+          <Route path="grupos/:id" element={<P.GrupoDetailPage />} />
+          <Route path="achados-e-perdidos" element={<P.AchadosPerdidosPage />} />
+        </Route>
         <Route path="/comunidade/:state/:city/:territorySlug/interesse" element={<P.CommunityInterestPage />} />
         <Route path="/comunidade/:state/:city/:territorySlug/problemas" element={<P.CommunityTerritorialShell />}>
           <Route index element={<P.TerritorialCommunityIssuesPage />} />

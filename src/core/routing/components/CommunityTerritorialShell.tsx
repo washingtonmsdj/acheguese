@@ -42,8 +42,11 @@ function resolveCommunityTerritoryBase(
   const city = parts[2] ?? fallbackCity;
   const segment3 = parts[3];
 
-  // Padrão canônico de comunidade: /comunidade/:state/:city/:territorySlug/...
-  // segment3 é sempre o territorySlug (nunca "area")
+  if (segment3 === "area" && parts[4]) {
+    return `/${state}/${city}/${parts[4]}`;
+  }
+
+  // Padrao de bairro: /comunidade/:state/:city/:territorySlug/...
   if (segment3 && !Object.values(MODULE_SLUGS).includes(segment3 as (typeof MODULE_SLUGS)[keyof typeof MODULE_SLUGS])) {
     return `/${state}/${city}/${segment3}`;
   }
@@ -77,6 +80,7 @@ export function CommunityTerritorialShell() {
     state?: string;
     city?: string;
     territorySlug?: string;
+    groupSlug?: string;
   }>();
   const [transitionMessage, setTransitionMessage] = useState<string | null>(null);
   const communityProfileQuery = useCommunityProfile(resolved);
@@ -84,13 +88,15 @@ export function CommunityTerritorialShell() {
   const state = params.state?.trim() ?? "";
   const city = params.city?.trim() ?? "";
   const territorySlug = params.territorySlug?.trim() ?? "";
-  const hasInvalidRouteParams = !state || !city || !territorySlug;
+  const groupSlug = params.groupSlug?.trim() ?? "";
+  const effectiveTerritorySlug = groupSlug || territorySlug;
+  const hasInvalidRouteParams = !state || !city || !effectiveTerritorySlug;
   const hasInvalidTerritorySlug =
     hasInvalidRouteParams ||
-    params.territorySlug === "area" ||
-    isReservedSlug(params.territorySlug ?? "");
+    (!groupSlug && params.territorySlug === "area") ||
+    isReservedSlug(effectiveTerritorySlug);
   const territoryBase = hasInvalidTerritorySlug
-    ? `/${state}/${city}/${territorySlug}`
+    ? `/${state}/${city}/${effectiveTerritorySlug}`
     : resolveCommunityTerritoryBase(location.pathname, state, city);
   const communityBase = hasInvalidTerritorySlug
     ? `/${MODULE_SLUGS.community}${territoryBase}`
@@ -100,7 +106,7 @@ export function CommunityTerritorialShell() {
     ? resolved.kind === "group"
       ? resolved.group.name
       : resolved.location.name
-    : titleFromSlug(territorySlug);
+    : titleFromSlug(effectiveTerritorySlug);
   const cityName = cityLabelFromSlug(city);
 
   useEffect(() => {

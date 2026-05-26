@@ -18,10 +18,11 @@ function titleCaseFromSlug(value?: string): string {
 
 export function CommunityInterestPage() {
   const navigate = useNavigate();
-  const { state, city, territorySlug } = useParams<{
+  const { state, city, territorySlug, groupSlug } = useParams<{
     state?: string;
     city?: string;
     territorySlug?: string;
+    groupSlug?: string;
   }>();
   const normalizedState = state?.trim() ?? "";
   const normalizedCity = city?.trim() ?? "";
@@ -41,8 +42,8 @@ export function CommunityInterestPage() {
   const territoryName = useMemo(() => {
     if (resolved?.kind === "group") return resolved.group.name;
     if (resolved?.kind === "location") return resolved.location.name;
-    return titleCaseFromSlug(territorySlug);
-  }, [resolved, territorySlug]);
+    return titleCaseFromSlug(groupSlug ?? territorySlug);
+  }, [groupSlug, resolved, territorySlug]);
   if (!communityBase || !eventsPath) {
     return <TerritorialNotFound message="A URL de interesse precisa informar estado e cidade válidos." />;
   }
