@@ -8,7 +8,7 @@
  */
 
 import { PlanTier, type PlanEntitlements } from './types';
-import { getEntitlements } from './plans';
+import { getBaselineEntitlements } from './entitlementBaselines';
 
 // ══════════════════════════════════════════════════════════════════════════
 // ENTITLEMENTS SERVICE
@@ -20,7 +20,7 @@ export class EntitlementsService {
    * Retorna todos os entitlements de um plano
    */
   static getAll(planTier: PlanTier): PlanEntitlements {
-    return this.withGenericAliases(getEntitlements(planTier));
+    return this.withGenericAliases(getBaselineEntitlements(planTier));
   }
   
   // ── Página Pública ────────────────────────────────────────────────────────
@@ -134,15 +134,15 @@ export class EntitlementsService {
   // ── Limites ───────────────────────────────────────────────────────────────
   
   static getMaxMenuItems(planTier: PlanTier): number | null {
-    return getEntitlements(planTier).maxMenuItems;
+    return this.getAll(planTier).maxMenuItems;
   }
   
   static getMaxPromotions(planTier: PlanTier): number | null {
-    return getEntitlements(planTier).maxPromotions;
+    return this.getAll(planTier).maxPromotions;
   }
   
   static getMaxImages(planTier: PlanTier): number | null {
-    return getEntitlements(planTier).maxImages;
+    return this.getAll(planTier).maxImages;
   }
   
   // ── Validações ────────────────────────────────────────────────────────────

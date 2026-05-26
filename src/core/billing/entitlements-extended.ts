@@ -6,7 +6,7 @@
  */
 
 import { PlanTier } from './types';
-import { getEntitlements } from './plans';
+import { getBaselineEntitlements } from './entitlementBaselines';
 
 // ══════════════════════════════════════════════════════════════════════════
 // EXTENDED ENTITLEMENTS SERVICE
@@ -17,93 +17,93 @@ export class ExtendedEntitlementsService {
   // ── Cardápio / Catálogo ────────────────────────────────────────────────────
   
   static canUseMenuVariations(planTier: PlanTier): boolean {
-    return getEntitlements(planTier).canUseMenuVariations;
+    return getBaselineEntitlements(planTier).canUseMenuVariations;
   }
   
   static canUseMenuAddons(planTier: PlanTier): boolean {
-    return getEntitlements(planTier).canUseMenuAddons;
+    return getBaselineEntitlements(planTier).canUseMenuAddons;
   }
   
   static canUseMenuCombos(planTier: PlanTier): boolean {
-    return getEntitlements(planTier).canUseMenuCombos;
+    return getBaselineEntitlements(planTier).canUseMenuCombos;
   }
   
   static canManageAvailability(planTier: PlanTier): boolean {
-    return getEntitlements(planTier).canManageAvailability;
+    return getBaselineEntitlements(planTier).canManageAvailability;
   }
   
   static canScheduleItems(planTier: PlanTier): boolean {
-    return getEntitlements(planTier).canScheduleItems;
+    return getBaselineEntitlements(planTier).canScheduleItems;
   }
   
   // ── Pedidos ─────────────────────────────────────────────────────────────
   
   static canManageOrderStatus(planTier: PlanTier): boolean {
-    return getEntitlements(planTier).canManageOrderStatus;
+    return getBaselineEntitlements(planTier).canManageOrderStatus;
   }
   
   static canCancelOrders(planTier: PlanTier): boolean {
-    return getEntitlements(planTier).canCancelOrders;
+    return getBaselineEntitlements(planTier).canCancelOrders;
   }
   
   static canViewOrderHistory(planTier: PlanTier): boolean {
-    return getEntitlements(planTier).canViewOrderHistory;
+    return getBaselineEntitlements(planTier).canViewOrderHistory;
   }
   
   // ── Delivery / Operação ─────────────────────────────────────────────────
   
   static canConfigureDeliveryArea(planTier: PlanTier): boolean {
-    return getEntitlements(planTier).canConfigureDeliveryArea;
+    return getBaselineEntitlements(planTier).canConfigureDeliveryArea;
   }
   
   static canSetDeliveryFees(planTier: PlanTier): boolean {
-    return getEntitlements(planTier).canSetDeliveryFees;
+    return getBaselineEntitlements(planTier).canSetDeliveryFees;
   }
   
   static canManageBusinessHours(planTier: PlanTier): boolean {
-    return getEntitlements(planTier).canManageBusinessHours;
+    return getBaselineEntitlements(planTier).canManageBusinessHours;
   }
   
   static canSetMinimumOrder(planTier: PlanTier): boolean {
-    return getEntitlements(planTier).canSetMinimumOrder;
+    return getBaselineEntitlements(planTier).canSetMinimumOrder;
   }
   
   static canUseOwnDelivery(planTier: PlanTier): boolean {
-    return getEntitlements(planTier).canUseOwnDelivery;
+    return getBaselineEntitlements(planTier).canUseOwnDelivery;
   }
   
   // ── Marketing ───────────────────────────────────────────────────────────
   
   static canUseCoupons(planTier: PlanTier): boolean {
-    return getEntitlements(planTier).canUseCoupons;
+    return getBaselineEntitlements(planTier).canUseCoupons;
   }
   
   static canSchedulePromotions(planTier: PlanTier): boolean {
-    return getEntitlements(planTier).canSchedulePromotions;
+    return getBaselineEntitlements(planTier).canSchedulePromotions;
   }
   
   // ── Analytics ───────────────────────────────────────────────────────────
   
   static canViewRealtimeMetrics(planTier: PlanTier): boolean {
-    return getEntitlements(planTier).canViewRealtimeMetrics;
+    return getBaselineEntitlements(planTier).canViewRealtimeMetrics;
   }
   
   static canViewCustomerInsights(planTier: PlanTier): boolean {
-    return getEntitlements(planTier).canViewCustomerInsights;
+    return getBaselineEntitlements(planTier).canViewCustomerInsights;
   }
   
   // ── Limites ─────────────────────────────────────────────────────────────
   
   static getMaxCategories(planTier: PlanTier): number | null {
-    return getEntitlements(planTier).maxCategories;
+    return getBaselineEntitlements(planTier).maxCategories;
   }
   
   static getMaxCombos(planTier: PlanTier): number | null {
-    return getEntitlements(planTier).maxCombos;
+    return getBaselineEntitlements(planTier).maxCombos;
   }
   
   static getMaxOrdersPerDay(planTier: PlanTier): number | null {
-    return getEntitlements(planTier).maxOrdersPerDay;
+    return getBaselineEntitlements(planTier).maxOrdersPerDay;
   }
   
   // ── Validações ──────────────────────────────────────────────────────────

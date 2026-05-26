@@ -40,12 +40,14 @@ const OPTIONAL_ENV_VARS = [
 
 const REQUIRED_SCRIPTS = ['build', 'typecheck:app', 'lint', 'validate:ssot', 'security:validate'];
 const PUBLIC_DOMAIN = 'acheguese.com.br';
-const FORBIDDEN_RUNTIME_FILES = [
+const FORBIDDEN_BILLING_ARTIFACTS = [
   'supabase/functions/stripe-webhook/index.ts',
   'supabase/functions/gastronomy-upgrade-plan/index.ts',
   'supabase/functions/gastronomy-cancel-subscription/index.ts',
   'supabase/functions/gastronomy-reactivate-subscription/index.ts',
   'supabase/functions/gastronomy-add-payment-method/index.ts',
+  'src/core/billing/plans.ts',
+  'src/modules/business/gastronomy/billing',
 ];
 
 let hasErrors = false;
@@ -141,7 +143,7 @@ for (const asset of REQUIRED_PUBLIC_ASSETS) {
 console.log();
 
 console.log('Billing canonico');
-for (const file of FORBIDDEN_RUNTIME_FILES) {
+for (const file of FORBIDDEN_BILLING_ARTIFACTS) {
   existsSync(file) ? fail(`${file} nao deve existir`) : ok(`${file} removido`);
 }
 console.log();

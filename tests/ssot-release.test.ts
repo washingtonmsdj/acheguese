@@ -53,9 +53,16 @@ describe("release SSOT scripts", () => {
       "supabase/functions/gastronomy-reactivate-subscription/index.ts",
       "supabase/functions/gastronomy-add-payment-method/index.ts",
     ];
+    const forbiddenPlanArtifacts = [
+      "src/core/billing/plans.ts",
+      "src/modules/business/gastronomy/billing",
+    ];
 
     for (const file of forbiddenFunctions) {
       expect(existsSync(file), `${file} should not be deployed from this repo`).toBe(false);
+    }
+    for (const file of forbiddenPlanArtifacts) {
+      expect(existsSync(file), `${file} should not be part of runtime billing`).toBe(false);
     }
 
     const runtimeFiles = [
@@ -69,7 +76,11 @@ describe("release SSOT scripts", () => {
         source.includes(".from(\"gastronomy_subscriptions\")") ||
         source.includes(".from('gastronomy_subscriptions')") ||
         source.includes(".from(\"business_subscriptions\")") ||
-        source.includes(".from('business_subscriptions')")
+        source.includes(".from('business_subscriptions')") ||
+        source.includes("GASTRONOMY_PLANS") ||
+        source.includes("@/core/billing/plans") ||
+        source.includes("from './plans'") ||
+        source.includes('from "./plans"')
       );
     });
 

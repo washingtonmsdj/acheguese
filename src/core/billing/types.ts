@@ -54,22 +54,6 @@ export interface BusinessSubscription {
   updated_at: string;
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-// PLAN DEFINITION
-// ══════════════════════════════════════════════════════════════════════════
-
-/**
- * Definição de um plano
- */
-export interface PlanDefinition {
-  tier: PlanTier;
-  name: string;
-  price: string;
-  priceValue: number; // em centavos
-  features: string[];
-  entitlements: PlanEntitlements;
-}
-
 /**
  * Entitlements (permissões) de um plano
  * 

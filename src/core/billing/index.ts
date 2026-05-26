@@ -18,9 +18,6 @@
 // Types
 export * from './types';
 
-// Plans
-export * from './plans';
-
 // Entitlements (SSOT)
 export * from './entitlements';
 export * from './entitlements-extended';
