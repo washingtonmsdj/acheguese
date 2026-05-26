@@ -6,6 +6,7 @@ import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Badge } from "@/shared/components/ui/badge";
 import { Switch } from "@/shared/components/ui/switch";
+import { useConfirmActionDialog } from "@/shared/hooks/useConfirmActionDialog";
 import {
   Dialog,
   DialogContent,
@@ -33,6 +34,7 @@ interface ServiceAreasManagerProps {
 export function ServiceAreasManager({ profileId }: ServiceAreasManagerProps) {
   const { activeProfile } = useSessionContext();
   const targetProfileId = profileId || activeProfile?.id;
+  const { confirm, ConfirmDialog } = useConfirmActionDialog();
 
   // Hooks do service
   const { data: areas = [], isLoading: loading } = useServiceAreas(
@@ -110,7 +112,13 @@ export function ServiceAreasManager({ profileId }: ServiceAreasManagerProps) {
   }
 
   async function handleDelete(areaId: string) {
-    if (!confirm("Tem certeza que deseja remover esta área?")) return;
+    const confirmed = await confirm({
+      title: "Remover area de atuacao",
+      description: "Esta area sera removida do perfil e deixara de aparecer na cobertura de atendimento.",
+      confirmLabel: "Remover",
+      variant: "destructive",
+    });
+    if (!confirmed) return;
 
     try {
       await deleteAreaMutation.mutateAsync(areaId);
@@ -320,6 +328,7 @@ export function ServiceAreasManager({ profileId }: ServiceAreasManagerProps) {
           </div>
         </DialogContent>
       </Dialog>
+      <ConfirmDialog />
     </div>
   );
 }

@@ -11,6 +11,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select';
 import { Label } from '@/shared/components/ui/label';
+import { useConfirmActionDialog } from '@/shared/hooks/useConfirmActionDialog';
 import { useToast } from '@/shared/hooks/use-toast';
 import { Trash2, Plus, Shield, User, Crown } from 'lucide-react';
 
@@ -21,6 +22,7 @@ interface ProfileMembersManagerProps {
 
 export function ProfileMembersManager({ profileId, profileType }: ProfileMembersManagerProps) {
   const { toast } = useToast();
+  const { confirm, ConfirmDialog } = useConfirmActionDialog();
   const { members, loading, addMember, removeMember, updateRole } = useProfileMembers(profileId);
   
   const [showAdd, setShowAdd] = useState(false);
@@ -58,7 +60,13 @@ export function ProfileMembersManager({ profileId, profileType }: ProfileMembers
   };
 
   const handleRemove = async (userId: string) => {
-    if (!confirm('Tem certeza que deseja remover este membro?')) return;
+    const confirmed = await confirm({
+      title: 'Remover membro',
+      description: 'Este usuario perdera acesso a este perfil.',
+      confirmLabel: 'Remover',
+      variant: 'destructive',
+    });
+    if (!confirmed) return;
 
     const result = await removeMember(userId);
 
@@ -216,6 +224,7 @@ export function ProfileMembersManager({ profileId, profileType }: ProfileMembers
           ))}
         </div>
       )}
+      <ConfirmDialog />
     </div>
   );
 }

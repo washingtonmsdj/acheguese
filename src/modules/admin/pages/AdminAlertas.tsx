@@ -35,6 +35,7 @@ export default function AdminAlertas() {
   } = useAlertData();
 
   const actions = useAlertActions({ setAlertPosts, setProfiles, setReports });
+  const AlertActionConfirmDialog = actions.ConfirmDialog;
 
   const getPostReportCount = (postId: string) =>
     alertReports.filter((r) => r.post_id === postId).length;
@@ -257,6 +258,7 @@ export default function AdminAlertas() {
         onResolve={handleResolveReport}
         onToggleBan={actions.handleToggleBan}
       />
+      <AlertActionConfirmDialog />
     </div>
   );
 }

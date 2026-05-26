@@ -12,6 +12,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select';
 import { Switch } from '@/shared/components/ui/switch';
 import { Label } from '@/shared/components/ui/label';
+import { useConfirmActionDialog } from '@/shared/hooks/useConfirmActionDialog';
 import { useToast } from '@/shared/hooks/use-toast';
 import { Trash2, Plus, GripVertical } from 'lucide-react';
 
@@ -21,6 +22,7 @@ interface ProfileLinksManagerProps {
 
 export function ProfileLinksManager({ profileId }: ProfileLinksManagerProps) {
   const { toast } = useToast();
+  const { confirm, ConfirmDialog } = useConfirmActionDialog();
   const { links, loading, createLink, updateLink, deleteLink, reorderLinks } = useProfileLinks(profileId);
   const { profiles } = useProfiles();
   
@@ -71,7 +73,13 @@ export function ProfileLinksManager({ profileId }: ProfileLinksManagerProps) {
   };
 
   const handleDelete = async (linkId: string) => {
-    if (!confirm('Tem certeza que deseja remover este vínculo?')) return;
+    const confirmed = await confirm({
+      title: 'Remover vinculo',
+      description: 'Este relacionamento deixara de aparecer entre os perfis.',
+      confirmLabel: 'Remover',
+      variant: 'destructive',
+    });
+    if (!confirmed) return;
 
     const result = await deleteLink(linkId);
 
@@ -238,6 +246,7 @@ export function ProfileLinksManager({ profileId }: ProfileLinksManagerProps) {
           ))}
         </div>
       )}
+      <ConfirmDialog />
     </div>
   );
 }

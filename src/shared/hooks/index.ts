@@ -19,3 +19,4 @@ export { usePersistedState } from "./usePersistedState";
 export { useSSOTMonitoring } from "./useSSOTMonitoring";
 export { useValidatedForm } from "./useValidatedForm";
 export { useTheme } from "./useTheme";
+export { useConfirmActionDialog } from "./useConfirmActionDialog";

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { adminAlertsService } from "@/core/admin";
+import { useConfirmActionDialog } from "@/shared/hooks/useConfirmActionDialog";
 import { useToast } from "@/shared/hooks/use-toast";
 import type { AlertPost, Profile, PostReport } from "./useAlertData";
 
@@ -16,6 +17,7 @@ export function useAlertActions({
 }: UseAlertActionsProps) {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const { toast } = useToast();
+  const { confirm, ConfirmDialog } = useConfirmActionDialog();
 
   const handleToggleHide = async (post: AlertPost) => {
     setActionLoading(post.id);
@@ -38,7 +40,13 @@ export function useAlertActions({
   };
 
   const handleDeletePost = async (postId: string) => {
-    if (!confirm("Excluir permanentemente este alerta?")) return;
+    const confirmed = await confirm({
+      title: "Excluir alerta permanentemente",
+      description: "Esta acao remove o alerta do painel administrativo e nao pode ser desfeita.",
+      confirmLabel: "Excluir",
+      variant: "destructive",
+    });
+    if (!confirmed) return;
     setActionLoading(postId);
     try {
       // ✅ SSOT AAA - Usa AdminAlertsService que delega para PostsFacade
@@ -116,5 +124,6 @@ export function useAlertActions({
     handleDeletePost,
     handleToggleBan,
     handleResolveReport,
+    ConfirmDialog,
   };
 }
