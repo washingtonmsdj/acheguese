@@ -57,6 +57,8 @@ export interface UpdateResidenceData {
   location_id?: string;
   country?: string;
   is_primary?: boolean;
+  is_verified?: boolean;
+  verification_requested_at?: string | null;
 }
 
 export interface EnqueueTerritoryResolutionReviewInput {
@@ -251,6 +253,10 @@ class ResidenceService {
       if (data.location_id !== undefined) payload.location_id = data.location_id;
       if (data.country !== undefined) payload.country = data.country;
       if (data.is_primary !== undefined) payload.is_primary = data.is_primary;
+      if (data.is_verified !== undefined) payload.is_verified = data.is_verified;
+      if (data.verification_requested_at !== undefined) {
+        payload.verification_requested_at = data.verification_requested_at;
+      }
 
       const { data: residence, error } = await supabase
         .from("user_residences")

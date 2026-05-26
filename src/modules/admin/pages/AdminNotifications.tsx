@@ -102,8 +102,8 @@ export default function AdminNotifications() {
 
   const topTypes = useMemo(
     () =>
-      Object.entries(stats?.byType || {})
-        .sort(([, left], [, right]) => Number(right) - Number(left))
+      (Object.entries(stats?.byType || {}) as [string, number][])
+        .sort(([, left], [, right]) => right - left)
         .slice(0, 5),
     [stats?.byType],
   );

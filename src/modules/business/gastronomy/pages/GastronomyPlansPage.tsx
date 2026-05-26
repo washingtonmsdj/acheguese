@@ -4,20 +4,22 @@
  * SSOT: planos vindos de billing_plans (banco), não de constantes hardcoded.
  */
 
-import { logger } from '@/shared/utils/logger';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
 import { useBusinessSubscription } from '@/core/billing';
 import { useBillingPlans } from '@/core/billing/hooks/useBillingPlans';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
-import { Check, ArrowLeft, Crown } from 'lucide-react';
+import { Check, ArrowLeft, Crown, Loader2 } from 'lucide-react';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
+import { BillingService } from '@/core/billing/services/BillingService';
+import { buildPublicAbsoluteUrl } from '@/shared/config/publicAppOrigin';
 
 export default function GastronomyPlansPage() {
   const { businessId } = useParams<{ businessId: string }>();
   const navigate = useNavigate();
+  const [checkoutPlanCode, setCheckoutPlanCode] = useState<string | null>(null);
 
   const { planTier, isLoading: loadingSubscription } = useBusinessSubscription(businessId!);
   const { data: plans = [], isLoading: loadingPlans } = useBillingPlans();
@@ -32,9 +34,29 @@ export default function GastronomyPlansPage() {
 
   const sortedPlans = [...plans].sort((a, b) => a.displayOrder - b.displayOrder);
 
-  const handleUpgrade = (targetPlanCode: string) => {
-    logger.debug('Upgrade solicitado para:', targetPlanCode);
-    toast.info(`Upgrade para ${targetPlanCode} sera implementado em breve.`);
+  const handleUpgrade = async (targetPlanCode: string) => {
+    if (!businessId) return;
+
+    if (targetPlanCode === 'free') {
+      navigate(businessManagementRoutes.gastronomia(businessId));
+      return;
+    }
+
+    setCheckoutPlanCode(targetPlanCode);
+    try {
+      const plansPath = businessManagementRoutes.planos(businessId);
+      await BillingService.redirectToCheckout({
+        planCode: targetPlanCode,
+        businessId,
+        subscriptionScope: 'business',
+        entityFamily: 'company',
+        vertical: 'gastronomy',
+        successUrl: buildPublicAbsoluteUrl(`${plansPath}?upgrade=success`),
+        cancelUrl: buildPublicAbsoluteUrl(plansPath),
+      });
+    } finally {
+      setCheckoutPlanCode(null);
+    }
   };
 
   return (
@@ -115,7 +137,12 @@ export default function GastronomyPlansPage() {
                       Plano Atual
                     </Button>
                   ) : (
-                    <Button className="w-full" onClick={() => handleUpgrade(plan.code)}>
+                    <Button
+                      className="w-full"
+                      onClick={() => handleUpgrade(plan.code)}
+                      disabled={checkoutPlanCode === plan.code}
+                    >
+                      {checkoutPlanCode === plan.code && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                       {plan.priceCents > 0 ? 'Fazer Upgrade' : 'Mudar para este plano'}
                     </Button>
                   )}

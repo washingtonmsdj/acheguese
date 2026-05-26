@@ -493,7 +493,7 @@ export default function AdminPromocoes() {
                 <CardTitle className="text-sm">Tipos de promocao</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
-                {Object.entries(stats?.byType ?? {}).map(([label, value]) => (
+                {(Object.entries(stats?.byType ?? {}) as [string, number][]).map(([label, value]) => (
                   <div key={label} className="flex justify-between">
                     <span>{label}</span>
                     <strong>{value}</strong>

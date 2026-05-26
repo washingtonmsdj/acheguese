@@ -8,6 +8,12 @@ import {
   UserResidenceWithRelations,
 } from "@/core/residence/services/ResidenceService";
 import { AddressService } from "@/core/address/services/AddressService";
+import type {
+  AddressPrecision,
+  AddressType,
+  CreateAddressInput,
+  UpdateAddressInput,
+} from "@/core/address/types";
 import {
   residentialLocalityService,
   type ResidentialLocality,
@@ -36,6 +42,21 @@ function tryMatchDistrictName(input: string, candidate: string): boolean {
   const b = normalizeSearch(candidate);
   if (!a || !b) return false;
   return a === b || a.includes(b) || b.includes(a);
+}
+
+function readMetadataString(
+  metadata: Record<string, unknown> | null | undefined,
+  key: string,
+): string | null {
+  const value = metadata?.[key];
+  return typeof value === "string" && value.trim() ? value : null;
+}
+
+function readTerritoryScope(
+  metadata: Record<string, unknown> | null | undefined,
+): "city" | "district" | null {
+  const value = metadata?.canonical_scope;
+  return value === "city" || value === "district" ? value : null;
 }
 
 export function ResidenceManager() {
@@ -107,23 +128,43 @@ export function ResidenceManager() {
   function openEditDialog() {
     if (residence) {
       // ETAPA 12: Carregar dados do address canônico
+      const metadata = residence.address?.metadata ?? {};
+      const existingCityId = readMetadataString(metadata, "canonical_city_id");
+      const existingStateId = readMetadataString(metadata, "canonical_state_id");
+      const existingScope = readTerritoryScope(metadata);
+      const existingLocalNeighborhood =
+        readMetadataString(metadata, "local_neighborhood") ??
+        readMetadataString(metadata, "address_neighborhood_text") ??
+        "";
+
       setAddressId(residence.address_id);
       setLocationId(residence.location_id);
-      setTerritorySummary(residence.location?.name ?? null);
-      setCityLocationId(null);
-      setStateLocationId(null);
-      // Campos do form serão carregados do address se necessário editar
-      setStreet("");
-      setNumber("");
-      setComplement("");
-      setPostalCode("");
-      setLocalNeighborhood(
-        typeof residence.address?.metadata?.local_neighborhood === "string"
-          ? residence.address.metadata.local_neighborhood
-          : "",
+      setTerritorySummary(
+        readMetadataString(metadata, "canonical_label") ??
+          residence.location?.name ??
+          null,
       );
-      setCepNeighborhoodCandidate("");
-      setResolvedCoordinates(null);
+      setTerritoryScope(existingScope ?? "district");
+      setCityLocationId(existingCityId);
+      setStateLocationId(existingStateId);
+      setStreet(residence.address?.street ?? "");
+      setNumber(residence.address?.number ?? "");
+      setComplement(residence.address?.complement ?? "");
+      setPostalCode(formatCep(residence.address?.postal_code ?? ""));
+      setLocalNeighborhood(existingLocalNeighborhood);
+      setCepNeighborhoodCandidate(
+        readMetadataString(metadata, "postal_neighborhood_raw") ??
+          existingLocalNeighborhood,
+      );
+      setResolvedCoordinates(
+        typeof residence.address?.latitude === "number" &&
+          typeof residence.address?.longitude === "number"
+          ? {
+              latitude: residence.address.latitude,
+              longitude: residence.address.longitude,
+            }
+          : null,
+      );
     } else {
       setStreet("");
       setNumber("");
@@ -137,17 +178,17 @@ export function ResidenceManager() {
       setTerritoryScope(null);
       setCityLocationId(null);
       setStateLocationId(null);
+      setResolvedCoordinates(null);
     }
     setStreetTouched(false);
     setLocalNeighborhoodTouched(false);
     setTerritoryTouched(false);
-    setCepLookupStatus("idle");
+    setCepLookupStatus(residence ? "success" : "idle");
     setCepLookupMessage("");
     setStreetLookupStatus("idle");
     setStreetSuggestions([]);
-    setEntryMode("cep");
+    setEntryMode(residence ? "manual" : "cep");
     setTerritoryResolutionNeeded(false);
-    setResolvedCoordinates(null);
     setFormOpen(true);
   }
 
@@ -541,60 +582,102 @@ export function ResidenceManager() {
         setTerritoryScope("city");
       }
 
+      const existingMetadata = residence?.address?.metadata ?? {};
+      const canonicalCityId =
+        cityLocationId ??
+        readMetadataString(existingMetadata, "canonical_city_id");
+      const canonicalStateId =
+        stateLocationId ??
+        readMetadataString(existingMetadata, "canonical_state_id");
+      const canonicalScope =
+        territoryScope ??
+        readTerritoryScope(existingMetadata) ??
+        (resolvedLocationId === canonicalCityId ? "city" : "district");
+      const hasStreetAndNumber = Boolean(street.trim() && number.trim());
+      const addressType: AddressType = hasStreetAndNumber ? "exact" : "approximate";
+      const precision: AddressPrecision = canonicalScope === "city" ? "city" : "district";
+      const latitude = resolvedCoordinates?.latitude ?? null;
+      const longitude = resolvedCoordinates?.longitude ?? null;
+      const metadata = {
+        ...existingMetadata,
+        local_neighborhood: safeLocalNeighborhood,
+        address_neighborhood_text: safeLocalNeighborhood,
+        postal_neighborhood_raw: cepNeighborhoodCandidate || null,
+        canonical_country_id: null,
+        canonical_country_code: "BR",
+        canonical_state_id: canonicalStateId,
+        canonical_scope: canonicalScope,
+        canonical_label:
+          territorySummary ??
+          readMetadataString(existingMetadata, "canonical_label"),
+        reconciliation_status:
+          resolvedLocationId === canonicalCityId
+            ? (safeLocalNeighborhood ? "city_only" : "unresolved")
+            : "resolved",
+        reconciliation_confidence:
+          resolvedLocationId === canonicalCityId ? 0.7 : 0.95,
+        territory_resolution_level:
+          resolvedLocationId === canonicalCityId ? "city" : "district",
+        canonical_city_id: canonicalCityId,
+        canonical_district_id:
+          resolvedLocationId && canonicalCityId && resolvedLocationId !== canonicalCityId
+            ? resolvedLocationId
+            : null,
+        territorial_group_id: null,
+        latitude,
+        longitude,
+      };
+
+      const addressPayload = {
+        location_id: resolvedLocationId,
+        street: street.trim() || null,
+        number: number.trim() || null,
+        complement: complement.trim() || null,
+        postal_code: postalCode.trim() || null,
+        address_type: addressType,
+        precision,
+        geocoding_source: "manual" as const,
+        latitude,
+        longitude,
+        metadata,
+      };
+
       if (residence) {
-        // ETAPA 12: Update apenas preserva canônico (não permite editar address inline)
-        toast.info("Edição de endereço não implementada. Crie uma nova residência.");
-        return;
+        if (!addressId) {
+          toast.error("Endereço canônico da residência não encontrado");
+          return;
+        }
+
+        const updatePayload: UpdateAddressInput = {
+          ...addressPayload,
+          verification_status: "pending",
+          verified_reason: "residence_address_updated",
+          is_verified: false,
+          verified_at: null,
+          verified_by: null,
+        };
+
+        await addressService.updateAddress(addressId, updatePayload);
+        await residenceService.updateResidence(residence.id, {
+          address_id: addressId,
+          location_id: resolvedLocationId,
+          country: "Brasil",
+          is_verified: false,
+          verification_requested_at: null,
+        });
+
+        toast.success("Residência atualizada");
       } else {
         // ✅ ETAPA 12 - Criar com address manual canônico
         let createdAddressId: string;
 
         try {
-          // Determinar address_type
-          const hasStreetAndNumber = street.trim() && number.trim();
-          const addressType = hasStreetAndNumber ? 'exact' : 'approximate';
-
-          const address = await addressService.createAddress({
-            location_id: resolvedLocationId,
+          const createPayload: CreateAddressInput = {
+            ...addressPayload,
             owner_user_id: user.id,
-            street: street || null,
-            number: number || null,
-            complement: complement || null,
-            postal_code: postalCode || null,
-            address_type: addressType,
-            precision: territoryScope === "city" ? "city" : "district",
-            geocoding_source: 'manual',
-            latitude: resolvedCoordinates?.latitude ?? null,
-            longitude: resolvedCoordinates?.longitude ?? null,
-            metadata: {
-              local_neighborhood: safeLocalNeighborhood || null,
-              address_neighborhood_text: safeLocalNeighborhood || null,
-              postal_neighborhood_raw: cepNeighborhoodCandidate || null,
-              canonical_country_id: null,
-              canonical_country_code: "BR",
-              canonical_state_id: stateLocationId ?? null,
-              canonical_scope: territoryScope ?? "district",
-              canonical_label: territorySummary,
-              reconciliation_status:
-                resolvedLocationId === cityLocationId
-                  ? (safeLocalNeighborhood ? "city_only" : "unresolved")
-                  : "resolved",
-              reconciliation_confidence:
-                resolvedLocationId === cityLocationId
-                  ? 0.7
-                  : 0.95,
-              territory_resolution_level:
-                resolvedLocationId === cityLocationId ? "city" : "district",
-              canonical_city_id: cityLocationId ?? null,
-              canonical_district_id:
-                resolvedLocationId && cityLocationId && resolvedLocationId !== cityLocationId
-                  ? resolvedLocationId
-                  : null,
-              territorial_group_id: null,
-              latitude: resolvedCoordinates?.latitude ?? null,
-              longitude: resolvedCoordinates?.longitude ?? null,
-            },
-          });
+          };
+
+          const address = await addressService.createAddress(createPayload);
 
           createdAddressId = address.id;
         } catch (err) {
@@ -656,14 +739,20 @@ export function ResidenceManager() {
       ? residence.address.metadata.local_neighborhood
       : null;
   const isCepMode = entryMode === "cep";
-  const hasManualTerritorySelection = Boolean(cityLocationId && selectedStateName && selectedCityName);
+  const hasManualTerritorySelection =
+    Boolean(residence) ||
+    Boolean(cityLocationId && selectedStateName && selectedCityName);
   const hasTerritoryData = Boolean(selectedStateName && selectedCityName);
   
   // SIMPLES: Mostrar território quando tem dados OU modo manual
-  const shouldShowTerritorySection = hasTerritoryData || !isCepMode || territoryResolutionNeeded;
+  const shouldShowTerritorySection =
+    Boolean(residence) || hasTerritoryData || !isCepMode || territoryResolutionNeeded;
   
   // SIMPLES: Mostrar campos quando CEP teve sucesso OU modo manual com território
-  const shouldShowAddressFields = (isCepMode && cepLookupStatus === "success") || (!isCepMode && hasManualTerritorySelection);
+  const shouldShowAddressFields =
+    Boolean(residence) ||
+    (isCepMode && cepLookupStatus === "success") ||
+    (!isCepMode && hasManualTerritorySelection);
   const shouldShowPostalNeighborhoodField =
     shouldShowAddressFields;
   const shouldShowLocalReferenceField = false;

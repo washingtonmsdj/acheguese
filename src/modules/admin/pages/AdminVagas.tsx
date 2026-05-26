@@ -680,7 +680,7 @@ export default function AdminVagas() {
                 <CardTitle className="text-sm">Contratos</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
-                {Object.entries(stats?.byContrato ?? {}).map(([label, value]) => (
+                {(Object.entries(stats?.byContrato ?? {}) as [string, number][]).map(([label, value]) => (
                   <div key={label} className="flex justify-between">
                     <span>{label}</span>
                     <strong>{value}</strong>
@@ -696,7 +696,7 @@ export default function AdminVagas() {
                 <CardTitle className="text-sm">Modalidades</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
-                {Object.entries(stats?.byModalidade ?? {}).map(([label, value]) => (
+                {(Object.entries(stats?.byModalidade ?? {}) as [string, number][]).map(([label, value]) => (
                   <div key={label} className="flex justify-between">
                     <span>{label}</span>
                     <strong>{value}</strong>

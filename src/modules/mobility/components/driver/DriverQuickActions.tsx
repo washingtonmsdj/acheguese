@@ -1,4 +1,3 @@
-import React from "react";
 import { useNavigate } from "react-router-dom";
 import {
   MapPin,
@@ -9,18 +8,17 @@ import {
   Store,
   Calendar,
   HelpCircle,
-  Phone,
   Navigation,
 } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
-import { toast } from "sonner";
+import { mobilityRoutes } from "@/core/mobility/routes/mobilityRoutes";
 
 const actions = [
   {
     icon: MapPin,
     label: "Pedidos",
     desc: "Ver mapa",
-    route: "/mobilidade/passageiro",
+    route: mobilityRoutes.motorista.corridas,
     color: "text-teal-400",
     bg: "bg-teal-500/10",
   },
@@ -35,8 +33,8 @@ const actions = [
   {
     icon: AlertTriangle,
     label: "SOS",
-    desc: "Emergência",
-    action: "sos",
+    desc: "Contatos",
+    route: "/mobilidade/contatos-emergencia",
     color: "text-red-400",
     bg: "bg-red-500/10",
   },
@@ -44,7 +42,7 @@ const actions = [
     icon: FileText,
     label: "Documentos",
     desc: "CNH e veículo",
-    action: "docs",
+    route: mobilityRoutes.motorista.cadastro,
     color: "text-purple-400",
     bg: "bg-purple-500/10",
   },
@@ -76,7 +74,7 @@ const actions = [
     icon: HelpCircle,
     label: "Suporte",
     desc: "Ajuda",
-    action: "help",
+    route: "/contato?assunto=motorista",
     color: "text-gray-400",
     bg: "bg-white/5",
   },
@@ -86,15 +84,7 @@ export function DriverQuickActions() {
   const navigate = useNavigate();
 
   const handleAction = (item: (typeof actions)[0]) => {
-    if (item.route) {
-      navigate(item.route);
-    } else if (item.action === "sos") {
-      toast.error("SOS ativado. Contatos de emergência serão notificados.");
-    } else if (item.action === "docs") {
-      toast.info("Seção de documentos em breve.");
-    } else if (item.action === "help") {
-      toast.info("Suporte ao motorista em breve.");
-    }
+    navigate(item.route);
   };
 
   return (

@@ -27,7 +27,7 @@ function asString(value: unknown): string | undefined {
 
 function mapGallery(items: unknown[] | null | undefined): EventGalleryItem[] {
   return (items ?? [])
-    .map((item, index) => {
+    .map<EventGalleryItem | null>((item, index) => {
       const record = readStringRecord(item);
       const url = asString(record.url);
       if (!url) return null;
@@ -40,12 +40,12 @@ function mapGallery(items: unknown[] | null | undefined): EventGalleryItem[] {
         order: index,
       };
     })
-    .filter((item): item is EventGalleryItem => Boolean(item));
+    .filter((item): item is EventGalleryItem => item !== null);
 }
 
 function mapSchedule(items: unknown[] | null | undefined): EventScheduleItem[] {
   return (items ?? [])
-    .map((item, index) => {
+    .map<EventScheduleItem | null>((item, index) => {
       const record = readStringRecord(item);
       const title = asString(record.title);
       const time = asString(record.time);
@@ -60,12 +60,12 @@ function mapSchedule(items: unknown[] | null | undefined): EventScheduleItem[] {
         location: asString(record.location),
       };
     })
-    .filter((item): item is EventScheduleItem => Boolean(item));
+    .filter((item): item is EventScheduleItem => item !== null);
 }
 
 function mapFaq(items: unknown[] | null | undefined): EventFAQ[] {
   return (items ?? [])
-    .map((item, index) => {
+    .map<EventFAQ | null>((item, index) => {
       const record = readStringRecord(item);
       const question = asString(record.question);
       const answer = asString(record.answer);
@@ -78,7 +78,7 @@ function mapFaq(items: unknown[] | null | undefined): EventFAQ[] {
         order: index,
       };
     })
-    .filter((item): item is EventFAQ => Boolean(item));
+    .filter((item): item is EventFAQ => item !== null);
 }
 
 export function mapCommunityEventToEvent(input: CommunityEvent): Event {

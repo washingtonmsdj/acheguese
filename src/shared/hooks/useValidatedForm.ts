@@ -85,9 +85,9 @@ export function useValidatedForm<TSchema extends z.ZodType<unknown>>({
       logger.error("Form validation errors:", errors);
 
       // Mostrar primeiro erro encontrado
-      const firstError = Object.values(errors)[0];
-      if (firstError?.message) {
-        toast.error(firstError.message as string);
+      const firstError = Object.values(errors)[0] as { message?: unknown } | undefined;
+      if (typeof firstError?.message === "string" && firstError.message.trim()) {
+        toast.error(firstError.message);
       } else {
         toast.error("Por favor, corrija os erros no formulário");
       }

@@ -67,7 +67,7 @@ export default function MyFavoritesPage() {
 
   // Tags únicas de todos os favoritos
   const allTags = Array.from(
-    new Set(favorites.flatMap((fav) => fav.tags ?? [])),
+    new Set<string>(favorites.flatMap((fav) => fav.tags ?? [])),
   ).sort();
 
   // Filtrar por busca e tags

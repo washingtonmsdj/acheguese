@@ -166,9 +166,15 @@ export function useUpdateContract() {
  * ```tsx
  * function CancelButton({ subscriptionId }: Props) {
  *   const cancelContract = useCancelContract();
+ *   const { confirm: requestConfirmation, ConfirmDialog } = useConfirmActionDialog();
  *   
  *   const handleCancel = async () => {
- *     const confirmed = await confirm('Tem certeza que deseja cancelar?');
+ *     const confirmed = await requestConfirmation({
+ *       title: 'Cancelar assinatura',
+ *       description: 'Tem certeza que deseja cancelar?',
+ *       confirmLabel: 'Cancelar assinatura',
+ *       variant: 'destructive',
+ *     });
  *     if (!confirmed) return;
  *     
  *     const result = await cancelContract.mutateAsync({
@@ -182,7 +188,12 @@ export function useUpdateContract() {
  *     }
  *   };
  *   
- *   return <Button onClick={handleCancel} variant="destructive">Cancelar</Button>;
+ *   return (
+ *     <>
+ *       <Button onClick={handleCancel} variant="destructive">Cancelar</Button>
+ *       <ConfirmDialog />
+ *     </>
+ *   );
  * }
  * ```
  */

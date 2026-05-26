@@ -1,4 +1,4 @@
-import React from "react";
+import { useState } from "react";
 import {
   Crown,
   Shield,
@@ -8,20 +8,56 @@ import {
   Bell,
   MapPin,
   Star,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { cn } from "@/shared/utils/cn";
 import type { DriverPlan } from "@/modules/mobility/types";
 import { toast } from "sonner";
+import { BillingService } from "@/core/billing/services/BillingService";
+import { buildPublicAbsoluteUrl } from "@/shared/config/publicAppOrigin";
+import { mobilityRoutes } from "@/core/mobility/routes/mobilityRoutes";
+
+type DriverSubscriptionService = "motorista" | "motoboy";
 
 interface DriverSubscriptionCardProps {
   currentPlan: DriverPlan;
+  service?: DriverSubscriptionService;
 }
+
+const checkoutConfigByService: Record<
+  DriverSubscriptionService,
+  {
+    vertical: "mobility_driver" | "mobility_courier";
+    returnPath: string;
+    planCodes: Record<DriverPlan, string>;
+  }
+> = {
+  motorista: {
+    vertical: "mobility_driver",
+    returnPath: mobilityRoutes.motorista.configuracoes,
+    planCodes: {
+      padrao: "mobility-driver-padrao",
+      prioritario: "mobility-driver-prioritario",
+    },
+  },
+  motoboy: {
+    vertical: "mobility_courier",
+    returnPath: mobilityRoutes.motoboy.configuracoes,
+    planCodes: {
+      padrao: "mobility-courier-padrao",
+      prioritario: "mobility-courier-prioritario",
+    },
+  },
+};
 
 export function DriverSubscriptionCard({
   currentPlan,
+  service = "motorista",
 }: DriverSubscriptionCardProps) {
+  const [checkoutPlan, setCheckoutPlan] = useState<DriverPlan | null>(null);
+  const checkoutConfig = checkoutConfigByService[service];
   const plans = [
     {
       id: "padrao" as DriverPlan,
@@ -50,6 +86,32 @@ export function DriverSubscriptionCard({
       ],
     },
   ];
+
+  const handlePlanChange = async (targetPlan: DriverPlan) => {
+    const planCode = checkoutConfig.planCodes[targetPlan];
+
+    setCheckoutPlan(targetPlan);
+    try {
+      await BillingService.redirectToCheckout({
+        planCode,
+        subscriptionScope: "worker",
+        entityFamily: "worker",
+        vertical: checkoutConfig.vertical,
+        successUrl: buildPublicAbsoluteUrl(
+          `${checkoutConfig.returnPath}?assinatura=sucesso`,
+        ),
+        cancelUrl: buildPublicAbsoluteUrl(checkoutConfig.returnPath),
+      });
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Nao foi possivel iniciar o checkout da assinatura.",
+      );
+    } finally {
+      setCheckoutPlan(null);
+    }
+  };
 
   return (
     <div className="space-y-2">
@@ -125,9 +187,8 @@ export function DriverSubscriptionCard({
                 </Button>
               ) : (
                 <Button
-                  onClick={() =>
-                    toast.info("Em breve: pagamento de assinatura")
-                  }
+                  onClick={() => handlePlanChange(plan.id)}
+                  disabled={checkoutPlan === plan.id}
                   className={cn(
                     "w-full rounded-lg h-7 font-semibold shadow-lg text-[0.6rem] mt-auto",
                     isTeal
@@ -135,6 +196,9 @@ export function DriverSubscriptionCard({
                       : "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white shadow-amber-500/20",
                   )}
                 >
+                  {checkoutPlan === plan.id && (
+                    <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                  )}
                   {plan.id === "prioritario" ? "Upgrade" : "Mudar"}
                 </Button>
               )}

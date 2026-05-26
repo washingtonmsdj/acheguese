@@ -18,6 +18,7 @@ import { Input } from '@/shared/components/ui/input';
 import { BusinessLogo } from '@/shared/components/ui/business-logo';
 import { buildMailtoUrl, buildTelUrl } from '@/shared/utils/contactLinks';
 import { useNationalFeatured } from '@/core/landing/hooks/useNationalFeatured';
+import type { NationalBusiness } from '@/app/features/landing/services/types';
 import { useAppUrls } from '@/core/routing/hooks/useAppUrls';
 import {
   BRASIL_INFO,
@@ -49,7 +50,10 @@ export function BrasilShowcasePage() {
   const groups = territories.groups;
 
   const states = useMemo(() => groupCitiesByState(cities), [cities]);
-  const verifiedBusinesses = useMemo(() => filterVerifiedBusinesses(businesses), [businesses]);
+  const verifiedBusinesses = useMemo(
+    () => filterVerifiedBusinesses<NationalBusiness>(businesses as NationalBusiness[]),
+    [businesses],
+  );
 
   const scrollTo = (id: string) => {
     if (id.startsWith('#') && id.length > 1) {
@@ -368,7 +372,7 @@ export function BrasilShowcasePage() {
                   {...fadeUp}
                   transition={{ delay: i * 0.05 }}
                   onClick={() => {
-                    if (!business.slug) return;
+                    if (!business.slug || !business.geographic_path) return;
                     const url = `/empresas${business.geographic_path}/${business.slug}`;
                     navigate(url);
                   }}

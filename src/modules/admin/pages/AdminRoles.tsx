@@ -484,7 +484,7 @@ export default function AdminRoles() {
                 <CardTitle className="text-sm">Distribuicao por role</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
-                {Object.entries(stats?.byRole ?? {}).map(([role, count]) => (
+                {(Object.entries(stats?.byRole ?? {}) as [string, number][]).map(([role, count]) => (
                   <div key={role} className="flex justify-between">
                     <span>{role}</span>
                     <strong>{count}</strong>

@@ -316,7 +316,7 @@ export default function MotoboyPage() {
             </TabsContent>
 
             <TabsContent value="planos" className="mt-0">
-              <DriverSubscriptionCard currentPlan="prioritario" />
+              <DriverSubscriptionCard currentPlan="prioritario" service="motoboy" />
             </TabsContent>
 
             <TabsContent value="alertas" className="mt-0">

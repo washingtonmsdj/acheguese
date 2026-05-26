@@ -83,6 +83,15 @@ export default function AdminAnalytics() {
     );
   }, [overview]);
 
+  const trendEntries = useMemo(
+    () =>
+      Object.entries(overview?.trends ?? {}) as Array<[
+        string,
+        { value: number; direction: TrendDirection },
+      ]>,
+    [overview?.trends],
+  );
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -214,10 +223,10 @@ export default function AdminAnalytics() {
             <CardTitle className="text-base">Tendências do período</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {Object.entries(overview.trends).length === 0 && (
+            {trendEntries.length === 0 && (
               <p className="text-sm text-muted-foreground">Sem tendências calculadas para o período.</p>
             )}
-            {Object.entries(overview.trends).map(([key, trend]) => {
+            {trendEntries.map(([key, trend]) => {
               const Icon = getTrendIcon(trend.direction);
               return (
                 <div key={key} className="flex items-center justify-between rounded-lg border p-3">

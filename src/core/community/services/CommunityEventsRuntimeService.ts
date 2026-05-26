@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/supabase";
+import type { Json } from "@/integrations/supabase/types.generated";
 import type { TerritoryFilter } from "@/core/location/types";
 import { logger } from "@/shared/utils/logger";
 
@@ -38,14 +39,14 @@ export interface CommunityEvent {
   accessibility_info?: string | null;
   banner_image_url?: string | null;
   video_url?: string | null;
-  gallery?: unknown[] | null;
-  schedule?: unknown[] | null;
-  faq?: unknown[] | null;
+  gallery?: Json[] | null;
+  schedule?: Json[] | null;
+  faq?: Json[] | null;
   meta_title?: string | null;
   meta_description?: string | null;
   meta_keywords?: string[] | null;
-  features?: Record<string, unknown> | null;
-  organizer_contact?: Record<string, unknown> | null;
+  features?: Record<string, Json> | null;
+  organizer_contact?: Record<string, Json> | null;
   published_at?: string | null;
   max_participants?: number;
   current_participants: number;
@@ -92,14 +93,14 @@ export interface CreateEventInput {
   accessibility_info?: string;
   banner_image_url?: string;
   video_url?: string;
-  gallery?: unknown[];
-  schedule?: unknown[];
-  faq?: unknown[];
+  gallery?: Json[];
+  schedule?: Json[];
+  faq?: Json[];
   meta_title?: string;
   meta_description?: string;
   meta_keywords?: string[];
-  features?: Record<string, unknown>;
-  organizer_contact?: Record<string, unknown>;
+  features?: Record<string, Json>;
+  organizer_contact?: Record<string, Json>;
   max_participants?: number;
   latitude?: number;
   longitude?: number;
