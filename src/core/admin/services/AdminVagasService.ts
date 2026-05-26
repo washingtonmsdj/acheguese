@@ -291,6 +291,28 @@ export class AdminVagasService {
     return this.updateStatus(vagaId, "closed");
   }
 
+  static async renovarVaga(vagaId: string, days = 30): Promise<boolean> {
+    try {
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + days);
+
+      const { error } = await this.db
+        .from("vagas")
+        .update({
+          status: "published",
+          expires_at: expiresAt.toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", vagaId);
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      logger.error("[AdminVagasService] Erro ao renovar vaga", error);
+      return false;
+    }
+  }
+
   static async marcarPreenchida(vagaId: string): Promise<boolean> {
     return this.updateStatus(vagaId, "closed");
   }

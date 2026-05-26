@@ -312,7 +312,7 @@ export default function AdminBranding() {
             Cores da Marca
           </CardTitle>
           <CardDescription>
-            Configure as cores principais do site (em desenvolvimento)
+            Configure as cores principais do site
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -384,14 +384,9 @@ export default function AdminBranding() {
               </div>
             </div>
             <div className="space-y-1">
-              <h4 className="font-semibold text-sm">Funcionalidade Completa</h4>
+              <h4 className="font-semibold text-sm">Identidade visual operacional</h4>
               <p className="text-sm text-muted-foreground">
-                O sistema de upload e gerenciamento de branding está totalmente funcional! 
-                As imagens são armazenadas no Supabase Storage e as configurações são salvas no banco de dados.
-              </p>
-              <p className="text-sm text-muted-foreground mt-2">
-                <strong>Próximo passo:</strong> Integrar a logo customizada com a topbar para exibir 
-                automaticamente a logo configurada aqui.
+                O upload de imagens usa Supabase Storage e as configuracoes de marca sao persistidas no banco.
               </p>
             </div>
           </div>

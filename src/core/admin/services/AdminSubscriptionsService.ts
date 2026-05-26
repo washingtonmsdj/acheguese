@@ -246,6 +246,33 @@ class AdminSubscriptionsServiceClass {
   }
 
   /**
+   * Renova assinatura ativa por um periodo administrativo.
+   */
+  async renewSubscription(subscriptionId: string, days: number = 30): Promise<boolean> {
+    try {
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + days);
+
+      const { error } = await this.db
+        .from("user_subscriptions")
+        .update({
+          status: ADMIN_SUBSCRIPTION_STATUS.ACTIVE,
+          active: true,
+          canceled_at: null,
+          expires_at: expiresAt.toISOString(),
+          updated_at: new Date().toISOString(),
+        } as any)
+        .eq("id", subscriptionId);
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      logger.error("Error renewing subscription:", error);
+      return false;
+    }
+  }
+
+  /**
    * Busca assinaturas expirando
    */
   async getExpiringSubscriptions(daysAhead: number = 7) {

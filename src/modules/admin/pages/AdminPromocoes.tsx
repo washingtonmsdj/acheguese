@@ -17,7 +17,7 @@ import {
   TableRow,
 } from "@/shared/components/ui/table";
 import { Badge } from "@/shared/components/ui/badge";
-import { Card, CardContent } from "@/shared/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
 import {
   Ticket,
@@ -467,11 +467,44 @@ export default function AdminPromocoes() {
 
         {/* Analytics Tab */}
         <TabsContent value="analytics">
-          <Card>
-            <CardContent className="pt-6">
-              <p className="text-muted-foreground">Analytics em desenvolvimento...</p>
-            </CardContent>
-          </Card>
+          <div className="grid gap-4 md:grid-cols-3">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Uso acumulado</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-3xl font-bold">{stats?.totalUsage ?? 0}</p>
+                <p className="text-sm text-muted-foreground">resgates registrados</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Valor concedido</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-3xl font-bold">
+                  R$ {(stats?.totalDiscountValue ?? 0).toLocaleString("pt-BR")}
+                </p>
+                <p className="text-sm text-muted-foreground">em descontos aplicados</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Tipos de promocao</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                {Object.entries(stats?.byType ?? {}).map(([label, value]) => (
+                  <div key={label} className="flex justify-between">
+                    <span>{label}</span>
+                    <strong>{value}</strong>
+                  </div>
+                ))}
+                {Object.keys(stats?.byType ?? {}).length === 0 && (
+                  <p className="text-muted-foreground">Sem dados por tipo</p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
       <ConfirmDialog />

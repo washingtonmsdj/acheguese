@@ -106,6 +106,19 @@ export default function AdminAssinaturas() {
       toast.error("Erro ao reativar assinatura");
     },
   });
+
+  const renewMutation = useMutation({
+    mutationFn: (id: string) => adminSubscriptionsService.renewSubscription(id, 30),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-subscriptions"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-subscriptions-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-subscriptions-expiring"] });
+      toast.success("Assinatura renovada por 30 dias");
+    },
+    onError: () => {
+      toast.error("Erro ao renovar assinatura");
+    },
+  });
   type SubscriptionItem = NonNullable<typeof subscriptionsData>["data"][number];
   type ExpiringSubscriptionItem = NonNullable<typeof expiringSubscriptions>[number];
 
@@ -382,11 +395,10 @@ export default function AdminAssinaturas() {
                         <Button
                           size="sm"
                           variant="default"
-                          onClick={() => {
-                            toast.info("Funcionalidade de renovação em desenvolvimento");
-                          }}
+                          onClick={() => renewMutation.mutate(sub.id)}
+                          disabled={renewMutation.isPending}
                         >
-                          Renovar
+                          {renewMutation.isPending ? "Renovando..." : "Renovar"}
                         </Button>
                       </div>
                     </div>

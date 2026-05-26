@@ -149,6 +149,19 @@ export default function AdminVagas() {
     },
   });
 
+  const renovarMutation = useMutation({
+    mutationFn: (id: string) => AdminVagasService.renovarVaga(id, 30),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-vagas"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-vagas-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-vagas-expiring"] });
+      toast.success("Vaga renovada por 30 dias");
+    },
+    onError: () => {
+      toast.error("Erro ao renovar vaga");
+    },
+  });
+
   const rejeitarMutation = useMutation({
     mutationFn: (id: string) => AdminVagasService.rejeitarVaga(id),
     onSuccess: () => {
@@ -622,11 +635,10 @@ export default function AdminVagas() {
                           <Button
                             size="sm"
                             variant="default"
-                            onClick={() => {
-                              toast.info("Funcionalidade de renovação em desenvolvimento");
-                            }}
+                            onClick={() => renovarMutation.mutate(vaga.id)}
+                            disabled={renovarMutation.isPending}
                           >
-                            Renovar
+                            {renovarMutation.isPending ? "Renovando..." : "Renovar"}
                           </Button>
                           <Button
                             size="sm"
@@ -651,11 +663,51 @@ export default function AdminVagas() {
 
         {/* Analytics Tab */}
         <TabsContent value="analytics">
-          <Card>
-            <CardContent className="pt-6">
-              <p className="text-muted-foreground">Analytics em desenvolvimento...</p>
-            </CardContent>
-          </Card>
+          <div className="grid gap-4 md:grid-cols-3">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Status operacional</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                <div className="flex justify-between"><span>Publicadas</span><strong>{stats?.published ?? 0}</strong></div>
+                <div className="flex justify-between"><span>Pausadas</span><strong>{stats?.paused ?? 0}</strong></div>
+                <div className="flex justify-between"><span>Expiradas</span><strong>{stats?.expired ?? 0}</strong></div>
+                <div className="flex justify-between"><span>Removidas</span><strong>{stats?.removed ?? 0}</strong></div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Contratos</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                {Object.entries(stats?.byContrato ?? {}).map(([label, value]) => (
+                  <div key={label} className="flex justify-between">
+                    <span>{label}</span>
+                    <strong>{value}</strong>
+                  </div>
+                ))}
+                {Object.keys(stats?.byContrato ?? {}).length === 0 && (
+                  <p className="text-muted-foreground">Sem dados de contrato</p>
+                )}
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Modalidades</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                {Object.entries(stats?.byModalidade ?? {}).map(([label, value]) => (
+                  <div key={label} className="flex justify-between">
+                    <span>{label}</span>
+                    <strong>{value}</strong>
+                  </div>
+                ))}
+                {Object.keys(stats?.byModalidade ?? {}).length === 0 && (
+                  <p className="text-muted-foreground">Sem dados de modalidade</p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
       <ConfirmDialog />

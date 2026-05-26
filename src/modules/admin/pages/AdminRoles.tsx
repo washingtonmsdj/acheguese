@@ -478,11 +478,48 @@ export default function AdminRoles() {
 
         {/* Analytics Tab */}
         <TabsContent value="analytics">
-          <Card>
-            <CardContent className="pt-6">
-              <p className="text-muted-foreground">Analytics em desenvolvimento...</p>
-            </CardContent>
-          </Card>
+          <div className="grid gap-4 md:grid-cols-3">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Distribuicao por role</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                {Object.entries(stats?.byRole ?? {}).map(([role, count]) => (
+                  <div key={role} className="flex justify-between">
+                    <span>{role}</span>
+                    <strong>{count}</strong>
+                  </div>
+                ))}
+                {Object.keys(stats?.byRole ?? {}).length === 0 && (
+                  <p className="text-muted-foreground">Sem roles cadastrados</p>
+                )}
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Atividade</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                <div className="flex justify-between"><span>Total</span><strong>{stats?.totalRoles ?? 0}</strong></div>
+                <div className="flex justify-between"><span>Ativos</span><strong>{stats?.activeRoles ?? 0}</strong></div>
+                <div className="flex justify-between"><span>Expirando</span><strong>{stats?.expiredRoles ?? 0}</strong></div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Saude de acesso</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-3xl font-bold">
+                  {stats?.totalRoles
+                    ? Math.round(((stats.activeRoles ?? 0) / stats.totalRoles) * 100)
+                    : 0}
+                  %
+                </p>
+                <p className="text-sm text-muted-foreground">roles ativos no total</p>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
       <Dialog
