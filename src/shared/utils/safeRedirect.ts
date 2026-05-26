@@ -94,6 +94,29 @@ export function resolveSafeRedirectUrl(
   }
 }
 
+export function resolveSafeInternalPath(rawUrl: unknown, fallback = '/'): string {
+  const fallbackPath = typeof fallback === 'string' && isRelativeUrl(fallback) ? fallback : '/';
+  if (typeof rawUrl !== 'string') return fallbackPath;
+
+  const input = rawUrl.trim();
+  if (!input || input.length > INPUT_VALIDATION.MAX_URL_LENGTH) return fallbackPath;
+
+  if (isRelativeUrl(input)) {
+    return input;
+  }
+
+  const currentOrigin = getCurrentOrigin();
+  if (!currentOrigin) return fallbackPath;
+
+  try {
+    const parsed = new URL(input);
+    if (parsed.origin !== currentOrigin) return fallbackPath;
+    return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+  } catch {
+    return fallbackPath;
+  }
+}
+
 export function navigateToSafeRedirect(rawUrl: string, options: SafeRedirectOptions = {}): boolean {
   const safeUrl = resolveSafeRedirectUrl(rawUrl, options);
   if (!safeUrl || typeof window === 'undefined') return false;

@@ -15,12 +15,14 @@ import { getAuthErrorMessage } from '@/core/auth/utils/authMessages';
 import { clearPendingSignupEmail } from '@/core/auth/utils/pendingSignup';
 import { useToast } from '@/shared/hooks/use-toast';
 import { cn } from '@/shared/utils/cn';
+import { resolveSafeInternalPath } from '@/shared/utils/safeRedirect';
 import {
   LoginIdentifierSchema,
   type LoginIdentifierInput,
 } from '@/shared/validation/schemas/user.schema';
 
 type PendingAction = 'login' | 'recovery' | 'google' | null;
+type LoginLocationState = { redirectTo?: unknown } | null;
 
 export default function LoginPage() {
   const {
@@ -38,7 +40,10 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const redirectTo = (location.state as any)?.redirectTo || searchParams.get('redirect') || '/';
+  const redirectTo = useMemo(() => {
+    const stateRedirect = (location.state as LoginLocationState)?.redirectTo;
+    return resolveSafeInternalPath(stateRedirect ?? searchParams.get('redirect'), '/');
+  }, [location.state, searchParams]);
   const isEmailConfirmed = searchParams.get('confirmed') === '1';
   const isPasswordReset = searchParams.get('passwordReset') === '1';
 
