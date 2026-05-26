@@ -37,7 +37,7 @@ export type SubscriptionStatus = 'active' | 'canceled' | 'past_due' | 'trialing'
 /**
  * Assinatura de uma empresa
  * 
- * Tabela: business_subscriptions
+ * Tabela canonica: user_subscriptions (subscription_scope = business)
  */
 export interface BusinessSubscription {
   id: string;

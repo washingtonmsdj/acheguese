@@ -32,8 +32,8 @@ export const FEATURE_FLAGS: Record<string, FeatureFlag> = {
     environments: ['development', 'staging', 'production'],
   },
   
-  GASTRONOMY_SUBSCRIPTIONS: {
-    key: 'gastronomy_subscriptions',
+  GASTRONOMY_BILLING: {
+    key: 'gastronomy_billing',
     enabled: true,
     rolloutPercentage: 100,
     environments: ['development', 'staging', 'production'],

@@ -1,199 +1,307 @@
 /**
- * CORE BILLING SUBSCRIPTION SERVICE — Serviço de assinaturas
+ * CORE BILLING SUBSCRIPTION SERVICE
  *
- * SSOT: Única fonte de verdade para operações de assinatura.
+ * SSOT: user_subscriptions.
  */
-import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase';
-import { PlanTier, type BusinessSubscription } from './types';
-import type { AdminSupabaseClient } from '@/core/admin/types/adminDatabase.types';
-import { BILLING_SUBSCRIPTION_STATUS } from './constants/subscription-status';
-// ══════════════════════════════════════════════════════════════════════════
-// TYPES
-// ══════════════════════════════════════════════════════════════════════════
+import { logger } from "@/shared/utils/logger";
+import { supabase } from "@/integrations/supabase";
+import { PlanTier, type BusinessSubscription, type SubscriptionStatus } from "./types";
+import { BILLING_SUBSCRIPTION_STATUS } from "./constants/subscription-status";
 
 export interface ServiceResult<T> {
   data: T | null;
   error: string | null;
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-// SUBSCRIPTION SERVICE
-// ══════════════════════════════════════════════════════════════════════════
+interface CanonicalBusinessSubscriptionRow {
+  id: string;
+  user_id: string;
+  business_id: string | null;
+  plan_code: string | null;
+  status_v2: string | null;
+  current_period_start: string | null;
+  current_period_end: string | null;
+  cancel_at_period_end: boolean | null;
+  trial_ends_at: string | null;
+  stripe_subscription_id: string | null;
+  stripe_customer_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+const billingDb = supabase as any;
+
+function toPlanTier(planCode: string | null | undefined): PlanTier {
+  if (planCode === PlanTier.DELIVERY || planCode?.includes("delivery")) {
+    return PlanTier.DELIVERY;
+  }
+
+  if (planCode === PlanTier.PRO || planCode?.includes("pro")) {
+    return PlanTier.PRO;
+  }
+
+  return PlanTier.FREE;
+}
+
+function toSubscriptionStatus(status: string | null | undefined): SubscriptionStatus {
+  if (status === BILLING_SUBSCRIPTION_STATUS.CANCELED) return BILLING_SUBSCRIPTION_STATUS.CANCELED;
+  if (status === BILLING_SUBSCRIPTION_STATUS.PAST_DUE) return BILLING_SUBSCRIPTION_STATUS.PAST_DUE;
+  if (status === BILLING_SUBSCRIPTION_STATUS.TRIALING) return BILLING_SUBSCRIPTION_STATUS.TRIALING;
+  return BILLING_SUBSCRIPTION_STATUS.ACTIVE;
+}
+
+function createDefaultFreeSubscription(businessId: string): BusinessSubscription {
+  const now = new Date().toISOString();
+  const futureDate = new Date();
+  futureDate.setFullYear(futureDate.getFullYear() + 100);
+
+  return {
+    id: `temp-free-${businessId}`,
+    business_id: businessId,
+    plan_tier: PlanTier.FREE,
+    status: BILLING_SUBSCRIPTION_STATUS.ACTIVE,
+    current_period_start: now,
+    current_period_end: futureDate.toISOString(),
+    cancel_at_period_end: false,
+    trial_end: null,
+    stripe_subscription_id: null,
+    stripe_customer_id: null,
+    created_at: now,
+    updated_at: now,
+  };
+}
+
+function mapCanonicalRow(row: CanonicalBusinessSubscriptionRow, businessId: string): BusinessSubscription {
+  const now = new Date().toISOString();
+
+  return {
+    id: row.id,
+    business_id: row.business_id ?? businessId,
+    plan_tier: toPlanTier(row.plan_code),
+    status: toSubscriptionStatus(row.status_v2),
+    current_period_start: row.current_period_start ?? row.created_at ?? now,
+    current_period_end: row.current_period_end ?? row.updated_at ?? now,
+    cancel_at_period_end: row.cancel_at_period_end ?? false,
+    trial_end: row.trial_ends_at,
+    stripe_subscription_id: row.stripe_subscription_id,
+    stripe_customer_id: row.stripe_customer_id,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  };
+}
+
+function toCanonicalStatus(status: SubscriptionStatus | undefined): string {
+  if (!status) return "active";
+  if (status === BILLING_SUBSCRIPTION_STATUS.CANCELED) return "canceled";
+  return status;
+}
+
+async function resolveBusinessOwnerUserId(businessId: string): Promise<string | null> {
+  const { data, error } = await billingDb
+    .from("business_data")
+    .select("profiles!inner(user_id)")
+    .eq("id", businessId)
+    .maybeSingle();
+
+  if (error) {
+    logger.error("[SubscriptionService] Erro ao resolver dono da empresa:", error);
+    return null;
+  }
+
+  const profile = data?.profiles;
+  if (Array.isArray(profile)) {
+    return profile[0]?.user_id ?? null;
+  }
+
+  return profile?.user_id ?? null;
+}
+
+async function fetchCanonicalByBusinessId(
+  businessId: string,
+): Promise<CanonicalBusinessSubscriptionRow | null> {
+  const { data, error } = await billingDb
+    .from("user_subscriptions")
+    .select(`
+      id,
+      user_id,
+      business_id,
+      plan_code,
+      status_v2,
+      current_period_start,
+      current_period_end,
+      cancel_at_period_end,
+      trial_ends_at,
+      stripe_subscription_id,
+      stripe_customer_id,
+      created_at,
+      updated_at
+    `)
+    .eq("business_id", businessId)
+    .eq("subscription_scope", "business")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+  return (data as CanonicalBusinessSubscriptionRow | null) ?? null;
+}
 
 export class SubscriptionService {
-  
-  /**
-   * Busca assinatura de uma empresa
-   */
   static async getByBusinessId(
-    businessId: string
+    businessId: string,
   ): Promise<ServiceResult<BusinessSubscription>> {
     try {
-      const supabaseTyped = supabase as unknown as AdminSupabaseClient;
-      const { data, error } = await supabaseTyped
-        .from('business_subscriptions')
-        .select('*')
-        .eq('business_id', businessId)
-        .limit(1);
+      const row = await fetchCanonicalByBusinessId(businessId);
+      return {
+        data: row ? mapCanonicalRow(row, businessId) : createDefaultFreeSubscription(businessId),
+        error: null,
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Erro ao buscar assinatura";
+      logger.error("[SubscriptionService] Erro ao buscar assinatura:", error);
+      return { data: null, error: message };
+    }
+  }
 
-      if (error) throw error;
+  static async upsert(
+    subscription: Partial<BusinessSubscription> & { business_id: string },
+  ): Promise<ServiceResult<BusinessSubscription>> {
+    try {
+      const existing = await fetchCanonicalByBusinessId(subscription.business_id);
+      const userId = existing?.user_id ?? (await resolveBusinessOwnerUserId(subscription.business_id));
 
-      const row = data?.[0] ?? null;
-      if (!row) {
-        return {
-          data: this.createDefaultFreeSubscription(businessId),
-          error: null,
-        };
+      if (!userId) {
+        return { data: null, error: "Dono da empresa nao encontrado para criar assinatura" };
       }
 
-      return { data: row, error: null };
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Erro ao buscar assinatura';
-      logger.error('[SubscriptionService] Erro ao buscar assinatura:', error);
-      return { data: null, error: message };
-    }
-  }
-  
-  /**
-   * Cria assinatura Free padrão (em memória)
-   */
-  private static createDefaultFreeSubscription(businessId: string): BusinessSubscription {
-    const now = new Date().toISOString();
-    const futureDate = new Date();
-    futureDate.setFullYear(futureDate.getFullYear() + 100);
-    
-    return {
-      id: 'temp-free-' + businessId,
-      business_id: businessId,
-      plan_tier: PlanTier.FREE,
-      status: BILLING_SUBSCRIPTION_STATUS.ACTIVE,
-      current_period_start: now,
-      current_period_end: futureDate.toISOString(),
-      cancel_at_period_end: false,
-      trial_end: null,
-      stripe_subscription_id: null,
-      stripe_customer_id: null,
-      created_at: now,
-      updated_at: now,
-    };
-  }
-  
-  /**
-   * Cria ou atualiza assinatura
-   */
-  static async upsert(
-    subscription: Partial<BusinessSubscription> & { business_id: string }
-  ): Promise<ServiceResult<BusinessSubscription>> {
-    try {
-      const { data, error } = await supabase
-        .from('business_subscriptions')
-        .upsert(subscription, {
-          onConflict: 'business_id',
-        })
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
-      return { data: data as BusinessSubscription, error: null };
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Erro ao salvar assinatura';
-      logger.error('[SubscriptionService] Erro ao salvar assinatura:', error);
-      return { data: null, error: message };
-    }
-  }
-  
-  /**
-   * Atualiza plano da assinatura
-   */
-  static async updatePlan(
-    businessId: string,
-    newPlanTier: PlanTier
-  ): Promise<ServiceResult<BusinessSubscription>> {
-    try {
-      const { data, error } = await supabase
-        .from('business_subscriptions')
-        .update({
-          plan_tier: newPlanTier,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('business_id', businessId)
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
-      return { data: data as BusinessSubscription, error: null };
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Erro ao atualizar plano';
-      logger.error('[SubscriptionService] Erro ao atualizar plano:', error);
-      return { data: null, error: message };
-    }
-  }
-  
-  /**
-   * Cancela assinatura
-   */
-  static async cancel(
-    businessId: string,
-    immediately: boolean = false
-  ): Promise<ServiceResult<BusinessSubscription>> {
-    try {
-      const updates: Partial<BusinessSubscription> = {
+      const planTier = subscription.plan_tier ?? PlanTier.FREE;
+      const status = toCanonicalStatus(subscription.status);
+      const payload = {
+        user_id: userId,
+        business_id: subscription.business_id,
+        plan_code: planTier,
+        plan_type: planTier,
+        status,
+        status_v2: status,
+        active: status === "active" || status === "trialing",
+        subscription_scope: "business",
+        entity_family: "company",
+        current_period_start: subscription.current_period_start ?? new Date().toISOString(),
+        current_period_end: subscription.current_period_end ?? null,
+        cancel_at_period_end: subscription.cancel_at_period_end ?? false,
+        trial_ends_at: subscription.trial_end ?? null,
+        stripe_subscription_id: subscription.stripe_subscription_id ?? null,
+        stripe_customer_id: subscription.stripe_customer_id ?? null,
         updated_at: new Date().toISOString(),
       };
-      
-      if (immediately) {
-        updates.status = BILLING_SUBSCRIPTION_STATUS.CANCELED;
-        updates.plan_tier = PlanTier.FREE;
-        updates.cancel_at_period_end = false;
-      } else {
-        updates.cancel_at_period_end = true;
-      }
-      
-      const { data, error } = await supabase
-        .from('business_subscriptions')
-        .update(updates)
-        .eq('business_id', businessId)
-        .select()
-        .single();
-      
+
+      const query = existing
+        ? billingDb.from("user_subscriptions").update(payload).eq("id", existing.id)
+        : billingDb.from("user_subscriptions").insert(payload);
+
+      const { data, error } = await query.select().single();
       if (error) throw error;
-      
-      return { data: data as BusinessSubscription, error: null };
+
+      return {
+        data: mapCanonicalRow(data as CanonicalBusinessSubscriptionRow, subscription.business_id),
+        error: null,
+      };
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Erro ao cancelar assinatura';
-      logger.error('[SubscriptionService] Erro ao cancelar assinatura:', error);
+      const message = error instanceof Error ? error.message : "Erro ao salvar assinatura";
+      logger.error("[SubscriptionService] Erro ao salvar assinatura:", error);
       return { data: null, error: message };
     }
   }
-  
-  /**
-   * Reativa assinatura
-   */
-  static async reactivate(
-    businessId: string
+
+  static async updatePlan(
+    businessId: string,
+    newPlanTier: PlanTier,
   ): Promise<ServiceResult<BusinessSubscription>> {
     try {
-      const { data, error } = await supabase
-        .from('business_subscriptions')
+      const { data, error } = await billingDb
+        .from("user_subscriptions")
         .update({
-          cancel_at_period_end: false,
+          plan_code: newPlanTier,
+          plan_type: newPlanTier,
           updated_at: new Date().toISOString(),
         })
-        .eq('business_id', businessId)
+        .eq("business_id", businessId)
+        .eq("subscription_scope", "business")
         .select()
         .single();
-      
+
       if (error) throw error;
-      
-      return { data: data as BusinessSubscription, error: null };
+
+      return { data: mapCanonicalRow(data as CanonicalBusinessSubscriptionRow, businessId), error: null };
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Erro ao reativar assinatura';
-      logger.error('[SubscriptionService] Erro ao reativar assinatura:', error);
+      const message = error instanceof Error ? error.message : "Erro ao atualizar plano";
+      logger.error("[SubscriptionService] Erro ao atualizar plano:", error);
+      return { data: null, error: message };
+    }
+  }
+
+  static async cancel(
+    businessId: string,
+    immediately = false,
+  ): Promise<ServiceResult<BusinessSubscription>> {
+    try {
+      const updates: Record<string, unknown> = {
+        cancel_at_period_end: !immediately,
+        updated_at: new Date().toISOString(),
+      };
+
+      if (immediately) {
+        updates.status = "canceled";
+        updates.status_v2 = "canceled";
+        updates.active = false;
+        updates.plan_code = PlanTier.FREE;
+        updates.plan_type = PlanTier.FREE;
+        updates.current_period_end = new Date().toISOString();
+      }
+
+      const { data, error } = await billingDb
+        .from("user_subscriptions")
+        .update(updates)
+        .eq("business_id", businessId)
+        .eq("subscription_scope", "business")
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return { data: mapCanonicalRow(data as CanonicalBusinessSubscriptionRow, businessId), error: null };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Erro ao cancelar assinatura";
+      logger.error("[SubscriptionService] Erro ao cancelar assinatura:", error);
+      return { data: null, error: message };
+    }
+  }
+
+  static async reactivate(
+    businessId: string,
+  ): Promise<ServiceResult<BusinessSubscription>> {
+    try {
+      const { data, error } = await billingDb
+        .from("user_subscriptions")
+        .update({
+          cancel_at_period_end: false,
+          status: "active",
+          status_v2: "active",
+          active: true,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("business_id", businessId)
+        .eq("subscription_scope", "business")
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return { data: mapCanonicalRow(data as CanonicalBusinessSubscriptionRow, businessId), error: null };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Erro ao reativar assinatura";
+      logger.error("[SubscriptionService] Erro ao reativar assinatura:", error);
       return { data: null, error: message };
     }
   }
 }
-

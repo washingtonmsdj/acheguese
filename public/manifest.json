@@ -1,0 +1,44 @@
+{
+  "name": "Achegue-se",
+  "short_name": "Achegue-se",
+  "description": "Comunidade, negócios locais, serviços, mobilidade e gastronomia no mesmo território.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#0f766e",
+  "lang": "pt-BR",
+  "categories": ["business", "food", "navigation", "social"],
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Comunidade",
+      "short_name": "Comunidade",
+      "url": "/comunidade/ba/salvador/area/complexo-do-nordeste-de-amaralina/feed"
+    },
+    {
+      "name": "Empresas",
+      "short_name": "Empresas",
+      "url": "/empresas"
+    },
+    {
+      "name": "Serviços",
+      "short_name": "Serviços",
+      "url": "/servicos"
+    }
+  ]
+}

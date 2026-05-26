@@ -1,21 +1,21 @@
-// Service Worker para Modo Offline
-// Versão: 1.0.0
+// Service Worker para modo offline.
+// Mantido como fallback legado; o service worker ativo de push usa /sw.js.
 
-const CACHE_NAME = 'localconnect-v1';
-const OFFLINE_CACHE = 'localconnect-offline-v1';
-const CRITICAL_CACHE = 'localconnect-critical-v1';
+const CACHE_NAME = 'acheguese-v1';
+const OFFLINE_CACHE = 'acheguese-offline-v1';
+const CRITICAL_CACHE = 'acheguese-critical-v1';
 const IS_LOCALHOST =
   self.location.hostname === 'localhost' ||
   self.location.hostname === '127.0.0.1' ||
   self.location.hostname === '::1';
 
-// Recursos críticos que SEMPRE devem estar disponíveis offline
+// Recursos criticos que devem estar disponiveis offline.
 const CRITICAL_RESOURCES = [
   '/',
   '/index.html',
   '/offline.html',
   '/manifest.json',
-  '/logo.png',
+  '/images/logo-icon.png',
   '/favicon.ico'
 ];
 

@@ -347,12 +347,48 @@ export interface CreateCheckoutBody {
   planCode: string;
   successUrl: string;
   cancelUrl: string;
+  businessId?: string;
+  subscriptionScope?: "user" | "business" | "profile" | "worker";
+  entityFamily?: "company" | "professional" | "worker";
+  vertical?:
+    | "gastronomy"
+    | "health"
+    | "education"
+    | "services"
+    | "retail"
+    | "classifieds"
+    | "mobility_company"
+    | "mobility_driver"
+    | "mobility_courier";
 }
 
 export const createCheckoutSchema: Schema<CreateCheckoutBody> = {
   planCode: { required: true, validator: v.string(1, 50) },
   successUrl: { required: true, validator: v.redirectUrl() },
   cancelUrl: { required: true, validator: v.redirectUrl() },
+  businessId: { required: false, validator: v.uuid() },
+  subscriptionScope: {
+    required: false,
+    validator: v.enum(["user", "business", "profile", "worker"] as const),
+  },
+  entityFamily: {
+    required: false,
+    validator: v.enum(["company", "professional", "worker"] as const),
+  },
+  vertical: {
+    required: false,
+    validator: v.enum([
+      "gastronomy",
+      "health",
+      "education",
+      "services",
+      "retail",
+      "classifieds",
+      "mobility_company",
+      "mobility_driver",
+      "mobility_courier",
+    ] as const),
+  },
 };
 
 /** Schema para portal de billing */

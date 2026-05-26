@@ -22,6 +22,19 @@ export interface CreateCheckoutParams {
   planCode: string;
   successUrl: string;
   cancelUrl: string;
+  businessId?: string;
+  subscriptionScope?: 'user' | 'business' | 'profile' | 'worker';
+  entityFamily?: 'company' | 'professional' | 'worker';
+  vertical?:
+    | 'gastronomy'
+    | 'health'
+    | 'education'
+    | 'services'
+    | 'retail'
+    | 'classifieds'
+    | 'mobility_company'
+    | 'mobility_driver'
+    | 'mobility_courier';
 }
 
 export interface CreateCheckoutResponse {

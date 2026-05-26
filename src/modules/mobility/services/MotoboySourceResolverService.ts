@@ -63,17 +63,19 @@ export class MotoboySourceResolverService {
     }
 
     const { data: currentPlan, error: currentPlanError } = await supabase
-      .from("business_subscriptions")
-      .select("plan_tier")
+      .from("user_subscriptions")
+      .select("plan_code")
       .eq("business_id", businessDataId)
+      .eq("subscription_scope", "business")
+      .in("status_v2", ["active", "trialing"])
       .order("updated_at", { ascending: false })
       .limit(1)
       .maybeSingle();
 
     if (currentPlanError) {
-      logger.warn("MotoboySourceResolverService.resolvePlanTier.businessSubscriptions", currentPlanError);
-    } else if (currentPlan?.plan_tier) {
-      return currentPlan.plan_tier;
+      logger.warn("MotoboySourceResolverService.resolvePlanTier.userSubscriptions", currentPlanError);
+    } else if (currentPlan?.plan_code) {
+      return currentPlan.plan_code;
     }
 
     return undefined;

@@ -15,6 +15,63 @@ import Stripe from 'https://esm.sh/stripe@14.21.0'
 import { validateBody, createCheckoutSchema, validationErrorResponse, type CreateCheckoutBody } from '../_shared/validation.ts'
 import { getAllSecurityHeaders, errorResponse, rateLimitMiddleware } from '../_shared/security.ts'
 
+type CatalogPricingPolicy = {
+  price_cents: number
+  currency: string | null
+  billing_period: string | null
+  stripe_price_id: string | null
+  stripe_lookup_key: string | null
+}
+
+type CatalogItem = {
+  id: string
+  catalog_version_id: string
+  item_code: string
+  item_name: string
+  pricing_model: string
+  entity_family: string | null
+  vertical: string | null
+  catalog_pricing_policy: CatalogPricingPolicy[] | CatalogPricingPolicy | null
+}
+
+function normalizePlanCode(planCode: string): string {
+  const trimmed = planCode.trim().toLowerCase()
+  if (trimmed === 'base-free') return 'free'
+  if (trimmed === 'base-pro') return 'pro'
+  if (trimmed === 'base-delivery') return 'delivery'
+  return trimmed
+}
+
+function toCatalogItemCode(planCode: string): string {
+  const normalized = normalizePlanCode(planCode)
+  if (normalized === 'free' || normalized === 'pro' || normalized === 'delivery') {
+    return `base-${normalized}`
+  }
+  return normalized
+}
+
+function getPricingPolicy(catalogItem: CatalogItem): CatalogPricingPolicy | null {
+  const policy = catalogItem.catalog_pricing_policy
+  if (Array.isArray(policy)) return policy[0] ?? null
+  return policy ?? null
+}
+
+async function resolveStripePriceId(
+  stripe: Stripe,
+  pricing: CatalogPricingPolicy,
+): Promise<string | null> {
+  if (pricing.stripe_price_id) return pricing.stripe_price_id
+  if (!pricing.stripe_lookup_key) return null
+
+  const prices = await stripe.prices.list({
+    active: true,
+    limit: 1,
+    lookup_keys: [pricing.stripe_lookup_key],
+  })
+
+  return prices.data[0]?.id ?? null
+}
+
 serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { status: 204, headers: getAllSecurityHeaders('POST, OPTIONS') })
@@ -54,7 +111,18 @@ serve(async (req: Request) => {
     if (!validation.ok) {
       return validationErrorResponse(validation.errors)
     }
-    const { planCode, successUrl, cancelUrl } = validation.data!
+    const {
+      planCode,
+      successUrl,
+      cancelUrl,
+      businessId,
+      subscriptionScope,
+      entityFamily,
+      vertical,
+    } = validation.data!
+    const normalizedPlanCode = normalizePlanCode(planCode)
+    const catalogItemCode = toCatalogItemCode(normalizedPlanCode)
+    const resolvedScope = businessId ? 'business' : (subscriptionScope ?? 'user')
 
     // ════════════════════════════════════════════════════════════════════════
     // 6. EXECUTAR OPERAÇÃO
@@ -64,20 +132,57 @@ serve(async (req: Request) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Buscar plano
-    const { data: plan, error: planError } = await supabaseAdmin
-      .from('billing_plans')
-      .select('*')
-      .eq('code', planCode)
-      .eq('is_active', true)
-      .single()
+    if ((businessId && resolvedScope !== 'business') || (!businessId && resolvedScope === 'business')) {
+      return errorResponse('Business checkout requires business_id and business subscription scope', 400)
+    }
 
-    if (planError || !plan) {
+    if (businessId) {
+      const { data: businessAccess, error: businessAccessError } = await supabaseAdmin
+        .from('business_data')
+        .select('id, profiles!inner(user_id)')
+        .eq('id', businessId)
+        .eq('profiles.user_id', user.id)
+        .maybeSingle()
+
+      if (businessAccessError || !businessAccess) {
+        return errorResponse('Business not found or access denied', 403, businessAccessError)
+      }
+    }
+
+    const { data: catalogItem, error: catalogError } = await supabaseAdmin
+      .from('catalog_item')
+      .select(`
+        id,
+        catalog_version_id,
+        item_code,
+        item_name,
+        pricing_model,
+        entity_family,
+        vertical,
+        commercial_catalog_version!inner(status),
+        catalog_pricing_policy (
+          price_cents,
+          currency,
+          billing_period,
+          stripe_price_id,
+          stripe_lookup_key
+        )
+      `)
+      .eq('item_code', catalogItemCode)
+      .eq('commercial_catalog_version.status', 'published')
+      .maybeSingle()
+
+    if (catalogError || !catalogItem) {
       return errorResponse('Plan not found', 404)
     }
 
-    // Plano free não precisa de checkout
-    if (plan.code === 'free') {
+    const pricing = getPricingPolicy(catalogItem as CatalogItem)
+
+    if (!pricing) {
+      return errorResponse('Plan pricing is not configured', 500)
+    }
+
+    if (catalogItem.pricing_model === 'free' || normalizedPlanCode === 'free') {
       return errorResponse('Free plan does not require checkout', 400)
     }
 
@@ -86,11 +191,20 @@ serve(async (req: Request) => {
       .from('user_subscriptions')
       .select('stripe_customer_id')
       .eq('user_id', user.id)
-      .single()
+      .not('stripe_customer_id', 'is', null)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
 
     const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') ?? '', {
       apiVersion: '2023-10-16',
     })
+
+    const stripePriceId = await resolveStripePriceId(stripe, pricing)
+
+    if (!stripePriceId) {
+      return errorResponse('Plan is not configured for Stripe checkout', 500)
+    }
 
     let customerId = subscription?.stripe_customer_id
 
@@ -105,6 +219,22 @@ serve(async (req: Request) => {
       customerId = customer.id
     }
 
+    const stripeMetadata: Record<string, string> = {
+      supabase_user_id: user.id,
+      plan_code: normalizedPlanCode,
+      catalog_item_code: catalogItem.item_code,
+      catalog_version_id: catalogItem.catalog_version_id,
+      subscription_scope: resolvedScope,
+    }
+
+    if (businessId) stripeMetadata.business_id = businessId
+    if (entityFamily || catalogItem.entity_family) {
+      stripeMetadata.entity_family = entityFamily ?? catalogItem.entity_family!
+    }
+    if (vertical || catalogItem.vertical) {
+      stripeMetadata.vertical = vertical ?? catalogItem.vertical!
+    }
+
     // Criar sessão de checkout
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -112,21 +242,15 @@ serve(async (req: Request) => {
       payment_method_types: ['card'],
       line_items: [
         {
-          price: plan.stripe_price_id, // Deve estar configurado no billing_plans
+          price: stripePriceId,
           quantity: 1,
         },
       ],
       success_url: successUrl,
       cancel_url: cancelUrl,
-      metadata: {
-        supabase_user_id: user.id,
-        plan_code: planCode,
-      },
+      metadata: stripeMetadata,
       subscription_data: {
-        metadata: {
-          supabase_user_id: user.id,
-          plan_code: planCode,
-        },
+        metadata: stripeMetadata,
       },
     })
 
@@ -140,7 +264,9 @@ serve(async (req: Request) => {
       p_entity_id: null,
       p_old_data: null,
       p_new_data: {
-        plan_code: planCode,
+        plan_code: normalizedPlanCode,
+        catalog_item_code: catalogItem.item_code,
+        business_id: businessId ?? null,
         session_id: session.id,
         customer_id: customerId,
       },

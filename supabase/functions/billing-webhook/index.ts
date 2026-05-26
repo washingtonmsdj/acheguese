@@ -157,6 +157,25 @@ serve(async (req: Request) => {
 // HANDLERS (SSOT-Compliant)
 // ══════════════════════════════════════════════════════════════════════════
 
+function normalizePlanCode(planCode: string): string {
+  const trimmed = planCode.trim().toLowerCase()
+  if (trimmed === 'base-free') return 'free'
+  if (trimmed === 'base-pro') return 'pro'
+  if (trimmed === 'base-delivery') return 'delivery'
+  return trimmed
+}
+
+function toCatalogItemCode(planCode: string, metadataCode?: string): string {
+  if (metadataCode) return metadataCode
+
+  const normalized = normalizePlanCode(planCode)
+  if (normalized === 'free' || normalized === 'pro' || normalized === 'delivery') {
+    return `base-${normalized}`
+  }
+
+  return normalized
+}
+
 /**
  * Handle subscription created/updated
  * 
@@ -170,13 +189,18 @@ async function handleSubscriptionChange(event: Stripe.Event, supabase: any) {
   const subscription = event.data.object as Stripe.Subscription
   const userId = subscription.metadata.supabase_user_id
   const businessId = subscription.metadata.business_id
-  const planCode = subscription.metadata.plan_code
-  const subscriptionScope = businessId ? 'business' : 'user'
+  const rawPlanCode = subscription.metadata.plan_code
+  const subscriptionScope = subscription.metadata.subscription_scope || (businessId ? 'business' : 'user')
+  const metadataEntityFamily = subscription.metadata.entity_family
+  const metadataVertical = subscription.metadata.vertical
 
-  if (!userId || !planCode) {
+  if (!userId || !rawPlanCode) {
     console.error('[billing-webhook] Missing metadata in subscription:', subscription.id)
     return
   }
+
+  const planCode = normalizePlanCode(rawPlanCode)
+  const catalogItemCode = toCatalogItemCode(planCode, subscription.metadata.catalog_item_code)
 
   console.log(`[billing-webhook] Processing ${event.type} for user ${userId}, plan ${planCode}`)
 
@@ -185,6 +209,7 @@ async function handleSubscriptionChange(event: Stripe.Event, supabase: any) {
     .from('catalog_item')
     .select(`
       id,
+      catalog_version_id,
       item_code,
       item_name,
       item_type,
@@ -212,25 +237,26 @@ async function handleSubscriptionChange(event: Stripe.Event, supabase: any) {
         currency,
         billing_period,
         stripe_price_id
-      )
+      ),
+      commercial_catalog_version!inner(status)
     `)
-    .eq('item_code', planCode)
-    .eq('status', 'published')
+    .eq('item_code', catalogItemCode)
+    .eq('commercial_catalog_version.status', 'published')
     .maybeSingle()
 
   if (catalogError || !catalogItem) {
-    console.error('[billing-webhook] Catalog item not found:', planCode, catalogError)
-    // Fallback: continue without snapshot (legacy compatibility)
+    console.error('[billing-webhook] Catalog item not found:', catalogItemCode, catalogError)
+    throw new Error(`Catalog item not found: ${catalogItemCode}`)
   }
 
   // Create contract snapshot (immutable)
-  const contractSnapshot = catalogItem ? {
+  const contractSnapshot = {
     catalog_item: catalogItem,
     contracted_at: new Date().toISOString(),
     terms_version: '1.0.0',
     stripe_subscription_id: subscription.id,
     stripe_price_id: subscription.items.data[0]?.price.id,
-  } : null
+  }
 
   // Map Stripe status to status_v2
   const statusV2 = mapStripeStatus(subscription.status)
@@ -239,33 +265,52 @@ async function handleSubscriptionChange(event: Stripe.Event, supabase: any) {
   const priceId = subscription.items.data[0]?.price.id
   const priceCents = subscription.items.data[0]?.price.unit_amount || 0
 
-  // Upsert subscription
-  const { error } = await supabase
+  const subscriptionPayload = {
+    user_id: userId,
+    business_id: businessId || null,
+    plan_code: planCode,
+    plan_type: planCode,
+    subscription_scope: subscriptionScope,
+    entity_family: metadataEntityFamily || catalogItem.entity_family || null,
+    vertical: metadataVertical || catalogItem.vertical || null,
+    status: statusV2,
+    status_v2: statusV2,
+    amount_cents: priceCents,
+    price_cents: priceCents,
+    billing_period: subscription.items.data[0]?.price.recurring?.interval || 'month',
+    current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+    current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+    cancel_at_period_end: subscription.cancel_at_period_end,
+    canceled_at: subscription.canceled_at ? new Date(subscription.canceled_at * 1000).toISOString() : null,
+    trial_ends_at: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
+    stripe_subscription_id: subscription.id,
+    stripe_customer_id: subscription.customer as string,
+    stripe_price_id: priceId,
+    catalog_version_id: catalogItem.catalog_version_id,
+    contract_snapshot: contractSnapshot,
+    active: statusV2 === 'active' || statusV2 === 'trialing',
+    updated_at: new Date().toISOString(),
+  }
+
+  const { data: existingSubscription, error: lookupError } = await supabase
     .from('user_subscriptions')
-    .upsert({
-      user_id: userId,
-      business_id: businessId || null,
-      plan_code: planCode,
-      subscription_scope: subscriptionScope,
-      entity_family: catalogItem?.entity_family || null,
-      vertical: catalogItem?.vertical || null,
-      status_v2: statusV2,
-      price_cents: priceCents,
-      billing_period: subscription.items.data[0]?.price.recurring?.interval || 'month',
-      current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-      current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-      cancel_at_period_end: subscription.cancel_at_period_end,
-      canceled_at: subscription.canceled_at ? new Date(subscription.canceled_at * 1000).toISOString() : null,
-      trial_ends_at: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
-      stripe_subscription_id: subscription.id,
-      stripe_customer_id: subscription.customer as string,
-      stripe_price_id: priceId,
-      catalog_item_id: catalogItem?.id || null,
-      contract_snapshot: contractSnapshot || {},
-      updated_at: new Date().toISOString(),
-    }, {
-      onConflict: subscriptionScope === 'business' ? 'business_id' : 'user_id',
-    })
+    .select('id')
+    .eq('stripe_subscription_id', subscription.id)
+    .maybeSingle()
+
+  if (lookupError) {
+    console.error('[billing-webhook] Error looking up subscription:', lookupError)
+    throw lookupError
+  }
+
+  const { error } = existingSubscription
+    ? await supabase
+        .from('user_subscriptions')
+        .update(subscriptionPayload)
+        .eq('id', existingSubscription.id)
+    : await supabase
+        .from('user_subscriptions')
+        .insert(subscriptionPayload)
 
   if (error) {
     console.error('[billing-webhook] Error upserting subscription:', error)
@@ -318,6 +363,7 @@ async function handleSubscriptionDeleted(event: Stripe.Event, supabase: any) {
     .from('user_subscriptions')
     .update({
       status_v2: 'canceled',
+      active: false,
       canceled_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     })
@@ -356,31 +402,43 @@ async function handleSubscriptionDeleted(event: Stripe.Event, supabase: any) {
  */
 async function handleInvoicePaid(event: Stripe.Event, supabase: any) {
   const invoice = event.data.object as Stripe.Invoice
-  const subscription = invoice.subscription as string
+  const subscriptionId = typeof invoice.subscription === 'string'
+    ? invoice.subscription
+    : invoice.subscription?.id
   const customerId = invoice.customer as string
 
   console.log(`[billing-webhook] Processing invoice.paid for customer ${customerId}`)
 
-  // Buscar usuário pelo customer_id
+  if (!subscriptionId) {
+    console.error('[billing-webhook] Missing subscription id for paid invoice:', invoice.id)
+    return
+  }
+
   const { data: userSub } = await supabase
     .from('user_subscriptions')
     .select('user_id, business_id')
-    .eq('stripe_customer_id', customerId)
-    .single()
+    .eq('stripe_subscription_id', subscriptionId)
+    .maybeSingle()
 
   if (!userSub) {
-    console.error('[billing-webhook] User not found for customer:', customerId)
+    console.error('[billing-webhook] Subscription not found for invoice:', subscriptionId)
     return
   }
 
   // Update status to active
-  await supabase
+  const { error: updateError } = await supabase
     .from('user_subscriptions')
     .update({
       status_v2: 'active',
+      active: true,
       updated_at: new Date().toISOString(),
     })
-    .eq('stripe_customer_id', customerId)
+    .eq('stripe_subscription_id', subscriptionId)
+
+  if (updateError) {
+    console.error('[billing-webhook] Error activating subscription:', updateError)
+    throw updateError
+  }
 
   console.log(`[billing-webhook] Invoice ${invoice.id} paid, subscription activated`)
 
@@ -396,7 +454,7 @@ async function handleInvoicePaid(event: Stripe.Event, supabase: any) {
     p_stripe_payment_intent_id: invoice.payment_intent as string,
     p_status: 'succeeded',
     p_metadata: {
-      subscription_id: subscription,
+      subscription_id: subscriptionId,
       invoice_number: invoice.number,
     },
   })
@@ -411,31 +469,43 @@ async function handleInvoicePaid(event: Stripe.Event, supabase: any) {
  */
 async function handleInvoicePaymentFailed(event: Stripe.Event, supabase: any) {
   const invoice = event.data.object as Stripe.Invoice
-  const subscription = invoice.subscription as string
+  const subscriptionId = typeof invoice.subscription === 'string'
+    ? invoice.subscription
+    : invoice.subscription?.id
   const customerId = invoice.customer as string
 
   console.log(`[billing-webhook] Processing invoice.payment_failed for customer ${customerId}`)
 
-  // Buscar usuário pelo customer_id
+  if (!subscriptionId) {
+    console.error('[billing-webhook] Missing subscription id for failed invoice:', invoice.id)
+    return
+  }
+
   const { data: userSub } = await supabase
     .from('user_subscriptions')
     .select('user_id, business_id')
-    .eq('stripe_customer_id', customerId)
-    .single()
+    .eq('stripe_subscription_id', subscriptionId)
+    .maybeSingle()
 
   if (!userSub) {
-    console.error('[billing-webhook] User not found for customer:', customerId)
+    console.error('[billing-webhook] Subscription not found for invoice:', subscriptionId)
     return
   }
 
   // Atualizar status para past_due
-  await supabase
+  const { error: updateError } = await supabase
     .from('user_subscriptions')
     .update({
       status_v2: 'past_due',
+      active: false,
       updated_at: new Date().toISOString(),
     })
-    .eq('stripe_customer_id', customerId)
+    .eq('stripe_subscription_id', subscriptionId)
+
+  if (updateError) {
+    console.error('[billing-webhook] Error marking subscription as past_due:', updateError)
+    throw updateError
+  }
 
   console.log(`[billing-webhook] Invoice ${invoice.id} payment failed, subscription marked as past_due`)
 
@@ -451,7 +521,7 @@ async function handleInvoicePaymentFailed(event: Stripe.Event, supabase: any) {
     p_stripe_payment_intent_id: invoice.payment_intent as string,
     p_status: 'failed',
     p_metadata: {
-      subscription_id: subscription,
+      subscription_id: subscriptionId,
       invoice_number: invoice.number,
       attempt_count: invoice.attempt_count,
     },

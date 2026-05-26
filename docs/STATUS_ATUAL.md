@@ -1,11 +1,14 @@
 # Status Atual do Projeto
 
-Data: 2026-05-11
-Branch: main
-Ultimo commit base: 0c8701a `Consolida moderacao admin em fila unica e audit log trust`
+Data: 2026-05-26
+Branch: workspace local
+Ultimo commit base: indisponivel neste ambiente (`git` nao esta acessivel no PATH local)
 
 ## Validacoes Recentes
 
+- Auditoria estatica de lancamento em 2026-05-26: scripts de teste passaram a apontar para arquivos versionados; assets PWA/SEO foram recriados; runtime de billing legado de gastronomia foi removido; `stripe-webhook` e edge functions antigas de assinatura de gastronomia foram excluidas do repositorio.
+- Auditoria SSOT de billing em 2026-05-26: acessos runtime a `gastronomy_subscriptions` e `business_subscriptions` foram removidos de `src`, mantendo `user_subscriptions` como tabela canonica.
+- Bloqueio de validacao em 2026-05-26: `npm`, `node` via shell e `git` nao estao acessiveis no ambiente local atual; validacoes de build/typecheck/lint/E2E precisam ser reexecutadas em ambiente com toolchain Node instalada.
 - `npm run lint`: passou em 2026-05-07.
 - `npm run typecheck`: passou em 2026-05-07.
 - `npm run build`: passou em 2026-05-07.
@@ -284,11 +287,12 @@ Plano mestre de execucao por fases: `docs/PLANO_MESTRE_EXECUCAO_INTEGRAL_SSOT.md
 - [CONCLUIDO] Servicos/Profissionais: validar Central Profissional, resposta, proposta estruturada, aceite e atendimento contratado com perfil real e dados de `professional_data`.
 - [CONCLUIDO] Servicos/Profissionais: validar avaliacao pos-servico controlada por atendimento concluido com perfis reais.
 - [CONCLUIDO] Marketplace/Classificados: consolidar moderacao dedicada para comentarios/perguntas publicas de anuncios na mesma trilha administrativa de confianca.
-- Comunidade/Feed: concluir hardening territorial/visibilidade em todos os pontos restantes (mocks runtime dos services-base foram removidos; faltam hooks/widgets/paginas residuais).
-- Comunidade/Feed: revalidar visualmente fluxo de edicao/exclusao/comentarios em browser apos fechamento dos TODOs funcionais e da edicao de post.
+- [EM VALIDACAO] Comunidade/Feed: hardening territorial blindado por testes SSOT versionados; ainda exige reexecucao completa de `npm run validate:phase:core` em ambiente com Node/npm.
+- [EM VALIDACAO] Comunidade/Feed: revalidacao visual de edicao/exclusao/comentarios segue como criterio de aceite antes de release publico amplo.
 - [CONCLUIDO] Admin/Moderacao: consolidar fila unica, audit log e moderacao transversal alem da fila inicial de confianca operacional.
 - [CONCLUIDO] Notificacoes: matriz completa por evento/audiencia/rota canonica consolidada em `docs/MATRIZ_NOTIFICACOES_FASE3_SSOT.md` e blindada por contrato E2E/SSOT.
-- SEO/Rotas: validar politica final de indexacao por rota (publica/comunidade duplicada) e canonical cross-modulo em producao.
+- [EM VALIDACAO] SEO/Rotas: politica de indexacao/canonical ganhou specs versionadas e assets sociais/PWA; falta rodar gate completo no ambiente de CI/deploy.
+- [CONCLUIDO] Billing/Seguranca: fluxo de gastronomia deixou de chamar `gastronomy_subscriptions` e edge functions antigas; checkout/webhook canonicamente usam `user_subscriptions`, contexto de negocio e catalogo publicado.
 
 ## P1 Abertos
 
@@ -308,6 +312,7 @@ Plano mestre de execucao por fases: `docs/PLANO_MESTRE_EXECUCAO_INTEGRAL_SSOT.md
 - Para rodar o Playwright de gastronomia, configurar `E2E_USER_EMAIL` e `E2E_USER_PASSWORD`; `E2E_GASTRONOMY_BUSINESS_ID` virou opcional.
 - Algumas validacoes historicas do Playwright existentes no repositorio podem depender de ambiente/seed especifico.
 - Docs historicos em `docs/archive`, `docs/historico` e relatorios antigos ainda contem afirmacoes antigas; usar este arquivo e `docs/ACAO_EXECUTAVEL_AUDITORIA_HIPERLOCAL.md` como fonte viva.
+- Ambiente local de 2026-05-26 nao possui `npm`/`git` acessiveis; qualquer decisao final de lancamento deve exigir CI verde com `npm run typecheck`, `npm run lint`, `npm run validate:phase:core`, `npm run security:validate` e `npm run verify:deploy`.
 
 ## Proxima Tarefa Recomendada
 

@@ -156,7 +156,7 @@ serve(async (req: Request) => {
     // 6. Gastronomy
     const { data: gastronomy } = await serviceClient
       .from('gastronomy_profiles')
-      .select('*, menus(*), gastronomy_subscriptions(*)')
+      .select('*, menus(*)')
       .eq('business_id', userId);
     if (gastronomy?.length) userData.gastronomy = gastronomy;
 

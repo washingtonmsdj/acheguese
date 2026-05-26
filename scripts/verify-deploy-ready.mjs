@@ -11,9 +11,23 @@ const REQUIRED_FILES = [
   'tsconfig.json',
 ];
 
+const REQUIRED_PUBLIC_ASSETS = [
+  'public/manifest.json',
+  'public/icon-192x192.png',
+  'public/icon-512x512.png',
+  'public/badge-72x72.png',
+  'public/og-image.png',
+];
+
 const REQUIRED_ENV_VARS = [
   'VITE_SUPABASE_URL',
   'VITE_SUPABASE_PUBLISHABLE_KEY',
+  'VITE_PUBLIC_SITE_URL',
+  'SUPABASE_URL',
+  'SUPABASE_SERVICE_ROLE_KEY',
+  'STRIPE_SECRET_KEY',
+  'STRIPE_WEBHOOK_SECRET',
+  'ALLOWED_REDIRECT_DOMAINS',
 ];
 
 const OPTIONAL_ENV_VARS = [
@@ -21,10 +35,18 @@ const OPTIONAL_ENV_VARS = [
   'VITE_FEATURE_COMMUNITY_ALERTS',
   'VITE_FEATURE_MAPS_V4',
   'VITE_GOOGLE_MAPS_API_KEY',
+  'VITE_ALLOWED_BILLING_REDIRECT_ORIGINS',
 ];
 
 const REQUIRED_SCRIPTS = ['build', 'typecheck:app', 'lint', 'validate:ssot', 'security:validate'];
 const PUBLIC_DOMAIN = 'acheguese.com.br';
+const FORBIDDEN_RUNTIME_FILES = [
+  'supabase/functions/stripe-webhook/index.ts',
+  'supabase/functions/gastronomy-upgrade-plan/index.ts',
+  'supabase/functions/gastronomy-cancel-subscription/index.ts',
+  'supabase/functions/gastronomy-reactivate-subscription/index.ts',
+  'supabase/functions/gastronomy-add-payment-method/index.ts',
+];
 
 let hasErrors = false;
 let hasWarnings = false;
@@ -89,7 +111,19 @@ console.log();
 
 console.log('Variaveis de ambiente para configurar na Vercel');
 console.log('  Obrigatorias:');
-for (const envVar of REQUIRED_ENV_VARS) console.log(`    - ${envVar}`);
+for (const envVar of REQUIRED_ENV_VARS) {
+  const value = process.env[envVar];
+  if (!value) {
+    console.log(`    - ${envVar}`);
+    continue;
+  }
+
+  if (/your-|placeholder|publishable_key/i.test(value)) {
+    fail(`${envVar} contem placeholder`);
+  } else {
+    ok(`${envVar} configurada`);
+  }
+}
 console.log('  Opcionais recomendadas:');
 for (const envVar of OPTIONAL_ENV_VARS) console.log(`    - ${envVar}`);
 console.log();
@@ -98,6 +132,18 @@ console.log('Estrutura de build');
 existsSync('src/main.tsx') || existsSync('src/main.ts') ? ok('entry point encontrado') : fail('entry point ausente');
 existsSync('src/App.tsx') || existsSync('src/App.ts') ? ok('App component encontrado') : fail('App component ausente');
 existsSync('public') ? ok('pasta public existe') : fail('pasta public ausente');
+console.log();
+
+console.log('PWA e assets sociais');
+for (const asset of REQUIRED_PUBLIC_ASSETS) {
+  existsSync(asset) ? ok(asset) : fail(`${asset} ausente`);
+}
+console.log();
+
+console.log('Billing canonico');
+for (const file of FORBIDDEN_RUNTIME_FILES) {
+  existsSync(file) ? fail(`${file} nao deve existir`) : ok(`${file} removido`);
+}
 console.log();
 
 console.log('TypeScript');

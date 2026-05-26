@@ -1,26 +1,4 @@
-# Testes (removidos - serão recriados no futuro)
-src/test/
-*.test.ts
-*.test.tsx
-*.spec.ts
-*.spec.tsx
-!src/core/admin/services/__tests__/*.spec.ts
-!src/app/components/__tests__/Breadcrumbs.spec.tsx
-!src/core/maps/**/*.spec.ts
-!src/core/routing/**/*.spec.ts
-!src/core/community/utils/__tests__/*.spec.ts
-!src/core/professional/__tests__/ProfessionalLeadSSOT.test.ts
-!src/modules/business/gastronomy/__tests__/GastronomyOperationalSSOT.test.ts
-!src/modules/business/gastronomy/components/GastronomyCheckoutSheet.spec.tsx
-!tests/e2e/gastronomy-operational.spec.ts
-!tests/e2e/mobility-operational.spec.ts
-!tests/e2e/mobile-core-layout.spec.ts
-!tests/e2e/mobile-auth-dashboards.spec.ts
-!tests/e2e/professional-operational.spec.ts
-!tests/e2e/onboarding-public.spec.ts
-!tests/e2e/institutional-public.spec.ts
-!tests/e2e/communication-territorial-operational.spec.ts
-!tests/e2e/community-territorial-operational.spec.ts
+# Testes fazem parte do gate de release e devem ser versionados.
 
 # Logs
 logs

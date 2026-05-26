@@ -687,19 +687,21 @@ export class MotoboyAuthorizationService {
     }
 
     const { data: currentSubscription, error: currentSubscriptionError } = await supabaseAny
-      .from("business_subscriptions")
-      .select("plan_tier")
+      .from("user_subscriptions")
+      .select("plan_code")
       .in("business_id", businessIds)
+      .eq("subscription_scope", "business")
+      .in("status_v2", ["active", "trialing"])
       .order("updated_at", { ascending: false })
       .limit(1)
       .maybeSingle();
     if (currentSubscriptionError) {
-      logger.warn("MotoboyAuthorizationService.resolvePlanTierByBusinessIds.business_subscriptions", {
+      logger.warn("MotoboyAuthorizationService.resolvePlanTierByBusinessIds.user_subscriptions", {
         businessIds,
         error: currentSubscriptionError,
       });
-    } else if (currentSubscription?.plan_tier) {
-      return currentSubscription.plan_tier;
+    } else if (currentSubscription?.plan_code) {
+      return currentSubscription.plan_code;
     }
 
     return undefined;

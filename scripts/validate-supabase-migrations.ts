@@ -5,6 +5,7 @@ const ROOT = process.cwd();
 const MIGRATIONS_DIR = path.join(ROOT, "supabase", "migrations");
 const FILENAME_PATTERN = /^(\d+)_(.+)\.sql$/;
 const INVALID_DO_BLOCK_PATTERNS = [/^DO \$$/m, /^END \$;$/m];
+const SECURITY_DEFINER_HARDENING_VERSION = "20260526000001";
 
 interface MigrationFile {
   name: string;
@@ -36,6 +37,15 @@ function main() {
   const violations: string[] = [];
   const files = readMigrationFiles();
   const seenVersions = new Map<string, string>();
+  const hasSecurityDefinerHardening = files.some(
+    (file) => file.version === SECURITY_DEFINER_HARDENING_VERSION,
+  );
+
+  if (!hasSecurityDefinerHardening) {
+    violations.push(
+      `Migration de hardening SECURITY DEFINER ausente: ${SECURITY_DEFINER_HARDENING_VERSION}_harden_security_definer_search_path.sql`,
+    );
+  }
 
   for (const file of files) {
     if (seenVersions.has(file.version)) {
@@ -58,6 +68,16 @@ function main() {
         );
         break;
       }
+    }
+
+    if (
+      file.version > SECURITY_DEFINER_HARDENING_VERSION &&
+      /SECURITY\s+DEFINER/i.test(content) &&
+      !/SET\s+search_path/i.test(content)
+    ) {
+      violations.push(
+        `Funcao SECURITY DEFINER sem SET search_path explicito em ${file.name}.`,
+      );
     }
   }
 

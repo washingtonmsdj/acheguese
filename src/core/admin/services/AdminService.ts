@@ -75,8 +75,8 @@ type ProfileListRow = {
 
 type PlanUsageSubscriptionRow = {
   business_id: string;
-  plan_tier: string;
-  business_data?: { name?: string | null } | null;
+  plan_code: string;
+  business_data?: { business_name?: string | null } | null;
 };
 
 export const AdminService = {
@@ -94,19 +94,19 @@ export const AdminService = {
         .from('business_data')
         .select(`
           id,
-          name,
+          business_name,
           slug,
-          is_active,
+          status,
           created_at
         `)
         .order('created_at', { ascending: false });
 
       if (filters?.is_active !== undefined) {
-        query = query.eq('is_active', filters.is_active);
+        query = query.eq('status', filters.is_active ? 'active' : 'inactive');
       }
 
       if (filters?.search) {
-        query = query.ilike('name', `%${filters.search}%`);
+        query = query.ilike('business_name', `%${filters.search}%`);
       }
 
       if (filters?.limit) {
@@ -123,10 +123,14 @@ export const AdminService = {
       const businessesWithStats = await Promise.all(
         (businesses || []).map(async (business) => {
           const { data: subscription } = await db
-            .from('business_subscriptions')
-            .select('plan_tier')
+            .from('user_subscriptions')
+            .select('plan_code')
             .eq('business_id', business.id)
-            .single();
+            .eq('subscription_scope', 'business')
+            .in('status_v2', ['active', 'trialing'])
+            .order('updated_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
 
           const { data: orderStats } = await db
             .from('orders')
@@ -143,8 +147,12 @@ export const AdminService = {
             ) || 0;
 
           return {
-            ...business,
-            plan_tier: subscription?.plan_tier || 'free',
+            id: business.id,
+            name: business.business_name,
+            slug: business.slug,
+            is_active: business.status === 'active',
+            created_at: business.created_at,
+            plan_tier: subscription?.plan_code || 'free',
             total_orders: totalOrders,
             total_revenue: totalRevenue,
             total_deliveries: totalDeliveries,
@@ -169,7 +177,7 @@ export const AdminService = {
     try {
       const { error } = await db
         .from('business_data')
-        .update({ is_active: isActive })
+        .update({ status: isActive ? 'active' : 'inactive' })
         .eq('id', businessId);
 
       if (error) {
@@ -247,14 +255,15 @@ export const AdminService = {
   async listPlanUsage(): Promise<ServiceResult<PlanUsage[]>> {
     try {
       const { data: subscriptions, error } = await db
-        .from('business_subscriptions')
+        .from('user_subscriptions')
         .select(`
           business_id,
-          plan_tier,
+          plan_code,
           business_data (
-            name
+            business_name
           )
-        `);
+        `)
+        .eq('subscription_scope', 'business');
 
       if (error) {
         logger.error('[AdminService] listPlanUsage error', error);
@@ -280,8 +289,8 @@ export const AdminService = {
 
           return {
             business_id: sub.business_id,
-            business_name: sub.business_data?.name || '',
-            plan_tier: sub.plan_tier,
+            business_name: sub.business_data?.business_name || '',
+            plan_tier: sub.plan_code,
             total_orders: totalOrders,
             total_revenue: totalRevenue,
             total_qr_scans: metrics.qr_scans || 0,
@@ -306,9 +315,14 @@ export const AdminService = {
   ): Promise<ServiceResult<boolean>> {
     try {
       const { error } = await db
-        .from('business_subscriptions')
-        .update({ plan_tier: planTier })
-        .eq('business_id', businessId);
+        .from('user_subscriptions')
+        .update({
+          plan_code: planTier,
+          plan_type: planTier,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('business_id', businessId)
+        .eq('subscription_scope', 'business');
 
       if (error) {
         logger.error('[AdminService] updateBusinessPlan error', error);
@@ -342,7 +356,7 @@ export const AdminService = {
       const { count: activeBusinesses } = await db
         .from('business_data')
         .select('*', { count: 'exact', head: true })
-        .eq('is_active', true);
+        .eq('status', 'active');
 
       const { count: totalUsers } = await db
         .from('profile_complete')
@@ -362,11 +376,13 @@ export const AdminService = {
       const totalDeliveries = await MobilityService.countDeliveredMotoboyRides();
 
       const { data: subscriptions } = await db
-        .from('business_subscriptions')
-        .select('plan_tier');
+        .from('user_subscriptions')
+        .select('plan_code')
+        .eq('subscription_scope', 'business')
+        .in('status_v2', ['active', 'trialing']);
 
-      const planDistribution = ((subscriptions as Array<{ plan_tier?: string }> | null) || []).reduce((acc, sub) => {
-        const tier = sub.plan_tier || 'free';
+      const planDistribution = ((subscriptions as Array<{ plan_code?: string }> | null) || []).reduce((acc, sub) => {
+        const tier = sub.plan_code || 'free';
         acc[tier] = (acc[tier] || 0) + 1;
         return acc;
       }, {} as Record<string, number>);
