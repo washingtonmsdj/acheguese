@@ -70,7 +70,10 @@ serve(async (req: Request) => {
       .from('user_subscriptions')
       .select('stripe_customer_id')
       .eq('user_id', user.id)
-      .single()
+      .not('stripe_customer_id', 'is', null)
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
 
     if (subError || !subscription?.stripe_customer_id) {
       return errorResponse('No active subscription found', 404)
