@@ -39,6 +39,7 @@ import {
   type FilterOption,
 } from "@/modules/admin/components";
 import type { Promotion } from "@/core/admin/services/AdminPromotionsService";
+import { useConfirmActionDialog } from "@/shared/hooks/useConfirmActionDialog";
 
 const statusFromTab = (
   tab: string,
@@ -47,6 +48,7 @@ const statusFromTab = (
 
 export default function AdminPromocoes() {
   const queryClient = useQueryClient();
+  const { confirm, ConfirmDialog } = useConfirmActionDialog();
   const [activeTab, setActiveTab] = useState<"all" | "expiring" | "top" | "analytics">("all");
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
@@ -163,6 +165,19 @@ export default function AdminPromocoes() {
       return <Badge variant="destructive">Expirada</Badge>;
     }
     return <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200">Ativa</Badge>;
+  };
+
+  const handleDeletePromotion = async (promotionId: string) => {
+    const confirmed = await confirm({
+      title: "Deletar promocao",
+      description: "Esta promocao sera removida definitivamente.",
+      confirmLabel: "Deletar",
+      variant: "destructive",
+    });
+
+    if (confirmed) {
+      deleteMutation.mutate(promotionId);
+    }
   };
 
   return (
@@ -335,15 +350,7 @@ export default function AdminPromocoes() {
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                onClick={() => {
-                                  if (
-                                    confirm(
-                                      "Tem certeza que deseja deletar esta promoção?"
-                                    )
-                                  ) {
-                                    deleteMutation.mutate(promo.id);
-                                  }
-                                }}
+                                onClick={() => handleDeletePromotion(promo.id)}
                               >
                                 <Trash2 className="h-4 w-4 text-destructive" />
                               </Button>
@@ -467,6 +474,7 @@ export default function AdminPromocoes() {
           </Card>
         </TabsContent>
       </Tabs>
+      <ConfirmDialog />
     </div>
   );
 }

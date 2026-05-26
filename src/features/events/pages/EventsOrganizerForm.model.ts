@@ -1,5 +1,7 @@
 ﻿import type { EventCategory } from '../types';
 
+import type { CreateEventInput } from '@/core/community/services/CommunityEventsRuntimeService';
+
 export type OrganizerLocationType = 'physical' | 'online' | 'hybrid';
 
 export interface EventsOrganizerFormData {
@@ -56,6 +58,10 @@ export interface EventsOrganizerFormData {
 
 export type EventsOrganizerField = keyof EventsOrganizerFormData;
 export type EventsOrganizerFieldChange = (field: EventsOrganizerField, value: unknown) => void;
+export type EventsOrganizerValidationIssue = {
+  field: EventsOrganizerField;
+  message: string;
+};
 
 interface ExistingEventLike {
   title?: string;
@@ -167,4 +173,106 @@ export function buildEventsOrganizerFormData(existingEvent?: ExistingEventLike |
     organizerPhone: existingEvent?.organizer?.contact?.phone || '',
     organizerWebsite: existingEvent?.organizer?.contact?.website || '',
   };
+}
+
+function toIsoDateTime(value: string): string {
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? value : parsed.toISOString();
+}
+
+function splitLines(value: string): string[] {
+  return value
+    .split('\n')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function getLocationLabel(formData: EventsOrganizerFormData): string {
+  if (formData.locationType === 'online') {
+    return formData.onlineUrl.trim() || formData.onlinePlatform.trim() || 'Evento online';
+  }
+
+  return [
+    formData.venueName,
+    formData.address,
+    formData.neighborhood,
+    formData.city,
+    formData.state,
+  ]
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .join(', ');
+}
+
+export function getEventsOrganizerValidationIssues(
+  formData: EventsOrganizerFormData,
+): EventsOrganizerValidationIssue[] {
+  const issues: EventsOrganizerValidationIssue[] = [];
+  const isPhysical = formData.locationType === 'physical' || formData.locationType === 'hybrid';
+  const isOnline = formData.locationType === 'online' || formData.locationType === 'hybrid';
+
+  if (!formData.title.trim()) {
+    issues.push({ field: 'title', message: 'Informe o titulo do evento.' });
+  }
+
+  if (!formData.shortDescription.trim() && !formData.description.trim()) {
+    issues.push({ field: 'shortDescription', message: 'Informe uma descricao para o evento.' });
+  }
+
+  if (!formData.startDate.trim()) {
+    issues.push({ field: 'startDate', message: 'Informe a data de inicio do evento.' });
+  }
+
+  if (isPhysical) {
+    if (!formData.venueName.trim()) {
+      issues.push({ field: 'venueName', message: 'Informe o nome do local.' });
+    }
+    if (!formData.address.trim()) {
+      issues.push({ field: 'address', message: 'Informe o endereco do evento.' });
+    }
+    if (!formData.city.trim()) {
+      issues.push({ field: 'city', message: 'Informe a cidade do evento.' });
+    }
+    if (!formData.state.trim()) {
+      issues.push({ field: 'state', message: 'Informe o estado do evento.' });
+    }
+  }
+
+  if (isOnline && !formData.onlineUrl.trim()) {
+    issues.push({ field: 'onlineUrl', message: 'Informe o link do evento online.' });
+  }
+
+  if (formData.capacity < 0) {
+    issues.push({ field: 'capacity', message: 'A capacidade nao pode ser negativa.' });
+  }
+
+  return issues;
+}
+
+export function buildCommunityEventInput(formData: EventsOrganizerFormData): CreateEventInput {
+  const descriptionParts = [
+    formData.shortDescription.trim(),
+    formData.description.trim(),
+    ...splitLines(formData.requirements).map((item) => `Requisito: ${item}`),
+    ...splitLines(formData.whatToBring).map((item) => `Levar: ${item}`),
+    formData.accessibilityInfo.trim(),
+  ].filter(Boolean);
+
+  const input: CreateEventInput = {
+    title: formData.title.trim(),
+    description: descriptionParts.join('\n\n'),
+    date: toIsoDateTime(formData.startDate),
+    location: getLocationLabel(formData) || 'Local a definir',
+    category: formData.category,
+  };
+
+  if (formData.coverImage.trim()) {
+    input.image_url = formData.coverImage.trim();
+  }
+
+  if (formData.capacity > 0) {
+    input.max_participants = formData.capacity;
+  }
+
+  return input;
 }

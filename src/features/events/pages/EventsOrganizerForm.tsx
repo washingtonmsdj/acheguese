@@ -8,17 +8,24 @@
  */
 
 import { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Calendar, CheckCircle, Clock, DollarSign, FileText, HelpCircle, Image as ImageIcon, MapPin, Save, Eye } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/utils/cn';
-import { buildEventsOrganizerFormData, type EventsOrganizerFieldChange } from './EventsOrganizerForm.model';
+import {
+  buildCommunityEventInput,
+  buildEventsOrganizerFormData,
+  getEventsOrganizerValidationIssues,
+  type EventsOrganizerFieldChange,
+} from './EventsOrganizerForm.model';
 import { EventsOrganizerFormStepContent } from './EventsOrganizerFormStepContent';
 import { communityEventsRuntimeService } from '@/core/community/services/CommunityEventsRuntimeService';
 import { mapCommunityEventToEvent } from '../utils/eventAdapters';
+import { useSessionContext } from '@/core/session/hooks/useSessionContext';
+import { useToast } from '@/shared/hooks/use-toast';
 
 const STEPS = [
   { id: 1, title: 'Informacoes Basicas', icon: FileText },
@@ -34,26 +41,36 @@ const STEPS = [
 export default function EventsOrganizerForm() {
   const navigate = useNavigate();
   const { eventId } = useParams();
-  const isEditing = !!eventId;
+  const queryClient = useQueryClient();
+  const { activeProfile } = useSessionContext();
+  const { toast } = useToast();
+  const [persistedEventId, setPersistedEventId] = useState<string | null>(eventId ?? null);
+  const currentEventId = eventId ?? persistedEventId;
+  const isEditing = !!currentEventId;
 
   const { data: existingEvent = null } = useQuery({
-    queryKey: ['events-organizer-form', eventId],
+    queryKey: ['events-organizer-form', currentEventId],
     enabled: isEditing,
     queryFn: async () => {
-      if (!eventId) return null;
-      const row = await communityEventsRuntimeService.getEventById(eventId);
+      if (!currentEventId) return null;
+      const row = await communityEventsRuntimeService.getEventById(currentEventId);
       return row ? mapCommunityEventToEvent(row) : null;
     },
   });
 
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState(() => buildEventsOrganizerFormData(existingEvent));
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (existingEvent) {
       setFormData(buildEventsOrganizerFormData(existingEvent));
     }
   }, [existingEvent]);
+
+  useEffect(() => {
+    setPersistedEventId(eventId ?? null);
+  }, [eventId]);
 
   // Handlers
   const handleInputChange: EventsOrganizerFieldChange = (field, value) => {
@@ -72,20 +89,79 @@ export default function EventsOrganizerForm() {
     }
   };
 
-  const handleSaveDraft = () => {
-    // TODO: Salvar como rascunho
-    alert('Salvo como rascunho!');
+  const persistEvent = async () => {
+    const issues = getEventsOrganizerValidationIssues(formData);
+    if (issues.length > 0) {
+      toast({
+        title: 'Revise os dados do evento',
+        description: issues[0].message,
+        variant: 'destructive',
+      });
+      return null;
+    }
+
+    if (!activeProfile?.id) {
+      toast({
+        title: 'Perfil ativo necessario',
+        description: 'Selecione um perfil antes de salvar o evento.',
+        variant: 'destructive',
+      });
+      return null;
+    }
+
+    setIsSaving(true);
+
+    try {
+      const input = buildCommunityEventInput(formData);
+      const savedEvent = currentEventId
+        ? await communityEventsRuntimeService.updateEvent(currentEventId, input)
+        : await communityEventsRuntimeService.createEvent(activeProfile.id, input);
+
+      setPersistedEventId(savedEvent.id);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['events-organizer-form', savedEvent.id] }),
+        queryClient.invalidateQueries({ queryKey: ['events-organizer-dashboard', activeProfile.id] }),
+        queryClient.invalidateQueries({ queryKey: ['event-detail-ssot', savedEvent.id] }),
+      ]);
+
+      if (!currentEventId) {
+        navigate(`/central/eventos/editar/${savedEvent.id}`, { replace: true });
+      }
+
+      toast({
+        title: currentEventId ? 'Evento atualizado' : 'Evento criado',
+        description: 'As informacoes foram salvas com sucesso.',
+      });
+
+      return savedEvent;
+    } catch (error) {
+      toast({
+        title: 'Erro ao salvar evento',
+        description: error instanceof Error ? error.message : 'Nao foi possivel salvar o evento.',
+        variant: 'destructive',
+      });
+      return null;
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handlePublish = () => {
-    // TODO: Publicar evento
-    alert('Evento publicado!');
-    navigate('/central/eventos');
+  const handleSave = async () => {
+    await persistEvent();
   };
 
-  const handlePreview = () => {
-    // TODO: Abrir preview
-    alert('Preview do evento');
+  const handlePublish = async () => {
+    const savedEvent = await persistEvent();
+    if (savedEvent) {
+      navigate('/central/eventos');
+    }
+  };
+
+  const handlePreview = async () => {
+    const savedEvent = await persistEvent();
+    if (savedEvent?.id) {
+      navigate(`/eventos/${savedEvent.id}`);
+    }
   };
 
   return (
@@ -111,13 +187,13 @@ export default function EventsOrganizerForm() {
                 Voltar
               </Button>
               <div className="flex gap-2">
-                <Button variant="outline" onClick={handlePreview} className="gap-2">
+                <Button variant="outline" onClick={handlePreview} disabled={isSaving} className="gap-2">
                   <Eye className="h-4 w-4" />
                   <span className="hidden sm:inline">Preview</span>
                 </Button>
-                <Button variant="outline" onClick={handleSaveDraft} className="gap-2">
+                <Button variant="outline" onClick={handleSave} disabled={isSaving} className="gap-2">
                   <Save className="h-4 w-4" />
-                  <span className="hidden sm:inline">Salvar</span>
+                  <span className="hidden sm:inline">{isSaving ? 'Salvando...' : 'Salvar'}</span>
                 </Button>
               </div>
             </div>
@@ -206,9 +282,9 @@ export default function EventsOrganizerForm() {
                 <ArrowRight className="h-4 w-4" />
               </Button>
             ) : (
-              <Button onClick={handlePublish} className="gap-2">
+              <Button onClick={handlePublish} disabled={isSaving} className="gap-2">
                 <CheckCircle className="h-4 w-4" />
-                Publicar Evento
+                {isSaving ? 'Salvando...' : 'Publicar Evento'}
               </Button>
             )}
           </div>

@@ -30,6 +30,7 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "@/shared/utils/dateLocale";
 import { useModeration } from "@/core/moderation/hooks/useModeration";
+import { useToast } from "@/shared/hooks/use-toast";
 interface PendingPostCardProps {
   post: PendingPost;
 }
@@ -39,6 +40,7 @@ export function PendingPostCard({ post }: PendingPostCardProps) {
   const [showActions, setShowActions] = useState(false);
   const [reason, setReason] = useState("");
   const { executeAction, isExecuting } = useModeration();
+  const { toast } = useToast();
 
   const priorityLevel = getPriorityLevel(post.priority);
   const priorityColors = {
@@ -62,7 +64,11 @@ export function PendingPostCard({ post }: PendingPostCardProps) {
         action === "warn_author") &&
       !reason.trim()
     ) {
-      alert("Por favor, forneça um motivo para esta ação.");
+      toast({
+        title: "Motivo obrigatorio",
+        description: "Informe o motivo antes de aplicar esta acao de moderacao.",
+        variant: "destructive",
+      });
       return;
     }
 

@@ -28,6 +28,16 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/shared/components/ui/dialog";
+import { Label } from "@/shared/components/ui/label";
+import { Textarea } from "@/shared/components/ui/textarea";
+import {
   Search,
   Shield,
   UserCog,
@@ -69,6 +79,10 @@ export default function AdminRoles() {
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("");
   const [page, setPage] = useState(1);
+  const [roleToRevoke, setRoleToRevoke] = useState<RoleDataItem | null>(null);
+  const [revokeReason, setRevokeReason] = useState("");
+  const [roleToRenew, setRoleToRenew] = useState<RoleDataItem | null>(null);
+  const [renewDays, setRenewDays] = useState("30");
 
   // Buscar estatísticas
   const { data: stats } = useQuery({
@@ -103,6 +117,8 @@ export default function AdminRoles() {
       queryClient.invalidateQueries({ queryKey: ["admin-roles"] });
       queryClient.invalidateQueries({ queryKey: ["admin-roles-stats"] });
       toast.success("Role revogado com sucesso");
+      setRoleToRevoke(null);
+      setRevokeReason("");
     },
     onError: () => {
       toast.error("Erro ao revogar role");
@@ -116,6 +132,8 @@ export default function AdminRoles() {
       queryClient.invalidateQueries({ queryKey: ["admin-roles"] });
       queryClient.invalidateQueries({ queryKey: ["admin-roles-expiring"] });
       toast.success("Role renovado com sucesso");
+      setRoleToRenew(null);
+      setRenewDays("30");
     },
     onError: () => {
       toast.error("Erro ao renovar role");
@@ -123,6 +141,36 @@ export default function AdminRoles() {
   });
 
   const actingUserId = user?.id ?? activeProfile?.id ?? "system";
+
+  const handleConfirmRevoke = () => {
+    if (!roleToRevoke) return;
+
+    revokeMutation.mutate({
+      userId: roleToRevoke.user_id,
+      role: roleToRevoke.role,
+      revokedBy: actingUserId,
+      reason: revokeReason.trim() || undefined,
+    });
+  };
+
+  const handleConfirmRenew = () => {
+    if (!roleToRenew) return;
+
+    const days = Number.parseInt(renewDays, 10);
+    if (!Number.isFinite(days) || days <= 0 || days > 3650) {
+      toast.error("Informe um prazo valido entre 1 e 3650 dias");
+      return;
+    }
+
+    const newDate = new Date();
+    newDate.setDate(newDate.getDate() + days);
+    renewMutation.mutate({
+      userId: roleToRenew.user_id,
+      role: roleToRenew.role,
+      newExpiresAt: newDate.toISOString(),
+      renewedBy: actingUserId,
+    });
+  };
 
   const getRoleBadge = (role: string) => {
     switch (role) {
@@ -337,15 +385,7 @@ export default function AdminRoles() {
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  onClick={() => {
-                                    const reason = prompt("Motivo da revogação (opcional):");
-                                    revokeMutation.mutate({
-                                      userId: roleData.user_id,
-                                      role: roleData.role,
-                                      revokedBy: actingUserId,
-                                      reason: reason || undefined,
-                                    });
-                                  }}
+                                  onClick={() => setRoleToRevoke(roleData)}
                                 >
                                   <XCircle className="h-4 w-4 text-destructive" />
                                 </Button>
@@ -416,17 +456,8 @@ export default function AdminRoles() {
                           size="sm"
                           variant="default"
                           onClick={() => {
-                            const days = prompt("Renovar por quantos dias?", "30");
-                            if (days) {
-                              const newDate = new Date();
-                              newDate.setDate(newDate.getDate() + parseInt(days));
-                              renewMutation.mutate({
-                                userId: roleData.user_id,
-                                role: roleData.role,
-                                newExpiresAt: newDate.toISOString(),
-                                renewedBy: actingUserId,
-                              });
-                            }
+                            setRoleToRenew(roleData);
+                            setRenewDays("30");
                           }}
                         >
                           <RefreshCw className="h-4 w-4 mr-2" />
@@ -454,6 +485,96 @@ export default function AdminRoles() {
           </Card>
         </TabsContent>
       </Tabs>
+      <Dialog
+        open={!!roleToRevoke}
+        onOpenChange={(open) => {
+          if (!open) {
+            setRoleToRevoke(null);
+            setRevokeReason("");
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Revogar role</DialogTitle>
+            <DialogDescription>
+              Registre um motivo administrativo para auditoria, se aplicavel.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="revoke-reason">Motivo</Label>
+            <Textarea
+              id="revoke-reason"
+              value={revokeReason}
+              onChange={(event) => setRevokeReason(event.target.value)}
+              placeholder="Motivo da revogacao..."
+              rows={4}
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setRoleToRevoke(null);
+                setRevokeReason("");
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmRevoke}
+              disabled={revokeMutation.isPending}
+            >
+              {revokeMutation.isPending ? "Revogando..." : "Revogar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={!!roleToRenew}
+        onOpenChange={(open) => {
+          if (!open) {
+            setRoleToRenew(null);
+            setRenewDays("30");
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Renovar role</DialogTitle>
+            <DialogDescription>
+              Defina por quantos dias esta permissao deve continuar ativa.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="renew-days">Dias</Label>
+            <Input
+              id="renew-days"
+              type="number"
+              min="1"
+              max="3650"
+              value={renewDays}
+              onChange={(event) => setRenewDays(event.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setRoleToRenew(null);
+                setRenewDays("30");
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button onClick={handleConfirmRenew} disabled={renewMutation.isPending}>
+              {renewMutation.isPending ? "Renovando..." : "Renovar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

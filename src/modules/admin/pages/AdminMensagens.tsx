@@ -29,10 +29,12 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/shared/components/ui/dialog";
 import { Badge } from "@/shared/components/ui/badge";
+import { Textarea } from "@/shared/components/ui/textarea";
 import { toast } from "@/shared/components/ui/use-toast";
 import { useConfirmActionDialog } from "@/shared/hooks/useConfirmActionDialog";
 
@@ -47,6 +49,8 @@ export default function AdminMensagens() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [selectedConversation, setSelectedConversation] = useState<AdminConversationData | null>(null);
+  const [conversationToBlock, setConversationToBlock] = useState<AdminConversationData | null>(null);
+  const [blockReason, setBlockReason] = useState("");
 
   // Busca conversas usando AdminMessagingService
   const { data: conversationsData, isLoading, error } = useQuery({
@@ -67,6 +71,8 @@ export default function AdminMensagens() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-conversations"] });
       toast({ title: "Conversa bloqueada com sucesso" });
+      setConversationToBlock(null);
+      setBlockReason("");
     },
     onError: (error: unknown) => {
       toast({
@@ -134,6 +140,20 @@ export default function AdminMensagens() {
     });
     if (!confirmed) return;
     deleteMutation.mutate(conversation.id);
+  };
+
+  const handleConfirmBlock = () => {
+    const reason = blockReason.trim();
+    if (!conversationToBlock || !reason) {
+      toast({
+        title: "Motivo obrigatorio",
+        description: "Informe o motivo antes de bloquear a conversa.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    blockMutation.mutate({ id: conversationToBlock.id, reason });
   };
 
   const formatDate = (dateString: string) => {
@@ -278,10 +298,7 @@ export default function AdminMensagens() {
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                onClick={() => {
-                                  const reason = prompt("Motivo do bloqueio:");
-                                  if (reason) blockMutation.mutate({ id: conversation.id, reason });
-                                }}
+                                onClick={() => setConversationToBlock(conversation)}
                                 disabled={blockMutation.isPending}
                               >
                                 <ShieldAlert className="h-4 w-4 text-red-400" />
@@ -397,6 +414,45 @@ export default function AdminMensagens() {
                 )}
               </div>
             )}
+          </DialogContent>
+        </Dialog>
+        <Dialog
+          open={!!conversationToBlock}
+          onOpenChange={(open) => {
+            if (!open) {
+              setConversationToBlock(null);
+              setBlockReason("");
+            }
+          }}
+        >
+          <DialogContent className="bg-[#121922] border-gray-800 text-white">
+            <DialogHeader>
+              <DialogTitle>Bloquear conversa</DialogTitle>
+              <DialogDescription className="text-gray-400">
+                Registre o motivo administrativo para auditoria.
+              </DialogDescription>
+            </DialogHeader>
+            <Textarea
+              value={blockReason}
+              onChange={(event) => setBlockReason(event.target.value)}
+              placeholder="Descreva o motivo do bloqueio..."
+              className="min-h-[120px] bg-[#0A0F14] border-gray-700 text-white"
+            />
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setConversationToBlock(null);
+                  setBlockReason("");
+                }}
+                className="border-gray-700 text-white"
+              >
+                Cancelar
+              </Button>
+              <Button onClick={handleConfirmBlock} disabled={blockMutation.isPending}>
+                {blockMutation.isPending ? "Bloqueando..." : "Bloquear"}
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
         <ConfirmDialog />

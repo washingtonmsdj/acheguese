@@ -15,6 +15,7 @@ import { Textarea } from '@/shared/components/ui/textarea';
 import { Avatar } from '@/shared/components/ui/avatar';
 import { Badge } from '@/shared/components/ui/badge';
 import { cn } from '@/shared/utils/cn';
+import { useToast } from '@/shared/hooks/use-toast';
 
 interface Review {
   id: string;
@@ -55,6 +56,7 @@ export function EventReviews({
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState('');
   const [filter, setFilter] = useState<'all' | 'positive' | 'negative'>('all');
+  const { toast } = useToast();
 
   // Calculate stats
   const stats = useMemo(() => {
@@ -86,7 +88,11 @@ export function EventReviews({
   // Submit review
   const handleSubmitReview = () => {
     if (rating === 0 || !comment.trim()) {
-      alert('Por favor, selecione uma nota e escreva um comentário.');
+      toast({
+        title: 'Avaliacao incompleta',
+        description: 'Selecione uma nota e escreva um comentario antes de publicar.',
+        variant: 'destructive',
+      });
       return;
     }
 
@@ -118,6 +124,10 @@ export function EventReviews({
     setRating(0);
     setComment('');
     setShowReviewForm(false);
+    toast({
+      title: 'Avaliacao publicada',
+      description: 'Obrigado por compartilhar sua experiencia.',
+    });
   };
 
   // Mark helpful

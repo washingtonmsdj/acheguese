@@ -38,9 +38,11 @@ import {
   AdminPagination,
   type FilterOption,
 } from "@/modules/admin/components";
+import { useConfirmActionDialog } from "@/shared/hooks/useConfirmActionDialog";
 
 export default function AdminAssinaturas() {
   const queryClient = useQueryClient();
+  const { confirm, ConfirmDialog } = useConfirmActionDialog();
   const [activeTab, setActiveTab] = useState("all");
   const [search, setSearch] = useState("");
   const [planFilter, setPlanFilter] = useState("");
@@ -159,6 +161,19 @@ export default function AdminAssinaturas() {
         return <Badge className="bg-amber-100 text-amber-800 border-amber-200">Pendente</Badge>;
       default:
         return <Badge>{status}</Badge>;
+    }
+  };
+
+  const handleCancelSubscription = async (subscriptionId: string) => {
+    const confirmed = await confirm({
+      title: "Cancelar assinatura",
+      description: "A assinatura sera cancelada e o acesso pago podera ser interrompido.",
+      confirmLabel: "Cancelar assinatura",
+      variant: "destructive",
+    });
+
+    if (confirmed) {
+      cancelMutation.mutate(subscriptionId);
     }
   };
 
@@ -295,15 +310,7 @@ export default function AdminAssinaturas() {
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  onClick={() => {
-                                    if (
-                                      confirm(
-                                        "Tem certeza que deseja cancelar esta assinatura?"
-                                      )
-                                    ) {
-                                      cancelMutation.mutate(sub.id);
-                                    }
-                                  }}
+                                  onClick={() => handleCancelSubscription(sub.id)}
                                 >
                                   <XCircle className="h-4 w-4 text-destructive" />
                                 </Button>
@@ -446,6 +453,7 @@ export default function AdminAssinaturas() {
           </div>
         </TabsContent>
       </Tabs>
+      <ConfirmDialog />
     </div>
   );
 }

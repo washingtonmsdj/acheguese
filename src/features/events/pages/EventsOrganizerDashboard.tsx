@@ -88,8 +88,57 @@ export default function EventsOrganizerDashboard() {
     navigate(`/eventos/${eventId}`);
   };
 
-  const handleDuplicateEvent = (eventId: string) => {
-    alert(`Duplicar evento ${eventId}`);
+  const handleDuplicateEvent = async (eventId: string) => {
+    if (!activeProfile?.id) {
+      toast({
+        title: 'Perfil ativo necessario',
+        description: 'Selecione um perfil antes de duplicar eventos.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const sourceEvent = organizerEvents.find((event) => event.id === eventId);
+    if (!sourceEvent) {
+      toast({
+        title: 'Evento nao encontrado',
+        description: 'Atualize a lista e tente novamente.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      const duplicated = await communityEventsRuntimeService.createEvent(activeProfile.id, {
+        title: `Copia de ${sourceEvent.title}`,
+        description: sourceEvent.description,
+        date: sourceEvent.start_date,
+        location: sourceEvent.location.address || sourceEvent.location.venue_name || 'Local a definir',
+        category: sourceEvent.category,
+        image_url: sourceEvent.cover_image_url === '/placeholder.svg' ? undefined : sourceEvent.cover_image_url,
+        max_participants: sourceEvent.capacity,
+        latitude: sourceEvent.location.latitude,
+        longitude: sourceEvent.location.longitude,
+        coordinate_source:
+          sourceEvent.location.latitude && sourceEvent.location.longitude ? 'exact' : undefined,
+      });
+
+      await queryClient.invalidateQueries({
+        queryKey: ['events-organizer-dashboard', activeProfile.id],
+      });
+
+      toast({
+        title: 'Evento duplicado',
+        description: 'A copia foi criada e aberta para edicao.',
+      });
+      navigate(`/central/eventos/editar/${duplicated.id}`);
+    } catch (error) {
+      toast({
+        title: 'Erro ao duplicar evento',
+        description: error instanceof Error ? error.message : 'Nao foi possivel duplicar o evento.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleDeleteEvent = async (eventId: string) => {
@@ -117,7 +166,53 @@ export default function EventsOrganizerDashboard() {
   };
 
   const handleExportData = () => {
-    alert('Exportar dados');
+    if (filteredEvents.length === 0) {
+      toast({
+        title: 'Nada para exportar',
+        description: 'A lista atual nao possui eventos.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const csvHeader = [
+      'id',
+      'titulo',
+      'status',
+      'categoria',
+      'inicio',
+      'local',
+      'participantes',
+      'capacidade',
+    ];
+    const csvRows = filteredEvents.map((event) => [
+      event.id,
+      event.title,
+      event.status,
+      event.category,
+      event.start_date,
+      event.location.address || event.location.venue_name || '',
+      String(event.participants_count),
+      event.capacity ? String(event.capacity) : '',
+    ]);
+    const escapeCsvValue = (value: string) => `"${value.replace(/"/g, '""')}"`;
+    const csv = [csvHeader, ...csvRows]
+      .map((row) => row.map(escapeCsvValue).join(','))
+      .join('\n');
+    const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `eventos-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: 'Exportacao concluida',
+      description: `${filteredEvents.length} evento(s) exportado(s) em CSV.`,
+    });
   };
 
   const handleViewAnalytics = (eventId: string) => {

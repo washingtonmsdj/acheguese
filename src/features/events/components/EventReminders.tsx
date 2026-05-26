@@ -14,6 +14,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
 import { cn } from '@/shared/utils/cn';
 import type { Event } from '../types';
+import { useToast } from '@/shared/hooks/use-toast';
 
 interface EventReminder {
   eventId: string;
@@ -40,6 +41,7 @@ export function EventReminders({ event }: EventRemindersProps) {
   const [reminders, setReminders] = useState<ReminderTime[]>([]);
   const [showSuccess, setShowSuccess] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const { toast } = useToast();
 
   // Load reminders from localStorage
   useEffect(() => {
@@ -113,7 +115,11 @@ export function EventReminders({ event }: EventRemindersProps) {
     if (!notificationsEnabled) {
       const granted = await requestNotificationPermission();
       if (!granted) {
-        alert('Por favor, habilite as notificações para receber lembretes.');
+        toast({
+          title: 'Notificacoes bloqueadas',
+          description: 'Habilite as notificacoes do navegador para receber lembretes.',
+          variant: 'destructive',
+        });
         return;
       }
     }

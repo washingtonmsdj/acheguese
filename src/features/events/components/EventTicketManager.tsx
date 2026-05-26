@@ -33,6 +33,7 @@ import {
 import { Badge } from '@/shared/components/ui/badge';
 import { cn } from '@/shared/utils/cn';
 import { useConfirmActionDialog } from '@/shared/hooks/useConfirmActionDialog';
+import { useToast } from '@/shared/hooks/use-toast';
 
 interface Ticket {
   id: string;
@@ -67,6 +68,7 @@ export function EventTicketManager({
     sale_end_date: '',
   });
   const { confirm, ConfirmDialog } = useConfirmActionDialog();
+  const { toast } = useToast();
 
   // Handle add ticket
   const handleAddTicket = () => {
@@ -91,8 +93,15 @@ export function EventTicketManager({
 
   // Handle save ticket
   const handleSaveTicket = () => {
-    if (!formData.name || !formData.price || !formData.quantity_available) {
-      alert('Preencha todos os campos obrigatórios');
+    const price = formData.price ?? 0;
+    const quantity = formData.quantity_available ?? 0;
+
+    if (!formData.name?.trim() || price < 0 || quantity <= 0) {
+      toast({
+        title: 'Revise o ingresso',
+        description: 'Informe nome, preco valido e quantidade maior que zero.',
+        variant: 'destructive',
+      });
       return;
     }
 
@@ -100,7 +109,7 @@ export function EventTicketManager({
       // Update existing ticket
       const updatedTickets = tickets.map(t =>
         t.id === editingTicket.id
-          ? { ...t, ...formData }
+          ? { ...t, ...formData, name: formData.name!.trim(), price, quantity_available: quantity }
           : t
       );
       onChange(updatedTickets);
@@ -108,10 +117,10 @@ export function EventTicketManager({
       // Add new ticket
       const newTicket: Ticket = {
         id: `ticket-${Date.now()}`,
-        name: formData.name!,
+        name: formData.name!.trim(),
         description: formData.description || '',
-        price: formData.price!,
-        quantity_available: formData.quantity_available!,
+        price,
+        quantity_available: quantity,
         quantity_sold: 0,
         sale_start_date: formData.sale_start_date,
         sale_end_date: formData.sale_end_date,
