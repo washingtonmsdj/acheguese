@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { adminModerationService } from "@/core/admin";
 import { useAuth } from "@/core/auth/hooks/useAuth";
+import {
+  MODERATION_REPORT_STATUS,
+  type ModerationReportStatus,
+} from "@/core/moderation/constants/reportStatus";
 import { useToast } from "@/shared/hooks/use-toast";
 import { logger } from "@/shared/utils/logger";
-import { supabase } from "@/integrations/supabase";
 
 export type TabType =
   | "posts"
@@ -30,23 +33,14 @@ export function useModeration() {
     setLoading(true);
     try {
       const data = await adminModerationService.getAllModerationData();
-      const [postReportData, commentReportData, profileReportData] = await Promise.all([
-        (supabase as any).from("admin_pending_post_reports").select("*"),
-        (supabase as any).from("admin_pending_comment_reports").select("*"),
-        (supabase as any)
-          .from("community_reports")
-          .select("*")
-          .eq("target_type", "profile")
-          .in("status", ["pending", "under_review"])
-          .order("created_at", { ascending: false }),
-      ]);
+      const reportQueues = await adminModerationService.getReportQueues();
 
       setPosts((data.posts ?? []) as unknown as Record<string, unknown>[]);
       setComments((data.comments ?? []) as unknown as Record<string, unknown>[]);
       setProfiles((data.profiles ?? []) as unknown as Record<string, unknown>[]);
-      setPostReports((postReportData.data ?? []) as Record<string, unknown>[]);
-      setCommentReports((commentReportData.data ?? []) as Record<string, unknown>[]);
-      setProfileReports((profileReportData.data ?? []) as Record<string, unknown>[]);
+      setPostReports(reportQueues.postReports);
+      setCommentReports(reportQueues.commentReports);
+      setProfileReports(reportQueues.profileReports);
       setWarnings((data.warnings ?? []) as unknown as Record<string, unknown>[]);
       setAuditLogs((data.auditLogs ?? []) as unknown as Record<string, unknown>[]);
     } catch (e) {
@@ -71,20 +65,11 @@ export function useModeration() {
   const handleReportAction = async (
     reportId: string,
     _table: string,
-    status: string,
+    status: ModerationReportStatus,
     adminNotes: string,
   ) => {
     try {
-      const { error } = await (supabase as any)
-        .from("community_reports")
-        .update({
-          status,
-          admin_notes: adminNotes || null,
-          reviewed_at: new Date().toISOString(),
-        })
-        .eq("id", reportId);
-
-      if (error) throw error;
+      await adminModerationService.updateReportReview(reportId, status, adminNotes);
 
       toast({ title: "Acao registrada" });
       await fetchAll();
@@ -113,16 +98,11 @@ export function useModeration() {
 
       const reportId = typeof report?.id === "string" ? report.id : null;
       if (reportId) {
-        const { error } = await (supabase as any)
-          .from("community_reports")
-          .update({
-            status: "removed",
-            admin_notes: adminNotes || null,
-            reviewed_at: new Date().toISOString(),
-          })
-          .eq("id", reportId);
-
-        if (error) throw error;
+        await adminModerationService.updateReportReview(
+          reportId,
+          MODERATION_REPORT_STATUS.REMOVED,
+          adminNotes,
+        );
       }
 
       toast({ title: `${type === "post" ? "Post" : "Comentario"} excluido` });

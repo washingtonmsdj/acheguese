@@ -91,6 +91,7 @@ const IDENTIFIER_PATTERN = new RegExp(
 );
 
 const SKIP_DIRS = new Set(['node_modules', '.git', 'dist']);
+const SKIP_FILE_PATTERNS = [/\.generated\.tsx?$/];
 
 // Files that are allowed to use regression-guarded symbols
 // Multi-profile implementation (Phases 4-6) uses useActiveProfile as a NEW hook
@@ -127,7 +128,7 @@ function walkDir(dir: string, files: string[] = []): string[] {
       walkDir(fullPath, files);
     } else {
       const ext = extname(entry);
-      if (ext === '.ts' || ext === '.tsx') {
+      if ((ext === '.ts' || ext === '.tsx') && !SKIP_FILE_PATTERNS.some((pattern) => pattern.test(entry))) {
         files.push(fullPath);
       }
     }

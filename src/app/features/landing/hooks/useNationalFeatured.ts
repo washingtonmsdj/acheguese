@@ -14,76 +14,25 @@ import {
   getNationalStats,
   getActiveTerritoriesWithLanding,
 } from '../services/LandingService';
+import type {
+  ActiveTerritoriesWithLanding,
+  NationalStats,
+} from '../services/types';
+
+export type {
+  NationalBusiness,
+  NationalClassified,
+  NationalService,
+  NationalStats,
+} from '../services/types';
+export type ActiveTerritory = ActiveTerritoriesWithLanding['locations'][number];
+export type ActiveGroup = ActiveTerritoriesWithLanding['groups'][number];
 
 const STALE_TIME = 5 * 60 * 1000;
 
 const DEFAULT_STATS: NationalStats = { businesses: 0, services: 0, classifieds: 0, cities: 0, districts: 0 };
 
-const DEFAULT_TERRITORIES = { locations: [] as ActiveTerritory[], groups: [] as ActiveGroup[] };
-
-export interface NationalBusiness {
-  id: string;
-  name: string;
-  category: string;
-  logo_url?: string;
-  rating: number;
-  is_premium: boolean;
-  is_verified: boolean;
-  slug?: string;
-  geographic_path?: string;
-  city_name?: string;
-}
-
-export interface NationalService {
-  id: string;
-  name: string;
-  category: string;
-  logo_url?: string;
-  rating: number;
-  is_verified: boolean;
-  price_range?: string;
-  city_name?: string;
-}
-
-export interface NationalClassified {
-  id: string;
-  titulo: string;
-  category: string;
-  price: number;
-  photos: string[];
-  created_at: string;
-  public_id?: string;
-  slug?: string;
-  geographic_path?: string;
-  category_slug?: string;
-  subcategory_slug?: string;
-}
-
-export interface NationalStats {
-  businesses: number;
-  services: number;
-  classifieds: number;
-  cities: number;
-  districts: number;
-}
-
-export interface ActiveTerritory {
-  id: string;
-  name: string;
-  slug: string;
-  type: 'city' | 'district';
-  geographic_path: string;
-  parent_name?: string;
-}
-
-export interface ActiveGroup {
-  id: string;
-  name: string;
-  slug: string;
-  description?: string;
-  member_count: number;
-  anchor_path?: string;
-}
+const DEFAULT_TERRITORIES: ActiveTerritoriesWithLanding = { locations: [], groups: [] };
 
 export function useNationalFeatured() {
   const businesses = useQuery({

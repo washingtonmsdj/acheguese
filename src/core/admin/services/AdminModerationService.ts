@@ -17,6 +17,11 @@ import { PostsFacade } from "@/core/posts/services";
 import { CommentService } from "@/core/comments/services";
 import { profileService } from "@/core/profiles/services";
 import { userWarningsService, adminAuditService } from "@/core/moderation";
+import {
+  MODERATION_REPORT_STATUS,
+  type ModerationReportStatus,
+} from "@/core/moderation/constants/reportStatus";
+import { supabase } from "@/core/infrastructure/supabase";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 
@@ -60,11 +65,44 @@ export interface AdminModerationData {
   auditLogs: AdminAuditLog[];
 }
 
+export type AdminModerationReport = Record<string, unknown>;
+
+export interface AdminModerationReportQueues {
+  postReports: AdminModerationReport[];
+  commentReports: AdminModerationReport[];
+  profileReports: AdminModerationReport[];
+}
+
+type SupabaseDynamicResult<TData> = {
+  data: TData | null;
+  error: unknown | null;
+};
+
+type SupabaseDynamicQuery<TData> = PromiseLike<SupabaseDynamicResult<TData>> & {
+  eq(column: string, value: unknown): SupabaseDynamicQuery<TData>;
+  in(column: string, values: readonly unknown[]): SupabaseDynamicQuery<TData>;
+  order(
+    column: string,
+    options?: { ascending?: boolean },
+  ): SupabaseDynamicQuery<TData>;
+};
+
+interface SupabaseDynamicClient {
+  from(table: string): {
+    select(columns: string): SupabaseDynamicQuery<AdminModerationReport[]>;
+    update(values: Record<string, unknown>): SupabaseDynamicQuery<null>;
+  };
+}
+
 // ============================================================================
 // 🏛️ ADMIN MODERATION SERVICE
 // ============================================================================
 
 class AdminModerationService {
+  private db(): SupabaseDynamicClient {
+    return supabase as unknown as SupabaseDynamicClient;
+  }
+
   /**
    * Busca todos os dados de moderação
    * Delega para PostsFacade, CommentService, ProfileService (SSOT)
@@ -102,6 +140,67 @@ class AdminModerationService {
         action: "getAllModerationData",
       });
       logger.error("Erro ao buscar dados de moderação", error);
+      throw error;
+    }
+  }
+
+  async getReportQueues(): Promise<AdminModerationReportQueues> {
+    try {
+      const [postReports, commentReports, profileReports] = await Promise.all([
+        this.db().from("admin_pending_post_reports").select("*"),
+        this.db().from("admin_pending_comment_reports").select("*"),
+        this.db()
+          .from("community_reports")
+          .select("*")
+          .eq("target_type", "profile")
+          .in("status", [
+            MODERATION_REPORT_STATUS.PENDING,
+            MODERATION_REPORT_STATUS.UNDER_REVIEW,
+          ])
+          .order("created_at", { ascending: false }),
+      ]);
+
+      if (postReports.error) throw postReports.error;
+      if (commentReports.error) throw commentReports.error;
+      if (profileReports.error) throw profileReports.error;
+
+      return {
+        postReports: (postReports.data ?? []) as AdminModerationReport[],
+        commentReports: (commentReports.data ?? []) as AdminModerationReport[],
+        profileReports: (profileReports.data ?? []) as AdminModerationReport[],
+      };
+    } catch (error) {
+      trackError(error as Error, {
+        component: "AdminModerationService",
+        action: "getReportQueues",
+      });
+      logger.error("Erro ao buscar filas de denuncias", error);
+      throw error;
+    }
+  }
+
+  async updateReportReview(
+    reportId: string,
+    status: ModerationReportStatus,
+    adminNotes?: string | null,
+  ): Promise<void> {
+    try {
+      const { error } = await this.db()
+        .from("community_reports")
+        .update({
+          status,
+          admin_notes: adminNotes || null,
+          reviewed_at: new Date().toISOString(),
+        })
+        .eq("id", reportId);
+
+      if (error) throw error;
+    } catch (error) {
+      trackError(error as Error, {
+        component: "AdminModerationService",
+        action: "updateReportReview",
+      });
+      logger.error("Erro ao atualizar denuncia de moderacao", error);
       throw error;
     }
   }

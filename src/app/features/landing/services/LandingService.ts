@@ -23,10 +23,15 @@ export {
 } from "./landing.queries";
 
 export type {
+  ActiveTerritoriesWithLanding,
   CountryData,
   StateData,
   CityData,
   TerritorialGroupData,
   PlatformStats,
+  NationalBusiness,
+  NationalClassified,
+  NationalService,
+  NationalStats,
   VerifiedBusiness,
 } from "./types";
