@@ -1,1 +1,1 @@
-export { default } from "@/core/community/pages/NovaRecomendacaoPage";
+export { default } from "@/core/community-recommendations/pages/NovaRecomendacaoPage";

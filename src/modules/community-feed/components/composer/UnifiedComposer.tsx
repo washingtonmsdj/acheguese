@@ -1,1 +1,1 @@
-export { UnifiedComposer } from "@/core/community/components/composer/UnifiedComposer";
+export { UnifiedComposer } from "@/core/community-feed/components/composer/UnifiedComposer";

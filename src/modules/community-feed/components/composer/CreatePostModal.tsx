@@ -1,1 +1,1 @@
-export { CreatePostModal } from "@/core/community/components/composer/CreatePostModal";
+export { CreatePostModal } from "@/core/community-feed/components/composer/CreatePostModal";

@@ -6,15 +6,15 @@ import { useTerritoryFilter } from "@/core/location/hooks/useTerritoryFilter";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import type { TerritoryFilter } from "@/core/location";
 import { useSessionContext } from "@/core/session";
-import { buildCommunityTerritoryPresentation } from "@/core/community/utils/communityTerritoryPresentation";
+import { buildCommunityTerritoryPresentation } from "@/core/community-issues/utils/communityTerritoryPresentation";
 import { Button } from "@/shared/components/ui/button";
 import { TooltipProvider } from "@/shared/components/ui/tooltip";
-import { CreateIssueModal } from "@/core/community/issues/components/CreateIssueModal";
-import { IssueCard } from "@/core/community/issues/components/IssueCard";
-import { IssueCardSkeleton } from "@/core/community/issues/components/IssueCardSkeleton";
-import { ISSUE_STATUS_LABELS } from "@/core/community/issues/config/issueConfig";
-import type { IssueStatus } from "@/core/community/issues/domain/types";
-import { useIssues } from "@/core/community/issues/hooks/useIssues";
+import { CreateIssueModal } from "@/core/community-issues/components/CreateIssueModal";
+import { IssueCard } from "@/core/community-issues/components/IssueCard";
+import { IssueCardSkeleton } from "@/core/community-issues/components/IssueCardSkeleton";
+import { ISSUE_STATUS_LABELS } from "@/core/community-issues/config/issueConfig";
+import type { IssueStatus } from "@/core/community-issues/domain/types";
+import { useIssues } from "@/core/community-issues/hooks/useIssues";
 
 interface ProblemasPageProps {
   resolved?: ResolvedTerritory;
