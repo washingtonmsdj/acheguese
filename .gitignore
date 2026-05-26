@@ -165,3 +165,4 @@ test-output.txt
 /tmp/
 /playwright-report/
 /test-results/
+/testsprite_tests/tmp/

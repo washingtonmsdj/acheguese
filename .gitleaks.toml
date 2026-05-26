@@ -39,8 +39,14 @@ tags = ["key", "supabase", "medium"]
 [[rules]]
 id = "generic-api-key"
 description = "Generic API Key"
-regex = '''(?i)(api[_-]?key|apikey|api[_-]?secret)\s*[:=]\s*['"][a-zA-Z0-9_\-]{20,}['"]'''
+regex = '''(?i)['"]?(api[_-]?key|apikey|api[_-]?secret)['"]?\s*[:=]\s*['"][a-zA-Z0-9_\-]{20,}['"]'''
 tags = ["key", "api"]
+
+[[rules]]
+id = "test-runner-user-api-key"
+description = "User-scoped test runner API key"
+regex = '''sk-user-[A-Za-z0-9_\-]{20,}'''
+tags = ["key", "api", "critical"]
 
 [allowlist]
 description = "Allowlist for false positives"
