@@ -1,11 +1,19 @@
-/**
- * Business Management Service - Stub
- */
+import { BusinessSettingsService } from "@/core/business/services/BusinessSettingsService";
+import { supabase } from "@/integrations/supabase";
+import { logger } from "@/shared/utils/logger";
+import {
+  getBusinessById,
+  updateActiveSections,
+  updateBusiness,
+} from "./BusinessService";
+import { isValidBusinessId, isValidBusinessStatus } from "./validators";
+import type { Business, UpdateBusinessInput } from "../types";
 
 export interface BusinessSection {
   id: string;
   title: string;
   type: string;
+  enabled?: boolean;
 }
 
 export interface BusinessSectionConfig {
@@ -16,52 +24,239 @@ export interface BusinessEditData {
   name?: string;
   description?: string;
   category?: string;
-  [key: string]: any;
+  [key: string]: unknown;
+}
+
+type SectionKey = "services" | "products" | "cardapio" | "portfolio" | "promocoes";
+
+type BusinessDataRecord = {
+  id: string;
+  profile_id: string;
+  business_name?: string | null;
+  description?: string | null;
+  category?: string | null;
+  status?: string | null;
+  rating?: number | null;
+  total_reviews?: number | null;
+  favorites_count?: number | null;
+  total_products?: number | null;
+  secoes_ativas?: Partial<Record<SectionKey, boolean>> | null;
+  metadata?: Record<string, unknown> | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
+const SECTION_DEFINITIONS: Array<Omit<BusinessSection, "enabled"> & { id: SectionKey }> = [
+  { id: "services", title: "Servicos", type: "services" },
+  { id: "products", title: "Produtos", type: "products" },
+  { id: "cardapio", title: "Cardapio", type: "menu" },
+  { id: "portfolio", title: "Portfolio", type: "portfolio" },
+  { id: "promocoes", title: "Promocoes", type: "promotions" },
+];
+
+const EMPTY_SECTIONS: Record<SectionKey, boolean> = {
+  services: false,
+  products: false,
+  cardapio: false,
+  portfolio: false,
+  promocoes: false,
+};
+
+function assertValidBusinessId(businessId: string): void {
+  if (!isValidBusinessId(businessId)) {
+    throw new Error("ID de empresa invalido");
+  }
+}
+
+function normalizeSections(
+  sections?: Partial<Record<SectionKey, boolean>> | null,
+): Record<SectionKey, boolean> {
+  return {
+    services: Boolean(sections?.services),
+    products: Boolean(sections?.products),
+    cardapio: Boolean(sections?.cardapio),
+    portfolio: Boolean(sections?.portfolio),
+    promocoes: Boolean(sections?.promocoes),
+  };
+}
+
+function toSectionRecord(config: BusinessSectionConfig): Record<SectionKey, boolean> {
+  const next = { ...EMPTY_SECTIONS };
+
+  for (const section of config.sections) {
+    if (section.id in next) {
+      next[section.id as SectionKey] = section.enabled ?? true;
+    }
+  }
+
+  return next;
+}
+
+function optionalString(value: unknown): string | undefined {
+  return typeof value === "string" ? value : undefined;
+}
+
+function toBusinessUpdateInput(data: BusinessEditData): UpdateBusinessInput {
+  return {
+    ...(optionalString(data.name) !== undefined ? { name: optionalString(data.name) } : {}),
+    ...(optionalString(data.description) !== undefined
+      ? { description: optionalString(data.description) }
+      : {}),
+    ...(optionalString(data.category) !== undefined
+      ? { category: optionalString(data.category) as UpdateBusinessInput["category"] }
+      : {}),
+    ...(data.status !== undefined ? { status: data.status as UpdateBusinessInput["status"] } : {}),
+    ...(optionalString(data.logo_url) !== undefined ? { logo_url: optionalString(data.logo_url) } : {}),
+    ...(optionalString(data.banner_url) !== undefined
+      ? { banner_url: optionalString(data.banner_url) }
+      : {}),
+    ...(Array.isArray(data.fotos)
+      ? { fotos: data.fotos.filter((item): item is string => typeof item === "string") }
+      : {}),
+  };
 }
 
 class BusinessManagementServiceClass {
-  async getBusinessSections(_profileId: string): Promise<BusinessSection[]> {
-    return [];
+  private async getBusinessRecord(businessId: string): Promise<BusinessDataRecord> {
+    assertValidBusinessId(businessId);
+
+    const { data, error } = await (supabase as any)
+      .from("business_data")
+      .select(
+        "id, profile_id, business_name, description, category, status, rating, total_reviews, favorites_count, total_products, secoes_ativas, metadata, created_at, updated_at",
+      )
+      .or(`id.eq.${businessId},profile_id.eq.${businessId}`)
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      logger.error("BusinessManagementService.getBusinessRecord", error, { businessId });
+      throw error;
+    }
+
+    if (!data) {
+      throw new Error("Empresa nao encontrada");
+    }
+
+    return data as BusinessDataRecord;
   }
+
+  async getBusinessSections(businessId: string): Promise<BusinessSection[]> {
+    const business = await this.getBusinessRecord(businessId);
+    const activeSections = normalizeSections(business.secoes_ativas);
+
+    return SECTION_DEFINITIONS.map((section) => ({
+      ...section,
+      enabled: activeSections[section.id],
+    }));
+  }
+
   async updateBusinessSections(
-    _profileId: string,
-    _config: BusinessSectionConfig,
+    businessId: string,
+    config: BusinessSectionConfig,
   ): Promise<boolean> {
+    const business = await this.getBusinessRecord(businessId);
+    await updateActiveSections(business.id, toSectionRecord(config));
     return true;
   }
+
   async updateBusinessSection(
-    _profileId: string,
-    _sectionId: string,
-    _data: any,
+    businessId: string,
+    sectionId: string,
+    data: { enabled?: boolean; active?: boolean; visible?: boolean } | boolean,
   ): Promise<boolean> {
+    if (!SECTION_DEFINITIONS.some((section) => section.id === sectionId)) {
+      throw new Error("Secao de empresa invalida");
+    }
+
+    const business = await this.getBusinessRecord(businessId);
+    const sections = normalizeSections(business.secoes_ativas);
+    const enabled =
+      typeof data === "boolean"
+        ? data
+        : Boolean(data.enabled ?? data.active ?? data.visible);
+
+    await updateActiveSections(business.id, {
+      ...sections,
+      [sectionId]: enabled,
+    });
+
     return true;
   }
-  async getBusinessInfo(_profileId: string): Promise<Record<string, unknown> | null> {
-    return null;
+
+  async getBusinessInfo(businessId: string): Promise<Record<string, unknown> | null> {
+    const business = await this.getBusinessRecord(businessId);
+
+    return {
+      ...business,
+      name: business.business_name,
+      logo_url: business.metadata?.logo_url,
+      banner_url: business.metadata?.banner_url,
+      fotos: business.metadata?.fotos,
+    };
   }
+
   async updateBusinessInfo(
-    _profileId: string,
-    _data: BusinessEditData,
+    businessId: string,
+    data: BusinessEditData,
   ): Promise<boolean> {
+    const business = await this.getBusinessRecord(businessId);
+    await updateBusiness(business.profile_id, toBusinessUpdateInput(data));
     return true;
   }
-  async getBusinessStats(
-    _profileId: string,
-  ): Promise<Record<string, unknown> | null> {
-    return null;
+
+  async getBusinessStats(businessId: string): Promise<Record<string, unknown>> {
+    const business = await this.getBusinessRecord(businessId);
+    const fullBusiness: Business = await getBusinessById(business.profile_id);
+
+    return {
+      rating: fullBusiness.rating,
+      total_reviews: fullBusiness.total_reviews,
+      favorites_count: fullBusiness.favorites_count ?? business.favorites_count ?? 0,
+      total_products: fullBusiness.total_products,
+      status: fullBusiness.status,
+      updated_at: business.updated_at,
+    };
   }
+
   async updateBusinessStatus(
-    _profileId: string,
-    _status: string,
+    businessId: string,
+    status: string,
   ): Promise<boolean> {
+    if (!isValidBusinessStatus(status) || status === "deleted") {
+      throw new Error("Status de empresa invalido");
+    }
+
+    const business = await this.getBusinessRecord(businessId);
+    await updateBusiness(business.profile_id, { status: status as UpdateBusinessInput["status"] });
     return true;
   }
+
   async uploadBusinessImage(
-    _profileId: string,
-    _file: File,
-    _imageType: "logo" | "banner" | "gallery",
+    businessId: string,
+    file: File,
+    imageType: "logo" | "banner" | "gallery",
   ): Promise<string> {
-    return "";
+    const business = await this.getBusinessRecord(businessId);
+    const url = await BusinessSettingsService.uploadBusinessImage({
+      businessId: business.profile_id,
+      file,
+      type: imageType,
+    });
+
+    if (imageType === "gallery") {
+      const currentPhotos = Array.isArray(business.metadata?.fotos)
+        ? business.metadata.fotos.filter((item): item is string => typeof item === "string")
+        : [];
+      await updateBusiness(business.profile_id, { fotos: [...currentPhotos, url] });
+    } else {
+      await updateBusiness(
+        business.profile_id,
+        imageType === "logo" ? { logo_url: url } : { banner_url: url },
+      );
+    }
+
+    return url;
   }
 }
 

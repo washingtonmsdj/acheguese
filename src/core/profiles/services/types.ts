@@ -122,6 +122,7 @@ export interface Profile {
   allow_messages?: boolean;
   show_activity?: boolean;
   show_businesses?: boolean;
+  share_activity_default?: boolean;
   metadata?: Record<string, unknown>;
   created_at: string;
   updated_at: string;

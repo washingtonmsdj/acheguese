@@ -31,4 +31,5 @@ export interface ProfilePrivacySettingsInput {
   allow_messages?: boolean;
   show_activity?: boolean;
   show_businesses?: boolean;
+  share_activity_default?: boolean;
 }

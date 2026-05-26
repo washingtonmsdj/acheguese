@@ -445,6 +445,21 @@ export class ProfileService {
       return [];
     }
   }
+  async getShareActivityDefault(userId: string): Promise<boolean> {
+    const profiles = await this.getProfilesByUserId(userId);
+    const profile = profiles.find((item) => item.is_active) ?? profiles[0];
+    return profile?.share_activity_default ?? true;
+  }
+  async updateShareActivityDefault(userId: string, shareDefault: boolean): Promise<void> {
+    const profiles = await this.getProfilesByUserId(userId);
+    const profile = profiles.find((item) => item.is_active) ?? profiles[0];
+    if (!profile) {
+      throw new Error("Perfil ativo nao encontrado");
+    }
+    await this.updatePrivacySettings(profile.id, {
+      share_activity_default: shareDefault,
+    });
+  }
   async getUserLikesCount(profileId: string): Promise<number> {
     try {
       // Import dinamico evita ciclo ProfileService <-> SocialInteractionsService.

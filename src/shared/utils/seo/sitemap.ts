@@ -14,6 +14,7 @@
  */
 
 import { LAUNCH_CITY_PATH, LAUNCH_COMMUNITY_TERRITORY_PATH, LAUNCH_URLS } from '@/config/territory';
+import { EventsService } from '@/core/community/services/CommunityEventsRuntimeService';
 import { supabase } from '@/integrations/supabase';
 import { getAllClassifieds } from '@/modules/classifieds/services';
 import { getPublicSiteOrigin } from '@/shared/config/brand';
@@ -201,15 +202,13 @@ async function fetchBusinessURLs(): Promise<SitemapURL[]> {
 }
 
 async function fetchEventURLs(): Promise<SitemapURL[]> {
-  const { data, error } = await (supabase as any)
-    .from('events')
-    .select('id, updated_at')
-    .eq('status', 'published')
-    .order('published_at', { ascending: false, nullsFirst: false })
-    .limit(500);
-
-  if (error) throw error;
-  return generateEventURLs((data ?? []) as Array<{ id: string; updated_at: string | null }>);
+  const events = await EventsService.getEvents();
+  return generateEventURLs(
+    events
+      .filter((event) => event.status !== 'cancelled')
+      .slice(0, 500)
+      .map((event) => ({ id: event.id, updated_at: event.updated_at })),
+  );
 }
 
 async function fetchClassifiedURLs(): Promise<SitemapURL[]> {

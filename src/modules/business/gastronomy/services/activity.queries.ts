@@ -1,5 +1,6 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/core/infrastructure/supabase';
+import { profileService } from '@/core/profiles/services/ProfileService';
 import type {
   GastronomyActivity,
   GastronomyActivityFilters,
@@ -153,21 +154,7 @@ export class ActivityQueryService {
 
   static async getUserShareActivityDefault(userId: string): Promise<boolean> {
     try {
-      // eslint-disable-next-line ssot/no-direct-profile-access -- Campo especifico de privacidade de atividades
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('share_activity_default')
-        .eq('user_id', userId)
-        .single();
-
-      if (error) {
-        logger.error('Failed to get user share activity default', error, {
-          userId,
-        });
-        return true;
-      }
-
-      return data?.share_activity_default ?? true;
+      return profileService.getShareActivityDefault(userId);
     } catch (error) {
       logger.error('Error in getUserShareActivityDefault', error);
       return true;
@@ -179,19 +166,7 @@ export class ActivityQueryService {
     shareDefault: boolean,
   ): Promise<void> {
     try {
-      // eslint-disable-next-line ssot/no-direct-profile-access -- Campo especifico de privacidade de atividades
-      const { error } = await supabase
-        .from('profiles')
-        .update({ share_activity_default: shareDefault })
-        .eq('user_id', userId);
-
-      if (error) {
-        logger.error('Failed to update user share activity default', error, {
-          userId,
-          shareDefault,
-        });
-        throw error;
-      }
+      await profileService.updateShareActivityDefault(userId, shareDefault);
 
       logger.info('User share activity default updated', {
         userId,

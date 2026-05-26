@@ -339,18 +339,12 @@ export class SessionService {
    */
   static async getUserProfiles(userId: string): Promise<Profile[]> {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('is_active', true);
+      const { profileService } = await import("@/core/profiles/services/ProfileService");
+      const profiles = await profileService.getProfilesByUserId(userId);
 
-      if (error || !data) {
-        logger.error('SessionService.getUserProfiles failed:', error);
-        return [];
-      }
-
-      return data.map((row) => SessionService.mapProfileFromDb(row as DbProfileRow));
+      return profiles
+        .filter((row) => row.is_active)
+        .map((row) => SessionService.mapProfileFromDb(row as unknown as DbProfileRow));
     } catch (error) {
       logger.error('SessionService.getUserProfiles failed:', error);
       return [];
