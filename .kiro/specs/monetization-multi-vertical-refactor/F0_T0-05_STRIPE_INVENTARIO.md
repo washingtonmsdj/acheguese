@@ -26,7 +26,7 @@ Identificados **2 webhooks Stripe paralelos** processando eventos com semântica
 | `STRIPE_PRICE_ID_PRO` | Plano Pro (gastronomia) | `gastronomy-upgrade-plan/index.ts` | `price_xxx` |
 | `STRIPE_PRICE_ID_DELIVERY` | Plano Delivery (gastronomia) | `gastronomy-upgrade-plan/index.ts` | `price_yyy` |
 | `STRIPE_SECRET_KEY` | Autenticação Stripe | Todas as funções | `sk_xxx` |
-| `STRIPE_WEBHOOK_SECRET` | Validação de webhook | `stripe-webhook`, `billing-webhook` | `whsec_xxx` |
+| `STRIPE_WEBHOOK_SECRET` | Validação de webhook | `billing-webhook` | `[stripe webhook secret]` |
 
 **Problema**: Apenas 2 price_ids hardcoded para gastronomia. Sem price_ids para:
 - Mobilidade (motorista, entregador, empresa)

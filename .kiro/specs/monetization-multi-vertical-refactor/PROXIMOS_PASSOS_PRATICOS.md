@@ -47,10 +47,10 @@ supabase db push
 #### 1.3 Variáveis de Ambiente
 ```bash
 # Verificar no Supabase Dashboard > Settings > Secrets
-✅ STRIPE_SECRET_KEY=sk_...
-✅ STRIPE_WEBHOOK_SECRET=whsec_...
-✅ SUPABASE_URL=https://...
-✅ SUPABASE_SERVICE_ROLE_KEY=eyJ...
+OK STRIPE_SECRET_KEY=[configurado em secret manager]
+OK STRIPE_WEBHOOK_SECRET=[configurado em secret manager]
+OK SUPABASE_URL=[configurado em secret manager]
+OK SUPABASE_SERVICE_ROLE_KEY=[configurado em secret manager]
 ```
 
 #### 1.4 Catálogo Seedado

@@ -75,6 +75,7 @@ const SCAN_PREFIXES = [
   'src/modules/admin/',
   'scripts/',
   'public/',
+  '.kiro/',
   '.env',
   'vercel.json',
 ];
