@@ -18,6 +18,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/shared/components/ui/dialog";
+import { useConfirmActionDialog } from "@/shared/hooks/useConfirmActionDialog";
 import { cn } from "@/shared/utils/cn";
 
 const MOTIVO_LABELS: Record<string, string> = {
@@ -95,6 +96,7 @@ export function ReportDetailDialog({
   onWarn,
 }: ReportDetailDialogProps) {
   const [adminNotes, setAdminNotes] = useState(report?.admin_notes || "");
+  const { confirm, ConfirmDialog } = useConfirmActionDialog();
 
   const handleAction = async (status: string) => {
     const success = await onAction(report.id, table, status, adminNotes);
@@ -105,8 +107,14 @@ export function ReportDetailDialog({
   };
 
   const handleDelete = async () => {
-    if (!confirm(`Excluir este ${type === "post" ? "post" : "comentário"}?`))
-      return;
+    const targetLabel = type === "post" ? "post" : "comentario";
+    const confirmed = await confirm({
+      title: `Excluir ${targetLabel}`,
+      description: `O ${targetLabel} denunciado sera removido durante a moderacao.`,
+      confirmLabel: "Excluir",
+      variant: "destructive",
+    });
+    if (!confirmed) return;
 
     const contentId = type === "post" ? report.post_id : report.comment_id;
     if (!contentId) return;
@@ -300,6 +308,7 @@ export function ReportDetailDialog({
           </div>
         </div>
       </DialogContent>
+      <ConfirmDialog />
     </Dialog>
   );
 }

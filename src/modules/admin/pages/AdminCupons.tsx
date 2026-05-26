@@ -34,12 +34,14 @@ import {
 } from "@/shared/components/ui/dialog";
 import { Badge } from "@/shared/components/ui/badge";
 import { toast } from "@/shared/components/ui/use-toast";
+import { useConfirmActionDialog } from "@/shared/hooks/useConfirmActionDialog";
 
 const TYPE_OPTIONS = ["porcentagem", "valor", "brinde"];
 
 export default function AdminCupons() {
   const { canModerate, isChecking } = useAdminGuard();
   const queryClient = useQueryClient();
+  const { confirm, ConfirmDialog } = useConfirmActionDialog();
   
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
@@ -111,10 +113,15 @@ export default function AdminCupons() {
     toggleActiveMutation.mutate({ id: coupon.id, isActive: !coupon.is_active });
   };
 
-  const handleDelete = (coupon: CouponData) => {
-    if (confirm(`Tem certeza que deseja excluir o cupom "${coupon.codigo}"?`)) {
-      deleteMutation.mutate(coupon.id);
-    }
+  const handleDelete = async (coupon: CouponData) => {
+    const confirmed = await confirm({
+      title: "Excluir cupom",
+      description: `O cupom "${coupon.codigo}" sera removido da area comercial.`,
+      confirmLabel: "Excluir",
+      variant: "destructive",
+    });
+    if (!confirmed) return;
+    deleteMutation.mutate(coupon.id);
   };
 
   const formatDate = (dateString: string) => {
@@ -350,6 +357,7 @@ export default function AdminCupons() {
             )}
           </DialogContent>
         </Dialog>
+        <ConfirmDialog />
       </div>
     </div>
   );

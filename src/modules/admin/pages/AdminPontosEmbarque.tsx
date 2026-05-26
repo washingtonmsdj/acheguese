@@ -39,6 +39,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import { toast } from "sonner";
+import { useConfirmActionDialog } from "@/shared/hooks/useConfirmActionDialog";
 import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
 import { useLocationContext } from "@/core/location";
 import { PICKUP_POINTS_DEFAULTS } from "@/modules/admin/config/pickupPoints.config";
@@ -125,6 +126,7 @@ export default function AdminPontosEmbarque() {
   const { activeLocation } = useLocationContext();
   const activeLocationId = activeLocation?.id ?? null;
   const activeLocationName = activeLocation?.name ?? "";
+  const { confirm, ConfirmDialog } = useConfirmActionDialog();
   const [points, setPoints] = useState<PickupPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -230,7 +232,13 @@ export default function AdminPontosEmbarque() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Tem certeza que deseja excluir este ponto?")) return;
+    const confirmed = await confirm({
+      title: "Excluir ponto de embarque",
+      description: "Este ponto sera removido da operacao de embarque do territorio selecionado.",
+      confirmLabel: "Excluir",
+      variant: "destructive",
+    });
+    if (!confirmed) return;
 
     try {
       await adminPickupPointsService.deletePickupPoint(id);
@@ -700,6 +708,7 @@ export default function AdminPontosEmbarque() {
           </form>
         </DialogContent>
       </Dialog>
+      <ConfirmDialog />
     </div>
   );
 }

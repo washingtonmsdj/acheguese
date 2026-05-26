@@ -38,6 +38,7 @@ import {
 } from '@/shared/components/ui/dialog';
 import { Switch } from '@/shared/components/ui/switch';
 import { useToast } from '@/shared/components/ui/use-toast';
+import { useConfirmActionDialog } from '@/shared/hooks/useConfirmActionDialog';
 import {
   Plus, Loader2, Pencil, Trash2, Star, Search,
   MapPin, Camera, Eye, EyeOff, Filter,
@@ -59,6 +60,7 @@ type LocationSelection = {
 
 export default function AdminPontosTuristicos() {
   const { toast } = useToast();
+  const { confirm, ConfirmDialog } = useConfirmActionDialog();
   const queryClient = useQueryClient();
   const { user } = useSessionContext();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -195,6 +197,17 @@ export default function AdminPontosTuristicos() {
   const openNew = () => {
     setEditingPoint(null);
     setDialogOpen(true);
+  };
+
+  const handleDeletePoint = async (point: TouristPoint) => {
+    const confirmed = await confirm({
+      title: 'Remover ponto turistico',
+      description: `O ponto "${point.name}" sera removido do guia publico.`,
+      confirmLabel: 'Remover',
+      variant: 'destructive',
+    });
+    if (!confirmed) return;
+    deleteMutation.mutate(point.id);
   };
 
   return (
@@ -397,11 +410,7 @@ export default function AdminPontosTuristicos() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => {
-                        if (confirm('Remover este ponto turístico?')) {
-                          deleteMutation.mutate(point.id);
-                        }
-                      }}
+                      onClick={() => handleDeletePoint(point)}
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
@@ -412,6 +421,7 @@ export default function AdminPontosTuristicos() {
           ))}
         </div>
       )}
+      <ConfirmDialog />
     </div>
   );
 }

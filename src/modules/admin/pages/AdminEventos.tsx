@@ -34,6 +34,7 @@ import {
 } from "@/shared/components/ui/dialog";
 import { Badge } from "@/shared/components/ui/badge";
 import { toast } from "@/shared/components/ui/use-toast";
+import { useConfirmActionDialog } from "@/shared/hooks/useConfirmActionDialog";
 
 const CATEGORY_OPTIONS = ["show", "feira", "festa", "esportivo", "educação", "promoção"];
 const STATUS_OPTIONS = ["upcoming", "ongoing", "completed", "cancelled"];
@@ -41,6 +42,7 @@ const STATUS_OPTIONS = ["upcoming", "ongoing", "completed", "cancelled"];
 export default function AdminEventos() {
   const { canModerate, isChecking } = useAdminGuard();
   const queryClient = useQueryClient();
+  const { confirm, ConfirmDialog } = useConfirmActionDialog();
   
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
@@ -124,10 +126,15 @@ export default function AdminEventos() {
     );
   }
 
-  const handleDelete = (event: AdminEventData) => {
-    if (confirm(`Tem certeza que deseja excluir o evento "${event.title}"?`)) {
-      deleteMutation.mutate(event.id);
-    }
+  const handleDelete = async (event: AdminEventData) => {
+    const confirmed = await confirm({
+      title: "Excluir evento",
+      description: `O evento "${event.title}" sera removido do backoffice.`,
+      confirmLabel: "Excluir",
+      variant: "destructive",
+    });
+    if (!confirmed) return;
+    deleteMutation.mutate(event.id);
   };
 
   const formatDate = (dateString: string) => {
@@ -380,6 +387,7 @@ export default function AdminEventos() {
             )}
           </DialogContent>
         </Dialog>
+        <ConfirmDialog />
       </div>
     </div>
   );

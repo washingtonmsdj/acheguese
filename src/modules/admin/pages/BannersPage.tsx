@@ -24,6 +24,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { useToast } from "@/shared/hooks/use-toast";
+import { useConfirmActionDialog } from "@/shared/hooks/useConfirmActionDialog";
 import { logger } from "@/shared/utils/logger";
 import { SessionService } from "@/core/session/services/SessionService";
 import {
@@ -41,6 +42,7 @@ export default function BannersPage() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
   const { toast } = useToast();
+  const { confirm, ConfirmDialog } = useConfirmActionDialog();
 
   // Form state
   const [formData, setFormData] = useState({
@@ -128,7 +130,13 @@ export default function BannersPage() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("Tem certeza que deseja excluir este banner?")) return;
+    const confirmed = await confirm({
+      title: "Excluir banner",
+      description: "Este banner sera removido da vitrine e nao aparecera mais no app.",
+      confirmLabel: "Excluir",
+      variant: "destructive",
+    });
+    if (!confirmed) return;
 
     try {
       await BannerService.deleteBanner(id);
@@ -572,6 +580,7 @@ export default function BannersPage() {
           </div>
         )}
       </div>
+      <ConfirmDialog />
     </div>
   );
 }

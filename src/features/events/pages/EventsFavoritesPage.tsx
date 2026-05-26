@@ -18,10 +18,12 @@ import { Button } from '@/shared/components/ui/button';
 import { useFavorites } from '../hooks/useFavorites';
 import { communityEventsRuntimeService } from '@/core/community/services/CommunityEventsRuntimeService';
 import { mapCommunityEventToEvent } from '../utils/eventAdapters';
+import { useConfirmActionDialog } from '@/shared/hooks/useConfirmActionDialog';
 
 export default function EventsFavoritesPage() {
   const navigate = useNavigate();
   const { favorites, removeFavorite, clearFavorites, isLoading } = useFavorites();
+  const { confirm, ConfirmDialog } = useConfirmActionDialog();
   const { data: events = [], isLoading: isLoadingEvents } = useQuery({
     queryKey: ['events-favorites', favorites],
     enabled: favorites.length > 0,
@@ -44,8 +46,15 @@ export default function EventsFavoritesPage() {
     removeFavorite(eventId);
   };
 
-  const handleClearAll = () => {
-    if (window.confirm('Tem certeza que deseja remover todos os favoritos?')) {
+  const handleClearAll = async () => {
+    const confirmed = await confirm({
+      title: 'Limpar favoritos?',
+      description: 'Todos os eventos salvos serao removidos da sua lista de favoritos.',
+      confirmLabel: 'Limpar favoritos',
+      variant: 'destructive',
+    });
+
+    if (confirmed) {
       clearFavorites();
     }
   };
@@ -187,6 +196,7 @@ export default function EventsFavoritesPage() {
           </div>
         </section>
       </div>
+      <ConfirmDialog />
     </>
   );
 }

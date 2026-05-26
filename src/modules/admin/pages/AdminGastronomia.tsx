@@ -27,6 +27,7 @@ import {
 import { Badge } from "@/shared/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
+import { useConfirmActionDialog } from "@/shared/hooks/useConfirmActionDialog";
 import {
   ChefHat,
   Eye,
@@ -48,6 +49,7 @@ const PAGE_SIZE = 20;
 
 export default function AdminGastronomia() {
   const queryClient = useQueryClient();
+  const { confirm, ConfirmDialog } = useConfirmActionDialog();
   const [activeTab, setActiveTab] = useState("profiles");
   const [search, setSearch] = useState("");
   const [cuisineFilter, setCuisineFilter] = useState<string>("all");
@@ -165,6 +167,17 @@ export default function AdminGastronomia() {
   type ProfileItem = NonNullable<typeof profilesData>["data"][number];
   type MenuItem = NonNullable<typeof menusData>["data"][number];
   type CatalogItem = NonNullable<typeof itemsData>["data"][number];
+
+  const handleDeleteProfile = async (profile: ProfileItem) => {
+    const confirmed = await confirm({
+      title: "Deletar perfil de gastronomia",
+      description: `O perfil "${profile.business?.name || profile.id}" sera removido do vertical de gastronomia.`,
+      confirmLabel: "Deletar",
+      variant: "destructive",
+    });
+    if (!confirmed) return;
+    deleteProfileMutation.mutate(profile.id);
+  };
 
   return (
     <div className="space-y-6">
@@ -365,11 +378,7 @@ export default function AdminGastronomia() {
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                onClick={() => {
-                                  if (confirm("Tem certeza que deseja deletar este perfil?")) {
-                                    deleteProfileMutation.mutate(profile.id);
-                                  }
-                                }}
+                                onClick={() => handleDeleteProfile(profile)}
                               >
                                 <Trash2 className="h-4 w-4 text-destructive" />
                               </Button>
@@ -670,6 +679,7 @@ export default function AdminGastronomia() {
           </div>
         </TabsContent>
       </Tabs>
+      <ConfirmDialog />
     </div>
   );
 }

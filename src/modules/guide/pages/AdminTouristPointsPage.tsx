@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from '@/shared/components/ui/select';
 import { useToast } from '@/shared/components/ui/use-toast';
+import { useConfirmActionDialog } from '@/shared/hooks/useConfirmActionDialog';
 import { useSessionContext } from '@/core/session';
 import {
   useAdminTouristPoints,
@@ -35,6 +36,7 @@ const ADMIN_TOURIST_POINT_LOCATION_IDS: string[] = [];
 
 export default function AdminTouristPointsPage() {
   const { toast } = useToast();
+  const { confirm, ConfirmDialog } = useConfirmActionDialog();
   const { user } = useSessionContext();
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<TouristPointStatus | ''>('');
@@ -57,7 +59,13 @@ export default function AdminTouristPointsPage() {
   });
 
   const handleDelete = async (point: TouristPoint) => {
-    if (!confirm(`Remover "${point.title}"? Esta ação não pode ser desfeita.`)) return;
+    const confirmed = await confirm({
+      title: 'Remover ponto turistico',
+      description: `O ponto "${point.title}" sera removido do modulo Guide.`,
+      confirmLabel: 'Remover',
+      variant: 'destructive',
+    });
+    if (!confirmed) return;
     try {
       await deleteMutation.mutateAsync(point.id);
       toast({ title: 'Removido', description: `"${point.title}" foi removido.` });
@@ -269,6 +277,7 @@ export default function AdminTouristPointsPage() {
           })}
         </div>
       )}
+      <ConfirmDialog />
     </div>
   );
 }

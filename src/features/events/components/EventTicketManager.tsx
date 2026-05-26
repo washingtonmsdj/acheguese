@@ -32,6 +32,7 @@ import {
 } from '@/shared/components/ui/dialog';
 import { Badge } from '@/shared/components/ui/badge';
 import { cn } from '@/shared/utils/cn';
+import { useConfirmActionDialog } from '@/shared/hooks/useConfirmActionDialog';
 
 interface Ticket {
   id: string;
@@ -65,6 +66,7 @@ export function EventTicketManager({
     sale_start_date: '',
     sale_end_date: '',
   });
+  const { confirm, ConfirmDialog } = useConfirmActionDialog();
 
   // Handle add ticket
   const handleAddTicket = () => {
@@ -121,8 +123,15 @@ export function EventTicketManager({
   };
 
   // Handle delete ticket
-  const handleDeleteTicket = (ticketId: string) => {
-    if (window.confirm('Tem certeza que deseja excluir este ingresso?')) {
+  const handleDeleteTicket = async (ticketId: string) => {
+    const confirmed = await confirm({
+      title: 'Excluir ingresso?',
+      description: 'Este tipo de ingresso sera removido da configuracao do evento.',
+      confirmLabel: 'Excluir ingresso',
+      variant: 'destructive',
+    });
+
+    if (confirmed) {
       onChange(tickets.filter(t => t.id !== ticketId));
     }
   };
@@ -403,6 +412,7 @@ export function EventTicketManager({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <ConfirmDialog />
     </div>
   );
 }

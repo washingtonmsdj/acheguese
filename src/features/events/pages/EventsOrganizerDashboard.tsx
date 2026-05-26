@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Plus, Calendar, Home, QrCode, Loader2 } from 'lucide-react';
@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from '@/shared/components/ui/dialog';
 import { useToast } from '@/shared/hooks/use-toast';
+import { useConfirmActionDialog } from '@/shared/hooks/useConfirmActionDialog';
 import type { EventStatus } from '../types';
 import { useSessionContext } from '@/core/session/hooks/useSessionContext';
 import {
@@ -34,8 +35,10 @@ import {
 
 export default function EventsOrganizerDashboard() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { activeProfile } = useSessionContext();
   const { toast } = useToast();
+  const { confirm, ConfirmDialog } = useConfirmActionDialog();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<EventStatus | 'all'>('all');
   const [participantsOpen, setParticipantsOpen] = useState(false);
@@ -89,9 +92,27 @@ export default function EventsOrganizerDashboard() {
     alert(`Duplicar evento ${eventId}`);
   };
 
-  const handleDeleteEvent = (eventId: string) => {
-    if (window.confirm('Tem certeza que deseja excluir este evento?')) {
-      alert(`Excluir evento ${eventId}`);
+  const handleDeleteEvent = async (eventId: string) => {
+    const confirmed = await confirm({
+      title: 'Excluir evento',
+      description: 'Este evento sera removido do painel do organizador.',
+      confirmLabel: 'Excluir',
+      variant: 'destructive',
+    });
+    if (!confirmed) return;
+
+    try {
+      await communityEventsRuntimeService.deleteEvent(eventId);
+      await queryClient.invalidateQueries({
+        queryKey: ['events-organizer-dashboard', activeProfile?.id],
+      });
+      toast({ title: 'Evento excluido', description: 'O evento foi removido com sucesso.' });
+    } catch (error) {
+      toast({
+        title: 'Erro ao excluir evento',
+        description: error instanceof Error ? error.message : 'Nao foi possivel excluir o evento.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -553,6 +574,7 @@ export default function EventsOrganizerDashboard() {
           </div>
         </DialogContent>
       </Dialog>
+      <ConfirmDialog />
 
     </>
   );

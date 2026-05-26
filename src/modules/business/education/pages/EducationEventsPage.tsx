@@ -40,6 +40,7 @@ import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { Switch } from '@/shared/components/ui/switch';
+import { useConfirmActionDialog } from '@/shared/hooks/useConfirmActionDialog';
 import { useToast } from '@/shared/hooks/use-toast';
 import { useEducationProfile } from '../hooks/useEducationProfile';
 import { useEducationEvents } from '../hooks/useEducationEvents';
@@ -75,6 +76,7 @@ export function EducationEventsPage() {
   const { businessId } = useParams<{ businessId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { confirm, ConfirmDialog } = useConfirmActionDialog();
   const { data: profile, isLoading: isProfileLoading } = useEducationProfile(businessId);
   const { events, isLoading, create, update, remove } = useEducationEvents(profile?.id);
 
@@ -175,7 +177,13 @@ export function EducationEventsPage() {
   };
 
   const handleDelete = async (eventId: string) => {
-    if (!confirm('Tem certeza que deseja excluir este evento?')) return;
+    const confirmed = await confirm({
+      title: 'Excluir evento',
+      description: 'Este evento sera removido da instituicao e deixara de aparecer no calendario publico.',
+      confirmLabel: 'Excluir',
+      variant: 'destructive',
+    });
+    if (!confirmed) return;
     try {
       await remove(eventId);
       toast({ title: 'Evento excluído', description: 'O evento foi removido com sucesso.' });
@@ -569,6 +577,7 @@ export function EducationEventsPage() {
           </form>
         </DialogContent>
       </Dialog>
+      <ConfirmDialog />
     </div>
   );
 }

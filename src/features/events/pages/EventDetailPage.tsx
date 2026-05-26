@@ -58,6 +58,7 @@ import { buildGoogleMapsSearchUrl } from '@/shared/utils/contactLinks';
 import { openSafeExternalUrl } from '@/shared/utils/safeRedirect';
 import { communityEventsRuntimeService } from '@/core/community/services/CommunityEventsRuntimeService';
 import { mapCommunityEventToEvent } from '../utils/eventAdapters';
+import { useConfirmActionDialog } from '@/shared/hooks/useConfirmActionDialog';
 
 // ============================================================================
 // MAIN COMPONENT
@@ -74,6 +75,7 @@ export default function EventDetailPage() {
   const { toast } = useToast();
   const { activeProfile } = useSessionContext();
   const queryClient = useQueryClient();
+  const { confirm, ConfirmDialog } = useConfirmActionDialog();
 
   const { data: event, isLoading } = useQuery({
     queryKey: ['event-detail-ssot', eventId],
@@ -239,14 +241,17 @@ export default function EventDetailPage() {
     handleSelectTicket(firstAvailableTicket.id);
   };
 
-  const handleCancelRegistration = () => {
+  const handleCancelRegistration = async () => {
     if (!activeProfile?.id || !isParticipating || isRegistering || isCancelling) {
       return;
     }
 
-    const confirmed = window.confirm(
-      'Tem certeza que deseja cancelar sua inscricao neste evento?'
-    );
+    const confirmed = await confirm({
+      title: 'Cancelar inscricao?',
+      description: 'Sua vaga sera liberada para outras pessoas e voce precisara se inscrever novamente para participar.',
+      confirmLabel: 'Cancelar inscricao',
+      variant: 'destructive',
+    });
     if (!confirmed) {
       return;
     }
@@ -567,6 +572,7 @@ export default function EventDetailPage() {
           onAction={handleCTAAction}
         />
       </div>
+      <ConfirmDialog />
     </>
   );
 }

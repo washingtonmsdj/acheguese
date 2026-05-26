@@ -34,12 +34,14 @@ import {
 } from "@/shared/components/ui/dialog";
 import { Badge } from "@/shared/components/ui/badge";
 import { toast } from "@/shared/components/ui/use-toast";
+import { useConfirmActionDialog } from "@/shared/hooks/useConfirmActionDialog";
 
 const STATUS_OPTIONS = ["active", "blocked"];
 
 export default function AdminMensagens() {
   const { canModerate, isChecking } = useAdminGuard();
   const queryClient = useQueryClient();
+  const { confirm, ConfirmDialog } = useConfirmActionDialog();
   
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
@@ -123,10 +125,15 @@ export default function AdminMensagens() {
     );
   }
 
-  const handleDelete = (conversation: AdminConversationData) => {
-    if (confirm(`Tem certeza que deseja excluir a conversa ID "${conversation.id}"?`)) {
-      deleteMutation.mutate(conversation.id);
-    }
+  const handleDelete = async (conversation: AdminConversationData) => {
+    const confirmed = await confirm({
+      title: "Excluir conversa",
+      description: `A conversa ${conversation.id} sera removida da moderacao.`,
+      confirmLabel: "Excluir",
+      variant: "destructive",
+    });
+    if (!confirmed) return;
+    deleteMutation.mutate(conversation.id);
   };
 
   const formatDate = (dateString: string) => {
@@ -392,6 +399,7 @@ export default function AdminMensagens() {
             )}
           </DialogContent>
         </Dialog>
+        <ConfirmDialog />
       </div>
     </div>
   );

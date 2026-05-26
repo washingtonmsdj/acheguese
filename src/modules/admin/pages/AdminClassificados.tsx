@@ -30,6 +30,7 @@ import {
 } from "@/modules/admin/components";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
+import { useConfirmActionDialog } from "@/shared/hooks/useConfirmActionDialog";
 import {
   Dialog,
   DialogContent,
@@ -85,6 +86,7 @@ function toDate(value?: string | null) {
 export default function AdminClassificados() {
   const { canModerate, isChecking } = useAdminGuard();
   const queryClient = useQueryClient();
+  const { confirm, ConfirmDialog } = useConfirmActionDialog();
 
   const [tab, setTab] = useState("catalog");
   const [page, setPage] = useState(1);
@@ -157,6 +159,17 @@ export default function AdminClassificados() {
       value: category.id,
     }));
   }, [categoriesQuery.data?.categories]);
+
+  const handleDeleteClassified = async (classified: AdminClassifiedData) => {
+    const confirmed = await confirm({
+      title: "Excluir classificado",
+      description: `O classificado "${classified.title}" sera removido do catalogo.`,
+      confirmLabel: "Excluir",
+      variant: "destructive",
+    });
+    if (!confirmed) return;
+    deleteMutation.mutate(classified.id);
+  };
 
   if (!isChecking && !canModerate) {
     return (
@@ -344,11 +357,7 @@ export default function AdminClassificados() {
                               size="sm"
                               variant="ghost"
                               disabled={deleteMutation.isPending}
-                              onClick={() => {
-                                if (confirm(`Excluir classificado "${classified.title}"?`)) {
-                                  deleteMutation.mutate(classified.id);
-                                }
-                              }}
+                              onClick={() => handleDeleteClassified(classified)}
                             >
                               <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
@@ -553,6 +562,7 @@ export default function AdminClassificados() {
           ) : null}
         </DialogContent>
       </Dialog>
+      <ConfirmDialog />
     </div>
   );
 }

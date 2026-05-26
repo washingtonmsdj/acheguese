@@ -33,6 +33,7 @@ import {
 import { Badge } from "@/shared/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
+import { useConfirmActionDialog } from "@/shared/hooks/useConfirmActionDialog";
 import {
   Search,
   Briefcase,
@@ -66,6 +67,7 @@ const ALL_MODALIDADE_FILTER = "__all_modalidade" as const;
 
 export default function AdminVagas() {
   const queryClient = useQueryClient();
+  const { confirm, ConfirmDialog } = useConfirmActionDialog();
   const [activeTab, setActiveTab] = useState("all");
   const [search, setSearch] = useState("");
   const [contratoFilter, setContratoFilter] = useState<
@@ -205,6 +207,17 @@ export default function AdminVagas() {
       default:
         return <Badge variant="secondary">{status}</Badge>;
     }
+  };
+
+  const handleDeleteVaga = async (vagaId: string) => {
+    const confirmed = await confirm({
+      title: "Deletar vaga",
+      description: "Esta vaga sera removida da moderacao de empregos.",
+      confirmLabel: "Deletar",
+      variant: "destructive",
+    });
+    if (!confirmed) return;
+    deleteMutation.mutate(vagaId);
   };
 
   return (
@@ -529,11 +542,7 @@ export default function AdminVagas() {
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                onClick={() => {
-                                  if (confirm("Tem certeza que deseja deletar esta vaga?")) {
-                                    deleteMutation.mutate(vaga.id);
-                                  }
-                                }}
+                                onClick={() => handleDeleteVaga(vaga.id)}
                                 title="Deletar"
                               >
                                 <Trash2 className="h-4 w-4 text-destructive" />
@@ -649,6 +658,7 @@ export default function AdminVagas() {
           </Card>
         </TabsContent>
       </Tabs>
+      <ConfirmDialog />
     </div>
   );
 }

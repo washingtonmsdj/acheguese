@@ -14,6 +14,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
+import { useConfirmActionDialog } from '@/shared/hooks/useConfirmActionDialog';
 import { toast } from 'sonner';
 import { AdminPageHeader } from '../components';
 import { SiteSettingsService } from '@/core/admin/services/SiteSettingsService';
@@ -22,6 +23,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 export default function AdminBranding() {
   const queryClient = useQueryClient();
+  const { confirm, ConfirmDialog } = useConfirmActionDialog();
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string>('');
   const [faviconFile, setFaviconFile] = useState<File | null>(null);
@@ -168,10 +170,15 @@ export default function AdminBranding() {
     }
   };
 
-  const handleRestoreDefaults = () => {
-    if (confirm('Tem certeza que deseja restaurar as configurações padrão? Esta ação não pode ser desfeita.')) {
-      restoreDefaultsMutation.mutate();
-    }
+  const handleRestoreDefaults = async () => {
+    const confirmed = await confirm({
+      title: 'Restaurar identidade visual',
+      description: 'As configuracoes atuais de logo, favicon e cor serao restauradas para o padrao.',
+      confirmLabel: 'Restaurar',
+      variant: 'destructive',
+    });
+    if (!confirmed) return;
+    restoreDefaultsMutation.mutate();
   };
 
   const isSaving = uploadLogoMutation.isPending || uploadFaviconMutation.isPending || updateColorMutation.isPending;
@@ -390,6 +397,7 @@ export default function AdminBranding() {
           </div>
         </CardContent>
       </Card>
+      <ConfirmDialog />
     </div>
   );
 }

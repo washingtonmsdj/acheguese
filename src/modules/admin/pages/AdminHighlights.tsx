@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { Plus, Pencil, Trash2, Eye, EyeOff, GripVertical, ChevronDown, Loader2 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
+import { useConfirmActionDialog } from '@/shared/hooks/useConfirmActionDialog';
 import { useHighlightsAdmin } from '@/core/territorial/highlights/useHighlightsAdmin';
 import { useTerritoryOptions } from '@/core/territorial/highlights/useTerritoryOptions';
 import { HighlightForm } from '@/modules/admin/pages/HighlightForm';
@@ -140,6 +141,7 @@ export default function AdminHighlights() {
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<TerritorialHighlight | null>(null);
+  const { confirm, ConfirmDialog } = useConfirmActionDialog();
 
   // Carrega territórios dinamicamente — sem hardcode
   const { data: territories = [], isLoading: loadingTerritories } = useTerritoryOptions();
@@ -172,8 +174,14 @@ export default function AdminHighlights() {
     reorder.mutate(reordered.map((h, i) => ({ id: h.id, position: i })));
   }
 
-  function handleDelete(id: string) {
-    if (!confirm('Remover este destaque?')) return;
+  async function handleDelete(id: string) {
+    const confirmed = await confirm({
+      title: 'Remover destaque',
+      description: 'Este destaque deixara de aparecer na vitrine territorial.',
+      confirmLabel: 'Remover',
+      variant: 'destructive',
+    });
+    if (!confirmed) return;
     remove.mutate(id);
   }
 
@@ -279,6 +287,7 @@ export default function AdminHighlights() {
           error={create.error?.message ?? update.error?.message ?? null}
         />
       )}
+      <ConfirmDialog />
     </div>
   );
 }

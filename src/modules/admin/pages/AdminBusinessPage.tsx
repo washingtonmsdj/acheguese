@@ -37,6 +37,7 @@ import {
 } from "@/shared/components/ui/dialog";
 import { Badge } from "@/shared/components/ui/badge";
 import { useToast } from "@/shared/hooks/use-toast";
+import { useConfirmActionDialog } from "@/shared/hooks/useConfirmActionDialog";
 import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
 import { useSessionContext } from "@/core/session";
 import { cn } from "@/shared/utils/cn";
@@ -80,6 +81,7 @@ export default function AdminBusinessPage() {
   const { canModerate, isChecking } = useAdminGuard();
   const { activeProfile } = useSessionContext();
   const { toast } = useToast();
+  const { confirm, ConfirmDialog } = useConfirmActionDialog();
   const queryClient = useQueryClient();
 
   // State
@@ -290,7 +292,13 @@ export default function AdminBusinessPage() {
 
   // 🎯 DELETE usando BusinessService
   const handleDelete = async (id: string) => {
-    if (!confirm("Tem certeza que deseja excluir esta empresa?")) return;
+    const confirmed = await confirm({
+      title: "Excluir empresa",
+      description: "Esta empresa sera removida do cadastro operacional.",
+      confirmLabel: "Excluir",
+      variant: "destructive",
+    });
+    if (!confirmed) return;
 
     try {
       await BusinessService.deleteBusiness(id);
@@ -673,6 +681,7 @@ export default function AdminBusinessPage() {
           </div>
         </DialogContent>
       </Dialog>
+      <ConfirmDialog />
     </div>
   );
 }
