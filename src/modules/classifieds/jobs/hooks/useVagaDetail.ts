@@ -18,7 +18,8 @@
 import { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { VagasService } from '../services/VagasService';
-import type { Vaga, Candidatura } from '../types/vagas.types';
+import type { Vaga } from '../types/vagas.types';
+import { useSessionContext } from '@/core/session';
 import { buildMailtoUrl, buildTelUrl, openContactUrl } from '@/shared/utils/contactLinks';
 import { openSafeExternalUrl } from '@/shared/utils/safeRedirect';
 
@@ -67,6 +68,7 @@ const STALE_TIME = 5 * 60 * 1000; // 5 minutos
 export function useVagaDetail(params: UseVagaDetailParams): UseVagaDetailReturn {
   const { slug, locationId } = params;
   const queryClient = useQueryClient();
+  const { activeProfile } = useSessionContext();
   const [isSaved, setIsSaved] = useState(false);
 
   // Query principal: buscar vaga por slug
@@ -112,9 +114,7 @@ export function useVagaDetail(params: UseVagaDetailParams): UseVagaDetailReturn 
 
   // Mutação: candidatar-se à vaga
   const candidaturaMutation = useMutation({
-    mutationFn: async (_mensagem?: string) => {
-      // TODO: Implementar quando módulo de candidaturas estiver pronto
-      // Por enquanto, apenas redireciona para o canal apropriado
+    mutationFn: async (mensagem?: string) => {
       if (!vaga) throw new Error('Vaga não encontrada');
       
       switch (vaga.applicationChannel) {
@@ -147,8 +147,17 @@ export function useVagaDetail(params: UseVagaDetailParams): UseVagaDetailReturn 
           break;
         case 'internal':
         default:
-          // Candidatura interna - ainda não implementada
-          throw new Error('Candidatura interna será implementada em breve');
+          if (!activeProfile?.id) {
+            throw new Error('Entre na sua conta para se candidatar por aqui.');
+          }
+          if (activeProfile.id === vaga.ownerProfileId) {
+            throw new Error('O perfil responsavel pela vaga nao pode se candidatar.');
+          }
+          await VagasService.applyToVaga({
+            vagaId: vaga.id,
+            candidatoProfileId: activeProfile.id,
+            mensagem,
+          });
       }
     },
     onSuccess: () => {

@@ -1,129 +1,119 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { PendingPost, ModerationFilters } from "@/core/moderation/types";
-import { RIDE_STATUS } from "@/shared/types/constants";
+import { supabase } from "@/integrations/supabase";
+import type { PendingPost, ModerationFilters } from "@/core/moderation/types";
+
 interface UsePendingPostsOptions {
   filters?: ModerationFilters;
   pageSize?: number;
+}
+
+type PendingPostReportRow = {
+  id: string;
+  content: string | null;
+  type: string | null;
+  images: unknown;
+  author_profile_id: string;
+  author_name: string | null;
+  author_avatar: string | null;
+  author_reputation: number | null;
+  author_previous_reports: number | null;
+  reports: unknown;
+  reports_count: number | null;
+  priority: number | null;
+  created_at: string;
+  status: string;
+};
+
+function normalizeStatus(status: unknown): string | undefined {
+  if (Array.isArray(status)) return typeof status[0] === "string" ? status[0] : undefined;
+  return typeof status === "string" ? status : undefined;
+}
+
+function normalizeImages(value: unknown): string[] {
+  if (Array.isArray(value)) return value.filter((item): item is string => typeof item === "string");
+  return [];
+}
+
+function normalizeReports(value: unknown): Array<Record<string, unknown>> {
+  if (Array.isArray(value)) return value as Array<Record<string, unknown>>;
+  return [];
+}
+
+function applyPriorityFilter(query: any, priority?: "high" | "medium" | "low") {
+  if (priority === "high") return query.gte("priority", 50);
+  if (priority === "medium") return query.gte("priority", 20).lt("priority", 50);
+  if (priority === "low") return query.lt("priority", 20);
+  return query;
+}
+
+function mapPendingPost(row: PendingPostReportRow): PendingPost {
+  const reports = normalizeReports(row.reports);
+  return {
+    id: row.id,
+    content: row.content ?? "",
+    type: row.type ?? "post",
+    images: normalizeImages(row.images),
+    author_profile_id: row.author_profile_id,
+    author_name: row.author_name ?? "Usuario",
+    author_avatar: row.author_avatar ?? "",
+    author_reputation: row.author_reputation ?? 0,
+    author_previous_reports: row.author_previous_reports ?? 0,
+    reports,
+    reports_count: row.reports_count ?? reports.length,
+    priority: row.priority ?? 0,
+    created_at: row.created_at,
+    status: row.status,
+  };
 }
 
 export function usePendingPosts({
   filters = {},
   pageSize = 10,
 }: UsePendingPostsOptions = {}) {
-  const {
-    data,
-    isLoading,
-    isError,
-    error,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useInfiniteQuery({
-    queryKey: ["pending-posts", filters],
-    queryFn: async () => {
-      // TEMPORÁRIO: Desabilitado até estrutura de comunidade estar completa
-      // Retornar array vazio para evitar erros 400/404
-      return {
-        posts: [],
-        nextPage: undefined,
-      };
+  const query = useInfiniteQuery({
+    queryKey: ["pending-posts", filters, pageSize],
+    queryFn: async ({ pageParam = 0 }) => {
+      const offset = Number(pageParam) || 0;
+      const status = normalizeStatus(filters.status);
 
-      const posts: any[] = [];
-      const postsError = null;
+      let request = (supabase as any)
+        .from("admin_pending_post_reports")
+        .select("*", { count: "exact" })
+        .order("priority", { ascending: false })
+        .order("latest_report_at", { ascending: false })
+        .range(offset, offset + pageSize - 1);
 
-      // Filtrar apenas posts que têm denúncias
-      const postsWithReports =
-        posts?.filter((post: any) => post.reports && post.reports.length > 0) ||
-        [];
-
-      // Transformar dados para formato PendingPost
-      const pendingPosts: PendingPost[] = postsWithReports.map((post: any) => {
-        // Buscar denúncias anteriores do autor
-        const authorPreviousReports = 0; // TODO: implementar query separada
-
-        // Calcular prioridade
-        const reportsCount = post.reports.length;
-        const authorReputation = post.author?.points || 0;
-
-        let priority = reportsCount * 5;
-        if (authorReputation < 100) priority += 20;
-        if (authorReputation < 50) priority += 30;
-
-        // Adicionar prioridade por tipo de denúncia
-        const hasHarassment = post.reports.some(
-          (r: any) => r.type === "harassment",
-        );
-        const hasFalseInfo = post.reports.some(
-          (r: any) => r.type === "false_information",
-        );
-        if (hasHarassment) priority += 50;
-        if (hasFalseInfo) priority += 30;
-
-        return {
-          id: post.id,
-          content: post.content,
-          type: post.type,
-          images: post.images,
-          author_profile_id: post.author?.id || "",
-          author_name: post.author?.name || "Desconhecido",
-          author_avatar: post.author?.avatar_url || "",
-          author_reputation: authorReputation,
-          author_previous_reports: authorPreviousReports,
-          reports: post.reports.map((r: any) => ({
-            id: r.id,
-            target_type: "post" as const,
-            target_id: post.id,
-            reporter_id: r.reporter.id,
-            reporter_name: r.reporter.name,
-            reporter_avatar: r.reporter.avatar_url,
-            type: r.type,
-            reason: r.reason,
-            description: r.description,
-            evidence_urls: r.evidence_urls,
-            priority: r.priority,
-            status: r.status,
-            created_at: r.created_at,
-          })),
-          reports_count: reportsCount,
-          priority,
-          created_at: post.created_at,
-          status: post.reports[0]?.status || RIDE_STATUS.PENDING,
-        };
-      });
-
-      // Ordenar por prioridade
-      pendingPosts.sort((a, b) => b.priority - a.priority);
-
-      // Aplicar filtro de prioridade se especificado
-      let filteredPosts = pendingPosts;
-      if (filters.priority) {
-        filteredPosts = pendingPosts.filter((post) => {
-          if (filters.priority === "high") return post.priority >= 50;
-          if (filters.priority === "medium")
-            return post.priority >= 20 && post.priority < 50;
-          if (filters.priority === "low") return post.priority < 20;
-          return true;
-        });
+      if (status) {
+        request = request.eq("status", status);
       }
 
+      request = applyPriorityFilter(request, filters.priority);
+
+      const { data, error, count } = await request;
+      if (error) throw error;
+
+      const rows = (data ?? []) as PendingPostReportRow[];
+      const nextOffset = offset + rows.length;
+
       return {
-        posts: filteredPosts,
-        nextPage: filteredPosts.length === pageSize ? 1 : undefined,
+        posts: rows.map(mapPendingPost),
+        nextPage: count && nextOffset < count ? nextOffset : undefined,
       };
     },
     getNextPageParam: (lastPage) => lastPage.nextPage,
     initialPageParam: 0,
   });
 
-  const posts = data?.pages.flatMap((page) => page.posts) || [];
+  const posts = query.data?.pages.flatMap((page) => page.posts) || [];
 
   return {
     posts,
-    isLoading,
-    isError,
-    error,
-    hasNextPage,
-    isFetchingNextPage,
-    loadMore: fetchNextPage,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    error: query.error,
+    hasNextPage: query.hasNextPage,
+    isFetchingNextPage: query.isFetchingNextPage,
+    loadMore: query.fetchNextPage,
+    refetch: query.refetch,
   };
 }

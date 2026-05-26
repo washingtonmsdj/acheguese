@@ -2,11 +2,9 @@
  * BuscaPage - Busca Global Profissional
  *
  * Busca unificada de:
- * - Negócios
+ * - Negocios
  * - Profissionais
- * - Classificados (TODO)
- * - Eventos (TODO)
- * - Cupons (TODO)
+ * - Oportunidades territoriais
  *
  */
 
@@ -17,9 +15,6 @@ import {
   Store,
   Wrench,
   BriefcaseBusiness,
-  Tag,
-  Calendar,
-  Ticket,
   ArrowLeft,
   X,
   Star,
@@ -105,17 +100,6 @@ const FILTERS: FilterOption[] = [
     label: "Oportunidades",
     icon: <BriefcaseBusiness className="h-3.5 w-3.5" />,
   },
-  {
-    id: "classifieds",
-    label: "Classificados",
-    icon: <Tag className="h-3.5 w-3.5" />,
-  },
-  {
-    id: "events",
-    label: "Eventos",
-    icon: <Calendar className="h-3.5 w-3.5" />,
-  },
-  { id: "coupons", label: "Cupons", icon: <Ticket className="h-3.5 w-3.5" /> },
 ];
 
 // ============================================================================
@@ -167,7 +151,7 @@ export default function BuscaPage() {
               autoFocus
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Buscar empresas, profissionais..."
+              placeholder="Buscar empresas, profissionais e oportunidades..."
               className="pl-9 pr-9 h-10 rounded-full bg-secondary border-none"
               aria-label="Campo de busca"
             />
@@ -296,7 +280,7 @@ function EmptyState({
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <Search className="h-12 w-12 text-muted-foreground/30 mb-4" />
         <p className="text-sm text-muted-foreground">
-          Digite para buscar empresas, profissionais e muito mais
+          Digite para buscar empresas, profissionais e oportunidades
         </p>
       </div>
 

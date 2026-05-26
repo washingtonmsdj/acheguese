@@ -1,4 +1,4 @@
-import { Activity, Smartphone, MapPin, Clock } from "lucide-react";
+import { Activity, MapPin, Clock } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -116,54 +116,6 @@ export function ActivityTab({ user, driverData }: ActivityTabProps) {
           </CardContent>
         </Card>
       )}
-
-      {/* Dispositivos (placeholder) */}
-      <Card className="bg-[#1E2529] border-white/10">
-        <CardHeader>
-          <CardTitle className="text-sm flex items-center gap-2">
-            <Smartphone className="h-4 w-4" />
-            Dispositivos
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-center text-gray-400 py-4 text-sm">
-            Rastreamento de dispositivos será implementado em breve
-          </p>
-          <div className="text-xs text-gray-500 mt-2 p-2 bg-[#0A0F14] rounded">
-            <p className="mb-1">Funcionalidades futuras:</p>
-            <ul className="list-disc list-inside space-y-1 ml-2">
-              <li>Lista de dispositivos usados</li>
-              <li>Histórico de IPs</li>
-              <li>Localização por IP</li>
-              <li>Detecção de dispositivos suspeitos</li>
-            </ul>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Logs de Atividade (placeholder) */}
-      <Card className="bg-[#1E2529] border-white/10">
-        <CardHeader>
-          <CardTitle className="text-sm flex items-center gap-2">
-            <Activity className="h-4 w-4" />
-            Logs de Atividade
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-center text-gray-400 py-4 text-sm">
-            Logs detalhados serão implementados em breve
-          </p>
-          <div className="text-xs text-gray-500 mt-2 p-2 bg-[#0A0F14] rounded">
-            <p className="mb-1">Funcionalidades futuras:</p>
-            <ul className="list-disc list-inside space-y-1 ml-2">
-              <li>Histórico de logins</li>
-              <li>Ações realizadas</li>
-              <li>Mudanças no perfil</li>
-              <li>Transações e pagamentos</li>
-            </ul>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Informações do Perfil */}
       <Card className="bg-[#1E2529] border-white/10">

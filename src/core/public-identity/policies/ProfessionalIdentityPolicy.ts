@@ -1,6 +1,6 @@
 /**
  * Professional Identity Policy
- * Política preparada para profissionais (não implementada UI final)
+ * Politica de identidade publica para profissionais.
  */
 
 import type { IdentityPolicy } from '../domain/IdentityPolicy';

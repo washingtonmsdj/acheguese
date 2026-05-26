@@ -1,16 +1,11 @@
-/**
- * ✅ SSOT AAA - Hook useModeration migrado
- * Usa AdminModerationService que delega para PostsFacade, CommentService, ProfileService (SSOT)
- */
-
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { adminModerationService } from "@/core/admin";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { useToast } from "@/shared/hooks/use-toast";
 import { logger } from "@/shared/utils/logger";
+import { supabase } from "@/integrations/supabase";
 
 export type TabType =
-  // ✅ SSOT - Tabelas de reports não existem, usando tabelas de conteúdo
   | "posts"
   | "comments"
   | "profiles"
@@ -34,15 +29,24 @@ export function useModeration() {
   const fetchAll = async () => {
     setLoading(true);
     try {
-      // ✅ SSOT AAA - Usa AdminModerationService que delega para serviços de domínio
       const data = await adminModerationService.getAllModerationData();
+      const [postReportData, commentReportData, profileReportData] = await Promise.all([
+        (supabase as any).from("admin_pending_post_reports").select("*"),
+        (supabase as any).from("admin_pending_comment_reports").select("*"),
+        (supabase as any)
+          .from("community_reports")
+          .select("*")
+          .eq("target_type", "profile")
+          .in("status", ["pending", "under_review"])
+          .order("created_at", { ascending: false }),
+      ]);
 
       setPosts((data.posts ?? []) as unknown as Record<string, unknown>[]);
       setComments((data.comments ?? []) as unknown as Record<string, unknown>[]);
       setProfiles((data.profiles ?? []) as unknown as Record<string, unknown>[]);
-      setPostReports([]); // Tabela post_reports não existe
-      setCommentReports([]); // Tabela comment_reports não existe
-      setProfileReports([]); // Tabela profile_reports não existe
+      setPostReports((postReportData.data ?? []) as Record<string, unknown>[]);
+      setCommentReports((commentReportData.data ?? []) as Record<string, unknown>[]);
+      setProfileReports((profileReportData.data ?? []) as Record<string, unknown>[]);
       setWarnings((data.warnings ?? []) as unknown as Record<string, unknown>[]);
       setAuditLogs((data.auditLogs ?? []) as unknown as Record<string, unknown>[]);
     } catch (e) {
@@ -66,14 +70,24 @@ export function useModeration() {
 
   const handleReportAction = async (
     reportId: string,
-    table: string,
+    _table: string,
     status: string,
     adminNotes: string,
   ) => {
     try {
-      // ✅ SSOT - Tabelas de reports não existem
-      // Esta função não faz nada pois não há tabela de reports
-      toast({ title: `Ação registrada` });
+      const { error } = await (supabase as any)
+        .from("community_reports")
+        .update({
+          status,
+          admin_notes: adminNotes || null,
+          reviewed_at: new Date().toISOString(),
+        })
+        .eq("id", reportId);
+
+      if (error) throw error;
+
+      toast({ title: "Acao registrada" });
+      await fetchAll();
       return true;
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : "Erro";
@@ -89,7 +103,6 @@ export function useModeration() {
     adminNotes?: string,
   ) => {
     try {
-      // ✅ SSOT AAA - Usa AdminModerationService que delega para PostsFacade/CommentService
       await adminModerationService.deleteContent(type, id);
 
       if (type === "post") {
@@ -98,9 +111,21 @@ export function useModeration() {
         setComments((prev) => prev.filter((c) => c.id !== id));
       }
 
-      // ✅ SSOT - Tabelas de reports não existem, não há report para atualizar
+      const reportId = typeof report?.id === "string" ? report.id : null;
+      if (reportId) {
+        const { error } = await (supabase as any)
+          .from("community_reports")
+          .update({
+            status: "removed",
+            admin_notes: adminNotes || null,
+            reviewed_at: new Date().toISOString(),
+          })
+          .eq("id", reportId);
 
-      toast({ title: `${type === "post" ? "Post" : "Comentário"} excluído` });
+        if (error) throw error;
+      }
+
+      toast({ title: `${type === "post" ? "Post" : "Comentario"} excluido` });
       return true;
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : "Erro";
@@ -117,15 +142,14 @@ export function useModeration() {
     if (!user) return false;
 
     try {
-      // ✅ SSOT AAA - Usa AdminModerationService que delega para ProfileService
       await adminModerationService.warnUser(userId, warnType, motivo, user.id);
 
       toast({
         title:
           warnType === "advertencia"
-            ? "Advertência aplicada"
-            : "Usuário suspenso",
-        description: `Ação aplicada com sucesso.`,
+            ? "Advertencia aplicada"
+            : "Usuario suspenso",
+        description: "Acao aplicada com sucesso.",
       });
 
       await fetchAll();

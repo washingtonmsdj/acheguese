@@ -143,7 +143,7 @@ export default defineConfig(({ mode }) => {
 
     build: {
       target: "es2020",
-      minify: "esbuild",
+      minify: "terser",
       cssCodeSplit: true,
       sourcemap: shouldUploadSourcemaps && !skipSourcemap,
       reportCompressedSize: !skipCompressedSize,

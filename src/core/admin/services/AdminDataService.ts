@@ -24,14 +24,17 @@ export class AdminDataService {
         throw new Error('User not found');
       }
 
-      // Buscar roles via AdminRolesService
-      const roles = await adminRolesService.getUserRoles(userId);
+      const primaryProfile = profiles[0];
 
-      // Retornar primeiro perfil com roles anexados
+      // Buscar roles e membros via servicos canonicos
+      const roles = await adminRolesService.getUserRoles(userId);
+      const profileMembers = await profileService.getProfileMembers(primaryProfile.id);
+
+      // Retornar primeiro perfil com roles e membros anexados
       return {
-        ...profiles[0],
+        ...primaryProfile,
         user_roles: roles.map(r => ({ role: r.role })),
-        profile_members: [], // TODO: Implementar via serviço apropriado se necessário
+        profile_members: profileMembers,
       };
     } catch (error: unknown) {
       logger.error('Error fetching user details:', error);

@@ -193,13 +193,27 @@ class EducationObservabilityServiceClass {
 
       const { data: profiles } = await profilesQuery;
       const publishedProfiles = profiles?.filter(p => p.status === 'published').length ?? 0;
+      const { data: analyticsEvents } = await this.getAnalyticsEventsForToday(profileId, today);
+      const eventRows = analyticsEvents ?? [];
+      const performanceDurations = eventRows
+        .map((event) => this.extractPerformanceDuration(event.metadata))
+        .filter((duration): duration is number => typeof duration === 'number' && Number.isFinite(duration));
+      const avgPageLoadTime = performanceDurations.length > 0
+        ? Math.round(performanceDurations.reduce((sum, duration) => sum + duration, 0) / performanceDurations.length)
+        : 0;
+      const apiErrorEvents = eventRows.filter((event) =>
+        event.event_type.endsWith('_failed') || event.event_type === 'education_api_timeout' || this.hasErrorMetadata(event.metadata),
+      ).length;
+      const apiErrorRate = eventRows.length > 0
+        ? Math.round((apiErrorEvents / eventRows.length) * 10000) / 100
+        : 0;
 
       return {
         leadsCreatedToday: totalLeads ?? 0,
         leadsConvertedToday: leadsConverted,
         conversionRate: Math.round(conversionRate * 100) / 100,
-        avgPageLoadTime: 0, // TODO: Calculate from performance events
-        apiErrorRate: 0, // TODO: Calculate from error events
+        avgPageLoadTime,
+        apiErrorRate,
         activeProfiles: profiles?.length ?? 0,
         publishedProfiles,
       };
@@ -220,6 +234,31 @@ class EducationObservabilityServiceClass {
   // ============================================================
   // PRIVATE METHODS
   // ============================================================
+
+  private async getAnalyticsEventsForToday(profileId: string | undefined, since: Date) {
+    let query = supabase
+      .from('education_analytics_events')
+      .select('event_type, metadata')
+      .gte('created_at', since.toISOString());
+
+    if (profileId) {
+      query = query.eq('education_profile_id', profileId);
+    }
+
+    return query;
+  }
+
+  private extractPerformanceDuration(metadata: Json | unknown): number | null {
+    if (!metadata || typeof metadata !== 'object') return null;
+    const performance = (metadata as { performance?: unknown }).performance;
+    if (!performance || typeof performance !== 'object') return null;
+    const duration = (performance as { duration?: unknown }).duration;
+    return typeof duration === 'number' ? duration : null;
+  }
+
+  private hasErrorMetadata(metadata: Json | unknown): boolean {
+    return Boolean(metadata && typeof metadata === 'object' && (metadata as { error?: unknown }).error);
+  }
 
   private async saveAnalyticsEvent(payload: EducationEventPayload): Promise<void> {
     try {
@@ -248,28 +287,44 @@ class EducationObservabilityServiceClass {
   }
 
   private async sendToExternalAnalytics(payload: EducationEventPayload): Promise<void> {
-    // TODO: Integrate with Google Analytics, Mixpanel, etc
-    // Example:
-    // if (window.gtag) {
-    //   window.gtag('event', payload.eventType, {
-    //     profile_id: payload.profileId,
-    //     niche_key: payload.nicheKey,
-    //   });
-    // }
+    const analyticsWindow = globalThis as typeof globalThis & {
+      gtag?: (...args: unknown[]) => void;
+    };
+
+    analyticsWindow.gtag?.('event', payload.eventType, {
+      profile_id: payload.profileId,
+      business_id: payload.businessId,
+      niche_key: payload.nicheKey,
+      lead_id: payload.leadId,
+      program_id: payload.programId,
+      ...payload.metadata,
+    });
   }
 
   private async sendToErrorTracking(payload: EducationEventPayload): Promise<void> {
-    // TODO: Integrate with Sentry, Rollbar, etc
-    // Example:
-    // if (window.Sentry) {
-    //   window.Sentry.captureException(new Error(payload.error?.message), {
-    //     tags: {
-    //       module: 'education',
-    //       event_type: payload.eventType,
-    //     },
-    //     extra: payload.metadata,
-    //   });
-    // }
+    const errorWindow = globalThis as typeof globalThis & {
+      Sentry?: {
+        captureException: (error: Error, context?: Record<string, unknown>) => void;
+      };
+    };
+
+    if (!errorWindow.Sentry || !payload.error?.message) return;
+
+    errorWindow.Sentry.captureException(new Error(payload.error.message), {
+      tags: {
+        module: 'education',
+        event_type: payload.eventType,
+        niche_key: payload.nicheKey,
+      },
+      extra: {
+        metadata: payload.metadata,
+        profileId: payload.profileId,
+        businessId: payload.businessId,
+        leadId: payload.leadId,
+        programId: payload.programId,
+        error: payload.error,
+      },
+    });
   }
 
   private getSessionId(): string | null {

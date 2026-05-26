@@ -104,7 +104,7 @@ export interface SchoolAgeRange {
   max: number;
 }
 
-// Placeholder - serao implementados nas fases seguintes
+// Canonical contracts for education profiles and their public/admin modules.
 export interface EducationProfile {
   id: string;
   business_id: string;

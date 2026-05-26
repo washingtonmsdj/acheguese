@@ -23,6 +23,8 @@ export async function getCommentsByPost(postId: string): Promise<Comment[]> {
       .from(TABLE)
       .select("*")
       .eq("post_id", postId)
+      .eq("is_removed", false)
+      .eq("is_hidden", false)
       .order("created_at", { ascending: false });
 
     if (error) throw error;
@@ -45,6 +47,8 @@ export async function getAllComments(limit = 1000): Promise<Comment[]> {
     const { data, error } = await supabaseTyped
       .from(TABLE)
       .select("*")
+      .eq("is_removed", false)
+      .eq("is_hidden", false)
       .order("created_at", { ascending: false })
       .limit(limit);
 
@@ -90,7 +94,9 @@ export async function getCommentsCount(postId: string): Promise<number> {
     const { count, error } = await supabaseTyped
       .from(TABLE)
       .select("*", { count: "exact", head: true })
-      .eq("post_id", postId);
+      .eq("post_id", postId)
+      .eq("is_removed", false)
+      .eq("is_hidden", false);
 
     if (error) throw error;
     return count || 0;

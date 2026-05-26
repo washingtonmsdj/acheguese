@@ -401,25 +401,7 @@ export class OperationalVerificationService {
         };
       }
 
-      // 2. Verificar configuração da operação (se houver)
-      if (params.operationId) {
-        // TODO: Implementar quando houver tabela de operações
-        // const { data: operation } = await supabase
-        //   .from('operations')
-        //   .select('requires_pin_for_deliveries')
-        //   .eq('id', params.operationId)
-        //   .single();
-        //
-        // if (operation?.requires_pin_for_deliveries === true) {
-        //   return {
-        //     isRequired: true,
-        //     requiredBy: 'operation',
-        //     reason: 'Operation requires PIN verification',
-        //   };
-        // }
-      }
-
-      // 3. Verificar preferência do remetente
+      // 2. Verificar preferência do remetente
       const sender = await profileService.getProfileById(params.senderProfileId) as {
         requires_pin_for_deliveries?: boolean | null;
       } | null;

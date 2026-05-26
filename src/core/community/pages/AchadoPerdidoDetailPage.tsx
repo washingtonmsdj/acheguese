@@ -159,14 +159,14 @@ export default function AchadoPerdidoDetailPage() {
         autor: (profileMap.get(c.autor_id) as {
           name: string;
           avatar_url: string;
-        }) || { name: "Usu·rio", avatar_url: "" },
+        }) || { name: "Usu√°rio", avatar_url: "" },
       })),
     );
   }
 
   async function handleComment() {
     if (!user) {
-      toast({ title: "FaÁa login para comentar", variant: "destructive" });
+      toast({ title: "Fa√ßa login para comentar", variant: "destructive" });
       return;
     }
     if (!commentText.trim()) return;
@@ -179,7 +179,7 @@ export default function AchadoPerdidoDetailPage() {
         conteudo: commentText.trim(),
       });
       setCommentText("");
-      toast({ title: "Coment·rio enviado!" });
+      toast({ title: "Coment√°rio enviado!" });
       await loadComments();
     } catch {
       toast({ title: "Erro ao comentar", variant: "destructive" });
@@ -193,7 +193,7 @@ export default function AchadoPerdidoDetailPage() {
     await lostFoundService.toggleResolved(post.id);
     toast({
       title: post.resolvido
-        ? "Marcado como n„o resolvido"
+        ? "Marcado como n√£o resolvido"
         : "Marcado como resolvido!",
     });
     loadPost();
@@ -211,7 +211,7 @@ export default function AchadoPerdidoDetailPage() {
   if (notFound || !post)
     return (
       <div className="p-4 text-center">
-        <p>PublicaÁ„o n„o encontrada.</p>
+        <p>Publica√ß√£o n√£o encontrada.</p>
         <Button
           variant="outline"
           onClick={() => navigate(appUrls.community.lostAndFound)} // SSOT
@@ -317,7 +317,7 @@ export default function AchadoPerdidoDetailPage() {
             </Avatar>
             <div className="flex-1">
               <p className="text-sm font-medium">
-                {post.autor?.name || "AnÙnimo"}
+                {post.autor?.name || "An√¥nimo"}
               </p>
               <p className="text-xs text-muted-foreground">
                 {formatDistanceToNow(new Date(post.created_at), {
@@ -358,11 +358,11 @@ export default function AchadoPerdidoDetailPage() {
 
           <div>
             <h3 className="text-sm font-bold mb-3">
-              Coment·rios ({comments.length})
+              Coment√°rios ({comments.length})
             </h3>
             {comments.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                Nenhum coment·rio ainda.
+                Nenhum coment√°rio ainda.
               </p>
             ) : (
               <div className="space-y-3">
@@ -382,7 +382,7 @@ export default function AchadoPerdidoDetailPage() {
                         </AvatarFallback>
                       </Avatar>
                       <span className="text-xs font-medium">
-                        {c.autor?.name || "AnÙnimo"}
+                        {c.autor?.name || "An√¥nimo"}
                       </span>
                       <span className="text-xs text-muted-foreground ml-auto">
                         {formatDistanceToNow(new Date(c.created_at), {
@@ -404,7 +404,7 @@ export default function AchadoPerdidoDetailPage() {
             <Textarea
               value={commentText}
               onChange={(e) => setCommentText(e.target.value.slice(0, 500))}
-              placeholder="Deixe um coment·rio..."
+              placeholder="Deixe um coment√°rio..."
               className="min-h-[40px] max-h-[80px] text-sm resize-none flex-1"
               rows={1}
             />
@@ -449,7 +449,7 @@ export default function AchadoPerdidoDetailPage() {
           )}
 
           <div className="bg-card rounded-xl border p-4 space-y-3">
-            <h3 className="font-semibold text-sm">InformaÁıes</h3>
+            <h3 className="font-semibold text-sm">Informa√ß√µes</h3>
             <div className="space-y-2 text-sm">
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Status:</span>
@@ -501,8 +501,8 @@ export default function AchadoPerdidoDetailPage() {
               <span>
                 <strong>Dica:</strong>{" "}
                 {post.tipo === "perdido"
-                  ? "Se vocÍ encontrou este item, entre em contato com o autor pelo WhatsApp."
-                  : "Se este item È seu, entre em contato com quem encontrou para combinar a devoluÁ„o."}
+                  ? "Se voc√™ encontrou este item, entre em contato com o autor pelo WhatsApp."
+                  : "Se este item √© seu, entre em contato com quem encontrou para combinar a devolu√ß√£o."}
               </span>
             </p>
           </div>

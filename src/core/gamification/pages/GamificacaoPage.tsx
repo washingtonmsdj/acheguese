@@ -35,8 +35,6 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/shared/components/ui/tabs";
-// TODO: Estes componentes devem ser movidos para core/gamification ou core/community
-// Por enquanto, mantém imports de modules (violações documentadas)
 import { BadgeGrid } from "@/core/gamification/components/BadgeDisplay";
 import { CommunityProfileCard } from "@/core/gamification/components/CommunityProfileCard";
 import { Leaderboard } from "@/core/gamification/components/Leaderboard";

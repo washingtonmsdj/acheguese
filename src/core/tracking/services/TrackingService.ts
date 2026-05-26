@@ -402,20 +402,30 @@ export class TrackingService {
 
   /**
    * Obtém histórico de tracking
-   * 
-   * ⚠️ GATE 2: Histórico não implementado ainda
-   * Tabela driver_location_tracking será criada em fase futura
-   * 
-   * @returns Array vazio por enquanto
    */
   async getHistory(
     entityId: string,
     entityType: 'driver' | 'user' | 'vehicle' | 'device' = 'driver',
     limit: number = 100
   ): Promise<TrackingHistoryEntry[]> {
-    // GATE 2: Histórico não suportado ainda
-    logger.warn('[TrackingService] getHistory() not supported yet - history table not created');
-    return [];
+    try {
+      const tableName = this.getTableName(entityType);
+      const idField = this.getIdField(entityType);
+
+      const { data, error } = await this.supabaseClient
+        .from(tableName)
+        .select('*')
+        .eq(idField, entityId)
+        .order('updated_at', { ascending: false })
+        .limit(limit);
+
+      if (error) throw error;
+
+      return ((data ?? []) as TrackingRow[]).map((row) => this.mapToHistoryEntry(row));
+    } catch (error) {
+      logger.error('[TrackingService] Error getting tracking history:', error);
+      return [];
+    }
   }
 
   // ============================================
@@ -624,25 +634,6 @@ export class TrackingService {
         return 'device_locations';
       default:
         return 'driver_locations';
-    }
-  }
-
-  /**
-   * ⚠️ GATE 2: Tabelas de histórico não existem ainda
-   * Será implementado em fase futura como driver_location_tracking
-   */
-  private getHistoryTableName(entityType: string): string {
-    switch (entityType) {
-      case 'driver':
-        return 'driver_location_tracking'; // ⚠️ Não existe ainda
-      case 'user':
-        return 'user_location_history'; // ⚠️ Não existe ainda
-      case 'vehicle':
-        return 'vehicle_location_history'; // ⚠️ Não existe ainda
-      case 'device':
-        return 'device_location_history'; // ⚠️ Não existe ainda
-      default:
-        return 'driver_location_tracking';
     }
   }
 

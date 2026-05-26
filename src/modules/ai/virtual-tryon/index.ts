@@ -22,6 +22,3 @@ export { useVirtualTryOn } from './hooks/useVirtualTryOn';
 export { VirtualTryOnStudio } from './components/VirtualTryOnStudio';
 export { TryOnUploadPanel } from './components/TryOnUploadPanel';
 export { TryOnResultsPanel } from './components/TryOnResultsPanel';
-
-// Provider registry (para extensão)
-export { getProvider, listProviders } from './api/providerRegistry';

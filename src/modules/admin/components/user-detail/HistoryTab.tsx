@@ -3,8 +3,6 @@ import {
   Shield,
   Ban,
   CheckCircle,
-  TrendingUp,
-  Edit,
 } from "lucide-react";
 import {
   Card,
@@ -12,7 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/shared/components/ui/card";
-import { Badge } from "@/shared/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "@/shared/utils/dateLocale";
 import { cn } from "@/shared/utils/cn";
@@ -182,20 +179,6 @@ export function HistoryTab({ suspensionHistory, user }: HistoryTabProps) {
         </CardContent>
       </Card>
 
-      {/* Mudanças de Reputação (placeholder) */}
-      <Card className="bg-[#1E2529] border-white/10">
-        <CardHeader>
-          <CardTitle className="text-sm flex items-center gap-2">
-            <TrendingUp className="h-4 w-4" />
-            Mudanças de Reputação
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-center text-gray-400 py-4 text-sm">
-            Histórico de mudanças será implementado em breve
-          </p>
-        </CardContent>
-      </Card>
     </div>
   );
 }

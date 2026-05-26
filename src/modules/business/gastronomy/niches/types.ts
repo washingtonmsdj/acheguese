@@ -194,7 +194,7 @@ export interface GastronomyNicheConfig {
   isBeta: boolean;
   /** Capacidades habilitadas para este nicho */
   enabledCapabilities: NicheCapability[];
-  /** Capacidades planejadas mas não implementadas */
+  /** Capacidades planejadas para proximas evolucoes do nicho */
   missingCapabilities: NicheCapability[];
   /** Configurações padrão */
   defaultConfig: NicheDefaultConfig;

@@ -14,6 +14,7 @@
  */
 
 import { LAUNCH_CITY_PATH, LAUNCH_COMMUNITY_TERRITORY_PATH, LAUNCH_URLS } from '@/config/territory';
+import { supabase } from '@/integrations/supabase';
 import { getPublicSiteOrigin } from '@/shared/config/brand';
 
 export interface SitemapURL {
@@ -147,10 +148,14 @@ export function getStaticPages(): SitemapURL[] {
  * 
  * This should be called with actual business data from the database.
  */
-export function generateBusinessURLs(businesses: Array<{ slug: string; updated_at: string }>): SitemapURL[] {
+export function generateBusinessURLs(
+  businesses: Array<{ slug: string; updated_at: string | null; geographic_path?: string | null }>,
+): SitemapURL[] {
   return businesses.map((business) => ({
-    loc: `/negocios/${business.slug}`,
-    lastmod: business.updated_at,
+    loc: business.geographic_path
+      ? `/empresas${business.geographic_path.startsWith('/') ? business.geographic_path : `/${business.geographic_path}`}/${business.slug}`
+      : `/p/${business.slug}`,
+    lastmod: business.updated_at ?? undefined,
     changefreq: 'weekly',
     priority: 0.7,
   }));
@@ -159,10 +164,10 @@ export function generateBusinessURLs(businesses: Array<{ slug: string; updated_a
 /**
  * Generate dynamic event URLs
  */
-export function generateEventURLs(events: Array<{ id: string; updated_at: string }>): SitemapURL[] {
+export function generateEventURLs(events: Array<{ id: string; updated_at: string | null }>): SitemapURL[] {
   return events.map((event) => ({
     loc: `/eventos/${event.id}`,
-    lastmod: event.updated_at,
+    lastmod: event.updated_at ?? undefined,
     changefreq: 'daily',
     priority: 0.6,
   }));
@@ -171,13 +176,50 @@ export function generateEventURLs(events: Array<{ id: string; updated_at: string
 /**
  * Generate dynamic classified URLs
  */
-export function generateClassifiedURLs(classifieds: Array<{ id: string; updated_at: string }>): SitemapURL[] {
+export function generateClassifiedURLs(
+  classifieds: Array<{ id: string; public_id?: string | null; updated_at: string | null }>,
+): SitemapURL[] {
   return classifieds.map((classified) => ({
-    loc: `/classificados/${classified.id}`,
-    lastmod: classified.updated_at,
+    loc: `/classificados/${classified.public_id || classified.id}`,
+    lastmod: classified.updated_at ?? undefined,
     changefreq: 'daily',
     priority: 0.6,
   }));
+}
+
+async function fetchBusinessURLs(): Promise<SitemapURL[]> {
+  const { data, error } = await (supabase as any)
+    .from('public_business_search')
+    .select('slug, geographic_path, updated_at')
+    .eq('status', 'active')
+    .not('slug', 'is', null)
+    .limit(500);
+
+  if (error) throw error;
+  return generateBusinessURLs((data ?? []) as Array<{ slug: string; geographic_path?: string | null; updated_at: string | null }>);
+}
+
+async function fetchEventURLs(): Promise<SitemapURL[]> {
+  const { data, error } = await (supabase as any)
+    .from('events')
+    .select('id, updated_at')
+    .eq('status', 'published')
+    .order('published_at', { ascending: false, nullsFirst: false })
+    .limit(500);
+
+  if (error) throw error;
+  return generateEventURLs((data ?? []) as Array<{ id: string; updated_at: string | null }>);
+}
+
+async function fetchClassifiedURLs(): Promise<SitemapURL[]> {
+  const { data, error } = await (supabase as any)
+    .from('classifieds')
+    .select('id, public_id, updated_at')
+    .eq('status', 'active')
+    .limit(500);
+
+  if (error) throw error;
+  return generateClassifiedURLs((data ?? []) as Array<{ id: string; public_id?: string | null; updated_at: string | null }>);
 }
 
 /**
@@ -188,12 +230,17 @@ export function generateClassifiedURLs(classifieds: Array<{ id: string; updated_
 export async function generateCompleteSitemap(
   baseUrl: string = getPublicSiteOrigin()
 ): Promise<string> {
+  const [businessUrls, eventUrls, classifiedUrls] = await Promise.all([
+    fetchBusinessURLs().catch(() => []),
+    fetchEventURLs().catch(() => []),
+    fetchClassifiedURLs().catch(() => []),
+  ]);
+
   const urls: SitemapURL[] = [
     ...getStaticPages(),
-    // TODO: Add dynamic URLs from database
-    // ...await fetchBusinessURLs(),
-    // ...await fetchEventURLs(),
-    // ...await fetchClassifiedURLs(),
+    ...businessUrls,
+    ...eventUrls,
+    ...classifiedUrls,
   ];
   
   return generateSitemapXML(urls, baseUrl);

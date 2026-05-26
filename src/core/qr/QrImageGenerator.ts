@@ -1,22 +1,39 @@
-/**
- * QR IMAGE GENERATOR — Gerador de imagens QR Code
- *
- * SSOT: Serviço central para gerar imagens QR (PNG/SVG)
- * 
- * Usa qrcode library para geração de imagens
- */
-import { logger } from '@/shared/utils/logger';
 import QRCode from 'qrcode';
+import { logger } from '@/shared/utils/logger';
 import { QrStyleVariant, type QrImageOptions, type QrPrintableAsset } from './types';
-// ══════════════════════════════════════════════════════════════════════════
-// QR IMAGE GENERATOR
-// ══════════════════════════════════════════════════════════════════════════
 
 export class QrImageGenerator {
-  
-  /**
-   * Opções padrão por variante de estilo
-   */
+  private static loadImage(src: string): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+      const image = new Image();
+      image.crossOrigin = 'anonymous';
+      image.onload = () => resolve(image);
+      image.onerror = () => reject(new Error('Nao foi possivel carregar a imagem do logo'));
+      image.src = src;
+    });
+  }
+
+  private static drawRoundedRect(
+    context: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    radius: number,
+  ): void {
+    context.beginPath();
+    context.moveTo(x + radius, y);
+    context.lineTo(x + width - radius, y);
+    context.quadraticCurveTo(x + width, y, x + width, y + radius);
+    context.lineTo(x + width, y + height - radius);
+    context.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+    context.lineTo(x + radius, y + height);
+    context.quadraticCurveTo(x, y + height, x, y + height - radius);
+    context.lineTo(x, y + radius);
+    context.quadraticCurveTo(x, y, x + radius, y);
+    context.closePath();
+  }
+
   private static getDefaultOptions(styleVariant: QrStyleVariant): Partial<QrImageOptions> {
     switch (styleVariant) {
       case QrStyleVariant.BASIC:
@@ -27,24 +44,23 @@ export class QrImageGenerator {
           foregroundColor: '#000000',
           backgroundColor: '#FFFFFF',
         };
-      
+
       case QrStyleVariant.BRANDED:
         return {
           size: 400,
           margin: 4,
-          errorCorrectionLevel: 'H', // High para suportar logo
+          errorCorrectionLevel: 'H',
           foregroundColor: '#000000',
           backgroundColor: '#FFFFFF',
         };
-      
+
       case QrStyleVariant.CUSTOM:
         return {
           size: 400,
           margin: 4,
           errorCorrectionLevel: 'H',
-          // Cores customizadas serão passadas pelo usuário
         };
-      
+
       case QrStyleVariant.PREMIUM:
         return {
           size: 500,
@@ -53,7 +69,7 @@ export class QrImageGenerator {
           foregroundColor: '#1a1a1a',
           backgroundColor: '#FFFFFF',
         };
-      
+
       default:
         return {
           size: 300,
@@ -62,16 +78,10 @@ export class QrImageGenerator {
         };
     }
   }
-  
-  /**
-   * Gera QR Code como PNG (Data URL)
-   */
-  static async generatePNG(
-    url: string,
-    options: Partial<QrImageOptions> = {}
-  ): Promise<string> {
+
+  static async generatePNG(url: string, options: Partial<QrImageOptions> = {}): Promise<string> {
     try {
-      const opts = {
+      return await QRCode.toDataURL(url, {
         width: options.size || 300,
         margin: options.margin || 4,
         errorCorrectionLevel: options.errorCorrectionLevel || 'M',
@@ -79,25 +89,16 @@ export class QrImageGenerator {
           dark: options.foregroundColor || '#000000',
           light: options.backgroundColor || '#FFFFFF',
         },
-      };
-      
-      const dataUrl = await QRCode.toDataURL(url, opts);
-      return dataUrl;
+      });
     } catch (error) {
       logger.error('[QrImageGenerator] Erro ao gerar PNG:', error);
       throw new Error('Erro ao gerar imagem QR Code');
     }
   }
-  
-  /**
-   * Gera QR Code como SVG (string)
-   */
-  static async generateSVG(
-    url: string,
-    options: Partial<QrImageOptions> = {}
-  ): Promise<string> {
+
+  static async generateSVG(url: string, options: Partial<QrImageOptions> = {}): Promise<string> {
     try {
-      const opts = {
+      return await QRCode.toString(url, {
         width: options.size || 300,
         margin: options.margin || 4,
         errorCorrectionLevel: options.errorCorrectionLevel || 'M',
@@ -105,58 +106,85 @@ export class QrImageGenerator {
           dark: options.foregroundColor || '#000000',
           light: options.backgroundColor || '#FFFFFF',
         },
-      };
-      
-      const svg = await QRCode.toString(url, { ...opts, type: 'svg' });
-      return svg;
+        type: 'svg',
+      });
     } catch (error) {
       logger.error('[QrImageGenerator] Erro ao gerar SVG:', error);
       throw new Error('Erro ao gerar SVG QR Code');
     }
   }
-  
-  /**
-   * Gera QR Code com logo (PNG)
-   * 
-   * Nota: Implementação básica. Para logos complexos, considerar usar canvas.
-   */
+
   static async generateWithLogo(
     url: string,
     logoUrl: string,
-    options: Partial<QrImageOptions> = {}
+    options: Partial<QrImageOptions> = {},
   ): Promise<string> {
     try {
-      // Gerar QR base
+      if (typeof document === 'undefined') {
+        throw new Error('Canvas indisponivel para compor QR Code com logo');
+      }
+
+      const size = options.size || 400;
       const qrDataUrl = await this.generatePNG(url, {
         ...options,
-        errorCorrectionLevel: 'H', // High para suportar logo
+        size,
+        errorCorrectionLevel: 'H',
       });
-      
-      // TODO: Implementar composição com logo usando canvas
-      // Por enquanto, retorna apenas o QR base
-      logger.warn('[QrImageGenerator] Logo não implementado ainda. Retornando QR base.');
-      return qrDataUrl;
+
+      const [qrImage, logoImage] = await Promise.all([
+        this.loadImage(qrDataUrl),
+        this.loadImage(logoUrl),
+      ]);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+
+      const context = canvas.getContext('2d');
+      if (!context) {
+        throw new Error('Canvas 2D indisponivel para compor QR Code');
+      }
+
+      context.drawImage(qrImage, 0, 0, size, size);
+
+      const logoSize = Math.round(size * 0.22);
+      const padding = Math.round(size * 0.035);
+      const backgroundSize = logoSize + padding * 2;
+      const backgroundX = Math.round((size - backgroundSize) / 2);
+      const backgroundY = backgroundX;
+      const logoX = backgroundX + padding;
+      const logoY = backgroundY + padding;
+      const radius = Math.round(backgroundSize * 0.18);
+
+      context.fillStyle = options.backgroundColor || '#FFFFFF';
+      this.drawRoundedRect(context, backgroundX, backgroundY, backgroundSize, backgroundSize, radius);
+      context.fill();
+
+      const scale = Math.min(logoSize / logoImage.width, logoSize / logoImage.height);
+      const drawWidth = Math.round(logoImage.width * scale);
+      const drawHeight = Math.round(logoImage.height * scale);
+      const drawX = logoX + Math.round((logoSize - drawWidth) / 2);
+      const drawY = logoY + Math.round((logoSize - drawHeight) / 2);
+
+      context.drawImage(logoImage, drawX, drawY, drawWidth, drawHeight);
+
+      return canvas.toDataURL('image/png');
     } catch (error) {
       logger.error('[QrImageGenerator] Erro ao gerar QR com logo:', error);
       throw new Error('Erro ao gerar QR Code com logo');
     }
   }
-  
-  /**
-   * Gera asset para impressão
-   */
+
   static async generatePrintableAsset(
     qrUrl: string,
     canonicalUrl: string,
     title: string,
     description?: string,
-    styleVariant: QrStyleVariant = QrStyleVariant.BASIC
+    styleVariant: QrStyleVariant = QrStyleVariant.BASIC,
   ): Promise<QrPrintableAsset> {
     try {
-      const defaultOptions = this.getDefaultOptions(styleVariant);
-      
-      const imageDataUrl = await this.generatePNG(qrUrl, defaultOptions);
-      
+      const imageDataUrl = await this.generatePNG(qrUrl, this.getDefaultOptions(styleVariant));
+
       return {
         qr_code_url: qrUrl,
         image_data_url: imageDataUrl,
@@ -166,14 +194,11 @@ export class QrImageGenerator {
         generated_at: new Date().toISOString(),
       };
     } catch (error) {
-      logger.error('[QrImageGenerator] Erro ao gerar asset para impressão:', error);
-      throw new Error('Erro ao gerar asset para impressão');
+      logger.error('[QrImageGenerator] Erro ao gerar asset para impressao:', error);
+      throw new Error('Erro ao gerar asset para impressao');
     }
   }
-  
-  /**
-   * Download de imagem QR Code
-   */
+
   static downloadImage(dataUrl: string, filename: string): void {
     const link = document.createElement('a');
     link.href = dataUrl;
@@ -182,10 +207,7 @@ export class QrImageGenerator {
     link.click();
     document.body.removeChild(link);
   }
-  
-  /**
-   * Download de SVG
-   */
+
   static downloadSVG(svgString: string, filename: string): void {
     const blob = new Blob([svgString], { type: 'image/svg+xml' });
     const url = URL.createObjectURL(blob);
@@ -197,10 +219,7 @@ export class QrImageGenerator {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   }
-  
-  /**
-   * Copia URL para clipboard
-   */
+
   static async copyToClipboard(text: string): Promise<void> {
     try {
       await navigator.clipboard.writeText(text);

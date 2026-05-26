@@ -36,12 +36,6 @@ class ModerationServiceClass {
     profile: "profiles",
   } as const;
 
-  private idFieldMap = {
-    post: "post_id",
-    comment: "comment_id",
-    profile: "profile_id",
-  } as const;
-
   private db(): any {
     return supabase as any;
   }
@@ -66,32 +60,67 @@ class ModerationServiceClass {
     }
   }
 
-  private getIdFieldByTarget(targetType: ModerationTarget): string {
-    switch (targetType) {
-      case "post":
-        return this.idFieldMap.post;
-      case "comment":
-        return this.idFieldMap.comment;
-      case "profile":
-        return this.idFieldMap.profile;
-      default:
-        return this.idFieldMap.post;
-    }
+  private async resolveProfileId(identifier: string): Promise<string | null> {
+    const { data: byProfileId } = await this.db()
+      .from("profiles")
+      .select("id")
+      .eq("id", identifier)
+      .maybeSingle();
+
+    if (byProfileId?.id) return byProfileId.id;
+
+    const { data: byUserId } = await this.db()
+      .from("profiles")
+      .select("id")
+      .eq("user_id", identifier)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    return byUserId?.id ?? null;
+  }
+
+  private async resolveTargetAuthorProfileId(
+    targetType: ModerationTarget,
+    targetId: string,
+  ): Promise<string> {
+    if (targetType === "profile") return targetId;
+
+    const table = this.getTableByTarget(targetType);
+    const { data, error } = await this.db()
+      .from(table)
+      .select("author_profile_id")
+      .eq("id", targetId)
+      .maybeSingle();
+
+    if (error) throw error;
+    const authorProfileId = data?.author_profile_id;
+    if (!authorProfileId) throw new Error("Conteudo denunciado nao encontrado");
+    return authorProfileId;
   }
 
   async reportContent(input: ReportContentInput): Promise<void> {
     try {
-      const table = this.getTableByTarget(input.targetType);
-      const idField = this.getIdFieldByTarget(input.targetType);
+      const targetAuthorProfileId = await this.resolveTargetAuthorProfileId(
+        input.targetType,
+        input.targetId,
+      );
 
-      const { error } = await this.db().from(table).insert({
-        [idField]: input.targetId,
-        reporter_id: input.reporterId,
-        motivo: input.reason,
-        detalhes: input.details || "",
+      const { error } = await this.db().from("community_reports").insert({
+        target_type: input.targetType,
+        target_id: input.targetId,
+        target_author_profile_id: targetAuthorProfileId,
+        reporter_profile_id: input.reporterId,
+        reason: input.reason,
+        description: input.details || null,
       });
 
-      if (error) throw error;
+      if (error) {
+        if ((error as SupabaseErrorLike).code === "23505") {
+          throw new Error("Voce ja enviou uma denuncia para este conteudo.");
+        }
+        throw error;
+      }
     } catch (error: unknown) {
       logger.error("Error reporting content:", error);
       throw new Error(`Erro ao enviar denuncia: ${this.getErrorMessage(error, "erro desconhecido")}`);
@@ -103,10 +132,10 @@ class ModerationServiceClass {
   ): Promise<CombinedModerationReport[] | ModerationReportRow[]> {
     try {
       if (targetType) {
-        const table = this.getTableByTarget(targetType);
         const { data, error } = await this.db()
-          .from(table)
+          .from("community_reports")
           .select("*")
+          .eq("target_type", targetType)
           .eq("status", MODERATION_REPORT_STATUS.PENDING)
           .order("created_at", { ascending: false });
 
@@ -136,9 +165,8 @@ class ModerationServiceClass {
 
   async approveReport(reportId: string, targetType: ModerationTarget): Promise<void> {
     try {
-      const table = this.getTableByTarget(targetType);
       const { error } = await this.db()
-        .from(table)
+        .from("community_reports")
         .update({
           status: MODERATION_REPORT_STATUS.APPROVED,
           reviewed_at: new Date().toISOString(),
@@ -154,9 +182,8 @@ class ModerationServiceClass {
 
   async rejectReport(reportId: string, targetType: ModerationTarget): Promise<void> {
     try {
-      const table = this.getTableByTarget(targetType);
       const { error } = await this.db()
-        .from(table)
+        .from("community_reports")
         .update({
           status: MODERATION_REPORT_STATUS.REJECTED,
           reviewed_at: new Date().toISOString(),
@@ -217,12 +244,14 @@ class ModerationServiceClass {
     reviewedBy: string,
   ): Promise<void> {
     try {
+      const reviewerProfileId = await this.resolveProfileId(reviewedBy);
+
       const { error } = await this.db()
         .from("community_reports")
         .update({
           status,
           reviewed_at: new Date().toISOString(),
-          reviewed_by: reviewedBy,
+          reviewed_by: reviewerProfileId,
         })
         .eq("target_type", targetType)
         .eq("target_id", targetId);
@@ -237,8 +266,12 @@ class ModerationServiceClass {
   async removeComment(commentId: string): Promise<void> {
     try {
       const { error } = await this.db()
-        .from("community_comments")
-        .update({ is_removed: true })
+        .from("comments")
+        .update({
+          is_removed: true,
+          content: "[comentario removido pela moderacao]",
+          removed_at: new Date().toISOString(),
+        })
         .eq("id", commentId);
 
       if (error) throw error;
@@ -256,22 +289,40 @@ class ModerationServiceClass {
   ): Promise<void> {
     try {
       if (action === "delete") {
-        const { error } = await this.db().from("community_posts").delete().eq("id", postId);
+        const { error } = await this.db()
+          .from("posts")
+          .update({
+            is_published: false,
+            is_removed: true,
+            removed_reason: reason || "Moderacao",
+            removed_at: new Date().toISOString(),
+            removed_by: await this.resolveProfileId(moderatedBy),
+          })
+          .eq("id", postId);
         if (error) throw error;
         return;
       }
 
-      const moderationStatus =
-        action === "approve" ? "approved" : action === "reject" ? "rejected" : "flagged";
+      const updateData =
+        action === "approve"
+          ? {
+              is_hidden: false,
+              is_removed: false,
+              is_published: true,
+              removed_reason: null,
+              removed_at: null,
+              removed_by: null,
+            }
+          : {
+              is_hidden: true,
+              is_published: false,
+              removed_reason: reason || null,
+              removed_by: await this.resolveProfileId(moderatedBy),
+            };
 
       const { error } = await this.db()
-        .from("community_posts")
-        .update({
-          moderation_status: moderationStatus,
-          moderated_at: new Date().toISOString(),
-          moderated_by: moderatedBy,
-          moderation_reason: reason || null,
-        })
+        .from("posts")
+        .update(updateData)
         .eq("id", postId);
 
       if (error) throw error;
@@ -284,7 +335,7 @@ class ModerationServiceClass {
   async getCommentAuthorId(commentId: string): Promise<string | null> {
     try {
       const { data, error } = await this.db()
-        .from("community_comments")
+        .from("comments")
         .select("author_profile_id")
         .eq("id", commentId)
         .single();

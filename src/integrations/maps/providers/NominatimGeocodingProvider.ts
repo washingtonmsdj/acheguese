@@ -34,6 +34,17 @@ interface NominatimResult {
 export class NominatimGeocodingProvider implements GeocodingProvider {
   private readonly baseUrl = buildSupabaseFunctionUrl('nominatim-proxy');
   private readonly apiKey = PUBLIC_SUPABASE_CONFIG.publishableKey;
+  private readonly placeCache = new Map<string, GeocodeResult>();
+
+  private cacheResult(result: GeocodeResult): GeocodeResult {
+    if (this.placeCache.size > 100) {
+      const oldestKey = this.placeCache.keys().next().value;
+      if (oldestKey) this.placeCache.delete(oldestKey);
+    }
+    this.placeCache.set(result.id, result);
+    return result;
+  }
+
   private getAuthHeaders(): HeadersInit {
     if (!this.apiKey) {
       return {};
@@ -72,7 +83,7 @@ export class NominatimGeocodingProvider implements GeocodingProvider {
       }
 
       const results: NominatimResult[] = await response.json();
-      return results.map((r) => this.mapToGeocodeResult(r));
+      return results.map((r) => this.cacheResult(this.mapToGeocodeResult(r)));
     } catch (error) {
       logger.error('[NominatimGeocoding] Geocode error:', error);
       return [];
@@ -100,7 +111,7 @@ export class NominatimGeocodingProvider implements GeocodingProvider {
       }
 
       const result: NominatimResult = await response.json();
-      return [this.mapToGeocodeResult(result)];
+      return [this.cacheResult(this.mapToGeocodeResult(result))];
     } catch (error) {
       logger.error('[NominatimGeocoding] Reverse geocode error:', error);
       return [];
@@ -133,7 +144,14 @@ export class NominatimGeocodingProvider implements GeocodingProvider {
   async getPlaceDetails(placeId: string): Promise<GeocodeResult> {
     // Nominatim não tem endpoint de detalhes separado
     // Retornar do cache ou fazer nova busca
-    throw new Error('getPlaceDetails not implemented for Nominatim');
+    const cached = this.placeCache.get(placeId);
+    if (cached) return cached;
+
+    const results = await this.geocode(placeId, { limit: 1 });
+    const [result] = results;
+    if (result) return result;
+
+    throw new Error('Local nao encontrado no provedor de geocoding.');
   }
 
   // ============================================

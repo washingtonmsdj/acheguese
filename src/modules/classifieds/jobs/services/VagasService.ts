@@ -9,7 +9,7 @@
  * - Métodos de listagem territorial com filtros avançados
  * - Busca por slug canônico (detalhe)
  * - Gestão de candidaturas tipadas
- * - Cache inteligente via React Query (não implementado aqui)
+ * - Cache gerenciado pelos hooks React Query
  * - Tratamento de erros consistente
  * - Logging estruturado
  * 
@@ -21,6 +21,7 @@ import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/core/infrastructure/supabase/supabase';
 import { JOB_QUERY_LIMITS } from '../constants/query-limits';
 import type {
+  Candidatura,
   Vaga,
   VagaFilters,
   VagaSortOption,
@@ -33,6 +34,7 @@ import type {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 type VagaRowLike = Record<string, unknown>;
+type CandidaturaRowLike = Record<string, unknown>;
 
 function mapRowToVaga(row: VagaRowLike): Vaga {
   const raw = row as Record<string, unknown>;
@@ -108,6 +110,22 @@ function mapRowToVaga(row: VagaRowLike): Vaga {
     viewCount: typeof raw.view_count === 'number' ? raw.view_count : 0,
     applicationCount: typeof raw.application_count === 'number' ? raw.application_count : 0,
     shareCount: typeof raw.share_count === 'number' ? raw.share_count : 0,
+  };
+}
+
+function mapRowToCandidatura(row: CandidaturaRowLike): Candidatura {
+  const raw = row as Record<string, unknown>;
+  return {
+    id: String(raw.id ?? ''),
+    vagaId: String(raw.vaga_id ?? ''),
+    candidatoProfileId: String(raw.candidato_profile_id ?? ''),
+    status: (raw.status as Candidatura['status']) ?? 'pending',
+    mensagem: typeof raw.mensagem === 'string' ? raw.mensagem : undefined,
+    curriculoUrl: typeof raw.curriculo_url === 'string' ? raw.curriculo_url : undefined,
+    respostaEmpresa: typeof raw.resposta_empresa === 'string' ? raw.resposta_empresa : undefined,
+    respondedAt: typeof raw.responded_at === 'string' ? new Date(raw.responded_at) : undefined,
+    createdAt: new Date(String(raw.created_at ?? new Date().toISOString())),
+    updatedAt: new Date(String(raw.updated_at ?? new Date().toISOString())),
   };
 }
 
@@ -523,6 +541,39 @@ export class VagasService {
       return (data ?? []).map(mapRowToVaga);
     } catch (error) {
       logger.error('[VagasService] Erro:', error);
+      throw error;
+    }
+  }
+
+  static async applyToVaga(input: {
+    vagaId: string;
+    candidatoProfileId: string;
+    mensagem?: string;
+    curriculoUrl?: string;
+  }): Promise<Candidatura> {
+    try {
+      const { data, error } = await (supabase as any)
+        .from('vaga_applications')
+        .insert({
+          vaga_id: input.vagaId,
+          candidato_profile_id: input.candidatoProfileId,
+          mensagem: input.mensagem?.trim() || null,
+          curriculo_url: input.curriculoUrl?.trim() || null,
+        })
+        .select('*')
+        .single();
+
+      if (error) {
+        if (error.code === '23505') {
+          throw new Error('Voce ja se candidatou a esta vaga.');
+        }
+        logger.error('[VagasService] Erro ao candidatar-se a vaga:', error);
+        throw new Error(`Falha ao enviar candidatura: ${error.message}`);
+      }
+
+      return mapRowToCandidatura(data as CandidaturaRowLike);
+    } catch (error) {
+      logger.error('[VagasService] Erro inesperado ao candidatar-se:', error);
       throw error;
     }
   }

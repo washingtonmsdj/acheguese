@@ -448,6 +448,7 @@ export async function removePost(
     const { error } = await (supabase as any)
       .from("posts")
       .update({
+        is_published: false,
         is_removed: true,
         removed_reason: reason,
         removed_at: new Date().toISOString(),
@@ -473,7 +474,10 @@ export async function hidePost(postId: string): Promise<void> {
   try {
     const { error } = await (supabase as any)
       .from("posts")
-      .update({ is_hidden: true })
+      .update({
+        is_hidden: true,
+        is_published: false,
+      })
       .eq("id", postId);
 
     if (error) {

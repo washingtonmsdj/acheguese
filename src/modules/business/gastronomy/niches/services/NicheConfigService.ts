@@ -171,7 +171,7 @@ export const NicheConfigService = {
     return niche?.enabledCapabilities ?? [];
   },
 
-  /** Lista capacidades planejadas mas não implementadas */
+  /** Lista capacidades planejadas para proximas evolucoes */
   getMissingCapabilities(key: string): NicheCapability[] {
     const niche = getNicheByKey(key);
     return niche?.missingCapabilities ?? [];

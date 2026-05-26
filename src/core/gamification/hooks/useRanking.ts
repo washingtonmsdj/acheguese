@@ -28,45 +28,38 @@ export function useRanking() {
       try {
         setLoading(true);
 
-        const data = await profileService.getRanking(50);
+        const [data, activeProfile] = await Promise.all([
+          profileService.getRanking(50),
+          user ? profileService.getActiveProfile(user.id) : Promise.resolve(null),
+        ]);
 
-        if (!data || data.length === 0) {
-          // TODO: Implementar dados reais do Supabase
-          setRanking([]);
-          if (user) {
-            setCurrentUserRank(null);
-          }
-        } else {
-          const rankingData: RankingEntry[] = data.map((p) => ({
-            id: p.id,
-            name: p.name,
-            avatar_url: p.avatar_url,
-            pontos: p.pontos,
-            badges: [],
-          }));
-          setRanking(rankingData);
+        const rankingData: RankingEntry[] = (data ?? []).map((p) => ({
+          id: p.id,
+          name: p.name,
+          avatar_url: p.avatar_url,
+          pontos: p.pontos,
+          badges: [],
+        }));
 
-          if (user) {
-            const userEntry = rankingData.find((p) => p.id === user.id);
-            if (userEntry) {
-              setCurrentUserRank(userEntry);
-            } else {
-              const userData = await profileService.getProfileById(user.id);
-              if (userData) {
-                setCurrentUserRank({
-                  id: userData.id,
-                  name: userData.name || "Você",
-                  avatar_url: userData.avatar_url || "",
-                  pontos: userData.pontos || 0,
-                  badges: [],
-                });
-              }
-            }
-          }
+        setRanking(rankingData);
+
+        if (!activeProfile) {
+          setCurrentUserRank(null);
+          return;
         }
+
+        const activeProfileEntry = rankingData.find((p) => p.id === activeProfile.id);
+        setCurrentUserRank(activeProfileEntry ?? {
+          id: activeProfile.id,
+          name: activeProfile.name || "Voce",
+          avatar_url: activeProfile.avatar_url || "",
+          pontos: activeProfile.pontos || 0,
+          badges: [],
+        });
       } catch (err) {
         logger.error(" Erro ao carregar ranking:", err);
         setRanking([]);
+        setCurrentUserRank(null);
       } finally {
         setLoading(false);
       }

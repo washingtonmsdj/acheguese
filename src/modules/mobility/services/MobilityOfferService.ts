@@ -128,6 +128,7 @@ export class MobilityOfferService {
       const config = MobilityDispatchConfigService.getConfig('exclusive_offer');
       const assignedAt = new Date(ride.driver_assigned_at || ride.created_at);
       const expiresAt = new Date(assignedAt.getTime() + config.offerTimeoutSeconds * 1000);
+      const attemptNumber = await this.getLatestAttemptNumber(ride.id, driverProfileId);
 
       // Verificar se expirou
       if (new Date() > expiresAt) {
@@ -176,7 +177,7 @@ export class MobilityOfferService {
         driverProfileId,
         offeredAt: ride.driver_assigned_at || ride.created_at,
         expiresAt: expiresAt.toISOString(),
-        attemptNumber: 1, // TODO: buscar do audit
+        attemptNumber,
         status: DISPATCH_ATTEMPT_STATUS.PENDING,
         
         // Dados protegidos (apenas apos aceite)
@@ -646,10 +647,34 @@ export class MobilityOfferService {
    * Extrai bairro do endereco completo
    */
   private static extractNeighborhood(address: string): string {
-    // TODO: Implementar extracao inteligente de bairro
-    // Por enquanto, retorna primeiras palavras
-    const parts = address.split(',');
-    return parts[parts.length - 2]?.trim() || 'Regiao';
+    const parts = address
+      .split(',')
+      .map((part) => part.trim())
+      .filter(Boolean);
+
+    if (parts.length === 0) return 'Regiao';
+
+    const isAdministrativePart = (part: string) => {
+      const normalized = part
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase();
+
+      return (
+        /^\d+$/.test(normalized) ||
+        /^\d{5}-?\d{3}$/.test(normalized) ||
+        /^[a-z]{2}$/.test(normalized) ||
+        normalized === 'brasil' ||
+        normalized === 'brazil' ||
+        /^(rua|avenida|av\.?|travessa|estrada|rodovia|alameda)\b/.test(normalized)
+      );
+    };
+
+    const neighborhood = [...parts]
+      .reverse()
+      .find((part) => !isAdministrativePart(part));
+
+    return neighborhood || parts[0] || 'Regiao';
   }
 
   /**
@@ -691,6 +716,34 @@ export class MobilityOfferService {
     driverProfileId: string
   ) {
     return getDriverOfferCapabilities(driverProfileId);
+  }
+
+  private static async getLatestAttemptNumber(
+    rideId: string,
+    driverProfileId: string,
+  ): Promise<number> {
+    try {
+      const { data, error } = await supabase
+        .from('ride_dispatch_audit')
+        .select('attempt_number')
+        .eq('ride_id', rideId)
+        .eq('driver_profile_id', driverProfileId)
+        .order('attempt_number', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      const attemptNumber = data?.attempt_number;
+      return typeof attemptNumber === 'number' && attemptNumber > 0 ? attemptNumber : 1;
+    } catch (error) {
+      logger.warn('Failed to resolve latest dispatch attempt number', {
+        rideId,
+        driverProfileId,
+        error,
+      });
+      return 1;
+    }
   }
 }
 

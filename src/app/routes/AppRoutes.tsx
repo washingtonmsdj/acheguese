@@ -476,7 +476,7 @@ export function AppRoutes() {
         <Route path="realtime-dashboard" element={<P.AdminRealtimeDashboard />} />
         <Route path="moderacao-completa" element={<P.AdminModeracaoCompleta />} />
         <Route path="moderacao" element={<P.AdminModeracao />} />
-        <Route path="alertas" element={<P.AdminAlertas />} />
+        <Route path="alertas" element={<P.AdminCommunityAlerts />} />
         <Route path="community-alerts" element={<P.AdminCommunityAlerts />} />
         <Route path="community-issues" element={<P.AdminCommunityIssues />} />
         <Route path="comunicacao" element={<P.AdminComunicacao />} />

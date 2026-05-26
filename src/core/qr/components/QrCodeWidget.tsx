@@ -6,8 +6,7 @@
  * FASE 6 - P2: Style de QR Code resolvido via EntitlementsService
  * - Usa EntitlementsService.getQrStyleVariant(planTier) para determinar estilo
  * - planTier vem de useBusinessSubscription que consulta backend
- * - Aceitável para P2 (baixo risco - apenas visual)
- * - TODO futuro: Migrar para useEntitlements() com cache React Query
+ * - Cache e sincronizacao seguem o hook de assinatura do billing
  * 
  * Uso:
  * ```tsx

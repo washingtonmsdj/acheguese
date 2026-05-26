@@ -89,7 +89,7 @@ function getStatusBadge(vaga: Vaga) {
 // COMPONENT: Botão de Candidatura
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function ApplicationButton({ vaga, onApply, isLoading }: { vaga: Vaga; onApply: () => void; isLoading: boolean }) {
+function ApplicationButton({ vaga, onApply, isLoading }: { vaga: Vaga; onApply: () => Promise<void>; isLoading: boolean }) {
   const { toast } = useToast();
   
   if (!canApplyToVaga(vaga)) {
@@ -107,9 +107,16 @@ function ApplicationButton({ vaga, onApply, isLoading }: { vaga: Vaga; onApply: 
 
   const channel = APPLICATION_CHANNEL_LABELS[vaga.applicationChannel];
   
-  const handleClick = () => {
+  const handleClick = async () => {
     try {
-      onApply();
+      await onApply();
+      toast({
+        title: vaga.applicationChannel === 'internal' ? 'Candidatura enviada' : 'Canal de candidatura aberto',
+        description:
+          vaga.applicationChannel === 'internal'
+            ? 'A empresa recebeu sua candidatura pela plataforma.'
+            : 'Conclua a candidatura no canal indicado pela empresa.',
+      });
     } catch (error) {
       toast({
         title: 'Erro',

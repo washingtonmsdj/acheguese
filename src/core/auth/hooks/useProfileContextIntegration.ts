@@ -22,7 +22,7 @@ import { logger } from "@/shared/utils/logger";
  * Shape canônico de activeProfile — camelCase, alinhado com SessionContext.Profile
  *
  * Este é o ÚNICO contrato de activeProfile no sistema.
- * AuthContext expõe este shape como adapter temporário.
+ * AuthContext expoe este shape como adapter de compatibilidade.
  *
  * @deprecated Use CanonicalProfile from @/core/profiles/mappers instead
  */

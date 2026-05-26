@@ -108,6 +108,33 @@ export class DriverAvailabilityService {
     return typed.code === '23505' || typed.message?.toLowerCase().includes('duplicate key') === true;
   }
 
+  private static async recordOperationalIncident(
+    level: 'warn' | 'error' | 'fatal',
+    message: string,
+    context: Record<string, unknown>,
+  ): Promise<void> {
+    try {
+      const { error } = await (supabase as any)
+        .from('application_logs')
+        .insert({
+          level,
+          message,
+          context: {
+            scope: 'mobility.driver_availability',
+            requires_manual_review: true,
+            ...context,
+          },
+        });
+
+      if (error) throw error;
+    } catch (error) {
+      logger.error('DriverAvailabilityService.recordOperationalIncident', error as Error, {
+        message,
+        context,
+      });
+    }
+  }
+
   /**
    * Garante bootstrap mínimo de driver_data para que o motorista possa
    * participar de dispatch (ride/motoboy) sem depender de migração manual.
@@ -559,8 +586,15 @@ export class DriverAvailabilityService {
             rideId: driver.active_ride_id,
             lastSeen: driver.last_seen_at,
           });
-          // TODO: Notificar suporte
-          // TODO: Escalar para resolução manual
+          await this.recordOperationalIncident(
+            'error',
+            'Driver stale with active ride requires manual operations review',
+            {
+              profileId: driver.profile_id,
+              rideId: driver.active_ride_id,
+              lastSeen: driver.last_seen_at,
+            },
+          );
         }
       }
 

@@ -4,13 +4,13 @@ import type { CreateEventInput } from '@/core/community/services/CommunityEvents
 
 export type OrganizerLocationType = 'physical' | 'online' | 'hybrid';
 
-export interface EventsOrganizerGalleryItem {
+export interface EventsOrganizerGalleryItem extends Record<string, string> {
   id: string;
   url: string;
   caption: string;
 }
 
-export interface EventsOrganizerScheduleItem {
+export interface EventsOrganizerScheduleItem extends Record<string, string> {
   id: string;
   time: string;
   title: string;
@@ -19,7 +19,7 @@ export interface EventsOrganizerScheduleItem {
   location: string;
 }
 
-export interface EventsOrganizerFaqItem {
+export interface EventsOrganizerFaqItem extends Record<string, string> {
   id: string;
   question: string;
   answer: string;

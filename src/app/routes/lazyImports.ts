@@ -361,7 +361,6 @@ export const AdminAnalyticsMobilidade = lazy(() => import("@/modules/admin/pages
 export const AdminRealtimeDashboard = lazy(() => import("@/modules/admin/pages/AdminRealtimeDashboard"));
 export const AdminModeracaoCompleta = lazy(() => import("@/modules/admin/pages/AdminModeracaoCompleta"));
 export const AdminModeracao = lazy(() => import("@/modules/admin/pages/AdminModeracao"));
-export const AdminAlertas = lazy(() => import("@/modules/admin/pages/AdminAlertas"));
 export const AdminAnalytics = lazy(() => import("@/modules/admin/pages/AdminAnalytics"));
 export const AdminGamificacao = lazy(() => import("@/modules/admin/pages/AdminGamificacao"));
 export const AdminCupons = lazy(() => import("@/modules/admin/pages/AdminCupons"));
