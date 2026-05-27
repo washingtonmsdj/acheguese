@@ -229,7 +229,7 @@ export class AuthService {
     return await this.isAdmin(userId);
   }
 
-  // ── Compatibility stubs for useAuth hook ──
+  // ── Canonical auth facade used by useAuth hook ──
 
   static async getCurrentUser(): Promise<import("./types").AuthUser | null> {
     // Delegate to SessionService — the only place allowed to call supabase.auth.getUser()

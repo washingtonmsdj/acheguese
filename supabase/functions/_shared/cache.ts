@@ -37,6 +37,10 @@ export const CACHE_TTL = {
  */
 export type CacheType = 'api' | 'geocoding' | 'external';
 
+function isCacheDebugEnabled(): boolean {
+  return Deno.env.get('CACHE_DEBUG') === 'true';
+}
+
 /**
  * Get Supabase client for cache operations
  */
@@ -207,11 +211,15 @@ export async function withCache<T>(
   // Try cache first
   const cached = await getCache<T>(key);
   if (cached !== null) {
-    console.log('Cache hit:', key);
+    if (isCacheDebugEnabled()) {
+      console.debug('Cache hit:', key);
+    }
     return cached;
   }
 
-  console.log('Cache miss:', key);
+  if (isCacheDebugEnabled()) {
+    console.debug('Cache miss:', key);
+  }
 
   // Fetch fresh data
   const data = await fetchFn();

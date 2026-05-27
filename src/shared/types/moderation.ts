@@ -198,44 +198,6 @@ export const STATUS_COLORS = {
   },
 };
 
-// Function to calcular prioridade (deprecated - use inline calculation)
-export function calculatePriority(params: {
-  reports_count?: number;
-  author_reputation?: number;
-  author_previous_reports?: number;
-  report_types?: ReportType[];
-  is_urgent?: boolean;
-}): number {
-  let priority = 0;
-
-  // Número de denúncias
-  priority += (params.reports_count || 0) * 5;
-
-  // Reputação do denunciado (quanto menor, maior a prioridade)
-  if (params.author_reputation !== undefined) {
-    if (params.author_reputation < 100) priority += 20;
-    if (params.author_reputation < 50) priority += 30;
-  }
-
-  // Histórico do denunciado
-  priority += (params.author_previous_reports || 0) * 10;
-
-  // Tipo de denúncia (se disponível)
-  if (params.report_types && params.report_types.length > 0) {
-    const hasHarassment = params.report_types.includes("harassment");
-    const hasFalseInfo = params.report_types.includes("false_information");
-
-    if (hasHarassment) priority += 50;
-    if (hasFalseInfo) priority += 30;
-  }
-
-  // Urgência
-  if (params.is_urgent) priority += 100;
-
-  return priority;
-}
-
-// Function to determinar nível de prioridade
 export function getPriorityLevel(priority: number): "high" | "medium" | "low" {
   if (priority >= 50) return "high";
   if (priority >= 20) return "medium";

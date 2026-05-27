@@ -14,6 +14,7 @@ import type {
   NicheFilters,
 } from '../types';
 import { NicheConfigService } from '../services/NicheConfigService';
+import { logger } from '@/shared/utils/logger';
 
 // ── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -89,7 +90,7 @@ export function useGastronomyNiche(
   // Memoizar configuração para evitar re-renders desnecessários
   const config = useMemo(() => {
     if (debug) {
-      console.log('[useGastronomyNiche] Carregando config para:', nicheKey);
+      logger.debug('[useGastronomyNiche] Carregando config para', { nicheKey });
     }
     return NicheConfigService.getConfigOrDefault(nicheKey);
   }, [nicheKey, debug]);
