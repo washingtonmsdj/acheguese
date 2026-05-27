@@ -25,14 +25,11 @@ A partir da ETAPA 6, empresas usam o modelo canônico:
 2. **NÃO usar location_id para inferir toda a cobertura**
 3. **NÃO criar coverage nova nesta etapa**
 
-## Compatibilidade Transitória
+## Modelo Em Produção
 
-Durante a migração, o sistema suporta ambos os modelos:
+O runtime de empresas deve consumir `address_id` e `location_id` como fonte canônica. Campos textuais históricos só podem aparecer como dados exibidos pelo adapter canônico quando já vierem do snapshot carregado, sem criar novos fluxos de migração em runtime.
 
-- **Modelo canônico**: `address_id` + `location_id` (preferido)
-- **Modelo legado**: campos textuais (`address`, `latitude`, `longitude`, metadata)
-
-### Verificar se migrado
+### Verificar cadastro canônico
 
 ```typescript
 import { isBusinessMigrated, hasPhysicalAddress } from '@/core/business';
@@ -41,27 +38,15 @@ const isMigrated = isBusinessMigrated(business);
 const hasAddress = hasPhysicalAddress(business);
 ```
 
-### Obter coordenadas (com fallback)
+### Obter coordenadas
 
 ```typescript
 import { getBusinessCoordinates } from '@/core/business';
 
-// Prefere address canônico, fallback para legado
 const coords = getBusinessCoordinates(businessWithRelations);
 ```
 
-## Migração
-
-### Script de Migração
-
-```typescript
-import { migrateBusinessDataToCanonical, formatMigrationReport } from '@/core/business';
-
-const result = await migrateBusinessDataToCanonical();
-console.log(formatMigrationReport(result));
-```
-
-### Estratégia de Resolução
+## Estratégia de Resolução
 
 #### location_id
 

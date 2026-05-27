@@ -26,13 +26,6 @@ export * from './utils';
 // Validators
 export * from './services/validators';
 
-// Migration (ETAPA 6)
-export {
-  migrateBusinessDataToCanonical,
-  formatMigrationReport,
-  type MigrationResult,
-} from './migrations/migrateBusinessDataToCanonical';
-
 // Canonical Adapter (ETAPA 6)
 export {
   isBusinessMigrated,

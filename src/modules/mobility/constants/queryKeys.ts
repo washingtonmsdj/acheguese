@@ -20,9 +20,6 @@ export const MOBILITY_QUERY_KEYS = {
   rideReports: (userId: string) => ["ride-reports", "user", userId] as const,
   rideReportsByRide: (rideId: string) => ["ride-reports", "ride", rideId] as const,
   rideReportsStats: () => ["ride-reports", "stats"] as const,
-  // Aliases publicos para consumidores historicos.
-  reports: (userId: string) => ["ride-reports", "user", userId] as const,
-  reportStats: () => ["ride-reports", "stats"] as const,
   
   // Admin
   adminReports: (filters?: any) => ["admin-ride-reports", filters] as const,

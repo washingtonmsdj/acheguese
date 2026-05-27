@@ -198,19 +198,6 @@ export const EducationSubscriptionService = {
     };
   },
 
-  /**
-   * Alias: canUsePremiumSite (compatibilidade)
-   */
-  async canUsePremiumSite(businessId: string): Promise<boolean> {
-    return this.canUsePremiumPublicPage(businessId);
-  },
-
-  /**
-   * Alias: canUseShortLink (compatibilidade)
-   */
-  async canUseShortLink(businessId: string): Promise<boolean> {
-    return this.canUseShortPremiumLink(businessId);
-  },
 };
 
 export default EducationSubscriptionService;

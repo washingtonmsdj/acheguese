@@ -27,7 +27,6 @@ export type { ClusterPoint, ClusterOptions } from './services/ClusteringService'
 export {
   MapLibreAdapter,
   MapLayerToggle,
-  MapViewportController,
   useViewportBridge,
 } from './components/v3';
 
@@ -35,7 +34,6 @@ export type {
   MapLibreAdapterHandle,
   MapLibreAdapterProps,
   MapLayerToggleProps,
-  MapViewportControllerProps,
 } from './components/v3';
 
 export { MapRadiusControl } from './components/v3/controls/MapRadiusControl';
