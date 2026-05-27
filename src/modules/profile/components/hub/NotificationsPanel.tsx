@@ -16,7 +16,7 @@ interface Notification {
   type: string;
   createdAt: string;
   read: boolean;
-  priority: 'low' | 'normal' | 'high' | 'urgent';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
 }
 
 interface NotificationsPanelProps {

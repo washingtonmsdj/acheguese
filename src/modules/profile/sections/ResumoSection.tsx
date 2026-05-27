@@ -148,7 +148,7 @@ export function ResumoSection({
         </div>
       </SectionFrame>
 
-      <NextActionsPanel actions={nextActions as any} />
+      <NextActionsPanel actions={nextActions} />
 
       <SectionFrame
         title="Ações pessoais"

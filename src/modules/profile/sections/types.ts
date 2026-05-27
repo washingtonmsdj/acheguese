@@ -61,7 +61,7 @@ export interface Notifications {
     readonly type: string;
     readonly createdAt: string;
     readonly read: boolean;
-    readonly priority: "low" | "normal" | "high" | "urgent";
+    readonly priority: "low" | "medium" | "high" | "urgent";
   }[];
 }
 
