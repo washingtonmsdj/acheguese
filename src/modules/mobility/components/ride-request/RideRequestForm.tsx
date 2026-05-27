@@ -22,7 +22,7 @@ import { AddressInput } from './AddressInput';
 import { RideTypeSelector } from './RideTypeSelector';
 import { TrustPreferenceChips } from './TrustPreferenceChips';
 import { AdvancedOptions } from './AdvancedOptions';
-import { RouteEstimateCardEnhanced } from '../RouteEstimateCardEnhanced';
+import { RouteEstimateSummaryCard } from '../RouteEstimateSummaryCard';
 import { BoardingPointsPanel, type BoardingPoint } from '../BoardingPointsPanel';
 import { useRideRequestForm } from '@/modules/mobility/hooks/useRideRequestForm';
 import { usePriceEstimate } from '@/core/pricing/hooks/usePriceEstimate';
@@ -313,7 +313,7 @@ export const RideRequestForm = memo<RideRequestFormProps>(function RideRequestFo
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
               >
-                <RouteEstimateCardEnhanced
+                <RouteEstimateSummaryCard
                   estimate={{
                     distance: {
                       distanceFormatted: `${priceEstimate.metadata.distanceKm.toFixed(1)} km`,

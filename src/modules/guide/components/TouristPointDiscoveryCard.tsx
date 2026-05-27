@@ -1,5 +1,5 @@
 /**
- * TouristPointCardEnhanced — Card enriquecido para experiência item-first
+ * TouristPointDiscoveryCard — Card enriquecido para experiência item-first
  *
  * Mostra: foto, nome, categoria, bairro, gratuito/pago, horário, avaliação.
  */
@@ -18,7 +18,7 @@ interface Props {
   variant?: 'card' | 'compact';
 }
 
-export function TouristPointCardEnhanced({ point, detailUrl, variant = 'card' }: Props) {
+export function TouristPointDiscoveryCard({ point, detailUrl, variant = 'card' }: Props) {
   const coverMedia = point.media?.find((m) => m.is_cover) ?? point.media?.[0];
   const categoryLabel = CATEGORY_LABELS[point.category] ?? point.category;
   const CategoryIcon = CATEGORY_ICONS[point.category] ?? MapPin;

@@ -151,7 +151,7 @@ useMenuItem.ts                ✅ Item específico
 ```
 GastronomyHero                ✅ Hero da landing
 GastronomyFilters             ✅ Filtros de busca
-GastronomyBusinessCardEnhanced ✅ Card de negócio
+GastronomyCard                 ✅ Card de negócio
 GastronomyCategoryCards       ✅ Cards de categorias
 GastronomyCTA                 ✅ Call-to-action
 FoodItemCard                  ✅ Card de prato

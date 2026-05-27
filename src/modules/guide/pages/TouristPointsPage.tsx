@@ -23,7 +23,7 @@ import { useTerritorialContext } from '@/core/routing/components/TerritorialLayo
 import { useTerritoryFilter } from '@/core/location/hooks/useTerritoryFilter';
 import { useTouristPoints } from '../hooks/useTouristPoints';
 import { useGuideUrls, buildTouristPointDetailUrl } from '../hooks/useGuideUrls';
-import { TouristPointCardEnhanced } from '../components/TouristPointCardEnhanced';
+import { TouristPointDiscoveryCard } from '../components/TouristPointDiscoveryCard';
 import { TouristPointCategoryCards } from '../components/TouristPointCategoryCards';
 import { TouristPointSectionCarousel } from '../components/TouristPointSectionCarousel';
 import { Button } from '@/shared/components/ui/button';
@@ -505,7 +505,7 @@ export default function TouristPointsPage() {
                   >
                     {displayedPoints.map(point => (
                       <motion.div key={point.id} variants={itemVariants}>
-                        <TouristPointCardEnhanced
+                        <TouristPointDiscoveryCard
                           point={point}
                           detailUrl={getDetailUrl(point)}
                           variant={displayLayout === 'list' ? 'compact' : 'card'}

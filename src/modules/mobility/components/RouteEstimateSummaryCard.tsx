@@ -74,8 +74,8 @@ function isPeakHour(fare: RouteEstimate['fare']): boolean {
 // MAIN COMPONENT
 // ============================================================================
 
-export const RouteEstimateCardEnhanced = memo(
-  forwardRef<HTMLDivElement, RouteEstimateCardProps>(function RouteEstimateCardEnhanced(
+export const RouteEstimateSummaryCard = memo(
+  forwardRef<HTMLDivElement, RouteEstimateCardProps>(function RouteEstimateSummaryCard(
     {
       estimate,
       variant = 'default',
@@ -364,7 +364,7 @@ export const RouteEstimateCardEnhanced = memo(
   }),
 );
 
-RouteEstimateCardEnhanced.displayName = 'RouteEstimateCardEnhanced';
+RouteEstimateSummaryCard.displayName = 'RouteEstimateSummaryCard';
 
 // ============================================================================
 // SKELETON COMPONENT

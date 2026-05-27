@@ -1097,7 +1097,7 @@
         "src/modules/professionals/services/components/ProfessionalHeader.tsx",
         "src/modules/professionals/services/components/ProfessionalReviewForm.tsx",
         "src/modules/professionals/services/components/ProfessionalReviewsList.tsx",
-        "src/modules/professionals/services/components/ServiceCardEnhanced.tsx",
+        "src/modules/professionals/services/components/ServiceCard.tsx",
         "src/modules/professionals/services/components/ServiceCategories.tsx",
         "src/modules/professionals/services/components/ServicesList.tsx",
         "src/modules/professionals/services/components/ServicosHeader.tsx",

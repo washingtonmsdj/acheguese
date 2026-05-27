@@ -5,7 +5,6 @@
 export { GastronomyHero } from './GastronomyHero';
 export { GastronomyFilters } from './GastronomyFilters';
 export { GastronomyCard } from './GastronomyCard';
-export { GastronomyCard as GastronomyBusinessCardEnhanced } from './GastronomyCard'; // Alias publico estavel
 export { GastronomyCategoryCards } from './GastronomyCategoryCards';
 export { GastronomyCTA } from './GastronomyCTA';
 export { FoodItemCard } from './FoodItemCard';

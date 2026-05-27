@@ -21,7 +21,7 @@ export interface ServiceCardProps {
   className?: string;
 }
 
-export const ServiceCardEnhanced = memo<ServiceCardProps>(
+export const ServiceCard = memo<ServiceCardProps>(
   ({
     professional,
     index = 0,
@@ -158,4 +158,4 @@ export const ServiceCardEnhanced = memo<ServiceCardProps>(
   },
 );
 
-ServiceCardEnhanced.displayName = 'ServiceCardEnhanced';
+ServiceCard.displayName = 'ServiceCard';

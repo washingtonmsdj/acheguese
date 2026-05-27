@@ -33,8 +33,6 @@ Card otimizado para conversão com hierarquia visual clara e metadados úteis.
 />
 ```
 
-Ver: [GASTRONOMY_CARD_REDESIGN.md](./components/GASTRONOMY_CARD_REDESIGN.md)
-
 ### GastronomyHero
 Hero section para página de detalhes do estabelecimento.
 
