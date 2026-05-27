@@ -10,7 +10,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { BusinessService } from "@/core/business/services/BusinessService";
-import type { Product } from "@/modules/business/types";
+import type { Product } from "@/core/business/types";
 
 interface UseBusinessProductsReturn {
   products: Product[];

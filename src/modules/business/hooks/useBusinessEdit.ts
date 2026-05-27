@@ -8,7 +8,7 @@ import { updateBusinessSchema } from "@/shared/schemas/business/businessSchemas"
 import { useSessionContext } from "@/core/session";
 import { mediaService } from "@/core/media/services/MediaService";
 import { toast } from "sonner";
-import type { UpdateBusinessInput, Business } from "@/modules/business/types";
+import type { UpdateBusinessInput, Business } from "@/core/business/types";
 
 interface UseBusinessEditOptions {
   onSuccess?: (business: Business) => void;

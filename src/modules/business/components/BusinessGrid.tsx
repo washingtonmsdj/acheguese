@@ -11,7 +11,7 @@ import { useBusinessAd } from "@/modules/business/hooks/useBusinessAd";
 import { SponsoredAdCard } from "@/modules/business/promotions";
 
 interface BusinessGridItem {
-  business: import("@/modules/business/types").Business;
+  business: import("@/core/business/types").Business;
   distance?: string | null;
   isFavorite?: boolean;
 }

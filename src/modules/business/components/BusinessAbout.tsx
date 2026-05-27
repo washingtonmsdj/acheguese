@@ -1,6 +1,6 @@
  
 import React from "react";
-import { Business } from "@/modules/business/types";
+import type { Business } from "@/core/business/types";
 
 interface BusinessAboutProps {
   business: Business;

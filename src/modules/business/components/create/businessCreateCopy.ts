@@ -1,4 +1,4 @@
-import type { BusinessCategory } from "@/modules/business/types";
+import type { BusinessCategory } from "@/core/business/types";
 
 export interface BusinessCreateFieldCopy {
   entityNoun: string;

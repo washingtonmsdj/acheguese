@@ -6,7 +6,7 @@ import React from "react";
 import { useState, useEffect } from "react";
 import { BusinessService } from "@/core/business/services/BusinessService";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
-import type { Business } from "@/modules/business/types";
+import type { Business } from "@/core/business/types";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Store } from "lucide-react";
 import BusinessSEO from "@/shared/components/seo/BusinessSEO";

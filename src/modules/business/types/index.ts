@@ -1,53 +1,4 @@
-/**
- * 🏆 BUSINESS MODULE TYPES - SSOT Re-exports
- *
- * Este arquivo re-exporta tipos do core para manter compatibilidade
- * com imports existentes no módulo business.
- *
- * ✅ SSOT: Todos os tipos vêm de @/core/business/types
- * ✅ Zero duplicação
- * ✅ TypeScript strict
- *
- * @version 4.0.0 - Limpeza completa
- * @author Kiro AI
- * @date 2026-04-10
- */
-
-// ============================================
-// CORE BUSINESS TYPES - Use these
-// ============================================
-
-export type {
-  Business,
-  BusinessCategory,
-  BusinessCompanyType,
-  BusinessEmployeeCount,
-  BusinessHours,
-  BusinessRole,
-  BusinessStatus,
-} from "@/core/business/types/Business";
 import type { Business } from "@/core/business/types/Business";
-
-export type {
-  CreateBusinessInput,
-  UpdateBusinessInput,
-  BusinessInput,
-  BusinessFilters,
-  BusinessStats,
-  BusinessDataRecord,
-  BusinessDataWithProfiles,
-  BusinessMetadata,
-  Product,
-  ProductRecord,
-  CreateProductInput,
-  Review,
-  ReviewRecord,
-  ReviewWithUser,
-} from "@/core/business/types";
-
-// ============================================
-// MODULE-SPECIFIC TYPES
-// ============================================
 
 /**
  * Service type for business services
@@ -74,9 +25,6 @@ export interface GalleryPhoto {
   caption: string;
 }
 
-/**
- * Compatibilidade de componentes legados de business.
- */
 export type BizData = Omit<Business, "address"> & {
   logo?: string;
   capa?: string;

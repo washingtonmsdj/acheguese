@@ -1,7 +1,7 @@
 import React from "react";
 import { useState } from "react";
 import { Search, SlidersHorizontal } from "lucide-react";
-import { Product } from "@/modules/business/types";
+import type { Product } from "@/core/business/types";
 interface BusinessProductsProps {
   products: Product[];
   isLoading: boolean;

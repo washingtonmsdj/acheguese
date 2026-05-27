@@ -18,7 +18,7 @@ import {
   isBusinessSlugSafetyBypassAllowed,
 } from "@/core/public-identity/domain/businessSlugSafety";
 import { useBusinessCreateMultiProfile } from "@/modules/business/hooks/useBusinessCreateMultiProfile";
-import type { CreateBusinessInput, BusinessCategory } from "@/modules/business/types";
+import type { CreateBusinessInput, BusinessCategory } from "@/core/business/types";
 import { StepIndicator } from "@/modules/business/components/create/StepIndicator";
 import { BasicInfoStep } from "@/modules/business/components/create/BasicInfoStep";
 import { ContactLocationStep } from "@/modules/business/components/create/ContactLocationStep";

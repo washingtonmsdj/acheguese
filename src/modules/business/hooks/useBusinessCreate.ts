@@ -9,7 +9,7 @@ import { useSessionContext } from "@/core/session";
 import { mediaService } from "@/core/media/services/MediaService";
 import { toast } from "sonner";
 import { locationContextStore } from "@/core/location/stores/LocationContextStore";
-import type { CreateBusinessInput, Business } from "@/modules/business/types";
+import type { CreateBusinessInput, Business } from "@/core/business/types";
 
 interface UseBusinessCreateOptions {
   onSuccess?: (business: Business) => void;

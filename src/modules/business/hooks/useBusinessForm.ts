@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { toast } from "sonner";
-import type { Business } from "@/modules/business/types";
+import type { Business } from "@/core/business/types";
 
 export function useBusinessForm() {
   const [etapa, setEtapa] = useState(1);

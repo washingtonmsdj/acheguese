@@ -1,6 +1,6 @@
 import React from "react";
 import { Star, User } from "lucide-react";
-import { Review } from "@/modules/business/types";
+import type { Review } from "@/core/business/types";
 interface BusinessReviewsProps {
   reviews: Review[];
   isLoading: boolean;

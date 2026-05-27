@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Business } from "@/modules/business/types";
+import type { Business } from "@/core/business/types";
 import { logger } from "@/shared/utils/logger";
 import { buildGoogleMapsDirectionsUrl } from "@/shared/utils/contactLinks";
 import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";

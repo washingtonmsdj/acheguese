@@ -16,7 +16,7 @@ import type {
   UpdateBusinessInput,
   BusinessCategory,
   Business,
-} from "@/modules/business/types";
+} from "@/core/business/types";
 import { StepProgress } from "@/modules/business/components/edit/StepProgress";
 import { BasicInfoStep } from "@/modules/business/components/edit/BasicInfoStep";
 import { ContactStep } from "@/modules/business/components/edit/ContactStep";

@@ -17,7 +17,7 @@ import {
   evaluateBusinessSlugSafety,
   isBusinessSlugSafetyBypassAllowed,
 } from "@/core/public-identity/domain/businessSlugSafety";
-import type { CreateBusinessInput } from "@/modules/business/types";
+import type { CreateBusinessInput } from "@/core/business/types";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 
 export interface BusinessCreateResult {

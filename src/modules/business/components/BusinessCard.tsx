@@ -38,7 +38,7 @@ import { cn } from "@/shared/utils/cn";
 import { buildWhatsAppUrl } from "@/shared/utils/contactLinks";
 import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
-import type { Business } from "@/modules/business/types";
+import type { Business } from "@/core/business/types";
 
 // 🎯 TYPES
 export interface BusinessCardProps {

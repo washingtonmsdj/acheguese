@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { BusinessService } from "@/core/business/services/BusinessService";
-import { Business } from "@/modules/business/types";
+import type { Business } from "@/core/business/types";
 import { logger } from "@/shared/utils/logger";
 
 interface UseBusinessSimilarOptions {
