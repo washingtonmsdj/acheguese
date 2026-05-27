@@ -1,0 +1,100 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("../services/PublicSnapshotRpcService", () => ({
+  PublicSnapshotRpcService: {
+    getBusinessSnapshotBySlug: vi.fn(),
+  },
+}));
+
+import { PublicSnapshotRpcService } from "../services/PublicSnapshotRpcService";
+import { PublicBusinessSnapshotService } from "../services/PublicBusinessSnapshotService";
+
+describe("PublicBusinessSnapshotService", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("consumes only PublicBusinessSnapshot RPC contract", async () => {
+    vi.mocked(PublicSnapshotRpcService.getBusinessSnapshotBySlug).mockResolvedValue({
+      identity: {
+        profileId: "profile-1",
+        businessId: "business-data-1",
+        slug: "restaurante-central",
+        displayName: "Restaurante Central",
+        canonicalBusinessUrl: "/empresas/ba/salvador/pituba/restaurante-central",
+      },
+      institutional: {
+        name: "Restaurante Central",
+        description: "Comida regional",
+        category: "restaurante",
+        subcategory: null,
+        photos: ["/banner.jpg"],
+        addressText: "Rua A, 10",
+        locationText: "Pituba, Salvador - BA",
+        openStatus: { open: true, todayHours: "11:00 - 22:00" },
+        rating: 4.7,
+        reviewCount: 25,
+        business: {
+          id: "profile-1",
+          profile_id: "profile-1",
+        },
+      },
+      verticals: {
+        activeVerticals: ["gastronomy"],
+        primaryVertical: "gastronomy",
+        canonicalVerticalUrl: "/gastronomia/ba/salvador/pituba/restaurante-central",
+        verticalPublicUrls: {
+          gastronomy: "/gastronomia/ba/salvador/pituba/restaurante-central",
+        },
+      },
+      gastronomyPreview: [
+        {
+          id: "item-1",
+          name: "Moqueca",
+          imageUrl: "/m.jpg",
+          priceFrom: 42,
+          priceLabel: "A partir de R$ 42,00",
+          menuUrl: "/gastronomia/ba/salvador/pituba/restaurante-central",
+        },
+      ],
+      seo: {
+        title: "Restaurante Central | Achegue-se",
+        description: "Comida regional",
+        canonical: "/empresas/ba/salvador/pituba/restaurante-central",
+        robots: "index, follow",
+        schemaType: "Restaurant",
+        hasLocalBusinessSchema: true,
+        hasRestaurantSchema: true,
+      },
+      routing: {},
+    } as any);
+
+    const snapshot = await PublicBusinessSnapshotService.getByTerritorySlug({
+      state: "ba",
+      city: "salvador",
+      district: "pituba",
+      slug: "restaurante-central",
+    });
+
+    expect(snapshot).not.toBeNull();
+    expect(snapshot?.gastronomyPreview).toHaveLength(1);
+    expect(snapshot?.verticals.canonicalVerticalUrl).toBe(
+      "/gastronomia/ba/salvador/pituba/restaurante-central",
+    );
+    expect(snapshot?.institutional.business.id).toBe("profile-1");
+    expect(vi.mocked(PublicSnapshotRpcService.getBusinessSnapshotBySlug)).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns null when RPC does not resolve a public snapshot", async () => {
+    vi.mocked(PublicSnapshotRpcService.getBusinessSnapshotBySlug).mockResolvedValue(null);
+
+    const snapshot = await PublicBusinessSnapshotService.getByTerritorySlug({
+      state: "ba",
+      city: "salvador",
+      district: "pituba",
+      slug: "nao-existe",
+    });
+
+    expect(snapshot).toBeNull();
+  });
+});
