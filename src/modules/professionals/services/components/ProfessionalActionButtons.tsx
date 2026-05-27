@@ -42,7 +42,7 @@ export function ProfessionalActionButtons({
           disabled={!professional.is_accepting_clients}
         >
           <Send className="h-4 w-4 mr-1.5" />
-          Orcamento
+          Orçamento
         </Button>
 
         {hasWhatsapp && (

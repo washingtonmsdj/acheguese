@@ -10,6 +10,14 @@ function readProjectFile(path: string): string {
   return readFileSync(resolve(repoRoot, path), "utf8");
 }
 
+function normalizeReadableText(value: string): string {
+  return value.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+}
+
+function expectReadableText(source: string, text: string): void {
+  expect(normalizeReadableText(source)).toContain(normalizeReadableText(text));
+}
+
 describe("professional lead SSOT", () => {
   it("creates a canonical lead schema with RLS and event history", () => {
     const migration = readProjectFile(
@@ -75,7 +83,7 @@ describe("professional lead SSOT", () => {
     expect(service).toContain("NotificationService.createNotification");
     expect(service).toContain('action_url: "/central/profissional"');
     expect(publicPage).toContain("ProfessionalLeadRequestDialog");
-    expect(publicPage).toContain("Solicitar orcamento");
+    expectReadableText(publicPage, "Solicitar orçamento");
     expect(actionButtons).toContain("ProfessionalLeadRequestDialog");
     expect(actionButtons).toContain('sourceChannel="service_profile"');
     expect(trackingPage).toContain("ProfessionalLeadService.getLeadDetails");
@@ -85,8 +93,8 @@ describe("professional lead SSOT", () => {
     expect(trackingPage).toContain("ProfessionalLeadService.updateQuoteStatus");
     expect(trackingPage).toContain("ProfessionalLeadService.getEngagementByLead");
     expect(trackingPage).toContain("ProfessionalLeadService.submitEngagementReview");
-    expect(trackingPage).toContain("Atendimento contratado");
-    expect(trackingPage).toContain("Avaliar atendimento concluido");
+    expectReadableText(trackingPage, "Atendimento contratado");
+    expectReadableText(trackingPage, "Avaliar atendimento concluído");
     expect(publicPage).not.toContain('.from("professional_leads")');
     expect(actionButtons).not.toContain('.from("professional_leads")');
     expect(trackingPage).not.toContain('.from("professional_leads")');
@@ -107,12 +115,12 @@ describe("professional lead SSOT", () => {
     expect(centralPage).toContain("ProfessionalLeadService.createQuote");
     expect(centralPage).toContain("ProfessionalLeadService.listEngagementsForProfessional");
     expect(centralPage).toContain("ProfessionalLeadService.updateEngagementStatus");
-    expect(centralRuntime).toContain("Pedidos de orcamento");
-    expect(centralRuntime).toContain("Atendimentos contratados");
-    expect(centralRuntime).toContain("Marcar contatado");
-    expect(centralRuntime).toContain("Enviar resposta");
-    expect(centralRuntime).toContain("Enviar proposta");
-    expect(centralRuntime).toContain("Leads capturados pelo perfil publico");
+    expectReadableText(centralRuntime, "Pedidos de orçamento");
+    expectReadableText(centralRuntime, "Atendimentos contratados");
+    expectReadableText(centralRuntime, "Marcar contatado");
+    expectReadableText(centralRuntime, "Enviar resposta");
+    expectReadableText(centralRuntime, "Enviar proposta");
+    expectReadableText(centralRuntime, "Leads capturados pelo perfil público");
     expect(centralPage).not.toContain('.from("professional_leads")');
     expect(centralPage).not.toContain('.from("professional_lead_messages")');
     expect(centralPage).not.toContain('.from("professional_lead_quotes")');

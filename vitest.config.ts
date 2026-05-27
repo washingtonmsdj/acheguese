@@ -12,6 +12,14 @@ export default defineConfig(({ mode }) => ({
     testTimeout: 120000, // 2 minutos para testes operacionais (Gate 6/7 com auto-dispatch)
     hookTimeout: 30000,
     env: loadEnv(mode, process.cwd(), ''),
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/.{idea,git,cache,output,temp}/**',
+      '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
+      'e2e/**',
+      'tests/e2e/**',
+    ],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

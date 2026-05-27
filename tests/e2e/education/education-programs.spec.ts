@@ -9,9 +9,7 @@ import {
   ensureEducationProfileExists,
   createTestProgram,
   cleanupEducationData,
-  loginViaUI,
 } from '../../helpers/education-setup';
-import { gotoAuthenticated } from '../../helpers/education-auth-inject';
 
 const businessId = '7ed16389-6768-4eda-904d-ebaec0d2f400';
 const programsUrl = `/perfil/empresas/${businessId}/education/programas`;
@@ -62,6 +60,7 @@ test.describe('Education Programs Management', () => {
     await page.waitForTimeout(2000);
     
     await ensureEducationProfileExists(businessId);
+  });
 
   test.afterEach(async () => {
     await cleanupEducationData(businessId);

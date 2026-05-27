@@ -81,7 +81,7 @@ export function ProfessionalLeadRequestDialog({
 
     if (!result.success) {
       toast({
-        title: "Nao foi possivel enviar",
+        title: "Não foi possível enviar",
         description: result.error,
         variant: "destructive",
       });
@@ -91,8 +91,8 @@ export function ProfessionalLeadRequestDialog({
     toast({
       title: "Pedido enviado",
       description: user
-        ? `${professionalName} recebeu sua solicitacao. Voce pode acompanhar o status.`
-        : `${professionalName} recebeu sua solicitacao de orcamento.`,
+        ? `${professionalName} recebeu sua solicitação. Você pode acompanhar o status.`
+        : `${professionalName} recebeu sua solicitação de orçamento.`,
     });
     resetForm();
     onOpenChange(false);
@@ -106,7 +106,7 @@ export function ProfessionalLeadRequestDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Solicitar orcamento</DialogTitle>
+          <DialogTitle>Solicitar orçamento</DialogTitle>
           <DialogDescription>
             Envie seu pedido para {professionalName}. Seus dados de contato ficam
             registrados no funil seguro do profissional.
@@ -161,12 +161,12 @@ export function ProfessionalLeadRequestDialog({
                     requesterEmail: event.target.value,
                   }))
                 }
-                placeholder="voce@email.com"
+                placeholder="seu@email.com"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="lead-service-needed">Servico desejado</Label>
+              <Label htmlFor="lead-service-needed">Serviço desejado</Label>
               <Input
                 id="lead-service-needed"
                 value={formData.serviceNeeded}
@@ -178,7 +178,7 @@ export function ProfessionalLeadRequestDialog({
                 }
                 required
                 minLength={3}
-                placeholder="Ex: instalacao eletrica"
+                placeholder="Ex: instalação elétrica"
               />
             </div>
           </div>
@@ -197,7 +197,7 @@ export function ProfessionalLeadRequestDialog({
               required
               minLength={10}
               rows={4}
-              placeholder="Inclua contexto, urgencia, medidas, fotos que pretende enviar ou qualquer detalhe importante."
+              placeholder="Inclua contexto, urgência, medidas, fotos que pretende enviar ou qualquer detalhe importante."
             />
           </div>
 
@@ -218,7 +218,7 @@ export function ProfessionalLeadRequestDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="lead-time-window">Horario</Label>
+              <Label htmlFor="lead-time-window">Horário</Label>
               <Input
                 id="lead-time-window"
                 value={formData.preferredTimeWindow}
@@ -228,7 +228,7 @@ export function ProfessionalLeadRequestDialog({
                     preferredTimeWindow: event.target.value,
                   }))
                 }
-                placeholder="Manha, tarde, noite"
+                placeholder="Manhã, tarde, noite"
               />
             </div>
 
@@ -250,7 +250,7 @@ export function ProfessionalLeadRequestDialog({
 
           <p className="text-xs text-muted-foreground">
             Informe telefone ou email. O profissional recebe o pedido dentro da
-            central, com historico e status para acompanhamento.
+            central, com histórico e status para acompanhamento.
           </p>
 
           <div className="flex justify-end gap-2 pt-2">

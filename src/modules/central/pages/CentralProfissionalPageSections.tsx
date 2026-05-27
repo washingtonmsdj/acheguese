@@ -123,7 +123,7 @@ export function CentralProfessionalStatsGrid({
       <StatCard
         title="Visualizações"
         value={getProfessionalStatsValue(stats, "total_views", "totalViews")}
-        description="Servico principal"
+        description="Serviço principal"
         icon={Eye}
       />
       <StatCard
@@ -275,7 +275,7 @@ function PrimaryServiceOperationalData({ service }: { service: Professional }) {
           </p>
         </div>
         <div className="rounded-lg border bg-background p-3 sm:col-span-2">
-          <p className="text-xs text-muted-foreground">Areas de atendimento</p>
+          <p className="text-xs text-muted-foreground">Áreas de atendimento</p>
           <p className="font-semibold">
             {service.service_areas?.length
               ? service.service_areas.join(", ")
@@ -565,7 +565,6 @@ function LeadStatusActions({
           disabled={disabled}
           onClick={() => onStatusChange(lead.id, "quoted")}
         >
-          Orcamento enviado
           Orçamento enviado
         </Button>
       )}
