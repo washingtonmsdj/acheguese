@@ -34,24 +34,6 @@ import type {
 
 export type { ProfileContext } from "@/core/profiles/views/ProfileContext";
 
-// ── Aliases de compatibilidade (@deprecated) ─────────────────────────────
-// Bloqueados para código novo via .eslintrc-profile-rules.json
-
-/**
- * @deprecated Use ProfileAssociatedBusiness de @/core/profiles/services/ProfileBusinessTypes
- */
-export type { ProfileAssociatedBusiness as Business } from "./ProfileBusinessTypes";
-
-/**
- * @deprecated Use ProfileBusinessModuleSnapshot de @/core/profiles/services/ProfileBusinessTypes
- */
-export type { ProfileBusinessModuleSnapshot as ProfileBusinessModuleItem } from "./ProfileBusinessTypes";
-
-/**
- * @deprecated Use ProfileActivityStats de @/core/profiles/services/ProfileOperationTypes
- */
-export type { ProfileActivityStats as ProfileStats } from "./ProfileOperationTypes";
-
 // ── Tipos de operação do service (sem equivalente canônico ainda) ─────────
 // Estes tipos são usados internamente pelo ProfileService e não têm
 // equivalente canônico fora de services/. Permanecem aqui até Fase 5.

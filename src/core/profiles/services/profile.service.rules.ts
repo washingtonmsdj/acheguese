@@ -7,10 +7,10 @@ import type {
   ProfileStatus,
 } from "@/core/profiles/contracts/ProfileRuntimeContracts";
 import type {
-  Business,
   Profile,
   ProfileVerificationStatusValue,
 } from "./types";
+import type { ProfileAssociatedBusiness } from "./ProfileBusinessTypes";
 import type {
   BannedUserLike,
   BusinessRow,
@@ -92,7 +92,7 @@ export function resolveVerificationStatus(
   return { status: PROFILE_VERIFICATION_STATUS.PENDING };
 }
 
-export function mapBusinessRecords(records: BusinessRow[]): Business[] {
+export function mapBusinessRecords(records: BusinessRow[]): ProfileAssociatedBusiness[] {
   return records.map((business) => ({
     id: business.profile_id,
     name: business.business_name,

@@ -8,8 +8,8 @@ import type {
   Profile,
   ProfileContext,
   ProfilePrivateWorkspace,
-  ProfileStats,
 } from "./types";
+import type { ProfileActivityStats } from "./ProfileOperationTypes";
 import type { ProfilePermissions } from "@/core/profiles/contracts/ProfileRuntimeContracts";
 import type { BusinessRow } from "./profile.service.types";
 import { mapBusinessRecords, resolveVerificationStatus } from "./profile.service.rules";
@@ -291,7 +291,7 @@ export async function getPrivateWorkspaceAggregate(
     }
 
     const verificationSummary = resolveVerificationStatus(verification);
-    const stats: ProfileStats = {
+    const stats: ProfileActivityStats = {
       posts: postsCount || 0,
       likes: likesCount || 0,
       favorites: favoritesResult.total_favorites_given || 0,

@@ -16,10 +16,10 @@ import type {
   ProfileContext,
   ProfileLikeActivityRecord,
   ProfilePrivateWorkspace,
-  ProfileStats,
   ProfileSummary,
   ProfileSummaryExtended,
 } from "./types";
+import type { ProfileActivityStats } from "./ProfileOperationTypes";
 import type {
   ProfileFilterRow,
   ActiveRideIdRow,
@@ -369,7 +369,7 @@ export async function getAdminProfilesList(
 /**
  * Busca estatísticas do profile
  */
-export async function getStats(userId: string): Promise<ProfileStats | null> {
+export async function getStats(userId: string): Promise<ProfileActivityStats | null> {
   const activeProfile = await getActiveProfile(userId);
 
   if (!activeProfile) {

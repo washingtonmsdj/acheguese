@@ -75,8 +75,6 @@ export type {
   AdminProfileListItem,
   AdminFilters,
   BasePermissions,
-  ProfileStats,
-  Business,
   ProfilePrivateWorkspace,
   ProfileIdentitySnapshot,
   ProfileOperationsCounts,
