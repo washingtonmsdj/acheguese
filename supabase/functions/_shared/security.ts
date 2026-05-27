@@ -447,8 +447,7 @@ export function auditLog(entry: AuditLogEntry): void {
 
   // Persistência assíncrona no banco — fire-and-forget com tratamento de erro
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
-  // Suporta novo formato (SUPABASE_SECRET_KEY) e legado (SUPABASE_SERVICE_ROLE_KEY)
-  const serviceKey = Deno.env.get('SUPABASE_SECRET_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
   if (supabaseUrl && serviceKey) {
     fetch(`${supabaseUrl}/rest/v1/function_audit`, {
@@ -456,9 +455,7 @@ export function auditLog(entry: AuditLogEntry): void {
       headers: {
         'Content-Type': 'application/json',
         'apikey': serviceKey,
-        // Nota: com as novas chaves (sb_secret_...), a secret key não é um JWT
-        // e não deve ser usada no Authorization header. O header apikey é suficiente
-        // para autenticar chamadas REST internas server-side.
+        // O header apikey autentica chamadas REST internas server-side.
         // Referência: https://github.com/orgs/supabase/discussions/29260
         'Prefer': 'return=minimal',
       },

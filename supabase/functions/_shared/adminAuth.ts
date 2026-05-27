@@ -26,11 +26,10 @@ export interface AdminAuthResult {
 
 function getSupabaseClient() {
   const url = Deno.env.get('SUPABASE_URL');
-  // Suporta novo formato (SUPABASE_SECRET_KEY) e legado (SUPABASE_SERVICE_ROLE_KEY)
-  const key = Deno.env.get('SUPABASE_SECRET_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
   if (!url || !key) {
-    throw new Error('Missing SUPABASE_URL or SUPABASE_SECRET_KEY env vars');
+    throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY env vars');
   }
 
   return createClient(url, key, {

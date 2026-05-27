@@ -14,7 +14,7 @@ import { requireAdmin } from '../_shared/adminAuth.ts';
 import { validateBody, listUsersSchema, validationErrorResponse, type ListUsersBody } from '../_shared/validation.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
-const SUPABASE_ADMIN_KEY = Deno.env.get('SUPABASE_SECRET_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
 interface AdminUser {
   user_id: string;
@@ -169,15 +169,15 @@ serve(async (req: Request) => {
     );
   }
 
-  if (!SUPABASE_URL || !SUPABASE_ADMIN_KEY) {
-    console.error('[admin-list-users] missing SUPABASE_URL or admin key env vars');
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    console.error('[admin-list-users] missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY env vars');
     return new Response(
       JSON.stringify({ error: 'Internal server error' }),
       { status: 500, headers: getAllSecurityHeaders('POST, OPTIONS', req) },
     );
   }
 
-  const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_ADMIN_KEY, {
+  const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
