@@ -7,7 +7,7 @@
 import { logger } from "@/shared/utils/logger";
 import { NotificationService } from "@/core/notifications/services/NotificationService";
 import type {
-  NotificationType,
+  CreateNotificationInput,
 } from "@/core/notifications/services/NotificationService";
 import { CommentService } from "@/core/comments/services";
 import { postService } from "@/core/posts/services";
@@ -131,7 +131,7 @@ export async function createCommentNotification(
 
     await NotificationService.createNotification({
       user_id: postOwnerProfileId,
-      type: "info" as NotificationType,
+      type: "info" satisfies CreateNotificationInput["type"],
       category: "social",
       title: "Novo comentário",
       message: `${actor?.name || "Alguém"} comentou no seu post`,
@@ -178,7 +178,7 @@ export async function createReplyNotification(
     const actor = await profileService.getProfileById(actorId);
     await NotificationService.createNotification({
       user_id: parentComment.author_profile_id,
-      type: "info" as NotificationType,
+      type: "info" satisfies CreateNotificationInput["type"],
       category: "social",
       title: "Nova resposta no comentário",
       message: `${actor?.name || "Alguém"} respondeu seu comentário`,
@@ -223,7 +223,7 @@ export async function createLikeNotification(
 
     await NotificationService.createNotification({
       user_id: postOwnerProfileId,
-      type: "info" as NotificationType,
+      type: "info" satisfies CreateNotificationInput["type"],
       category: "social",
       title: "Nova curtida",
       message: `${actor?.name || "Alguém"} curtiu seu post`,
@@ -260,7 +260,7 @@ export async function createFollowedPostNotifications(
       try {
         await NotificationService.createNotification({
           user_id: followerId,
-          type: "info" as NotificationType,
+          type: "info" satisfies CreateNotificationInput["type"],
           category: "social",
           title: "Novo comentário em post seguido",
           message: `${actor?.name || "Alguém"} comentou em um post que você segue`,
@@ -321,7 +321,7 @@ export async function createMentionNotifications(
       try {
         await NotificationService.createNotification({
           user_id: user.id,
-          type: "info" as NotificationType,
+          type: "info" satisfies CreateNotificationInput["type"],
           category: "social",
           title: "Você foi mencionado",
           message: `${actor?.name || "Alguém"} mencionou você em um post`,

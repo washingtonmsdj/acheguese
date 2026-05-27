@@ -27,7 +27,6 @@ export function EmpresasSection({
   showBusinessOnboarding,
   navigate,
   appUrls,
-  handleBusinessClick,
   copyToClipboard,
 }: EmpresasSectionProps) {
   const primaryBusinessModule = businessModules[0] ?? null;

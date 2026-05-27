@@ -7,7 +7,11 @@
 
 import type { NavigateFunction } from "react-router-dom";
 import type { MultiProfileRecord } from "@/core/profiles/services/multi-profile/types";
-import type { ProfileBusinessModuleSnapshot } from "@/core/profiles/services/ProfileBusinessTypes";
+import type {
+  ProfileAssociatedBusiness,
+  ProfileBusinessModuleSnapshot,
+} from "@/core/profiles/services/ProfileBusinessTypes";
+import type { VerificationStatus } from "@/modules/profile/components/ResidentVerificationCard";
 import type { Tables } from "@/core/infrastructure/supabase/types.generated";
 export type ProfileSectionId =
   import("@/modules/profile/config/profile-sections.config").ProfileSectionId;
@@ -142,6 +146,11 @@ export interface Favorite {
   readonly item: Record<string, unknown>;
 }
 
+export interface BusinessFavoritesState {
+  readonly favorites: readonly ProfileAssociatedBusiness[];
+  readonly loading: boolean;
+}
+
 // ============================================
 // Account Snapshot (estado da conta)
 // ============================================
@@ -150,7 +159,7 @@ export interface AccountSnapshot {
   readonly accountState: "active" | "inactive" | "blocked" | "suspended";
   readonly isBlocked: boolean;
   readonly isSuspended: boolean;
-  readonly verificationStatus: string;
+  readonly verificationStatus: VerificationStatus;
   readonly verificationRejectionReason?: string;
 }
 
@@ -185,17 +194,16 @@ export interface DadosPessoaisSectionProps extends BaseSectionProps {
   readonly stats: Stats;
   readonly operations: Operations;
   readonly isVerified: boolean;
-  readonly verificationStatus: string;
+  readonly verificationStatus: VerificationStatus;
   readonly verificationRejectionReason?: string;
-  readonly favorites: readonly Favorite[];
-  readonly handleBusinessClick: (id: string) => void;
+  readonly favorites: BusinessFavoritesState;
+  readonly handleBusinessClick: (business: ProfileAssociatedBusiness) => void;
   readonly setActiveSection: (section: ProfileSectionId) => void;
 }
 
 export interface EmpresasSectionProps extends BaseSectionProps {
   readonly businessModules: readonly ProfileBusinessModuleSnapshot[];
   readonly showBusinessOnboarding: boolean;
-  readonly handleBusinessClick: (id: string) => void;
   readonly copyToClipboard: (text: string) => void;
 }
 
@@ -237,7 +245,7 @@ export interface SegurancaSectionProps extends BaseSectionProps {
   readonly roles: any;
   readonly activeProfile: MultiProfileRecord | null;
   readonly stats: Stats;
-  readonly verificationStatus: string;
+  readonly verificationStatus: VerificationStatus;
   readonly verificationRejectionReason?: string;
   readonly downloadDataOpen: boolean;
   readonly setDownloadDataOpen: (open: boolean) => void;

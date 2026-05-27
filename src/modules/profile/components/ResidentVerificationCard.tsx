@@ -23,7 +23,7 @@ import { VerificationService } from "@/core/verification/services/VerificationSe
 import { mediaService } from "@/core/media/services/MediaService";
 import { useResidentAddress } from "@/core/address/hooks/useResidentAddress";
 
-type VerificationStatus = "not_requested" | "pending" | "approved" | "rejected";
+export type VerificationStatus = "not_requested" | "pending" | "approved" | "rejected";
 
 interface ResidentVerificationCardProps {
   profileId: string;

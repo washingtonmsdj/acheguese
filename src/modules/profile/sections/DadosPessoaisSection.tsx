@@ -51,7 +51,7 @@ export function DadosPessoaisSection({
   appUrls,
   handleBusinessClick,
 }: DadosPessoaisSectionProps) {
-  const publicHandle = (profile as any)?.username || (profile as any)?.handle || "";
+  const publicHandle = profile?.username || profile?.handle || "";
 
   return (
     <div className="space-y-6">
@@ -200,7 +200,7 @@ export function DadosPessoaisSection({
           {profile ? (
             <ResidentVerificationCard
               profileId={profile.id}
-              currentStatus={verificationStatus as any}
+              currentStatus={verificationStatus}
               rejectionReason={verificationRejectionReason}
             />
           ) : null}
@@ -212,9 +212,9 @@ export function DadosPessoaisSection({
         <ContentTabsSection
           userId={user.id}
           profileId={personalProfileId}
-          favorites={favorites as any}
+          favorites={favorites}
           onPostClick={(id) => navigate(`${appUrls.community.feed}?post=${id}`)}
-          onBusinessClick={handleBusinessClick as any}
+          onBusinessClick={handleBusinessClick}
           onExplore={() => navigate(appUrls.business.list)}
           onCreateService={() => navigate(appUrls.services.register)}
           onEditService={(id) => navigate(appUrls.services.edit(id))}

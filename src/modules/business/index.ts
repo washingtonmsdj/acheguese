@@ -64,7 +64,7 @@ export { default as EditarEmpresaPage } from "./pages/EditarEmpresaPage";
 export { default as EmpresaCatalogoPublicoPage } from "./pages/EmpresaCatalogoPublicoPage";
 export { default as EmpresasPage } from "./pages/EmpresasPage";
 
-// Types - Export all types from types/index.ts (excluding those that conflict with component names)
+// Types - canonical business contracts live in core/business.
 export type {
   BusinessCategory,
   BusinessMetadata,
@@ -81,13 +81,20 @@ export type {
   BusinessStats,
   CreateProductInput,
   BusinessInput,
+} from "@/core/business/types";
+
+export type {
+  Service,
+  GalleryPhoto,
+  BizData,
+  SortOption,
 } from "./types";
 
 // Export BusinessHours and BusinessFilters types with aliases to avoid conflicts with components
 export type {
   BusinessHours as BusinessHoursType,
   BusinessFilters as BusinessFiltersType,
-} from "./types";
+} from "@/core/business/types";
 
 export {
   businessSchema,

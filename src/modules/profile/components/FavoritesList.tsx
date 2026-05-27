@@ -5,7 +5,7 @@ import { Heart, Star, BadgeCheck, Loader2, Search } from "lucide-react";
 import type { ProfileAssociatedBusiness } from "@/core/profiles/services/ProfileBusinessTypes";
 
 interface FavoritesListProps {
-  favorites: ProfileAssociatedBusiness[];
+  favorites: readonly ProfileAssociatedBusiness[];
   loading: boolean;
   onBusinessClick: (business: ProfileAssociatedBusiness) => void;
   onExplore: () => void;

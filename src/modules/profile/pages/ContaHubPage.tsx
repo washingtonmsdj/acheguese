@@ -102,10 +102,7 @@ function buildSectionProps(
         verificationRejectionReason: data.verificationRejectionReason,
         favorites: data.favorites as any,
         setActiveSection: data.setActiveSection,
-        handleBusinessClick: (id: string) => {
-          const business = (data.businessModules as any[]).find((b: any) => b.business?.id === id)?.business;
-          if (business) data.handleBusinessClick(business);
-        },
+        handleBusinessClick: data.handleBusinessClick,
       };
 
     case "empresas":
@@ -113,10 +110,6 @@ function buildSectionProps(
         ...baseProps,
         businessModules: data.businessModules,
         showBusinessOnboarding: data.showBusinessOnboarding,
-        handleBusinessClick: (id: string) => {
-          const business = (data.businessModules as any[]).find((b: any) => b.business?.id === id)?.business;
-          if (business) data.handleBusinessClick(business);
-        },
         copyToClipboard: data.copyToClipboard,
       };
 
