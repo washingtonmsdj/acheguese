@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Users, Loader2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
-import { GrupoCardEnhanced } from "./GrupoCardEnhanced";
+import { GrupoCard } from "./GrupoCard";
 
 interface GroupLike {
   id: string;
@@ -80,7 +80,7 @@ export function GruposList({
   return (
     <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
       {groups.map((group, index) => (
-        <GrupoCardEnhanced
+        <GrupoCard
           key={group.id}
           group={group}
           variant="grid"

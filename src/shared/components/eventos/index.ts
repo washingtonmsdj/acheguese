@@ -2,6 +2,5 @@
  * Eventos Components - Barrel Export
  */
 
-export { EventCardEnhanced } from './EventCardEnhanced';
-export { EventCardEnhanced as EventCard } from './EventCardEnhanced'; // Alias para compatibilidade
+export { EventCard } from './EventCard';
 export { EventGrid } from './EventGrid';

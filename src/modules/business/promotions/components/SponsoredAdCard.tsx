@@ -94,8 +94,8 @@ function getOwnerIcon(ownerType: string): LucideIcon {
 // MAIN COMPONENT
 // ============================================================================
 
-export const SponsoredAdCardEnhanced = memo(
-  forwardRef<HTMLDivElement, SponsoredAdCardProps>(function SponsoredAdCardEnhanced(
+export const SponsoredAdCard = memo(
+  forwardRef<HTMLDivElement, SponsoredAdCardProps>(function SponsoredAdCard(
     {
       campaign,
       variant = 'card',
@@ -309,4 +309,4 @@ export const SponsoredAdCardEnhanced = memo(
   }),
 );
 
-SponsoredAdCardEnhanced.displayName = 'SponsoredAdCardEnhanced';
+SponsoredAdCard.displayName = 'SponsoredAdCard';

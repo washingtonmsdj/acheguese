@@ -75,8 +75,8 @@ function isPopularGroup(membersCount: number): boolean {
   return membersCount >= 50;
 }
 
-export const GrupoCardEnhanced = memo(
-  forwardRef<HTMLDivElement, GrupoCardProps>(function GrupoCardEnhanced(
+export const GrupoCard = memo(
+  forwardRef<HTMLDivElement, GrupoCardProps>(function GrupoCard(
     { group, variant = "list", index = 0, onClick, onJoin, className },
     ref,
   ) {
@@ -327,4 +327,4 @@ export const GrupoCardEnhanced = memo(
   }),
 );
 
-GrupoCardEnhanced.displayName = "GrupoCardEnhanced";
+GrupoCard.displayName = "GrupoCard";

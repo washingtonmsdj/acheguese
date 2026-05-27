@@ -18,7 +18,7 @@
 import { memo, useRef, useEffect } from "react";
 import { Calendar, Loader2 } from "lucide-react";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { EventCardEnhanced } from "./EventCardEnhanced";
+import { EventCard } from "./EventCard";
 
 interface Event {
   id: string;
@@ -102,7 +102,7 @@ export const EventGrid = memo(function EventGrid({
   return (
     <div className="flex flex-col gap-3">
       {eventos.map((evento, index) => (
-        <EventCardEnhanced
+        <EventCard
           key={evento.id}
           evento={evento}
           variant="list"

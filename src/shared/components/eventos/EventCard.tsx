@@ -189,8 +189,8 @@ function openInMaps(latitude: number, longitude: number): void {
 // MAIN COMPONENT
 // ============================================================================
 
-export const EventCardEnhanced = memo(
-  forwardRef<HTMLDivElement, EventCardProps>(function EventCardEnhanced(
+export const EventCard = memo(
+  forwardRef<HTMLDivElement, EventCardProps>(function EventCard(
     {
       evento,
       variant = 'grid',
@@ -622,4 +622,4 @@ export const EventCardEnhanced = memo(
   }),
 );
 
-EventCardEnhanced.displayName = 'EventCardEnhanced';
+EventCard.displayName = 'EventCard';
