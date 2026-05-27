@@ -152,7 +152,7 @@ export async function getPrivateWorkspaceAggregate(
     const issuesCountPromise = communityIssueService.getCountByProfile(activeProfile.id).catch(() => 0);
     const notificationStatsPromise = notificationService.getStats(deps.userId).catch(() => null);
     const notificationFeedPromise = notificationService
-      .fetchNotifications(deps.userId, { limit: 5 })
+      .fetchNotifications({ limit: 5 })
       .catch(() => []);
     const ridesPromise = mobilityService.getUserRides(deps.userId).catch(() => []);
 

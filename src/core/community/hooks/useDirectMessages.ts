@@ -20,10 +20,6 @@ interface PostContext {
   type: "civic_report" | "achado" | "recomendacao" | "alerta";
 }
 
-// Re-export types from MessagingService for compatibility
-export type { ConversationPreview as Conversation } from "@/core/messaging/types";
-export type { Message as DirectMessage } from "@/core/messaging/types";
-
 export function useDirectMessages(_currentUserId?: string) {
   const { activeProfile } = useSessionContext();
   const profileId = activeProfile?.id;

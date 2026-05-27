@@ -94,7 +94,7 @@ export default function PassageiroPage() {
   const mobilityUrls = useMobilityUrls();
   const {
     myRides,
-    createRideRequest,
+    createRide,
     cancelRide,
     rateRide,
     confirmRideCompletion,
@@ -565,7 +565,7 @@ export default function PassageiroPage() {
           onOpenChange={setIsCreateOpen}
           initialType={createModalInitialType}
           onSubmit={async (data) => {
-            const ride = await createRideRequest(data) as { id?: string } | null;
+            const ride = await createRide(data) as { id?: string } | null;
             if (ride?.id) {
               navigate(`/mobilidade/buscando/${ride.id}`);
             }

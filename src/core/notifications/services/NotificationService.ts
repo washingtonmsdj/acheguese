@@ -60,10 +60,6 @@ export interface UserNotificationSettings {
   weekly_digest: boolean;
 }
 
-// Public aliases used by community flows.
-export type NotificationType = CreateNotificationInput["type"];
-export type NotificationPriority = "low" | "medium" | "high";
-
 export class NotificationService {
   private static readonly db = supabase as any;
   /**
@@ -259,18 +255,8 @@ export class NotificationService {
     };
   }
 
-  // Instance methods for compatibility
-  async fetchNotifications(userIdOrFilters?: string | NotificationFilters, filters?: NotificationFilters): Promise<Notification[]> {
-    // Support both signatures:
-    // fetchNotifications(filters) - new signature
-    // fetchNotifications(userId, filters) - old signature for compatibility
-    if (typeof userIdOrFilters === 'string') {
-      // Old signature: fetchNotifications(userId, filters)
-      return NotificationService.getUserNotifications(filters);
-    } else {
-      // New signature: fetchNotifications(filters)
-      return NotificationService.getUserNotifications(userIdOrFilters);
-    }
+  async fetchNotifications(filters?: NotificationFilters): Promise<Notification[]> {
+    return NotificationService.getUserNotifications(filters);
   }
 
   async createNotification(input: CreateNotificationInput): Promise<string | null> {

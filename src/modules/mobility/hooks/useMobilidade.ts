@@ -658,7 +658,6 @@ export function useMobilidade() {
     acceptRide,
     completeRide,
     refetch,
-    createRideRequest: createRide,
     rateRide,
     confirmRideCompletion,
     reportRideProblem,

@@ -55,7 +55,6 @@ export {
 export {
   //  Rides
   createRide,
-  createRideRequest,
   updateRide,
   updateRideWithGuards,
   updateRideIfStatusIn,
@@ -223,7 +222,6 @@ export class MobilityFacade {
   static getRideAvailableSeats = MobilityQueries.getRideAvailableSeats;
   //  ===== MUTATIONS =====
   static createRide = MobilityMutations.createRide;
-  static createRideRequest = MobilityMutations.createRideRequest;
   static updateRide = MobilityMutations.updateRide;
   static updateRideWithGuards = MobilityMutations.updateRideWithGuards;
   static updateRideIfStatusIn = MobilityMutations.updateRideIfStatusIn;

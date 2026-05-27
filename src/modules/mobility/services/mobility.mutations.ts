@@ -28,13 +28,6 @@ export async function createRide(data: Record<string, unknown>): Promise<unknown
 }
 
 /**
- * Criar solicitação de corrida (alias para createRide)
- */
-export async function createRideRequest(data: Record<string, unknown>): Promise<unknown> {
-  return createRide({ ...data, status: RIDE_STATUS.PENDING });
-}
-
-/**
  * Atualizar corrida
  */
 export async function updateRide(rideId: string, updates: Record<string, unknown>): Promise<unknown> {

@@ -71,10 +71,7 @@ export function useUnifiedNotifications(
       setError(null);
 
       try {
-        const data = await notificationService.fetchNotifications(
-          user.id,
-          filtersRef.current,
-        );
+        const data = await notificationService.fetchNotifications(filtersRef.current);
         setNotifications(data as Notification[]);
 
         const statsData = await notificationService.getStats(user.id);

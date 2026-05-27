@@ -1,11 +1,3 @@
-/**
- * Community Types
- * 
- * CommunityPost moved to core/posts/types/Post.ts for SSOT
- */
-
-// Re-export from core/posts for backward compatibility
-export type { CommunityPost } from "@/core/posts/types/Post";
 export type ReportReason =
   | "spam"
   | "odio"
