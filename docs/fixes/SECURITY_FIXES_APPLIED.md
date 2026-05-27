@@ -31,4 +31,4 @@ npm run build
 
 ## Status
 
-Baseline ativo em 2026-05-24. Este arquivo deve ser atualizado quando novas protecoes forem adicionadas ou quando uma excecao de seguranca for aprovada.
+Baseline ativo em 2026-05-26. Este arquivo deve ser atualizado quando novas protecoes forem adicionadas ou quando uma excecao de seguranca for aprovada.

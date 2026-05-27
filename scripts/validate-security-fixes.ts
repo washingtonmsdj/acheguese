@@ -216,7 +216,7 @@ class SecurityValidator {
   private async checkDocumentation(): Promise<void> {
     console.log('Verificando documentacao...');
 
-    const docs = ['docs/SECURITY_GUIDELINES.md', 'SECURITY_FIXES_APPLIED.md'];
+    const docs = ['docs/SECURITY_GUIDELINES.md', 'docs/fixes/SECURITY_FIXES_APPLIED.md'];
     const missing = docs.filter((doc) => !fs.existsSync(path.join(this.rootPath, doc)));
 
     if (missing.length > 0) {

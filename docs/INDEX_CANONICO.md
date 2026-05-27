@@ -34,7 +34,6 @@ Data de referencia: 2026-05-06
 - [audits/EXECUTION_CHECKLIST.md](./audits/EXECUTION_CHECKLIST.md)
 - [audits/QUICK_WINS.md](./audits/QUICK_WINS.md)
 - [audits/POST_READINESS_BACKLOG.md](./audits/POST_READINESS_BACKLOG.md)
-- [tasks/SSOT_EXECUCAO_CONTINUIDADE_2026-04-20.md](./tasks/SSOT_EXECUCAO_CONTINUIDADE_2026-04-20.md)
 
 Observacao:
 - Auditorias podem citar caminhos legados por contexto historico; para decisao atual, prevalecem `CURRENT_RULES.md`, `STATUS_ATUAL.md` e `ACAO_EXECUTAVEL_AUDITORIA_HIPERLOCAL.md`.
