@@ -1,18 +1,9 @@
 import type {
-  AdminProfileListItem,
   CreateProfileData,
   Profile,
   ProfileContext,
-  ProfileSummary,
-  ProfileSummaryExtended,
 } from "./types";
-import type {
-  AdminProfileListRow,
-  ProfileSummaryExtendedRow,
-  ProfileSummaryRow,
-  UserSubscriptionLike,
-  VerificationWorkflowStatus,
-} from "./profile.service.types";
+import type { VerificationWorkflowStatus } from "./profile.service.types";
 import type {
   ProfilePermissions,
   ProfilePlan,
@@ -64,40 +55,4 @@ export function mapProfileContext(params: {
     reputation,
     verified: profile.verified || verification === "verified" || false,
   };
-}
-
-export function mapAdminProfilesList(data: AdminProfileListRow[] | null): AdminProfileListItem[] {
-  return (data || []).map((profile) => ({
-    id: profile.id,
-    name: profile.name,
-    username: profile.username,
-    avatarUrl: profile.avatar_url,
-    verified: profile.verified || false,
-    suspended: profile.is_suspended || false,
-    createdAt: profile.created_at,
-    profileType: profile.profile_type,
-  }));
-}
-
-export function mapProfilesSummary(data: ProfileSummaryRow[] | null): ProfileSummary[] {
-  return (data || []).map((profile) => ({
-    id: profile.id,
-    userId: profile.user_id,
-    name: profile.name,
-    avatarUrl: profile.avatar_url,
-    verified: profile.verified || false,
-  }));
-}
-
-export function mapProfilesSummaryExtended(
-  data: ProfileSummaryExtendedRow[] | null,
-): ProfileSummaryExtended[] {
-  return (data || []).map((profile) => ({
-    id: profile.id,
-    name: profile.display_name,
-    avatarUrl: profile.avatar_url,
-    verified: false,
-    neighborhood: profile.public_neighborhood,
-    whatsapp: null,
-  }));
 }

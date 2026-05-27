@@ -36,33 +36,6 @@ export type RecentProfileRow = {
   avatar_url: string | null;
   created_at: string;
 };
-export type ProfileSummaryRow = {
-  id: string;
-  user_id: string;
-  name: string;
-  avatar_url: string | null;
-  verified?: boolean | null;
-};
-export type ProfileSummaryExtendedRow = {
-  id: string;
-  display_name: string | null;
-  avatar_url: string | null;
-  verified?: boolean | null;
-  username?: string | null;
-  public_neighborhood?: string | null;
-  public_city?: string | null;
-  public_state?: string | null;
-};
-export type AdminProfileListRow = {
-  id: string;
-  name: string;
-  username: string | null;
-  avatar_url: string | null;
-  verified?: boolean | null;
-  is_suspended?: boolean | null;
-  created_at: string;
-  profile_type: string;
-};
 export type ProfileFilterRow = {
   id: string;
   user_id: string;
