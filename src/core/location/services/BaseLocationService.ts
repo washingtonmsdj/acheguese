@@ -121,30 +121,4 @@ export abstract class BaseLocationService {
     return { scope: 'location', location_id: location.id };
   }
 
-  /**
-   * @deprecated Use getTerritoryFilter() — retorna TerritoryFilter tipado.
-   * Mantido para compatibilidade com hooks legados que usam getFilterParams().
-   */
-  getFilterParams(): { location_id?: string; scope?: string } {
-    const location = this.getActiveLocation();
-    if (!location) return {};
-    return {
-      location_id: location.id,
-      scope: this.getFilterScope(),
-    };
-  }
-
-  /**
-   * Parâmetros de filtro para queries (versão assíncrona).
-   * Usa getOperationalLocationId() — permite override em subclasses.
-   */
-  async getFilterParamsAsync(): Promise<{ location_id?: string; scope?: string }> {
-    const operationalId = await this.getOperationalLocationId();
-    if (!operationalId) return {};
-
-    return {
-      location_id: operationalId,
-      scope: this.getFilterScope(),
-    };
-  }
 }

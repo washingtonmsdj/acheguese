@@ -40,11 +40,11 @@ import type {
   ActivityItem,
   ActivityMetadata,
   ActivityType,
-  CommentCreatedMetadate,
-  PollVotedMetadate,
-  PostCreatedMetadate,
-  PostLikedMetadate,
-  PostSavedMetadate,
+  CommentCreatedMetadata,
+  PollVotedMetadata,
+  PostCreatedMetadata,
+  PostLikedMetadata,
+  PostSavedMetadata,
 } from "@/shared/types/activity";
 
 interface ActivityTimelineProps {
@@ -123,17 +123,13 @@ const FILTER_OPTIONS: Array<{ value: ActivityFilterValue; label: string }> = [
   { value: "poll_voted", label: "Votos" },
 ];
 
-function getActivityMetadata(activity: ActivityItem): ActivityMetadata | undefined {
-  return activity.metadata ?? activity.metadate;
-}
-
 function isFilterValue(value: string): value is ActivityFilterValue {
   return FILTER_OPTIONS.some((option) => option.value === value);
 }
 
 function isPostCreatedMetadata(
   metadata: ActivityMetadata | undefined,
-): metadata is PostCreatedMetadate {
+): metadata is PostCreatedMetadata {
   return (
     metadata !== undefined &&
     "post_content" in metadata &&
@@ -144,13 +140,13 @@ function isPostCreatedMetadata(
 
 function isCommentCreatedMetadata(
   metadata: ActivityMetadata | undefined,
-): metadata is CommentCreatedMetadate {
+): metadata is CommentCreatedMetadata {
   return metadata !== undefined && "comment_content" in metadata;
 }
 
 function isPostInteractionMetadata(
   metadata: ActivityMetadata | undefined,
-): metadata is PostLikedMetadate | PostSavedMetadate {
+): metadata is PostLikedMetadata | PostSavedMetadata {
   return (
     metadata !== undefined &&
     "author_name" in metadata &&
@@ -160,7 +156,7 @@ function isPostInteractionMetadata(
 
 function isPollVoteMetadata(
   metadata: ActivityMetadata | undefined,
-): metadata is PollVotedMetadate {
+): metadata is PollVotedMetadata {
   return (
     metadata !== undefined &&
     "question" in metadata &&
@@ -169,7 +165,7 @@ function isPollVoteMetadata(
 }
 
 function getPostTargetId(activity: ActivityItem): string | null {
-  const metadata = getActivityMetadata(activity);
+  const metadata = activity.metadata;
 
   if (!metadata || !("post_id" in metadata)) {
     return null;
@@ -205,7 +201,7 @@ export function ActivityTimeline({
   const renderActivityContent = (activity: ActivityItem) => {
     const config = ACTIVITY_CONFIG[activity.type];
     const Icon = config.icon;
-    const metadata = getActivityMetadata(activity);
+    const metadata = activity.metadata;
 
     return (
       <div className="flex gap-4">

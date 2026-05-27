@@ -10,11 +10,10 @@ import type {
 import type {
   ActivityFilters,
   ActivityItem,
-  ActivityMetadata,
-  CommentCreatedMetadate,
-  PollVotedMetadate,
-  PostSavedMetadate,
-  PostLikedMetadate,
+  CommentCreatedMetadata,
+  PollVotedMetadata,
+  PostSavedMetadata,
+  PostLikedMetadata,
 } from "@/shared/types/activity";
 
 type PostCreatedActivityRecord = Awaited<
@@ -37,13 +36,6 @@ interface PaginatedActivityResult {
   nextPage?: number;
 }
 
-function withCompatibilityMetadata(metadata: ActivityMetadata) {
-  return {
-    metadata,
-    metadate: metadata,
-  };
-}
-
 function mapPostCreatedActivity(activity: PostCreatedActivityRecord): ActivityItem {
   const metadata = activity.metadata;
 
@@ -51,12 +43,12 @@ function mapPostCreatedActivity(activity: PostCreatedActivityRecord): ActivityIt
     id: activity.id,
     type: activity.type,
     created_at: activity.created_at,
-    ...withCompatibilityMetadata(metadata),
+    metadata,
   };
 }
 
 function mapCommentActivity(comment: CommentActivityRecord): ActivityItem {
-  const metadata: CommentCreatedMetadate = {
+  const metadata: CommentCreatedMetadata = {
     comment_id: comment.id,
     post_id: comment.post_id,
     post_type: "",
@@ -68,12 +60,12 @@ function mapCommentActivity(comment: CommentActivityRecord): ActivityItem {
     id: `comment_${comment.id}`,
     type: "comment_created",
     created_at: comment.created_at,
-    ...withCompatibilityMetadata(metadata),
+    metadata,
   };
 }
 
 function mapLikeActivity(like: ProfileLikeActivityRecord): ActivityItem {
-  const metadata: PostLikedMetadate = {
+  const metadata: PostLikedMetadata = {
     post_id: like.post?.id ?? "",
     post_type: like.post?.type ?? "",
     post_content: like.post?.content ?? "",
@@ -86,12 +78,12 @@ function mapLikeActivity(like: ProfileLikeActivityRecord): ActivityItem {
     id: `like_${like.id}`,
     type: "post_liked",
     created_at: like.created_at,
-    ...withCompatibilityMetadata(metadata),
+    metadata,
   };
 }
 
 function mapSavedActivity(save: ProfileSaveActivityRecord): ActivityItem {
-  const metadata: PostSavedMetadate = {
+  const metadata: PostSavedMetadata = {
     post_id: save.post?.id ?? "",
     post_type: save.post?.type ?? "",
     post_content: save.post?.content ?? "",
@@ -104,7 +96,7 @@ function mapSavedActivity(save: ProfileSaveActivityRecord): ActivityItem {
     id: `save_${save.id}`,
     type: "post_saved",
     created_at: save.created_at,
-    ...withCompatibilityMetadata(metadata),
+    metadata,
   };
 }
 
@@ -112,7 +104,7 @@ function mapPollVoteActivity(vote: ProfilePollVoteActivityRecord): ActivityItem 
   const selectedOption = vote.poll?.options?.find(
     (option) => option.id === vote.option_id,
   );
-  const metadata: PollVotedMetadate = {
+  const metadata: PollVotedMetadata = {
     poll_id: vote.poll?.id ?? "",
     post_id: vote.poll?.post_id ?? "",
     question: vote.poll?.question ?? "",
@@ -123,7 +115,7 @@ function mapPollVoteActivity(vote: ProfilePollVoteActivityRecord): ActivityItem 
     id: `vote_${vote.id}`,
     type: "poll_voted",
     created_at: vote.created_at,
-    ...withCompatibilityMetadata(metadata),
+    metadata,
   };
 }
 

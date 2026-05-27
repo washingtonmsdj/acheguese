@@ -59,9 +59,8 @@ export function useModuleLocation<T extends BaseLocationService>(service: T) {
     [service]
   );
 
-  // Obter parâmetros de filtro (síncrono)
-  const getFilterParams = useCallback(() => {
-    return service.getFilterParams();
+  const getTerritoryFilter = useCallback(() => {
+    return service.getTerritoryFilter();
   }, [service]);
 
   // Obter comportamento padrão
@@ -80,10 +79,11 @@ export function useModuleLocation<T extends BaseLocationService>(service: T) {
     // Métodos
     refreshActiveLocation,
     validateLocationId,
-    getFilterParams,
+    getTerritoryFilter,
     getDefaultBehavior,
 
     // Computed
+    territoryFilter: service.getTerritoryFilter(),
     filterScope: service.getFilterScope(),
     canCreate: activeLocation !== null,
     isCity: service.isCity(),

@@ -13,22 +13,19 @@ export interface ActivityItem {
   type: ActivityType;
   created_at: string;
   metadata?: ActivityMetadata;
-  metadate?: ActivityMetadata;
 }
 
 export type ActivityMetadata =
-  | PostCreatedMetadate
-  | CommentCreatedMetadate
-  | PostLikedMetadate
-  | CommentLikedMetadate
-  | PostSavedMetadate
-  | PollVotedMetadate
-  | AlertConfirmedMetadate
-  | MentionReceivedMetadate;
+  | PostCreatedMetadata
+  | CommentCreatedMetadata
+  | PostLikedMetadata
+  | CommentLikedMetadata
+  | PostSavedMetadata
+  | PollVotedMetadata
+  | AlertConfirmedMetadata
+  | MentionReceivedMetadata;
 
-export type ActivityMetadate = ActivityMetadata;
-
-export interface PostCreatedMetadate {
+export interface PostCreatedMetadata {
   post_id: string;
   post_type: string;
   post_content: string;
@@ -36,7 +33,7 @@ export interface PostCreatedMetadate {
   comments_count: number;
 }
 
-export interface CommentCreatedMetadate {
+export interface CommentCreatedMetadata {
   comment_id: string;
   post_id: string;
   post_type: string;
@@ -44,7 +41,7 @@ export interface CommentCreatedMetadate {
   likes_count: number;
 }
 
-export interface PostLikedMetadate {
+export interface PostLikedMetadata {
   post_id: string;
   post_type: string;
   post_content: string;
@@ -53,7 +50,7 @@ export interface PostLikedMetadate {
   author_avatar: string;
 }
 
-export interface CommentLikedMetadate {
+export interface CommentLikedMetadata {
   comment_id: string;
   post_id: string;
   comment_content: string;
@@ -62,7 +59,7 @@ export interface CommentLikedMetadate {
   author_avatar: string;
 }
 
-export interface PostSavedMetadate {
+export interface PostSavedMetadata {
   post_id: string;
   post_type: string;
   post_content: string;
@@ -71,20 +68,20 @@ export interface PostSavedMetadate {
   author_avatar: string;
 }
 
-export interface PollVotedMetadate {
+export interface PollVotedMetadata {
   poll_id: string;
   post_id: string;
   question: string;
   option_text: string;
 }
 
-export interface AlertConfirmedMetadate {
+export interface AlertConfirmedMetadata {
   post_id: string;
   alert_content: string;
   confirmations_count: number;
 }
 
-export interface MentionReceivedMetadate {
+export interface MentionReceivedMetadata {
   post_id: string;
   post_type: string;
   post_content: string;
