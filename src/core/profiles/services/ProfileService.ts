@@ -15,16 +15,18 @@ import type {
   PlanType,
   Profile,
   ProfileContext,
-  ProfileLikeActivityRecord,
-  ProfilePollVoteActivityRecord,
   ProfilePrivateWorkspace,
   ProfilePrivacySettingsInput,
-  ProfileSaveActivityRecord,
   ProfileSummary,
   ProfileSummaryExtended,
   UpdateProfileData,
   ProfileVerificationStatusValue,
 } from "./types";
+import type {
+  ProfileLikeActivityRecord,
+  ProfilePollVoteActivityRecord,
+  ProfileSaveActivityRecord,
+} from "@/core/profiles/views/ProfileActivityRecords";
 import type {
   ProfilePermissions,
   ProfileStatus,
@@ -35,6 +37,7 @@ import type {
   ProfileFilterRow,
   ProfileIdRow,
   RecentProfileRow,
+  RideProfileRow,
   UserSubscriptionLike,
   VerificationWorkflowStatus,
 } from "./profile.service.types";
@@ -359,7 +362,7 @@ export class ProfileService {
   async getProfilesForRides(
     ids: string[],
     type: "passenger" | "driver",
-  ): Promise<ProfileLikeActivityRecord[]> {
+  ): Promise<RideProfileRow[]> {
     return getProfilesForRidesQuery(ids, type);
   }
   async unsuspendUser(userId: string): Promise<void> {

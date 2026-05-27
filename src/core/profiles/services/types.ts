@@ -109,7 +109,6 @@ export interface Profile {
   created_at: string;
   updated_at: string;
 }
-
 /** @deprecated Use CreateProfileInput de @/core/profiles/operations/CreateProfileInput */
 export interface CreateProfileData {
   profile_type: ProfileType;
@@ -300,55 +299,4 @@ export interface ProfilePrivateWorkspace {
   hasActiveRide: boolean;
   verificationStatus: ProfileVerificationStatusValue;
   verificationRejectionReason?: string;
-}
-
-// ── Activity records (deprecated — use views/ProfileActivityRecords) ──────
-
-/** @deprecated Use ProfileLikeActivityRecord de @/core/profiles/views/ProfileActivityRecords */
-export interface ProfileActivityAuthorSummary {
-  id: string;
-  name: string | null;
-  avatar_url: string | null;
-}
-
-/** @deprecated Use ProfileLikeActivityRecord de @/core/profiles/views/ProfileActivityRecords */
-export interface ProfileActivityPostSummary {
-  id: string;
-  type: string | null;
-  content: string | null;
-  author: ProfileActivityAuthorSummary | null;
-}
-
-/** @deprecated Use ProfileLikeActivityRecord de @/core/profiles/views/ProfileActivityRecords */
-export interface ProfileLikeActivityRecord {
-  id: string;
-  created_at: string;
-  post: ProfileActivityPostSummary | null;
-}
-
-/** @deprecated Use ProfileSaveActivityRecord de @/core/profiles/views/ProfileActivityRecords */
-export interface ProfileSaveActivityRecord {
-  id: string;
-  created_at: string;
-  post: ProfileActivityPostSummary | null;
-}
-
-export interface ProfilePollOptionRecord {
-  id: string;
-  text: string | null;
-}
-
-export interface ProfilePollActivitySummary {
-  id: string;
-  question: string | null;
-  options: ProfilePollOptionRecord[] | null;
-  post_id: string | null;
-}
-
-/** @deprecated Use ProfilePollVoteActivityRecord de @/core/profiles/views/ProfileActivityRecords */
-export interface ProfilePollVoteActivityRecord {
-  id: string;
-  option_id: string;
-  created_at: string;
-  poll: ProfilePollActivitySummary | null;
 }

@@ -14,7 +14,6 @@ import type {
   AdminProfileListItem,
   Profile,
   ProfileContext,
-  ProfileLikeActivityRecord,
   ProfilePrivateWorkspace,
   ProfileSummary,
   ProfileSummaryExtended,
@@ -472,15 +471,16 @@ export async function getActiveRideId(profileId: string): Promise<string | null>
 export async function getProfilesForRides(
   ids: string[],
   type: "passenger" | "driver",
-): Promise<ProfileLikeActivityRecord[]> {
+): Promise<RideProfileRow[]> {
   if (ids.length === 0) return [];
 
-  const selectFields =
+  const { data, error } =
     type === "passenger"
-      ? "id, name, avatar_url, city, neighborhood, street, pontos, telefone"
-      : "id, name, avatar_url";
-
-  const { data, error } = await supabase.from(TABLE).select(selectFields).in("id", ids);
+      ? await supabase
+          .from(TABLE)
+          .select("id,name,avatar_url,city,neighborhood,street,pontos,telefone")
+          .in("id", ids)
+      : await supabase.from(TABLE).select("id,name,avatar_url").in("id", ids);
 
   if (error) {
     trackError(new Error("Error fetching profiles for rides"), {
@@ -491,7 +491,7 @@ export async function getProfilesForRides(
     return [];
   }
 
-  return (((data as unknown as RideProfileRow[] | null) || []) as unknown) as ProfileLikeActivityRecord[];
+  return (data as RideProfileRow[] | null) ?? [];
 }
 
 export async function getProfilesWithAlertBan(profileIds: string[]): Promise<
