@@ -22,8 +22,7 @@ export { default as PublicarVagaPage } from './pages/PublicarVagaPage';
 // COMPONENTS
 // ═══════════════════════════════════════════════════════════════════════════════
 
-export { VagaCardEnhanced } from './components/VagaCardEnhanced';
-export { VagaCardEnhanced as VagaCard } from './components/VagaCardEnhanced';
+export { VagaCard } from './components/VagaCard';
 export { VagasFilters } from './components/VagasFilters';
 export { VagasLoading, VagasEmpty, VagasError } from './components/VagasStates';
 
@@ -36,7 +35,7 @@ export { useVagasPublic, useVagasUrgentes, useVagasDestaque, useBairrosComVagas 
 export { useVagaDetail } from './hooks/useVagaDetail';
 export { useVagaPublishPermission } from './hooks/useVagaPublishPermission';
 
-// Hooks legados (mantidos para compatibilidade)
+// Hooks
 export { useVagas } from './hooks/useVagas';
 export { useVagasLocation } from './hooks/useVagasLocation';
 

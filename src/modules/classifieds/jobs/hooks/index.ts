@@ -8,7 +8,7 @@
 export { useVagasPublic, useVagasUrgentes, useVagasDestaque, useBairrosComVagas } from './useVagasPublic';
 export { useVagaDetail } from './useVagaDetail';
 
-// Hooks legados (mantidos para compatibilidade - serão deprecados)
+// Hooks operacionais
 export { useVagas } from './useVagas';
 export { useVagasLocation } from './useVagasLocation';
 export { useVagaPublishPermission } from './useVagaPublishPermission';

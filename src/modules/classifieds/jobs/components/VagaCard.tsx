@@ -83,13 +83,6 @@ interface VagaCardProps {
 // ============================================================================
 
 /**
- * Formata salário em BRL (wrapper para manter compatibilidade)
- */
-function formatSalary(vaga: Vaga): string {
-  return formatSalaryFromTypes(vaga);
-}
-
-/**
  * Formata data relativa
  */
 function formatRelativeDate(date: Date): string {
@@ -128,8 +121,8 @@ function isNewVaga(date: Date): boolean {
 // MAIN COMPONENT
 // ============================================================================
 
-export const VagaCardEnhanced = memo(
-  forwardRef<HTMLDivElement, VagaCardProps>(function VagaCardEnhanced(
+export const VagaCard = memo(
+  forwardRef<HTMLDivElement, VagaCardProps>(function VagaCard(
     {
       vaga,
       variant = 'grid',
@@ -468,4 +461,4 @@ export const VagaCardEnhanced = memo(
   }),
 );
 
-VagaCardEnhanced.displayName = 'VagaCardEnhanced';
+VagaCard.displayName = 'VagaCard';

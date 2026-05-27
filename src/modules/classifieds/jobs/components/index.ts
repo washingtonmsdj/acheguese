@@ -3,6 +3,6 @@
  */
 
 export { VagasHeader } from './VagasHeader';
-export { VagaCardEnhanced } from './VagaCardEnhanced';
+export { VagaCard } from './VagaCard';
 export { VagasFilters } from './VagasFilters';
 export { VagasLoading, VagasEmpty, VagasError } from './VagasStates';

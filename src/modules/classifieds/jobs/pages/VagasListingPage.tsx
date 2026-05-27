@@ -23,7 +23,7 @@ import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { useVagas } from "../hooks/useVagas";
 import { useVagasLocation } from "../hooks/useVagasLocation";
-import { VagasHeader, VagaCardEnhanced, VagasFilters, VagasLoading, VagasEmpty, VagasError } from "../components";
+import { VagasHeader, VagaCard, VagasFilters, VagasLoading, VagasEmpty, VagasError } from "../components";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 
 import heroImg from "@/assets/empresas-hero.jpg";
@@ -173,7 +173,7 @@ export default function VagasListingPage({ resolved, activeMemberIds }: VagasLis
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {urgentVagas.slice(0, 3).map((vaga, i) => (
-                <VagaCardEnhanced 
+                <VagaCard
                   key={vaga.id} 
                   vaga={vaga} 
                   variant="compact"
@@ -224,7 +224,7 @@ export default function VagasListingPage({ resolved, activeMemberIds }: VagasLis
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {filteredVagas.map((vaga, i) => (
-              <VagaCardEnhanced 
+              <VagaCard
                 key={vaga.id} 
                 vaga={vaga} 
                 variant="list"
@@ -247,7 +247,7 @@ export default function VagasListingPage({ resolved, activeMemberIds }: VagasLis
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {featuredVagas.map((vaga, i) => (
-                <VagaCardEnhanced 
+                <VagaCard
                   key={vaga.id} 
                   vaga={vaga} 
                   variant="compact"

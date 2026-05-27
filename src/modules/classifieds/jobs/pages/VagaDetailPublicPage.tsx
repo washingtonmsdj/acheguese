@@ -38,7 +38,7 @@ import { useAuth } from '@/core/auth/hooks/useAuth';
 import { useToast } from '@/shared/hooks/use-toast';
 
 import { useVagaDetail } from '../hooks/useVagaDetail';
-import { VagaCardEnhanced } from '../components/VagaCardEnhanced';
+import { VagaCard } from '../components/VagaCard';
 import {
   formatSalary,
   isVagaActive,
@@ -508,7 +508,7 @@ export default function VagaDetailPublicPage() {
                 <h2 className="text-lg font-semibold text-foreground mb-4">Vagas semelhantes</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {vagasRelacionadas.map((vagaRel) => (
-                    <VagaCardEnhanced
+                    <VagaCard
                       key={vagaRel.id}
                       vaga={vagaRel}
                       variant="compact"

@@ -9,7 +9,7 @@ import { Zap, Star, ChevronDown, Loader2 } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Separator } from "@/shared/components/ui/separator";
-import { VagaCardEnhanced } from "../components/VagaCardEnhanced";
+import { VagaCard } from "../components/VagaCard";
 import {
   VagasLoading,
   VagasEmpty,
@@ -61,7 +61,7 @@ export function VagasListagemSection({
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {vagasUrgentes.map((vaga) => (
-                <VagaCardEnhanced
+                <VagaCard
                   key={vaga.id}
                   vaga={vaga as never}
                   variant="compact"
@@ -86,7 +86,7 @@ export function VagasListagemSection({
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {vagasDestaque.map((vaga) => (
-                <VagaCardEnhanced
+                <VagaCard
                   key={vaga.id}
                   vaga={vaga as never}
                   variant="compact"
@@ -101,7 +101,7 @@ export function VagasListagemSection({
         {/* Todas as vagas */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {vagas.map((vaga) => (
-            <VagaCardEnhanced
+            <VagaCard
               key={vaga.id}
               vaga={vaga as never}
               variant="list"
