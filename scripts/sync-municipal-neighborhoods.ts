@@ -52,12 +52,11 @@ interface NeighborhoodPayload {
 }
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL ?? "";
-const SUPABASE_SERVICE_KEY =
-  process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY ?? "";
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
   throw new Error(
-    "Defina VITE_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY (ou SUPABASE_SECRET_KEY).",
+    "Defina VITE_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY.",
   );
 }
 

@@ -118,7 +118,6 @@ function buildSupabaseApiCandidates(files) {
     const fileUrl = parsed.VITE_SUPABASE_URL;
     const fileKeys = [
       parsed.SUPABASE_SERVICE_ROLE_KEY,
-      parsed.SUPABASE_SECRET_KEY,
       parsed.VITE_SUPABASE_PUBLISHABLE_KEY,
     ];
     for (const key of fileKeys) {
@@ -129,7 +128,6 @@ function buildSupabaseApiCandidates(files) {
   const processUrl = process.env.VITE_SUPABASE_URL;
   const processKeys = [
     process.env.SUPABASE_SERVICE_ROLE_KEY,
-    process.env.SUPABASE_SECRET_KEY,
     process.env.VITE_SUPABASE_PUBLISHABLE_KEY,
   ];
   for (const key of processKeys) {
