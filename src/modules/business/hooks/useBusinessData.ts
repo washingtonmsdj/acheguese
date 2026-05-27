@@ -14,7 +14,7 @@ import { useBusinessProducts } from "./useBusinessProducts";
 import { useBusinessServices } from "./useBusinessServices";
 import { useBusinessReviews } from "./useBusinessReviews";
 import { useBusinessGallery } from "./useBusinessGallery";
-import { useBusiness } from "./useBusiness";
+import { useBusiness } from "@/core/business/hooks/useBusiness";
 
 export function useBusinessData(idOrSlug: string) {
   // Tenta usar useBusinessById se for UUID, senão usa useBusiness

@@ -17,7 +17,7 @@ import {
   TrendingUp,
   Clock,
 } from "lucide-react";
-import { useSSOTMonitoring } from "@/shared/hooks/common/useSSOTMonitoring";
+import { useSSOTMonitoring } from "@/shared/hooks/useSSOTMonitoring";
 import { cn } from "@/shared/utils/cn";
 
 /**

@@ -9,7 +9,7 @@ export { useBusinessRollout } from './useBusinessRollout';
 export { useBusinessAd } from './useBusinessAd';
 
 // Business hooks
-export * from "./useBusiness";
+export { useBusiness } from "@/core/business/hooks/useBusiness";
 export * from "./useBusinessById";
 export * from "./useBusinessCreate";
 export { useBusinessEdit } from "./useBusinessEdit";

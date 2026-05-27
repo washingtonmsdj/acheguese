@@ -9,6 +9,8 @@
  * - Sempre importar deste módulo: import { FACILITIES } from '@/core/business/constants'
  */
 
+import { BUSINESS_CATEGORY_OPTIONS } from "@/shared/taxonomy/businessCategories";
+
 // Facilidades
 export {
   FACILITIES,
@@ -71,17 +73,21 @@ export {
 // Categorias e Subcategorias
 export {
   BUSINESS_CATEGORIES,
+  BUSINESS_CATEGORY_OPTIONS,
   BUSINESS_SUBCATEGORIES,
   BUSINESS_CATEGORY_LABELS,
-  getCategoryLabel,
-  getSubcategories,
-  hasSubcategories,
-  getCategoriesAsOptions,
-  getSubcategoriesAsOptions,
-  isValidCategory,
-  isValidSubcategory,
+  getBusinessCategoryLabel as getCategoryLabel,
+  getBusinessSubcategories as getSubcategories,
+  hasBusinessSubcategories as hasSubcategories,
+  getBusinessSubcategoryOptions as getSubcategoriesAsOptions,
+  isBusinessCategory as isValidCategory,
+  isBusinessSubcategory as isValidSubcategory,
   type BusinessCategory,
-} from './categories';
+} from "@/shared/taxonomy/businessCategories";
+
+export function getCategoriesAsOptions() {
+  return BUSINESS_CATEGORY_OPTIONS;
+}
 
 // Dias da Semana
 export {

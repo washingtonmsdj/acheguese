@@ -19,7 +19,7 @@ import {
   FileCode2,
   Lock,
 } from "lucide-react";
-import { useSSOTMonitoring } from "@/shared/hooks/common/useSSOTMonitoring";
+import { useSSOTMonitoring } from "@/shared/hooks/useSSOTMonitoring";
 import {
   USER_ROLE,
   RIDE_STATUS,

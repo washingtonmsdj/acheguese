@@ -31,7 +31,7 @@ export {
 } from "@/core/business/services/BusinessManagementService";
 
 // Hooks
-export { useBusiness } from "./hooks/useBusiness";
+export { useBusiness } from "@/core/business/hooks/useBusiness";
 export { useBusinessById } from "./hooks/useBusinessById";
 export { useBusinessCreate } from "./hooks/useBusinessCreate";
 export { useBusinessEdit } from "./hooks/useBusinessEdit";
@@ -89,19 +89,12 @@ export type {
   BusinessFilters as BusinessFiltersType,
 } from "./types";
 
-// Schemas - Export schemas and their inferred types with explicit names to avoid conflicts
-export {
-  CreateBusinessSchema,
-  UpdateBusinessSchema,
-  GetBusinessesSchema,
-  type GetBusinessesInput,
-} from "./schemas/business.schema";
-
 export {
   businessSchema,
   createBusinessSchema,
   updateBusinessSchema,
   businessUXSchema,
   type BusinessUXInput,
+  getBusinessesSchema,
+  type GetBusinessesInput,
 } from "@/shared/schemas/business/businessSchemas";
-

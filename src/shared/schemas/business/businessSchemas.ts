@@ -306,9 +306,18 @@ export const businessUXSchema = baseBusinessObjectSchema.pick({
   website: true,
 });
 
+export const getBusinessesSchema = z.object({
+  city: z.string().optional(),
+  category: z.string().optional(),
+  verified: z.boolean().optional(),
+  limit: z.number().int().min(1).max(100).default(20),
+  offset: z.number().int().min(0).default(0),
+});
+
 export type CreateBusinessInput = z.infer<typeof createBusinessSchema>;
 export type UpdateBusinessInput = z.infer<typeof updateBusinessSchema>;
 export type BusinessUXInput = z.infer<typeof businessUXSchema>;
+export type GetBusinessesInput = z.infer<typeof getBusinessesSchema>;
 
 export const businessSchema = createBusinessSchema;
 export type BusinessInput = CreateBusinessInput;
