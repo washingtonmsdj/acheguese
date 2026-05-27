@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { ServicesService } from "../services/ServicesService";
+import { ProfessionalFacade } from "@/core/professional/services";
 import { mapProfessionalToItem } from "@/modules/professionals/services/domain/professionalViewModels";
 import { useTerritoryFilter, isTerritoryFilterReady, territoryFilterKey } from "@/core/location/hooks/useTerritoryFilter";
 import type { ProfessionalItem } from "@/modules/professionals/services/domain/professionalViewModels";
@@ -20,10 +20,12 @@ export function useTopRatedProfessionals(options: UseTopRatedProfessionalsOption
   const { data } = useQuery({
     queryKey: ["top-rated-professionals", filterKey, limit],
     queryFn: async () => {
-      const professionals = await ServicesService.getTopRatedProfessionals({
-        limit,
-        territoryFilter,
+      const result = await ProfessionalFacade.queries.getProfessionalsList({
+        pageParam: 0,
+        category: undefined,
+        territory: territoryFilter,
       });
+      const professionals = result.professionals.slice(0, limit);
       return professionals.map(mapProfessionalToItem);
     },
     enabled: filterReady,

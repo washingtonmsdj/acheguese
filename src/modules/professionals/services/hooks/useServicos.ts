@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ServicesService } from "../services/ServicesService";
+import { ProfessionalFacade } from "@/core/professional/services";
 import { useTerritoryFilter, isTerritoryFilterReady, territoryFilterKey } from "@/core/location/hooks/useTerritoryFilter";
 import { mapProfessionalToItem } from "@/modules/professionals/services/domain/professionalViewModels";
 import type { ProfessionalItem } from "@/modules/professionals/services/domain/professionalViewModels";
@@ -30,7 +30,7 @@ export function useServicos(options: UseServicosOptions = {}) {
   const { data, isLoading, isFetching } = useQuery({
     queryKey: ["servicos", sortBy, filter, search, filterKey],
     queryFn: async () => {
-      const professionals = await ServicesService.getProfessionals({
+      const professionals = await ProfessionalFacade.queries.getProfessionals({
         sortBy: sortBy === "rating" ? "rating" : undefined,
         category: filter && filter !== "todos" ? filter : undefined,
         search: search || undefined,

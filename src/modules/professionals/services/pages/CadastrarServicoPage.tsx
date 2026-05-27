@@ -39,7 +39,7 @@ import { useToast } from "@/shared/hooks/use-toast";
 import { mediaService } from "@/core/media/services/MediaService";
 import { useSessionContext } from "@/core/session";
 import { servicesLocationService } from "@/modules/professionals/services/services/ServicesLocationService";
-import { useProfessionalCreateMultiProfile } from "@/modules/professionals/services/hooks/useProfessionalCreateMultiProfile";
+import { useProfessionalProfileCreate } from "@/modules/professionals/services/hooks/useProfessionalProfileCreate";
 import { ProfessionalSlugSection } from "@/modules/professionals/services/components/identity/ProfessionalSlugSection";
 import { PublicIdentityService } from "@/core/public-identity";
 import { evaluateProfessionalSlugSafety } from "@/core/public-identity/domain/professionalSlugSafety";
@@ -89,7 +89,7 @@ export default function CadastrarServicoPage() {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
 
-  const { createProfessional, isLoading: loading } = useProfessionalCreateMultiProfile({
+  const { createProfessional, isLoading: loading } = useProfessionalProfileCreate({
     onSuccess: (result) => {
       // ✅ Professional não usa /u/:username
       // Redirecionar para página de sucesso ou listagem de serviços

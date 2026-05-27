@@ -1,11 +1,3 @@
-/**
- * USE PROFESSIONAL CREATE MULTI-PROFILE
- * Hook MIGRADO para usar MultiProfileService.createProfile()
- *
- * CORREÇÃO: Cria perfil professional via RPC create_profile_with_extension
- * em vez de ProfessionalService.createProfessional() legado
- */
-
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { MultiProfileService } from "@/core/profiles/services/multi-profile";
 import { toast } from "sonner";
@@ -54,7 +46,7 @@ interface UseProfessionalCreateReturn {
   reset: () => void;
 }
 
-export function useProfessionalCreateMultiProfile(
+export function useProfessionalProfileCreate(
   options: UseProfessionalCreateOptions = {},
 ): UseProfessionalCreateReturn {
   const queryClient = useQueryClient();

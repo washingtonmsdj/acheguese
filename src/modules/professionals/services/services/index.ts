@@ -1,19 +1,7 @@
 /**
- * 🛠️ SERVICES MODULE - SSOT Exports
- *
- * Este módulo é um wrapper para o core Professional.
- * Delega todas as operações para ProfessionalFacade.
- *
+ * Services module infrastructure exports.
  */
 
-// ============================================================
-// 🏛️ FACADE - Interface unificada
-// ============================================================
-export { ServicesService } from "./ServicesService";
-
-// ============================================================
-// 🌍 GEOGRAPHIC FOUNDATION INTEGRATION
-// ============================================================
 export {
   servicesLocationService,
   ServicesLocationService,

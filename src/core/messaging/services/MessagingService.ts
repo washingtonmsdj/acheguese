@@ -253,13 +253,6 @@ class MessagingService {
   }
 
   /**
-   * Conta mensagens não lidas de um usuário (alias para compatibilidade)
-   */
-  async getUnreadMessagesCount(userId: string): Promise<number> {
-    return this.getTotalUnreadCount(userId);
-  }
-
-  /**
    * Subscreve a mudanças em mensagens para um usuário
    */
   subscribeToMessages(userId: string, callback: () => void): RealtimeChannel | null {
