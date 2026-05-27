@@ -648,9 +648,9 @@ export const INPUT_VALIDATION = {
  * MUST be updated on every security config change.
  */
 export const SECURITY_AUDIT_LOG = {
-  lastReview: '2026-04-26',
-  reviewer: 'Kiro AI',
-  version: '2.6.0',
+  lastReview: '2026-05-26',
+  reviewer: 'Codex',
+  version: '2.6.1',
   changes: [
     'Initial SSOT implementation',
     'CSP directives centralized',
@@ -694,8 +694,10 @@ export const SECURITY_AUDIT_LOG = {
     // v2.6.0 — CSP inline script hashes
     'FIX: script-src — adicionados hashes SHA256 dos inline scripts do index.html',
     'FIX: CSP violation — permite AdSense loader e SW cleanup scripts via hash whitelist',
+    // v2.6.1 — Monthly security review
+    'AUDIT: revisão mensal de CSP, headers, domínios documentados, vercel.json e hardcodes de segurança sem erros',
   ],
-  nextReview: '2026-05-26',
+  nextReview: '2026-06-26',
 } as const;
 
 /**
@@ -768,9 +770,9 @@ export const CACHE_HEADERS = {
  * Metadata about this configuration file.
  */
 export const SECURITY_CONFIG_METADATA = {
-  version: '2.6.0',
+  version: '2.6.1',
   created: '2026-04-18',
-  lastModified: '2026-04-26',
+  lastModified: '2026-05-26',
   author: 'Kiro AI',
   purpose: 'Single Source of Truth for security configurations',
   criticality: 'CRITICAL',

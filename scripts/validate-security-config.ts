@@ -88,11 +88,15 @@ if (undocumentedDomains > 0) {
 
 // 4. Check audit log
 console.log('\n📋 4. Checking security audit log...');
-const lastReview = new Date(SECURITY_AUDIT_LOG.lastReview);
-const nextReview = new Date(SECURITY_AUDIT_LOG.nextReview);
 const now = new Date();
+const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
 
-if (now > nextReview) {
+function parseAuditDate(value: string): number {
+  const [year, month, day] = value.split('-').map(Number);
+  return Date.UTC(year, month - 1, day);
+}
+
+if (today > parseAuditDate(SECURITY_AUDIT_LOG.nextReview)) {
   results.warnings.push('Security audit is overdue');
   console.log('   ⚠️  Security audit is overdue');
   console.log(`      Last review: ${SECURITY_AUDIT_LOG.lastReview}`);
