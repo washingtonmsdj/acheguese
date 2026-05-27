@@ -1,4 +1,4 @@
-import { supabase } from '@/core/infrastructure/supabase/client';
+import { supabase } from '@/core/infrastructure/supabase';
 import { mediaService } from '@/core/media/services/MediaService';
 import type { Database } from '@/core/infrastructure/supabase/types.generated';
 import type {

@@ -12,7 +12,7 @@
  * @version 1.0.0
  */
 
-import { supabase } from '@/core/infrastructure/supabase/client';
+import { supabase } from '@/core/infrastructure/supabase';
 import { logger } from '@/shared/utils/logger';
 import type {
   EducationAnalyticsEventType,

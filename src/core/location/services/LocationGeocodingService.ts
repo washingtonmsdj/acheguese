@@ -10,7 +10,7 @@
  * - Troca futura de provider não quebra consumidores, pois todos dependem deste contrato.
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/core/infrastructure/supabase';
 import {
   geocodingService as providerGeocodingService,
   type GeocodeRequest,

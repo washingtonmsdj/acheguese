@@ -21,7 +21,7 @@ const geocodingProvider = providerRegistry.getGeocodingProvider();
 
 ```typescript
 // ❌ ERRADO - em componente de mapa
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/core/infrastructure/supabase';
 const { data } = await supabase.from('businesses').select('*');
 
 // ✅ CORRETO - usar service
@@ -168,7 +168,7 @@ import { nominatimGeocodingProvider } from '@/integrations/maps'; // ❌ ERRO
 
 ```typescript
 // src/modules/map/components/MapMarkers.tsx
-import { supabase } from '@/integrations/supabase/client'; // ❌ ERRO
+import { supabase } from '@/core/infrastructure/supabase'; // ❌ ERRO
 
 async function loadMarkers() {
   const { data } = await supabase.from('businesses').select('*'); // ❌ ERRO
@@ -292,7 +292,7 @@ export function setupDefaultProviders() {
 ```bash
 # Buscar violações potenciais
 grep -r "from '@/integrations/maps/providers" src/modules/
-grep -r "from '@/integrations/supabase/client'" src/modules/map/
+grep -r "from '@/core/infrastructure/supabase'" src/modules/map/
 grep -r "latitude.*longitude.*coordinates" src/modules/ | grep -v "mapEntityProjection"
 ```
 

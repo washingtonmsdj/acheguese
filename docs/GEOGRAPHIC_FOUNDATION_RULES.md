@@ -188,7 +188,7 @@ import { MobilityService } from '@/modules/mobility';  // Em modules/business
 
 // ❌ Acesso direto a clientes de integração
 import { mapsClient } from '@/integrations/maps/client';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/core/infrastructure/supabase';
 ```
 
 #### ❌ NÃO PODE FAZER

@@ -338,7 +338,7 @@ TypeError: Cannot read property 'from' of undefined
 **Solução:**
 ```typescript
 // Mock completo do Supabase
-vi.mock('@/integrations/supabase/client', () => ({
+vi.mock('@/core/infrastructure/supabase', () => ({
   supabase: {
     from: vi.fn(() => ({
       select: vi.fn(() => ({
@@ -361,7 +361,7 @@ vi.mock('@/integrations/supabase/client', () => ({
 **Solução:**
 ```typescript
 // Usar mocks em vez de banco real
-vi.mock('@/integrations/supabase/client');
+vi.mock('@/core/infrastructure/supabase');
 
 // Reduzir timeout de testes
 describe('BillingPlanService', () => {

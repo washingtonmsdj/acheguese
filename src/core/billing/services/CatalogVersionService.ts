@@ -8,7 +8,7 @@
  * @see F1_1_SANEAMENTO_MODELAGEM.md
  */
 
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/core/infrastructure/supabase';
 import type {
   CatalogVersionCreateInput,
   CatalogVersionUpdateInput,
