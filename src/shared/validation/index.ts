@@ -12,6 +12,18 @@
 export { validationMessages } from "./messages/pt-BR";
 export type { ValidationMessages } from "./messages/pt-BR";
 
+// Politica de senha
+export {
+  PASSWORD_POLICY,
+  getPasswordRequirementStatus,
+  getPasswordStrength,
+  isStrongPassword,
+} from "./passwordPolicy";
+export type {
+  PasswordRequirementId,
+  PasswordRequirementStatus,
+} from "./passwordPolicy";
+
 // Validadores customizados
 export {
   cpfValidator,

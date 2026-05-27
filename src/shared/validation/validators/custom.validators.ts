@@ -6,6 +6,7 @@
  */
 
 import { z } from "zod";
+import { isStrongPassword } from "../passwordPolicy";
 
 /**
  * Validador de CPF
@@ -112,24 +113,7 @@ export const phoneValidator = z.string().refine(
  * Validador de senha forte
  */
 export const strongPasswordValidator = z.string().refine(
-  (password) => {
-    // Mínimo 8 caracteres
-    if (password.length < 8) return false;
-
-    // Pelo menos uma letra maiúscula
-    if (!/[A-Z]/.test(password)) return false;
-
-    // Pelo menos uma letra minúscula
-    if (!/[a-z]/.test(password)) return false;
-
-    // Pelo menos um número
-    if (!/\d/.test(password)) return false;
-
-    // Pelo menos um caractere especial
-    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) return false;
-
-    return true;
-  },
+  isStrongPassword,
   {
     message:
       "Senha deve ter no mínimo 8 caracteres, incluindo maiúsculas, minúsculas, números e caracteres especiais",
