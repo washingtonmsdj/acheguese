@@ -8,8 +8,19 @@ import type { IActionHandler } from "./IActionHandler";
 async function professionalUrl(professional: Professional): Promise<string | undefined> {
   if (!professional.slug) return undefined;
 
+  if (professional.geographic_path) {
+    const canonical = ProfessionalUrlService.getCanonicalUrlFromGeographicPath({
+      id: professional.profile_id,
+      slug: professional.slug,
+      geographicPath: professional.geographic_path,
+    });
+    if (canonical) return canonical;
+  }
+
   try {
-    const ctx = await ProfessionalUrlService.resolveById(professional.profile_id);
+    const ctx = professional.professional_data_id
+      ? await ProfessionalUrlService.resolveByProfessionalDataId(professional.professional_data_id)
+      : await ProfessionalUrlService.resolveById(professional.profile_id);
     return ctx ? ProfessionalUrlService.getCanonicalUrl(ctx) : undefined;
   } catch (error) {
     logger.warn("[AI] Professional URL unavailable for search result", {

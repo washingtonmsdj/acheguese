@@ -4,6 +4,7 @@
 
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
+import { buildSafeOrILikeFilter } from "@/shared/utils/sqlSanitization";
 import type { AdminSupabaseClient } from "../types/adminDatabase.types";
 
 export interface PromotionStats {
@@ -109,7 +110,10 @@ class AdminPromotionsServiceClass {
 
       // Filtros
       if (search) {
-        query = query.or(`code.ilike.%${search}%,title.ilike.%${search}%`);
+        const searchFilter = buildSafeOrILikeFilter(["code", "title"], search);
+        if (searchFilter) {
+          query = query.or(searchFilter);
+        }
       }
       if (type) {
         query = query.eq("type", type);

@@ -6,6 +6,7 @@
 import { useNavigate } from "react-router-dom";
 import { useCallback } from "react";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
+import { buildBusinessPremiumUrl } from "@/core/business/utils/businessPublicUrls";
 import { logger } from "@/shared/utils/logger";
 import { useBusinessUrls } from "./useBusinessUrls";
 
@@ -46,7 +47,7 @@ export function useBusinessNavigation() {
       }
 
       if (business.is_premium) {
-        return `/p/${business.slug}`;
+        return buildBusinessPremiumUrl(business.slug);
       }
     }
 
@@ -87,7 +88,7 @@ export function useBusinessNavigation() {
 
     if (business.slug) {
       if (business.is_premium) {
-        return `/p/${business.slug}`;
+        return buildBusinessPremiumUrl(business.slug);
       }
 
       logger.warn(

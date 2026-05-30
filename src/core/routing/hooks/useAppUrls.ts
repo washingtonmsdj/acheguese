@@ -20,7 +20,9 @@ import type { ResolvedTerritory } from './useResolveTerritoryFromUrl';
 import { usePublicBrowsingCity } from '@/core/location/hooks/usePublicBrowsingCity';
 import { useActiveTerritory } from '@/core/location/hooks/useActiveTerritory';
 import { buildGroupBaseUrl, buildModuleTerritoryUrl, geoPathToPublicUrl, MODULE_SLUGS } from '@/core/routing/utils/territoryUrls';
+import { jobPublicRoutes } from '@/core/verticals/jobs/routes/jobPublicRoutes';
 import { LAUNCH_URLS } from '@/config/territory';
+import { classifiedUrlService, type ClassifiedUrlContext } from '@/core/classifieds/services';
 
 export interface AppUrls {
   // Módulos territoriais
@@ -28,19 +30,10 @@ export interface AppUrls {
   services: ReturnType<typeof useServiceUrls>;
   classifieds: {
     list: string;
-    detail: (id: string) => string;
     new: string;
     edit: (id: string) => string;
     seller: (sellerId: string) => string;
-    canonical: (ctx: {
-      state_slug: string;
-      city_slug: string;
-      district_slug: string;
-      category_slug: string;
-      subcategory_slug: string;
-      slug: string;
-      public_id: string;
-    }) => string;
+    canonical: (ctx: ClassifiedUrlContext) => string;
     short: (publicId: string) => string;
   };
   community: ReturnType<typeof useCommunityUrls>;
@@ -146,21 +139,11 @@ export function useAppUrls(routeResolved?: ResolvedTerritory | null): AppUrls {
       : LAUNCH_URLS.classifieds;
   const classifieds = {
     list: classifiedsList,
-    detail: (id: string) => `/classificados/${id}`,
-    new: '/classificados/novo',
-    edit: (id: string) => `/classificados/editar/${id}`,
-    seller: (sellerId: string) => `/classificados/vendedor/${sellerId}`,
-    canonical: (ctx: {
-      state_slug: string;
-      city_slug: string;
-      district_slug: string;
-      category_slug: string;
-      subcategory_slug: string;
-      slug: string;
-      public_id: string;
-    }) =>
-      `/classificados/${ctx.state_slug}/${ctx.city_slug}/${ctx.district_slug}/${ctx.category_slug}/${ctx.subcategory_slug}/${ctx.slug}/${ctx.public_id}`,
-    short: (publicId: string) => `/c/${publicId}`,
+    new: classifiedUrlService.buildNewUrl(),
+    edit: (id: string) => classifiedUrlService.buildEditUrl(id),
+    seller: (sellerId: string) => classifiedUrlService.buildSellerUrl(sellerId),
+    canonical: (ctx: ClassifiedUrlContext) => classifiedUrlService.buildUrls(ctx).canonical,
+    short: (publicId: string) => classifiedUrlService.buildShortUrl(publicId),
   };
   const community = useCommunityUrls(routeResolved);
   const mobility = {
@@ -230,7 +213,7 @@ export function useAppUrls(routeResolved?: ResolvedTerritory | null): AppUrls {
     gamification: '/gamificacao',
     search: `/buscar${cityBase}`,
     notifications: '/notificacoes',
-    jobs: `/vagas${cityBase}`,
+    jobs: jobPublicRoutes.list({ state: active.state, city: active.city }),
     family: {
       home: '/conta',
     },

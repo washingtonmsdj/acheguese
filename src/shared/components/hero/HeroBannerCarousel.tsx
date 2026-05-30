@@ -67,7 +67,7 @@ export function HeroBannerCarousel({
   const [[page, direction], setPage] = useState([0, 0]);
   const [isPaused, setIsPaused] = useState(false);
 
-  const currentBanner = banners[page];
+  const currentBanner = banners.at(page) ?? banners.at(0);
 
   const paginate = useCallback((newDirection: number) => {
     setPage([
@@ -92,7 +92,7 @@ export function HeroBannerCarousel({
     return () => clearInterval(interval);
   }, [page, isPaused, autoPlayInterval, banners.length, paginate]);
 
-  if (banners.length === 0) return null;
+  if (!currentBanner) return null;
 
   const textAlignClass = 
     currentBanner.textPosition === 'center' ? 'items-center text-center' :

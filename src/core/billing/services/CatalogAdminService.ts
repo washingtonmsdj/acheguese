@@ -9,6 +9,7 @@
  */
 
 import { supabase } from '@/core/infrastructure/supabase';
+import { buildSafeOrILikeFilter } from '@/shared/utils/sqlSanitization';
 import type {
   CatalogItemCreateInput,
   CatalogItemUpdateInput,
@@ -293,7 +294,10 @@ export class CatalogAdminService {
     }
 
     if (filters?.search) {
-      query = query.or(`item_code.ilike.%${filters.search}%,display_name.ilike.%${filters.search}%`);
+      const searchFilter = buildSafeOrILikeFilter(['item_code', 'display_name'], filters.search);
+      if (searchFilter) {
+        query = query.or(searchFilter);
+      }
     }
 
     const { data: items, error } = await query;

@@ -5,5 +5,8 @@ export const SIDEBAR_UI_CONFIG = {
   MOBILE_WIDTH: "18rem",
   ICON_WIDTH: "3rem",
   KEYBOARD_SHORTCUT: "b",
+  SKELETON_WIDTH_PERCENT: {
+    MIN: 50,
+    RANGE: 40,
+  },
 } as const;
-

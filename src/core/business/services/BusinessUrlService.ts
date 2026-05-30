@@ -7,13 +7,17 @@
  *   - Hooks apenas consomem este service.
  *
  * PADRÃO OFICIAL DE URLs:
- *   Canônica pública:  /empresas/:uf/:cidade/:slug
+ *   Canônica pública:  /empresas/:uf/:cidade/:bairro/:slug
  *   Premium (curta):   /p/:slug  → mini-site premium isolado
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import { PublicIdentityService } from '@/core/public-identity/services/PublicIdentityService';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
+import {
+  buildBusinessPremiumUrl,
+  buildBusinessPublicUrlFromTerritory,
+} from '@/core/business/utils/businessPublicUrls';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -93,12 +97,15 @@ export class BusinessUrlService {
       );
     }
 
-    const canonical = `/empresas/${territory.uf}/${territory.cidade}/${territory.bairro}/${slug}`;
+    const canonical = buildBusinessPublicUrlFromTerritory(
+      `/${territory.uf}/${territory.cidade}/${territory.bairro}`,
+      slug,
+    );
     const dashboard = businessManagementRoutes.overview(id);
 
     return {
       canonical,
-      premium: is_premium ? `/p/${slug}` : null,
+      premium: is_premium ? buildBusinessPremiumUrl(slug) : null,
 
       dashboard,
     };

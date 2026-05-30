@@ -13,9 +13,12 @@
  */
 
 import type { BusinessCategory } from "@/core/business/types/Business";
+import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
 
 // Identificadores canônicos de vertical (estado atual do projeto)
 export type VerticalKey = "gastronomy" | "education";
+
+export const VERTICAL_KEYS: readonly VerticalKey[] = ["gastronomy", "education"];
 
 export interface VerticalConfig {
   key: VerticalKey;
@@ -58,8 +61,8 @@ export const VERTICAL_CONFIGS: Record<VerticalKey, VerticalConfig> = {
       namePlaceholder: "Ex: Restaurante da Praça",
       descriptionPlaceholder: "Explique a cozinha, o tipo de atendimento e o diferencial do negócio.",
     },
-    setupRoute: (businessId) => `/central/empresas/${businessId}/gastronomia/setup`,
-    dashboardRoute: (businessId) => `/central/empresas/${businessId}/gastronomia`,
+    setupRoute: (businessId) => businessManagementRoutes.gastronomySetup(businessId),
+    dashboardRoute: (businessId) => businessManagementRoutes.gastronomia(businessId),
   },
   education: {
     key: "education",
@@ -76,10 +79,19 @@ export const VERTICAL_CONFIGS: Record<VerticalKey, VerticalConfig> = {
       namePlaceholder: "Ex: Escola Municipal Maria Quitéria",
       descriptionPlaceholder: "Explique o tipo de ensino, público atendido, diferenciais e informações institucionais relevantes.",
     },
-    setupRoute: (businessId) => `/central/empresas/${businessId}/educacao/setup`,
-    dashboardRoute: (businessId) => `/central/empresas/${businessId}/educacao`,
+    setupRoute: (businessId) => businessManagementRoutes.educationSetup(businessId),
+    dashboardRoute: (businessId) => businessManagementRoutes.education(businessId),
   },
 };
+
+export function getVerticalConfig(vertical: VerticalKey): VerticalConfig {
+  switch (vertical) {
+    case "gastronomy":
+      return VERTICAL_CONFIGS.gastronomy;
+    case "education":
+      return VERTICAL_CONFIGS.education;
+  }
+}
 
 /**
  * Retorna os verticais elegíveis para uma categoria de empresa.
@@ -102,10 +114,10 @@ export function getVerticalByCreateSlug(slug?: string | null): VerticalConfig | 
 }
 
 export function getBusinessCreateRoute(vertical?: VerticalKey): string {
-  if (!vertical) return "/central/empresas/nova";
+  if (!vertical) return businessManagementRoutes.create();
 
-  const config = VERTICAL_CONFIGS[vertical];
-  return `/central/empresas/nova/${config.createSlugs[0]}`;
+  const config = getVerticalConfig(vertical);
+  return businessManagementRoutes.createByVerticalSlug(config.createSlugs.at(0) ?? config.key);
 }
 
 /**

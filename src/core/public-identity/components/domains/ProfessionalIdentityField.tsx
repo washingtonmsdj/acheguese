@@ -1,4 +1,5 @@
 import { IdentityField, type IdentityFieldProps } from '../IdentityField';
+import { professionalPublicRoutes } from '@/core/professional/routes/professionalPublicRoutes';
 
 type ProfessionalIdentityFieldProps = Omit<
   IdentityFieldProps,
@@ -18,10 +19,9 @@ export function ProfessionalIdentityField({
       {...props}
       entityType="professional"
       label={label}
-      previewFn={(slug) => (slug ? `/profissionais/:uf/:cidade/${slug}` : '')}
+      previewFn={(slug) => (slug ? professionalPublicRoutes.detailPreview(slug) : '')}
       showHistory={showHistory}
       showCooldown={showCooldown}
     />
   );
 }
-

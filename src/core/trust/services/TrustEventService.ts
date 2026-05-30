@@ -5,6 +5,7 @@ import { logger } from "@/shared/utils/logger";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
 import { mobilityRoutes } from "@/core/mobility/routes/mobilityRoutes";
 import { LAUNCH_URLS } from "@/config/territory";
+import { classifiedUrlService, getClassifiedById } from "@/core/classifieds/services";
 import {
   TRUST_ADMIN_ACTION_TYPES,
   TRUST_EVENT_STATUSES,
@@ -91,7 +92,7 @@ function assertRating(rating?: number | null): void {
   }
 }
 
-function trustContextActionUrl(event: Pick<TrustEvent, "context_type" | "context_id">): string {
+async function trustContextActionUrl(event: Pick<TrustEvent, "context_type" | "context_id">): Promise<string> {
   if (event.context_type === "order") {
     return businessManagementRoutes.gastronomyPedidoPublico(event.context_id);
   }
@@ -99,7 +100,8 @@ function trustContextActionUrl(event: Pick<TrustEvent, "context_type" | "context
     return mobilityRoutes.motoboy.entregas;
   }
   if (event.context_type === "classified") {
-    return `/classificados/${event.context_id}`;
+    const classified = await getClassifiedById(event.context_id);
+    return classified ? classifiedUrlService.buildPublicUrl(classified) ?? "/admin/moderacao" : "/admin/moderacao";
   }
   if (event.context_type === "service") {
     return "/central/profissional";
@@ -151,6 +153,7 @@ export class TrustEventService {
       severity: event.severity,
       status: event.status,
     };
+    const actionUrl = await trustContextActionUrl(event);
 
     const tasks: Promise<unknown>[] = [];
 
@@ -162,7 +165,7 @@ export class TrustEventService {
         title: "Evento de confianca registrado",
         message:
           "Um evento operacional foi registrado no seu perfil e pode impactar prioridade de chamados.",
-        action_url: trustContextActionUrl(event),
+        action_url: actionUrl,
         action_label: "Ver contexto",
         metadata: { ...baseMetadata, audience: "subject" },
       }));
@@ -175,7 +178,7 @@ export class TrustEventService {
         category: "transactional",
         title: "Feedback registrado",
         message: "Seu feedback operacional foi recebido para analise administrativa.",
-        action_url: trustContextActionUrl(event),
+        action_url: actionUrl,
         action_label: "Ver contexto",
         metadata: { ...baseMetadata, audience: "actor" },
       }));
@@ -202,7 +205,7 @@ export class TrustEventService {
     const linkedEvent = action.trust_event_id
       ? await this.getTrustEventById(action.trust_event_id)
       : null;
-    const subjectActionUrl = linkedEvent ? trustContextActionUrl(linkedEvent) : "/conta";
+    const subjectActionUrl = linkedEvent ? await trustContextActionUrl(linkedEvent) : "/conta";
     const adminActionUrl = "/admin/moderacao";
     const metadata = {
       source: "trust_admin_action",

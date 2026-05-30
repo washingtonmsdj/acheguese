@@ -9,6 +9,7 @@
 
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
+import { buildSafeILikePattern } from "@/shared/utils/sqlSanitization";
 import type { GastronomyProfile } from "../types/adminDatabase.types";
 
 export interface GastronomyStats {
@@ -216,7 +217,10 @@ class AdminGastronomyServiceClass {
         );
 
       if (search) {
-        query = query.ilike("business.name", `%${search}%`);
+        const searchPattern = buildSafeILikePattern(search);
+        if (searchPattern) {
+          query = query.ilike("business.name", searchPattern);
+        }
       }
       if (cuisineType) {
         query = query.eq("cuisine_type", cuisineType);
@@ -290,7 +294,10 @@ class AdminGastronomyServiceClass {
     try {
       let query = this.db.from("menus").select("*", { count: "exact" });
 
-      if (search) query = query.ilike("name", `%${search}%`);
+      if (search) {
+        const searchPattern = buildSafeILikePattern(search);
+        if (searchPattern) query = query.ilike("name", searchPattern);
+      }
       if (isActive !== undefined) query = query.eq("is_active", isActive);
 
       const from = (page - 1) * limit;
@@ -386,7 +393,10 @@ class AdminGastronomyServiceClass {
         .from("menu_items")
         .select("id, name, category_id, base_price, is_available, image_url", { count: "exact" });
 
-      if (search) query = query.ilike("name", `%${search}%`);
+      if (search) {
+        const searchPattern = buildSafeILikePattern(search);
+        if (searchPattern) query = query.ilike("name", searchPattern);
+      }
       if (categoryId) query = query.eq("category_id", categoryId);
       if (isAvailable !== undefined) query = query.eq("is_available", isAvailable);
 
@@ -655,7 +665,10 @@ class AdminGastronomyServiceClass {
         .eq("niche_key", nicheKey);
 
       if (search) {
-        query = query.ilike("business.name", `%${search}%`);
+        const searchPattern = buildSafeILikePattern(search);
+        if (searchPattern) {
+          query = query.ilike("business.name", searchPattern);
+        }
       }
 
       const from = (page - 1) * limit;

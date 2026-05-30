@@ -30,6 +30,7 @@ export interface ConversationWithDetails extends Conversation {
   classified_title: string;
   classified_price: number;
   classified_photo: string;
+  classified_public_url: string | null;
   other_user_name: string;
   other_user_avatar: string;
 }

@@ -9,6 +9,7 @@ import type { OrderRecord } from "../order/types";
 import { LOGISTICS_STATUS, type LogisticsStatus } from "../logistics/types";
 import { mobilityRoutes } from "@/core/mobility/routes/mobilityRoutes";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 
 interface NotificationPayload {
   userId: string;
@@ -125,6 +126,26 @@ function orderShortId(orderId: string): string {
   return orderId.slice(0, 8).toUpperCase();
 }
 
+function getStatusLabel(status: LogisticsStatus): string {
+  return getRecordValue(STATUS_LABELS, status) ?? "Status atualizado";
+}
+
+function getEventLabel(event: OrderNotificationEvent): string {
+  return getRecordValue(EVENT_LABELS, event) ?? event;
+}
+
+function getCustomerMessage(status: LogisticsStatus): string {
+  return getRecordValue(CUSTOMER_MESSAGES, status) ?? "Seu pedido foi atualizado.";
+}
+
+function getMerchantMessage(status: LogisticsStatus): string {
+  return getRecordValue(MERCHANT_MESSAGES, status) ?? "Pedido atualizado na operacao.";
+}
+
+function getCourierMessage(status: LogisticsStatus): string {
+  return getRecordValue(COURIER_MESSAGES, status) ?? "Entrega atualizada.";
+}
+
 function merchantOrderUrl(order: OrderRecord): string | null {
   const businessId = order.source_context.source_id;
   if (!businessId || order.source_context.source_type !== "gastronomy") return null;
@@ -139,7 +160,7 @@ function customerOrderUrl(order: OrderRecord): string | null {
 function notificationMetadata(order: OrderRecord, event: OrderNotificationEvent): Record<string, unknown> {
   return {
     event,
-    event_label: EVENT_LABELS[event] ?? event,
+    event_label: getEventLabel(event),
     order_id: order.id,
     order_status: order.logistics_status,
     source_type: order.source_context.source_type,
@@ -228,7 +249,8 @@ export class OrderDeliveryNotificationService {
 
       const status = order.logistics_status;
       const resolvedEvent = event ?? this.resolveDefaultEvent(order);
-      const title = `${STATUS_LABELS[status]} #${orderShortId(order.id)}`;
+      const eventLabel = getEventLabel(resolvedEvent);
+      const title = `${getStatusLabel(status)} #${orderShortId(order.id)}`;
       const type = resolveNotificationType(resolvedEvent, status);
       const metadata = notificationMetadata(order, resolvedEvent);
       const actionUrl = merchantOrderUrl(order);
@@ -243,7 +265,7 @@ export class OrderDeliveryNotificationService {
           type,
           category: "transactional",
           title,
-          message: `${CUSTOMER_MESSAGES[status]} (${EVENT_LABELS[resolvedEvent]}).`,
+          message: `${getCustomerMessage(status)} (${eventLabel}).`,
           actionUrl: customerActionUrl,
           actionLabel: customerActionUrl ? "Abrir pedido" : null,
           metadata: { ...metadata, audience: "customer" },
@@ -257,7 +279,7 @@ export class OrderDeliveryNotificationService {
           type,
           category: "transactional",
           title,
-          message: `${MERCHANT_MESSAGES[status]} (${EVENT_LABELS[resolvedEvent]}).`,
+          message: `${getMerchantMessage(status)} (${eventLabel}).`,
           actionUrl,
           actionLabel: actionUrl ? "Abrir pedido" : null,
           metadata: { ...metadata, audience: "merchant" },
@@ -271,7 +293,7 @@ export class OrderDeliveryNotificationService {
           type,
           category: "transactional",
           title,
-          message: `${COURIER_MESSAGES[status]} (${EVENT_LABELS[resolvedEvent]}).`,
+          message: `${getCourierMessage(status)} (${eventLabel}).`,
           actionUrl: mobilityRoutes.motoboy.entregas,
           actionLabel: "Abrir entregas",
           metadata: { ...metadata, audience: "courier" },

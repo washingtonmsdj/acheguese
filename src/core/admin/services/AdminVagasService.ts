@@ -1,5 +1,7 @@
 import { supabase } from "@/core/infrastructure/supabase/supabase";
+import { VagaPublicationDistributionService } from "@/core/verticals/jobs/services/VagaPublicationDistributionService";
 import { logger } from "@/shared/utils/logger";
+import { buildSafeOrILikeFilter } from "@/shared/utils/sqlSanitization";
 
 export type VagaStatus =
   | "draft"
@@ -200,9 +202,10 @@ export class AdminVagasService {
         );
 
       if (search) {
-        query = query.or(
-          `titulo.ilike.%${search}%,empresa_nome.ilike.%${search}%,descricao.ilike.%${search}%`,
-        );
+        const searchFilter = buildSafeOrILikeFilter(["titulo", "empresa_nome", "descricao"], search);
+        if (searchFilter) {
+          query = query.or(searchFilter);
+        }
       }
       if (contrato) query = query.eq("contrato", contrato);
       if (modalidade) query = query.eq("modalidade", modalidade);
@@ -264,6 +267,11 @@ export class AdminVagasService {
         .eq("id", vagaId);
 
       if (error) throw error;
+
+      if (status === "published") {
+        await this.distributePublishedVaga(vagaId);
+      }
+
       return true;
     } catch (error) {
       logger.error("[AdminVagasService] Erro ao atualizar status da vaga", error);
@@ -306,6 +314,9 @@ export class AdminVagasService {
         .eq("id", vagaId);
 
       if (error) throw error;
+
+      await this.distributePublishedVaga(vagaId);
+
       return true;
     } catch (error) {
       logger.error("[AdminVagasService] Erro ao renovar vaga", error);
@@ -427,6 +438,14 @@ export class AdminVagasService {
       publishedAt: row.published_at ? new Date(row.published_at) : undefined,
       expiresAt: row.expires_at ? new Date(row.expires_at) : undefined,
     };
+  }
+
+  private static async distributePublishedVaga(vagaId: string): Promise<void> {
+    try {
+      await VagaPublicationDistributionService.distributePublishedVaga(vagaId);
+    } catch (error) {
+      logger.error("[AdminVagasService] Erro ao distribuir vaga publicada", error);
+    }
   }
 }
 

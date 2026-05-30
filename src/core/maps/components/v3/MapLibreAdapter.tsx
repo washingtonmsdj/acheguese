@@ -154,7 +154,8 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
     const [currentZoom, setCurrentZoom] = React.useState<number>(DEFAULT_ZOOM);
     
     // ID único do mapa para componentes filhos
-    const mapId = React.useMemo(() => `map-${Math.random().toString(36).substr(2, 9)}`, []);
+    const reactMapId = React.useId();
+    const mapId = React.useMemo(() => `map-${reactMapId.replace(/[^a-zA-Z0-9_-]/g, '')}`, [reactMapId]);
 
     // Expor handle imperativo
     useImperativeHandle(ref, () => ({

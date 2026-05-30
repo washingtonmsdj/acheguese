@@ -24,6 +24,15 @@ const QUERY_KEYS = {
   featured: ['billing-plans', 'featured'] as const,
 };
 
+function getEntitlementEntry(
+  entitlements: PlanEntitlements,
+  key: keyof PlanEntitlements,
+): PlanEntitlements[keyof PlanEntitlements] | undefined {
+  return Object.entries(entitlements).find(([entryKey]) => entryKey === key)?.[1] as
+    | PlanEntitlements[keyof PlanEntitlements]
+    | undefined;
+}
+
 function getEntitlementValue(
   entitlements: PlanEntitlements | undefined,
   entitlement: keyof PlanEntitlements,
@@ -32,7 +41,7 @@ function getEntitlementValue(
     return false;
   }
 
-  const value = entitlements[entitlement];
+  const value = getEntitlementEntry(entitlements, entitlement);
 
   if (typeof value === 'boolean') {
     return value;
@@ -56,7 +65,9 @@ function getLimitValue(
     return null;
   }
 
-  return entitlements[limitKey] ?? null;
+  const value = getEntitlementEntry(entitlements, limitKey);
+  if (typeof value === "number") return value;
+  return null;
 }
 
 // ══════════════════════════════════════════════════════════════════════════

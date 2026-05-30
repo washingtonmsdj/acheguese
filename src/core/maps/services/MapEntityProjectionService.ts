@@ -17,6 +17,8 @@
  */
 import { logger } from '@/shared/utils/logger';
 import { APP_MODULE_SLUGS, buildAppModulePath } from '@/config/moduleSlugs';
+import { LAUNCH_URLS } from '@/config/territory';
+import { ProfessionalUrlService } from '@/core/professional/services/ProfessionalUrlService';
 import type { MapMarker, MapEntityType, MapEntityStatus, Coordinates } from '../types';
 import { isValidCoordinates } from '../types';
 // ============================================
@@ -183,10 +185,23 @@ export class MapEntityProjectionService {
     professional: MappableEntity,
     options: ProjectionOptions = {}
   ): MapMarker | null {
-    return this.projectEntity(professional, 'professional', {
-      ...options,
-      baseUrl: options.baseUrl || '/profissionais',
+    const publicUrl = ProfessionalUrlService.getCanonicalUrlFromTarget({
+      id: professional.id,
+      profile_id: typeof professional.profile_id === 'string' ? professional.profile_id : null,
+      slug: typeof professional.slug === 'string' ? professional.slug : null,
+      geographic_path:
+        typeof professional.geographic_path === 'string' ? professional.geographic_path : null,
+      geographicPath:
+        typeof professional.geographicPath === 'string' ? professional.geographicPath : null,
+      state: typeof professional.state === 'string' ? professional.state : null,
+      city: typeof professional.city === 'string' ? professional.city : null,
     });
+
+    return this.projectEntity(
+      publicUrl ? { ...professional, url: publicUrl } : professional,
+      'professional',
+      options,
+    );
   }
 
   /**
@@ -198,7 +213,7 @@ export class MapEntityProjectionService {
   ): MapMarker | null {
     return this.projectEntity(point, 'tourist_point', {
       ...options,
-      baseUrl: options.baseUrl || buildAppModulePath(APP_MODULE_SLUGS.touristPoints),
+      baseUrl: options.baseUrl || LAUNCH_URLS.touristPoints,
     });
   }
 

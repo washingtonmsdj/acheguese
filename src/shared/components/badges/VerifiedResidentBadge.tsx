@@ -33,6 +33,18 @@ const sizeClasses = {
   large: "w-6 h-6",
 };
 
+function getHomeIconSizeClass(size: VerifiedResidentBadgeProps["size"]): string {
+  switch (size) {
+    case "small":
+      return sizeClasses.small;
+    case "large":
+      return sizeClasses.large;
+    case "medium":
+    default:
+      return sizeClasses.medium;
+  }
+}
+
 export function VerifiedResidentBadge({
   size = "medium",
   showTooltip = true,
@@ -49,7 +61,7 @@ export function VerifiedResidentBadge({
     >
       <div className="relative">
         <Home
-          className={cn(sizeClasses[size], "text-blue-500")}
+          className={cn(getHomeIconSizeClass(size), "text-blue-500")}
           strokeWidth={2.5}
         />
         <ShieldCheck

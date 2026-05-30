@@ -2,6 +2,7 @@ import React from "react";
 import { memo } from "react";
 import { useSponsoredAds } from "../../hooks/useSponsoredAds";
 import { WidgetSkeleton } from "./WidgetSkeleton";
+import { SafeImage, SafeLink } from "@/shared/components/security";
 export const SponsoredWidget = memo(() => {
   const { data: ad, isLoading } = useSponsoredAds();
 
@@ -25,9 +26,9 @@ export const SponsoredWidget = memo(() => {
         <span className="text-[0.55rem] text-gray-400">Ad</span>
       </div>
 
-      <a href={ad.link} className="block group">
+      <SafeLink href={ad.link} className="block group">
         <div className="aspect-video bg-gradient-to-br from-purple-500 to-pink-500 rounded-md mb-1.5 overflow-hidden">
-          <img
+          <SafeImage
             src={ad.imageUrl}
             alt={ad.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
@@ -39,7 +40,7 @@ export const SponsoredWidget = memo(() => {
         <p className="text-[0.55rem] text-gray-400 line-clamp-2">
           {ad.description}
         </p>
-      </a>
+      </SafeLink>
 
       <button className="w-full mt-1.5 px-2 py-1 bg-gradient-to-r from-teal-400 to-cyan-400 text-white text-[9px] font-semibold rounded-md hover:shadow-lg transition-all">
         Anunciar aqui

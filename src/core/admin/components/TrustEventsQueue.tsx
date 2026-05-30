@@ -18,6 +18,7 @@ import { TrustEventQueueCard } from "./TrustEventQueueCard";
 import { TrustEventsQueueBulkActions } from "./TrustEventsQueueBulkActions";
 import { TrustEventsQueueFilters } from "./TrustEventsQueueFilters";
 import { TrustEventsQueueSummary } from "./TrustEventsQueueSummary";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 
 export interface TrustEventsQueueProps {
   initialContextFilter?: TrustContextFilter;
@@ -27,6 +28,10 @@ export interface TrustEventsQueueProps {
   initialOnlyClassifiedCommentReports?: boolean;
   lockOnlyClassifiedCommentReports?: boolean;
   hideScoreSummary?: boolean;
+}
+
+function readResolutionNote(notes: Record<string, string>, eventId: string): string | null {
+  return getRecordValue(notes, eventId)?.trim() || null;
 }
 
 export function TrustEventsQueue({
@@ -70,7 +75,28 @@ export function TrustEventsQueue({
       community: 0,
     };
     for (const event of events) {
-      counts[event.context_type] += 1;
+      switch (event.context_type) {
+        case "order":
+          counts.order += 1;
+          break;
+        case "ride":
+          counts.ride += 1;
+          break;
+        case "delivery":
+          counts.delivery += 1;
+          break;
+        case "classified":
+          counts.classified += 1;
+          break;
+        case "service":
+          counts.service += 1;
+          break;
+        case "community":
+          counts.community += 1;
+          break;
+        default:
+          break;
+      }
     }
     return counts;
   }, [events]);
@@ -187,7 +213,7 @@ export function TrustEventsQueue({
     const result = await TrustEventService.reviewEvent(eventId, {
       status,
       reviewed_by_profile_id: activeProfile.id,
-      resolution_notes: resolutionNotes[eventId]?.trim() || null,
+      resolution_notes: readResolutionNote(resolutionNotes, eventId),
     });
 
     if (result.error) {
@@ -210,7 +236,7 @@ export function TrustEventsQueue({
       return;
     }
 
-    const note = resolutionNotes[event.id]?.trim();
+    const note = readResolutionNote(resolutionNotes, event.id);
     const reason = note || `Acao administrativa por evento ${event.event_type}`;
 
     setReviewingId(event.id);
@@ -264,7 +290,7 @@ export function TrustEventsQueue({
         TrustEventService.reviewEvent(event.id, {
           status,
           reviewed_by_profile_id: activeProfile.id!,
-          resolution_notes: resolutionNotes[event.id]?.trim() || notes,
+          resolution_notes: readResolutionNote(resolutionNotes, event.id) || notes,
         }),
       ),
     );
@@ -290,9 +316,9 @@ export function TrustEventsQueue({
           applied_by_profile_id: activeProfile.id!,
           action_type: actionType,
           reason:
-            resolutionNotes[event.id]?.trim() ||
+            readResolutionNote(resolutionNotes, event.id) ||
             `Acao administrativa em lote (${actionType})`,
-          notes: resolutionNotes[event.id]?.trim() || null,
+          notes: readResolutionNote(resolutionNotes, event.id),
           duration_days: durationDays,
           metadata: {
             batch: true,
@@ -381,7 +407,7 @@ export function TrustEventsQueue({
                   key={event.id}
                   event={event}
                   selected={selectedSet.has(event.id)}
-                  resolutionNote={resolutionNotes[event.id] ?? ""}
+                  resolutionNote={getRecordValue(resolutionNotes, event.id) ?? ""}
                   disabled={reviewingId === event.id}
                   onToggleSelection={toggleSelection}
                   onResolutionNoteChange={(eventId, value) =>

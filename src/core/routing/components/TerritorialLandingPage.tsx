@@ -206,36 +206,18 @@ function ServiceCard({ s, onNavigate, moduleUrl }: { s: FeaturedService; onNavig
   );
 }
 
-function ClassifiedCard({ c, onNavigate, shortUrl }: { 
+function ClassifiedCard({ c, onNavigate }: {
   c: FeaturedClassified; 
   onNavigate: (to: string) => void;
-  shortUrl: (publicId: string) => string;
 }) {
   const thumb = c.photos?.[0];
-  
-  // ✅ Constrói URL canônica se dados disponíveis, senão usa link curto
-  const getUrl = () => {
-    if (c.geographic_path && c.category_slug && c.subcategory_slug && c.slug && c.public_id) {
-      try {
-        const urls = classifiedUrlService.buildUrls({
-          id: c.id,
-          public_id: c.public_id,
-          slug: c.slug,
-          geographic_path: c.geographic_path,
-          category_slug: c.category_slug,
-          subcategory_slug: c.subcategory_slug,
-        });
-        return urls.canonical;
-      } catch {
-        return shortUrl(c.public_id);
-      }
-    }
-    return shortUrl(c.public_id);
-  };
+  const publicUrl = classifiedUrlService.buildPublicUrl(c);
   
   return (
     <button
-      onClick={() => onNavigate(getUrl())}
+      onClick={() => {
+        if (publicUrl) onNavigate(publicUrl);
+      }}
       className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border hover:border-orange-500/40 hover:bg-accent transition-all text-left w-full"
     >
       <div className="h-10 w-10 rounded-lg bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center">
@@ -328,8 +310,6 @@ export function TerritorialLandingPage() {
   const { businesses, services, classifieds, stats, isLoading } = useLandingFeatured(filter);
   const { data: allHighlights = [], isLoading: highlightsLoading } = useTerritorialHighlights(resolved);
   const { data: territoryStats, isLoading: statsLoading } = useTerritoryStats(resolved);
-  const shortClassifiedUrl = (publicId: string) => classifiedUrlService.buildShortUrl(publicId);
-
   // Aplica limite editorial de highlights
   const highlights = allHighlights.slice(0, TERRITORIAL_LANDING_LIMITS.HIGHLIGHTS);
 
@@ -768,7 +748,7 @@ export function TerritorialLandingPage() {
         ) : classifieds.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {classifieds.slice(0, TERRITORIAL_LANDING_LIMITS.CLASSIFIEDS).map((c) => (
-                  <ClassifiedCard key={c.id} c={c} onNavigate={navigate} shortUrl={shortClassifiedUrl} />
+                  <ClassifiedCard key={c.id} c={c} onNavigate={navigate} />
                 ))}
           </div>
         ) : (

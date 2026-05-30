@@ -2,6 +2,7 @@ import { GamificationService } from "@/core/gamification/services/GamificationSe
 import { supabase } from "@/integrations/supabase";
 import { trackError } from "@/shared/utils/errorTracking";
 import { logger } from "@/shared/utils/logger";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 import type { FlexibleMetadata } from "@/shared/types/supabase.types";
 import type {
   CommunityInteraction,
@@ -91,7 +92,7 @@ const BADGE_REQUIREMENTS = {
 } as const;
 
 function getInteractionPoints(interactionType: InteractionType): number {
-  return INTERACTION_POINTS[interactionType] ?? 0;
+  return getRecordValue(INTERACTION_POINTS, interactionType) ?? 0;
 }
 
 class CommunityGamificationServiceClass {
@@ -182,13 +183,16 @@ class CommunityGamificationServiceClass {
 
       const totalInteractions = interactions?.length || 0;
       const totalPoints = interactions?.reduce((sum, i) => sum + (i.points || 0), 0) || 0;
-      const interactionsByType: Record<string, number> = {};
+      const interactionsByType = new Map<string, number>();
 
       interactions?.forEach((i) => {
-        interactionsByType[i.interaction_type] = (interactionsByType[i.interaction_type] || 0) + 1;
+        interactionsByType.set(
+          i.interaction_type,
+          (interactionsByType.get(i.interaction_type) ?? 0) + 1,
+        );
       });
 
-      return { totalInteractions, totalPoints, interactionsByType };
+      return { totalInteractions, totalPoints, interactionsByType: Object.fromEntries(interactionsByType) };
     } catch (error) {
       if (!isTableNotFoundError(error)) {
         trackError(error as Error, {
@@ -211,7 +215,7 @@ class CommunityGamificationServiceClass {
         let shouldAward = false;
 
         if ("interaction_type" in requirement) {
-          const count = stats.interactionsByType[requirement.interaction_type] || 0;
+          const count = getRecordValue(stats.interactionsByType, requirement.interaction_type) ?? 0;
           shouldAward = count >= requirement.count;
         } else if ("total_interactions" in requirement) {
           shouldAward = stats.totalInteractions >= requirement.total_interactions;
@@ -406,9 +410,12 @@ class CommunityGamificationServiceClass {
     ];
 
     const currentLevel =
-      levels.find((l) => totalPoints >= l.minPoints && totalPoints < l.maxPoints) || levels[0];
+      levels.find((l) => totalPoints >= l.minPoints && totalPoints < l.maxPoints) ?? levels.at(0);
+    if (!currentLevel) {
+      throw new Error("Community level configuration is empty");
+    }
     const currentIndex = levels.indexOf(currentLevel);
-    const nextLevel = levels[currentIndex + 1] || currentLevel;
+    const nextLevel = levels.at(currentIndex + 1) ?? currentLevel;
 
     const progress =
       nextLevel.maxPoints === Infinity

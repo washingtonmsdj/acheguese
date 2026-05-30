@@ -425,9 +425,14 @@ export class QrCodeService {
   /**
    * Gera hash do IP (privacidade)
    */
-  static async hashIp(ip: string): Promise<string> {
+  static async hashIp(ip: string, salt: string): Promise<string> {
+    const normalizedSalt = salt.trim();
+    if (!normalizedSalt) {
+      throw new Error('IP hash salt is required');
+    }
+
     const encoder = new TextEncoder();
-    const data = encoder.encode(ip + process.env.IP_SALT || 'default-salt');
+    const data = encoder.encode(`${normalizedSalt}:${ip}`);
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');

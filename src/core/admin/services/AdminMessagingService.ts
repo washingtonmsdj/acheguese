@@ -8,6 +8,7 @@
 
 import { supabase } from "@/integrations/supabase/supabase";
 import { logger } from "@/shared/utils/logger";
+import { buildSafeOrILikeFilter } from "@/shared/utils/sqlSanitization";
 import type { AdminSupabaseClient } from "../types/adminDatabase.types";
 import { messagingService } from "@/core/messaging/services/MessagingService";
 import type {
@@ -126,7 +127,10 @@ class AdminMessagingServiceClass {
 
       // Aplica busca se fornecida
       if (options.search) {
-        query = query.or(`buyer.name.ilike.%${options.search}%,seller.name.ilike.%${options.search}%`);
+        const searchFilter = buildSafeOrILikeFilter(["buyer.name", "seller.name"], options.search);
+        if (searchFilter) {
+          query = query.or(searchFilter);
+        }
       }
 
       query = query

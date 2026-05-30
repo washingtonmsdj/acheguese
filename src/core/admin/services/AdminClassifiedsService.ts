@@ -11,6 +11,7 @@ import { logger } from "@/shared/utils/logger";
 import { REPORT_STATUS } from "@/shared/types/constants";
 import { CLASSIFIED_STATUS } from "@/core/classifieds/constants/statuses";
 import { profileService } from "@/core/profiles/services/ProfileService";
+import { buildSafeILikePattern } from "@/shared/utils/sqlSanitization";
 
 export interface AdminClassifiedData {
   [key: string]: unknown;
@@ -431,7 +432,10 @@ class AdminClassifiedsServiceClass {
 
       // Aplica busca se fornecida
       if (options.search) {
-        query = query.ilike("title", `%${options.search}%`);
+        const searchPattern = buildSafeILikePattern(options.search);
+        if (searchPattern) {
+          query = query.ilike("title", searchPattern);
+        }
       }
 
       if (options.categoryId) {
@@ -695,5 +699,4 @@ class AdminClassifiedsServiceClass {
 }
 
 export const adminClassifiedsService = new AdminClassifiedsServiceClass();
-
 

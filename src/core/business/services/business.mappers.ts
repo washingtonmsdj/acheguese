@@ -27,7 +27,7 @@ function setIfDefined<T extends object, K extends keyof T>(
   value: T[K] | undefined,
 ): void {
   if (value !== undefined) {
-    target[key] = value;
+    Object.assign(target, Object.fromEntries([[key, value]]) as unknown as Partial<T>);
   }
 }
 

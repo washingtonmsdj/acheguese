@@ -1,6 +1,6 @@
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { toast } from "sonner";
 import { useDashboardAccess } from "@/core/business/hooks/useDashboardAccess";
@@ -75,14 +75,24 @@ export default function DashboardEmpresaPage() {
 
   const handleBack = () => navigate(appUrls.profile.home);
 
-  const handleViewPublic = () => {
-    if (business?.slug && business.geographic_path) {
-      navigate(BusinessUrlService.getCanonicalUrl({
+  const businessCanonicalUrl = useMemo(() => {
+    if (!business?.slug || !business.geographic_path) return null;
+
+    try {
+      return BusinessUrlService.getCanonicalUrl({
         id: business.id,
         slug: business.slug,
         is_premium: business.is_premium,
         geographic_path: business.geographic_path,
-      }));
+      });
+    } catch {
+      return null;
+    }
+  }, [business?.geographic_path, business?.id, business?.is_premium, business?.slug]);
+
+  const handleViewPublic = () => {
+    if (businessCanonicalUrl) {
+      navigate(businessCanonicalUrl);
     }
   };
 
@@ -153,23 +163,21 @@ export default function DashboardEmpresaPage() {
               </p>
             </div>
 
-            <QrCodeWidget
-              entityType={QrEntityType.BUSINESS}
-              entityId={business.id}
-              businessId={business.id}
-              canonicalUrl={business.slug && business.geographic_path
-                ? BusinessUrlService.getCanonicalUrl({
-                    id: business.id,
-                    slug: business.slug,
-                    is_premium: business.is_premium,
-                    geographic_path: business.geographic_path,
-                  })
-                : `/empresas/${business.id}`
-              }
-              ownerProfileId={business.profile_id || profileId || ''}
-              title="QR Code da Empresa"
-              description="Compartilhe este QR Code para clientes acessarem sua pagina"
-            />
+            {businessCanonicalUrl ? (
+              <QrCodeWidget
+                entityType={QrEntityType.BUSINESS}
+                entityId={business.id}
+                businessId={business.id}
+                canonicalUrl={businessCanonicalUrl}
+                ownerProfileId={business.profile_id || profileId || ''}
+                title="QR Code da Empresa"
+                description="Compartilhe este QR Code para clientes acessarem sua pagina"
+              />
+            ) : (
+              <div className="rounded-lg border bg-card p-4 text-sm text-muted-foreground">
+                Complete o endereço territorial e o link público da empresa para liberar o QR Code público.
+              </div>
+            )}
           </div>
         </TabPanel>
 

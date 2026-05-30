@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/supabase";
 import type { Json } from "@/integrations/supabase/types.generated";
 import type { TerritoryFilter } from "@/core/location/types";
 import { logger } from "@/shared/utils/logger";
+import { sanitizeForILike } from "@/shared/utils/sqlSanitization";
 
 export interface CommunityEvent {
   id: string;
@@ -229,8 +230,10 @@ class CommunityEventsRuntimeService {
         }
       }
       if (input.search?.trim()) {
-        const search = input.search.trim().replace(/,/g, " ");
-        query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%,location.ilike.%${search}%`);
+        const search = sanitizeForILike(input.search);
+        if (search) {
+          query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%,location.ilike.%${search}%`);
+        }
       }
 
       const sortBy = input.sortBy ?? "date";

@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { MEDIA_UPLOAD_LIMITS } from "@/core/media/config/uploadLimits";
 import { getImageOptimizePreset, optimizeImage } from "@/shared/utils/imageOptimizer";
+import { secureRandomString } from "@/shared/utils/secureRandom";
 
 export class MediaError extends Error {
   constructor(
@@ -283,7 +284,7 @@ class MediaServiceClass {
 
       // Gerar path único
       const timestamp = Date.now();
-      const random = Math.random().toString(36).slice(2);
+      const random = secureRandomString(16);
       const ext = this.getSafeExtensionFromMime(optimizedFile.type);
       const folder = type === "logo" ? "" : "portfolio/";
       const path = `professionals/${userId}/${folder}${timestamp}-${random}.${ext}`;
@@ -450,7 +451,7 @@ class MediaServiceClass {
     const prefix = options.pathPrefix?.replace(/^\/+|\/+$/g, "") || "uploads";
     const sanitizedFileName = options.fileName
       ? options.fileName.replace(/[\\/]/g, "").replace(/\.+/g, ".")
-      : `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      : `${Date.now()}-${secureRandomString(16)}.${ext}`;
     const ensuredName = sanitizedFileName.includes(".")
       ? sanitizedFileName
       : `${sanitizedFileName}.${ext}`;

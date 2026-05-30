@@ -5,16 +5,19 @@
  */
 
 import { useMemo } from 'react';
+import { buildBusinessPublicUrlPreview } from '@/core/business/utils/businessPublicUrls';
+import { COMMUNICATION_CHANNEL_URL_PREVIEW_PATTERN } from '@/core/communication-territorial/utils/communicationTerritorialUrls';
+import { professionalPublicRoutes } from '@/core/professional/routes/professionalPublicRoutes';
 import type { EntityType } from '@/core/public-identity/domain/types';
 
 export type UrlPreviewFn = (identifier: string) => string;
 
 /** Funções de preview por domínio - sem estado, sem IO */
 export const URL_PREVIEW_FNS: Record<EntityType, UrlPreviewFn> = {
-  business: (slug) => (slug ? `/empresas/:uf/:cidade/:bairro/${slug}` : ''),
+  business: buildBusinessPublicUrlPreview,
   profile: (username) => (username ? `/u/${username}` : ''),
-  professional: (slug) => (slug ? `/profissionais/:uf/:cidade/${slug}` : ''),
-  communication_channel: (slug) => (slug ? `/comunicacao/:uf/:cidade/:territorio/${slug}` : ''),
+  professional: (slug) => (slug ? professionalPublicRoutes.detailPreview(slug) : ''),
+  communication_channel: (slug) => (slug ? COMMUNICATION_CHANNEL_URL_PREVIEW_PATTERN.replace(":canal", slug) : ''),
 };
 
 export interface UseIdentityUrlPreviewOptions {

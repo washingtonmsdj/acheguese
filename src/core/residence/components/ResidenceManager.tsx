@@ -25,6 +25,7 @@ import { toast } from "sonner";
 import { useSessionContext } from "@/core/session";
 import { logger } from "@/shared/utils/logger";
 import { ResidenceAddressFormCard } from "./ResidenceAddressFormCard";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 
 type LookupStatus = "idle" | "loading" | "success" | "error";
 type AddressEntryMode = "cep" | "manual";
@@ -48,7 +49,7 @@ function readMetadataString(
   metadata: Record<string, unknown> | null | undefined,
   key: string,
 ): string | null {
-  const value = metadata?.[key];
+  const value = metadata ? getRecordValue(metadata, key) : undefined;
   return typeof value === "string" && value.trim() ? value : null;
 }
 

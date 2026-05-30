@@ -20,4 +20,13 @@ describe("supabase auth config", () => {
     expect(source).toContain("storageKey: AUTH_STORAGE_KEY");
     expect(source).not.toContain("storageKey: 'token'");
   });
+
+  it("uses PKCE with the centralized cookie-only auth storage", () => {
+    const source = readProjectFile("src/integrations/supabase/supabase.ts");
+
+    expect(source).toContain("createBrowserAuthStorage()");
+    expect(source).toContain('flowType: "pkce"');
+    expect(source).not.toContain('flowType: "implicit"');
+    expect(source).not.toContain("localStorage fallback");
+  });
 });

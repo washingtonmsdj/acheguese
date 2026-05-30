@@ -3,7 +3,7 @@ import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritory
 import { COMMUNITY_EXPERIENCE_STATUS } from "@/core/community-experience/constants/statuses";
 
 export type CommunityStatus = "active" | "launching" | "waiting_list" | "coming_soon" | "inactive";
-export type CommunityTerritoryType = "neighborhood" | "district" | "territorial_group";
+export type CommunityTerritoryType = "city" | "neighborhood" | "district" | "territorial_group";
 
 export interface TerritorialCommunityProfile {
   id: string;
@@ -25,6 +25,27 @@ export interface TerritorialCommunityProfile {
 }
 
 function fallbackFromResolved(resolved: ResolvedTerritory): TerritorialCommunityProfile {
+  if (resolved.kind === "location" && resolved.location.type === "city") {
+    return {
+      id: `community-city-${resolved.location.id}`,
+      name: `Achegue-se ${resolved.location.name}`,
+      slug: resolved.location.slug,
+      city_id: resolved.location.id,
+      territory_type: "city",
+      territory_id: resolved.location.id,
+      status: COMMUNITY_EXPERIENCE_STATUS.ACTIVE,
+      headline: null,
+      description: null,
+      launch_message: null,
+      hero_title: null,
+      hero_subtitle: null,
+      primary_cta_label: null,
+      secondary_cta_label: null,
+      is_featured: false,
+      sort_order: 0,
+    };
+  }
+
   if (
     resolved.kind === "location" &&
     (resolved.location.type === "neighborhood" || resolved.location.type === "district")
@@ -78,9 +99,11 @@ export class CommunityExperienceService {
     const territoryType: CommunityTerritoryType =
       resolved.kind === "group"
         ? "territorial_group"
-        : resolved.location.type === "neighborhood"
-          ? "neighborhood"
-          : "district";
+        : resolved.location.type === "city"
+          ? "city"
+          : resolved.location.type === "neighborhood"
+            ? "neighborhood"
+            : "district";
     const territoryId = resolved.kind === "group" ? resolved.group.id : resolved.location.id;
 
     try {

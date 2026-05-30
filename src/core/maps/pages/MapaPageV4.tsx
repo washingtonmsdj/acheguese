@@ -30,6 +30,7 @@ import { useTerritoryPolygon } from '../hooks/useTerritoryPolygon';
 import { useQuery } from '@tanstack/react-query';
 import { APP_MODULE_SLUGS, buildAppModulePath } from '@/config/moduleSlugs';
 import { spatialSearchService } from '@/core/geospatial/services/SpatialSearchService';
+import { useTouristPointPublicUrls } from '@/core/verticals/guide/routes/useTouristPointPublicUrls';
 import { EntityStatus } from '@/shared/types/enums';
 import type { BoundingBox, MapLayerKey, MapMarker, MapViewport } from '../types/core';
 import type { TerritoryFilter } from '@/core/location/types';
@@ -53,7 +54,6 @@ const TILE_STYLE_URL = DEFAULT_TILE_STYLE.styleUrl;
 const BUSINESS_MAP_BASE_URL = buildAppModulePath(APP_MODULE_SLUGS.business);
 const EVENTS_MAP_BASE_URL = buildAppModulePath(APP_MODULE_SLUGS.events);
 const GASTRONOMY_MAP_BASE_URL = buildAppModulePath(APP_MODULE_SLUGS.gastronomy);
-const TOURIST_POINTS_MAP_BASE_URL = buildAppModulePath(APP_MODULE_SLUGS.touristPoints);
 
 // ─── Bounds e zoom iniciais vindos do SSOT de mapas ───────────────────────────
 const INITIAL_BOUNDS: BoundingBox = MAP_DEFAULT_BOUNDS;
@@ -271,6 +271,7 @@ export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV
   // SSOT territorial
   const territoryFilter = useTerritoryFilter(resolved, activeMemberIds);
   const { polygons: territoryPolygons } = useTerritoryPolygon(resolved);
+  const guideUrls = useTouristPointPublicUrls(resolved);
 
   const touristLayerVisible = visibleLayers.tourist_points !== false;
   const businessesLayerVisible = visibleLayers.businesses !== false;
@@ -400,13 +401,13 @@ export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV
             map_layer_key: 'tourist_points',
           })),
           'tourist_point',
-          { includeMetadata: true, calculateScore: true, baseUrl: TOURIST_POINTS_MAP_BASE_URL },
+          { includeMetadata: true, calculateScore: true, baseUrl: guideUrls.touristPoints },
         )
       : [];
 
     const merged = [...Object.values(layerData).flat(), ...touristPointMarkers];
     return [...focusMarkers, ...merged];
-  }, [touristPointsData, layerData, touristLayerVisible, focusMarkers]);
+  }, [touristPointsData, layerData, touristLayerVisible, focusMarkers, guideUrls.touristPoints]);
 
   useEffect(() => {
     if (!focusTarget || selectedMarker || focusMarkers.length === 0) return;

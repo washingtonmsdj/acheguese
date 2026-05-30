@@ -1,6 +1,7 @@
 import React from "react";
 import { useState } from "react";
 import { cn } from "@/shared/utils/cn";
+import { resolveSafeImageUrl } from "@/shared/utils/urlSafety";
 
 interface OptimizedImageProps {
   src: string;
@@ -33,6 +34,7 @@ export function OptimizedImage({
 }: OptimizedImageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const safeSrc = resolveSafeImageUrl(src, { context: "OptimizedImage" });
 
   const handleLoad = () => {
     setIsLoading(false);
@@ -61,7 +63,7 @@ export function OptimizedImage({
     return url;
   };
 
-  if (hasError) {
+  if (!safeSrc || hasError) {
     return (
       <div
         className={cn(
@@ -96,7 +98,7 @@ export function OptimizedImage({
         />
       )}
       <img
-        src={getOptimizedUrl(src)}
+        src={getOptimizedUrl(safeSrc)}
         alt={alt}
         width={width}
         height={height}

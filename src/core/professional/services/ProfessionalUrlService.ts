@@ -1,76 +1,192 @@
 /**
- * ProfessionalUrlService — Camada autorizada SSOT para URLs públicas de profissionais.
+ * ProfessionalUrlService - SSOT for public professional URLs.
  *
- * REGRAS ARQUITETURAIS:
- *   - Nenhum componente, hook ou página monta URL de profissional manualmente.
- *   - Toda geração, resolução e validação de URL passa por aqui.
- *   - Hooks apenas consomem este service.
- *
- * PADRÃO OFICIAL DE URLs:
- *   Canônica pública:  /profissionais/:uf/:cidade/:slug
- *   
- * DIFERENÇAS COM BUSINESS:
- *   - Professional não requer bairro (apenas cidade)
- *   - Professional não tem link premium curto
- *   - Professional não tem geographic_path (usa location_id)
+ * Canonical public URL:
+ *   /servicos/:uf/:cidade/profissional/:slug
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import { PublicIdentityService } from '@/core/public-identity/services/PublicIdentityService';
-
-// ─── Tipos ────────────────────────────────────────────────────────────────────
+import { professionalPublicRoutes } from '@/core/professional/routes/professionalPublicRoutes';
 
 export interface ProfessionalUrlContext {
-  /** profile_id do profissional */
+  /** Professional profile_id. */
   id: string;
   slug: string;
-  /** Estado (UF) - ex: 'ba', 'sp' */
+  /** State slug or name. Example: ba, sp. */
   state: string;
-  /** Cidade - ex: 'salvador', 'sao-paulo' */
+  /** City slug or name. Example: salvador, sao-paulo. */
   city: string;
 }
 
 export interface ResolvedProfessionalUrl {
-  /** URL canônica pública: /profissionais/ba/salvador/joao-silva-dev */
+  /** Public canonical URL: /servicos/ba/salvador/profissional/joao-silva-dev */
   canonical: string;
-  /** URL interna de dashboard: /dashboard/professional/:id */
+  /** Internal dashboard URL: /dashboard/professional/:id */
   dashboard: string;
 }
 
-// ─── Helpers internos ─────────────────────────────────────────────────────────
+export interface ProfessionalPublicUrlTarget {
+  id: string;
+  profile_id?: string | null;
+  slug?: string | null;
+  geographic_path?: string | null;
+  geographicPath?: string | null;
+  state?: string | null;
+  city?: string | null;
+}
 
-/**
- * Normaliza UF e cidade para URL
- * Remove acentos, converte para lowercase, substitui espaços por hífens
- */
+type ProfessionalLocationRelation = {
+  id?: string | null;
+  name?: string | null;
+  slug?: string | null;
+  type?: string | null;
+  geographic_path?: string | null;
+  parent?: ProfessionalLocationRelation | ProfessionalLocationRelation[] | null;
+};
+
+type ProfessionalUrlRow = {
+  id?: string | null;
+  profile_id: string | null;
+  slug: string | null;
+  location?: ProfessionalLocationRelation | ProfessionalLocationRelation[] | null;
+};
+
+type ParsedProfessionalTerritory = {
+  state: string;
+  city: string;
+};
+
+const PROFESSIONAL_URL_SELECT = `
+  id,
+  profile_id,
+  slug,
+  location:locations!professional_data_location_id_fkey(
+    id,
+    name,
+    slug,
+    type,
+    geographic_path,
+    parent:locations!locations_parent_id_fkey(
+      id,
+      name,
+      slug,
+      type,
+      geographic_path,
+      parent:locations!locations_parent_id_fkey(
+        id,
+        name,
+        slug,
+        type,
+        geographic_path
+      )
+    )
+  )
+`;
+
 function normalizeForUrl(text: string): string {
   return text
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '') // Remove acentos
-    .replace(/\s+/g, '-') // Espaços para hífens
-    .replace(/[^a-z0-9-]/g, ''); // Remove caracteres especiais
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '');
 }
 
-// ─── Service ──────────────────────────────────────────────────────────────────
+function firstRelation<T>(relation: T | T[] | null | undefined): T | null {
+  if (Array.isArray(relation)) return relation[0] ?? null;
+  return relation ?? null;
+}
+
+function parseTerritoryFromGeographicPath(
+  geographicPath: string | null | undefined,
+): ParsedProfessionalTerritory | null {
+  if (!geographicPath) return null;
+
+  const parts = geographicPath.split('/').filter(Boolean);
+  const territoryParts = parts.at(0) === 'br' ? parts.slice(1) : parts;
+  const [state, city] = territoryParts;
+
+  if (!state || !city) return null;
+  return { state, city };
+}
+
+function extractTerritoryFromLocation(
+  location: ProfessionalLocationRelation | null | undefined,
+): ParsedProfessionalTerritory | null {
+  const current = firstRelation(location);
+  if (!current) return null;
+
+  const pathTerritory = parseTerritoryFromGeographicPath(current.geographic_path);
+  if (pathTerritory) return pathTerritory;
+
+  const parent = firstRelation(current.parent);
+  const grandparent = firstRelation(parent?.parent);
+
+  if (current.type === 'neighborhood' || current.type === 'district') {
+    const city = parent?.slug ?? parent?.name ?? '';
+    const state = grandparent?.slug ?? grandparent?.name ?? '';
+    return state && city ? { state, city } : null;
+  }
+
+  if (current.type === 'city') {
+    const city = current.slug ?? current.name ?? '';
+    const state = parent?.slug ?? parent?.name ?? '';
+    return state && city ? { state, city } : null;
+  }
+
+  return null;
+}
+
+function resolveContextFromRow(
+  row: ProfessionalUrlRow,
+  logContext: Record<string, unknown>,
+): ProfessionalUrlContext | null {
+  if (!row.profile_id || !row.slug) {
+    logger.warn('[ProfessionalUrlService] Professional without public identity', logContext);
+    return null;
+  }
+
+  const location = firstRelation(row.location);
+  if (!location) {
+    logger.warn('[ProfessionalUrlService] Professional without location', logContext);
+    return null;
+  }
+
+  if (location.type === 'state') {
+    logger.warn('[ProfessionalUrlService] Professional with state-level location', logContext);
+    return null;
+  }
+
+  const territory = extractTerritoryFromLocation(location);
+  if (!territory) {
+    logger.warn('[ProfessionalUrlService] Could not extract state/city', {
+      ...logContext,
+      location,
+    });
+    return null;
+  }
+
+  return {
+    id: row.profile_id,
+    slug: row.slug,
+    state: territory.state,
+    city: territory.city,
+  };
+}
 
 export class ProfessionalUrlService {
-  /**
-   * Gera todas as URLs para um profissional a partir do contexto mínimo.
-   */
   static buildUrls(ctx: ProfessionalUrlContext): ResolvedProfessionalUrl {
     const { id, slug, state, city } = ctx;
 
     if (!state || !city) {
       throw new Error(
         `[ProfessionalUrlService] Profissional ${id} sem state/city. ` +
-        `Profissionais devem ter location_id apontando para cidade.`
+          'Profissionais devem ter location_id apontando para cidade.',
       );
     }
 
-    const normalizedState = normalizeForUrl(state);
-    const normalizedCity = normalizeForUrl(city);
-    const canonical = `/profissionais/${normalizedState}/${normalizedCity}/${slug}`;
+    const canonical = professionalPublicRoutes.detail({ state, city, slug });
 
     return {
       canonical,
@@ -78,20 +194,70 @@ export class ProfessionalUrlService {
     };
   }
 
-  /**
-   * Gera apenas a URL canônica pública.
-   * Uso: links em cards, SEO, compartilhamento.
-   */
   static getCanonicalUrl(ctx: ProfessionalUrlContext): string {
     return this.buildUrls(ctx).canonical;
   }
 
-  /**
-   * Resolve profissional por slug + UF + cidade, retornando o contexto completo de URL.
-   * Faz join com locations para obter state e city.
-   *
-   * Retorna null se não encontrado ou inativo.
-   */
+  static getCanonicalUrlFromGeographicPath(ctx: {
+    id: string;
+    slug: string;
+    geographicPath: string;
+  }): string | null {
+    const territory = parseTerritoryFromGeographicPath(ctx.geographicPath);
+    if (!territory) return null;
+
+    return this.getCanonicalUrl({
+      id: ctx.id,
+      slug: ctx.slug,
+      state: territory.state,
+      city: territory.city,
+    });
+  }
+
+  static getCanonicalUrlFromTarget(target: ProfessionalPublicUrlTarget): string | null {
+    const slug = typeof target.slug === 'string' && target.slug.trim() ? target.slug : null;
+    if (!slug) return null;
+
+    const id = target.profile_id ?? target.id;
+    const geographicPath =
+      typeof target.geographic_path === 'string' && target.geographic_path.trim()
+        ? target.geographic_path
+        : typeof target.geographicPath === 'string' && target.geographicPath.trim()
+          ? target.geographicPath
+          : null;
+
+    try {
+      if (geographicPath) {
+        return this.getCanonicalUrlFromGeographicPath({
+          id,
+          slug,
+          geographicPath,
+        });
+      }
+
+      if (target.state && target.city) {
+        return this.getCanonicalUrl({
+          id,
+          slug,
+          state: target.state,
+          city: target.city,
+        });
+      }
+    } catch (error) {
+      logger.warn('[ProfessionalUrlService] Could not build canonical professional URL', {
+        id,
+        slug,
+        error,
+      });
+    }
+
+    return null;
+  }
+
+  static getPublicUrlPreview(slug: string): string {
+    return slug ? professionalPublicRoutes.detailPreview(slug) : '';
+  }
+
   static async resolveBySlug(
     slug: string,
     state: string,
@@ -103,25 +269,7 @@ export class ProfessionalUrlService {
 
       const { data, error } = await supabase
         .from('professional_data')
-        .select(`
-          profile_id,
-          slug,
-          location:locations!location_id(
-            id,
-            name,
-            type,
-            parent:locations!parent_id(
-              id,
-              name,
-              type,
-              parent:locations!parent_id(
-                id,
-                name,
-                type
-              )
-            )
-          )
-        `)
+        .select(PROFESSIONAL_URL_SELECT)
         .eq('slug', slug)
         .maybeSingle();
 
@@ -130,182 +278,108 @@ export class ProfessionalUrlService {
         return null;
       }
 
-      // Extrair state e city da hierarquia de locations
-      const location = data.location as any;
-      if (!location) {
-        logger.warn('[ProfessionalUrlService] Professional without location', { slug });
+      const ctx = resolveContextFromRow(data as ProfessionalUrlRow, { slug });
+      if (!ctx) return null;
+
+      const actualState = normalizeForUrl(ctx.state);
+      const actualCity = normalizeForUrl(ctx.city);
+
+      if (actualState !== normalizedState || actualCity !== normalizedCity) {
+        logger.warn('[ProfessionalUrlService] Professional found but location mismatch', {
+          slug,
+          expected: { state: normalizedState, city: normalizedCity },
+          actual: { state: actualState, city: actualCity },
+        });
         return null;
       }
 
-      // Determinar state e city baseado no tipo de location
-      let extractedState = '';
-      let extractedCity = '';
-
-      if ((location.type === 'neighborhood' || location.type === 'district')) {
-        // location é bairro → parent é cidade → parent.parent é estado
-        extractedCity = location.parent?.name || '';
-        extractedState = location.parent?.parent?.name || '';
-      } else if (location.type === 'city') {
-        // location é cidade → parent é estado
-        extractedCity = location.name;
-        extractedState = location.parent?.name || '';
-      } else if (location.type === 'state') {
-        // location é estado (inválido para professional)
-        logger.warn('[ProfessionalUrlService] Professional with state-level location', { slug });
-        return null;
-      }
-
-      // Validar que state e city batem com os parâmetros
-      const extractedStateNormalized = normalizeForUrl(extractedState);
-      const extractedCityNormalized = normalizeForUrl(extractedCity);
-
-      if (extractedStateNormalized !== normalizedState || extractedCityNormalized !== normalizedCity) {
-        logger.warn(
-          '[ProfessionalUrlService] Professional found but location mismatch',
-          {
-            slug,
-            expected: { state: normalizedState, city: normalizedCity },
-            actual: { state: extractedStateNormalized, city: extractedCityNormalized },
-          }
-        );
-        return null;
-      }
-
-      return {
-        id: data.profile_id,
-        slug: data.slug,
-        state: extractedState,
-        city: extractedCity,
-      };
+      return ctx;
     } catch (err) {
       logger.error('[ProfessionalUrlService] resolveBySlug error:', err);
       return null;
     }
   }
 
-  /**
-   * Resolve profissional por ID (profile_id), retornando o contexto completo de URL.
-   * Usado por componentes internos que recebem apenas o identificador do perfil.
-   */
   static async resolveById(id: string): Promise<ProfessionalUrlContext | null> {
     try {
       const { data, error } = await supabase
         .from('professional_data')
-        .select(`
-          profile_id,
-          slug,
-          location:locations!location_id(
-            id,
-            name,
-            type,
-            parent:locations!parent_id(
-              id,
-              name,
-              type,
-              parent:locations!parent_id(
-                id,
-                name,
-                type
-              )
-            )
-          )
-        `)
+        .select(PROFESSIONAL_URL_SELECT)
         .eq('profile_id', id)
         .maybeSingle();
 
-      if (error || !data || !data.slug) {
-        logger.warn('[ProfessionalUrlService] Professional not found by id', { id, error });
+      if (error || !data) {
+        logger.warn('[ProfessionalUrlService] Professional not found by profile id', { id, error });
         return null;
       }
 
-      // Extrair state e city da hierarquia de locations
-      const location = data.location as any;
-      if (!location) {
-        logger.warn('[ProfessionalUrlService] Professional without location', { id });
-        return null;
-      }
-
-      let state = '';
-      let city = '';
-
-      if ((location.type === 'neighborhood' || location.type === 'district')) {
-        city = location.parent?.name || '';
-        state = location.parent?.parent?.name || '';
-      } else if (location.type === 'city') {
-        city = location.name;
-        state = location.parent?.name || '';
-      }
-
-      if (!state || !city) {
-        logger.warn('[ProfessionalUrlService] Could not extract state/city', { id, location });
-        return null;
-      }
-
-      return {
-        id: data.profile_id,
-        slug: data.slug,
-        state,
-        city,
-      };
+      return resolveContextFromRow(data as ProfessionalUrlRow, { id });
     } catch (err) {
       logger.error('[ProfessionalUrlService] resolveById error:', err);
       return null;
     }
   }
 
-  /**
-   * Valida se um slug pode ser usado como identificador público de profissional.
-   * Usa PublicIdentityService para validação consistente.
-   */
+  static async resolveByProfessionalDataId(
+    professionalDataId: string,
+  ): Promise<ProfessionalUrlContext | null> {
+    try {
+      const { data, error } = await supabase
+        .from('professional_data')
+        .select(PROFESSIONAL_URL_SELECT)
+        .eq('id', professionalDataId)
+        .maybeSingle();
+
+      if (error || !data) {
+        logger.warn('[ProfessionalUrlService] Professional not found by data id', {
+          professionalDataId,
+          error,
+        });
+        return null;
+      }
+
+      return resolveContextFromRow(data as ProfessionalUrlRow, { professionalDataId });
+    } catch (err) {
+      logger.error('[ProfessionalUrlService] resolveByProfessionalDataId error:', err);
+      return null;
+    }
+  }
+
   static isValidSlug(slug: string): boolean {
-    // Valida formato
     const validation = PublicIdentityService.validateFormat(slug, 'professional');
     if (!validation.valid) return false;
 
-    // Valida reserved names
     if (PublicIdentityService.isReserved(slug, 'professional')) return false;
 
     return true;
   }
 
-  /**
-   * Gera slug a partir de um nome de profissional.
-   * Usa PublicIdentityService para normalização consistente.
-   */
   static generateSlug(name: string): string {
     return PublicIdentityService.normalize(name, 'professional');
   }
 
-  /**
-   * Gera slug único verificando disponibilidade via PublicIdentityService.
-   * Adiciona sufixo numérico se necessário.
-   */
   static async generateUniqueSlug(name: string): Promise<string> {
     const slug = this.generateSlug(name);
 
-    // Verifica disponibilidade via PublicIdentityService
     const availability = await PublicIdentityService.checkAvailability({
       identifier: slug,
       entityType: 'professional',
     });
 
-    // Se disponível, retorna
     if (availability.status === 'available') {
       return slug;
     }
 
-    // Se não disponível, usa sugestão
     if (availability.suggestion) {
       return availability.suggestion;
     }
 
-    // Fallback: adiciona contador manualmente
     const { data } = await supabase
       .from('professional_data')
       .select('slug')
       .ilike('slug', `${slug}%`);
 
-    const existingSlugs: string[] = (data || []).map((d: any) => d.slug);
+    const existingSlugs: string[] = (data || []).map((d: { slug: string | null }) => d.slug).filter(Boolean);
     let counter = 1;
     while (existingSlugs.includes(`${slug}-${counter}`)) {
       counter++;

@@ -34,7 +34,7 @@ interface TerritorialSEOProps {
  */
 function resolveCurrentModule(pathname: string, baseUrl: string): ModuleSlug | null {
   const suffix = pathname.replace(baseUrl, '').replace(/^\//, '');
-  const segment = suffix.split('/')[0];
+  const segment = suffix.split('/').at(0);
   if (!segment) return null; // index = landing hub
 
   const known = Object.values(MODULE_SLUGS) as string[];
@@ -46,6 +46,7 @@ function resolveCurrentModule(pathname: string, baseUrl: string): ModuleSlug | n
  */
 function generateStructuredData(resolved: ResolvedTerritory, canonicalUrl: string, module: ModuleSlug | null) {
   const baseUrl = getPublicAppOrigin();
+  const firstGroupMember = resolved.kind === 'group' ? resolved.group.members.at(0) : null;
   
   // Place schema para território
   const placeSchema = {
@@ -59,10 +60,10 @@ function generateStructuredData(resolved: ResolvedTerritory, canonicalUrl: strin
       '@type': 'PostalAddress',
       addressLocality: resolved.kind === 'location' 
         ? (resolved.location.metadata?.city_name as string ?? resolved.location.name)
-        : (resolved.group.members[0]?.metadata?.city_name as string ?? resolved.group.members[0]?.name),
+        : (firstGroupMember?.metadata?.city_name as string ?? firstGroupMember?.name),
       addressRegion: resolved.kind === 'location'
         ? (resolved.location.metadata?.state_code as string)
-        : (resolved.group.members[0]?.metadata?.state_code as string),
+        : (firstGroupMember?.metadata?.state_code as string),
       addressCountry: 'BR',
     },
     geo: resolved.kind === 'location' && 

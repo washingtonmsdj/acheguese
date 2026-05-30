@@ -65,14 +65,16 @@ export const useAppointments = ({ businessId }: UseAppointmentsProps) => {
         ),
       );
 
-      const statusLabels = {
-        pending: "pendente",
-        confirmed: "confirmado",
-        cancelled: "cancelado",
-        completed: "concluido",
-      };
+      const statusLabel =
+        newStatus === "confirmed"
+          ? "confirmado"
+          : newStatus === "cancelled"
+            ? "cancelado"
+            : newStatus === "completed"
+              ? "concluido"
+              : "pendente";
 
-      toast.success(`Agendamento ${statusLabels[newStatus]} com sucesso!`);
+      toast.success(`Agendamento ${statusLabel} com sucesso!`);
     },
     [appointments],
   );

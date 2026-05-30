@@ -126,7 +126,7 @@ export class CommunicationDistributionService {
 
   static resolvePublicationInteraction(
     distribution: CommunicationPublicationDistribution,
-    params: Omit<CommunicationChannelUrlParts, "channelSlug">,
+    params: Pick<CommunicationChannelUrlParts, "state" | "city">,
   ): { mode: "canonical" | "inline"; href?: string } {
     const publication = distribution.publication;
     const channel = distribution.channel;

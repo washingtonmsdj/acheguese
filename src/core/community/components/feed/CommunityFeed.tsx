@@ -31,6 +31,7 @@ import type { UnifiedPost } from "@/shared/types/posts";
 import { UnifiedFeedWithMessages } from "./UnifiedFeedWithMessages";
 import { PostCardSkeleton } from "../PostCardSkeleton";
 import { SPACING } from "../styles/communityDesignSystem";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 
 const SORT_ICONS: Record<CommunityFeedSortType, React.ElementType> = {
   recent: Clock3,
@@ -45,6 +46,14 @@ const COMPOSER_ICONS: Record<CommunityFeedComposerActionId, React.ElementType> =
   alert: Megaphone,
   file: FileText,
 };
+
+function getComposerIcon(id: CommunityFeedComposerActionId): React.ElementType {
+  return getRecordValue(COMPOSER_ICONS, id) ?? MessageCircle;
+}
+
+function getSortIcon(id: CommunityFeedSortType): React.ElementType {
+  return getRecordValue(SORT_ICONS, id) ?? Clock3;
+}
 
 interface CommunityFeedProps {
   currentUserId?: string;
@@ -192,7 +201,7 @@ export function CommunityFeed({
           aria-label={COMMUNITY_FEED_COPY.composerActionsAriaLabel}
         >
           {COMMUNITY_FEED_COMPOSER_ACTIONS.map(({ id, label }) => {
-            const Icon = COMPOSER_ICONS[id];
+            const Icon = getComposerIcon(id);
             return (
               <button
                 key={id}
@@ -250,7 +259,7 @@ export function CommunityFeed({
           aria-label={COMMUNITY_FEED_COPY.sortAriaLabel}
         >
           {COMMUNITY_FEED_SORT_FILTERS.map(({ id, label }) => {
-            const Icon = SORT_ICONS[id];
+            const Icon = getSortIcon(id);
             return (
               <button
                 key={id}

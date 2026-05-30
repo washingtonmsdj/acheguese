@@ -4,6 +4,7 @@
  */
 
 export { ProfessionalService } from "./services/ProfessionalService";
+export { professionalPublicRoutes } from "./routes/professionalPublicRoutes";
 export type * from "./types";
 
 // Migration (ETAPA 7)

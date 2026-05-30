@@ -36,17 +36,13 @@ function normalizeBaseUrl(value: string): string {
 function resolveSitemapBaseUrl(explicitBaseUrl?: string): string {
   const envBaseUrl =
     typeof process !== "undefined"
-      ? process.env.VITE_PUBLIC_APP_ORIGIN ||
-        process.env.VITE_SITE_ORIGIN ||
-        process.env.VITE_SITE_URL ||
-        process.env.SITE_URL ||
-        ""
+      ? process.env.VITE_PUBLIC_SITE_URL || ""
       : "";
 
   const resolvedBaseUrl = (explicitBaseUrl || envBaseUrl).trim();
   if (!resolvedBaseUrl) {
     throw new Error(
-      "Sitemap base URL not configured. Define VITE_PUBLIC_APP_ORIGIN (or VITE_SITE_ORIGIN/VITE_SITE_URL).",
+      "Sitemap base URL not configured. Define VITE_PUBLIC_SITE_URL.",
     );
   }
 
@@ -65,6 +61,8 @@ function generateTerritoryUrls(
   publicPath: string,
   isGroup: boolean,
 ): SitemapUrl[] {
+  const pathParts = publicPath.split('/').filter(Boolean);
+  const isCityPath = pathParts.length === 2;
   const urls: SitemapUrl[] = [
     {
       loc: `${baseUrl}${publicPath}`,
@@ -88,17 +86,13 @@ function generateTerritoryUrls(
     });
   });
 
-  const hasCommunityTerritorySlug = publicPath.split('/').filter(Boolean).length >= 3;
-  if (hasCommunityTerritorySlug) {
-    urls.push({
-      loc: `${baseUrl}${buildCommunityTerritoryUrl(publicPath)}`,
-      changefreq: 'daily',
-      priority: 0.7,
-    });
-  }
-
-  if (isGroup) {
+  if (!isGroup && isCityPath) {
     urls.push(
+      {
+        loc: `${baseUrl}${buildCommunityTerritoryUrl(publicPath)}`,
+        changefreq: 'daily',
+        priority: 0.7,
+      },
       {
         loc: `${baseUrl}${buildCommunityTerritoryUrl(publicPath, 'feed')}`,
         changefreq: 'hourly',

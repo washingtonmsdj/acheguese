@@ -2,7 +2,7 @@ import { supabase } from "@/integrations/supabase";
 import { trackError } from "@/shared/utils/errorTracking";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services";
-import { getClassifiedById } from "@/core/classifieds/services";
+import { classifiedUrlService, getClassifiedById } from "@/core/classifieds/services";
 import { ALERT_STATUS } from "@/shared/types/constants";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import type {
@@ -17,6 +17,11 @@ import type {
 
 type ClassifiedSummary = {
   id: string;
+  public_id?: string | null;
+  slug?: string | null;
+  geographic_path?: string | null;
+  category_slug?: string | null;
+  subcategory_slug?: string | null;
   title?: string | null;
   price?: number | null;
   photos?: string[] | null;
@@ -86,6 +91,7 @@ class MessagingService {
             classified_title: classified?.title || "Anuncio",
             classified_price: classified?.price || 0,
             classified_photo: classified?.photos?.[0] || "",
+            classified_public_url: classified ? classifiedUrlService.buildPublicUrl(classified) : null,
             other_user_name: otherProfile?.name || "Usuario",
             other_user_avatar: otherProfile?.avatarUrl || "",
             last_message_text: lastMessage?.text || "",
@@ -139,6 +145,7 @@ class MessagingService {
         classified_title: classified?.title || "Anuncio",
         classified_price: classified?.price || 0,
         classified_photo: classified?.photos?.[0] || "",
+        classified_public_url: classified ? classifiedUrlService.buildPublicUrl(classified) : null,
         other_user_name: otherProfile?.name || "Usuario",
         other_user_avatar: otherProfile?.avatar_url || "",
       };

@@ -8,9 +8,12 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { pricingService } from '../services/PricingService';
 import { authenticateAsFirstAdminProfile, signOut } from '../../../../tests/helpers/auth-helper';
 import { getAdminClient } from '../../../../tests/helpers/supabase-test-client';
+import { getMissingOperationalEnv } from '../../../../tests/helpers/operational-env';
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL ?? '';
+const MISSING_RUNTIME_ENV = getMissingOperationalEnv({ requireServiceRole: true });
 const HAS_RUNTIME =
+  MISSING_RUNTIME_ENV.length === 0 &&
   SUPABASE_URL.length > 0 &&
   !SUPABASE_URL.includes('placeholder.supabase.co') &&
   !SUPABASE_URL.includes('your-project.supabase.co');
@@ -23,7 +26,7 @@ describe('PricingService - Runtime Validation', () => {
   let testRuleId: string;
   let testProfileId: string;
   let activeCustomRuleIdsBefore: string[] = [];
-  const supabaseAdmin = getAdminClient();
+  let supabaseAdmin: ReturnType<typeof getAdminClient>;
 
   async function cleanupRuntimeRules(): Promise<void> {
     await supabaseAdmin
@@ -34,6 +37,7 @@ describe('PricingService - Runtime Validation', () => {
 
   beforeAll(async () => {
     if (skipIfNoRuntime()) return;
+    supabaseAdmin = getAdminClient();
 
     await cleanupRuntimeRules();
 

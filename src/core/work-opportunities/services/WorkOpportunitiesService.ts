@@ -1,6 +1,7 @@
 import { SessionService } from "@/core/session/services/SessionService";
 import { NotificationService } from "@/core/notifications/services/NotificationService";
 import { postService } from "@/core/posts/services";
+import { ProfessionalUrlService } from "@/core/professional/services/ProfessionalUrlService";
 import { supabase } from "@/integrations/supabase";
 import { trackError } from "@/shared/utils/errorTracking";
 import { logger } from "@/shared/utils/logger";
@@ -53,6 +54,7 @@ interface ProfessionalDataDetailRow {
     is_cover?: boolean;
   }> | null;
   metadata: Record<string, unknown> | null;
+  location: { geographic_path: string | null } | null;
 }
 
 class WorkOpportunitiesServiceClass {
@@ -595,7 +597,22 @@ class WorkOpportunitiesServiceClass {
         const { data: professionalData, error: professionalError } = await (supabase as any)
           .from("professional_data")
           .select(
-            "id, slug, professional_name, service_category, description, availability_notes, is_accepting_clients, visibility, rating, portfolio_items, metadata",
+            `
+            id,
+            slug,
+            professional_name,
+            service_category,
+            description,
+            availability_notes,
+            is_accepting_clients,
+            visibility,
+            rating,
+            portfolio_items,
+            metadata,
+            location:locations!professional_data_location_id_fkey(
+              geographic_path
+            )
+          `,
           )
           .eq("id", base.professional_id)
           .maybeSingle();
@@ -607,6 +624,11 @@ class WorkOpportunitiesServiceClass {
           professional = {
             id: rawProfessional.id,
             slug: rawProfessional.slug,
+            public_url: ProfessionalUrlService.getCanonicalUrlFromTarget({
+              id: rawProfessional.id,
+              slug: rawProfessional.slug,
+              geographic_path: rawProfessional.location?.geographic_path,
+            }),
             professional_name: rawProfessional.professional_name,
             service_category: rawProfessional.service_category,
             description: rawProfessional.description,

@@ -100,13 +100,14 @@ export function AccessibilityProvider({
     setFontSize(size);
     localStorage.setItem("accessibility-font-size", size);
 
-    const sizeLabels = {
-      normal: "Tamanho normal",
-      large: "Tamanho grande",
-      "extra-large": "Tamanho extra grande",
-    };
+    const sizeLabel =
+      size === "large"
+        ? "Tamanho grande"
+        : size === "extra-large"
+          ? "Tamanho extra grande"
+          : "Tamanho normal";
 
-    announceToScreenReader(`Fonte alterada para ${sizeLabels[size]}`);
+    announceToScreenReader(`Fonte alterada para ${sizeLabel}`);
   };
 
   return (

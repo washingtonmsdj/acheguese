@@ -89,9 +89,15 @@ export class PrivacyService {
 
     // Notifica o DPO por email — falha silenciosa para não bloquear o usuário
     try {
+      const dpoEmail = getDpoEmail();
+      if (!dpoEmail) {
+        logger.warn('[PrivacyService] Email DPO nao configurado; notificacao por email ignorada');
+        return;
+      }
+
       await supabase.functions.invoke('send-email', {
         body: {
-          to: getDpoEmail(),
+          to: dpoEmail,
           subject: `[DPO] ${params.subject}`,
           template: 'dpo-request',
           data: {

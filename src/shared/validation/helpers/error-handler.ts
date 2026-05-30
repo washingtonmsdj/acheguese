@@ -53,14 +53,9 @@ export function handleValidationError(error: unknown): string {
 export function formatZodErrorsByField(
   error: ZodError,
 ): Record<string, string> {
-  const errors: Record<string, string> = {};
-
-  error.errors.forEach((err) => {
-    const field = err.path.join(".");
-    if (field) {
-      errors[field] = err.message;
-    }
-  });
-
-  return errors;
+  return Object.fromEntries(
+    error.errors
+      .map((err) => [err.path.join("."), err.message] as const)
+      .filter(([field]) => Boolean(field)),
+  );
 }

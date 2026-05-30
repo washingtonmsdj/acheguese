@@ -1,5 +1,6 @@
 ﻿import React from "react";
 import { Helmet } from "react-helmet-async";
+import { buildBusinessCityListingUrl } from "@/core/business/utils/businessPublicUrls";
 import { buildPublicAbsoluteUrl, getPublicAppOrigin } from "@/shared/config/publicAppOrigin";
 
 interface BusinessSEOProps {
@@ -55,6 +56,27 @@ function parseBusinessTerritoryFromUrl(url: string): { state?: string; city?: st
   }
 }
 
+function getSchemaDayName(day: string): string | null {
+  switch (day) {
+    case "segunda":
+      return "Monday";
+    case "terca":
+      return "Tuesday";
+    case "quarta":
+      return "Wednesday";
+    case "quinta":
+      return "Thursday";
+    case "sexta":
+      return "Friday";
+    case "sabado":
+      return "Saturday";
+    case "domingo":
+      return "Sunday";
+    default:
+      return null;
+  }
+}
+
 export default function BusinessSEO({
   name,
   description,
@@ -84,7 +106,7 @@ export default function BusinessSEO({
   const seoCity = slugToLabel(city || parsedTerritory.city);
   const companiesListingPath =
     parsedTerritory.state && parsedTerritory.city
-      ? `/empresas/${parsedTerritory.state}/${parsedTerritory.city}`
+      ? buildBusinessCityListingUrl(parsedTerritory.state, parsedTerritory.city)
       : "/empresas";
 
   const title = `${name} | Achegue-se`;
@@ -98,22 +120,15 @@ export default function BusinessSEO({
   const formatOpeningHours = () => {
     if (!openingHours) return undefined;
 
-    const dayMap: Record<string, string> = {
-      segunda: "Monday",
-      terca: "Tuesday",
-      quarta: "Wednesday",
-      quinta: "Thursday",
-      sexta: "Friday",
-      sabado: "Saturday",
-      domingo: "Sunday",
-    };
-
     const hours: string[] = [];
     Object.entries(openingHours).forEach(([day, schedule]) => {
       if (typeof schedule !== "object" || schedule === null) return;
       if ("closed" in schedule && schedule.closed) return;
       if ("open" in schedule && "close" in schedule) {
-        hours.push(`${dayMap[day]} ${schedule.open}-${schedule.close}`);
+        const schemaDay = getSchemaDayName(day);
+        if (schemaDay) {
+          hours.push(`${schemaDay} ${schedule.open}-${schedule.close}`);
+        }
       }
     });
 

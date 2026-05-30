@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { TerritorialGroupService } from "@/core/territorial/services/TerritorialGroupService";
 import { selectLooseRows } from "@/integrations/supabase/services/supabaseHelpers";
 import { CommunicationTerritorialService } from "../services/CommunicationTerritorialService";
 
@@ -33,7 +32,7 @@ describe("CommunicationTerritorialService", () => {
     );
   });
 
-  it("expands territorial group members before querying hub publications", async () => {
+  it("expands city hub scope to the city and child territories", async () => {
     const listLocationsSpy = vi.spyOn(CommunicationTerritorialService, "listLocations").mockResolvedValue([
       {
         id: "city-1",
@@ -43,6 +42,22 @@ describe("CommunicationTerritorialService", () => {
         type: "city",
         parent_id: null,
       },
+      {
+        id: "loc-a",
+        name: "A",
+        full_name: "A",
+        slug: "a",
+        type: "district",
+        parent_id: "city-1",
+      },
+      {
+        id: "loc-b",
+        name: "B",
+        full_name: "B",
+        slug: "b",
+        type: "district",
+        parent_id: "city-1",
+      },
     ]);
     const listActiveChannelsSpy = vi
       .spyOn(CommunicationTerritorialService, "listActiveChannels")
@@ -51,27 +66,14 @@ describe("CommunicationTerritorialService", () => {
       .spyOn(CommunicationTerritorialService, "listPublications")
       .mockResolvedValue([]);
 
-    vi.spyOn(TerritorialGroupService.prototype, "getGroupBySlugAndCity").mockResolvedValue({
-      id: "group-1",
-      name: "Complexo",
-      slug: "complexo",
-      status: "active",
-    } as never);
-    vi.spyOn(TerritorialGroupService.prototype, "listAllMembers").mockResolvedValue([
-      { id: "loc-a", name: "A" },
-      { id: "loc-b", name: "B" },
-      { id: "loc-a", name: "A repetido" },
-    ] as never);
-
     const result = await CommunicationTerritorialService.getPublicHub({
       state: "ba",
       city: "salvador",
-      territorySlug: "complexo",
     });
 
     expect(listLocationsSpy).toHaveBeenCalled();
-    expect(listActiveChannelsSpy).toHaveBeenCalledWith(["loc-a", "loc-b"]);
-    expect(listPublicationsSpy).toHaveBeenCalledWith({ locationIds: ["loc-a", "loc-b"], limit: 40 });
-    expect(result.title).toBe("Comunicacao em Complexo");
+    expect(listActiveChannelsSpy).toHaveBeenCalledWith(["city-1", "loc-a", "loc-b"]);
+    expect(listPublicationsSpy).toHaveBeenCalledWith({ locationIds: ["city-1", "loc-a", "loc-b"], limit: 40 });
+    expect(result.title).toBe("Comunicacao em Salvador");
   });
 });

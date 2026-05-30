@@ -20,6 +20,15 @@ type ChartContextProps = {
   config: ChartConfig;
 };
 
+function getChartConfigEntry(config: ChartConfig, key: string) {
+  return Object.entries(config).find(([entryKey]) => entryKey === key)?.[1];
+}
+
+function getStringField(source: object, key: string): string | undefined {
+  const value = Object.entries(source).find(([entryKey]) => entryKey === key)?.[1];
+  return typeof value === "string" ? value : undefined;
+}
+
 const ChartContext = React.createContext<ChartContextProps | null>(null);
 
 function useChart() {
@@ -138,7 +147,7 @@ const ChartTooltipContent = React.forwardRef<
       const itemConfig = getPayloadConfigFromPayload(config, item, key);
       const value =
         !labelKey && typeof label === "string"
-          ? config[label as keyof typeof config]?.label || label
+          ? getChartConfigEntry(config, label)?.label || label
           : itemConfig?.label;
 
       if (labelFormatter) {
@@ -330,24 +339,16 @@ function getPayloadConfigFromPayload(
 
   let configLabelKey: string = key;
 
-  if (
-    key in payload &&
-    typeof payload[key as keyof typeof payload] === "string"
-  ) {
-    configLabelKey = payload[key as keyof typeof payload] as string;
-  } else if (
-    payloadPayload &&
-    key in payloadPayload &&
-    typeof payloadPayload[key as keyof typeof payloadPayload] === "string"
-  ) {
-    configLabelKey = payloadPayload[
-      key as keyof typeof payloadPayload
-    ] as string;
+  const payloadLabel = getStringField(payload, key);
+  const nestedPayloadLabel = payloadPayload ? getStringField(payloadPayload, key) : undefined;
+
+  if (payloadLabel) {
+    configLabelKey = payloadLabel;
+  } else if (nestedPayloadLabel) {
+    configLabelKey = nestedPayloadLabel;
   }
 
-  return configLabelKey in config
-    ? config[configLabelKey]
-    : config[key as keyof typeof config];
+  return getChartConfigEntry(config, configLabelKey) ?? getChartConfigEntry(config, key);
 }
 
 export {

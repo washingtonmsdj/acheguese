@@ -67,7 +67,8 @@ function getTagline(
   
   const taglines = customTaglines ?? DEFAULT_TAGLINES;
   const index = hashString(territoryName) % taglines.length;
-  return taglines[index](territoryName);
+  const tagline = taglines.at(index) ?? DEFAULT_TAGLINES.at(0);
+  return tagline ? tagline(territoryName) : `Descubra ${moduleName.toLowerCase()} perto de voce`;
 }
 
 export function ModuleHeader({

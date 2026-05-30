@@ -36,16 +36,14 @@ class FeedCache {
     });
   }
 
-  invalidate(pattern?: string): void {
-    if (!pattern) {
+  invalidate(keyFragment?: string): void {
+    if (!keyFragment) {
       this.cache.clear();
       return;
     }
 
-    // Invalidate keys matching pattern
-    const regex = new RegExp(pattern);
     for (const key of this.cache.keys()) {
-      if (regex.test(key)) {
+      if (key.includes(keyFragment)) {
         this.cache.delete(key);
       }
     }

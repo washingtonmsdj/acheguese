@@ -2,13 +2,12 @@ function normalizeOrigin(origin: string): string {
   return origin.trim().replace(/\/+$/, "");
 }
 
-export function getPublicAppOrigin(): string {
-  const envOrigin =
-    import.meta.env.VITE_PUBLIC_APP_ORIGIN ||
-    import.meta.env.VITE_SITE_ORIGIN ||
-    import.meta.env.VITE_SITE_URL ||
-    "";
+function getConfiguredPublicOrigin(): string {
+  return import.meta.env.VITE_PUBLIC_SITE_URL || "";
+}
 
+export function getPublicAppOrigin(): string {
+  const envOrigin = getConfiguredPublicOrigin();
   if (envOrigin) {
     return normalizeOrigin(envOrigin);
   }

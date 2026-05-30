@@ -44,16 +44,11 @@ export class AuthService {
 
   static isRecoveryRedirect(): boolean {
     const searchParams = new URLSearchParams(window.location.search);
-    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
 
     return (
       searchParams.get("mode") === "recovery" ||
       searchParams.get("type") === "recovery" ||
-      hashParams.get("type") === "recovery" ||
-      // Supabase PKCE flow: code + type no query string
-      (searchParams.get("code") !== null && searchParams.get("type") === "recovery") ||
-      // Supabase implicit flow: access_token + type no hash
-      (hashParams.get("access_token") !== null && hashParams.get("type") === "recovery")
+      (searchParams.get("code") !== null && searchParams.get("mode") === "recovery")
     );
   }
 
@@ -87,17 +82,6 @@ export class AuthService {
     ) as { data: { subscription: Subscription } };
 
     return () => subscription.unsubscribe();
-  }
-
-  static async applyRecoverySession(
-    accessToken: string,
-    refreshToken?: string | null,
-  ): Promise<boolean> {
-    const { error } = await (supabase as any).auth.setSession({
-      access_token: accessToken,
-      refresh_token: refreshToken ?? "",
-    });
-    return !error;
   }
 
   private static async resolveEmailByUsername(username: string): Promise<string> {

@@ -20,6 +20,7 @@ import { useResolveTerritoryFromUrl } from "../hooks/useResolveTerritoryFromUrl"
 import type { ResolvedTerritory } from "../hooks/useResolveTerritoryFromUrl";
 import { MODULE_SLUGS, buildGroupBaseUrl, isEntityDetailRoute } from "../utils/territoryUrls";
 import { TerritorialNotFound } from "./TerritorialNotFound";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 
 export type TerritorialLayoutContext = {
   resolved: ResolvedTerritory;
@@ -49,7 +50,7 @@ const SLUG_TO_MODULE_KEY: Record<string, ModuleKey> = {
 };
 
 function resolveModuleKeyFromSlug(slug: string): ModuleKey | null {
-  return SLUG_TO_MODULE_KEY[slug] ?? null;
+  return getRecordValue(SLUG_TO_MODULE_KEY, slug) ?? null;
 }
 
 function PartialCoverageBanner({ activeCount, totalCount }: { activeCount: number; totalCount: number }) {
@@ -81,13 +82,17 @@ function resolveBaseUrl(
   }
 
   if (resolved.kind === "group") {
-    const firstMember = resolved.group.members[0];
+    const firstMember = resolved.group.members.at(0);
     if (!firstMember?.geographic_path) {
       return `/${params.state}/${params.city}/${resolved.group.slug}`;
     }
 
-    const parts = firstMember.geographic_path.split("/").filter(Boolean);
-    return buildGroupBaseUrl(resolved.group, `/${parts[0]}/${parts[1]}/${parts[2]}`);
+    const [country, state, city] = firstMember.geographic_path.split("/").filter(Boolean);
+    if (!country || !state || !city) {
+      return `/${params.state}/${params.city}/${resolved.group.slug}`;
+    }
+
+    return buildGroupBaseUrl(resolved.group, `/${country}/${state}/${city}`);
   }
 
   const parts = resolved.location.geographic_path.split("/").filter(Boolean);

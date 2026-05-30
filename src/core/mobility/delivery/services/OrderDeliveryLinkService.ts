@@ -103,46 +103,62 @@ export class OrderDeliveryLinkService {
    * Usado para sincronizar estados entre os dois sistemas
    */
   static mapRideStatusToLogisticsStatus(rideStatus: string): LogisticsStatus | null {
-    const mapping: Partial<Record<string, LogisticsStatus>> = {
-      'requested': 'pending',
-      'searching_driver': 'pending',
-      'driver_assigned': 'accepted',
-      'driver_accepted': 'accepted',
-      'driver_arriving': 'preparing',
-      'driver_on_the_way': 'preparing',
-      'driver_arrived': 'ready_for_pickup',
-      'pickup_confirmed': 'picked_up',
-      'in_delivery': 'picked_up',
-      'delivered': 'delivered',
-      'completed': 'delivered',
-      'cancelled': 'canceled',
-      'cancelled_by_driver': 'canceled',
-      'cancelled_by_passenger': 'canceled',
-      'failed_delivery': 'failed',
-      'failed': 'failed',
-      'expired': 'failed',
-    };
-
-    return mapping[rideStatus] || null;
+    switch (rideStatus) {
+      case 'requested':
+      case 'searching_driver':
+        return LOGISTICS_STATUS.PENDING;
+      case 'driver_assigned':
+      case 'driver_accepted':
+        return LOGISTICS_STATUS.ACCEPTED;
+      case 'driver_arriving':
+      case 'driver_on_the_way':
+        return LOGISTICS_STATUS.PREPARING;
+      case 'driver_arrived':
+        return LOGISTICS_STATUS.READY_FOR_PICKUP;
+      case 'pickup_confirmed':
+      case 'in_delivery':
+        return LOGISTICS_STATUS.PICKED_UP;
+      case 'delivered':
+      case 'completed':
+        return LOGISTICS_STATUS.DELIVERED;
+      case 'cancelled':
+      case 'cancelled_by_driver':
+      case 'cancelled_by_passenger':
+        return LOGISTICS_STATUS.CANCELED;
+      case 'failed_delivery':
+      case 'failed':
+      case 'expired':
+        return LOGISTICS_STATUS.FAILED;
+      default:
+        return null;
+    }
   }
 
   /**
    * Mapeia logistics_status de order para status de ride_request
    */
   static mapLogisticsStatusToRideStatus(logisticsStatus: string): string | null {
-    const mapping: Record<string, string> = {
-      'pending': 'requested',
-      'accepted': 'driver_accepted',
-      'preparing': 'driver_arriving',
-      'ready_for_pickup': 'driver_arriving',
-      'picked_up': 'pickup_confirmed',
-      'in_transit': 'in_delivery',
-      'delivered': 'delivered',
-      'canceled': 'cancelled',
-      'failed': 'failed',
-    };
-
-    return mapping[logisticsStatus] || null;
+    switch (logisticsStatus) {
+      case LOGISTICS_STATUS.PENDING:
+        return 'requested';
+      case LOGISTICS_STATUS.ACCEPTED:
+        return 'driver_accepted';
+      case LOGISTICS_STATUS.PREPARING:
+      case LOGISTICS_STATUS.READY_FOR_PICKUP:
+        return 'driver_arriving';
+      case LOGISTICS_STATUS.PICKED_UP:
+        return 'pickup_confirmed';
+      case 'in_transit':
+        return 'in_delivery';
+      case LOGISTICS_STATUS.DELIVERED:
+        return 'delivered';
+      case LOGISTICS_STATUS.CANCELED:
+        return 'cancelled';
+      case LOGISTICS_STATUS.FAILED:
+        return 'failed';
+      default:
+        return null;
+    }
   }
 
   /**

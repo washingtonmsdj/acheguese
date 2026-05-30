@@ -15,6 +15,7 @@ import { applyTerritoryFilter } from "@/core/location";
 import { ReviewsService } from "@/core/reviews";
 import { PublicIdentityService } from "@/core/public-identity";
 import { sanitizeForILike } from "@/shared/utils/sqlSanitization";
+import { mapProfessionalRow, mapProfessionalRows } from "./professional.mappers";
 import type { TerritoryFilter } from "@/core/location/types";
 import type {
   Professional,
@@ -44,8 +45,9 @@ export async function getProfessionals(
       .select(
         `
         *,
-        profiles:profile_id(id, name, avatar_url, verified),
-        addresses:address_id(*)
+        profiles!professional_data_profile_id_fkey(id, name, avatar_url, phone, whatsapp, verified),
+        addresses:address_id(*),
+        location:locations!professional_data_location_id_fkey(id, name, full_name, type, slug, geographic_path)
       `,
       );
 
@@ -85,7 +87,7 @@ export async function getProfessionals(
       throw new Error(error.message);
     }
 
-    return (data || []) as Professional[];
+    return mapProfessionalRows(data);
   } catch (error) {
     logger.error("[professional.queries] Error fetching professionals:", error);
     trackError(error as Error, {
@@ -116,7 +118,9 @@ export async function getProfessionalsList(params: {
       .select(
         `
         *,
-        profiles:profile_id(id, name, avatar_url, verified)
+        profiles!professional_data_profile_id_fkey(id, name, avatar_url, phone, whatsapp, verified),
+        address:addresses!address_id(id, location_id, postal_code, street, number, complement, latitude, longitude),
+        location:locations!professional_data_location_id_fkey(id, name, full_name, type, slug, geographic_path)
       `,
         { count: "exact" },
       )
@@ -149,7 +153,7 @@ export async function getProfessionalsList(params: {
     const hasMore = count ? offset + (data?.length || 0) < count : false;
 
     return {
-      professionals: (data || []) as Professional[],
+      professionals: mapProfessionalRows(data),
       nextPage: hasMore ? pageParam + 1 : undefined,
     };
   } catch (error) {
@@ -173,8 +177,9 @@ export async function getProfessionalById(id: string): Promise<Professional> {
       .select(
         `
         *,
-        profiles:profile_id(id, name, avatar_url, verified),
-        addresses:address_id(*)
+        profiles!professional_data_profile_id_fkey(id, name, avatar_url, phone, whatsapp, verified),
+        addresses:address_id(*),
+        location:locations!professional_data_location_id_fkey(id, name, full_name, type, slug, geographic_path)
       `,
       )
       .eq("id", id)
@@ -188,7 +193,7 @@ export async function getProfessionalById(id: string): Promise<Professional> {
       throw new Error("Profissional não encontrado");
     }
 
-    return data as Professional;
+    return mapProfessionalRow(data);
   } catch (error) {
     logger.error("[professional.queries] Error fetching professional by ID:", error);
     trackError(error as Error, {
@@ -210,7 +215,9 @@ export async function getServicesByProfile(profileId: string): Promise<Professio
       .select(
         `
         *,
-        addresses:address_id(*)
+        profiles!professional_data_profile_id_fkey(id, name, avatar_url, phone, whatsapp, verified),
+        addresses:address_id(*),
+        location:locations!professional_data_location_id_fkey(id, name, full_name, type, slug, geographic_path)
       `,
       )
       .eq("profile_id", profileId)
@@ -220,7 +227,7 @@ export async function getServicesByProfile(profileId: string): Promise<Professio
       throw new Error(error.message);
     }
 
-    return (data || []) as Professional[];
+    return mapProfessionalRows(data);
   } catch (error) {
     logger.error("[professional.queries] Error fetching services by profile:", error);
     trackError(error as Error, {
@@ -441,7 +448,8 @@ export async function getProfessionalsByIds(ids: string[]): Promise<Professional
       .select(
         `
         *,
-        profiles:profile_id(id, name, avatar_url, verified)
+        profiles!professional_data_profile_id_fkey(id, name, avatar_url, phone, whatsapp, verified),
+        location:locations!professional_data_location_id_fkey(id, name, full_name, type, slug, geographic_path)
       `,
       )
       .in("id", ids)
@@ -452,7 +460,7 @@ export async function getProfessionalsByIds(ids: string[]): Promise<Professional
       throw new Error(error.message);
     }
 
-    return (data || []) as Professional[];
+    return mapProfessionalRows(data);
   } catch (error) {
     logger.error("[professional.queries] Error fetching professionals by IDs:", error);
     trackError(error as Error, {
@@ -479,9 +487,9 @@ export async function searchProfessionals(
       .select(
         `
         *,
-        profiles!professional_data_profile_id_fkey(id, name, avatar_url, verified),
+        profiles!professional_data_profile_id_fkey(id, name, avatar_url, phone, whatsapp, verified),
         address:addresses!address_id(id, location_id, postal_code, street, number, complement, latitude, longitude),
-        location:locations!location_id(id, name, full_name, type, slug)
+        location:locations!professional_data_location_id_fkey(id, name, full_name, type, slug, geographic_path)
       `,
       )
       .eq("is_accepting_clients", true)
@@ -513,7 +521,7 @@ export async function searchProfessionals(
       throw new Error(error.message);
     }
 
-    return (data || []) as Professional[];
+    return mapProfessionalRows(data);
   } catch (error) {
     logger.error("[professional.queries] Error searching professionals:", error);
     trackError(error as Error, {
@@ -543,14 +551,15 @@ export async function getPublicProfileBySlug(
       .select(
         `
         *,
-        profiles:profile_id(id, name, avatar_url, verified),
-        addresses:address_id(*)
+        profiles!professional_data_profile_id_fkey(id, name, avatar_url, phone, whatsapp, verified),
+        addresses:address_id(*),
+        location:locations!professional_data_location_id_fkey(id, name, full_name, type, slug, geographic_path)
       `,
       )
       .eq("slug", slug)
       .maybeSingle();
     if (error) throw error;
-    return (data as Professional | null) ?? null;
+    return data ? mapProfessionalRow(data) : null;
   } catch (error) {
     logger.error("[professional.queries] Error fetching public profile:", error);
     trackError(error as Error, {

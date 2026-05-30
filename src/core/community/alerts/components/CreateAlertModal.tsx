@@ -18,6 +18,7 @@ import { Textarea } from "@/shared/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/shared/components/ui/radio-group";
 import { Siren } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 import { createAlertSchema, type CreateAlertFormData } from "../schemas/alertSchema";
 import { RPC_ERROR_MESSAGES, useCreateAlert } from "../hooks/useCreateAlert";
 import {
@@ -31,6 +32,23 @@ import type { AlertCategory, AlertStartedApprox } from "../domain/types";
 import type { Control, FieldErrors, UseFormSetValue, UseFormWatch } from "react-hook-form";
 
 const TOTAL_STEPS = 5;
+
+function getFieldsForStep(step: number): (keyof CreateAlertFormData)[] {
+  switch (step) {
+    case 1:
+      return ["category"];
+    case 2:
+      return ["location_id", "location_reference"];
+    case 3:
+      return ["seen_personally", "started_at_approx", "is_happening_now", "still_risky"];
+    case 4:
+      return ["description"];
+    case 5:
+      return ["confirm_real", "confirm_no_ops", "confirm_consequences"];
+    default:
+      return [];
+  }
+}
 
 interface CreateAlertModalProps {
   open: boolean;
@@ -101,14 +119,7 @@ export function CreateAlertModal({
   }
 
   async function goNext() {
-    const fieldsPerStep: Record<number, (keyof CreateAlertFormData)[]> = {
-      1: ["category"],
-      2: ["location_id", "location_reference"],
-      3: ["seen_personally", "started_at_approx", "is_happening_now", "still_risky"],
-      4: ["description"],
-      5: ["confirm_real", "confirm_no_ops", "confirm_consequences"],
-    };
-    const valid = await trigger(fieldsPerStep[step]);
+    const valid = await trigger(getFieldsForStep(step));
     if (valid) setStep((s) => Math.min(s + 1, TOTAL_STEPS));
   }
 
@@ -131,7 +142,11 @@ export function CreateAlertModal({
       return;
     }
 
-    setServerError(result.error ? RPC_ERROR_MESSAGES[result.error] ?? "Erro ao criar alerta." : "Erro ao criar alerta.");
+    setServerError(
+      result.error
+        ? getRecordValue(RPC_ERROR_MESSAGES, result.error) ?? "Erro ao criar alerta."
+        : "Erro ao criar alerta.",
+    );
   }
 
   return (

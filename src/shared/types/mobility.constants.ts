@@ -212,6 +212,8 @@ export const MOBILITY_QUERY_KEYS = {
   deliveries: (sourceType: string, sourceId: string) => ['deliveries', sourceType, sourceId],
   activeDelivery: (sourceId: string) => ['active-delivery', sourceId],
   deliveryHistory: (sourceId: string) => ['delivery-history', sourceId],
+  reports: (sourceId?: string) => ['ride-reports', sourceId ?? 'all'],
+  reportStats: () => ['ride-reports', 'stats'],
   
   // Generic
   drivers: () => ['drivers'],

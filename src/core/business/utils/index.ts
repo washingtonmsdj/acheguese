@@ -6,6 +6,7 @@
 
 export * from './businessHelpers';
 export * from './addressFormatters';
+export * from './businessPublicUrls';
 export {
   getCurrentDayOfWeek,
   isOpenNow,

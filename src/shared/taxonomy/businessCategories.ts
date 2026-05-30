@@ -7,6 +7,8 @@
  * - UI deve importar daqui em vez de declarar listas locais.
  */
 
+import { getRequiredRecordValue } from "@/shared/utils/recordLookup";
+
 export const BUSINESS_CATEGORIES = [
   "restaurante",
   "mercado",
@@ -130,7 +132,7 @@ export const BUSINESS_SUBCATEGORIES: Record<BusinessCategory, readonly string[]>
 
 export const BUSINESS_CATEGORY_OPTIONS = BUSINESS_CATEGORIES.map((category) => ({
   value: category,
-  label: BUSINESS_CATEGORY_LABELS[category],
+  label: getRequiredRecordValue(BUSINESS_CATEGORY_LABELS, category, BUSINESS_CATEGORY_LABELS.outros),
 }));
 
 export function isBusinessCategory(category: unknown): category is BusinessCategory {
@@ -192,11 +194,19 @@ export function normalizeBusinessCategoryId(category: unknown): BusinessCategory
 }
 
 export function getBusinessCategoryLabel(category: BusinessCategory | string): string {
-  return BUSINESS_CATEGORY_LABELS[normalizeBusinessCategoryId(category)];
+  return getRequiredRecordValue(
+    BUSINESS_CATEGORY_LABELS,
+    normalizeBusinessCategoryId(category),
+    BUSINESS_CATEGORY_LABELS.outros,
+  );
 }
 
 export function getBusinessSubcategories(category: BusinessCategory | string): readonly string[] {
-  return BUSINESS_SUBCATEGORIES[normalizeBusinessCategoryId(category)];
+  return getRequiredRecordValue(
+    BUSINESS_SUBCATEGORIES,
+    normalizeBusinessCategoryId(category),
+    BUSINESS_SUBCATEGORIES.outros,
+  );
 }
 
 export function hasBusinessSubcategories(category: BusinessCategory | string): boolean {

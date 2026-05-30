@@ -9,7 +9,7 @@
  *   /:state/:city/:groupSlug              -> TerritorialGroup
  *   /[modulo]/:state/:city/:district?     -> Location city/district
  *   /[modulo]/:state/:city/:groupSlug     -> TerritorialGroup
- *   /comunidade/:state/:city/:territorySlug -> Resolver por slug p?blico de comunidade
+ *   /comunidade/:state/:city                -> Location city da comunidade
  *
  * Em /comunidade, o slug pode resolver para grupo territorial quando houver
  * configura??o p?blica da comunidade ou quando o bairro pertencer de forma
@@ -68,12 +68,9 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
   const state = params.state;
   const city = params.city;
   const groupSlug = params.groupSlug;
-  let districtSlug = params.territorySlug || params.district || params.groupSlugOrDistrict;
-  if (districtSlug === '_') districtSlug = undefined;
+  const districtSlug = params.territorySlug || params.district || params.groupSlugOrDistrict;
 
-  const isGuideRoute =
-    isAppModulePath(pathname, APP_MODULE_SLUGS.touristPoints) ||
-    pathname.startsWith(`/guia/${APP_MODULE_SLUGS.touristPoints}/`);
+  const isGuideRoute = isAppModulePath(pathname, APP_MODULE_SLUGS.touristPoints);
   const isCommunityRoute = isAppModulePath(pathname, APP_MODULE_SLUGS.community);
 
   const [result, setResult] = useState<TerritoryResolveResult>({

@@ -4,6 +4,7 @@
 
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
+import { buildSafeOrILikeFilter } from "@/shared/utils/sqlSanitization";
 
 export interface UserRole {
   id: string;
@@ -158,7 +159,10 @@ class AdminRolesServiceClass {
         `, { count: "exact" });
 
       if (search) {
-        query = query.or(`user.email.ilike.%${search}%`);
+        const searchFilter = buildSafeOrILikeFilter(["user.email"], search);
+        if (searchFilter) {
+          query = query.or(searchFilter);
+        }
       }
       if (role) {
         query = query.eq("role", role);

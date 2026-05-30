@@ -12,6 +12,7 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase } from "@/integrations/supabase";
 import { SessionService } from '@/core/session/services/SessionService';
+import { buildSafeOrILikeFilter } from '@/shared/utils/sqlSanitization';
 
 type AlertCategory =
   | "tiroteio_disparos"
@@ -233,7 +234,10 @@ class AdminCommunityAlertsServiceClass {
       }
 
       if (search) {
-        query = query.or(`description.ilike.%${search}%,neighborhood_display.ilike.%${search}%`);
+        const searchFilter = buildSafeOrILikeFilter(['description', 'neighborhood_display'], search);
+        if (searchFilter) {
+          query = query.or(searchFilter);
+        }
       }
 
       // Paginação

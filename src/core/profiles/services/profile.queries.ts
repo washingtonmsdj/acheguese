@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase";
 import { callRPC } from "@/integrations/supabase/services/supabaseHelpers";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
+import { sanitizeForILike } from "@/shared/utils/sqlSanitization";
 import { SessionService } from "@/core/session/services/SessionService";
 import type {
   AdminFilters,
@@ -335,7 +336,10 @@ export async function getAdminProfilesList(
   }
 
   if (filters?.search) {
-    query = query.or(`name.ilike.%${filters.search}%,username.ilike.%${filters.search}%`);
+    const search = sanitizeForILike(filters.search);
+    if (search) {
+      query = query.or(`name.ilike.%${search}%,username.ilike.%${search}%`);
+    }
   }
 
   if (filters?.limit) {
@@ -420,7 +424,7 @@ export async function getProfilesFiltered(filters: {
   if (profileType) query = query.eq("profile_type", profileType);
   if (visibility !== "all") query = query.eq("is_public", visibility === "public");
 
-  const term = search?.trim().replace(/[%(),]/g, " ").trim();
+  const term = search ? sanitizeForILike(search) : "";
   if (term) {
     query = query.or(
       `name.ilike.%${term}%,display_name.ilike.%${term}%,username.ilike.%${term}%,user_id.ilike.%${term}%`,

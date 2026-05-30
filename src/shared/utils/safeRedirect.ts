@@ -1,5 +1,6 @@
 import { INPUT_VALIDATION } from '@/config/security.config';
 import { logger } from '@/shared/utils/logger';
+import { getRecordValue } from '@/shared/utils/recordLookup';
 
 type PublicEnv = Partial<Record<string, string>>;
 
@@ -42,7 +43,7 @@ export function getAllowedRedirectOriginsFromEnv(
     new Set([
       currentOrigin,
       ...defaults.map(normalizeOrigin),
-      ...parseOriginList(publicEnv[envKey]),
+      ...parseOriginList(getRecordValue(publicEnv, envKey)),
     ].filter(Boolean)),
   );
 }

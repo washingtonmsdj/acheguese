@@ -1,8 +1,14 @@
 import { useParams } from "react-router-dom";
-import { APP_MODULE_SLUGS, buildAppModulePath } from "@/config/moduleSlugs";
 import { LAUNCH_URLS } from "@/config/territory";
 import { isReservedSlug } from "@/core/routing/reservedSlugs";
-import { buildCommunityTerritoryUrl, buildModuleTerritoryUrl, MODULE_SLUGS } from "@/core/routing/utils/territoryUrls";
+import { gastronomyPublicRoutes } from "@/core/verticals/gastronomy/routes/gastronomyPublicRoutes";
+import { touristPointPublicRoutes } from "@/core/verticals/guide/routes/touristPointPublicRoutes";
+import {
+  buildCommunityTerritoryUrl,
+  buildModuleTerritoryUrl,
+  hasPublicCityTerritoryPath,
+  MODULE_SLUGS,
+} from "@/core/routing/utils/territoryUrls";
 import { usePublicBrowsingCity } from "@/core/location/hooks/usePublicBrowsingCity";
 
 interface FriendlyRouteParams {
@@ -55,21 +61,19 @@ export function useFriendlyModuleUrls(): FriendlyModuleUrls {
 }
 
 function buildTerritorialUrls(basePath: string, territoryName: string | null): FriendlyModuleUrls {
-  const hasCommunityTerritorySlug = basePath.split("/").filter(Boolean).length >= 3;
-
   return {
     base: basePath,
     landing: basePath,
     territoryName,
-    community: hasCommunityTerritorySlug ? buildCommunityTerritoryUrl(basePath) : LAUNCH_URLS.community,
+    community: hasPublicCityTerritoryPath(basePath) ? buildCommunityTerritoryUrl(basePath) : LAUNCH_URLS.community,
     business: buildModuleTerritoryUrl(MODULE_SLUGS.business, basePath),
     services: buildModuleTerritoryUrl(MODULE_SLUGS.services, basePath),
     classifieds: buildModuleTerritoryUrl(MODULE_SLUGS.classifieds, basePath),
     gastronomy: buildModuleTerritoryUrl(MODULE_SLUGS.gastronomy, basePath),
-    gastronomyFavorites: "/gastronomia/favoritos",
+    gastronomyFavorites: gastronomyPublicRoutes.favorites(),
     events: buildModuleTerritoryUrl(MODULE_SLUGS.events, basePath),
     jobs: buildModuleTerritoryUrl(MODULE_SLUGS.jobs, basePath),
-    touristPoints: buildAppModulePath(APP_MODULE_SLUGS.touristPoints, basePath),
+    touristPoints: touristPointPublicRoutes.listFromTerritoryPath(basePath),
     ranking: buildModuleTerritoryUrl(MODULE_SLUGS.ranking, basePath),
     map: buildModuleTerritoryUrl(MODULE_SLUGS.map, basePath),
   };

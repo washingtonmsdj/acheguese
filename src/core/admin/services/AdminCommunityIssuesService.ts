@@ -12,6 +12,7 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import { SessionService } from '@/core/session/services/SessionService';
+import { buildSafeOrILikeFilter } from '@/shared/utils/sqlSanitization';
 import type { AdminSupabaseClient } from '../types/adminDatabase.types';
 
 type IssueCategory =
@@ -242,7 +243,10 @@ class AdminCommunityIssuesServiceClass {
       }
 
       if (search) {
-        query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%,neighborhood_display.ilike.%${search}%`);
+        const searchFilter = buildSafeOrILikeFilter(['title', 'description', 'neighborhood_display'], search);
+        if (searchFilter) {
+          query = query.or(searchFilter);
+        }
       }
 
       // Paginação

@@ -88,7 +88,7 @@ export class SearchBusinessesActionHandler implements IActionHandler {
   readonly type = "business_search" as const;
 
   async execute(intent: AIIntent, context: AIActionContext): Promise<AIActionResultItem[]> {
-    const requiresOpenNow = intent.filters.tags.includes("aberto_agora");
+    const requiresOpenNow = intent.filters.tags?.includes("aberto_agora") ?? false;
 
     // "Aberto agora" exige validacao por horario real; caminho espacial nao carrega esse dado.
     if (context.coordinates && !requiresOpenNow) {

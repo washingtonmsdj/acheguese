@@ -1,3 +1,5 @@
+import { getRecordValue } from "@/shared/utils/recordLookup";
+
 type PublicRuntimeEnv = Partial<Record<string, string>>;
 
 const viteEnv = ((import.meta as ImportMeta & { env?: PublicRuntimeEnv }).env ?? {}) as PublicRuntimeEnv;
@@ -7,7 +9,7 @@ const nodeEnv =
     : {};
 
 function requirePublicRuntimeEnv(name: string): string {
-  const value = viteEnv[name] ?? nodeEnv[name];
+  const value = getRecordValue(viteEnv, name) ?? getRecordValue(nodeEnv, name);
   if (typeof value === "string" && value.trim().length > 0) {
     return value.trim();
   }

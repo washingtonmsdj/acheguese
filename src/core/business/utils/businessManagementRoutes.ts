@@ -1,8 +1,18 @@
-import { getBusinessCreateRoute, type VerticalKey } from "@/core/verticals/config";
+import { gastronomyPublicRoutes } from "@/core/verticals/gastronomy/routes/gastronomyPublicRoutes";
+
+function cleanRouteSegment(value: string, label: string): string {
+  const segment = value.trim().replace(/^\/+|\/+$/g, "");
+  if (!segment || /[/?#]/.test(segment)) {
+    throw new Error(`${label} deve ser um unico segmento de rota.`);
+  }
+  return segment;
+}
 
 export const businessManagementRoutes = {
   list: () => "/central/empresas",
-  create: (vertical?: VerticalKey) => getBusinessCreateRoute(vertical),
+  create: () => "/central/empresas/nova",
+  createByVerticalSlug: (verticalSlug: string) =>
+    `${businessManagementRoutes.create()}/${cleanRouteSegment(verticalSlug, "slug vertical")}`,
   overview: (businessId: string) => `/central/empresas/${businessId}`,
   dados: (businessId: string) => `/central/empresas/${businessId}/dados`,
   gastronomia: (businessId: string) => `/central/empresas/${businessId}/gastronomia`,
@@ -18,7 +28,7 @@ export const businessManagementRoutes = {
   gastronomyPedidoDetalhe: (businessId: string, orderId: string) =>
     `${businessManagementRoutes.gastronomyPedidos(businessId)}/${orderId}`,
   gastronomyPedidoPublico: (orderId: string) =>
-    `/gastronomia/pedidos/${orderId}`,
+    gastronomyPublicRoutes.orderDetails(orderId),
   gastronomyEntregas: (businessId: string) => `/central/empresas/${businessId}/gastronomia/entregas`,
   gastronomyAnalytics: (businessId: string) => `/central/empresas/${businessId}/gastronomia/analytics`,
   gastronomyPromocoes: (businessId: string) => `/central/empresas/${businessId}/gastronomia/promocoes`,

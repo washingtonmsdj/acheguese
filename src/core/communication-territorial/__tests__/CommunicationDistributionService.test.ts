@@ -99,11 +99,10 @@ describe("CommunicationDistributionService", () => {
       CommunicationDistributionService.resolvePublicationInteraction(distribution, {
         state: "ba",
         city: "salvador",
-        territorySlug: "nordeste-de-amaralina",
       }),
     ).toEqual({
       mode: "canonical",
-      href: "/comunicacao/ba/salvador/nordeste-de-amaralina/portal-local",
+      href: "/comunicacao/ba/salvador/portal-local",
     });
 
     distribution.publication!.content_format = "update";
@@ -111,7 +110,6 @@ describe("CommunicationDistributionService", () => {
       CommunicationDistributionService.resolvePublicationInteraction(distribution, {
         state: "ba",
         city: "salvador",
-        territorySlug: "nordeste-de-amaralina",
       }),
     ).toEqual({ mode: "inline" });
   });

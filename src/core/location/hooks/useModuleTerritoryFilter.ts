@@ -65,7 +65,7 @@ function getRouteLocation(routeResolved?: ResolvedTerritory | null): {
 
   const ids = routeResolved.group.members.map((member) => member.id);
   return {
-    location: routeResolved.group.members[0] ?? null,
+    location: routeResolved.group.members.at(0) ?? null,
     ids,
     label: routeResolved.group.name,
   };

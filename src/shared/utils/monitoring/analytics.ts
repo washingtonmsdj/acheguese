@@ -8,6 +8,7 @@
  */
 
 import { logger } from "@/shared/utils/logger";
+import { secureRandomString } from "@/shared/utils/secureRandom";
 
 interface AnalyticsEvent {
   name: string;
@@ -55,7 +56,7 @@ class AnalyticsService {
    * Gera ID de sessão único
    */
   private generateSessionId(): string {
-    return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `session_${Date.now()}_${secureRandomString(12)}`;
   }
 
   /**

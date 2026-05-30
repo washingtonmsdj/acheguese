@@ -176,7 +176,10 @@ export const IMAGE_OPTIMIZE_PRESETS: Record<ImageOptimizePreset, Required<ImageO
 };
 
 export function getImageOptimizePreset(preset: ImageOptimizePreset): Required<ImageOptimizeOptions> {
-  return IMAGE_OPTIMIZE_PRESETS[preset];
+  return (
+    Object.entries(IMAGE_OPTIMIZE_PRESETS).find(([key]) => key === preset)?.[1] ??
+    IMAGE_OPTIMIZE_PRESETS.user_avatar
+  );
 }
 
 /**

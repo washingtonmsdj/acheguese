@@ -3,6 +3,7 @@ import { AlertTriangle, Calendar, Clock, Landmark, MapPin, Navigation, Store } f
 import { Badge } from "@/shared/components/ui/badge";
 import { Card } from "@/shared/components/ui/card";
 import { APP_MODULE_SLUGS, buildAppModulePath } from "@/config/moduleSlugs";
+import { useFriendlyModuleUrls } from "@/core/routing/hooks/useFriendlyModuleUrls";
 import type { NearbyEntity } from "../hooks/useNearbyEntities";
 
 interface NearbyCardProps {
@@ -16,7 +17,7 @@ const ENTITY_CONFIG = {
   alert: { label: "Alerta", baseUrl: buildAppModulePath(APP_MODULE_SLUGS.communityAlerts), icon: AlertTriangle, color: "bg-red-500" },
   tourist_point: {
     label: "Ponto turistico",
-    baseUrl: buildAppModulePath(APP_MODULE_SLUGS.touristPoints),
+    baseUrl: "",
     icon: Landmark,
     color: "bg-purple-500",
   },
@@ -37,8 +38,10 @@ function getWalkingTime(meters: number): string {
 }
 
 export function NearbyCard({ entity, onNavigate }: NearbyCardProps) {
+  const friendlyUrls = useFriendlyModuleUrls();
   const config = ENTITY_CONFIG[entity.type];
   const Icon = config.icon;
+  const baseUrl = entity.type === "tourist_point" ? friendlyUrls.touristPoints : config.baseUrl;
   const hasRealDistance = entity.distance > 0 && entity.distance < 100000;
   const neighborhood =
     typeof entity.metadata?.neighborhood === "string" ? entity.metadata.neighborhood : null;
@@ -48,13 +51,13 @@ export function NearbyCard({ entity, onNavigate }: NearbyCardProps) {
 
   const url = React.useMemo(() => {
     if ((entity.type === "business" || entity.type === "event") && entity.metadata?.slug) {
-      return `${config.baseUrl}/${entity.metadata.slug}`;
+      return `${baseUrl}/${entity.metadata.slug}`;
     }
     if (entity.type === "tourist_point") {
-      return `${config.baseUrl}/${entity.metadata?.slug || entity.id}`;
+      return `${baseUrl}/${entity.metadata?.slug || entity.id}`;
     }
-    return `${config.baseUrl}/${entity.id}`;
-  }, [config.baseUrl, entity.id, entity.metadata?.slug, entity.type]);
+    return `${baseUrl}/${entity.id}`;
+  }, [baseUrl, entity.id, entity.metadata?.slug, entity.type]);
 
   return (
     <Card

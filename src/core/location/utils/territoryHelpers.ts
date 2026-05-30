@@ -31,8 +31,7 @@ function slugToTitle(slug: string): string {
 export function extractCityStateFromPath(geographicPath: string): { city: string; state: string } {
   const parts = geographicPath.split('/').filter(Boolean);
   // parts: ['br', 'ba', 'salvador', ...]
-  const stateSlug = parts[1] ?? '';
-  const citySlug = parts[2] ?? '';
+  const [, stateSlug = '', citySlug = ''] = parts;
   
   return {
     city: slugToTitle(citySlug),
@@ -53,8 +52,9 @@ export function getCityStateFromLocation(location: Location): { city: string; st
  */
 export function getCityStateFromGroup(group: TerritorialGroupWithMembers): { city: string; state: string } {
   // Usa o primeiro membro para extrair cidade/estado
-  if (group.members.length > 0) {
-    return getCityStateFromLocation(group.members[0]);
+  const firstMember = group.members.at(0);
+  if (firstMember) {
+    return getCityStateFromLocation(firstMember);
   }
   
   // Fallback: tenta extrair do metadata se disponível

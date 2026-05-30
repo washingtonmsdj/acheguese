@@ -4,7 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/shared/components/ui/button";
 import { useResolveTerritoryFromUrl } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { useCommunityProfile } from "@/core/community-experience/hooks/useCommunityProfile";
-import { buildCommunityTerritoryUrl } from "@/core/routing/utils/territoryUrls";
+import { buildModuleTerritoryUrl, MODULE_SLUGS } from "@/core/routing/utils/territoryUrls";
 import { TerritorialNotFound } from "./TerritorialNotFound";
 
 function titleCaseFromSlug(value?: string): string {
@@ -18,11 +18,9 @@ function titleCaseFromSlug(value?: string): string {
 
 export function CommunityInterestPage() {
   const navigate = useNavigate();
-  const { state, city, territorySlug, groupSlug } = useParams<{
+  const { state, city } = useParams<{
     state?: string;
     city?: string;
-    territorySlug?: string;
-    groupSlug?: string;
   }>();
   const normalizedState = state?.trim() ?? "";
   const normalizedCity = city?.trim() ?? "";
@@ -30,21 +28,23 @@ export function CommunityInterestPage() {
   const { data: profile } = useCommunityProfile(resolved);
   const communityBase = useMemo(() => {
     if (!normalizedState || !normalizedCity) return null;
-    if (!resolved) return `/${normalizedState}/${normalizedCity}`;
-    if (resolved.kind === "group") return `/${normalizedState}/${normalizedCity}/${resolved.group.slug}`;
-    return `/${normalizedState}/${normalizedCity}/${resolved.location.slug}`;
-  }, [normalizedCity, normalizedState, resolved]);
+    return `/${normalizedState}/${normalizedCity}`;
+  }, [normalizedCity, normalizedState]);
   const eventsPath = useMemo(
-    () => (communityBase ? buildCommunityTerritoryUrl(communityBase, "eventos") : null),
+    () => (communityBase ? buildModuleTerritoryUrl(MODULE_SLUGS.events, communityBase) : null),
+    [communityBase],
+  );
+  const businessPath = useMemo(
+    () => (communityBase ? buildModuleTerritoryUrl(MODULE_SLUGS.business, communityBase) : null),
     [communityBase],
   );
 
   const territoryName = useMemo(() => {
     if (resolved?.kind === "group") return resolved.group.name;
     if (resolved?.kind === "location") return resolved.location.name;
-    return titleCaseFromSlug(groupSlug ?? territorySlug);
-  }, [groupSlug, resolved, territorySlug]);
-  if (!communityBase || !eventsPath) {
+    return titleCaseFromSlug(normalizedCity);
+  }, [normalizedCity, resolved]);
+  if (!communityBase || !eventsPath || !businessPath) {
     return <TerritorialNotFound message="A URL de interesse precisa informar estado e cidade válidos." />;
   }
 
@@ -70,7 +70,7 @@ export function CommunityInterestPage() {
           <Button onClick={() => navigate(`/contato${contactQuery}`)}>
             {profile?.primary_cta_label ?? "Cadastrar interesse"}
           </Button>
-          <Button variant="outline" onClick={() => navigate(`${buildCommunityTerritoryUrl(communityBase)}/empresas`)}>
+          <Button variant="outline" onClick={() => navigate(businessPath)}>
             {profile?.secondary_cta_label ?? "Quero minha empresa aqui"}
           </Button>
           <Button variant="outline" onClick={() => navigate(`/contato${contactQuery}`)}>

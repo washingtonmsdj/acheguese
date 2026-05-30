@@ -17,6 +17,7 @@ import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-r
 import { usePostById } from "@/core/community/hooks/usePostById";
 import { useCommunityLocation } from "@/core/community/hooks/useCommunityLocation";
 import { postService } from "@/core/posts/services";
+import { jobPublicRoutes } from "@/core/verticals/jobs/routes/jobPublicRoutes";
 import { extractOpportunityPayload } from "@/core/work-opportunities/utils/opportunityPayload";
 import { workOpportunitiesService } from "@/core/work-opportunities/services/WorkOpportunitiesService";
 import { workOpportunityTelemetryService } from "@/core/work-opportunities/services/WorkOpportunityTelemetryService";
@@ -164,7 +165,7 @@ export function useComunidadePage() {
             return;
           }
           if (vagaId) {
-            navigate(`/vagas/detalhe/${vagaId}`);
+            navigate(jobPublicRoutes.home());
             return;
           }
         }

@@ -19,6 +19,7 @@ import { useCityMetadata } from '@/core/city/hooks/useCityMetadata';
 import { resolveFallbackCityStatus, type CityStatus } from '@/core/city/services/CityService';
 import { TERRITORY_CONFIG } from '@/config/territory';
 import { buildPublicAbsoluteUrl } from '@/shared/config/publicAppOrigin';
+import { getRequiredRecordValue } from '@/shared/utils/recordLookup';
 
 // Lazy imports dos módulos existentes
 const ComunidadePage       = lazy(() => import('@/modules/community-feed/pages/ComunidadePage'));
@@ -128,7 +129,7 @@ function CityStatusGate({ module, enforceActive = false, children }: CityStatusG
   const { pathname } = useLocation();
   const locationPath = resolved.kind === 'location'
     ? resolved.location.geographic_path
-    : resolved.group.members[0]?.geographic_path ?? '';
+    : resolved.group.members.at(0)?.geographic_path ?? '';
   const { state, city } = extractCityStateFromPath(locationPath);
   const cityName = getCityNameFromPath(city);
   const { data } = useCityMetadata(state, city);
@@ -137,20 +138,23 @@ function CityStatusGate({ module, enforceActive = false, children }: CityStatusG
   const mustBlock = enforceActive ? cityStatus !== 'active' : cityStatus === 'inactive' || cityStatus === 'coming_soon' || cityStatus === 'launching';
   if (!mustBlock) return <>{children}</>;
 
-  const copy = MODULE_EMPTY_COPY[module];
+  const copy = getRequiredRecordValue(MODULE_EMPTY_COPY, module, MODULE_EMPTY_COPY.comunidade);
   const pagePath = pathname.startsWith('/') ? pathname : `/${pathname}`;
   const canonicalHref = buildPublicAbsoluteUrl(pagePath);
   const pageTitle = `${copy.title} - ${cityName} | Achegue-se`;
   const isCommunityPath = pathname.startsWith('/comunidade/');
   const safeState = state ?? TERRITORY_CONFIG.launch.state;
   const safeCity = city ?? TERRITORY_CONFIG.launch.city;
-  const canonicalTerritoryBase = resolved.kind === 'group'
+  const moduleTerritoryBase = resolved.kind === 'group'
     ? `/${safeState}/${safeCity}/${resolved.group.slug}`
-    : `/${safeState}/${safeCity}/${resolved.location.slug}`;
+    : resolved.location.type === 'city'
+      ? `/${safeState}/${safeCity}`
+      : `/${safeState}/${safeCity}/${resolved.location.slug}`;
+  const communityTerritoryBase = `/${safeState}/${safeCity}`;
   const primaryCtaHref = isCommunityPath
-    ? `/comunidade${canonicalTerritoryBase}/empresas`
-    : `/empresas${canonicalTerritoryBase}`;
-  const communityEntryHref = `/comunidade${canonicalTerritoryBase}`;
+    ? `/empresas${communityTerritoryBase}`
+    : `/empresas${moduleTerritoryBase}`;
+  const communityEntryHref = `/comunidade${communityTerritoryBase}`;
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10">

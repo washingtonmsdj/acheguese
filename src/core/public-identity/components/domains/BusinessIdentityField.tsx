@@ -1,3 +1,7 @@
+import {
+  buildBusinessPremiumUrlPreview,
+  buildBusinessPublicUrlPreview,
+} from "@/core/business/utils/businessPublicUrls";
 import { IdentityField, type IdentityFieldProps } from "../IdentityField";
 
 type BusinessIdentityFieldProps = Omit<IdentityFieldProps, "entityType" | "label"> & {
@@ -14,8 +18,8 @@ export function BusinessIdentityField({
   ...props
 }: BusinessIdentityFieldProps) {
   const defaultPreviewFn = isPremium
-    ? (slug: string) => (slug ? `/p/${slug}` : "")
-    : (slug: string) => (slug ? `/empresas/:uf/:cidade/:bairro/${slug}` : "");
+    ? buildBusinessPremiumUrlPreview
+    : buildBusinessPublicUrlPreview;
 
   return (
     <IdentityField

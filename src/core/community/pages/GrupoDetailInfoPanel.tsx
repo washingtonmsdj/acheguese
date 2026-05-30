@@ -23,6 +23,7 @@ import {
 } from "@/core/community/hooks/useGroupQueries";
 import type { GroupMessageReportStatus } from "@/core/community/types/groupReports";
 import { useState } from "react";
+import { getRequiredRecordValue } from "@/shared/utils/recordLookup";
 
 interface GroupInfoPanelGroup {
   name: string;
@@ -402,13 +403,14 @@ function ReportAction({
     default: "border-white/10 bg-white/5 text-gray-200",
     success: "border-emerald-400/30 bg-emerald-400/10 text-emerald-200",
     muted: "border-slate-400/30 bg-slate-400/10 text-slate-200",
-  }[tone];
+  };
+  const className = getRequiredRecordValue(classes, tone, classes.default);
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-full border px-2 py-0.5 text-[10px] ${classes}`}
+      className={`rounded-full border px-2 py-0.5 text-[10px] ${className}`}
     >
       {label}
     </button>

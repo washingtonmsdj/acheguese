@@ -13,6 +13,7 @@
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
+import { buildSafeILikePattern, buildSafeOrILikeFilter } from '@/shared/utils/sqlSanitization';
 import type { AdminSupabaseClient } from '../types/adminDatabase.types';
 import { MobilityService } from '@/core/mobility/services/runtime';
 
@@ -106,7 +107,10 @@ export const AdminService = {
       }
 
       if (filters?.search) {
-        query = query.ilike('business_name', `%${filters.search}%`);
+        const searchPattern = buildSafeILikePattern(filters.search);
+        if (searchPattern) {
+          query = query.ilike('business_name', searchPattern);
+        }
       }
 
       if (filters?.limit) {
@@ -212,7 +216,10 @@ export const AdminService = {
         .order('created_at', { ascending: false });
 
       if (filters?.search) {
-        query = query.or(`username.ilike.%${filters.search}%,full_name.ilike.%${filters.search}%`);
+        const searchFilter = buildSafeOrILikeFilter(['username', 'full_name'], filters.search);
+        if (searchFilter) {
+          query = query.or(searchFilter);
+        }
       }
 
       if (filters?.limit) {
@@ -285,7 +292,7 @@ export const AdminService = {
 
           const totalOrders = orders?.length || 0;
           const totalRevenue = orders?.reduce((sum, o) => sum + o.total, 0) || 0;
-          const metrics = analytics?.[0] || {};
+          const metrics = analytics?.at(0) || {};
 
           return {
             business_id: sub.business_id,
@@ -381,11 +388,12 @@ export const AdminService = {
         .eq('subscription_scope', 'business')
         .in('status_v2', ['active', 'trialing']);
 
-      const planDistribution = ((subscriptions as Array<{ plan_code?: string }> | null) || []).reduce((acc, sub) => {
+      const planDistributionMap = new Map<string, number>();
+      for (const sub of (subscriptions as Array<{ plan_code?: string }> | null) || []) {
         const tier = sub.plan_code || 'free';
-        acc[tier] = (acc[tier] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
+        planDistributionMap.set(tier, (planDistributionMap.get(tier) ?? 0) + 1);
+      }
+      const planDistribution = Object.fromEntries(planDistributionMap);
 
       return {
         data: {

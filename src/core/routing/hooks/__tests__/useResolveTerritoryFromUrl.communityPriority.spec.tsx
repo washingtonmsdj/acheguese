@@ -40,7 +40,7 @@ describe("useResolveTerritoryFromUrl community priority", () => {
     findGroupsContainingLocationMock.mockResolvedValue([]);
   });
 
-  it("promotes district slug to territorial group in /comunidade when membership is unique", async () => {
+  it("resolves the canonical city-level community route as the city location", async () => {
     findByPathMock.mockImplementation(async (path: string) => {
       if (path === "/br/ba/salvador") {
         return {
@@ -55,57 +55,23 @@ describe("useResolveTerritoryFromUrl community priority", () => {
         };
       }
 
-      if (path === "/br/ba/salvador/chapada-do-rio-vermelho") {
-        return {
-          id: "district-1",
-          name: "Chapada do Rio Vermelho",
-          slug: "chapada-do-rio-vermelho",
-          type: "district",
-          parent_id: "city-1",
-          geographic_path: path,
-          status: "active",
-          metadata: { is_navigable: true },
-        };
-      }
-
       return null;
     });
 
-    findBySlugAndCityMock.mockResolvedValue(null);
-
-    findGroupsContainingLocationMock.mockResolvedValue([
-      {
-        id: "group-1",
-        name: "Complexo do Nordeste",
-        slug: "complexo-do-nordeste-de-amaralina",
-        anchor_city_id: "city-1",
-        status: "active",
-        metadata: { is_navigable: true },
-      },
-    ]);
-
-    findWithMembersMock.mockResolvedValue({
-      id: "group-1",
-      name: "Complexo do Nordeste",
-      slug: "complexo-do-nordeste-de-amaralina",
-      anchor_city_id: "city-1",
-      status: "active",
-      metadata: { is_navigable: true },
-      members: [],
-    });
-
     render(
-      <MemoryRouter initialEntries={["/comunidade/ba/salvador/chapada-do-rio-vermelho"]}>
+      <MemoryRouter initialEntries={["/comunidade/ba/salvador"]}>
         <Routes>
-          <Route path="/comunidade/:state/:city/:groupSlugOrDistrict" element={<Probe />} />
+          <Route path="/comunidade/:state/:city" element={<Probe />} />
         </Routes>
       </MemoryRouter>,
     );
 
-    await waitFor(() => expect(screen.getByText("group")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("location")).toBeInTheDocument());
+    expect(findBySlugAndCityMock).not.toHaveBeenCalled();
+    expect(findGroupsContainingLocationMock).not.toHaveBeenCalled();
   });
 
-  it("resolves group before district for /comunidade/:state/:city/:territorySlug", async () => {
+  it("keeps community subpages scoped to the city route params", async () => {
     findByPathMock.mockImplementation(async (path: string) => {
       if (path === "/br/ba/salvador") {
         return {
@@ -120,47 +86,19 @@ describe("useResolveTerritoryFromUrl community priority", () => {
         };
       }
 
-      if (path === "/br/ba/salvador/nordeste-de-amaralina") {
-        return {
-          id: "district-1",
-          name: "Nordeste de Amaralina",
-          slug: "nordeste-de-amaralina",
-          type: "district",
-          parent_id: "city-1",
-          geographic_path: path,
-          status: "active",
-          metadata: { is_navigable: true },
-        };
-      }
-
       return null;
     });
 
-    findBySlugAndCityMock.mockResolvedValue({
-      id: "group-1",
-      name: "Nordeste Expandido",
-      slug: "nordeste-de-amaralina",
-      status: "active",
-      metadata: { is_navigable: true },
-    });
-
-    findWithMembersMock.mockResolvedValue({
-      id: "group-1",
-      name: "Nordeste Expandido",
-      slug: "nordeste-de-amaralina",
-      status: "active",
-      metadata: { is_navigable: true },
-      members: [],
-    });
-
     render(
-      <MemoryRouter initialEntries={["/comunidade/ba/salvador/nordeste-de-amaralina"]}>
+      <MemoryRouter initialEntries={["/comunidade/ba/salvador/feed"]}>
         <Routes>
-          <Route path="/comunidade/:state/:city/:groupSlugOrDistrict" element={<Probe />} />
+          <Route path="/comunidade/:state/:city/feed" element={<Probe />} />
         </Routes>
       </MemoryRouter>,
     );
 
-    await waitFor(() => expect(screen.getByText("group")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("location")).toBeInTheDocument());
+    expect(findBySlugAndCityMock).not.toHaveBeenCalled();
+    expect(findWithMembersMock).not.toHaveBeenCalled();
   });
 });

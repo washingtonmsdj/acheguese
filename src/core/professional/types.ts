@@ -174,6 +174,8 @@ export interface Professional {
   // Location
   /** FK canonica para locations.id. Define o territorio principal do profissional. */
   location_id?: string;
+  /** Caminho territorial canonico da location. Ex: /br/ba/salvador/pituba */
+  geographic_path?: string;
   address?: string;
   neighborhood?: string;
   city?: string;

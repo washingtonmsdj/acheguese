@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase";
 import { trackError } from "@/shared/utils/errorTracking";
 import type { TerritoryFilter } from "@/core/location";
+import { sanitizeForILike } from "@/shared/utils/sqlSanitization";
 
 const db = supabase as any;
 
@@ -80,7 +81,10 @@ export class CommunityGroupsService {
       }
 
       if (search) {
-        query = query.ilike("name", `%${search}%`);
+        const sanitizedSearch = sanitizeForILike(search);
+        if (sanitizedSearch) {
+          query = query.ilike("name", `%${sanitizedSearch}%`);
+        }
       }
 
       if (groupIds && groupIds.length > 0) {
@@ -135,7 +139,10 @@ export class CommunityGroupsService {
         .order("created_at", { ascending: false });
 
       if (search) {
-        query = query.ilike("name", `%${search}%`);
+        const sanitizedSearch = sanitizeForILike(search);
+        if (sanitizedSearch) {
+          query = query.ilike("name", `%${sanitizedSearch}%`);
+        }
       }
 
       if (territoryFilter?.scope === "location") {

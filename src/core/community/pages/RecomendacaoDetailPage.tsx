@@ -6,6 +6,8 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import { ReportContentDialog } from "@/core/moderation/components/ReportContentDialog";
 import { useAppUrls } from "@/core/routing/hooks"; // ✅ SSOT URLs
 import { useBusinessNavigation } from '@/core/business';
+import { ProfessionalUrlService } from "@/core/professional/services/ProfessionalUrlService";
+import { professionalPublicRoutes } from "@/core/professional/routes/professionalPublicRoutes";
 import { useRecomendacaoDetail } from "@/core/community/hooks/useRecomendacaoDetail";
 import { QuestionCard } from "@/shared/components/recomendacoes/QuestionCard";
 import { AnswersList } from "@/shared/components/recomendacoes/AnswersList";
@@ -66,8 +68,9 @@ export default function RecomendacaoDetailPage() {
     setReportOpen(true);
   };
 
-  const handleNavigateToProfessional = (professionalId: string) => {
-    navigate(`/servicos/${professionalId}`);
+  const handleNavigateToProfessional = async (professionalId: string) => {
+    const ctx = await ProfessionalUrlService.resolveByProfessionalDataId(professionalId);
+    navigate(ctx ? ProfessionalUrlService.getCanonicalUrl(ctx) : professionalPublicRoutes.home());
   };
 
   const handleNavigateToBusiness = (business: NavigableBusiness) => {
@@ -165,4 +168,3 @@ export default function RecomendacaoDetailPage() {
     </div>
   );
 }
-

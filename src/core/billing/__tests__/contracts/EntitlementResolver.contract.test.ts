@@ -9,26 +9,30 @@
  * FASE 7: SSOT Enforcement
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { EntitlementResolver, type EntitlementContext } from '@/core/billing/services/EntitlementResolver';
+
+const TEST_USER_ID = '00000000-0000-4000-8000-000000000001';
+const TEST_BUSINESS_ID = '00000000-0000-4000-8000-000000000002';
+const NON_EXISTENT_USER_ID = '00000000-0000-4000-8000-000000000003';
 
 describe('EntitlementResolver - Contract Tests', () => {
   describe('API Contract', () => {
     it('deve aceitar EntitlementContext válido', () => {
       const context: EntitlementContext = {
-        user_id: 'test-user-id',
-        business_id: 'test-business-id',
+        user_id: TEST_USER_ID,
+        business_id: TEST_BUSINESS_ID,
         subscription_scope: 'business',
       };
       
       expect(context).toBeDefined();
-      expect(context.user_id).toBe('test-user-id');
+      expect(context.user_id).toBe(TEST_USER_ID);
       expect(context.subscription_scope).toBe('business');
     });
     
     it('deve retornar ResolvedEntitlements com estrutura esperada', async () => {
       const context: EntitlementContext = {
-        user_id: 'test-user-id',
+        user_id: TEST_USER_ID,
         subscription_scope: 'user',
       };
       
@@ -51,7 +55,7 @@ describe('EntitlementResolver - Contract Tests', () => {
       // Em produção, seria necessário mockar dados de teste
       
       const context: EntitlementContext = {
-        user_id: 'test-user-id',
+        user_id: TEST_USER_ID,
         subscription_scope: 'user',
       };
       
@@ -66,7 +70,7 @@ describe('EntitlementResolver - Contract Tests', () => {
   describe('Validação de Assinatura Ativa', () => {
     it('deve validar status_v2 = active ou trialing', async () => {
       const context: EntitlementContext = {
-        user_id: 'test-user-id',
+        user_id: TEST_USER_ID,
         subscription_scope: 'user',
       };
       
@@ -78,7 +82,7 @@ describe('EntitlementResolver - Contract Tests', () => {
     
     it('deve retornar fallback para usuário sem assinatura', async () => {
       const context: EntitlementContext = {
-        user_id: 'non-existent-user',
+        user_id: NON_EXISTENT_USER_ID,
         subscription_scope: 'user',
       };
       
@@ -94,7 +98,7 @@ describe('EntitlementResolver - Contract Tests', () => {
   describe('Tipos de Entitlement', () => {
     it('entitlements booleanos devem ser boolean', async () => {
       const context: EntitlementContext = {
-        user_id: 'test-user-id',
+        user_id: TEST_USER_ID,
         subscription_scope: 'user',
       };
       
@@ -107,7 +111,7 @@ describe('EntitlementResolver - Contract Tests', () => {
     
     it('entitlements numéricos devem ser number ou null', async () => {
       const context: EntitlementContext = {
-        user_id: 'test-user-id',
+        user_id: TEST_USER_ID,
         subscription_scope: 'user',
       };
       
@@ -122,7 +126,7 @@ describe('EntitlementResolver - Contract Tests', () => {
   describe('Subscription Scope', () => {
     it('deve aceitar scope = user', async () => {
       const context: EntitlementContext = {
-        user_id: 'test-user-id',
+        user_id: TEST_USER_ID,
         subscription_scope: 'user',
       };
       
@@ -132,8 +136,8 @@ describe('EntitlementResolver - Contract Tests', () => {
     
     it('deve aceitar scope = business com business_id', async () => {
       const context: EntitlementContext = {
-        user_id: 'test-user-id',
-        business_id: 'test-business-id',
+        user_id: TEST_USER_ID,
+        business_id: TEST_BUSINESS_ID,
         subscription_scope: 'business',
       };
       

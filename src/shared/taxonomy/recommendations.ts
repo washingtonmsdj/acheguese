@@ -1,3 +1,5 @@
+import { getRequiredRecordValue } from "@/shared/utils/recordLookup";
+
 export const RECOMMENDATION_CATEGORY_IDS = [
   'services',
   'restaurantes',
@@ -48,7 +50,11 @@ export const RECOMMENDATION_CATEGORY_DETAILS: Record<
 
 export const RECOMMENDATION_CATEGORY_OPTIONS = RECOMMENDATION_CATEGORY_IDS.map((id) => ({
   id,
-  ...RECOMMENDATION_CATEGORY_DETAILS[id],
+  ...getRequiredRecordValue(
+    RECOMMENDATION_CATEGORY_DETAILS,
+    id,
+    RECOMMENDATION_CATEGORY_DETAILS.outros,
+  ),
 }));
 
 export const RECOMMENDATION_FILTER_OPTIONS = [
@@ -60,9 +66,10 @@ export function getRecommendationCategoryDetails(category: string): {
   label: string;
   hint: string;
 } {
-  return (
-    RECOMMENDATION_CATEGORY_DETAILS[category as RecommendationCategoryId] ??
-    RECOMMENDATION_CATEGORY_DETAILS.outros
+  return getRequiredRecordValue(
+    RECOMMENDATION_CATEGORY_DETAILS,
+    category,
+    RECOMMENDATION_CATEGORY_DETAILS.outros,
   );
 }
 

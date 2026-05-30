@@ -7,9 +7,8 @@ describe("communication territorial urls", () => {
       buildCommunicationChannelUrl({
         state: "ba",
         city: "salvador",
-        territorySlug: "nordeste-de-amaralina",
         channelSlug: "radio-bairro",
       }),
-    ).toBe("/comunicacao/ba/salvador/nordeste-de-amaralina/radio-bairro");
+    ).toBe("/comunicacao/ba/salvador/radio-bairro");
   });
 });

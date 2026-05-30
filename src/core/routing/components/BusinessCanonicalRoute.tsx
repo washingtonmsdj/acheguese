@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import type { ComponentType } from 'react';
 import { useParams } from 'react-router-dom';
 import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
+import { buildBusinessPublicUrlFromSegments } from '@/core/business/utils/businessPublicUrls';
 import { Loader2 } from 'lucide-react';
 import { logPageNotFound } from '@/core/public-identity/utils/identity-logger';
 
@@ -35,6 +36,12 @@ export default function BusinessCanonicalRoute({
 
     async function resolve() {
       try {
+        const attemptedUrl = buildBusinessPublicUrlFromSegments({
+          state,
+          city,
+          district,
+          slug,
+        });
         const ctx = await BusinessUrlService.resolveByTerritoryAndSlug(
           state,
           city,
@@ -45,14 +52,14 @@ export default function BusinessCanonicalRoute({
         if (!ctx) {
           if (import.meta.env.DEV) {
             logger.info(
-              `[BusinessCanonicalRoute] Não encontrada: /empresas/${state}/${city}/${district}/${slug}`,
+              `[BusinessCanonicalRoute] Não encontrada: ${attemptedUrl}`,
             );
           }
 
           logPageNotFound({
             entityType: 'business',
             identifier: slug,
-            attemptedUrl: `/empresas/${state}/${city}/${district}/${slug}`,
+            attemptedUrl,
           });
           setStatus('not-found');
           return;

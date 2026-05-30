@@ -13,6 +13,7 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import type { AdminSupabaseClient } from '@/core/admin/types/adminDatabase.types';
+import { secureRandomString } from '@/shared/utils/secureRandom';
 
 // ── Tipos ─────────────────────────────────────────────────────────────────
 
@@ -402,7 +403,7 @@ export const AnalyticsService = {
     let sessionId = localStorage.getItem(key);
 
     if (!sessionId) {
-      sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      sessionId = `session_${Date.now()}_${secureRandomString(12)}`;
       localStorage.setItem(key, sessionId);
     }
 

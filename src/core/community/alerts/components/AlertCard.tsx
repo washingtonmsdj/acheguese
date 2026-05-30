@@ -10,6 +10,7 @@ import { AlertTriangle, Clock, Eye, ThumbsDown, Flag, Info } from "lucide-react"
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { cn } from "@/shared/utils/cn";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 import { AlertReportDialog } from "./AlertReportDialog";
 import { ALERT_CATEGORY_LABELS } from "../config/alertConfig";
 import type { CommunityAlertPublic } from "../domain/types";
@@ -26,7 +27,7 @@ export function AlertCard({ alert, onSeeGuidelines }: AlertCardProps) {
 
   const minutesLeft = differenceInMinutes(new Date(alert.expires_at), new Date());
   const isExpiringSoon = minutesLeft <= 15 && minutesLeft > 0;
-  const categoryLabel = ALERT_CATEGORY_LABELS[alert.category] ?? alert.category;
+  const categoryLabel = getRecordValue(ALERT_CATEGORY_LABELS, alert.category) ?? alert.category;
   const timeAgo = formatDistanceToNow(new Date(alert.created_at), {
     addSuffix: true,
     locale: ptBR,
@@ -156,7 +157,7 @@ function StatusBadge({ status }: { status: CommunityAlertPublic["status"] }) {
     removido:  { label: "REMOVIDO",  className: "bg-gray-100 text-gray-400" },
   };
 
-  const { label, className } = config[status] ?? config.ativo;
+  const { label, className } = getRecordValue(config, status) ?? config.ativo;
 
   return (
     <span className={cn("text-xs font-bold px-2 py-0.5 rounded-full", className)}>

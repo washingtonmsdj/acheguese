@@ -1,4 +1,5 @@
 import { formatDistanceToNow } from "date-fns";
+import { useQuery } from "@tanstack/react-query";
 import { ptBR } from "@/shared/utils/dateLocale";
 import {
   AlertTriangle,
@@ -26,6 +27,7 @@ import {
   SEVERITY_LABELS,
   STATUS_LABELS,
 } from "./TrustEventsQueue.constants";
+import { classifiedUrlService, getClassifiedById } from "@/core/classifieds/services";
 
 interface TrustEventQueueCardProps {
   event: TrustEvent;
@@ -70,6 +72,50 @@ function ClassifiedCommentEvidence({ event }: { event: TrustEvent }) {
         <p className="mt-1 line-clamp-3 rounded bg-white/60 px-2 py-1 text-[11px] text-amber-950">
           {content}
         </p>
+      )}
+    </div>
+  );
+}
+
+function ClassifiedContextActions({ event }: { event: TrustEvent }) {
+  const publicUrlQuery = useQuery({
+    queryKey: ["trust-event-classified-public-url", event.context_id],
+    queryFn: async () => {
+      const classified = await getClassifiedById(event.context_id);
+      return classified ? classifiedUrlService.buildPublicUrl(classified) : null;
+    },
+    enabled: event.context_type === "classified",
+    staleTime: 60_000,
+  });
+
+  if (event.context_type !== "classified") {
+    return null;
+  }
+
+  return (
+    <div className="mt-2 flex flex-wrap gap-2">
+      {publicUrlQuery.data ? (
+        <Button size="sm" variant="outline" asChild>
+          <a href={publicUrlQuery.data} target="_blank" rel="noreferrer">
+            Abrir anuncio
+          </a>
+        </Button>
+      ) : (
+        <Button size="sm" variant="outline" disabled>
+          Anuncio sem URL publica
+        </Button>
+      )}
+      <Button size="sm" variant="outline" asChild>
+        <a href="/admin/classificados" target="_blank" rel="noreferrer">
+          Abrir catalogo admin
+        </a>
+      </Button>
+      {event.reason_code.startsWith("classified_comment_") && (
+        <Button size="sm" variant="outline" asChild>
+          <a href="/admin/classificados/denuncias" target="_blank" rel="noreferrer">
+            Abrir fila de denuncias
+          </a>
+        </Button>
       )}
     </div>
   );
@@ -121,26 +167,7 @@ export function TrustEventQueueCard({
               Contexto: {event.context_type} #{event.context_id.slice(0, 8)} - Motivo:{" "}
               {event.reason_code}
             </p>
-            {event.context_type === "classified" && (
-              <div className="mt-2 flex flex-wrap gap-2">
-                <Button size="sm" variant="outline" asChild>
-                  <a
-                    href={`/classificados/${event.context_id}`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Abrir anuncio
-                  </a>
-                </Button>
-                {event.reason_code.startsWith("classified_comment_") && (
-                  <Button size="sm" variant="outline" asChild>
-                    <a href="/admin/classificados/denuncias" target="_blank" rel="noreferrer">
-                      Abrir fila de denuncias
-                    </a>
-                  </Button>
-                )}
-              </div>
-            )}
+            <ClassifiedContextActions event={event} />
           </div>
 
           {event.description && (

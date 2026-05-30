@@ -7,6 +7,7 @@ import { ModuleKey, RolloutStatus } from "@/core/rollout/types";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { mobilityService } from "@/core/mobility/services/runtime";
 import { DriverAvailabilityService } from "@/core/mobility/services/runtime";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 
 const MOTOBOY_ENABLED_CONFIG_KEY = "motoboy_enabled";
 const DEFAULT_MOTOBOY_ENABLED = true;
@@ -163,7 +164,7 @@ export class AdminMobilityRuntimeService {
     if (!locationId) return false;
     const config = await this.getMobilityConfigForLocation(locationId);
     if (!config) return DEFAULT_MOTOBOY_ENABLED;
-    const rawValue = config[MOTOBOY_ENABLED_CONFIG_KEY];
+    const rawValue = getRecordValue(config, MOTOBOY_ENABLED_CONFIG_KEY);
     return typeof rawValue === "boolean" ? rawValue : DEFAULT_MOTOBOY_ENABLED;
   }
 

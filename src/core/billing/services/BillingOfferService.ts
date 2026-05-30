@@ -35,6 +35,12 @@ const OFFERS: Record<BillingOfferKey, BillingOffer> = {
 
 export class BillingOfferService {
   static getOffer(key: BillingOfferKey): BillingOffer {
-    return OFFERS[key] ?? OFFERS.catalog;
+    switch (key) {
+      case 'delivery':
+        return OFFERS.delivery;
+      case 'catalog':
+      default:
+        return OFFERS.catalog;
+    }
   }
 }

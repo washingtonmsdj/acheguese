@@ -1,11 +1,23 @@
 import { useActiveTerritory } from "@/core/location/hooks/useActiveTerritory";
+import { ProfessionalUrlService } from "@/core/professional/services/ProfessionalUrlService";
+import { professionalPublicRoutes } from "@/core/professional/routes/professionalPublicRoutes";
 import { buildGroupBaseUrl, buildModuleTerritoryUrl, geoPathToPublicUrl, MODULE_SLUGS } from "@/core/routing/utils/territoryUrls";
 import { LAUNCH_URLS } from "@/config/territory";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 
+export interface ServiceDetailUrlInput {
+  id: string;
+  profile_id?: string | null;
+  slug?: string | null;
+  geographic_path?: string | null;
+  geographicPath?: string | null;
+  state?: string | null;
+  city?: string | null;
+}
+
 export interface ServiceUrls {
   list: string;
-  detail: (id: string) => string;
+  detail: (target: ServiceDetailUrlInput | string) => string;
   register: string;
   edit: (id: string) => string;
 }
@@ -36,8 +48,11 @@ export function useServiceUrls(routeResolved?: ResolvedTerritory | null): Servic
 
   return {
     list: listUrl,
-    detail: (id: string) => `/servicos/${id}`,
-    register: "/servicos/cadastrar",
+    detail: (target: ServiceDetailUrlInput | string) => {
+      if (typeof target === "string") return listUrl;
+      return ProfessionalUrlService.getCanonicalUrlFromTarget(target) ?? listUrl;
+    },
+    register: professionalPublicRoutes.register(),
     edit: (id: string) => `/servicos/${id}/editar`,
   };
 }

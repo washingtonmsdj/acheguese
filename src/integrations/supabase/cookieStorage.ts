@@ -1,34 +1,22 @@
 /**
- * Secure Cookie Storage for Supabase Auth
- * 
- * Implementação de storage seguro usando cookies com HttpOnly TRUE.
- * 
- * ARQUITETURA:
- * - Client-side: Define cookies via JavaScript (httpOnly ignorado pelo browser)
- * - Server-side: middleware.ts intercepta e migra para HttpOnly TRUE
- * - Migração automática: cookies client-side → server-side HttpOnly
- * 
- * SEGURANÇA:
- * - Cookies com Secure flag (HTTPS only)
- * - SameSite=Strict (proteção CSRF)
- * - HttpOnly=TRUE (via middleware.ts) IMPLEMENTADO
- * - Path=/ (disponível em toda aplicação)
- * - Max-Age configurável
- * 
- * HTTPONLY VERDADEIRO:
- * - Implementado via Vercel Edge Middleware (middleware.ts)
- * - Cookies inacessíveis via JavaScript
- * - Proteção contra XSS cookie theft
- * - Session hijacking prevention
- * - Migração automática de cookies existentes
- * 
- * SSOT: Todas as configurações importadas de security.config.ts
- * 
- * @see https://supabase.com/docs/guides/auth/server-side/creating-a-client
- * @see middleware.ts - Server-side cookie management
+ * Browser auth storage for Supabase.
+ *
+ * This module intentionally does not claim HttpOnly protection. A Vite SPA can
+ * only write browser-readable cookies; true HttpOnly auth requires a server-side
+ * auth boundary. Within the SPA constraint, auth persistence is cookie-only,
+ * SameSite=Strict, Secure on HTTPS, chunked for Supabase payload size, and never
+ * falls back to localStorage.
  */
-import type { SupportedStorage } from '@supabase/supabase-js';
-import { SECURE_COOKIE_CONFIG, AUTH_COOKIE_PREFIX } from '@/config/security.config';
+import type { SupportedStorage } from "@supabase/supabase-js";
+
+import {
+  AUTH_BROWSER_STORAGE_CONFIG,
+  AUTH_COOKIE_PREFIX,
+  SECURE_COOKIE_CONFIG,
+} from "@/config/security.config";
+
+const COOKIE_OPTIONS = SECURE_COOKIE_CONFIG;
+const CHUNK_METADATA_SUFFIX = ".chunks";
 
 function devDebug(message: string, context?: unknown): void {
   if (import.meta.env.DEV) {
@@ -42,24 +30,80 @@ function devWarn(message: string, context?: unknown): void {
   }
 }
 
-function devError(message: string, context?: unknown): void {
-  if (import.meta.env.DEV) {
-    console.error(message, context);
+function getChunkCookieName(cookieName: string, index: number): string {
+  return `${cookieName}.${index}`;
+}
+
+function getChunkMetadataCookieName(cookieName: string): string {
+  return `${cookieName}${CHUNK_METADATA_SUFFIX}`;
+}
+
+function isBrowserDocumentAvailable(): boolean {
+  return typeof document !== "undefined";
+}
+
+function isBrowserWindowAvailable(): boolean {
+  return typeof window !== "undefined";
+}
+
+function getLegacyStorage(): Storage | null {
+  if (!isBrowserWindowAvailable()) return null;
+
+  try {
+    const storage = window.localStorage;
+    const testKey = AUTH_BROWSER_STORAGE_CONFIG.localStorageProbeKey;
+    storage.setItem(testKey, testKey);
+    storage.removeItem(testKey);
+    return storage;
+  } catch {
+    return null;
   }
 }
-/**
- * Configuração de cookies seguros (importada do SSOT)
- */
-const COOKIE_OPTIONS = SECURE_COOKIE_CONFIG;
-/**
- * Utilitário para manipulação segura de cookies
- */
+
+function clearLegacyLocalAuthStorage(additionalKey?: string): void {
+  const storage = getLegacyStorage();
+  if (!storage) return;
+
+  const keysToRemove = new Set<string>(AUTH_BROWSER_STORAGE_CONFIG.legacyLocalStorageKeys);
+  if (additionalKey) keysToRemove.add(additionalKey);
+
+  for (const key of keysToRemove) {
+    try {
+      storage.removeItem(key);
+    } catch {
+      devWarn("[AuthStorage] Failed to remove legacy localStorage key", { key });
+    }
+  }
+}
+
+function splitByEncodedLength(value: string): string[] {
+  const chunks: string[] = [];
+  let current = "";
+
+  for (const char of value) {
+    const next = current + char;
+    if (
+      current.length > 0 &&
+      encodeURIComponent(next).length > AUTH_BROWSER_STORAGE_CONFIG.maxCookieChunkSize
+    ) {
+      chunks.push(current);
+      current = char;
+      continue;
+    }
+
+    current = next;
+  }
+
+  if (current.length > 0 || value.length === 0) {
+    chunks.push(current);
+  }
+
+  return chunks;
+}
+
 class CookieManager {
-  /**
-   * Define um cookie com flags de segurança
-   */
-  static set(name: string, value: string, options = COOKIE_OPTIONS): void {
-    if (typeof document === 'undefined') return;
+  static set(name: string, value: string, options = COOKIE_OPTIONS): boolean {
+    if (!isBrowserDocumentAvailable()) return false;
 
     const cookieParts = [
       `${encodeURIComponent(name)}=${encodeURIComponent(value)}`,
@@ -68,268 +112,178 @@ class CookieManager {
       `Max-Age=${options.maxAge}`,
     ];
 
-    // Adiciona Secure flag apenas em HTTPS
-    if (options.secure && window.location.protocol === 'https:') {
-      cookieParts.push('Secure');
+    if (options.secure && isBrowserWindowAvailable() && window.location.protocol === "https:") {
+      cookieParts.push("Secure");
     }
 
-    document.cookie = cookieParts.join('; ');
+    try {
+      document.cookie = cookieParts.join("; ");
+      return CookieManager.get(name) === value;
+    } catch {
+      return false;
+    }
   }
 
-  /**
-   * Obtém valor de um cookie
-   */
   static get(name: string): string | null {
-    if (typeof document === 'undefined') return null;
+    if (!isBrowserDocumentAvailable()) return null;
 
-    const cookies = document.cookie.split(';');
     const encodedName = encodeURIComponent(name);
+    const cookies = document.cookie.split(";");
 
     for (const cookie of cookies) {
-      const [cookieName, cookieValue] = cookie.trim().split('=');
-      if (cookieName === encodedName) {
-        return decodeURIComponent(cookieValue);
-      }
+      const separatorIndex = cookie.indexOf("=");
+      if (separatorIndex < 0) continue;
+
+      const cookieName = cookie.slice(0, separatorIndex).trim();
+      if (cookieName !== encodedName) continue;
+
+      const cookieValue = cookie.slice(separatorIndex + 1);
+      return decodeURIComponent(cookieValue);
     }
 
     return null;
   }
 
-  /**
-   * Remove um cookie
-   */
-  static remove(name: string): void {
-    if (typeof document === 'undefined') return;
-
-    // Define Max-Age=0 para expirar imediatamente
-    document.cookie = `${encodeURIComponent(name)}=; Path=/; Max-Age=0`;
-  }
-
-  /**
-   * Verifica se cookies estão habilitados
-   */
-  static isEnabled(): boolean {
-    if (typeof document === 'undefined') return false;
+  static remove(name: string, options = COOKIE_OPTIONS): void {
+    if (!isBrowserDocumentAvailable()) return;
 
     try {
-      const testKey = '__cookie_test__';
-      CookieManager.set(testKey, 'test', { ...COOKIE_OPTIONS, maxAge: 1 });
-      const result = CookieManager.get(testKey) === 'test';
-      CookieManager.remove(testKey);
-      return result;
+      document.cookie = `${encodeURIComponent(name)}=; Path=${options.path}; Max-Age=0`;
     } catch {
-      return false;
+      // Cookie deletion should be idempotent. A disabled cookie jar is handled
+      // by the caller without falling back to another token store.
     }
+  }
+
+  static isEnabled(): boolean {
+    const testKey = AUTH_BROWSER_STORAGE_CONFIG.cookieProbeKey;
+    const written = CookieManager.set(testKey, testKey, {
+      ...COOKIE_OPTIONS,
+      maxAge: AUTH_BROWSER_STORAGE_CONFIG.cookieProbeMaxAgeSeconds,
+    });
+    CookieManager.remove(testKey);
+    return written;
   }
 }
 
-/**
- * Implementação de SupportedStorage usando cookies seguros
- * 
- * Esta classe implementa a interface SupportedStorage do Supabase
- * para armazenar tokens de autenticação em cookies ao invés de localStorage.
- * 
- * VANTAGENS:
- * - Cookies podem ser HttpOnly (quando configurado no servidor)
- * - Proteção contra XSS
- * - SameSite=Strict protege contra CSRF
- * - Secure flag garante transmissão apenas via HTTPS
- * 
- * LIMITAÇÕES:
- * - HttpOnly verdadeiro requer middleware no servidor
- * - Tamanho limitado (4KB por cookie)
- * - Enviado em toda requisição (overhead mínimo)
- */
-export class SecureCookieStorage implements SupportedStorage {
-  private prefix: string;
+export class BrowserCookieStorage implements SupportedStorage {
+  private readonly prefix: string;
 
   constructor(prefix = AUTH_COOKIE_PREFIX) {
     this.prefix = prefix;
   }
 
-  /**
-   * Obtém item do cookie storage
-   */
   getItem(key: string): string | null {
-    const cookieName = `${this.prefix}-${key}`;
-    return CookieManager.get(cookieName);
+    const cookieName = this.getCookieName(key);
+    const chunkMetadata = CookieManager.get(getChunkMetadataCookieName(cookieName));
+    if (chunkMetadata === null) {
+      return CookieManager.get(cookieName);
+    }
+
+    const chunkCount = Number(chunkMetadata);
+    if (!Number.isInteger(chunkCount) || chunkCount <= 0) {
+      this.removeItem(key);
+      return null;
+    }
+
+    const chunks: string[] = [];
+    for (let index = 0; index < chunkCount; index += 1) {
+      const chunk = CookieManager.get(getChunkCookieName(cookieName, index));
+      if (chunk === null) {
+        this.removeItem(key);
+        return null;
+      }
+      chunks.push(chunk);
+    }
+
+    return chunks.join("");
   }
 
-  /**
-   * Define item no cookie storage
-   */
   setItem(key: string, value: string): void {
-    const cookieName = `${this.prefix}-${key}`;
-    CookieManager.set(cookieName, value);
-  }
+    const cookieName = this.getCookieName(key);
+    this.removeItem(key);
 
-  /**
-   * Remove item do cookie storage
-   */
-  removeItem(key: string): void {
-    const cookieName = `${this.prefix}-${key}`;
+    const chunks = splitByEncodedLength(value);
+    if (chunks.length > AUTH_BROWSER_STORAGE_CONFIG.maxCookieChunks) {
+      devWarn("[AuthStorage] Supabase session exceeds cookie storage budget", {
+        key,
+        chunks: chunks.length,
+        maxChunks: AUTH_BROWSER_STORAGE_CONFIG.maxCookieChunks,
+      });
+      return;
+    }
+
+    if (chunks.length === 1) {
+      CookieManager.remove(getChunkMetadataCookieName(cookieName));
+      if (!CookieManager.set(cookieName, value)) {
+        devWarn("[AuthStorage] Failed to persist Supabase session cookie", { key });
+      }
+      return;
+    }
+
     CookieManager.remove(cookieName);
-  }
-}
+    if (!CookieManager.set(getChunkMetadataCookieName(cookieName), String(chunks.length))) {
+      devWarn("[AuthStorage] Failed to persist Supabase session chunk metadata", { key });
+      return;
+    }
 
-/**
- * Storage híbrido: tenta cookies primeiro, fallback para localStorage
- * 
- * Esta implementação garante compatibilidade máxima:
- * - Usa cookies se disponíveis (mais seguro)
- * - Fallback para localStorage se cookies desabilitados
- * - Migra dados de localStorage para cookies automaticamente
- */
-export class HybridStorage implements SupportedStorage {
-  private cookieStorage: SecureCookieStorage;
-  private localStorageAvailable: boolean;
-  private cookiesAvailable: boolean;
+    const failedChunkIndex = chunks.findIndex(
+      (chunk, index) => !CookieManager.set(getChunkCookieName(cookieName, index), chunk),
+    );
 
-  constructor() {
-    this.cookieStorage = new SecureCookieStorage();
-    this.localStorageAvailable = this.checkLocalStorage();
-    this.cookiesAvailable = CookieManager.isEnabled();
-
-    // Log de configuração (apenas em desenvolvimento)
-    if (import.meta.env.DEV) {
-      devDebug('[HybridStorage] Initialized', {
-        cookies: this.cookiesAvailable ? 'available' : 'unavailable',
-        localStorage: this.localStorageAvailable ? 'available' : 'unavailable',
-        preferredStorage: this.cookiesAvailable ? 'cookies' : 'localStorage',
+    if (failedChunkIndex >= 0) {
+      this.removeItem(key);
+      devWarn("[AuthStorage] Failed to persist Supabase session chunk", {
+        key,
+        failedChunkIndex,
       });
     }
   }
 
-  /**
-   * Verifica se localStorage está disponível
-   */
-  private checkLocalStorage(): boolean {
-    try {
-      const testKey = '__ls_test__';
-      localStorage.setItem(testKey, 'test');
-      localStorage.removeItem(testKey);
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  /**
-   * Migra dados de localStorage para cookies
-   */
-  private migrateFromLocalStorage(key: string): void {
-    if (!this.localStorageAvailable || !this.cookiesAvailable) return;
-
-    try {
-      const value = localStorage.getItem(key);
-      if (value) {
-        this.cookieStorage.setItem(key, value);
-        localStorage.removeItem(key);
-        
-        if (import.meta.env.DEV) {
-          devDebug(`[HybridStorage] Migrated ${key} from localStorage to cookies`);
-        }
-      }
-    } catch (error) {
-      console.warn('[HybridStorage] Migration failed:', error);
-    }
-  }
-
-  /**
-   * Obtém item (cookies primeiro, fallback para localStorage)
-   */
-  getItem(key: string): string | null {
-    // Tentar cookies primeiro
-    if (this.cookiesAvailable) {
-      const value = this.cookieStorage.getItem(key);
-      if (value) return value;
-
-      // Se não encontrou em cookies, tentar migrar de localStorage
-      this.migrateFromLocalStorage(key);
-      return this.cookieStorage.getItem(key);
-    }
-
-    // Fallback para localStorage
-    if (this.localStorageAvailable) {
-      try {
-        return localStorage.getItem(key);
-      } catch {
-        return null;
-      }
-    }
-
-    return null;
-  }
-
-  /**
-   * Define item (cookies preferencial, fallback para localStorage)
-   */
-  setItem(key: string, value: string): void {
-    // Tentar cookies primeiro
-    if (this.cookiesAvailable) {
-      try {
-        this.cookieStorage.setItem(key, value);
-        
-        // Remover de localStorage se existir (migração)
-        if (this.localStorageAvailable) {
-          try {
-            localStorage.removeItem(key);
-          } catch {
-            // Ignorar erro de remoção
-          }
-        }
-        return;
-      } catch (error) {
-        devWarn('[HybridStorage] Cookie storage failed, falling back to localStorage:', error);
-      }
-    }
-
-    // Fallback para localStorage
-    if (this.localStorageAvailable) {
-      try {
-        localStorage.setItem(key, value);
-      } catch (error) {
-        devError('[HybridStorage] All storage methods failed:', error);
-      }
-    }
-  }
-
-  /**
-   * Remove item de ambos os storages
-   */
   removeItem(key: string): void {
-    if (this.cookiesAvailable) {
-      this.cookieStorage.removeItem(key);
-    }
+    const cookieName = this.getCookieName(key);
+    CookieManager.remove(cookieName);
+    CookieManager.remove(getChunkMetadataCookieName(cookieName));
 
-    if (this.localStorageAvailable) {
-      try {
-        localStorage.removeItem(key);
-      } catch {
-        // Ignorar erro
-      }
+    for (let index = 0; index < AUTH_BROWSER_STORAGE_CONFIG.maxCookieChunks; index += 1) {
+      CookieManager.remove(getChunkCookieName(cookieName, index));
     }
+  }
+
+  private getCookieName(key: string): string {
+    return `${this.prefix}-${key}`;
   }
 }
 
-/**
- * Factory para criar storage apropriado baseado no ambiente
- */
-export function createSecureStorage(): SupportedStorage {
-  // Em produção, usar storage híbrido (cookies preferencial)
-  if (import.meta.env.PROD) {
-    return new HybridStorage();
+export class StrictBrowserAuthStorage implements SupportedStorage {
+  private readonly cookieStorage: BrowserCookieStorage;
+
+  constructor(cookieStorage = new BrowserCookieStorage()) {
+    this.cookieStorage = cookieStorage;
+    clearLegacyLocalAuthStorage();
+
+    devDebug("[AuthStorage] Initialized cookie-only Supabase auth storage", {
+      cookiesAvailable: CookieManager.isEnabled(),
+      localStorageFallback: false,
+    });
   }
 
-  // Em desenvolvimento, permitir localStorage para facilitar debug
-  // mas avisar sobre migração futura
-  if (import.meta.env.DEV) {
-    devDebug(
-      '[Security] Usando localStorage em desenvolvimento. ' +
-      'Em produção, tokens serão armazenados em cookies seguros.'
-    );
-    return new HybridStorage();
+  getItem(key: string): string | null {
+    clearLegacyLocalAuthStorage(key);
+    return this.cookieStorage.getItem(key);
   }
 
-  return new HybridStorage();
+  setItem(key: string, value: string): void {
+    clearLegacyLocalAuthStorage(key);
+    this.cookieStorage.setItem(key, value);
+  }
+
+  removeItem(key: string): void {
+    this.cookieStorage.removeItem(key);
+    clearLegacyLocalAuthStorage(key);
+  }
+}
+
+export function createBrowserAuthStorage(): SupportedStorage {
+  return new StrictBrowserAuthStorage();
 }

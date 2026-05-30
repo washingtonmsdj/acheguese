@@ -9,6 +9,8 @@
  * - Screen reader otimizado
  */
 
+import { secureRandomString } from "@/shared/utils/secureRandom";
+
 // ============================================
 // CORES ACESSÍVEIS - CONTRASTE AAA
 // ============================================
@@ -235,7 +237,7 @@ export const MOTION = {
  * Gera ID único para associações ARIA
  */
 export const generateAriaId = (prefix: string = "aria") => {
-  return `${prefix}-${Math.random().toString(36).substr(2, 9)}`;
+  return `${prefix}-${secureRandomString(12)}`;
 };
 
 /**

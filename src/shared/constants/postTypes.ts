@@ -43,11 +43,14 @@ export const POST_CONTENT_PREFIXES = {
   EMERGENCIA: "EMERGÊNCIA",
 } as const;
 
-// Regex para detectar prefixos
-export const POST_PREFIX_PATTERN = new RegExp(
-  `^(${Object.values(POST_CONTENT_PREFIXES).join("|")}):\\s*`,
-  "i",
-);
+export function getPostContentPrefix(value: string): string | null {
+  const normalized = value.trimStart().toLocaleUpperCase("pt-BR");
+  return (
+    Object.values(POST_CONTENT_PREFIXES).find((prefix) =>
+      normalized.startsWith(`${prefix.toLocaleUpperCase("pt-BR")}:`),
+    ) ?? null
+  );
+}
 
 // Limites de Conteúdo
 export const POST_LIMITS = {

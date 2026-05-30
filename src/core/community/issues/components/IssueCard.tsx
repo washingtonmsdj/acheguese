@@ -12,6 +12,7 @@ import { Wrench, MapPin, ThumbsUp, Flag, Clock } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { cn } from "@/shared/utils/cn";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 import { ISSUE_CATEGORY_LABELS, ISSUE_STATUS_LABELS } from "../config/issueConfig";
 import { useIssueSupport } from "../hooks/useIssueSupport";
 import type { CommunityIssuePublic } from "../domain/types";
@@ -24,8 +25,8 @@ interface IssueCardProps {
 
 export function IssueCard({ issue, profileId, onReport }: IssueCardProps) {
   const { isSupporting, toggleSupport, isPending } = useIssueSupport(issue.id, profileId);
-  const categoryLabel = ISSUE_CATEGORY_LABELS[issue.category] ?? issue.category;
-  const statusLabel = ISSUE_STATUS_LABELS[issue.status] ?? issue.status;
+  const categoryLabel = getRecordValue(ISSUE_CATEGORY_LABELS, issue.category) ?? issue.category;
+  const statusLabel = getRecordValue(ISSUE_STATUS_LABELS, issue.status) ?? issue.status;
 
   const timeAgo = formatDistanceToNow(new Date(issue.created_at), {
     addSuffix: true,
@@ -121,7 +122,12 @@ function StatusBadge({ status, label }: { status: CommunityIssuePublic["status"]
   };
 
   return (
-    <span className={cn("text-xs font-bold px-2 py-0.5 rounded-full", classMap[status] ?? classMap.aberto)}>
+    <span
+      className={cn(
+        "text-xs font-bold px-2 py-0.5 rounded-full",
+        getRecordValue(classMap, status) ?? classMap.aberto,
+      )}
+    >
       {label.toUpperCase()}
     </span>
   );

@@ -125,6 +125,7 @@ export interface WorkOpportunityCard {
 export interface WorkOpportunityProfessionalDetail {
   id: string;
   slug: string | null;
+  public_url: string | null;
   professional_name: string | null;
   service_category: string | null;
   description: string | null;

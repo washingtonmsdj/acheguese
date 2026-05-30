@@ -1,5 +1,4 @@
-import { MODULE_SLUGS } from "../utils/territoryUrls";
-import { isReservedSlug } from "../reservedSlugs";
+import { MODULE_SLUGS, isCommunityCanonicalSuffixSegment } from "../utils/territoryUrls";
 
 export interface TerritorialSeoPolicy {
   canonicalPath: string;
@@ -22,26 +21,50 @@ export function resolveSeoPolicy(pathname: string): TerritorialSeoPolicy {
   ]);
 
   if (parts[0] === MODULE_SLUGS.community && parts[1] && parts[2]) {
-    const part3 = parts[3];
-    const isInvalidCommunityTerritory = !part3 || part3 === "area" || isReservedSlug(part3);
-    const isDistrictEmbeddedModule = Boolean(
-      !isInvalidCommunityTerritory && parts[4] && embeddedCommunityModules.has(parts[4]),
-    );
+    const state = parts[1];
+    const city = parts[2];
+    const firstAfterCity = parts[3];
+    const secondAfterCity = parts[4];
 
-    if (isInvalidCommunityTerritory) {
+    if (!firstAfterCity || isCommunityCanonicalSuffixSegment(firstAfterCity)) {
       return {
         canonicalPath: cleanPath,
+        robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+      };
+    }
+
+    if (firstAfterCity === "area") {
+      return {
+        canonicalPath: `/${MODULE_SLUGS.community}/${state}/${city}`,
         robots: "noindex, follow",
       };
     }
 
-    if (isDistrictEmbeddedModule) {
-      const embeddedModule = parts[4];
+    if (embeddedCommunityModules.has(firstAfterCity)) {
       return {
-        canonicalPath: `/${embeddedModule}/${parts.slice(1, 4).join("/")}`,
+        canonicalPath: `/${firstAfterCity}/${state}/${city}`,
         robots: "noindex, follow",
       };
     }
+
+    if (secondAfterCity && embeddedCommunityModules.has(secondAfterCity)) {
+      return {
+        canonicalPath: `/${secondAfterCity}/${state}/${city}`,
+        robots: "noindex, follow",
+      };
+    }
+
+    if (secondAfterCity && isCommunityCanonicalSuffixSegment(secondAfterCity)) {
+      return {
+        canonicalPath: `/${MODULE_SLUGS.community}/${state}/${city}/${parts.slice(4).join("/")}`,
+        robots: "noindex, follow",
+      };
+    }
+
+    return {
+      canonicalPath: `/${MODULE_SLUGS.community}/${state}/${city}`,
+      robots: "noindex, follow",
+    };
   }
 
   return {

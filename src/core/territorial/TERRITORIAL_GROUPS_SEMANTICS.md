@@ -117,7 +117,7 @@ CONSTRAINT territorial_groups_slug_city_unique UNIQUE (slug, anchor_city_id)
 
 ### Caso 1: Filtro Territorial por Grupo
 
-**Cenário**: Usuário acessa `/br/ba/salvador/area/complexo-do-nordeste-de-amaralina`
+**Cenário**: Usuário acessa `/br/ba/salvador/complexo-do-nordeste-de-amaralina`
 
 **Resolução**:
 ```typescript
@@ -185,7 +185,7 @@ const result = await territorialRolloutService.activateRolloutForGroup({
 | **Hierarquia** | Sim (parent_id) | Não (membership) |
 | **Tipo** | country/state/city/district | Sempre agrupamento de districts |
 | **Slug** | Único globalmente | Único por cidade |
-| **URL** | `/br/ba/salvador/pituba` | `/br/ba/salvador/area/complexo-do-nordeste` |
+| **URL** | `/br/ba/salvador/pituba` | `/br/ba/salvador/complexo-do-nordeste` |
 | **Tabela** | `locations` | `territorial_groups` |
 | **Vínculo** | `parent_id` (hierarquia) | `territorial_group_members` (membership) |
 | **Mudança** | Governança oficial (IBGE) | Admin interno |
@@ -348,7 +348,7 @@ if (filter.scope === 'none') {
 3. Chapada do Rio Vermelho (`loc-chapada-do-rio-vermelho`)
 4. Vale das Pedrinhas (`loc-vale-das-pedrinhas`)
 
-**URL**: `/br/ba/salvador/area/complexo-do-nordeste-de-amaralina`
+**URL**: `/br/ba/salvador/complexo-do-nordeste-de-amaralina`
 
 **Filtro Resultante**:
 ```typescript

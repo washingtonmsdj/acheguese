@@ -4,6 +4,7 @@
 
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
+import { buildSafeILikePattern } from "@/shared/utils/sqlSanitization";
 
 export interface CouponData {
   id: string;
@@ -130,7 +131,10 @@ class AdminCouponsServiceClass {
       }
 
       if (options.search) {
-        query = query.ilike("codigo", "%" + options.search + "%");
+        const searchPattern = buildSafeILikePattern(options.search);
+        if (searchPattern) {
+          query = query.ilike("codigo", searchPattern);
+        }
       }
 
       const { data, error, count } = await query

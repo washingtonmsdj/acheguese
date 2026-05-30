@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { normalizeNotification } from "@/core/notifications/utils/normalizeNotification";
 import { profileService } from "@/core/profiles/services/ProfileService";
+import { buildSafeOrILikeFilter } from "@/shared/utils/sqlSanitization";
 import type {
   Notification,
   NotificationPriority,
@@ -118,10 +119,6 @@ export interface AdminEmailDeliveryAuditResult {
   total: number;
   page: number;
   totalPages: number;
-}
-
-function escapeIlike(term: string): string {
-  return term.replace(/[%(),]/g, " ").trim();
 }
 
 async function loadProfilesByUserId(userIds: string[]): Promise<Map<string, AdminProfileSummary>> {
@@ -353,10 +350,10 @@ class AdminNotificationsService {
       }
 
       if (search?.trim()) {
-        const term = escapeIlike(search);
-        query = query.or(
-          `title.ilike.%${term}%,message.ilike.%${term}%,type.ilike.%${term}%,user_id.ilike.%${term}%`,
-        );
+        const searchFilter = buildSafeOrILikeFilter(["title", "message", "type", "user_id"], search);
+        if (searchFilter) {
+          query = query.or(searchFilter);
+        }
       }
 
       const from = (page - 1) * limit;

@@ -13,6 +13,7 @@
 
 import { useState, ImgHTMLAttributes } from 'react';
 import { cn } from '@/shared/utils/cn';
+import { resolveSafeImageUrl } from '@/shared/utils/urlSafety';
 
 export interface OptimizedImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, 'src' | 'srcSet'> {
   /**
@@ -117,9 +118,13 @@ export function OptimizedImage({
   objectFit = 'cover',
   ...props
 }: OptimizedImageProps) {
+  const safeInitialSrc = resolveSafeImageUrl(src, { context: 'OptimizedImage.src' });
+  const safeFallback = fallback
+    ? resolveSafeImageUrl(fallback, { context: 'OptimizedImage.fallback' })
+    : null;
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
-  const [imageSrc, setImageSrc] = useState(src);
+  const [imageSrc, setImageSrc] = useState(safeInitialSrc ?? safeFallback ?? '');
 
   // Calculate aspect ratio for placeholder
   const aspectRatio = width && height ? (height / width) * 100 : undefined;
@@ -133,13 +138,13 @@ export function OptimizedImage({
   const handleError = () => {
     setHasError(true);
     setIsLoading(false);
-    if (fallback && imageSrc !== fallback) {
-      setImageSrc(fallback);
+    if (safeFallback && imageSrc !== safeFallback) {
+      setImageSrc(safeFallback);
     }
   };
 
   // Generate srcset if width is provided
-  const srcSet = width ? generateSrcSet(src) : undefined;
+  const srcSet = width && imageSrc ? generateSrcSet(imageSrc) : undefined;
 
   // Default sizes if not provided
   const imageSizes = sizes || '100vw';
@@ -161,30 +166,32 @@ export function OptimizedImage({
       )}
 
       {/* Image */}
-      <img
-        src={imageSrc}
-        srcSet={srcSet}
-        sizes={imageSizes}
-        alt={alt}
-        loading={lazy ? 'lazy' : 'eager'}
-        decoding="async"
-        onLoad={handleLoad}
-        onError={handleError}
-        className={cn(
-          'transition-opacity duration-300',
-          aspectRatio ? 'absolute inset-0 w-full h-full' : '',
-          isLoading ? 'opacity-0' : 'opacity-100',
-          objectFit === 'cover' && 'object-cover',
-          objectFit === 'contain' && 'object-contain',
-          objectFit === 'fill' && 'object-fill',
-          objectFit === 'none' && 'object-none',
-          objectFit === 'scale-down' && 'object-scale-down'
-        )}
-        {...props}
-      />
+      {imageSrc ? (
+        <img
+          src={imageSrc}
+          srcSet={srcSet}
+          sizes={imageSizes}
+          alt={alt}
+          loading={lazy ? 'lazy' : 'eager'}
+          decoding="async"
+          onLoad={handleLoad}
+          onError={handleError}
+          className={cn(
+            'transition-opacity duration-300',
+            aspectRatio ? 'absolute inset-0 w-full h-full' : '',
+            isLoading ? 'opacity-0' : 'opacity-100',
+            objectFit === 'cover' && 'object-cover',
+            objectFit === 'contain' && 'object-contain',
+            objectFit === 'fill' && 'object-fill',
+            objectFit === 'none' && 'object-none',
+            objectFit === 'scale-down' && 'object-scale-down'
+          )}
+          {...props}
+        />
+      ) : null}
 
       {/* Error state */}
-      {hasError && !fallback && (
+      {(hasError || !imageSrc) && !safeFallback && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
           <div className="text-center text-gray-400">
             <svg

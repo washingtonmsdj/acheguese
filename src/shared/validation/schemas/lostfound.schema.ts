@@ -5,6 +5,7 @@
  */
 
 import { z } from "zod";
+import { getRequiredRecordValue } from "@/shared/utils/recordLookup";
 
 export const CATEGORIAS_LOSTFOUND = [
   "animal",
@@ -33,7 +34,7 @@ export const LOST_FOUND_CATEGORY_DETAILS: Record<
 
 export const LOST_FOUND_CATEGORY_OPTIONS = CATEGORIAS_LOSTFOUND.map((id) => ({
   id,
-  ...LOST_FOUND_CATEGORY_DETAILS[id],
+  ...getRequiredRecordValue(LOST_FOUND_CATEGORY_DETAILS, id, LOST_FOUND_CATEGORY_DETAILS.outro),
 }));
 
 export const LOST_FOUND_FILTER_OPTIONS = [
@@ -42,7 +43,11 @@ export const LOST_FOUND_FILTER_OPTIONS = [
 ];
 
 export function getLostFoundCategoryLabel(category: string): string {
-  return LOST_FOUND_CATEGORY_DETAILS[category as LostFoundCategory]?.label ?? "Outro";
+  return getRequiredRecordValue(
+    LOST_FOUND_CATEGORY_DETAILS,
+    category,
+    LOST_FOUND_CATEGORY_DETAILS.outro,
+  ).label;
 }
 
 export const NovoAchadoPerdidoSchema = z.object({

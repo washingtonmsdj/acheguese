@@ -4,6 +4,7 @@
 
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
+import { buildSafeOrILikeFilter } from "@/shared/utils/sqlSanitization";
 import {
   ADMIN_SUBSCRIPTION_STATUS,
   type AdminSubscriptionStatus,
@@ -130,7 +131,10 @@ class AdminSubscriptionsServiceClass {
 
       // Filtros
       if (search) {
-        query = query.or(`user.email.ilike.%${search}%`);
+        const searchFilter = buildSafeOrILikeFilter(["user.email"], search);
+        if (searchFilter) {
+          query = query.or(searchFilter);
+        }
       }
       if (planType) {
         query = query.eq("plan_type", planType);

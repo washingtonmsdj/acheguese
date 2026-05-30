@@ -1,4 +1,5 @@
 import type { UnifiedPost } from "@/shared/types/posts";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 
 export type TerritorialFeedChannel =
   | "todos"
@@ -87,7 +88,7 @@ function inferChannels(post: UnifiedPost): Set<TerritorialFeedChannel> {
   }
 
   const intent = norm(post.content_intent ?? "");
-  for (const channel of INTENT_TO_CHANNELS[intent] ?? []) {
+  for (const channel of getRecordValue(INTENT_TO_CHANNELS, intent) ?? []) {
     channels.add(channel);
   }
 

@@ -1,9 +1,10 @@
-import { VERTICAL_CONFIGS, type VerticalKey } from './config';
+import { getVerticalConfig, type VerticalKey } from './config';
 import {
   getAvailableVerticalPublicUrls,
   type BusinessVerticalRouteContext,
   type VerticalAvailability,
 } from './publicUrls';
+import { getRecordValue } from '@/shared/utils/recordLookup';
 
 export interface BusinessVerticalSummary {
   readonly activeVerticals: readonly VerticalKey[];
@@ -29,7 +30,7 @@ export function buildBusinessVerticalSummary(
 
   const verticalPublicUrls = getAvailableVerticalPublicUrls(ctx, availability);
   const activeVerticals = PRIMARY_VERTICAL_ORDER.filter((vertical) =>
-    Boolean(verticalPublicUrls[vertical]),
+    Boolean(getRecordValue(verticalPublicUrls, vertical)),
   );
   const primaryVertical = activeVerticals[0] ?? null;
 
@@ -37,12 +38,12 @@ export function buildBusinessVerticalSummary(
     activeVerticals,
     primaryVertical,
     canonicalVerticalUrl: primaryVertical
-      ? verticalPublicUrls[primaryVertical] ?? null
+      ? getRecordValue(verticalPublicUrls, primaryVertical) ?? null
       : null,
     verticalPublicUrls,
   };
 }
 
 export function getVerticalLabel(vertical: VerticalKey): string {
-  return VERTICAL_CONFIGS[vertical].label;
+  return getVerticalConfig(vertical).label;
 }

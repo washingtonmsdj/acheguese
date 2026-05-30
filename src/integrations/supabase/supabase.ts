@@ -12,8 +12,8 @@
  */
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "./types.generated";
-import { createSecureStorage } from "./cookieStorage";
-import { AUTH_STORAGE_KEY } from "@/config/security.config";
+import { createBrowserAuthStorage } from "./cookieStorage";
+import { AUTH_BROWSER_STORAGE_CONFIG, AUTH_STORAGE_KEY } from "@/config/security.config";
 import { PUBLIC_SUPABASE_CONFIG } from "@/shared/config/publicSupabase";
 
 const viteEnv = typeof import.meta !== "undefined" ? import.meta.env : undefined;
@@ -26,13 +26,12 @@ const DEBUG_BOOT =
 if (typeof window !== "undefined") {
   const url = new URL(window.location.href);
   if (url.hash.includes("access_token") || url.searchParams.has("code")) {
-    // Remove fragmentos de auth da URL apos 5s (tempo para o SDK processar)
     setTimeout(() => {
       const cleanUrl = new URL(window.location.href);
       cleanUrl.hash = "";
       cleanUrl.searchParams.delete("code");
       window.history.replaceState({}, document.title, cleanUrl.toString());
-    }, 5000);
+    }, AUTH_BROWSER_STORAGE_CONFIG.authUrlCleanupDelayMs);
   }
 }
 
@@ -47,13 +46,14 @@ if (DEBUG_BOOT) {
  * Cliente Supabase principal
  *
  * STORAGE:
- * - Producao: Cookies com Secure + SameSite=Strict
- * - Desenvolvimento: Hibrido (cookies preferencial, localStorage fallback)
- * - Migracao automatica de localStorage para cookies
+ * - Cookie-only browser storage with Secure on HTTPS + SameSite=Strict
+ * - No auth token fallback to localStorage
+ * - Oversized Supabase payloads are chunked within the security SSOT budget
  *
  * Seguranca:
- * - Protecao contra XSS (cookies nao acessiveis via JavaScript quando HttpOnly)
- * - Protecao contra CSRF (SameSite=Strict)
+ * - PKCE auth flow avoids access tokens in URL fragments
+ * - XSS controls are CSP, sanitization, validation, and no localStorage token copy
+ * - CSRF reduction via SameSite=Strict
  * - Transmissao segura (Secure flag em HTTPS)
  *
  * Tipado com Database gerado automaticamente do schema do Supabase.
@@ -63,12 +63,12 @@ export const supabase = createClient<Database>(
   PUBLIC_SUPABASE_CONFIG.publishableKey,
   {
     auth: {
-      storage: typeof window !== "undefined" ? createSecureStorage() : undefined,
+      storage: typeof window !== "undefined" ? createBrowserAuthStorage() : undefined,
       storageKey: AUTH_STORAGE_KEY,
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
-      flowType: "implicit",
+      flowType: "pkce",
     },
   },
 );

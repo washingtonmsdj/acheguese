@@ -41,6 +41,7 @@ import {
   getLostFoundCategoryLabel,
   LOST_FOUND_FILTER_OPTIONS,
 } from "@/shared/validation/schemas/lostfound.schema";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 type LostFoundTipoFilter = "todos" | "perdido" | "achado";
 
 interface LostFoundItem {
@@ -149,7 +150,7 @@ export default function AchadosPerdidosPage() {
       new Set(
         items
           .map((item) => item.location_id)
-          .filter((id): id is string => Boolean(id) && !locationLabels[id]),
+          .filter((id): id is string => Boolean(id) && !getRecordValue(locationLabels, id)),
       ),
     );
 
@@ -184,7 +185,7 @@ export default function AchadosPerdidosPage() {
 
   const resolveItemTerritoryLabel = (item: LostFoundItem) => {
     if (item.location_id) {
-      return locationLabels[item.location_id] ?? "Carregando território...";
+      return getRecordValue(locationLabels, item.location_id) ?? "Carregando território...";
     }
 
     return item.bairro_publico || "Território não informado";

@@ -1,7 +1,14 @@
 import { LAUNCH_URLS } from "@/config/territory";
 import { useActiveTerritory } from "@/core/location/hooks/useActiveTerritory";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
-import { buildCommunityTerritoryUrl, buildModuleTerritoryUrl, geoPathToPublicUrl, MODULE_SLUGS } from "@/core/routing/utils/territoryUrls";
+import {
+  buildCityTerritoryBaseUrl,
+  buildCommunityTerritoryUrl,
+  buildModuleTerritoryUrl,
+  geoPathToPublicUrl,
+  MODULE_SLUGS,
+} from "@/core/routing/utils/territoryUrls";
+import { eventPublicRoutes } from "@/core/verticals/events/routes/eventPublicRoutes";
 
 export interface CommunityUrls {
   feed: string;
@@ -9,6 +16,9 @@ export interface CommunityUrls {
   issues: string;
   events: string;
   eventDetail: (id: string) => string;
+  eventFavorites: string;
+  eventCalendar: string;
+  eventMap: string;
   groups: string;
   groupDetail: (id: string) => string;
   recommendations: string;
@@ -21,8 +31,13 @@ export interface CommunityUrls {
   newPost: string;
 }
 
-function hasCommunityTerritorySlug(publicPath: string): boolean {
-  return publicPath.split("/").filter(Boolean).length >= 3;
+function toCityBaseFromGeographicPath(geographicPath: string | null | undefined): string | null {
+  if (!geographicPath) return null;
+  try {
+    return buildCityTerritoryBaseUrl(geoPathToPublicUrl(geographicPath));
+  } catch {
+    return null;
+  }
 }
 
 export function useCommunityUrls(routeResolved?: ResolvedTerritory | null): CommunityUrls {
@@ -34,24 +49,23 @@ export function useCommunityUrls(routeResolved?: ResolvedTerritory | null): Comm
   if (routeResolved) {
     if (routeResolved.kind === "group") {
       const firstMember = routeResolved.group.members[0];
-      if (firstMember?.geographic_path) {
-        const parts = firstMember.geographic_path.split("/").filter(Boolean);
-        const communityTerritoryPath = `/${parts[1]}/${parts[2]}/${routeResolved.group.slug}`;
-        feedUrl = buildCommunityTerritoryUrl(communityTerritoryPath);
-        eventsUrl = buildModuleTerritoryUrl(MODULE_SLUGS.events, communityTerritoryPath);
+      const cityBase = toCityBaseFromGeographicPath(firstMember?.geographic_path);
+      if (cityBase) {
+        feedUrl = buildCommunityTerritoryUrl(cityBase);
+        eventsUrl = buildModuleTerritoryUrl(MODULE_SLUGS.events, cityBase);
       } else {
         feedUrl = LAUNCH_URLS.community;
         eventsUrl = LAUNCH_URLS.events;
       }
     } else {
-      const geoUrl = geoPathToPublicUrl(routeResolved.location.geographic_path);
-      feedUrl = hasCommunityTerritorySlug(geoUrl) ? buildCommunityTerritoryUrl(geoUrl) : LAUNCH_URLS.community;
-      eventsUrl = hasCommunityTerritorySlug(geoUrl) ? buildModuleTerritoryUrl(MODULE_SLUGS.events, geoUrl) : LAUNCH_URLS.events;
+      const cityBase = toCityBaseFromGeographicPath(routeResolved.location.geographic_path);
+      feedUrl = cityBase ? buildCommunityTerritoryUrl(cityBase) : LAUNCH_URLS.community;
+      eventsUrl = cityBase ? buildModuleTerritoryUrl(MODULE_SLUGS.events, cityBase) : LAUNCH_URLS.events;
     }
   } else if (activeLocation?.geographic_path) {
-    const geoUrl = geoPathToPublicUrl(activeLocation.geographic_path);
-    feedUrl = hasCommunityTerritorySlug(geoUrl) ? buildCommunityTerritoryUrl(geoUrl) : LAUNCH_URLS.community;
-    eventsUrl = hasCommunityTerritorySlug(geoUrl) ? buildModuleTerritoryUrl(MODULE_SLUGS.events, geoUrl) : LAUNCH_URLS.events;
+    const cityBase = toCityBaseFromGeographicPath(activeLocation.geographic_path);
+    feedUrl = cityBase ? buildCommunityTerritoryUrl(cityBase) : LAUNCH_URLS.community;
+    eventsUrl = cityBase ? buildModuleTerritoryUrl(MODULE_SLUGS.events, cityBase) : LAUNCH_URLS.events;
   } else {
     feedUrl = LAUNCH_URLS.community;
     eventsUrl = LAUNCH_URLS.events;
@@ -66,7 +80,10 @@ export function useCommunityUrls(routeResolved?: ResolvedTerritory | null): Comm
     alerts: alertsUrl,
     issues: issuesUrl,
     events: eventsUrl,
-    eventDetail: (id: string) => `/eventos/${id}`,
+    eventDetail: (id: string) => eventPublicRoutes.detailFromBase(eventsUrl, id),
+    eventFavorites: eventPublicRoutes.favoritesFromBase(eventsUrl),
+    eventCalendar: eventPublicRoutes.calendarFromBase(eventsUrl),
+    eventMap: eventPublicRoutes.mapFromBase(eventsUrl),
     groups: groupsUrl,
     groupDetail: (id: string) => `${groupsUrl}/${id}`,
     recommendations: "/recomendacoes",

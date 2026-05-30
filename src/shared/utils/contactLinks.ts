@@ -47,6 +47,20 @@ export function buildMailtoUrl(
   return `mailto:${encodeURIComponent(value)}${query ? `?${query}` : ""}`;
 }
 
+export function buildMailtoShareUrl(
+  options: {
+    subject?: string;
+    body?: string;
+  } = {},
+): string | null {
+  const params = new URLSearchParams();
+  if (options.subject) params.set("subject", options.subject);
+  if (options.body) params.set("body", options.body);
+
+  const query = params.toString();
+  return query ? `mailto:?${query}` : "mailto:";
+}
+
 export function openContactUrl(url: string | null | undefined): boolean {
   if (!url || typeof window === "undefined") {
     return false;

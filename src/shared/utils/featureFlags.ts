@@ -20,7 +20,28 @@ export interface FeatureFlag {
   rolloutPercentage?: number;
   allowedUsers?: string[];
   allowedTerritories?: string[];
-  environments?: ('development' | 'staging' | 'production')[];
+  environments?: FeatureFlagEnvironment[];
+}
+
+type FeatureFlagEnvironment = 'development' | 'staging' | 'production';
+
+const FEATURE_FLAG_ENVIRONMENTS: readonly FeatureFlagEnvironment[] = [
+  'development',
+  'staging',
+  'production',
+];
+
+function resolveFeatureFlagEnvironment(): FeatureFlagEnvironment {
+  const mode = import.meta.env.MODE;
+  if (FEATURE_FLAG_ENVIRONMENTS.includes(mode as FeatureFlagEnvironment)) {
+    return mode as FeatureFlagEnvironment;
+  }
+
+  if (mode === 'test') {
+    return 'development';
+  }
+
+  return 'production';
 }
 
 export const FEATURE_FLAGS: Record<string, FeatureFlag> = {
@@ -107,6 +128,13 @@ export const FEATURE_FLAGS: Record<string, FeatureFlag> = {
     rolloutPercentage: 100,
     environments: ['development', 'staging', 'production'],
   },
+
+  AI_VIRTUAL_TRYON: {
+    key: 'ai_virtual_tryon',
+    enabled: import.meta.env.VITE_FEATURE_AI_VIRTUAL_TRYON === 'true',
+    rolloutPercentage: 100,
+    environments: ['development', 'staging', 'production'],
+  },
 };
 
 /**
@@ -132,7 +160,7 @@ export function isFeatureEnabled(
   }
   
   // Check environment
-  const currentEnv = import.meta.env.MODE as 'development' | 'staging' | 'production';
+  const currentEnv = resolveFeatureFlagEnvironment();
   if (flag.environments && !flag.environments.includes(currentEnv)) {
     return false;
   }

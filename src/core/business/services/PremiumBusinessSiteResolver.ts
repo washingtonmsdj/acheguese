@@ -1,4 +1,8 @@
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
+import {
+  BUSINESS_PREMIUM_ROUTE_CHILD_SEGMENTS,
+  buildBusinessPremiumRoute,
+} from "@/core/business/utils/businessPublicUrls";
 
 export interface PremiumBusinessTerritoryRoute {
   readonly state: string;
@@ -63,14 +67,19 @@ export class PremiumBusinessSiteResolver {
   }
 
   static buildRoutes(premiumSlug: string): PremiumBusinessSiteRoutes {
-    const base = `/p/${premiumSlug}`;
+    const base = buildBusinessPremiumRoute(premiumSlug);
     return {
       home: base,
-      menu: `${base}/cardapio`,
-      cart: `${base}/carrinho`,
-      checkout: `${base}/checkout`,
-      product: (productSlug: string) => `${base}/produto/${productSlug}`,
+      menu: buildBusinessPremiumRoute(premiumSlug, [BUSINESS_PREMIUM_ROUTE_CHILD_SEGMENTS.menu]),
+      cart: buildBusinessPremiumRoute(premiumSlug, [BUSINESS_PREMIUM_ROUTE_CHILD_SEGMENTS.cart]),
+      checkout: buildBusinessPremiumRoute(premiumSlug, [
+        BUSINESS_PREMIUM_ROUTE_CHILD_SEGMENTS.checkout,
+      ]),
+      product: (productSlug: string) =>
+        buildBusinessPremiumRoute(premiumSlug, [
+          BUSINESS_PREMIUM_ROUTE_CHILD_SEGMENTS.product,
+          productSlug,
+        ]),
     };
   }
 }
-

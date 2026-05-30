@@ -1,5 +1,9 @@
 import { LAUNCH_URLS } from "@/config/territory";
-import { buildCommunityTerritoryUrl } from "@/core/routing/utils/territoryUrls";
+import {
+  buildCommunityTerritoryUrl,
+  hasPublicCityTerritoryPath,
+  MODULE_SLUGS,
+} from "@/core/routing/utils/territoryUrls";
 
 export interface HomeCommunityGroupCandidate {
   slug: string;
@@ -16,13 +20,17 @@ export interface HomeCommunityHrefInput {
   fallbackHref?: string;
 }
 
-function hasTerritorySlug(path: string | null | undefined): boolean {
-  if (!path) return false;
-  return path.split("/").filter(Boolean).length >= 3;
-}
-
 function isActiveGroup(status: unknown): boolean {
   return String(status).toLowerCase() === "active";
+}
+
+function normalizeCommunityFallbackHref(href: string | null | undefined): string | null {
+  if (!href) return null;
+  const parts = href.split("/").filter(Boolean);
+  if (parts[0] === MODULE_SLUGS.community && parts[1] && parts[2]) {
+    return buildCommunityTerritoryUrl(`/${parts[1]}/${parts[2]}`);
+  }
+  return href;
 }
 
 function extractGroupSlugFromLastTerritory(
@@ -55,20 +63,22 @@ export function resolveHomeCommunityHref(input: HomeCommunityHrefInput): string 
   const activeGroup = preferredGroup ?? activeGroups[0];
 
   if (activeGroup && input.homeCityPath) {
-    return buildCommunityTerritoryUrl(`${input.homeCityPath}/${activeGroup.slug}`);
+    return buildCommunityTerritoryUrl(input.homeCityPath);
   }
 
   if (input.homeDistrictPath) {
     return buildCommunityTerritoryUrl(input.homeDistrictPath);
   }
 
-  if (hasTerritorySlug(input.currentTerritoryBaseUrl)) {
-    return buildCommunityTerritoryUrl(input.currentTerritoryBaseUrl);
+  const currentTerritoryBaseUrl = input.currentTerritoryBaseUrl;
+  if (currentTerritoryBaseUrl && hasPublicCityTerritoryPath(currentTerritoryBaseUrl)) {
+    return buildCommunityTerritoryUrl(currentTerritoryBaseUrl);
   }
 
-  if (hasTerritorySlug(input.lastTerritoryBaseUrl)) {
-    return buildCommunityTerritoryUrl(input.lastTerritoryBaseUrl);
+  const lastTerritoryBaseUrl = input.lastTerritoryBaseUrl;
+  if (lastTerritoryBaseUrl && hasPublicCityTerritoryPath(lastTerritoryBaseUrl)) {
+    return buildCommunityTerritoryUrl(lastTerritoryBaseUrl);
   }
 
-  return input.fallbackHref ?? LAUNCH_URLS.community;
+  return normalizeCommunityFallbackHref(input.fallbackHref) ?? LAUNCH_URLS.community;
 }

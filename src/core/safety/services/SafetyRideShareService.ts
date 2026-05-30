@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { SAFETY_RIDE_SHARE_STATUS } from "@/core/safety/constants/status";
+import { secureRandomString } from "@/shared/utils/secureRandom";
 import type {
   CreateRideShareInput,
   RideShare,
@@ -194,6 +195,6 @@ export class SafetyRideShareService {
   }
 
   private generateShareToken(): string {
-    return `${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+    return secureRandomString(32);
   }
 }

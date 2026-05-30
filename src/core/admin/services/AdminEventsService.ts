@@ -8,6 +8,7 @@
 
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
+import { buildSafeILikePattern } from "@/shared/utils/sqlSanitization";
 
 export interface AdminEventData {
   [key: string]: unknown;
@@ -125,7 +126,10 @@ class AdminEventsServiceClass {
 
       // Aplica busca se fornecida
       if (options.search) {
-        query = query.ilike("title", `%${options.search}%`);
+        const searchPattern = buildSafeILikePattern(options.search);
+        if (searchPattern) {
+          query = query.ilike("title", searchPattern);
+        }
       }
 
       query = query

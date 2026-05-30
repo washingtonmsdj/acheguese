@@ -8,6 +8,7 @@ import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { MapPin } from "lucide-react";
 import { DEFAULT_TILE_STYLE } from "@/core/maps/providers/MapProvider";
+import { createMapPopupContent } from "@/shared/components/maps/mapPopupContent";
 
 interface LostFoundMiniMapProps {
   latitude: number;
@@ -59,8 +60,12 @@ export function LostFoundMiniMap({
       markerRef.current = new maplibregl.Marker({ element: el, anchor: "bottom" })
         .setLngLat([longitude, latitude])
         .setPopup(
-          new maplibregl.Popup({ closeButton: false }).setHTML(
-            `<div style="text-align:center;padding:4px"><strong>${title}</strong><br/><small>${tipo === "perdido" ? "Item Perdido" : "Item Encontrado"}</small></div>`,
+          new maplibregl.Popup({ closeButton: false }).setDOMContent(
+            createMapPopupContent({
+              title,
+              description: tipo === "perdido" ? "Item Perdido" : "Item Encontrado",
+              titleTone: tipo === "perdido" ? "danger" : "success",
+            }),
           ),
         )
         .addTo(map);

@@ -4,7 +4,9 @@ import {
   MODULE_SLUGS,
   buildGroupModuleUrl,
   buildLocationModuleUrl,
+  buildModuleTerritoryEntityUrl,
   buildModuleTerritoryUrl,
+  buildModuleTerritoryUrlFromSegments,
   buildTerritoryModuleUrl,
   normalizePublicTerritoryPath,
 } from "@/core/routing/utils/territoryUrls";
@@ -45,6 +47,44 @@ describe("module-first territory urls", () => {
     expect(buildModuleTerritoryUrl(MODULE_SLUGS.services, "/br/ba/salvador/pituba")).toBe(
       "/servicos/ba/salvador/pituba",
     );
+  });
+
+  it("monta listagem e detalhe a partir do mesmo SSOT territorial", () => {
+    expect(
+      buildModuleTerritoryUrlFromSegments(MODULE_SLUGS.education, "ba", "salvador"),
+    ).toBe("/educacao/ba/salvador");
+    expect(
+      buildModuleTerritoryUrlFromSegments(MODULE_SLUGS.education, "ba", "salvador", [
+        "pituba",
+      ]),
+    ).toBe("/educacao/ba/salvador/pituba");
+    expect(
+      buildModuleTerritoryEntityUrl(
+        MODULE_SLUGS.gastronomy,
+        "/br/ba/salvador/rio-vermelho",
+        "cafe-central",
+      ),
+    ).toBe("/gastronomia/ba/salvador/rio-vermelho/cafe-central");
+  });
+
+  it("rejeita slug de entidade vazio ou com separadores de rota", () => {
+    expect(() =>
+      buildModuleTerritoryEntityUrl(MODULE_SLUGS.gastronomy, "/ba/salvador/pituba", ""),
+    ).toThrow("segmento unico");
+    expect(() =>
+      buildModuleTerritoryEntityUrl(
+        MODULE_SLUGS.gastronomy,
+        "/ba/salvador/pituba",
+        "cafe/extra",
+      ),
+    ).toThrow("segmento unico");
+    expect(() =>
+      buildModuleTerritoryEntityUrl(
+        MODULE_SLUGS.gastronomy,
+        "/ba/salvador/pituba",
+        "cafe?tab=menu",
+      ),
+    ).toThrow("segmento unico");
   });
 
   it("mantem os builders antigos alinhados ao padrao publico canonico", () => {

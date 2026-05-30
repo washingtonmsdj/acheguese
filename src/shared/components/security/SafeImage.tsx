@@ -14,70 +14,14 @@
  * @security-critical
  * @ssot src/config/security.config.ts
  */
-import { logger } from '@/shared/utils/logger';
 import { ImgHTMLAttributes, useState } from 'react';
 import { ImageOff } from 'lucide-react';
-import { 
-  ALLOWED_IMAGE_EXTENSIONS,
-  BLOCKED_IMAGE_EXTENSIONS,
-  isImageExtensionSafe 
-} from '@/config/security.config';
+import { resolveSafeImageUrl } from '@/shared/utils/urlSafety';
+
 interface SafeImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, 'src'> {
   src: string;
   alt: string;
   fallback?: string;
-}
-
-/**
- * Valida se URL de imagem é segura
- * 
- * IMPORTANTE: Usa configuração do SSOT (security.config.ts)
- * NÃO hardcode extensões aqui!
- */
-function isImageUrlSafe(url: string): boolean {
-  try {
-    const parsed = new URL(url, window.location.origin);
-    // Bloqueia javascript:
-    if (parsed.protocol === 'javascript:') {
-      logger.warn('[SafeImage] Blocked javascript: protocol');
-      return false;
-    }
-    
-    // Bloqueia data:image/svg (XSS risk)
-    if (parsed.protocol === 'data:' && url.toLowerCase().includes('svg')) {
-      logger.warn('[SafeImage] Blocked SVG data URL (XSS risk)');
-      return false;
-    }
-
-    // Valida extensão usando SSOT
-    const extension = parsed.pathname.toLowerCase().match(/\.[^./?#]+$/)?.[0];
-    if (extension) {
-      // Verifica se está na lista de bloqueados (do SSOT)
-      const isBlocked = BLOCKED_IMAGE_EXTENSIONS.some(blocked => 
-        extension === blocked
-      );
-      
-      if (isBlocked) {
-        logger.warn('[SafeImage] Blocked dangerous extension:', extension);
-        return false;
-      }
-      
-      // Verifica se está na lista de permitidos (do SSOT)
-      const isAllowed = ALLOWED_IMAGE_EXTENSIONS.some(allowed => 
-        extension === allowed
-      );
-      
-      if (!isAllowed) {
-        logger.warn('[SafeImage] Unknown extension:', extension);
-        return false;
-      }
-    }
-
-    return true;
-  } catch {
-    logger.warn('[SafeImage] Invalid URL:', url);
-    return false;
-  }
 }
 
 export function SafeImage({
@@ -88,16 +32,20 @@ export function SafeImage({
   ...props
 }: SafeImageProps) {
   const [error, setError] = useState(false);
+  const safeSrc = resolveSafeImageUrl(src, { context: 'SafeImage.src' });
+  const safeFallback = fallback
+    ? resolveSafeImageUrl(fallback, { context: 'SafeImage.fallback' })
+    : null;
 
   // Valida URL usando configuração do SSOT
-  if (!isImageUrlSafe(src)) {
+  if (!safeSrc) {
     return <ImagePlaceholder alt={alt} className={className} />;
   }
 
   // Mostra placeholder se imagem falhar
   if (error) {
-    return fallback ? (
-      <img src={fallback} alt={alt} className={className} {...props} />
+    return safeFallback ? (
+      <img src={safeFallback} alt={alt} className={className} {...props} />
     ) : (
       <ImagePlaceholder alt={alt} className={className} />
     );
@@ -105,7 +53,7 @@ export function SafeImage({
 
   return (
     <img
-      src={src}
+      src={safeSrc}
       alt={alt}
       className={className}
       loading="lazy"

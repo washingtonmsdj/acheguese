@@ -1,7 +1,6 @@
 import { supabase } from "@/integrations/supabase";
 import { selectLooseRows } from "@/integrations/supabase/services/supabaseHelpers";
 import { SessionService } from "@/core/session/services/SessionService";
-import { TerritorialGroupService } from "@/core/territorial/services/TerritorialGroupService";
 import { PublicIdentityService } from "@/core/public-identity";
 import type {
   CommunicationChannel,
@@ -63,7 +62,6 @@ function attachPublicationRelations(
 }
 
 export class CommunicationTerritorialService {
-  private static territorialGroupService = new TerritorialGroupService();
   static async requestChannel(input: RequestCommunicationChannelInput): Promise<{ request_id: string; status: string }> {
     const sanitizedInput = parseRequestCommunicationChannelInput(input);
     return callLooseRpc("request_communication_channel", { payload: sanitizedInput });
@@ -260,7 +258,6 @@ export class CommunicationTerritorialService {
   static async getPublicHub(params: {
     state?: string;
     city?: string;
-    territorySlug?: string;
   }): Promise<CommunicationHubData> {
     const { locationIds, title } = await this.resolveLocationScope(params);
     const [channels, publications, locations] = await Promise.all([
@@ -279,34 +276,14 @@ export class CommunicationTerritorialService {
   private static async resolveLocationScope(params: {
     state?: string;
     city?: string;
-    territorySlug?: string;
   }): Promise<{ locationIds?: string[]; title: string }> {
     if (!params.city) return { title: "Comunicacao Territorial" };
 
     const locations = await this.listLocations();
     const city = locations.find((location) => location.slug === params.city && location.type === "city");
-    if (!city) return { locationIds: [], title: "Territorio nao encontrado" };
+    if (!city) return { locationIds: [], title: "Cidade nao encontrada" };
 
-    if (!params.territorySlug) {
-      const childIds = locations.filter((location) => location.parent_id === city.id).map((location) => location.id);
-      return { locationIds: [city.id, ...childIds], title: `Comunicacao em ${city.name}` };
-    }
-
-    const group = await this.territorialGroupService.getGroupBySlugAndCity(params.territorySlug, city.id);
-    if (group && group.status === "active") {
-      const members = await this.territorialGroupService.listAllMembers(group.id);
-      return {
-        locationIds: [...new Set(members.map((member) => member.id))],
-        title: `Comunicacao em ${group.name}`,
-      };
-    }
-
-    const territory = locations.find(
-      (location) => location.slug === params.territorySlug && location.parent_id === city.id,
-    );
-    return {
-      locationIds: territory ? [territory.id] : [],
-      title: territory ? `Comunicacao em ${territory.name}` : "Territorio nao encontrado",
-    };
+    const childIds = locations.filter((location) => location.parent_id === city.id).map((location) => location.id);
+    return { locationIds: [city.id, ...childIds], title: `Comunicacao em ${city.name}` };
   }
 }

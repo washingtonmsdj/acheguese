@@ -246,7 +246,11 @@ export default function ChatPage() {
   if (!conversation) return null;
 
   const isBlocked = conversation.status === "blocked";
-  const iAmSeller = conversation.seller_id === user.id;
+  const handleOpenClassified = () => {
+    if (conversation.classified_public_url) {
+      navigate(conversation.classified_public_url);
+    }
+  };
 
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)]">
@@ -262,9 +266,7 @@ export default function ChatPage() {
         {/* Classified mini card */}
         <div
           className="flex items-center gap-2.5 flex-1 min-w-0 cursor-pointer"
-          onClick={() =>
-            navigate(`/classificados/${conversation.classified_id}`)
-          }
+          onClick={handleOpenClassified}
         >
           <div className="h-10 w-10 rounded-lg bg-secondary overflow-hidden shrink-0">
             {conversation.classified_photo ? (
@@ -298,9 +300,8 @@ export default function ChatPage() {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem
-              onClick={() =>
-                navigate(`/classificados/${conversation.classified_id}`)
-              }
+              disabled={!conversation.classified_public_url}
+              onClick={handleOpenClassified}
             >
               Ver anúncio
             </DropdownMenuItem>

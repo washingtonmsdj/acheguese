@@ -27,37 +27,51 @@ function isEventHandler(propName: string, value: unknown): value is (...args: un
   return /^on[A-Z]/.test(propName) && typeof value === "function";
 }
 
+function getPropValue(props: React.HTMLAttributes<HTMLElement>, propName: string): unknown {
+  return Object.entries(props).find(([entryName]) => entryName === propName)?.[1];
+}
+
+function isStyleValue(value: unknown): value is React.CSSProperties {
+  return typeof value === "object" && value !== null;
+}
+
 function mergeSlotProps(
   slotProps: React.HTMLAttributes<HTMLElement>,
   childProps: React.HTMLAttributes<HTMLElement>,
 ): React.HTMLAttributes<HTMLElement> {
-  const mergedProps: Record<string, unknown> = { ...slotProps, ...childProps };
-
-  Object.entries(childProps).forEach(([propName, childValue]) => {
-    const slotValue = slotProps[propName as keyof typeof slotProps];
+  const propNames = new Set([...Object.keys(slotProps), ...Object.keys(childProps)]);
+  const mergedEntries = Array.from(propNames, (propName): [string, unknown] => {
+    const childValue = getPropValue(childProps, propName);
+    const slotValue = getPropValue(slotProps, propName);
 
     if (isEventHandler(propName, childValue) && isEventHandler(propName, slotValue)) {
-      mergedProps[propName] = (...args: unknown[]) => {
+      return [propName, (...args: unknown[]) => {
         childValue(...args);
         const event = args[0] as { defaultPrevented?: boolean } | undefined;
         if (!event?.defaultPrevented) {
           slotValue(...args);
         }
-      };
-      return;
+      }];
     }
 
     if (propName === "className") {
-      mergedProps[propName] = cn(slotProps.className, childProps.className);
-      return;
+      return [propName, cn(slotProps.className, childProps.className)];
     }
 
     if (propName === "style") {
-      mergedProps[propName] = { ...slotProps.style, ...childProps.style };
+      return [
+        propName,
+        {
+          ...(isStyleValue(slotValue) ? slotValue : undefined),
+          ...(isStyleValue(childValue) ? childValue : undefined),
+        },
+      ];
     }
+
+    return [propName, childValue ?? slotValue];
   });
 
-  return mergedProps as React.HTMLAttributes<HTMLElement>;
+  return Object.fromEntries(mergedEntries) as React.HTMLAttributes<HTMLElement>;
 }
 
 const ButtonSlot = React.forwardRef<HTMLElement, PolymorphicSlotProps>(

@@ -158,16 +158,14 @@ export function useCityNeighborhoodsPolygons({
         if (cancelled) return;
 
         const results = await Promise.allSettled(
-          neighborhoods.map((neighborhood: Location) =>
-            boundaryService
-              .getNeighborhoodBounds({
-                neighborhood: neighborhood.name,
-                city: '',
-                state: '',
-                locationId: neighborhood.id,
-              })
-              .then((result) => ({ neighborhood, result })),
-          ),
+          neighborhoods.map(async (neighborhood: Location) => {
+            return boundaryService.getNeighborhoodBounds({
+              neighborhood: neighborhood.name,
+              city: '',
+              state: '',
+              locationId: neighborhood.id,
+            });
+          }),
         );
 
         if (cancelled) return;
@@ -176,15 +174,19 @@ export function useCityNeighborhoodsPolygons({
         let successCount = 0;
         let failureCount = 0;
         const unresolvedNeighborhoods: string[] = [];
+        const fallbackColor = NEIGHBORHOOD_COLORS.at(0);
 
         results.forEach((settled, index) => {
-          if (settled.status !== 'fulfilled') {
+          const neighborhood = neighborhoods.at(index);
+          if (!neighborhood) return;
+
+          if (settled.status === 'rejected') {
             failureCount++;
-            unresolvedNeighborhoods.push(neighborhoods[index].name);
+            unresolvedNeighborhoods.push(neighborhood.name);
             return;
           }
 
-          const { neighborhood, result } = settled.value;
+          const result = settled.value;
           if (result.rings.length === 0) {
             failureCount++;
             unresolvedNeighborhoods.push(neighborhood.name);
@@ -192,7 +194,8 @@ export function useCityNeighborhoodsPolygons({
           }
 
           successCount++;
-          const color = NEIGHBORHOOD_COLORS[index % NEIGHBORHOOD_COLORS.length];
+          const color = NEIGHBORHOOD_COLORS.at(index % NEIGHBORHOOD_COLORS.length) ?? fallbackColor;
+          if (!color) return;
           result.rings.forEach((ring) => {
             built.push({
               name: neighborhood.name,

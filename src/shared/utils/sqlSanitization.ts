@@ -32,6 +32,29 @@ export function sanitizeForILike(input: string): string {
 }
 
 /**
+ * Cria um padrao seguro para uso em ILIKE.
+ */
+export function buildSafeILikePattern(input: string | null | undefined): string | null {
+  const sanitized = sanitizeForILike(input ?? '');
+  return sanitized ? `%${sanitized}%` : null;
+}
+
+/**
+ * Cria uma expressao segura para Supabase .or com filtros ILIKE.
+ */
+export function buildSafeOrILikeFilter(
+  columns: readonly string[],
+  input: string | null | undefined,
+): string | null {
+  const sanitized = sanitizeForILike(input ?? '');
+  if (!sanitized || columns.length === 0) return null;
+
+  return columns
+    .map((column) => `${column}.ilike.%${sanitized}%`)
+    .join(',');
+}
+
+/**
  * Sanitiza array de strings para uso em queries
  * 
  * @param inputs - Array de strings a serem sanitizadas

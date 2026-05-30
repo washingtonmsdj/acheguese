@@ -128,14 +128,21 @@ export class GeospatialService {
     if (!boundary.coordinates || boundary.coordinates.length === 0) {
       throw new Error('Boundary must have coordinates');
     }
-    if (boundary.coordinates[0].length < 4) {
+    const outerRing = boundary.coordinates.at(0);
+    if (!outerRing || outerRing.length < 4) {
       throw new Error('Polygon must have at least 4 points (including closing point)');
     }
 
     // Validar que primeiro e último ponto são iguais (polígono fechado)
-    const first = boundary.coordinates[0][0];
-    const last = boundary.coordinates[0][boundary.coordinates[0].length - 1];
-    if (first[0] !== last[0] || first[1] !== last[1]) {
+    const first = outerRing.at(0);
+    const last = outerRing.at(-1);
+    if (!first || !last) {
+      throw new Error('Polygon must have at least 4 points (including closing point)');
+    }
+
+    const [firstLongitude, firstLatitude] = first;
+    const [lastLongitude, lastLatitude] = last;
+    if (firstLongitude !== lastLongitude || firstLatitude !== lastLatitude) {
       throw new Error('Polygon must be closed (first and last points must be equal)');
     }
   }

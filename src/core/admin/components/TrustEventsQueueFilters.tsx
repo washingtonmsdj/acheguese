@@ -3,6 +3,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Label } from "@/shared/components/ui/label";
 import { Switch } from "@/shared/components/ui/switch";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 import {
   CONTEXT_LABELS,
   type TrustContextFilter,
@@ -58,6 +59,8 @@ export function TrustEventsQueueFilters({
       {!lockContextFilter &&
         Object.keys(CONTEXT_LABELS).map((key) => {
           const filter = key as TrustContextFilter;
+          const label = getRecordValue(CONTEXT_LABELS, filter) ?? filter;
+          const count = getRecordValue(contextCounts, filter) ?? 0;
           return (
             <Button
               key={filter}
@@ -67,7 +70,7 @@ export function TrustEventsQueueFilters({
               onClick={() => onContextFilterChange(filter)}
               className="h-8"
             >
-              {CONTEXT_LABELS[filter]} ({contextCounts[filter]})
+              {label} ({count})
             </Button>
           );
         })}

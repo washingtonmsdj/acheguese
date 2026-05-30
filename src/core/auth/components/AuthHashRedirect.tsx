@@ -1,12 +1,12 @@
 /**
  * AuthHashRedirect
  *
- * Detecta hashes do Supabase na URL raiz e redireciona para a rota correta.
+ * Detecta retornos do Supabase na URL raiz e redireciona para a rota correta.
  * Toda lógica de detecção delegada ao AuthService (SSOT de auth).
  *
  * Casos tratados:
  *  - #error=access_denied&error_code=otp_expired  → /reset-password?expired=1
- *  - #access_token=...&type=recovery              → /reset-password (com hash preservado)
+ *  - ?code=...&mode=recovery                      → /reset-password (com query preservada)
  */
 import { useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -30,10 +30,9 @@ export function AuthHashRedirect() {
 
     if (AuthService.isRecoveryRedirect()) {
       handled.current = true;
-      // Preserva o hash para que o ResetPasswordPage possa processar o access_token
-      navigate({ pathname: '/reset-password', hash: location.hash }, { replace: true });
+      navigate({ pathname: '/reset-password', search: location.search }, { replace: true });
     }
-  }, [location.pathname, location.hash, navigate]);
+  }, [location.pathname, location.search, location.hash, navigate]);
 
   return null;
 }

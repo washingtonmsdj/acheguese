@@ -9,20 +9,14 @@ import { useCommunityScopeResolver } from "@/core/community/hooks/useCommunitySc
 import { useCommunityProfile } from "@/core/community-experience/hooks/useCommunityProfile";
 import { TerritorialLayout } from "./TerritorialLayout";
 import { TerritorialNotFound } from "./TerritorialNotFound";
-import { buildCommunityTerritoryUrl, MODULE_SLUGS } from "@/core/routing/utils/territoryUrls";
-import { isReservedSlug } from "@/core/routing/reservedSlugs";
+import {
+  buildCommunityTerritoryUrl,
+  buildModuleTerritoryUrl,
+  MODULE_SLUGS,
+} from "@/core/routing/utils/territoryUrls";
 import { resolveSeoPolicy } from "@/core/routing/seo/territorialSeoPolicy";
 
 const TRANSITION_MS = 720;
-function titleFromSlug(value?: string): string {
-  if (!value) return "Comunidade local";
-  return value
-    .split("-")
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-}
-
 function cityLabelFromSlug(value?: string): string {
   if (!value) return "Cidade";
   return value
@@ -30,28 +24,6 @@ function cityLabelFromSlug(value?: string): string {
     .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
-}
-
-function resolveCommunityTerritoryBase(
-  pathname: string,
-  fallbackState: string,
-  fallbackCity: string,
-): string {
-  const parts = pathname.split("/").filter(Boolean);
-  const state = parts[1] ?? fallbackState;
-  const city = parts[2] ?? fallbackCity;
-  const segment3 = parts[3];
-
-  if (segment3 === "area" && parts[4]) {
-    return `/${state}/${city}/${parts[4]}`;
-  }
-
-  // Padrao de bairro: /comunidade/:state/:city/:territorySlug/...
-  if (segment3 && !Object.values(MODULE_SLUGS).includes(segment3 as (typeof MODULE_SLUGS)[keyof typeof MODULE_SLUGS])) {
-    return `/${state}/${city}/${segment3}`;
-  }
-
-  return `/${state}/${city}`;
 }
 
 function useCommunitySeoHead(canonicalHref: string, robots: string) {
@@ -79,35 +51,33 @@ export function CommunityTerritorialShell() {
   const params = useParams<{
     state?: string;
     city?: string;
-    territorySlug?: string;
-    groupSlug?: string;
   }>();
   const [transitionMessage, setTransitionMessage] = useState<string | null>(null);
   const communityProfileQuery = useCommunityProfile(resolved);
 
   const state = params.state?.trim() ?? "";
   const city = params.city?.trim() ?? "";
-  const territorySlug = params.territorySlug?.trim() ?? "";
-  const groupSlug = params.groupSlug?.trim() ?? "";
-  const effectiveTerritorySlug = groupSlug || territorySlug;
-  const hasInvalidRouteParams = !state || !city || !effectiveTerritorySlug;
-  const hasInvalidTerritorySlug =
-    hasInvalidRouteParams ||
-    (!groupSlug && params.territorySlug === "area") ||
-    isReservedSlug(effectiveTerritorySlug);
-  const territoryBase = hasInvalidTerritorySlug
-    ? `/${state}/${city}/${effectiveTerritorySlug}`
-    : resolveCommunityTerritoryBase(location.pathname, state, city);
-  const communityBase = hasInvalidTerritorySlug
-    ? `/${MODULE_SLUGS.community}${territoryBase}`
+  const routeParts = location.pathname.split("/").filter(Boolean);
+  const hasInvalidRouteParams = !state || !city;
+  const hasLegacyAreaSegment = routeParts[0] === MODULE_SLUGS.community && routeParts[3] === "area";
+  const hasInvalidCommunityRoute = hasInvalidRouteParams || hasLegacyAreaSegment;
+  const territoryBase = `/${state}/${city}`;
+  const communityBase = hasInvalidRouteParams
+    ? `/${MODULE_SLUGS.community}`
     : buildCommunityTerritoryUrl(territoryBase);
+  const businessModuleUrl = hasInvalidRouteParams
+    ? `/${MODULE_SLUGS.business}`
+    : buildModuleTerritoryUrl(MODULE_SLUGS.business, territoryBase);
+  const eventsModuleUrl = hasInvalidRouteParams
+    ? `/${MODULE_SLUGS.events}`
+    : buildModuleTerritoryUrl(MODULE_SLUGS.events, territoryBase);
   const cityHref = `/${state}/${city}`;
+  const cityName = cityLabelFromSlug(city);
   const territoryName = resolved
     ? resolved.kind === "group"
       ? resolved.group.name
       : resolved.location.name
-    : titleFromSlug(effectiveTerritorySlug);
-  const cityName = cityLabelFromSlug(city);
+    : cityName;
 
   useEffect(() => {
     setTransitionMessage(`Bem-vindo ao ${territoryName}`);
@@ -123,21 +93,21 @@ export function CommunityTerritorialShell() {
     : seoPolicy.canonicalPath;
   useCommunitySeoHead(canonicalHref, seoPolicy.robots);
 
-  if (hasInvalidTerritorySlug) {
+  if (hasInvalidCommunityRoute) {
     return (
       <>
         <Helmet>
           <link rel="canonical" href={canonicalHref} />
           <meta name="robots" content="noindex, follow" />
         </Helmet>
-        <TerritorialNotFound message="A comunidade precisa de um território válido na URL." />
+        <TerritorialNotFound message="A comunidade precisa de estado e cidade válidos na URL." />
       </>
     );
   }
 
   if (communityProfileQuery.isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#081114] text-white">
+      <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
         Carregando comunidade...
       </div>
     );
@@ -145,9 +115,9 @@ export function CommunityTerritorialShell() {
 
   if (communityStatus === "inactive") {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#081114] px-4 py-10 text-center text-white">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4 py-10 text-center text-foreground">
         <h1 className="text-2xl font-bold sm:text-3xl">Comunidade indisponível neste momento</h1>
-        <p className="mt-3 max-w-xl text-sm text-white/70 sm:text-base">
+        <p className="mt-3 max-w-xl text-sm text-muted-foreground sm:text-base">
           Esta área ainda não está ativa para experiência comunitária. Você pode navegar pela cidade ou acessar a comunidade principal.
         </p>
         <div className="mt-6 flex w-full max-w-xl flex-col gap-3 sm:flex-row sm:justify-center">
@@ -168,25 +138,25 @@ export function CommunityTerritorialShell() {
           <meta name="robots" content="noindex, follow" />
           <title>{profile?.hero_title ?? territoryName} | Achegue-se</title>
         </Helmet>
-        <div className="min-h-screen bg-[#081114] px-4 py-10 text-white sm:py-14">
-          <div className="mx-auto max-w-3xl rounded-2xl border border-white/10 bg-white/5 p-6 sm:p-8">
+        <div className="min-h-screen bg-background px-4 py-10 text-foreground sm:py-14">
+          <div className="mx-auto max-w-3xl rounded-2xl border border-border bg-card p-6 text-card-foreground sm:p-8">
             <p className="text-xs uppercase tracking-wide text-primary">Próxima comunidade</p>
             <h1 className="mt-2 text-2xl font-bold sm:text-3xl">{profile?.hero_title ?? `A comunidade de ${territoryName} está chegando`}</h1>
-            <p className="mt-3 text-sm text-white/75 sm:text-base">{profile?.hero_subtitle ?? profile?.description}</p>
-            <p className="mt-2 text-sm text-white/60 sm:text-base">
+            <p className="mt-3 text-sm text-muted-foreground sm:text-base">{profile?.hero_subtitle ?? profile?.description}</p>
+            <p className="mt-2 text-sm text-muted-foreground sm:text-base">
               Enquanto esta comunidade estiver em preparação, você pode navegar pela cidade e registrar interesse para o lançamento.
             </p>
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
               <Button className="w-full" onClick={() => navigate(interestPath)}>
                 {profile?.primary_cta_label ?? "Cadastrar interesse"}
               </Button>
-              <Button className="w-full" variant="outline" onClick={() => navigate(`${communityBase}/empresas`)}>
+              <Button className="w-full" variant="outline" onClick={() => navigate(businessModuleUrl)}>
                 {profile?.secondary_cta_label ?? "Quero minha empresa aqui"}
               </Button>
               <Button className="w-full" variant="outline" onClick={() => navigate(interestPath)}>
                 Indicar comércio ou serviço da região
               </Button>
-              <Button className="w-full" variant="outline" onClick={() => navigate(`${communityBase}/eventos`)}>Cadastrar evento da região</Button>
+              <Button className="w-full" variant="outline" onClick={() => navigate(eventsModuleUrl)}>Cadastrar evento da região</Button>
             </div>
           </div>
         </div>

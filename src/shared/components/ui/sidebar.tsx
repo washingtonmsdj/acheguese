@@ -6,6 +6,7 @@ import { PanelLeft } from "lucide-react";
 
 import { useIsMobile } from "@/shared/hooks/use-mobile";
 import { cn } from "@/shared/utils/cn";
+import { secureRandomInt } from "@/shared/utils/secureRandom";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Separator } from "@/shared/components/ui/separator";
@@ -25,6 +26,7 @@ const SIDEBAR_WIDTH = SIDEBAR_UI_CONFIG.WIDTH;
 const SIDEBAR_WIDTH_MOBILE = SIDEBAR_UI_CONFIG.MOBILE_WIDTH;
 const SIDEBAR_WIDTH_ICON = SIDEBAR_UI_CONFIG.ICON_WIDTH;
 const SIDEBAR_KEYBOARD_SHORTCUT = SIDEBAR_UI_CONFIG.KEYBOARD_SHORTCUT;
+const SIDEBAR_SKELETON_WIDTH_PERCENT = SIDEBAR_UI_CONFIG.SKELETON_WIDTH_PERCENT;
 
 type SidebarContext = {
   state: "expanded" | "collapsed";
@@ -658,9 +660,8 @@ const SidebarMenuSkeleton = React.forwardRef<
     showIcon?: boolean;
   }
 >(({ className, showIcon = false, ...props }, ref) => {
-  // Random width between 50 to 90%.
   const width = React.useMemo(() => {
-    return `${Math.floor(Math.random() * 40) + 50}%`;
+    return `${secureRandomInt(SIDEBAR_SKELETON_WIDTH_PERCENT.RANGE) + SIDEBAR_SKELETON_WIDTH_PERCENT.MIN}%`;
   }, []);
 
   return (

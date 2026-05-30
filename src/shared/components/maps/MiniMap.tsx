@@ -8,6 +8,7 @@ import { useEffect, useRef } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { DEFAULT_TILE_STYLE } from '@/shared/config/mapDefaults';
+import { createMapPopupContent } from './mapPopupContent';
 
 export interface MiniMapProps {
   latitude: number;
@@ -133,12 +134,7 @@ export function MiniMap({
         offset: 25, 
         closeButton: false,
         closeOnClick: false,
-      }).setHTML(`
-        <div style="padding: 8px 12px; text-align: center; max-width: 200px;">
-          ${title ? `<p style="font-weight: 600; margin: 0 0 4px 0; font-size: 13px;">${title}</p>` : ''}
-          ${description ? `<p style="font-size: 11px; color: #666; margin: 0;">${description}</p>` : ''}
-        </div>
-      `);
+      }).setDOMContent(createMapPopupContent({ title, description }));
     }
 
     // Adicionar marcador ao mapa

@@ -79,7 +79,7 @@ export function getActionLabel(
   action: keyof typeof ariaLabels,
   entity?: string,
 ): string {
-  const baseLabel = ariaLabels[action];
+  const baseLabel = Object.entries(ariaLabels).find(([key]) => key === action)?.[1] ?? action;
   return entity ? `${baseLabel} ${entity}` : baseLabel;
 }
 

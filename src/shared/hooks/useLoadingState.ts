@@ -106,25 +106,25 @@ export function useLoadingState(options: LoadingStateOptions = {}) {
  * ```
  */
 export function useMultipleLoadingStates() {
-  const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>(
-    {},
+  const [loadingStates, setLoadingStates] = useState<Map<string, boolean>>(
+    () => new Map(),
   );
 
   const startLoading = useCallback((key: string) => {
-    setLoadingStates((prev) => ({ ...prev, [key]: true }));
+    setLoadingStates((prev) => new Map(prev).set(key, true));
   }, []);
 
   const stopLoading = useCallback((key: string) => {
-    setLoadingStates((prev) => ({ ...prev, [key]: false }));
+    setLoadingStates((prev) => new Map(prev).set(key, false));
   }, []);
 
   const isLoading = useCallback(
-    (key: string) => loadingStates[key] === true,
+    (key: string) => loadingStates.get(key) === true,
     [loadingStates],
   );
 
   const isAnyLoading = useCallback(
-    () => Object.values(loadingStates).some((loading) => loading),
+    () => Array.from(loadingStates.values()).some(Boolean),
     [loadingStates],
   );
 

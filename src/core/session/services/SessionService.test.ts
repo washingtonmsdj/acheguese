@@ -10,6 +10,7 @@ const {
   authSignOutMock,
   rpcMock,
   fromMock,
+  profileServiceGetProfilesByUserIdMock,
 } = vi.hoisted(() => ({
   authGetSessionMock: vi.fn(),
   authGetUserMock: vi.fn(),
@@ -19,6 +20,7 @@ const {
   authSignOutMock: vi.fn(),
   rpcMock: vi.fn(),
   fromMock: vi.fn(),
+  profileServiceGetProfilesByUserIdMock: vi.fn(),
 }));
 
 vi.mock("@/integrations/supabase", () => ({
@@ -34,6 +36,12 @@ vi.mock("@/integrations/supabase", () => ({
   },
 }));
 
+vi.mock("@/core/profiles/services/ProfileService", () => ({
+  profileService: {
+    getProfilesByUserId: profileServiceGetProfilesByUserIdMock,
+  },
+}));
+
 describe("SessionService", () => {
   beforeEach(() => {
     SessionState.clear();
@@ -43,6 +51,7 @@ describe("SessionService", () => {
     authSignOutMock.mockReset();
     rpcMock.mockReset();
     fromMock.mockReset();
+    profileServiceGetProfilesByUserIdMock.mockReset();
   });
 
   afterEach(() => {
@@ -103,16 +112,18 @@ describe("SessionService", () => {
       },
     ];
 
-    const eqStatusMock = vi.fn().mockResolvedValue({ data: dbRows, error: null });
-    const eqUserMock = vi.fn(() => ({ eq: eqStatusMock }));
-    const selectMock = vi.fn(() => ({ eq: eqUserMock }));
-    fromMock.mockReturnValue({ select: selectMock });
+    profileServiceGetProfilesByUserIdMock.mockResolvedValue([
+      ...dbRows,
+      {
+        ...dbRows[0],
+        id: "inactive-profile",
+        is_active: false,
+      },
+    ]);
 
     const profiles = await SessionService.getUserProfiles("user-123");
 
-    expect(fromMock).toHaveBeenCalledWith("profiles");
-    expect(eqUserMock).toHaveBeenCalledWith("user_id", "user-123");
-    expect(eqStatusMock).toHaveBeenCalledWith("is_active", true);
+    expect(profileServiceGetProfilesByUserIdMock).toHaveBeenCalledWith("user-123");
     expect(profiles).toHaveLength(1);
     expect(profiles[0].userId).toBe("user-123");
     expect(profiles[0].profileType).toBe("personal");
@@ -166,8 +177,7 @@ describe("SessionService", () => {
       return { data: null, error: null };
     });
 
-    const eqStatusMock = vi.fn().mockResolvedValue({
-      data: [
+    profileServiceGetProfilesByUserIdMock.mockResolvedValue([
         {
           id: "profile-2",
           user_id: "user-123",
@@ -187,12 +197,7 @@ describe("SessionService", () => {
           verified: false,
           created_at: "2026-01-01T00:00:00.000Z",
         },
-      ],
-      error: null,
-    });
-    const eqUserMock = vi.fn(() => ({ eq: eqStatusMock }));
-    const selectMock = vi.fn(() => ({ eq: eqUserMock }));
-    fromMock.mockReturnValue({ select: selectMock });
+    ]);
 
     await SessionService.switchProfile("profile-2");
 

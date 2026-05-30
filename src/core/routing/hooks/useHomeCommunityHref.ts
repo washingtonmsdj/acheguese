@@ -71,7 +71,7 @@ export function useHomeCommunityHref(): string {
   return useMemo(() => {
     const fallbackHref = (() => {
       if (fallbackGroupSlug) {
-        return buildCommunityTerritoryUrl(`${fallbackCityPath}/${fallbackGroupSlug}`);
+        return buildCommunityTerritoryUrl(fallbackCityPath);
       }
       return LAUNCH_URLS.community;
     })();
@@ -91,9 +91,9 @@ function extractCurrentTerritoryBaseUrl(pathname: string): string | null {
   const parts = pathname.split("/").filter(Boolean);
   if (parts.length < 3) return null;
 
-  // /comunidade/:state/:city/:territorySlug[/...]
-  if (parts[0] === "comunidade" && parts.length >= 4) {
-    return `/${parts[1]}/${parts[2]}/${parts[3]}`;
+  // /comunidade/:state/:city[/...]
+  if (parts[0] === "comunidade" && parts.length >= 3) {
+    return `/${parts[1]}/${parts[2]}`;
   }
 
   const moduleSlugs = new Set([
@@ -111,15 +111,15 @@ function extractCurrentTerritoryBaseUrl(pathname: string): string | null {
     "guia",
   ]);
 
-  // /[module]/:state/:city/:territorySlug[/...]
-  if (moduleSlugs.has(parts[0]) && parts.length >= 4) {
-    return `/${parts[1]}/${parts[2]}/${parts[3]}`;
+  // /[module]/:state/:city[/...]
+  if (moduleSlugs.has(parts[0]) && parts.length >= 3) {
+    return `/${parts[1]}/${parts[2]}`;
   }
 
-  // /:state/:city/:territorySlug
+  // /:state/:city[/...]
   const statePattern = /^[a-z]{2}$/i;
-  if (statePattern.test(parts[0])) {
-    return `/${parts[0]}/${parts[1]}/${parts[2]}`;
+  if (statePattern.test(parts[0]) && parts[1]) {
+    return `/${parts[0]}/${parts[1]}`;
   }
 
   return null;

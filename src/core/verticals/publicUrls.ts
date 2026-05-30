@@ -1,9 +1,8 @@
 import { GastronomyUrlService } from "@/core/verticals/gastronomy/services/GastronomyUrlService";
-import {
-  MODULE_SLUGS,
-  normalizePublicTerritoryPath,
-} from "@/core/routing/utils/territoryUrls";
-import type { VerticalKey } from './config';
+import { APP_MODULE_SLUGS } from "@/config/moduleSlugs";
+import { buildModuleTerritoryEntityUrl } from "@/core/routing/utils/territoryUrls";
+import { VERTICAL_KEYS, type VerticalKey } from './config';
+import { getRecordValue } from '@/shared/utils/recordLookup';
 
 export interface BusinessVerticalRouteContext {
   id: string;
@@ -27,13 +26,26 @@ const VERTICAL_URL_BUILDERS: Record<VerticalKey, VerticalUrlBuilder> = {
       is_premium: ctx.is_premium,
     }),
   education: (ctx) =>
-    `/${MODULE_SLUGS.education}${normalizePublicTerritoryPath(ctx.geographic_path)}/${ctx.slug || ctx.id}`,
+    buildModuleTerritoryEntityUrl(
+      APP_MODULE_SLUGS.education,
+      ctx.geographic_path,
+      ctx.slug || ctx.id,
+    ),
 };
 
 const VERTICAL_REQUIRES_PROFILE: Record<VerticalKey, boolean> = {
   gastronomy: true,
   education: true,
 };
+
+function verticalRequiresProfile(vertical: VerticalKey): boolean {
+  switch (vertical) {
+    case "gastronomy":
+      return VERTICAL_REQUIRES_PROFILE.gastronomy;
+    case "education":
+      return VERTICAL_REQUIRES_PROFILE.education;
+  }
+}
 
 export function getVerticalPublicUrl(
   vertical: VerticalKey,
@@ -53,17 +65,14 @@ export function getAvailableVerticalPublicUrls(
   ctx: BusinessVerticalRouteContext,
   availability: VerticalAvailability = {},
 ): Partial<Record<VerticalKey, string>> {
-  const urls: Partial<Record<VerticalKey, string>> = {};
+  const entries = VERTICAL_KEYS.flatMap((vertical) => {
+    const hasProfile = getRecordValue(availability.profiles ?? {}, vertical) ?? false;
+    if (verticalRequiresProfile(vertical) && !hasProfile) return [];
 
-  for (const vertical of Object.keys(VERTICAL_URL_BUILDERS) as VerticalKey[]) {
-    const hasProfile = availability.profiles?.[vertical] ?? false;
-    const requiresProfile = VERTICAL_REQUIRES_PROFILE[vertical];
-    if (!requiresProfile || hasProfile) {
-      urls[vertical] = getVerticalPublicUrl(vertical, ctx);
-    }
-  }
+    return [[vertical, getVerticalPublicUrl(vertical, ctx)] as const];
+  });
 
-  return urls;
+  return Object.fromEntries(entries);
 }
 
 function assertNeverVertical(vertical: never): never {

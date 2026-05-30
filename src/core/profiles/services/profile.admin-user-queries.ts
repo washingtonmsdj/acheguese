@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
+import { sanitizeForILike } from "@/shared/utils/sqlSanitization";
 import { mapAdminUserList } from "./profile.service.admin-rules";
 import type { ProfilePermissions, ProfileStatus } from "@/core/profiles/contracts/ProfileRuntimeContracts";
 import type { PassengerRatingRow, UserListRow } from "./profile.service.types";
@@ -213,10 +214,13 @@ export async function getSimilarUsernames(
   limit = 20,
 ): Promise<string[]> {
   try {
+    const sanitizedUsername = sanitizeForILike(username);
+    if (!sanitizedUsername) return [];
+
     const { data, error } = await supabase
       .from(TABLE)
       .select("username")
-      .ilike("username", `${username}%`)
+      .ilike("username", `${sanitizedUsername}%`)
       .limit(limit);
 
     if (error) {

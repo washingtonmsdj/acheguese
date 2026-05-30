@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 import { PAGINATION } from "@/shared/constants";
+import { buildSafeILikePattern } from "@/shared/utils/sqlSanitization";
 import type {
   Post,
   PostStats,
@@ -232,7 +233,10 @@ export async function getPostsByType(
 
     // Busca textual no conteúdo
     if (filters?.search) {
-      query = query.ilike("content", `%${filters.search}%`);
+      const pattern = buildSafeILikePattern(filters.search);
+      if (pattern) {
+        query = query.ilike("content", pattern);
+      }
     }
 
     const { data: posts, error } = await query.limit(100);

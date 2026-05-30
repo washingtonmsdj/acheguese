@@ -4,6 +4,8 @@
 
 import { BusinessService } from "@/core/business/services/BusinessService";
 import { ProfessionalService } from "@/core/professional/services/ProfessionalService";
+import { ProfessionalUrlService } from "@/core/professional/services/ProfessionalUrlService";
+import { jobPublicRoutes } from "@/core/verticals/jobs/routes/jobPublicRoutes";
 import { supabase } from "@/integrations/supabase";
 import { trackError } from "@/shared/utils/errorTracking";
 import { logger } from "@/shared/utils/logger";
@@ -48,13 +50,17 @@ export interface WorkOpportunitySearchResult {
 
 export interface SearchResults {
   businesses: Business[];
-  professionals: Professional[];
+  professionals: ProfessionalSearchResult[];
   opportunities: WorkOpportunitySearchResult[];
   classifieds: Record<string, unknown>[];
   events: Record<string, unknown>[];
   coupons: Record<string, unknown>[];
   total: number;
 }
+
+export type ProfessionalSearchResult = Professional & {
+  target_url: string | null;
+};
 
 export class SearchService {
   private static readonly SLOW_SEARCH_THRESHOLD_MS = 450;
@@ -140,14 +146,17 @@ export class SearchService {
     }
   }
 
-  private static async searchProfessionals(query: string, filters: SearchFilters): Promise<Professional[]> {
+  private static async searchProfessionals(query: string, filters: SearchFilters): Promise<ProfessionalSearchResult[]> {
     try {
       const results = await ProfessionalService.searchProfessionals(query, {
         city: filters.city,
         neighborhood: filters.neighborhood,
         min_rating: filters.minRating,
       });
-      return results as Professional[];
+      return (results as Professional[]).map((professional) => ({
+        ...professional,
+        target_url: ProfessionalUrlService.getCanonicalUrlFromTarget(professional),
+      }));
     } catch (error) {
       logger.error("Error searching professionals:", error);
       return [];
@@ -231,7 +240,21 @@ export class SearchService {
 
       let vagasQuery = (supabase as any)
         .from("vagas")
-        .select("id, titulo, categoria, bairro_nome, urgencia, resumo, empresa_nome, slug, published_at, created_at")
+        .select(`
+          id,
+          titulo,
+          categoria,
+          bairro_nome,
+          urgencia,
+          resumo,
+          empresa_nome,
+          slug,
+          published_at,
+          created_at,
+          location:locations(
+            geographic_path
+          )
+        `)
         .limit(20)
         .or(
           [
@@ -275,6 +298,7 @@ export class SearchService {
         slug: string | null;
         published_at: string | null;
         created_at: string | null;
+        location: { geographic_path: string | null } | null;
       }>).map((item) => ({
         id: item.id,
         headline: item.titulo,
@@ -287,7 +311,7 @@ export class SearchService {
         professional_name: null,
         post_id: null,
         source_kind: "vaga",
-        target_url: `/vagas/detalhe/${item.id}`,
+        target_url: this.buildStructuredVagaTargetUrl(item),
         company_name: item.empresa_nome,
         published_at: item.published_at,
         created_at: item.created_at,
@@ -301,6 +325,24 @@ export class SearchService {
         hasCityFilter: Boolean(filters.city),
         hasNeighborhoodFilter: Boolean(filters.neighborhood),
       });
+    }
+  }
+
+  private static buildStructuredVagaTargetUrl(item: {
+    id: string;
+    slug: string | null;
+    location: { geographic_path: string | null } | null;
+  }): string {
+    if (!item.slug || !item.location?.geographic_path) return jobPublicRoutes.home();
+
+    try {
+      return jobPublicRoutes.detailFromGeographicPath(item.location.geographic_path, item.slug);
+    } catch (error) {
+      logger.warn("SearchService.buildStructuredVagaTargetUrl", {
+        vagaId: item.id,
+        error,
+      });
+      return jobPublicRoutes.home();
     }
   }
 

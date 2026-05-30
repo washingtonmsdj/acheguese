@@ -42,13 +42,14 @@ export function useSSOTMonitoring() {
 
       for (const record of records) {
         for (const { column, validator } of validations) {
-          const value = record[column];
+          const value = Object.entries(record).find(([key]) => key === column)?.[1];
           if (value && typeof value === "string" && !validator(value)) {
+            const recordId = Object.entries(record).find(([key]) => key === "id")?.[1];
             violations.push({
               table,
               column,
               value,
-              recordId: String(record.id || "unknown"),
+              recordId: String(recordId || "unknown"),
               timestamp: new Date().toISOString(),
             });
           }

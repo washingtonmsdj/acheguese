@@ -1,4 +1,5 @@
 import { PLATFORM_BRAND } from "@/shared/config/brand";
+import { secureRandomString } from "@/shared/utils/secureRandom";
 
 /**
  * Site Settings Configuration - SSOT
@@ -93,6 +94,6 @@ export const getFileExtension = (filename: string): string => {
 
 export const generateFileName = (prefix: string, extension: string): string => {
   const timestamp = Date.now();
-  const random = Math.random().toString(36).substring(2, 8);
+  const random = secureRandomString(8);
   return `${prefix}-${timestamp}-${random}.${extension}`;
 };

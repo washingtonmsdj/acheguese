@@ -103,5 +103,13 @@ const ENTITLEMENTS_BY_PLAN: Record<PlanTier, PlanEntitlements> = {
 };
 
 export function getBaselineEntitlements(planTier: PlanTier): PlanEntitlements {
-  return { ...(ENTITLEMENTS_BY_PLAN[planTier] ?? ENTITLEMENTS_BY_PLAN[PlanTier.FREE]) };
+  switch (planTier) {
+    case PlanTier.PRO:
+      return { ...ENTITLEMENTS_BY_PLAN.pro };
+    case PlanTier.DELIVERY:
+      return { ...ENTITLEMENTS_BY_PLAN.delivery };
+    case PlanTier.FREE:
+    default:
+      return { ...ENTITLEMENTS_BY_PLAN.free };
+  }
 }

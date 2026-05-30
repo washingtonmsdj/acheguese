@@ -16,7 +16,7 @@ describe("resolveHomeCommunityHref", () => {
       fallbackHref: "/comunidade/ba/salvador",
     });
 
-    expect(href).toBe("/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina");
+    expect(href).toBe("/comunidade/ba/salvador");
   });
 
   it("abre o bairro quando nao existe grupo ativo para a residencia", () => {
@@ -27,7 +27,7 @@ describe("resolveHomeCommunityHref", () => {
       fallbackHref: "/comunidade/ba/salvador",
     });
 
-    expect(href).toBe("/comunidade/ba/salvador/pituba");
+    expect(href).toBe("/comunidade/ba/salvador");
   });
 
   it("respeita o ultimo grupo territorial usado quando ele esta ativo", () => {
@@ -45,7 +45,7 @@ describe("resolveHomeCommunityHref", () => {
       lastTerritoryBaseUrl: "/ba/salvador/complexo-do-nordeste-de-amaralina",
     });
 
-    expect(href).toBe("/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina");
+    expect(href).toBe("/comunidade/ba/salvador");
   });
 
   it("usa o territorio atual antes de cair no fallback", () => {
@@ -57,6 +57,6 @@ describe("resolveHomeCommunityHref", () => {
       fallbackHref: "/comunidade/ba/salvador",
     });
 
-    expect(href).toBe("/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina");
+    expect(href).toBe("/comunidade/ba/salvador");
   });
 });

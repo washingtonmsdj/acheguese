@@ -1,3 +1,4 @@
+import { COMMUNICATION_CHANNEL_URL_PREVIEW_PATTERN } from '@/core/communication-territorial/utils/communicationTerritorialUrls';
 import { IdentityField, type IdentityFieldProps } from '../IdentityField';
 
 type CommunicationChannelIdentityFieldProps = Omit<
@@ -18,7 +19,7 @@ export function CommunicationChannelIdentityField({
       {...props}
       entityType="communication_channel"
       label={label}
-      previewFn={(slug) => (slug ? `/comunicacao/:uf/:cidade/:territorio/${slug}` : '')}
+      previewFn={(slug) => (slug ? COMMUNICATION_CHANNEL_URL_PREVIEW_PATTERN.replace(":canal", slug) : '')}
       showHistory={showHistory}
       showCooldown={showCooldown}
     />
