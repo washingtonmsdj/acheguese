@@ -9,35 +9,48 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { getAllSecurityHeaders, auditLog, getAuditInfo, errorResponse } from '../_shared/security.ts';
+import {
+  auditLog,
+  errorResponse,
+  getAllSecurityHeaders,
+  getAuditInfo,
+  rateLimitMiddleware,
+  readJsonBody,
+  requireHttpMethod,
+} from '../_shared/security.ts';
 import { requireSuperAdmin } from '../_shared/adminAuth.ts';
 import { validateBody, createUserSchema, validationErrorResponse, type CreateUserBody } from '../_shared/validation.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+const ALLOWED_METHODS = 'POST, OPTIONS';
 
 serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { status: 204, headers: getAllSecurityHeaders('POST, OPTIONS') });
+    return new Response('ok', { status: 204, headers: getAllSecurityHeaders(ALLOWED_METHODS, req) });
   }
 
-  if (req.method !== 'POST') {
-    return new Response(
-      JSON.stringify({ error: 'Method not allowed' }),
-      { status: 405, headers: getAllSecurityHeaders() },
-    );
-  }
+  const methodError = requireHttpMethod(req, ['POST'], ALLOWED_METHODS);
+  if (methodError) return methodError;
 
   // 1. Autenticação e autorização centralizadas
+  const rateLimitResponse = await rateLimitMiddleware(req, 10, 60000);
+  if (rateLimitResponse) return rateLimitResponse;
+
   const auth = await requireSuperAdmin(req);
   if (auth instanceof Response) return auth;
   const { userId: requesterId } = auth;
 
   // 2. Validar body
-  const rawBody = await req.json();
-  const validation = validateBody<CreateUserBody>(rawBody, createUserSchema);
+  const rawBody = await readJsonBody<CreateUserBody>(req, {
+    maxBytes: 8192,
+    methods: ALLOWED_METHODS,
+  });
+  if (!rawBody.ok) return rawBody.response;
+
+  const validation = validateBody<CreateUserBody>(rawBody.data, createUserSchema);
   if (!validation.ok) {
-    return validationErrorResponse(validation.errors);
+    return validationErrorResponse(validation.errors, ALLOWED_METHODS, req);
   }
   const { email, password, username, fullName, role } = validation.data!;
 
@@ -51,7 +64,7 @@ serve(async (req: Request) => {
     if (existingUsers?.users.some((u: { email?: string }) => u.email === email)) {
       return new Response(
         JSON.stringify({ error: 'Email already exists' }),
-        { status: 409, headers: getAllSecurityHeaders() },
+        { status: 409, headers: getAllSecurityHeaders(ALLOWED_METHODS, req) },
       );
     }
 
@@ -65,7 +78,7 @@ serve(async (req: Request) => {
     if (existingProfile) {
       return new Response(
         JSON.stringify({ error: 'Username already exists' }),
-        { status: 409, headers: getAllSecurityHeaders() },
+        { status: 409, headers: getAllSecurityHeaders(ALLOWED_METHODS, req) },
       );
     }
 
@@ -132,7 +145,7 @@ serve(async (req: Request) => {
           roles: newRoles,
         },
       }),
-      { status: 201, headers: getAllSecurityHeaders() },
+      { status: 201, headers: getAllSecurityHeaders(ALLOWED_METHODS, req) },
     );
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error';

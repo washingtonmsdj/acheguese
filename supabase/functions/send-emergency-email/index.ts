@@ -11,16 +11,20 @@ import {
   auditLog,
   getAuditInfo,
   errorResponse,
+  getRequiredEnv,
   isValidUUID,
   isOriginAllowed,
+  readJsonBody,
+  requireHttpMethod,
   sanitizeString,
 } from '../_shared/security.ts';
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
-const EMAIL_FROM_DOMAIN = Deno.env.get('EMAIL_FROM_DOMAIN') || 'onboarding@resend.dev';
-const EMAIL_FROM_NAME = Deno.env.get('EMAIL_FROM_NAME') || 'Alerta de Emergencia';
+const EMAIL_FROM_DOMAIN = getRequiredEnv('EMAIL_FROM_DOMAIN');
+const EMAIL_FROM_NAME = getRequiredEnv('EMAIL_FROM_NAME');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const ALLOWED_METHODS = 'POST, OPTIONS';
 
 const RATE_LIMIT_MAX = 5;
 const RATE_LIMIT_WINDOW_MINUTES = 5;
@@ -74,21 +78,22 @@ interface ContactRecord {
 serve(async (req: Request) => {
   const auditInfo = getAuditInfo(req);
   const origin = req.headers.get('origin');
+  const respond = (body: Record<string, unknown>, status = 200) =>
+    jsonSecurityResponse(body, status, ALLOWED_METHODS, req);
 
   if (origin && !isOriginAllowed(origin)) {
-    return jsonSecurityResponse({ error: 'Origin not allowed' }, 403);
+    return respond({ error: 'Origin not allowed' }, 403);
   }
 
   if (req.method === 'OPTIONS') {
     return new Response('ok', {
       status: 204,
-      headers: getAllSecurityHeaders('POST, OPTIONS'),
+      headers: getAllSecurityHeaders(ALLOWED_METHODS, req),
     });
   }
 
-  if (req.method !== 'POST') {
-    return jsonSecurityResponse({ error: 'Method not allowed' }, 405);
-  }
+  const methodError = requireHttpMethod(req, ['POST'], ALLOWED_METHODS);
+  if (methodError) return methodError;
 
   const rateLimitResponse = await rateLimitMiddleware(req, 100, 60000);
   if (rateLimitResponse) return rateLimitResponse;
@@ -115,25 +120,25 @@ serve(async (req: Request) => {
   const userId = authResult.user.id;
   const userRateLimit = await checkRateLimit(`emergency-email:${userId}`, 30, 5 * 60 * 1000);
   if (!userRateLimit.allowed) {
-    return jsonSecurityResponse(
+    return respond(
       { error: 'Rate limit exceeded. Try again later.' },
       429,
     );
   }
 
   try {
-    let emailRequest: EmailRequest;
-    try {
-      emailRequest = await req.json();
-    } catch {
-      return jsonSecurityResponse({ error: 'Invalid JSON body' }, 400);
-    }
+    const rawBody = await readJsonBody<EmailRequest>(req, {
+      maxBytes: 8192,
+      methods: ALLOWED_METHODS,
+    });
+    if (!rawBody.ok) return rawBody.response;
+    const emailRequest = rawBody.data;
 
     if (!emailRequest.alertId || !isValidUUID(emailRequest.alertId)) {
-      return jsonSecurityResponse({ error: 'Valid alertId is required' }, 400);
+      return respond({ error: 'Valid alertId is required' }, 400);
     }
     if (!emailRequest.contactId || !isValidUUID(emailRequest.contactId)) {
-      return jsonSecurityResponse({ error: 'Valid contactId is required' }, 400);
+      return respond({ error: 'Valid contactId is required' }, 400);
     }
 
     const { data: userProfiles, error: profileError } = await supabase
@@ -145,7 +150,7 @@ serve(async (req: Request) => {
       return errorResponse('Failed to validate user profile', 500, profileError);
     }
     if (!userProfiles || userProfiles.length === 0) {
-      return jsonSecurityResponse({ error: 'User profile not found' }, 403);
+      return respond({ error: 'User profile not found' }, 403);
     }
 
     const userProfileIds = new Set(userProfiles.map((profile: UserProfileRecord) => profile.id));
@@ -160,7 +165,7 @@ serve(async (req: Request) => {
       return errorResponse('Failed to validate alert', 500, alertError);
     }
     if (!alertData) {
-      return jsonSecurityResponse({ error: 'Alert not found' }, 404);
+      return respond({ error: 'Alert not found' }, 404);
     }
 
     const alert = alertData as AlertRecord;
@@ -174,7 +179,7 @@ serve(async (req: Request) => {
         details: { reason: 'alert_not_owned_by_user', alertId: emailRequest.alertId },
         ...auditInfo,
       });
-      return jsonSecurityResponse({ error: 'Forbidden' }, 403);
+      return respond({ error: 'Forbidden' }, 403);
     }
 
     const { data: contactData, error: contactError } = await supabase
@@ -187,7 +192,7 @@ serve(async (req: Request) => {
       return errorResponse('Failed to validate emergency contact', 500, contactError);
     }
     if (!contactData) {
-      return jsonSecurityResponse({ error: 'Emergency contact not found' }, 404);
+      return respond({ error: 'Emergency contact not found' }, 404);
     }
 
     const contact = contactData as ContactRecord;
@@ -205,15 +210,15 @@ serve(async (req: Request) => {
         },
         ...auditInfo,
       });
-      return jsonSecurityResponse({ error: 'Forbidden' }, 403);
+      return respond({ error: 'Forbidden' }, 403);
     }
     if (contact.is_active === false) {
-      return jsonSecurityResponse({ error: 'Emergency contact is inactive' }, 403);
+      return respond({ error: 'Emergency contact is inactive' }, 403);
     }
 
     const contactEmail = extractEmail(contact.phone || '');
     if (!contactEmail) {
-      return jsonSecurityResponse(
+      return respond(
         { error: 'Emergency contact email is not configured' },
         400,
       );
@@ -261,7 +266,7 @@ serve(async (req: Request) => {
         ...auditInfo,
       });
 
-      return jsonSecurityResponse(
+      return respond(
         { error: `Rate limit exceeded. Max ${RATE_LIMIT_MAX} attempts per ${RATE_LIMIT_WINDOW_MINUTES} minutes.` },
         429,
       );
@@ -389,7 +394,7 @@ serve(async (req: Request) => {
     };
 
     return new Response(JSON.stringify(response), {
-      headers: getAllSecurityHeaders('POST, OPTIONS'),
+      headers: getAllSecurityHeaders(ALLOWED_METHODS, req),
     });
   } catch (error) {
     auditLog({
@@ -450,14 +455,20 @@ function escapeHtml(input: string): string {
 }
 
 function translateAlertType(type: string): string {
-  const translations: Record<string, string> = {
-    sos: 'SOS',
-    emergency_button: 'Botao de Emergencia',
-    automatic: 'Alerta Automatico',
-    manual: 'Alerta Manual',
-    panic: 'Panico',
-  };
-  return translations[type] || type;
+  switch (type) {
+    case 'sos':
+      return 'SOS';
+    case 'emergency_button':
+      return 'Botao de Emergencia';
+    case 'automatic':
+      return 'Alerta Automatico';
+    case 'manual':
+      return 'Alerta Manual';
+    case 'panic':
+      return 'Panico';
+    default:
+      return type;
+  }
 }
 
 function buildEmailHtml(
@@ -556,4 +567,3 @@ Este e um email automatico do sistema de seguranca.
 Nao responda a este email.
   `.trim();
 }
-

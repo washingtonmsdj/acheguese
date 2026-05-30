@@ -1,5 +1,5 @@
 // Service Worker para modo offline.
-// Mantido como fallback legado; o service worker ativo de push usa /sw.js.
+// O service worker de push usa /sw.js; este arquivo cobre navegacao offline.
 
 const CACHE_NAME = 'acheguese-v1';
 const OFFLINE_CACHE = 'acheguese-offline-v1';
@@ -14,6 +14,7 @@ const CRITICAL_RESOURCES = [
   '/',
   '/index.html',
   '/offline.html',
+  '/offline.js',
   '/manifest.json',
   '/images/logo-icon.png',
   '/favicon.ico'

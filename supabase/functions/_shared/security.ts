@@ -50,21 +50,15 @@ export function getCorsHeaders(methods = 'POST, OPTIONS', req?: Request): Record
 function resolveAllowedOrigin(requestOrigin: string | null): string {
   const allowedOrigins = Deno.env.get('ALLOWED_ORIGINS') || '';
 
-  // Desenvolvimento: APENAS quando DENO_ENV ou NODE_ENV está explicitamente
-  // definido como 'development'. Nunca inferir pelo conteúdo da SUPABASE_URL.
-  const isDev =
-    Deno.env.get('DENO_ENV') === 'development' ||
-    Deno.env.get('NODE_ENV') === 'development';
-
   // Sem Origin no request (ex: chamadas server-to-server, webhooks) — permitir
   if (!requestOrigin) {
-    if (!allowedOrigins && !isDev) {
+    if (!allowedOrigins) {
       console.warn('⚠️ ALLOWED_ORIGINS não configurado - bloqueando CORS');
     }
     // Sem Origin = não é um request de browser cross-origin; retornar primeira origem
     // configurada como fallback para preflight sem Origin (raro mas possível)
     const origins = allowedOrigins.split(',').map(o => o.trim()).filter(Boolean);
-    return origins[0] ?? (isDev ? 'http://localhost:8080' : 'null');
+    return origins[0] ?? 'null';
   }
 
   // Verificar se a origem solicitada está na lista permitida
@@ -79,26 +73,13 @@ function resolveAllowedOrigin(requestOrigin: string | null): string {
 /**
  * Valida se a origem da requisição é permitida.
  *
- * SEGURANÇA: A detecção de ambiente de desenvolvimento é feita APENAS via
- * DENO_ENV/NODE_ENV explícito. Nunca inferimos dev a partir da SUPABASE_URL
- * para evitar que uma configuração acidental em produção abra o CORS para
- * localhost.
+ * SEGURANÇA: todas as origens permitidas devem estar em ALLOWED_ORIGINS.
+ * Ambiente local tambem deve declarar explicitamente suas origens no template.
  */
 export function isOriginAllowed(origin: string | null): boolean {
   if (!origin) return false;
 
   const allowedOrigins = Deno.env.get('ALLOWED_ORIGINS') || '';
-
-  // Desenvolvimento: APENAS quando DENO_ENV ou NODE_ENV está explicitamente
-  // definido como 'development'. Nunca inferir pelo conteúdo da SUPABASE_URL.
-  const isDev =
-    Deno.env.get('DENO_ENV') === 'development' ||
-    Deno.env.get('NODE_ENV') === 'development';
-
-  if (isDev && (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:'))) {
-    return true;
-  }
-
   if (!allowedOrigins) return false;
 
   const origins = allowedOrigins.split(',').map(o => o.trim()).filter(Boolean);
@@ -149,6 +130,154 @@ export function getAllSecurityHeaders(methods = 'POST, OPTIONS', req?: Request):
     ...getSecurityHeaders(),
     'Content-Type': 'application/json',
   };
+}
+
+export function jsonResponse(
+  body: unknown,
+  status = 200,
+  methods = 'POST, OPTIONS',
+  req?: Request,
+): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: getAllSecurityHeaders(methods, req),
+  });
+}
+
+export function methodNotAllowedResponse(methods = 'POST, OPTIONS', req?: Request): Response {
+  return jsonResponse({ error: 'Method not allowed' }, 405, methods, req);
+}
+
+export function requireHttpMethod(
+  req: Request,
+  allowedMethods: readonly string[],
+  methods = `${allowedMethods.join(', ')}, OPTIONS`,
+): Response | null {
+  if (allowedMethods.includes(req.method)) return null;
+  return methodNotAllowedResponse(methods, req);
+}
+
+export function getRequiredEnv(name: string): string {
+  const value = Deno.env.get(name)?.trim();
+  if (!value) {
+    throw new Error(`Missing required env var: ${name}`);
+  }
+  return value;
+}
+
+export function extractBearerToken(req: Request): string | null {
+  const authHeader = req.headers.get('authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return null;
+  }
+
+  return authHeader.slice(7).trim();
+}
+
+export function requireCronSecret(req: Request, methods = 'POST, OPTIONS'): Response | null {
+  const cronSecret = Deno.env.get('CRON_SECRET')?.trim() ?? '';
+  if (!cronSecret) {
+    console.error('[CronAuth] CRON_SECRET is not configured; request blocked');
+    return jsonResponse(
+      { error: 'Function misconfigured: CRON_SECRET not set' },
+      500,
+      methods,
+      req,
+    );
+  }
+
+  const cronHeader = req.headers.get('x-cron-secret') ?? '';
+  const bearerToken = extractBearerToken(req);
+  if (cronHeader === cronSecret || bearerToken === cronSecret) return null;
+
+  return jsonResponse({ error: 'Unauthorized' }, 401, methods, req);
+}
+
+const DEFAULT_JSON_BODY_LIMIT_BYTES = 64_000;
+
+export async function readJsonBody<T = unknown>(
+  req: Request,
+  options: { maxBytes?: number; methods?: string } = {},
+): Promise<{ ok: true; data: T } | { ok: false; response: Response }> {
+  const maxBytes = options.maxBytes ?? DEFAULT_JSON_BODY_LIMIT_BYTES;
+  const methods = options.methods ?? 'POST, OPTIONS';
+  const contentType = req.headers.get('content-type') ?? '';
+
+  if (contentType && !contentType.toLowerCase().includes('application/json')) {
+    return {
+      ok: false,
+      response: jsonResponse({ error: 'Content-Type must be application/json' }, 415, methods, req),
+    };
+  }
+
+  const contentLength = req.headers.get('content-length');
+  if (contentLength) {
+    const declaredBytes = Number(contentLength);
+    if (!Number.isFinite(declaredBytes) || declaredBytes < 0) {
+      return {
+        ok: false,
+        response: jsonResponse({ error: 'Invalid Content-Length' }, 400, methods, req),
+      };
+    }
+    if (declaredBytes > maxBytes) {
+      return {
+        ok: false,
+        response: jsonResponse({ error: 'Request body too large' }, 413, methods, req),
+      };
+    }
+  }
+
+  const text = await req.text();
+  if (new TextEncoder().encode(text).length > maxBytes) {
+    return {
+      ok: false,
+      response: jsonResponse({ error: 'Request body too large' }, 413, methods, req),
+    };
+  }
+
+  try {
+    return { ok: true, data: JSON.parse(text) as T };
+  } catch {
+    return {
+      ok: false,
+      response: jsonResponse({ error: 'Invalid JSON body' }, 400, methods, req),
+    };
+  }
+}
+
+export async function readTextBody(
+  req: Request,
+  options: { maxBytes?: number; methods?: string } = {},
+): Promise<{ ok: true; data: string } | { ok: false; response: Response }> {
+  const maxBytes = options.maxBytes ?? DEFAULT_JSON_BODY_LIMIT_BYTES;
+  const methods = options.methods ?? 'POST, OPTIONS';
+  const contentLength = req.headers.get('content-length');
+
+  if (contentLength) {
+    const declaredBytes = Number(contentLength);
+    if (!Number.isFinite(declaredBytes) || declaredBytes < 0) {
+      return {
+        ok: false,
+        response: jsonResponse({ error: 'Invalid Content-Length' }, 400, methods, req),
+      };
+    }
+    if (declaredBytes > maxBytes) {
+      return {
+        ok: false,
+        response: jsonResponse({ error: 'Request body too large' }, 413, methods, req),
+      };
+    }
+  }
+
+  const text = await req.text();
+  if (new TextEncoder().encode(text).length > maxBytes) {
+    return {
+      ok: false,
+      response: jsonResponse({ error: 'Request body too large' }, 413, methods, req),
+    };
+  }
+
+  return { ok: true, data: text };
 }
 
 // ══════════════════════════════════════════════════════════════════════════

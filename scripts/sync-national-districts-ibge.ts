@@ -1,4 +1,3 @@
-import https from "node:https";
 import { config } from "dotenv";
 import fetch from "node-fetch";
 import { createClient } from "@supabase/supabase-js";
@@ -41,6 +40,12 @@ interface DistrictPayload {
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL ?? "";
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
+const IBGE_DISTRICTS_URL = readRequiredEnv("IBGE_DISTRICTS_URL");
+const NOMINATIM_BASE_URL = readRequiredHttpsBaseUrl("NOMINATIM_BASE_URL");
+const NOMINATIM_USER_AGENT = readRequiredEnv("NOMINATIM_USER_AGENT");
+const NOMINATIM_DEFAULT_FORMAT = readRequiredEnv("NOMINATIM_DEFAULT_FORMAT");
+const NOMINATIM_DEFAULT_LIMIT = readRequiredEnv("NOMINATIM_DEFAULT_LIMIT");
+const NOMINATIM_DEFAULT_COUNTRY_NAME = readRequiredEnv("NOMINATIM_DEFAULT_COUNTRY_NAME");
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
   throw new Error(
@@ -51,6 +56,22 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
+
+function readRequiredEnv(name: string): string {
+  const value = process.env[name]?.trim();
+  if (!value) throw new Error(`Defina ${name}.`);
+  return value;
+}
+
+function readRequiredHttpsBaseUrl(name: string): string {
+  const value = readRequiredEnv(name).replace(/\/+$/, "");
+  const parsed = new URL(value);
+  if (parsed.protocol !== "https:") {
+    throw new Error(`${name} deve usar HTTPS.`);
+  }
+
+  return parsed.toString().replace(/\/+$/, "");
+}
 
 function normalizeText(value: string): string {
   return value
@@ -102,10 +123,7 @@ async function fetchAllLocationsByType(type: "state" | "city" | "district"): Pro
 }
 
 async function fetchIbgeDistricts(): Promise<IbgeDistrictRow[]> {
-  const url = "https://servicodados.ibge.gov.br/api/v1/localidades/distritos?view=nivelado";
-  const response = await fetch(url, {
-    agent: new https.Agent({ rejectUnauthorized: false }),
-  });
+  const response = await fetch(IBGE_DISTRICTS_URL);
 
   if (!response.ok) {
     throw new Error(`Falha ao buscar distritos do IBGE: HTTP ${response.status}`);
@@ -123,13 +141,16 @@ async function geocodeMunicipalityCenter(
   cityName: string,
   ufName: string,
 ): Promise<{ lat: number; lng: number } | null> {
-  const query = encodeURIComponent(`${cityName}, ${ufName}, Brasil`);
-  const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${query}`;
+  const query = encodeURIComponent(`${cityName}, ${ufName}, ${NOMINATIM_DEFAULT_COUNTRY_NAME}`);
+  const url =
+    `${NOMINATIM_BASE_URL}/search` +
+    `?format=${encodeURIComponent(NOMINATIM_DEFAULT_FORMAT)}` +
+    `&limit=${encodeURIComponent(NOMINATIM_DEFAULT_LIMIT)}` +
+    `&q=${query}`;
 
   const response = await fetch(url, {
-    agent: new https.Agent({ rejectUnauthorized: false }),
     headers: {
-      "User-Agent": "acheguese-territory-sync/1.0",
+      "User-Agent": NOMINATIM_USER_AGENT,
       Accept: "application/json",
     },
   });

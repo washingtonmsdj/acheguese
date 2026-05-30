@@ -1244,7 +1244,6 @@
         "src/modules/communication-territorial/pages/CommunicationCompanyDetailsPage.tsx",
         "src/modules/communication-territorial/pages/CommunicationLandingPage.tsx",
         "src/modules/communication-territorial/pages/CommunicationRequestPage.tsx",
-        "src/modules/communication-territorial/pages/CommunicationTerritoryPage.tsx",
         "src/modules/communication-territorial/pages/CommunityCommunicationTabPage.tsx"
       ],
       "routes": [],
@@ -1256,7 +1255,6 @@
         "src/modules/communication-territorial/hooks/useCommunicationCityHub.ts",
         "src/modules/communication-territorial/hooks/useCommunicationLandingHub.ts",
         "src/modules/communication-territorial/hooks/useCommunicationLocations.ts",
-        "src/modules/communication-territorial/hooks/useCommunicationTerritoryHub.ts",
         "src/modules/communication-territorial/hooks/useCommunityCommunicationFeed.ts"
       ],
       "legacyHooks": [],

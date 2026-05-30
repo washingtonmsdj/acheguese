@@ -88,8 +88,7 @@ Foi criada uma nova página completa de detalhes para empresas/canais de comunic
 
 ### Rotas Existentes (mantidas)
 ```
-/comunicacao/:state/:city/:territorySlug/:channelSlug
-/comunicacao/:state/:city/:territorySlug
+/comunicacao/:state/:city/:channelSlug
 /comunicacao/:state/:city
 /comunicacao
 ```

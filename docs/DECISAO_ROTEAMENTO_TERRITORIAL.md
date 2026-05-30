@@ -82,13 +82,11 @@ Rotas canonicas:
 
 ```text
 /comunidade/ba/salvador
-/comunidade/ba/salvador/nordeste-de-amaralina
-/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina
 
-/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/feed
-/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/grupos
-/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/alertas
-/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/problemas
+/comunidade/ba/salvador/feed
+/comunidade/ba/salvador/grupos
+/comunidade/ba/salvador/alertas
+/comunidade/ba/salvador/problemas
 ```
 
 Papel:
@@ -103,9 +101,9 @@ Papel:
 Rotas como estas podem existir:
 
 ```text
-/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/empresas
-/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/servicos
-/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/classificados
+/comunidade/ba/salvador/empresas
+/comunidade/ba/salvador/servicos
+/comunidade/ba/salvador/classificados
 ```
 
 Mas o papel delas e diferente das rotas publicas diretas:
@@ -124,9 +122,7 @@ Rotas canonicas:
 ```text
 /comunicacao
 /comunicacao/ba/salvador
-/comunicacao/ba/salvador/nordeste-de-amaralina
-/comunicacao/ba/salvador/complexo-do-nordeste-de-amaralina
-/comunicacao/ba/salvador/complexo-do-nordeste-de-amaralina/:channelSlug
+/comunicacao/ba/salvador/:channelSlug
 ```
 
 Papel:

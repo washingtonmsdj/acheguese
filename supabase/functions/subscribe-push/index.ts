@@ -8,10 +8,19 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { getAllSecurityHeaders, rateLimitMiddleware, errorResponse, isValidUUID } from '../_shared/security.ts';
+import {
+  errorResponse,
+  getAllSecurityHeaders,
+  isValidUUID,
+  rateLimitMiddleware,
+  readJsonBody,
+  requireHttpMethod,
+} from '../_shared/security.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const ALLOWED_METHODS = 'POST, OPTIONS';
 
 interface SubscribePushRequest {
   userId: string;
@@ -27,20 +36,15 @@ interface SubscribePushRequest {
 serve(async (req: Request) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { status: 204, headers: getAllSecurityHeaders('POST, OPTIONS') });
+    return new Response('ok', { status: 204, headers: getAllSecurityHeaders(ALLOWED_METHODS, req) });
   }
+
+  const methodError = requireHttpMethod(req, ['POST'], ALLOWED_METHODS);
+  if (methodError) return methodError;
 
   // Rate limiting
   const rateLimitResponse = await rateLimitMiddleware(req, 10, 60000);
   if (rateLimitResponse) return rateLimitResponse;
-
-  // 1. Validate HTTP method
-  if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-      status: 405,
-      headers: getAllSecurityHeaders(),
-    });
-  }
 
   try {
     // 2. Validate authentication
@@ -49,19 +53,28 @@ serve(async (req: Request) => {
       return errorResponse('Missing authorization header', 401);
     }
 
-    // Create Supabase client
+    const authClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      global: { headers: { Authorization: authHeader } },
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     // Get user from token
     const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    const { data: { user }, error: authError } = await authClient.auth.getUser(token);
 
     if (authError || !user) {
       return errorResponse('Invalid token', 401);
     }
 
     // 3. Parse and validate input
-    const body: SubscribePushRequest = await req.json();
+    const rawBody = await readJsonBody<SubscribePushRequest>(req, {
+      maxBytes: 16_000,
+      methods: ALLOWED_METHODS,
+    });
+    if (!rawBody.ok) return rawBody.response;
+
+    const body = rawBody.data;
     const { userId, subscription, userAgent, deviceName } = body;
 
     if (!userId || !isValidUUID(userId) || !subscription || !subscription.endpoint || !subscription.p256dh || !subscription.auth) {
@@ -106,7 +119,7 @@ serve(async (req: Request) => {
           message: 'Subscription updated',
           subscriptionId: existing.id,
         }),
-        { status: 200, headers: getAllSecurityHeaders() }
+        { status: 200, headers: getAllSecurityHeaders(ALLOWED_METHODS, req) }
       );
     }
 
@@ -137,7 +150,7 @@ serve(async (req: Request) => {
         message: 'Subscription created',
         subscriptionId: newSubscription.id,
       }),
-      { status: 200, headers: getAllSecurityHeaders() }
+      { status: 200, headers: getAllSecurityHeaders(ALLOWED_METHODS, req) }
     );
   } catch (error) {
     console.error('Exception in subscribe-push function:', error);

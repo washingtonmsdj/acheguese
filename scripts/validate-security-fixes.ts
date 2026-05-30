@@ -13,7 +13,7 @@ interface ValidationResult {
   details?: string;
 }
 
-const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx']);
+const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx', '.html']);
 const IGNORED_DIRECTORIES = new Set(['node_modules', 'dist', 'build', '.git', '.tmp', 'coverage']);
 
 type SourceMatch = {
@@ -26,6 +26,7 @@ class SecurityValidator {
   private results: ValidationResult[] = [];
   private readonly rootPath = process.cwd();
   private readonly srcPath = path.join(this.rootPath, 'src');
+  private readonly publicPath = path.join(this.rootPath, 'public');
 
   async validate(): Promise<void> {
     console.log('Validando correcoes de seguranca...\n');
@@ -69,7 +70,10 @@ class SecurityValidator {
   private findInSource(predicate: (line: string, file: string) => boolean): SourceMatch[] {
     const matches: SourceMatch[] = [];
 
-    for (const file of this.listSourceFiles(this.srcPath)) {
+    for (const file of [
+      ...this.listSourceFiles(this.srcPath),
+      ...this.listSourceFiles(this.publicPath),
+    ]) {
       const relativeFile = path.relative(this.rootPath, file).replace(/\\/g, '/');
       const lines = fs.readFileSync(file, 'utf-8').split(/\r?\n/);
 

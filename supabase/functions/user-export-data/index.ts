@@ -13,17 +13,20 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   getAllSecurityHeaders,
   rateLimitMiddleware,
-  isValidUUID,
   errorResponse,
   auditLog,
   getAuditInfo,
+  requireHttpMethod,
 } from "../_shared/security.ts";
 
 serve(async (req: Request) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { status: 204, headers: getAllSecurityHeaders('POST, OPTIONS') });
+    return new Response('ok', { status: 204, headers: getAllSecurityHeaders('POST, OPTIONS', req) });
   }
+
+  const methodError = requireHttpMethod(req, ['POST'], 'POST, OPTIONS');
+  if (methodError) return methodError;
 
   // Rate limit: 5 requests por hora por usuário
   const rateLimitResponse = await rateLimitMiddleware(req, 5, 60 * 60 * 1000);
@@ -40,10 +43,11 @@ serve(async (req: Request) => {
 
     // Initialize Supabase clients
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
     // Client with user's JWT (for validation)
-    const userClient = createClient(supabaseUrl, supabaseServiceKey, {
+    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: `Bearer ${jwt}` } },
       auth: { autoRefreshToken: false, persistSession: false },
     });
@@ -282,7 +286,7 @@ serve(async (req: Request) => {
       {
         status: 200,
         headers: {
-          ...getAllSecurityHeaders('POST, OPTIONS'),
+          ...getAllSecurityHeaders('POST, OPTIONS', req),
           'Content-Disposition': `attachment; filename="meus-dados-${userId.slice(0, 8)}-${new Date().toISOString().split('T')[0]}.json"`,
           'X-Export-Size': String(sizeInBytes),
           'X-Export-Tables': String(Object.keys(userData).length),

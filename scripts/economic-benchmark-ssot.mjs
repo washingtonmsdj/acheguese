@@ -271,7 +271,7 @@ async function runBenchmarkWithPg(outputPath) {
   for (const candidate of candidates) {
     const candidateClient = new Client({
       connectionString: candidate.connectionString,
-      ssl: { rejectUnauthorized: false },
+      ssl: true,
       connectionTimeoutMillis: 12000,
     });
     try {

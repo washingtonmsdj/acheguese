@@ -123,7 +123,7 @@ O service nao deve importar componentes de comunidade. A comunidade consome o co
 
 ## Comunidade
 
-Adicionar uma aba ou secao `Comunicacao` em `/comunidade/:state/:city/:territorySlug`.
+Adicionar uma aba ou secao `Comunicacao` em `/comunidade/:state/:city`.
 
 Essa aba deve:
 

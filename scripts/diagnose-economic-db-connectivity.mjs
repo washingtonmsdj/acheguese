@@ -57,7 +57,7 @@ function buildCandidates() {
           database: db,
           user: u,
           password,
-          ssl: { rejectUnauthorized: false },
+          ssl: true,
         });
       }
       out.push({
@@ -67,7 +67,7 @@ function buildCandidates() {
         database: db,
         user: u,
         password,
-        ssl: { rejectUnauthorized: false },
+        ssl: true,
       });
     }
   }

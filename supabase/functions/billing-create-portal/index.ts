@@ -14,25 +14,29 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import Stripe from 'https://esm.sh/stripe@14.21.0'
 import { validateBody, createPortalSchema, validationErrorResponse, type CreatePortalBody } from '../_shared/validation.ts'
-import { getAllSecurityHeaders, errorResponse, rateLimitMiddleware } from '../_shared/security.ts'
+import {
+  errorResponse,
+  getAllSecurityHeaders,
+  rateLimitMiddleware,
+  readJsonBody,
+  requireHttpMethod,
+} from '../_shared/security.ts'
+
+const ALLOWED_METHODS = 'POST, OPTIONS'
 
 serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { status: 204, headers: getAllSecurityHeaders('POST, OPTIONS') })
+    return new Response('ok', { status: 204, headers: getAllSecurityHeaders(ALLOWED_METHODS, req) })
   }
+
+  const methodError = requireHttpMethod(req, ['POST'], ALLOWED_METHODS)
+  if (methodError) return methodError
 
   // Rate limiting via SSOT — 30 req/min por IP
   const rl = await rateLimitMiddleware(req, 30, 60000)
   if (rl) return rl
 
   try {
-    if (req.method !== 'POST') {
-      return new Response(
-        JSON.stringify({ error: 'Method not allowed' }),
-        { status: 405, headers: getAllSecurityHeaders() }
-      )
-    }
-
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
       return errorResponse('Missing authorization header', 401)
@@ -50,10 +54,15 @@ serve(async (req: Request) => {
       return errorResponse('Invalid token', 401)
     }
 
-    const rawBody = await req.json()
-    const validation = validateBody<CreatePortalBody>(rawBody, createPortalSchema)
+    const rawBody = await readJsonBody<CreatePortalBody>(req, {
+      maxBytes: 4096,
+      methods: ALLOWED_METHODS,
+    })
+    if (!rawBody.ok) return rawBody.response
+
+    const validation = validateBody<CreatePortalBody>(rawBody.data, createPortalSchema)
     if (!validation.ok) {
-      return validationErrorResponse(validation.errors)
+      return validationErrorResponse(validation.errors, ALLOWED_METHODS, req)
     }
     const { returnUrl } = validation.data!
 
@@ -110,7 +119,7 @@ serve(async (req: Request) => {
 
     return new Response(
       JSON.stringify({ url: session.url }),
-      { status: 200, headers: getAllSecurityHeaders() }
+      { status: 200, headers: getAllSecurityHeaders(ALLOWED_METHODS, req) }
     )
   } catch (error) {
     console.error('Error in billing-create-portal:', error)

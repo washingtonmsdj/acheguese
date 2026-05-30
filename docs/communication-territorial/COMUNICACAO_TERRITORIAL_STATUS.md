@@ -38,8 +38,7 @@ Frontend publico:
 - `/comunicacao`
 - `/comunicacao/solicitar`
 - `/comunicacao/:state/:city`
-- `/comunicacao/:state/:city/:territorySlug`
-- `/comunicacao/:state/:city/:territorySlug/:channelSlug`
+- `/comunicacao/:state/:city/:channelSlug`
 
 Operacao:
 

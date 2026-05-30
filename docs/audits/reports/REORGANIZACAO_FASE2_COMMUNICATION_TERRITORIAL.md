@@ -31,14 +31,12 @@ Criado `services/communicationTerritorialGateway.ts` para centralizar:
 Criado `services/communicationRouting.ts` com wrappers:
 - `buildCommunicationChannelPath`
 - `buildCommunicationCityPath`
-- `buildCommunicationTerritoryPath`
 
 ### 4. Hooks de consulta por caso de uso
 Criados:
 - `hooks/useCommunicationLandingHub.ts`
 - `hooks/useCommunicationLocations.ts`
 - `hooks/useCommunicationCityHub.ts`
-- `hooks/useCommunicationTerritoryHub.ts`
 - `hooks/useCommunicationChannelPublicPage.ts`
 - `hooks/useCommunityCommunicationFeed.ts`
 
@@ -47,7 +45,6 @@ Migradas sem alterar rotas nem UI:
 - `pages/CommunicationLandingPage.tsx`
 - `pages/CommunicationRequestPage.tsx`
 - `pages/CommunicationCityPage.tsx`
-- `pages/CommunicationTerritoryPage.tsx`
 - `pages/CommunicationChannelPage.tsx`
 - `pages/CommunicationCompanyDetailsPage.tsx`
 - `pages/CommunityCommunicationTabPage.tsx`

@@ -14,7 +14,18 @@
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-import { getAllSecurityHeaders, errorResponse } from '../_shared/security.ts';
+import {
+  errorResponse,
+  getAllSecurityHeaders,
+  getRequiredEnv,
+  rateLimitMiddleware,
+  requireHttpMethod,
+} from '../_shared/security.ts';
+import {
+  isSafePublicId,
+  isSafePublicUrlSegment,
+  trimTrailingSlashes,
+} from '../_shared/url_validation.ts';
 
 // Sitemap é um recurso público consumido por crawlers (sem credenciais).
 // Usamos getAllSecurityHeaders() do SSOT, que já configura CORS corretamente
@@ -35,13 +46,95 @@ const STATIC_PAGES: SitemapURL[] = [
   { loc: '/classificados', changefreq: 'hourly', priority: 0.8 },
   { loc: '/eventos', changefreq: 'daily', priority: 0.8 },
   { loc: '/comunidade', changefreq: 'hourly', priority: 0.8 },
-  { loc: '/profissionais', changefreq: 'daily', priority: 0.8 },
+  { loc: '/servicos', changefreq: 'daily', priority: 0.8 },
   { loc: '/sobre', changefreq: 'monthly', priority: 0.5 },
   { loc: '/contato', changefreq: 'monthly', priority: 0.5 },
   { loc: '/privacidade', changefreq: 'monthly', priority: 0.3 },
   { loc: '/termos', changefreq: 'monthly', priority: 0.3 },
   { loc: '/cookies', changefreq: 'monthly', priority: 0.3 },
 ];
+
+type LocationRelation = { geographic_path?: string | null } | null;
+
+interface BusinessSitemapRow {
+  profile_id: string;
+  slug: string | null;
+  updated_at: string | null;
+  location: LocationRelation;
+}
+
+interface EventSitemapRow {
+  id: string;
+  updated_at: string | null;
+  location: LocationRelation;
+}
+
+interface ClassifiedSitemapRow {
+  id: string;
+  public_id: string | null;
+  slug: string | null;
+  updated_at: string | null;
+  locations: LocationRelation;
+  classified_categories: { slug?: string | null } | null;
+  classified_subcategories: { slug?: string | null } | null;
+}
+
+function cleanUrlSegment(value: string | null | undefined): string | null {
+  const segment = String(value ?? '').trim().toLowerCase();
+  return isSafePublicUrlSegment(segment) ? segment : null;
+}
+
+function cleanPublicId(value: string | null | undefined): string | null {
+  const publicId = String(value ?? '').trim();
+  return isSafePublicId(publicId) ? publicId : null;
+}
+
+function getTerritoryParts(geographicPath: string | null | undefined): {
+  state: string;
+  city: string;
+  district?: string;
+} | null {
+  const parts = String(geographicPath ?? '').split('/').filter(Boolean);
+  const territoryParts = parts[0] === 'br' ? parts.slice(1) : parts;
+  const [rawState, rawCity, rawDistrict] = territoryParts;
+  const state = cleanUrlSegment(rawState);
+  const city = cleanUrlSegment(rawCity);
+  const district = cleanUrlSegment(rawDistrict);
+
+  if (!state || !city) return null;
+  return district ? { state, city, district } : { state, city };
+}
+
+function buildBusinessSitemapUrl(row: BusinessSitemapRow): string | null {
+  const slug = cleanUrlSegment(row.slug);
+  const territory = getTerritoryParts(row.location?.geographic_path);
+  if (!slug || !territory?.district) return null;
+
+  return `/empresas/${territory.state}/${territory.city}/${territory.district}/${slug}`;
+}
+
+function buildEventSitemapUrl(row: EventSitemapRow): string {
+  const territory = getTerritoryParts(row.location?.geographic_path);
+  if (!territory) return `/eventos/evento/${row.id}`;
+
+  return `/eventos/${territory.state}/${territory.city}/evento/${row.id}`;
+}
+
+function buildClassifiedSitemapUrl(row: ClassifiedSitemapRow): string | null {
+  const publicId = cleanPublicId(row.public_id);
+  if (!publicId) return null;
+
+  const slug = cleanUrlSegment(row.slug);
+  const category = cleanUrlSegment(row.classified_categories?.slug);
+  const subcategory = cleanUrlSegment(row.classified_subcategories?.slug);
+  const territory = getTerritoryParts(row.locations?.geographic_path);
+
+  if (slug && category && subcategory && territory?.district) {
+    return `/classificados/${territory.state}/${territory.city}/${territory.district}/${category}/${subcategory}/${slug}/${publicId}`;
+  }
+
+  return `/c/${publicId}`;
+}
 
 function generateSitemapXML(urls: SitemapURL[], baseUrl: string): string {
   const urlEntries = urls.map((url) => {
@@ -64,13 +157,18 @@ ${urlEntries}
 Deno.serve(async (req: Request) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: getAllSecurityHeaders('GET, OPTIONS') });
+    return new Response(null, { headers: getAllSecurityHeaders('GET, OPTIONS', req) });
   }
 
+  const methodError = requireHttpMethod(req, ['GET'], 'GET, OPTIONS');
+  if (methodError) return methodError;
+
+  const rateLimitResponse = await rateLimitMiddleware(req, 120, 60000);
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
-    // Get base URL from request
-    const url = new URL(req.url);
-    const baseUrl = Deno.env.get('BASE_URL') || 'https://ordax.com.br';
+    const baseUrl = trimTrailingSlashes(getRequiredEnv('BASE_URL'));
+    new URL(baseUrl);
     
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -83,17 +181,26 @@ Deno.serve(async (req: Request) => {
     // Fetch businesses (public only)
     try {
       const { data: businesses } = await supabase
-        .from('businesses')
-        .select('slug, updated_at')
+        .from('business_data')
+        .select(`
+          profile_id,
+          slug,
+          updated_at,
+          location:locations!location_id(geographic_path)
+        `)
         .eq('status', 'active')
+        .in('business_role', ['standalone', 'branch'])
         .not('slug', 'is', null)
+        .not('location_id', 'is', null)
         .limit(1000);
       
       if (businesses) {
-        businesses.forEach((business) => {
+        (businesses as BusinessSitemapRow[]).forEach((business) => {
+          const loc = buildBusinessSitemapUrl(business);
+          if (!loc) return;
           urls.push({
-            loc: `/negocios/${business.slug}`,
-            lastmod: business.updated_at,
+            loc,
+            lastmod: business.updated_at ?? undefined,
             changefreq: 'weekly',
             priority: 0.7,
           });
@@ -105,18 +212,24 @@ Deno.serve(async (req: Request) => {
     
     // Fetch events (active only)
     try {
+      const nowIso = new Date().toISOString();
       const { data: events } = await supabase
         .from('events')
-        .select('id, updated_at')
-        .eq('status', 'active')
-        .gte('end_date', new Date().toISOString())
+        .select(`
+          id,
+          date,
+          updated_at,
+          location:locations(geographic_path)
+        `)
+        .in('status', ['upcoming', 'ongoing'])
+        .or(`end_date.gte.${nowIso},and(end_date.is.null,date.gte.${nowIso})`)
         .limit(1000);
       
       if (events) {
-        events.forEach((event) => {
+        (events as EventSitemapRow[]).forEach((event) => {
           urls.push({
-            loc: `/eventos/${event.id}`,
-            lastmod: event.updated_at,
+            loc: buildEventSitemapUrl(event),
+            lastmod: event.updated_at ?? undefined,
             changefreq: 'daily',
             priority: 0.6,
           });
@@ -130,15 +243,26 @@ Deno.serve(async (req: Request) => {
     try {
       const { data: classifieds } = await supabase
         .from('classifieds')
-        .select('id, updated_at')
-        .eq('status', 'active')
+        .select(`
+          id,
+          public_id,
+          slug,
+          updated_at,
+          locations(geographic_path),
+          classified_categories(slug),
+          classified_subcategories(slug)
+        `)
+        .eq('is_active', true)
+        .not('public_id', 'is', null)
         .limit(1000);
       
       if (classifieds) {
-        classifieds.forEach((classified) => {
+        (classifieds as ClassifiedSitemapRow[]).forEach((classified) => {
+          const loc = buildClassifiedSitemapUrl(classified);
+          if (!loc) return;
           urls.push({
-            loc: `/classificados/${classified.id}`,
-            lastmod: classified.updated_at,
+            loc,
+            lastmod: classified.updated_at ?? undefined,
             changefreq: 'daily',
             priority: 0.6,
           });
@@ -154,7 +278,7 @@ Deno.serve(async (req: Request) => {
     // Return with caching headers
     return new Response(sitemap, {
       headers: {
-        ...getAllSecurityHeaders('GET, OPTIONS'),
+        ...getAllSecurityHeaders('GET, OPTIONS', req),
         'Content-Type': 'application/xml',
         'Cache-Control': 'public, max-age=3600, s-maxage=3600',
       },

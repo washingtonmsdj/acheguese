@@ -501,6 +501,32 @@ export const gastronomyCancelSchema: Schema<GastronomyCancelBody> = {
   immediately: { required: false, validator: v.boolean() },
 };
 
+/** Schema para exclusao LGPD de conta */
+export interface DeleteAccountBody {
+  reason?: string;
+  confirmation: boolean;
+  export_first?: boolean;
+}
+
+export const deleteAccountSchema: Schema<DeleteAccountBody> = {
+  reason: { required: false, validator: v.string(1, 500) },
+  confirmation: { required: true, validator: v.boolean() },
+  export_first: { required: false, validator: v.boolean() },
+};
+
+/** Schema para geracao de conteudo de territorio por IA */
+export interface TerritoryAiContentBody {
+  territory_slug: string;
+  territory_name: string;
+  members?: string[];
+}
+
+export const territoryAiContentSchema: Schema<TerritoryAiContentBody> = {
+  territory_slug: { required: true, validator: v.string(1, 120) },
+  territory_name: { required: true, validator: v.string(1, 160) },
+  members: { required: false, validator: v.array(0) },
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPERS DE RESPOSTA
 // ─────────────────────────────────────────────────────────────────────────────
@@ -512,6 +538,8 @@ export const gastronomyCancelSchema: Schema<GastronomyCancelBody> = {
  */
 export function validationErrorResponse(
   errors: Record<string, string>,
+  methods = "POST, OPTIONS",
+  req?: Request,
 ): Response {
   return new Response(
     JSON.stringify({
@@ -520,7 +548,7 @@ export function validationErrorResponse(
     }),
     {
       status: 400,
-      headers: getAllSecurityHeaders(),
+      headers: getAllSecurityHeaders(methods, req),
     },
   );
 }

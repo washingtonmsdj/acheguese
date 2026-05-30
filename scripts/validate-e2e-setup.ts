@@ -113,23 +113,33 @@ async function validateEnvironment() {
   console.log("\n2. Servidor de desenvolvimento");
   console.log("-".repeat(60));
 
-  const baseUrl = process.env.PLAYWRIGHT_BASE_URL || process.env.BASE_URL || "http://localhost:8080";
+  const baseUrl = process.env.PLAYWRIGHT_BASE_URL || process.env.BASE_URL;
 
-  try {
-    const response = await fetch(baseUrl, { method: "HEAD" });
-    const result: ValidationResult = response.ok
-      ? { name: "Dev Server", status: "PASS", message: `Respondendo em ${baseUrl}` }
-      : { name: "Dev Server", status: "WARN", message: `Status ${response.status} em ${baseUrl}` };
-    addResult(result.name, result.status, result.message);
-    logResult(result);
-  } catch {
+  if (!baseUrl) {
     const result: ValidationResult = {
       name: "Dev Server",
       status: "FAIL",
-      message: `Nao esta rodando em ${baseUrl}`,
+      message: "Configure PLAYWRIGHT_BASE_URL ou BASE_URL",
     };
     addResult(result.name, result.status, result.message);
     logResult(result);
+  } else {
+    try {
+      const response = await fetch(baseUrl, { method: "HEAD" });
+      const result: ValidationResult = response.ok
+        ? { name: "Dev Server", status: "PASS", message: `Respondendo em ${baseUrl}` }
+        : { name: "Dev Server", status: "WARN", message: `Status ${response.status} em ${baseUrl}` };
+      addResult(result.name, result.status, result.message);
+      logResult(result);
+    } catch {
+      const result: ValidationResult = {
+        name: "Dev Server",
+        status: "FAIL",
+        message: `Nao esta rodando em ${baseUrl}`,
+      };
+      addResult(result.name, result.status, result.message);
+      logResult(result);
+    }
   }
 
   console.log("\n3. Auth anonimo");

@@ -154,9 +154,14 @@ export async function requireSuperAdmin(req: Request): Promise<AdminAuthResult |
   return result;
 }
 
-export function jsonResponse(body: unknown, status = 200): Response {
+export function jsonResponse(
+  body: unknown,
+  status = 200,
+  methods = 'POST, OPTIONS',
+  req?: Request,
+): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: getAllSecurityHeaders(),
+    headers: getAllSecurityHeaders(methods, req),
   });
 }

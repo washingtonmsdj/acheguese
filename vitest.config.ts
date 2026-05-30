@@ -2,6 +2,10 @@ import { defineConfig } from 'vitest/config';
 import { resolve } from 'path';
 import { loadEnv } from 'vite';
 
+function loadClientEnv(mode: string) {
+  return loadEnv(mode, process.cwd(), 'VITE_');
+}
+
 export default defineConfig(({ mode }) => ({
   test: {
     globals: true,
@@ -11,10 +15,12 @@ export default defineConfig(({ mode }) => ({
     fileParallelism: false,
     testTimeout: 120000, // 2 minutos para testes operacionais (Gate 6/7 com auto-dispatch)
     hookTimeout: 30000,
-    env: loadEnv(mode, process.cwd(), ''),
+    env: loadClientEnv(mode),
     exclude: [
       '**/node_modules/**',
       '**/dist/**',
+      '**/tmp/**',
+      'tmp/**',
       '**/.{idea,git,cache,output,temp}/**',
       '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
       'e2e/**',

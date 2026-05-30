@@ -173,8 +173,7 @@ src/modules/communication-territorial/v2/
 ### Rotas Existentes (Mantidas)
 ```
 /comunicacao/empresa/:channelSlug              # V1 - Página de detalhes
-/comunicacao/:state/:city/:territorySlug/:channelSlug  # Rota territorial completa
-/comunicacao/:state/:city/:territorySlug       # Página de território
+/comunicacao/:state/:city/:channelSlug         # Página pública canônica do canal
 /comunicacao/:state/:city                      # Página de cidade
 /comunicacao                                   # Landing page
 ```

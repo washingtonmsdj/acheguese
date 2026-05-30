@@ -4,11 +4,12 @@ export function jsonSecurityResponse(
   body: Record<string, unknown>,
   status = 200,
   methods = "POST, OPTIONS",
+  req?: Request,
 ): Response {
   return new Response(JSON.stringify(body), {
     status,
     headers: {
-      ...getAllSecurityHeaders(methods),
+      ...getAllSecurityHeaders(methods, req),
       "Content-Type": "application/json",
     },
   });
@@ -32,6 +33,8 @@ export async function requireAuthenticatedUser(
     return jsonSecurityResponse(
       { success: false, error: "Missing authorization token" },
       401,
+      "POST, OPTIONS",
+      req,
     );
   }
 
@@ -44,6 +47,8 @@ export async function requireAuthenticatedUser(
     return jsonSecurityResponse(
       { success: false, error: "Invalid or expired token" },
       401,
+      "POST, OPTIONS",
+      req,
     );
   }
 
@@ -72,6 +77,8 @@ export async function requireBusinessManagementAccess(
     return jsonSecurityResponse(
       { success: false, error: "Failed to verify business access" },
       500,
+      "POST, OPTIONS",
+      req,
     );
   }
 
@@ -79,6 +86,8 @@ export async function requireBusinessManagementAccess(
     return jsonSecurityResponse(
       { success: false, error: "Business not found" },
       404,
+      "POST, OPTIONS",
+      req,
     );
   }
 
@@ -95,6 +104,8 @@ export async function requireBusinessManagementAccess(
     return jsonSecurityResponse(
       { success: false, error: "Failed to verify business ownership" },
       500,
+      "POST, OPTIONS",
+      req,
     );
   }
 
@@ -112,6 +123,8 @@ export async function requireBusinessManagementAccess(
     return jsonSecurityResponse(
       { success: false, error: "Failed to verify profile membership" },
       500,
+      "POST, OPTIONS",
+      req,
     );
   }
 
@@ -123,9 +136,10 @@ export async function requireBusinessManagementAccess(
     return jsonSecurityResponse(
       { success: false, error: "User is not allowed to manage this business" },
       403,
+      "POST, OPTIONS",
+      req,
     );
   }
 
   return { user: { id: userId }, businessProfileId };
 }
-

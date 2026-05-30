@@ -26,10 +26,43 @@
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 9%;
+    --info: 217 91% 60%;
+    --info-foreground: 0 0% 100%;
     --border: 0 0% 20%;
     --input: 0 0% 20%;
     --ring: 171 77% 56%;
     --radius: 0.75rem;
+    --radius-sm: calc(var(--radius) - 4px);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) + 4px);
+    --radius-full: 9999px;
+    --space-xs: 0.25rem;
+    --space-sm: 0.5rem;
+    --space-md: 1rem;
+    --space-lg: 1.5rem;
+    --space-xl: 2rem;
+    --space-2xl: 3rem;
+    --duration-fast: 150ms;
+    --duration-normal: 200ms;
+    --duration-slow: 300ms;
+    --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+    --shadow-color: 0 0% 0%;
+    --shadow-sm: 0 1px 2px 0 hsl(var(--shadow-color) / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(var(--shadow-color) / 0.1);
+    --shadow-lg: 0 10px 15px -3px hsl(var(--shadow-color) / 0.1);
+    --shadow-xl: 0 20px 25px -5px hsl(var(--shadow-color) / 0.1);
+    --shadow-accent: 0 10px 30px -5px hsl(var(--primary) / 0.3);
+    --shadow-glow-primary: 0 0 20px hsl(var(--primary) / 0.3);
+    --shadow-glow-primary-strong: 0 0 30px hsl(var(--primary) / 0.6);
+    --map-popup-background: hsl(var(--popover));
+    --map-popup-foreground: hsl(var(--popover-foreground));
+    --map-popup-shadow: 0 2px 8px hsl(var(--shadow-color) / 0.15);
+    --map-popup-radius: var(--radius-sm);
+    --map-popup-min-width: 9.375rem;
+    --map-popup-user-border-width: 0.125rem;
+    --map-popup-user-border: hsl(var(--success));
+    --map-popup-z-index: 10001;
     --sidebar-background: 200 20% 9%;
     --sidebar-foreground: 0 0% 98%;
     --sidebar-primary: 171 77% 56%;
@@ -61,6 +94,8 @@
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 9%;
+    --info: 217 91% 60%;
+    --info-foreground: 0 0% 100%;
     --border: 0 0% 90%;
     --input: 0 0% 90%;
     --ring: 171 77% 40%;
@@ -90,7 +125,12 @@
     overflow-x: hidden;
     max-width: 100vw;
   }
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: "Space Grotesk", sans-serif;
   }
 }
@@ -131,7 +171,9 @@
 }
 
 .sidebar-transition {
-  transition: margin-left 0.3s ease-in-out, width 0.3s ease-in-out;
+  transition:
+    margin-left 0.3s ease-in-out,
+    width 0.3s ease-in-out;
 }
 
 @keyframes shimmer {
@@ -144,7 +186,12 @@
 }
 
 .skeleton-shimmer {
-  background: linear-gradient(90deg, hsl(var(--muted)) 0%, hsla(var(--muted-foreground), 0.1) 50%, hsl(var(--muted)) 100%);
+  background: linear-gradient(
+    90deg,
+    hsl(var(--muted)) 0%,
+    hsla(var(--muted-foreground), 0.1) 50%,
+    hsl(var(--muted)) 100%
+  );
   background-size: 1000px 100%;
   animation: shimmer 2s infinite linear;
 }
@@ -154,11 +201,12 @@
 }
 
 @keyframes pulse-glow {
-  0%, 100% {
-    box-shadow: 0 0 20px rgba(233, 30, 99, 0.3);
+  0%,
+  100% {
+    box-shadow: var(--shadow-glow-primary);
   }
   50% {
-    box-shadow: 0 0 30px rgba(233, 30, 99, 0.6);
+    box-shadow: var(--shadow-glow-primary-strong);
   }
 }
 
@@ -192,32 +240,32 @@
 
 /* MapLibre Popup Styles - Fix para popup branco/vazio */
 .maplibregl-popup-content {
-  background: white !important;
+  background: var(--map-popup-background) !important;
   padding: 0 !important;
-  border-radius: 8px !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
-  min-width: 150px !important;
+  border-radius: var(--map-popup-radius) !important;
+  box-shadow: var(--map-popup-shadow) !important;
+  min-width: var(--map-popup-min-width) !important;
 }
 
 .maplibregl-popup-content > div {
-  background: white !important;
-  color: #333 !important;
+  background: var(--map-popup-background) !important;
+  color: var(--map-popup-foreground) !important;
 }
 
 .maplibregl-popup-tip {
-  border-top-color: white !important;
+  border-top-color: var(--map-popup-background) !important;
 }
 
 .user-location-popup .maplibregl-popup-content {
-  background: white !important;
-  border: 2px solid #10b981 !important;
+  background: var(--map-popup-background) !important;
+  border: var(--map-popup-user-border-width) solid var(--map-popup-user-border) !important;
 }
 
 .user-location-popup .maplibregl-popup-tip {
-  border-top-color: white !important;
+  border-top-color: var(--map-popup-background) !important;
 }
 
 /* Garantir que o popup seja visível */
 .maplibregl-popup {
-  z-index: 10001 !important;
+  z-index: var(--map-popup-z-index) !important;
 }

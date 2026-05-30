@@ -8,10 +8,12 @@ Keep public Supabase config in the repository-local environment files and keep t
 
 - `VITE_SUPABASE_URL` may exist in `.env.local`, `.env`, or `.env.remote`.
 - `VITE_SUPABASE_PUBLISHABLE_KEY` may exist in `.env.local`, `.env`, or `.env.remote`.
-- `SUPABASE_SERVICE_ROLE_KEY` must not be persisted in repository environment files.
+- Real `SUPABASE_SERVICE_ROLE_KEY` values must not be persisted in repository environment files. Templates may contain empty placeholders only.
+- `SUPABASE_ANON_KEY` is required by Supabase Edge Functions and may use the same current public publishable/anon key value.
 - `VITE_SUPABASE_SERVICE_ROLE_KEY` is deprecated and must not be introduced again.
 - Frontend code must not depend on service-role credentials.
 - Administrative scripts may consume `SUPABASE_SERVICE_ROLE_KEY` only from the current shell or a backend secret manager.
+- Edge Function provider secrets are documented in `docs/EDGE_FUNCTION_SECRETS.md`.
 
 ## Current Local Workflow
 
@@ -52,6 +54,7 @@ This writes only public variables to `.env.local`. It does not persist the servi
 ## What Works From Now On
 
 - Frontend runtime uses `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`.
+- Edge Functions use `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`.
 - Login, signup, public reads, and normal browser flows continue to work without admin secrets.
 - Admin scripts work after the local import step loads `SUPABASE_SERVICE_ROLE_KEY` into the shell.
 

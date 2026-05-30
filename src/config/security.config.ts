@@ -516,6 +516,33 @@ export const ALLOWED_IMAGE_EXTENSIONS = [
 ] as const;
 
 /**
+ * Image URL Protocol Allowlist
+ *
+ * Separate from link protocols because images may allow safe image data URLs,
+ * while interactive links must keep all data: URLs blocked.
+ */
+export const ALLOWED_IMAGE_PROTOCOLS = [
+  'http:',
+  'https:',
+  'data:',
+] as const;
+
+/**
+ * Image data URL MIME allowlist
+ *
+ * SVG is intentionally excluded because it can carry active content.
+ */
+export const ALLOWED_IMAGE_DATA_MIME_TYPES = [
+  'image/png',
+  'image/jpeg',
+  'image/gif',
+  'image/webp',
+  'image/avif',
+  'image/bmp',
+  'image/x-icon',
+] as const;
+
+/**
  * Blocked Image Extensions
  * 
  * Dangerous formats that can contain scripts.
@@ -528,45 +555,13 @@ export const BLOCKED_IMAGE_EXTENSIONS = [
 ] as const;
 
 /**
- * Secure Cookie Configuration
- * 
- * Implements secure cookie best practices.
- * Used by cookie storage implementation.
- * 
- * HTTPONLY: FALSE (Client-side - Limitação Técnica)
- * 
- * JUSTIFICATIVA TÉCNICA:
- * - Vite é SPA (Single Page Application) puro
- * - SPA = Client-side only (sem server-side por padrão)
- * - HttpOnly TRUE requer backend server-side
- * - Vercel + Vite = Static hosting (sem server-side)
- * 
- * ALTERNATIVAS AVALIADAS:
- * 1. Migrar para Next.js: Custo ALTO, benefício +3%
- * 2. Backend separado: Custo MÉDIO, benefício +3%
- * 3. Manter atual: Custo ZERO, segurança 97%
- * 
- * DECISÃO: Manter httpOnly: false
- * - Segurança atual: 97% (EXCELENTE)
- * - Risco atual: 0.1% (MÍNIMO)
- * - 6 outras camadas de defesa ativas
- * - Supabase já gerencia auth server-side
- * - Custo-benefício não justifica migração
- * 
- * DEFESA EM PROFUNDIDADE (6 CAMADAS):
- * 1. Input Validation
- * 2. HTML Sanitization (DOMPurify)
- * 3. URL Validation
- * 4. Image Validation
- * 5. CSP (Content Security Policy)
- * 6. Secure Headers
- * 
- * IMPLEMENTAÇÃO:
- * - Client-side: Define cookies via JavaScript
- * - Supabase: Gerencia autenticação server-side
- * - Tokens: Gerenciados pelo Supabase (HttpOnly em seus cookies)
- * 
- * @see HTTPONLY_REALISTIC_APPROACH.md - Análise completa
+ * Browser cookie configuration for Supabase auth storage.
+ *
+ * This SPA can only create browser-readable cookies. HttpOnly must not be
+ * claimed here because it requires a server-side auth boundary. The production
+ * guarantee in this frontend is strict cookie-only persistence: SameSite=Strict,
+ * Secure on HTTPS, no auth token fallback to localStorage, and CSP/sanitization
+ * as the XSS control layer.
  */
 export const SECURE_COOKIE_CONFIG = {
   // Path - available on all routes
@@ -581,11 +576,7 @@ export const SECURE_COOKIE_CONFIG = {
   // Max-Age - 7 days (balance security vs UX)
   maxAge: 60 * 60 * 24 * 7,
   
-  // HttpOnly - FALSE (Client-side)
-  // LIMITAÇÃO TÉCNICA: Vite é SPA puro (sem server-side)
-  // JUSTIFICATIVA: Ver documentação acima
-  // SEGURANÇA: 97% com 6 outras camadas de defesa
-  // RISCO: 0.1% (MÍNIMO)
+  // HttpOnly cannot be set by JavaScript. Do not treat this as HttpOnly auth.
   httpOnly: false,
   
   // Domain - Not set (defaults to current domain)
@@ -600,6 +591,27 @@ export const SECURE_COOKIE_CONFIG = {
  */
 export const AUTH_COOKIE_PREFIX = 'sb-auth' as const;
 export const AUTH_STORAGE_KEY = 'acheguese-auth-token' as const;
+
+/**
+ * Supabase browser auth storage limits and migration cleanup.
+ *
+ * Values are centralized because cookie payload size, cleanup timing, and legacy
+ * localStorage keys are security-sensitive operational contracts.
+ */
+export const AUTH_BROWSER_STORAGE_CONFIG = {
+  maxCookieChunkSize: 3800,
+  maxCookieChunks: 8,
+  authUrlCleanupDelayMs: 5 * 1000,
+  recoveryEventTimeoutMs: 3 * 1000,
+  cookieProbeKey: '__acheguese_auth_cookie_probe__',
+  cookieProbeMaxAgeSeconds: 1,
+  localStorageProbeKey: '__acheguese_auth_local_storage_probe__',
+  legacyLocalStorageKeys: [
+    AUTH_STORAGE_KEY,
+    'token',
+    'sb-auth-token',
+  ],
+} as const;
 
 /**
  * Rate Limiting Configuration
@@ -648,18 +660,17 @@ export const INPUT_VALIDATION = {
  * MUST be updated on every security config change.
  */
 export const SECURITY_AUDIT_LOG = {
-  lastReview: '2026-05-26',
+  lastReview: '2026-05-29',
   reviewer: 'Codex',
-  version: '2.6.1',
+  version: '2.8.0',
   changes: [
     'Initial SSOT implementation',
     'CSP directives centralized',
     'Domain registry created',
     'Type-safe configuration',
     'Comprehensive documentation',
-    'HttpOnly analysis: FALSE justified (Vite SPA limitation)',
-    'Realistic approach documented',
-    'Defense in depth: 6 layers active',
+    'Browser-readable cookie limitation documented for Vite SPA auth',
+    'Defense-in-depth controls centralized without HttpOnly claims',
     'Cache headers added for performance',
     // v2.3.0 — Security fixes
     'FIX: isOriginAllowed — detecção de dev não mais baseada em SUPABASE_URL',
@@ -696,8 +707,15 @@ export const SECURITY_AUDIT_LOG = {
     'FIX: CSP violation — permite AdSense loader e SW cleanup scripts via hash whitelist',
     // v2.6.1 — Monthly security review
     'AUDIT: revisão mensal de CSP, headers, domínios documentados, vercel.json e hardcodes de segurança sem erros',
+    // v2.7.0 — Auth storage hardening
+    'FIX: Supabase auth storage migrado para cookie-only sem fallback para localStorage',
+    'FIX: Supabase auth flow migrado de implicit para PKCE',
+    'FIX: limites de cookie chunking e limpeza de URL centralizados em AUTH_BROWSER_STORAGE_CONFIG',
+    // v2.8.0 - URL/media safety centralization
+    'FIX: validacao segura de URLs de links e imagens centralizada em utilitario unico',
+    'FIX: data URLs de imagem limitadas a MIME types raster seguros',
   ],
-  nextReview: '2026-06-26',
+  nextReview: '2026-06-29',
 } as const;
 
 /**
@@ -770,15 +788,15 @@ export const CACHE_HEADERS = {
  * Metadata about this configuration file.
  */
 export const SECURITY_CONFIG_METADATA = {
-  version: '2.6.1',
+  version: '2.8.0',
   created: '2026-04-18',
-  lastModified: '2026-05-26',
+  lastModified: '2026-05-29',
   author: 'Kiro AI',
   purpose: 'Single Source of Truth for security configurations',
   criticality: 'CRITICAL',
   changeControl: 'Requires security review and approval',
-  httpOnly: 'FALSE_JUSTIFIED',
-  architecture: 'Vite SPA (client-side only)',
+  httpOnly: 'SERVER_SIDE_REQUIRED',
+  architecture: 'Vite SPA with cookie-only browser auth storage',
 } as const;
 
 /**
@@ -791,6 +809,8 @@ export type CSPDirective = keyof typeof CSP_DIRECTIVES;
 export type SecurityHeader = keyof typeof SECURITY_HEADERS;
 export type AllowedImageExtension = typeof ALLOWED_IMAGE_EXTENSIONS[number];
 export type BlockedImageExtension = typeof BLOCKED_IMAGE_EXTENSIONS[number];
+export type AllowedImageProtocol = typeof ALLOWED_IMAGE_PROTOCOLS[number];
+export type AllowedImageDataMimeType = typeof ALLOWED_IMAGE_DATA_MIME_TYPES[number];
 export type AllowedURLProtocol = typeof ALLOWED_URL_PROTOCOLS[number];
 export type BlockedURLProtocol = typeof BLOCKED_URL_PROTOCOLS[number];
 

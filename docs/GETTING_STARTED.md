@@ -346,7 +346,7 @@ Agora que seu ambiente está configurado:
 
 - **Issues**: [GitHub Issues](https://github.com/seu-usuario/projeto/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/seu-usuario/projeto/discussions)
-- **Email**: dev@acheguese.com.br
+- **Email**: configure `VITE_CONTACT_EMAIL`
 
 ### Recursos Externos
 

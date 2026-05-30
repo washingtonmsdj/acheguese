@@ -42,7 +42,6 @@ src/modules/communication-territorial/
 │   ├── CommunicationLandingPage.tsx ⭐ (NOVA - era V2)
 │   ├── CommunicationRequestPage.tsx
 │   ├── CommunicationCityPage.tsx
-│   ├── CommunicationTerritoryPage.tsx
 │   ├── CommunicationChannelPage.tsx
 │   └── CommunityCommunicationTabPage.tsx
 ├── v2/
@@ -74,8 +73,7 @@ src/modules/communication-territorial/
 ```
 /comunicacao/solicitar → CommunicationRequestPage
 /comunicacao/:state/:city → CommunicationCityPage
-/comunicacao/:state/:city/:territorySlug → CommunicationTerritoryPage
-/comunicacao/:state/:city/:territorySlug/:channelSlug → CommunicationChannelPage
+/comunicacao/:state/:city/:channelSlug → CommunicationChannelPage
 ```
 
 ## 📝 Mudanças no Código

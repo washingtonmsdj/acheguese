@@ -115,7 +115,7 @@ Modelo publico atual:
 /empresas/:state/:city                     -> vitrine publica do modulo na cidade
 /empresas/:state/:city/:district           -> vitrine publica do modulo no bairro
 /empresas/:state/:city/:groupSlug          -> vitrine publica do modulo no grupo
-/comunidade/:state/:city/:territorySlug    -> experiencia social/local do territorio (canonica)
+/comunidade/:state/:city                   -> experiencia social/local da cidade (canonica)
 ```
 
 Exemplo real:

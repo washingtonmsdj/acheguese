@@ -34,12 +34,13 @@ export const TERRITORY_CONFIG = {
 } as const;
 
 export const LAUNCH_URLS = {
-  community: buildAppModulePath(APP_MODULE_SLUGS.community, LAUNCH_COMMUNITY_TERRITORY_PATH),
+  community: buildAppModulePath(APP_MODULE_SLUGS.community, LAUNCH_CITY_PATH),
   business: buildAppModulePath(APP_MODULE_SLUGS.business, LAUNCH_CITY_PATH),
   services: buildAppModulePath(APP_MODULE_SLUGS.services, LAUNCH_CITY_PATH),
   classifieds: buildAppModulePath(APP_MODULE_SLUGS.classifieds, LAUNCH_CITY_PATH),
   gastronomy: buildAppModulePath(APP_MODULE_SLUGS.gastronomy, LAUNCH_CITY_PATH),
   education: buildAppModulePath(APP_MODULE_SLUGS.education, LAUNCH_CITY_PATH),
-  events: buildAppModulePath(APP_MODULE_SLUGS.events, LAUNCH_COMMUNITY_TERRITORY_PATH),
+  events: buildAppModulePath(APP_MODULE_SLUGS.events, LAUNCH_CITY_PATH),
   jobs: buildAppModulePath(APP_MODULE_SLUGS.jobs, LAUNCH_CITY_PATH),
+  touristPoints: buildAppModulePath(APP_MODULE_SLUGS.touristPoints, LAUNCH_CITY_PATH),
 } as const;

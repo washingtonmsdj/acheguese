@@ -16,6 +16,8 @@ import {
   getAuditInfo,
   isOriginAllowed,
   isValidUUID,
+  readJsonBody,
+  requireHttpMethod,
   sanitizeString,
 } from '../_shared/security.ts';
 
@@ -24,25 +26,27 @@ interface SuspendRequest {
   reason: string;
 }
 
+const ALLOWED_METHODS = 'POST, OPTIONS';
+
 Deno.serve(async (req: Request) => {
   const auditInfo = getAuditInfo(req);
   const origin = req.headers.get('origin');
+  const respond = (body: unknown, status = 200) => jsonResponse(body, status, ALLOWED_METHODS, req);
 
   if (origin && !isOriginAllowed(origin)) {
-    return jsonResponse({ error: 'Origin not allowed' }, 403);
+    return respond({ error: 'Origin not allowed' }, 403);
   }
   
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { 
       status: 204, 
-      headers: getAllSecurityHeaders('POST, OPTIONS'),
+      headers: getAllSecurityHeaders(ALLOWED_METHODS, req),
     });
   }
 
-  if (req.method !== 'POST') {
-    return jsonResponse({ error: 'Method not allowed' }, 405);
-  }
+  const methodError = requireHttpMethod(req, ['POST'], ALLOWED_METHODS);
+  if (methodError) return methodError;
 
   // Rate limiting (mais restritivo para operações admin)
   const rateLimitResponse = await rateLimitMiddleware(req, 20, 60000);
@@ -53,10 +57,11 @@ Deno.serve(async (req: Request) => {
   if (authResult instanceof Response) return authResult;
 
   // 2. Parse body
-  let body: SuspendRequest;
-  try {
-    body = await req.json();
-  } catch {
+  const rawBody = await readJsonBody<SuspendRequest>(req, {
+    maxBytes: 4096,
+    methods: ALLOWED_METHODS,
+  });
+  if (!rawBody.ok) {
     auditLog({
       timestamp: new Date().toISOString(),
       userId: authResult.userId,
@@ -66,16 +71,17 @@ Deno.serve(async (req: Request) => {
       details: { reason: 'invalid_json' },
       ...auditInfo,
     });
-    return jsonResponse({ error: 'Invalid JSON body' }, 400);
+    return rawBody.response;
   }
+  const body = rawBody.data;
 
   // 3. Validar entrada
   if (!body.profile_id?.trim() || !isValidUUID(body.profile_id)) {
-    return jsonResponse({ error: 'Valid profile_id is required' }, 400);
+    return respond({ error: 'Valid profile_id is required' }, 400);
   }
 
   if (!body.reason?.trim()) {
-    return jsonResponse({ error: 'reason is required for suspension' }, 400);
+    return respond({ error: 'reason is required for suspension' }, 400);
   }
 
   const sanitizedReason = sanitizeString(body.reason, 500);
@@ -103,7 +109,7 @@ Deno.serve(async (req: Request) => {
       details: { profileId: body.profile_id, error: error.message },
       ...auditInfo,
     });
-    return jsonResponse({ error: 'Failed to suspend profile' }, 500);
+    return respond({ error: 'Failed to suspend profile' }, 500);
   }
 
   // Audit log de sucesso
@@ -117,6 +123,6 @@ Deno.serve(async (req: Request) => {
     ...auditInfo,
   });
 
-  return jsonResponse(data);
+  return respond(data);
 });
 

@@ -31,7 +31,8 @@ import { SafeHtml } from '@/shared/components/security';
 localStorage.setItem('auth_token', token);
 
 // ✅ CORRETO
-// Use HttpOnly cookies (configurado no Supabase)
+// Use o storage de auth centralizado em src/integrations/supabase/cookieStorage.ts.
+// No SPA Vite, nao afirmar HttpOnly: isso requer fronteira server-side.
 ```
 
 ### 4. SEMPRE valide URLs de usuário

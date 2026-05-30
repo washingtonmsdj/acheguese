@@ -16,26 +16,30 @@ import {
   errorResponse,
   auditLog,
   getAuditInfo,
+  readJsonBody,
+  requireHttpMethod,
 } from "../_shared/security.ts";
+import { deleteAccountSchema, validateBody, type DeleteAccountBody } from "../_shared/validation.ts";
 
-const corsHeaders = getAllSecurityHeaders('POST, OPTIONS');
+const ALLOWED_METHODS = 'POST, OPTIONS';
+
+function responseHeaders(req: Request): Record<string, string> {
+  return getAllSecurityHeaders(ALLOWED_METHODS, req);
+}
 
 /** Extrai mensagem de erro de forma type-safe */
 function toErrorMessage(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
 }
 
-interface DeleteRequest {
-  reason?: string;
-  confirmation: boolean; // Must be true
-  export_first?: boolean; // If true, export data before deletion
-}
-
 serve(async (req: Request) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response('ok', { status: 204, headers: responseHeaders(req) });
   }
+
+  const methodError = requireHttpMethod(req, ['POST'], ALLOWED_METHODS);
+  if (methodError) return methodError;
 
   // Rate limit: 3 tentativas por dia
   const rateLimitResponse = await rateLimitMiddleware(req, 3, 24 * 60 * 60 * 1000);
@@ -43,7 +47,21 @@ serve(async (req: Request) => {
 
   try {
     // Parse request body
-    const body: DeleteRequest = await req.json();
+    const rawBody = await readJsonBody<DeleteAccountBody>(req, {
+      maxBytes: 4096,
+      methods: ALLOWED_METHODS,
+    });
+    if (!rawBody.ok) return rawBody.response;
+
+    const validation = validateBody<DeleteAccountBody>(rawBody.data, deleteAccountSchema);
+    if (!validation.ok) {
+      return new Response(
+        JSON.stringify({ error: 'Validation failed', details: validation.errors }),
+        { status: 400, headers: responseHeaders(req) },
+      );
+    }
+
+    const body = validation.data!;
 
     if (!body.confirmation) {
       return errorResponse('Confirmation required to delete account', 400);
@@ -100,7 +118,7 @@ serve(async (req: Request) => {
           message: 'You must transfer or close your businesses before deleting your account',
           businesses: activeBusinesses.map(b => ({ id: b.id, name: b.name })),
         }),
-        { status: 409, headers: corsHeaders }
+        { status: 409, headers: responseHeaders(req) }
       );
     }
 
@@ -118,7 +136,7 @@ serve(async (req: Request) => {
           message: 'You must complete or cancel pending rides before deleting your account',
           rides: pendingRides,
         }),
-        { status: 409, headers: corsHeaders }
+        { status: 409, headers: responseHeaders(req) }
       );
     }
 
@@ -376,7 +394,7 @@ serve(async (req: Request) => {
       }, null, 2),
       {
         status: 200,
-        headers: corsHeaders,
+        headers: responseHeaders(req),
       }
     );
 
@@ -385,4 +403,3 @@ serve(async (req: Request) => {
     return errorResponse('Deletion failed', 500, error);
   }
 });
-

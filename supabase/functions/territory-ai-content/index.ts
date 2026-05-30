@@ -1,35 +1,47 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { checkRateLimit, getAllSecurityHeaders, isOriginAllowed } from "../_shared/security.ts";
+import {
+  checkRateLimit,
+  getAllSecurityHeaders,
+  isOriginAllowed,
+  readJsonBody,
+  requireHttpMethod,
+} from "../_shared/security.ts";
 import { jsonSecurityResponse, requireAuthenticatedUser } from "../_shared/businessAuth.ts";
+import {
+  territoryAiContentSchema,
+  validateBody,
+  type TerritoryAiContentBody,
+} from "../_shared/validation.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") || "";
+const ALLOWED_METHODS = "POST, OPTIONS";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-interface TerritoryPayload {
-  territory_slug: string;
-  territory_name: string;
-  members?: string[];
-}
-
 serve(async (req: Request) => {
+  const respond = (body: Record<string, unknown>, status = 200) =>
+    jsonSecurityResponse(body, status, ALLOWED_METHODS, req);
+
   const origin = req.headers.get("origin");
   if (origin && !isOriginAllowed(origin)) {
-    return jsonSecurityResponse({ error: "Origin not allowed" }, 403);
+    return respond({ error: "Origin not allowed" }, 403);
   }
 
   if (req.method === "OPTIONS") {
     return new Response("ok", {
       status: 204,
-      headers: getAllSecurityHeaders("POST, OPTIONS"),
+      headers: getAllSecurityHeaders(ALLOWED_METHODS, req),
     });
   }
 
+  const methodError = requireHttpMethod(req, ["POST"], ALLOWED_METHODS);
+  if (methodError) return methodError;
+
   if (!LOVABLE_API_KEY) {
-    return jsonSecurityResponse({ error: "LOVABLE_API_KEY not configured" }, 500);
+    return respond({ error: "LOVABLE_API_KEY not configured" }, 500);
   }
 
   const authResult = await requireAuthenticatedUser(req, supabase);
@@ -39,20 +51,34 @@ serve(async (req: Request) => {
 
   const rateLimit = await checkRateLimit(`territory-ai:${authResult.user.id}`, 10, 60 * 60 * 1000);
   if (!rateLimit.allowed) {
-    return jsonSecurityResponse(
+    return respond(
       { error: "Rate limit exceeded. Try again later." },
       429,
     );
   }
 
   try {
-    const { territory_slug, territory_name, members }: TerritoryPayload = await req.json();
+    const rawBody = await readJsonBody<TerritoryAiContentBody>(req, {
+      maxBytes: 16_000,
+      methods: ALLOWED_METHODS,
+    });
+    if (!rawBody.ok) return rawBody.response;
+
+    const validation = validateBody<TerritoryAiContentBody>(
+      rawBody.data,
+      territoryAiContentSchema,
+    );
+    if (!validation.ok) {
+      return respond({ error: "Validation failed", details: validation.errors }, 400);
+    }
+
+    const { territory_slug, territory_name, members } = validation.data!;
 
     const territorySlug = (territory_slug || "").trim().toLowerCase();
     const territoryName = (territory_name || "").trim();
 
     if (!territorySlug || !territoryName) {
-      return jsonSecurityResponse(
+      return respond(
         { error: "territory_slug and territory_name are required" },
         400,
       );
@@ -61,7 +87,7 @@ serve(async (req: Request) => {
     const sanitizedMembers = Array.isArray(members)
       ? members
           .map((member) => String(member).trim())
-          .filter((member) => member.length > 0)
+          .filter((member) => member.length > 0 && member.length <= 120)
           .slice(0, 30)
       : [];
 
@@ -118,15 +144,15 @@ Seja preciso e use informacoes reais sobre Salvador. Se nao tiver dados exatos, 
 
     if (!aiResponse.ok) {
       if (aiResponse.status === 429) {
-        return jsonSecurityResponse({ error: "Rate limit exceeded. Try again later." }, 429);
+        return respond({ error: "Rate limit exceeded. Try again later." }, 429);
       }
       if (aiResponse.status === 402) {
-        return jsonSecurityResponse({ error: "Payment required. Add funds to workspace." }, 402);
+        return respond({ error: "Payment required. Add funds to workspace." }, 402);
       }
 
       const errText = await aiResponse.text();
       console.error("AI gateway error:", aiResponse.status, errText);
-      return jsonSecurityResponse({ error: "AI gateway error" }, 502);
+      return respond({ error: "AI gateway error" }, 502);
     }
 
     const aiData = await aiResponse.json();
@@ -139,7 +165,7 @@ Seja preciso e use informacoes reais sobre Salvador. Se nao tiver dados exatos, 
       parsed = JSON.parse(content);
     } catch {
       console.error("Failed to parse AI response:", content);
-      return jsonSecurityResponse({ error: "Failed to parse AI response" }, 500);
+      return respond({ error: "Failed to parse AI response" }, 500);
     }
 
     const { data, error } = await supabase
@@ -163,14 +189,13 @@ Seja preciso e use informacoes reais sobre Salvador. Se nao tiver dados exatos, 
 
     if (error) {
       console.error("DB error:", error);
-      return jsonSecurityResponse({ error: "Failed to save content" }, 500);
+      return respond({ error: "Failed to save content" }, 500);
     }
 
-    return jsonSecurityResponse({ success: true, data }, 200);
+    return respond({ success: true, data }, 200);
   } catch (e) {
     console.error("Error:", e);
-    return jsonSecurityResponse({ error: "Internal server error" }, 500);
+    return respond({ error: "Internal server error" }, 500);
   }
 });
-
 

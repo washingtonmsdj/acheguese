@@ -11,79 +11,48 @@
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-import { getAllSecurityHeaders, isOriginAllowed } from '../_shared/security.ts';
+import {
+  getAllSecurityHeaders,
+  isOriginAllowed,
+  jsonResponse,
+  rateLimitMiddleware,
+  requireCronSecret,
+  requireHttpMethod,
+} from '../_shared/security.ts';
 
-const CRON_SECRET = Deno.env.get('CRON_SECRET') || '';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
-
-function jsonResponse(body: Record<string, unknown>, status = 200): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: {
-      ...getAllSecurityHeaders('GET, POST, OPTIONS'),
-      'Content-Type': 'application/json',
-    },
-  });
-}
-
-function extractBearerToken(req: Request): string | null {
-  const authHeader = req.headers.get('authorization');
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return null;
-  }
-
-  return authHeader.slice(7).trim();
-}
-
-function isAuthorized(req: Request): boolean {
-  if (!CRON_SECRET) return false;
-
-  const cronHeader = req.headers.get('x-cron-secret') || '';
-  const bearerToken = extractBearerToken(req);
-
-  // Aceita apenas CRON_SECRET — nunca a service role key como token HTTP.
-  return cronHeader === CRON_SECRET || bearerToken === CRON_SECRET;
-}
 
 Deno.serve(async (req: Request) => {
   const origin = req.headers.get('origin');
   if (origin && !isOriginAllowed(origin)) {
-    return jsonResponse({ success: false, error: 'Origin not allowed' }, 403);
+    return jsonResponse({ success: false, error: 'Origin not allowed' }, 403, 'POST, OPTIONS', req);
   }
 
   if (req.method === 'OPTIONS') {
     return new Response('ok', {
       status: 204,
-      headers: getAllSecurityHeaders('GET, POST, OPTIONS'),
+      headers: getAllSecurityHeaders('POST, OPTIONS', req),
     });
   }
+
+  const methodError = requireHttpMethod(req, ['POST'], 'POST, OPTIONS');
+  if (methodError) return methodError;
+
+  const rateLimitResponse = await rateLimitMiddleware(req, 30, 60000);
+  if (rateLimitResponse) return rateLimitResponse;
 
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
     return jsonResponse(
       { success: false, error: 'Function misconfigured: missing Supabase credentials' },
       500,
+      'POST, OPTIONS',
+      req,
     );
   }
 
-  if (!CRON_SECRET) {
-    console.error('[ProcessTimeouts] CRON_SECRET não configurado — requisição bloqueada');
-    return jsonResponse(
-      { success: false, error: 'Function misconfigured: CRON_SECRET not set' },
-      500,
-    );
-  }
-
-  if (!isAuthorized(req)) {
-    return jsonResponse(
-      {
-        success: false,
-        error: 'Unauthorized',
-        timestamp: new Date().toISOString(),
-      },
-      401,
-    );
-  }
+  const cronAuthError = requireCronSecret(req, 'POST, OPTIONS');
+  if (cronAuthError) return cronAuthError;
 
   try {
     const supabaseClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -102,6 +71,8 @@ Deno.serve(async (req: Request) => {
           executionTime,
         },
         500,
+        'POST, OPTIONS',
+        req,
       );
     }
 
@@ -118,6 +89,8 @@ Deno.serve(async (req: Request) => {
         executionTime,
       },
       200,
+      'POST, OPTIONS',
+      req,
     );
   } catch (err) {
     console.error('Unexpected error:', err);
@@ -128,8 +101,9 @@ Deno.serve(async (req: Request) => {
         timestamp: new Date().toISOString(),
       },
       500,
+      'POST, OPTIONS',
+      req,
     );
   }
 });
-
 

@@ -13,7 +13,7 @@ Este dominio nao substitui `/comunidade` e nao deve virar mais um feed social. E
 Decisao de produto atualizada em 2026-05-15:
 
 - `/comunicacao` e a listagem/descoberta dos agentes de comunicacao do territorio.
-- O feed proprio do canal vive na pagina canonica do canal em `/comunicacao/:state/:city/:territorySlug/:channelSlug`.
+- O feed proprio do canal vive na pagina canonica do canal em `/comunicacao/:state/:city/:channelSlug`.
 - As publicacoes dos canais tambem devem ser distribuidas na comunidade relacionada, em uma aba de Comunicacao ou bloco equivalente.
 - Conteudo do tipo materia/reportagem deve abrir sua experiencia canonica no canal.
 - Conteudo do tipo postagem comum, com texto/fotos, pode ser consumido diretamente na comunidade sem obrigar navegacao para a pagina do canal.
@@ -24,11 +24,10 @@ A rota publica canonica do dominio e:
 ```text
 /comunicacao
 /comunicacao/:state/:city
-/comunicacao/:state/:city/:territorySlug
-/comunicacao/:state/:city/:territorySlug/:channelSlug
+/comunicacao/:state/:city/:channelSlug
 ```
 
-Observacao: o projeto usa `state`, `city` e `territorySlug` nas rotas territoriais. `uf` e aceito como conceito de produto, mas o contrato tecnico deve manter o padrao existente.
+Observacao: o projeto usa `state` e `city` nas rotas publicas canonicas de modulos. `uf` e aceito como conceito de produto, mas o contrato tecnico deve manter o padrao existente.
 
 ## Objetivo estrategico
 
@@ -381,18 +380,10 @@ Papel: explicar a camada, listar cidades/territorios ativos, entrada institucion
 
 Papel: hub editorial da cidade, canais verificados e noticias por territorio.
 
-### Territorio
-
-```text
-/comunicacao/:state/:city/:territorySlug
-```
-
-Papel: hub editorial do bairro/grupo, feed de noticias, utilidade publica, canais ativos e alertas institucionais.
-
 ### Canal
 
 ```text
-/comunicacao/:state/:city/:territorySlug/:channelSlug
+/comunicacao/:state/:city/:channelSlug
 ```
 
 Papel: pagina publica canonica do canal de comunicacao.
@@ -400,9 +391,9 @@ Papel: pagina publica canonica do canal de comunicacao.
 ### Subrotas opcionais
 
 ```text
-/comunicacao/:state/:city/:territorySlug/noticias
-/comunicacao/:state/:city/:territorySlug/alertas
-/comunicacao/:state/:city/:territorySlug/canais
+/comunicacao/:state/:city/noticias
+/comunicacao/:state/:city/alertas
+/comunicacao/:state/:city/canais
 ```
 
 ## Relacao com `/comunidade`
@@ -495,7 +486,7 @@ Responsabilidades:
 - [x] Adicionar `content_format` em `communication_publications`.
 - [x] Criar `communication_publication_distribution`.
 - [x] Criar `CommunicationDistributionService`.
-- [x] Criar query para aba `Comunicacao` em `/comunidade/:state/:city/:territorySlug`.
+- [x] Criar query para aba `Comunicacao` em `/comunidade/:state/:city`.
 - [x] Garantir que `article` e `update` tenham comportamento de clique diferente.
 - [x] Centralizar score inicial da distribuicao em SQL.
 - [x] Materializar `rank_score` e `rank_reason` no banco.

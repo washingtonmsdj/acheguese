@@ -3,22 +3,20 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { getAllSecurityHeaders, isOriginAllowed, errorResponse } from '../_shared/security.ts';
-import { validateBody, dispatchRideSchema, validationErrorResponse, type DispatchRideBody } from '../_shared/validation.ts';
+import {
+  getAllSecurityHeaders,
+  isOriginAllowed,
+  jsonResponse,
+  rateLimitMiddleware,
+  readJsonBody,
+  requireCronSecret,
+  requireHttpMethod,
+} from '../_shared/security.ts';
+import { validateBody, dispatchRideSchema, type DispatchRideBody } from '../_shared/validation.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-
-/**
- * CRON_SECRET: segredo dedicado para autenticação de chamadas internas/cron.
- *
- * SSOT: mesmo padrão de `process-timeouts/index.ts`.
- *
- * NUNCA use SUPABASE_SERVICE_ROLE_KEY como token de autenticação HTTP —
- * essa chave tem acesso irrestrito ao banco e não deve trafegar em headers.
- * Configure CRON_SECRET como variável de ambiente separada no Supabase Dashboard.
- */
-const CRON_SECRET = Deno.env.get('CRON_SECRET') || '';
+const ALLOWED_METHODS = 'POST, OPTIONS';
 
 // Configurações
 const CONFIG = {
@@ -34,91 +32,46 @@ interface DriverEligibility {
   rating: number;
 }
 
-function extractBearerToken(req: Request): string | null {
-  const authHeader = req.headers.get('authorization');
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return null;
-  }
-  return authHeader.slice(7).trim();
-}
-
-/**
- * Valida autenticação da requisição.
- *
- * Aceita:
- * 1. Header `x-cron-secret` com o valor de CRON_SECRET (preferencial)
- * 2. Bearer token igual a CRON_SECRET (compatibilidade com schedulers que
- *    só suportam Authorization header)
- *
- * SSOT: mesmo padrão de `process-timeouts/index.ts`.
- */
-function isAuthorized(req: Request): boolean {
-  if (!CRON_SECRET) return false;
-
-  const cronHeader = req.headers.get('x-cron-secret') || '';
-  const bearerToken = extractBearerToken(req);
-
-  return cronHeader === CRON_SECRET || bearerToken === CRON_SECRET;
+function dispatchJson(req: Request, body: unknown, status = 200): Response {
+  return jsonResponse(body, status, ALLOWED_METHODS, req);
 }
 
 serve(async (req: Request) => {
   const origin = req.headers.get('origin');
   if (origin && !isOriginAllowed(origin)) {
-    return new Response(
-      JSON.stringify({ error: 'Origin not allowed' }),
-      {
-        status: 403,
-        headers: {
-          ...getAllSecurityHeaders('POST, OPTIONS'),
-          'Content-Type': 'application/json',
-        },
-      },
-    );
+    return dispatchJson(req, { error: 'Origin not allowed' }, 403);
   }
 
   if (req.method === 'OPTIONS') {
     return new Response('ok', {
       status: 204,
-      headers: getAllSecurityHeaders('POST, OPTIONS'),
+      headers: getAllSecurityHeaders(ALLOWED_METHODS, req),
     });
   }
 
+  const methodError = requireHttpMethod(req, ['POST'], ALLOWED_METHODS);
+  if (methodError) return methodError;
+
+  const rateLimitResponse = await rateLimitMiddleware(req, 30, 60000);
+  if (rateLimitResponse) return rateLimitResponse;
+
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-    return new Response(
-      JSON.stringify({ error: 'Function misconfigured: missing Supabase credentials' }),
-      { status: 500, headers: getAllSecurityHeaders('POST, OPTIONS') },
-    );
+    return dispatchJson(req, { error: 'Function misconfigured: missing Supabase credentials' }, 500);
   }
 
-  if (!CRON_SECRET) {
-    console.error('[AutoDispatch] CRON_SECRET não configurado — requisição bloqueada');
-    return new Response(
-      JSON.stringify({ error: 'Function misconfigured: CRON_SECRET not set' }),
-      { status: 500, headers: getAllSecurityHeaders('POST, OPTIONS') },
-    );
-  }
-
-  if (!isAuthorized(req)) {
-    return new Response(
-      JSON.stringify({ error: 'Unauthorized' }),
-      {
-        status: 401,
-        headers: {
-          ...getAllSecurityHeaders('POST, OPTIONS'),
-          'Content-Type': 'application/json',
-        },
-      },
-    );
-  }
+  const cronAuthError = requireCronSecret(req, ALLOWED_METHODS);
+  if (cronAuthError) return cronAuthError;
 
   try {
-    const rawBody = await req.json();
-    const validation = validateBody<DispatchRideBody>(rawBody, dispatchRideSchema);
+    const rawBody = await readJsonBody<DispatchRideBody>(req, {
+      maxBytes: 4096,
+      methods: ALLOWED_METHODS,
+    });
+    if (!rawBody.ok) return rawBody.response;
+
+    const validation = validateBody<DispatchRideBody>(rawBody.data, dispatchRideSchema);
     if (!validation.ok) {
-      return new Response(
-        JSON.stringify({ error: 'Validation failed', details: validation.errors }),
-        { status: 400, headers: getAllSecurityHeaders() }
-      );
+      return dispatchJson(req, { error: 'Validation failed', details: validation.errors }, 400);
     }
     const { rideId } = validation.data!;
 
@@ -142,19 +95,13 @@ serve(async (req: Request) => {
 
     if (rideError || !ride) {
       console.error('[AutoDispatch] Ride not found:', rideError);
-      return new Response(
-        JSON.stringify({ error: 'Ride not found' }),
-        { status: 404, headers: { 'Content-Type': 'application/json' } }
-      );
+      return dispatchJson(req, { error: 'Ride not found' }, 404);
     }
 
     // Validar estado
     if (ride.status !== 'searching_driver') {
       console.log(`[AutoDispatch] Invalid state: ${ride.status}`);
-      return new Response(
-        JSON.stringify({ error: `Invalid state: ${ride.status}` }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+      return dispatchJson(req, { error: `Invalid state: ${ride.status}` }, 400);
     }
 
     // Verificar timeout total
@@ -164,10 +111,7 @@ serve(async (req: Request) => {
     
     if (minutesElapsed > CONFIG.TOTAL_TIMEOUT_MINUTES) {
       await expireRide(supabase, rideId, 'Total timeout exceeded');
-      return new Response(
-        JSON.stringify({ success: false, reason: 'expired' }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
-      );
+      return dispatchJson(req, { success: false, reason: 'expired' });
     }
 
     // Buscar coordenadas - addresses é um array, pegar o primeiro elemento
@@ -177,10 +121,7 @@ serve(async (req: Request) => {
 
     if (!pickupLat || !pickupLng) {
       console.error('[AutoDispatch] Missing coordinates');
-      return new Response(
-        JSON.stringify({ error: 'Missing pickup coordinates' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+      return dispatchJson(req, { error: 'Missing pickup coordinates' }, 400);
     }
 
     // Buscar motoristas elegíveis
@@ -194,10 +135,7 @@ serve(async (req: Request) => {
 
     if (eligibleDrivers.length === 0) {
       await expireRide(supabase, rideId, 'No eligible drivers found');
-      return new Response(
-        JSON.stringify({ success: false, reason: 'no_drivers' }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
-      );
+      return dispatchJson(req, { success: false, reason: 'no_drivers' });
     }
 
     console.log(`[AutoDispatch] Found ${eligibleDrivers.length} eligible drivers`);
@@ -205,9 +143,8 @@ serve(async (req: Request) => {
     // Tentar oferecer para motoristas sequencialmente
     const maxAttempts = Math.min(eligibleDrivers.length, CONFIG.MAX_RETRY_ATTEMPTS);
     
-    for (let i = 0; i < maxAttempts; i++) {
-      const driver = eligibleDrivers[i];
-      const attemptNumber = i + 1;
+    for (const [index, driver] of eligibleDrivers.slice(0, maxAttempts).entries()) {
+      const attemptNumber = index + 1;
 
       console.log(`[AutoDispatch] Attempt ${attemptNumber}: offering to ${driver.profileId}`);
 
@@ -246,14 +183,14 @@ serve(async (req: Request) => {
 
         console.log(`[AutoDispatch] Driver ${driver.profileId} accepted`);
 
-        return new Response(
-          JSON.stringify({
+        return dispatchJson(
+          req,
+          {
             success: true,
             driverProfileId: driver.profileId,
             totalAttempts: attemptNumber,
             reason: 'accepted',
-          }),
-          { status: 200, headers: { 'Content-Type': 'application/json' } }
+          },
         );
       }
 
@@ -279,18 +216,18 @@ serve(async (req: Request) => {
     // Nenhum motorista aceitou
     await expireRide(supabase, rideId, 'No driver accepted after all attempts');
     
-    return new Response(
-      JSON.stringify({
+    return dispatchJson(
+      req,
+      {
         success: false,
         totalAttempts: maxAttempts,
         reason: 'expired',
-      }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
+      },
     );
 
   } catch (error) {
     console.error('[AutoDispatch] Error:', error);
-    return errorResponse('Internal server error', 500, error);
+    return dispatchJson(req, { error: 'Internal server error' }, 500);
   }
 });
 

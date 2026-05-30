@@ -1,4 +1,3 @@
-import https from "node:https";
 import { config } from "dotenv";
 import fetch from "node-fetch";
 import { createClient } from "@supabase/supabase-js";
@@ -158,9 +157,7 @@ async function fetchArcGisFeatures(source: MunicipalNeighborhoodSource): Promise
       f: "json",
     });
     const url = `${source.serviceUrl}/query?${params.toString()}`;
-    const response = await fetch(url, {
-      agent: new https.Agent({ rejectUnauthorized: false }),
-    });
+    const response = await fetch(url);
 
     if (!response.ok) {
       throw new Error(`Falha ao buscar ${source.key}: HTTP ${response.status}`);

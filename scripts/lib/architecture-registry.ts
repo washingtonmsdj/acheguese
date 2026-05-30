@@ -263,7 +263,7 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
       "/services/:id/editar",
       "/services/cadastrar",
       "/servicos/:state/:city",
-      "/profissionais/:uf/:cidade/:slug",
+      "/servicos/:state/:city/profissional/:slug",
       "/vagas/:state/:city",
       "/vagas/publicar",
     ],
@@ -334,7 +334,7 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
       "src/core/comments/services/CommentService.ts",
     ],
     routePrefixes: [
-      "/comunidade/:state/:city/:territorySlug",
+      "/comunidade/:state/:city",
       "/novo-post",
     ],
     adminRoutePrefixes: ["/admin/moderacao", "/admin/moderacao-completa", "/admin/zeladoria"],
@@ -361,7 +361,7 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
       "src/core/alerts/services/AlertService.ts",
       "src/core/community/alerts/services/CommunityAlertService.ts",
     ],
-    routePrefixes: ["/comunidade/:state/:city/:territorySlug/feed?tab=alertas"],
+    routePrefixes: ["/comunidade/:state/:city/feed?tab=alertas"],
     adminRoutePrefixes: ["/admin/community-alerts", "/admin/alertas"],
     criticality: "high",
     canonicalServiceBasenames: [
@@ -387,7 +387,7 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     ssotPaths: [
       "src/core/community/issues/services/CommunityIssueService.ts",
     ],
-    routePrefixes: ["/comunidade/:state/:city/:territorySlug/problemas"],
+    routePrefixes: ["/comunidade/:state/:city/problemas"],
     adminRoutePrefixes: ["/admin/community-issues"],
     criticality: "high",
     canonicalServiceBasenames: ["CommunityIssueService.ts"],
@@ -406,8 +406,8 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     docsPaths: ["src/modules/community-groups/README.md"],
     ssotPaths: ["src/core/social/services/GroupService.ts"],
     routePrefixes: [
-      "/comunidade/:state/:city/:territorySlug/grupos",
-      "/comunidade/:state/:city/:territorySlug/grupos/:id",
+      "/comunidade/:state/:city/grupos",
+      "/comunidade/:state/:city/grupos/:id",
     ],
     adminRoutePrefixes: [],
     criticality: "medium",

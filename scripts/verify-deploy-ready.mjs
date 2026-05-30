@@ -23,23 +23,68 @@ const REQUIRED_ENV_VARS = [
   'VITE_SUPABASE_URL',
   'VITE_SUPABASE_PUBLISHABLE_KEY',
   'VITE_PUBLIC_SITE_URL',
+  'VITE_CONTACT_EMAIL',
+  'VITE_DPO_EMAIL',
+  'BASE_URL',
   'SUPABASE_URL',
+  'SUPABASE_ANON_KEY',
   'SUPABASE_SERVICE_ROLE_KEY',
+  'ALLOWED_ORIGINS',
+  'ALLOWED_REDIRECT_DOMAINS',
+  'CRON_SECRET',
+  'VAPID_PUBLIC_KEY',
+  'RESEND_API_KEY',
+  'FROM_EMAIL',
+  'EMAIL_FROM_DOMAIN',
+  'EMAIL_FROM_NAME',
   'STRIPE_SECRET_KEY',
   'STRIPE_WEBHOOK_SECRET',
-  'ALLOWED_REDIRECT_DOMAINS',
+  'LOVABLE_API_KEY',
+  'REPLICATE_API_TOKEN',
+  'TRYON_REPLICATE_MODEL_VERSION',
+  'FIREBASE_PROJECT_ID',
+  'FIREBASE_SERVICE_ACCOUNT',
+  'NOMINATIM_BASE_URL',
+  'NOMINATIM_USER_AGENT',
+  'NOMINATIM_ACCEPT_LANGUAGE',
+  'NOMINATIM_DEFAULT_COUNTRY',
+  'NOMINATIM_DEFAULT_COUNTRY_CODES',
+  'NOMINATIM_DEFAULT_FORMAT',
+  'NOMINATIM_DEFAULT_ADDRESSDETAILS',
+  'NOMINATIM_DEFAULT_LIMIT',
+];
+
+const REQUIRED_ENV_GROUPS = [
+  {
+    name: 'TRYON_REPLICATE_HUMAN_IMAGE_*',
+    vars: [
+      'TRYON_REPLICATE_HUMAN_IMAGE_URL',
+      'TRYON_REPLICATE_HUMAN_IMAGE_MALE_URL',
+      'TRYON_REPLICATE_HUMAN_IMAGE_FEMALE_URL',
+      'TRYON_REPLICATE_HUMAN_IMAGE_NEUTRAL_URL',
+    ],
+    featureFlagEnv: 'VITE_FEATURE_AI_VIRTUAL_TRYON',
+    message:
+      'configure TRYON_REPLICATE_HUMAN_IMAGE_URL or all gender-specific human image URLs',
+  },
 ];
 
 const OPTIONAL_ENV_VARS = [
   'VITE_SENTRY_DSN',
   'VITE_FEATURE_COMMUNITY_ALERTS',
+  'VITE_FEATURE_AI_VIRTUAL_TRYON',
   'VITE_FEATURE_MAPS_V4',
   'VITE_GOOGLE_MAPS_API_KEY',
   'VITE_ALLOWED_BILLING_REDIRECT_ORIGINS',
+  'VITE_ALLOWED_QR_REDIRECT_ORIGINS',
+  'UPSTASH_REDIS_REST_URL',
+  'UPSTASH_REDIS_REST_TOKEN',
+  'IBGE_DISTRICTS_URL',
+  'NOMINATIM_DEFAULT_COUNTRY_NAME',
+  'NOMINATIM_REQUEST_DELAY_MS',
 ];
 
 const REQUIRED_SCRIPTS = ['build', 'typecheck:app', 'lint', 'validate:ssot', 'security:validate'];
-const PUBLIC_DOMAIN = 'acheguese.com.br';
 const FORBIDDEN_BILLING_ARTIFACTS = [
   'supabase/functions/stripe-webhook/index.ts',
   'supabase/functions/gastronomy-upgrade-plan/index.ts',
@@ -71,6 +116,22 @@ function readJson(file) {
   return JSON.parse(readFileSync(file, 'utf-8'));
 }
 
+function getPublicSiteHost() {
+  const rawUrl = process.env.VITE_PUBLIC_SITE_URL?.trim();
+  if (!rawUrl) return null;
+
+  try {
+    return new URL(rawUrl).hostname;
+  } catch {
+    fail('VITE_PUBLIC_SITE_URL deve ser uma URL absoluta valida');
+    return null;
+  }
+}
+
+function isEnabledEnvironmentFlag(envVar) {
+  return process.env[envVar]?.trim().toLowerCase() === 'true';
+}
+
 function collectSourceFiles(root, extensions = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs'])) {
   if (!existsSync(root)) return [];
 
@@ -88,6 +149,19 @@ function collectSourceFiles(root, extensions = new Set(['.ts', '.tsx', '.js', '.
   }
 
   return files;
+}
+
+function isTestSourceFile(file) {
+  const normalized = file.replaceAll('\\', '/');
+  return (
+    normalized.includes('/__tests__/') ||
+    normalized.includes('.spec.') ||
+    normalized.includes('.test.')
+  );
+}
+
+function collectRuntimeSourceFiles(root, extensions) {
+  return collectSourceFiles(root, extensions).filter((file) => !isTestSourceFile(file));
 }
 
 console.log('Verificando preparacao para deploy...\n');
@@ -139,11 +213,29 @@ for (const envVar of REQUIRED_ENV_VARS) {
     continue;
   }
 
-  if (/your-|placeholder|publishable_key/i.test(value)) {
+  if (/your[-_]|placeholder|publishable_key|example|_here$/i.test(value)) {
     fail(`${envVar} contem placeholder`);
   } else {
     ok(`${envVar} configurada`);
   }
+}
+console.log('  Grupos obrigatorios:');
+for (const group of REQUIRED_ENV_GROUPS) {
+  if (group.featureFlagEnv && !isEnabledEnvironmentFlag(group.featureFlagEnv)) {
+    ok(`${group.name} nao exigido porque ${group.featureFlagEnv} nao esta ativo`);
+    continue;
+  }
+
+  const values = group.vars.map((envVar) => process.env[envVar]?.trim() ?? '');
+  const hasGlobal = Boolean(values[0]);
+  const hasAllSpecific = values.slice(1).every(Boolean);
+
+  if (!hasGlobal && !hasAllSpecific) {
+    fail(`${group.name}: ${group.message}`);
+    continue;
+  }
+
+  ok(`${group.name} configurado`);
 }
 console.log('  Opcionais recomendadas:');
 for (const envVar of OPTIONAL_ENV_VARS) console.log(`    - ${envVar}`);
@@ -169,7 +261,7 @@ console.log();
 
 console.log('Higiene de runtime');
 try {
-  const sourceFiles = collectSourceFiles('src');
+  const sourceFiles = collectRuntimeSourceFiles('src');
   const nativeDialogPattern = /\b(?:window\.)?(alert|prompt)\s*\(|window\.confirm\s*\(|\bconfirm\s*\(\s*["']/;
   const nativeDialogAllowlist = new Set([
     'src/shared/hooks/useConfirmActionDialog.tsx',
@@ -184,7 +276,7 @@ try {
     ? ok('sem dialogos nativos de navegador no runtime')
     : fail(`dialogos nativos encontrados: ${nativeDialogFindings.join(', ')}`);
 
-  const eventFiles = collectSourceFiles('src/features/events');
+  const eventFiles = collectRuntimeSourceFiles('src/features/events');
   const eventPlaceholderPattern = /\bTODO\b|\bFIXME\b|sera implementado|será implementado/i;
   const eventPlaceholderFindings = eventFiles.filter((file) =>
     eventPlaceholderPattern.test(readFileSync(file, 'utf-8')),
@@ -222,8 +314,13 @@ console.log();
 console.log('robots.txt');
 if (existsSync('public/robots.txt')) {
   try {
+    const publicDomain = getPublicSiteHost();
     const robots = readFileSync('public/robots.txt', 'utf-8');
-    robots.includes(PUBLIC_DOMAIN) ? ok(`robots.txt aponta para ${PUBLIC_DOMAIN}`) : fail(`robots.txt nao contem ${PUBLIC_DOMAIN}`);
+    if (publicDomain) {
+      robots.includes(publicDomain)
+        ? ok(`robots.txt aponta para ${publicDomain}`)
+        : fail(`robots.txt nao contem ${publicDomain}`);
+    }
   } catch (error) {
     fail(`erro ao ler robots.txt: ${error.message}`);
   }

@@ -286,8 +286,8 @@ await supabase.from('audit_logs').insert({
 
 ### Contatos
 
-- **Segurança**: seguranca@acheguese.com.br
-- **Emergência**: +55 11 9999-9999
+- Configure o contato publico de seguranca em `VITE_CONTACT_EMAIL`.
+- Configure o contato do encarregado de dados em `VITE_DPO_EMAIL`.
 
 ## 📋 Checklist de Segurança
 
@@ -368,7 +368,7 @@ await supabase.from('audit_logs').insert({
 
 Nenhuma vulnerabilidade conhecida no momento.
 
-Para reportar vulnerabilidades: seguranca@acheguese.com.br
+Para reportar vulnerabilidades, use o contato configurado em `VITE_CONTACT_EMAIL`.
 
 ## 🔐 Compliance
 

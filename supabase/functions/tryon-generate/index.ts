@@ -3,7 +3,14 @@
 // Provider: Replicate / cuuupid/idm-vton.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { getAllSecurityHeaders } from "../_shared/security.ts";
+import { AI_RATE_LIMITS, dataUrlToImageBytes, isAllowedImageReference } from "../_ai/requestGuards.ts";
+import {
+  getAllSecurityHeaders,
+  isValidUUID,
+  rateLimitMiddleware,
+  readJsonBody,
+  requireHttpMethod,
+} from "../_shared/security.ts";
 
 function responseHeaders(req: Request): Record<string, string> {
   return getAllSecurityHeaders("POST, OPTIONS", req);
@@ -13,10 +20,7 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-const REPLICATE_MODEL_VERSION = "0513734a452173b8173e907e3a59d19a36266e55b48528559432bd21c7d7e985";
-const DEFAULT_HUMAN_IMAGE_URLS = [
-  "https://replicate.delivery/pbxt/KgwTlhCMvDagRrcVzZJbuozNJ8esPqiNAIJS3eMgHrYuHmW4/KakaoTalk_Photo_2024-04-04-21-44-45.png",
-];
+const REPLICATE_MODEL_VERSION = Deno.env.get("TRYON_REPLICATE_MODEL_VERSION")?.trim() ?? "";
 
 type Category =
   | "clothing_upper"
@@ -27,6 +31,10 @@ type Category =
   | "accessory_headwear"
   | "accessory_other"
   | "swimwear";
+
+interface GenerateRequest {
+  generationId: string;
+}
 
 function categoryToReplicateCategory(category: Category): "upper_body" | "lower_body" | "dresses" {
   switch (category) {
@@ -62,8 +70,11 @@ function humanImageForGender(gender: string, index: number): string {
   const urls = [
     ...parseUrlList(Deno.env.get(genderKey)),
     ...parseUrlList(Deno.env.get("TRYON_REPLICATE_HUMAN_IMAGE_URL")),
-    ...DEFAULT_HUMAN_IMAGE_URLS,
   ];
+
+  if (urls.length === 0) {
+    throw new Error("Imagem humana base do Try-On nao configurada no backend.");
+  }
 
   return urls[index % urls.length];
 }
@@ -131,6 +142,10 @@ async function replicateRequest(path: string, init?: RequestInit): Promise<any> 
 }
 
 async function makeImageAvailableToReplicate(imageUrl: string): Promise<string> {
+  if (!isAllowedImageReference(imageUrl) || imageUrl.startsWith("data:")) {
+    throw new Error("URL da imagem do produto invalida.");
+  }
+
   const sourceResp = await fetch(imageUrl, {
     headers: {
       "User-Agent": "acheguese-tryon/1.0",
@@ -182,6 +197,10 @@ async function callReplicateTryOn(
   style: string,
   seed: number,
 ): Promise<string> {
+  if (!REPLICATE_MODEL_VERSION) {
+    throw new Error("TRYON_REPLICATE_MODEL_VERSION nao esta configurado no backend.");
+  }
+
   const prediction = await replicateRequest("/predictions", {
     method: "POST",
     headers: { Prefer: "wait=60" },
@@ -205,19 +224,12 @@ async function callReplicateTryOn(
   return url;
 }
 
-function dataUrlToBytes(dataUrl: string): { bytes: Uint8Array; mime: string } {
-  const match = dataUrl.match(/^data:([^;]+);base64,(.*)$/);
-  if (!match) throw new Error("data URL invalida");
-
-  const mime = match[1];
-  const bin = atob(match[2]);
-  const bytes = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  return { bytes, mime };
-}
-
 async function imageRefToBytes(imageRef: string): Promise<{ bytes: Uint8Array; mime: string }> {
-  if (imageRef.startsWith("data:")) return dataUrlToBytes(imageRef);
+  if (imageRef.startsWith("data:")) return dataUrlToImageBytes(imageRef);
+
+  if (!isAllowedImageReference(imageRef)) {
+    throw new Error("URL de imagem gerada invalida.");
+  }
 
   const imgResp = await fetch(imageRef);
   if (!imgResp.ok) throw new Error(`Falha ao baixar imagem gerada: HTTP ${imgResp.status}`);
@@ -230,6 +242,16 @@ async function imageRefToBytes(imageRef: string): Promise<{ bytes: Uint8Array; m
 Deno.serve(async (req) => {
   const headers = responseHeaders(req);
   if (req.method === "OPTIONS") return new Response(null, { headers });
+
+  const methodError = requireHttpMethod(req, ["POST"], "POST, OPTIONS");
+  if (methodError) return methodError;
+
+  const rateLimitResponse = await rateLimitMiddleware(
+    req,
+    AI_RATE_LIMITS.tryOnGenerate.maxRequests,
+    AI_RATE_LIMITS.tryOnGenerate.windowMs,
+  );
+  if (rateLimitResponse) return rateLimitResponse;
 
   try {
     const authHeader = req.headers.get("Authorization") ?? "";
@@ -246,8 +268,14 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { generationId } = await req.json();
-    if (!generationId || typeof generationId !== "string") {
+    const rawBody = await readJsonBody<GenerateRequest>(req, {
+      maxBytes: 4096,
+      methods: "POST, OPTIONS",
+    });
+    if (!rawBody.ok) return rawBody.response;
+
+    const { generationId } = rawBody.data;
+    if (!generationId || typeof generationId !== "string" || !isValidUUID(generationId)) {
       return new Response(JSON.stringify({ error: "generationId required" }), {
         status: 400,
         headers: { ...headers, "Content-Type": "application/json" },

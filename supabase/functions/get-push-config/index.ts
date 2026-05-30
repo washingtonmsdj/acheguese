@@ -14,34 +14,40 @@
  */
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { getAllSecurityHeaders, errorResponse } from '../_shared/security.ts';
+import {
+  getAllSecurityHeaders,
+  getRequiredEnv,
+  jsonResponse,
+  rateLimitMiddleware,
+  requireHttpMethod,
+} from '../_shared/security.ts';
 
-const VAPID_PUBLIC_KEY = Deno.env.get('VAPID_PUBLIC_KEY') || 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U';
+const ALLOWED_METHODS = 'GET, POST, OPTIONS';
 
 serve(async (req: Request) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', {
       status: 204,
-      headers: getAllSecurityHeaders('GET, POST, OPTIONS'),
+      headers: getAllSecurityHeaders(ALLOWED_METHODS, req),
     });
   }
 
-  // Allow GET and POST
-  if (req.method !== 'GET' && req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-      status: 405,
-      headers: getAllSecurityHeaders(),
-    });
-  }
+  const methodError = requireHttpMethod(req, ['GET', 'POST'], ALLOWED_METHODS);
+  if (methodError) return methodError;
+
+  const rateLimitResponse = await rateLimitMiddleware(req, 100, 60000);
+  if (rateLimitResponse) return rateLimitResponse;
 
   try {
+    const vapidPublicKey = getRequiredEnv('VAPID_PUBLIC_KEY');
+
     return new Response(
-      JSON.stringify({ vapidPublicKey: VAPID_PUBLIC_KEY }),
+      JSON.stringify({ vapidPublicKey }),
       {
         status: 200,
         headers: {
-          ...getAllSecurityHeaders('GET, POST, OPTIONS'),
+          ...getAllSecurityHeaders(ALLOWED_METHODS, req),
           // VAPID key é pública e imutável — cache agressivo é seguro
           'Cache-Control': 'public, max-age=3600, immutable',
           'CDN-Cache-Control': 'public, max-age=3600',
@@ -51,7 +57,7 @@ serve(async (req: Request) => {
     );
   } catch (error) {
     console.error('Exception in get-push-config function:', error);
-    return errorResponse('Internal server error', 500, error);
+    return jsonResponse({ error: 'Internal server error' }, 500, ALLOWED_METHODS, req);
   }
 });
 

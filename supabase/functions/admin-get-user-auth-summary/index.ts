@@ -9,35 +9,48 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { getAllSecurityHeaders, auditLog, getAuditInfo, errorResponse } from '../_shared/security.ts';
+import {
+  auditLog,
+  errorResponse,
+  getAllSecurityHeaders,
+  getAuditInfo,
+  rateLimitMiddleware,
+  readJsonBody,
+  requireHttpMethod,
+} from '../_shared/security.ts';
 import { requireAdmin } from '../_shared/adminAuth.ts';
 import { validateBody, getUserSchema, validationErrorResponse, type GetUserBody } from '../_shared/validation.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+const ALLOWED_METHODS = 'POST, OPTIONS';
 
 serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { status: 204, headers: getAllSecurityHeaders('POST, OPTIONS') });
+    return new Response('ok', { status: 204, headers: getAllSecurityHeaders(ALLOWED_METHODS, req) });
   }
 
-  if (req.method !== 'POST') {
-    return new Response(
-      JSON.stringify({ error: 'Method not allowed' }),
-      { status: 405, headers: getAllSecurityHeaders() },
-    );
-  }
+  const methodError = requireHttpMethod(req, ['POST'], ALLOWED_METHODS);
+  if (methodError) return methodError;
 
   // 1. Autenticação e autorização centralizadas
+  const rateLimitResponse = await rateLimitMiddleware(req, 200, 60000);
+  if (rateLimitResponse) return rateLimitResponse;
+
   const auth = await requireAdmin(req);
   if (auth instanceof Response) return auth;
   const { userId: requesterId } = auth;
 
   // 2. Validar body
-  const rawBody = await req.json();
-  const validation = validateBody<GetUserBody>(rawBody, getUserSchema);
+  const rawBody = await readJsonBody<GetUserBody>(req, {
+    maxBytes: 4096,
+    methods: ALLOWED_METHODS,
+  });
+  if (!rawBody.ok) return rawBody.response;
+
+  const validation = validateBody<GetUserBody>(rawBody.data, getUserSchema);
   if (!validation.ok) {
-    return validationErrorResponse(validation.errors);
+    return validationErrorResponse(validation.errors, ALLOWED_METHODS, req);
   }
   const { userId } = validation.data!;
 
@@ -52,7 +65,7 @@ serve(async (req: Request) => {
       if (authGetError.message.includes('not found')) {
         return new Response(
           JSON.stringify({ error: 'User not found' }),
-          { status: 404, headers: getAllSecurityHeaders() },
+          { status: 404, headers: getAllSecurityHeaders(ALLOWED_METHODS, req) },
         );
       }
       throw authGetError;
@@ -100,7 +113,7 @@ serve(async (req: Request) => {
           userMetadata: u.user_metadata,
         },
       }),
-      { status: 200, headers: getAllSecurityHeaders() },
+      { status: 200, headers: getAllSecurityHeaders(ALLOWED_METHODS, req) },
     );
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error';

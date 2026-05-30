@@ -11,7 +11,14 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { getAllSecurityHeaders, errorResponse, isValidUUID, rateLimitMiddleware } from '../_shared/security.ts';
+import {
+  errorResponse,
+  getAllSecurityHeaders,
+  isValidUUID,
+  rateLimitMiddleware,
+  readJsonBody,
+  requireHttpMethod,
+} from '../_shared/security.ts';
 import { requireAdmin } from '../_shared/adminAuth.ts';
 
 interface UpdateLocationVisibilityRequest {
@@ -22,6 +29,7 @@ interface UpdateLocationVisibilityRequest {
 }
 
 type CanonicalVisibilityFlag = 'is_selector_active' | 'is_landing_enabled' | 'is_navigable';
+const ALLOWED_METHODS = 'POST, OPTIONS';
 
 function normalizeCanonicalFlag(flag: UpdateLocationVisibilityRequest['flag']): CanonicalVisibilityFlag | null {
   if (flag === 'is_selector_active' || flag === 'is_landing_enabled' || flag === 'is_navigable') {
@@ -33,8 +41,11 @@ function normalizeCanonicalFlag(flag: UpdateLocationVisibilityRequest['flag']): 
 
 serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { status: 204, headers: getAllSecurityHeaders('POST, OPTIONS') });
+    return new Response('ok', { status: 204, headers: getAllSecurityHeaders(ALLOWED_METHODS, req) });
   }
+
+  const methodError = requireHttpMethod(req, ['POST'], ALLOWED_METHODS);
+  if (methodError) return methodError;
 
   // Rate limiting via SSOT
   const rl = await rateLimitMiddleware(req, 100, 60000);
@@ -46,20 +57,19 @@ serve(async (req: Request) => {
   const { userId } = auth;
 
   try {
-    if (req.method !== 'POST') {
-      return new Response(
-        JSON.stringify({ error: 'Method not allowed' }),
-        { status: 405, headers: getAllSecurityHeaders() }
-      );
-    }
-
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    const body: UpdateLocationVisibilityRequest = await req.json();
+    const rawBody = await readJsonBody<UpdateLocationVisibilityRequest>(req, {
+      maxBytes: 4096,
+      methods: ALLOWED_METHODS,
+    });
+    if (!rawBody.ok) return rawBody.response;
+
+    const body = rawBody.data;
     const locationId = body.locationId ?? body.id;
     const { flag, value } = body;
     const canonicalFlag = normalizeCanonicalFlag(flag);
@@ -137,7 +147,7 @@ serve(async (req: Request) => {
 
     return new Response(
       JSON.stringify({ success: true, location: updatedLocation }),
-      { headers: getAllSecurityHeaders() }
+      { headers: getAllSecurityHeaders(ALLOWED_METHODS, req) }
     );
 
   } catch (error) {

@@ -9,12 +9,21 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { getAllSecurityHeaders, getCorsHeaders, auditLog, getAuditInfo } from '../_shared/security.ts';
+import {
+  auditLog,
+  getAllSecurityHeaders,
+  getCorsHeaders,
+  getAuditInfo,
+  rateLimitMiddleware,
+  readJsonBody,
+  requireHttpMethod,
+} from '../_shared/security.ts';
 import { requireAdmin } from '../_shared/adminAuth.ts';
 import { validateBody, listUsersSchema, validationErrorResponse, type ListUsersBody } from '../_shared/validation.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+const ALLOWED_METHODS = 'POST, OPTIONS';
 
 interface AdminUser {
   user_id: string;
@@ -139,28 +148,46 @@ function choosePrimaryProfile(profiles: AdminUserProfile[]): AdminUserProfile | 
   return profiles.find((profile) => profile.profile_type === 'personal') ?? profiles[0] ?? null;
 }
 
+function normalizeAdminUserSearch(value: string | undefined): string | null {
+  if (!value) return null;
+
+  const normalized = value
+    .normalize('NFKC')
+    .replace(/[^\p{L}\p{N}@._\-\s]/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 64);
+
+  return normalized.length > 0 ? normalized : null;
+}
+
 serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: getCorsHeaders('POST, OPTIONS', req) });
   }
 
-  if (req.method !== 'POST') {
-    return new Response(
-      JSON.stringify({ error: 'Method not allowed' }),
-      { status: 405, headers: getAllSecurityHeaders('POST, OPTIONS', req) },
-    );
-  }
+  const methodError = requireHttpMethod(req, ['POST'], ALLOWED_METHODS);
+  if (methodError) return methodError;
+
+  const rateLimitResponse = await rateLimitMiddleware(req, 100, 60000);
+  if (rateLimitResponse) return rateLimitResponse;
 
   const auth = await requireAdmin(req);
   if (auth instanceof Response) return auth;
   const { userId: requesterId } = auth;
 
-  const rawBody = await req.json();
-  const validation = validateBody<ListUsersBody>(rawBody, listUsersSchema);
+  const rawBody = await readJsonBody<ListUsersBody>(req, {
+    maxBytes: 4096,
+    methods: ALLOWED_METHODS,
+  });
+  if (!rawBody.ok) return rawBody.response;
+
+  const validation = validateBody<ListUsersBody>(rawBody.data, listUsersSchema);
   if (!validation.ok) {
-    return validationErrorResponse(validation.errors);
+    return validationErrorResponse(validation.errors, ALLOWED_METHODS, req);
   }
   const { page = 0, pageSize = 20, search } = validation.data!;
+  const normalizedSearch = normalizeAdminUserSearch(search);
 
   if (pageSize < 1 || pageSize > 100) {
     return new Response(
@@ -189,9 +216,10 @@ serve(async (req: Request) => {
       })
       .order('created_at', { ascending: false });
 
-    if (search) {
-      const term = search.replaceAll('%', '').replaceAll(',', ' ').trim();
-      profilesPageQuery = profilesPageQuery.or(`username.ilike.%${term}%,name.ilike.%${term}%,display_name.ilike.%${term}%`);
+    if (normalizedSearch) {
+      profilesPageQuery = profilesPageQuery.or(
+        `username.ilike.%${normalizedSearch}%,name.ilike.%${normalizedSearch}%,display_name.ilike.%${normalizedSearch}%`,
+      );
     }
 
     const profilesPageResult = await profilesPageQuery.range(page * pageSize, page * pageSize + pageSize - 1);
@@ -262,8 +290,8 @@ serve(async (req: Request) => {
       };
     }).filter((user): user is AdminUser => user !== null);
 
-    if (search) {
-      const searchLower = search.toLowerCase();
+    if (normalizedSearch) {
+      const searchLower = normalizedSearch.toLowerCase();
       adminUsers = adminUsers.filter(
         (user) =>
           user.email.toLowerCase().includes(searchLower) ||

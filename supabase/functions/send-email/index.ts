@@ -10,30 +10,55 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { validateBody, sendEmailSchema, validationErrorResponse, type SendEmailBody } from '../_shared/validation.ts';
-import { getAllSecurityHeaders, rateLimitMiddleware, errorResponse } from '../_shared/security.ts';
+import {
+  errorResponse,
+  getAllSecurityHeaders,
+  getRequiredEnv,
+  rateLimitMiddleware,
+  readJsonBody,
+  requireHttpMethod,
+} from '../_shared/security.ts';
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const FROM_EMAIL = Deno.env.get('FROM_EMAIL') || 'noreply@yourdomain.com';
+const FROM_EMAIL = getRequiredEnv('FROM_EMAIL');
+const ALLOWED_METHODS = 'POST, OPTIONS';
+
+function isCategoryEmailEnabled(
+  preferences: {
+    transactional_enabled?: boolean | null;
+    social_enabled?: boolean | null;
+    system_enabled?: boolean | null;
+    marketing_enabled?: boolean | null;
+  },
+  category: NonNullable<SendEmailBody['category']>,
+): boolean {
+  switch (category) {
+    case 'transactional':
+      return preferences.transactional_enabled !== false;
+    case 'social':
+      return preferences.social_enabled !== false;
+    case 'system':
+      return preferences.system_enabled !== false;
+    case 'marketing':
+      return preferences.marketing_enabled !== false;
+  }
+}
 
 serve(async (req: Request) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { status: 204, headers: getAllSecurityHeaders('POST, OPTIONS') });
+    return new Response('ok', { status: 204, headers: getAllSecurityHeaders(ALLOWED_METHODS, req) });
   }
+
+  const methodError = requireHttpMethod(req, ['POST'], ALLOWED_METHODS);
+  if (methodError) return methodError;
 
   // Rate limiting
   const rateLimitResponse = await rateLimitMiddleware(req, 50, 60000);
   if (rateLimitResponse) return rateLimitResponse;
-
-  // 1. Validate HTTP method
-  if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-      status: 405,
-      headers: getAllSecurityHeaders(),
-    });
-  }
 
   try {
     // 2. Validate authentication
@@ -42,22 +67,30 @@ serve(async (req: Request) => {
       return errorResponse('Missing authorization header', 401);
     }
 
-    // Create Supabase client
+    const authClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      global: { headers: { Authorization: authHeader } },
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     // Get user from token
     const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    const { data: { user }, error: authError } = await authClient.auth.getUser(token);
 
     if (authError || !user) {
       return errorResponse('Invalid token', 401);
     }
 
     // 3. Parse and validate input
-    const rawBody = await req.json();
-    const validation = validateBody<SendEmailBody>(rawBody, sendEmailSchema);
+    const rawBody = await readJsonBody<SendEmailBody>(req, {
+      maxBytes: 120_000,
+      methods: ALLOWED_METHODS,
+    });
+    if (!rawBody.ok) return rawBody.response;
+
+    const validation = validateBody<SendEmailBody>(rawBody.data, sendEmailSchema);
     if (!validation.ok) {
-      return validationErrorResponse(validation.errors);
+      return validationErrorResponse(validation.errors, ALLOWED_METHODS, req);
     }
     const { to, subject, html, text, userId, category = 'transactional' } = validation.data!;
 
@@ -76,8 +109,7 @@ serve(async (req: Request) => {
         }
 
         // Check category preferences
-        const categoryKey = `${category}_enabled`;
-        if (preferences[categoryKey] === false && category !== 'transactional') {
+        if (!isCategoryEmailEnabled(preferences, category)) {
           return errorResponse(`${category} emails disabled by user`, 403);
         }
 
@@ -110,22 +142,25 @@ serve(async (req: Request) => {
     let errorMessage: string | null = null;
     let emailId: string | null = null;
 
-    if (RESEND_API_KEY) {
-      try {
-        const resendResponse = await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${RESEND_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            from: FROM_EMAIL,
-            to: [to],
-            subject,
-            html,
-            text: text || undefined,
-          }),
-        });
+    if (!RESEND_API_KEY) {
+      return errorResponse('Email provider is not configured', 503);
+    }
+
+    try {
+      const resendResponse = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${RESEND_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: FROM_EMAIL,
+          to: [to],
+          subject,
+          html,
+          text: text || undefined,
+        }),
+      });
 
         const resendData = await resendResponse.json();
 
@@ -141,12 +176,6 @@ serve(async (req: Request) => {
         errorMessage = String(error);
         console.error('Error sending email via Resend:', error);
       }
-    } else {
-      // Development mode: log email instead of sending
-      console.log('📧 Email (dev mode):', { to, subject, html: html.substring(0, 100) });
-      emailStatus = 'sent';
-    }
-
     // 6. Log email
     const { error: logError } = await supabase.from('email_logs').insert({
       user_id: userId || null,
@@ -179,7 +208,7 @@ serve(async (req: Request) => {
       }),
       {
         status: 200,
-        headers: getAllSecurityHeaders(),
+        headers: getAllSecurityHeaders(ALLOWED_METHODS, req),
       }
     );
   } catch (error) {

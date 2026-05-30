@@ -29,27 +29,35 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import Stripe from 'https://esm.sh/stripe@14.21.0'
-import { getAllSecurityHeaders, errorResponse, auditLog, getAuditInfo } from '../_shared/security.ts'
+import {
+  errorResponse,
+  getAllSecurityHeaders,
+  getRequiredEnv,
+  rateLimitMiddleware,
+  readTextBody,
+  requireHttpMethod,
+} from '../_shared/security.ts'
+
+const ALLOWED_METHODS = 'POST, OPTIONS'
 
 serve(async (req: Request) => {
   // ════════════════════════════════════════════════════════════════════════
   // 1. CORS — Webhooks do Stripe não enviam Origin, mas preflight pode ocorrer
   // ════════════════════════════════════════════════════════════════════════
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { status: 204, headers: getAllSecurityHeaders('POST, OPTIONS') })
+    return new Response('ok', { status: 204, headers: getAllSecurityHeaders(ALLOWED_METHODS, req) })
   }
+
+  const methodError = requireHttpMethod(req, ['POST'], ALLOWED_METHODS)
+  if (methodError) return methodError
+
+  const rateLimitResponse = await rateLimitMiddleware(req, 600, 60000)
+  if (rateLimitResponse) return rateLimitResponse
 
   try {
     // ════════════════════════════════════════════════════════════════════════
     // 2. VALIDAR MÉTODO
     // ════════════════════════════════════════════════════════════════════════
-    if (req.method !== 'POST') {
-      return new Response(
-        JSON.stringify({ error: 'Method not allowed' }),
-        { status: 405, headers: getAllSecurityHeaders() }
-      )
-    }
-
     // ════════════════════════════════════════════════════════════════════════
     // 3. VALIDAR ASSINATURA DO STRIPE
     // ════════════════════════════════════════════════════════════════════════
@@ -58,8 +66,13 @@ serve(async (req: Request) => {
       return errorResponse('Missing stripe-signature header', 401)
     }
 
-    const body = await req.text()
-    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') ?? '', {
+    const rawBody = await readTextBody(req, {
+      maxBytes: 1_000_000,
+      methods: ALLOWED_METHODS,
+    })
+    if (!rawBody.ok) return rawBody.response
+
+    const stripe = new Stripe(getRequiredEnv('STRIPE_SECRET_KEY'), {
       apiVersion: '2023-10-16',
     })
 
@@ -67,9 +80,9 @@ serve(async (req: Request) => {
 
     try {
       event = stripe.webhooks.constructEvent(
-        body,
+        rawBody.data,
         signature,
-        Deno.env.get('STRIPE_WEBHOOK_SECRET') ?? ''
+        getRequiredEnv('STRIPE_WEBHOOK_SECRET')
       )
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
@@ -95,7 +108,7 @@ serve(async (req: Request) => {
     if (!webhookId) {
       return new Response(
         JSON.stringify({ received: true, message: 'Event already processed' }),
-        { status: 200, headers: getAllSecurityHeaders() }
+        { status: 200, headers: getAllSecurityHeaders(ALLOWED_METHODS, req) }
       )
     }
 
@@ -134,7 +147,7 @@ serve(async (req: Request) => {
 
       return new Response(
         JSON.stringify({ received: true }),
-        { status: 200, headers: getAllSecurityHeaders() }
+        { status: 200, headers: getAllSecurityHeaders(ALLOWED_METHODS, req) }
       )
     } catch (error) {
       // Marcar webhook como erro
@@ -532,16 +545,17 @@ async function handleInvoicePaymentFailed(event: Stripe.Event, supabase: any) {
  * Map Stripe status to status_v2
  */
 function mapStripeStatus(stripeStatus: string): string {
-  const statusMap: Record<string, string> = {
-    'active': 'active',
-    'trialing': 'trialing',
-    'past_due': 'past_due',
-    'incomplete': 'incomplete',
-    'incomplete_expired': 'incomplete_expired',
-    'unpaid': 'unpaid',
-    'canceled': 'canceled',
+  switch (stripeStatus) {
+    case 'active':
+    case 'trialing':
+    case 'past_due':
+    case 'incomplete':
+    case 'incomplete_expired':
+    case 'unpaid':
+    case 'canceled':
+      return stripeStatus
+    default:
+      return 'canceled'
   }
-  
-  return statusMap[stripeStatus] || 'canceled'
 }
 

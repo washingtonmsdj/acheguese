@@ -7,6 +7,14 @@ import {
   logAiUsage,
   mapGatewayErrorToResponse,
 } from "../_ai/gateway.ts";
+import {
+  AI_RATE_LIMITS,
+  AI_TEXT_REQUEST_LIMITS,
+  hasAllowedTextMessages,
+  hasAllowedToolSchema,
+  jsonByteLength,
+} from "../_ai/requestGuards.ts";
+import { rateLimitMiddleware, readJsonBody } from "../_shared/security.ts";
 
 interface Body {
   feature: string;
@@ -30,18 +38,70 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: getAiCorsHeaders(req) });
   if (req.method !== "POST") return jsonResponse({ error: "method_not_allowed" }, 405, req);
 
-  let body: Body;
-  try {
-    body = await req.json();
-  } catch {
-    return jsonResponse({ error: "invalid_json", code: "bad_request" }, 400, req);
-  }
+  const rateLimitResponse = await rateLimitMiddleware(
+    req,
+    AI_RATE_LIMITS.text.maxRequests,
+    AI_RATE_LIMITS.text.windowMs,
+  );
+  if (rateLimitResponse) return rateLimitResponse;
+
+  const rawBody = await readJsonBody<Body>(req, {
+    maxBytes: AI_TEXT_REQUEST_LIMITS.maxRequestBytes,
+    methods: "POST, OPTIONS",
+  });
+  if (!rawBody.ok) return rawBody.response;
+  const body = rawBody.data;
 
   if (!body?.feature || !Array.isArray(body.messages) || body.messages.length === 0) {
     return jsonResponse({ error: "feature e messages são obrigatórios.", code: "bad_request" }, 400, req);
   }
 
+  if (body.messages.length > AI_TEXT_REQUEST_LIMITS.maxMessages) {
+    return jsonResponse(
+      { error: `maximo ${AI_TEXT_REQUEST_LIMITS.maxMessages} mensagens por chamada.`, code: "bad_request" },
+      400,
+      req,
+    );
+  }
+  if (!hasAllowedTextMessages(body.messages)) {
+    return jsonResponse({ error: "messages contem role ou content invalidos.", code: "bad_request" }, 400, req);
+  }
+  if (!hasAllowedToolSchema(body.schema)) {
+    return jsonResponse({ error: "schema invalido.", code: "bad_request" }, 400, req);
+  }
+  if (
+    jsonByteLength({ system: body.system, messages: body.messages, schema: body.schema }) >
+      AI_TEXT_REQUEST_LIMITS.maxRequestBytes
+  ) {
+    return jsonResponse({ error: "payload acima do limite permitido.", code: "payload_too_large" }, 413, req);
+  }
+  if (
+    body.maxTokens !== undefined &&
+    (!Number.isInteger(body.maxTokens) || body.maxTokens < 1 || body.maxTokens > AI_TEXT_REQUEST_LIMITS.maxTokens)
+  ) {
+    return jsonResponse(
+      { error: `maxTokens deve ficar entre 1 e ${AI_TEXT_REQUEST_LIMITS.maxTokens}.`, code: "bad_request" },
+      400,
+      req,
+    );
+  }
+  if (
+    body.temperature !== undefined &&
+    (
+      !Number.isFinite(body.temperature) ||
+      body.temperature < 0 ||
+      body.temperature > AI_TEXT_REQUEST_LIMITS.maxTemperature
+    )
+  ) {
+    return jsonResponse(
+      { error: `temperature deve ficar entre 0 e ${AI_TEXT_REQUEST_LIMITS.maxTemperature}.`, code: "bad_request" },
+      400,
+      req,
+    );
+  }
+
   const { user, admin } = await getUserAndAdmin(req);
+  if (!user) return jsonResponse({ error: "unauthorized" }, 401, req);
   const model = body.model ?? DEFAULT_MODEL;
 
   const messages = body.system

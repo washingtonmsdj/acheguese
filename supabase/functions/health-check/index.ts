@@ -8,7 +8,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { getAllSecurityHeaders } from "../_shared/security.ts";
+import { getAllSecurityHeaders, rateLimitMiddleware, requireHttpMethod } from "../_shared/security.ts";
 import { requireAdmin } from "../_shared/adminAuth.ts";
 
 interface HealthCheck {
@@ -35,8 +35,14 @@ const startTime = Date.now();
 serve(async (req: Request) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { status: 204, headers: getAllSecurityHeaders('GET, OPTIONS') });
+    return new Response('ok', { status: 204, headers: getAllSecurityHeaders('GET, OPTIONS', req) });
   }
+
+  const methodError = requireHttpMethod(req, ['GET'], 'GET, OPTIONS');
+  if (methodError) return methodError;
+
+  const rateLimitResponse = await rateLimitMiddleware(req, 30, 60000);
+  if (rateLimitResponse) return rateLimitResponse;
 
   // Requer autenticação admin — health check expõe informações de infraestrutura
   const auth = await requireAdmin(req);
@@ -160,7 +166,7 @@ serve(async (req: Request) => {
       {
         status: statusCode,
         headers: {
-          ...getAllSecurityHeaders('GET, OPTIONS'),
+          ...getAllSecurityHeaders('GET, OPTIONS', req),
           'Cache-Control': 'no-cache, no-store, must-revalidate',
         },
       }
@@ -181,7 +187,7 @@ serve(async (req: Request) => {
       {
         status: 503,
         headers: {
-          ...getAllSecurityHeaders('GET, OPTIONS'),
+          ...getAllSecurityHeaders('GET, OPTIONS', req),
           'Cache-Control': 'no-cache, no-store, must-revalidate',
         },
       }

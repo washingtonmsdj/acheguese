@@ -22,8 +22,7 @@ Publicas:
 - `/comunicacao`
 - `/comunicacao/solicitar`
 - `/comunicacao/:state/:city`
-- `/comunicacao/:state/:city/:territorySlug`
-- `/comunicacao/:state/:city/:territorySlug/:channelSlug`
+- `/comunicacao/:state/:city/:channelSlug`
 
 Operacionais:
 
@@ -80,4 +79,3 @@ npm run test:e2e:communication-territorial
 ```
 
 O E2E atual cobre estabilidade das rotas existentes. A proxima fase precisa adicionar E2E da aba `Comunicacao` na comunidade.
-
