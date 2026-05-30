@@ -83,7 +83,7 @@ export class TouristPointQueryService {
         .eq('status', 'active');
 
       if (neighborhoods && neighborhoods.length > 0) {
-        return neighborhoods.map((neighborhood) => neighborhood.id);
+        return [locationId, ...neighborhoods.map((neighborhood) => neighborhood.id)];
       }
 
       const { data: districts } = await supabase
@@ -94,7 +94,7 @@ export class TouristPointQueryService {
         .eq('status', 'active');
 
       if (districts && districts.length > 0) {
-        return districts.map((district) => district.id);
+        return [locationId, ...districts.map((district) => district.id)];
       }
     }
 
@@ -212,5 +212,4 @@ export class TouristPointQueryService {
     }
   }
 }
-
 

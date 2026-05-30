@@ -14,6 +14,7 @@ import { Card } from "@/shared/components/ui/card";
 import { useNotifications } from "@/core/notifications/hooks/useNotifications";
 import { Notification } from "@/core/notifications/services/NotificationService";
 import { cn } from "@/shared/utils/cn";
+import { SafeLink } from "@/shared/components/security";
 
 interface NotificationItemProps {
   notification: Notification;
@@ -119,10 +120,10 @@ export function NotificationItem({ notification }: NotificationItemProps) {
 
             {notification.action_url && notification.action_label && (
               <Button variant="outline" size="sm" className="mt-3" asChild>
-                <a href={notification.action_url}>
+                <SafeLink href={notification.action_url} allowInternal>
                   {notification.action_label}
                   <ExternalLink className="ml-2 h-3 w-3" />
-                </a>
+                </SafeLink>
               </Button>
             )}
           </div>

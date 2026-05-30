@@ -1,5 +1,7 @@
 import { ProfessionalUrlService } from "@/core/professional/services/ProfessionalUrlService";
+import { professionalPublicRoutes } from "@/core/professional/routes/professionalPublicRoutes";
 import type { Professional, ProfessionalStats } from "@/core/professional/types";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 
 export function formatProfessionalCategory(value: string | undefined) {
   if (!value) return "Servico";
@@ -22,16 +24,7 @@ export function formatProfessionalOperationalHours(
 }
 
 export function resolveProfessionalPublicUrl(service: Professional): string {
-  if (service.slug && service.state && service.city) {
-    return ProfessionalUrlService.getCanonicalUrl({
-      id: service.profile_id,
-      slug: service.slug,
-      state: service.state,
-      city: service.city,
-    });
-  }
-
-  return `/servicos/${service.id}`;
+  return ProfessionalUrlService.getCanonicalUrlFromTarget(service) ?? professionalPublicRoutes.home();
 }
 
 export function getProfessionalStatsValue(
@@ -40,7 +33,9 @@ export function getProfessionalStatsValue(
   camelKey: "totalViews" | "totalContacts",
 ): number {
   const record = stats as unknown as Record<string, unknown> | undefined;
-  const value = record?.[snakeKey] ?? record?.[camelKey] ?? 0;
+  const value = record
+    ? getRecordValue(record, snakeKey) ?? getRecordValue(record, camelKey) ?? 0
+    : 0;
   return typeof value === "number" ? value : Number(value) || 0;
 }
 

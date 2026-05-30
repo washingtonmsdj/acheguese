@@ -1,5 +1,7 @@
 ﻿import type { Event, EventStatus } from '../types';
 
+import { getRecordValue } from '@/shared/utils/recordLookup';
+
 export type OrganizerDashboardStats = {
   total: number;
   published: number;
@@ -60,5 +62,5 @@ export function getOrganizerEventStatusBadge(status: EventStatus): { label: stri
     em_andamento: { label: 'Em Andamento', className: 'bg-amber-500' },
   };
 
-  return config[status] ?? config.rascunho;
+  return getRecordValue(config, status) ?? config.rascunho;
 }

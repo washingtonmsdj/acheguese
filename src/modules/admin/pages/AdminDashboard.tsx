@@ -160,13 +160,12 @@ export default function AdminDashboard() {
 
       setStats(statsWithTrends.stats);
       setTrends(
-        Object.entries(statsWithTrends.trends).reduce((acc, [key, trend]) => {
-          acc[key] = {
+        Object.fromEntries(
+          Object.entries(statsWithTrends.trends).map(([key, trend]) => [key, {
             ...trend,
             period: days === 7 ? "vs semana passada" : days === 30 ? "vs mês passado" : "vs período anterior",
-          };
-          return acc;
-        }, {} as Record<string, TrendData>)
+          }]),
+        ) as Record<string, TrendData>,
       );
       setActivity(activityData);
       setRecent(Array.isArray(recentData) ? recentData : []);

@@ -10,6 +10,7 @@ import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Heart, Loader2, Search, Tag, X } from 'lucide-react';
 
+import { gastronomyPublicRoutes } from '@/core/verticals/gastronomy/routes/gastronomyPublicRoutes';
 import { useSessionContext } from '@/core/session';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
@@ -41,12 +42,12 @@ export default function MyFavoritesPage() {
           </p>
           <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
             <Button asChild>
-              <Link to="/login" state={{ redirectTo: '/gastronomia/favoritos' }}>
+              <Link to="/login" state={{ redirectTo: gastronomyPublicRoutes.favorites() }}>
                 Entrar
               </Link>
             </Button>
             <Button asChild variant="outline">
-              <Link to="/gastronomia">Explorar gastronomia</Link>
+              <Link to={gastronomyPublicRoutes.home()}>Explorar gastronomia</Link>
             </Button>
           </div>
         </div>
@@ -207,7 +208,7 @@ export default function MyFavoritesPage() {
                 Salve restaurantes para acessá-los rapidamente
               </p>
               <Button asChild className="mt-4">
-                <Link to="/gastronomia">Explorar gastronomia</Link>
+                <Link to={gastronomyPublicRoutes.home()}>Explorar gastronomia</Link>
               </Button>
             </div>
           )}

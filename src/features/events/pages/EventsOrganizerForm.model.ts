@@ -1,16 +1,17 @@
 ﻿import type { EventCategory } from '../types';
 
 import type { CreateEventInput } from '@/core/community/services/CommunityEventsRuntimeService';
+import type { Json } from '@/integrations/supabase/types.generated';
 
 export type OrganizerLocationType = 'physical' | 'online' | 'hybrid';
 
-export interface EventsOrganizerGalleryItem extends Record<string, string> {
+export interface EventsOrganizerGalleryItem {
   id: string;
   url: string;
   caption: string;
 }
 
-export interface EventsOrganizerScheduleItem extends Record<string, string> {
+export interface EventsOrganizerScheduleItem {
   id: string;
   time: string;
   title: string;
@@ -19,7 +20,7 @@ export interface EventsOrganizerScheduleItem extends Record<string, string> {
   location: string;
 }
 
-export interface EventsOrganizerFaqItem extends Record<string, string> {
+export interface EventsOrganizerFaqItem {
   id: string;
   question: string;
   answer: string;
@@ -85,6 +86,26 @@ export type EventsOrganizerValidationIssue = {
   message: string;
 };
 
+type OrganizerInputText = string | null | undefined;
+type OrganizerGalleryInput = Array<{
+  id?: OrganizerInputText;
+  url?: OrganizerInputText;
+  caption?: OrganizerInputText;
+}>;
+type OrganizerScheduleInput = Array<{
+  id?: OrganizerInputText;
+  time?: OrganizerInputText;
+  title?: OrganizerInputText;
+  description?: OrganizerInputText;
+  speaker?: OrganizerInputText;
+  location?: OrganizerInputText;
+}>;
+type OrganizerFaqInput = Array<{
+  id?: OrganizerInputText;
+  question?: OrganizerInputText;
+  answer?: OrganizerInputText;
+}>;
+
 interface ExistingEventLike {
   title?: string;
   subtitle?: string;
@@ -121,9 +142,9 @@ interface ExistingEventLike {
   cover_image_url?: string;
   banner_image_url?: string;
   video_url?: string;
-  gallery?: Array<Partial<EventsOrganizerGalleryItem> & { url?: string }>;
-  schedule?: Array<Partial<EventsOrganizerScheduleItem>>;
-  faq?: Array<Partial<EventsOrganizerFaqItem>>;
+  gallery?: OrganizerGalleryInput;
+  schedule?: OrganizerScheduleInput;
+  faq?: OrganizerFaqInput;
   meta_title?: string;
   meta_description?: string;
   meta_keywords?: string[];
@@ -226,9 +247,7 @@ function createStableItemId(prefix: string, index: number): string {
   return `${prefix}-${index + 1}`;
 }
 
-function normalizeGallery(
-  gallery?: Array<Partial<EventsOrganizerGalleryItem> & { url?: string }>,
-): EventsOrganizerGalleryItem[] {
+function normalizeGallery(gallery?: OrganizerGalleryInput): EventsOrganizerGalleryItem[] {
   return (gallery ?? [])
     .filter((item) => item.url?.trim())
     .map((item, index) => ({
@@ -238,9 +257,7 @@ function normalizeGallery(
     }));
 }
 
-function normalizeSchedule(
-  schedule?: Array<Partial<EventsOrganizerScheduleItem>>,
-): EventsOrganizerScheduleItem[] {
+function normalizeSchedule(schedule?: OrganizerScheduleInput): EventsOrganizerScheduleItem[] {
   return (schedule ?? [])
     .filter((item) => item.title?.trim() || item.time?.trim())
     .map((item, index) => ({
@@ -253,7 +270,7 @@ function normalizeSchedule(
     }));
 }
 
-function normalizeFaq(faq?: Array<Partial<EventsOrganizerFaqItem>>): EventsOrganizerFaqItem[] {
+function normalizeFaq(faq?: OrganizerFaqInput): EventsOrganizerFaqItem[] {
   return (faq ?? [])
     .filter((item) => item.question?.trim() || item.answer?.trim())
     .map((item, index) => ({
@@ -261,6 +278,33 @@ function normalizeFaq(faq?: Array<Partial<EventsOrganizerFaqItem>>): EventsOrgan
       question: item.question?.trim() || '',
       answer: item.answer?.trim() || '',
     }));
+}
+
+export function serializeOrganizerGallery(gallery?: OrganizerGalleryInput): Json[] {
+  return normalizeGallery(gallery).map<Json>((item) => ({
+    id: item.id,
+    url: item.url,
+    caption: item.caption,
+  }));
+}
+
+export function serializeOrganizerSchedule(schedule?: OrganizerScheduleInput): Json[] {
+  return normalizeSchedule(schedule).map<Json>((item) => ({
+    id: item.id,
+    time: item.time,
+    title: item.title,
+    description: item.description,
+    speaker: item.speaker,
+    location: item.location,
+  }));
+}
+
+export function serializeOrganizerFaq(faq?: OrganizerFaqInput): Json[] {
+  return normalizeFaq(faq).map<Json>((item) => ({
+    id: item.id,
+    question: item.question,
+    answer: item.answer,
+  }));
 }
 
 function getLocationLabel(formData: EventsOrganizerFormData): string {
@@ -377,9 +421,9 @@ export function buildCommunityEventInput(formData: EventsOrganizerFormData): Cre
     accessibility_info: formData.accessibilityInfo.trim(),
     banner_image_url: formData.bannerImage.trim(),
     video_url: formData.videoUrl.trim(),
-    gallery: normalizeGallery(formData.gallery),
-    schedule: normalizeSchedule(formData.schedule),
-    faq: normalizeFaq(formData.faq),
+    gallery: serializeOrganizerGallery(formData.gallery),
+    schedule: serializeOrganizerSchedule(formData.schedule),
+    faq: serializeOrganizerFaq(formData.faq),
     meta_title: formData.metaTitle.trim(),
     meta_description: formData.metaDescription.trim(),
     meta_keywords: splitCsv(formData.metaKeywords),

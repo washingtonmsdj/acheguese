@@ -13,6 +13,7 @@ import {
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { cn } from "@/shared/utils/cn";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 import type { DriverPlan } from "@/modules/mobility/types";
 import { toast } from "sonner";
 import { BillingService } from "@/core/billing/services/BillingService";
@@ -57,7 +58,7 @@ export function DriverSubscriptionCard({
   service = "motorista",
 }: DriverSubscriptionCardProps) {
   const [checkoutPlan, setCheckoutPlan] = useState<DriverPlan | null>(null);
-  const checkoutConfig = checkoutConfigByService[service];
+  const checkoutConfig = getRecordValue(checkoutConfigByService, service) ?? checkoutConfigByService.motorista;
   const plans = [
     {
       id: "padrao" as DriverPlan,
@@ -88,7 +89,11 @@ export function DriverSubscriptionCard({
   ];
 
   const handlePlanChange = async (targetPlan: DriverPlan) => {
-    const planCode = checkoutConfig.planCodes[targetPlan];
+    const planCode = getRecordValue(checkoutConfig.planCodes, targetPlan);
+    if (!planCode) {
+      toast.error("Plano indisponivel para este servico.");
+      return;
+    }
 
     setCheckoutPlan(targetPlan);
     try {

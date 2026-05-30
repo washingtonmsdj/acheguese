@@ -15,6 +15,7 @@ import { communicationRoutes } from "@/core/communication-territorial/routes/com
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import { SafeLink } from "@/shared/components/security";
 import { buildMailtoUrl, buildTelUrl } from "@/shared/utils/contactLinks";
 import { CHANNEL_KIND_LABELS, PUBLICATION_TYPE_LABELS } from "../types";
 import { communicationTerritorialGateway } from "../services";
@@ -180,15 +181,14 @@ export default function CommunicationAgentPage() {
                         {publication.summary ?? publication.body}
                       </p>
                       {publication.source_url ? (
-                        <a
+                        <SafeLink
                           href={publication.source_url}
                           target="_blank"
-                          rel="noreferrer"
                           className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-primary hover:opacity-80"
                         >
                           Abrir fonte
                           <ExternalLink className="h-4 w-4" />
-                        </a>
+                        </SafeLink>
                       ) : null}
                     </article>
                   ))
@@ -246,15 +246,14 @@ export default function CommunicationAgentPage() {
                   </a>
                 ) : null}
                 {agent.website_url ? (
-                  <a
+                  <SafeLink
                     className="flex items-center gap-2 text-muted-foreground hover:text-primary"
                     href={agent.website_url}
                     target="_blank"
-                    rel="noreferrer"
                   >
                     <ExternalLink className="h-4 w-4" />
                     Site oficial
-                  </a>
+                  </SafeLink>
                 ) : null}
                 {!agent.contact_email && !agent.contact_phone && !agent.website_url ? (
                   <p className="text-muted-foreground">Contato público não informado.</p>

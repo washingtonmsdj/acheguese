@@ -18,10 +18,11 @@ import {
 
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
-import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
+import { getBusinessCreateRoute } from '@/core/verticals/config';
 import { cn } from '@/shared/utils/cn';
 
 import { getNicheByKey, getPublicNiches } from '../niches/registry';
+import { EducationUrlService } from '../services/EducationUrlService';
 import type { EducationPublicProfile } from '../types';
 import {
   INFRASTRUCTURE_FILTERS,
@@ -293,7 +294,7 @@ export function FeaturedEducationSection({
             const nicheLabel =
               getNicheByKey(profile.niche_key)?.displayName ??
               profile.niche_key;
-            const detailHref = `/educacao/${route.state}/${route.city}/${route.district}/${route.slug}`;
+            const detailHref = EducationUrlService.buildDetailUrl(route);
             const institutionName = profile.business_name ?? profile.institution_type;
 
             return (
@@ -449,7 +450,7 @@ export function EducationInstitutionCta({ businessExplorerHref }: { businessExpl
                 </ul>
 
                 <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-                  <Link to={businessManagementRoutes.create('education')}>
+                  <Link to={getBusinessCreateRoute('education')}>
                     <Button size="lg" className="w-full rounded-full sm:w-auto">
                       Cadastrar instituição
                       <ArrowUpRight className="ml-2 h-4 w-4" />

@@ -1,6 +1,7 @@
 import React from "react";
 import { Award, Crown, Medal, Trophy, Zap } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 import type { NeighborRank } from "@/shared/types/mobilidade";
 
 const rankConfig: Record<
@@ -18,36 +19,36 @@ const rankConfig: Record<
   bronze: {
     label: "Vizinho Bronze",
     icon: <Medal className="h-3.5 w-3.5" />,
-    color: "text-amber-600",
-    bg: "bg-amber-900/20",
-    border: "border-amber-700/30",
+    color: "text-warning",
+    bg: "bg-warning/10",
+    border: "border-warning/30",
     min: 0,
     max: 999,
   },
   prata: {
     label: "Vizinho Prata",
     icon: <Award className="h-3.5 w-3.5" />,
-    color: "text-gray-300",
-    bg: "bg-gray-500/10",
-    border: "border-gray-400/30",
+    color: "text-muted-foreground",
+    bg: "bg-muted",
+    border: "border-border",
     min: 1000,
     max: 2999,
   },
   ouro: {
     label: "Vizinho Ouro",
     icon: <Crown className="h-3.5 w-3.5" />,
-    color: "text-yellow-400",
-    bg: "bg-yellow-500/10",
-    border: "border-yellow-500/30",
+    color: "text-warning",
+    bg: "bg-warning/10",
+    border: "border-warning/30",
     min: 3000,
     max: 5999,
   },
   elite: {
     label: "Vizinho Elite",
     icon: <Zap className="h-3.5 w-3.5" />,
-    color: "text-teal-400",
-    bg: "bg-teal-500/10",
-    border: "border-teal-500/30",
+    color: "text-primary",
+    bg: "bg-primary/10",
+    border: "border-primary/30",
     min: 6000,
     max: Infinity,
   },
@@ -60,7 +61,7 @@ export function RankBadge({
   rank: NeighborRank;
   size?: "xs" | "sm" | "md";
 }) {
-  const cfg = rankConfig[rank];
+  const cfg = getRecordValue(rankConfig, rank) ?? rankConfig.bronze;
   return (
     <div
       className={cn(

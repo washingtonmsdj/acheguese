@@ -16,13 +16,14 @@ import {
 } from '@/shared/components/ui/tooltip';
 import { useAppUrls } from '@/core/routing/hooks/useAppUrls';
 import { useHomeCommunityHref } from '@/core/routing/hooks/useHomeCommunityHref';
+import { buildModuleTerritoryUrl, MODULE_SLUGS } from '@/core/routing/utils/territoryUrls';
 import { cn } from '@/shared/utils/cn';
 import { MOBILE_NAV_ITEMS, type NavItem } from './navigation.config';
 import { usePublicBrowsingCity } from '@/core/location/hooks/usePublicBrowsingCity';
 import { useResolveTerritoryFromUrl } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
 import { useGroupAvailability } from '@/core/territorial/hooks/useGroupAvailability';
 import { ModuleKey } from '@/core/rollout/types';
-import { isReservedSlug } from '@/core/routing/reservedSlugs';
+import { GastronomyUrlService } from '@/core/verticals/gastronomy/services/GastronomyUrlService';
 
 interface NavItemProps extends NavItem {
   isActive?: boolean;
@@ -112,16 +113,16 @@ export function AppBottomNav() {
 
   const communityContext = useMemo(() => {
     const parts = location.pathname.split('/').filter(Boolean);
-    if (parts[0] !== 'comunidade' || !parts[1] || !parts[2] || !parts[3]) {
+    if (parts[0] !== 'comunidade' || !parts[1] || !parts[2]) {
       return null;
     }
-    if (parts[3] === 'area' || isReservedSlug(parts[3])) {
+    if (parts[3] === 'area') {
       return null;
     }
     return {
       state: parts[1],
       city: parts[2],
-      territorySlug: parts[3],
+      territorySlug: parts[2],
     };
   }, [location.pathname]);
 
@@ -135,6 +136,17 @@ export function AppBottomNav() {
   const gastronomyAvailability = useGroupAvailability(communityGroupId, ModuleKey.GASTRONOMY);
   const servicesAvailability = useGroupAvailability(communityGroupId, ModuleKey.SERVICES);
   const classifiedsAvailability = useGroupAvailability(communityGroupId, ModuleKey.CLASSIFIEDS);
+  const activeModuleUrls = useMemo(() => {
+    const cityBase = `/${active.state}/${active.city}`;
+
+    return {
+      business: buildModuleTerritoryUrl(MODULE_SLUGS.business, cityBase),
+      gastronomy: GastronomyUrlService.getTerritoryUrl(cityBase),
+      services: buildModuleTerritoryUrl(MODULE_SLUGS.services, cityBase),
+      classifieds: buildModuleTerritoryUrl(MODULE_SLUGS.classifieds, cityBase),
+      map: buildModuleTerritoryUrl(MODULE_SLUGS.map, cityBase),
+    } as const;
+  }, [active.city, active.state]);
 
   const isActive = (href: string): boolean => {
     if (!href) return false;
@@ -148,20 +160,19 @@ export function AppBottomNav() {
   };
 
   const getNavHref = (item: NavItem): string => {
-    const cityBase = `/${active.state}/${active.city}`;
     switch (item.id) {
       case 'community':
         return homeCommunityHref;
       case 'business':
-        return `/empresas${cityBase}`;
+        return activeModuleUrls.business;
       case 'gastronomy':
-        return `/gastronomia${cityBase}`;
+        return activeModuleUrls.gastronomy;
       case 'services':
-        return `/servicos${cityBase}`;
+        return activeModuleUrls.services;
       case 'classifieds':
-        return `/classificados${cityBase}`;
+        return activeModuleUrls.classifieds;
       case 'map':
-        return `/mapa${cityBase}`;
+        return activeModuleUrls.map;
       default:
         return item.href;
     }

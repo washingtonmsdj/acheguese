@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 import { DriverRidesList } from "@/modules/mobility/components/driver/DriverRidesList";
 import { useMotoristaPage } from "@/modules/mobility/hooks/useMotoristaPage";
 import { getMobilityServicePath } from "@/modules/mobility/routes/mobilityNavigation";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 import type { MobilityRide } from "@/core/mobility/types/ride";
 
 type RideLike = MobilityRide & {
@@ -29,7 +30,7 @@ const TRUST_RISK_LABELS: Record<string, string> = {
 function getTrustRiskLabel(ride: RideLike): string | null {
   const risk = ride?.passenger_trust_risk_level;
   if (typeof risk !== "string" || risk === "trusted") return null;
-  return TRUST_RISK_LABELS[risk] ?? risk;
+  return getRecordValue(TRUST_RISK_LABELS, risk) ?? risk;
 }
 
 /**

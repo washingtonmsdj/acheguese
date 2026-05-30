@@ -9,6 +9,7 @@
 
 import type { GastronomyNicheConfig, NicheFilters, NicheStatus, NicheRegistry } from './types';
 import { NICHE_STATUS_PRIORITY } from './types';
+import { getRecordValue } from '@/shared/utils/recordLookup';
 
 // ── Presets ──────────────────────────────────────────────────────────────────
 
@@ -64,7 +65,7 @@ export const GASTRONOMY_NICHE_REGISTRY: NicheRegistry = {
  * Retorna null se não encontrado.
  */
 export function getNicheByKey(key: string): GastronomyNicheConfig | null {
-  return GASTRONOMY_NICHE_REGISTRY[key] ?? null;
+  return getRecordValue(GASTRONOMY_NICHE_REGISTRY, key) ?? null;
 }
 
 /**
@@ -218,8 +219,9 @@ export const DEFAULT_NICHE_KEY = 'lanches';
  * Obtém config do nicho ou fallback para padrão.
  */
 export function getNicheOrDefault(key?: string | null): GastronomyNicheConfig {
+  const defaultNiche = getRecordValue(GASTRONOMY_NICHE_REGISTRY, DEFAULT_NICHE_KEY) ?? lanchesNicheConfig;
   if (key && nicheExists(key)) {
-    return GASTRONOMY_NICHE_REGISTRY[key];
+    return getRecordValue(GASTRONOMY_NICHE_REGISTRY, key) ?? defaultNiche;
   }
-  return GASTRONOMY_NICHE_REGISTRY[DEFAULT_NICHE_KEY];
+  return defaultNiche;
 }

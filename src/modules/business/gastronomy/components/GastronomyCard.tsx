@@ -38,7 +38,7 @@ import {
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/utils/cn';
-import { normalizePublicTerritoryPath } from '@/core/routing/utils/territoryUrls';
+import { GastronomyUrlService } from '@/core/verticals/gastronomy/services/GastronomyUrlService';
 import { OpeningHoursService } from '@/core/business/services/OpeningHoursService';
 import { getCuisineLabel } from '../constants';
 import { formatBrl } from '../utils/currency';
@@ -146,7 +146,10 @@ export const GastronomyCard = memo<GastronomyCardProps>(
     const url = useMemo(
       () =>
         business.slug && business.geographic_path
-          ? `/gastronomia${normalizePublicTerritoryPath(business.geographic_path)}/${business.slug}`
+          ? GastronomyUrlService.getCanonicalUrlFromTerritory(
+              business.geographic_path,
+              business.slug,
+            )
           : null,
       [business.slug, business.geographic_path],
     );

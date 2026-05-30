@@ -15,7 +15,6 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export { default as VagasListingPage } from './pages/VagasListingPage';
-export { default as VagaDetailPage } from './pages/VagaDetailPage';
 export { default as PublicarVagaPage } from './pages/PublicarVagaPage';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -44,6 +43,12 @@ export { useVagasLocation } from './hooks/useVagasLocation';
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export { VagasService, vagasService } from './services/VagasService';
+export {
+  VagaReportService,
+  vagaReportService,
+  VAGA_REPORT_REASON_OPTIONS,
+  isVagaReportReason,
+} from './services/VagaReportService';
 export { VagasPublishPermissionService, vagasPublishPermissionService } from './services/VagasPublishPermissionService';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -60,6 +65,12 @@ export type {
   VagasPaginatedResult,
   Candidatura,
 } from './types/vagas.types';
+
+export type {
+  VagaReport,
+  VagaReportReason,
+  CreateVagaReportInput,
+} from './services/VagaReportService';
 
 export type {
   VagaStatus,

@@ -28,10 +28,16 @@ import {
   type OrganizerParticipant,
 } from './EventsOrganizerDashboard.model';
 import {
+  serializeOrganizerFaq,
+  serializeOrganizerGallery,
+  serializeOrganizerSchedule,
+} from './EventsOrganizerForm.model';
+import {
   EventsOrganizerFiltersSection,
   EventsOrganizerListSection,
   EventsOrganizerStatsSection,
 } from './EventsOrganizerDashboardSections';
+import { eventPublicRoutes } from '@/core/verticals/events/routes/eventPublicRoutes';
 
 export default function EventsOrganizerDashboard() {
   const navigate = useNavigate();
@@ -85,7 +91,7 @@ export default function EventsOrganizerDashboard() {
   };
 
   const handleViewEvent = (eventId: string) => {
-    navigate(`/eventos/${eventId}`);
+    navigate(eventPublicRoutes.detail(eventId));
   };
 
   const handleDuplicateEvent = async (eventId: string) => {
@@ -141,9 +147,9 @@ export default function EventsOrganizerDashboard() {
         accessibility_info: sourceEvent.accessibility_info,
         banner_image_url: sourceEvent.banner_image_url,
         video_url: sourceEvent.video_url,
-        gallery: sourceEvent.gallery,
-        schedule: sourceEvent.schedule,
-        faq: sourceEvent.faq,
+        gallery: serializeOrganizerGallery(sourceEvent.gallery),
+        schedule: serializeOrganizerSchedule(sourceEvent.schedule),
+        faq: serializeOrganizerFaq(sourceEvent.faq),
         meta_title: sourceEvent.meta_title,
         meta_description: sourceEvent.meta_description,
         meta_keywords: sourceEvent.meta_keywords,

@@ -29,6 +29,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui
 import { Separator } from '@/shared/components/ui/separator';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
+import { GastronomyUrlService } from '@/core/verticals/gastronomy/services/GastronomyUrlService';
 import { buildTelUrl } from '@/shared/utils/contactLinks';
 
 const ORDER_TYPE_LABELS = {
@@ -147,7 +148,7 @@ export default function OrderDetailsPage() {
   const effectiveBusinessId = businessId ?? order.business_id;
   const backTarget = isBusinessRoute
     ? businessManagementRoutes.gastronomyPedidos(effectiveBusinessId)
-    : '/gastronomia';
+    : GastronomyUrlService.getHomeUrl();
 
   return (
     <div className="container max-w-6xl py-6 sm:py-8 space-y-6">

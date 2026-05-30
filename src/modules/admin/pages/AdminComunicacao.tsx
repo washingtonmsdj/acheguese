@@ -16,6 +16,7 @@ import {
   type ChannelStatus,
 } from "@/core/communication-territorial";
 import { PublicIdentityService } from "@/core/public-identity";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 
 const CHANNEL_STATUSES: ChannelStatus[] = ["active", "restricted", "suspended", "pending_verification", "rejected"];
 
@@ -77,7 +78,11 @@ export default function AdminComunicacao() {
   });
 
   const reject = useMutation({
-    mutationFn: (requestId: string) => AdminCommunicationTerritorialService.rejectRequest(requestId, rejectNotes[requestId] ?? "Rejeitado pelo admin"),
+    mutationFn: (requestId: string) =>
+      AdminCommunicationTerritorialService.rejectRequest(
+        requestId,
+        getRecordValue(rejectNotes, requestId) ?? "Rejeitado pelo admin",
+      ),
     onSuccess: () => { toast.success("Solicitacao rejeitada."); invalidate(); },
     onError: (error) => toast.error(getCommunicationErrorMessage(error, "Falha ao rejeitar solicitacao.")),
   });

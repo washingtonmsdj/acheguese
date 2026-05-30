@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { ProfessionalService } from "@/core/professional/services/ProfessionalService";
+import { ProfessionalUrlService } from "@/core/professional/services/ProfessionalUrlService";
+import { professionalPublicRoutes } from "@/core/professional/routes/professionalPublicRoutes";
 import {
   getOpportunityUrgencyLabel,
 } from "@/core/work-opportunities";
@@ -17,6 +19,10 @@ interface UserServicesSectionProps {
   profileId: string;
   onCreateNew: () => void;
   onEdit: (id: string) => void;
+}
+
+function resolveServicePublicUrl(service: Professional): string {
+  return ProfessionalUrlService.getCanonicalUrlFromTarget(service) ?? professionalPublicRoutes.home();
 }
 
 export function UserServicesSection({
@@ -106,7 +112,7 @@ export function UserServicesSection({
                     actorUserId: activeProfile?.userId ?? activeProfile?.userId ?? null,
                     metadata: { entrypoint: "profile_professions_chip" },
                   });
-                  navigate(`/servicos/${service.professional_data_id || service.id}`);
+                  navigate(resolveServicePublicUrl(service));
                 }}
               >
                 {service.category || "serviço"}
@@ -190,7 +196,7 @@ export function UserServicesSection({
                         actorUserId: activeProfile?.userId ?? activeProfile?.userId ?? null,
                         metadata: { entrypoint: "profile_professions_card" },
                       });
-                      navigate(`/servicos/${service.professional_data_id || service.id}`);
+                      navigate(resolveServicePublicUrl(service));
                     }}
                     className="gap-2"
                   >

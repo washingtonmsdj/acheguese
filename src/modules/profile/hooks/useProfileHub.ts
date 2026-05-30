@@ -50,7 +50,7 @@ const GLOBAL_MODULE_URLS = {
   community: LAUNCH_URLS.community,
   jobs: buildAppModulePath(APP_MODULE_SLUGS.jobs),
   events: buildAppModulePath(APP_MODULE_SLUGS.events),
-  touristPoints: buildAppModulePath(APP_MODULE_SLUGS.touristPoints),
+  touristPoints: LAUNCH_URLS.touristPoints,
   ranking: buildAppModulePath(APP_MODULE_SLUGS.ranking),
   analytics: '/analytics',
 } as const;

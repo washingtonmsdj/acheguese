@@ -4,6 +4,7 @@ import {
   evaluateProfessionalSlugSafety,
   isProfessionalSlugSafetyBypassAllowed,
 } from "@/core/public-identity/domain/professionalSlugSafety";
+import { professionalPublicRoutes } from "@/core/professional/routes/professionalPublicRoutes";
 
 interface ProfessionalSlugSectionProps {
   slug: string;
@@ -24,10 +25,8 @@ export function ProfessionalSlugSection({
   isVerifiedProfessional = false,
   disabled,
 }: ProfessionalSlugSectionProps) {
-  const originalUrl = originalSlug
-    ? `/profissionais/:uf/:cidade/${originalSlug}`
-    : "";
-  const newUrl = slug ? `/profissionais/:uf/:cidade/${slug}` : "";
+  const originalUrl = originalSlug ? professionalPublicRoutes.detailPreview(originalSlug) : "";
+  const newUrl = slug ? professionalPublicRoutes.detailPreview(slug) : "";
   const slugSafety =
     professionalName && slug
       ? evaluateProfessionalSlugSafety({ professionalName, slug })

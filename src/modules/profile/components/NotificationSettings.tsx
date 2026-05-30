@@ -94,6 +94,34 @@ function toServicePayload(settings: NotificationSettingsForm) {
   };
 }
 
+function toggleNotificationSetting(
+  previous: NotificationSettingsForm,
+  key: keyof NotificationSettingsForm,
+): NotificationSettingsForm {
+  switch (key) {
+    case "emailNotifications":
+      return { ...previous, emailNotifications: !previous.emailNotifications };
+    case "pushNotifications":
+      return { ...previous, pushNotifications: !previous.pushNotifications };
+    case "newMessages":
+      return { ...previous, newMessages: !previous.newMessages };
+    case "newComments":
+      return { ...previous, newComments: !previous.newComments };
+    case "newLikes":
+      return { ...previous, newLikes: !previous.newLikes };
+    case "newFollowers":
+      return { ...previous, newFollowers: !previous.newFollowers };
+    case "businessUpdates":
+      return { ...previous, businessUpdates: !previous.businessUpdates };
+    case "communityUpdates":
+      return { ...previous, communityUpdates: !previous.communityUpdates };
+    case "weeklyDigest":
+      return { ...previous, weeklyDigest: !previous.weeklyDigest };
+    default:
+      return previous;
+  }
+}
+
 export function NotificationSettings({
   userId,
   onUpdate,
@@ -131,10 +159,7 @@ export function NotificationSettings({
   });
 
   const handleToggle = (key: keyof NotificationSettingsForm) => {
-    setSettings((previous) => ({
-      ...previous,
-      [key]: !previous[key],
-    }));
+    setSettings((previous) => toggleNotificationSetting(previous, key));
   };
 
   const handleReset = () => {

@@ -193,7 +193,6 @@ export const EducationPlansPage = lazy(() => import("@/modules/business/educatio
 // SERVICOS E PROFISSIONAIS
 // ============================================================
 export const ServicosLandingPage = lazy(() => import("@/modules/professionals/services/pages/ServicosLandingPage"));
-export const ProfissionalDetailPage = lazy(() => import("@/modules/professionals/services/pages/ProfissionalDetailPage"));
 export const ProfissionalPublicPage = lazy(() => import("@/modules/professionals/pages/ProfissionalPublicPage"));
 export const ProfessionalLeadTrackingPage = lazy(() => import("@/modules/professionals/pages/ProfessionalLeadTrackingPage"));
 export const CadastrarServicoPage = lazy(() => import("@/modules/professionals/services/pages/CadastrarServicoPage"));
@@ -215,7 +214,6 @@ export const ClassifiedShortRoute = lazy(() => import("@/core/routing/components
 // ============================================================
 export const PublicarVagaPage = lazy(() => import("@/modules/classifieds/jobs/pages/PublicarVagaPage"));
 export const VagasPublicPage = lazy(() => import("@/modules/classifieds/jobs/pages/VagasPublicPage"));
-export const VagaDetailPage = lazy(() => import("@/modules/classifieds/jobs/pages/VagaDetailPage"));
 export const VagaDetailPublicPage = lazy(() => import("@/modules/classifieds/jobs/pages/VagaDetailPublicPage"));
 export const WorkOpportunitiesPage = lazy(() => import("@/modules/work-opportunities/pages/WorkOpportunitiesPage"));
 export const WorkOpportunityDetailPage = lazy(() => import("@/modules/work-opportunities/pages/WorkOpportunityDetailPage"));
@@ -252,7 +250,6 @@ export const NovoPostPage = lazy(() => import("@/modules/community-feed/pages/No
 export const CommunicationLandingPage = lazy(() => import("@/modules/communication-territorial/pages/CommunicationLandingPage").then(module => ({ default: module.default })));
 export const CommunicationRequestPage = lazy(() => import("@/modules/communication-territorial/pages/CommunicationRequestPage"));
 export const CommunicationCityPage = lazy(() => import("@/modules/communication-territorial/pages/CommunicationCityPage"));
-export const CommunicationTerritoryPage = lazy(() => import("@/modules/communication-territorial/pages/CommunicationTerritoryPage"));
 export const CommunicationChannelPage = lazy(() => import("@/modules/communication-territorial/pages/CommunicationChannelPage"));
 export const CommunicationCompanyDetailsPage = lazy(() => import("@/modules/communication-territorial/pages/CommunicationCompanyDetailsPage"));
 export const CommunicationAgentPage = lazy(() => import("@/modules/communication-territorial/pages/CommunicationAgentPage"));

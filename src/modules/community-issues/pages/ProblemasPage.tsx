@@ -9,6 +9,7 @@ import { useSessionContext } from "@/core/session";
 import { buildCommunityTerritoryPresentation } from "@/core/community-issues/utils/communityTerritoryPresentation";
 import { Button } from "@/shared/components/ui/button";
 import { TooltipProvider } from "@/shared/components/ui/tooltip";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 import { CreateIssueModal } from "@/core/community-issues/components/CreateIssueModal";
 import { IssueCard } from "@/core/community-issues/components/IssueCard";
 import { IssueCardSkeleton } from "@/core/community-issues/components/IssueCardSkeleton";
@@ -37,7 +38,7 @@ export default function ProblemasPage({ resolved }: ProblemasPageProps) {
     resolved?.kind === "location"
       ? resolved.location
       : resolved?.kind === "group"
-        ? resolved.group.members[0]
+        ? resolved.group.members.at(0) ?? null
         : null;
   const routeTerritoryPresentation = buildCommunityTerritoryPresentation({
     resolvedLocation,
@@ -60,11 +61,11 @@ export default function ProblemasPage({ resolved }: ProblemasPageProps) {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-[#12181B]" role="main">
+      <div className="min-h-screen bg-background" role="main">
         <div className="container mx-auto max-w-2xl px-4 py-6 space-y-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Wrench className="h-5 w-5 text-amber-500" aria-hidden />
+              <Wrench className="h-5 w-5 text-warning" aria-hidden />
               <h1 className="text-lg font-semibold text-foreground">Problemas urbanos</h1>
             </div>
             <Button
@@ -85,12 +86,12 @@ export default function ProblemasPage({ resolved }: ProblemasPageProps) {
                   onClick={() => setFilterStatus(status)}
                   className={`text-xs px-3 py-1 rounded-full border transition-colors ${
                     filterStatus === status
-                      ? "bg-amber-500 text-white border-amber-500"
-                      : "border-border text-muted-foreground hover:border-amber-400"
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "border-border text-muted-foreground hover:border-primary"
                   }`}
                   aria-pressed={filterStatus === status}
                 >
-                  {status ? ISSUE_STATUS_LABELS[status] : "Todos"}
+                  {status ? getRecordValue(ISSUE_STATUS_LABELS, status) ?? status : "Todos"}
                 </button>
               ),
             )}

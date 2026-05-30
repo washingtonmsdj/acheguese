@@ -3,7 +3,7 @@
  *
  * Componente específico para a página de favoritos.
  * Recebe FavoriteBusiness diretamente — sem conversão de tipos.
- * Constrói a URL canônica via normalizePublicTerritoryPath (SSOT).
+ * Constrói a URL canônica via GastronomyUrlService (SSOT).
  */
 
 import { Link } from 'react-router-dom';
@@ -11,7 +11,7 @@ import { Star, Truck, UtensilsCrossed } from 'lucide-react';
 
 import { Badge } from '@/shared/components/ui/badge';
 import { BusinessLogo } from '@/shared/components/ui/business-logo';
-import { normalizePublicTerritoryPath } from '@/core/routing/utils/territoryUrls';
+import { GastronomyUrlService } from '@/core/verticals/gastronomy/services/GastronomyUrlService';
 import { getCuisineLabel } from '../constants';
 import type { FavoriteBusiness } from '../services/favorites.queries';
 
@@ -23,7 +23,10 @@ export function FavoriteBusinessCard({ favorite: fav }: FavoriteBusinessCardProp
   // URL canônica via SSOT — só constrói se tiver geographic_path e slug
   const url =
     fav.business_geographic_path && fav.business_slug
-      ? `/gastronomia${normalizePublicTerritoryPath(fav.business_geographic_path)}/${fav.business_slug}`
+      ? GastronomyUrlService.getCanonicalUrlFromTerritory(
+          fav.business_geographic_path,
+          fav.business_slug,
+        )
       : null;
 
   const cuisineLabel = fav.cuisine_type ? getCuisineLabel(fav.cuisine_type) : null;

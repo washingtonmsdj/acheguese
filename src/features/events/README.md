@@ -11,6 +11,8 @@ Modulo publico e operacional de eventos.
 
 ## Padrao
 
-- Rotas publicas usam `/eventos` e `/eventos/:eventId`.
+- Rotas publicas canonicas usam `/eventos/:state/:city`.
+- Detalhes usam o sufixo estatico `/evento/:eventId` para nao colidir com bairro ou grupo territorial.
+- Links devem ser gerados por `eventPublicRoutes` e pelos hooks centrais de URLs territoriais.
 - Componentes nao devem carregar nomes de versao.
 - Documentacao de migracao antiga nao deve ficar junto do codigo do modulo.

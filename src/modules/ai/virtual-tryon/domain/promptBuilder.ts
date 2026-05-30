@@ -1,4 +1,5 @@
 import { BodyTarget, TryOnCategory, TryOnGender, TryOnStyle } from './types';
+import { getRecordValue } from '@/shared/utils/recordLookup';
 
 interface Args {
   category: TryOnCategory;
@@ -24,8 +25,8 @@ const targetInstruction: Record<BodyTarget, string> = {
 };
 
 export function buildTryOnPrompt({ category, bodyTarget, gender, style }: Args): string {
-  const subject = genderText[gender];
-  const target = targetInstruction[bodyTarget];
+  const subject = getRecordValue(genderText, gender) ?? genderText.neutral;
+  const target = getRecordValue(targetInstruction, bodyTarget) ?? targetInstruction.full_body;
   const ctx = category === TryOnCategory.SWIMWEAR
     ? 'beach photoshoot, tasteful fashion editorial, fully appropriate'
     : `${style} fashion photoshoot, studio quality lighting`;

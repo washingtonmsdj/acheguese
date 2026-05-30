@@ -1,6 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import { Link, useParams } from "react-router-dom";
-import { LAUNCH_URLS, TERRITORY_CONFIG } from "@/config/territory";
+import { buildCommunityTerritoryUrl } from "@/core/routing/utils/territoryUrls";
 import { buildPublicAbsoluteUrl } from "@/shared/config/publicAppOrigin";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
@@ -18,8 +18,7 @@ export default function CommunicationCityPage() {
 
   const cityPath = buildCommunicationCityPath(state, city);
   const canonicalUrl = buildPublicAbsoluteUrl(cityPath);
-  const isLaunchCity = state === TERRITORY_CONFIG.launch.state && city === TERRITORY_CONFIG.launch.city;
-  const communityPath = isLaunchCity ? LAUNCH_URLS.community : `/${state}/${city}`;
+  const communityPath = buildCommunityTerritoryUrl(`/${state}/${city}`);
 
   return (
     <CommunicationPageShell>
@@ -39,7 +38,7 @@ export default function CommunicationCityPage() {
             {data?.title ?? "Comunicação Territorial"}
           </h1>
           <p className="max-w-3xl text-sm text-muted-foreground sm:text-base">
-            Canais editoriais da cidade. Abra um território para navegar em contexto local.
+            Canais editoriais da cidade com cobertura local organizada por contexto territorial.
           </p>
         </div>
         <Button asChild variant="outline">
@@ -89,25 +88,21 @@ export default function CommunicationCityPage() {
               <Badge variant="outline">{data?.publications?.length ?? 0} publicações</Badge>
             </div>
             {(data?.publications ?? []).length ? (
-              (data?.publications ?? []).map((publication) => {
-                const locationSlug = publication.location?.slug ?? city;
-                return (
-                  <PublicationCard
-                    key={publication.id}
-                    publication={publication}
-                    channelHref={
-                      publication.channel
-                        ? buildCommunicationChannelPath({
-                            state,
-                            city,
-                            territorySlug: locationSlug,
-                            channelSlug: publication.channel.slug,
-                          })
-                        : undefined
-                    }
-                  />
-                );
-              })
+              (data?.publications ?? []).map((publication) => (
+                <PublicationCard
+                  key={publication.id}
+                  publication={publication}
+                  channelHref={
+                    publication.channel
+                      ? buildCommunicationChannelPath({
+                          state,
+                          city,
+                          channelSlug: publication.channel.slug,
+                        })
+                      : undefined
+                  }
+                />
+              ))
             ) : (
               <Card className="border-border">
                 <CardContent className="py-8 text-sm text-muted-foreground">
@@ -121,7 +116,7 @@ export default function CommunicationCityPage() {
             <p className="text-sm text-muted-foreground">
               Quer navegar por bairros e grupos desta cidade?{" "}
               <Link className="font-medium text-primary hover:underline" to={communityPath}>
-                {isLaunchCity ? "Abrir comunidade territorial" : "Ver pagina da cidade"}
+                Abrir comunidade
               </Link>
               .
             </p>

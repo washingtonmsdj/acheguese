@@ -2,6 +2,7 @@ import { supabase } from "@/core/infrastructure/supabase";
 import { BillingService } from "@/core/billing/services/BillingService";
 import type { PlanTier } from "@/core/billing";
 import { PlanTier as BillingPlanTier } from "@/core/billing";
+import { getPublicAppOrigin } from "@/shared/config/publicAppOrigin";
 import { logger } from "@/shared/utils/logger";
 import {
   GASTRONOMY_SUBSCRIPTION_STATUSES,
@@ -90,17 +91,23 @@ function toPlanTier(planCode: string | null | undefined): PlanTier {
 }
 
 function getReturnUrl(businessId: string, state: "success" | "cancel" | "portal"): string {
-  const fallbackBaseUrl = typeof window === "undefined"
-    ? import.meta.env.VITE_PUBLIC_SITE_URL || "http://localhost:8080"
-    : import.meta.env.VITE_PUBLIC_SITE_URL || window.location.origin;
-  const currentUrl = typeof window === "undefined"
-    ? new URL("/", fallbackBaseUrl)
-    : new URL(window.location.href);
+  const publicOrigin = getPublicAppOrigin();
+  const currentUrl = typeof window !== "undefined" && window.location?.href
+    ? new URL(window.location.href)
+    : new URL("/", requirePublicOrigin(publicOrigin));
 
   currentUrl.searchParams.set("businessId", businessId);
   currentUrl.searchParams.set("billing", state);
 
   return currentUrl.toString();
+}
+
+function requirePublicOrigin(origin: string): string {
+  if (!origin) {
+    throw new Error("Public app origin is not configured. Define VITE_PUBLIC_SITE_URL.");
+  }
+
+  return origin;
 }
 
 function createDefaultSubscription(

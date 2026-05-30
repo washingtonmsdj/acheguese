@@ -21,7 +21,7 @@ export function AdGallery({
   onPrev,
 }: AdGalleryProps) {
   const hasMultiplePhotos = photos.length > 1;
-  const hasPhotos = photos.length > 0;
+  const currentPhotoUrl = photos.at(currentPhoto) ?? null;
 
   return (
     <div className="relative bg-secondary">
@@ -33,9 +33,9 @@ export function AdGallery({
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
         >
-          {hasPhotos ? (
+          {currentPhotoUrl ? (
             <img
-              src={photos[currentPhoto]}
+              src={currentPhotoUrl}
               alt={title}
               className="w-full h-72 object-cover"
             />

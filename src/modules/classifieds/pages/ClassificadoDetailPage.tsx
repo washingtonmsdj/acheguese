@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
@@ -13,6 +13,7 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import { useSessionContext } from "@/core/session";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { useClassificadoDetail } from "@/modules/classifieds/hooks/useClassificadoDetail";
+import { useClassifiedFavorite } from "@/modules/classifieds/hooks/useClassifiedFavorite";
 import { useClassificados } from "@/modules/classifieds/hooks/useClassificados";
 import { useSellerAds } from "@/modules/classifieds/hooks/useSellerAds";
 import { getCategoryLabel } from "@/modules/classifieds/constants/categories";
@@ -28,8 +29,10 @@ import {
 } from "./ClassificadoDetailPageSections";
 import { getClassifiedStatusLabel } from "./ClassificadoDetailStatus";
 import {
+  CLASSIFIED_REPORT_REASON_OPTIONS,
   classifiedReportService,
   classifiedUrlService,
+  isClassifiedReportReason,
   markAsSold,
   reactivateClassified,
   updateClassified,
@@ -42,9 +45,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "@/shared/utils/dateLocale";
 import { messagingService } from "@/core/messaging";
 
-type ReportReason = "fraud" | "fake" | "inappropriate" | "spam" | "duplicate" | "wrong-category" | "sold" | "other";
 interface ClassificadoDetailPageProps { classifiedId?: string; }
-const CLASSIFIED_FAVORITES_KEY = "classifieds:favorites";
 
 export default function ClassificadoDetailPage({ classifiedId: propId }: ClassificadoDetailPageProps = {}) {
   const { id: paramId } = useParams<{ id: string }>();
@@ -58,7 +59,6 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
 
   const [imgIdx, setImgIdx] = useState(0);
   const [galleryOpen, setGalleryOpen] = useState(false);
-  const [isFav, setIsFav] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [reportReason, setReportReason] = useState("");
   const [submittingReport, setSubmittingReport] = useState(false);
@@ -71,6 +71,12 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
   });
 
   const { sellerAds } = useSellerAds(classificado?.vendedor?.id, id);
+  const {
+    canFavorite,
+    isFavorite,
+    isPending: isFavoritePending,
+    toggleFavorite,
+  } = useClassifiedFavorite(id);
   const isOwner = Boolean(activeProfile?.id && classificado?.vendedor?.id === activeProfile.id);
   const statusMutation = useMutation({
     mutationFn: async (nextStatus: ClassifiedStatusValue) => {
@@ -97,26 +103,17 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
   });
 
   const anunciosRelacionados = relacionados.filter((ad) => ad.id !== id).slice(0, 4);
-  useEffect(() => {
-    if (!id || typeof window === "undefined") return;
-    try {
-      const parsed = JSON.parse(window.localStorage.getItem(CLASSIFIED_FAVORITES_KEY) || "[]");
-      const favoriteIds = Array.isArray(parsed) ? parsed : [];
-      setIsFav(favoriteIds.includes(id));
-    } catch {
-      setIsFav(false);
-    }
-  }, [id]);
-
 
   const nextImg = useCallback(() => {
-    if (!classificado?.fotos) return;
-    setImgIdx((p) => (p === classificado.fotos.length - 1 ? 0 : p + 1));
+    if (!classificado?.fotos?.length) return;
+    const photoCount = classificado.fotos.length;
+    setImgIdx((p) => (p >= photoCount - 1 ? 0 : p + 1));
   }, [classificado]);
 
   const prevImg = useCallback(() => {
-    if (!classificado?.fotos) return;
-    setImgIdx((p) => (p === 0 ? classificado.fotos.length - 1 : p - 1));
+    if (!classificado?.fotos?.length) return;
+    const photoCount = classificado.fotos.length;
+    setImgIdx((p) => (p <= 0 ? photoCount - 1 : p - 1));
   }, [classificado]);
 
   const handleWhatsApp = useCallback(() => {
@@ -158,10 +155,10 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
       const conversation = await messagingService.findOrCreateConversation(id, activeProfile.id, sellerId);
       if (!conversation) throw new Error("Conversation was not created");
       navigate(`/chat/${conversation.id}`);
-    } catch {
+    } catch (error) {
       toast({
         title: "Não foi possível abrir o chat",
-        description: "Tente novamente em alguns instantes.",
+        description: error instanceof Error ? error.message : "Tente novamente em alguns instantes.",
         variant: "destructive",
       });
     } finally {
@@ -192,41 +189,41 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
     }
   }, [classificado, toast]);
 
-  const handleToggleFavorite = useCallback(() => {
-    if (!id || typeof window === "undefined") return;
+  const handleToggleFavorite = useCallback(async () => {
+    if (!id) return;
+    if (!canFavorite) {
+      navigate(appUrls.auth.login);
+      return;
+    }
 
     try {
-      const parsed = JSON.parse(window.localStorage.getItem(CLASSIFIED_FAVORITES_KEY) || "[]");
-      const favoriteIds: string[] = Array.isArray(parsed) ? parsed : [];
-      const nextIsFav = !favoriteIds.includes(id);
-      const nextFavorites = nextIsFav
-        ? [...favoriteIds, id]
-        : favoriteIds.filter((favoriteId) => favoriteId !== id);
-
-      window.localStorage.setItem(CLASSIFIED_FAVORITES_KEY, JSON.stringify(nextFavorites));
-      setIsFav(nextIsFav);
+      const nextIsFavorite = await toggleFavorite();
       toast({
-        title: nextIsFav ? "Anúncio salvo" : "Anúncio removido",
-        description: nextIsFav
+        title: nextIsFavorite ? "Anúncio salvo" : "Anúncio removido",
+        description: nextIsFavorite
           ? "Você pode acessar depois em seus favoritos."
           : "O anúncio foi removido dos favoritos.",
       });
-    } catch {
+    } catch (error) {
       toast({
         title: "Não foi possível atualizar favoritos",
-        description: "Tente novamente em alguns instantes.",
+        description: error instanceof Error ? error.message : "Tente novamente em alguns instantes.",
         variant: "destructive",
       });
     }
-  }, [id, toast]);
+  }, [appUrls.auth.login, canFavorite, id, navigate, toast, toggleFavorite]);
 
   const handleReport = useCallback(async () => {
-    if (!reportReason.trim()) return;
+    if (!activeProfile?.id) {
+      navigate(appUrls.auth.login);
+      return;
+    }
+    if (!isClassifiedReportReason(reportReason)) return;
     setSubmittingReport(true);
     try {
-      await classifiedReportService.createReport(user?.id || null, {
+      await classifiedReportService.createReport(activeProfile.id, {
         classified_id: id!,
-        reason: reportReason as ReportReason,
+        reason: reportReason,
       });
       toast({ title: "Denúncia enviada", description: "Nossa equipe irá analisar em breve." });
       setReportOpen(false);
@@ -236,21 +233,17 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
     } finally {
       setSubmittingReport(false);
     }
-  }, [reportReason, user, id, toast]);
+  }, [activeProfile?.id, appUrls.auth.login, id, navigate, reportReason, toast]);
 
-  const buildAdUrl = useCallback((ad: any) => {
-    if (ad.geographic_path && ad.category_slug && ad.subcategory_slug && ad.slug && ad.public_id) {
-      const urls = classifiedUrlService.buildUrls({
-        id: ad.id,
-        public_id: ad.public_id,
-        geographic_path: ad.geographic_path,
-        category_slug: ad.category_slug,
-        subcategory_slug: ad.subcategory_slug,
-        slug: ad.slug,
-      });
-      return urls.canonical;
-    }
-    return `/c/${ad.public_id || ad.id}`;
+  const buildAdUrl = useCallback((ad: {
+    id: string;
+    public_id?: string | null;
+    slug?: string | null;
+    geographic_path?: string | null;
+    category_slug?: string | null;
+    subcategory_slug?: string | null;
+  }) => {
+    return classifiedUrlService.buildPublicUrl(ad);
   }, []);
 
 
@@ -286,6 +279,7 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
 
   const photos = classificado.fotos || [];
   const hasMultiplePhotos = photos.length > 1;
+  const currentPhotoUrl = photos.at(imgIdx) ?? null;
   const categoryLabel = getCategoryLabel(classificado.categoria);
   const timeAgo = formatDistanceToNow(new Date(classificado.created_at), { addSuffix: true, locale: ptBR });
 
@@ -310,9 +304,10 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
               variant="ghost"
               size="icon"
               onClick={handleToggleFavorite}
+              disabled={isFavoritePending}
               className="rounded-full h-9 w-9"
             >
-              <Heart className={cn("h-4 w-4", isFav && "fill-red-500 text-red-500")} />
+              <Heart className={cn("h-4 w-4", isFavorite && "fill-red-500 text-red-500")} />
             </Button>
           </div>
         </div>
@@ -325,12 +320,12 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
             className="relative aspect-[4/3] sm:aspect-[16/9] lg:aspect-[2.2/1] overflow-hidden cursor-zoom-in"
             onClick={() => setGalleryOpen(true)}
           >
-            {photos.length > 0 ? (
+            {currentPhotoUrl ? (
               <motion.img
                 key={imgIdx}
                 initial={{ opacity: 0.8 }}
                 animate={{ opacity: 1 }}
-                src={photos[imgIdx]}
+                src={currentPhotoUrl}
                 alt={classificado.titulo}
                 className="w-full h-full object-cover"
               />
@@ -537,7 +532,15 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
               {sellerAds.slice(0, 4).map((ad, i) => (
-                <MiniAdCard key={ad.id} ad={ad} index={i} onClick={() => navigate(buildAdUrl(ad))} />
+                <MiniAdCard
+                  key={ad.id}
+                  ad={ad}
+                  index={i}
+                  onClick={() => {
+                    const publicUrl = buildAdUrl(ad);
+                    if (publicUrl) navigate(publicUrl);
+                  }}
+                />
               ))}
             </div>
           </motion.section>
@@ -566,7 +569,15 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
               {anunciosRelacionados.map((ad, i) => (
-                <MiniAdCard key={ad.id} ad={ad} index={i} onClick={() => navigate(buildAdUrl(ad))} />
+                <MiniAdCard
+                  key={ad.id}
+                  ad={ad}
+                  index={i}
+                  onClick={() => {
+                    const publicUrl = buildAdUrl(ad);
+                    if (publicUrl) navigate(publicUrl);
+                  }}
+                />
               ))}
             </div>
           </motion.section>
@@ -619,14 +630,11 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
                 className="w-full h-10 px-3 rounded-xl bg-background border border-border text-foreground text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 <option value="">Selecione um motivo</option>
-                <option value="fraud">Fraude ou golpe</option>
-                <option value="fake">Produto falso</option>
-                <option value="inappropriate">Conteúdo inapropriado</option>
-                <option value="spam">Spam</option>
-                <option value="duplicate">Duplicado</option>
-                <option value="wrong-category">Categoria incorreta</option>
-                <option value="sold">Já vendido</option>
-                <option value="other">Outro</option>
+                {CLASSIFIED_REPORT_REASON_OPTIONS.map((reason) => (
+                  <option key={reason.id} value={reason.id}>
+                    {reason.label}
+                  </option>
+                ))}
               </select>
               <div className="flex gap-2">
                 <Button variant="outline" onClick={() => { setReportOpen(false); setReportReason(""); }} className="flex-1 rounded-xl">
@@ -647,7 +655,7 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
 
       {/* -- Gallery Modal ------------------------------- */}
       <AnimatePresence>
-        {galleryOpen && photos.length > 0 && (
+        {galleryOpen && currentPhotoUrl && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -667,7 +675,7 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
                 key={imgIdx}
                 initial={{ opacity: 0.5, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
-                src={photos[imgIdx]}
+                src={currentPhotoUrl}
                 alt={classificado.titulo}
                 className="w-full h-auto max-h-[85vh] object-contain rounded-lg"
               />

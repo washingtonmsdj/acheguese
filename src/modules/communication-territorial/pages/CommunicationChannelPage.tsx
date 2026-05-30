@@ -3,15 +3,12 @@ import { Link, useParams } from "react-router-dom";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import { SafeLink } from "@/shared/components/security";
 import { buildPublicAbsoluteUrl } from "@/shared/config/publicAppOrigin";
 import { buildMailtoUrl } from "@/shared/utils/contactLinks";
 import { CommunicationPageShell, PublicationCard } from "../components/CommunicationBlocks";
 import { useCommunicationChannelPublicPage } from "../hooks";
-import {
-  buildCommunicationChannelPath,
-  buildCommunicationCityPath,
-  buildCommunicationTerritoryPath,
-} from "../services";
+import { buildCommunicationChannelPath, buildCommunicationCityPath } from "../services";
 import { CHANNEL_KIND_LABELS } from "../types";
 
 function LoadingState() {
@@ -46,16 +43,14 @@ function LoadingState() {
 }
 
 export default function CommunicationChannelPage() {
-  const { state = "", city = "", territorySlug = "", channelSlug = "" } = useParams();
+  const { state = "", city = "", channelSlug = "" } = useParams();
   const { data, isLoading } = useCommunicationChannelPublicPage(channelSlug);
   const channel = data?.channel;
 
   const cityPath = buildCommunicationCityPath(state, city);
-  const territoryPath = buildCommunicationTerritoryPath(state, city, territorySlug);
   const canonicalPath = buildCommunicationChannelPath({
     state,
     city,
-    territorySlug,
     channelSlug: channel?.slug ?? channelSlug,
   });
   const canonicalUrl = buildPublicAbsoluteUrl(canonicalPath);
@@ -79,8 +74,6 @@ export default function CommunicationChannelPage() {
         <Link to="/comunicacao" className="hover:text-foreground">Comunicacao</Link>
         <span>/</span>
         <Link to={cityPath} className="hover:text-foreground">{city || "cidade"}</Link>
-        <span>/</span>
-        <Link to={territoryPath} className="hover:text-foreground">{territorySlug || "territorio"}</Link>
       </nav>
 
       {isLoading ? <LoadingState /> : null}
@@ -92,11 +85,11 @@ export default function CommunicationChannelPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Este canal nao esta ativo ou nao pertence ao territorio informado.
+              Este canal nao esta ativo ou nao pertence a cidade informada.
             </p>
             <div className="flex flex-wrap gap-2">
               <Button asChild variant="outline">
-                <Link to={territoryPath}>Voltar ao territorio</Link>
+                <Link to={cityPath}>Voltar a comunicacao da cidade</Link>
               </Button>
               <Button asChild>
                 <Link to="/comunicacao/solicitar">Solicitar canal</Link>
@@ -153,14 +146,13 @@ export default function CommunicationChannelPage() {
                 {channel.website_url ? (
                   <p>
                     Site:{" "}
-                    <a
+                    <SafeLink
                       href={channel.website_url}
                       target="_blank"
-                      rel="noreferrer"
                       className="font-medium text-primary hover:underline"
                     >
                       {channel.website_url}
-                    </a>
+                    </SafeLink>
                   </p>
                 ) : null}
                 {channel.contact_email ? (
@@ -195,7 +187,7 @@ export default function CommunicationChannelPage() {
             ) : (
               <Card className="border-border">
                 <CardContent className="py-8 text-sm text-muted-foreground">
-                  Este canal ainda nao publicou conteudo neste territorio.
+                  Este canal ainda nao publicou conteudo nesta cidade.
                 </CardContent>
               </Card>
             )}

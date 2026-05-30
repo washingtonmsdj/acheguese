@@ -25,6 +25,7 @@ import { ActionButton, RouteOptions } from '../components/ctas';
 import type { VerticalKey } from '@/core/verticals';
 import { VERTICAL_CONFIGS } from '@/core/verticals';
 import { buildTelUrl, buildWhatsAppUrl } from '@/shared/utils/contactLinks';
+import { getRecordValue } from '@/shared/utils/recordLookup';
 import type { EmpresaCTAsSectionProps } from './types';
 
 export function EmpresaCTAsSection({
@@ -142,7 +143,8 @@ export function EmpresaCTAsSection({
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {availableVerticals.map(([vertical, url]) => {
-                const config = VERTICAL_CONFIGS[vertical];
+                const config = getRecordValue(VERTICAL_CONFIGS, vertical);
+                if (!config) return null;
                 const Icon = getVerticalIcon(vertical);
 
                 return (

@@ -20,6 +20,7 @@ import { ReviewForm } from './ReviewForm';
 import { useReviewsManager } from '../hooks/useGastronomyReviews';
 import { useUserReviewVote } from '../hooks/useGastronomyReviews';
 import type { Review } from '../services/review.queries';
+import { getRecordValue } from '@/shared/utils/recordLookup';
 
 interface ReviewsSectionProps {
   businessProfileId: string;
@@ -143,7 +144,7 @@ export function ReviewsSection({
               {/* Distribuição */}
               <div className="flex-1 space-y-2">
                 {[5, 4, 3, 2, 1].map((stars) => {
-                  const count = distribution[stars] || 0;
+                  const count = getRecordValue(distribution, String(stars)) || 0;
                   const percentage = total > 0 ? (count / total) * 100 : 0;
 
                   return (

@@ -32,6 +32,7 @@ import { Skeleton } from '@/shared/components/ui/skeleton';
 import { useToast } from '@/shared/hooks/use-toast';
 import { useEducationProfile } from '../hooks/useEducationProfile';
 import { EducationService } from '../services/EducationService';
+import { EducationUrlService } from '../services/EducationUrlService';
 import type {
   EducationLevel,
   EducationNicheKey,
@@ -176,11 +177,18 @@ const FACILITY_OPTIONS: { key: SchoolFacilityFeatureKey; label: string }[] = [
   { key: 'animal_nursery', label: 'Viveiro/criacao de animais' },
 ];
 
+function toggleArrayValue<T extends string>(items: readonly T[], value: T): T[] {
+  return items.includes(value)
+    ? items.filter((item) => item !== value)
+    : [...items, value];
+}
+
 export function EducationSetupPage() {
   const { businessId } = useParams<{ businessId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { data: profile, isLoading, refetch } = useEducationProfile(businessId);
+  const dashboardUrl = businessId ? EducationUrlService.buildAdminDashboardUrl(businessId) : null;
 
   const [formData, setFormData] = useState({
     institutionType: '',
@@ -227,15 +235,24 @@ export function EducationSetupPage() {
     });
   }, [profile]);
 
-  const toggleArrayField = <T extends string>(field: keyof typeof formData, value: T) => {
+  const toggleArrayField = (field: string, value: string) => {
     setFormData((prev) => {
-      const current = prev[field] as T[];
-      return {
-        ...prev,
-        [field]: current.includes(value)
-          ? current.filter((item) => item !== value)
-          : [...current, value],
-      };
+      switch (field) {
+        case 'educationLevels':
+          return { ...prev, educationLevels: toggleArrayValue(prev.educationLevels, value as EducationLevel) };
+        case 'shifts':
+          return { ...prev, shifts: toggleArrayValue(prev.shifts, value as SchoolShift) };
+        case 'schoolBasicResources':
+          return { ...prev, schoolBasicResources: toggleArrayValue(prev.schoolBasicResources, value as SchoolBasicResourceKey) };
+        case 'schoolAccessibilityFeatures':
+          return { ...prev, schoolAccessibilityFeatures: toggleArrayValue(prev.schoolAccessibilityFeatures, value as SchoolAccessibilityFeatureKey) };
+        case 'schoolEquipmentFeatures':
+          return { ...prev, schoolEquipmentFeatures: toggleArrayValue(prev.schoolEquipmentFeatures, value as SchoolEquipmentFeatureKey) };
+        case 'schoolFacilityFeatures':
+          return { ...prev, schoolFacilityFeatures: toggleArrayValue(prev.schoolFacilityFeatures, value as SchoolFacilityFeatureKey) };
+        default:
+          return prev;
+      }
     });
   };
 
@@ -308,7 +325,9 @@ export function EducationSetupPage() {
           description: 'As alterações foram salvas com sucesso.',
         });
         refetch();
-        navigate(`/central/empresas/${businessId}/educacao`);
+        if (dashboardUrl) {
+          navigate(dashboardUrl);
+        }
       } else {
         toast({
           title: 'Erro ao salvar',
@@ -380,7 +399,7 @@ export function EducationSetupPage() {
           variant="ghost"
           size="sm"
           className="mb-4"
-          onClick={() => navigate(`/central/empresas/${businessId}/educacao`)}
+          onClick={() => (dashboardUrl ? navigate(dashboardUrl) : navigate(-1))}
         >
           <ArrowLeft className="w-4 h-4 mr-1" />
           Voltar
@@ -806,7 +825,7 @@ export function EducationSetupPage() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => navigate(`/central/empresas/${businessId}/educacao`)}
+              onClick={() => (dashboardUrl ? navigate(dashboardUrl) : navigate(-1))}
             >
               Cancelar
             </Button>

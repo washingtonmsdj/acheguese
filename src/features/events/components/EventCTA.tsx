@@ -22,6 +22,7 @@ import {
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/utils/cn';
 import { openSafeExternalUrl } from '@/shared/utils/safeRedirect';
+import { buildMailtoUrl, buildTelUrl, openContactUrl } from '@/shared/utils/contactLinks';
 import type { EventCTA as EventCTAType } from '../types';
 
 interface EventCTAProps {
@@ -120,7 +121,7 @@ export function EventCTA({
                     variant="outline"
                     size="lg"
                     className="gap-2"
-                    onClick={() => window.location.assign(`mailto:${encodeURIComponent(cta.contact_methods!.email!)}`)}
+                    onClick={() => openContactUrl(buildMailtoUrl(cta.contact_methods!.email!))}
                   >
                     <Mail className="h-5 w-5" />
                     <span className="hidden sm:inline">E-mail</span>
@@ -131,7 +132,7 @@ export function EventCTA({
                     variant="outline"
                     size="lg"
                     className="gap-2"
-                    onClick={() => window.location.assign(`tel:${normalizePhone(cta.contact_methods!.phone!)}`)}
+                    onClick={() => openContactUrl(buildTelUrl(normalizePhone(cta.contact_methods!.phone!)))}
                   >
                     <Phone className="h-5 w-5" />
                     <span className="hidden sm:inline">Telefone</span>

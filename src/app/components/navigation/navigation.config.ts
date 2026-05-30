@@ -22,7 +22,9 @@ import {
   LayoutGrid,
   type LucideIcon,
 } from 'lucide-react';
+import { APP_MODULE_SLUGS, buildAppModulePath } from '@/config/moduleSlugs';
 import { LAUNCH_URLS } from '@/config/territory';
+import { gastronomyPublicRoutes } from '@/core/verticals/gastronomy/routes/gastronomyPublicRoutes';
 
 export interface NavItem {
   id: string;
@@ -39,6 +41,18 @@ export interface NavSection {
   label: string;
   items: NavItem[];
 }
+
+const NAV_MODULE_ROOTS = {
+  business: buildAppModulePath(APP_MODULE_SLUGS.business),
+  gastronomy: gastronomyPublicRoutes.home(),
+  services: buildAppModulePath(APP_MODULE_SLUGS.services),
+  education: buildAppModulePath(APP_MODULE_SLUGS.education),
+  classifieds: buildAppModulePath(APP_MODULE_SLUGS.classifieds),
+  jobs: buildAppModulePath(APP_MODULE_SLUGS.jobs),
+  events: buildAppModulePath(APP_MODULE_SLUGS.events),
+  map: buildAppModulePath(APP_MODULE_SLUGS.map),
+  mobility: buildAppModulePath(APP_MODULE_SLUGS.mobility),
+} as const;
 
 /**
  * Sidebar desktop.
@@ -70,35 +84,35 @@ export const NAV_SECTIONS: NavSection[] = [
         id: 'business',
         icon: Building2,
         label: 'Empresas',
-        href: '/empresas',
+        href: NAV_MODULE_ROOTS.business,
         description: 'Empresas locais',
       },
       {
         id: 'gastronomy',
         icon: UtensilsCrossed,
         label: 'Gastronomia',
-        href: '/gastronomia',
+        href: NAV_MODULE_ROOTS.gastronomy,
         description: 'Restaurantes e cardápios',
       },
       {
         id: 'services',
         icon: Wrench,
         label: 'Serviços',
-        href: '/servicos',
+        href: NAV_MODULE_ROOTS.services,
         description: 'Profissionais locais',
       },
       {
         id: 'education',
         icon: GraduationCap,
         label: 'Educação',
-        href: '/educacao',
+        href: NAV_MODULE_ROOTS.education,
         description: 'Cursos e escolas locais',
       },
       {
         id: 'classifieds',
         icon: Tag,
         label: 'Classificados',
-        href: '/classificados',
+        href: NAV_MODULE_ROOTS.classifieds,
         description: 'Anúncios locais',
       },
     ],
@@ -125,14 +139,14 @@ export const NAV_SECTIONS: NavSection[] = [
         id: 'jobs',
         icon: Briefcase,
         label: 'Vagas',
-        href: '/vagas',
+        href: NAV_MODULE_ROOTS.jobs,
         description: 'Oportunidades de emprego',
       },
       {
         id: 'events',
         icon: Calendar,
         label: 'Eventos',
-        href: '/eventos',
+        href: NAV_MODULE_ROOTS.events,
         description: 'Agenda local',
       },
     ],
@@ -152,14 +166,14 @@ export const NAV_SECTIONS: NavSection[] = [
         id: 'map',
         icon: Map,
         label: 'Mapa',
-        href: '/mapa',
+        href: NAV_MODULE_ROOTS.map,
         description: 'Mapa de empresas e serviços',
       },
       {
         id: 'mobility',
         icon: Car,
         label: 'Mobilidade',
-        href: '/mobilidade',
+        href: NAV_MODULE_ROOTS.mobility,
         description: 'Caronas e transporte',
       },
       {
@@ -189,7 +203,7 @@ export const MOBILE_NAV_ITEMS: NavItem[] = [
     id: 'business',
     icon: Building2,
     label: 'Empresas',
-    href: '/empresas',
+    href: NAV_MODULE_ROOTS.business,
     description: 'Empresas locais',
   },
   {
@@ -203,28 +217,28 @@ export const MOBILE_NAV_ITEMS: NavItem[] = [
     id: 'gastronomy',
     icon: UtensilsCrossed,
     label: 'Gastronomia',
-    href: '/gastronomia',
+    href: NAV_MODULE_ROOTS.gastronomy,
     description: 'Restaurantes e cardápios',
   },
   {
     id: 'classifieds',
     icon: Tag,
     label: 'Anúncios',
-    href: '/classificados',
+    href: NAV_MODULE_ROOTS.classifieds,
     description: 'Classificados',
   },
   {
     id: 'services',
     icon: Wrench,
     label: 'Serviços',
-    href: '/servicos',
+    href: NAV_MODULE_ROOTS.services,
     description: 'Profissionais locais',
   },
   {
     id: 'map',
     icon: Map,
     label: 'Mapa',
-    href: '/mapa',
+    href: NAV_MODULE_ROOTS.map,
     description: 'Mapa',
   },
 ];

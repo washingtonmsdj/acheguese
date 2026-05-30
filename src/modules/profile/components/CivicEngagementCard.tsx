@@ -2,6 +2,7 @@ import React from "react";
 import { Card } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
 import { Construction, Users, TrendingUp, Award, Lightbulb } from "lucide-react";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 interface CivicEngagementCardProps {
   reportsCount: number;
   supportsCount: number;
@@ -103,7 +104,7 @@ export function CivicEngagementCard({
           <p className="text-sm font-medium mb-2">Conquistas</p>
           <div className="flex flex-wrap gap-2">
             {badges.map((badgeType) => {
-              const info = BADGE_INFO[badgeType];
+              const info = getRecordValue(BADGE_INFO, badgeType);
               if (!info) return null;
 
               return (

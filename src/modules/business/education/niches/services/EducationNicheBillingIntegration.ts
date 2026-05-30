@@ -107,13 +107,12 @@ export const EducationNicheBillingIntegration = {
     context: NicheBillingContext,
     capabilities: EducationNicheCapability[]
   ): Record<EducationNicheCapability, EffectiveCapabilityResult> {
-    const results = {} as Record<EducationNicheCapability, EffectiveCapabilityResult>;
-    
-    for (const capability of capabilities) {
-      results[capability] = this.resolveEffectiveCapability(context, capability);
-    }
-    
-    return results;
+    return Object.fromEntries(
+      capabilities.map((capability) => [
+        capability,
+        this.resolveEffectiveCapability(context, capability),
+      ]),
+    ) as Record<EducationNicheCapability, EffectiveCapabilityResult>;
   },
 
   /**

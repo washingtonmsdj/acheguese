@@ -36,9 +36,10 @@ import { cn } from '@/shared/utils/cn';
 import { useFavorites } from '../hooks/useFavorites';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
 import { buildCommunityTerritoryUrl, geoPathToPublicUrl } from '@/core/routing/utils/territoryUrls';
-import { useTerritoryFilter } from '@/core/location/hooks/useTerritoryFilter';
+import { useCommunityUrls } from '@/core/routing/hooks/useCommunityUrls';
 import { communityEventsRuntimeService } from '@/core/community/services/CommunityEventsRuntimeService';
 import { mapCommunityEventToEvent } from '../utils/eventAdapters';
+import { useEventTerritoryFilter } from '../hooks/useEventTerritoryFilter';
 import {
   EVENT_DATE_FILTER_OPTIONS,
   EVENT_LIST_CATEGORY_OPTIONS,
@@ -73,21 +74,8 @@ export interface EventsListPageProps {
 export default function EventsListPage({ resolved, activeMemberIds }: EventsListPageProps = {}) {
   const navigate = useNavigate();
   const { count: favoritesCount } = useFavorites();
-  const ssotTerritoryFilter = useTerritoryFilter(resolved, activeMemberIds);
-  const territoryFilter = useMemo(() => {
-    if (resolved?.kind === 'location') {
-      return { scope: 'location' as const, location_id: resolved.location.id };
-    }
-
-    if (resolved?.kind === 'group') {
-      const ids = activeMemberIds ?? resolved.group.members.map((member) => member.id);
-      if (ids.length > 0) {
-        return { scope: 'group' as const, location_ids: ids };
-      }
-    }
-
-    return ssotTerritoryFilter;
-  }, [resolved, activeMemberIds, ssotTerritoryFilter]);
+  const eventUrls = useCommunityUrls(resolved);
+  const territoryFilter = useEventTerritoryFilter(resolved, activeMemberIds);
   const { data: eventsData = [], isLoading: isEventsLoading } = useQuery({
     queryKey: ['events-list-ssot', territoryFilter],
     queryFn: async () => {
@@ -148,7 +136,7 @@ export default function EventsListPage({ resolved, activeMemberIds }: EventsList
   };
 
   const handleEventClick = (eventId: string) => {
-    navigate(`/eventos/${eventId}`);
+    navigate(eventUrls.eventDetail(eventId));
   };
 
   const handleClearFilters = () => {
@@ -233,7 +221,7 @@ export default function EventsListPage({ resolved, activeMemberIds }: EventsList
             {/* Favorites Button */}
             {favoritesCount > 0 && (
               <Link
-                to="/eventos/favoritos"
+                to={eventUrls.eventFavorites}
                 className="absolute right-4 top-1/2 -translate-y-1/2"
               >
                 <Button variant="outline" size="sm" className="gap-2">
@@ -490,14 +478,14 @@ export default function EventsListPage({ resolved, activeMemberIds }: EventsList
                   <List className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </button>
                 <button
-                  onClick={() => navigate('/eventos/calendario')}
+                  onClick={() => navigate(eventUrls.eventCalendar)}
                   className="rounded-md p-1 text-muted-foreground transition-all hover:text-foreground sm:p-1.5"
                   aria-label="Visualização em calendário"
                 >
                   <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </button>
                 <button
-                  onClick={() => navigate('/eventos/mapa')}
+                  onClick={() => navigate(eventUrls.eventMap)}
                   className="rounded-md p-1 text-muted-foreground transition-all hover:text-foreground sm:p-1.5"
                   aria-label="Visualização em mapa"
                 >

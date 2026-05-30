@@ -1,5 +1,3 @@
-import { postService } from "@/core/posts/services";
-import { workOpportunitiesService } from "@/core/work-opportunities/services/WorkOpportunitiesService";
 import { VagasService } from "./VagasService";
 import type {
   VagaContrato,
@@ -112,55 +110,6 @@ export class VagasPublishWorkflowService {
       metaDescription: form.descricao.trim().slice(0, 160),
       ogImageUrl: undefined,
     });
-
-    try {
-      await postService.createPost({
-        author_profile_id: context.activeProfileId,
-        content: `Vaga aberta: ${form.titulo.trim()} • ${form.empresa.trim()}`,
-        type: "favor",
-        location_id: context.activeLocationId,
-        reach: "city",
-        tags: [
-          "format:opportunity",
-          "intent:vaga",
-          `category:${form.categoria || "outro"}`,
-          `contract:${form.contrato}`,
-        ],
-        content_intent: "vaga",
-        display_format: "opportunity_card",
-        distribution_channels: ["oportunidades", "empresas", "para_voce", "todos"],
-        content_payload: {
-          schema_version: "territorial-content.v3",
-          intent: "vaga",
-          structural_type: "favor",
-          display_format: "opportunity_card",
-          vaga: {
-            id: createdVaga.id,
-            slug: createdVaga.slug,
-            title: createdVaga.titulo,
-            company: createdVaga.empresaNome,
-            category: createdVaga.categoria,
-            location_id: createdVaga.locationId,
-            target_url: `/vagas/detalhe/${createdVaga.id}`,
-          },
-        },
-      });
-    } catch (feedError) {
-      console.warn("[VagasPublishWorkflowService] Não foi possível distribuir vaga no feed", feedError);
-    }
-
-    try {
-      await workOpportunitiesService.notifyMatchingForStructuredVaga({
-        vagaId: createdVaga.id,
-        title: createdVaga.titulo,
-        professionalCategory: createdVaga.categoria,
-        territoryLocationId: createdVaga.locationId,
-        sourceUrl: `/vagas/detalhe/${createdVaga.id}`,
-        actorUserId: context.actorUserId ?? null,
-      });
-    } catch (matchingError) {
-      console.warn("[VagasPublishWorkflowService] Não foi possível notificar matching da vaga", matchingError);
-    }
 
     return createdVaga;
   }

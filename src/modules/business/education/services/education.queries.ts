@@ -9,6 +9,7 @@
 
 import { supabase } from '@/core/infrastructure/supabase';
 import { logger } from '@/shared/utils/logger';
+import { getRecordValue } from '@/shared/utils/recordLookup';
 import type {
   EducationPublicProfile,
   EducationPublicRoute,
@@ -557,6 +558,31 @@ export interface LeadStatusCounts {
   lost: number;
 }
 
+function incrementLeadStatusCount(counts: LeadStatusCounts, status: keyof LeadStatusCounts): void {
+  switch (status) {
+    case 'new':
+      counts.new += 1;
+      return;
+    case 'contacted':
+      counts.contacted += 1;
+      return;
+    case 'visit_scheduled':
+      counts.visit_scheduled += 1;
+      return;
+    case 'proposal_sent':
+      counts.proposal_sent += 1;
+      return;
+    case 'enrolled':
+      counts.enrolled += 1;
+      return;
+    case 'lost':
+      counts.lost += 1;
+      return;
+    case 'total':
+      return;
+  }
+}
+
 export interface GradeLeadMetrics {
   grade: string;
   leadCount: number;
@@ -614,7 +640,7 @@ export async function countLeadsByStatus(profileId: string): Promise<LeadStatusC
   (data ?? []).forEach((lead) => {
     const status = lead.status as keyof LeadStatusCounts;
     if (status in counts) {
-      counts[status]++;
+      incrementLeadStatusCount(counts, status);
     }
     counts.total++;
   });
@@ -697,7 +723,7 @@ export async function getLeadsByShiftMetrics(profileId: string): Promise<ShiftLe
 
   return Array.from(shiftMap.entries())
     .map(([shift, metrics]) => ({
-      shift: shiftLabels[shift] ?? shift,
+      shift: getRecordValue(shiftLabels, shift) ?? shift,
       leadCount: metrics.leadCount,
       enrollmentCount: metrics.enrollmentCount,
     }))

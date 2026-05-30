@@ -23,6 +23,7 @@ import { CommunicationPageShell } from "../components/CommunicationBlocks";
 import { useCommunicationLocations } from "../hooks";
 import { communicationTerritorialGateway } from "../services";
 import { CHANNEL_KIND_LABELS, getCommunicationErrorMessage, type ChannelKind } from "../types";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 
 const CHANNEL_KINDS = Object.keys(CHANNEL_KIND_LABELS) as ChannelKind[];
 
@@ -138,7 +139,7 @@ export default function CommunicationRequestPage() {
                   <SelectContent>
                     {CHANNEL_KINDS.map((kind) => (
                       <SelectItem key={kind} value={kind}>
-                        {CHANNEL_KIND_LABELS[kind]}
+                        {getRecordValue(CHANNEL_KIND_LABELS, kind) ?? kind}
                       </SelectItem>
                     ))}
                   </SelectContent>

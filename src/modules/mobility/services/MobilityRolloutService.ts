@@ -10,6 +10,7 @@ import { createLocationRepository } from '@/core/location/repositories/createLoc
 import { mobilityLocationService } from './MobilityLocationService';
 import { ModuleKey, RolloutStatus } from '@/core/rollout/types';
 import type { EffectiveRollout } from '@/core/rollout/types';
+import { getRecordValue } from '@/shared/utils/recordLookup';
 
 const MOTOBOY_ENABLED_CONFIG_KEY = 'motoboy_enabled';
 const DEFAULT_MOTOBOY_ENABLED = true;
@@ -150,7 +151,7 @@ export class MobilityRolloutService {
       return DEFAULT_MOTOBOY_ENABLED;
     }
 
-    const rawValue = config[MOTOBOY_ENABLED_CONFIG_KEY];
+    const rawValue = getRecordValue(config, MOTOBOY_ENABLED_CONFIG_KEY);
     if (typeof rawValue !== 'boolean') {
       return DEFAULT_MOTOBOY_ENABLED;
     }

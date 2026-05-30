@@ -3,8 +3,10 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, CreditCard, Link2, Trash2, Wallet } from "lucide-react";
 import { toast } from "sonner";
 
+import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
 import { useAppUrls } from "@/core/routing/hooks";
 import { useSessionContext } from "@/core/session";
+import { GastronomyUrlService } from "@/core/verticals/gastronomy/services/GastronomyUrlService";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
@@ -73,7 +75,7 @@ export default function GastronomyCheckoutPage() {
     return (
       <div className="container mx-auto px-4 py-8">
         <p className="text-sm text-muted-foreground">Checkout inválido. Volte para a loja e reabra o pedido.</p>
-        <Button className="mt-4" onClick={() => navigate("/gastronomia")}>Voltar</Button>
+        <Button className="mt-4" onClick={() => navigate(GastronomyUrlService.getHomeUrl())}>Voltar</Button>
       </div>
     );
   }
@@ -277,7 +279,7 @@ function GastronomyCheckoutContent({ business }: GastronomyCheckoutContentProps)
           : undefined,
       });
       toast.success(`Pedido ${order.id.slice(0, 8)} criado com sucesso.`);
-      navigate(`/gastronomia/pedidos/${order.id}`);
+      navigate(businessManagementRoutes.gastronomyPedidoPublico(order.id));
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Falha ao concluir o pedido.");
     }

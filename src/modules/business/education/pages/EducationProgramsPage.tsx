@@ -48,6 +48,7 @@ import { useEducationPrograms } from '../hooks/useEducationPrograms';
 import { useEducationNicheBilling } from '../niches/hooks/useEducationNicheBilling';
 import { EducationUpgradeBanner } from '../niches/components/EducationUpgradeBanner';
 import { getNicheByKey } from '../niches/registry';
+import { EducationUrlService } from '../services/EducationUrlService';
 import type { EducationLevel, EducationProgram } from '../types';
 import {
   getSchoolStageOptions,
@@ -75,6 +76,7 @@ export function EducationProgramsPage() {
   const { confirm, ConfirmDialog } = useConfirmActionDialog();
   const { data: profile, isLoading: isProfileLoading } = useEducationProfile(businessId);
   const { programs, isLoading, create, update, remove } = useEducationPrograms(profile?.id);
+  const dashboardUrl = businessId ? EducationUrlService.buildAdminDashboardUrl(businessId) : null;
 
   // Integração nicho + billing
   const nicheBilling = useEducationNicheBilling({
@@ -313,7 +315,7 @@ export function EducationProgramsPage() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate(`/central/empresas/${businessId}/educacao`)}
+            onClick={() => (dashboardUrl ? navigate(dashboardUrl) : navigate(-1))}
           >
             <ArrowLeft className="w-4 h-4 mr-1" />
           </Button>

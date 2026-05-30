@@ -266,7 +266,10 @@ export async function getClassifiedById(id: string): Promise<ClassifiedData | nu
           avatar_url,
           phone,
           whatsapp
-        )
+        ),
+        locations(geographic_path, type, parent_id),
+        classified_categories(slug),
+        classified_subcategories(slug)
       `,
       )
       .eq("id", id)
@@ -280,7 +283,7 @@ export async function getClassifiedById(id: string): Promise<ClassifiedData | nu
       throw error;
     }
 
-    return mapRawClassified(data as Record<string, unknown>);
+    return mapClassifiedWithSeller(data as ClassifiedWithRelationsRow);
   } catch (error) {
     logger.error("Error in getClassifiedById:", error);
     trackError(error as Error, {
@@ -307,7 +310,10 @@ export async function getClassifiedsByCategory(category: string): Promise<Classi
           avatar_url,
           phone,
           whatsapp
-        )
+        ),
+        locations(geographic_path, type, parent_id),
+        classified_categories(slug),
+        classified_subcategories(slug)
       `,
       )
       .eq("category", category)
@@ -319,7 +325,9 @@ export async function getClassifiedsByCategory(category: string): Promise<Classi
       throw error;
     }
 
-    return (data || []).map((item) => mapRawClassified(item as Record<string, unknown>));
+    return ((data || []) as unknown[]).map((item) =>
+      mapClassifiedWithSeller(item as ClassifiedWithRelationsRow),
+    );
   } catch (error) {
     logger.error("Error in getClassifiedsByCategory:", error);
     trackError(error as Error, {
@@ -346,7 +354,10 @@ export async function getUserClassifieds(userId: string): Promise<ClassifiedData
           avatar_url,
           phone,
           whatsapp
-        )
+        ),
+        locations(geographic_path, type, parent_id),
+        classified_categories(slug),
+        classified_subcategories(slug)
       `,
       )
       .eq("seller_id", userId)
@@ -357,7 +368,9 @@ export async function getUserClassifieds(userId: string): Promise<ClassifiedData
       throw error;
     }
 
-    return (data || []).map((item) => mapRawClassified(item as Record<string, unknown>));
+    return ((data || []) as unknown[]).map((item) =>
+      mapClassifiedWithSeller(item as ClassifiedWithRelationsRow),
+    );
   } catch (error) {
     logger.error("Error in getUserClassifieds:", error);
     trackError(error as Error, {
@@ -380,7 +393,10 @@ export async function getClassifiedsBySeller(sellerId: string): Promise<Classifi
         * ,
         seller:profiles!seller_id (
           id, name, avatar_url, phone, whatsapp
-        )
+        ),
+        locations(geographic_path, type, parent_id),
+        classified_categories(slug),
+        classified_subcategories(slug)
       `,
       )
       .eq("seller_id", sellerId)
@@ -392,7 +408,9 @@ export async function getClassifiedsBySeller(sellerId: string): Promise<Classifi
       throw error;
     }
 
-    return (data || []).map((item) => mapRawClassified(item as Record<string, unknown>));
+    return ((data || []) as unknown[]).map((item) =>
+      mapClassifiedWithSeller(item as ClassifiedWithRelationsRow),
+    );
   } catch (error) {
     logger.error("Error in getClassifiedsBySeller:", error);
     return [];

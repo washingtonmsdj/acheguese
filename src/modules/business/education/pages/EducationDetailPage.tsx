@@ -45,6 +45,7 @@ import {
   AccordionTrigger,
 } from '@/shared/components/ui/accordion';
 import { cn } from '@/shared/utils/cn';
+import { getRecordValue } from '@/shared/utils/recordLookup';
 import { buildPublicAbsoluteUrl } from '@/shared/config/publicAppOrigin';
 import { usePublicBrowsingCity } from '@/core/location/hooks/usePublicBrowsingCity';
 
@@ -55,6 +56,7 @@ import { getNicheByKey } from '../niches/registry';
 import { useLabels } from '../hooks/useEducationLabels';
 import { useEducationTracking } from '../hooks/useEducationTracking';
 import { useEducationLeads } from '../hooks/useEducationLeads';
+import { EducationUrlService } from '../services/EducationUrlService';
 import type { LeadFormData } from '../components/EducationLeadForm';
 import {
   ACCESSIBILITY_LABELS,
@@ -161,11 +163,14 @@ export function EducationDetailPage() {
 
   const institutionName =
     profile?.business_name ?? profile?.institution_type ?? 'Instituição';
+  const showcasePath = EducationUrlService.buildListingUrl({
+    state: effectiveState,
+    city: effectiveCity,
+  });
   const canonicalPath =
     state && city && district && slug
-      ? `/educacao/${state}/${city}/${district}/${slug}`
-      : '/educacao';
-  const showcasePath = `/educacao/${effectiveState}/${effectiveCity}`;
+      ? EducationUrlService.buildDetailUrl({ state, city, district, slug })
+      : showcasePath;
 
   const whatsappHref = buildWhatsAppHref(profile?.whatsapp_number);
 
@@ -179,10 +184,18 @@ export function EducationDetailPage() {
     return set;
   }, [programs]);
 
-  const basicResources = (profile.school_basic_resources ?? []).map((key) => BASIC_RESOURCE_LABELS[key]).filter(Boolean);
-  const accessibilityFeatures = (profile.school_accessibility_features ?? []).map((key) => ACCESSIBILITY_LABELS[key]).filter(Boolean);
-  const equipmentFeatures = (profile.school_equipment_features ?? []).map((key) => EQUIPMENT_LABELS[key]).filter(Boolean);
-  const facilityFeatures = (profile.school_facility_features ?? []).map((key) => FACILITY_LABELS[key]).filter(Boolean);
+  const basicResources = (profile.school_basic_resources ?? [])
+    .map((key) => getRecordValue(BASIC_RESOURCE_LABELS, key))
+    .filter((label): label is string => Boolean(label));
+  const accessibilityFeatures = (profile.school_accessibility_features ?? [])
+    .map((key) => getRecordValue(ACCESSIBILITY_LABELS, key))
+    .filter((label): label is string => Boolean(label));
+  const equipmentFeatures = (profile.school_equipment_features ?? [])
+    .map((key) => getRecordValue(EQUIPMENT_LABELS, key))
+    .filter((label): label is string => Boolean(label));
+  const facilityFeatures = (profile.school_facility_features ?? [])
+    .map((key) => getRecordValue(FACILITY_LABELS, key))
+    .filter((label): label is string => Boolean(label));
 
   const goToShowcase = () => navigate(showcasePath);
 
@@ -254,7 +267,7 @@ export function EducationDetailPage() {
                 Inicio
               </Link>
               <ChevronRight className="h-3 w-3" />
-              <Link to={`/educacao/${state}/${city}`} className="hover:text-white">
+              <Link to={showcasePath} className="hover:text-white">
                 Educação
               </Link>
               <ChevronRight className="h-3 w-3" />
@@ -698,10 +711,9 @@ export function EducationDetailPage() {
           </div>
 
           <EducationDetailSidebar
-            city={city}
             handleLeadSubmit={handleLeadSubmit}
             profile={profile}
-            state={state}
+            showcaseHref={showcasePath}
             trackEnrollmentCTAClick={trackEnrollmentCTAClick}
             trackWhatsAppClick={trackWhatsAppClick}
             whatsappHref={whatsappHref}

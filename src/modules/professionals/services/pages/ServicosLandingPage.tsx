@@ -269,7 +269,17 @@ export default function ServicosLandingPage({ resolved, activeMemberIds }: Servi
   });
 
   const handleProfessionalClick = useCallback(
-    (pro: ProfessionalItem) => navigate(appUrls.services.detail(pro.id)),
+    (pro: ProfessionalItem) =>
+      navigate(
+        appUrls.services.detail({
+          id: pro.id,
+          profile_id: pro.profile_id,
+          slug: pro.slug,
+          geographic_path: pro.geographic_path,
+          state: pro.state,
+          city: pro.city,
+        }),
+      ),
     [navigate, appUrls],
   );
 

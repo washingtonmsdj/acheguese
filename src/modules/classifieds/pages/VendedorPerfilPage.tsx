@@ -19,6 +19,7 @@ import type { VendedorPerfil } from "../hooks/useVendedorPerfil";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { VendedorAdFilters, applyAdFilters, type AdFilters } from "../components/profile/VendedorAdFilters";
 import { VendedorContactBar } from "../components/profile/VendedorContactBar";
+import { classifiedUrlService } from "../services";
 
 export default function VendedorPerfilPage() {
   const { sellerId } = useParams<{ sellerId: string }>();
@@ -183,7 +184,10 @@ export default function VendedorPerfilPage() {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.04 }}
-                  onClick={() => navigate(`/classificados/${ad.id}`)}
+                  onClick={() => {
+                    const publicUrl = classifiedUrlService.buildPublicUrl(ad);
+                    if (publicUrl) navigate(publicUrl);
+                  }}
                   className="group bg-card border border-border rounded-xl overflow-hidden cursor-pointer hover:shadow-lg hover:shadow-primary/5 transition-all hover:-translate-y-0.5"
                 >
                   <div className="relative aspect-[4/3] bg-secondary">

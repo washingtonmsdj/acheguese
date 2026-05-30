@@ -1,4 +1,5 @@
 import { RIDE_STATUS_LABELS } from "@/modules/mobility/constants";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 import type { RideStatus } from "@/modules/mobility/types";
 
 interface StatusBadgeProps {
@@ -7,27 +8,27 @@ interface StatusBadgeProps {
 }
 
 const statusColorClasses: Record<string, string> = {
-  pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
-  requested: "bg-yellow-100 text-yellow-800 border-yellow-200",
-  searching_driver: "bg-amber-100 text-amber-800 border-amber-200",
-  driver_assigned: "bg-blue-100 text-blue-800 border-blue-200",
-  driver_accepted: "bg-blue-100 text-blue-800 border-blue-200",
-  driver_arriving: "bg-purple-100 text-purple-800 border-purple-200",
-  driver_on_the_way: "bg-purple-100 text-purple-800 border-purple-200",
-  driver_arrived: "bg-green-100 text-green-800 border-green-200",
-  passenger_boarded: "bg-indigo-100 text-indigo-800 border-indigo-200",
-  passenger_on_board: "bg-indigo-100 text-indigo-800 border-indigo-200",
-  in_progress: "bg-blue-100 text-blue-800 border-blue-200",
-  pickup_confirmed: "bg-green-100 text-green-800 border-green-200",
-  in_delivery: "bg-purple-100 text-purple-800 border-purple-200",
-  delivered: "bg-green-100 text-green-800 border-green-200",
-  failed_delivery: "bg-red-100 text-red-800 border-red-200",
-  completed: "bg-green-100 text-green-800 border-green-200",
-  cancelled: "bg-red-100 text-red-800 border-red-200",
-  cancelled_by_passenger: "bg-red-100 text-red-800 border-red-200",
-  cancelled_by_driver: "bg-red-100 text-red-800 border-red-200",
-  expired: "bg-gray-100 text-gray-600 border-gray-200",
-  failed: "bg-red-100 text-red-800 border-red-200",
+  pending: "bg-warning/10 text-warning border-warning/20",
+  requested: "bg-warning/10 text-warning border-warning/20",
+  searching_driver: "bg-warning/10 text-warning border-warning/20",
+  driver_assigned: "bg-primary/10 text-primary border-primary/20",
+  driver_accepted: "bg-primary/10 text-primary border-primary/20",
+  driver_arriving: "bg-accent text-accent-foreground border-border",
+  driver_on_the_way: "bg-accent text-accent-foreground border-border",
+  driver_arrived: "bg-success/10 text-success border-success/20",
+  passenger_boarded: "bg-primary/10 text-primary border-primary/20",
+  passenger_on_board: "bg-primary/10 text-primary border-primary/20",
+  in_progress: "bg-primary/10 text-primary border-primary/20",
+  pickup_confirmed: "bg-success/10 text-success border-success/20",
+  in_delivery: "bg-accent text-accent-foreground border-border",
+  delivered: "bg-success/10 text-success border-success/20",
+  failed_delivery: "bg-destructive/10 text-destructive border-destructive/20",
+  completed: "bg-success/10 text-success border-success/20",
+  cancelled: "bg-destructive/10 text-destructive border-destructive/20",
+  cancelled_by_passenger: "bg-destructive/10 text-destructive border-destructive/20",
+  cancelled_by_driver: "bg-destructive/10 text-destructive border-destructive/20",
+  expired: "bg-muted text-muted-foreground border-border",
+  failed: "bg-destructive/10 text-destructive border-destructive/20",
 };
 
 const sizeClasses = {
@@ -37,9 +38,9 @@ const sizeClasses = {
 };
 
 export function StatusBadge({ status, size = "md" }: StatusBadgeProps) {
-  const colorClass = statusColorClasses[status] ?? "bg-gray-100 text-gray-600 border-gray-200";
-  const label = RIDE_STATUS_LABELS[status] ?? status;
-  const sizeClass = sizeClasses[size] ?? sizeClasses.md;
+  const colorClass = getRecordValue(statusColorClasses, status) ?? "bg-muted text-muted-foreground border-border";
+  const label = getRecordValue(RIDE_STATUS_LABELS, status) ?? status;
+  const sizeClass = getRecordValue(sizeClasses, size) ?? sizeClasses.md;
 
   return (
     <span className={`inline-flex items-center rounded-full border font-medium ${colorClass} ${sizeClass}`}>

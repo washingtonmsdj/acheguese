@@ -20,6 +20,7 @@ import { ScrollArea, ScrollBar } from '@/shared/components/ui/scroll-area';
 import { Separator } from '@/shared/components/ui/separator';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { usePublicGastronomySnapshot } from '@/modules/business/public/hooks';
+import { GastronomyUrlService } from '@/core/verticals/gastronomy/services/GastronomyUrlService';
 import { cn } from '@/shared/utils/cn';
 import {
   buildGoogleMapsDirectionsUrl,
@@ -438,6 +439,7 @@ export default function GastronomyDetailPage() {
   const hasUsefulMenuContent = snapshot?.gastronomy.hasUsefulMenuContent ?? false;
   const gastronomyCanonicalUrl =
     snapshot?.seo.canonicalGastronomyUrl ?? snapshot?.seo.canonical ?? null;
+  const gastronomyHomeUrl = GastronomyUrlService.getHomeUrl();
 
   const openingStatus = useGastronomyOpeningStatus(business);
 
@@ -494,6 +496,10 @@ export default function GastronomyDetailPage() {
     snapshot?.seo.description ??
     `${business?.description ?? ''} - cardápio, preços e pedidos online.`;
 
+  const canonicalHref = gastronomyCanonicalUrl?.startsWith('/')
+    ? `${window.location.origin}${gastronomyCanonicalUrl}`
+    : window.location.href;
+
   const breadcrumbsSchema = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -503,7 +509,7 @@ export default function GastronomyDetailPage() {
         '@type': 'ListItem',
         position: 2,
         name: 'Gastronomia',
-        item: `${window.location.origin}/gastronomia`,
+        item: `${window.location.origin}${gastronomyHomeUrl}`,
       },
       {
         '@type': 'ListItem',
@@ -525,7 +531,7 @@ export default function GastronomyDetailPage() {
           O endereço informado não pertence a um estabelecimento ativo neste território.
         </p>
         <Button asChild className="mt-6">
-          <Link to="/gastronomia">Voltar para gastronomia</Link>
+          <Link to={gastronomyHomeUrl}>Voltar para gastronomia</Link>
         </Button>
       </div>
     );
@@ -552,7 +558,7 @@ export default function GastronomyDetailPage() {
       <Helmet>
         <title>{seoTitle}</title>
         <meta name="description" content={seoDescription} />
-        <link rel="canonical" href={window.location.href} />
+        <link rel="canonical" href={canonicalHref} />
         <script type="application/ld+json">{JSON.stringify(breadcrumbsSchema)}</script>
       </Helmet>
 

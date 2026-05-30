@@ -19,6 +19,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 import { Input } from "@/shared/components/ui/input";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Textarea } from "@/shared/components/ui/textarea";
+import { getRecordValue, setRecordValue } from "@/shared/utils/recordLookup";
 import type {
   Professional,
   ProfessionalLeadRecord,
@@ -34,6 +35,43 @@ import {
   resolveProfessionalPublicUrl,
 } from "./CentralProfissionalPage.model";
 import { centralRoutes } from "@/modules/central/routes/centralRoutes";
+
+type QuoteDraft = {
+  amount: string;
+  description: string;
+  startDate: string;
+  duration: string;
+};
+
+function createEmptyQuoteDraft(): QuoteDraft {
+  return {
+    amount: "",
+    description: "",
+    startDate: "",
+    duration: "",
+  };
+}
+
+function updateQuoteDraft(
+  current: QuoteDraft | undefined,
+  field: keyof QuoteDraft,
+  value: string,
+): QuoteDraft {
+  const base = current ?? createEmptyQuoteDraft();
+
+  switch (field) {
+    case "amount":
+      return { ...base, amount: value };
+    case "description":
+      return { ...base, description: value };
+    case "startDate":
+      return { ...base, startDate: value };
+    case "duration":
+      return { ...base, duration: value };
+  }
+
+  return base;
+}
 
 export function CentralProfessionalHeader({
   onCreateService,
@@ -321,9 +359,7 @@ export function LeadPipeline({
   }) => void;
 }) {
   const [replyByLeadId, setReplyByLeadId] = useState<Record<string, string>>({});
-  const [quoteByLeadId, setQuoteByLeadId] = useState<
-    Record<string, { amount: string; description: string; startDate: string; duration: string }>
-  >({});
+  const [quoteByLeadId, setQuoteByLeadId] = useState<Record<string, QuoteDraft>>({});
   const openLeads = leads.filter((lead) =>
     ["new", "contacted", "quoted", "scheduled"].includes(lead.status),
   );
@@ -369,7 +405,8 @@ export function LeadPipeline({
         {!isLoading && leads.length ? (
           <div className="space-y-3">
             {leads.slice(0, 3).map((lead) => {
-              const quote = quoteByLeadId[lead.id];
+              const quote = getRecordValue(quoteByLeadId, lead.id);
+              const reply = getRecordValue(replyByLeadId, lead.id) ?? "";
 
               return (
                 <div key={lead.id} className="rounded-lg border p-3">
@@ -390,12 +427,11 @@ export function LeadPipeline({
                   </p>
                   <div className="mt-3 space-y-2">
                     <Textarea
-                      value={replyByLeadId[lead.id] ?? ""}
+                      value={reply}
                       onChange={(event) =>
-                        setReplyByLeadId((current) => ({
-                          ...current,
-                          [lead.id]: event.target.value,
-                        }))
+                        setReplyByLeadId((current) =>
+                          setRecordValue(current, lead.id, event.target.value),
+                        )
                       }
                       placeholder="Responder ao cliente pelo funil do orçamento"
                       rows={2}
@@ -403,11 +439,10 @@ export function LeadPipeline({
                     <Button
                       className="w-full sm:w-auto"
                       size="sm"
-                      disabled={isReplying || !(replyByLeadId[lead.id] ?? "").trim()}
+                      disabled={isReplying || !reply.trim()}
                       onClick={() => {
-                        const message = replyByLeadId[lead.id] ?? "";
-                        onReply(lead.id, message);
-                        setReplyByLeadId((current) => ({ ...current, [lead.id]: "" }));
+                        onReply(lead.id, reply);
+                        setReplyByLeadId((current) => setRecordValue(current, lead.id, ""));
                       }}
                     >
                       Enviar resposta
@@ -452,12 +487,8 @@ function LeadQuoteForm({
 }: {
   disabled: boolean;
   leadId: string;
-  quote?: { amount: string; description: string; startDate: string; duration: string };
-  setQuoteByLeadId: React.Dispatch<
-    React.SetStateAction<
-      Record<string, { amount: string; description: string; startDate: string; duration: string }>
-    >
-  >;
+  quote?: QuoteDraft;
+  setQuoteByLeadId: React.Dispatch<React.SetStateAction<Record<string, QuoteDraft>>>;
   onQuote: (input: {
     leadId: string;
     amountCents: number;
@@ -470,16 +501,13 @@ function LeadQuoteForm({
     field: "amount" | "description" | "startDate" | "duration",
     value: string,
   ) => {
-    setQuoteByLeadId((current) => ({
-      ...current,
-      [leadId]: {
-        amount: current[leadId]?.amount ?? "",
-        description: current[leadId]?.description ?? "",
-        startDate: current[leadId]?.startDate ?? "",
-        duration: current[leadId]?.duration ?? "",
-        [field]: value,
-      },
-    }));
+    setQuoteByLeadId((current) =>
+      setRecordValue(
+        current,
+        leadId,
+        updateQuoteDraft(getRecordValue(current, leadId), field, value),
+      ),
+    );
   };
 
   return (
@@ -525,10 +553,9 @@ function LeadQuoteForm({
             estimatedStartDate: quote.startDate || undefined,
             estimatedDuration: quote.duration || undefined,
           });
-          setQuoteByLeadId((current) => ({
-            ...current,
-            [leadId]: { amount: "", description: "", startDate: "", duration: "" },
-          }));
+          setQuoteByLeadId((current) =>
+            setRecordValue(current, leadId, createEmptyQuoteDraft()),
+          );
         }}
       >
         Enviar proposta

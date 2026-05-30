@@ -13,6 +13,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { Badge } from '@/shared/components/ui/badge';
+import { getRecordValue } from '@/shared/utils/recordLookup';
 import type { OrderStatus } from '@/modules/business/gastronomy/services/OrderService';
 
 interface OrderStatusBadgeProps {
@@ -106,7 +107,7 @@ function getIconSizeClass(size: 'sm' | 'md' | 'lg'): string {
 }
 
 export function OrderStatusBadge({ status, size = 'md' }: OrderStatusBadgeProps) {
-  const config = STATUS_CONFIG[status] ?? STATUS_CONFIG.pending;
+  const config = getRecordValue(STATUS_CONFIG, status) ?? STATUS_CONFIG.pending;
   const Icon = config.icon;
 
   return (

@@ -10,6 +10,7 @@
 
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/core/infrastructure/supabase';
+import { secureRandomString } from '@/shared/utils/secureRandom';
 
 type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
@@ -332,7 +333,7 @@ class EducationObservabilityServiceClass {
     try {
       let sessionId = sessionStorage.getItem('education_session_id');
       if (!sessionId) {
-        sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        sessionId = `session_${Date.now()}_${secureRandomString(12)}`;
         sessionStorage.setItem('education_session_id', sessionId);
       }
       return sessionId;

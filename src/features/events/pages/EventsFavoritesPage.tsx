@@ -19,9 +19,13 @@ import { useFavorites } from '../hooks/useFavorites';
 import { communityEventsRuntimeService } from '@/core/community/services/CommunityEventsRuntimeService';
 import { mapCommunityEventToEvent } from '../utils/eventAdapters';
 import { useConfirmActionDialog } from '@/shared/hooks/useConfirmActionDialog';
+import { useTerritorialContextOptional } from '@/core/routing/components/TerritorialLayout';
+import { useCommunityUrls } from '@/core/routing/hooks/useCommunityUrls';
 
 export default function EventsFavoritesPage() {
   const navigate = useNavigate();
+  const territorialContext = useTerritorialContextOptional();
+  const eventUrls = useCommunityUrls(territorialContext?.resolved);
   const { favorites, removeFavorite, clearFavorites, isLoading } = useFavorites();
   const { confirm, ConfirmDialog } = useConfirmActionDialog();
   const { data: events = [], isLoading: isLoadingEvents } = useQuery({
@@ -38,12 +42,12 @@ export default function EventsFavoritesPage() {
   }, [events, favorites]);
 
   const handleEventClick = (eventId: string) => {
-    navigate(`/eventos/${eventId}`);
+    navigate(eventUrls.eventDetail(eventId));
   };
 
   const handleRemoveFavorite = (eventId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    removeFavorite(eventId);
+    void removeFavorite(eventId);
   };
 
   const handleClearAll = async () => {
@@ -55,7 +59,7 @@ export default function EventsFavoritesPage() {
     });
 
     if (confirmed) {
-      clearFavorites();
+      await clearFavorites();
     }
   };
 
@@ -79,7 +83,7 @@ export default function EventsFavoritesPage() {
                 <span className="hidden sm:inline">Início</span>
               </Link>
               <span>/</span>
-              <Link to="/eventos" className="transition-colors hover:text-foreground">
+              <Link to={eventUrls.events} className="transition-colors hover:text-foreground">
                 Eventos
               </Link>
               <span>/</span>
@@ -161,7 +165,7 @@ export default function EventsFavoritesPage() {
                 <p className="mb-6 text-muted-foreground">
                   Comece a salvar eventos que você gosta para vê-los aqui
                 </p>
-                <Button onClick={() => navigate('/eventos')} className="gap-2">
+                <Button onClick={() => navigate(eventUrls.events)} className="gap-2">
                   <Sparkles className="h-4 w-4" />
                   Explorar eventos
                 </Button>

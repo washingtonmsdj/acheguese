@@ -1,28 +1,17 @@
 /**
- * useTouristPoint — Hook público de detalhe por slug + locationId ou por ID
+ * useTouristPoint - Hook publico de detalhe por slug + locationId.
  *
- * Orquestra estado de loading/error/data.
- * Aceita tanto slug quanto UUID direto.
+ * Rotas publicas de pontos turisticos nao aceitam UUID direto.
  */
 
 import { useQuery } from '@tanstack/react-query';
 import { TouristPointQueryService } from '../services/TouristPointQueryService';
 
-export function useTouristPoint(locationId: string | undefined, slugOrId: string | undefined) {
-  // Detectar se é UUID
-  const isUUID = slugOrId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slugOrId);
-  
+export function useTouristPoint(locationId: string | undefined, slug: string | undefined) {
   return useQuery({
-    queryKey: ['guide:tourist-point', locationId, slugOrId, isUUID],
-    queryFn: () => {
-      if (isUUID) {
-        // Buscar por ID direto
-        return TouristPointQueryService.getById(slugOrId!);
-      }
-      // Buscar por slug + locationId
-      return TouristPointQueryService.getPublishedBySlug(locationId!, slugOrId!);
-    },
-    enabled: isUUID ? !!slugOrId : (!!locationId && !!slugOrId),
+    queryKey: ['guide:tourist-point', locationId, slug],
+    queryFn: () => TouristPointQueryService.getPublishedBySlug(locationId!, slug!),
+    enabled: !!locationId && !!slug,
     staleTime: 5 * 60 * 1000,
     retry: false,
   });

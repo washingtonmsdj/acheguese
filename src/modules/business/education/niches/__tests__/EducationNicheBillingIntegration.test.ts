@@ -10,11 +10,13 @@ import { EducationNicheBillingIntegration } from '../services/EducationNicheBill
 import { PlanTier } from '@/core/billing/types';
 import type { EducationNicheCapability } from '../types';
 
+const TEST_BUSINESS_ID = '00000000-0000-4000-8000-000000000002';
+
 describe('EducationNicheBillingIntegration', () => {
   const mockContext = {
     nicheKey: 'regular_school',
     planTier: PlanTier.PRO,
-    businessId: 'test-business-id',
+    businessId: TEST_BUSINESS_ID,
   };
 
   // ============================================================================

@@ -15,6 +15,7 @@ import { Card, CardContent } from '@/shared/components/ui/card';
 import { Badge } from '@/shared/components/ui/badge';
 import type { GastronomyActivationStatus } from '../hooks/useGastronomyStatus';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
+import { getRecordValue } from '@/shared/utils/recordLookup';
 
 interface GastronomyVerticalCTAProps {
   businessId: string;
@@ -47,7 +48,7 @@ const STATUS_CONFIG = {
     icon: UtensilsCrossed,
   },
   temporarily_closed: {
-    badge: { label: 'Temporariamente fechado', color: 'text-amber-600 border-amber-500/30', icon: Clock },
+    badge: { label: 'Temporariamente fechado', color: 'text-warning border-warning/30', icon: Clock },
     title: 'Módulo Gastronomia',
     description: 'Marcado como temporariamente fechado.',
     cta: 'Gerenciar',
@@ -59,7 +60,7 @@ const STATUS_CONFIG = {
 
 export function GastronomyVerticalCTA({ businessId, status }: GastronomyVerticalCTAProps) {
   const navigate = useNavigate();
-  const config = STATUS_CONFIG[status];
+  const config = getRecordValue(STATUS_CONFIG, status);
 
   if (!config) return null;
 

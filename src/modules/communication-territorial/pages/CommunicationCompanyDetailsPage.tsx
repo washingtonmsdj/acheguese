@@ -1,6 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
+import { communicationRoutes } from "@/core/communication-territorial/routes/communicationRoutes";
 import { buildPublicAbsoluteUrl } from "@/shared/config/publicAppOrigin";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
@@ -14,11 +15,6 @@ import {
   CompanyDetailsTerritoriesTab,
 } from "../components/company-details/CommunicationCompanyDetailsSections";
 import { useCommunicationChannelPublicPage } from "../hooks";
-import {
-  buildCommunicationChannelPath,
-  buildCommunicationCityPath,
-  buildCommunicationTerritoryPath,
-} from "../services";
 
 function LoadingState() {
   return (
@@ -32,21 +28,14 @@ function LoadingState() {
 }
 
 export default function CommunicationCompanyDetailsPage() {
-  const { state = "", city = "", territorySlug = "", channelSlug = "" } = useParams();
+  const { channelSlug = "" } = useParams();
   const { data, isLoading } = useCommunicationChannelPublicPage(channelSlug);
 
   const channel = data?.channel;
   const publications = data?.publications ?? [];
   const territories = data?.territories ?? [];
 
-  const territoryPath = buildCommunicationTerritoryPath(state, city, territorySlug);
-  const cityPath = buildCommunicationCityPath(state, city);
-  const canonicalPath = buildCommunicationChannelPath({
-    state,
-    city,
-    territorySlug,
-    channelSlug: channel?.slug ?? channelSlug,
-  });
+  const canonicalPath = communicationRoutes.companyDetails(channel?.slug ?? channelSlug);
   const canonicalUrl = buildPublicAbsoluteUrl(canonicalPath);
 
   return (
@@ -65,11 +54,9 @@ export default function CommunicationCompanyDetailsPage() {
       </Helmet>
 
       <nav className="mb-4 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-        <Link to="/comunicacao" className="hover:text-foreground">Comunicacao</Link>
+        <Link to={communicationRoutes.home} className="hover:text-foreground">Comunicacao</Link>
         <span>/</span>
-        <Link to={cityPath} className="hover:text-foreground">{city || "cidade"}</Link>
-        <span>/</span>
-        <Link to={territoryPath} className="hover:text-foreground">{territorySlug || "territorio"}</Link>
+        <span>{channelSlug || "canal"}</span>
       </nav>
 
       {isLoading ? <LoadingState /> : null}
@@ -80,14 +67,14 @@ export default function CommunicationCompanyDetailsPage() {
             <div className="space-y-2">
               <h2 className="text-2xl font-bold">Canal nao encontrado</h2>
               <p className="text-muted-foreground">
-                O canal informado nao existe, esta inativo ou nao pertence a este territorio.
+                O canal informado nao existe ou esta inativo.
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
               <Button asChild variant="outline">
-                <Link to={territoryPath}>
+                <Link to={communicationRoutes.home}>
                   <ArrowLeft className="mr-2 h-4 w-4" />
-                  Voltar ao territorio
+                  Voltar para comunicacao
                 </Link>
               </Button>
               <Button asChild>
@@ -101,7 +88,7 @@ export default function CommunicationCompanyDetailsPage() {
       {channel ? (
         <div className="space-y-6">
           <Button variant="ghost" size="sm" asChild>
-            <Link to={territoryPath}>
+            <Link to={communicationRoutes.home}>
               <ArrowLeft className="mr-2 h-4 w-4" />
               Voltar
             </Link>

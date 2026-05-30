@@ -12,6 +12,7 @@ import { useAuth } from '@/core/auth/hooks/useAuth';
 import { getAuthErrorMessage } from '@/core/auth/utils/authMessages';
 import { getAuthPasswordRequirementStatus } from '@/core/auth/utils/passwordPolicy';
 import { useToast } from '@/shared/hooks/use-toast';
+import { AUTH_BROWSER_STORAGE_CONFIG } from '@/config/security.config';
 import {
   ResetPasswordFormSchema,
   type ResetPasswordFormInput,
@@ -54,42 +55,27 @@ export default function ResetPasswordPage() {
     // Se já sabemos que é inválido (ex: ?expired=1), não precisa verificar
     if (recoveryState === 'invalid') return;
 
-    // Caso 1: hash da URL tem access_token + type=recovery (implicit flow)
-    // Com flowType='implicit' o SDK processa automaticamente, mas como fallback
-    // também tentamos via setSession caso o hash ainda esteja disponível
-    const hashParams = AuthService.captureAuthHash();
-    const accessToken = hashParams.get('access_token');
-    const refreshToken = hashParams.get('refresh_token');
-    const hashType = hashParams.get('type');
-
-    if (accessToken && hashType === 'recovery') {
-      AuthService.applyRecoverySession(accessToken, refreshToken).then((isApplied) => {
-        setRecoveryState(isApplied ? 'ready' : 'invalid');
-      });
-      return;
-    }
-
-    // Caso 2: URL já tem o marcador de recovery (redirect com ?mode=recovery)
+    // Caso 1: URL ja tem o marcador de recovery (PKCE com ?mode=recovery)
     if (AuthService.isRecoveryRedirect()) {
       setRecoveryState('ready');
       return;
     }
 
-    // Caso 3: usuário já autenticado via sessão de recovery ativa
+    // Caso 2: usuario ja autenticado via sessao de recovery ativa
     if (user) {
       setRecoveryState('ready');
       return;
     }
 
-    // Caso 4: aguardar evento PASSWORD_RECOVERY do SDK Supabase (PKCE flow com ?code=)
+    // Caso 3: aguardar evento PASSWORD_RECOVERY do SDK Supabase (PKCE com ?code=)
     const unsubscribeRecovery = AuthService.onPasswordRecovery(() => {
       setRecoveryState('ready');
     });
 
-    // Timeout de segurança: se nenhum evento chegar em 3s, link é inválido
+    // Timeout de segurança: se nenhum evento chegar dentro do contrato SSOT, link é inválido
     const invalidTimer = window.setTimeout(() => {
       setRecoveryState((current) => (current === 'checking' ? 'invalid' : current));
-    }, 3000);
+    }, AUTH_BROWSER_STORAGE_CONFIG.recoveryEventTimeoutMs);
 
     return () => {
       window.clearTimeout(invalidTimer);

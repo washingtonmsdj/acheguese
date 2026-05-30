@@ -6,21 +6,36 @@
  */
 
 import type { OpenStatus } from "../sections/types";
+import { getRecordValue } from "@/shared/utils/recordLookup";
+
+type DaySchedule = {
+  closed?: boolean;
+  open?: unknown;
+  close?: unknown;
+};
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function isDaySchedule(value: unknown): value is DaySchedule {
+  return isRecord(value);
+}
 
 /**
  * Verifica se empresa está aberta no momento
  */
 export function isCurrentlyOpen(
-  hours: any
+  hours: unknown,
 ): OpenStatus {
-  if (!hours) return { open: false, todayHours: null };
+  if (!isRecord(hours)) return { open: false, todayHours: null };
 
   const days = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
   const now = new Date();
-  const dayKey = days[now.getDay()];
-  const todaySchedule = hours[dayKey];
+  const dayKey = days.at(now.getDay());
+  const todaySchedule = dayKey ? getRecordValue(hours, dayKey) : undefined;
 
-  if (!todaySchedule || todaySchedule.closed) {
+  if (!isDaySchedule(todaySchedule) || todaySchedule.closed) {
     return { open: false, todayHours: "Fechado hoje" };
   }
 

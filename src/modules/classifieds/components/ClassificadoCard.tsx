@@ -23,6 +23,7 @@ import { ViewOnMapButton } from '@/core/maps/components/ViewOnMapButton';
 import { motion } from 'framer-motion';
 import { Badge } from '@/shared/components/ui/badge';
 import { cn } from '@/shared/utils/cn';
+import { getRecordValue } from '@/shared/utils/recordLookup';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from '@/shared/utils/dateLocale';
 import type { ClassificadoWithVendedor } from '@/modules/classifieds/hooks/useClassificados';
@@ -134,12 +135,12 @@ export const ClassificadoCard = memo(
     // ========================================================================
 
     const status = useMemo(
-      () => STATUS_CONFIG[classificado.status] || STATUS_CONFIG.active,
+      () => getRecordValue(STATUS_CONFIG, classificado.status) ?? STATUS_CONFIG.active,
       [classificado.status],
     );
 
     const firstImage = useMemo(
-      () => classificado.fotos?.[0] || '/placeholder.svg',
+      () => classificado.fotos?.at(0) || '/placeholder.svg',
       [classificado.fotos],
     );
 

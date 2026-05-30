@@ -60,10 +60,6 @@ export class EventsErrorBoundary extends Component<Props, State> {
     window.location.reload();
   };
 
-  handleGoHome = () => {
-    window.location.assign('/');
-  };
-
   render() {
     if (this.state.hasError) {
       if (this.props.fallback) {
@@ -120,13 +116,15 @@ export class EventsErrorBoundary extends Component<Props, State> {
                 Recarregar página
               </Button>
               <Button
-                onClick={this.handleGoHome}
+                asChild
                 variant="outline"
                 className="gap-2"
                 size="lg"
               >
-                <Home className="h-4 w-4" />
+                <a href="/">
+                  <Home className="h-4 w-4" />
                 Ir para início
+                </a>
               </Button>
             </div>
           </div>

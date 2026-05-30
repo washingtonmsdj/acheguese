@@ -13,6 +13,7 @@ import {
   type DriverRegistrationInput,
   type DriverRegistrationFormValues,
 } from "@/modules/mobility/utils/driverRegistration";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 
 interface DriverRegistrationFormProps {
   defaultValues?: DriverRegistrationDefaults;
@@ -155,7 +156,7 @@ export function DriverRegistrationForm({
           >
             {DRIVER_VEHICLE_TYPES.map((vehicleType) => (
               <option key={vehicleType} value={vehicleType}>
-                {VEHICLE_TYPE_LABELS[vehicleType]}
+                {getRecordValue(VEHICLE_TYPE_LABELS, vehicleType) ?? vehicleType}
               </option>
             ))}
           </select>

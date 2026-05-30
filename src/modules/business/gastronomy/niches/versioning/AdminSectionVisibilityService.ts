@@ -16,6 +16,7 @@ import type {
   AdminSectionsVisibilityMap,
   ProfileNicheConfig,
 } from './types';
+import { getRecordValue } from '@/shared/utils/recordLookup';
 
 /**
  * Mapeamento de seções de admin para capabilities necessárias
@@ -67,7 +68,7 @@ export class AdminSectionVisibilityService {
     section: AdminSection,
     enabledCapabilities: NicheCapability[],
   ): boolean {
-    const requiredCaps = ADMIN_SECTION_REQUIREMENTS[section];
+    const requiredCaps = getRecordValue(ADMIN_SECTION_REQUIREMENTS, section);
     if (!requiredCaps || requiredCaps.length === 0) {
       return false;
     }
@@ -83,7 +84,7 @@ export class AdminSectionVisibilityService {
     section: AdminSection,
     enabledCapabilities: NicheCapability[],
   ): AdminSectionVisibility {
-    const requiredCaps = ADMIN_SECTION_REQUIREMENTS[section] || [];
+    const requiredCaps = getRecordValue(ADMIN_SECTION_REQUIREMENTS, section) || [];
     const missingCaps = requiredCaps.filter(
       (cap) => !enabledCapabilities.includes(cap),
     );
@@ -152,7 +153,7 @@ export class AdminSectionVisibilityService {
     ) as AdminSection[];
 
     return sections.filter((section) => {
-      const requiredCaps = ADMIN_SECTION_REQUIREMENTS[section] || [];
+      const requiredCaps = getRecordValue(ADMIN_SECTION_REQUIREMENTS, section) || [];
       if (requiredCaps.length === 0) return false;
 
       // Seção é configurável se:
@@ -238,7 +239,7 @@ export class AdminSectionVisibilityService {
     section: AdminSection,
     missingCapabilities: NicheCapability[],
   ): string | null {
-    const requiredCaps = ADMIN_SECTION_REQUIREMENTS[section] || [];
+    const requiredCaps = getRecordValue(ADMIN_SECTION_REQUIREMENTS, section) || [];
     const missing = requiredCaps.filter((cap) =>
       missingCapabilities.includes(cap),
     );
@@ -270,7 +271,7 @@ export class AdminSectionVisibilityService {
       pastel_builder: 'Monte seu Pastel',
     };
 
-    const sectionName = sectionNames[section] || section;
+    const sectionName = getRecordValue(sectionNames, section) || section;
     return `Configure ${sectionName} para habilitar esta funcionalidade`;
   }
 }

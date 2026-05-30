@@ -12,7 +12,7 @@ import {
 import type { CommunicationPublicationDistribution } from "@/core/communication-territorial/types";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { useCommunityCommunicationFeed } from "../hooks";
-import { communicationTerritorialGateway } from "../services";
+import { buildCommunicationCityPath, communicationTerritorialGateway } from "../services";
 
 interface CommunityCommunicationTabPageProps {
   resolved: ResolvedTerritory;
@@ -28,12 +28,6 @@ function getTerritoryName(resolved: ResolvedTerritory): string {
   if (!resolved) return "territorio";
   if (resolved.kind === "location") return resolved.location.name;
   return resolved.group.name;
-}
-
-function getTerritorySlug(resolved: ResolvedTerritory): string {
-  if (!resolved) return "territorio";
-  if (resolved.kind === "location") return resolved.location.slug;
-  return resolved.group.slug;
 }
 
 function parseStateCityFromTerritory(resolved: ResolvedTerritory): { state?: string; city?: string } {
@@ -60,7 +54,7 @@ function CommunicationCard({
   routeParams,
 }: {
   distribution: CommunicationPublicationDistribution;
-  routeParams: { state: string; city: string; territorySlug: string };
+  routeParams: { state: string; city: string };
 }) {
   const publication = distribution.publication;
   const channel = distribution.channel;
@@ -121,16 +115,13 @@ function CommunicationCard({
 }
 
 export default function CommunityCommunicationTabPage({ resolved }: CommunityCommunicationTabPageProps) {
-  const params = useParams<{ state?: string; city?: string; territorySlug?: string }>();
+  const params = useParams<{ state?: string; city?: string }>();
   const locationIds = useMemo(() => getLocationIds(resolved), [resolved]);
   const territoryName = getTerritoryName(resolved);
   const routeTerritory = parseStateCityFromTerritory(resolved);
   const state = params.state ?? routeTerritory.state;
   const city = params.city ?? routeTerritory.city;
-  const territorySlug = params.territorySlug ?? getTerritorySlug(resolved);
-  const canonicalCommunicationHref = state && city && territorySlug
-    ? `/comunicacao/${state}/${city}/${territorySlug}`
-    : null;
+  const canonicalCommunicationHref = state && city ? buildCommunicationCityPath(state, city) : null;
 
   const feed = useCommunityCommunicationFeed(locationIds);
 
@@ -159,7 +150,7 @@ export default function CommunityCommunicationTabPage({ resolved }: CommunityCom
             </div>
             {canonicalCommunicationHref ? (
               <Button asChild variant="outline" className="border-white/15 bg-white/5 text-white hover:bg-white/10">
-                <Link to={canonicalCommunicationHref}>Ver canais do territorio</Link>
+                <Link to={canonicalCommunicationHref}>Ver canais da cidade</Link>
               </Button>
             ) : null}
           </div>
@@ -189,11 +180,11 @@ export default function CommunityCommunicationTabPage({ resolved }: CommunityCom
 
         <section className="grid gap-4">
           {(feed.data ?? []).map((distribution) =>
-            state && city && territorySlug ? (
+            state && city ? (
               <CommunicationCard
                 key={distribution.id}
                 distribution={distribution}
-                routeParams={{ state, city, territorySlug }}
+                routeParams={{ state, city }}
               />
             ) : null,
           )}

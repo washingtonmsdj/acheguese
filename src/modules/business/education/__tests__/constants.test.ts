@@ -9,9 +9,9 @@ import {
 describe('Education Constants', () => {
   describe('EDUCATION_PROFILE_STATUS', () => {
     it('should have all required statuses', () => {
-      expect(EDUCATION_PROFILE_STATUS.draft).toEqual({ label: 'Rascunho', color: 'gray' });
-      expect(EDUCATION_PROFILE_STATUS.published).toEqual({ label: 'Publicado', color: 'green' });
-      expect(EDUCATION_PROFILE_STATUS.paused).toEqual({ label: 'Pausado', color: 'yellow' });
+      expect(EDUCATION_PROFILE_STATUS.draft).toEqual({ label: 'Rascunho', color: 'gray', variant: 'secondary' });
+      expect(EDUCATION_PROFILE_STATUS.published).toEqual({ label: 'Publicado', color: 'green', variant: 'default' });
+      expect(EDUCATION_PROFILE_STATUS.paused).toEqual({ label: 'Pausado', color: 'yellow', variant: 'destructive' });
     });
 
     it('should have correct label and color for each status', () => {
@@ -20,24 +20,29 @@ describe('Education Constants', () => {
       statuses.forEach((key) => {
         expect(EDUCATION_PROFILE_STATUS[key as keyof typeof EDUCATION_PROFILE_STATUS]).toHaveProperty('label');
         expect(EDUCATION_PROFILE_STATUS[key as keyof typeof EDUCATION_PROFILE_STATUS]).toHaveProperty('color');
+        expect(EDUCATION_PROFILE_STATUS[key as keyof typeof EDUCATION_PROFILE_STATUS]).toHaveProperty('variant');
       });
     });
   });
 
   describe('EDUCATION_LEAD_STATUS', () => {
     it('should have all required pipeline statuses in correct order', () => {
-      expect(EDUCATION_LEAD_STATUS.new).toEqual({ label: 'Novo', color: 'blue', order: 1 });
-      expect(EDUCATION_LEAD_STATUS.contacted).toEqual({ label: 'Contactado', color: 'purple', order: 2 });
-      expect(EDUCATION_LEAD_STATUS.visit_scheduled).toEqual({ label: 'Visita Agendada', color: 'orange', order: 3 });
-      expect(EDUCATION_LEAD_STATUS.proposal_sent).toEqual({ label: 'Proposta Enviada', color: 'cyan', order: 4 });
-      expect(EDUCATION_LEAD_STATUS.enrolled).toEqual({ label: 'Matriculado', color: 'green', order: 5 });
-      expect(EDUCATION_LEAD_STATUS.lost).toEqual({ label: 'Perdido', color: 'red', order: 6 });
+      expect(EDUCATION_LEAD_STATUS.new).toEqual({ label: 'Novo', color: 'blue', order: 1, variant: 'default' });
+      expect(EDUCATION_LEAD_STATUS.contacted).toEqual({ label: 'Contactado', color: 'purple', order: 2, variant: 'secondary' });
+      expect(EDUCATION_LEAD_STATUS.visit_scheduled).toEqual({ label: 'Visita Agendada', color: 'orange', order: 3, variant: 'outline' });
+      expect(EDUCATION_LEAD_STATUS.proposal_sent).toEqual({ label: 'Proposta Enviada', color: 'cyan', order: 4, variant: 'outline' });
+      expect(EDUCATION_LEAD_STATUS.enrolled).toEqual({ label: 'Matriculado', color: 'green', order: 5, variant: 'default' });
+      expect(EDUCATION_LEAD_STATUS.lost).toEqual({ label: 'Perdido', color: 'red', order: 6, variant: 'destructive' });
     });
 
     it('should have ascending order values', () => {
       const statuses = Object.values(EDUCATION_LEAD_STATUS);
       for (let i = 1; i < statuses.length; i++) {
-        expect(statuses[i].order).toBeGreaterThan(statuses[i - 1].order);
+        const current = statuses.at(i);
+        const previous = statuses.at(i - 1);
+        expect(current).toBeDefined();
+        expect(previous).toBeDefined();
+        expect(current?.order).toBeGreaterThan(previous?.order ?? -1);
       }
     });
   });

@@ -26,6 +26,25 @@ interface BusinessHoursFormProps {
   businessId: string;
 }
 
+function updateDayHoursField(
+  day: DayHours,
+  field: keyof DayHours,
+  value: string | boolean,
+): DayHours {
+  switch (field) {
+    case 'opens_at':
+      return { ...day, opens_at: String(value) };
+    case 'closes_at':
+      return { ...day, closes_at: String(value) };
+    case 'is_closed':
+      return { ...day, is_closed: Boolean(value) };
+    case 'day_of_week':
+      return { ...day, day_of_week: Number(value) };
+  }
+
+  return day;
+}
+
 export function BusinessHoursForm({ businessId }: BusinessHoursFormProps) {
   const { hours, isLoading, setBulkHours, isSettingHours } = useBusinessHours(businessId);
 
@@ -61,7 +80,7 @@ export function BusinessHoursForm({ businessId }: BusinessHoursFormProps) {
   const handleDayChange = (dayIndex: number, field: keyof DayHours, value: string | boolean) => {
     setEditedHours((prev) =>
       prev.map((day) =>
-        day.day_of_week === dayIndex ? { ...day, [field]: value } : day
+        day.day_of_week === dayIndex ? updateDayHoursField(day, field, value) : day
       )
     );
   };
@@ -71,7 +90,8 @@ export function BusinessHoursForm({ businessId }: BusinessHoursFormProps) {
   };
 
   const handleCopyToAll = (dayIndex: number) => {
-    const source = editedHours[dayIndex];
+    const source = editedHours.at(dayIndex);
+    if (!source) return;
     setEditedHours((prev) =>
       prev.map((day) => ({
         ...day,

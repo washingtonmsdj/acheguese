@@ -20,25 +20,30 @@
 
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   ArrowLeft, Briefcase, MapPin, Clock, Star, Share2,
-  Heart, Zap, Building2, CalendarDays, DollarSign,
-  GraduationCap, Monitor, CheckCircle2, AlertCircle,
+  Zap, Building2, CalendarDays, DollarSign,
+  CheckCircle2, AlertCircle,
   ExternalLink, MessageCircle, Mail, Phone, Send,
-  ChevronRight, Flag, Bookmark,
+  ChevronRight, Flag, Bookmark, X,
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
 import { Separator } from '@/shared/components/ui/separator';
 import { Skeleton } from '@/shared/components/ui/skeleton';
+import { Textarea } from '@/shared/components/ui/textarea';
 import { SEO } from '@/shared/components/seo/SEO';
 import { useAppUrls } from '@/core/routing/hooks/useAppUrls';
 import { useAuth } from '@/core/auth/hooks/useAuth';
+import { jobPublicRoutes } from '@/core/verticals/jobs/routes/jobPublicRoutes';
+import { TERRITORY_CONFIG } from '@/config/territory';
 import { useToast } from '@/shared/hooks/use-toast';
 
 import { useVagaDetail } from '../hooks/useVagaDetail';
 import { VagaCard } from '../components/VagaCard';
+import { VAGA_REPORT_REASON_OPTIONS, isVagaReportReason } from '../services/VagaReportService';
+import { JOB_FORM_LIMITS } from '../constants/form-limits';
 import {
   formatSalary,
   isVagaActive,
@@ -209,7 +214,12 @@ export default function VagaDetailPublicPage() {
   const appUrls = useAppUrls();
   const { user } = useAuth();
   const { toast } = useToast();
-  const [isShareOpen, setIsShareOpen] = useState(false);
+  const routeState = state || TERRITORY_CONFIG.launch.state;
+  const routeCity = city || TERRITORY_CONFIG.launch.city;
+  const listUrl = jobPublicRoutes.list({ state: routeState, city: routeCity });
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reportDescription, setReportDescription] = useState("");
 
   const {
     vaga,
@@ -221,7 +231,9 @@ export default function VagaDetailPublicPage() {
     candidatarSe,
     compartilhar,
     salvarVaga,
+    denunciarVaga,
     isSaved,
+    isDenunciando,
   } = useVagaDetail({ slug: slug || '' });
 
   // SEO
@@ -244,19 +256,72 @@ export default function VagaDetailPublicPage() {
   }, [compartilhar, toast]);
 
   const handleSave = useCallback(async () => {
-    await salvarVaga();
-    toast({
-      title: isSaved ? 'Vaga removida' : 'Vaga salva!',
-      description: isSaved ? 'A vaga foi removida dos seus favoritos.' : 'A vaga foi salva para você consultar depois.',
-    });
-  }, [salvarVaga, isSaved, toast]);
+    try {
+      const nextIsSaved = await salvarVaga();
+      toast({
+        title: nextIsSaved ? 'Vaga salva!' : 'Vaga removida',
+        description: nextIsSaved
+          ? 'A vaga foi salva para você consultar depois.'
+          : 'A vaga foi removida dos seus favoritos.',
+      });
+    } catch (error) {
+      if (!user) {
+        navigate(appUrls.auth.login);
+        return;
+      }
 
-  const handleDenuncia = useCallback(() => {
-    toast({
-      title: 'Denúncia recebida',
-      description: 'Obrigado por nos informar. Vamos analisar esta vaga.',
-    });
-  }, [toast]);
+      toast({
+        title: 'Nao foi possivel atualizar favoritos',
+        description: error instanceof Error ? error.message : 'Tente novamente em instantes.',
+        variant: 'destructive',
+      });
+    }
+  }, [appUrls.auth.login, navigate, salvarVaga, toast, user]);
+
+  const handleOpenReport = useCallback(() => {
+    if (!user) {
+      navigate(appUrls.auth.login);
+      return;
+    }
+
+    setReportOpen(true);
+  }, [appUrls.auth.login, navigate, user]);
+
+  const handleDenuncia = useCallback(async () => {
+    if (!user) {
+      navigate(appUrls.auth.login);
+      return;
+    }
+    if (!isVagaReportReason(reportReason)) return;
+
+    try {
+      await denunciarVaga({
+        reason: reportReason,
+        description: reportDescription,
+      });
+      toast({
+        title: 'Denuncia enviada',
+        description: 'Nossa equipe ira analisar esta vaga em breve.',
+      });
+      setReportOpen(false);
+      setReportReason("");
+      setReportDescription("");
+    } catch (error) {
+      toast({
+        title: 'Erro ao enviar denuncia',
+        description: error instanceof Error ? error.message : 'Tente novamente em instantes.',
+        variant: 'destructive',
+      });
+    }
+  }, [
+    appUrls.auth.login,
+    denunciarVaga,
+    navigate,
+    reportDescription,
+    reportReason,
+    toast,
+    user,
+  ]);
 
   // Loading state
   if (isLoading) {
@@ -285,7 +350,7 @@ export default function VagaDetailPublicPage() {
         <p className="text-muted-foreground mb-6 text-center">
           A vaga que você procura não existe, foi encerrada ou expirou.
         </p>
-        <Button onClick={() => navigate(`/vagas/${state}/${city}`)}>
+        <Button onClick={() => navigate(listUrl)}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Ver todas as vagas
         </Button>
@@ -312,7 +377,7 @@ export default function VagaDetailPublicPage() {
             </button>
             <div className="h-5 w-px bg-border hidden sm:block" />
             <button
-              onClick={() => navigate(`/vagas/${state}/${city}`)}
+              onClick={() => navigate(listUrl)}
               className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors hidden sm:block"
             >
               Vagas
@@ -333,7 +398,7 @@ export default function VagaDetailPublicPage() {
               <Share2 className="h-4 w-4 text-muted-foreground" />
             </button>
             <button
-              onClick={handleDenuncia}
+              onClick={handleOpenReport}
               className="h-9 w-9 rounded-lg bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors"
             >
               <Flag className="h-4 w-4 text-muted-foreground" />
@@ -347,7 +412,7 @@ export default function VagaDetailPublicPage() {
         <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
           <button onClick={() => navigate('/')} className="hover:text-primary transition-colors">Início</button>
           <ChevronRight className="h-4 w-4" />
-          <button onClick={() => navigate(`/vagas/${state}/${city}`)} className="hover:text-primary transition-colors">
+          <button onClick={() => navigate(listUrl)} className="hover:text-primary transition-colors">
             Vagas {city}
           </button>
           <ChevronRight className="h-4 w-4" />
@@ -512,7 +577,7 @@ export default function VagaDetailPublicPage() {
                       key={vagaRel.id}
                       vaga={vagaRel}
                       variant="compact"
-                      onClick={() => navigate(`/vagas/${state}/${city}/${vagaRel.slug}`)}
+                      onClick={() => navigate(jobPublicRoutes.detail({ state: routeState, city: routeCity, slug: vagaRel.slug }))}
                     />
                   ))}
                 </div>
@@ -572,7 +637,7 @@ export default function VagaDetailPublicPage() {
                     {vagasEmpresa.map((vagaEmp) => (
                       <button
                         key={vagaEmp.id}
-                        onClick={() => navigate(`/vagas/${state}/${city}/${vagaEmp.slug}`)}
+                        onClick={() => navigate(jobPublicRoutes.detail({ state: routeState, city: routeCity, slug: vagaEmp.slug }))}
                         className="w-full text-left p-3 rounded-lg hover:bg-secondary transition-colors"
                       >
                         <p className="text-sm font-medium text-foreground line-clamp-1">{vagaEmp.titulo}</p>
@@ -598,6 +663,85 @@ export default function VagaDetailPublicPage() {
           </div>
         </div>
       </main>
+
+      <AnimatePresence>
+        {reportOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-4"
+            onClick={() => setReportOpen(false)}
+          >
+            <motion.div
+              initial={{ y: 24, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 24, opacity: 0 }}
+              onClick={(event) => event.stopPropagation()}
+              className="bg-card border border-border rounded-xl p-5 max-w-md w-full"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Flag className="h-4 w-4 text-destructive" />
+                  <h2 className="text-base font-semibold text-foreground">Denunciar vaga</h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setReportOpen(false)}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Fechar denuncia"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <p className="text-xs text-muted-foreground mb-4">
+                Selecione o motivo para enviar esta vaga para moderacao.
+              </p>
+
+              <select
+                value={reportReason}
+                onChange={(event) => setReportReason(event.target.value)}
+                className="w-full h-10 px-3 rounded-lg bg-background border border-border text-foreground text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="">Selecione um motivo</option>
+                {VAGA_REPORT_REASON_OPTIONS.map((reason) => (
+                  <option key={reason.id} value={reason.id}>
+                    {reason.label}
+                  </option>
+                ))}
+              </select>
+
+              <Textarea
+                value={reportDescription}
+                onChange={(event) => setReportDescription(event.target.value)}
+                maxLength={JOB_FORM_LIMITS.MAX_REPORT_DESCRIPTION}
+                placeholder="Detalhes opcionais"
+                className="min-h-24 resize-none mb-4"
+              />
+
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setReportOpen(false)}
+                  className="flex-1"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleDenuncia}
+                  disabled={!isVagaReportReason(reportReason) || isDenunciando}
+                  className="flex-1 bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                >
+                  {isDenunciando ? "Enviando..." : "Denunciar"}
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

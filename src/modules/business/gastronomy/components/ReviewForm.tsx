@@ -126,7 +126,7 @@ export function ReviewForm({
                 >
                   <Star
                     className={`h-8 w-8 ${
-                      isActive ? 'fill-amber-400 text-amber-400' : 'fill-muted text-muted'
+                      isActive ? 'fill-warning text-warning' : 'fill-muted text-muted'
                     }`}
                   />
                 </button>
@@ -135,7 +135,7 @@ export function ReviewForm({
           </div>
           {activeRating > 0 && (
             <span className="text-sm font-medium text-muted-foreground">
-              {RATING_LABELS[activeRating]}
+              {RATING_LABELS.at(activeRating) ?? ''}
             </span>
           )}
         </div>

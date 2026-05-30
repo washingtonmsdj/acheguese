@@ -1,4 +1,5 @@
 import type { BusinessCategory } from "@/core/business/types";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 
 export interface BusinessCreateFieldCopy {
   entityNoun: string;
@@ -225,6 +226,6 @@ const CATEGORY_COPY: Partial<Record<BusinessCategory, Partial<BusinessCreateFiel
 
 export function getBusinessCreateFieldCopy(category?: string): BusinessCreateFieldCopy {
   const normalizedCategory = (category || "outros") as BusinessCategory;
-  const overrides = CATEGORY_COPY[normalizedCategory] ?? CATEGORY_COPY.outros ?? {};
+  const overrides = getRecordValue(CATEGORY_COPY, normalizedCategory) ?? CATEGORY_COPY.outros ?? {};
   return { ...DEFAULT_COPY, ...overrides };
 }

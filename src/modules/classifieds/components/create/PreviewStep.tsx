@@ -13,6 +13,7 @@ import { getCategoryLabel } from "@/modules/classifieds/constants/categories";
 import { getSubcategoryLabel } from "@/modules/classifieds/constants/subcategories";
 import { getPriceTypeLabel } from "@/modules/classifieds/constants/price-types";
 import { getCategoryFields } from "@/modules/classifieds/constants/category-fields";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 
 interface PreviewStepProps {
   titulo: string;
@@ -53,17 +54,18 @@ export function PreviewStep({
       : `R$ ${parseFloat(price || "0").toLocaleString("pt-BR")}`;
 
   const categoryFields = getCategoryFields(category);
-  const filledDetails = categoryFields.filter((f) => details[f.key]);
+  const filledDetails = categoryFields.filter((f) => getRecordValue(details, f.key));
+  const coverPreviewUrl = photoPreviews.at(0) ?? null;
 
   return (
     <div className="space-y-4">
       {/* Card Preview */}
       <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
         {/* Foto principal */}
-        {photoPreviews.length > 0 && (
+        {coverPreviewUrl && (
           <div className="relative aspect-[4/3] bg-muted">
             <img
-              src={photoPreviews[0]}
+              src={coverPreviewUrl}
               alt={titulo}
               className="w-full h-full object-cover"
             />
@@ -113,17 +115,22 @@ export function PreviewStep({
           {/* Detalhes dinâmicos */}
           {filledDetails.length > 0 && (
             <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border">
-              {filledDetails.map((f) => (
-                <div key={f.key} className="text-xs">
-                  <span className="text-muted-foreground">{f.label}: </span>
-                  <span className="font-medium text-foreground">
-                    {f.type === "select"
-                      ? f.options?.find((o) => o.value === details[f.key])?.label || details[f.key]
-                      : details[f.key]}
-                    {f.suffix ? ` ${f.suffix}` : ""}
-                  </span>
-                </div>
-              ))}
+              {filledDetails.map((f) => {
+                const detailValue = getRecordValue(details, f.key) ?? "";
+                const detailLabel = f.type === "select"
+                  ? f.options?.find((o) => o.value === detailValue)?.label ?? detailValue
+                  : detailValue;
+
+                return (
+                  <div key={f.key} className="text-xs">
+                    <span className="text-muted-foreground">{f.label}: </span>
+                    <span className="font-medium text-foreground">
+                      {detailLabel}
+                      {f.suffix ? ` ${f.suffix}` : ""}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           )}
 

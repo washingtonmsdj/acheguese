@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 
 import { useSessionContext } from '@/core/session';
+import { GastronomyUrlService } from '@/core/verticals/gastronomy/services/GastronomyUrlService';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
@@ -35,6 +36,7 @@ import {
 import { getCuisineLabel } from '../constants';
 import type { MenuItemWithRelations } from '../types';
 import { formatBrl } from '../utils/currency';
+import { getRecordValue, setRecordValue } from '@/shared/utils/recordLookup';
 
 type SortMode = 'mais-pedidos' | 'menor-preco' | 'maior-preco';
 
@@ -125,6 +127,7 @@ export default function GastronomyPremiumDetailPage() {
   }, [activeCategoryData?.items, glutenFreeOnly, lactoseFreeOnly, search, sortMode, veganOnly, vegetarianOnly]);
 
   const profile = business?.gastronomy_profile;
+  const gastronomyHomeUrl = GastronomyUrlService.getHomeUrl();
 
   const handleShare = async () => {
     const url = window.location.href;
@@ -139,11 +142,11 @@ export default function GastronomyPremiumDetailPage() {
     setShareOpen(true);
   };
 
-  const quantityFor = (itemId: string) => itemQuantities[itemId] ?? 1;
+  const quantityFor = (itemId: string) => getRecordValue(itemQuantities, itemId) ?? 1;
 
   const updateQuantity = (itemId: string, quantity: number) => {
     const next = Math.max(1, quantity);
-    setItemQuantities((current) => ({ ...current, [itemId]: next }));
+    setItemQuantities((current) => setRecordValue(current, itemId, next));
   };
 
   const handleQuickAdd = (item: MenuItemWithRelations) => {
@@ -167,7 +170,7 @@ export default function GastronomyPremiumDetailPage() {
           Esse link premium não está ativo para o território informado.
         </p>
         <Button asChild className="mt-6">
-          <Link to="/gastronomia">Voltar para gastronomia</Link>
+          <Link to={gastronomyHomeUrl}>Voltar para gastronomia</Link>
         </Button>
       </div>
     );

@@ -159,7 +159,8 @@ export class AutoDispatchService {
       const maxAttempts = Math.min(eligibleDrivers.length, CONFIG.MAX_RETRY_ATTEMPTS);
       
       for (let i = 0; i < maxAttempts; i++) {
-        const driver = eligibleDrivers[i];
+        const driver = eligibleDrivers.at(i);
+        if (!driver) continue;
         const attemptNumber = i + 1;
 
         logger.info('AutoDispatch: Offering to driver', {

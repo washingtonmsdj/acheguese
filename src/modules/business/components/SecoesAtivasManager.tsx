@@ -36,37 +36,54 @@ const SECOES = [
     label: "Serviços",
     icon: Briefcase,
     description: "Lista de serviços oferecidos pela empresa",
-    color: "text-blue-500",
+    color: "text-primary",
   },
   {
     id: "products" as const,
     label: "Produtos",
     icon: Package,
     description: "Catálogo de produtos para venda",
-    color: "text-green-500",
+    color: "text-success",
   },
   {
     id: "cardapio" as const,
     label: "Cardápio",
     icon: ShoppingBag,
     description: "Cardápio completo com pratos e bebidas",
-    color: "text-orange-500",
+    color: "text-warning",
   },
   {
     id: "portfolio" as const,
     label: "Portfólio",
     icon: Award,
     description: "Galeria de trabalhos e projetos realizados",
-    color: "text-purple-500",
+    color: "text-accent-foreground",
   },
   {
     id: "promocoes" as const,
     label: "Promoções",
     icon: Sparkles,
     description: "Ofertas e descontos especiais",
-    color: "text-yellow-500",
+    color: "text-warning",
   },
 ];
+
+function toggleSectionConfig(config: SecoesConfig, secao: keyof SecoesConfig): SecoesConfig {
+  switch (secao) {
+    case "services":
+      return { ...config, services: !config.services };
+    case "products":
+      return { ...config, products: !config.products };
+    case "cardapio":
+      return { ...config, cardapio: !config.cardapio };
+    case "portfolio":
+      return { ...config, portfolio: !config.portfolio };
+    case "promocoes":
+      return { ...config, promocoes: !config.promocoes };
+  }
+
+  return config;
+}
 
 export default function SecoesAtivasManager({
   businessId,
@@ -77,7 +94,7 @@ export default function SecoesAtivasManager({
   const [saving, setSaving] = useState(false);
 
   const toggleSecao = (secao: keyof SecoesConfig) => {
-    setConfig((prev) => ({ ...prev, [secao]: !prev[secao] }));
+    setConfig((prev) => toggleSectionConfig(prev, secao));
   };
 
   const handleSave = async () => {

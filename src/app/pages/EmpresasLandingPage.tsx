@@ -168,14 +168,14 @@ export default function EmpresasLandingPage({
       resolved?.kind === "location"
         ? resolved.location.geographic_path
         : resolved?.kind === "group"
-          ? resolved.group.members[0]?.geographic_path
+          ? resolved.group.members.at(0)?.geographic_path
           : null;
     if (!geoPath) return {};
-    const parts = geoPath.split("/").filter(Boolean);
+    const [, stateSlug = null, citySlug = null, districtSlug = null] = geoPath.split("/").filter(Boolean);
     return {
-      stateSlug: parts[1] ?? null,
-      citySlug: parts[2] ?? null,
-      districtSlug: parts[3] ?? null,
+      stateSlug,
+      citySlug,
+      districtSlug,
     };
   }, [resolved]);
   // Usa apenas empresas reais do SSOT.
@@ -236,15 +236,15 @@ export default function EmpresasLandingPage({
   }, [nearbyMode, nearbyBusinesses, realBusinesses]);
 
   const categoryCards = useMemo(() => {
-    const counts = businessesToShow.reduce<Record<string, number>>((acc, business) => {
+    const counts = new Map<string, number>();
+    businessesToShow.forEach((business) => {
       const category = normalizeBusinessCategoryId(business.category);
-      acc[category] = (acc[category] ?? 0) + 1;
-      return acc;
-    }, {});
+      counts.set(category, (counts.get(category) ?? 0) + 1);
+    });
 
     return CATEGORIES.map((category) => ({
       ...category,
-      count: String(counts[normalizeBusinessCategoryId(category.slug)] ?? 0),
+      count: String(counts.get(normalizeBusinessCategoryId(category.slug)) ?? 0),
     }));
   }, [businessesToShow]);
 

@@ -17,7 +17,7 @@ describe("gastronomy operational SSOT flow", () => {
       "src/core/mobility/delivery/services/OrderDeliveryNotificationService.ts",
     );
 
-    expect(routesSource).toContain('path="/gastronomia/pedidos/:orderId"');
+    expect(routesSource).toContain("gastronomyPublicRoutes.orderDetails(GASTRONOMY_PUBLIC_ROUTE_PARAMS.orderId)");
     expect(routesSource).toContain("<P.OrderDetailsPage />");
     expect(notificationSource).toContain("customerOrderUrl");
     expect(notificationSource).toContain("businessManagementRoutes.gastronomyPedidoPublico(order.id)");

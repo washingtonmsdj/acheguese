@@ -47,16 +47,23 @@ export {
 export { classifiedUrlService, ClassifiedUrlService } from "./ClassifiedUrlService";
 export type {
   ClassifiedUrlContext,
+  ClassifiedPublicUrlInput,
   ResolvedClassifiedUrl,
   ClassifiedResolution,
 } from "./ClassifiedUrlService";
 
-export { classifiedReportService } from "@/modules/classifieds/services/ClassifiedReportService";
+export {
+  CLASSIFIED_REPORT_REASON_OPTIONS,
+  classifiedReportService,
+  isClassifiedReportReason,
+} from "@/modules/classifieds/services/ClassifiedReportService";
 export type {
   ClassifiedReport,
   CreateReportInput,
   ReportReason,
 } from "@/modules/classifieds/services/ClassifiedReportService";
+
+export { ClassifiedFavoriteService } from "./ClassifiedFavoriteService";
 
 export { classifiedCommentService } from "./ClassifiedCommentService";
 export type { ClassifiedComment } from "./ClassifiedCommentService";

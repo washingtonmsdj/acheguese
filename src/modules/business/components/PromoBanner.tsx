@@ -4,6 +4,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Sparkles, Tag, Clock, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 interface PromoBannerProps {
   title: string;
   description: string;
@@ -26,9 +27,10 @@ export default function PromoBanner({
   const variants = {
     default: "bg-primary text-primary-foreground",
     gradient:
-      "bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 text-white",
+      "bg-gradient-to-r from-primary via-accent to-secondary text-primary-foreground",
     minimal: "bg-secondary border-2 border-primary",
   };
+  const variantClassName = getRecordValue(variants, variant) ?? variants.gradient;
 
   return (
     <motion.div
@@ -37,12 +39,12 @@ export default function PromoBanner({
       transition={{ duration: 0.5 }}
     >
       <Card
-        className={`p-6 mb-6 overflow-hidden relative ${variants[variant]}`}
+        className={`p-6 mb-6 overflow-hidden relative ${variantClassName}`}
       >
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full -translate-y-1/2 translate-x-1/2" />
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full translate-y-1/2 -translate-x-1/2" />
+          <div className="absolute top-0 right-0 w-64 h-64 bg-primary-foreground rounded-full -translate-y-1/2 translate-x-1/2" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary-foreground rounded-full translate-y-1/2 -translate-x-1/2" />
         </div>
 
         <div className="relative z-10 flex items-center justify-between gap-4 flex-wrap">
@@ -51,7 +53,7 @@ export default function PromoBanner({
               <Sparkles className="h-5 w-5 animate-pulse" />
               <Badge
                 variant="secondary"
-                className="bg-white/20 text-white border-white/30"
+                className="bg-primary-foreground/20 text-primary-foreground border-primary-foreground/30"
               >
                 <Tag className="h-3 w-3 mr-1" />
                 Promoção Especial
@@ -61,7 +63,7 @@ export default function PromoBanner({
             <h3 className="text-2xl font-bold font-display mb-2 flex items-center gap-2">
               {title}
               {discount && (
-                <span className="inline-flex items-center px-3 py-1 rounded-full bg-white/20 text-lg">
+                <span className="inline-flex items-center px-3 py-1 rounded-full bg-primary-foreground/20 text-lg">
                   {discount}
                 </span>
               )}

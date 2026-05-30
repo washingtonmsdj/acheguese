@@ -1,6 +1,6 @@
 /**
  * Página pública de profissional
- * Rota: /profissionais/:uf/:cidade/:slug
+ * Rota: /servicos/:state/:city/profissional/:slug
  *
  * Contrato público seguro:
  * - nome público, slug, bio/descrição
@@ -19,29 +19,34 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avat
 import { useProfessionalBySlug } from '../hooks/useProfessionalBySlug';
 import { ProfessionalLeadRequestDialog } from '../components/ProfessionalLeadRequestDialog';
 import { logPageNotFound } from '@/core/public-identity/utils/identity-logger';
+import { professionalPublicRoutes } from '@/core/professional/routes/professionalPublicRoutes';
 import { useEffect, useState } from 'react';
 
 export default function ProfissionalPublicPage() {
-  const { uf, cidade, slug } = useParams<{ uf: string; cidade: string; slug: string }>();
+  const { state, city, slug } = useParams<{ state: string; city: string; slug: string }>();
   const navigate = useNavigate();
   const [leadDialogOpen, setLeadDialogOpen] = useState(false);
 
   const { data: professional, isLoading, error } = useProfessionalBySlug({
-    uf: uf ?? '',
-    cidade: cidade ?? '',
+    uf: state ?? '',
+    cidade: city ?? '',
     slug: slug ?? '',
   });
 
   // Log 404 quando profissional não encontrado
   useEffect(() => {
-    if (!isLoading && (error || !professional) && slug) {
+    if (!isLoading && (error || !professional) && slug && state && city) {
       logPageNotFound({
         entityType: 'professional',
         identifier: slug,
-        attemptedUrl: `/profissionais/${uf}/${cidade}/${slug}`,
+        attemptedUrl: professionalPublicRoutes.detail({
+          state,
+          city,
+          slug,
+        }),
       });
     }
-  }, [isLoading, error, professional, slug, uf, cidade]);
+  }, [isLoading, error, professional, slug, state, city]);
 
   if (isLoading) {
     return (

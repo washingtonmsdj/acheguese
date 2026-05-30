@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import * as components from '../index';
+import { getRecordValue } from '@/shared/utils/recordLookup';
 
 describe('Education Components Exports', () => {
   it('exports all components', () => {
@@ -28,7 +29,7 @@ describe('Education Components Exports', () => {
     ];
 
     componentExports.forEach((name) => {
-      const comp = (components as Record<string, unknown>)[name];
+      const comp = getRecordValue(components as Record<string, unknown>, name);
       expect(comp).toBeDefined();
       expect(typeof comp === 'function' || typeof comp === 'object').toBe(true);
     });

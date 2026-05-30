@@ -23,12 +23,22 @@ import { Badge } from '@/shared/components/ui/badge';
 import { useEducationProfile } from '../hooks/useEducationProfile';
 import { useEducationNiche } from '../niches/hooks/useEducationNiche';
 import { getNicheByKey } from '../niches/registry';
+import { EducationUrlService } from '../services/EducationUrlService';
 
 export function EducationDashboardPage() {
   const { businessId } = useParams<{ businessId: string }>();
   const { data: profile, isLoading } = useEducationProfile(businessId);
   const nicheData = useEducationNiche(profile?.niche_key);
   const nicheInfo = profile?.niche_key ? getNicheByKey(profile.niche_key) : null;
+  const adminUrls = businessId
+    ? {
+        setup: EducationUrlService.buildAdminSetupUrl(businessId),
+        programs: EducationUrlService.buildAdminProgramsUrl(businessId),
+        leads: EducationUrlService.buildAdminLeadsUrl(businessId),
+        events: EducationUrlService.buildAdminEventsUrl(businessId),
+        analytics: EducationUrlService.buildAdminAnalyticsUrl(businessId),
+      }
+    : null;
 
   // Helper para status do nicho
   const getStatusBadge = (status?: string) => {
@@ -51,34 +61,34 @@ export function EducationDashboardPage() {
     {
       icon: Settings,
       label: 'Configuração',
-      href: `/central/empresas/${businessId}/educacao/setup`,
+      href: adminUrls?.setup,
       description: 'Dados da instituição e perfil',
     },
     {
       icon: BookOpen,
       label: 'Programas',
-      href: `/central/empresas/${businessId}/educacao/programas`,
+      href: adminUrls?.programs,
       description: 'Gerenciar turmas e programas',
     },
     {
       icon: Users,
       label: 'Leads',
-      href: `/central/empresas/${businessId}/educacao/leads`,
+      href: adminUrls?.leads,
       description: 'Pipeline de matrículas',
     },
     {
       icon: Calendar,
       label: 'Eventos',
-      href: `/central/empresas/${businessId}/educacao/eventos`,
+      href: adminUrls?.events,
       description: 'Eventos e visitas agendadas',
     },
     {
       icon: TrendingUp,
       label: 'Analytics',
-      href: `/central/empresas/${businessId}/educacao/analytics`,
+      href: adminUrls?.analytics,
       description: 'Estatísticas e relatórios',
     },
-  ];
+  ].flatMap((item) => (item.href ? [{ ...item, href: item.href }] : []));
 
   if (isLoading) {
     return (

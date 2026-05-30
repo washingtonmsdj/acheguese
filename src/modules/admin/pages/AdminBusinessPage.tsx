@@ -51,6 +51,7 @@ import type {
 import { ADMIN_BUSINESS_FIELDS } from "@/modules/admin/config/adminBusinessFields";
 import { ADMIN_BUSINESS_ACTIONS } from "@/modules/admin/config/adminBusinessActions";
 import { ADMIN_BUSINESS_FILTERS } from "@/modules/admin/config/adminBusinessFilters";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 interface FieldConfig {
   key: string;
   label: string;
@@ -106,7 +107,7 @@ export default function AdminBusinessPage() {
   const filters = ADMIN_BUSINESS_FILTERS;
   const getFieldValue = (business: Business, key: string): unknown => {
     const businessRecord = business as unknown as Record<string, unknown>;
-    return businessRecord[key];
+    return getRecordValue(businessRecord, key);
   };
 
   // 🎯 LOAD DATA usando BusinessService com PAGINAÇÃO

@@ -1,14 +1,11 @@
 /**
  * TouristPointRouteResolver
- * 
- * Resolve a ambiguidade entre:
- * - /guia/pontos-turisticos/:state/:city/:district (listagem)
- * - /guia/pontos-turisticos/:state/:city/:slug (detalhe)
- * 
- * PRIORIDADE: Ponto turístico > Distrito
- * 
- * Quando há ambiguidade (ex: "pelourinho" é tanto distrito quanto ponto turístico),
- * prioriza o ponto turístico.
+ *
+ * Resolve a rota de 3 segmentos do modulo de pontos turisticos:
+ * - /pontos-turisticos/:state/:city/:district (listagem)
+ * - /pontos-turisticos/:state/:city/:slug (detalhe sem distrito)
+ *
+ * Detalhes com distrito usam /pontos-turisticos/:state/:city/:district/:slug.
  */
 
 import { useState, useEffect } from 'react';

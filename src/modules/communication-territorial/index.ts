@@ -1,7 +1,6 @@
 export { default as CommunicationLandingPage } from "./pages/CommunicationLandingPage";
 export { default as CommunicationRequestPage } from "./pages/CommunicationRequestPage";
 export { default as CommunicationCityPage } from "./pages/CommunicationCityPage";
-export { default as CommunicationTerritoryPage } from "./pages/CommunicationTerritoryPage";
 export { default as CommunicationChannelPage } from "./pages/CommunicationChannelPage";
 export { default as CommunicationCompanyDetailsPage } from "./pages/CommunicationCompanyDetailsPage";
 export { default as CommunicationAgentPage } from "./pages/CommunicationAgentPage";

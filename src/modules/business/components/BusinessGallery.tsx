@@ -11,6 +11,7 @@ export function BusinessGallery({
   businessName,
 }: BusinessGalleryProps) {
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
+  const selectedImageUrl = selectedImage !== null ? images.at(selectedImage) ?? null : null;
 
   if (!images || images.length === 0) {
     return null;
@@ -55,7 +56,7 @@ export function BusinessGallery({
       </div>
 
       {/* Modal de visualização */}
-      {selectedImage !== null && (
+      {selectedImageUrl && selectedImage !== null && (
         <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4">
           <button
             onClick={() => setSelectedImage(null)}
@@ -72,7 +73,7 @@ export function BusinessGallery({
           </button>
 
           <img
-            src={images[selectedImage]}
+            src={selectedImageUrl}
             alt={`${businessName} - Imagem ${selectedImage + 1}`}
             className="max-w-full max-h-full object-contain"
           />

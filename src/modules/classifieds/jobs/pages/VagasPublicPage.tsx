@@ -21,6 +21,7 @@ import { ModuleLocationDialog } from "@/core/location/components/ModuleLocationD
 import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
 import { useTerritoryLabels } from "@/core/location/hooks/useTerritoryLabels";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
+import { jobPublicRoutes } from "@/core/verticals/jobs/routes/jobPublicRoutes";
 import { TERRITORY_CONFIG } from "@/config/territory";
 import { VagasPublicLayout } from "./VagasPublicLayout";
 import { VagasHeader } from "../components";
@@ -108,7 +109,7 @@ export default function VagasPublicPage({ resolved }: VagasPublicPageProps = {})
   const pageDescription = `Encontre vagas de emprego em ${cityName}. ${total} oportunidades de trabalho disponíveis. Candidate-se agora!`;
   const isEmbeddedCommunityRoute = location.pathname.startsWith("/comunidade/");
   const moduleBasePath = useMemo(() => {
-    if (!isEmbeddedCommunityRoute) return "/vagas";
+    if (!isEmbeddedCommunityRoute) return jobPublicRoutes.home();
     const parts = location.pathname.split("/").filter(Boolean);
     const embeddedState = parts[1] ?? routeState;
     const embeddedCity = parts[2] ?? routeCity;
@@ -119,7 +120,7 @@ export default function VagasPublicPage({ resolved }: VagasPublicPageProps = {})
     return `/comunidade/${embeddedState}/${embeddedCity}/${routeTerritorySlug}/vagas`;
   }, [isEmbeddedCommunityRoute, location.pathname, resolved, routeCity, routeState]);
   const publishPath = useMemo(() => {
-    if (!isEmbeddedCommunityRoute) return "/vagas/publicar";
+    if (!isEmbeddedCommunityRoute) return jobPublicRoutes.publish();
     const parts = location.pathname.split("/").filter(Boolean);
     const embeddedState = parts[1] ?? routeState;
     const embeddedCity = parts[2] ?? routeCity;
@@ -133,7 +134,7 @@ export default function VagasPublicPage({ resolved }: VagasPublicPageProps = {})
   // Handlers
   const handleVagaClick = useCallback(
     (slug: string) => {
-      navigate(`/vagas/${routeState}/${routeCity}/${slug}`);
+      navigate(jobPublicRoutes.detail({ state: routeState, city: routeCity, slug }));
     },
     [navigate, routeCity, routeState]
   );

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import { SafeLink } from "@/shared/components/security";
 import {
   CHANNEL_KIND_LABELS,
   COMMUNICATION_CONTENT_FORMAT_LABELS,
@@ -73,14 +74,13 @@ export function PublicationCard({
           </Button>
         ) : null}
         {publication.source_url ? (
-          <a
+          <SafeLink
             className="mt-3 inline-block text-sm font-medium text-primary"
             href={publication.source_url}
             target="_blank"
-            rel="noreferrer"
           >
             Fonte original
-          </a>
+          </SafeLink>
         ) : null}
       </CardContent>
     </Card>

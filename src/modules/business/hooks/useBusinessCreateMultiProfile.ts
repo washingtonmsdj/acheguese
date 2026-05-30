@@ -67,7 +67,8 @@ async function createProfileWithHandleFallback(params: {
   );
 
   for (let index = 0; index < handles.length; index += 1) {
-    const handle = handles[index];
+    const handle = handles.at(index);
+    if (!handle) continue;
     const result = await MultiProfileService.createProfile({
       profile_type: "business",
       handle,

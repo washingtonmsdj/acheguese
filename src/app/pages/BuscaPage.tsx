@@ -29,6 +29,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useBusinessNavigation } from "@/modules/business/hooks/useBusinessNavigation";
 import { useGlobalSearch } from "@/core/search/hooks/useGlobalSearch";
 import { useSessionContext } from "@/core/session";
+import { professionalPublicRoutes } from "@/core/professional/routes/professionalPublicRoutes";
 import { workOpportunityTelemetryService } from "@/core/work-opportunities/services/WorkOpportunityTelemetryService";
 import { analyticsService } from "@/core/analytics/services/AnalyticsService";
 import type { SearchCategory } from "@/core/search";
@@ -55,6 +56,7 @@ interface BusinessSearchItem {
 interface ProfessionalSearchItem {
   id: string;
   name: string;
+  target_url?: string | null;
   logo_url?: string | null;
   category?: string | null;
   city?: string | null;
@@ -205,7 +207,9 @@ export default function BuscaPage() {
             results={results}
             activeFilter={activeFilter}
             onBusinessClick={navigateToBusiness}
-            onProfessionalClick={(id) => navigate(`/servicos/${id}`)}
+            onProfessionalClick={(professional) =>
+              navigate(professional.target_url || professionalPublicRoutes.home())
+            }
             onOpportunityClick={(opportunity) => {
               if (opportunity.source_kind !== "vaga") {
                 void workOpportunityTelemetryService.trackOpportunityClick({
@@ -352,7 +356,7 @@ function ResultsView({
   results: SearchResultsViewModel;
   activeFilter: SearchCategory;
   onBusinessClick: (business: BusinessSearchItem) => void;
-  onProfessionalClick: (id: string) => void;
+  onProfessionalClick: (professional: ProfessionalSearchItem) => void;
   onOpportunityClick: (opportunity: SearchResultsViewModel["opportunities"][number]) => void;
 }) {
   return (
@@ -394,7 +398,7 @@ function ResultsView({
               <ProfessionalCard
                 key={professional.id}
                 professional={professional}
-                onClick={() => onProfessionalClick(professional.id)}
+                onClick={() => onProfessionalClick(professional)}
               />
             ))}
           </Section>

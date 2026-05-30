@@ -22,6 +22,7 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import { PassengerTrustBadge } from "@/shared/components/badges/PassengerTrustBadge";
 import { RideChatDialog } from "../RideChatDialog";
 import { cn } from "@/shared/utils/cn";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 import type { MobilityRide } from "@/core/mobility/types/ride";
 import { useSessionContext } from "@/core/session";
 import { RIDE_STATUS, PAYMENT_METHOD } from "@/shared/types/constants";
@@ -219,7 +220,7 @@ export function DriverRidesList({
         desc: "Suas corridas concluídas aparecerão aqui",
       },
     };
-    const config = emptyConfig[type];
+    const config = getRecordValue(emptyConfig, type) ?? emptyConfig.available;
     return (
       <div className="flex flex-col items-center justify-center py-4 text-center">
         <div
@@ -321,7 +322,7 @@ export function DriverRidesList({
                     )}
                   {trustRisk && (
                     <Badge variant="outline" className="text-[0.6rem]">
-                      {TRUST_RISK_LABELS[trustRisk] ?? trustRisk}
+                      {getRecordValue(TRUST_RISK_LABELS, trustRisk) ?? trustRisk}
                     </Badge>
                   )}
                 </div>

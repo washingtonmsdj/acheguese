@@ -37,6 +37,7 @@ describe('business and gastronomy public page separation', () => {
     expect(source).toContain('StickyOrderBar');
     expect(source).toContain('link rel="canonical"');
     expect(source).toContain('BreadcrumbList');
-    expect(source).toContain('businessDataId={business.business_data_id}');
+    expect(source).toContain('useFavoritesManager(business?.business_data_id)');
+    expect(source).toContain('business={business}');
   });
 });

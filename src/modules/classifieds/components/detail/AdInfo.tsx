@@ -2,6 +2,7 @@ import React from "react";
 import { MapPin, Clock, Tag } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/shared/utils/cn";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 
 interface AdInfoProps {
   title: string;
@@ -55,7 +56,7 @@ export function AdInfo({
   neighborhood,
   createdAt,
 }: AdInfoProps) {
-  const statusData = statusConfig[status] || statusConfig.active;
+  const statusData = getRecordValue(statusConfig, status) ?? statusConfig.active;
   const timeAgo = createdAt ? getTimeAgo(createdAt) : "";
 
   return (

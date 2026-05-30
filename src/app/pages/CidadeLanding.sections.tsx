@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/shared/components/ui/button";
+import { SafeLink } from "@/shared/components/security";
 import { buildMailtoUrl, buildTelUrl } from "@/shared/utils/contactLinks";
 
 type ElectedCard = {
@@ -195,11 +196,11 @@ export function CityUsefulContactsSection({
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {civicChannels.map((channel) => (
-              <a
+              <SafeLink
                 key={channel.titulo}
                 href={channel.href}
+                allowInternal
                 target={channel.href.startsWith("http") ? "_blank" : undefined}
-                rel={channel.href.startsWith("http") ? "noopener noreferrer" : undefined}
                 className="flex items-start justify-between gap-3 rounded-2xl border border-border bg-card p-4 hover:border-primary/30 hover:shadow-md transition-all"
               >
                 <div>
@@ -207,7 +208,7 @@ export function CityUsefulContactsSection({
                   <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{channel.detalhe}</p>
                 </div>
                 <span className="text-xs font-semibold text-primary whitespace-nowrap">{channel.acao}</span>
-              </a>
+              </SafeLink>
             ))}
           </div>
         </section>
@@ -275,6 +276,16 @@ export function CityCommunityCtaSection({
   );
 }
 
+function normalizeSocialHandle(value: string): string | null {
+  const normalized = value.trim().replace(/^@/, "").replace(/^\/+/, "");
+  return normalized ? encodeURIComponent(normalized) : null;
+}
+
+function buildSocialProfileUrl(baseUrl: string, handle: string): string | null {
+  const normalizedHandle = normalizeSocialHandle(handle);
+  return normalizedHandle ? `${baseUrl}/${normalizedHandle}` : null;
+}
+
 export function CityHallFooter({
   prefeituraInfo,
   cityDisplayName = "Cidade",
@@ -294,6 +305,37 @@ export function CityHallFooter({
   servicesPath: string;
   classifiedsPath: string;
 }) {
+  const socialLinks = [
+    {
+      key: "instagram",
+      label: "Instagram",
+      icon: Instagram,
+      href: buildSocialProfileUrl("https://instagram.com", prefeituraInfo.instagram),
+      className: "hover:text-primary",
+    },
+    {
+      key: "facebook",
+      label: "Facebook",
+      icon: Facebook,
+      href: buildSocialProfileUrl("https://facebook.com", prefeituraInfo.facebook),
+      className: "hover:text-primary",
+    },
+    {
+      key: "twitter",
+      label: "Twitter/X",
+      icon: Twitter,
+      href: buildSocialProfileUrl("https://twitter.com", prefeituraInfo.twitter),
+      className: "hover:text-primary",
+    },
+    {
+      key: "youtube",
+      label: "YouTube",
+      icon: Youtube,
+      href: buildSocialProfileUrl("https://youtube.com", prefeituraInfo.youtube),
+      className: "hover:text-destructive",
+    },
+  ] as const;
+
   return (
     <footer className="w-full bg-card border-t border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 md:py-14">
@@ -332,11 +374,11 @@ export function CityHallFooter({
                 {prefeituraInfo.email}
               </a>
               {prefeituraInfo.site ? (
-                <a href={prefeituraInfo.site} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors">
+                <SafeLink href={prefeituraInfo.site} target="_blank" className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors">
                   <Globe className="h-3.5 w-3.5 text-primary" />
                   {prefeituraInfo.site.replace("https://", "")}
                   <ExternalLink className="h-3 w-3" />
-                </a>
+                </SafeLink>
               ) : null}
             </div>
           </div>
@@ -344,22 +386,26 @@ export function CityHallFooter({
           <div>
             <h3 className="text-sm font-bold text-foreground mb-4">Redes Sociais</h3>
             <div className="grid grid-cols-2 gap-2.5">
-              <a href={prefeituraInfo.instagram ? `https://instagram.com/${(prefeituraInfo.instagram || "").replace("@", "")}` : "#"} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors bg-secondary/50 rounded-lg px-3 py-2">
-                <Instagram className="h-4 w-4" />
-                Instagram
-              </a>
-              <a href={prefeituraInfo.facebook ? `https://facebook.com/${prefeituraInfo.facebook || ""}` : "#"} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors bg-secondary/50 rounded-lg px-3 py-2">
-                <Facebook className="h-4 w-4" />
-                Facebook
-              </a>
-              <a href={prefeituraInfo.twitter ? `https://twitter.com/${(prefeituraInfo.twitter || "").replace("@", "")}` : "#"} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors bg-secondary/50 rounded-lg px-3 py-2">
-                <Twitter className="h-4 w-4" />
-                Twitter/X
-              </a>
-              <a href={prefeituraInfo.youtube ? `https://youtube.com/${prefeituraInfo.youtube || ""}` : "#"} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-xs text-muted-foreground hover:text-destructive transition-colors bg-secondary/50 rounded-lg px-3 py-2">
-                <Youtube className="h-4 w-4" />
-                YouTube
-              </a>
+              {socialLinks.map((link) => {
+                const Icon = link.icon;
+                const className = `flex items-center gap-2 text-xs text-muted-foreground ${link.className} transition-colors bg-secondary/50 rounded-lg px-3 py-2`;
+
+                if (!link.href) {
+                  return (
+                    <span key={link.key} className={className}>
+                      <Icon className="h-4 w-4" />
+                      {link.label}
+                    </span>
+                  );
+                }
+
+                return (
+                  <SafeLink key={link.key} href={link.href} target="_blank" className={className}>
+                    <Icon className="h-4 w-4" />
+                    {link.label}
+                  </SafeLink>
+                );
+              })}
             </div>
           </div>
         </div>

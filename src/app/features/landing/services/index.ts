@@ -2,6 +2,11 @@
  * Landing Services - Barrel export
  */
 
+import * as LandingService from './LandingService';
+
+export { LandingService };
+export const landingService = LandingService;
+
 export {
   getCountryData,
   getActiveStates,

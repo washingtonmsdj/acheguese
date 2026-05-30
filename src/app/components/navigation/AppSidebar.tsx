@@ -48,10 +48,11 @@ import { usePublicBrowsingCity } from '@/core/location/hooks/usePublicBrowsingCi
 import { PublicCitySelector } from './PublicCitySelector';
 import { useTheme } from '@/shared/hooks/useTheme';
 import { useHomeCommunityHref } from '@/core/routing/hooks/useHomeCommunityHref';
-import { isReservedSlug } from '@/core/routing/reservedSlugs';
 import { useResolveTerritoryFromUrl } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
+import { buildModuleTerritoryUrl, MODULE_SLUGS } from '@/core/routing/utils/territoryUrls';
 import { useGroupAvailability } from '@/core/territorial/hooks/useGroupAvailability';
 import { ModuleKey } from '@/core/rollout/types';
+import { GastronomyUrlService } from '@/core/verticals/gastronomy/services/GastronomyUrlService';
 
 function getInitials(value?: string | null): string {
   if (!value) return 'U';
@@ -90,18 +91,18 @@ export function AppSidebar() {
 
   const communityContext = useMemo(() => {
     const parts = location.pathname.split('/').filter(Boolean);
-    if (parts[0] !== 'comunidade' || !parts[1] || !parts[2] || !parts[3]) {
+    if (parts[0] !== 'comunidade' || !parts[1] || !parts[2]) {
       return null;
     }
-    if (parts[3] === 'area' || isReservedSlug(parts[3])) {
+    if (parts[3] === 'area') {
       return null;
     }
 
     return {
       state: parts[1],
       city: parts[2],
-      territorySlug: parts[3],
-      basePath: `/comunidade/${parts[1]}/${parts[2]}/${parts[3]}`,
+      territorySlug: parts[2],
+      basePath: `/comunidade/${parts[1]}/${parts[2]}`,
     };
   }, [location.pathname]);
 
@@ -153,6 +154,17 @@ export function AppSidebar() {
     if (!communityContext) return [];
 
     const base = communityContext.basePath;
+    const cityBase = `/${communityContext.state}/${communityContext.city}`;
+    const communityModuleUrls = {
+      business: buildModuleTerritoryUrl(MODULE_SLUGS.business, cityBase),
+      gastronomy: GastronomyUrlService.getTerritoryUrl(cityBase),
+      education: buildModuleTerritoryUrl(MODULE_SLUGS.education, cityBase),
+      services: buildModuleTerritoryUrl(MODULE_SLUGS.services, cityBase),
+      classifieds: buildModuleTerritoryUrl(MODULE_SLUGS.classifieds, cityBase),
+      events: buildModuleTerritoryUrl(MODULE_SLUGS.events, cityBase),
+      map: buildModuleTerritoryUrl(MODULE_SLUGS.map, cityBase),
+      mobility: buildModuleTerritoryUrl(MODULE_SLUGS.mobility, cityBase),
+    } as const;
     const territoryName = formatSlugLabel(communityContext.territorySlug).replace(
       /^Complexo Do\s+/i,
       'Complexo do ',
@@ -181,7 +193,7 @@ export function AppSidebar() {
             icon: Building2,
             label: `Comércios do ${territoryName}`,
             description: `Comércios do ${territoryName}`,
-            href: `${base}/empresas`,
+            href: communityModuleUrls.business,
             visible: moduleVisibility.business,
           },
           {
@@ -189,7 +201,7 @@ export function AppSidebar() {
             icon: UtensilsCrossed,
             label: 'Gastronomia',
             description: 'Restaurantes e cardápios locais',
-            href: `${base}/gastronomia`,
+            href: communityModuleUrls.gastronomy,
             visible: moduleVisibility.gastronomy,
           },
           {
@@ -197,7 +209,7 @@ export function AppSidebar() {
             icon: GraduationCap,
             label: 'Educação',
             description: `Escolas e cursos do ${territoryName}`,
-            href: `${base}/educacao`,
+            href: communityModuleUrls.education,
             // Educação usa a base de disponibilidade de negócio local.
             visible: moduleVisibility.business,
           },
@@ -206,7 +218,7 @@ export function AppSidebar() {
             icon: Wrench,
             label: 'Serviços locais',
             description: `Serviços do ${territoryName}`,
-            href: `${base}/servicos`,
+            href: communityModuleUrls.services,
             visible: moduleVisibility.services,
           },
         ]
@@ -222,7 +234,7 @@ export function AppSidebar() {
             icon: Tag,
             label: 'Classificados da comunidade',
             description: `Classificados do ${territoryName}`,
-            href: `${base}/classificados`,
+            href: communityModuleUrls.classifieds,
             visible: moduleVisibility.classifieds,
           },
           {
@@ -238,7 +250,7 @@ export function AppSidebar() {
             icon: Calendar,
             label: 'Eventos do bairro',
             description: `Eventos do ${territoryName}`,
-            href: `${base}/eventos`,
+            href: communityModuleUrls.events,
             visible: moduleVisibility.events,
           },
         ]
@@ -249,7 +261,7 @@ export function AppSidebar() {
         id: 'tools',
         label: 'Ferramentas',
         items: [
-          { id: 'community-map', icon: MapPin, label: 'Mapa', description: 'Camadas territoriais', href: `${base}/mapa` },
+          { id: 'community-map', icon: MapPin, label: 'Mapa', description: 'Camadas territoriais', href: communityModuleUrls.map },
           { id: 'community-search', icon: Search, label: 'Busca', description: 'Busca no contexto local', href: `/buscar/${communityContext.state}/${communityContext.city}` },
           { id: 'community-nearby', icon: MapPin, label: 'Perto de mim', description: 'Explorar o que está por perto', href: '/perto-de-mim' },
           {
@@ -257,7 +269,7 @@ export function AppSidebar() {
             icon: Car,
             label: 'Mobilidade',
             description: 'Caronas e entregas locais',
-            href: `${base}/mobilidade`,
+            href: communityModuleUrls.mobility,
             visible: moduleVisibility.mobility,
           },
         ]
@@ -268,31 +280,42 @@ export function AppSidebar() {
   }, [communityContext, moduleVisibility]);
 
   const homeHref = '/';
+  const activeCityBase = `/${active.state}/${active.city}`;
+  const activeModuleUrls = {
+    business: buildModuleTerritoryUrl(MODULE_SLUGS.business, activeCityBase),
+    gastronomy: GastronomyUrlService.getTerritoryUrl(activeCityBase),
+    services: buildModuleTerritoryUrl(MODULE_SLUGS.services, activeCityBase),
+    education: buildModuleTerritoryUrl(MODULE_SLUGS.education, activeCityBase),
+    classifieds: buildModuleTerritoryUrl(MODULE_SLUGS.classifieds, activeCityBase),
+    jobs: buildModuleTerritoryUrl(MODULE_SLUGS.jobs, activeCityBase),
+    events: buildModuleTerritoryUrl(MODULE_SLUGS.events, activeCityBase),
+    map: buildModuleTerritoryUrl(MODULE_SLUGS.map, activeCityBase),
+  } as const;
+
   const getNavHref = (item: NavItem): string => {
-    const cityBase = `/${active.state}/${active.city}`;
     switch (item.id) {
       case 'home':
         return homeHref;
       case 'neighborhood':
         return homeCommunityHref;
       case 'business':
-        return `/empresas${cityBase}`;
+        return activeModuleUrls.business;
       case 'gastronomy':
-        return `/gastronomia${cityBase}`;
+        return activeModuleUrls.gastronomy;
       case 'services':
-        return `/servicos${cityBase}`;
+        return activeModuleUrls.services;
       case 'education':
-        return `/educacao${cityBase}`;
+        return activeModuleUrls.education;
       case 'classifieds':
-        return `/classificados${cityBase}`;
+        return activeModuleUrls.classifieds;
       case 'jobs':
-        return `/vagas${cityBase}`;
+        return activeModuleUrls.jobs;
       case 'events':
-        return `/eventos${cityBase}`;
+        return activeModuleUrls.events;
       case 'map':
-        return `/mapa${cityBase}`;
+        return activeModuleUrls.map;
       case 'search':
-        return `/buscar${cityBase}`;
+        return `/buscar${activeCityBase}`;
       default:
         return item.href;
     }

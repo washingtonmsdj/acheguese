@@ -7,6 +7,7 @@
 
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 
 export interface EngagementMetricCardProps {
   readonly icon: LucideIcon;
@@ -30,7 +31,7 @@ export function EngagementMetricCard({
   return (
     <div className="rounded-2xl border border-border bg-card p-4">
       <div className="flex items-center gap-3">
-        <div className={cn("rounded-xl p-2", COLOR_CLASSES[color])}>
+        <div className={cn("rounded-xl p-2", getRecordValue(COLOR_CLASSES, color))}>
           <Icon className="h-4 w-4" />
         </div>
         <div className="flex-1">

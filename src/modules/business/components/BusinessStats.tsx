@@ -17,6 +17,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Card } from "@/shared/components/ui/card";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { cn } from "@/shared/utils/cn";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 import {
   getBusinessAnalyticsSummary,
   getMetricChange,
@@ -186,7 +187,7 @@ export default function BusinessStats({
       <div className="flex items-center gap-2">
         <Badge variant="outline" className="gap-2">
           <Calendar className="h-3 w-3" />
-          {PERIOD_LABEL[period]}
+          {getRecordValue(PERIOD_LABEL, period) ?? period}
         </Badge>
       </div>
 

@@ -6,6 +6,7 @@ import {
   Phone,
   Eye,
 } from "lucide-react";
+import { jobPublicRoutes } from "@/core/verticals/jobs/routes/jobPublicRoutes";
 import {
   CONTRATO_LABELS,
   MODALIDADE_LABELS,
@@ -66,7 +67,7 @@ export function buildVagasListPath(pathname: string): string {
   ) {
     return `/comunidade/${parts[1]}/${parts[2]}/${parts[3]}/vagas`;
   }
-  return "/vagas";
+  return jobPublicRoutes.home();
 }
 
 export function addUniqueListItem(list: string[], input: string): string[] {

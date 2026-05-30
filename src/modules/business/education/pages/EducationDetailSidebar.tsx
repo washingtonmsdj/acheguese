@@ -5,20 +5,18 @@ import { EducationLeadForm, type LeadFormData } from '../components/EducationLea
 import type { EducationProfile } from '../types';
 
 type EducationDetailSidebarProps = {
-  city?: string;
   handleLeadSubmit: (formData: LeadFormData) => Promise<void>;
   profile: EducationProfile;
-  state?: string;
+  showcaseHref: string;
   trackEnrollmentCTAClick: (label: string) => void;
   trackWhatsAppClick: () => void;
   whatsappHref: string | null;
 };
 
 export function EducationDetailSidebar({
-  city,
   handleLeadSubmit,
   profile,
-  state,
+  showcaseHref,
   trackEnrollmentCTAClick,
   trackWhatsAppClick,
   whatsappHref,
@@ -90,7 +88,7 @@ export function EducationDetailSidebar({
         </div>
 
         <Link
-          to={`/educacao/${state}/${city}`}
+          to={showcaseHref}
           className="block rounded-3xl border border-dashed border-border bg-card/40 p-4 text-center text-sm text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
         >
           <ChevronLeft className="mr-1 inline h-4 w-4" /> Voltar para vitrine

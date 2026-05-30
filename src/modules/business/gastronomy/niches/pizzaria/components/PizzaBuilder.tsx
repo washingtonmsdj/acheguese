@@ -78,7 +78,7 @@ export function PizzaBuilder({ businessId, item, catalog, onAddToCart, defaultEd
   const fractions = getEqualFractions(flavorIds.length);
   const flavorSelection = flavorIds.map((flavorId, index) => ({
     flavor_id: flavorId,
-    fraction: fractions[index] ?? 0,
+    fraction: fractions.at(index) ?? 0,
   }));
 
   const validation = useMemo(

@@ -5,6 +5,8 @@
  */
 
 // Services
+export { LandingService, landingService } from './services';
+
 export {
   getCountryData,
   getActiveStates,

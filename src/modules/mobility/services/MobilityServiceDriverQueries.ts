@@ -80,7 +80,7 @@ export async function getDriverDataByProfileIds(profileIds: string[]): Promise<u
   const suspensionMap = new Map(
     profileIds.map((profileId, index) => [
       profileId,
-      isProfileSuspended(profiles[index] as Record<string, unknown> | null),
+      isProfileSuspended(profiles.at(index) as Record<string, unknown> | null),
     ]),
   );
 

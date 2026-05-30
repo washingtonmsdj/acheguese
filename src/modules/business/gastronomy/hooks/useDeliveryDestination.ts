@@ -11,7 +11,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 
 import { locationGeocodingService } from '@/core/location/services/LocationGeocodingService';
 import { residenceService, type UserResidenceWithRelations } from '@/core/residence/services/ResidenceService';
-import { normalizePublicTerritoryPath } from '@/core/routing/utils/territoryUrls';
+import { GastronomyUrlService } from '@/core/verticals/gastronomy/services/GastronomyUrlService';
 import { useRobustGeolocation } from '@/shared/hooks';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
 import {
@@ -476,8 +476,7 @@ export function useDeliveryDestination(options: UseDeliveryDestinationOptions) {
       return;
     }
 
-    const territoryPath = normalizePublicTerritoryPath(geographicPath);
-    const targetUrl = `/gastronomia${territoryPath}`;
+    const targetUrl = GastronomyUrlService.getTerritoryUrl(geographicPath);
 
     if (location.pathname !== targetUrl) {
       navigate(targetUrl);

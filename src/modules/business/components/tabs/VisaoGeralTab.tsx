@@ -14,6 +14,7 @@ import {
   Star,
 } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 import PhotoGallery from "@/modules/business/components/PhotoGallery.tsx";
 import type { VisaoGeralTabProps, ModoAtendimentoIcon } from "@/modules/business/types/components";
 import type { BizData } from "@/modules/business/types";
@@ -27,17 +28,17 @@ const MODOS_ICONS: Record<string, ModoAtendimentoIcon> = {
   delivery: {
     icon: Truck,
     label: "Delivery",
-    color: "bg-green-500/10 text-green-600",
+    color: "bg-success/10 text-success",
   },
   domicilio: {
     icon: Store,
     label: "A domicílio",
-    color: "bg-yellow-500/10 text-yellow-600",
+    color: "bg-warning/10 text-warning",
   },
   online: {
     icon: Globe,
     label: "Online",
-    color: "bg-sky-500/10 text-sky-600",
+    color: "bg-accent text-accent-foreground",
   },
 };
 
@@ -92,7 +93,7 @@ export function VisaoGeralTab({
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
             {business.modos_atendimento.map((modo: string) => {
-              const m = MODOS_ICONS[modo];
+              const m = getRecordValue(MODOS_ICONS, modo);
               if (!m) return null;
               const Icon = m.icon;
               return (

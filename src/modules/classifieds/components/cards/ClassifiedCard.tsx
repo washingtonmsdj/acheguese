@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/utils/cn";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 import { getRelativeTime } from "../../utils";
 import { STATUS_CONFIG } from "../../sections/types";
 import type { Classificado } from "../../sections/types";
@@ -38,8 +39,8 @@ export const ClassifiedCard = React.forwardRef<HTMLDivElement, ClassifiedCardPro
       entrega_disponivel?: boolean;
       vendedor?: (Classificado["vendedor"] & { rating?: number }) | null;
     };
-    const status = STATUS_CONFIG[ad.status] || STATUS_CONFIG.active;
-    const firstImage = ad.fotos?.[0] || "/placeholder.svg";
+    const status = getRecordValue(STATUS_CONFIG, ad.status) ?? STATUS_CONFIG.active;
+    const firstImage = ad.fotos?.at(0) || "/placeholder.svg";
     const timeAgo = getRelativeTime(ad.created_at);
 
     return (

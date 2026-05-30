@@ -59,6 +59,9 @@ import { openSafeExternalUrl } from '@/shared/utils/safeRedirect';
 import { communityEventsRuntimeService } from '@/core/community/services/CommunityEventsRuntimeService';
 import { mapCommunityEventToEvent } from '../utils/eventAdapters';
 import { useConfirmActionDialog } from '@/shared/hooks/useConfirmActionDialog';
+import { EventEngagementService } from '../services/EventEngagementService';
+import { useTerritorialContextOptional } from '@/core/routing/components/TerritorialLayout';
+import { useCommunityUrls } from '@/core/routing/hooks/useCommunityUrls';
 
 // ============================================================================
 // MAIN COMPONENT
@@ -74,6 +77,8 @@ export default function EventDetailPage() {
   const { isFavorited, toggleFavorite } = useFavorites();
   const { toast } = useToast();
   const { activeProfile } = useSessionContext();
+  const territorialContext = useTerritorialContextOptional();
+  const eventUrls = useCommunityUrls(territorialContext?.resolved);
   const queryClient = useQueryClient();
   const { confirm, ConfirmDialog } = useConfirmActionDialog();
 
@@ -94,6 +99,14 @@ export default function EventDetailPage() {
         upcoming: true,
       });
       return rows.map(mapCommunityEventToEvent).filter((candidate) => candidate.id !== event?.id);
+    },
+  });
+  const { data: eventReviews = [] } = useQuery({
+    queryKey: ['event-reviews', event?.id],
+    enabled: Boolean(event?.id),
+    queryFn: async () => {
+      if (!event?.id) return [];
+      return EventEngagementService.getReviews(event.id);
     },
   });
 
@@ -134,9 +147,10 @@ export default function EventDetailPage() {
 
   const isSoldOut = event.tickets.every(t => t.quantity_available === 0);
   const eventIsFavorited = isFavorited(event.id);
+  const eventDetailUrl = eventUrls.eventDetail(event.id);
 
   const handleFavorite = () => {
-    toggleFavorite(event.id);
+    void toggleFavorite(event.id);
   };
 
   const handleShare = () => {
@@ -420,7 +434,31 @@ export default function EventDetailPage() {
             eventId={event.id}
             eventTitle={event.title}
             eventDate={event.start_date}
-            canReview={new Date(event.start_date) < new Date()}
+            reviews={eventReviews}
+            canReview={new Date(event.start_date) < new Date() && Boolean(activeProfile?.id)}
+            reviewerProfileId={activeProfile?.id ?? null}
+            onSubmitReview={async ({ rating, comment }) => {
+              if (!activeProfile?.id) {
+                throw new Error('Perfil ativo necessario para avaliar.');
+              }
+
+              const savedReview = await EventEngagementService.submitReview({
+                eventId: event.id,
+                reviewerProfileId: activeProfile.id,
+                rating,
+                comment,
+              });
+              await queryClient.invalidateQueries({ queryKey: ['event-reviews', event.id] });
+              return savedReview;
+            }}
+            onMarkHelpful={async (reviewId) => {
+              if (!activeProfile?.id) {
+                throw new Error('Perfil ativo necessario para marcar utilidade.');
+              }
+
+              await EventEngagementService.markReviewHelpful(reviewId, activeProfile.id);
+              await queryClient.invalidateQueries({ queryKey: ['event-reviews', event.id] });
+            }}
           />
 
           {/* Location Section */}
@@ -538,7 +576,13 @@ export default function EventDetailPage() {
           </section>
 
           {/* Related Events Section */}
-          <EventRelated currentEvent={event} events={relatedEvents} maxEvents={4} />
+          <EventRelated
+            currentEvent={event}
+            events={relatedEvents}
+            eventsUrl={eventUrls.events}
+            getEventUrl={eventUrls.eventDetail}
+            maxEvents={4}
+          />
         </div>
 
         {/* Share Modal */}
@@ -546,7 +590,7 @@ export default function EventDetailPage() {
           isOpen={showShareModal}
           onClose={() => setShowShareModal(false)}
           eventTitle={event.title}
-          eventUrl={`/eventos/${event.id}`}
+          eventUrl={eventDetailUrl}
           eventDescription={event.short_description}
         />
 

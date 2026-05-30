@@ -21,10 +21,12 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { useAuth } from "@/core/auth/hooks/useAuth";
+import { jobPublicRoutes } from "@/core/verticals/jobs/routes/jobPublicRoutes";
 import { useVagas } from "../hooks/useVagas";
 import { useVagasLocation } from "../hooks/useVagasLocation";
 import { VagasHeader, VagaCard, VagasFilters, VagasLoading, VagasEmpty, VagasError } from "../components";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
+import type { Vaga } from "../types/vagas.types";
 
 import heroImg from "@/assets/empresas-hero.jpg";
 
@@ -63,7 +65,7 @@ export default function VagasListingPage({ resolved, activeMemberIds }: VagasLis
   const navigate = useNavigate();
   const { user } = useAuth();
   const appUrls = useAppUrls(resolved);
-  const { activeLocationName } = useVagasLocation();
+  const { activeLocation, activeLocationName } = useVagasLocation();
 
   // ✅ Extrair nome do território resolvido com preposição adequada
   const territoryName = useMemo(() => {
@@ -89,7 +91,20 @@ export default function VagasListingPage({ resolved, activeMemberIds }: VagasLis
     isError,
   } = useVagas({ resolved, activeMemberIds });
 
-  const handleVagaClick = (id: string) => navigate(`/vagas/detalhe/${id}`);
+  const publishUrl = jobPublicRoutes.publish();
+  const handleVagaClick = (vaga: Vaga) => {
+    if (activeLocation?.geographic_path) {
+      try {
+        navigate(jobPublicRoutes.detailFromGeographicPath(activeLocation.geographic_path, vaga.slug));
+        return;
+      } catch {
+        navigate(appUrls.jobs);
+        return;
+      }
+    }
+
+    navigate(appUrls.jobs);
+  };
 
   return (
     <div className="min-h-screen w-full bg-background text-foreground flex flex-col">
@@ -111,7 +126,7 @@ export default function VagasListingPage({ resolved, activeMemberIds }: VagasLis
             <span className="font-semibold text-foreground">Contrate talentos locais!</span>{" "}
             Publique vagas gratuitamente e encontre profissionais da sua região.
           </span>
-          <button onClick={() => navigate(user ? "/vagas/publicar" : "/login")} className="text-primary font-semibold hover:underline ml-1 flex items-center gap-0.5">
+          <button onClick={() => navigate(user ? publishUrl : "/login")} className="text-primary font-semibold hover:underline ml-1 flex items-center gap-0.5">
             Publicar <ArrowRight className="h-3 w-3" />
           </button>
         </div>
@@ -178,7 +193,7 @@ export default function VagasListingPage({ resolved, activeMemberIds }: VagasLis
                   vaga={vaga} 
                   variant="compact"
                   index={i} 
-                  onClick={() => handleVagaClick(vaga.id)}
+                  onClick={() => handleVagaClick(vaga)}
                   locationName={activeLocationName}
                 />
               ))}
@@ -229,7 +244,7 @@ export default function VagasListingPage({ resolved, activeMemberIds }: VagasLis
                 vaga={vaga} 
                 variant="list"
                 index={i} 
-                onClick={() => handleVagaClick(vaga.id)}
+                onClick={() => handleVagaClick(vaga)}
                 locationName={activeLocationName}
               />
             ))}
@@ -252,7 +267,7 @@ export default function VagasListingPage({ resolved, activeMemberIds }: VagasLis
                   vaga={vaga} 
                   variant="compact"
                   index={i} 
-                  onClick={() => handleVagaClick(vaga.id)}
+                  onClick={() => handleVagaClick(vaga)}
                   locationName={activeLocationName}
                 />
               ))}
@@ -325,7 +340,7 @@ export default function VagasListingPage({ resolved, activeMemberIds }: VagasLis
             Alcance milhares de candidatos qualificados da sua região. Publicação gratuita, sem taxas e sem burocracia.
           </p>
           <Button
-            onClick={() => navigate(user ? "/vagas/publicar" : "/login")}
+            onClick={() => navigate(user ? publishUrl : "/login")}
             size="lg"
             className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl"
           >

@@ -4,10 +4,11 @@ import { toast } from "sonner";
 import { ArrowLeft, Store } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import BusinessSEO from "@/shared/components/seo/BusinessSEO";
+import BusinessSEO from "@/core/business/components/seo/BusinessSEO";
 import BranchNetworkBlock from "@/core/business/components/BranchNetworkBlock";
 import { BusinessService } from "@/core/business/services/BusinessService";
 import { BusinessHoursService } from "@/core/business";
+import { buildBusinessPublicUrlFromTerritory } from "@/core/business/utils/businessPublicUrls";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { useBusinessFavorite } from "@/modules/business/hooks/useBusinessFavorite";
 import { useBusinessProducts } from "@/modules/business/hooks/useBusinessProducts";
@@ -17,6 +18,7 @@ import { usePublicBusinessSnapshot } from "@/modules/business/public/hooks";
 import { LAUNCH_URLS } from "@/config/territory";
 import { buildGoogleMapsSearchUrl } from "@/shared/utils/contactLinks";
 import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 import {
   EmpresaAvaliacoesSection,
   EmpresaCTAsSection,
@@ -158,8 +160,14 @@ export default function EmpresaDetailLandingPage(
     }
 
     const days = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
-    const dayKey = days[new Date().getDay()];
-    const today = (openingHours as Record<string, { open?: string; close?: string; closed?: boolean }>)[dayKey];
+    const dayKey = days.at(new Date().getDay());
+    if (!dayKey) {
+      return { open: null, todayHours: null };
+    }
+    const today = getRecordValue(
+      openingHours as Record<string, { open?: string; close?: string; closed?: boolean }>,
+      dayKey,
+    );
 
     if (!today) {
       return { open: null, todayHours: null };
@@ -234,10 +242,7 @@ export default function EmpresaDetailLandingPage(
               rating: detail?.rating || 0,
               isOpen: undefined,
               canonicalUrl: detail?.slug && detail?.geographic_path
-                ? `/empresas/${detail.geographic_path.replace("/br/", "")}/${detail.slug}`.replace(
-                    /\/+/g,
-                    "/",
-                  )
+                ? buildBusinessPublicUrlFromTerritory(detail.geographic_path, detail.slug)
                 : undefined,
             } satisfies NearbyBusiness;
           })

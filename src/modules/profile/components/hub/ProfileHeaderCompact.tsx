@@ -18,6 +18,7 @@ import {
   Star,
   Users,
 } from "lucide-react";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 import { motion } from "framer-motion";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
@@ -74,7 +75,7 @@ function getInitials(name?: string | null): string {
   if (!name) return "U";
   return name
     .split(" ")
-    .map((part) => part[0])
+    .map((part) => part.at(0))
     .join("")
     .slice(0, 2)
     .toUpperCase();
@@ -90,7 +91,8 @@ function formatPlanLabel(value?: string | null): string {
     premium: "Premium",
     enterprise: "Enterprise",
   };
-  return map[value] ?? value[0].toUpperCase() + value.slice(1);
+  const firstLetter = value.at(0);
+  return getRecordValue(map, value) ?? (firstLetter ? firstLetter.toUpperCase() + value.slice(1) : value);
 }
 
 function getAccountTone(state: AccountSnapshot["accountState"]): string {

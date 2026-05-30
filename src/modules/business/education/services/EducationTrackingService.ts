@@ -14,6 +14,7 @@
 
 import { supabase } from '@/core/infrastructure/supabase';
 import { logger } from '@/shared/utils/logger';
+import { secureRandomString } from '@/shared/utils/secureRandom';
 import type {
   EducationAnalyticsEventType,
   EducationNicheKey,
@@ -45,7 +46,7 @@ function getSessionId(): string {
   let sessionId = sessionStorage.getItem(key);
 
   if (!sessionId) {
-    sessionId = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    sessionId = `${Date.now()}-${secureRandomString(12)}`;
     sessionStorage.setItem(key, sessionId);
   }
 

@@ -27,6 +27,11 @@ export interface VendedorPerfil extends VendedorWithAds {
   whatsapp?: string | null;
   all_ads: Array<{
     id: string;
+    public_id?: string | null;
+    slug?: string | null;
+    geographic_path?: string | null;
+    category_slug?: string | null;
+    subcategory_slug?: string | null;
     title: string;
     price: number;
     photos: string[];
@@ -53,6 +58,11 @@ export function useVendedorPerfil(sellerId: string | undefined) {
         const activeAds = classifieds.filter((ad) => ad.is_active);
         const allAds = classifieds.map((ad) => ({
           id: ad.id,
+          public_id: ad.public_id,
+          slug: ad.slug,
+          geographic_path: ad.geographic_path,
+          category_slug: ad.category_slug,
+          subcategory_slug: ad.subcategory_slug,
           title: ad.title,
           price: ad.price,
           photos: ad.photos || [],

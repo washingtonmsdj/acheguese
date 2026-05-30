@@ -14,10 +14,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/shared/components/ui/button';
 import MapaPageV4 from '@/core/maps/pages/MapaPageV4';
 import { useTerritorialContextOptional } from '@/core/routing/components/TerritorialLayout';
+import { useCommunityUrls } from '@/core/routing/hooks/useCommunityUrls';
 
 export default function EventsMapPage() {
   const navigate = useNavigate();
   const territorialContext = useTerritorialContextOptional();
+  const eventUrls = useCommunityUrls(territorialContext?.resolved);
 
   return (
     <>
@@ -38,7 +40,7 @@ export default function EventsMapPage() {
                 <span className="hidden sm:inline">Início</span>
               </Link>
               <span>/</span>
-              <Link to="/eventos" className="transition-colors hover:text-foreground">
+              <Link to={eventUrls.events} className="transition-colors hover:text-foreground">
                 Eventos
               </Link>
               <span>/</span>
@@ -78,7 +80,7 @@ export default function EventsMapPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => navigate('/eventos')}
+                  onClick={() => navigate(eventUrls.events)}
                   className="gap-2"
                 >
                   <List className="h-4 w-4" />
@@ -87,7 +89,7 @@ export default function EventsMapPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => navigate('/eventos/calendario')}
+                  onClick={() => navigate(eventUrls.eventCalendar)}
                   className="gap-2"
                 >
                   <Calendar className="h-4 w-4" />

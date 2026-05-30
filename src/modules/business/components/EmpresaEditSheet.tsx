@@ -19,6 +19,7 @@ import { ScrollArea } from "@/shared/components/ui/scroll-area";
 import { Clock, Lightbulb, Save, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/shared/utils/cn";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 import { DRIVER_STATUS } from "@/shared/types/constants";
 import { profileService } from "@/core/profiles/services";
 import { InlineFieldError } from "@/shared/components/ui/InlineFieldError";
@@ -65,7 +66,7 @@ interface Props {
 
 const CATEGORY_OPTIONS = BUSINESS_CATEGORIES.map((id) => ({
   id,
-  label: CATEGORY_CONFIGS[id]?.label ?? id,
+  label: getRecordValue(CATEGORY_CONFIGS, id)?.label ?? id,
 }));
 
 const MODOS = [

@@ -5,6 +5,7 @@
  */
 
 import { UtensilsCrossed } from 'lucide-react';
+import { gastronomyPublicRoutes } from '@/core/verticals/gastronomy/routes/gastronomyPublicRoutes';
 import { ModuleHeader } from '@/shared/components/module-header';
 
 interface GastronomyHeaderProps {
@@ -28,7 +29,7 @@ export function GastronomyHeader({ searchQuery, onSearchChange }: GastronomyHead
       onSearchChange={onSearchChange}
       searchPlaceholder="Buscar restaurantes, pratos..."
       taglines={GASTRONOMY_TAGLINES}
-      favoritesLink="/gastronomia/favoritos"
+      favoritesLink={gastronomyPublicRoutes.favorites()}
       showFavorites={true}
     />
   );

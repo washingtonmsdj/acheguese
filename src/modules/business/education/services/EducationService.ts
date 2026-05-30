@@ -8,6 +8,7 @@
  */
 
 import { logger } from '@/shared/utils/logger';
+import { getRecordValue, setRecordValue } from '@/shared/utils/recordLookup';
 import { BusinessService } from '@/core/business/services/BusinessService';
 import { BusinessOwnershipService } from '@/core/business/services/BusinessOwnershipService';
 import { EDUCATION_LEAD_STATUS, EDUCATION_PROFILE_STATUS } from '../constants';
@@ -590,12 +591,12 @@ export const EducationService = {
 
   /** Retorna label do status do perfil */
   getProfileStatusLabel(status: EducationProfileStatus): string {
-    return EDUCATION_PROFILE_STATUS[status]?.label ?? status;
+    return getRecordValue(EDUCATION_PROFILE_STATUS, status)?.label ?? status;
   },
 
   /** Retorna cor do status do perfil */
   getProfileStatusColor(status: EducationProfileStatus): string {
-    return EDUCATION_PROFILE_STATUS[status]?.color ?? 'gray';
+    return getRecordValue(EDUCATION_PROFILE_STATUS, status)?.color ?? 'gray';
   },
 
   /** Verifica se programa está disponível (ativo e com vagas) */
@@ -617,12 +618,12 @@ export const EducationService = {
 
   /** Retorna label do status do lead */
   getLeadStatusLabel(status: EducationLeadStatus): string {
-    return EDUCATION_LEAD_STATUS[status]?.label ?? status;
+    return getRecordValue(EDUCATION_LEAD_STATUS, status)?.label ?? status;
   },
 
   /** Retorna cor do status do lead */
   getLeadStatusColor(status: EducationLeadStatus): string {
-    return EDUCATION_LEAD_STATUS[status]?.color ?? 'gray';
+    return getRecordValue(EDUCATION_LEAD_STATUS, status)?.color ?? 'gray';
   },
 
   /** Verifica se lead está em status ativo (não terminal) */
@@ -670,7 +671,7 @@ export const EducationService = {
       enrolled: 100,
       lost: 0,
     };
-    return probabilities[status] ?? 0;
+    return getRecordValue(probabilities, status) ?? 0;
   },
 
   /** Calcula resumo do pipeline (versão síncrona para dados já carregados) */
@@ -685,7 +686,8 @@ export const EducationService = {
     };
 
     leads.forEach((lead) => {
-      byStatus[lead.status] = (byStatus[lead.status] ?? 0) + 1;
+      const count = getRecordValue(byStatus, lead.status) ?? 0;
+      Object.assign(byStatus, setRecordValue(byStatus, lead.status, count + 1));
     });
 
     const total = leads.length;

@@ -11,6 +11,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
 import { Sparkles, ArrowRight } from 'lucide-react';
 import type { ProfileNicheConfig } from '../types';
+import { getRecordValue } from '@/shared/utils/recordLookup';
 
 interface NicheUpgradeBannerProps {
   profile: ProfileNicheConfig;
@@ -40,30 +41,30 @@ export function NicheUpgradeBanner({
   };
 
   const missingLabels = profile.missing_capabilities
-    .map((cap) => capabilityLabels[cap] || cap)
+    .map((cap) => getRecordValue(capabilityLabels, cap) ?? cap)
     .slice(0, 3);
 
   const hasMore = profile.missing_capabilities.length > 3;
 
   return (
-    <Alert className="border-blue-200 bg-blue-50">
-      <Sparkles className="h-4 w-4 text-blue-600" />
-      <AlertTitle className="text-blue-900 font-semibold">
+    <Alert className="border-primary/20 bg-primary/5">
+      <Sparkles className="h-4 w-4 text-primary" />
+      <AlertTitle className="text-primary font-semibold">
         Novas funcionalidades disponíveis!
       </AlertTitle>
-      <AlertDescription className="text-blue-800">
+      <AlertDescription className="text-foreground">
         <p className="mb-3">
           Seu negócio pode aproveitar novos recursos para melhorar a experiência
           dos clientes:
         </p>
         <div className="flex flex-wrap gap-2 mb-4">
           {missingLabels.map((label) => (
-            <Badge key={label} variant="secondary" className="bg-blue-100">
+            <Badge key={label} variant="secondary" className="bg-primary/10">
               {label}
             </Badge>
           ))}
           {hasMore && (
-            <Badge variant="secondary" className="bg-blue-100">
+            <Badge variant="secondary" className="bg-primary/10">
               +{profile.missing_capabilities.length - 3} mais
             </Badge>
           )}
@@ -73,7 +74,7 @@ export function NicheUpgradeBanner({
             <Button
               size="sm"
               onClick={onUpgrade}
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-primary hover:bg-primary/90"
             >
               Configurar Agora
               <ArrowRight className="ml-2 h-4 w-4" />

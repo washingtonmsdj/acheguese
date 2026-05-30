@@ -5,6 +5,11 @@
 
 import { useState } from "react";
 import { BusinessIdentityField } from "@/core/public-identity/components/domains/BusinessIdentityField";
+import {
+  BUSINESS_PUBLIC_URL_PREVIEW_SLUG,
+  buildBusinessPremiumUrl,
+  buildBusinessPublicUrlFromSegments,
+} from "@/core/business/utils/businessPublicUrls";
 import { IdentityImpactNotice } from "@/core/public-identity/components/IdentityImpactNotice";
 import { IdentityChangeConfirmDialog } from "@/core/public-identity/components/IdentityChangeConfirmDialog";
 import { getBusinessCreateFieldCopy } from "@/modules/business/components/create/businessCreateCopy";
@@ -67,18 +72,31 @@ export function BusinessSlugSection({
   const stateSegment = toUrlSegment(stateName, "uf");
   const citySegment = toUrlSegment(cityName, "cidade");
   const districtSegment = toUrlSegment(districtName, "bairro");
+  const previewTerritory = {
+    state: stateSegment,
+    city: citySegment,
+    district: districtSegment,
+  };
 
   const canonicalPreviewFn = (value: string) => {
     if (!value) return "";
-    return buildPublicAbsoluteUrl(`/empresas/${stateSegment}/${citySegment}/${districtSegment}/${value}`);
+    return buildPublicAbsoluteUrl(
+      buildBusinessPublicUrlFromSegments({
+        ...previewTerritory,
+        slug: value,
+      }),
+    );
   };
 
   const canonicalPreviewSkeleton = buildPublicAbsoluteUrl(
-    `/empresas/${stateSegment}/${citySegment}/${districtSegment}/seu-link`,
+    buildBusinessPublicUrlFromSegments({
+      ...previewTerritory,
+      slug: BUSINESS_PUBLIC_URL_PREVIEW_SLUG,
+    }),
   );
 
   const previewFn = isPremium
-    ? (value: string) => (value ? buildPublicAbsoluteUrl(`/p/${value}`) : "")
+    ? (value: string) => (value ? buildPublicAbsoluteUrl(buildBusinessPremiumUrl(value)) : "")
     : canonicalPreviewFn;
 
   const slugSafety =
@@ -171,7 +189,9 @@ export function BusinessSlugSection({
       {!isPremium && (
         <p className="text-xs text-muted-foreground">
           Link curto premium disponível no plano pago:{" "}
-          <span className="font-mono">{buildPublicAbsoluteUrl(`/p/${slug || "seu-link"}`)}</span>
+          <span className="font-mono">
+            {buildPublicAbsoluteUrl(buildBusinessPremiumUrl(slug || BUSINESS_PUBLIC_URL_PREVIEW_SLUG))}
+          </span>
         </p>
       )}
 

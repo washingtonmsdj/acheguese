@@ -1,13 +1,14 @@
 import type { CommunicationDashboardView } from "@/core/communication-territorial/types/communicationDashboard";
+import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
 import { mobilityRoutes } from "@/core/mobility/routes/mobilityRoutes";
 
 export const centralRoutes = {
   home: "/central",
   empresas: {
-    list: "/central/empresas",
-    create: "/central/empresas/nova",
-    createByVertical: (verticalSlug: string) => `/central/empresas/nova/${verticalSlug}`,
-    manage: (businessId: string) => `/central/empresas/${businessId}`,
+    list: businessManagementRoutes.list(),
+    create: businessManagementRoutes.create(),
+    createByVertical: (verticalSlug: string) => businessManagementRoutes.createByVerticalSlug(verticalSlug),
+    manage: (businessId: string) => businessManagementRoutes.overview(businessId),
   },
   eventos: {
     list: "/central/eventos",

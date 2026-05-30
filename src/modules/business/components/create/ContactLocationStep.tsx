@@ -11,6 +11,7 @@ import {
 } from "@/shared/components/ui/card";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { TerritorialSelector } from "@/core/location/components/TerritorialSelector";
+import { getRecordValue, setRecordValue } from "@/shared/utils/recordLookup";
 import { getBusinessCreateFieldCopy } from "./businessCreateCopy";
 
 interface DayHoursValue {
@@ -111,13 +112,12 @@ export function ContactLocationStep({
   };
 
   const updateDay = (day: string, patch: Partial<DayHoursValue>) => {
-    onHoursChange({
-      ...hours,
-      [day]: {
-        ...hours[day],
+    onHoursChange(
+      setRecordValue(hours, day, {
+        ...(getRecordValue(hours, day) ?? { open: "", close: "" }),
         ...patch,
-      },
-    });
+      }),
+    );
   };
 
   return (

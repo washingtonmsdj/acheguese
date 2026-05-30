@@ -11,6 +11,8 @@ import { Calendar, Search, Home, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/shared/components/ui/button';
 import { Helmet } from 'react-helmet-async';
+import { useTerritorialContextOptional } from '@/core/routing/components/TerritorialLayout';
+import { useCommunityUrls } from '@/core/routing/hooks/useCommunityUrls';
 
 interface EventNotFoundProps {
   eventId?: string;
@@ -19,6 +21,8 @@ interface EventNotFoundProps {
 
 export function EventNotFound({ eventId, message }: EventNotFoundProps) {
   const navigate = useNavigate();
+  const territorialContext = useTerritorialContextOptional();
+  const eventUrls = useCommunityUrls(territorialContext?.resolved);
 
   return (
     <>
@@ -74,7 +78,7 @@ export function EventNotFound({ eventId, message }: EventNotFoundProps) {
               Voltar
             </Button>
             <Button
-              onClick={() => navigate('/eventos')}
+              onClick={() => navigate(eventUrls.events)}
               className="gap-2"
               size="lg"
             >

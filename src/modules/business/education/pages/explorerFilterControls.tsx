@@ -39,6 +39,32 @@ export function labelFromOptions(options: readonly { key: string; label: string 
 }
 
 type NicheOption = { nicheKey: string; displayName: string; isBeta?: boolean };
+type ArrayFilterKey = 'niches' | 'schoolNetworks' | 'institutionTypes' | 'infrastructure' | 'modalities' | 'audiences';
+
+function toggleValue(values: readonly string[], value: string): string[] {
+  return values.includes(value)
+    ? values.filter((item) => item !== value)
+    : [...values, value];
+}
+
+function toggleFilterArray(filters: FilterState, key: ArrayFilterKey, value: string): FilterState {
+  switch (key) {
+    case 'niches':
+      return { ...filters, niches: toggleValue(filters.niches, value) };
+    case 'schoolNetworks':
+      return { ...filters, schoolNetworks: toggleValue(filters.schoolNetworks, value) };
+    case 'institutionTypes':
+      return { ...filters, institutionTypes: toggleValue(filters.institutionTypes, value) };
+    case 'infrastructure':
+      return { ...filters, infrastructure: toggleValue(filters.infrastructure, value) };
+    case 'modalities':
+      return { ...filters, modalities: toggleValue(filters.modalities, value) };
+    case 'audiences':
+      return { ...filters, audiences: toggleValue(filters.audiences, value) };
+  }
+
+  return filters;
+}
 
 interface SharedFilterProps {
   filters: FilterState;
@@ -62,14 +88,11 @@ export function FilterPanel({
   onClear,
   nicheIcons,
 }: FilterPanelProps) {
-  const toggle = <K extends 'niches' | 'schoolNetworks' | 'institutionTypes' | 'infrastructure' | 'modalities' | 'audiences'>(
-    key: K,
+  const toggle = (
+    key: ArrayFilterKey,
     value: string,
   ) => {
-    setFilters((prev) => ({
-      ...prev,
-      [key]: prev[key].includes(value) ? prev[key].filter((v) => v !== value) : [...prev[key], value],
-    }));
+    setFilters((prev) => toggleFilterArray(prev, key, value));
   };
 
   return (
@@ -197,8 +220,8 @@ function FilterPill({ active, onClear, icon: Icon, label, count, children }: { a
 }
 
 export function FilterBar({ filters, setFilters, niches, districts, view, setView, resultsCount, onClear, nicheIcons }: FilterBarProps) {
-  const toggle = <K extends 'niches' | 'schoolNetworks' | 'institutionTypes' | 'infrastructure' | 'modalities' | 'audiences'>(key: K, value: string) => {
-    setFilters((prev) => ({ ...prev, [key]: prev[key].includes(value) ? prev[key].filter((v) => v !== value) : [...prev[key], value] }));
+  const toggle = (key: ArrayFilterKey, value: string) => {
+    setFilters((prev) => toggleFilterArray(prev, key, value));
   };
 
   const availableActive = filters.onlyAvailable;

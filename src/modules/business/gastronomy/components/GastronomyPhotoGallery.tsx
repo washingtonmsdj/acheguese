@@ -20,6 +20,7 @@ export function GastronomyPhotoGallery({
   businessName,
 }: GastronomyPhotoGalleryProps) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const lightboxPhotoUrl = lightboxIndex !== null ? photos.at(lightboxIndex) ?? null : null;
 
   if (!photos.length) return null;
 
@@ -60,7 +61,7 @@ export function GastronomyPhotoGallery({
       </section>
 
       {/* Lightbox */}
-      {lightboxIndex !== null && (
+      {lightboxIndex !== null && lightboxPhotoUrl && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
           onClick={closeLightbox}
@@ -92,7 +93,7 @@ export function GastronomyPhotoGallery({
 
           {/* Imagem */}
           <img
-            src={photos[lightboxIndex]}
+            src={lightboxPhotoUrl}
             alt={`${businessName} — foto ${lightboxIndex + 1}`}
             className="max-h-[85vh] max-w-[90vw] rounded-xl object-contain"
             onClick={(e) => e.stopPropagation()}

@@ -20,6 +20,7 @@ import {
 } from '@/shared/components/ui/select';
 import { useToast } from '@/shared/components/ui/use-toast';
 import { useConfirmActionDialog } from '@/shared/hooks/useConfirmActionDialog';
+import { getRecordValue } from '@/shared/utils/recordLookup';
 import { useSessionContext } from '@/core/session';
 import {
   useAdminTouristPoints,
@@ -93,7 +94,10 @@ export default function AdminTouristPointsPage() {
   const handleStatusChange = async (point: TouristPoint, status: TouristPointStatus) => {
     try {
       await statusMutation.mutateAsync({ id: point.id, status });
-      toast({ title: 'Status atualizado', description: TOURIST_POINT_STATUS_LABELS[status] });
+      toast({
+        title: 'Status atualizado',
+        description: getRecordValue(TOURIST_POINT_STATUS_LABELS, status) ?? status,
+      });
     } catch (err: unknown) {
       toast({
         title: 'Erro',
@@ -230,10 +234,10 @@ export default function AdminTouristPointsPage() {
                           }
                           className="text-[10px]"
                         >
-                          {TOURIST_POINT_STATUS_LABELS[point.status]}
+                          {getRecordValue(TOURIST_POINT_STATUS_LABELS, point.status) ?? point.status}
                         </Badge>
                         <Badge variant="outline" className="text-[10px]">
-                          {PRICE_TYPE_LABELS[point.price_type]}
+                          {getRecordValue(PRICE_TYPE_LABELS, point.price_type) ?? point.price_type}
                         </Badge>
                         {point.location && (
                           <span className="text-xs text-muted-foreground truncate">

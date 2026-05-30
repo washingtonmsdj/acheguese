@@ -1,109 +1,86 @@
-/**
- * ⭐ USE FAVORITES HOOK
- * 
- * Hook para gerenciar favoritos de eventos
- * Persiste no localStorage e sincroniza entre abas
- * 
- * @version 1.0.0
- */
-
-import { useState, useEffect, useCallback } from 'react';
-
-const FAVORITES_KEY = 'acheguese_event_favorites';
+import { useCallback, useEffect, useState } from 'react';
+import { useSessionContext } from '@/core/session';
+import { logger } from '@/shared/utils/logger';
+import { EventEngagementService } from '../services/EventEngagementService';
 
 export function useFavorites() {
   const [favorites, setFavorites] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { activeProfile } = useSessionContext();
 
-  // Load favorites from localStorage on mount
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(FAVORITES_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        setFavorites(Array.isArray(parsed) ? parsed : []);
+    let mounted = true;
+
+    async function loadFavorites() {
+      if (!activeProfile?.id) {
+        setFavorites([]);
+        setIsLoading(false);
+        return;
       }
-    } catch (error) {
-      console.error('Failed to load favorites:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
 
-  // Save favorites to localStorage whenever they change
-  useEffect(() => {
-    if (!isLoading) {
-      try {
-        localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
-        // Dispatch custom event for cross-tab sync
-        window.dispatchEvent(new CustomEvent('favorites-updated', { detail: favorites }));
-      } catch (error) {
-        console.error('Failed to save favorites:', error);
+      setIsLoading(true);
+      const favoriteEventIds = await EventEngagementService.getFavoriteEventIds(activeProfile.id);
+      if (mounted) {
+        setFavorites(favoriteEventIds);
+        setIsLoading(false);
       }
     }
-  }, [favorites, isLoading]);
 
-  // Listen for changes from other tabs
-  useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === FAVORITES_KEY && e.newValue) {
-        try {
-          const parsed = JSON.parse(e.newValue);
-          setFavorites(Array.isArray(parsed) ? parsed : []);
-        } catch (error) {
-          console.error('Failed to sync favorites:', error);
-        }
-      }
-    };
-
-    const handleCustomEvent = (e: CustomEvent) => {
-      setFavorites(e.detail);
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('favorites-updated', handleCustomEvent as EventListener);
+    loadFavorites();
 
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('favorites-updated', handleCustomEvent as EventListener);
+      mounted = false;
     };
-  }, []);
+  }, [activeProfile?.id]);
 
-  // Check if event is favorited
-  const isFavorited = useCallback((eventId: string) => {
-    return favorites.includes(eventId);
-  }, [favorites]);
+  const isFavorited = useCallback((eventId: string) => favorites.includes(eventId), [favorites]);
 
-  // Toggle favorite
-  const toggleFavorite = useCallback((eventId: string) => {
-    setFavorites(prev => {
-      if (prev.includes(eventId)) {
-        return prev.filter(id => id !== eventId);
-      } else {
-        return [...prev, eventId];
-      }
-    });
-  }, []);
+  const addFavorite = useCallback(async (eventId: string) => {
+    if (!activeProfile?.id || favorites.includes(eventId)) return;
 
-  // Add favorite
-  const addFavorite = useCallback((eventId: string) => {
-    setFavorites(prev => {
-      if (!prev.includes(eventId)) {
-        return [...prev, eventId];
-      }
-      return prev;
-    });
-  }, []);
+    setFavorites((prev) => [...prev, eventId]);
+    try {
+      await EventEngagementService.addFavorite(eventId, activeProfile.id);
+    } catch (error) {
+      setFavorites((prev) => prev.filter((id) => id !== eventId));
+      logger.error('useFavorites.addFavorite', error);
+    }
+  }, [activeProfile?.id, favorites]);
 
-  // Remove favorite
-  const removeFavorite = useCallback((eventId: string) => {
-    setFavorites(prev => prev.filter(id => id !== eventId));
-  }, []);
+  const removeFavorite = useCallback(async (eventId: string) => {
+    if (!activeProfile?.id) return;
 
-  // Clear all favorites
-  const clearFavorites = useCallback(() => {
+    const previousFavorites = favorites;
+    setFavorites((prev) => prev.filter((id) => id !== eventId));
+    try {
+      await EventEngagementService.removeFavorite(eventId, activeProfile.id);
+    } catch (error) {
+      setFavorites(previousFavorites);
+      logger.error('useFavorites.removeFavorite', error);
+    }
+  }, [activeProfile?.id, favorites]);
+
+  const toggleFavorite = useCallback(async (eventId: string) => {
+    if (favorites.includes(eventId)) {
+      await removeFavorite(eventId);
+      return;
+    }
+
+    await addFavorite(eventId);
+  }, [addFavorite, favorites, removeFavorite]);
+
+  const clearFavorites = useCallback(async () => {
+    if (!activeProfile?.id) return;
+
+    const previousFavorites = favorites;
     setFavorites([]);
-  }, []);
+    try {
+      await EventEngagementService.clearFavorites(activeProfile.id);
+    } catch (error) {
+      setFavorites(previousFavorites);
+      logger.error('useFavorites.clearFavorites', error);
+    }
+  }, [activeProfile?.id, favorites]);
 
   return {
     favorites,

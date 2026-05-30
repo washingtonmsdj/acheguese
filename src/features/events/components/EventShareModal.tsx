@@ -26,6 +26,7 @@ import { Input } from '@/shared/components/ui/input';
 import { cn } from '@/shared/utils/cn';
 import QRCode from 'qrcode';
 import { openSafeExternalUrl } from '@/shared/utils/safeRedirect';
+import { buildMailtoShareUrl, openContactUrl } from '@/shared/utils/contactLinks';
 
 interface EventShareModalProps {
   isOpen: boolean;
@@ -109,9 +110,10 @@ export function EventShareModal({
       icon: Mail,
       color: 'bg-slate-600 hover:bg-slate-700',
       action: () => {
-        const subject = encodeURIComponent(eventTitle);
-        const body = encodeURIComponent(`${eventDescription || shareText}\n\n${fullUrl}`);
-        window.location.assign(`mailto:?subject=${subject}&body=${body}`);
+        openContactUrl(buildMailtoShareUrl({
+          subject: eventTitle,
+          body: `${eventDescription || shareText}\n\n${fullUrl}`,
+        }));
       },
     },
   ];

@@ -24,6 +24,7 @@ import type { BizEditData } from "@/modules/business/components/EmpresaEditSheet
 import type { LucideIcon } from "lucide-react";
 import { logger } from "@/shared/utils/logger";
 import { openSafeUrlInNewTab } from "@/shared/utils/safeRedirect";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 
 interface User {
   id: string;
@@ -276,7 +277,7 @@ export function BusinessHeader({
             business.modos_atendimento.length > 0 && (
               <div className="flex flex-wrap gap-2 pt-5 border-t">
                 {business.modos_atendimento.map((modo: string, idx: number) => {
-                  const m = MODOS_ICONS[modo];
+                  const m = getRecordValue(MODOS_ICONS, modo);
                   if (!m) return null;
                   const Icon = m.icon;
                   return (

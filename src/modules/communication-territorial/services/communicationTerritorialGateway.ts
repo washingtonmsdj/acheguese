@@ -12,7 +12,7 @@ import {
 } from "@/core/communication-territorial";
 
 export const communicationTerritorialGateway = {
-  getPublicHub(params: { state?: string; city?: string; territorySlug?: string }): Promise<CommunicationHubData> {
+  getPublicHub(params: { state?: string; city?: string }): Promise<CommunicationHubData> {
     return CommunicationTerritorialService.getPublicHub(params);
   },
   getChannelPublicPage(channelSlug: string) {
@@ -54,7 +54,7 @@ export const communicationTerritorialGateway = {
   },
   resolvePublicationInteraction(
     distribution: CommunicationPublicationDistribution,
-    params: Omit<CommunicationChannelUrlParts, "channelSlug">,
+    params: Pick<CommunicationChannelUrlParts, "state" | "city">,
   ): { mode: "canonical" | "inline"; href?: string } {
     return CommunicationDistributionService.resolvePublicationInteraction(distribution, params);
   },

@@ -8,8 +8,13 @@
  */
 
 import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
-import { MODULES } from '@/config/modules';
+import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
+import { APP_MODULE_SLUGS } from '@/config/moduleSlugs';
 import { TERRITORY_CONFIG } from '@/config/territory';
+import {
+  buildModuleTerritoryEntityUrl,
+  buildModuleTerritoryUrlFromSegments,
+} from '@/core/routing/utils/territoryUrls';
 import { getVerticalPublicUrl } from '@/core/verticals/publicUrls';
 
 // ============================================================
@@ -39,12 +44,12 @@ export const EducationUrlService = {
    */
   buildListingUrl(params: TerritoryParams): string {
     const { state, city, district } = params;
-    const moduleSlug = MODULES.education.slug;
-
-    if (district) {
-      return `/${moduleSlug}/${state}/${city}/${district}`;
-    }
-    return `/${moduleSlug}/${state}/${city}`;
+    return buildModuleTerritoryUrlFromSegments(
+      APP_MODULE_SLUGS.education,
+      state,
+      city,
+      district ? [district] : [],
+    );
   },
 
   /**
@@ -52,8 +57,11 @@ export const EducationUrlService = {
    */
   buildDetailUrl(identifiers: BusinessIdentifiers): string {
     const { state, city, district, slug } = identifiers;
-    const moduleSlug = MODULES.education.slug;
-    return `/${moduleSlug}/${state}/${city}/${district}/${slug}`;
+    return buildModuleTerritoryEntityUrl(
+      APP_MODULE_SLUGS.education,
+      `/${state}/${city}/${district}`,
+      slug,
+    );
   },
 
   /**
@@ -61,7 +69,7 @@ export const EducationUrlService = {
    */
   buildLaunchUrl(): string {
     const { state, city } = TERRITORY_CONFIG.launch;
-    return `/${MODULES.education.slug}/${state}/${city}`;
+    return buildModuleTerritoryUrlFromSegments(APP_MODULE_SLUGS.education, state, city);
   },
 
   /**
@@ -81,49 +89,49 @@ export const EducationUrlService = {
    * Gera URL do dashboard admin de educacao
    */
   buildAdminDashboardUrl(businessId: string): string {
-    return `/central/empresas/${businessId}/educacao`;
+    return businessManagementRoutes.education(businessId);
   },
 
   /**
    * Gera URL de setup de educacao
    */
   buildAdminSetupUrl(businessId: string): string {
-    return `/central/empresas/${businessId}/educacao/setup`;
+    return businessManagementRoutes.educationSetup(businessId);
   },
 
   /**
    * Gera URL de leads
    */
   buildAdminLeadsUrl(businessId: string): string {
-    return `/central/empresas/${businessId}/educacao/leads`;
+    return businessManagementRoutes.educationLeads(businessId);
   },
 
   /**
    * Gera URL de programas
    */
   buildAdminProgramsUrl(businessId: string): string {
-    return `/central/empresas/${businessId}/educacao/programas`;
+    return businessManagementRoutes.educationProgramas(businessId);
   },
 
   /**
    * Gera URL de eventos
    */
   buildAdminEventsUrl(businessId: string): string {
-    return `/central/empresas/${businessId}/educacao/eventos`;
+    return businessManagementRoutes.educationEventos(businessId);
   },
 
   /**
    * Gera URL de analytics
    */
   buildAdminAnalyticsUrl(businessId: string): string {
-    return `/central/empresas/${businessId}/educacao/analytics`;
+    return businessManagementRoutes.educationAnalytics(businessId);
   },
 
   /**
    * Gera URL de planos
    */
   buildAdminPlansUrl(businessId: string): string {
-    return `/central/empresas/${businessId}/educacao/planos`;
+    return businessManagementRoutes.educationPlanos(businessId);
   },
 
   /**

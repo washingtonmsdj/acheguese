@@ -39,7 +39,7 @@ describe("premium business public site", () => {
       "src/modules/business/premium/pages/PremiumBusinessHomePage.tsx",
     );
 
-    expect(source).toContain("Ver cardapio e pedir");
+    expect(source).toContain("Ver cardápio e pedir");
     expect(source).toContain("Link to={routes.menu}");
     expect(source).not.toContain("MenuItemDetailDrawer");
     expect(source).not.toContain("StickyOrderBar");

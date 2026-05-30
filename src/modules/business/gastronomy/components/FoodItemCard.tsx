@@ -4,7 +4,7 @@
 
 import { Link } from 'react-router-dom';
 import { Badge } from '@/shared/components/ui/badge';
-import { normalizePublicTerritoryPath } from '@/core/routing/utils/territoryUrls';
+import { GastronomyUrlService } from '@/core/verticals/gastronomy/services/GastronomyUrlService';
 import {
   Star,
   MapPin,
@@ -26,7 +26,10 @@ interface Props {
 }
 
 export function FoodItemCard({ item, variant = 'card', distanceMeters }: Props) {
-  const url = `/gastronomia${normalizePublicTerritoryPath(item.business_geographic_path)}/${item.business_slug}`;
+  const url = GastronomyUrlService.getCanonicalUrlFromTerritory(
+    item.business_geographic_path,
+    item.business_slug,
+  );
   const distanceLabel =
     typeof distanceMeters === 'number' ? formatDistance(distanceMeters) : null;
 

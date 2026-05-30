@@ -41,7 +41,8 @@ export function CategoryList({
     if (draggedIndex === null || draggedIndex === index) return;
 
     const newCategories = [...categories];
-    const draggedItem = newCategories[draggedIndex];
+    const draggedItem = newCategories.at(draggedIndex);
+    if (!draggedItem) return;
     newCategories.splice(draggedIndex, 1);
     newCategories.splice(index, 0, draggedItem);
 

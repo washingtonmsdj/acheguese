@@ -3,5 +3,4 @@ export { communicationTerritorialGateway } from "./communicationTerritorialGatew
 export {
   buildCommunicationChannelPath,
   buildCommunicationCityPath,
-  buildCommunicationTerritoryPath,
 } from "./communicationRouting";

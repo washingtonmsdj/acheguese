@@ -22,6 +22,10 @@
 
 import { logger } from '@/shared/utils/logger';
 import { getAllClassifieds } from '@/modules/classifieds/services/classifieds.queries';
+import {
+  normalizeSafePublicId,
+  normalizeSafePublicUrlSegment,
+} from '@/shared/utils/publicUrlSegments';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -35,6 +39,15 @@ export interface ClassifiedUrlContext {
   category_slug: string;
   /** slug da subcategoria */
   subcategory_slug: string;
+}
+
+export interface ClassifiedPublicUrlInput {
+  id: string;
+  public_id?: string | null;
+  slug?: string | null;
+  geographic_path?: string | null;
+  category_slug?: string | null;
+  subcategory_slug?: string | null;
 }
 
 export interface ResolvedClassifiedUrl {
@@ -52,7 +65,13 @@ export interface ClassifiedResolution {
   current_canonical: string;
 }
 
-// ─── Helpers internos ─────────────────────────────────────────────────────────
+function normalizeUrlSegment(value: string, label: string): string {
+  return normalizeSafePublicUrlSegment(value, `[ClassifiedUrlService] ${label}`);
+}
+
+function normalizePublicId(publicId: string): string {
+  return normalizeSafePublicId(publicId, '[ClassifiedUrlService] publicId');
+}
 
 /**
  * Extrai segmentos UF, cidade e bairro de um geographic_path.
@@ -61,14 +80,18 @@ export interface ClassifiedResolution {
 function extractTerritorySegments(
   geoPath: string,
 ): { uf: string; cidade: string; bairro: string } | null {
-  const parts = geoPath.replace(/^\//, '').split('/');
+  const parts = geoPath.split('/').filter(Boolean);
   if (parts.length < 4) {
     logger.error(
       `[ClassifiedUrlService] geographic_path inválido (sem bairro): "${geoPath}"`
     );
     return null;
   }
-  return { uf: parts[1], cidade: parts[2], bairro: parts[3] };
+  return {
+    uf: normalizeUrlSegment(parts[1], 'UF'),
+    cidade: normalizeUrlSegment(parts[2], 'cidade'),
+    bairro: normalizeUrlSegment(parts[3], 'bairro'),
+  };
 }
 
 /**
@@ -89,14 +112,23 @@ export function slugify(text: string): string {
 // ─── Service ──────────────────────────────────────────────────────────────────
 
 export class ClassifiedUrlService {
+  static buildNewUrl(): string {
+    return '/classificados/novo';
+  }
+
+  static buildEditUrl(classifiedId: string): string {
+    return `/classificados/editar/${normalizePublicId(classifiedId)}`;
+  }
+
+  static buildSellerUrl(sellerId: string): string {
+    return `/classificados/vendedor/${normalizePublicId(sellerId)}`;
+  }
+
   /**
    * Gera URL curta canônica para classificado.
    */
   static buildShortUrl(publicId: string): string {
-    const normalized = String(publicId ?? '').trim();
-    if (!normalized) {
-      throw new Error('[ClassifiedUrlService] publicId inválido para URL curta');
-    }
+    const normalized = normalizePublicId(publicId);
     return `/c/${normalized}`;
   }
 
@@ -121,12 +153,46 @@ export class ClassifiedUrlService {
     }
 
     const { uf, cidade, bairro } = territory;
+    const categorySlug = normalizeUrlSegment(category_slug, 'categoria');
+    const subcategorySlug = normalizeUrlSegment(subcategory_slug, 'subcategoria');
+    const classifiedSlug = normalizeUrlSegment(slug, 'slug');
+    const publicId = normalizePublicId(public_id);
 
-    const canonical = `/classificados/${uf}/${cidade}/${bairro}/${category_slug}/${subcategory_slug}/${slug}/${public_id}`;
-    const short = this.buildShortUrl(public_id);
-    const edit = `/classificados/editar/${id}`;
+    const canonical = `/classificados/${uf}/${cidade}/${bairro}/${categorySlug}/${subcategorySlug}/${classifiedSlug}/${publicId}`;
+    const short = this.buildShortUrl(publicId);
+    const edit = this.buildEditUrl(id);
 
     return { canonical, short, edit };
+  }
+
+  /**
+   * Gera a melhor URL pública disponível para navegação.
+   * Usa a URL canônica quando o contexto territorial/taxonômico está completo.
+   * Usa URL curta somente quando public_id existe; nunca expõe id interno.
+   */
+  static buildPublicUrl(ctx: ClassifiedPublicUrlInput): string | null {
+    const publicId = ctx.public_id?.trim();
+    if (!publicId) {
+      logger.warn('[ClassifiedUrlService] Classificado sem public_id para URL pública:', ctx.id);
+      return null;
+    }
+
+    if (ctx.geographic_path && ctx.category_slug && ctx.subcategory_slug && ctx.slug) {
+      try {
+        return this.buildUrls({
+          id: ctx.id,
+          public_id: publicId,
+          slug: ctx.slug,
+          geographic_path: ctx.geographic_path,
+          category_slug: ctx.category_slug,
+          subcategory_slug: ctx.subcategory_slug,
+        }).canonical;
+      } catch (error) {
+        logger.error('[ClassifiedUrlService] Erro ao gerar URL canônica:', error);
+      }
+    }
+
+    return this.buildShortUrl(publicId);
   }
 
   /**

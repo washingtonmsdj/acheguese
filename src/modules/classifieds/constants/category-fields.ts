@@ -5,6 +5,8 @@
  * Usado pelo formulário de criação/edição para renderizar campos dinâmicos.
  */
 
+import { getRecordValue } from "@/shared/utils/recordLookup";
+
 export interface CategoryField {
   key: string;
   label: string;
@@ -129,7 +131,7 @@ export const CATEGORY_SPECIFIC_FIELDS: Record<string, CategoryField[]> = {
  * Retorna campos específicos para uma categoria.
  */
 export function getCategoryFields(categoryId: string): CategoryField[] {
-  return (CATEGORY_SPECIFIC_FIELDS as Record<string, CategoryField[]>)[categoryId] || [];
+  return getRecordValue(CATEGORY_SPECIFIC_FIELDS as Record<string, CategoryField[]>, categoryId) ?? [];
 }
 
 /**

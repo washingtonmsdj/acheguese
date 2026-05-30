@@ -33,7 +33,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Card } from '@/shared/components/ui/card';
 import { Separator } from '@/shared/components/ui/separator';
 import { MiniMap } from '@/shared/components/maps/MiniMap';
-import { normalizePublicTerritoryPath } from '@/core/routing/utils/territoryUrls';
+import { GastronomyUrlService } from '@/core/verticals/gastronomy/services/GastronomyUrlService';
 import {
   buildGoogleMapsDirectionsUrl,
   buildMailtoUrl,
@@ -411,12 +411,14 @@ export function GastronomyContactSidebar({ business }: GastronomyContactSidebarP
                     type="button"
                     onClick={() => {
                       if (sim.geographic_path && sim.slug) {
-                        // Usa normalizePublicTerritoryPath — SSOT de URLs territoriais
                         navigate(
-                          `/gastronomia${normalizePublicTerritoryPath(sim.geographic_path)}/${sim.slug}`,
+                          GastronomyUrlService.getCanonicalUrlFromTerritory(
+                            sim.geographic_path,
+                            sim.slug,
+                          ),
                         );
                       } else {
-                        navigate('/gastronomia');
+                        navigate(GastronomyUrlService.getHomeUrl());
                       }
                     }}
                     className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-secondary/80 transition-all group cursor-pointer border border-transparent hover:border-primary/20 text-left"

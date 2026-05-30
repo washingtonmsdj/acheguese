@@ -290,13 +290,13 @@ export default function EditarEmpresaPage() {
 
   // Helper to extract error messages
   const getErrors = (): Record<string, string> => {
-    const errors: Record<string, string> = {};
     const formErrors = form.formState.errors;
-    for (const key of Object.keys(formErrors)) {
-      const err = formErrors[key as keyof typeof formErrors];
-      if (err?.message) errors[key] = err.message;
-    }
-    return errors;
+
+    return Object.fromEntries(
+      Object.entries(formErrors).flatMap(([key, error]) =>
+        error?.message ? [[key, error.message as string]] : [],
+      ),
+    );
   };
 
   if (loadingBusiness) {

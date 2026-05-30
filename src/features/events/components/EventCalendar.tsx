@@ -43,16 +43,13 @@ export function EventCalendar({ events, onEventClick }: EventCalendarProps) {
 
   // Group events by day
   const eventsByDay = useMemo(() => {
-    const grouped: Record<number, Event[]> = {};
+    const grouped = new Map<number, Event[]>();
 
     events.forEach(event => {
       const eventDate = new Date(event.start_date);
       if (eventDate.getMonth() === month && eventDate.getFullYear() === year) {
         const day = eventDate.getDate();
-        if (!grouped[day]) {
-          grouped[day] = [];
-        }
-        grouped[day].push(event);
+        grouped.set(day, [...(grouped.get(day) ?? []), event]);
       }
     });
 
@@ -78,7 +75,7 @@ export function EventCalendar({ events, onEventClick }: EventCalendarProps) {
     const endDate = event.end_date ? new Date(event.end_date) : new Date(startDate.getTime() + 2 * 60 * 60 * 1000);
     
     const formatDate = (date: Date) => {
-      return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      return `${date.toISOString().replace(/[-:]/g, '').split('.').at(0) ?? ''}Z`;
     };
 
     const url = new URL('https://calendar.google.com/calendar/render');
@@ -96,7 +93,7 @@ export function EventCalendar({ events, onEventClick }: EventCalendarProps) {
     const endDate = event.end_date ? new Date(event.end_date) : new Date(startDate.getTime() + 2 * 60 * 60 * 1000);
     
     const formatDate = (date: Date) => {
-      return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      return `${date.toISOString().replace(/[-:]/g, '').split('.').at(0) ?? ''}Z`;
     };
 
     const ical = [
@@ -137,7 +134,7 @@ export function EventCalendar({ events, onEventClick }: EventCalendarProps) {
 
     // Days of the month
     for (let day = 1; day <= daysInMonth; day++) {
-      const dayEvents = eventsByDay[day] || [];
+      const dayEvents = eventsByDay.get(day) ?? [];
       const isToday = isCurrentMonth && today.getDate() === day;
       const hasEvents = dayEvents.length > 0;
 
@@ -244,7 +241,7 @@ export function EventCalendar({ events, onEventClick }: EventCalendarProps) {
             {monthName}
           </h3>
           <p className="text-sm text-muted-foreground">
-            {Object.keys(eventsByDay).length} {Object.keys(eventsByDay).length === 1 ? 'dia com eventos' : 'dias com eventos'}
+            {eventsByDay.size} {eventsByDay.size === 1 ? 'dia com eventos' : 'dias com eventos'}
           </p>
         </div>
         <div className="flex gap-2">

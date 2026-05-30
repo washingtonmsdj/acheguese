@@ -57,6 +57,7 @@ import {
 export default function DPOContactPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const dpoEmail = getDpoEmail();
   const userMetadata = user?.user_metadata;
   const fullName =
     userMetadata && typeof userMetadata === 'object'
@@ -108,10 +109,14 @@ export default function DPOContactPage() {
       });
     },
     onError: () => {
+      const fallbackMessage = dpoEmail
+        ? ' Tente novamente ou envie diretamente para ' + dpoEmail
+        : ' Tente novamente pelo formulario.';
+
       toast({
         title: 'Erro ao enviar',
         description:
-          'Nao foi possivel enviar sua solicitacao. Tente novamente ou envie diretamente para ' + getDpoEmail(),
+          'Nao foi possivel enviar sua solicitacao.' + fallbackMessage,
         variant: 'destructive',
       });
     },
@@ -312,12 +317,16 @@ export default function DPOContactPage() {
                 <Mail className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
                 <div>
                   <p className="font-medium text-sm">E-mail</p>
-                  <a
-                    href={buildMailtoUrl(getDpoEmail()) ?? undefined}
-                    className="text-sm text-primary hover:underline"
-                  >
-                    {getDpoEmail()}
-                  </a>
+                  {dpoEmail ? (
+                    <a
+                      href={buildMailtoUrl(dpoEmail) ?? undefined}
+                      className="text-sm text-primary hover:underline"
+                    >
+                      {dpoEmail}
+                    </a>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">E-mail publico nao configurado</p>
+                  )}
                 </div>
               </div>
               <div className="flex items-start gap-3">

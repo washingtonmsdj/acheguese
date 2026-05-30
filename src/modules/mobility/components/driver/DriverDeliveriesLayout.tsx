@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 import { MotoboyDeliveryActions } from "@/modules/mobility/components/driver/MotoboyDeliveryActions";
 import { useMotoristaPage } from "@/modules/mobility/hooks/useMotoristaPage";
 import { getMobilityServicePath } from "@/modules/mobility/routes/mobilityNavigation";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 
 type DeliveryLike = {
   id: string;
@@ -34,7 +35,7 @@ const TRUST_RISK_LABELS: Record<string, string> = {
 function getTrustRiskLabel(delivery: DeliveryLike): string | null {
   const risk = delivery?.customer_trust_risk_level;
   if (typeof risk !== "string" || risk === "trusted") return null;
-  return TRUST_RISK_LABELS[risk] ?? risk;
+  return getRecordValue(TRUST_RISK_LABELS, risk) ?? risk;
 }
 
 /**

@@ -21,6 +21,7 @@ interface EventGalleryProps {
 export function EventGallery({ images, title = 'Galeria de Fotos' }: EventGalleryProps) {
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const selectedImageSrc = selectedImage !== null ? images.at(selectedImage) ?? null : null;
 
   const openLightbox = (index: number) => {
     setSelectedImage(index);
@@ -45,9 +46,9 @@ export function EventGallery({ images, title = 'Galeria de Fotos' }: EventGaller
   };
 
   const handleDownload = () => {
-    if (selectedImage !== null) {
+    if (selectedImage !== null && selectedImageSrc) {
       const link = document.createElement('a');
-      link.href = images[selectedImage];
+      link.href = selectedImageSrc;
       link.download = `evento-foto-${selectedImage + 1}.jpg`;
       link.click();
     }
@@ -118,7 +119,7 @@ export function EventGallery({ images, title = 'Galeria de Fotos' }: EventGaller
 
       {/* Lightbox */}
       <AnimatePresence>
-        {isLightboxOpen && selectedImage !== null && (
+        {isLightboxOpen && selectedImage !== null && selectedImageSrc && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -189,7 +190,7 @@ export function EventGallery({ images, title = 'Galeria de Fotos' }: EventGaller
             {/* Image */}
             <motion.img
               key={selectedImage}
-              src={images[selectedImage]}
+              src={selectedImageSrc}
               alt={`Foto ${selectedImage + 1}`}
               className="max-h-[90vh] max-w-[90vw] object-contain"
               initial={{ scale: 0.9, opacity: 0 }}

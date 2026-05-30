@@ -13,19 +13,24 @@ import { motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 import { EventCard } from './EventCard';
 import type { Event } from '../types';
+import { eventPublicRoutes } from '@/core/verticals/events/routes/eventPublicRoutes';
 
 interface EventRelatedProps {
   currentEvent: Event;
   events: Event[];
   maxEvents?: number;
   title?: string;
+  eventsUrl?: string;
+  getEventUrl?: (eventId: string) => string;
 }
 
 export function EventRelated({ 
   currentEvent, 
   events,
   maxEvents = 4,
-  title = 'Eventos Similares' 
+  title = 'Eventos Similares',
+  eventsUrl = eventPublicRoutes.home(),
+  getEventUrl = eventPublicRoutes.detail,
 }: EventRelatedProps) {
   const navigate = useNavigate();
 
@@ -71,7 +76,7 @@ export function EventRelated({
   }, [currentEvent, maxEvents, events]);
 
   const handleEventClick = (eventId: string) => {
-    navigate(`/eventos/${eventId}`);
+    navigate(getEventUrl(eventId));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -131,7 +136,7 @@ export function EventRelated({
               className="mt-8 text-center"
             >
               <button
-                onClick={() => navigate('/eventos')}
+                onClick={() => navigate(eventsUrl)}
                 className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-3 font-semibold text-foreground transition-all hover:border-primary hover:bg-primary/5 hover:text-primary"
               >
                 Ver todos os eventos

@@ -12,6 +12,7 @@ import type {
   EducationAdminSection,
   EducationNicheStatus 
 } from './types';
+import { getRecordValue } from '@/shared/utils/recordLookup';
 
 const EDUCATION_NICHES: EducationNicheRegistry = {
   regular_school: {
@@ -569,7 +570,7 @@ const EDUCATION_NICHES: EducationNicheRegistry = {
 // ============================================================================
 
 export function getNicheByKey(key: string): EducationNicheConfig | null {
-  return EDUCATION_NICHES[key] ?? null;
+  return getRecordValue(EDUCATION_NICHES, key) ?? null;
 }
 
 export function getAllNiches(): EducationNicheConfig[] {

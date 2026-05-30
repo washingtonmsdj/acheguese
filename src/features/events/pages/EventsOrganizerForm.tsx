@@ -26,6 +26,7 @@ import { communityEventsRuntimeService } from '@/core/community/services/Communi
 import { mapCommunityEventToEvent } from '../utils/eventAdapters';
 import { useSessionContext } from '@/core/session/hooks/useSessionContext';
 import { useToast } from '@/shared/hooks/use-toast';
+import { eventPublicRoutes } from '@/core/verticals/events/routes/eventPublicRoutes';
 
 const STEPS = [
   { id: 1, title: 'Informacoes Basicas', icon: FileText },
@@ -160,7 +161,7 @@ export default function EventsOrganizerForm() {
   const handlePreview = async () => {
     const savedEvent = await persistEvent();
     if (savedEvent?.id) {
-      navigate(`/eventos/${savedEvent.id}`);
+      navigate(eventPublicRoutes.detail(savedEvent.id));
     }
   };
 

@@ -15,19 +15,31 @@ import { EventCalendar } from '../components/EventCalendar';
 import { Button } from '@/shared/components/ui/button';
 import { communityEventsRuntimeService } from '@/core/community/services/CommunityEventsRuntimeService';
 import { mapCommunityEventToEvent } from '../utils/eventAdapters';
+import { useTerritorialContextOptional } from '@/core/routing/components/TerritorialLayout';
+import { useCommunityUrls } from '@/core/routing/hooks/useCommunityUrls';
+import { useEventTerritoryFilter } from '../hooks/useEventTerritoryFilter';
 
 export default function EventsCalendarPage() {
   const navigate = useNavigate();
+  const territorialContext = useTerritorialContextOptional();
+  const eventUrls = useCommunityUrls(territorialContext?.resolved);
+  const territoryFilter = useEventTerritoryFilter(
+    territorialContext?.resolved,
+    territorialContext?.activeMemberIds,
+  );
   const { data: events = [] } = useQuery({
-    queryKey: ['events-calendar'],
+    queryKey: ['events-calendar', territoryFilter],
     queryFn: async () => {
-      const rows = await communityEventsRuntimeService.getEvents({ upcoming: true });
+      const rows = await communityEventsRuntimeService.getEvents({
+        upcoming: true,
+        territoryFilter,
+      });
       return rows.map(mapCommunityEventToEvent);
     },
   });
 
   const handleEventClick = (eventId: string) => {
-    navigate(`/eventos/${eventId}`);
+    navigate(eventUrls.eventDetail(eventId));
   };
 
   return (
@@ -49,7 +61,7 @@ export default function EventsCalendarPage() {
                 <span className="hidden sm:inline">Início</span>
               </Link>
               <span>/</span>
-              <Link to="/eventos" className="transition-colors hover:text-foreground">
+              <Link to={eventUrls.events} className="transition-colors hover:text-foreground">
                 Eventos
               </Link>
               <span>/</span>
@@ -88,7 +100,7 @@ export default function EventsCalendarPage() {
               <div className="mt-6 flex justify-center gap-2">
                 <Button
                   variant="outline"
-                  onClick={() => navigate('/eventos')}
+                  onClick={() => navigate(eventUrls.events)}
                   className="gap-2"
                 >
                   <List className="h-4 w-4" />
@@ -100,7 +112,7 @@ export default function EventsCalendarPage() {
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => navigate('/eventos/mapa')}
+                  onClick={() => navigate(eventUrls.eventMap)}
                   className="gap-2"
                 >
                   <Map className="h-4 w-4" />

@@ -1,7 +1,7 @@
 /**
  * TouristPointDetailPage — Detalhe expandido de ponto turístico
  *
- * Rota canônica: /guia/pontos-turisticos/:state/:city/:district?/:slug
+ * Rota canônica: /pontos-turisticos/:state/:city/:district?/:slug
  *
  * Seções:
  * 1. Galeria forte (hero)
@@ -15,9 +15,10 @@
  * 9. Lugares relacionados
  */
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
+import { toast } from 'sonner';
 import {
   ArrowLeft,
   Loader2,
@@ -31,12 +32,13 @@ import {
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
+import { getRecordValue } from '@/shared/utils/recordLookup';
 import { useTerritorialContext } from '@/core/routing/components/TerritorialLayout';
 import { useTerritoryFilter } from '@/core/location/hooks/useTerritoryFilter';
 import { useTouristPoint } from '../hooks/useTouristPoint';
 import { useTouristPoints } from '../hooks/useTouristPoints';
-import { useGuideUrls } from '../hooks/useGuideUrls';
-import { TERRITORY_CONFIG } from '@/config/territory';
+import { buildTouristPointDetailUrl, useGuideUrls } from '../hooks/useGuideUrls';
+import { useSavedTouristPoint } from '../hooks/useSavedTouristPoint';
 import { TouristPointGallery } from '../components/TouristPointGallery';
 import { TouristPointFactsPanel } from '../components/TouristPointFactsPanel';
 import { TouristPointTipsSection } from '../components/TouristPointTipsSection';
@@ -82,55 +84,69 @@ function getCategoryLabel(category?: TouristPointCategory | null): string | null
 
 function getCategoryIcon(category?: TouristPointCategory | null) {
   if (!category) return null;
-  return CATEGORY_ICONS[category] ?? null;
+  return getRecordValue(CATEGORY_ICONS, category) ?? null;
 }
 
 export default function TouristPointDetailPage() {
-  const params = useParams<{ state?: string; city?: string; slug?: string; groupSlugOrDistrict?: string; id?: string }>();
-  // Para rota direta por ID, resolved pode não existir (não está dentro de TerritorialLayout)
-  let resolved;
-  let activeMemberIds: string[] | undefined;
-  try {
-    const context = useTerritorialContext();
-    resolved = context.resolved;
-    activeMemberIds = context.activeMemberIds;
-  } catch {
-    // Rota direta por ID não tem contexto territorial
-    resolved = undefined;
-    activeMemberIds = undefined;
-  }
-  
+  const params = useParams<{ state?: string; city?: string; slug?: string; groupSlugOrDistrict?: string }>();
+  const { resolved, activeMemberIds } = useTerritorialContext();
   const guideUrls = useGuideUrls(resolved);
 
-  // Detectar se estamos na rota de 3 ou 4 segmentos OU rota direta por ID
-  // Rota direta: /pontos-turisticos/:id (UUID)
-  // Rota 3 segmentos: /guia/pontos-turisticos/:state/:city/:slug
-  //   → groupSlugOrDistrict é o slug do ponto turístico
-  // Rota 4 segmentos: /guia/pontos-turisticos/:state/:city/:district/:slug
-  //   → slug é o slug do ponto turístico
-  // Rota 4 segmentos com placeholder: /guia/pontos-turisticos/:state/:city/_/:slug
-  //   → "_" é ignorado, slug é o slug do ponto turístico
-  
-  // Verificar se é um UUID (rota direta por ID)
-  const isUUID = params.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(params.id);
-  
-  const pointSlug = isUUID 
-    ? params.id 
-    : (params.slug || (params.groupSlugOrDistrict !== '_' ? params.groupSlugOrDistrict : undefined));
-
-  // Se não há slug, significa que groupSlugOrDistrict pode ser tanto um distrito
-  // quanto um slug de ponto turístico. Vamos tentar buscar como ponto turístico.
-  // Para rota direta por ID, locationId é opcional
-  const locationId = !isUUID && resolved
+  const pointSlug = params.slug ?? params.groupSlugOrDistrict;
+  const locationId = resolved
     ? (resolved.kind === 'location'
       ? resolved.location.id
-      : resolved.group.members[0]?.id ?? '')
+      : resolved.group.members.at(0)?.id ?? '')
     : undefined;
 
   const territoryFilter = useTerritoryFilter(resolved, activeMemberIds);
   const { data: point, isLoading } = useTouristPoint(locationId, pointSlug);
   const { data: relatedPointsRaw = [] } = useTouristPoints(territoryFilter);
+  const {
+    canSave,
+    isSaved,
+    isLoading: isSaving,
+    toggleSaved,
+  } = useSavedTouristPoint(point?.id);
   const [loadingTimedOut, setLoadingTimedOut] = useState(false);
+
+  const handleToggleSaved = useCallback(async () => {
+    if (!canSave) {
+      toast.error('Entre na sua conta para salvar pontos turisticos.');
+      return;
+    }
+
+    try {
+      const nextSaved = await toggleSaved();
+      toast.success(nextSaved ? 'Ponto turistico salvo.' : 'Ponto turistico removido dos salvos.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Nao foi possivel atualizar este ponto turistico.');
+    }
+  }, [canSave, toggleSaved]);
+
+  const handleShare = useCallback(async () => {
+    if (!point) return;
+
+    const url = `${window.location.origin}${buildTouristPointDetailUrl(point.location, point.slug)}`;
+    const shareData = {
+      title: point.title,
+      text: point.summary,
+      url,
+    };
+
+    try {
+      if (navigator.share && navigator.canShare?.(shareData) !== false) {
+        await navigator.share(shareData);
+        return;
+      }
+
+      await navigator.clipboard.writeText(url);
+      toast.success('Link do ponto turistico copiado.');
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') return;
+      toast.error('Nao foi possivel compartilhar este ponto turistico.');
+    }
+  }, [point]);
 
   useEffect(() => {
     if (!isLoading) {
@@ -153,7 +169,7 @@ export default function TouristPointDetailPage() {
       : resolved.group.name)
     : 'Brasil';
 
-  const backUrl = resolved ? guideUrls.touristPoints : '/pontos-turisticos';
+  const backUrl = guideUrls.touristPoints;
 
   if (isLoading && !loadingTimedOut) {
     return (
@@ -200,7 +216,7 @@ export default function TouristPointDetailPage() {
 
   const displayModel = toTouristPointDisplay(displayPoint);
   const relatedPoints = relatedPointsRaw.map(toTouristPointDisplay);
-  const coverMedia = displayPoint.media?.find((m) => m.is_cover) ?? displayPoint.media?.[0];
+  const coverMedia = displayPoint.media?.find((m) => m.is_cover) ?? displayPoint.media?.at(0);
 
   const category = displayModel.category as TouristPointCategory | undefined;
   const catLabel = getCategoryLabel(category);
@@ -221,7 +237,7 @@ export default function TouristPointDetailPage() {
       <Helmet>
         <title>{displayPoint.title} — Pontos Turísticos — {territoryName}</title>
         <meta name="description" content={displayPoint.summary} />
-        <link rel="canonical" href={guideUrls.touristPointDetail(displayPoint.slug)} />
+        <link rel="canonical" href={buildTouristPointDetailUrl(displayPoint.location, displayPoint.slug)} />
         {coverMedia && <meta property="og:image" content={coverMedia.url} />}
       </Helmet>
 
@@ -316,11 +332,18 @@ export default function TouristPointDetailPage() {
 
             {/* Action buttons */}
             <div className="flex items-center gap-2 mt-5">
-              <Button size="sm" variant="outline" className="text-xs">
-                <Heart className="h-3.5 w-3.5 mr-1.5" />
-                Salvar
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-xs"
+                onClick={handleToggleSaved}
+                disabled={isSaving}
+                aria-pressed={isSaved}
+              >
+                <Heart className={`h-3.5 w-3.5 mr-1.5 ${isSaved ? 'fill-current' : ''}`} />
+                {isSaved ? 'Salvo' : 'Salvar'}
               </Button>
-              <Button size="sm" variant="outline" className="text-xs">
+              <Button size="sm" variant="outline" className="text-xs" onClick={handleShare}>
                 <Share2 className="h-3.5 w-3.5 mr-1.5" />
                 Compartilhar
               </Button>
@@ -367,7 +390,7 @@ export default function TouristPointDetailPage() {
               <div className="rounded-xl border border-border bg-card p-4">
                 <p className="text-xs text-muted-foreground mb-1">Entrada</p>
                 <p className="text-lg font-bold text-foreground">
-                  {PRICE_TYPE_LABELS[displayPoint.price_type]}
+                  {getRecordValue(PRICE_TYPE_LABELS, displayPoint.price_type) ?? displayPoint.price_type}
                 </p>
                 {displayPoint.price_text && (
                   <p className="text-sm text-muted-foreground mt-0.5">{displayPoint.price_text}</p>
@@ -381,7 +404,7 @@ export default function TouristPointDetailPage() {
             pointTitle={displayPoint.title}
             pointSlug={displayPoint.slug}
             locationId={locationId || null}
-            city={params.city ?? TERRITORY_CONFIG.launch.city}
+            city={params.city ?? ''}
             state={params.state}
             neighborhood={neighborhood ?? null}
           />

@@ -28,9 +28,11 @@ import { Progress } from '@/shared/components/ui/progress';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { useToast } from '@/shared/hooks/use-toast';
 import { logger } from '@/shared/utils/logger';
+import { getRecordValue } from '@/shared/utils/recordLookup';
 import { BillingService } from '@/core/billing';
 import { useBillingPlans } from '@/core/billing/hooks/useBillingPlans';
 import { useEducationSubscription } from '../hooks/useEducationSubscription';
+import { EducationUrlService } from '../services/EducationUrlService';
 
 const EDUCATION_PLAN_TEMPLATES = [
   {
@@ -130,8 +132,19 @@ export function EducationPlansPage() {
   });
 
   const currentPlanCode = planType === 'free' ? 'free' : planType === 'premium' ? 'delivery' : 'pro';
+  const dashboardUrl = businessId ? EducationUrlService.buildAdminDashboardUrl(businessId) : null;
+  const plansUrl = businessId ? EducationUrlService.buildAdminPlansUrl(businessId) : null;
 
   const handleUpgrade = async (planId: string) => {
+    if (!plansUrl) {
+      toast({
+        title: 'InstituiÃ§Ã£o indisponÃ­vel',
+        description: 'NÃ£o foi possÃ­vel identificar a instituiÃ§Ã£o para iniciar o checkout.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
       toast({
         title: 'Redirecionando...',
@@ -140,7 +153,7 @@ export function EducationPlansPage() {
 
       await BillingService.redirectToCheckout({
         planCode: planId,
-        successUrl: `${window.location.origin}/central/empresas/${businessId}/educacao/planos?upgrade=success`,
+        successUrl: `${window.location.origin}${plansUrl}?upgrade=success`,
         cancelUrl: window.location.href,
       });
     } catch (error) {
@@ -197,7 +210,7 @@ export function EducationPlansPage() {
           variant="ghost"
           size="sm"
           className="mb-4"
-          onClick={() => navigate(`/central/empresas/${businessId}/educacao`)}
+          onClick={() => (dashboardUrl ? navigate(dashboardUrl) : navigate(-1))}
         >
           <ArrowLeft className="w-4 h-4 mr-1" />
           Voltar
@@ -310,7 +323,7 @@ export function EducationPlansPage() {
               <CardContent className="flex-1 flex flex-col">
                 <ul className="space-y-2 mb-6 flex-1">
                   {Object.entries(plan.features).map(([key, value]) => {
-                    const feature = FEATURE_LABELS[key];
+                    const feature = getRecordValue(FEATURE_LABELS, key);
                     if (!feature) return null;
                     const Icon = feature.icon;
                     return (

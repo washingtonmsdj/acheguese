@@ -1,169 +1,196 @@
-/**
- * ⭐ EVENT REVIEWS
- * 
- * Sistema de avaliações e reviews de eventos
- * Permite usuários avaliarem eventos passados
- * 
- * @version 1.0.0
- */
-
-import { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Star, ThumbsUp, Flag, User, Calendar, CheckCircle } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { CheckCircle, Flag, Star, ThumbsUp, User } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Textarea } from '@/shared/components/ui/textarea';
-import { Avatar } from '@/shared/components/ui/avatar';
 import { Badge } from '@/shared/components/ui/badge';
 import { cn } from '@/shared/utils/cn';
 import { useToast } from '@/shared/hooks/use-toast';
+import {
+  EVENT_REVIEW_LIMITS,
+  validateEventReviewInput,
+  type EventReview,
+} from '../services/EventEngagementService';
 
-interface Review {
-  id: string;
-  userId: string;
-  userName: string;
-  userAvatar?: string;
-  rating: number;
-  comment: string;
-  date: string;
-  helpful: number;
-  verified: boolean;
-}
+type SubmitReviewInput = Pick<EventReview, 'rating' | 'comment'>;
 
 interface EventReviewsProps {
   eventId: string;
   eventTitle: string;
   eventDate: string;
-  reviews?: Review[];
+  reviews?: EventReview[];
   averageRating?: number;
   totalReviews?: number;
   canReview?: boolean;
+  reviewerProfileId?: string | null;
+  onSubmitReview?: (input: SubmitReviewInput) => Promise<EventReview>;
+  onMarkHelpful?: (reviewId: string) => Promise<void>;
 }
 
-const STORAGE_KEY = 'acheguese_event_reviews';
+const EMPTY_REVIEWS: EventReview[] = [];
+const RATING_STARS = [5, 4, 3, 2, 1] as const;
+const INTERACTIVE_STARS = [1, 2, 3, 4, 5] as const;
 
 export function EventReviews({
-  eventId,
   eventTitle,
-  eventDate,
-  reviews: initialReviews = [],
+  reviews: initialReviews = EMPTY_REVIEWS,
   averageRating: initialAverage = 0,
   totalReviews: initialTotal = 0,
   canReview = true,
+  reviewerProfileId,
+  onSubmitReview,
+  onMarkHelpful,
 }: EventReviewsProps) {
-  const [reviews, setReviews] = useState<Review[]>(initialReviews);
+  const [reviews, setReviews] = useState<EventReview[]>(initialReviews);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState('');
   const [filter, setFilter] = useState<'all' | 'positive' | 'negative'>('all');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [helpfulPendingId, setHelpfulPendingId] = useState<string | null>(null);
   const { toast } = useToast();
+  const canSubmitReview = canReview && Boolean(reviewerProfileId && onSubmitReview);
 
-  // Calculate stats
+  useEffect(() => {
+    setReviews(initialReviews);
+  }, [initialReviews]);
+
   const stats = useMemo(() => {
     const total = reviews.length || initialTotal;
-    const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
-    const average = total > 0 ? sum / total : initialAverage;
-    
-    const distribution = [5, 4, 3, 2, 1].map(stars => ({
-      stars,
-      count: reviews.filter(r => r.rating === stars).length,
-      percentage: total > 0 ? (reviews.filter(r => r.rating === stars).length / total) * 100 : 0,
-    }));
+    const sum = reviews.reduce((acc, review) => acc + review.rating, 0);
+    const average = reviews.length > 0 ? sum / reviews.length : initialAverage;
+    const distribution = RATING_STARS.map((stars) => {
+      const count = reviews.filter((review) => review.rating === stars).length;
+      return {
+        stars,
+        count,
+        percentage: total > 0 ? (count / total) * 100 : 0,
+      };
+    });
 
     return { total, average, distribution };
   }, [reviews, initialTotal, initialAverage]);
 
-  // Filter reviews
   const filteredReviews = useMemo(() => {
     switch (filter) {
       case 'positive':
-        return reviews.filter(r => r.rating >= 4);
+        return reviews.filter((review) => review.rating >= 4);
       case 'negative':
-        return reviews.filter(r => r.rating <= 2);
+        return reviews.filter((review) => review.rating <= 2);
       default:
         return reviews;
     }
   }, [reviews, filter]);
 
-  // Submit review
-  const handleSubmitReview = () => {
-    if (rating === 0 || !comment.trim()) {
+  const resetForm = () => {
+    setRating(0);
+    setHoverRating(0);
+    setComment('');
+    setShowReviewForm(false);
+  };
+
+  const handleSubmitReview = async () => {
+    const validation = validateEventReviewInput({ rating, comment });
+    if (validation.valid === false) {
       toast({
         title: 'Avaliacao incompleta',
-        description: 'Selecione uma nota e escreva um comentario antes de publicar.',
+        description: validation.message,
         variant: 'destructive',
       });
       return;
     }
 
-    const newReview: Review = {
-      id: Date.now().toString(),
-      userId: 'current-user',
-      userName: 'Você',
-      rating,
-      comment: comment.trim(),
-      date: new Date().toISOString(),
-      helpful: 0,
-      verified: true,
-    };
-
-    const updatedReviews = [newReview, ...reviews];
-    setReviews(updatedReviews);
-
-    // Save to localStorage
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      const allReviews = stored ? JSON.parse(stored) : {};
-      allReviews[eventId] = updatedReviews;
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(allReviews));
-    } catch (error) {
-      console.error('Failed to save review:', error);
+    if (!reviewerProfileId || !onSubmitReview) {
+      toast({
+        title: 'Acesso necessario',
+        description: 'Entre com um perfil participante para avaliar este evento.',
+        variant: 'destructive',
+      });
+      return;
     }
 
-    // Reset form
-    setRating(0);
-    setComment('');
-    setShowReviewForm(false);
-    toast({
-      title: 'Avaliacao publicada',
-      description: 'Obrigado por compartilhar sua experiencia.',
-    });
+    setIsSubmitting(true);
+    try {
+      const savedReview = await onSubmitReview({
+        rating,
+        comment: validation.comment,
+      });
+
+      setReviews((prev) => [
+        savedReview,
+        ...prev.filter((review) => review.id !== savedReview.id),
+      ]);
+      resetForm();
+      toast({
+        title: 'Avaliacao publicada',
+        description: 'Obrigado por compartilhar sua experiencia.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Erro ao publicar',
+        description: error instanceof Error ? error.message : 'Nao foi possivel publicar a avaliacao.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  // Mark helpful
-  const handleMarkHelpful = (reviewId: string) => {
-    setReviews(prev =>
-      prev.map(r =>
-        r.id === reviewId ? { ...r, helpful: r.helpful + 1 } : r
-      )
-    );
+  const handleMarkHelpful = async (reviewId: string) => {
+    if (!reviewerProfileId || !onMarkHelpful) {
+      toast({
+        title: 'Acesso necessario',
+        description: 'Entre com um perfil para marcar avaliacoes como uteis.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setHelpfulPendingId(reviewId);
+    try {
+      await onMarkHelpful(reviewId);
+      setReviews((prev) =>
+        prev.map((review) =>
+          review.id === reviewId ? { ...review, helpful: review.helpful + 1 } : review,
+        ),
+      );
+    } catch (error) {
+      toast({
+        title: 'Erro ao registrar',
+        description: error instanceof Error ? error.message : 'Nao foi possivel registrar utilidade.',
+        variant: 'destructive',
+      });
+    } finally {
+      setHelpfulPendingId(null);
+    }
   };
 
-  // Render stars
   const renderStars = (count: number, interactive = false, size = 'default') => {
     const sizeClass = size === 'small' ? 'h-3 w-3' : size === 'large' ? 'h-6 w-6' : 'h-4 w-4';
-    
+
     return (
       <div className="flex gap-0.5">
-        {[1, 2, 3, 4, 5].map(star => (
+        {INTERACTIVE_STARS.map((star) => (
           <button
             key={star}
             type="button"
-            disabled={!interactive}
+            disabled={!interactive || isSubmitting}
             onMouseEnter={() => interactive && setHoverRating(star)}
             onMouseLeave={() => interactive && setHoverRating(0)}
             onClick={() => interactive && setRating(star)}
             className={cn(
-              "transition-all",
-              interactive && "cursor-pointer hover:scale-110"
+              'transition-all',
+              interactive && 'cursor-pointer hover:scale-110',
             )}
+            aria-label={`${star} estrela${star > 1 ? 's' : ''}`}
           >
             <Star
               className={cn(
                 sizeClass,
                 star <= (interactive ? (hoverRating || rating) : count)
-                  ? "fill-amber-400 text-amber-400"
-                  : "fill-none text-muted-foreground"
+                  ? 'fill-amber-400 text-amber-400'
+                  : 'fill-none text-muted-foreground',
               )}
             />
           </button>
@@ -173,7 +200,7 @@ export function EventReviews({
   };
 
   return (
-    <section className="py-12 bg-muted/30">
+    <section className="bg-muted/30 py-12" aria-label={`Avaliacoes de ${eventTitle}`}>
       <div className="mx-auto max-w-4xl px-4 sm:px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -181,35 +208,31 @@ export function EventReviews({
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
         >
-          {/* Header */}
           <div className="mb-8">
             <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-semibold text-primary">
               <Star className="h-4 w-4" />
-              Avaliações
+              Avaliacoes
             </div>
             <h2 className="text-3xl font-bold text-foreground">
               O que as pessoas acharam
             </h2>
           </div>
 
-          {/* Stats Overview */}
           <div className="mb-8 grid gap-6 rounded-2xl border border-border bg-card p-6 sm:grid-cols-2">
-            {/* Average Rating */}
             <div className="text-center sm:border-r sm:border-border">
               <div className="mb-2 text-5xl font-bold text-foreground">
                 {stats.average.toFixed(1)}
               </div>
               {renderStars(Math.round(stats.average), false, 'large')}
               <p className="mt-2 text-sm text-muted-foreground">
-                {stats.total} {stats.total === 1 ? 'avaliação' : 'avaliações'}
+                {stats.total} {stats.total === 1 ? 'avaliacao' : 'avaliacoes'}
               </p>
             </div>
 
-            {/* Rating Distribution */}
             <div className="space-y-2">
               {stats.distribution.map(({ stars, count, percentage }) => (
                 <div key={stars} className="flex items-center gap-2">
-                  <span className="w-8 text-sm font-medium text-foreground">{stars}★</span>
+                  <span className="w-8 text-sm font-medium text-foreground">{stars}*</span>
                   <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
                     <motion.div
                       initial={{ width: 0 }}
@@ -225,18 +248,16 @@ export function EventReviews({
             </div>
           </div>
 
-          {/* Write Review Button */}
-          {canReview && !showReviewForm && (
+          {canSubmitReview && !showReviewForm && (
             <Button
               onClick={() => setShowReviewForm(true)}
               className="mb-6 w-full gap-2 sm:w-auto"
             >
               <Star className="h-4 w-4" />
-              Escrever avaliação
+              Escrever avaliacao
             </Button>
           )}
 
-          {/* Review Form */}
           <AnimatePresence>
             {showReviewForm && (
               <motion.div
@@ -246,10 +267,9 @@ export function EventReviews({
                 className="mb-6 overflow-hidden rounded-xl border border-border bg-card p-6"
               >
                 <h3 className="mb-4 text-lg font-semibold text-foreground">
-                  Sua avaliação
+                  Sua avaliacao
                 </h3>
-                
-                {/* Rating */}
+
                 <div className="mb-4">
                   <label className="mb-2 block text-sm font-medium text-foreground">
                     Nota
@@ -257,32 +277,32 @@ export function EventReviews({
                   {renderStars(rating, true, 'large')}
                 </div>
 
-                {/* Comment */}
                 <div className="mb-4">
                   <label className="mb-2 block text-sm font-medium text-foreground">
-                    Comentário
+                    Comentario
                   </label>
                   <Textarea
                     value={comment}
-                    onChange={(e) => setComment(e.target.value)}
-                    placeholder="Conte como foi sua experiência..."
+                    onChange={(event) => setComment(event.target.value)}
+                    placeholder="Conte como foi sua experiencia..."
                     rows={4}
+                    maxLength={EVENT_REVIEW_LIMITS.maxCommentLength}
                     className="resize-none"
+                    disabled={isSubmitting}
                   />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {comment.trim().length}/{EVENT_REVIEW_LIMITS.maxCommentLength}
+                  </p>
                 </div>
 
-                {/* Actions */}
                 <div className="flex gap-2">
-                  <Button onClick={handleSubmitReview}>
-                    Publicar avaliação
+                  <Button onClick={handleSubmitReview} disabled={isSubmitting}>
+                    {isSubmitting ? 'Publicando...' : 'Publicar avaliacao'}
                   </Button>
                   <Button
                     variant="outline"
-                    onClick={() => {
-                      setShowReviewForm(false);
-                      setRating(0);
-                      setComment('');
-                    }}
+                    disabled={isSubmitting}
+                    onClick={resetForm}
                   >
                     Cancelar
                   </Button>
@@ -291,7 +311,6 @@ export function EventReviews({
             )}
           </AnimatePresence>
 
-          {/* Filter */}
           {reviews.length > 0 && (
             <div className="mb-4 flex gap-2">
               <Button
@@ -306,27 +325,26 @@ export function EventReviews({
                 size="sm"
                 onClick={() => setFilter('positive')}
               >
-                Positivas ({reviews.filter(r => r.rating >= 4).length})
+                Positivas ({reviews.filter((review) => review.rating >= 4).length})
               </Button>
               <Button
                 variant={filter === 'negative' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setFilter('negative')}
               >
-                Negativas ({reviews.filter(r => r.rating <= 2).length})
+                Negativas ({reviews.filter((review) => review.rating <= 2).length})
               </Button>
             </div>
           )}
 
-          {/* Reviews List */}
           <div className="space-y-4">
             {filteredReviews.length === 0 ? (
               <div className="rounded-xl border border-border bg-card p-8 text-center">
                 <Star className="mx-auto mb-3 h-12 w-12 text-muted-foreground" />
                 <p className="text-muted-foreground">
                   {reviews.length === 0
-                    ? 'Seja o primeiro a avaliar este evento!'
-                    : 'Nenhuma avaliação encontrada com este filtro.'}
+                    ? 'Nenhuma avaliacao publicada para este evento.'
+                    : 'Nenhuma avaliacao encontrada com este filtro.'}
                 </p>
               </div>
             ) : (
@@ -338,7 +356,6 @@ export function EventReviews({
                   transition={{ delay: index * 0.05 }}
                   className="rounded-xl border border-border bg-card p-4 sm:p-6"
                 >
-                  {/* User Info */}
                   <div className="mb-3 flex items-start justify-between">
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
@@ -362,19 +379,18 @@ export function EventReviews({
                     {renderStars(review.rating, false, 'small')}
                   </div>
 
-                  {/* Comment */}
                   <p className="mb-3 text-sm text-foreground">{review.comment}</p>
 
-                  {/* Actions */}
                   <div className="flex items-center gap-2">
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => handleMarkHelpful(review.id)}
+                      disabled={helpfulPendingId === review.id}
                       className="gap-1 text-xs"
                     >
                       <ThumbsUp className="h-3 w-3" />
-                      Útil ({review.helpful})
+                      Util ({review.helpful})
                     </Button>
                     <Button
                       variant="ghost"

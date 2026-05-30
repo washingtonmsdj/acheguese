@@ -6,6 +6,7 @@ import {
   type IssueStatus,
 } from "@/core/community/issues";
 import type { LucideIcon } from "lucide-react";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 
 export function getStatusBadge(status: IssueStatus) {
   const variants: Record<IssueStatus, { variant: BadgeProps["variant"]; label: string }> = {
@@ -15,7 +16,7 @@ export function getStatusBadge(status: IssueStatus) {
     resolvido: { variant: "default", label: "Resolvido" },
     rejeitado: { variant: "destructive", label: "Rejeitado" },
   };
-  const config = variants[status] ?? variants.aberto;
+  const config = getRecordValue(variants, status) ?? variants.aberto;
   return <Badge variant={config.variant}>{config.label}</Badge>;
 }
 
@@ -26,9 +27,9 @@ export function getPriorityBadge(priority: IssuePriority) {
     alta: { variant: "default", icon: ArrowUp },
     urgente: { variant: "destructive", icon: AlertCircle },
   };
-  const config = variants[priority] ?? variants.media;
+  const config = getRecordValue(variants, priority) ?? variants.media;
   const Icon = config.icon;
-  const priorityLabel = ISSUE_PRIORITY_LABELS[priority] ?? ISSUE_PRIORITY_LABELS.media;
+  const priorityLabel = getRecordValue(ISSUE_PRIORITY_LABELS, priority) ?? ISSUE_PRIORITY_LABELS.media;
 
   return (
     <Badge variant={config.variant} className="flex items-center gap-1">

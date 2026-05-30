@@ -13,11 +13,11 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { EducationTrackingService } from '../EducationTrackingService';
-import { supabase } from '@/core/infrastructure/supabase/client';
+import { supabase } from '@/core/infrastructure/supabase';
 import { logger } from '@/shared/utils/logger';
 
 // Mocks
-vi.mock('@/core/infrastructure/supabase/client');
+vi.mock('@/core/infrastructure/supabase');
 vi.mock('@/shared/utils/logger');
 
 const mockInsert = vi.fn();
@@ -33,11 +33,13 @@ describe('EducationTrackingService', () => {
     vi.mocked(logger.warn).mockClear();
     
     // Mock sessionStorage
-    const mockSessionStorage: Record<string, string> = {};
+    const mockSessionStorage = new Map<string, string>();
     Object.defineProperty(window, 'sessionStorage', {
       value: {
-        getItem: (key: string) => mockSessionStorage[key] || null,
-        setItem: (key: string, value: string) => { mockSessionStorage[key] = value; },
+        getItem: (key: string) => mockSessionStorage.get(key) ?? null,
+        setItem: (key: string, value: string) => {
+          mockSessionStorage.set(key, value);
+        },
       },
       writable: true,
     });

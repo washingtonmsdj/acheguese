@@ -10,7 +10,7 @@ import { Textarea } from "@/shared/components/ui/textarea";
 import { Label } from "@/shared/components/ui/label";
 import { useSessionContext } from "@/core/session";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
-import { getClassifiedById, updateClassified } from "@/modules/classifieds/services";
+import { classifiedUrlService, getClassifiedById, updateClassified } from "@/modules/classifieds/services";
 
 export default function EditarClassificadoPage() {
   const { id } = useParams<{ id: string }>();
@@ -64,9 +64,9 @@ export default function EditarClassificadoPage() {
         status,
       });
     },
-    onSuccess: () => {
+    onSuccess: (updatedClassified) => {
       toast.success("Classificado atualizado com sucesso");
-      navigate(`/classificados/${id}`);
+      navigate(classifiedUrlService.buildPublicUrl(updatedClassified) ?? appUrls.classifieds.list);
     },
     onError: (err) => {
       toast.error(err instanceof Error ? err.message : "Falha ao atualizar classificado");
@@ -212,7 +212,10 @@ export default function EditarClassificadoPage() {
           </div>
 
           <div className="flex flex-wrap gap-2 justify-end">
-            <Button variant="outline" onClick={() => navigate(`/classificados/${id}`)}>
+            <Button
+              variant="outline"
+              onClick={() => navigate(classifiedUrlService.buildPublicUrl(data) ?? appUrls.classifieds.list)}
+            >
               Cancelar
             </Button>
             <Button onClick={() => mutation.mutate()} disabled={disabled}>

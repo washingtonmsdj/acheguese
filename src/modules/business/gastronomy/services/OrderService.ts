@@ -7,6 +7,7 @@
  */
 
 import { logger } from '@/shared/utils/logger';
+import { getRecordValue } from '@/shared/utils/recordLookup';
 import { OrderDeliverySSOTService } from '@/core/mobility/delivery/services/OrderDeliverySSOTService';
 import { MobilityService } from '@/core/mobility/services/runtime';
 import {
@@ -226,7 +227,8 @@ function shouldCreateCustomerLateCancellationEvent(
 }
 
 function getMetadataString(order: OrderRecord, key: string): string | null {
-  const value = order.source_context.source_metadata?.[key];
+  const metadata = order.source_context.source_metadata;
+  const value = metadata ? getRecordValue(metadata, key) : undefined;
   return typeof value === 'string' && value.trim() ? value : null;
 }
 
@@ -241,7 +243,8 @@ function getMetadataStringFirst(order: OrderRecord, keys: readonly string[]): st
 }
 
 function getMetadataNumber(order: OrderRecord, key: string): number | null {
-  const value = order.source_context.source_metadata?.[key];
+  const metadata = order.source_context.source_metadata;
+  const value = metadata ? getRecordValue(metadata, key) : undefined;
   return typeof value === 'number' && Number.isFinite(value) ? value : null;
 }
 
@@ -255,7 +258,7 @@ function getDeliveryPricingNumber(
   );
   const pricing = metadata.delivery_pricing;
   if (!pricing) return null;
-  const value = pricing[key];
+  const value = key === 'courier_cost' ? pricing.courier_cost : pricing.margin;
   return typeof value === 'number' && Number.isFinite(value) ? value : null;
 }
 

@@ -19,6 +19,10 @@
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/core/infrastructure/supabase/supabase';
+import {
+  ProfileSavedEntityService,
+  type ProfileSavedEntityConfig,
+} from '@/core/engagement/services/ProfileSavedEntityService';
 import { JOB_QUERY_LIMITS } from '../constants/query-limits';
 import type {
   Candidatura,
@@ -28,6 +32,12 @@ import type {
   VagasQueryParams,
   VagasPaginatedResult,
 } from '../types/vagas.types';
+
+const VAGA_SAVED_CONFIG = {
+  tableName: 'vaga_saved_items',
+  entityIdColumn: 'vaga_id',
+  logLabel: 'vaga_saved_items',
+} as const satisfies ProfileSavedEntityConfig;
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // MAPEAMENTO DATABASE -> DOMAIN
@@ -576,6 +586,22 @@ export class VagasService {
       logger.error('[VagasService] Erro inesperado ao candidatar-se:', error);
       throw error;
     }
+  }
+
+  static async getSavedVagaIds(profileId: string): Promise<string[]> {
+    return ProfileSavedEntityService.getSavedEntityIds(VAGA_SAVED_CONFIG, profileId);
+  }
+
+  static async isVagaSaved(vagaId: string, profileId: string): Promise<boolean> {
+    return ProfileSavedEntityService.isSaved(VAGA_SAVED_CONFIG, vagaId, profileId);
+  }
+
+  static async saveVaga(vagaId: string, profileId: string): Promise<void> {
+    return ProfileSavedEntityService.save(VAGA_SAVED_CONFIG, vagaId, profileId);
+  }
+
+  static async removeSavedVaga(vagaId: string, profileId: string): Promise<void> {
+    return ProfileSavedEntityService.remove(VAGA_SAVED_CONFIG, vagaId, profileId);
   }
 
   /**

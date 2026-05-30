@@ -15,6 +15,7 @@ import {
 } from "@/shared/components/ui/dialog";
 import { PizzaAdminService } from "../PizzaAdminService";
 import { toast } from "sonner";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 import type { PizzaCatalog, PizzaSize, PizzaFlavor, PizzaEdge, PizzaDough, PizzaPriceRuleType } from "../types";
 
 interface Props {
@@ -226,7 +227,10 @@ export function PizzaAdminPanel({ businessId, userId }: Props) {
         dough: "pizza_doughs",
       };
 
-      await PizzaAdminService.setAvailability(tableMap[type], item.id, !item.is_available, businessId, userId);
+      const tableName = getRecordValue(tableMap, type);
+      if (!tableName) return;
+
+      await PizzaAdminService.setAvailability(tableName, item.id, !item.is_available, businessId, userId);
       await loadCatalog();
       toast.success("Status atualizado");
     } catch (err) {

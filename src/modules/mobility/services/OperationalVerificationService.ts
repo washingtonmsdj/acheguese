@@ -15,6 +15,7 @@
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/core/infrastructure/supabase/supabase';
+import { secureRandomDigits } from '@/shared/utils/secureRandom';
 import bcrypt from 'bcryptjs';
 import { profileService } from '@/core/profiles/services/ProfileService';
 import type {
@@ -438,15 +439,7 @@ export class OperationalVerificationService {
    * Gera PIN de 4 dígitos
    */
   private static generatePIN(): string {
-    const cryptoApi = globalThis.crypto;
-
-    if (cryptoApi?.getRandomValues) {
-      const bytes = new Uint16Array(1);
-      cryptoApi.getRandomValues(bytes);
-      return (bytes[0] % 10000).toString().padStart(4, '0');
-    }
-
-    return Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+    return secureRandomDigits(CONFIG.LENGTH);
   }
 
   /**

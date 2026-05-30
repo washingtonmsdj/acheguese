@@ -32,6 +32,7 @@ import { useLocationContext } from '@/core/location/hooks/useLocationContext';
 import { useOrders } from '../hooks/useOrders';
 import { OrderDeliveryLinkService } from '@/core/mobility/delivery/services/OrderDeliveryLinkService';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
+import { getRecordValue } from '@/shared/utils/recordLookup';
 
 type DeliveryFilterTab = 'all' | 'pending' | 'in_progress' | 'delivered' | 'failed' | 'cancelled';
 
@@ -80,7 +81,7 @@ function statusLabel(status: string): string {
     expired: 'Expirada',
   };
 
-  return labels[status] || status;
+  return getRecordValue(labels, status) ?? status;
 }
 
 function statusVariant(status: string): 'default' | 'secondary' | 'destructive' | 'outline' {

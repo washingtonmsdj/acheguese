@@ -21,6 +21,7 @@ import {
   Share2,
 } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 import type {
   CommunityRideIntent,
   CommunityRidePostData,
@@ -212,17 +213,17 @@ export function PostToRideModal({
 
           {/* Suggested messages */}
           <div className="space-y-1.5">
-            <Label className="text-xs text-gray-400 flex items-center gap-1">
-              <Sparkles className="h-3 w-3 text-yellow-400" />
+            <Label className="text-xs text-muted-foreground flex items-center gap-1">
+              <Sparkles className="h-3 w-3 text-warning" />
               Sugestões rápidas
             </Label>
             <div className="flex flex-wrap gap-1.5">
-              {SUGGESTED_MESSAGES[intent].map((msg, i) => (
+              {(getRecordValue(SUGGESTED_MESSAGES, intent) ?? []).map((msg, i) => (
                 <button
                   key={i}
                   type="button"
                   onClick={() => handleSuggestedMessage(msg)}
-                  className="text-[0.6rem] px-2.5 py-1 rounded-full border border-white/10 text-gray-400 hover:border-teal-400/50 hover:text-teal-400 transition-all bg-white/[0.02] hover:bg-teal-500/5 text-left"
+                  className="text-[0.6rem] px-2.5 py-1 rounded-full border border-border text-muted-foreground hover:border-primary/50 hover:text-primary transition-all bg-background hover:bg-primary/5 text-left"
                 >
                   {msg.length > 40 ? msg.slice(0, 40) + "…" : msg}
                 </button>

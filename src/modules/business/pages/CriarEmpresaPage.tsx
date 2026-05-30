@@ -31,6 +31,7 @@ import { getEligibleVerticals, getVerticalByCreateSlug } from "@/core/verticals/
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
 import { EntityStatus } from "@/shared/types/enums";
 import { locationContextStore } from "@/core/location/stores/LocationContextStore";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 
 interface DayHoursValue {
   open: string;
@@ -83,7 +84,7 @@ function getStepErrorMessages(
   fields: readonly string[],
 ): string[] {
   const collected = fields
-    .map((field) => errors[field])
+    .map((field) => getRecordValue(errors, field))
     .filter((message): message is string => Boolean(message));
 
   return Array.from(new Set(collected));
@@ -224,17 +225,13 @@ export default function CriarEmpresaPage() {
   }, [createVertical, form]);
 
   const getErrors = (): Record<string, string> => {
-    const errors: Record<string, string> = {};
     const formErrors = form.formState.errors;
 
-    for (const key of Object.keys(formErrors)) {
-      const fieldError = formErrors[key as keyof typeof formErrors];
-      if (fieldError?.message) {
-        errors[key] = fieldError.message;
-      }
-    }
-
-    return errors;
+    return Object.fromEntries(
+      Object.entries(formErrors).flatMap(([key, fieldError]) =>
+        fieldError?.message ? [[key, fieldError.message as string]] : [],
+      ),
+    );
   };
 
   const handleNameChange = (value: string) => {

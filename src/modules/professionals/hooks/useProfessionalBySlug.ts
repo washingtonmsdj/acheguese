@@ -1,6 +1,6 @@
 /**
  * Hook para buscar profissional por slug + uf + cidade
- * Usado pela página pública /profissionais/:uf/:cidade/:slug
+ * Usado pela pagina publica /servicos/:state/:city/profissional/:slug
  *
  * ✅ BLINDAGEM v3.0: Acesso ao banco delegado para ProfessionalService
  */

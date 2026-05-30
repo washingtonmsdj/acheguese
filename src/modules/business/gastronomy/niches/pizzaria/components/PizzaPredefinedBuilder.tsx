@@ -17,6 +17,7 @@ import type { MenuItemAddon, MenuItemWithRelations } from "@/modules/business/ga
 import { PizzaSliceVisualizer } from "./PizzaSliceVisualizer";
 import { findFlavorByMenuItemName } from "../utils/flavorMatch";
 import { resolvePizzaRenderSize, textHasPizzaCrustHint } from "../utils/pizzaVisualRules";
+import { getRecordValue, setRecordValue } from "@/shared/utils/recordLookup";
 
 interface Props {
   businessId: string;
@@ -183,11 +184,11 @@ export function PizzaPredefinedBuilder({
   };
 
   const updateAdditionalFlavor = (index: number, flavorId: string) => {
-    setAdditionalFlavorIds((current) => {
-      const updated = [...current];
-      updated[index] = flavorId;
-      return updated;
-    });
+    setAdditionalFlavorIds((current) =>
+      current.map((currentFlavorId, currentIndex) =>
+        currentIndex === index ? flavorId : currentFlavorId,
+      ),
+    );
   };
 
   const removeAdditionalFlavor = (index: number) => {
@@ -198,9 +199,9 @@ export function PizzaPredefinedBuilder({
     setExtraQuantities((current) => {
       const nextValue = Math.max(
         0,
-        Math.min((current[extra.id] ?? 0) + delta, extra.max_quantity || 5)
+        Math.min((getRecordValue(current, extra.id) ?? 0) + delta, extra.max_quantity || 5)
       );
-      return { ...current, [extra.id]: nextValue };
+      return setRecordValue(current, extra.id, nextValue);
     });
   };
 

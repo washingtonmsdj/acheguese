@@ -42,8 +42,11 @@ import { useResolveTerritoryFromUrl } from '@/core/routing/hooks/useResolveTerri
 import { usePublicBrowsingCity } from '@/core/location/hooks/usePublicBrowsingCity';
 import { LocationType } from '@/core/location/types';
 import { buildPublicAbsoluteUrl } from '@/shared/config/publicAppOrigin';
+import { APP_MODULE_SLUGS } from '@/config/moduleSlugs';
+import { buildModuleTerritoryUrlFromSegments } from '@/core/routing/utils/territoryUrls';
 
 import { useEducationList } from '../hooks/useEducationList';
+import { EducationUrlService } from '../services/EducationUrlService';
 import { getPublicNiches, getNicheByKey } from '../niches/registry';
 import {
   filterEnrichedProfiles,
@@ -172,12 +175,17 @@ export function EducationExplorerPage() {
     return slugToLabel(effectiveCity);
   }, [effectiveCity, groupSlugOrDistrict, resolved]);
 
-  const canonicalPath = district
-    ? `/educacao/${effectiveState}/${effectiveCity}/${district}`
-    : `/educacao/${effectiveState}/${effectiveCity}`;
-  const businessExplorerHref = district
-    ? `/empresas/${effectiveState}/${effectiveCity}/${district}`
-    : `/empresas/${effectiveState}/${effectiveCity}`;
+  const canonicalPath = EducationUrlService.buildListingUrl({
+    state: effectiveState,
+    city: effectiveCity,
+    district,
+  });
+  const businessExplorerHref = buildModuleTerritoryUrlFromSegments(
+    APP_MODULE_SLUGS.business,
+    effectiveState,
+    effectiveCity,
+    district ? [district] : [],
+  );
 
   return (
     <div className="min-h-screen bg-background">

@@ -1,4 +1,6 @@
 import { RIDE_STATUS } from "../constants";
+import { secureRandomString } from "@/shared/utils/secureRandom";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 
 export function isRideActive(status: string): boolean {
   const activeStatuses: string[] = [
@@ -85,7 +87,7 @@ export function formatPrice(value: number): string {
 }
 
 export function generateShareToken(): string {
-  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+  return secureRandomString(32);
 }
 
 export function isValidCoordinate(lat: number, lng: number): boolean {
@@ -127,33 +129,33 @@ export function getRideStatusLabel(status: string): string {
     [RIDE_STATUS.FAILED_DELIVERY]: "Falha na entrega",
   };
 
-  return labels[status] ?? "Status desconhecido";
+  return getRecordValue(labels, status) ?? "Status desconhecido";
 }
 
 export function getRideStatusColor(status: string): string {
   const colors: Record<string, string> = {
-    [RIDE_STATUS.PENDING]: "text-amber-600",
-    [RIDE_STATUS.REQUESTED]: "text-amber-600",
-    [RIDE_STATUS.SEARCHING_DRIVER]: "text-blue-600",
-    [RIDE_STATUS.DRIVER_ASSIGNED]: "text-indigo-600",
-    [RIDE_STATUS.DRIVER_ACCEPTED]: "text-indigo-600",
-    [RIDE_STATUS.DRIVER_ARRIVING]: "text-indigo-600",
-    [RIDE_STATUS.DRIVER_ON_THE_WAY]: "text-indigo-600",
-    [RIDE_STATUS.DRIVER_ARRIVED]: "text-violet-600",
-    [RIDE_STATUS.PASSENGER_BOARDED]: "text-cyan-600",
-    [RIDE_STATUS.PASSENGER_ON_BOARD]: "text-cyan-600",
-    [RIDE_STATUS.IN_PROGRESS]: "text-cyan-600",
-    [RIDE_STATUS.PICKUP_CONFIRMED]: "text-cyan-600",
-    [RIDE_STATUS.IN_DELIVERY]: "text-cyan-600",
-    [RIDE_STATUS.DELIVERED]: "text-green-600",
-    [RIDE_STATUS.COMPLETED]: "text-green-600",
-    [RIDE_STATUS.CANCELLED]: "text-red-600",
-    [RIDE_STATUS.CANCELLED_BY_DRIVER]: "text-red-600",
-    [RIDE_STATUS.CANCELLED_BY_PASSENGER]: "text-red-600",
-    [RIDE_STATUS.EXPIRED]: "text-slate-500",
-    [RIDE_STATUS.FAILED]: "text-red-700",
-    [RIDE_STATUS.FAILED_DELIVERY]: "text-red-700",
+    [RIDE_STATUS.PENDING]: "text-warning",
+    [RIDE_STATUS.REQUESTED]: "text-warning",
+    [RIDE_STATUS.SEARCHING_DRIVER]: "text-primary",
+    [RIDE_STATUS.DRIVER_ASSIGNED]: "text-primary",
+    [RIDE_STATUS.DRIVER_ACCEPTED]: "text-primary",
+    [RIDE_STATUS.DRIVER_ARRIVING]: "text-primary",
+    [RIDE_STATUS.DRIVER_ON_THE_WAY]: "text-primary",
+    [RIDE_STATUS.DRIVER_ARRIVED]: "text-success",
+    [RIDE_STATUS.PASSENGER_BOARDED]: "text-primary",
+    [RIDE_STATUS.PASSENGER_ON_BOARD]: "text-primary",
+    [RIDE_STATUS.IN_PROGRESS]: "text-primary",
+    [RIDE_STATUS.PICKUP_CONFIRMED]: "text-success",
+    [RIDE_STATUS.IN_DELIVERY]: "text-primary",
+    [RIDE_STATUS.DELIVERED]: "text-success",
+    [RIDE_STATUS.COMPLETED]: "text-success",
+    [RIDE_STATUS.CANCELLED]: "text-destructive",
+    [RIDE_STATUS.CANCELLED_BY_DRIVER]: "text-destructive",
+    [RIDE_STATUS.CANCELLED_BY_PASSENGER]: "text-destructive",
+    [RIDE_STATUS.EXPIRED]: "text-muted-foreground",
+    [RIDE_STATUS.FAILED]: "text-destructive",
+    [RIDE_STATUS.FAILED_DELIVERY]: "text-destructive",
   };
 
-  return colors[status] ?? "text-muted-foreground";
+  return getRecordValue(colors, status) ?? "text-muted-foreground";
 }

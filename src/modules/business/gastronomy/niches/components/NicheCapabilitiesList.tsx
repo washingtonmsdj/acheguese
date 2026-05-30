@@ -9,6 +9,7 @@
 import React from 'react';
 import { Check, X, Clock, AlertCircle } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
+import { getRecordValue } from '@/shared/utils/recordLookup';
 import type { GastronomyNicheConfig, NicheCapability } from '../types';
 
 // ── Tipos ────────────────────────────────────────────────────────────────────
@@ -170,5 +171,5 @@ function getCapabilityLabel(capability: NicheCapability): string {
     reviews: 'Avaliações',
   };
 
-  return labels[capability] || capability;
+  return getRecordValue(labels, capability) ?? capability;
 }

@@ -13,14 +13,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/core/auth";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { RideReportsService, type CreateReportInput, type RideReport } from "@/modules/mobility/services/RideReportsService";
+import { MOBILITY_QUERY_KEYS } from "@/modules/mobility/constants";
 import { toast } from "sonner";
 import { logger } from "@/shared/utils/logger";
-
-const QUERY_KEYS = {
-  myReports: (userId: string) => ["ride-reports", "user", userId],
-  rideReports: (rideId: string) => ["ride-reports", "ride", rideId],
-  stats: () => ["ride-reports", "stats"],
-};
 
 export function useRideReports() {
   const { user } = useAuth();
@@ -33,7 +28,7 @@ export function useRideReports() {
     isLoading,
     refetch,
   } = useQuery({
-    queryKey: QUERY_KEYS.myReports(user?.id || ""),
+    queryKey: MOBILITY_QUERY_KEYS.reports(user?.id || ""),
     queryFn: async () => {
       if (!user) return [];
       
@@ -68,7 +63,7 @@ export function useRideReports() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.myReports(user?.id || "") });
+      queryClient.invalidateQueries({ queryKey: MOBILITY_QUERY_KEYS.reports(user?.id || "") });
       toast.success("Report enviado com sucesso");
     },
     onError: (error: Error) => {

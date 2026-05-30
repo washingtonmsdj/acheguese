@@ -15,9 +15,10 @@
  * @version 3.0.0 - Hook Completo AAA
  */
 
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { VagasService } from '../services/VagasService';
+import { VagaReportService, type VagaReportReason } from '../services/VagaReportService';
 import type { Vaga } from '../types/vagas.types';
 import { useSessionContext } from '@/core/session';
 import { buildMailtoUrl, buildTelUrl, openContactUrl } from '@/shared/utils/contactLinks';
@@ -51,8 +52,10 @@ interface UseVagaDetailReturn {
   // Ações
   refetch: () => void;
   compartilhar: () => Promise<void>;
-  salvarVaga: () => Promise<void>;
+  salvarVaga: () => Promise<boolean>;
+  denunciarVaga: (input: { reason: VagaReportReason; description?: string }) => Promise<void>;
   isSaved: boolean;
+  isDenunciando: boolean;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -69,7 +72,6 @@ export function useVagaDetail(params: UseVagaDetailParams): UseVagaDetailReturn 
   const { slug, locationId } = params;
   const queryClient = useQueryClient();
   const { activeProfile } = useSessionContext();
-  const [isSaved, setIsSaved] = useState(false);
 
   // Query principal: buscar vaga por slug
   const {
@@ -110,6 +112,14 @@ export function useVagaDetail(params: UseVagaDetailParams): UseVagaDetailReturn 
     },
     staleTime: STALE_TIME,
     enabled: !!vaga?.empresaId,
+  });
+
+  const {
+    data: isSaved = false,
+  } = useQuery({
+    queryKey: ['vaga-saved', activeProfile?.id, vaga?.id],
+    queryFn: () => VagasService.isVagaSaved(vaga!.id, activeProfile!.id),
+    enabled: Boolean(vaga?.id && activeProfile?.id),
   });
 
   // Mutação: candidatar-se à vaga
@@ -166,6 +176,46 @@ export function useVagaDetail(params: UseVagaDetailParams): UseVagaDetailReturn 
     },
   });
 
+  const savedVagaMutation = useMutation({
+    mutationFn: async () => {
+      if (!vaga) throw new Error('Vaga nao encontrada');
+      if (!activeProfile?.id) {
+        throw new Error('Entre na sua conta para salvar vagas.');
+      }
+
+      if (isSaved) {
+        await VagasService.removeSavedVaga(vaga.id, activeProfile.id);
+        return false;
+      }
+
+      await VagasService.saveVaga(vaga.id, activeProfile.id);
+      return true;
+    },
+    onSuccess: (nextIsSaved) => {
+      queryClient.setQueryData(['vaga-saved', activeProfile?.id, vaga?.id], nextIsSaved);
+      void queryClient.invalidateQueries({ queryKey: ['vaga-saved', activeProfile?.id] });
+      void queryClient.invalidateQueries({ queryKey: ['saved-vagas', activeProfile?.id] });
+    },
+  });
+
+  const reportVagaMutation = useMutation({
+    mutationFn: async (input: { reason: VagaReportReason; description?: string }) => {
+      if (!vaga) throw new Error('Vaga nao encontrada');
+      if (!activeProfile?.id) {
+        throw new Error('Entre na sua conta para denunciar vagas.');
+      }
+      if (activeProfile.id === vaga.ownerProfileId) {
+        throw new Error('O perfil responsavel pela vaga nao pode denuncia-la.');
+      }
+
+      await VagaReportService.createReport(activeProfile.id, {
+        vagaId: vaga.id,
+        reason: input.reason,
+        description: input.description,
+      });
+    },
+  });
+
   // Handler de candidatura
   const candidatarSe = useCallback(async (mensagem?: string) => {
     await candidaturaMutation.mutateAsync(mensagem);
@@ -192,36 +242,13 @@ export function useVagaDetail(params: UseVagaDetailParams): UseVagaDetailReturn 
     }
   }, [vaga]);
 
-  // Handler de salvar vaga (localStorage por enquanto)
   const salvarVaga = useCallback(async () => {
-    if (!vaga) return;
-    
-    try {
-      const saved = JSON.parse(localStorage.getItem('vagas-salvas') || '[]');
-      const index = saved.indexOf(vaga.id);
-      
-      if (index === -1) {
-        saved.push(vaga.id);
-        setIsSaved(true);
-      } else {
-        saved.splice(index, 1);
-        setIsSaved(false);
-      }
-      
-      localStorage.setItem('vagas-salvas', JSON.stringify(saved));
-    } catch {
-      // Falha silenciosa
-    }
-  }, [vaga]);
+    return savedVagaMutation.mutateAsync();
+  }, [savedVagaMutation]);
 
-  // Verificar se está salvo no localStorage (apenas no client)
-  // useEffect(() => {
-  //   if (!vaga) return;
-  //   try {
-  //     const saved = JSON.parse(localStorage.getItem('vagas-salvas') || '[]');
-  //     setIsSaved(saved.includes(vaga.id));
-  //   } catch {}
-  // }, [vaga]);
+  const denunciarVaga = useCallback(async (input: { reason: VagaReportReason; description?: string }) => {
+    await reportVagaMutation.mutateAsync(input);
+  }, [reportVagaMutation]);
 
   return {
     // Dados
@@ -243,6 +270,8 @@ export function useVagaDetail(params: UseVagaDetailParams): UseVagaDetailReturn 
     refetch,
     compartilhar,
     salvarVaga,
+    denunciarVaga,
     isSaved,
+    isDenunciando: reportVagaMutation.isPending,
   };
 }

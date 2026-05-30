@@ -21,8 +21,6 @@ import type { ClassifiedUrlContext } from '@/modules/classifieds/services/Classi
 export interface ClassifiedUrls {
   /** Lista de classificados: /classificados/ba/salvador ou /classificados/ba/salvador/complexo-do-nordeste */
   list: string;
-  /** Detalhe de classificado: /classificados/{id} (global, não territorial) - DEPRECATED */
-  detail: (id: string) => string;
   /** Novo classificado: /classificados/novo (global) */
   new: string;
   /** Editar classificado: /classificados/editar/{id} (global) */
@@ -66,11 +64,9 @@ export function useClassifiedUrls(routeResolved?: ResolvedTerritory | null): Cla
 
   return {
     list: listUrl,
-    /** @deprecated Usar canonical ou short */
-    detail: (id: string) => `/classificados/${id}`,
-    new: '/classificados/novo',
-    edit: (id: string) => `/classificados/editar/${id}`,
-    seller: (sellerId: string) => `/classificados/vendedor/${sellerId}`,
+    new: classifiedUrlService.buildNewUrl(),
+    edit: (id: string) => classifiedUrlService.buildEditUrl(id),
+    seller: (sellerId: string) => classifiedUrlService.buildSellerUrl(sellerId),
     canonical: (ctx: ClassifiedUrlContext) => classifiedUrlService.buildUrls(ctx).canonical,
     short: (publicId: string) => classifiedUrlService.buildShortUrl(publicId),
   };

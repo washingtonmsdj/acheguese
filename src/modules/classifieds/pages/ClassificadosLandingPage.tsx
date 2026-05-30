@@ -156,21 +156,10 @@ export default function ClassificadosLandingPage({ resolved, activeMemberIds }: 
   const clearFilters = useCallback(() => setFilters(DEFAULT_FILTERS), []);
 
   const handleAdClick = useCallback((ad: ClassificadoWithVendedor) => {
-    // ✅ SSOT: Usar classifiedUrlService para construir URL canônica
-    if (ad.geographic_path && ad.category_slug && ad.subcategory_slug && ad.slug && ad.public_id) {
-      const urls = classifiedUrlService.buildUrls({
-        id: ad.id,
-        public_id: ad.public_id,
-        geographic_path: ad.geographic_path,
-        category_slug: ad.category_slug,
-        subcategory_slug: ad.subcategory_slug,
-        slug: ad.slug,
-      });
-      navigate(urls.canonical);
-      return;
+    const publicUrl = classifiedUrlService.buildPublicUrl(ad);
+    if (publicUrl) {
+      navigate(publicUrl);
     }
-    // Fallback para URL curta canônica via SSOT
-    navigate(classifiedUrlService.buildShortUrl(ad.public_id || ad.id));
   }, [navigate]);
 
   const handleNewAd = useCallback(() => {

@@ -259,7 +259,8 @@ Callback chamado quando o card é clicado.
 
 ```typescript
 const handleClick = () => {
-  navigate(`/classificados/${item.id}`);
+  const publicUrl = classifiedUrlService.buildPublicUrl(item);
+  if (publicUrl) navigate(publicUrl);
 };
 ```
 

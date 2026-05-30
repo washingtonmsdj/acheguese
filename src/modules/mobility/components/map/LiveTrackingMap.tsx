@@ -12,6 +12,7 @@ import { Car, MapPin, Navigation } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
 import { RIDE_STATUS } from '@/shared/types/constants';
 import { DEFAULT_TILE_STYLE } from '@/core/maps/providers/MapProvider';
+import { createMapPopupContent } from '@/shared/components/maps/mapPopupContent';
 interface LiveTrackingMapProps {
   driverProfileId: string;
   origin: { lat: number; lng: number; address: string };
@@ -145,12 +146,30 @@ export function LiveTrackingMap({
       // Marcadores fixos
       new maplibregl.Marker({ element: makeSvgMarker('#34d399', 'circle') })
         .setLngLat([origin.lng, origin.lat])
-        .setPopup(new maplibregl.Popup({ closeButton: false }).setHTML(`<p style="font-size:12px;font-weight:600;color:#059669">Origem</p><p style="font-size:11px;color:#6b7280">${origin.address}</p>`))
+        .setPopup(
+          new maplibregl.Popup({ closeButton: false }).setDOMContent(
+            createMapPopupContent({
+              title: 'Origem',
+              description: origin.address,
+              titleTone: 'success',
+              align: 'left',
+            }),
+          ),
+        )
         .addTo(map);
 
       new maplibregl.Marker({ element: makeSvgMarker('#ef4444', 'circle') })
         .setLngLat([destination.lng, destination.lat])
-        .setPopup(new maplibregl.Popup({ closeButton: false }).setHTML(`<p style="font-size:12px;font-weight:600;color:#dc2626">Destino</p><p style="font-size:11px;color:#6b7280">${destination.address}</p>`))
+        .setPopup(
+          new maplibregl.Popup({ closeButton: false }).setDOMContent(
+            createMapPopupContent({
+              title: 'Destino',
+              description: destination.address,
+              titleTone: 'danger',
+              align: 'left',
+            }),
+          ),
+        )
         .addTo(map);
 
       // Ajustar câmera para cobrir origem e destino

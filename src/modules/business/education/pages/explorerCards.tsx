@@ -5,16 +5,15 @@ import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { cn } from '@/shared/utils/cn';
+import { SafeLink } from '@/shared/components/security';
+import { buildWhatsAppUrl } from '@/shared/utils/contactLinks';
 import { getNicheByKey } from '../niches/registry';
+import { EducationUrlService } from '../services/EducationUrlService';
 import type { EducationPublicProfile } from '../types';
 import type { ViewMode } from './explorerFilters';
 
 function buildWhatsAppHref(phone?: string | null): string | null {
-  if (!phone) return null;
-  const digits = phone.replace(/\D/g, '');
-  if (!digits) return null;
-  const normalized = digits.startsWith('55') ? digits : `55${digits.replace(/^0+/, '')}`;
-  return `https://wa.me/${normalized}`;
+  return buildWhatsAppUrl(phone);
 }
 
 interface EditorialCardProps {
@@ -45,7 +44,7 @@ export function EditorialCard({
   const gradient = nicheAccent[profile.niche_key] ?? 'from-primary to-primary/70';
   const route = profile.public_route;
   const detailHref = route
-    ? `/educacao/${route.state}/${route.city}/${route.district}/${route.slug}`
+    ? EducationUrlService.buildDetailUrl(route)
     : null;
   const whatsappHref = buildWhatsAppHref(profile.whatsapp_number);
   const institutionName = profile.business_name ?? profile.institution_type;
@@ -75,7 +74,11 @@ export function EditorialCard({
             {comparing ? 'Adicionado' : 'Comparar'}
           </button>
           {detailHref ? <Link to={detailHref}><Button size="sm" className="w-full justify-between rounded-full">Ver detalhes <ArrowUpRight className="h-4 w-4" /></Button></Link> : <Button size="sm" className="w-full justify-between rounded-full" disabled>Sem rota publica <ArrowUpRight className="h-4 w-4" /></Button>}
-          {whatsappHref && <a href={whatsappHref} target="_blank" rel="noreferrer"><Button size="sm" variant="outline" className="w-full justify-between rounded-full">WhatsApp <MessageCircle className="h-4 w-4" /></Button></a>}
+          {whatsappHref && (
+            <Button size="sm" variant="outline" className="w-full justify-between rounded-full" asChild>
+              <SafeLink href={whatsappHref} target="_blank">WhatsApp <MessageCircle className="h-4 w-4" /></SafeLink>
+            </Button>
+          )}
         </div>
       </motion.article>
     );
@@ -99,7 +102,11 @@ export function EditorialCard({
         <div className="mt-auto flex items-center justify-between gap-2 pt-4 text-[11px] text-muted-foreground">{route?.district ? <span className="inline-flex min-w-0 items-center gap-1"><MapPin className="h-3 w-3 shrink-0" /><span className="truncate capitalize">{route.district.replace(/-/g, ' ')}</span></span> : <span />}</div>
         <div className="mt-3 flex gap-1.5 border-t border-border/60 pt-3">
           {detailHref ? <Link to={detailHref} className="flex-1"><Button size="sm" className="h-8 w-full rounded-full px-3 text-xs">Detalhes<ChevronRight className="ml-1 h-3.5 w-3.5" /></Button></Link> : <Button size="sm" className="h-8 flex-1 rounded-full px-3 text-xs" disabled>Sem rota</Button>}
-          {whatsappHref && <a href={whatsappHref} target="_blank" rel="noreferrer"><Button size="sm" variant="outline" className="h-8 rounded-full px-2.5"><MessageCircle className="h-3.5 w-3.5" /></Button></a>}
+          {whatsappHref && (
+            <Button size="sm" variant="outline" className="h-8 rounded-full px-2.5" asChild>
+              <SafeLink href={whatsappHref} target="_blank"><MessageCircle className="h-3.5 w-3.5" /></SafeLink>
+            </Button>
+          )}
         </div>
       </div>
     </motion.article>

@@ -155,21 +155,12 @@ export function useClassificadosPage(options: UseClassificadosPageOptions = {}) 
   );
   const handleClassificadoClick = useCallback(
     (c: ClassificadoWithVendedor) => {
-      if (c.geographic_path && c.category_slug && c.subcategory_slug && c.slug && c.public_id) {
-        const urls = classifiedUrlService.buildUrls({
-          id: c.id,
-          public_id: c.public_id,
-          slug: c.slug,
-          geographic_path: c.geographic_path,
-          category_slug: c.category_slug,
-          subcategory_slug: c.subcategory_slug,
-        });
-        navigate(urls.canonical);
-      } else {
-        navigate(classifiedUrls.short(c.public_id));
+      const publicUrl = classifiedUrlService.buildPublicUrl(c);
+      if (publicUrl) {
+        navigate(publicUrl);
       }
     },
-    [navigate, classifiedUrls],
+    [navigate],
   );
   const handleNewClassificado = useCallback(
     () => navigate(classifiedUrls.new),

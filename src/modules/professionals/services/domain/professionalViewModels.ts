@@ -2,6 +2,8 @@ import type { Professional } from "@/core/professional/types";
 
 export interface ProfessionalItem {
   id: string;
+  profile_id: string;
+  slug: string | null;
   name: string;
   category: string;
   service: string;
@@ -10,7 +12,9 @@ export interface ProfessionalItem {
   reviews_count: number;
   avatar_url: string | null;
   city: string;
+  state: string;
   neighborhood: string;
+  geographic_path: string | null;
   price_range: string;
   whatsapp: string | null;
   latitude: number | null;
@@ -59,6 +63,8 @@ export interface ProfessionalDetailView {
 export function mapProfessionalToItem(professional: Professional): ProfessionalItem {
   return {
     id: professional.id,
+    profile_id: professional.profile_id,
+    slug: professional.slug ?? null,
     name: professional.name,
     category: professional.category,
     service: professional.subcategory || professional.category || "",
@@ -67,7 +73,9 @@ export function mapProfessionalToItem(professional: Professional): ProfessionalI
     reviews_count: professional.total_reviews,
     avatar_url: professional.logo_url || null,
     city: professional.city || "",
+    state: professional.state || "",
     neighborhood: professional.neighborhood || "",
+    geographic_path: professional.geographic_path ?? null,
     price_range: professional.price_range || "",
     whatsapp: professional.whatsapp || null,
     latitude: professional.latitude ?? null,

@@ -20,6 +20,24 @@ export type ReportReason =
   | "sold"
   | "other";
 
+export const CLASSIFIED_REPORT_REASON_OPTIONS: readonly {
+  id: ReportReason;
+  label: string;
+}[] = [
+  { id: "fraud", label: "Fraude ou golpe" },
+  { id: "fake", label: "Produto falso" },
+  { id: "inappropriate", label: "Conteudo inapropriado" },
+  { id: "spam", label: "Spam" },
+  { id: "duplicate", label: "Duplicado" },
+  { id: "wrong-category", label: "Categoria incorreta" },
+  { id: "sold", label: "Ja vendido" },
+  { id: "other", label: "Outro" },
+] as const;
+
+export function isClassifiedReportReason(value: string): value is ReportReason {
+  return CLASSIFIED_REPORT_REASON_OPTIONS.some((reason) => reason.id === value);
+}
+
 export interface ClassifiedReport {
   id: string;
   classified_id: string;
@@ -58,15 +76,19 @@ class ClassifiedReportServiceClass {
    *  Cria uma nova denncia
    */
   async createReport(
-    userId: string | null,
+    reporterProfileId: string,
     input: CreateReportInput
   ): Promise<ClassifiedReport> {
     try {
+      if (!isClassifiedReportReason(input.reason)) {
+        throw new Error("Motivo de denuncia invalido.");
+      }
+
       const { data, error } = await supabase
         .from("classified_reports")
         .insert({
           classified_id: input.classified_id,
-          reporter_id: userId,
+          reporter_id: reporterProfileId,
           reason: input.reason,
           description: input.description,
           status: REPORT_STATUS.PENDING,

@@ -26,6 +26,7 @@ import {
   getMetricChange,
   type BusinessAnalyticsPeriod,
 } from "@/core/business/services/business-analytics.service";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 
 interface AnalyticsMetric {
   label: string;
@@ -167,7 +168,7 @@ export default function AnalyticsDashboard({
           <TabsList>
             {(Object.keys(PERIOD_LABEL) as BusinessAnalyticsPeriod[]).map((key) => (
               <TabsTrigger key={key} value={key}>
-                {PERIOD_LABEL[key]}
+                {getRecordValue(PERIOD_LABEL, key) ?? key}
               </TabsTrigger>
             ))}
           </TabsList>

@@ -3,6 +3,7 @@ import { supabase } from '@/core/infrastructure/supabase';
 import { resolveCityToLocationIds, resolveNeighborhoodInCity } from '@/core/location/helpers/territorialResolver';
 import { LocationType } from '@/shared/types/enums';
 import { PAGINATION } from '@/shared/constants';
+import { sanitizeForILike } from '@/shared/utils/sqlSanitization';
 import type {
   TouristPoint,
   CreateTouristPointInput,
@@ -22,6 +23,35 @@ const TOURIST_POINT_SELECT = `
   address_relation:addresses!address_id(street, number, complement, postal_code, latitude, longitude),
   media:tourist_point_media(id, url, alt_text, is_cover, display_order)
 `;
+
+type SupabaseRelation<T> = T | T[] | null | undefined;
+
+type TouristPointDbLocation = {
+  name?: string | null;
+  full_name?: string | null;
+  geographic_path?: string | null;
+};
+
+type TouristPointDbAddress = {
+  street?: string | null;
+  number?: string | null;
+  complement?: string | null;
+  postal_code?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+};
+
+type TouristPointDbMedia = {
+  url?: string | null;
+  is_cover?: boolean | null;
+};
+
+type TouristPointDbRow = Partial<TouristPoint> &
+  Record<string, unknown> & {
+    location_relation?: SupabaseRelation<TouristPointDbLocation>;
+    address_relation?: SupabaseRelation<TouristPointDbAddress>;
+    media?: TouristPointDbMedia[] | null;
+  };
 
 function has(obj: Record<string, unknown>, key: string): boolean {
   return Object.prototype.hasOwnProperty.call(obj, key);
@@ -71,7 +101,8 @@ function firstOrNull<T>(v: T | T[] | null | undefined): T | null {
   return v ?? null;
 }
 
-function mapDbToTouristPoint(point: any): TouristPoint {
+function mapDbToTouristPoint(rawPoint: unknown): TouristPoint {
+  const point = rawPoint as TouristPointDbRow;
   const location = firstOrNull(point.location_relation);
   const address = firstOrNull(point.address_relation);
   const media = Array.isArray(point.media) ? point.media : [];
@@ -116,7 +147,7 @@ function mapDbToTouristPoint(point: any): TouristPoint {
           longitude: address.longitude ?? null,
         }
       : null,
-    neighborhood: toText(point.neighborhood) ?? location?.name ?? null,
+    neighborhood: location?.name ?? toText(point['neighborhood']) ?? null,
     address_text: toText(point.address_text) ?? toText(point.address),
     latitude: address?.latitude ?? point.latitude ?? null,
     longitude: address?.longitude ?? point.longitude ?? null,
@@ -248,22 +279,21 @@ export class TouristPointService {
         query = query.eq('location_id', filters.location_id);
       } else if (filters.state && filters.city) {
         const resolution = await resolveCityToLocationIds(filters.state, filters.city);
-        if (resolution) {
-          query = query.in('location_id', [resolution.cityId, ...resolution.districtIds]);
-        } else {
-          query = query.eq('state', filters.state.toLowerCase()).eq('city', filters.city.toLowerCase());
-        }
-      } else {
-        if (filters.state) query = query.eq('state', filters.state.toLowerCase());
-        if (filters.city) query = query.eq('city', filters.city.toLowerCase());
+        if (!resolution) return [];
+        query = query.in('location_id', [resolution.cityId, ...resolution.districtIds]);
+      } else if (filters.state || filters.city) {
+        return [];
       }
 
       if (filters.category) query = query.eq('category', filters.category);
       if (filters.is_featured !== undefined) query = query.eq('is_featured', filters.is_featured);
       if (filters.search) {
-        query = query.or(
-          `title.ilike.%${filters.search}%,name.ilike.%${filters.search}%,summary.ilike.%${filters.search}%,description.ilike.%${filters.search}%`,
-        );
+        const search = sanitizeForILike(filters.search);
+        if (search) {
+          query = query.or(
+            `title.ilike.%${search}%,name.ilike.%${search}%,summary.ilike.%${search}%,description.ilike.%${search}%`,
+          );
+        }
       }
       if (filters.limit) query = query.limit(filters.limit);
       if (filters.offset) query = query.range(filters.offset, filters.offset + (filters.limit ?? 20) - 1);
@@ -302,16 +332,6 @@ export class TouristPointService {
         if (data) return mapDbToTouristPoint(data);
       }
 
-      const { data: fallback } = await supabase
-        .from('tourist_points')
-        .select(TOURIST_POINT_SELECT)
-        .eq('state', state.toLowerCase())
-        .eq('city', city.toLowerCase())
-        .eq('slug', slug)
-        .eq('status', TOURIST_POINT_STATUS.PUBLISHED)
-        .maybeSingle();
-
-      if (fallback) return mapDbToTouristPoint(fallback);
       return null;
     } catch {
       return null;
@@ -556,16 +576,7 @@ export class TouristPointService {
   static async countByCity(state: string, city: string): Promise<number> {
     try {
       const resolution = await resolveCityToLocationIds(state, city);
-      if (!resolution) {
-        const { count, error } = await supabase
-          .from('tourist_points')
-          .select('*', { count: 'exact', head: true })
-          .eq('state', state.toLowerCase())
-          .eq('city', city.toLowerCase())
-          .eq('status', TOURIST_POINT_STATUS.PUBLISHED);
-        if (error) return 0;
-        return count ?? 0;
-      }
+      if (!resolution) return 0;
 
       if (!resolution.districtIds.length) return 0;
       const { count, error } = await supabase
@@ -583,16 +594,7 @@ export class TouristPointService {
   static async getCategoriesByCity(state: string, city: string): Promise<string[]> {
     try {
       const resolution = await resolveCityToLocationIds(state, city);
-      if (!resolution) {
-        const { data, error } = await supabase
-          .from('tourist_points')
-          .select('category')
-          .eq('state', state.toLowerCase())
-          .eq('city', city.toLowerCase())
-          .eq('status', TOURIST_POINT_STATUS.PUBLISHED);
-        if (error) return [];
-        return [...new Set((data ?? []).map((d: any) => d.category).filter(Boolean))];
-      }
+      if (!resolution) return [];
 
       if (!resolution.districtIds.length) return [];
       const { data, error } = await supabase
@@ -601,7 +603,8 @@ export class TouristPointService {
         .in('location_id', resolution.districtIds)
         .eq('status', TOURIST_POINT_STATUS.PUBLISHED);
       if (error) return [];
-      return [...new Set((data ?? []).map((d: any) => d.category).filter(Boolean))];
+      const rows = (data ?? []) as Array<{ category?: string | null }>;
+      return [...new Set(rows.map((row) => row.category).filter(Boolean))];
     } catch {
       return [];
     }

@@ -1,6 +1,7 @@
 import type { CommunityEvent } from "@/core/community/services/CommunityEventsRuntimeService";
 import type { Event, EventCategory, EventFAQ, EventGalleryItem, EventScheduleItem } from "../types";
 import { isEventCategory } from "../constants";
+import { normalizePersistedTextEncoding } from "@/shared/utils/textEncodingRepair";
 
 function toEventCategory(category?: string): EventCategory {
   if (isEventCategory(category)) {
@@ -25,6 +26,21 @@ function asString(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
 
+function asReadableString(value: unknown): string | undefined {
+  const raw = asString(value);
+  return raw ? normalizePersistedTextEncoding(raw) : undefined;
+}
+
+function asReadableStringArray(value: unknown): string[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+
+  const items = value
+    .map((item) => asReadableString(item))
+    .filter((item): item is string => Boolean(item));
+
+  return items.length > 0 ? items : undefined;
+}
+
 function mapGallery(items: unknown[] | null | undefined): EventGalleryItem[] {
   return (items ?? [])
     .map<EventGalleryItem | null>((item, index) => {
@@ -36,7 +52,7 @@ function mapGallery(items: unknown[] | null | undefined): EventGalleryItem[] {
         id: asString(record.id) ?? `gallery-${index + 1}`,
         url,
         type: "image" as const,
-        caption: asString(record.caption),
+        caption: asReadableString(record.caption),
         order: index,
       };
     })
@@ -54,10 +70,10 @@ function mapSchedule(items: unknown[] | null | undefined): EventScheduleItem[] {
       return {
         id: asString(record.id) ?? `schedule-${index + 1}`,
         time,
-        title,
-        description: asString(record.description),
-        speaker: asString(record.speaker),
-        location: asString(record.location),
+        title: normalizePersistedTextEncoding(title),
+        description: asReadableString(record.description),
+        speaker: asReadableString(record.speaker),
+        location: asReadableString(record.location),
       };
     })
     .filter((item): item is EventScheduleItem => item !== null);
@@ -73,8 +89,8 @@ function mapFaq(items: unknown[] | null | undefined): EventFAQ[] {
 
       return {
         id: asString(record.id) ?? `faq-${index + 1}`,
-        question,
-        answer,
+        question: normalizePersistedTextEncoding(question),
+        answer: normalizePersistedTextEncoding(answer),
         order: index,
       };
     })
@@ -82,8 +98,8 @@ function mapFaq(items: unknown[] | null | undefined): EventFAQ[] {
 }
 
 export function mapCommunityEventToEvent(input: CommunityEvent): Event {
-  const description = input.description ?? "";
-  const location = input.location ?? "";
+  const description = normalizePersistedTextEncoding(input.description ?? "");
+  const location = normalizePersistedTextEncoding(input.location ?? "");
   const organizerContact = readStringRecord(input.organizer_contact);
   const features = readStringRecord(input.features);
   const capacity = input.max_participants ?? undefined;
@@ -96,13 +112,13 @@ export function mapCommunityEventToEvent(input: CommunityEvent): Event {
   return {
     id: input.id,
     slug: input.id,
-    title: input.title,
-    subtitle: input.subtitle ?? undefined,
+    title: normalizePersistedTextEncoding(input.title),
+    subtitle: asReadableString(input.subtitle),
     description,
     short_description: description,
     cover_image_url: input.image_url || "/placeholder.svg",
-    banner_image_url: input.banner_image_url ?? undefined,
-    video_url: input.video_url ?? undefined,
+    banner_image_url: asString(input.banner_image_url),
+    video_url: asString(input.video_url),
     gallery,
     category: toEventCategory(input.category),
     tags: input.tags ?? undefined,
@@ -114,15 +130,15 @@ export function mapCommunityEventToEvent(input: CommunityEvent): Event {
     duration_minutes: input.duration_minutes ?? undefined,
     location: {
       type: input.location_type ?? "physical",
-      venue_name: input.venue_name ?? location,
-      address: input.address ?? location,
-      city: input.city ?? undefined,
-      state: input.state ?? undefined,
-      neighborhood: input.neighborhood ?? location,
-      zipcode: input.zipcode ?? undefined,
-      online_url: input.online_url ?? undefined,
-      online_platform: input.online_platform ?? undefined,
-      instructions: input.location_instructions ?? undefined,
+      venue_name: asReadableString(input.venue_name) ?? location,
+      address: asReadableString(input.address) ?? location,
+      city: asReadableString(input.city),
+      state: asReadableString(input.state),
+      neighborhood: asReadableString(input.neighborhood) ?? location,
+      zipcode: asString(input.zipcode),
+      online_url: asString(input.online_url),
+      online_platform: asReadableString(input.online_platform),
+      instructions: asReadableString(input.location_instructions),
       latitude: input.latitude ?? undefined,
       longitude: input.longitude ?? undefined,
     },
@@ -160,18 +176,18 @@ export function mapCommunityEventToEvent(input: CommunityEvent): Event {
     participants_count: input.current_participants,
     waitlist_enabled: input.waitlist_enabled ?? false,
     schedule,
-    requirements: input.requirements ?? undefined,
-    what_to_bring: input.what_to_bring ?? undefined,
-    accessibility_info: input.accessibility_info ?? undefined,
-    age_restriction: input.age_restriction ?? undefined,
-    dress_code: input.dress_code ?? undefined,
+    requirements: asReadableStringArray(input.requirements),
+    what_to_bring: asReadableStringArray(input.what_to_bring),
+    accessibility_info: asReadableString(input.accessibility_info),
+    age_restriction: asReadableString(input.age_restriction),
+    dress_code: asReadableString(input.dress_code),
     faq,
     views_count: 0,
     favorites_count: 0,
     shares_count: 0,
-    meta_title: input.meta_title ?? undefined,
-    meta_description: input.meta_description ?? undefined,
-    meta_keywords: input.meta_keywords ?? undefined,
+    meta_title: asReadableString(input.meta_title),
+    meta_description: asReadableString(input.meta_description),
+    meta_keywords: asReadableStringArray(input.meta_keywords),
     created_at: input.created_at,
     updated_at: input.updated_at,
     published_at: input.published_at ?? undefined,

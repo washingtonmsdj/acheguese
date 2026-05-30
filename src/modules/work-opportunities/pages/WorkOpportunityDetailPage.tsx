@@ -23,6 +23,7 @@ import {
 import { workOpportunitiesService } from "@/core/work-opportunities/services/WorkOpportunitiesService";
 import { workOpportunityTelemetryService } from "@/core/work-opportunities/services/WorkOpportunityTelemetryService";
 import { workOpportunityTrustService } from "@/core/work-opportunities/services/WorkOpportunityTrustService";
+import { professionalPublicRoutes } from "@/core/professional/routes/professionalPublicRoutes";
 import { useSessionContext } from "@/core/session";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
@@ -433,7 +434,7 @@ export default function WorkOpportunityDetailPage() {
                           actorProfileId: activeProfile?.id,
                           actorUserId: activeProfile?.userId ?? null,
                         });
-                        navigate(`/servicos/${data.professional?.id}`);
+                        navigate(data.professional?.public_url ?? professionalPublicRoutes.home());
                       }}
                     >
                       <Eye className="h-4 w-4" />

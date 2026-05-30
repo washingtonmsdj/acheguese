@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useEducationNicheBilling } from '../hooks/useEducationNicheBilling';
 import type { EducationNicheCapability } from '../types';
+import { getRecordValue } from '@/shared/utils/recordLookup';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TIPOS
@@ -321,7 +322,7 @@ function getFeatureDisplayName(feature: string): string {
     'analytics_advanced': 'Analytics avançado',
   };
   
-  return names[feature] || feature;
+  return getRecordValue(names, feature) ?? feature;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

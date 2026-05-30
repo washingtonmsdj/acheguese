@@ -11,6 +11,8 @@
 import { motion } from 'framer-motion';
 import { Navigation, ChevronRight } from 'lucide-react';
 import { LAUNCH_URLS } from '@/config/territory';
+import { buildBusinessPublicListingUrl } from '@/core/business/utils/businessPublicUrls';
+import { normalizePublicTerritoryPath } from '@/core/routing/utils/territoryUrls';
 import { NearbyBusinessCard } from '../components/cards';
 import type { EmpresaProximasSectionProps } from './types';
 
@@ -21,10 +23,14 @@ export function EmpresaProximasSection({
   navigate,
 }: EmpresaProximasSectionProps) {
   const buildBusinessesHubUrl = () => {
-    const parts = (currentBusinessGeographicPath || '').replace(/^\//, '').split('/');
-    if (parts.length >= 4) {
-      return `/empresas/${parts[1]}/${parts[2]}/${parts[3]}`;
+    const [state, city, district] = normalizePublicTerritoryPath(
+      currentBusinessGeographicPath || '',
+    ).split('/').filter(Boolean);
+
+    if (state && city) {
+      return buildBusinessPublicListingUrl({ state, city, district });
     }
+
     return LAUNCH_URLS.business;
   };
 

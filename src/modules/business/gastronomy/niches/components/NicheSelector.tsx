@@ -9,6 +9,7 @@
 import React, { useMemo, useCallback } from 'react';
 import { Check, Clock, FlaskConical, AlertCircle, Info } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
+import { getRecordValue } from '@/shared/utils/recordLookup';
 import { NicheConfigService } from '../services/NicheConfigService';
 import type { GastronomyNicheConfig, NicheStatus } from '../types';
 
@@ -153,7 +154,7 @@ function NicheCard({ niche, isSelected, onClick, disabled }: NicheCardProps) {
       {/* Tag beta */}
       {niche.isBeta && (
         <div className="absolute bottom-2 right-2">
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-800 rounded-full">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-warning/10 text-warning rounded-full">
             <FlaskConical className="h-3 w-3" />
             Beta
           </span>
@@ -165,7 +166,7 @@ function NicheCard({ niche, isSelected, onClick, disabled }: NicheCardProps) {
 
 interface StatusBadgeProps {
   status: NicheStatus;
-  info: { label: string; color: string };
+  info: { label: string; className: string };
 }
 
 function StatusBadge({ status, info }: StatusBadgeProps) {
@@ -186,11 +187,10 @@ function StatusBadge({ status, info }: StatusBadgeProps) {
 
   return (
     <span
-      className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full"
-      style={{
-        backgroundColor: `${info.color}20`,
-        color: info.color,
-      }}
+      className={cn(
+        "inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full",
+        info.className,
+      )}
     >
       {getIcon()}
       {info.label}
@@ -200,13 +200,13 @@ function StatusBadge({ status, info }: StatusBadgeProps) {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function getStatusInfo(status: NicheStatus): { label: string; color: string } {
-  const map: Record<NicheStatus, { label: string; color: string }> = {
-    full_enabled: { label: 'Completo', color: '#22c55e' },
-    basic_enabled: { label: 'Básico', color: '#3b82f6' },
-    beta_enabled: { label: 'Beta', color: '#f59e0b' },
-    hidden: { label: 'Oculto', color: '#6b7280' },
-    coming_soon: { label: 'Em Breve', color: '#a855f7' },
+function getStatusInfo(status: NicheStatus): { label: string; className: string } {
+  const map: Record<NicheStatus, { label: string; className: string }> = {
+    full_enabled: { label: 'Completo', className: 'bg-success/10 text-success' },
+    basic_enabled: { label: 'Básico', className: 'bg-primary/10 text-primary' },
+    beta_enabled: { label: 'Beta', className: 'bg-warning/10 text-warning' },
+    hidden: { label: 'Oculto', className: 'bg-muted text-muted-foreground' },
+    coming_soon: { label: 'Em Breve', className: 'bg-accent text-accent-foreground' },
   };
-  return map[status];
+  return getRecordValue(map, status) ?? map.hidden;
 }

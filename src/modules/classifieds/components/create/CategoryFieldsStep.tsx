@@ -17,6 +17,7 @@ import {
 } from "@/shared/components/ui/select";
 import { getCategoryFields, hasCategoryFields } from "@/modules/classifieds/constants/category-fields";
 import { getCategoryLabel } from "@/modules/classifieds/constants/categories";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 
 interface CategoryFieldsStepProps {
   category: string;
@@ -45,47 +46,51 @@ export function CategoryFieldsStep({ category, details, onChange }: CategoryFiel
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {fields.map((field) => (
-          <div key={field.key} className="space-y-1">
-            <label className="text-xs font-medium text-foreground">
-              {field.label}
-              {field.required && <span className="text-destructive ml-0.5">*</span>}
-            </label>
+        {fields.map((field) => {
+          const fieldValue = getRecordValue(details, field.key) ?? "";
 
-            {field.type === "select" ? (
-              <Select
-                value={details[field.key] || ""}
-                onValueChange={(v) => onChange(field.key, v)}
-              >
-                <SelectTrigger className="h-10 text-sm rounded-xl">
-                  <SelectValue placeholder={`Selecione ${field.label.toLowerCase()}`} />
-                </SelectTrigger>
-                <SelectContent>
-                  {field.options?.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            ) : (
-              <div className="relative">
-                <Input
-                  type={field.type}
-                  placeholder={field.placeholder}
-                  value={details[field.key] || ""}
-                  onChange={(e) => onChange(field.key, e.target.value)}
-                  className="h-10 text-sm rounded-xl"
-                />
-                {field.suffix && (
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                    {field.suffix}
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-        ))}
+          return (
+            <div key={field.key} className="space-y-1">
+              <label className="text-xs font-medium text-foreground">
+                {field.label}
+                {field.required && <span className="text-destructive ml-0.5">*</span>}
+              </label>
+
+              {field.type === "select" ? (
+                <Select
+                  value={fieldValue}
+                  onValueChange={(v) => onChange(field.key, v)}
+                >
+                  <SelectTrigger className="h-10 text-sm rounded-xl">
+                    <SelectValue placeholder={`Selecione ${field.label.toLowerCase()}`} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {field.options?.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="relative">
+                  <Input
+                    type={field.type}
+                    placeholder={field.placeholder}
+                    value={fieldValue}
+                    onChange={(e) => onChange(field.key, e.target.value)}
+                    className="h-10 text-sm rounded-xl"
+                  />
+                  {field.suffix && (
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                      {field.suffix}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

@@ -9,7 +9,7 @@ import { BusinessUrlService } from "@/core/business/services/BusinessUrlService"
 import type { Business } from "@/core/business/types";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Store } from "lucide-react";
-import BusinessSEO from "@/shared/components/seo/BusinessSEO";
+import BusinessSEO from "@/core/business/components/seo/BusinessSEO";
 import CanonicalUrl from "@/shared/components/seo/CanonicalUrl";
 // Componentes standalone
 import StandaloneNav from "@/shared/components/standalone/StandaloneNav";

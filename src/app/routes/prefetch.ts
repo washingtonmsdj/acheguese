@@ -129,7 +129,7 @@ export function scheduleIdleRouteWarmup(): void {
       buildAppModulePath(APP_MODULE_SLUGS.search),
       buildAppModulePath(APP_MODULE_SLUGS.mobility),
       buildAppModulePath(APP_MODULE_SLUGS.ranking),
-      buildAppModulePath(APP_MODULE_SLUGS.touristPoints),
+      LAUNCH_URLS.touristPoints,
       "/mensagens",
       "/notifications",
       "/conta",

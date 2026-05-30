@@ -36,6 +36,7 @@ import {
 
 import type { SectionNavItem } from "@/modules/profile/components/hub/ProfileSectionsNav";
 import { buildProfileSectionItems, getProfileSectionPath } from "@/modules/profile/utils/profileNavigation";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 
 // ============================================
 // Mapa de Sections (SSOT)
@@ -295,7 +296,7 @@ export default function ContaHubPage() {
   // Renderizar Layout + Section Ativa
   // ============================================
 
-  const ActiveSection = (SECTION_MAP as any)[activeSection];
+  const ActiveSection = getRecordValue(SECTION_MAP, activeSection) ?? ResumoSection;
   const sectionProps = buildSectionProps(activeSection, {
     ...data,
     personalProfile,

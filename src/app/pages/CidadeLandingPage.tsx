@@ -25,7 +25,6 @@ import { useHomeCommunityHref } from "@/core/routing/hooks/useHomeCommunityHref"
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 import { APP_MODULE_SLUGS, buildAppModulePath } from "@/config/moduleSlugs";
 import { classifiedUrlService } from "@/modules/classifieds/services/ClassifiedUrlService";
-import { useClassifiedUrls } from "@/modules/classifieds/hooks/useClassifiedUrls";
 import { useTouristPoints } from "@/modules/guide/tourist-points/hooks/useTouristPoints";
 import { CATEGORY_ICONS } from "@/modules/guide/tourist-points/types";
 
@@ -68,9 +67,6 @@ export default function CidadeLandingPage() {
   const businesses = businessesReal.slice(0, 6);
   const services = servicesReal.slice(0, 6);
   const classifieds = classifiedsReal.slice(0, 6);
-
-  // URLs helper para classificados
-  const classifiedUrls = useClassifiedUrls(null);
 
   // Pontos turísticos via SSOT
   const { data: touristPoints = [] } = useTouristPoints({ state, city, limit: 6 });
@@ -558,30 +554,15 @@ export default function CidadeLandingPage() {
             {classifieds.map((classified) => {
               const thumb = classified.photos?.[0];
 
-              const getUrl = () => {
-                if (classified.geographic_path && classified.category_slug && classified.subcategory_slug && classified.slug && classified.public_id) {
-                  try {
-                    const urls = classifiedUrlService.buildUrls({
-                      id: classified.id,
-                      public_id: classified.public_id,
-                      slug: classified.slug,
-                      geographic_path: classified.geographic_path,
-                      category_slug: classified.category_slug,
-                      subcategory_slug: classified.subcategory_slug,
-                    });
-                    return urls.canonical;
-                  } catch {
-                    return classifiedUrls.short(classified.public_id);
-                  }
-                }
-                return classifiedUrls.short(classified.public_id);
-              };
+              const publicUrl = classifiedUrlService.buildPublicUrl(classified);
 
               return (
                 <motion.div
                   key={classified.id}
                   {...fadeUp}
-                  onClick={() => navigate(getUrl())}
+                  onClick={() => {
+                    if (publicUrl) navigate(publicUrl);
+                  }}
                   className="bg-card border rounded-2xl p-5 hover:shadow-xl transition-all cursor-pointer group border-border hover:border-orange-500/30"
                 >
                   <div className="flex items-start gap-4">
