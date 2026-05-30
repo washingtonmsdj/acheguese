@@ -5,19 +5,15 @@
  * Valida estados no banco e auditoria com timeout configurável.
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { createOperationalAdminClient } from './operational-env';
 import type { RideState } from '@/modules/mobility/core/RideStateMachine';
 
-const supabaseAdmin = createClient(
-  process.env.VITE_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  }
-);
+let supabaseAdmin: ReturnType<typeof createOperationalAdminClient> | undefined;
+
+function getSupabaseAdmin() {
+  supabaseAdmin ??= createOperationalAdminClient();
+  return supabaseAdmin;
+}
 
 interface PollResult {
   success: boolean;
@@ -47,7 +43,7 @@ export async function waitForRideStatus(
   const pollInterval = 500; // 500ms entre verificações
   
   while (Date.now() - startTime < timeoutMs) {
-    const { data: ride, error } = await supabaseAdmin
+    const { data: ride, error } = await getSupabaseAdmin()
       .from('ride_requests')
       .select('status')
       .eq('id', rideId)
@@ -82,7 +78,7 @@ export async function waitForRideStatus(
   }
   
   // Timeout - buscar status atual para mensagem de erro
-  const { data: ride } = await supabaseAdmin
+  const { data: ride } = await getSupabaseAdmin()
     .from('ride_requests')
     .select('status')
     .eq('id', rideId)
@@ -109,7 +105,7 @@ export async function waitForAuditTransition(
   const pollInterval = 500;
   
   while (Date.now() - startTime < timeoutMs) {
-    const { data: transitions, error } = await supabaseAdmin
+    const { data: transitions, error } = await getSupabaseAdmin()
       .from('ride_state_audit')
       .select('from_state, to_state, changed_by, reason, created_at')
       .eq('ride_id', rideId)
@@ -150,7 +146,7 @@ export async function waitForAuditTransition(
 export async function validateDriverAvailable(
   driverProfileId: string
 ): Promise<{ valid: boolean; error?: string; state?: any }> {
-  const { data: driver, error } = await supabaseAdmin
+  const { data: driver, error } = await getSupabaseAdmin()
     .from('driver_availability')
     .select('is_online, is_available, active_ride_id, current_lat, current_lng')
     .eq('profile_id', driverProfileId)
@@ -215,7 +211,7 @@ export async function validateDriverAvailable(
 export async function validateNoDriversAvailable(
   driverProfileIds?: string[]
 ): Promise<{ valid: boolean; error?: string; count?: number; driverIds?: string[] }> {
-  let query = supabaseAdmin
+  let query = getSupabaseAdmin()
     .from('driver_availability')
     .select('profile_id')
     .eq('is_online', true)
@@ -266,7 +262,7 @@ export async function waitForDriverStatus(
   const pollInterval = 500;
   
   while (Date.now() - startTime < timeoutMs) {
-    const { data: driver, error } = await supabaseAdmin
+    const { data: driver, error } = await getSupabaseAdmin()
       .from('driver_availability')
       .select('is_online, is_available, active_ride_id')
       .eq('profile_id', driverProfileId)
@@ -301,7 +297,7 @@ export async function waitForDriverStatus(
   }
   
   // Timeout - buscar status atual
-  const { data: driver } = await supabaseAdmin
+  const { data: driver } = await getSupabaseAdmin()
     .from('driver_availability')
     .select('is_online, is_available, active_ride_id')
     .eq('profile_id', driverProfileId)
@@ -370,7 +366,7 @@ export async function waitForDriversAvailable(
 export async function getRideAuditTrail(
   rideId: string
 ): Promise<AuditTransition[]> {
-  const { data: transitions, error } = await supabaseAdmin
+  const { data: transitions, error } = await getSupabaseAdmin()
     .from('ride_state_audit')
     .select('from_state, to_state, changed_by, reason, created_at')
     .eq('ride_id', rideId)

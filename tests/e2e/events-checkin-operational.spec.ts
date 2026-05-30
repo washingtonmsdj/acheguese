@@ -14,7 +14,7 @@ test.describe("Eventos - Detalhe e Check-in", () => {
   test("bloqueia garantia de vaga sem login e mantém estado seguro", async ({ page }) => {
     test.setTimeout(240_000);
     await page.goto(
-      "/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/eventos",
+      "/comunidade/ba/salvador/eventos",
       { waitUntil: "domcontentloaded" },
     );
     await dismissConsentBanner(page);

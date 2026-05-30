@@ -4,26 +4,22 @@
  * Fornece funções para autenticar como diferentes atores nos testes.
  */
 
-import { createClient } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase';
+import { createOperationalAdminClient } from './operational-env';
 
-const supabaseAdmin = createClient(
-  process.env.VITE_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  }
-);
+let supabaseAdmin: ReturnType<typeof createOperationalAdminClient> | undefined;
+
+function getSupabaseAdmin() {
+  supabaseAdmin ??= createOperationalAdminClient();
+  return supabaseAdmin;
+}
 
 /**
  * Autentica como um profile específico (motorista ou passageiro)
  */
 export async function authenticateAsProfile(profileId: string): Promise<void> {
   // Buscar user_id do profile
-  const { data: profile, error: profileError } = await supabaseAdmin
+  const { data: profile, error: profileError } = await getSupabaseAdmin()
     .from('profiles')
     .select('user_id')
     .eq('id', profileId)
@@ -34,14 +30,14 @@ export async function authenticateAsProfile(profileId: string): Promise<void> {
   }
 
   // Buscar email do usuário
-  const { data: { user }, error: userError } = await supabaseAdmin.auth.admin.getUserById(profile.user_id);
+  const { data: { user }, error: userError } = await getSupabaseAdmin().auth.admin.getUserById(profile.user_id);
 
   if (userError || !user?.email) {
     throw new Error(`User ${profile.user_id} não encontrado ou sem email`);
   }
 
   // Resetar senha para garantir que é TestPass123!
-  await supabaseAdmin.auth.admin.updateUserById(profile.user_id, {
+  await getSupabaseAdmin().auth.admin.updateUserById(profile.user_id, {
     password: 'TestPass123!',
   });
 
@@ -63,7 +59,7 @@ export async function authenticateAsProfile(profileId: string): Promise<void> {
  * Autentica como o primeiro profile associado a um admin ativo.
  */
 export async function authenticateAsFirstAdminProfile(): Promise<string> {
-  const { data: adminRole, error: roleError } = await supabaseAdmin
+  const { data: adminRole, error: roleError } = await getSupabaseAdmin()
     .from('user_roles')
     .select('user_id')
     .in('role_enum', ['super_admin', 'admin'])
@@ -77,7 +73,7 @@ export async function authenticateAsFirstAdminProfile(): Promise<string> {
     throw new Error(`Nenhum admin ativo encontrado para testes: ${roleError?.message ?? 'sem user_id'}`);
   }
 
-  const { data: adminProfile, error: profileError } = await supabaseAdmin
+  const { data: adminProfile, error: profileError } = await getSupabaseAdmin()
     .from('profiles')
     .select('id')
     .eq('user_id', adminRole.user_id)

@@ -5,6 +5,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { createOperationalAdminClient } from './operational-env';
 
 let _adminClient: ReturnType<typeof createClient> | null = null;
 
@@ -13,16 +14,7 @@ let _adminClient: ReturnType<typeof createClient> | null = null;
  */
 export function getAdminClient() {
   if (!_adminClient) {
-    _adminClient = createClient(
-      process.env.VITE_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      }
-    );
+    _adminClient = createOperationalAdminClient();
   }
   
   return _adminClient;

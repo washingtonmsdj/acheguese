@@ -35,20 +35,20 @@ test.describe('public landing routes', () => {
       .toBe('Achegue-se - Comunidade hiperlocal');
   });
 
-  test("home CTA 'Ver meu bairro' opens a territorial community route (with slug)", async ({ page }) => {
+  test("home CTA 'Ver meu bairro' opens a city-level community route", async ({ page }) => {
     test.setTimeout(60_000);
     await openPublicRoute(page, '/');
 
     const neighborhoodButton = page.getByRole('button', { name: /Ver meu bairro/i }).first();
     await expect(neighborhoodButton).toBeVisible({ timeout: 30_000 });
     await Promise.all([
-      page.waitForURL(/\/comunidade\/[a-z]{2}\/[^/]+\/[^/?#]+/i, { timeout: 15_000 }),
+      page.waitForURL(/\/comunidade\/[a-z]{2}\/[^/?#]+/i, { timeout: 15_000 }),
       neighborhoodButton.click(),
     ]);
 
     const path = new URL(page.url()).pathname;
     const segments = path.split('/').filter(Boolean);
-    expect(segments.length).toBeGreaterThanOrEqual(4);
+    expect(segments.length).toBeGreaterThanOrEqual(3);
     expect(segments[0]).toBe('comunidade');
   });
 
@@ -127,8 +127,8 @@ test.describe('public landing routes', () => {
       { path: '/empresas/ba/salvador/complexo-do-nordeste-de-amaralina', text: /Empresas|Complexo do Nordeste de Amaralina/i },
       { path: '/educacao/ba/salvador', text: /Educação|Educacao|Salvador/i },
       { path: '/educacao/ba/salvador/complexo-do-nordeste-de-amaralina', text: /Educação|Educacao|Complexo do Nordeste de Amaralina/i },
-      { path: '/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/feed', text: /Feed|Comunidade|Complexo do Nordeste/i },
-      { path: '/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/grupos', text: /Grupos|Comunidade|Complexo do Nordeste/i },
+      { path: '/comunidade/ba/salvador/feed', text: /Feed|Comunidade|Salvador/i },
+      { path: '/comunidade/ba/salvador/grupos', text: /Grupos|Comunidade|Salvador/i },
     ];
 
     for (const route of routes) {

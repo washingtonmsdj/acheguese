@@ -12,8 +12,8 @@
  * ISOLAMENTO: Usa fixtures distintos do Gate 6 (passengerC, driverC)
  */
 
-import { describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest';
-import { createClient } from '@supabase/supabase-js';
+import { it, expect, beforeAll, beforeEach, afterEach } from 'vitest';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { RideOperationalService } from '@/modules/mobility/core/RideOperationalService';
@@ -33,24 +33,18 @@ import {
   safeCleanupRides,
   safeCleanupVerifications,
 } from '../helpers/test-cleanup-helpers';
+import { createOperationalAdminClient, describeOperational } from '../helpers/operational-env';
 
 // Carregar fixtures
 const fixturesPath = join(__dirname, '../fixtures/gate6-fixtures.json');
 const fixtures = JSON.parse(readFileSync(fixturesPath, 'utf-8'));
 
 // Service role client para validações
-const supabaseAdmin = createClient(
-  process.env.VITE_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  }
-);
+let supabaseAdmin: SupabaseClient;
 
-describe('Gate 7 - PIN Verification: Entrega', () => {
+describeOperational('Gate 7 - PIN Verification: Entrega', {
+  requireServiceRole: true,
+}, () => {
   // ISOLAMENTO: Usar fixtures DISTINTOS do Gate 6
   // Gate 6 usa: passengerB, driverB
   // Gate 7 delivery tenta passengerC/driverC, mas faz fallback para perfis válidos.
@@ -81,6 +75,8 @@ describe('Gate 7 - PIN Verification: Entrega', () => {
   const dropoffLocationId = fixtures.locationIds.primary;
 
   beforeAll(async () => {
+    supabaseAdmin = createOperationalAdminClient();
+
     for (const candidate of driverCandidates) {
       const { data: profile } = await supabaseAdmin
         .from('profiles')

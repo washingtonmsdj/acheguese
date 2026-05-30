@@ -23,8 +23,8 @@ npx playwright test tests/e2e/education
 Criar/verificar `.env.test`:
 
 ```env
-VITE_SUPABASE_URL=your_supabase_url
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+VITE_SUPABASE_URL=
+SUPABASE_SERVICE_ROLE_KEY=
 PLAYWRIGHT_BASE_URL=http://localhost:8080
 ```
 

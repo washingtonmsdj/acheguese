@@ -55,7 +55,7 @@ describe('Integração - Módulo de Mobilidade', () => {
     });
 
     it('deve ter MOBILITY_QUERY_KEYS exportado', async () => {
-      const module = await import('../src/modules/mobility/constants/queryKeys');
+      const module = await import('../src/modules/mobility/constants');
       expect(module.MOBILITY_QUERY_KEYS).toBeDefined();
       expect(module.MOBILITY_QUERY_KEYS.deliveries).toBeDefined();
       expect(module.MOBILITY_QUERY_KEYS.reports).toBeDefined();
@@ -98,7 +98,7 @@ describe('Integração - Módulo de Mobilidade', () => {
 
   describe('Constantes', () => {
     it('deve ter query keys centralizadas', async () => {
-      const { MOBILITY_QUERY_KEYS } = await import('../src/modules/mobility/constants/queryKeys');
+      const { MOBILITY_QUERY_KEYS } = await import('../src/modules/mobility/constants');
       
       expect(MOBILITY_QUERY_KEYS).toBeDefined();
       expect(typeof MOBILITY_QUERY_KEYS.deliveries).toBe('function');
@@ -107,7 +107,7 @@ describe('Integração - Módulo de Mobilidade', () => {
     });
 
     it('deve gerar query keys consistentes', async () => {
-      const { MOBILITY_QUERY_KEYS } = await import('../src/modules/mobility/constants/queryKeys');
+      const { MOBILITY_QUERY_KEYS } = await import('../src/modules/mobility/constants');
       
       const key1 = MOBILITY_QUERY_KEYS.deliveries('business', 'business-123');
       const key2 = MOBILITY_QUERY_KEYS.deliveries('business', 'business-123');
@@ -123,7 +123,7 @@ describe('Integração - Módulo de Mobilidade', () => {
       const module = await import('../src/app/routes/lazyImports');
       
       expect(module.AdminMotoboyOperations).toBeDefined();
-      expect(module.AdminReportsPassageirosV2).toBeDefined();
+      expect(module.AdminReportsPassageiros).toBeDefined();
     });
   });
 
@@ -133,8 +133,8 @@ describe('Integração - Módulo de Mobilidade', () => {
       expect(module.default).toBeDefined();
     });
 
-    it('deve ter AdminReportsPassageirosV2 definido', async () => {
-      const module = await import('../src/modules/admin/pages/AdminReportsPassageirosV2');
+    it('deve ter AdminReportsPassageiros definido', async () => {
+      const module = await import('../src/modules/admin/pages/AdminReportsPassageiros');
       expect(module.default).toBeDefined();
     });
   });

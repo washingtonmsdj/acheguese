@@ -10,8 +10,8 @@
  * Este bloco CONTA para fechamento do Gate 6.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { createClient } from '@supabase/supabase-js';
+import { it, expect, beforeEach, afterEach } from 'vitest';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { RideOperationalService } from '@/modules/mobility/core/RideOperationalService';
@@ -29,24 +29,17 @@ import {
   setupDriverAvailable,
   cleanupMultipleDrivers,
 } from '../helpers/gate6-setup-helpers';
+import { createOperationalAdminClient, describeOperational } from '../helpers/operational-env';
 
 // Carregar fixtures
 const fixturesPath = join(__dirname, '../fixtures/gate6-fixtures.json');
 const fixtures = JSON.parse(readFileSync(fixturesPath, 'utf-8'));
 
 // Service role client para validações
-const supabaseAdmin = createClient(
-  process.env.VITE_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  }
-);
-
-describe('Gate 6 - Bloco A: Runtime Real COM Motoristas', () => {
+let supabaseAdmin: SupabaseClient;
+describeOperational('Gate 6 - Bloco A: Runtime Real COM Motoristas', {
+  requireServiceRole: true,
+}, () => {
   // IDs de teste
   const passengerId = fixtures.passengers.passengerA.id;
   const driverId = fixtures.drivers.driverA.id;
@@ -66,6 +59,7 @@ describe('Gate 6 - Bloco A: Runtime Real COM Motoristas', () => {
   const dropoffLocationId = fixtures.locationIds.primary;
 
   beforeEach(async () => {
+    supabaseAdmin = createOperationalAdminClient();
     // Limpar dados de teste
     await supabaseAdmin.from('driver_availability').delete().eq('profile_id', driverId);
     await supabaseAdmin.from('ride_requests').delete().eq('passenger_profile_id', passengerId);

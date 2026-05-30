@@ -1,267 +1,180 @@
-/**
- * Testes de Cookie Storage Seguro
- * 
- * Valida que tokens são armazenados de forma segura em cookies.
- */
+import { describe, expect, it, beforeEach, afterEach } from "vitest";
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { SecureCookieStorage, HybridStorage } from '@/integrations/supabase/cookieStorage';
+import {
+  BrowserCookieStorage,
+  StrictBrowserAuthStorage,
+  createBrowserAuthStorage,
+} from "@/integrations/supabase/cookieStorage";
+import {
+  AUTH_BROWSER_STORAGE_CONFIG,
+  AUTH_STORAGE_KEY,
+} from "@/config/security.config";
 
-describe('SecureCookieStorage', () => {
-  let storage: SecureCookieStorage;
+function clearCookies(): void {
+  document.cookie.split(";").forEach((cookie) => {
+    const name = cookie.split("=")[0]?.trim();
+    if (name) {
+      document.cookie = `${name}=; Path=/; Max-Age=0`;
+    }
+  });
+}
+
+function restoreCookieDescriptor(
+  originalOwnCookie: PropertyDescriptor | undefined,
+  originalProtoCookie: PropertyDescriptor | undefined,
+): void {
+  if (originalOwnCookie) {
+    Object.defineProperty(document, "cookie", originalOwnCookie);
+    return;
+  }
+
+  delete (document as { cookie?: string }).cookie;
+  if (originalProtoCookie) {
+    Object.defineProperty(Document.prototype, "cookie", originalProtoCookie);
+  }
+}
+
+describe("BrowserCookieStorage", () => {
+  let storage: BrowserCookieStorage;
 
   beforeEach(() => {
-    storage = new SecureCookieStorage('test');
-    // Limpar cookies
-    document.cookie.split(';').forEach(cookie => {
-      const name = cookie.split('=')[0].trim();
-      document.cookie = `${name}=; Max-Age=0`;
-    });
+    clearCookies();
+    localStorage.clear();
+    storage = new BrowserCookieStorage("test");
   });
 
   afterEach(() => {
-    // Limpar cookies após cada teste
-    document.cookie.split(';').forEach(cookie => {
-      const name = cookie.split('=')[0].trim();
-      document.cookie = `${name}=; Max-Age=0`;
-    });
+    clearCookies();
+    localStorage.clear();
   });
 
-  describe('setItem / getItem', () => {
-    it('deve armazenar e recuperar valores', () => {
-      storage.setItem('key1', 'value1');
-      expect(storage.getItem('key1')).toBe('value1');
-    });
+  it("stores, reads, overwrites, and removes values", () => {
+    storage.setItem("key1", "value1");
+    expect(storage.getItem("key1")).toBe("value1");
 
-    it('deve retornar null para chaves inexistentes', () => {
-      expect(storage.getItem('nonexistent')).toBeNull();
-    });
+    storage.setItem("key1", "value2");
+    expect(storage.getItem("key1")).toBe("value2");
 
-    it('deve sobrescrever valores existentes', () => {
-      storage.setItem('key1', 'value1');
-      storage.setItem('key1', 'value2');
-      expect(storage.getItem('key1')).toBe('value2');
-    });
-
-    it('deve lidar com valores vazios', () => {
-      storage.setItem('empty', '');
-      expect(storage.getItem('empty')).toBe('');
-    });
-
-    it('deve lidar com caracteres especiais', () => {
-      const specialValue = 'value with spaces & special=chars';
-      storage.setItem('special', specialValue);
-      expect(storage.getItem('special')).toBe(specialValue);
-    });
-
-    it('deve lidar com JSON stringificado', () => {
-      const jsonValue = JSON.stringify({ token: 'abc123', expires: 123456 });
-      storage.setItem('json', jsonValue);
-      expect(storage.getItem('json')).toBe(jsonValue);
-    });
+    storage.removeItem("key1");
+    expect(storage.getItem("key1")).toBeNull();
   });
 
-  describe('removeItem', () => {
-    it('deve remover itens', () => {
-      storage.setItem('key1', 'value1');
-      storage.removeItem('key1');
-      expect(storage.getItem('key1')).toBeNull();
-    });
+  it("preserves empty values, special characters, and JSON payloads", () => {
+    storage.setItem("empty", "");
+    expect(storage.getItem("empty")).toBe("");
 
-    it('deve ser idempotente', () => {
-      storage.setItem('key1', 'value1');
-      storage.removeItem('key1');
-      storage.removeItem('key1'); // Segunda remoção não deve causar erro
-      expect(storage.getItem('key1')).toBeNull();
-    });
+    storage.setItem("marker-like", "chunked:2");
+    expect(storage.getItem("marker-like")).toBe("chunked:2");
+
+    const specialValue = "value with spaces & special=chars";
+    storage.setItem("special", specialValue);
+    expect(storage.getItem("special")).toBe(specialValue);
+
+    const jsonValue = JSON.stringify({ token: "abc123", expires: 123456 });
+    storage.setItem("json", jsonValue);
+    expect(storage.getItem("json")).toBe(jsonValue);
   });
 
-  describe('Isolamento de prefixo', () => {
-    it('deve isolar storages com prefixos diferentes', () => {
-      const storage1 = new SecureCookieStorage('prefix1');
-      const storage2 = new SecureCookieStorage('prefix2');
+  it("isolates keys by prefix", () => {
+    const storage1 = new BrowserCookieStorage("prefix1");
+    const storage2 = new BrowserCookieStorage("prefix2");
 
-      storage1.setItem('key', 'value1');
-      storage2.setItem('key', 'value2');
+    storage1.setItem("key", "value1");
+    storage2.setItem("key", "value2");
 
-      expect(storage1.getItem('key')).toBe('value1');
-      expect(storage2.getItem('key')).toBe('value2');
-    });
+    expect(storage1.getItem("key")).toBe("value1");
+    expect(storage2.getItem("key")).toBe("value2");
+  });
+
+  it("chunks payloads that exceed a single cookie budget", () => {
+    const largeValue = "x".repeat(AUTH_BROWSER_STORAGE_CONFIG.maxCookieChunkSize + 128);
+
+    storage.setItem("large-session", largeValue);
+
+    expect(storage.getItem("large-session")).toBe(largeValue);
+    expect(document.cookie).toContain("test-large-session");
+    expect(document.cookie).toContain("test-large-session.0");
+  });
+
+  it("does not persist payloads above the configured cookie budget", () => {
+    const oversizedValue = "x".repeat(
+      AUTH_BROWSER_STORAGE_CONFIG.maxCookieChunkSize *
+        (AUTH_BROWSER_STORAGE_CONFIG.maxCookieChunks + 1),
+    );
+
+    storage.setItem("oversized-session", oversizedValue);
+
+    expect(storage.getItem("oversized-session")).toBeNull();
   });
 });
 
-describe('HybridStorage', () => {
-  let storage: HybridStorage;
-
+describe("StrictBrowserAuthStorage", () => {
   beforeEach(() => {
-    storage = new HybridStorage();
-    
-    // Limpar cookies
-    document.cookie.split(';').forEach(cookie => {
-      const name = cookie.split('=')[0].trim();
-      document.cookie = `${name}=; Max-Age=0`;
-    });
-
-    // Limpar localStorage
+    clearCookies();
     localStorage.clear();
   });
 
   afterEach(() => {
-    // Limpar cookies
-    document.cookie.split(';').forEach(cookie => {
-      const name = cookie.split('=')[0].trim();
-      document.cookie = `${name}=; Max-Age=0`;
-    });
-
-    // Limpar localStorage
+    clearCookies();
     localStorage.clear();
   });
 
-  describe('Preferência por cookies', () => {
-    it('deve usar cookies quando disponíveis', () => {
-      storage.setItem('key1', 'value1');
-      
-      // Verificar que está em cookies
-      expect(document.cookie).toContain('sb-auth-key1');
-      
-      // Verificar que NÃO está em localStorage
-      expect(localStorage.getItem('key1')).toBeNull();
-    });
-
-    it('deve recuperar de cookies', () => {
-      storage.setItem('key1', 'value1');
-      expect(storage.getItem('key1')).toBe('value1');
-    });
-  });
-
-  describe('Migração de localStorage para cookies', () => {
-    it('deve migrar dados existentes de localStorage', () => {
-      // Simular dados antigos em localStorage
-      localStorage.setItem('token', 'old-token-value');
-
-      // Tentar recuperar (deve migrar automaticamente)
-      const value = storage.getItem('token');
-
-      // Verificar que migrou para cookies
-      expect(value).toBe('old-token-value');
-      expect(document.cookie).toContain('sb-auth-token');
-      
-      // Verificar que removeu de localStorage
-      expect(localStorage.getItem('sb-auth-token')).toBeNull();
-    });
-
-    it('não deve migrar se valor não existir', () => {
-      const value = storage.getItem('nonexistent');
-      expect(value).toBeNull();
-    });
-  });
-
-  describe('Fallback para localStorage', () => {
-    it('deve usar localStorage se cookies falharem', () => {
-      // Mock de cookies desabilitados
-      const originalOwnCookie = Object.getOwnPropertyDescriptor(document, 'cookie');
-      const originalProtoCookie = Object.getOwnPropertyDescriptor(Document.prototype, 'cookie');
-
-      Object.defineProperty(document, 'cookie', {
-        get: () => '',
-        set: () => {
-          throw new Error('Cookies disabled');
-        },
-        configurable: true,
-      });
-
-      try {
-        // Criar novo storage com cookies desabilitados
-        const storageWithoutCookies = new HybridStorage();
-
-        // Deve usar localStorage
-        storageWithoutCookies.setItem('key1', 'value1');
-        expect(localStorage.getItem('key1')).toBe('value1');
-      } finally {
-        // Restaurar mesmo se o teste falhar
-        if (originalOwnCookie) {
-          Object.defineProperty(document, 'cookie', originalOwnCookie);
-        } else if (originalProtoCookie) {
-          delete (document as { cookie?: string }).cookie;
-          Object.defineProperty(Document.prototype, 'cookie', originalProtoCookie);
-        }
-      }
-    });
-  });
-
-  describe('removeItem', () => {
-    it('deve remover de ambos os storages', () => {
-      // Adicionar em ambos
-      storage.setItem('key1', 'value1');
-      localStorage.setItem('key1', 'value1');
-
-      // Remover
-      storage.removeItem('key1');
-
-      // Verificar que removeu de ambos
-      expect(storage.getItem('key1')).toBeNull();
-      expect(localStorage.getItem('key1')).toBeNull();
-    });
-  });
-});
-
-describe('Segurança de Cookies', () => {
-  it('deve definir cookies com flags de segurança', () => {
-    const storage = new SecureCookieStorage('test');
-    storage.setItem('secure-key', 'secure-value');
-
-    const cookies = document.cookie;
-    
-    // Verificar que cookie foi criado
-    expect(cookies).toContain('test-secure-key');
-    
-    // Nota: Não podemos verificar Secure e HttpOnly via JavaScript
-    // pois essas flags são intencionalmente inacessíveis
-    // Elas são verificadas via testes E2E ou inspeção manual
-  });
-
-  it('não deve expor tokens via document.cookie em produção', () => {
-    // Este teste documenta a limitação atual:
-    // Cookies ainda são acessíveis via document.cookie no client-side
-    // Para HttpOnly verdadeiro, é necessário middleware no servidor
-    
-    const storage = new SecureCookieStorage('test');
-    storage.setItem('token', 'sensitive-token');
-
-    // ⚠️ LIMITAÇÃO: Token ainda acessível via document.cookie
-    expect(document.cookie).toContain('test-token');
-    
-    // TODO: Implementar middleware server-side para HttpOnly verdadeiro
-  });
-});
-
-describe('Compatibilidade com Supabase', () => {
-  it('deve implementar interface SupportedStorage', () => {
-    const storage = new SecureCookieStorage();
-    
-    // Verificar que tem todos os métodos necessários
-    expect(typeof storage.getItem).toBe('function');
-    expect(typeof storage.setItem).toBe('function');
-    expect(typeof storage.removeItem).toBe('function');
-  });
-
-  it('deve armazenar sessão do Supabase', () => {
-    const storage = new HybridStorage();
-    
-    // Simular sessão do Supabase
+  it("uses cookie storage and never writes auth tokens to localStorage", () => {
+    const storage = new StrictBrowserAuthStorage(new BrowserCookieStorage("test"));
     const session = JSON.stringify({
-      access_token: 'mock-access-token',
-      refresh_token: 'mock-refresh-token',
+      access_token: "mock-access-token",
+      refresh_token: "mock-refresh-token",
       expires_at: Date.now() + 3600000,
     });
 
-    storage.setItem('token', session);
-    
-    const retrieved = storage.getItem('token');
-    expect(retrieved).toBe(session);
-    
-    // Verificar que pode ser parseado
-    const parsed = JSON.parse(retrieved!);
-    expect(parsed.access_token).toBe('mock-access-token');
+    storage.setItem(AUTH_STORAGE_KEY, session);
+
+    expect(storage.getItem(AUTH_STORAGE_KEY)).toBe(session);
+    expect(document.cookie).toContain(`test-${AUTH_STORAGE_KEY}`);
+    expect(localStorage.getItem(AUTH_STORAGE_KEY)).toBeNull();
+  });
+
+  it("clears known legacy auth keys from localStorage", () => {
+    for (const key of AUTH_BROWSER_STORAGE_CONFIG.legacyLocalStorageKeys) {
+      localStorage.setItem(key, "legacy-session");
+    }
+
+    const storage = new StrictBrowserAuthStorage();
+    storage.getItem(AUTH_STORAGE_KEY);
+
+    for (const key of AUTH_BROWSER_STORAGE_CONFIG.legacyLocalStorageKeys) {
+      expect(localStorage.getItem(key)).toBeNull();
+    }
+  });
+
+  it("does not fall back to localStorage when cookies are unavailable", () => {
+    const originalOwnCookie = Object.getOwnPropertyDescriptor(document, "cookie");
+    const originalProtoCookie = Object.getOwnPropertyDescriptor(Document.prototype, "cookie");
+
+    Object.defineProperty(document, "cookie", {
+      get: () => "",
+      set: () => {
+        throw new Error("Cookies disabled");
+      },
+      configurable: true,
+    });
+
+    try {
+      const storage = new StrictBrowserAuthStorage();
+      storage.setItem(AUTH_STORAGE_KEY, "sensitive-session");
+
+      expect(storage.getItem(AUTH_STORAGE_KEY)).toBeNull();
+      expect(localStorage.getItem(AUTH_STORAGE_KEY)).toBeNull();
+    } finally {
+      restoreCookieDescriptor(originalOwnCookie, originalProtoCookie);
+    }
+  });
+
+  it("implements the Supabase SupportedStorage contract", () => {
+    const storage = createBrowserAuthStorage();
+
+    expect(typeof storage.getItem).toBe("function");
+    expect(typeof storage.setItem).toBe("function");
+    expect(typeof storage.removeItem).toBe("function");
   });
 });

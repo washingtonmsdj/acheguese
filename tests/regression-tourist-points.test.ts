@@ -12,6 +12,7 @@ import { readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
 
 const GUIDE_MODULE_PATH = join(process.cwd(), 'src/modules/guide');
+const APP_ROUTES_PATH = join(process.cwd(), 'src/app/routes/AppRoutes.tsx');
 
 /**
  * Lê todos os arquivos TypeScript/TSX de um diretório recursivamente
@@ -41,6 +42,12 @@ function readTsFiles(dir: string): { path: string; content: string }[] {
 }
 
 describe('Regression: URL Construction', () => {
+  it('should not expose public tourist point detail by raw ID', () => {
+    const appRoutes = readFileSync(APP_ROUTES_PATH, 'utf-8');
+
+    expect(appRoutes).not.toMatch(/<Route\s+path=["']\/pontos-turisticos\/:id["']/);
+  });
+
   it('should not have manual URL construction for tourist points', () => {
     const files = readTsFiles(GUIDE_MODULE_PATH);
     const violations: string[] = [];

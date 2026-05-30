@@ -7,7 +7,7 @@
  * - Both clients converge to the same final state.
  */
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { it, expect, beforeAll, afterAll } from 'vitest';
 import { type SupabaseClient } from '@supabase/supabase-js';
 import { RideOperationalService } from '../../src/modules/mobility/core/RideOperationalService';
 import { RIDE_STATE } from '../../src/modules/mobility/core/RideStateMachine';
@@ -21,6 +21,7 @@ import {
   signOutGate3Runtime,
   type Gate3UserFixture,
 } from './gate3-test-fixtures';
+import { describeOperational } from '../helpers/operational-env';
 
 async function subscribeAndWait(channel: ReturnType<SupabaseClient['channel']>): Promise<void> {
   await new Promise<void>((resolve, reject) => {
@@ -65,7 +66,10 @@ async function waitForRideStatusEvent(
   );
 }
 
-describe('GATE 3 - Realtime validation', () => {
+describeOperational('GATE 3 - Realtime validation', {
+  requireDriverCredentials: true,
+  requireServiceRole: true,
+}, () => {
   let supabase: SupabaseClient;
   let admin: SupabaseClient;
   let passengerProfileId: string;

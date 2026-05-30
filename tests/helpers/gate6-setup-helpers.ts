@@ -8,18 +8,14 @@
 import { DriverAvailabilityService } from '@/modules/mobility/services/DriverAvailabilityService';
 import { authenticateAsProfile } from './auth-helper';
 import { validateDriverAvailable } from './gate6-polling-helpers';
-import { createClient } from '@supabase/supabase-js';
+import { createOperationalAdminClient } from './operational-env';
 
-const supabaseAdmin = createClient(
-  process.env.VITE_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  }
-);
+let supabaseAdmin: ReturnType<typeof createOperationalAdminClient> | undefined;
+
+function getSupabaseAdmin() {
+  supabaseAdmin ??= createOperationalAdminClient();
+  return supabaseAdmin;
+}
 
 interface SetupDriverResult {
   success: boolean;
@@ -46,7 +42,7 @@ export async function setupDriverAvailable(
   lng: number
 ): Promise<SetupDriverResult> {
   try {
-    const { error: capabilityError } = await supabaseAdmin
+    const { error: capabilityError } = await getSupabaseAdmin()
       .from('driver_data')
       .upsert({
         profile_id: driverProfileId,

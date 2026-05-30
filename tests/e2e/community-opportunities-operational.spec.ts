@@ -9,7 +9,7 @@ test.describe("community opportunities public surface", () => {
 
   test("opportunities route renders without falling back to global loader", async ({ page }) => {
     await page.goto(
-      "/comunidade/ba/salvador/area/complexo-do-nordeste-de-amaralina/oportunidades",
+      "/comunidade/ba/salvador/feed?tab=oportunidades",
       { waitUntil: "domcontentloaded", timeout: 120_000 },
     );
 

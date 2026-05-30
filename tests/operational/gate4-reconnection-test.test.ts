@@ -9,30 +9,28 @@
  * - Detecção de stale state
  */
 
-import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
+import { it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { TrackingService } from '@/core/tracking/services/TrackingService';
 import { ReconnectionManager } from '@/core/tracking/services/ReconnectionManager';
+import { describeOperational, requireOperationalEnv } from '../helpers/operational-env';
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
-
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  throw new Error('VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY devem estar definidas');
-}
-
-describe('GATE 4: Reconexão e Recuperação', () => {
+describeOperational('GATE 4: Reconexão e Recuperação', {
+  requireDriverCredentials: true,
+}, () => {
   let supabase: SupabaseClient;
   let trackingService: TrackingService;
   let driverProfileId: string;
 
   beforeAll(async () => {
+    const env = requireOperationalEnv({ requireDriverCredentials: true });
+
     // Criar cliente autenticado
-    supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    supabase = createClient(env.supabaseUrl, env.anonKey);
 
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-      email: TEST_DRIVER_EMAIL,
-      password: TEST_DRIVER_PASSWORD,
+      email: env.driverEmail,
+      password: env.driverPassword,
     });
 
     if (authError || !authData.user) {
@@ -57,8 +55,8 @@ describe('GATE 4: Reconexão e Recuperação', () => {
   });
 
   afterAll(async () => {
-    trackingService.unsubscribeAll();
-    await supabase.auth.signOut();
+    trackingService?.unsubscribeAll();
+    await supabase?.auth.signOut();
   });
 
   it('1. Deve inicializar com estado conectado', async () => {

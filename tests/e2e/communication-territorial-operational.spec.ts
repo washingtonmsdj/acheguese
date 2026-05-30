@@ -220,7 +220,7 @@ async function expectCommunityCommunicationRouteResolved(page: Page) {
   await expect
     .poll(async () => {
       const text = (await bodyText(page)).toLowerCase();
-      return page.url().includes('/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/comunicacao')
+      return page.url().includes('/comunidade/ba/salvador/comunicacao')
         && text.includes('comunicacao em')
         && text.includes('camada editorial comunitaria');
     }, { timeout: 120_000 })
@@ -382,14 +382,11 @@ test.describe('communication territorial routes', () => {
     await expectRouteResolved(page);
   });
 
-  test('city, territory and channel routes resolve', async ({ page }) => {
+  test('city and channel routes resolve', async ({ page }) => {
     await open(page, '/comunicacao/ba/salvador');
     await expectRouteResolved(page);
 
-    await open(page, '/comunicacao/ba/salvador/nordeste-de-amaralina');
-    await expectRouteResolved(page);
-
-    await open(page, '/comunicacao/ba/salvador/nordeste-de-amaralina/canal-demo');
+    await open(page, '/comunicacao/ba/salvador/canal-demo');
     await expectRouteResolved(page);
   });
 
@@ -402,18 +399,18 @@ test.describe('communication territorial routes', () => {
   });
 
   test('community communication tab resolves inside territorial shell', async ({ page }) => {
-    await open(page, '/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/comunicacao');
+    await open(page, '/comunidade/ba/salvador/comunicacao');
     await expectCommunityCommunicationRouteResolved(page);
 
-    await expect(page.getByRole('link', { name: /Ver canais do territorio/i })).toHaveAttribute(
+    await expect(page.getByRole('link', { name: /Ver canais da cidade/i })).toHaveAttribute(
       'href',
-      '/comunicacao/ba/salvador/complexo-do-nordeste-de-amaralina',
+      '/comunicacao/ba/salvador',
     );
   });
 
   test('community communication tab distributes article and inline update', async ({ page }) => {
     await mockCommunicationDistribution(page);
-    await open(page, '/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/comunicacao');
+    await open(page, '/comunidade/ba/salvador/comunicacao');
     await expectCommunityCommunicationRouteResolved(page);
 
     await expect(page.getByText('Materia transacional do bairro')).toBeVisible();
@@ -423,7 +420,7 @@ test.describe('communication territorial routes', () => {
     await expect(page.getByRole('link', { name: /Ler no canal/i })).toHaveCount(1);
     await expect(page.getByRole('link', { name: /Ler no canal/i })).toHaveAttribute(
       'href',
-      '/comunicacao/ba/salvador/complexo-do-nordeste-de-amaralina/radio-comunitaria-local',
+      '/comunicacao/ba/salvador/radio-comunitaria-local',
     );
   });
 
@@ -484,7 +481,7 @@ test.describe('communication territorial routes', () => {
     await page.getByRole('button', { name: /Criar e publicar/i }).click();
     await expect(page.getByText(/Publicacao criada e publicada/i)).toBeVisible({ timeout: 30_000 });
 
-    await open(page, '/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/comunicacao');
+    await open(page, '/comunidade/ba/salvador/comunicacao');
     await expectCommunityCommunicationRouteResolved(page);
     await expect(page.getByText(uniqueTitle)).toBeVisible({ timeout: 45_000 });
   });

@@ -48,38 +48,33 @@ async function expectRouteResolved(page: Page) {
 test.describe("community territorial routes", () => {
   test.setTimeout(240_000);
 
-  test("city-only community route is rejected", async ({ page }) => {
+  test("city-level community route resolves", async ({ page }) => {
     await open(page, "/comunidade/ba/salvador");
-    await expect
-      .poll(async () => {
-        const text = await bodyText(page);
-        return /territ[oó]rio v[aá]lido|n[aã]o encontrado|not found/i.test(text);
-      }, { timeout: 60_000 })
-      .toBe(true);
-  });
-
-  test("district feed and groups resolve", async ({ page }) => {
-    await open(page, "/comunidade/ba/salvador/nordeste-de-amaralina/feed");
-    await expectRouteResolved(page);
-
-    await open(page, "/comunidade/ba/salvador/nordeste-de-amaralina/grupos");
     await expectRouteResolved(page);
   });
 
-  test("territorial group slug feed and groups resolve (canonical)", async ({ page }) => {
-    await open(page, "/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/feed");
+  test("city feed and groups resolve", async ({ page }) => {
+    await open(page, "/comunidade/ba/salvador/feed");
     await expectRouteResolved(page);
 
-    await open(page, "/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/grupos");
+    await open(page, "/comunidade/ba/salvador/grupos");
+    await expectRouteResolved(page);
+  });
+
+  test("city social surfaces stay canonical", async ({ page }) => {
+    await open(page, "/comunidade/ba/salvador/feed");
+    await expectRouteResolved(page);
+
+    await open(page, "/comunidade/ba/salvador/grupos");
     await expectRouteResolved(page);
   });
 
   test("community sidebar exposes Educacao and route resolves", async ({ page }) => {
-    await open(page, "/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/feed");
+    await open(page, "/comunidade/ba/salvador/feed");
     await expectRouteResolved(page);
 
     const educationLink = page
-      .locator('a[href="/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/educacao"]')
+      .locator('a[href="/comunidade/ba/salvador/educacao"]')
       .first();
 
     await expect(educationLink).toBeVisible({ timeout: 30_000 });
@@ -87,7 +82,7 @@ test.describe("community territorial routes", () => {
 
     await expect
       .poll(() => page.url(), { timeout: 30_000 })
-      .toContain("/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/educacao");
+      .toContain("/comunidade/ba/salvador/educacao");
     await expectRouteResolved(page);
   });
 });

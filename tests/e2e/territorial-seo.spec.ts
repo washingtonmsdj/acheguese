@@ -20,7 +20,7 @@ test.describe("territorial SEO policy", () => {
   test.setTimeout(180_000);
 
   test("public territorial pages render indexable content", async ({ page }) => {
-    await openRoute(page, "/ba/salvador/area/complexo-do-nordeste-de-amaralina");
+    await openRoute(page, "/ba/salvador/complexo-do-nordeste-de-amaralina");
 
     await expect
       .poll(() => readBodyText(page), { timeout: 60_000 })
@@ -31,15 +31,15 @@ test.describe("territorial SEO policy", () => {
   });
 
   test("duplicated module inside community keeps noindex policy", async ({ page }) => {
-    await openRoute(page, "/comunidade/ba/salvador/area/complexo-do-nordeste-de-amaralina/classificados");
+    await openRoute(page, "/comunidade/ba/salvador/classificados");
 
     await expect
       .poll(() => readBodyText(page), { timeout: 60_000 })
-      .toMatch(/Classificados|Comunidade|Complexo/i);
+      .toMatch(/Classificados|Comunidade|Salvador/i);
 
     await expect.poll(() => readRobots(page), { timeout: 60_000 }).toMatch(/noindex/i);
 
     const canonical = await readCanonical(page);
-    expect(canonical ?? "").toContain("/classificados/ba/salvador/area/complexo-do-nordeste-de-amaralina");
+    expect(canonical ?? "").toContain("/classificados/ba/salvador");
   });
 });

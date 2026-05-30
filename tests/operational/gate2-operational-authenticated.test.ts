@@ -7,34 +7,30 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { TrackingService } from '@/core/tracking/services/TrackingService';
+import { describeOperational, requireOperationalEnv } from '../helpers/operational-env';
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL!;
-const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY!;
-const E2E_USER_EMAIL = process.env.E2E_USER_EMAIL;
-const E2E_USER_PASSWORD = process.env.E2E_USER_PASSWORD;
-
-if (!E2E_USER_EMAIL || !E2E_USER_PASSWORD) {
-  throw new Error(
-    '[GATE 2] E2E_USER_EMAIL e E2E_USER_PASSWORD são obrigatórios. ' +
-    'Configure em .env.local ou .env.test (não commitado).',
-  );
-}
-
-describe('GATE 2: VALIDAÇÃO OPERACIONAL AUTENTICADA', () => {
+describeOperational('GATE 2: VALIDAÇÃO OPERACIONAL AUTENTICADA', {
+  requireDriverCredentials: true,
+}, () => {
   let supabase: SupabaseClient;
   let trackingService: TrackingService;
   let testDriverId: string;
   let userId: string;
+  let e2eUserEmail: string;
+  let e2eUserPassword: string;
 
   beforeAll(async () => {
-    supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const env = requireOperationalEnv({ requireDriverCredentials: true });
+    e2eUserEmail = env.driverEmail;
+    e2eUserPassword = env.driverPassword;
+    supabase = createClient(env.supabaseUrl, env.anonKey);
 
     console.log('\n🔐 Autenticando usuário E2E...');
     
     // Autenticar com usuário E2E
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-      email: E2E_USER_EMAIL,
-      password: E2E_USER_PASSWORD,
+      email: e2eUserEmail,
+      password: e2eUserPassword,
     });
 
     if (authError) {
@@ -44,7 +40,7 @@ describe('GATE 2: VALIDAÇÃO OPERACIONAL AUTENTICADA', () => {
 
     userId = authData.user!.id;
     trackingService = new TrackingService(supabase);
-    console.log('✅ Autenticado como:', E2E_USER_EMAIL);
+    console.log('✅ Autenticado como:', e2eUserEmail);
     console.log('📍 User ID:', userId);
 
     // Buscar ou criar perfil do motorista

@@ -11,16 +11,17 @@
  * - Validação de corrida correta
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { createClient } from '@supabase/supabase-js';
+import { it, expect, beforeEach, afterEach } from 'vitest';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { DriverAvailabilityService } from '@/modules/mobility/services/DriverAvailabilityService';
 import { authenticateAsProfile, signOut } from '../helpers/auth-helper';
+import { createOperationalAdminClient, describeOperational } from '../helpers/operational-env';
 
-// Cliente admin para bypassar RLS em testes
-const supabaseAdmin = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.SUPABASE_SERVICE_ROLE_KEY
-);
+let supabaseAdmin: SupabaseClient;
+
+function describeGate5(name: string, suite: Parameters<typeof describeOperational>[2]) {
+  return describeOperational(name, { requireServiceRole: true }, suite);
+}
 
 // ============================================
 // TEST SETUP
@@ -88,6 +89,7 @@ async function markRideFinalForRelease(rideId: string, driverProfileId = TEST_DR
 }
 
 beforeEach(async () => {
+  supabaseAdmin = createOperationalAdminClient();
   await setupTestProfiles();
   await cleanupTestData();
 });
@@ -101,7 +103,7 @@ afterEach(async () => {
 // SUITE 1: TRANSIÇÕES DE ESTADO
 // ============================================
 
-describe('Gate 5 - Suite 1: Transições de Estado', () => {
+describeGate5('Gate 5 - Suite 1: Transições de Estado', () => {
   it('1.1. offline → online_warming_up', async () => {
     const result = await DriverAvailabilityService.goOnline(TEST_DRIVER_ID);
     expect(result.success).toBe(true);
@@ -230,7 +232,7 @@ describe('Gate 5 - Suite 1: Transições de Estado', () => {
 // SUITE 2: INTEGRAÇÃO COM DISPATCH
 // ============================================
 
-describe('Gate 5 - Suite 2: Integração com Dispatch', () => {
+describeGate5('Gate 5 - Suite 2: Integração com Dispatch', () => {
   it('2.1. findAvailableDrivers retorna apenas disponíveis', async () => {
     // Driver 1: available
     await DriverAvailabilityService.goOnline(TEST_DRIVER_ID);
@@ -334,7 +336,7 @@ describe('Gate 5 - Suite 2: Integração com Dispatch', () => {
 // SUITE 3: STALE DETECTION
 // ============================================
 
-describe('Gate 5 - Suite 3: Stale Detection', () => {
+describeGate5('Gate 5 - Suite 3: Stale Detection', () => {
   it('3.1. Motorista DISPONÍVEL stale deve ser marcado offline', async () => {
     // Criar estado inicial diretamente no banco (sem usar service que atualiza last_seen_at)
     const oldTimestamp = new Date(Date.now() - 6 * 60 * 1000).toISOString();
@@ -441,7 +443,7 @@ describe('Gate 5 - Suite 3: Stale Detection', () => {
 // SUITE 4: TRACKING INTEGRATION
 // ============================================
 
-describe('Gate 5 - Suite 4: Tracking Integration', () => {
+describeGate5('Gate 5 - Suite 4: Tracking Integration', () => {
   it('4.1. markLastSeen atualiza last_seen_at', async () => {
     await DriverAvailabilityService.goOnline(TEST_DRIVER_ID);
 
@@ -485,7 +487,7 @@ describe('Gate 5 - Suite 4: Tracking Integration', () => {
 // SUITE 5: VALIDAÇÃO DE CORRIDA CORRETA
 // ============================================
 
-describe('Gate 5 - Suite 5: Validação de Corrida Correta', () => {
+describeGate5('Gate 5 - Suite 5: Validação de Corrida Correta', () => {
   it('5.1. releaseBusy com rideId correto deve suceder', async () => {
     await DriverAvailabilityService.goOnline(TEST_DRIVER_ID);
     await DriverAvailabilityService.setAvailable(TEST_DRIVER_ID, TEST_LOCATION);
@@ -541,7 +543,7 @@ describe('Gate 5 - Suite 5: Validação de Corrida Correta', () => {
 // SUITE 6: BOOTSTRAP AUTOMÁTICO
 // ============================================
 
-describe('Gate 5 - Suite 6: Bootstrap Automático', () => {
+describeGate5('Gate 5 - Suite 6: Bootstrap Automático', () => {
   it('6.1. goOnline cria registro se não existir', async () => {
     // Garantir que não existe
     await supabaseAdmin
@@ -577,7 +579,7 @@ describe('Gate 5 - Suite 6: Bootstrap Automático', () => {
 // SUITE 7: MOTOBOY MODE
 // ============================================
 
-describe('Gate 5 - Suite 7: Motoboy Mode', () => {
+describeGate5('Gate 5 - Suite 7: Motoboy Mode', () => {
   it('7.1. setBusy com mode motoboy registra corretamente', async () => {
     await DriverAvailabilityService.goOnline(TEST_DRIVER_ID);
     await DriverAvailabilityService.setAvailable(TEST_DRIVER_ID, TEST_LOCATION);

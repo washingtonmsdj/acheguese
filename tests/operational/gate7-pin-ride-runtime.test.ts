@@ -10,8 +10,8 @@
  * Este teste CONTA para fechamento do Gate 7.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { createClient } from '@supabase/supabase-js';
+import { it, expect, beforeEach, afterEach } from 'vitest';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { RideOperationalService } from '@/modules/mobility/core/RideOperationalService';
@@ -31,24 +31,18 @@ import {
   safeCleanupRides,
   safeCleanupVerifications,
 } from '../helpers/test-cleanup-helpers';
+import { createOperationalAdminClient, describeOperational } from '../helpers/operational-env';
 
 // Carregar fixtures
 const fixturesPath = join(__dirname, '../fixtures/gate6-fixtures.json');
 const fixtures = JSON.parse(readFileSync(fixturesPath, 'utf-8'));
 
 // Service role client para validações
-const supabaseAdmin = createClient(
-  process.env.VITE_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  }
-);
+let supabaseAdmin: SupabaseClient;
 
-describe('Gate 7 - PIN Verification: Corrida', () => {
+describeOperational('Gate 7 - PIN Verification: Corrida', {
+  requireServiceRole: true,
+}, () => {
   // IDs de teste
   const passengerId = fixtures.passengers.passengerA.id;
   const driverId = fixtures.drivers.driverA.id;
@@ -69,6 +63,7 @@ describe('Gate 7 - PIN Verification: Corrida', () => {
   const dropoffLocationId = fixtures.locationIds.primary;
 
   beforeEach(async () => {
+    supabaseAdmin = createOperationalAdminClient();
     createdRideIds.length = 0;
 
     // ISOLAMENTO CRÍTICO: Resetar configurações de PIN PRIMEIRO

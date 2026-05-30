@@ -97,7 +97,7 @@ describe('Sprint 2 - Fase 2: PostService Refatorado', () => {
           type: 'city',
           parent_id: '00000000-0000-0000-0000-000000000010', // Bahia
           status: 'inactive',
-          metadata: '{"center_latitude": -12.0, "center_longitude": -38.0}'::jsonb,
+          metadata: { center_latitude: -12.0, center_longitude: -38.0 },
         })
         .select()
         .single();

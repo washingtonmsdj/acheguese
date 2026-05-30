@@ -16,7 +16,7 @@ test.describe("community social SEO policy", () => {
   test.setTimeout(180_000);
 
   test("feed route resolves as the social canonical surface", async ({ page }) => {
-    await openCommunity(page, "/comunidade/ba/salvador/area/complexo-do-nordeste-de-amaralina/feed");
+    await openCommunity(page, "/comunidade/ba/salvador/feed");
 
     await expect
       .poll(() => readBodyText(page), { timeout: 60_000 })
@@ -26,7 +26,7 @@ test.describe("community social SEO policy", () => {
   });
 
   test("groups route resolves as the social canonical surface", async ({ page }) => {
-    await openCommunity(page, "/comunidade/ba/salvador/area/complexo-do-nordeste-de-amaralina/grupos");
+    await openCommunity(page, "/comunidade/ba/salvador/grupos");
 
     await expect
       .poll(() => readBodyText(page), { timeout: 60_000 })

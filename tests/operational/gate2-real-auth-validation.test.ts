@@ -9,29 +9,28 @@
  * 3. Arquivo .env.test configurado
  */
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { it, expect, beforeAll, afterAll } from 'vitest';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { TrackingService } from '../../src/core/tracking/services/TrackingService';
+import { describeOperational, requireOperationalEnv } from '../helpers/operational-env';
 
-describe('GATE 2 - Validação Operacional Real', () => {
+describeOperational('GATE 2 - Validação Operacional Real', {
+  requireDriverCredentials: true,
+}, () => {
   let supabase: SupabaseClient;
   let trackingService: TrackingService;
   let driverProfileId: string;
   let authUserId: string;
+  let driverEmail: string;
+  let driverPassword: string;
 
   beforeAll(async () => {
     // Carregar variáveis de ambiente
-    const supabaseUrl = process.env.VITE_SUPABASE_URL;
-    const supabaseKey = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-    const driverEmail = process.env.E2E_USER_EMAIL || process.env.TEST_DRIVER_EMAIL;
-    const driverPassword = process.env.E2E_USER_PASSWORD || process.env.TEST_DRIVER_PASSWORD;
-
-    if (!supabaseUrl || !supabaseKey || !driverEmail || !driverPassword) {
-      throw new Error('Variáveis de ambiente não configuradas. Verifique .env.test');
-    }
-
+    const env = requireOperationalEnv({ requireDriverCredentials: true });
+    driverEmail = env.driverEmail;
+    driverPassword = env.driverPassword;
     // Criar cliente Supabase
-    supabase = createClient(supabaseUrl, supabaseKey);
+    supabase = createClient(env.supabaseUrl, env.anonKey);
 
     // Autenticar como motorista
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
@@ -243,8 +242,8 @@ describe('GATE 2 - Validação Operacional Real', () => {
     await supabase.auth.signOut();
 
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-      email: process.env.E2E_USER_EMAIL || process.env.TEST_DRIVER_EMAIL!,
-      password: process.env.E2E_USER_PASSWORD || process.env.TEST_DRIVER_PASSWORD!,
+      email: driverEmail,
+      password: driverPassword,
     });
 
     expect(authError).toBeNull();

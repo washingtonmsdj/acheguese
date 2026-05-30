@@ -1,5 +1,10 @@
 import { createClient, type SupabaseClient, type User } from '@supabase/supabase-js';
 import { supabase as runtimeSupabase } from '@/integrations/supabase';
+import {
+  createOperationalAdminClient,
+  createOperationalAnonClient,
+  requireOperationalEnv,
+} from '../helpers/operational-env';
 
 export interface Gate3UserFixture {
   email: string;
@@ -19,31 +24,16 @@ export interface Gate3Clients {
 }
 
 export function createGate3Clients(): Gate3Clients {
-  const supabaseUrl = process.env.VITE_SUPABASE_URL;
-  const anonKey = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
-
-  if (!supabaseUrl || !anonKey || !serviceRoleKey) {
-    throw new Error('Configure VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY e SUPABASE_SERVICE_ROLE_KEY.');
-  }
-
   return {
-    anon: createClient(supabaseUrl, anonKey, {
-      auth: { autoRefreshToken: false, persistSession: false },
-    }),
-    admin: createClient(supabaseUrl, serviceRoleKey, {
-      auth: { autoRefreshToken: false, persistSession: false },
-    }),
+    anon: createOperationalAnonClient(),
+    admin: createOperationalAdminClient(),
   };
 }
 
 export async function authenticateGate3Driver(anon: SupabaseClient): Promise<Gate3UserFixture> {
-  const email = process.env.E2E_USER_EMAIL || process.env.TEST_DRIVER_EMAIL;
-  const password = process.env.E2E_USER_PASSWORD || process.env.TEST_DRIVER_PASSWORD;
-
-  if (!email || !password) {
-    throw new Error('Configure E2E_USER_EMAIL/E2E_USER_PASSWORD ou TEST_DRIVER_EMAIL/TEST_DRIVER_PASSWORD.');
-  }
+  const { driverEmail: email, driverPassword: password } = requireOperationalEnv({
+    requireDriverCredentials: true,
+  });
 
   const { data: auth, error } = await anon.auth.signInWithPassword({ email, password });
   if (error || !auth.user) {
@@ -75,8 +65,7 @@ export async function createGate3PassengerFixture(
   admin: SupabaseClient,
   prefix: string,
 ): Promise<Gate3UserFixture> {
-  const supabaseUrl = process.env.VITE_SUPABASE_URL!;
-  const anonKey = process.env.VITE_SUPABASE_PUBLISHABLE_KEY!;
+  const { anonKey, supabaseUrl } = requireOperationalEnv();
   const suffix = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
   const email = `${prefix}-${suffix}@acheguese.local`;
   const password = 'Gate3Passenger@2026!';
