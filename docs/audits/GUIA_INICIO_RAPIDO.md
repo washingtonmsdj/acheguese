@@ -1,360 +1,453 @@
-# Guia de Início Rápido - Eliminação de Hardcodes
+# Guia de Início Rápido - Refatoração Estrutural
 
-**Tempo estimado:** 30 minutos  
-**Objetivo:** Começar a eliminar hardcodes hoje mesmo
-
----
-
-## 🚀 Passo 1: Entender o Problema (5 min)
-
-### O que são hardcodes indevidos?
-
-**❌ ERRADO:**
-```typescript
-// Preço hardcoded
-const price = 49.90;
-
-// Coordenada hardcoded
-const center = { lat: -12.9714, lng: -38.5103 };
-
-// Mock em produção
-import { MOCK_VAGAS } from './mock-vagas';
-```
-
-**✅ CORRETO:**
-```typescript
-// Preço do banco
-const { data: plan } = useBillingPlan('pro');
-const price = plan.priceValue;
-
-// Coordenada do banco
-const { data: location } = useLocation(locationId);
-const center = { lat: location.latitude, lng: location.longitude };
-
-// Dados reais
-const { data: vagas } = useVagas();
-```
-
-### Por que isso importa?
-
-- ❌ **Hardcode:** Impossível mudar sem deploy
-- ✅ **SSOT:** Muda no banco, reflete instantaneamente
+**Data:** 30 de Maio de 2026  
+**Objetivo:** Começar a refatoração HOJE
 
 ---
 
-## 🔍 Passo 2: Validar Situação Atual (5 min)
+## 🚀 Começando AGORA
 
+### Passo 1: Ler Documentação (30 minutos)
+1. ✅ Ler `RESUMO_EXECUTIVO_AUDITORIA.md` (5 min)
+2. ✅ Ler `AUDITORIA_TECNICA_ESTRUTURAL_2026.md` - Seção "Problemas Críticos" (10 min)
+3. ✅ Ler `EXEMPLOS_REFATORACAO.md` - Exemplo 1 (Desacoplamento) (15 min)
+
+### Passo 2: Setup do Ambiente (1 hora)
 ```bash
-# Executar validação
-npm run validate:hardcodes
+# 1. Criar branch de refatoração
+git checkout -b refactor/architecture-2026
+
+# 2. Instalar dependências (se necessário)
+npm install
+
+# 3. Rodar testes para baseline
+npm run test
+npm run test:e2e
+
+# 4. Criar estrutura de pastas
+mkdir -p src/core/infrastructure/database/{interfaces,repositories,adapters}
+mkdir -p src/core/infrastructure/database/query-builders
 ```
 
-**Saída esperada:**
-```
-🔍 RELATÓRIO DE VALIDAÇÃO SSOT - HARDCODES
-═══════════════════════════════════════════
-
-📊 RESUMO:
-   🔴 Críticas: 160
-   🟡 Altas: 80
-   🟢 Médias: 22
-   📝 Total: 262
-
-📋 POR TIPO:
-   Status hardcoded: 80
-   Coordenada hardcoded: 60
-   Preço hardcoded: 45
-   UUID hardcoded: 30
-   Limite operacional hardcoded: 25
-   Import de mock em runtime: 15
-   ...
-```
-
-**Ação:** Anote os números para acompanhar progresso
+### Passo 3: Primeira Refatoração (2-3 horas)
+Vamos refatorar o módulo `profiles` como piloto.
 
 ---
 
-## 📚 Passo 3: Ler Documentação Essencial (10 min)
+## 📝 Checklist Sprint 1 - Dia 1
 
-### Leitura Obrigatória (10 min)
+### Manhã (4 horas)
 
-1. **[RESUMO_EXECUTIVO_AUDITORIA.md](./RESUMO_EXECUTIVO_AUDITORIA.md)** (5 min)
-   - Seção: "Top 6 Violações Críticas"
-   - Seção: "Plano de Ação"
-
-2. **[EXEMPLOS_CODIGO_CORRETO.md](./EXEMPLOS_CODIGO_CORRETO.md)** (5 min)
-   - Seção: "1. Preços e Valores Monetários"
-   - Seção: "5. Mocks e Fixtures"
-
-### Leitura Complementar (depois)
-
-- [PLANO_MIGRACAO_HARDCODES.md](./PLANO_MIGRACAO_HARDCODES.md) - Quando for implementar
-- [RELATORIO_HARDCODES_ENCONTRADOS.md](./RELATORIO_HARDCODES_ENCONTRADOS.md) - Para detalhes
-
----
-
-## 🛠️ Passo 4: Primeira Correção (10 min)
-
-### Exemplo Prático: Remover Mock de Produção
-
-**Antes (❌ ERRADO):**
+#### ✅ Tarefa 1: Criar Interfaces (1 hora)
 ```typescript
-// src/modules/vagas/hooks/useVagas.ts
-import { MOCK_VAGAS } from "../data/mock-vagas";
+// src/core/infrastructure/database/interfaces/IRepository.ts
+export interface IRepository<T> {
+  findById(id: string): Promise<T | null>;
+  findByIds(ids: string[]): Promise<T[]>;
+  findAll(filters?: Filter[]): Promise<T[]>;
+  count(filters?: Filter[]): Promise<number>;
+  create(data: Partial<T>): Promise<T>;
+  update(id: string, data: Partial<T>): Promise<T>;
+  delete(id: string): Promise<void>;
+}
 
-export function useVagas() {
-  const [vagas] = useState(MOCK_VAGAS);
-  return { vagas };
+export interface Filter {
+  field: string;
+  operator: 'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte' | 'in';
+  value: any;
 }
 ```
 
-**Depois (✅ CORRETO):**
+**Commit:** `feat: add repository interfaces`
 
-#### 1. Criar Service (2 min)
-```bash
-npm run generate:service VagasService
-```
+---
 
-#### 2. Implementar Query (3 min)
+#### ✅ Tarefa 2: Criar BaseRepository (1.5 horas)
 ```typescript
-// src/modules/vagas/services/VagasService.ts
-static async getVagas(): Promise<Vaga[]> {
-  const { data, error } = await supabase
-    .from('vagas')
-    .select('*')
-    .eq('status', 'ativa');
+// src/core/infrastructure/database/repositories/BaseRepository.ts
+import { SupabaseClient } from '@supabase/supabase-js';
+import { IRepository, Filter } from '../interfaces/IRepository';
+
+export abstract class BaseRepository<T> implements IRepository<T> {
+  protected abstract table: string;
   
-  if (error) throw error;
-  return data;
+  constructor(protected client: SupabaseClient) {}
+
+  async findById(id: string): Promise<T | null> {
+    const { data, error } = await this.client
+      .from(this.table)
+      .select('*')
+      .eq('id', id)
+      .maybeSingle();
+    
+    if (error) throw new DatabaseError(error);
+    return data;
+  }
+
+  async findByIds(ids: string[]): Promise<T[]> {
+    const { data, error } = await this.client
+      .from(this.table)
+      .select('*')
+      .in('id', ids);
+    
+    if (error) throw new DatabaseError(error);
+    return data || [];
+  }
+
+  async count(filters?: Filter[]): Promise<number> {
+    let query = this.client
+      .from(this.table)
+      .select('id', { count: 'exact', head: true });
+
+    if (filters) {
+      filters.forEach(f => {
+        query = this.applyFilter(query, f);
+      });
+    }
+
+    const { count, error } = await query;
+    if (error) throw new DatabaseError(error);
+    return count || 0;
+  }
+
+  private applyFilter(query: any, filter: Filter) {
+    switch (filter.operator) {
+      case 'eq': return query.eq(filter.field, filter.value);
+      case 'neq': return query.neq(filter.field, filter.value);
+      case 'gt': return query.gt(filter.field, filter.value);
+      case 'gte': return query.gte(filter.field, filter.value);
+      case 'lt': return query.lt(filter.field, filter.value);
+      case 'lte': return query.lte(filter.field, filter.value);
+      case 'in': return query.in(filter.field, filter.value);
+      default: return query;
+    }
+  }
+
+  // Implementar outros métodos...
+}
+
+// src/core/infrastructure/database/errors/DatabaseError.ts
+export class DatabaseError extends Error {
+  constructor(public originalError: any) {
+    super(originalError.message || 'Database error');
+    this.name = 'DatabaseError';
+  }
 }
 ```
 
-#### 3. Atualizar Hook (2 min)
-```typescript
-// src/modules/vagas/hooks/useVagas.ts
-import { useQuery } from '@tanstack/react-query';
-import { VagasService } from '../services/VagasService';
+**Commit:** `feat: add base repository implementation`
 
-export function useVagas() {
-  return useQuery({
-    queryKey: ['vagas'],
-    queryFn: () => VagasService.getVagas(),
+---
+
+#### ✅ Tarefa 3: Criar ProfileRepository (1 hora)
+```typescript
+// src/core/infrastructure/database/repositories/ProfileRepository.ts
+import { BaseRepository } from './BaseRepository';
+import { supabase } from '@/integrations/supabase';
+
+export interface Profile {
+  id: string;
+  user_id: string;
+  name: string;
+  username: string;
+  avatar_url?: string;
+  // ... outros campos
+}
+
+export class ProfileRepository extends BaseRepository<Profile> {
+  protected table = 'profiles';
+
+  constructor() {
+    super(supabase);
+  }
+
+  // Métodos específicos de Profile
+  async findByUsername(username: string): Promise<Profile | null> {
+    const { data, error } = await this.client
+      .from(this.table)
+      .select('*')
+      .eq('username', username)
+      .maybeSingle();
+    
+    if (error) throw new DatabaseError(error);
+    return data;
+  }
+
+  async findByUserId(userId: string): Promise<Profile[]> {
+    const { data, error } = await this.client
+      .from(this.table)
+      .select('*')
+      .eq('user_id', userId);
+    
+    if (error) throw new DatabaseError(error);
+    return data || [];
+  }
+}
+
+// src/core/infrastructure/database/repositories/index.ts
+export { ProfileRepository } from './ProfileRepository';
+export type { Profile } from './ProfileRepository';
+```
+
+**Commit:** `feat: add profile repository`
+
+---
+
+### Tarde (4 horas)
+
+#### ✅ Tarefa 4: Refatorar ProfileService (2 horas)
+```typescript
+// src/core/profiles/services/ProfileService.ts
+import { ProfileRepository, Profile } from '@/core/infrastructure/database/repositories';
+
+export class ProfileService {
+  constructor(private repo: ProfileRepository) {}
+
+  async getProfileById(id: string): Promise<Profile | null> {
+    return this.repo.findById(id);
+  }
+
+  async getProfilesByIds(ids: string[]): Promise<Profile[]> {
+    return this.repo.findByIds(ids);
+  }
+
+  async getProfileByUsername(username: string): Promise<Profile | null> {
+    return this.repo.findByUsername(username);
+  }
+
+  async getProfilesByUserId(userId: string): Promise<Profile[]> {
+    return this.repo.findByUserId(userId);
+  }
+
+  async getTotalProfilesCount(): Promise<number> {
+    return this.repo.count();
+  }
+
+  async createProfile(data: Partial<Profile>): Promise<Profile> {
+    return this.repo.create(data);
+  }
+
+  async updateProfile(id: string, data: Partial<Profile>): Promise<Profile> {
+    return this.repo.update(id, data);
+  }
+}
+
+// src/core/profiles/services/index.ts
+import { ProfileRepository } from '@/core/infrastructure/database/repositories';
+import { ProfileService } from './ProfileService';
+
+export const profileService = new ProfileService(
+  new ProfileRepository()
+);
+```
+
+**Commit:** `refactor: decouple ProfileService from Supabase`
+
+---
+
+#### ✅ Tarefa 5: Criar Testes (1.5 horas)
+```typescript
+// src/core/profiles/services/__tests__/ProfileService.test.ts
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { ProfileService } from '../ProfileService';
+import { ProfileRepository } from '@/core/infrastructure/database/repositories';
+
+describe('ProfileService', () => {
+  let service: ProfileService;
+  let mockRepo: ProfileRepository;
+
+  beforeEach(() => {
+    mockRepo = {
+      findById: vi.fn(),
+      findByIds: vi.fn(),
+      findByUsername: vi.fn(),
+      count: vi.fn(),
+    } as any;
+
+    service = new ProfileService(mockRepo);
   });
+
+  describe('getProfileById', () => {
+    it('should return profile when found', async () => {
+      const mockProfile = { id: '1', name: 'Test' };
+      vi.mocked(mockRepo.findById).mockResolvedValue(mockProfile as any);
+
+      const result = await service.getProfileById('1');
+
+      expect(result).toEqual(mockProfile);
+      expect(mockRepo.findById).toHaveBeenCalledWith('1');
+    });
+
+    it('should return null when not found', async () => {
+      vi.mocked(mockRepo.findById).mockResolvedValue(null);
+
+      const result = await service.getProfileById('999');
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('getTotalProfilesCount', () => {
+    it('should return count from repository', async () => {
+      vi.mocked(mockRepo.count).mockResolvedValue(42);
+
+      const result = await service.getTotalProfilesCount();
+
+      expect(result).toBe(42);
+      expect(mockRepo.count).toHaveBeenCalled();
+    });
+  });
+});
+```
+
+**Commit:** `test: add ProfileService unit tests`
+
+---
+
+#### ✅ Tarefa 6: Atualizar Imports (30 minutos)
+Buscar e substituir todos os imports de ProfileService no projeto:
+
+```bash
+# Buscar arquivos que importam ProfileService
+grep -r "from.*ProfileService" src/
+
+# Atualizar imports para usar a nova instância
+# Antes:
+import { ProfileService } from '@/core/profiles/services/ProfileService';
+const service = new ProfileService();
+
+# Depois:
+import { profileService } from '@/core/profiles/services';
+// Usar profileService diretamente
+```
+
+**Commit:** `refactor: update ProfileService imports`
+
+---
+
+## 📊 Checklist de Validação
+
+### Antes de Commitar
+- [ ] Código compila sem erros
+- [ ] Testes passam (`npm run test`)
+- [ ] Testes E2E passam (`npm run test:e2e`)
+- [ ] Lint passa (`npm run lint`)
+- [ ] TypeCheck passa (`npm run typecheck`)
+
+### Antes de Fazer PR
+- [ ] Todos os commits seguem padrão conventional
+- [ ] Documentação atualizada
+- [ ] Cobertura de testes >70%
+- [ ] Code review interno feito
+- [ ] Testado manualmente
+
+---
+
+## 🎯 Métricas de Sucesso - Dia 1
+
+### Objetivos
+- ✅ Criar estrutura de Repository
+- ✅ Refatorar 1 módulo (profiles)
+- ✅ Criar testes unitários
+- ✅ Documentar padrão
+
+### Resultados Esperados
+- 0 imports diretos do Supabase em ProfileService
+- >70% cobertura de testes em ProfileService
+- Documentação do padrão Repository criada
+- Exemplo funcionando para replicar
+
+---
+
+## 📅 Próximos Dias
+
+### Dia 2: Expandir para Mobility
+- Criar MobilityRepository
+- Refatorar MobilityService
+- Testes
+
+### Dia 3: Expandir para Business
+- Criar BusinessRepository
+- Refatorar BusinessService
+- Testes
+
+### Dia 4: Expandir para Classifieds
+- Criar ClassifiedsRepository
+- Refatorar ClassifiedsService
+- Testes
+
+### Dia 5: Review e Ajustes
+- Code review
+- Ajustes baseados em feedback
+- Documentação final da Sprint 1
+
+---
+
+## 🆘 Troubleshooting
+
+### Problema: Testes falhando
+**Solução:** Verificar se mocks estão corretos
+```typescript
+// Mock correto do repository
+const mockRepo = {
+  findById: vi.fn().mockResolvedValue(mockData),
+  // ... outros métodos
+} as any;
+```
+
+### Problema: TypeScript reclamando
+**Solução:** Verificar se interfaces estão corretas
+```typescript
+// Interface deve ter todos os métodos
+export interface IProfileRepository extends IRepository<Profile> {
+  findByUsername(username: string): Promise<Profile | null>;
 }
 ```
 
-#### 4. Mover Mock (1 min)
-```bash
-# Mover para fixtures
-mv src/modules/vagas/data/mock-vagas.ts tests/fixtures/vagas.fixtures.ts
-```
-
-#### 5. Validar (2 min)
-```bash
-npm run validate:hardcodes
-npm test src/modules/vagas
-```
-
-**Resultado:** 1 violação crítica eliminada! 🎉
-
----
-
-## ✅ Checklist de Início
-
-### Hoje (30 min)
-- [ ] Executei `npm run validate:hardcodes`
-- [ ] Li o Resumo Executivo
-- [ ] Li os Exemplos de Código
-- [ ] Fiz minha primeira correção
-- [ ] Validei a correção
-
-### Esta Semana
-- [ ] Revisei o Plano de Migração
-- [ ] Escolhi uma violação crítica para corrigir
-- [ ] Implementei a correção
-- [ ] Criei testes
-- [ ] Fiz commit e push
-
-### Próximas 4 Semanas
-- [ ] Executei Fase 1 (Crítico)
-- [ ] Executei Fase 2 (Alta)
-- [ ] Executei Fase 3 (Média)
-- [ ] Executei Fase 4 (Prevenção)
-
----
-
-## 🎯 Metas Diárias
-
-### Meta Mínima (30 min/dia)
-- Corrigir **1 violação crítica** por dia
-- Validar com `npm run validate:hardcodes`
-- Fazer commit
-
-### Meta Ideal (1h/dia)
-- Corrigir **2-3 violações críticas** por dia
-- Adicionar testes
-- Atualizar checklist
-
-### Meta Ambiciosa (2h/dia)
-- Corrigir **5+ violações** por dia
-- Implementar service completo
-- Documentar aprendizados
-
----
-
-## 📊 Acompanhar Progresso
-
-### Dashboard Simples
-
-```bash
-# Criar arquivo de progresso
-cat > progress.sh << 'EOF'
-#!/bin/bash
-echo "=== PROGRESSO SSOT ==="
-echo "Data: $(date +%Y-%m-%d)"
-echo ""
-echo "Hardcodes restantes:"
-npm run validate:hardcodes 2>&1 | grep "Total:"
-echo ""
-echo "Testes passando:"
-npm test 2>&1 | grep "Tests:"
-EOF
-
-chmod +x progress.sh
-./progress.sh
-```
-
-### Gráfico de Progresso
-
-```
-Semana 1: [████████░░] 80% (160 → 32 críticas)
-Semana 2: [██████████] 100% (32 → 0 críticas)
-Semana 3: [██████░░░░] 60% (80 → 32 altas)
-Semana 4: [████░░░░░░] 40% (prevenção)
-```
-
----
-
-## 💡 Dicas para Sucesso
-
-### 1. Comece Pequeno
-- Não tente corrigir tudo de uma vez
-- Foque em 1 violação por vez
-- Valide após cada correção
-
-### 2. Use os Geradores
-```bash
-# Gerar migration
-npm run generate:migration create_pricing_rules
-
-# Gerar service
-npm run generate:service PricingService
-```
-
-### 3. Teste Sempre
-```bash
-# Após cada correção
-npm test
-
-# Validar hardcodes
-npm run validate:hardcodes
-```
-
-### 4. Commit Frequente
-```bash
-# Commits pequenos e frequentes
-git add .
-git commit -m "fix: remover mock de vagas"
-git push
-```
-
-### 5. Peça Ajuda
-- Canal: `#tech-architecture`
-- Consulte documentação
-- Revise exemplos
-
----
-
-## 🚨 Erros Comuns
-
-### Erro 1: Esquecer de Remover Import
+### Problema: Imports circulares
+**Solução:** Usar barrel apenas no final
 ```typescript
-// ❌ ERRADO: Ainda importa o mock
-import { MOCK_VAGAS } from './mock-vagas';
-const { data: vagas } = useVagas(); // Não usa o mock, mas import ainda existe
-```
+// ❌ Não fazer
+export * from './ProfileRepository';
 
-**Solução:** Remova o import completamente
-
-### Erro 2: Não Mover Mock para Fixtures
-```typescript
-// ❌ ERRADO: Mock ainda em src/
-src/modules/vagas/data/mock-vagas.ts
-```
-
-**Solução:** Mova para `tests/fixtures/`
-
-### Erro 3: Não Validar
-```bash
-# ❌ ERRADO: Fazer correção e não validar
-git commit -m "fix: algo"
-```
-
-**Solução:** Sempre valide antes de commitar
-```bash
-npm run validate:hardcodes
-npm test
-git commit -m "fix: algo"
+// ✅ Fazer
+export { ProfileRepository } from './ProfileRepository';
+export type { Profile } from './ProfileRepository';
 ```
 
 ---
 
-## 📞 Precisa de Ajuda?
+## 📚 Recursos
 
 ### Documentação
-- [README.md](./README.md) - Índice completo
-- [EXEMPLOS_CODIGO_CORRETO.md](./EXEMPLOS_CODIGO_CORRETO.md) - Exemplos práticos
-- [PLANO_MIGRACAO_HARDCODES.md](./PLANO_MIGRACAO_HARDCODES.md) - Guia detalhado
+- [Auditoria Completa](./AUDITORIA_TECNICA_ESTRUTURAL_2026.md)
+- [Exemplos de Refatoração](./EXEMPLOS_REFATORACAO.md)
+- [Lista de Arquivos Problemáticos](./LISTA_ARQUIVOS_PROBLEMATICOS.md)
 
-### Suporte
-- Canal: `#tech-architecture`
-- Email: architecture@empresa.com
-- Issues: GitHub com tag `hardcode-audit`
+### Padrões
+- Repository Pattern
+- Dependency Injection
+- Clean Architecture
 
-### Scripts Úteis
-```bash
-# Validar hardcodes
-npm run validate:hardcodes
-
-# Gerar migration
-npm run generate:migration <nome>
-
-# Gerar service
-npm run generate:service <nome>
-
-# Executar testes
-npm test
-
-# Ver progresso
-./progress.sh
-```
+### Ferramentas
+- Vitest (testes)
+- ESLint (lint)
+- TypeScript (type checking)
 
 ---
 
-## 🎉 Próximos Passos
+## ✅ Checklist Final do Dia
 
-Após completar este guia:
-
-1. ✅ Escolha uma violação crítica do relatório
-2. ✅ Siga o [Plano de Migração](./PLANO_MIGRACAO_HARDCODES.md)
-3. ✅ Use o [Checklist de Execução](./CHECKLIST_EXECUCAO.md)
-4. ✅ Acompanhe progresso diariamente
-
-**Lembre-se:** Cada hardcode eliminado é uma vitória! 🎯
+- [ ] Estrutura de Repository criada
+- [ ] ProfileRepository implementado
+- [ ] ProfileService refatorado
+- [ ] Testes criados e passando
+- [ ] Documentação atualizada
+- [ ] Commits feitos
+- [ ] PR criado (se aplicável)
 
 ---
 
-**Última Atualização:** 2026-04-16  
-**Tempo de Leitura:** 10 minutos  
-**Tempo de Prática:** 20 minutos  
-**Total:** 30 minutos para começar!
+**Próximo Passo:** Começar Dia 2 - Refatorar MobilityService
+
+**Dúvidas?** Consultar `EXEMPLOS_REFATORACAO.md` ou pedir ajuda ao tech lead.
