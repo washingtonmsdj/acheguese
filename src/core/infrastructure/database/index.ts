@@ -31,3 +31,5 @@ export { BaseRepository } from './repositories/BaseRepository';
 
 // Repositories Concretos
 export { ProfileRepository, type Profile } from './repositories/ProfileRepository';
+export { RideRepository, type Ride, type RideStatus } from './repositories/RideRepository';
+export { DriverRepository, type Driver } from './repositories/DriverRepository';
