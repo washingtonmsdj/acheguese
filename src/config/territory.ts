@@ -16,6 +16,9 @@ export const LAUNCH_CITY_PATH = launchState && launchCity ? `/${launchState}/${l
 export const LAUNCH_COMMUNITY_TERRITORY_PATH = launchCommunitySlug
   ? `${LAUNCH_CITY_PATH}/${launchCommunitySlug}`
   : LAUNCH_CITY_PATH;
+export const LAUNCH_COMMUNITY_PUBLIC_PATH = launchCommunitySlug
+  ? `/${launchCommunitySlug}`
+  : LAUNCH_COMMUNITY_TERRITORY_PATH;
 
 export const TERRITORY_CONFIG = {
   launch: {
@@ -34,7 +37,7 @@ export const TERRITORY_CONFIG = {
 } as const;
 
 export const LAUNCH_URLS = {
-  community: buildAppModulePath(APP_MODULE_SLUGS.community, LAUNCH_CITY_PATH),
+  community: buildAppModulePath(APP_MODULE_SLUGS.community, LAUNCH_COMMUNITY_PUBLIC_PATH),
   business: buildAppModulePath(APP_MODULE_SLUGS.business, LAUNCH_CITY_PATH),
   services: buildAppModulePath(APP_MODULE_SLUGS.services, LAUNCH_CITY_PATH),
   classifieds: buildAppModulePath(APP_MODULE_SLUGS.classifieds, LAUNCH_CITY_PATH),

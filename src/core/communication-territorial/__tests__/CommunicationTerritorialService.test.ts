@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { selectLooseRows } from "@/integrations/supabase/services/supabaseHelpers";
+import { selectLooseRows } from "@/integrations/supabase";
 import { CommunicationTerritorialService } from "../services/CommunicationTerritorialService";
 
-vi.mock("@/integrations/supabase/services/supabaseHelpers", () => ({
+vi.mock("@/integrations/supabase", () => ({
   selectLooseRows: vi.fn(),
 }));
 

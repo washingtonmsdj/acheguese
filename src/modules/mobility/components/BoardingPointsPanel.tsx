@@ -19,7 +19,7 @@ import { toast } from "sonner";
 import {
   BoardingPointService,
   type BoardingPointSummary,
-} from "@/modules/mobility/services";
+} from "@/core/mobility/services";
 
 export interface BoardingPoint {
   id: string;

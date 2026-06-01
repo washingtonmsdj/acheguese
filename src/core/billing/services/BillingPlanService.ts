@@ -13,7 +13,7 @@
  */
 
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase/supabase';
+import { supabase } from '@/integrations/supabase';
 import type { GenericBillingEntitlementAliases } from '../types';
 const billingDb = supabase as any;
 

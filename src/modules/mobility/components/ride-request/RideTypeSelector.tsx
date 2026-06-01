@@ -11,7 +11,7 @@ import React, { memo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Car, Package, Calendar, Users } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
-import type { RideType } from '@/modules/mobility/types';
+import type { RideType } from '@/core/mobility/types';
 import {
   Tooltip,
   TooltipContent,

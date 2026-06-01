@@ -4,8 +4,8 @@ import type {
   ItemDestination,
   ItemHolder,
   ResolutionStatus,
-} from "@/modules/mobility/types/FailedDeliveryMetadata";
-import { VALID_FAILURE_REASONS } from "@/modules/mobility/types/FailedDeliveryMetadata";
+} from "@/core/mobility/types/FailedDeliveryMetadata";
+import { VALID_FAILURE_REASONS } from "@/core/mobility/types/FailedDeliveryMetadata";
 
 const DEFAULT_ITEM_DESTINATION: ItemDestination = "awaiting_manual_resolution";
 const DEFAULT_ITEM_HOLDER: ItemHolder = "driver";

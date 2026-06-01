@@ -6,7 +6,7 @@
  */
 import { logger } from '@/shared/utils/logger';
 import { useEffect, useState, useCallback } from 'react';
-import { getRideById } from '../services/mobility.queries';
+import { getRideById } from '@/core/mobility/services/mobility.queries';
 import { useRideRealtime } from './useRideRealtime';
 
 interface RideSearchStatus {

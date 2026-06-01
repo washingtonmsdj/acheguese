@@ -47,7 +47,7 @@ import { NearbyPlacesBlock } from '../components/NearbyPlacesBlock';
 import { RelatedPointsBlock } from '../components/RelatedPointsBlock';
 import { CommunityPhotosGallery } from '../components/CommunityPhotosGallery';
 import { CATEGORY_LABELS, CATEGORY_ICONS, type TouristPointCategory } from '../types/categories';
-import { PRICE_TYPE_LABELS } from '../tourist-points/types';
+import { PRICE_TYPE_LABELS } from '@/core/guide/tourist-points/types';
 import { toTouristPointDisplay } from '../types/presentation';
 
 function getCategoryLabel(category?: TouristPointCategory | null): string | null {

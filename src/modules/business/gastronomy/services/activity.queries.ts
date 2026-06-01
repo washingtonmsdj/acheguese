@@ -1,5 +1,5 @@
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/core/infrastructure/supabase';
+import { supabase } from '@/integrations/supabase';
 import { profileService } from '@/core/profiles/services/ProfileService';
 import type {
   GastronomyActivity,

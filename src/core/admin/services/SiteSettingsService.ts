@@ -10,10 +10,10 @@
  * - Validação de arquivos
  */
 
-import { supabase } from '@/core/infrastructure/supabase';
+import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
 import { mediaService } from '@/core/media/services/MediaService';
-import type { Json } from '@/integrations/supabase/types.generated';
+import type { Json } from '@/integrations/supabase';
 import {
   SITE_SETTINGS_STORAGE,
   SITE_SETTING_KEYS,

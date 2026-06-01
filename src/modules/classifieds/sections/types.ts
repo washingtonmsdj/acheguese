@@ -6,7 +6,7 @@
  */
 
 import type { NavigateFunction } from "react-router-dom";
-import type { ClassificadoWithVendedor } from "@/modules/classifieds/hooks/useClassificados";
+import type { ClassificadoWithVendedor } from "@/core/classifieds/hooks/useClassificados";
 import type { VendedorWithAds } from "@/modules/classifieds/hooks/useVendedores";
 
 // ============================================

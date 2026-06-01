@@ -6,7 +6,7 @@
  *
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/core/infrastructure/supabase';
+import { supabase } from '@/integrations/supabase';
 import { BusinessService } from '@/core/business/services/BusinessService';
 import { OpeningHoursService } from '@/core/business/services/OpeningHoursService';
 import { applyTerritoryFilter } from '@/core/location/utils';

@@ -8,8 +8,8 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { getMobilityConversations, getLastMessage, getUnreadCount } from '../services/mobility.queries';
-import { MOBILITY_QUERY_KEYS, TIMEOUTS } from '../constants';
+import { getMobilityConversations, getLastMessage, getUnreadCount } from '@/core/mobility/services/mobility.queries';
+import { MOBILITY_QUERY_KEYS, TIMEOUTS } from '@/core/mobility/constants';
 
 export function useMobilityConversations(profileId: string | null | undefined) {
   return useQuery({

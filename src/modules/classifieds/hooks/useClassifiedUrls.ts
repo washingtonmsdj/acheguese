@@ -14,9 +14,9 @@
 import { useActiveTerritory } from '@/core/location/hooks/useActiveTerritory';
 import { buildGroupBaseUrl, buildModuleTerritoryUrl, geoPathToPublicUrl, MODULE_SLUGS } from '@/core/routing/utils/territoryUrls';
 import { LAUNCH_URLS } from '@/config/territory';
-import { classifiedUrlService } from '@/modules/classifieds/services';
+import { classifiedUrlService } from '@/core/classifieds/services';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
-import type { ClassifiedUrlContext } from '@/modules/classifieds/services/ClassifiedUrlService';
+import type { ClassifiedUrlContext } from '@/core/classifieds/services/ClassifiedUrlService';
 
 export interface ClassifiedUrls {
   /** Lista de classificados: /classificados/ba/salvador ou /classificados/ba/salvador/complexo-do-nordeste */

@@ -21,7 +21,7 @@ import {
   MODERATION_REPORT_STATUS,
   type ModerationReportStatus,
 } from "@/core/moderation/constants/reportStatus";
-import { supabase } from "@/core/infrastructure/supabase";
+import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 

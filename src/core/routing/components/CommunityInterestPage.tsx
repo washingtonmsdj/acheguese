@@ -28,8 +28,17 @@ export function CommunityInterestPage() {
   const { data: profile } = useCommunityProfile(resolved);
   const communityBase = useMemo(() => {
     if (!normalizedState || !normalizedCity) return null;
+    if (resolved?.kind === "group") {
+      return `/${normalizedState}/${normalizedCity}/${resolved.group.slug}`;
+    }
+    if (
+      resolved?.kind === "location" &&
+      resolved.location.type !== "city"
+    ) {
+      return `/${normalizedState}/${normalizedCity}/${resolved.location.slug}`;
+    }
     return `/${normalizedState}/${normalizedCity}`;
-  }, [normalizedCity, normalizedState]);
+  }, [normalizedCity, normalizedState, resolved]);
   const eventsPath = useMemo(
     () => (communityBase ? buildModuleTerritoryUrl(MODULE_SLUGS.events, communityBase) : null),
     [communityBase],

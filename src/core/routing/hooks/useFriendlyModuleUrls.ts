@@ -1,12 +1,14 @@
 import { useParams } from "react-router-dom";
 import { LAUNCH_URLS } from "@/config/territory";
 import { isReservedSlug } from "@/core/routing/reservedSlugs";
+import { useTerritorialContextOptional } from "@/core/routing/components/TerritorialLayout";
 import { gastronomyPublicRoutes } from "@/core/verticals/gastronomy/routes/gastronomyPublicRoutes";
 import { touristPointPublicRoutes } from "@/core/verticals/guide/routes/touristPointPublicRoutes";
 import {
   buildCommunityTerritoryUrl,
   buildModuleTerritoryUrl,
   hasPublicCityTerritoryPath,
+  type ModuleSlug,
   MODULE_SLUGS,
 } from "@/core/routing/utils/territoryUrls";
 import { usePublicBrowsingCity } from "@/core/location/hooks/usePublicBrowsingCity";
@@ -38,8 +40,23 @@ export interface FriendlyModuleUrls {
 
 export function useFriendlyModuleUrls(): FriendlyModuleUrls {
   const { cityBasePath } = usePublicBrowsingCity();
+  const territorialContext = useTerritorialContextOptional();
   const { state, city, district, groupSlug, groupSlugOrDistrict } =
     useParams<Record<string, string | undefined>>();
+
+  if (territorialContext) {
+    const territoryName =
+      territorialContext.resolved?.kind === "group"
+        ? territorialContext.resolved.group.name
+        : territorialContext.resolved?.location.name ?? null;
+
+    return buildTerritorialUrls(
+      territorialContext.baseUrl,
+      territoryName,
+      territorialContext.communityBaseUrl,
+    );
+  }
+
   const hasTerritoryParams = Boolean(state && city && !isReservedSlug(state));
 
   if (hasTerritoryParams && state && city) {
@@ -60,22 +77,43 @@ export function useFriendlyModuleUrls(): FriendlyModuleUrls {
   return buildTerritorialUrls(cityBasePath, null);
 }
 
-function buildTerritorialUrls(basePath: string, territoryName: string | null): FriendlyModuleUrls {
+function buildScopedModuleUrl(
+  module: ModuleSlug,
+  basePath: string,
+  communityBaseUrl?: string | null,
+): string {
+  if (communityBaseUrl === basePath) {
+    return `${basePath}/${module}`;
+  }
+
+  return buildModuleTerritoryUrl(module, basePath);
+}
+
+function buildTerritorialUrls(
+  basePath: string,
+  territoryName: string | null,
+  communityBaseUrl?: string | null,
+): FriendlyModuleUrls {
+  const community = communityBaseUrl ??
+    (hasPublicCityTerritoryPath(basePath)
+      ? buildCommunityTerritoryUrl(basePath)
+      : LAUNCH_URLS.community);
+
   return {
     base: basePath,
     landing: basePath,
     territoryName,
-    community: hasPublicCityTerritoryPath(basePath) ? buildCommunityTerritoryUrl(basePath) : LAUNCH_URLS.community,
-    business: buildModuleTerritoryUrl(MODULE_SLUGS.business, basePath),
-    services: buildModuleTerritoryUrl(MODULE_SLUGS.services, basePath),
-    classifieds: buildModuleTerritoryUrl(MODULE_SLUGS.classifieds, basePath),
-    gastronomy: buildModuleTerritoryUrl(MODULE_SLUGS.gastronomy, basePath),
+    community,
+    business: buildScopedModuleUrl(MODULE_SLUGS.business, basePath, communityBaseUrl),
+    services: buildScopedModuleUrl(MODULE_SLUGS.services, basePath, communityBaseUrl),
+    classifieds: buildScopedModuleUrl(MODULE_SLUGS.classifieds, basePath, communityBaseUrl),
+    gastronomy: buildScopedModuleUrl(MODULE_SLUGS.gastronomy, basePath, communityBaseUrl),
     gastronomyFavorites: gastronomyPublicRoutes.favorites(),
-    events: buildModuleTerritoryUrl(MODULE_SLUGS.events, basePath),
-    jobs: buildModuleTerritoryUrl(MODULE_SLUGS.jobs, basePath),
+    events: buildScopedModuleUrl(MODULE_SLUGS.events, basePath, communityBaseUrl),
+    jobs: buildScopedModuleUrl(MODULE_SLUGS.jobs, basePath, communityBaseUrl),
     touristPoints: touristPointPublicRoutes.listFromTerritoryPath(basePath),
-    ranking: buildModuleTerritoryUrl(MODULE_SLUGS.ranking, basePath),
-    map: buildModuleTerritoryUrl(MODULE_SLUGS.map, basePath),
+    ranking: buildScopedModuleUrl(MODULE_SLUGS.ranking, basePath, communityBaseUrl),
+    map: buildScopedModuleUrl(MODULE_SLUGS.map, basePath, communityBaseUrl),
   };
 }
 

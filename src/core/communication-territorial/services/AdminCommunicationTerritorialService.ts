@@ -3,7 +3,7 @@ import {
   insertLooseRow,
   selectLooseRows,
   updateLooseRows,
-} from "@/integrations/supabase/services/supabaseHelpers";
+} from "@/integrations/supabase";
 import { PublicIdentityService } from "@/core/public-identity";
 import type { AvailabilityResult } from "@/core/public-identity";
 import { evaluateCommunicationChannelSlugSafety } from "@/core/public-identity/domain/communicationChannelSlugSafety";

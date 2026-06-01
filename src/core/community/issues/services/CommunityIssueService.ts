@@ -9,12 +9,12 @@
  */
 
 import { supabase } from "@/integrations/supabase";
-import { callRPC } from "@/integrations/supabase/services/supabaseHelpers";
+import { callRPC } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import type { TerritoryFilter } from "@/core/location/types";
 import { SessionService } from "@/core/session/services/SessionService";
 import { profileService } from "@/core/profiles/services/ProfileService";
-import type { Json } from "@/integrations/supabase/types";
+import type { Json } from "@/integrations/supabase";
 import type {
   CommunityIssuePublic,
   CreateIssuePayload,

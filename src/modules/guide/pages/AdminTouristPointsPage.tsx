@@ -28,8 +28,8 @@ import {
   useSetTouristPointStatus,
   useSetTouristPointFeatured,
 } from '../hooks/useAdminTouristPoints';
-import { TOURIST_POINT_STATUS_LABELS, PRICE_TYPE_LABELS } from '../tourist-points/types';
-import type { TouristPoint, TouristPointStatus } from '../tourist-points/types';
+import { TOURIST_POINT_STATUS_LABELS, PRICE_TYPE_LABELS } from '@/core/guide/tourist-points/types';
+import type { TouristPoint, TouristPointStatus } from '@/core/guide/tourist-points/types';
 
 // Empty list means "all territories"; scoped filtering must come from the
 // location selector, not from a launch-city constant.

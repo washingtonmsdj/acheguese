@@ -21,50 +21,62 @@ export const TerritorialLayout = lazy(() =>
 export const CommunityTerritorialShell = lazy(() =>
   import("@/core/routing/components/CommunityTerritorialShell").then((m) => ({ default: m.CommunityTerritorialShell }))
 );
+export const CommunityAliasRoute = lazy(() =>
+  import("@/core/routing/components/CommunityAliasRoute").then((m) => ({ default: m.CommunityAliasRoute }))
+);
+export const CommunityEntityAliasRoute = lazy(() =>
+  import("@/core/routing/components/CommunityEntityAliasRoute").then((m) => ({ default: m.CommunityEntityAliasRoute }))
+);
+export const CommunityShortAliasShellRoute = lazy(() =>
+  import("@/core/routing/components/CommunityShortAliasShellRoute").then((m) => ({ default: m.CommunityShortAliasShellRoute }))
+);
+export const CommunityShortEntityRoute = lazy(() =>
+  import("@/core/routing/components/CommunityShortEntityRoute").then((m) => ({ default: m.CommunityShortEntityRoute }))
+);
 export const TerritorialIndexPage = lazy(() =>
   import("@/core/routing/components/TerritorialIndexPage").then((m) => ({ default: m.TerritorialIndexPage }))
 );
 export const TerritorialCommunityPage = lazy(() =>
-  import("@/core/routing/components/TerritorialModulePages").then((m) => ({ default: m.TerritorialCommunityPage }))
+  import("@/app/routes/territorial/TerritorialModulePages").then((m) => ({ default: m.TerritorialCommunityPage }))
 );
 export const TerritorialCommunityEntryPage = lazy(() =>
-  import("@/core/routing/components/TerritorialModulePages").then((m) => ({ default: m.TerritorialCommunityEntryPage }))
+  import("@/app/routes/territorial/TerritorialModulePages").then((m) => ({ default: m.TerritorialCommunityEntryPage }))
 );
 export const TerritorialCommunityIssuesPage = lazy(() =>
-  import("@/core/routing/components/TerritorialModulePages").then((m) => ({ default: m.TerritorialCommunityIssuesPage }))
+  import("@/app/routes/territorial/TerritorialModulePages").then((m) => ({ default: m.TerritorialCommunityIssuesPage }))
 );
 export const TerritorialCommunityCommunicationPage = lazy(() =>
-  import("@/core/routing/components/TerritorialModulePages").then((m) => ({ default: m.TerritorialCommunityCommunicationPage }))
+  import("@/app/routes/territorial/TerritorialModulePages").then((m) => ({ default: m.TerritorialCommunityCommunicationPage }))
 );
 export const TerritorialBusinessPage = lazy(() =>
-  import("@/core/routing/components/TerritorialModulePages").then((m) => ({ default: m.TerritorialBusinessPage }))
+  import("@/app/routes/territorial/TerritorialModulePages").then((m) => ({ default: m.TerritorialBusinessPage }))
 );
 export const TerritorialServicesPage = lazy(() =>
-  import("@/core/routing/components/TerritorialModulePages").then((m) => ({ default: m.TerritorialServicesPage }))
+  import("@/app/routes/territorial/TerritorialModulePages").then((m) => ({ default: m.TerritorialServicesPage }))
 );
 export const TerritorialClassificadosPage = lazy(() =>
-  import("@/core/routing/components/TerritorialModulePages").then((m) => ({ default: m.TerritorialClassificadosPage }))
+  import("@/app/routes/territorial/TerritorialModulePages").then((m) => ({ default: m.TerritorialClassificadosPage }))
 );
 export const TerritorialEventosPage = lazy(() =>
-  import("@/core/routing/components/TerritorialModulePages").then((m) => ({ default: m.TerritorialEventosPage }))
+  import("@/app/routes/territorial/TerritorialModulePages").then((m) => ({ default: m.TerritorialEventosPage }))
 );
 export const TerritorialGastronomyPage = lazy(() =>
-  import("@/core/routing/components/TerritorialModulePages").then((m) => ({ default: m.TerritorialGastronomyPage }))
+  import("@/app/routes/territorial/TerritorialModulePages").then((m) => ({ default: m.TerritorialGastronomyPage }))
 );
 export const TerritorialEducationPage = lazy(() =>
-  import("@/core/routing/components/TerritorialModulePages").then((m) => ({ default: m.TerritorialEducationPage }))
+  import("@/app/routes/territorial/TerritorialModulePages").then((m) => ({ default: m.TerritorialEducationPage }))
 );
 export const TerritorialMobilidadePage = lazy(() =>
-  import("@/core/routing/components/TerritorialModulePages").then((m) => ({ default: m.TerritorialMobilidadePage }))
+  import("@/app/routes/territorial/TerritorialModulePages").then((m) => ({ default: m.TerritorialMobilidadePage }))
 );
 export const TerritorialVagasPage = lazy(() =>
-  import("@/core/routing/components/TerritorialModulePages").then((m) => ({ default: m.TerritorialVagasPage }))
+  import("@/app/routes/territorial/TerritorialModulePages").then((m) => ({ default: m.TerritorialVagasPage }))
 );
 export const TerritorialCategoryBusinessPage = lazy(() =>
-  import("@/core/routing/components/TerritorialModulePages").then((m) => ({ default: m.TerritorialCategoryBusinessPage }))
+  import("@/app/routes/territorial/TerritorialModulePages").then((m) => ({ default: m.TerritorialCategoryBusinessPage }))
 );
 export const TerritorialMapPage = lazy(() =>
-  import("@/core/routing/components/TerritorialModulePages").then((m) => ({ default: m.TerritorialMapPage }))
+  import("@/app/routes/territorial/TerritorialModulePages").then((m) => ({ default: m.TerritorialMapPage }))
 );
 
 // ============================================================
@@ -138,7 +150,7 @@ export const ProfilePublicRoute = lazy(() => import("@/core/routing/components/P
 export const CriarEmpresaPage = lazy(() => import("@/modules/business/pages/CriarEmpresaPage"));
 export const EmpresasCadastroLandingPage = lazy(() => import("@/modules/business/pages/EmpresasCadastroLandingPage"));
 export const EditarEmpresaPage = lazy(() => import("@/modules/business/pages/EditarEmpresaPage"));
-export const DashboardEmpresaPage = lazy(() => import("@/core/business/services/DashboardEmpresaPage"));
+export const DashboardEmpresaPage = lazy(() => import("@/app/pages/DashboardEmpresaPage"));
 export const BusinessDashboardShellPage = lazy(() => import("@/modules/business/dashboard/pages/BusinessDashboardShellPage"));
 export const BusinessOverviewPage = lazy(() => import("@/modules/business/dashboard/pages/BusinessOverviewPage"));
 export const BusinessDetailsPage = lazy(() => import("@/modules/business/dashboard/pages/BusinessDetailsPage"));
@@ -206,8 +218,8 @@ export const ClassificadosPage = lazy(() => import("@/modules/classifieds/pages/
 export const NovoClassificadoPage = lazy(() => import("@/modules/classifieds/pages/NovoClassificadoPage"));
 export const EditarClassificadoPage = lazy(() => import("@/modules/classifieds/pages/EditarClassificadoPage"));
 export const VendedorPerfilPage = lazy(() => import("@/modules/classifieds/pages/VendedorPerfilPage"));
-export const ClassifiedCanonicalRoute = lazy(() => import("@/core/routing/components/ClassifiedCanonicalRoute"));
-export const ClassifiedShortRoute = lazy(() => import("@/core/routing/components/ClassifiedShortRoute"));
+export const ClassifiedCanonicalRoute = lazy(() => import("@/app/routes/classifieds/ClassifiedCanonicalRoute"));
+export const ClassifiedShortRoute = lazy(() => import("@/app/routes/classifieds/ClassifiedShortRoute"));
 
 // ============================================================
 // VAGAS/EMPREGOS
@@ -289,8 +301,8 @@ export const CupomDetailPage = lazy(() => import("@/modules/business/pages/Cupom
 // ============================================================
 // GAMIFICACAO E RANKING
 // ============================================================
-export const GamificacaoPage = lazy(() => import("@/core/gamification/pages/GamificacaoPage"));
-export const RankingPage = lazy(() => import("@/core/gamification/pages/RankingPage"));
+export const GamificacaoPage = lazy(() => import("@/app/pages/gamification/GamificacaoPage"));
+export const RankingPage = lazy(() => import("@/app/pages/gamification/RankingPage"));
 
 // ============================================================
 // MENSAGENS E CHAT

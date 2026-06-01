@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useSessionContext } from "@/core/session";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { toast } from "sonner";
-import { ClassifiedsService } from "@/modules/classifieds/services";
+import { ClassifiedsService } from "@/core/classifieds/services";
 import { useClassifiedsLocation } from "./useClassifiedsLocation";
 /**
  * ✅ SSOT COMPLIANT - Hook useNovoClassificado migrado

@@ -10,7 +10,7 @@ import {
 } from "@/shared/components/ui/dialog";
 import { useSessionContext } from "@/core/session";
 import { safetyService } from "@/core/safety";
-import type { RideRequest } from "@/modules/mobility/types";
+import type { RideRequest } from "@/core/mobility/types";
 import { logger } from "@/shared/utils/logger";
 import { toast } from "sonner";
 

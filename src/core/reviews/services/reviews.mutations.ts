@@ -8,7 +8,7 @@
  */
 
 import { supabase } from "@/integrations/supabase";
-import { insertLooseRow, updateLooseRows } from "@/integrations/supabase/services/supabaseHelpers";
+import { insertLooseRow, updateLooseRows } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 import type { Review, ReviewType, CreateReviewData } from "../types";

@@ -25,7 +25,7 @@ import {
   useCreateClassifiedComment,
   useDeleteClassifiedComment,
 } from "@/modules/classifieds/hooks/useClassifiedComments";
-import { classifiedCommentService } from "@/modules/classifieds/services/ClassifiedCommentService";
+import { classifiedCommentService } from "@/core/classifieds/services/ClassifiedCommentService";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "@/shared/utils/dateLocale";
 

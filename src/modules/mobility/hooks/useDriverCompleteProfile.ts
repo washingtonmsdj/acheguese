@@ -8,8 +8,8 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { getDriverCompleteProfile } from '../services/mobility.queries';
-import { MOBILITY_QUERY_KEYS, TIMEOUTS } from '../constants';
+import { getDriverCompleteProfile } from '@/core/mobility/services/mobility.queries';
+import { MOBILITY_QUERY_KEYS, TIMEOUTS } from '@/core/mobility/constants';
 
 export function useDriverCompleteProfile(profileId: string | null | undefined) {
   return useQuery({

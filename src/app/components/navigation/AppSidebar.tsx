@@ -48,8 +48,13 @@ import { usePublicBrowsingCity } from '@/core/location/hooks/usePublicBrowsingCi
 import { PublicCitySelector } from './PublicCitySelector';
 import { useTheme } from '@/shared/hooks/useTheme';
 import { useHomeCommunityHref } from '@/core/routing/hooks/useHomeCommunityHref';
+import { useCommunityNavigationContext } from '@/core/routing/hooks/useCommunityNavigationContext';
 import { useResolveTerritoryFromUrl } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
-import { buildModuleTerritoryUrl, MODULE_SLUGS } from '@/core/routing/utils/territoryUrls';
+import {
+  buildModuleTerritoryUrl,
+  MODULE_SLUGS,
+} from '@/core/routing/utils/territoryUrls';
+import { buildCommunityNavigationModuleUrls } from '@/core/routing/utils/communityNavigationContext';
 import { useGroupAvailability } from '@/core/territorial/hooks/useGroupAvailability';
 import { ModuleKey } from '@/core/rollout/types';
 import { GastronomyUrlService } from '@/core/verticals/gastronomy/services/GastronomyUrlService';
@@ -87,27 +92,12 @@ export function AppSidebar() {
   const { active } = usePublicBrowsingCity();
   const { theme, toggleTheme } = useTheme();
   const homeCommunityHref = useHomeCommunityHref();
+  const communityContext = useCommunityNavigationContext();
   const territoryResolve = useResolveTerritoryFromUrl();
-
-  const communityContext = useMemo(() => {
-    const parts = location.pathname.split('/').filter(Boolean);
-    if (parts[0] !== 'comunidade' || !parts[1] || !parts[2]) {
-      return null;
-    }
-    if (parts[3] === 'area') {
-      return null;
-    }
-
-    return {
-      state: parts[1],
-      city: parts[2],
-      territorySlug: parts[2],
-      basePath: `/comunidade/${parts[1]}/${parts[2]}`,
-    };
-  }, [location.pathname]);
 
   const communityGroupId = useMemo(() => {
     if (!communityContext) return null;
+    if (communityContext.groupId) return communityContext.groupId;
     if (territoryResolve.status !== 'resolved_group') return null;
     return territoryResolve.resolved?.kind === 'group' ? territoryResolve.resolved.group.id : null;
   }, [communityContext, territoryResolve.resolved, territoryResolve.status]);
@@ -154,17 +144,7 @@ export function AppSidebar() {
     if (!communityContext) return [];
 
     const base = communityContext.basePath;
-    const cityBase = `/${communityContext.state}/${communityContext.city}`;
-    const communityModuleUrls = {
-      business: buildModuleTerritoryUrl(MODULE_SLUGS.business, cityBase),
-      gastronomy: GastronomyUrlService.getTerritoryUrl(cityBase),
-      education: buildModuleTerritoryUrl(MODULE_SLUGS.education, cityBase),
-      services: buildModuleTerritoryUrl(MODULE_SLUGS.services, cityBase),
-      classifieds: buildModuleTerritoryUrl(MODULE_SLUGS.classifieds, cityBase),
-      events: buildModuleTerritoryUrl(MODULE_SLUGS.events, cityBase),
-      map: buildModuleTerritoryUrl(MODULE_SLUGS.map, cityBase),
-      mobility: buildModuleTerritoryUrl(MODULE_SLUGS.mobility, cityBase),
-    } as const;
+    const communityModuleUrls = buildCommunityNavigationModuleUrls(communityContext);
     const territoryName = formatSlugLabel(communityContext.territorySlug).replace(
       /^Complexo Do\s+/i,
       'Complexo do ',
@@ -242,7 +222,7 @@ export function AppSidebar() {
             icon: Briefcase,
             label: 'Oportunidades perto de você',
             description: 'Oportunidades perto de você',
-            href: `${base}/feed?tab=oportunidades`,
+            href: communityModuleUrls.jobs,
             visible: moduleVisibility.jobs,
           },
           {

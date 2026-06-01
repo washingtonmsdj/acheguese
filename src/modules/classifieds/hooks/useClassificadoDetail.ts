@@ -9,8 +9,8 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
-import { ClassifiedsService, mapToClassificadoWithVendedor } from "@/modules/classifieds/services";
-import type { ClassificadoWithVendedor } from "./useClassificados";
+import { ClassifiedsService, mapToClassificadoWithVendedor } from "@/core/classifieds/services";
+import type { ClassificadoWithVendedor } from "@/core/classifieds/hooks/useClassificados";
 
 export function useClassificadoDetail(id: string) {
   const query = useQuery<ClassificadoWithVendedor | null>({

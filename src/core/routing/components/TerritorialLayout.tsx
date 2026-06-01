@@ -18,13 +18,19 @@ import { lastTerritoryStore } from "../stores/LastTerritoryStore";
 import { TerritorialSEO } from "../seo/TerritorialSEO";
 import { useResolveTerritoryFromUrl } from "../hooks/useResolveTerritoryFromUrl";
 import type { ResolvedTerritory } from "../hooks/useResolveTerritoryFromUrl";
-import { MODULE_SLUGS, buildGroupBaseUrl, isEntityDetailRoute } from "../utils/territoryUrls";
+import {
+  MODULE_SLUGS,
+  buildCommunityTerritoryUrl,
+  buildGroupBaseUrl,
+  isEntityDetailRoute,
+} from "../utils/territoryUrls";
 import { TerritorialNotFound } from "./TerritorialNotFound";
 import { getRecordValue } from "@/shared/utils/recordLookup";
 
 export type TerritorialLayoutContext = {
   resolved: ResolvedTerritory;
   baseUrl: string;
+  communityBaseUrl: string;
   groupAvailability: GroupModuleAvailability;
   activeMemberIds: string[];
 };
@@ -210,6 +216,7 @@ export function TerritorialLayout() {
   const outletContext: TerritorialLayoutContext = {
     resolved,
     baseUrl,
+    communityBaseUrl: buildCommunityTerritoryUrl(baseUrl),
     groupAvailability: effectiveAvailability,
     activeMemberIds: resolved.kind === "group" ? active_member_ids : [],
   };

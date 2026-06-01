@@ -14,14 +14,6 @@ import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AdminVagasService } from "@/core/admin/services/AdminVagasRuntimeService";
 import { Button } from "@/shared/components/ui/button";
-import { Input } from "@/shared/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/components/ui/select";
 import {
   Table,
   TableBody,
@@ -31,11 +23,10 @@ import {
   TableRow,
 } from "@/shared/components/ui/table";
 import { Badge } from "@/shared/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import { Card, CardContent } from "@/shared/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
 import { useConfirmActionDialog } from "@/shared/hooks/useConfirmActionDialog";
 import {
-  Search,
   Briefcase,
   CheckCircle,
   XCircle,
@@ -44,41 +35,33 @@ import {
   Eye,
   EyeOff,
   Trash2,
-  RefreshCw,
   MapPin,
 } from "lucide-react";
 import { toast } from "sonner";
-import type { VagaStatus, VagaContrato, VagaModalidade } from "@/core/admin/services/AdminVagasService";
-
-const STATUS_OPTIONS: { value: VagaStatus; label: string }[] = [
-  { value: "draft", label: "Rascunho" },
-  { value: "pending_review", label: "Aguardando revisão" },
-  { value: "published", label: "Publicada" },
-  { value: "paused", label: "Pausada" },
-  { value: "closed", label: "Encerrada" },
-  { value: "expired", label: "Expirada" },
-  { value: "rejected", label: "Rejeitada" },
-  { value: "removed", label: "Removida" },
-];
-
-const ALL_STATUS_FILTER = "__all_status" as const;
-const ALL_CONTRATO_FILTER = "__all_contrato" as const;
-const ALL_MODALIDADE_FILTER = "__all_modalidade" as const;
+import {
+  ALL_CONTRATO_FILTER,
+  ALL_MODALIDADE_FILTER,
+  ALL_STATUS_FILTER,
+  type ContratoFilter,
+  type ModalidadeFilter,
+  type StatusFilter,
+} from "./AdminVagas.model";
+import { AdminVagasAnalytics } from "./AdminVagasAnalytics";
+import { AdminVagasFilters } from "./AdminVagasFilters";
+import { AdminVagasStatsCards } from "./AdminVagasStatsCards";
+import { AdminVagasStatusBadge } from "./AdminVagasStatusBadge";
 
 export default function AdminVagas() {
   const queryClient = useQueryClient();
   const { confirm, ConfirmDialog } = useConfirmActionDialog();
   const [activeTab, setActiveTab] = useState("all");
   const [search, setSearch] = useState("");
-  const [contratoFilter, setContratoFilter] = useState<
-    VagaContrato | typeof ALL_CONTRATO_FILTER
-  >(ALL_CONTRATO_FILTER);
-  const [modalidadeFilter, setModalidadeFilter] = useState<
-    VagaModalidade | typeof ALL_MODALIDADE_FILTER
-  >(ALL_MODALIDADE_FILTER);
-  const [statusFilter, setStatusFilter] = useState<
-    VagaStatus | typeof ALL_STATUS_FILTER
-  >(ALL_STATUS_FILTER);
+  const [contratoFilter, setContratoFilter] =
+    useState<ContratoFilter>(ALL_CONTRATO_FILTER);
+  const [modalidadeFilter, setModalidadeFilter] =
+    useState<ModalidadeFilter>(ALL_MODALIDADE_FILTER);
+  const [statusFilter, setStatusFilter] =
+    useState<StatusFilter>(ALL_STATUS_FILTER);
   const [page, setPage] = useState(1);
 
   // Buscar estatísticas
@@ -199,29 +182,6 @@ export default function AdminVagas() {
     },
   });
 
-  const getStatusBadge = (status: VagaStatus) => {
-    switch (status) {
-      case "published":
-      return <Badge variant="secondary">Publicada</Badge>;
-      case "pending_review":
-        return <Badge variant="default">Em revisão</Badge>;
-      case "paused":
-      return <Badge variant="outline">Pausada</Badge>;
-      case "closed":
-        return <Badge variant="secondary">Encerrada</Badge>;
-      case "draft":
-        return <Badge variant="outline">Rascunho</Badge>;
-      case "rejected":
-        return <Badge variant="destructive">Rejeitada</Badge>;
-      case "removed":
-        return <Badge variant="secondary">Removida</Badge>;
-      case "expired":
-        return <Badge variant="secondary">Expirada</Badge>;
-      default:
-        return <Badge variant="secondary">{status}</Badge>;
-    }
-  };
-
   const handleDeleteVaga = async (vagaId: string) => {
     const confirmed = await confirm({
       title: "Deletar vaga",
@@ -246,82 +206,7 @@ export default function AdminVagas() {
         </p>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total de Vagas
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.total || 0}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {stats?.published || 0} publicadas
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <CheckCircle className="h-4 w-4" />
-              Publicadas
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats?.published || 0}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {stats?.total ? Math.round((stats.published / stats.total) * 100) : 0}% do total
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              Em revisão
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{stats?.pendingReview || 0}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Aguardando moderação
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <XCircle className="h-4 w-4" />
-              Encerradas
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-gray-600">{stats?.closed || 0}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Finalizadas
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" />
-              Destaques
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{stats?.destaques || 0}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Vagas com destaque ativo
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      <AdminVagasStatsCards stats={stats} />
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -342,93 +227,16 @@ export default function AdminVagas() {
 
         {/* Todas as Vagas Tab */}
         <TabsContent value="all" className="space-y-4">
-          {/* Filtros */}
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex flex-col md:flex-row gap-4">
-                <div className="flex-1">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Buscar por título, empresa ou descrição..."
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                      className="pl-9"
-                    />
-                  </div>
-                </div>
-                <Select
-                  value={statusFilter}
-                  onValueChange={(v) =>
-                    setStatusFilter(v as VagaStatus | typeof ALL_STATUS_FILTER)
-                  }
-                >
-                  <SelectTrigger className="w-full md:w-[180px]">
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={ALL_STATUS_FILTER}>Todos</SelectItem>
-                    {STATUS_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select
-                  value={contratoFilter}
-                  onValueChange={(v) =>
-                    setContratoFilter(
-                      v as VagaContrato | typeof ALL_CONTRATO_FILTER,
-                    )
-                  }
-                >
-                  <SelectTrigger className="w-full md:w-[180px]">
-                    <SelectValue placeholder="Contrato" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={ALL_CONTRATO_FILTER}>Todos</SelectItem>
-                    <SelectItem value="CLT">CLT</SelectItem>
-                    <SelectItem value="PJ">PJ</SelectItem>
-                    <SelectItem value="temporario">Temporario</SelectItem>
-                    <SelectItem value="estagio">Est?gio</SelectItem>
-                    <SelectItem value="freelancer">Freelancer</SelectItem>
-                    <SelectItem value="aprendiz">Aprendiz</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select
-                  value={modalidadeFilter}
-                  onValueChange={(v) =>
-                    setModalidadeFilter(
-                      v as VagaModalidade | typeof ALL_MODALIDADE_FILTER,
-                    )
-                  }
-                >
-                  <SelectTrigger className="w-full md:w-[180px]">
-                    <SelectValue placeholder="Modalidade" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={ALL_MODALIDADE_FILTER}>Todas</SelectItem>
-                    <SelectItem value="presencial">Presencial</SelectItem>
-                    <SelectItem value="remoto">Remoto</SelectItem>
-                    <SelectItem value="hibrido">H?brido</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setSearch("");
-                    setContratoFilter(ALL_CONTRATO_FILTER);
-                    setModalidadeFilter(ALL_MODALIDADE_FILTER);
-                    setStatusFilter(ALL_STATUS_FILTER);
-                  }}
-                >
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Limpar
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <AdminVagasFilters
+            search={search}
+            statusFilter={statusFilter}
+            contratoFilter={contratoFilter}
+            modalidadeFilter={modalidadeFilter}
+            onSearchChange={setSearch}
+            onStatusFilterChange={setStatusFilter}
+            onContratoFilterChange={setContratoFilter}
+            onModalidadeFilterChange={setModalidadeFilter}
+          />
 
           {/* Tabela de Vagas */}
           <Card>
@@ -482,7 +290,9 @@ export default function AdminVagas() {
                           <TableCell>
                             <Badge variant="outline">{vaga.nivel}</Badge>
                           </TableCell>
-                          <TableCell>{getStatusBadge(vaga.status)}</TableCell>
+                          <TableCell>
+                            <AdminVagasStatusBadge status={vaga.status} />
+                          </TableCell>
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-1">
                               {vaga.status === "pending_review" && (
@@ -663,51 +473,7 @@ export default function AdminVagas() {
 
         {/* Analytics Tab */}
         <TabsContent value="analytics">
-          <div className="grid gap-4 md:grid-cols-3">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">Status operacional</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                <div className="flex justify-between"><span>Publicadas</span><strong>{stats?.published ?? 0}</strong></div>
-                <div className="flex justify-between"><span>Pausadas</span><strong>{stats?.paused ?? 0}</strong></div>
-                <div className="flex justify-between"><span>Expiradas</span><strong>{stats?.expired ?? 0}</strong></div>
-                <div className="flex justify-between"><span>Removidas</span><strong>{stats?.removed ?? 0}</strong></div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">Contratos</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                {(Object.entries(stats?.byContrato ?? {}) as [string, number][]).map(([label, value]) => (
-                  <div key={label} className="flex justify-between">
-                    <span>{label}</span>
-                    <strong>{value}</strong>
-                  </div>
-                ))}
-                {Object.keys(stats?.byContrato ?? {}).length === 0 && (
-                  <p className="text-muted-foreground">Sem dados de contrato</p>
-                )}
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">Modalidades</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                {(Object.entries(stats?.byModalidade ?? {}) as [string, number][]).map(([label, value]) => (
-                  <div key={label} className="flex justify-between">
-                    <span>{label}</span>
-                    <strong>{value}</strong>
-                  </div>
-                ))}
-                {Object.keys(stats?.byModalidade ?? {}).length === 0 && (
-                  <p className="text-muted-foreground">Sem dados de modalidade</p>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+          <AdminVagasAnalytics stats={stats} />
         </TabsContent>
       </Tabs>
       <ConfirmDialog />

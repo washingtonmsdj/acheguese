@@ -3,11 +3,11 @@
  */
 
 import { supabase } from "@/integrations/supabase";
-import type { Database } from "@/integrations/supabase/types.generated";
+import type { Database } from "@/integrations/supabase";
 import {
   insertLooseRow,
   selectLooseRows,
-} from "@/integrations/supabase/services/supabaseHelpers";
+} from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { SessionService } from "@/core/session/services/SessionService";
 import type {

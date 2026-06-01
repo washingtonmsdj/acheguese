@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/supabase";
+import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 
 export interface ProfileSavedEntityConfig {

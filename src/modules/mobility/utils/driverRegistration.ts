@@ -1,5 +1,5 @@
 import { PublicIdentityService } from "@/core/public-identity";
-import { BUSINESS_RULES } from "@/modules/mobility/constants";
+import { BUSINESS_RULES } from "@/core/mobility/constants";
 
 export const DRIVER_LICENSE_CATEGORIES = ["A", "B", "AB", "C", "D", "E"] as const;
 export const DRIVER_VEHICLE_TYPES = ["car", "motorcycle", "van", "truck"] as const;

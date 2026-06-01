@@ -5,7 +5,7 @@
 
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
-import { insertLooseRow, selectLooseRows } from '@/integrations/supabase/services/supabaseHelpers';
+import { insertLooseRow, selectLooseRows } from '@/integrations/supabase';
 import { CommunicationChannelIdentityPolicy } from '../policies/CommunicationChannelIdentityPolicy';
 import type { IdentityAdapter } from '../domain/IdentityAdapter';
 import type {

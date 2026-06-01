@@ -9,7 +9,7 @@
  */
 
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/core/infrastructure/supabase';
+import { supabase } from '@/integrations/supabase';
 import { secureRandomString } from '@/shared/utils/secureRandom';
 
 type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];

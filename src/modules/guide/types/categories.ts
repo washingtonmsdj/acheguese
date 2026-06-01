@@ -8,8 +8,8 @@ export {
   TouristPointCategory,
   CATEGORY_LABELS,
   CATEGORY_ICONS,
-} from '@/modules/guide/tourist-points/types';
-import type { TouristPointCategory } from '@/modules/guide/tourist-points/types';
+} from '@/core/guide/tourist-points/types';
+import type { TouristPointCategory } from '@/core/guide/tourist-points/types';
 
 // ── Quick Filters ────────────────────────────────────────────────────────────
 

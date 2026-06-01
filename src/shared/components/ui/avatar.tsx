@@ -23,9 +23,10 @@ const AvatarImage = React.forwardRef<
   React.ElementRef<typeof AvatarPrimitive.Image>,
   React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image>
 >(({ className, src, ...props }, ref) => {
-  const safeSrc = typeof src === "string"
-    ? resolveSafeImageUrl(src, { context: "AvatarImage" }) ?? undefined
-    : src;
+  const normalizedSrc = typeof src === "string" ? src.trim() : src;
+  const safeSrc = typeof normalizedSrc === "string" && normalizedSrc
+    ? resolveSafeImageUrl(normalizedSrc, { context: "AvatarImage" }) ?? undefined
+    : undefined;
 
   return (
     <AvatarPrimitive.Image

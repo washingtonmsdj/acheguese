@@ -5,7 +5,7 @@
  *
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/core/infrastructure/supabase';
+import { supabase } from '@/integrations/supabase';
 import { OpeningHoursService } from '@/core/business/services/OpeningHoursService';
 import { sanitizeForILike } from '@/shared/utils/sqlSanitization';
 import {

@@ -18,7 +18,7 @@ import {
   Clock,
   Star,
 } from "lucide-react";
-import { RideRequest } from "@/modules/mobility/types";
+import { RideRequest } from "@/core/mobility/types";
 import {
   Avatar,
   AvatarFallback,

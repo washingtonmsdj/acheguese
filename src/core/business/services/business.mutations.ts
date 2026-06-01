@@ -13,7 +13,7 @@ import {
 import { AddressService } from "@/core/address/services/AddressService";
 import { BusinessHoursService } from "@/core/business/BusinessHoursService";
 const supabaseTyped = supabase as any;
-import { callRPC } from "@/integrations/supabase/services/supabaseHelpers";
+import { callRPC } from "@/integrations/supabase";
 import {
   createBusinessSchema,
   updateBusinessSchema,

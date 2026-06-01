@@ -83,9 +83,9 @@ export class RideRepository extends BaseRepository<Ride> {
   /**
    * Busca rides por motorista
    */
-  async findByDriverId(driverId: string): Promise<Ride[]> {
+  async findByDriverId(driverProfileId: string): Promise<Ride[]> {
     const filters: Filter[] = [
-      this.createFilter('driver_id', 'eq', driverId),
+      this.createFilter('driver_id', 'eq', driverProfileId),
     ];
 
     const orderBy = [this.createOrderBy('created_at', 'desc')];
@@ -172,12 +172,12 @@ export class RideRepository extends BaseRepository<Ride> {
   /**
    * Busca ride ativa de um motorista
    */
-  async findActiveByDriverId(driverId: string): Promise<Ride | null> {
+  async findActiveByDriverId(driverProfileId: string): Promise<Ride | null> {
     try {
       const { data, error } = await this.client
         .from(this.table)
         .select('*')
-        .eq('driver_id', driverId)
+        .eq('driver_id', driverProfileId)
         .in('status', ['accepted', 'in_progress'])
         .order('created_at', { ascending: false })
         .limit(1)
@@ -192,11 +192,11 @@ export class RideRepository extends BaseRepository<Ride> {
       if (error instanceof DatabaseError) throw error;
       throw new DatabaseError({
         code: DatabaseErrorCode.QUERY_ERROR,
-        message: `Failed to find active ride for driver: ${driverId}`,
+        message: `Failed to find active ride for driver: ${driverProfileId}`,
         originalError: error,
         table: this.table,
         operation: 'findActiveByDriverId',
-        context: { driverId },
+        context: { driverProfileId },
       });
     }
   }
@@ -226,9 +226,9 @@ export class RideRepository extends BaseRepository<Ride> {
   /**
    * Conta rides de um motorista
    */
-  async countByDriverId(driverId: string): Promise<number> {
+  async countByDriverId(driverProfileId: string): Promise<number> {
     const filters: Filter[] = [
-      this.createFilter('driver_id', 'eq', driverId),
+      this.createFilter('driver_id', 'eq', driverProfileId),
     ];
 
     return this.count(filters);
@@ -308,9 +308,9 @@ export class RideRepository extends BaseRepository<Ride> {
   /**
    * Atribui motorista à ride
    */
-  async assignDriver(rideId: string, driverId: string): Promise<Ride> {
+  async assignDriver(rideId: string, driverProfileId: string): Promise<Ride> {
     return this.updateStatus(rideId, 'accepted', {
-      driver_id: driverId,
+      driver_id: driverProfileId,
       accepted_at: new Date().toISOString(),
     });
   }

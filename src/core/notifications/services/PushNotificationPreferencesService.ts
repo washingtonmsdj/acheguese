@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/supabase";
+import { supabase } from "@/integrations/supabase";
 
 export interface PushNotificationPreferencesRecord {
   notify_pet_perdido: boolean;

@@ -9,7 +9,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database as GeneratedDatabase } from '@/integrations/supabase/types.generated';
+import type { Database as GeneratedDatabase } from '@/integrations/supabase';
 
 // ============================================
 // FRAUD ALERTS

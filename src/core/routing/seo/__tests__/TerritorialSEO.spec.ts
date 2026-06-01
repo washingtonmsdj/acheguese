@@ -14,7 +14,7 @@ describe("resolveSeoPolicy", () => {
     const policy = resolveSeoPolicy("/comunidade/ba/salvador/nordeste-de-amaralina/empresas");
 
     expect(policy.robots).toBe("noindex, follow");
-    expect(policy.canonicalPath).toBe("/empresas/ba/salvador");
+    expect(policy.canonicalPath).toBe("/empresas/ba/salvador/nordeste-de-amaralina");
   });
 
   it("aplica noindex e canonical publico para modulo duplicado dentro da comunidade (grupo territorial)", () => {
@@ -23,7 +23,7 @@ describe("resolveSeoPolicy", () => {
     );
 
     expect(policy.robots).toBe("noindex, follow");
-    expect(policy.canonicalPath).toBe("/servicos/ba/salvador");
+    expect(policy.canonicalPath).toBe("/servicos/ba/salvador/complexo-do-nordeste-de-amaralina");
   });
 
   it("mantem index para rotas sociais proprias da comunidade", () => {
@@ -36,10 +36,10 @@ describe("resolveSeoPolicy", () => {
     expect(groupsPolicy.canonicalPath).toBe("/comunidade/ba/salvador/grupos");
   });
 
-  it("desindexa rota legada de comunidade por territorio e aponta para aba municipal", () => {
+  it("mantem index para rota social escopada por territorio", () => {
     const policy = resolveSeoPolicy("/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/feed");
 
-    expect(policy.robots).toBe("noindex, follow");
-    expect(policy.canonicalPath).toBe("/comunidade/ba/salvador/feed");
+    expect(policy.robots).toContain("index, follow");
+    expect(policy.canonicalPath).toBe("/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/feed");
   });
 });

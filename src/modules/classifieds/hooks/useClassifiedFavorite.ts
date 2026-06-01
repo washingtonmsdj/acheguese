@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useSessionContext } from "@/core/session";
-import { ClassifiedFavoriteService } from "@/modules/classifieds/services/ClassifiedFavoriteService";
+import { ClassifiedFavoriteService } from "@/core/classifieds/services/ClassifiedFavoriteService";
 
 export function useClassifiedFavorite(classifiedId: string | null | undefined) {
   const { activeProfile } = useSessionContext();

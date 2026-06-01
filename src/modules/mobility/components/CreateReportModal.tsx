@@ -13,7 +13,7 @@ import { Textarea } from "@/shared/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
 import { Label } from "@/shared/components/ui/label";
 import { useRideReports } from "@/modules/mobility/hooks/useRideReports";
-import type { ReportType, ReportSeverity } from "@/modules/mobility/services/RideReportsService";
+import type { ReportType, ReportSeverity } from "@/core/mobility/services/RideReportsService";
 import {
   AlertTriangle,
   Shield,

@@ -10,11 +10,11 @@
  * - Anon usa apenas views públicas
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase/supabase';
+import { supabase } from '@/integrations/supabase';
 import {
   selectLooseRows,
   updateLooseRows,
-} from '@/integrations/supabase/services/supabaseHelpers';
+} from '@/integrations/supabase';
 import { SessionService } from '@/core/session/services/SessionService';
 import { SessionState } from '@/core/session/state/SessionState';
 import { BusinessService } from './businessService';

@@ -10,7 +10,7 @@ import { Textarea } from "@/shared/components/ui/textarea";
 import { Label } from "@/shared/components/ui/label";
 import { useSessionContext } from "@/core/session";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
-import { classifiedUrlService, getClassifiedById, updateClassified } from "@/modules/classifieds/services";
+import { classifiedUrlService, getClassifiedById, updateClassified } from "@/core/classifieds/services";
 
 export default function EditarClassificadoPage() {
   const { id } = useParams<{ id: string }>();

@@ -1,8 +1,8 @@
 import { useCallback, useState, useMemo } from "react";
 import { toast } from "sonner";
-import { RIDE_STATUS, RIDE_MODE } from "../constants";
+import { RIDE_STATUS, RIDE_MODE } from "@/core/mobility/constants";
 import { useDriverDashboardBase } from "./useDriverDashboardBase";
-import { RideOperationalService } from "@/modules/mobility/core/RideOperationalService";
+import { RideOperationalService } from "@/core/mobility/core/RideOperationalService";
 import { buildFailedDeliveryMetadata } from "@/modules/mobility/utils/failedDelivery";
 import type { DeliveryProof } from "./useDelivery";
 

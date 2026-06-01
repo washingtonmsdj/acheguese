@@ -21,7 +21,7 @@ import { cn } from "@/shared/utils/cn";
 import { useSessionContext } from "@/core/session";
 import { GeolocationService } from "@/core/maps/services/GeolocationService";
 import { useEmergencyAlerts } from "@/core/safety";
-import type { RideRequest } from "@/modules/mobility/types";
+import type { RideRequest } from "@/core/mobility/types";
 import { logger } from "@/shared/utils/logger";
 import { toast } from "sonner";
 

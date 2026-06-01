@@ -10,7 +10,7 @@ import {
   realtimeService,
   type RealtimeSubscription,
 } from '@/core/realtime/services/RealtimeService';
-import { DB_TABLES, REALTIME_CHANNELS } from '../constants';
+import { DB_TABLES, REALTIME_CHANNELS } from '@/core/mobility/constants';
 
 export interface RideRealtimeEvent {
   type:

@@ -1,8 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React from "react";
-
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
 import { lostFoundRuntimeService as lostFoundService } from "@/core/community/services/LostFoundRuntimeService";
 import { useAppUrls } from "@/core/routing/hooks"; // SSOT URLs
 import {
@@ -28,10 +26,7 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import { useToast } from "@/shared/hooks/use-toast";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { ReportContentDialog } from "@/core/moderation/components/ReportContentDialog";
-import {
-  LostFoundMiniMap,
-  LostFoundLocationCard,
-} from "@/core/community-lost-found/components";
+import { LostFoundLocationCard } from "@/core/community-lost-found/components/LostFoundLocationCard";
 import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "@/shared/utils/dateLocale";
 import { cn } from "@/shared/utils/cn";
@@ -42,6 +37,12 @@ import { getLostFoundCategoryLabel } from "@/shared/validation/schemas/lostfound
 import type { ProfileRow } from "@/core/profiles/persistence/ProfileRow";
 import type { LostFoundComment } from "@/core/community-lost-found/services";
 type CommentProfileSummary = { id: string; name: string; avatarUrl?: string | null };
+
+const LazyLostFoundMiniMap = lazy(() =>
+  import("@/core/community-lost-found/components/LostFoundMiniMap").then((module) => ({
+    default: module.LostFoundMiniMap,
+  })),
+);
 
 const profileServiceInstance = new ProfileService();
 
@@ -434,13 +435,15 @@ export default function AchadoPerdidoDetailPage() {
       <div className="hidden lg:block lg:w-[380px] lg:sticky lg:top-4 lg:self-start">
         <div className="space-y-4">
           {hasLocation ? (
-            <LostFoundMiniMap
-              latitude={post.latitude!}
-              longitude={post.longitude!}
-              title={post.titulo}
-              tipo={post.tipo as "perdido" | "encontrado"}
-              className="h-[400px]"
-            />
+            <Suspense fallback={<Skeleton className="h-[400px] rounded-xl" />}>
+              <LazyLostFoundMiniMap
+                latitude={post.latitude!}
+                longitude={post.longitude!}
+                title={post.titulo}
+                tipo={post.tipo as "perdido" | "encontrado"}
+                className="h-[400px]"
+              />
+            </Suspense>
           ) : (
             <LostFoundLocationCard
               neighborhood={post.publicNeighborhood}

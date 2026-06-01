@@ -1,6 +1,6 @@
 // Barrel export for classifieds hooks
 export * from "./useClassificadoDetail";
-export * from "./useClassificados";
+export * from "@/core/classifieds/hooks/useClassificados";
 export * from "./useClassificadosPage";
 export * from "./useNovoClassificado";
 export * from "./useSellerAds";

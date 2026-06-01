@@ -3,10 +3,10 @@ import { useNavigate } from "react-router-dom";
 import {
   useClassificados,
   type ClassificadoWithVendedor,
-} from "./useClassificados";
+} from "@/core/classifieds/hooks/useClassificados";
 import { useVendedores } from "./useVendedores";
 import { useClassifiedUrls } from "./useClassifiedUrls";
-import { classifiedUrlService } from "@/modules/classifieds/services";
+import { classifiedUrlService } from "@/core/classifieds/services";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 
 export type ViewMode = "anuncios" | "vendedores";

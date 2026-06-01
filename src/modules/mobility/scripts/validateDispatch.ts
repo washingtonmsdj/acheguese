@@ -4,11 +4,11 @@
  * Valida que todos os componentes do dispatch automtico esto funcionando
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/core/infrastructure/supabase';
-import { AutoDispatchService } from '../core/AutoDispatchService';
-import { RideOperationalService } from '../core/RideOperationalService';
-import { RideDispatchService } from '../core/RideDispatchService';
-import { getAllRideRequests } from '../services/mobility.queries';
+import { supabase } from '@/integrations/supabase';
+import { AutoDispatchService } from '@/core/mobility/core/AutoDispatchService';
+import { RideOperationalService } from '@/core/mobility/core/RideOperationalService';
+import { RideDispatchService } from '@/core/mobility/core/RideDispatchService';
+import { getAllRideRequests } from '@/core/mobility/services/mobility.queries';
 
 interface ValidationResult {
   check: string;

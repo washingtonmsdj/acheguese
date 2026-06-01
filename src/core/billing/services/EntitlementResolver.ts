@@ -12,7 +12,7 @@
  * @version 1.0.0
  */
 
-import { supabase } from '@/integrations/supabase/supabase';
+import { supabase } from '@/integrations/supabase';
 import { BillingPlanService } from '@/core/billing/services/BillingPlanService';
 import { logger } from '@/shared/utils/logger';
 import type { GenericBillingEntitlementAliases } from '../types';

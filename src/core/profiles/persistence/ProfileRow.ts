@@ -7,7 +7,7 @@
  * @version 2.0.0
  */
 
-import type { Database } from '@/integrations/supabase/types.generated';
+import type { Database } from '@/integrations/supabase';
 
 /**
  * ProfileRow — Row do banco (snake_case)

@@ -1,6 +1,6 @@
-import { RIDE_STATUS_LABELS } from "@/modules/mobility/constants";
+import { RIDE_STATUS_LABELS } from "@/core/mobility/constants";
 import { getRecordValue } from "@/shared/utils/recordLookup";
-import type { RideStatus } from "@/modules/mobility/types";
+import type { RideStatus } from "@/core/mobility/types";
 
 interface StatusBadgeProps {
   status: RideStatus;

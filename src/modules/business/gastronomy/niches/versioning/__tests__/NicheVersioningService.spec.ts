@@ -7,7 +7,7 @@ import { NicheVersioningService } from '../NicheVersioningService';
 import type { ProfileNicheConfig } from '../types';
 
 // Mock Supabase
-vi.mock('@/core/infrastructure/supabase', () => ({
+vi.mock('@/integrations/supabase', () => ({
   supabase: {
     rpc: vi.fn(),
     from: vi.fn(() => ({
@@ -28,7 +28,7 @@ vi.mock('@/core/infrastructure/supabase', () => ({
 describe('NicheVersioningService', () => {
   describe('hasCapability', () => {
     it('deve verificar se perfil tem capability', async () => {
-      const { supabase } = await import('@/core/infrastructure/supabase');
+      const { supabase } = await import('@/integrations/supabase');
       vi.mocked(supabase.rpc).mockResolvedValueOnce({
         data: true,
         error: null,
@@ -45,7 +45,7 @@ describe('NicheVersioningService', () => {
     });
 
     it('deve retornar false em caso de erro', async () => {
-      const { supabase } = await import('@/core/infrastructure/supabase');
+      const { supabase } = await import('@/integrations/supabase');
       vi.mocked(supabase.rpc).mockResolvedValueOnce({
         data: null,
         error: new Error('Database error'),
@@ -62,7 +62,7 @@ describe('NicheVersioningService', () => {
 
   describe('hasCapabilities', () => {
     it('deve verificar múltiplas capabilities', async () => {
-      const { supabase } = await import('@/core/infrastructure/supabase');
+      const { supabase } = await import('@/integrations/supabase');
       const mockFrom = vi.fn(() => ({
         select: vi.fn(() => ({
           eq: vi.fn(() => ({
@@ -98,7 +98,7 @@ describe('NicheVersioningService', () => {
 
   describe('addCapability', () => {
     it('deve adicionar capability com sucesso', async () => {
-      const { supabase } = await import('@/core/infrastructure/supabase');
+      const { supabase } = await import('@/integrations/supabase');
       vi.mocked(supabase.rpc).mockResolvedValueOnce({
         data: true,
         error: null,
@@ -115,7 +115,7 @@ describe('NicheVersioningService', () => {
     });
 
     it('deve indicar quando capability já existe', async () => {
-      const { supabase } = await import('@/core/infrastructure/supabase');
+      const { supabase } = await import('@/integrations/supabase');
       vi.mocked(supabase.rpc).mockResolvedValueOnce({
         data: false,
         error: null,
@@ -131,7 +131,7 @@ describe('NicheVersioningService', () => {
     });
 
     it('deve retornar erro em caso de falha', async () => {
-      const { supabase } = await import('@/core/infrastructure/supabase');
+      const { supabase } = await import('@/integrations/supabase');
       vi.mocked(supabase.rpc).mockResolvedValueOnce({
         data: null,
         error: { message: 'Database error' },
@@ -149,7 +149,7 @@ describe('NicheVersioningService', () => {
 
   describe('markNeedsUpgrade', () => {
     it('deve marcar perfis como precisando upgrade', async () => {
-      const { supabase } = await import('@/core/infrastructure/supabase');
+      const { supabase } = await import('@/integrations/supabase');
       vi.mocked(supabase.rpc).mockResolvedValueOnce({
         data: 5,
         error: null,
@@ -166,7 +166,7 @@ describe('NicheVersioningService', () => {
 
   describe('upgradeNiche', () => {
     it('deve realizar upgrade completo', async () => {
-      const { supabase } = await import('@/core/infrastructure/supabase');
+      const { supabase } = await import('@/integrations/supabase');
 
       // Mock fetch current profile
       const mockFrom = vi.fn(() => ({
@@ -206,7 +206,7 @@ describe('NicheVersioningService', () => {
     });
 
     it('deve retornar erro se perfil não encontrado', async () => {
-      const { supabase } = await import('@/core/infrastructure/supabase');
+      const { supabase } = await import('@/integrations/supabase');
 
       const mockFrom = vi.fn(() => ({
         select: vi.fn(() => ({
@@ -235,7 +235,7 @@ describe('NicheVersioningService', () => {
 
   describe('getProfileNicheConfig', () => {
     it('deve obter configuração de nicho do perfil', async () => {
-      const { supabase } = await import('@/core/infrastructure/supabase');
+      const { supabase } = await import('@/integrations/supabase');
 
       const mockFrom = vi.fn(() => ({
         select: vi.fn(() => ({
@@ -271,7 +271,7 @@ describe('NicheVersioningService', () => {
     });
 
     it('deve retornar null se perfil não encontrado', async () => {
-      const { supabase } = await import('@/core/infrastructure/supabase');
+      const { supabase } = await import('@/integrations/supabase');
 
       const mockFrom = vi.fn(() => ({
         select: vi.fn(() => ({

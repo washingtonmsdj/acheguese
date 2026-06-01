@@ -1,4 +1,4 @@
-import { selectLooseRows } from "@/integrations/supabase/services/supabaseHelpers";
+import { selectLooseRows } from "@/integrations/supabase";
 import {
   buildCommunicationChannelUrl,
   type CommunicationChannelUrlParts,

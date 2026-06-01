@@ -8,7 +8,7 @@ import {
 } from '../EducationObservabilityService';
 
 // Mock Supabase
-vi.mock('@/core/infrastructure/supabase', () => ({
+vi.mock('@/integrations/supabase', () => ({
   supabase: {
     from: vi.fn(() => ({
       insert: vi.fn(() => Promise.resolve({ data: null, error: null })),

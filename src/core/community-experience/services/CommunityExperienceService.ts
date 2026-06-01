@@ -1,9 +1,12 @@
 import { supabase } from "@/integrations/supabase";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { COMMUNITY_EXPERIENCE_STATUS } from "@/core/community-experience/constants/statuses";
+import type {
+  CommunityStatus,
+  CommunityTerritoryType,
+} from "@/core/community-experience/types";
 
-export type CommunityStatus = "active" | "launching" | "waiting_list" | "coming_soon" | "inactive";
-export type CommunityTerritoryType = "city" | "neighborhood" | "district" | "territorial_group";
+export type { CommunityStatus, CommunityTerritoryType };
 
 export interface TerritorialCommunityProfile {
   id: string;

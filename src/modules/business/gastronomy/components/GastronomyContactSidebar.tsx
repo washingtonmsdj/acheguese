@@ -32,7 +32,7 @@ import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { Card } from '@/shared/components/ui/card';
 import { Separator } from '@/shared/components/ui/separator';
-import { MiniMap } from '@/shared/components/maps/MiniMap';
+import { LazyMiniMap } from '@/shared/components/maps/LazyMiniMap';
 import { GastronomyUrlService } from '@/core/verticals/gastronomy/services/GastronomyUrlService';
 import {
   buildGoogleMapsDirectionsUrl,
@@ -366,7 +366,7 @@ export function GastronomyContactSidebar({ business }: GastronomyContactSidebarP
             )}
 
             <div className="overflow-hidden rounded-xl">
-              <MiniMap
+              <LazyMiniMap
                 latitude={latitude}
                 longitude={longitude}
                 title={business.name}

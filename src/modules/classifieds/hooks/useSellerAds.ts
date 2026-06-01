@@ -3,8 +3,8 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
-import { ClassifiedsService } from "@/modules/classifieds/services";
-import type { ClassificadoWithVendedor } from "./useClassificados";
+import { ClassifiedsService } from "@/core/classifieds/services";
+import type { ClassificadoWithVendedor } from "@/core/classifieds/hooks/useClassificados";
 
 export function useSellerAds(sellerId: string | undefined, excludeId?: string) {
   const query = useQuery({

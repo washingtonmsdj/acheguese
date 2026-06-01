@@ -1,5 +1,5 @@
 import { Button } from "@/shared/components/ui/button";
-import type { RideRequest } from "@/modules/mobility/types";
+import type { RideRequest } from "@/core/mobility/types";
 
 interface RideRequestCardProps {
   ride: RideRequest;

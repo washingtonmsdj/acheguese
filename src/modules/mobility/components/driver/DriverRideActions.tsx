@@ -1,6 +1,6 @@
 import { Button } from "@/shared/components/ui/button";
-import { RideStatus } from "@/modules/mobility/types";
-import type { RideRequest } from "@/modules/mobility/types/types";
+import { RideStatus } from "@/core/mobility/types";
+import type { RideRequest } from "@/core/mobility/types/types";
 import { RIDE_STATUS } from "@/shared/types/constants";
 import {
   Car,

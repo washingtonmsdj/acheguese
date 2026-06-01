@@ -335,6 +335,9 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     ],
     routePrefixes: [
       "/comunidade/:state/:city",
+      "/comunidade/:state/:city/:groupSlugOrDistrict",
+      "/comunidade/:communitySlug",
+      "/comunidade/:communitySlug/*",
       "/novo-post",
     ],
     adminRoutePrefixes: ["/admin/moderacao", "/admin/moderacao-completa", "/admin/zeladoria"],
@@ -361,7 +364,10 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
       "src/core/alerts/services/AlertService.ts",
       "src/core/community/alerts/services/CommunityAlertService.ts",
     ],
-    routePrefixes: ["/comunidade/:state/:city/feed?tab=alertas"],
+    routePrefixes: [
+      "/comunidade/:state/:city/feed?tab=alertas",
+      "/comunidade/:state/:city/:groupSlugOrDistrict/feed?tab=alertas",
+    ],
     adminRoutePrefixes: ["/admin/community-alerts", "/admin/alertas"],
     criticality: "high",
     canonicalServiceBasenames: [
@@ -387,7 +393,10 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     ssotPaths: [
       "src/core/community/issues/services/CommunityIssueService.ts",
     ],
-    routePrefixes: ["/comunidade/:state/:city/problemas"],
+    routePrefixes: [
+      "/comunidade/:state/:city/problemas",
+      "/comunidade/:state/:city/:groupSlugOrDistrict/problemas",
+    ],
     adminRoutePrefixes: ["/admin/community-issues"],
     criticality: "high",
     canonicalServiceBasenames: ["CommunityIssueService.ts"],
@@ -408,6 +417,8 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     routePrefixes: [
       "/comunidade/:state/:city/grupos",
       "/comunidade/:state/:city/grupos/:id",
+      "/comunidade/:state/:city/:groupSlugOrDistrict/grupos",
+      "/comunidade/:state/:city/:groupSlugOrDistrict/grupos/:id",
     ],
     adminRoutePrefixes: [],
     criticality: "medium",

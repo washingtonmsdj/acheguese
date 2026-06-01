@@ -2,17 +2,17 @@ import { useState, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/core/auth";
 import { profileService } from "@/core/profiles/services/ProfileService";
-import { RidePassengerService, RideRatingService, RideReportsService } from "@/modules/mobility/services";
-import type { ReportSeverity, ReportType } from "@/modules/mobility/services/RideReportsService";
+import { RidePassengerService, RideRatingService, RideReportsService } from "@/core/mobility/services";
+import type { ReportSeverity, ReportType } from "@/core/mobility/services/RideReportsService";
 import { toast } from "sonner";
-import { getUserRides, getRideById, getPassengerRating } from "@/modules/mobility/services/mobility.queries";
-import type { RideRequest } from "@/modules/mobility/types/types";
-import { acceptRide, startRide, completeRide, cancelRide } from "@/modules/mobility/services/mobility.mutations";
-import { RideOperationalService } from "@/modules/mobility/core/RideOperationalService";
-import { RideDispatchService } from "@/modules/mobility/core/RideDispatchService";
+import { getUserRides, getRideById, getPassengerRating } from "@/core/mobility/services/mobility.queries";
+import type { RideRequest } from "@/core/mobility/types/types";
+import { acceptRide, startRide, completeRide, cancelRide } from "@/core/mobility/services/mobility.mutations";
+import { RideOperationalService } from "@/core/mobility/core/RideOperationalService";
+import { RideDispatchService } from "@/core/mobility/core/RideDispatchService";
 import { logger } from "@/shared/utils/logger";
 import { useRideRealtime } from "./useRideRealtime";
-import { RIDE_STATUS, MOBILITY_QUERY_KEYS, TIMEOUTS } from "../constants";
+import { RIDE_STATUS, MOBILITY_QUERY_KEYS, TIMEOUTS } from "@/core/mobility/constants";
 
 export interface CreateRideRequestData {
   origin: string;

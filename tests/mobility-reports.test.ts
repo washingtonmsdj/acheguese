@@ -11,7 +11,7 @@ import type { ReportType, ReportSeverity, ReportStatus } from '../src/modules/mo
 const TEST_RIDE_ID = '7b9817cb-d0c3-46f3-b57f-b2c4d5a20ed3';
 const TEST_REPORTER_PROFILE_ID = 'c64a8e34-16be-474c-b4f8-0585afce7d14';
 
-vi.mock('@/core/infrastructure/supabase/supabase', () => ({
+vi.mock('@/integrations/supabase', () => ({
   supabase: {
     from: vi.fn(() => ({
       insert: vi.fn(() => ({

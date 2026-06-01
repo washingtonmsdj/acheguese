@@ -5,7 +5,7 @@
  */
 import { logger } from '@/shared/utils/logger';
 import { useState, useEffect, useCallback } from "react";
-import { ChatService, type ChatMessage, type RideChat } from "../services/ChatService";
+import { ChatService, type ChatMessage, type RideChat } from "@/core/mobility/services/ChatService";
 
 function getErrorMessage(error: unknown, fallback: string): string {
   if (error instanceof Error && error.message) return error.message;

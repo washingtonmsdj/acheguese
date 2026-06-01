@@ -1,4 +1,4 @@
-import { supabase } from "@/core/infrastructure/supabase/supabase";
+import { supabase } from "@/integrations/supabase";
 import { VagaPublicationDistributionService } from "@/core/verticals/jobs/services/VagaPublicationDistributionService";
 import { logger } from "@/shared/utils/logger";
 import { buildSafeOrILikeFilter } from "@/shared/utils/sqlSanitization";

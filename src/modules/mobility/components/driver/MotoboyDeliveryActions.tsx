@@ -28,7 +28,7 @@ import {
   Phone,
   Loader2,
 } from "lucide-react";
-import { RIDE_STATUS } from "../../constants";
+import { RIDE_STATUS } from "@/core/mobility/constants";
 import type { DeliveryProof } from "../../hooks/useDelivery";
 import { buildTelUrl } from "@/shared/utils/contactLinks";
 

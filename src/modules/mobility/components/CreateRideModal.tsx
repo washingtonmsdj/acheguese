@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import { toast } from "sonner";
-import type { RideType, PaymentMethod } from "@/modules/mobility/types";
+import type { RideType, PaymentMethod } from "@/core/mobility/types";
 import { BoardingPointsPanel, type BoardingPoint } from "./BoardingPointsPanel";
 import { TrustRideFilter, type TrustPreference } from "./TrustRideFilter";
 import { RouteEstimateCard } from "./index";

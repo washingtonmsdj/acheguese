@@ -8,7 +8,7 @@ import {
   type TrustFeedbackTarget,
 } from "@/core/trust";
 import { useSessionContext } from "@/core/session";
-import { ClassifiedTrustService } from "@/modules/classifieds/services";
+import { ClassifiedTrustService } from "@/core/classifieds/services";
 
 interface ClassifiedTrustFeedbackPanelProps {
   classifiedId: string;

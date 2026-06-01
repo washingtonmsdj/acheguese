@@ -81,7 +81,13 @@ No arquivo `AppRoutes.tsx`, adicione dentro do componente `Routes`:
 /empresas/:state/:city                        # Vitrine publica do modulo na cidade
 /empresas/:state/:city/:district              # Vitrine publica do modulo no bairro
 /empresas/:state/:city/:groupSlug             # Vitrine publica do modulo no grupo
+/:communitySlug                               # URL curta publica da comunidade
+/:communitySlug/empresas                      # Empresas da comunidade
+/:communitySlug/empresas/:slug                # Detalhe de empresa mantendo URL curta
+/:communitySlug/gastronomia                   # Gastronomia da comunidade
+/:communitySlug/gastronomia/:slug             # Detalhe gastronomico mantendo URL curta
 /comunidade/:state/:city                      # Comunidade municipal (canonica publica)
+/comunidade/:state/:city/:communitySlug       # Comunidade de bairro/grupo (deterministica)
 /comunidade/:state/:city/feed                 # Feed comunitario municipal
 /empresas/:state/:city/:district/:businessSlug # Detalhe especifico de empresa
 ```
@@ -89,9 +95,16 @@ No arquivo `AppRoutes.tsx`, adicione dentro do componente `Routes`:
 Regra de intencao:
 
 - Rotas diretas de modulo (`/empresas/...`, `/servicos/...`) sao vitrines publicas e SEO.
-- Rotas dentro de `/comunidade/...` sao experiencia social/local com contexto comunitario.
+- Rotas curtas `/:communitySlug/...` sao a experiencia social/local com contexto comunitario.
+- `/:communitySlug` so e valido quando existe alias publico unico em
+  `community_public_aliases`; em caso de colisao, use a rota completa com estado e cidade.
+- Detalhes em `/:communitySlug/empresas/:slug` e
+  `/:communitySlug/gastronomia/:slug` mantem a URL curta visivel e resolvem a
+  entidade pelo SSOT territorial.
+- `/comunidade/:communitySlug...` e alias legado; deve redirecionar para
+  `/:communitySlug...`.
 - Em comunidade, a URL publica nao expoe tipo tecnico (`district` vs `territorial_group`):
-  `/comunidade/:state/:city`.
+  `/:communitySlug` ou `/comunidade/:state/:city/:communitySlug` como fallback tecnico.
 - Nenhuma rota publica de comunidade usa `/area/`.
 - Rotas operacionais ficam em `/central`.
 - Rotas de identidade/configuracao pessoal ficam em `/conta`.

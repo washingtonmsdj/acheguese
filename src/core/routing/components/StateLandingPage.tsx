@@ -24,7 +24,8 @@ interface CityItem {
 }
 
 export function StateLandingPage() {
-  const { state } = useParams<{ state: string }>();
+  const params = useParams<{ state?: string; communitySlug?: string }>();
+  const state = params.state ?? params.communitySlug;
   const navigate = useNavigate();
   const country = TERRITORY_CONFIG.defaultCountry;
 

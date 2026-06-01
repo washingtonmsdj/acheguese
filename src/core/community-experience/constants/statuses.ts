@@ -1,4 +1,4 @@
-import type { CommunityStatus } from "../services/CommunityExperienceService";
+import type { CommunityStatus } from "../types";
 
 export const COMMUNITY_EXPERIENCE_STATUS = {
   ACTIVE: "active",

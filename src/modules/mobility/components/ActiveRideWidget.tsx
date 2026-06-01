@@ -16,7 +16,7 @@ import {
 import { Badge } from "@/shared/components/ui/badge";
 import { motion } from "framer-motion";
 import { cn } from "@/shared/utils/cn";
-import type { RideRequest } from "@/modules/mobility/types/types";
+import type { RideRequest } from "@/core/mobility/types/types";
 import { mobilityRoutes } from "@/core/mobility/routes/mobilityRoutes";
 
 interface ActiveRideWidgetProps {

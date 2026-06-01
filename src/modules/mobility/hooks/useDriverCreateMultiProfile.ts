@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { MultiProfileService } from "@/core/profiles/services/multi-profile";
-import { MOBILITY_QUERY_KEYS } from "@/modules/mobility/constants";
+import { MOBILITY_QUERY_KEYS } from "@/core/mobility/constants";
 import {
   buildDriverProfileCreatePayload,
   type DriverRegistrationInput,

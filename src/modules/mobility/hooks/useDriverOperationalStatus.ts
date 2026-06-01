@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import { DriverAvailabilityService } from "@/modules/mobility/services/DriverAvailabilityService";
-import { mobilityService } from "@/modules/mobility/services/MobilityService";
+import { DriverAvailabilityService } from "@/core/mobility/services/DriverAvailabilityService";
+import { mobilityService } from "@/core/mobility/services/MobilityService";
 
 type DriverDataOperationalUpdate = {
   is_online?: boolean;

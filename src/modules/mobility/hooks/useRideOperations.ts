@@ -3,9 +3,9 @@
  */
 
 import { useState } from "react";
-import { RideOperationalService } from "../core/RideOperationalService";
-import type { CreateRideInput } from "../core/RideOperationalService";
-import { RIDE_STATE, type RideState } from "../core/RideStateMachine";
+import { RideOperationalService } from "@/core/mobility/core/RideOperationalService";
+import type { CreateRideInput } from "@/core/mobility/core/RideOperationalService";
+import { RIDE_STATE, type RideState } from "@/core/mobility/core/RideStateMachine";
 import { toast } from "sonner";
 import { logger } from "@/shared/utils/logger";
 

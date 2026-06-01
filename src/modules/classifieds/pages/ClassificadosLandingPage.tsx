@@ -18,9 +18,9 @@ import { Button } from "@/shared/components/ui/button";
 import { useSessionContext } from "@/core/session";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { ModuleLocationDialog, useTerritoryLabels } from "@/core/location";
-import { useClassificados } from "@/modules/classifieds/hooks/useClassificados";
+import { useClassificados } from "@/core/classifieds/hooks/useClassificados";
 import { CLASSIFIED_CATEGORIES } from "@/modules/classifieds/constants/categories";
-import { classifiedUrlService } from "@/modules/classifieds/services/ClassifiedUrlService";
+import { classifiedUrlService } from "@/core/classifieds/services/ClassifiedUrlService";
 import { ClassifiedsViewToggle, VendedorCard, ClassificadosHeader, AdvancedFilters } from "@/modules/classifieds/components";
 import { cn } from "@/shared/utils/cn";
 import {
@@ -29,7 +29,7 @@ import {
   SearchBar,
   SellersEmptyState,
 } from "./ClassificadosLandingPageSections";
-import type { ClassificadoWithVendedor } from "@/modules/classifieds/hooks/useClassificados";
+import type { ClassificadoWithVendedor } from "@/core/classifieds/hooks/useClassificados";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 
 import heroImg from "@/assets/servicos-hero.jpg";

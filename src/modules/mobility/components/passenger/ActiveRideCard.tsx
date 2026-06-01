@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { XCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/utils/cn";
-import type { RideRequest } from "@/modules/mobility/types";
+import type { RideRequest } from "@/core/mobility/types";
 import { RIDE_STATUS } from "@/shared/types/constants";
 import { StatusTimeline } from "../StatusTimeline";
 import { RideTrackingMap } from "../RideTrackingMap";

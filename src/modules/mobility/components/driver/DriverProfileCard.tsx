@@ -21,7 +21,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
 import { cn } from "@/shared/utils/cn";
-import type { DriverPlan, DriverEarnings } from "@/modules/mobility/types";
+import type { DriverPlan, DriverEarnings } from "@/core/mobility/types";
 
 interface DriverProfileCardProps {
   isOnline: boolean;

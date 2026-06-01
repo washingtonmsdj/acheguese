@@ -6,7 +6,7 @@
  * delegando para o MessagingService (SSOT) sempre que possível.
  */
 
-import { supabase } from "@/integrations/supabase/supabase";
+import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { buildSafeOrILikeFilter } from "@/shared/utils/sqlSanitization";
 import type { AdminSupabaseClient } from "../types/adminDatabase.types";

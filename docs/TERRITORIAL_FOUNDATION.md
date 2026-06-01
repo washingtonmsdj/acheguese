@@ -116,6 +116,13 @@ Modelo publico atual:
 /empresas/:state/:city/:district           -> vitrine publica do modulo no bairro
 /empresas/:state/:city/:groupSlug          -> vitrine publica do modulo no grupo
 /comunidade/:state/:city                   -> experiencia social/local da cidade (canonica)
+/comunidade/:state/:city/:district         -> experiencia social/local do bairro (canonica)
+/comunidade/:state/:city/:groupSlug        -> experiencia social/local do grupo (canonica)
+/:communitySlug                            -> URL curta publica da comunidade, apenas quando for unica
+/:communitySlug/empresas                   -> empresas da comunidade
+/:communitySlug/empresas/:slug             -> detalhe de empresa mantendo URL curta
+/:communitySlug/gastronomia                -> gastronomia da comunidade
+/:communitySlug/gastronomia/:slug          -> detalhe gastronomico mantendo URL curta
 ```
 
 Exemplo real:
@@ -124,7 +131,7 @@ Exemplo real:
 /ba/salvador/nordeste-de-amaralina                 → Nordeste de Amaralina
 ```
 
-Rotas antigas com `/:country/...`, comunidade com `/area/...`, `/community` ou `/feed` nao devem ser usadas em implementacoes novas.
+Rotas antigas com `/:country/...`, comunidade com `/area/...`, `/community` ou `/feed` nao devem ser usadas em implementacoes novas. Alias curto de comunidade deve permanecer como URL visivel quando for unico; a rota territorial completa fica como fallback tecnico. Detalhes de empresas e gastronomia dentro do alias curto resolvem pelo SSOT territorial e mantem a URL curta.
 
 ---
 

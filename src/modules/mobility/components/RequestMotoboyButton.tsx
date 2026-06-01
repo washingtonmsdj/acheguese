@@ -15,8 +15,8 @@ import { useAuth } from "@/core/auth";
 import { useLocationContext } from "@/core/location";
 import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 import { Button } from "@/shared/components/ui/button";
-import { MotoboyAuthorizationService } from "../services/MotoboyAuthorizationService";
-import type { SourceType } from "../constants";
+import { MotoboyAuthorizationService } from "@/core/mobility/services/MotoboyAuthorizationService";
+import type { SourceType } from "@/core/mobility/constants";
 import { CreateDeliveryModal } from "./CreateDeliveryModal";
 
 interface RequestMotoboyButtonProps {
@@ -65,7 +65,7 @@ export function RequestMotoboyButton({
       let locationId = activeLocation?.id ?? null;
 
       if (!locationId && sourceId) {
-        const { MotoboySourceResolverService } = await import("../services/MotoboySourceResolverService");
+        const { MotoboySourceResolverService } = await import("@/core/mobility/services/MotoboySourceResolverService");
         locationId = (await MotoboySourceResolverService.resolveLocationIdFromSource(sourceId)) ?? null;
       }
 

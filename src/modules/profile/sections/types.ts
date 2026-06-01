@@ -12,7 +12,7 @@ import type {
   ProfileBusinessModuleSnapshot,
 } from "@/core/profiles/services/ProfileBusinessTypes";
 import type { VerificationStatus } from "@/modules/profile/components/ResidentVerificationCard";
-import type { Tables } from "@/core/infrastructure/supabase/types.generated";
+import type { DriverDataRecord } from "@/core/mobility/types/DriverDataRecord";
 export type ProfileSectionId =
   import("@/modules/profile/config/profile-sections.config").ProfileSectionId;
 
@@ -183,7 +183,7 @@ export interface ResumoSectionProps extends BaseSectionProps {
   readonly hasActiveRide: boolean;
   readonly activeRide?: Ride;
   readonly driverProfileId: string | null;
-  readonly driverData?: Tables<"driver_data"> | null;
+  readonly driverData?: DriverDataRecord | null;
   readonly setActiveSection: (section: ProfileSectionId) => void;
 }
 
@@ -211,7 +211,7 @@ export interface MobilidadeSectionProps extends BaseSectionProps {
   readonly hasDriverProfile: boolean;
   readonly driverProfile: MultiProfileRecord | null;
   readonly driverProfileId: string | null;
-  readonly driverData: Tables<"driver_data"> | null;
+  readonly driverData: DriverDataRecord | null;
   readonly driverDataLoading: boolean;
   readonly operations: Operations;
   readonly hasActiveRide: boolean;

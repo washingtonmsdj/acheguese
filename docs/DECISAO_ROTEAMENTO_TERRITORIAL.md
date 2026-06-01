@@ -1,6 +1,7 @@
 # Decisao Canonica: Roteamento Territorial
 
 Data: 2026-05-07
+Atualizado: 2026-06-01
 Status: ativo
 
 Este documento define a separacao entre site publico de cidade, modulos publicos e experiencia de comunidade. Use como SSOT de produto/SEO antes de criar ou alterar rotas territoriais.
@@ -11,7 +12,7 @@ O Achegue-se tem quatro camadas publicas:
 
 1. Site geral da cidade.
 2. Modulos publicos por cidade ou territorio.
-3. Comunidade local por territorio (slug publico unico por cidade).
+3. Comunidade local por territorio, com rota canonica territorial e alias publico curto.
 4. Comunicacao territorial institucional/editorial.
 
 Essas camadas podem apontar para os mesmos dados, mas nao devem ter a mesma intencao de produto.
@@ -82,6 +83,8 @@ Rotas canonicas:
 
 ```text
 /comunidade/ba/salvador
+/comunidade/ba/salvador/nordeste-de-amaralina
+/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina
 
 /comunidade/ba/salvador/feed
 /comunidade/ba/salvador/grupos
@@ -96,6 +99,30 @@ Papel:
 - Feed, grupos, alertas, problemas urbanos, eventos comunitarios, recomendacoes e achados/perdidos pertencem primeiro a esta camada.
 - URL publica de comunidade nunca expoe tipo tecnico (`area`, `district`, `territorial_group`, `locality`).
 
+### URL Curta de Comunidade
+
+A URL curta de comunidade e a rota publica principal vista pelo usuario:
+
+```text
+/santa-cruz
+/chapada-do-rio-vermelho
+```
+
+A rota territorial completa continua existindo como fallback tecnico e para resolucao deterministica interna:
+
+```text
+/comunidade/ba/salvador/santa-cruz
+/comunidade/ba/salvador/chapada-do-rio-vermelho
+```
+
+Regras:
+
+- Alias curto usa a raiz do site somente quando for unico e nao colidir com rotas reservadas.
+- Alias precisa ser unico em `community_public_aliases`; se houver colisao, nao deve escolher uma comunidade arbitrariamente.
+- O banco continua guardando estado, cidade, territorio, tipo e comunidade como SSOT. O alias e a camada publica de apresentacao.
+- Sitemap, canonical e compartilhamentos devem favorecer a URL curta quando houver alias unico.
+- O prefixo `/comunidade/:state/:city...` fica como rota tecnica/legada e pode redirecionar aliases antigos para a URL curta.
+
 ## Rotas de Modulo Dentro da Comunidade
 
 Rotas como estas podem existir:
@@ -104,6 +131,7 @@ Rotas como estas podem existir:
 /comunidade/ba/salvador/empresas
 /comunidade/ba/salvador/servicos
 /comunidade/ba/salvador/classificados
+/comunidade/ba/salvador/gastronomia
 ```
 
 Mas o papel delas e diferente das rotas publicas diretas:
@@ -112,6 +140,28 @@ Mas o papel delas e diferente das rotas publicas diretas:
 - `/comunidade/.../empresas`: visao contextual da comunidade, com navegacao comunitaria, sinais sociais e retorno ao bairro.
 
 Se uma tela nao entregar contexto comunitario adicional, ela deve preferir linkar para a rota publica direta em vez de duplicar experiencia.
+
+Detalhes de entidades nao devem virar paginas duplicadas dentro da comunidade. Links como:
+
+```text
+/santa-cruz/empresas/padaria-do-joao
+/santa-cruz/gastronomia/pizzaria-estrela
+```
+
+devem renderizar o detalhe mantendo a URL curta visivel. A resolucao usa o SSOT territorial; as URLs longas abaixo continuam como fallback tecnico:
+
+```text
+/empresas/ba/salvador/santa-cruz/padaria-do-joao
+/gastronomia/ba/salvador/santa-cruz/pizzaria-estrela
+```
+
+Mini-site premium continua sendo uma camada propria:
+
+```text
+/p/padaria-do-joao
+```
+
+`/p/:slug` nao deve ser reaproveitado como URL de comunidade nem misturado com alias curto de bairro.
 
 ## Camada 4: Comunicacao Territorial
 
@@ -142,7 +192,8 @@ Plano de distribuicao: [COMUNICACAO_DISTRIBUICAO_TERRITORIAL_PLANO.md](./COMUNIC
 ## SEO e Canonical
 
 - Rotas publicas de modulo (`/empresas/...`, `/servicos/...`, `/classificados/...`) usam `index, follow` e canonical self.
-- Rotas comunitarias com conteudo social proprio (`/comunidade/...`, `/feed`, `/grupos`, `/alertas`, `/problemas`) usam `index, follow` e canonical self.
+- Rotas curtas de comunidade (`/:communitySlug`, `/:communitySlug/empresas`, `/:communitySlug/gastronomia`, etc.) usam `index, follow` e canonical self quando o alias for unico.
+- Rotas comunitarias territoriais (`/comunidade/:state/:city...`) continuam validas como fallback tecnico.
 - Rotas editoriais/institucionais (`/comunicacao/...`) usam `index, follow` e canonical self quando publicas e verificadas.
 - Rotas de modulo embutidas dentro da comunidade (`/comunidade/.../empresas`, `/servicos`, `/classificados`, etc.) usam `noindex, follow` e canonical para a rota publica equivalente enquanto nao tiverem conteudo comunitario exclusivo suficiente.
 - Conteudo de comunicacao exibido dentro de `/comunidade/...` deve apontar canonical para `/comunicacao/...` quando for materia/reportagem editorial.
@@ -175,5 +226,5 @@ Antes de criar uma rota nova, responder:
 ## Pendencias
 
 - Criar testes E2E para cidade, bairro e grupo nas rotas de comunidade.
-- Revisar se `/comunidade/.../empresas` e `/comunidade/.../servicos` entregam contexto comunitario real ou apenas duplicam vitrines.
+- Revisar se indices como `/comunidade/.../empresas`, `/comunidade/.../servicos` e `/comunidade/.../gastronomia` entregam contexto comunitario real ou apenas duplicam vitrines.
 - Atualizar sitemap dinamico conectado ao banco para respeitar esta separacao em producao.

@@ -1,4 +1,4 @@
-import { supabase } from "@/core/infrastructure/supabase";
+import { supabase } from "@/integrations/supabase";
 import { MODERATION_REPORT_STATUS } from "@/core/moderation/constants/reportStatus";
 import type {
   ModerationFilters,

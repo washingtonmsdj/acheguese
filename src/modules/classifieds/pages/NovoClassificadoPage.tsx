@@ -14,7 +14,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { useSessionContext } from "@/core/session";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
-import { createClassified } from "@/modules/classifieds/services";
+import { createClassified } from "@/core/classifieds/services";
 import { useClassifiedsLocation } from "@/modules/classifieds/hooks/useClassifiedsLocation";
 import { useClassifiedImageUpload } from "@/modules/classifieds/hooks/useClassifiedImageUpload";
 import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-runtime-context";

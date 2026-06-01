@@ -2,7 +2,7 @@
  * Tipos do sistema de cardápio
  */
 
-import type { Json } from '@/core/infrastructure/supabase';
+import type { Json } from '@/integrations/supabase';
 
 // ============================================================================
 // MENU

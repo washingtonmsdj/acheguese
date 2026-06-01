@@ -1,4 +1,4 @@
-import { supabase } from "@/core/infrastructure/supabase";
+import { supabase } from "@/integrations/supabase";
 import { BillingService } from "@/core/billing/services/BillingService";
 import type { PlanTier } from "@/core/billing";
 import { PlanTier as BillingPlanTier } from "@/core/billing";

@@ -12,13 +12,13 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/core/auth";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { toast } from "sonner";
-import { mobilityService } from "@/modules/mobility/services/MobilityService";
-import { RideOperationalService } from "@/modules/mobility/core/RideOperationalService";
+import { mobilityService } from "@/core/mobility/services/MobilityService";
+import { RideOperationalService } from "@/core/mobility/core/RideOperationalService";
 import { pricingService } from "@/core/pricing/services/PricingService";
 import { logger } from "@/shared/utils/logger";
 import { useRideRealtime } from "./useRideRealtime";
 import { buildFailedDeliveryMetadata } from "@/modules/mobility/utils/failedDelivery";
-import type { RideRequest } from "@/modules/mobility/types/types";
+import type { RideRequest } from "@/core/mobility/types/types";
 import {
   RIDE_STATUS,
   RIDE_MODE,
@@ -26,7 +26,7 @@ import {
   TIMEOUTS,
   type SourceType,
   type PackageSize,
-} from "../constants";
+} from "@/core/mobility/constants";
 
 // ============================================
 // TIPOS

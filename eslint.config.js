@@ -397,8 +397,8 @@ export default tseslint.config(
   // ClassifiedService é o SSOT canônico de classifieds — acesso direto necessário por design.
   {
     files: [
-      "src/modules/classifieds/services/classifieds.mutations.ts",
-      "src/modules/classifieds/services/classifieds.queries.ts",
+      "src/core/classifieds/services/classifieds.mutations.ts",
+      "src/core/classifieds/services/classifieds.queries.ts",
       "src/core/admin/services/AdminClassifiedsService.ts", // Admin service com acesso direto necessário
     ],
     rules: { "ssot/no-direct-classified-access": "off" },
@@ -406,9 +406,9 @@ export default tseslint.config(
   // MobilityService é o SSOT canônico de mobility — acesso direto necessário por design.
   {
     files: [
-      "src/modules/mobility/services/mobility.mutations.ts",
-      "src/modules/mobility/services/mobility.queries.ts",
-      "src/modules/mobility/services/MobilityRuntimeService.ts",
+      "src/core/mobility/services/mobility.mutations.ts",
+      "src/core/mobility/services/mobility.queries.ts",
+      "src/core/mobility/services/MobilityRuntimeService.ts",
     ],
     rules: { "ssot/no-direct-mobility-access": "off" },
   },
@@ -437,7 +437,7 @@ export default tseslint.config(
   },
   // ClassifiedUrlService é o SSOT de URLs de classificados — acesso read-only necessário para resolver URLs canônicas.
   {
-    files: ["src/modules/classifieds/services/ClassifiedUrlService.ts"],
+    files: ["src/core/classifieds/services/ClassifiedUrlService.ts"],
     rules: { "ssot/no-direct-classified-access": "off" },
   },
   {

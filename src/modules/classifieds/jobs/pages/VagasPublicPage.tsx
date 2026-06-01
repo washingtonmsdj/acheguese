@@ -21,6 +21,13 @@ import { ModuleLocationDialog } from "@/core/location/components/ModuleLocationD
 import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
 import { useTerritoryLabels } from "@/core/location/hooks/useTerritoryLabels";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
+import {
+  buildCommunityTerritoryUrl,
+  extractCommunityTerritoryBaseUrl,
+  MODULE_SLUGS,
+} from "@/core/routing/utils/territoryUrls";
+import { useCommunityNavigationContext } from "@/core/routing/hooks/useCommunityNavigationContext";
+import { buildCommunityNavigationModuleUrls } from "@/core/routing/utils/communityNavigationContext";
 import { jobPublicRoutes } from "@/core/verticals/jobs/routes/jobPublicRoutes";
 import { TERRITORY_CONFIG } from "@/config/territory";
 import { VagasPublicLayout } from "./VagasPublicLayout";
@@ -47,6 +54,12 @@ interface VagasPublicPageProps {
   resolved?: ResolvedTerritory;
 }
 
+function buildEmbeddedCommunityJobsPath(pathname: string, state: string, city: string, suffix = ""): string {
+  const territoryBasePath = extractCommunityTerritoryBaseUrl(pathname) ?? `/${state}/${city}`;
+  const jobsSuffix = [MODULE_SLUGS.jobs, suffix].filter(Boolean).join("/");
+  return buildCommunityTerritoryUrl(territoryBasePath, jobsSuffix);
+}
+
 export default function VagasPublicPage({ resolved }: VagasPublicPageProps = {}) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -54,6 +67,7 @@ export default function VagasPublicPage({ resolved }: VagasPublicPageProps = {})
   const routeState = state?.trim() || TERRITORY_CONFIG.launch.state;
   const routeCity = city?.trim() || TERRITORY_CONFIG.launch.city;
   const { user } = useAuth();
+  const communityContext = useCommunityNavigationContext();
   const [locationDialogOpen, setLocationDialogOpen] = useState(false);
   const { permission, isLoading: isLoadingPublishPermission } =
     useVagaPublishPermission();
@@ -107,29 +121,30 @@ export default function VagasPublicPage({ resolved }: VagasPublicPageProps = {})
   // SEO
   const pageTitle = `Vagas de Emprego em ${cityName} | AcheGuese`;
   const pageDescription = `Encontre vagas de emprego em ${cityName}. ${total} oportunidades de trabalho disponíveis. Candidate-se agora!`;
-  const isEmbeddedCommunityRoute = location.pathname.startsWith("/comunidade/");
+  const communityJobsBasePath = useMemo(
+    () =>
+      communityContext
+        ? buildCommunityNavigationModuleUrls(communityContext).jobs
+        : null,
+    [communityContext],
+  );
+  const isEmbeddedCommunityRoute =
+    Boolean(communityJobsBasePath) || location.pathname.startsWith("/comunidade/");
   const moduleBasePath = useMemo(() => {
+    if (communityJobsBasePath) return communityJobsBasePath;
     if (!isEmbeddedCommunityRoute) return jobPublicRoutes.home();
-    const parts = location.pathname.split("/").filter(Boolean);
-    const embeddedState = parts[1] ?? routeState;
-    const embeddedCity = parts[2] ?? routeCity;
-    const routeTerritorySlug =
-      parts[3] ??
-      (resolved?.kind === "group" ? resolved.group.slug : resolved?.location.slug) ??
-      routeCity;
-    return `/comunidade/${embeddedState}/${embeddedCity}/${routeTerritorySlug}/vagas`;
-  }, [isEmbeddedCommunityRoute, location.pathname, resolved, routeCity, routeState]);
+    return buildEmbeddedCommunityJobsPath(location.pathname, routeState, routeCity);
+  }, [communityJobsBasePath, isEmbeddedCommunityRoute, location.pathname, routeCity, routeState]);
   const publishPath = useMemo(() => {
+    if (communityJobsBasePath) return `${communityJobsBasePath}/publicar`;
     if (!isEmbeddedCommunityRoute) return jobPublicRoutes.publish();
-    const parts = location.pathname.split("/").filter(Boolean);
-    const embeddedState = parts[1] ?? routeState;
-    const embeddedCity = parts[2] ?? routeCity;
-    const routeTerritorySlug =
-      parts[3] ??
-      (resolved?.kind === "group" ? resolved.group.slug : resolved?.location.slug) ??
-      routeCity;
-    return `/comunidade/${embeddedState}/${embeddedCity}/${routeTerritorySlug}/vagas/publicar`;
-  }, [isEmbeddedCommunityRoute, location.pathname, resolved, routeCity, routeState]);
+    return buildEmbeddedCommunityJobsPath(
+      location.pathname,
+      routeState,
+      routeCity,
+      "publicar",
+    );
+  }, [communityJobsBasePath, isEmbeddedCommunityRoute, location.pathname, routeCity, routeState]);
 
   // Handlers
   const handleVagaClick = useCallback(

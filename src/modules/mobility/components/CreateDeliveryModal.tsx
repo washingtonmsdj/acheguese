@@ -40,8 +40,8 @@ import { logger } from "@/shared/utils/logger";
 import type { CreateDeliveryData } from "../hooks/useDelivery";
 import { useDelivery } from "../hooks/useDelivery";
 import { useLocationContext } from "@/core/location";
-import type { SourceType, PackageSize } from "../constants";
-import { MotoboySourceResolverService } from "../services/MotoboySourceResolverService";
+import type { SourceType, PackageSize } from "@/core/mobility/constants";
+import { MotoboySourceResolverService } from "@/core/mobility/services/MotoboySourceResolverService";
 
 interface PickupPoint {
   addressId?: string;

@@ -10,7 +10,7 @@
  */
 
 import { useModuleLocation } from '@/core/location/hooks/useModuleLocation';
-import { classifiedsLocationService } from '../services';
+import { classifiedsLocationService } from '@/core/classifieds/services';
 
 export function useClassifiedsLocation() {
   return useModuleLocation(classifiedsLocationService);

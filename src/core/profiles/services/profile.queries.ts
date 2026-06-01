@@ -5,7 +5,7 @@
  */
 
 import { supabase } from "@/integrations/supabase";
-import { callRPC } from "@/integrations/supabase/services/supabaseHelpers";
+import { callRPC } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 import { sanitizeForILike } from "@/shared/utils/sqlSanitization";

@@ -6,7 +6,11 @@ import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
 import { territorialGroupService } from "@/core/territorial/services/TerritorialGroupService";
 import { resolveHomeCommunityHref } from "@/core/routing/utils/homeCommunityHref";
 import { lastTerritoryStore, type LastTerritory } from "@/core/routing/stores/LastTerritoryStore";
-import { buildCommunityTerritoryUrl } from "@/core/routing/utils/territoryUrls";
+import { CommunityPublicAliasService } from "@/core/routing/services/CommunityPublicAliasService";
+import {
+  buildCommunityTerritoryUrl,
+  extractCommunityTerritoryBaseUrl,
+} from "@/core/routing/utils/territoryUrls";
 
 function toPublicPathFromGeographicPath(path: string | null | undefined): string | null {
   if (!path) return null;
@@ -37,7 +41,7 @@ export function useHomeCommunityHref(): string {
     retry: false,
   });
 
-  const { data: fallbackGroupSlug = null } = useQuery({
+  const { data: fallbackGroup = null } = useQuery({
     queryKey: ["home-community-fallback-group", homeCity?.id, homeCity?.path],
     queryFn: async () => {
       const launchCityPath = `/${TERRITORY_CONFIG.launch.state}/${TERRITORY_CONFIG.launch.city}`;
@@ -59,7 +63,8 @@ export function useHomeCommunityHref(): string {
           }))
         .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
 
-      return candidates[0]?.slug ?? null;
+      const group = candidates[0];
+      return group ? { id: group.id, slug: group.slug } : null;
     },
     enabled: true,
     staleTime: 10 * 60 * 1000,
@@ -67,11 +72,83 @@ export function useHomeCommunityHref(): string {
   });
 
   const fallbackCityPath = homeCity?.path ?? `/${TERRITORY_CONFIG.launch.state}/${TERRITORY_CONFIG.launch.city}`;
+  const aliasCandidateKey = useMemo(
+    () => ({
+      homeCityPath: homeCity?.path ?? null,
+      homeDistrictPath: homeDistrict?.path ?? null,
+      homeDistrictId: homeDistrict?.id ?? null,
+      fallbackCityPath,
+      fallbackGroup,
+      groups: groups
+        .filter((group) => String(group.status).toLowerCase() === "active")
+        .map((group) => ({
+          id: group.id,
+          slug: group.slug,
+        }))
+        .sort((a, b) => a.slug.localeCompare(b.slug)),
+    }),
+    [
+      fallbackCityPath,
+      fallbackGroup,
+      groups,
+      homeCity?.id,
+      homeCity?.path,
+      homeDistrict?.id,
+      homeDistrict?.path,
+    ],
+  );
+
+  const { data: communityUrlsByTerritoryBaseUrl = {} } = useQuery({
+    queryKey: ["home-community-public-alias-urls", aliasCandidateKey],
+    queryFn: async () => {
+      const entries: Array<[string, string]> = [];
+
+      async function addAliasUrl(
+        territoryBaseUrl: string | null | undefined,
+        reference: Parameters<typeof CommunityPublicAliasService.findPublicUrlForTerritory>[0],
+      ) {
+        if (!territoryBaseUrl || !reference.territoryId) return;
+        const url = await CommunityPublicAliasService.findPublicUrlForTerritory(reference);
+        if (url) entries.push([territoryBaseUrl.replace(/\/+$/, ""), url]);
+      }
+
+      await Promise.all([
+        ...aliasCandidateKey.groups.map((group) =>
+          addAliasUrl(
+            aliasCandidateKey.homeCityPath
+              ? `${aliasCandidateKey.homeCityPath}/${group.slug}`
+              : null,
+            {
+              kind: "group",
+              territoryId: group.id,
+            },
+          ),
+        ),
+        addAliasUrl(aliasCandidateKey.homeDistrictPath, {
+          kind: "location",
+          territoryId: aliasCandidateKey.homeDistrictId,
+        }),
+        aliasCandidateKey.fallbackGroup
+          ? addAliasUrl(
+              `${aliasCandidateKey.fallbackCityPath}/${aliasCandidateKey.fallbackGroup.slug}`,
+              {
+                kind: "group",
+                territoryId: aliasCandidateKey.fallbackGroup.id,
+              },
+            )
+          : Promise.resolve(),
+      ]);
+
+      return Object.fromEntries(entries);
+    },
+    staleTime: 10 * 60 * 1000,
+    retry: false,
+  });
 
   return useMemo(() => {
     const fallbackHref = (() => {
-      if (fallbackGroupSlug) {
-        return buildCommunityTerritoryUrl(fallbackCityPath);
+      if (fallbackGroup) {
+        return buildCommunityTerritoryUrl(`${fallbackCityPath}/${fallbackGroup.slug}`);
       }
       return LAUNCH_URLS.community;
     })();
@@ -83,8 +160,18 @@ export function useHomeCommunityHref(): string {
       currentTerritoryBaseUrl: extractCurrentTerritoryBaseUrl(pathname),
       lastTerritoryBaseUrl: lastTerritory?.baseUrl,
       fallbackHref,
+      communityUrlsByTerritoryBaseUrl,
     });
-  }, [groups, homeCity?.path, homeDistrict?.path, pathname, lastTerritory?.baseUrl, fallbackGroupSlug, fallbackCityPath]);
+  }, [
+    groups,
+    homeCity?.path,
+    homeDistrict?.path,
+    pathname,
+    lastTerritory?.baseUrl,
+    fallbackGroup,
+    fallbackCityPath,
+    communityUrlsByTerritoryBaseUrl,
+  ]);
 }
 
 function extractCurrentTerritoryBaseUrl(pathname: string): string | null {
@@ -92,8 +179,8 @@ function extractCurrentTerritoryBaseUrl(pathname: string): string | null {
   if (parts.length < 3) return null;
 
   // /comunidade/:state/:city[/...]
-  if (parts[0] === "comunidade" && parts.length >= 3) {
-    return `/${parts[1]}/${parts[2]}`;
+  if (parts[0] === "comunidade") {
+    return extractCommunityTerritoryBaseUrl(pathname);
   }
 
   const moduleSlugs = new Set([
@@ -113,6 +200,10 @@ function extractCurrentTerritoryBaseUrl(pathname: string): string | null {
 
   // /[module]/:state/:city[/...]
   if (moduleSlugs.has(parts[0]) && parts.length >= 3) {
+    const firstAfterCity = parts[3];
+    if (firstAfterCity && !["categoria", "evento", "calendario", "favoritos", "mapa", "profissional", "publicar"].includes(firstAfterCity)) {
+      return `/${parts[1]}/${parts[2]}/${firstAfterCity}`;
+    }
     return `/${parts[1]}/${parts[2]}`;
   }
 

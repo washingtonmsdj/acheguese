@@ -11,7 +11,7 @@
  */
 
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase/supabase';
+import { supabase } from '@/integrations/supabase';
 import { SECURITY_DOMAINS } from '@/config/security.config';
 import {
   getAllowedRedirectOriginsFromEnv,

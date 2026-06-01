@@ -16,7 +16,7 @@ import {
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent } from "@/shared/components/ui/card";
-import { useCommunityPhotos } from "@/modules/guide/tourist-points/hooks/useCommunityPhotos";
+import { useCommunityPhotos } from "@/core/guide/tourist-points/hooks/useCommunityPhotos";
 
 interface CommunityPhotosGalleryProps {
   pointTitle: string;

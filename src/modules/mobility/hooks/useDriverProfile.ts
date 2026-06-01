@@ -2,9 +2,9 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useSessionContext } from "@/core/session";
-import { MOBILITY_QUERY_KEYS } from "@/modules/mobility/constants";
-import { useDriverProfileIdentity } from "@/modules/mobility/hooks/useDriverProfileIdentity";
-import { mobilityService } from "@/modules/mobility/services/MobilityService";
+import { MOBILITY_QUERY_KEYS } from "@/core/mobility/constants";
+import { useDriverProfileIdentity } from "@/core/mobility/hooks/useDriverProfileIdentity";
+import { mobilityService } from "@/core/mobility/services/MobilityService";
 
 export function useDriverProfile() {
   const { user } = useSessionContext();

@@ -8,8 +8,8 @@ const forbiddenDirectUsages = [
   "src/core/routing/components/TerritorialLayout.tsx",
   "src/core/routing/components/CountryLandingPage.tsx",
   "src/core/routing/components/StateLandingPage.tsx",
-  "src/core/landing/useNationalFeatured.ts",
-  "src/app/features/landing/services/LandingService.ts",
+  "src/core/landing/hooks/useNationalFeatured.ts",
+  "src/core/landing/services/LandingService.ts",
   "src/core/community/components/CommunityRolloutGate.tsx",
 ];
 

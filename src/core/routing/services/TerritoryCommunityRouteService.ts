@@ -1,7 +1,11 @@
 import { supabase } from "@/integrations/supabase";
+import {
+  isCommunityRouteableTerritoryType,
+  type CommunityRouteableTerritoryType,
+} from "@/core/community-experience/types";
 
 export interface TerritoryCommunityRoute {
-  territory_type: "neighborhood" | "district" | "territorial_group";
+  territory_type: CommunityRouteableTerritoryType;
   territory_id: string;
 }
 
@@ -19,12 +23,12 @@ export class TerritoryCommunityRouteService {
       const row = data as { territory_type?: string; territory_id?: string };
       if (
         !row.territory_id ||
-        !["neighborhood", "district", "territorial_group"].includes(row.territory_type ?? "")
+        !isCommunityRouteableTerritoryType(row.territory_type)
       ) {
         return null;
       }
       return {
-        territory_type: row.territory_type as TerritoryCommunityRoute["territory_type"],
+        territory_type: row.territory_type,
         territory_id: row.territory_id,
       };
     } catch {

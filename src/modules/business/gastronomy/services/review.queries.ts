@@ -9,7 +9,7 @@
  */
 
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/core/infrastructure/supabase';
+import { supabase } from '@/integrations/supabase';
 import { REPORT_STATUS } from '@/shared/types/constants';
 import { EntityStatus } from '@/shared/types/enums';
 const rpcDb = supabase as any;

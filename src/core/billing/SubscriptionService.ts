@@ -5,6 +5,7 @@
  */
 import { logger } from "@/shared/utils/logger";
 import { supabase } from "@/integrations/supabase";
+import { BusinessRepository, ProfileRepository } from "@/core/infrastructure/database";
 import { PlanTier, type BusinessSubscription, type SubscriptionStatus } from "./types";
 import { BILLING_SUBSCRIPTION_STATUS } from "./constants/subscription-status";
 
@@ -30,6 +31,8 @@ interface CanonicalBusinessSubscriptionRow {
 }
 
 const billingDb = supabase as any;
+const businessRepository = new BusinessRepository();
+const profileRepository = new ProfileRepository();
 
 function toPlanTier(planCode: string | null | undefined): PlanTier {
   if (planCode === PlanTier.DELIVERY || planCode?.includes("delivery")) {
@@ -97,23 +100,18 @@ function toCanonicalStatus(status: SubscriptionStatus | undefined): string {
 }
 
 async function resolveBusinessOwnerUserId(businessId: string): Promise<string | null> {
-  const { data, error } = await billingDb
-    .from("business_data")
-    .select("profiles!inner(user_id)")
-    .eq("id", businessId)
-    .maybeSingle();
+  try {
+    const business = await businessRepository.findById(businessId);
+    if (!business?.profile_id) {
+      return null;
+    }
 
-  if (error) {
+    const profile = await profileRepository.findById(business.profile_id);
+    return profile?.user_id ?? null;
+  } catch (error) {
     logger.error("[SubscriptionService] Erro ao resolver dono da empresa:", error);
     return null;
   }
-
-  const profile = data?.profiles;
-  if (Array.isArray(profile)) {
-    return profile[0]?.user_id ?? null;
-  }
-
-  return profile?.user_id ?? null;
 }
 
 async function fetchCanonicalByBusinessId(

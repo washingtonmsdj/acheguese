@@ -6,7 +6,7 @@
  */
 
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase/supabase';
+import { supabase } from '@/integrations/supabase';
 interface NeighborhoodBoundary {
   id: string;
   location_id: string;

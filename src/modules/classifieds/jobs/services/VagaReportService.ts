@@ -1,4 +1,4 @@
-import { supabase } from "@/core/infrastructure/supabase/supabase";
+import { supabase } from "@/integrations/supabase";
 import { REPORT_STATUS, type ReportStatus } from "@/shared/types/constants";
 import { trackError } from "@/shared/utils/errorTracking";
 import { logger } from "@/shared/utils/logger";

@@ -1,7 +1,7 @@
 import React from "react";
 import { MapPin, Car, Package, Users, Zap } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
-import type { RideRequest } from "@/modules/mobility/types";
+import type { RideRequest } from "@/core/mobility/types";
 import { RIDE_STATUS } from "@/shared/types/constants";
 import { useTerritoryLabels } from "@/core/location";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";

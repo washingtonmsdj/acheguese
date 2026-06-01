@@ -8,7 +8,7 @@
  */
 
 import { useReducer, useCallback, useMemo } from 'react';
-import type { RideType, PaymentMethod } from '@/modules/mobility/types';
+import type { RideType, PaymentMethod } from '@/core/mobility/types';
 import type { GeolocationCoordinates } from '@/modules/mobility/hooks/useGeolocation';
 import { PAYMENT_METHOD } from '@/shared/types/constants';
 import type { BoardingPoint } from '@/modules/mobility/components/BoardingPointsPanel';

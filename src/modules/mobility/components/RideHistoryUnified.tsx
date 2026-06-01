@@ -13,7 +13,7 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/core/auth";
-import { mobilityService } from "@/modules/mobility/services/MobilityService";
+import { mobilityService } from "@/core/mobility/services/MobilityService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
@@ -38,8 +38,8 @@ import {
 import { format } from "date-fns";
 import { ptBR } from "@/shared/utils/dateLocale";
 import { cn } from "@/shared/utils/cn";
-import { RIDE_STATUS, RIDE_MODE, MOBILITY_QUERY_KEYS } from "@/modules/mobility/constants";
-import type { RideRequest } from "@/modules/mobility/types/types";
+import { RIDE_STATUS, RIDE_MODE, MOBILITY_QUERY_KEYS } from "@/core/mobility/constants";
+import type { RideRequest } from "@/core/mobility/types/types";
 import {
   TRUST_ACTOR_ROLES,
   TRUST_CONTEXT_TYPES,

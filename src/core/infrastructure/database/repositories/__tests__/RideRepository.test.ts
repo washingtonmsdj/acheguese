@@ -9,6 +9,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { supabase } from '@/integrations/supabase';
 import { RideRepository, type Ride, type RideStatus } from '../RideRepository';
 import { DatabaseError, DatabaseErrorCode } from '../../errors/DatabaseError';
 
@@ -55,7 +56,6 @@ describe('RideRepository', () => {
     repository = new RideRepository();
     
     // Setup mock Supabase
-    const { supabase } = require('@/integrations/supabase');
     mockSupabase = {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
@@ -68,7 +68,7 @@ describe('RideRepository', () => {
       maybeSingle: vi.fn(),
       single: vi.fn(),
     };
-    supabase.from.mockReturnValue(mockSupabase);
+    (supabase.from as any).mockReturnValue(mockSupabase);
   });
 
   describe('findByPassengerId', () => {

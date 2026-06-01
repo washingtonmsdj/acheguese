@@ -19,7 +19,7 @@ import type { VendedorPerfil } from "../hooks/useVendedorPerfil";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { VendedorAdFilters, applyAdFilters, type AdFilters } from "../components/profile/VendedorAdFilters";
 import { VendedorContactBar } from "../components/profile/VendedorContactBar";
-import { classifiedUrlService } from "../services";
+import { classifiedUrlService } from "@/core/classifieds/services";
 
 export default function VendedorPerfilPage() {
   const { sellerId } = useParams<{ sellerId: string }>();

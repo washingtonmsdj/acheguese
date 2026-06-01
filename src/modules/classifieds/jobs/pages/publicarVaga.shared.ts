@@ -6,6 +6,12 @@ import {
   Phone,
   Eye,
 } from "lucide-react";
+import {
+  buildCommunityTerritoryUrl,
+  extractCommunityTerritoryBaseUrl,
+  MODULE_SLUGS,
+} from "@/core/routing/utils/territoryUrls";
+import { getCommunityAliasCandidateFromPath } from "@/core/routing/utils/communityNavigationContext";
 import { jobPublicRoutes } from "@/core/verticals/jobs/routes/jobPublicRoutes";
 import {
   CONTRATO_LABELS,
@@ -57,15 +63,22 @@ export const SUGGESTED_BENEFITS = [
 
 export function buildVagasListPath(pathname: string): string {
   const parts = pathname.split("/").filter(Boolean);
+  const aliasCandidate = getCommunityAliasCandidateFromPath(pathname);
   if (
-    parts[0] === "comunidade" &&
-    parts[1] &&
-    parts[2] &&
-    parts[3] &&
-    parts[4] === "vagas" &&
-    parts[5] === "publicar"
+    aliasCandidate &&
+    parts.at(1) === MODULE_SLUGS.jobs &&
+    parts.at(2) === "publicar"
   ) {
-    return `/comunidade/${parts[1]}/${parts[2]}/${parts[3]}/vagas`;
+    return `/${aliasCandidate}/${MODULE_SLUGS.jobs}`;
+  }
+
+  const communityTerritoryBasePath = extractCommunityTerritoryBaseUrl(pathname);
+  if (
+    communityTerritoryBasePath &&
+    parts.at(-2) === MODULE_SLUGS.jobs &&
+    parts.at(-1) === "publicar"
+  ) {
+    return buildCommunityTerritoryUrl(communityTerritoryBasePath, MODULE_SLUGS.jobs);
   }
   return jobPublicRoutes.home();
 }

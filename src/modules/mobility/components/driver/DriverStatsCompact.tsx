@@ -7,10 +7,10 @@ import {
   TrendingDown,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { mobilityService } from "@/modules/mobility/services/MobilityService";
+import { mobilityService } from "@/core/mobility/services/MobilityService";
 import { useSessionContext } from "@/core/session";
 import { profileService } from "@/core/profiles/services";
-import { MOBILITY_QUERY_KEYS, TIMEOUTS } from "@/modules/mobility/constants";
+import { MOBILITY_QUERY_KEYS, TIMEOUTS } from "@/core/mobility/constants";
 
 interface DriverStatsCompactProps {
   className?: string;

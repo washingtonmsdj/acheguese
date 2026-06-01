@@ -51,17 +51,25 @@ export function CommunityTerritorialShell() {
   const params = useParams<{
     state?: string;
     city?: string;
+    territorySlug?: string;
+    district?: string;
+    groupSlugOrDistrict?: string;
   }>();
   const [transitionMessage, setTransitionMessage] = useState<string | null>(null);
   const communityProfileQuery = useCommunityProfile(resolved);
 
   const state = params.state?.trim() ?? "";
   const city = params.city?.trim() ?? "";
+  const scopedSlug =
+    params.territorySlug?.trim() ||
+    params.district?.trim() ||
+    params.groupSlugOrDistrict?.trim() ||
+    "";
   const routeParts = location.pathname.split("/").filter(Boolean);
   const hasInvalidRouteParams = !state || !city;
   const hasLegacyAreaSegment = routeParts[0] === MODULE_SLUGS.community && routeParts[3] === "area";
   const hasInvalidCommunityRoute = hasInvalidRouteParams || hasLegacyAreaSegment;
-  const territoryBase = `/${state}/${city}`;
+  const territoryBase = scopedSlug ? `/${state}/${city}/${scopedSlug}` : `/${state}/${city}`;
   const communityBase = hasInvalidRouteParams
     ? `/${MODULE_SLUGS.community}`
     : buildCommunityTerritoryUrl(territoryBase);

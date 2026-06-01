@@ -1,4 +1,4 @@
-import type { Json } from "@/core/infrastructure/supabase";
+import type { Json } from "@/shared/types/json";
 import type { CartItem, CartItemAddon, MenuItemAddon } from "../../types/menu";
 import { money } from "../../utils/currency";
 import { PizzaPricingService } from "./PizzaPricingService";

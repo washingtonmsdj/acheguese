@@ -8,7 +8,7 @@ import {
   Clock,
 } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
-import type { DriverStats } from "@/modules/mobility/types";
+import type { DriverStats } from "@/core/mobility/types";
 
 interface DriverStatsPanelProps {
   stats: DriverStats;

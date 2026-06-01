@@ -50,10 +50,10 @@ export { HowItWorksSteps } from "./components/landing/HowItWorksSteps";
 export { MobilidadeTabs } from "./components/landing/MobilidadeTabs";
 
 // Services
-export { rideService } from "./services/RideService";
-export { driverService } from "./services/DriverService";
-export { chatService } from "./services/ChatService";
-export { MobilityService, mobilityService } from "./services/MobilityService";
+export { rideService } from "@/core/mobility/services/RideService";
+export { driverService } from "@/core/mobility/services/DriverService";
+export { chatService } from "@/core/mobility/services/ChatService";
+export { MobilityService, mobilityService } from "@/core/mobility/services/MobilityService";
 
 // Hooks - Rides
 export { useActiveRide } from "./hooks/useActiveRide";
@@ -81,17 +81,17 @@ export type {
   RideRequest,
   CreateRideData,
   UpdateRideData,
-} from "./services/RideService";
+} from "@/core/mobility/services/RideService";
 
 export type {
   DriverProfile,
   DriverStats,
   WeeklyEarning,
-} from "./services/DriverService";
+} from "@/core/mobility/services/DriverService";
 
 export type {
   RideDispatchContextRow as DriverLocation,
-} from "./services/mobility.queries";
+} from "@/core/mobility/services/mobility.queries";
 
 export type RideStats = {
   totalRides: number;
@@ -104,7 +104,7 @@ export type {
   ChatMessage,
   Conversation,
   CreateMessageData,
-} from "./services/ChatService";
+} from "@/core/mobility/services/ChatService";
 
 // Schemas
-export * from "./schemas/mobilitySchemas";
+export * from "@/core/mobility/schemas/mobilitySchemas";

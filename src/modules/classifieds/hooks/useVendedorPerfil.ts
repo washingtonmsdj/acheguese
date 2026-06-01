@@ -4,7 +4,7 @@
  */
 import { logger } from "@/shared/utils/logger";
 import { useQuery } from "@tanstack/react-query";
-import { ClassifiedsService } from "@/modules/classifieds/services";
+import { ClassifiedsService } from "@/core/classifieds/services";
 import { profileService } from "@/core/profiles/services";
 import type { VendedorWithAds } from "./useVendedores";
 

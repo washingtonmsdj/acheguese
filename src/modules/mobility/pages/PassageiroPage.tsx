@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { useMobilidade } from "@/modules/mobility/hooks/useMobilidade";
 import { useMobilityUrls } from "@/modules/mobility/hooks/useMobilityUrls";
 import { RIDE_STATUS } from "@/shared/types/constants";
-import { PASSENGER_PAGE_LABELS } from "@/modules/mobility/constants/passengerPageLabels";
+import { PASSENGER_PAGE_LABELS } from "@/core/mobility/constants/passengerPageLabels";
 import { CreateRideModal } from "../components/CreateRideModal";
 import { RideHistoryUnified } from "../components/RideHistoryUnified";
 import { RateDriverModal } from "../components/passenger/RateDriverModal";
@@ -41,7 +41,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
-import type { RideRequest } from "@/modules/mobility/types";
+import type { RideRequest } from "@/core/mobility/types";
 import { ErrorBoundary, ErrorState } from "../components/ErrorBoundary";
 
 const fadeUp = {

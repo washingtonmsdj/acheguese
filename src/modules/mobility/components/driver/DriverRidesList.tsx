@@ -29,7 +29,7 @@ import { RIDE_STATUS, PAYMENT_METHOD } from "@/shared/types/constants";
 import { toast } from "sonner";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services";
-import { mobilityService } from "@/modules/mobility/services/MobilityService";
+import { mobilityService } from "@/core/mobility/services/MobilityService";
 import { DriverTrustFeedbackPanel } from "./DriverTrustFeedbackPanel";
 import { buildTelUrl, openContactUrl } from "@/shared/utils/contactLinks";
 

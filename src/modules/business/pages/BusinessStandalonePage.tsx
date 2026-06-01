@@ -1,4 +1,3 @@
-import React from "react";
 /**
  * Página Standalone para Empresas Premium
  */
@@ -16,7 +15,7 @@ import StandaloneNav from "@/shared/components/standalone/StandaloneNav";
 import StandaloneHero from "@/shared/components/standalone/StandaloneHero";
 import StandaloneContactBar from "@/shared/components/standalone/StandaloneContactBar";
 import StandaloneAbout from "@/shared/components/standalone/StandaloneAbout";
-import StandaloneMap from "@/shared/components/standalone/StandaloneMap";
+import { LazyStandaloneMap } from "@/shared/components/standalone/LazyStandaloneMap";
 import StandaloneFooter from "@/shared/components/standalone/StandaloneFooter";
 import { logger } from "@/shared/utils/logger";
 
@@ -126,7 +125,7 @@ export default function BusinessStandalonePage({
         <StandaloneContactBar business={business as never} />
         <main className="w-full">
           <StandaloneAbout business={business as never} />
-          <StandaloneMap business={business as never} />
+          <LazyStandaloneMap business={business as never} />
         </main>
         <StandaloneFooter business={business as never} />
       </div>

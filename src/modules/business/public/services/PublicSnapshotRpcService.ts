@@ -1,4 +1,4 @@
-import { callRPC } from "@/core/infrastructure/supabase/helpers";
+import { callRPC } from "@/integrations/supabase";
 import { SERVICE_MODES } from "@/core/business/constants";
 import { logger } from "@/shared/utils/logger";
 import type {

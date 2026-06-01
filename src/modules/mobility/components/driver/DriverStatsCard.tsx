@@ -21,9 +21,9 @@ import {
 import { useSessionContext } from "@/core/session";
 import { profileService } from "@/core/profiles/services";
 import { useQuery } from "@tanstack/react-query";
-import { mobilityService } from "@/modules/mobility/services/MobilityService";
+import { mobilityService } from "@/core/mobility/services/MobilityService";
 import { ReviewsService } from "@/core/reviews/services/ReviewsService";
-import { MOBILITY_QUERY_KEYS, TIMEOUTS } from "@/modules/mobility/constants";
+import { MOBILITY_QUERY_KEYS, TIMEOUTS } from "@/core/mobility/constants";
 
 interface DriverStats {
   // Métricas principais

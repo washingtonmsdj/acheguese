@@ -1,5 +1,5 @@
 import { logger } from "@/shared/utils/logger";
-import { selectLooseRows } from "@/integrations/supabase/services/supabaseHelpers";
+import { selectLooseRows } from "@/integrations/supabase";
 
 import type { Profile } from "./types";
 

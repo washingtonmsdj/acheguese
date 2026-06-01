@@ -9,7 +9,7 @@
  */
 import { logger } from '@/shared/utils/logger';
 import { useState, useEffect, useCallback } from 'react';
-import { classifiedsRolloutService } from '../services';
+import { classifiedsRolloutService } from '@/core/classifieds/services';
 import { useClassifiedsLocation } from './useClassifiedsLocation';
 import type { EffectiveRollout } from '@/core/rollout/types';
 export function useClassifiedsRollout() {

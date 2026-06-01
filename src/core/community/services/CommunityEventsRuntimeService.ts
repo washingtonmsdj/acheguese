@@ -1,5 +1,5 @@
-import { supabase } from "@/integrations/supabase/supabase";
-import type { Json } from "@/integrations/supabase/types.generated";
+import { supabase } from "@/integrations/supabase";
+import type { Json } from "@/integrations/supabase";
 import type { TerritoryFilter } from "@/core/location/types";
 import { logger } from "@/shared/utils/logger";
 import { sanitizeForILike } from "@/shared/utils/sqlSanitization";

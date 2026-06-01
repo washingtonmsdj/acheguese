@@ -2,12 +2,16 @@ import { describe, expect, it } from "vitest";
 
 import {
   MODULE_SLUGS,
+  buildCommunityAliasUrl,
+  buildCommunityTabUrlFromPath,
+  buildCommunityTerritoryUrl,
   buildGroupModuleUrl,
   buildLocationModuleUrl,
   buildModuleTerritoryEntityUrl,
   buildModuleTerritoryUrl,
   buildModuleTerritoryUrlFromSegments,
   buildTerritoryModuleUrl,
+  extractCommunityTerritoryBaseUrl,
   normalizePublicTerritoryPath,
 } from "@/core/routing/utils/territoryUrls";
 
@@ -100,5 +104,57 @@ describe("module-first territory urls", () => {
         MODULE_SLUGS.gastronomy,
       ),
     ).toBe("/gastronomia/ba/salvador/pituba");
+  });
+});
+
+describe("community territory urls", () => {
+  it("preserva bairro ou grupo na URL comunitaria canonica", () => {
+    expect(buildCommunityTerritoryUrl("/ba/salvador")).toBe(
+      "/comunidade/ba/salvador",
+    );
+    expect(buildCommunityTerritoryUrl("/ba/salvador/chapada-do-rio-vermelho")).toBe(
+      "/comunidade/ba/salvador/chapada-do-rio-vermelho",
+    );
+    expect(
+      buildCommunityTerritoryUrl(
+        "/ba/salvador/complexo-do-nordeste-de-amaralina",
+        "feed",
+      ),
+    ).toBe("/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/feed");
+  });
+
+  it("gera abas sociais preservando o escopo territorial atual", () => {
+    expect(
+      buildCommunityTabUrlFromPath(
+        "/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina",
+        "feed",
+      ),
+    ).toBe("/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/feed");
+  });
+
+  it("monta alias publico curto de comunidade na raiz", () => {
+    expect(buildCommunityAliasUrl("santa-cruz")).toBe("/santa-cruz");
+    expect(buildCommunityAliasUrl("santa-cruz", "empresas")).toBe(
+      "/santa-cruz/empresas",
+    );
+    expect(() => buildCommunityAliasUrl("santa/cruz")).toThrow("segmento de URL");
+  });
+
+  it("extrai o territorio de rotas comunitarias sem confundir modulos com bairro", () => {
+    expect(extractCommunityTerritoryBaseUrl("/comunidade/ba/salvador")).toBe(
+      "/ba/salvador",
+    );
+    expect(
+      extractCommunityTerritoryBaseUrl("/comunidade/ba/salvador/feed"),
+    ).toBe("/ba/salvador");
+    expect(
+      extractCommunityTerritoryBaseUrl("/comunidade/ba/salvador/empresas"),
+    ).toBe("/ba/salvador");
+    expect(
+      extractCommunityTerritoryBaseUrl("/comunidade/ba/salvador/chapada-do-rio-vermelho/empresas"),
+    ).toBe("/ba/salvador/chapada-do-rio-vermelho");
+    expect(
+      extractCommunityTerritoryBaseUrl("/comunidade/santa-cruz/empresas"),
+    ).toBeNull();
   });
 });

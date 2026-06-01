@@ -1,7 +1,7 @@
 import React from "react";
 import { RideRequestCard } from "./index";
 import { Car, Package, Loader2 } from "lucide-react";
-import type { RideRequest } from "@/modules/mobility/types";
+import type { RideRequest } from "@/core/mobility/types";
 
 interface MobilidadeFeedProps {
   rides: RideRequest[];

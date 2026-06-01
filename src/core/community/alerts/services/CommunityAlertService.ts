@@ -8,8 +8,8 @@
  */
 
 import { supabase } from "@/integrations/supabase";
-import { callRPC, insertLooseRow } from "@/integrations/supabase/services/supabaseHelpers";
-import type { Database } from "@/integrations/supabase/types.generated";
+import { callRPC, insertLooseRow } from "@/integrations/supabase";
+import type { Database } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { SessionService } from "@/core/session/services/SessionService";
 import type {

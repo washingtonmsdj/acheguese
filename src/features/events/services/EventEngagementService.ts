@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/supabase";
+import { supabase } from "@/integrations/supabase";
 import { ProfileSavedEntityService, type ProfileSavedEntityConfig } from "@/core/engagement/services/ProfileSavedEntityService";
 import { logger } from "@/shared/utils/logger";
 

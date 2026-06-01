@@ -8,9 +8,9 @@ import { logger } from '@/shared/utils/logger';
 import type { Location, TerritorialGroupWithMembers } from '@/core/location/types';
 import {
   MODULE_SLUGS,
+  buildCommunityAliasUrl,
   buildGroupBaseUrl,
   buildModuleTerritoryUrl,
-  buildCommunityTerritoryUrl,
   geoPathToPublicUrl,
 } from '@/core/routing/utils/territoryUrls';
 import { LocationsReadService } from '@/core/location/services/LocationsReadService';
@@ -60,9 +60,8 @@ function generateTerritoryUrls(
   baseUrl: string,
   publicPath: string,
   isGroup: boolean,
+  communityAlias?: string | null,
 ): SitemapUrl[] {
-  const pathParts = publicPath.split('/').filter(Boolean);
-  const isCityPath = pathParts.length === 2;
   const urls: SitemapUrl[] = [
     {
       loc: `${baseUrl}${publicPath}`,
@@ -86,20 +85,30 @@ function generateTerritoryUrls(
     });
   });
 
-  if (!isGroup && isCityPath) {
+  if (communityAlias) {
     urls.push(
       {
-        loc: `${baseUrl}${buildCommunityTerritoryUrl(publicPath)}`,
+        loc: `${baseUrl}${buildCommunityAliasUrl(communityAlias)}`,
+        changefreq: 'daily',
+        priority: 0.8,
+      },
+      {
+        loc: `${baseUrl}${buildCommunityAliasUrl(communityAlias, 'empresas')}`,
         changefreq: 'daily',
         priority: 0.7,
       },
       {
-        loc: `${baseUrl}${buildCommunityTerritoryUrl(publicPath, 'feed')}`,
+        loc: `${baseUrl}${buildCommunityAliasUrl(communityAlias, 'gastronomia')}`,
+        changefreq: 'daily',
+        priority: 0.7,
+      },
+      {
+        loc: `${baseUrl}${buildCommunityAliasUrl(communityAlias, 'feed')}`,
         changefreq: 'hourly',
         priority: 0.8,
       },
       {
-        loc: `${baseUrl}${buildCommunityTerritoryUrl(publicPath, 'grupos')}`,
+        loc: `${baseUrl}${buildCommunityAliasUrl(communityAlias, 'grupos')}`,
         changefreq: 'daily',
         priority: 0.7,
       },
@@ -107,6 +116,16 @@ function generateTerritoryUrls(
   }
 
   return urls;
+}
+
+function getDistrictAliasFromPublicPath(publicPath: string): string | null {
+  const parts = publicPath.split('/').filter(Boolean);
+  return parts.length === 3 ? parts[2] : null;
+}
+
+function incrementAliasCount(counts: Map<string, number>, alias: string | null | undefined) {
+  if (!alias) return;
+  counts.set(alias, (counts.get(alias) ?? 0) + 1);
 }
 
 export function generateSitemap(
@@ -138,10 +157,36 @@ export function generateSitemap(
     });
   });
 
+  const aliasCounts = new Map<string, number>();
+  locations
+    .filter((location) => location.status === 'active' && location.type === 'district')
+    .forEach((location) => {
+      incrementAliasCount(
+        aliasCounts,
+        getDistrictAliasFromPublicPath(geoPathToPublicUrl(location.geographic_path)),
+      );
+    });
+  groups
+    .filter((group) => group.status === 'active')
+    .forEach((group) => incrementAliasCount(aliasCounts, group.slug));
+
+  const getUniqueAlias = (alias: string | null | undefined) =>
+    alias && aliasCounts.get(alias) === 1 ? alias : null;
+
   locations
     .filter((location) => location.status === 'active')
     .forEach((location) => {
-      urls.push(...generateTerritoryUrls(normalizedBaseUrl, geoPathToPublicUrl(location.geographic_path), false));
+      const publicPath = geoPathToPublicUrl(location.geographic_path);
+      urls.push(
+        ...generateTerritoryUrls(
+          normalizedBaseUrl,
+          publicPath,
+          false,
+          location.type === 'district'
+            ? getUniqueAlias(getDistrictAliasFromPublicPath(publicPath))
+            : null,
+        ),
+      );
     });
 
   groups
@@ -151,7 +196,14 @@ export function generateSitemap(
       if (firstMember?.geographic_path) {
         const parts = firstMember.geographic_path.split('/').filter(Boolean);
         const groupPath = buildGroupBaseUrl(group, `/${parts[0]}/${parts[1]}/${parts[2]}`);
-        urls.push(...generateTerritoryUrls(normalizedBaseUrl, groupPath, true));
+        urls.push(
+          ...generateTerritoryUrls(
+            normalizedBaseUrl,
+            groupPath,
+            true,
+            getUniqueAlias(group.slug),
+          ),
+        );
       }
     });
 

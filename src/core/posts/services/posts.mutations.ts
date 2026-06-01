@@ -15,7 +15,7 @@ import { LocationType, EntityStatus } from "@/shared/types/enums";
 import type { Post, CreatePostData, UpdatePostData } from "../types";
 import { PostError } from "../types";
 import * as queries from "./posts.queries";
-import type { Json } from "@/integrations/supabase/types";
+import type { Json } from "@/integrations/supabase";
 
 export type CreatePostTerritoryPolicy = {
   allowedLocationTypes?: readonly LocationType[];

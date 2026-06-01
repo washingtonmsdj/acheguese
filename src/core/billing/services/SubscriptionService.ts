@@ -9,7 +9,7 @@
  */
 
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase/supabase';
+import { supabase } from '@/integrations/supabase';
 import { SessionService } from '@/core/session/services/SessionService';
 const subscriptionDb = supabase as any;
 export interface UserSubscription {

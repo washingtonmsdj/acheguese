@@ -1,10 +1,12 @@
 import { useParams } from 'react-router-dom';
 import { LAUNCH_URLS } from '@/config/territory';
 import { isReservedSlug } from '@/core/routing/reservedSlugs';
+import { useTerritorialContextOptional } from '@/core/routing/components/TerritorialLayout';
 import {
   buildCommunityTerritoryUrl,
   buildModuleTerritoryUrl,
   hasPublicCityTerritoryPath,
+  type ModuleSlug,
   MODULE_SLUGS,
 } from '@/core/routing/utils/territoryUrls';
 
@@ -18,6 +20,7 @@ export interface ModuleUrls {
 }
 
 export function useModuleUrls(): ModuleUrls {
+  const territorialContext = useTerritorialContextOptional();
   const { state, city, district, groupSlug, groupSlugOrDistrict } = useParams<{
     state?: string;
     city?: string;
@@ -25,6 +28,19 @@ export function useModuleUrls(): ModuleUrls {
     groupSlug?: string;
     groupSlugOrDistrict?: string;
   }>();
+
+  if (territorialContext) {
+    const territoryName =
+      territorialContext.resolved?.kind === 'group'
+        ? territorialContext.resolved.group.name
+        : territorialContext.resolved?.location.name ?? null;
+
+    return buildTerritorialModuleUrls(
+      territorialContext.baseUrl,
+      territoryName,
+      territorialContext.communityBaseUrl,
+    );
+  }
 
   if (state && city && !isReservedSlug(state)) {
     const base = groupSlug
@@ -48,14 +64,35 @@ export function useModuleUrls(): ModuleUrls {
   };
 }
 
-function buildTerritorialModuleUrls(base: string, territoryName: string | null): ModuleUrls {
+function buildScopedModuleUrl(
+  module: ModuleSlug,
+  base: string,
+  communityBaseUrl?: string | null,
+): string {
+  if (communityBaseUrl === base) {
+    return `${base}/${module}`;
+  }
+
+  return buildModuleTerritoryUrl(module, base);
+}
+
+function buildTerritorialModuleUrls(
+  base: string,
+  territoryName: string | null,
+  communityBaseUrl?: string | null,
+): ModuleUrls {
+  const community = communityBaseUrl ??
+    (hasPublicCityTerritoryPath(base)
+      ? buildCommunityTerritoryUrl(base)
+      : LAUNCH_URLS.community);
+
   return {
     base,
     territoryName,
-    community: hasPublicCityTerritoryPath(base) ? buildCommunityTerritoryUrl(base) : LAUNCH_URLS.community,
-    business: buildModuleTerritoryUrl(MODULE_SLUGS.business, base),
-    services: buildModuleTerritoryUrl(MODULE_SLUGS.services, base),
-    classifieds: buildModuleTerritoryUrl(MODULE_SLUGS.classifieds, base),
+    community,
+    business: buildScopedModuleUrl(MODULE_SLUGS.business, base, communityBaseUrl),
+    services: buildScopedModuleUrl(MODULE_SLUGS.services, base, communityBaseUrl),
+    classifieds: buildScopedModuleUrl(MODULE_SLUGS.classifieds, base, communityBaseUrl),
   };
 }
 

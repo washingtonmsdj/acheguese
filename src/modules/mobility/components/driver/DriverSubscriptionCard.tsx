@@ -14,7 +14,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { cn } from "@/shared/utils/cn";
 import { getRecordValue } from "@/shared/utils/recordLookup";
-import type { DriverPlan } from "@/modules/mobility/types";
+import type { DriverPlan } from "@/core/mobility/types";
 import { toast } from "sonner";
 import { BillingService } from "@/core/billing/services/BillingService";
 import { buildPublicAbsoluteUrl } from "@/shared/config/publicAppOrigin";

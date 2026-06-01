@@ -29,7 +29,7 @@ export const MAP_PRODUCT_SURFACES: MapProductSurface[] = [
   },
   {
     route: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.map),
-    owner: "src/core/routing/components/TerritorialModulePages.tsx",
+    owner: "src/app/routes/territorial/TerritorialModulePages.tsx",
     status: "official",
     note: "Superficie territorial canonica do mapa.",
   },
@@ -37,7 +37,7 @@ export const MAP_PRODUCT_SURFACES: MapProductSurface[] = [
     route: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.map, [
       TERRITORIAL_ROUTE_PARAMS.district,
     ]),
-    owner: "src/core/routing/components/TerritorialModulePages.tsx",
+    owner: "src/app/routes/territorial/TerritorialModulePages.tsx",
     status: "official",
     note: "Mapa contextual por bairro.",
   },

@@ -9,7 +9,7 @@
  * - Edge functions chamam RPCs via service_role
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase/supabase';
+import { supabase } from '@/integrations/supabase';
 import { SessionService } from '@/core/session/services/SessionService';
 import { buildSupabaseFunctionUrl } from '@/shared/config/publicSupabase';
 import type { ServiceResponse } from './types';

@@ -1,4 +1,4 @@
-import { supabase } from "@/core/infrastructure/supabase";
+import { supabase } from "@/integrations/supabase";
 import type { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 
 type RealtimeChannelStatus = string;

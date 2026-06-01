@@ -1,25 +1,25 @@
 /**
  * Canonical cross-domain entrypoint for mobility runtime services.
  */
-export { mobilityService, MobilityService } from '@/modules/mobility/services/MobilityService.impl';
-export { DriverAvailabilityService } from '@/modules/mobility/services/DriverAvailabilityService';
+export { mobilityService, MobilityService } from '@/core/mobility/services/MobilityService.impl';
+export { DriverAvailabilityService } from '@/core/mobility/services/DriverAvailabilityService';
 export {
   MobilityRolloutService,
   mobilityRolloutService,
-} from '@/modules/mobility/services/MobilityRolloutService';
+} from '@/core/mobility/services/MobilityRolloutService';
 export {
   DriverModerationEventsService,
-} from '@/modules/mobility/services/DriverModerationEventsService';
+} from '@/core/mobility/services/DriverModerationEventsService';
 export type {
   DriverModerationAction,
   DriverModerationEvent,
-} from '@/modules/mobility/services/DriverModerationEventsService';
-export { RideReportsService } from '@/modules/mobility/services/RideReportsService';
+} from '@/core/mobility/services/DriverModerationEventsService';
+export { RideReportsService } from '@/core/mobility/services/RideReportsService';
 export type {
   RideReport,
   ReportStatus,
   ReportSeverity,
   ReportType,
   ReporterType,
-} from '@/modules/mobility/services/RideReportsService';
+} from '@/core/mobility/services/RideReportsService';
 export type { RideRequest } from '@/core/mobility/types/types';

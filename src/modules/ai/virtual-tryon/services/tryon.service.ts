@@ -1,6 +1,6 @@
-import { supabase } from '@/core/infrastructure/supabase';
+import { supabase } from '@/integrations/supabase';
 import { mediaService } from '@/core/media/services/MediaService';
-import type { Database } from '@/core/infrastructure/supabase/types.generated';
+import type { Database } from '@/integrations/supabase';
 import type {
   CreateTryOnInput,
   TryOnGeneration,

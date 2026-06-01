@@ -6,7 +6,7 @@
  * porque o schema gerado usa enums do banco que não estão nos tipos de domínio.
  */
 
-import { supabase } from '@/integrations/supabase/supabase';
+import { supabase } from '@/integrations/supabase';
 import type { IAddressRepository } from './IAddressRepository';
 import type { Address, CreateAddressInput, UpdateAddressInput } from '../types';
 

@@ -18,7 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/shared/components/ui/dialog';
-import { MiniMap } from '@/shared/components/maps/MiniMap';
+import { LazyMiniMap } from '@/shared/components/maps/LazyMiniMap';
 import { toast } from '@/shared/components/ui/use-toast';
 
 interface TouristPointMapSectionProps {
@@ -56,7 +56,7 @@ export function TouristPointMapSection({
   return (
     <>
       <Card className="overflow-hidden">
-        <MiniMap
+        <LazyMiniMap
           latitude={latitude}
           longitude={longitude}
           title={title}

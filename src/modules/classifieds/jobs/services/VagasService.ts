@@ -18,7 +18,7 @@
  * @version 3.0.0 - Service Completo AAA
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/core/infrastructure/supabase/supabase';
+import { supabase } from '@/integrations/supabase';
 import {
   ProfileSavedEntityService,
   type ProfileSavedEntityConfig,

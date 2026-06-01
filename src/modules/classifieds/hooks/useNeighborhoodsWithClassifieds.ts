@@ -10,7 +10,7 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
-import { ClassifiedsService } from "@/modules/classifieds/services";
+import { ClassifiedsService } from "@/core/classifieds/services";
 
 export interface NeighborhoodWithCount {
   location_id: string;

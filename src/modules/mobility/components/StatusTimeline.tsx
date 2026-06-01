@@ -1,5 +1,5 @@
 import { RIDE_STATUS } from "@/shared/types/constants";
-import { RideRequest } from "@/modules/mobility/types";
+import { RideRequest } from "@/core/mobility/types";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "@/shared/utils/dateLocale";
 import { Car, CheckCircle2, FileText, MapPin, User, XCircle, type LucideIcon } from "lucide-react";

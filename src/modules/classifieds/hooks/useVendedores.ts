@@ -3,7 +3,7 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
-import { ClassifiedsService } from "@/modules/classifieds/services";
+import { ClassifiedsService } from "@/core/classifieds/services";
 import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
 import { territoryFilterKey } from "@/core/location/hooks/useTerritoryFilter";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";

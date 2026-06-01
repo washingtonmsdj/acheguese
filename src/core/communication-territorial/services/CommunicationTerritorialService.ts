@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase";
-import { selectLooseRows } from "@/integrations/supabase/services/supabaseHelpers";
+import { selectLooseRows } from "@/integrations/supabase";
 import { SessionService } from "@/core/session/services/SessionService";
 import { PublicIdentityService } from "@/core/public-identity";
 import type {

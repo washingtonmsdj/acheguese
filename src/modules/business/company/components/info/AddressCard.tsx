@@ -10,7 +10,7 @@
 
 import { MapPin, Navigation, ExternalLink, Store } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
-import StandaloneMap from '@/shared/components/standalone/StandaloneMap';
+import { LazyStandaloneMap } from '@/shared/components/standalone/LazyStandaloneMap';
 import { getCoordinates } from '@/core/business/services/business.helpers';
 import type { AddressCardProps } from '../../sections/types';
 
@@ -22,7 +22,7 @@ export function AddressCard({
 }: AddressCardProps) {
   // SSOT: resolve coordenadas por helper canônico (address/location/metadata)
   if (getCoordinates(business)) {
-    return <StandaloneMap business={business} />;
+    return <LazyStandaloneMap business={business} />;
   }
 
   // Fallback: Card com endereço estilizado

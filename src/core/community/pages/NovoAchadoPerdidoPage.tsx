@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+import type { ChangeEvent } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { mediaService } from "@/core/media/services/MediaService";
@@ -30,7 +31,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/shared/components/ui/popover";
-import { LocationPickerSheet } from "@/shared/components/LocationPickerSheet";
 import { useToast } from "@/shared/hooks/use-toast";
 import { lostFoundRuntimeService as lostFoundService } from "@/core/community/services/LostFoundRuntimeService";
 import { useAuth } from "@/core/auth/hooks/useAuth";
@@ -51,6 +51,12 @@ import {
 } from "@/shared/validation/schemas/lostfound.schema";
 
 type TerritorySelectOption = Pick<LocationOption, "id" | "name" | "type">;
+
+const LazyLocationPickerSheet = lazy(() =>
+  import("@/shared/components/LocationPickerSheet").then((module) => ({
+    default: module.LocationPickerSheet,
+  })),
+);
 
 export default function NovoAchadoPerdidoPage() {
   const navigate = useNavigate();
@@ -131,7 +137,7 @@ export default function NovoAchadoPerdidoPage() {
     }
   }, [homeDistrict?.id, homeDistrict?.name, selectedLocationId, setValue, territoryOptions]);
 
-  const handleFotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFotoChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setFotoFile(file);
@@ -472,18 +478,21 @@ export default function NovoAchadoPerdidoPage() {
         </Button>
       </form>
 
-      {/* Location Picker Sheet */}
-      <LocationPickerSheet
-        open={locationPickerOpen}
-        onOpenChange={setLocationPickerOpen}
-        initialLat={watchLatitude || undefined}
-        initialLng={watchLongitude || undefined}
-        onConfirm={(lat, lng) => {
-          setValue("latitude", lat);
-          setValue("longitude", lng);
-          setLocationPickerOpen(false);
-        }}
-      />
+      {locationPickerOpen && (
+        <Suspense fallback={null}>
+          <LazyLocationPickerSheet
+            open={locationPickerOpen}
+            onOpenChange={setLocationPickerOpen}
+            initialLat={watchLatitude || undefined}
+            initialLng={watchLongitude || undefined}
+            onConfirm={(lat, lng) => {
+              setValue("latitude", lat);
+              setValue("longitude", lng);
+              setLocationPickerOpen(false);
+            }}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }

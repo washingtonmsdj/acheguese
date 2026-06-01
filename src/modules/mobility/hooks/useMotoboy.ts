@@ -17,7 +17,7 @@
  */
 
 import { useDelivery, type CreateDeliveryData, type DeliveryProof } from "./useDelivery";
-import type { SourceType } from "../constants";
+import type { SourceType } from "@/core/mobility/constants";
 
 interface UseMotoboyOptions {
   sourceType: SourceType;

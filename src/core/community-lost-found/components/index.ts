@@ -1,4 +1,6 @@
 export {
   LostFoundMiniMap,
-  LostFoundLocationCard,
 } from "./LostFoundMiniMap";
+export {
+  LostFoundLocationCard,
+} from "./LostFoundLocationCard";

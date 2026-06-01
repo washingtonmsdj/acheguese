@@ -8,7 +8,7 @@
  */
 import { logger } from '@/shared/utils/logger';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { deleteDriverNeighborhood, deleteDriverServiceArea } from '../services/mobility.mutations';
+import { deleteDriverNeighborhood, deleteDriverServiceArea } from '@/core/mobility/services/mobility.mutations';
 import { toast } from 'sonner';
 
 export function useDriverServiceArea() {

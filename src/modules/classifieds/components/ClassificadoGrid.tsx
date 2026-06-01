@@ -22,7 +22,7 @@ import { ClassificadoCard } from "./ClassificadoCard";
 import { AnimatePresence, motion } from "framer-motion";
 import { useClassifiedsAd } from "@/modules/classifieds/hooks/useClassifiedsAd";
 import { SponsoredAdCard } from "@/core/business/promotions";
-import type { ClassificadoWithVendedor } from "@/modules/classifieds/hooks/useClassificados";
+import type { ClassificadoWithVendedor } from "@/core/classifieds/hooks/useClassificados";
 
 interface ClassificadoGridProps {
   classificados: ClassificadoWithVendedor[];

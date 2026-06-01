@@ -23,7 +23,7 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import { cn } from "@/shared/utils/cn";
 import { motion, AnimatePresence } from "framer-motion";
 import { RIDE_STATUS, USER_ROLE } from "@/shared/types/constants";
-import { FILTER_TYPES } from "../../constants";
+import { FILTER_TYPES } from "@/core/mobility/constants";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import {
@@ -31,7 +31,7 @@ import {
   getRideBasicInfo,
   getLastMessage,
   getUnreadCount,
-} from "@/modules/mobility/services/mobility.queries";
+} from "@/core/mobility/services/mobility.queries";
 
 interface RideChatPreview {
   id: string;

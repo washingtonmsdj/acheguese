@@ -7,7 +7,7 @@
  * @version 2.0.0 - Refatoração SSOT
  */
 
-import { selectLooseRows } from "@/integrations/supabase/services/supabaseHelpers";
+import { selectLooseRows } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 import type {

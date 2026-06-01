@@ -7,6 +7,7 @@ export const TERRITORIAL_ROUTE_PARAMS = {
   district: ":district",
   territorySlug: ":territorySlug",
   groupSlugOrDistrict: ":groupSlugOrDistrict",
+  communitySlug: ":communitySlug",
   slug: ":slug",
   eventId: ":eventId",
   id: ":id",
@@ -82,4 +83,23 @@ export function buildCommunityTerritoryRoutePath(
   suffixSegments: readonly string[] = [],
 ): string {
   return buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.community, suffixSegments);
+}
+
+export function buildCommunityAliasRoutePath(
+  suffixSegments: readonly string[] = [],
+): string {
+  return joinRoutePath([
+    APP_MODULE_SLUGS.community,
+    TERRITORIAL_ROUTE_PARAMS.communitySlug,
+    ...suffixSegments,
+  ]);
+}
+
+export function buildCommunityRootAliasRoutePath(
+  suffixSegments: readonly string[] = [],
+): string {
+  return joinRoutePath([
+    TERRITORIAL_ROUTE_PARAMS.communitySlug,
+    ...suffixSegments,
+  ]);
 }

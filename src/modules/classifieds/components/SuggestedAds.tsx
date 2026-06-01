@@ -2,7 +2,7 @@ import { memo } from "react";
 import { Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { ClassificadoCard } from "./ClassificadoCard";
-import type { ClassificadoWithVendedor } from "@/modules/classifieds/hooks/useClassificados";
+import type { ClassificadoWithVendedor } from "@/core/classifieds/hooks/useClassificados";
 
 interface SuggestedAdsProps {
   ads: ClassificadoWithVendedor[];

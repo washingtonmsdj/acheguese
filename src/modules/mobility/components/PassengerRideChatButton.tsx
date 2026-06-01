@@ -3,7 +3,7 @@ import { Button } from "@/shared/components/ui/button";
 import { MessageCircle } from "lucide-react";
 import { RideChatDialog } from "./RideChatDialog";
 import { useSessionContext } from "@/core/session";
-import type { RideRequest } from "@/modules/mobility/types";
+import type { RideRequest } from "@/core/mobility/types";
 
 type ChatRide = RideRequest & {
   driver?: { name?: string | null } | null;

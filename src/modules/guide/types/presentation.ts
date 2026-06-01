@@ -1,4 +1,4 @@
-import { CATEGORY_ICONS, type TouristPoint, type TouristPointCategory } from '@/modules/guide/tourist-points/types';
+import { CATEGORY_ICONS, type TouristPoint, type TouristPointCategory } from '@/core/guide/tourist-points/types';
 import type { LucideIcon } from 'lucide-react';
 
 export interface TouristPointCategoryShortcut {

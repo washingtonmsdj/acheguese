@@ -10,10 +10,10 @@
 
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { mobilityLocationService } from '../services/MobilityLocationService';
+import { mobilityLocationService } from '@/core/mobility/services/MobilityLocationService';
 import { useLocationContext } from '@/core/location/hooks/useLocationContext';
 import type { TerritoryFilter } from '@/core/location/types';
-import { MOBILITY_QUERY_KEYS, TIMEOUTS } from '../constants';
+import { MOBILITY_QUERY_KEYS, TIMEOUTS } from '@/core/mobility/constants';
 
 export function useMobilityLocation() {
   // Reage a mudanças no contexto geográfico ativo

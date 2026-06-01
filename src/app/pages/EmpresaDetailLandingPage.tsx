@@ -43,17 +43,28 @@ import type { BusinessOperationConfig } from "@/core/business/BusinessHoursServi
 
 interface EmpresaDetailLandingPageProps {
   businessId?: string;
+  routeParams?: {
+    state?: string;
+    city?: string;
+    district?: string;
+    slug?: string;
+  };
+  canonicalPathOverride?: string;
 }
 
 export default function EmpresaDetailLandingPage(
-  _props: EmpresaDetailLandingPageProps = {},
+  props: EmpresaDetailLandingPageProps = {},
 ) {
-  const { state, city, district, slug } = useParams<{
+  const urlParams = useParams<{
     state: string;
     city: string;
     district: string;
     slug: string;
   }>();
+  const state = props.routeParams?.state ?? urlParams.state;
+  const city = props.routeParams?.city ?? urlParams.city;
+  const district = props.routeParams?.district ?? urlParams.district;
+  const slug = props.routeParams?.slug ?? urlParams.slug;
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -351,7 +362,7 @@ export default function EmpresaDetailLandingPage(
         name={business.name}
         description={snapshot.seo.description}
         image={business.banner_url || business.logo_url}
-        url={`${window.location.origin}${snapshot.seo.canonical}`}
+        url={`${window.location.origin}${props.canonicalPathOverride ?? snapshot.seo.canonical}`}
         category={business.category}
         rating={snapshot.institutional.rating}
         reviewCount={snapshot.institutional.reviewCount}

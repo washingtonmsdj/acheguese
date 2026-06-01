@@ -9,8 +9,8 @@
  * Contexto geográfico: resolvido automaticamente pela fundação via AdDeliveryService
  */
 
-import { useAdDelivery } from '@/modules/business/promotions';
-import type { AdCampaignWithTargets } from '@/modules/business/promotions';
+import { useAdDelivery } from '@/core/business/promotions';
+import type { AdCampaignWithTargets } from '@/core/business/promotions';
 
 interface UseBusinessAdReturn {
   /** Campanha elegível para o contexto atual, ou null */

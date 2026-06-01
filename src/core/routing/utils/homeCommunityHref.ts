@@ -2,7 +2,9 @@ import { LAUNCH_URLS } from "@/config/territory";
 import {
   buildCommunityTerritoryUrl,
   hasPublicCityTerritoryPath,
+  isCommunityCanonicalSuffixSegment,
   MODULE_SLUGS,
+  normalizePublicTerritoryPath,
 } from "@/core/routing/utils/territoryUrls";
 
 export interface HomeCommunityGroupCandidate {
@@ -18,17 +20,43 @@ export interface HomeCommunityHrefInput {
   currentTerritoryBaseUrl?: string | null;
   lastTerritoryBaseUrl?: string | null;
   fallbackHref?: string;
+  communityUrlsByTerritoryBaseUrl?: Record<string, string | null | undefined>;
 }
 
 function isActiveGroup(status: unknown): boolean {
   return String(status).toLowerCase() === "active";
 }
 
-function normalizeCommunityFallbackHref(href: string | null | undefined): string | null {
+function normalizeTerritoryBaseKey(path: string): string {
+  return normalizePublicTerritoryPath(path).replace(/\/+$/, "");
+}
+
+function resolveCommunityUrlForTerritory(
+  territoryBaseUrl: string,
+  input: Pick<HomeCommunityHrefInput, "communityUrlsByTerritoryBaseUrl">,
+): string {
+  const key = normalizeTerritoryBaseKey(territoryBaseUrl);
+  return input.communityUrlsByTerritoryBaseUrl?.[key] ?? buildCommunityTerritoryUrl(key);
+}
+
+function isShortCommunityBaseHref(href: string | null | undefined): href is string {
+  if (!href || !href.startsWith("/") || /[?#]/.test(href)) return false;
+  const parts = href.split("/").filter(Boolean);
+  return parts.length === 1 && parts[0] !== MODULE_SLUGS.community;
+}
+
+function normalizeCommunityFallbackHref(
+  href: string | null | undefined,
+  input: Pick<HomeCommunityHrefInput, "communityUrlsByTerritoryBaseUrl">,
+): string | null {
   if (!href) return null;
   const parts = href.split("/").filter(Boolean);
   if (parts[0] === MODULE_SLUGS.community && parts[1] && parts[2]) {
-    return buildCommunityTerritoryUrl(`/${parts[1]}/${parts[2]}`);
+    const territoryParts = [parts[1], parts[2]];
+    if (parts[3] && !isCommunityCanonicalSuffixSegment(parts[3])) {
+      territoryParts.push(parts[3]);
+    }
+    return resolveCommunityUrlForTerritory(`/${territoryParts.join("/")}`, input);
   }
   return href;
 }
@@ -63,22 +91,33 @@ export function resolveHomeCommunityHref(input: HomeCommunityHrefInput): string 
   const activeGroup = preferredGroup ?? activeGroups[0];
 
   if (activeGroup && input.homeCityPath) {
-    return buildCommunityTerritoryUrl(input.homeCityPath);
+    return resolveCommunityUrlForTerritory(
+      `${input.homeCityPath}/${activeGroup.slug}`,
+      input,
+    );
   }
 
   if (input.homeDistrictPath) {
-    return buildCommunityTerritoryUrl(input.homeDistrictPath);
+    return resolveCommunityUrlForTerritory(input.homeDistrictPath, input);
+  }
+
+  if (input.homeCityPath) {
+    return resolveCommunityUrlForTerritory(input.homeCityPath, input);
   }
 
   const currentTerritoryBaseUrl = input.currentTerritoryBaseUrl;
   if (currentTerritoryBaseUrl && hasPublicCityTerritoryPath(currentTerritoryBaseUrl)) {
-    return buildCommunityTerritoryUrl(currentTerritoryBaseUrl);
+    return resolveCommunityUrlForTerritory(currentTerritoryBaseUrl, input);
   }
 
   const lastTerritoryBaseUrl = input.lastTerritoryBaseUrl;
-  if (lastTerritoryBaseUrl && hasPublicCityTerritoryPath(lastTerritoryBaseUrl)) {
-    return buildCommunityTerritoryUrl(lastTerritoryBaseUrl);
+  if (isShortCommunityBaseHref(lastTerritoryBaseUrl)) {
+    return lastTerritoryBaseUrl;
   }
 
-  return normalizeCommunityFallbackHref(input.fallbackHref) ?? LAUNCH_URLS.community;
+  if (lastTerritoryBaseUrl && hasPublicCityTerritoryPath(lastTerritoryBaseUrl)) {
+    return resolveCommunityUrlForTerritory(lastTerritoryBaseUrl, input);
+  }
+
+  return normalizeCommunityFallbackHref(input.fallbackHref, input) ?? LAUNCH_URLS.community;
 }

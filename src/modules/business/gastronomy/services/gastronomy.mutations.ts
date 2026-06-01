@@ -6,8 +6,8 @@
  *
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/core/infrastructure/supabase';
-import type { Json } from '@/core/infrastructure/supabase';
+import { supabase } from '@/integrations/supabase';
+import type { Json } from '@/integrations/supabase';
 import { BusinessOwnershipService } from '@/core/business/services/BusinessOwnershipService';
 import {
   GASTRONOMY_PROFILE_STATUSES,

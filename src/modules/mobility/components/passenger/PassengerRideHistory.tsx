@@ -16,7 +16,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Input } from "@/shared/components/ui/input";
 import { cn } from "@/shared/utils/cn";
-import type { RideRequest } from "@/modules/mobility/types";
+import type { RideRequest } from "@/core/mobility/types";
 import { RIDE_STATUS, PAYMENT_METHOD } from "@/shared/types/constants";
 
 type PassengerRide = RideRequest & {

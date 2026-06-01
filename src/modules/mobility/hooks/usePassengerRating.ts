@@ -8,8 +8,8 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { getPassengerRating } from '../services/mobility.queries';
-import { MOBILITY_QUERY_KEYS, TIMEOUTS } from '../constants';
+import { getPassengerRating } from '@/core/mobility/services/mobility.queries';
+import { MOBILITY_QUERY_KEYS, TIMEOUTS } from '@/core/mobility/constants';
 
 export function usePassengerRating(profileId: string | null | undefined) {
   return useQuery({

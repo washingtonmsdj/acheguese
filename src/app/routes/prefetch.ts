@@ -55,7 +55,7 @@ const PREFETCHERS: Array<{ test: (path: string) => boolean; load: () => Promise<
   },
   {
     test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.ranking),
-    load: () => import("@/core/gamification/pages/RankingPage"),
+    load: () => import("@/app/pages/gamification/RankingPage"),
   },
   {
     test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.touristPoints),

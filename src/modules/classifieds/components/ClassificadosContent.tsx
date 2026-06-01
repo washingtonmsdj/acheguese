@@ -1,7 +1,7 @@
 import React from "react";
 import { ClassificadoFilters } from "./ClassificadoFilters";
 import { ClassificadoGrid } from "./ClassificadoGrid";
-import type { ClassificadoWithVendedor } from "@/modules/classifieds/hooks/useClassificados";
+import type { ClassificadoWithVendedor } from "@/core/classifieds/hooks/useClassificados";
 import type { ClassificadosFilters as FiltersType } from "@/modules/classifieds/hooks/useClassificadosPage";
 
 interface ClassificadosContentProps {

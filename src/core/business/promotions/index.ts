@@ -1,12 +1,12 @@
 /**
  * Canonical cross-domain entrypoint for sponsored promotion delivery.
  */
-export { useAdDelivery } from '@/modules/business/promotions/hooks/useAdDelivery';
-export { SponsoredAdCard } from '@/modules/business/promotions/components';
+export { useAdDelivery } from '@/core/business/promotions/hooks/useAdDelivery';
+export { SponsoredAdCard } from '@/core/business/promotions/components';
 export {
   adDeliveryService,
   AdDeliveryService,
-} from '@/modules/business/promotions/services/AdDeliveryService';
+} from '@/core/business/promotions/services/AdDeliveryService';
 export type {
   AdCampaign,
   AdCampaignStatus,
@@ -17,4 +17,4 @@ export type {
   AdResolutionResult,
   AdTarget,
   AdTargetScope,
-} from '@/modules/business/promotions/types';
+} from '@/core/business/promotions/types';

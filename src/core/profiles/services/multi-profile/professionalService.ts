@@ -6,7 +6,7 @@
  * Zero acesso direto ao Supabase fora deste service.
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase/supabase';
+import { supabase } from '@/integrations/supabase';
 import type { ProfessionalData, ServiceResponse } from './types';
 
 const errorMessage = (error: unknown, fallback: string): string =>

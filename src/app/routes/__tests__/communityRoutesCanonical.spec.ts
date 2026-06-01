@@ -3,9 +3,12 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
+import { APP_MODULE_SLUGS } from "@/config/moduleSlugs";
 import {
   TERRITORIAL_ROUTE_PARAMS,
   TERRITORIAL_ROUTE_STATIC_SEGMENTS,
+  buildCommunityAliasRoutePath,
+  buildCommunityRootAliasRoutePath,
   buildCommunityTerritoryRoutePath,
 } from "@/core/routing/config/territorialRoutePatterns";
 
@@ -26,6 +29,17 @@ describe("community canonical routes", () => {
     ).toBe("/comunidade/:state/:city/feed");
     expect(
       buildCommunityTerritoryRoutePath([
+        TERRITORIAL_ROUTE_PARAMS.groupSlugOrDistrict,
+      ]),
+    ).toBe("/comunidade/:state/:city/:groupSlugOrDistrict");
+    expect(
+      buildCommunityTerritoryRoutePath([
+        TERRITORIAL_ROUTE_PARAMS.groupSlugOrDistrict,
+        TERRITORIAL_ROUTE_STATIC_SEGMENTS.feed,
+      ]),
+    ).toBe("/comunidade/:state/:city/:groupSlugOrDistrict/feed");
+    expect(
+      buildCommunityTerritoryRoutePath([
         TERRITORIAL_ROUTE_STATIC_SEGMENTS.groups,
         TERRITORIAL_ROUTE_PARAMS.id,
       ]),
@@ -40,28 +54,64 @@ describe("community canonical routes", () => {
         TERRITORIAL_ROUTE_STATIC_SEGMENTS.lostAndFound,
       ]),
     ).toBe("/comunidade/:state/:city/achados-e-perdidos");
+    expect(buildCommunityAliasRoutePath()).toBe(
+      "/comunidade/:communitySlug",
+    );
+    expect(buildCommunityRootAliasRoutePath()).toBe(
+      "/:communitySlug",
+    );
+    expect(
+      buildCommunityRootAliasRoutePath([APP_MODULE_SLUGS.business]),
+    ).toBe("/:communitySlug/empresas");
+    expect(
+      buildCommunityRootAliasRoutePath([
+        APP_MODULE_SLUGS.business,
+        TERRITORIAL_ROUTE_PARAMS.slug,
+      ]),
+    ).toBe("/:communitySlug/empresas/:slug");
+    expect(buildCommunityAliasRoutePath(["*"])).toBe(
+      "/comunidade/:communitySlug/*",
+    );
+    expect(
+      buildCommunityAliasRoutePath([TERRITORIAL_ROUTE_STATIC_SEGMENTS.feed]),
+    ).toBe("/comunidade/:communitySlug/feed");
+    expect(
+      buildCommunityAliasRoutePath([
+        APP_MODULE_SLUGS.business,
+      ]),
+    ).toBe("/comunidade/:communitySlug/empresas");
+    expect(
+      buildCommunityAliasRoutePath([
+        APP_MODULE_SLUGS.jobs,
+        "*",
+      ]),
+    ).toBe("/comunidade/:communitySlug/vagas/*");
   });
 
   it("does not hardcode canonical community local route strings in AppRoutes", () => {
-    const routesSource = readProjectFile("src/app/routes/AppRoutes.tsx");
+    const routesSource = [
+      readProjectFile("src/app/routes/AppRoutes.tsx"),
+      readProjectFile("src/app/routes/sections/CommunityTerritoryRoutes.tsx"),
+    ].join("\n");
 
+    expect(routesSource).toContain("COMMUNITY_ROUTE_DEFINITIONS");
+    expect(routesSource).toContain("COMMUNITY_ALIAS_REDIRECT_PREFIXES");
     expect(routesSource).toContain("buildCommunityTerritoryRoutePath()");
-    expect(routesSource).toContain(
-      "buildCommunityTerritoryRoutePath([TERRITORIAL_STATIC.feed])",
-    );
-    expect(routesSource).toContain(
-      "buildCommunityTerritoryRoutePath([TERRITORIAL_STATIC.groups, TERRITORIAL_PARAMS.id])",
-    );
-    expect(routesSource).not.toContain(
-      'path="/comunidade/:state/:city/:territorySlug"',
-    );
-    expect(routesSource).not.toContain(
-      'path="/comunidade/:state/:city/:territorySlug/feed"',
-    );
+    expect(routesSource).toContain("buildCommunityScopedRoutePath()");
+    expect(routesSource).toContain("buildCommunityAliasRoutePath");
+    expect(routesSource).toContain("buildCommunityRootAliasRoutePath");
+    expect(routesSource).toContain("CommunityShortAliasShellRoute");
+    expect(routesSource).toContain("CommunityShortEntityRoute");
+    expect(routesSource).toContain("TERRITORIAL_STATIC.feed");
+    expect(routesSource).toContain("TERRITORIAL_STATIC.groups");
+    expect(routesSource).toContain("TERRITORIAL_PARAMS.id");
   });
 
   it("does not keep legacy community paths", () => {
-    const routesSource = readProjectFile("src/app/routes/AppRoutes.tsx");
+    const routesSource = [
+      readProjectFile("src/app/routes/AppRoutes.tsx"),
+      readProjectFile("src/app/routes/sections/CommunityTerritoryRoutes.tsx"),
+    ].join("\n");
 
     expect(routesSource).not.toContain("buildCommunityLegacyAreaRoutePath");
     expect(routesSource).not.toContain("CommunityAreaCanonicalRedirect");

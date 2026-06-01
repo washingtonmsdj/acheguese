@@ -15,7 +15,7 @@
  */
 
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase/supabase';
+import { supabase } from '@/integrations/supabase';
 import { DPO_REQUEST_STATUS } from '@/core/privacy/constants/dpoRequestStatus';
 import { getDpoEmail } from '@/shared/config/privacyContacts';
 

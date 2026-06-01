@@ -1,7 +1,7 @@
-﻿import type { EventCategory } from '../types';
+import type { EventCategory } from '../types';
 
 import type { CreateEventInput } from '@/core/community/services/CommunityEventsRuntimeService';
-import type { Json } from '@/integrations/supabase/types.generated';
+import type { Json } from '@/shared/types/json';
 
 export type OrganizerLocationType = 'physical' | 'online' | 'hybrid';
 

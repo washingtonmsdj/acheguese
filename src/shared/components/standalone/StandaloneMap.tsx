@@ -17,6 +17,7 @@ import { MapPin, Navigation, Loader2, Map as MapIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
 import { useRobustGeolocation } from '@/shared/hooks';
+import { DEFAULT_TILE_STYLE } from '@/shared/config/mapDefaults';
 import { buildGoogleMapsDirectionsUrl } from '@/shared/utils/contactLinks';
 import { openSafeExternalUrl } from '@/shared/utils/safeRedirect';
 
@@ -38,14 +39,9 @@ interface Business {
   } | null;
 }
 
-interface StandaloneMapProps {
+export interface StandaloneMapProps {
   business: Business;
 }
-
-const DEFAULT_TILE_STYLE = {
-  styleUrl: "https://tiles.openfreemap.org/styles/positron",
-  attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
-} as const;
 
 function haversineDistance(a: [number, number], b: [number, number]): string {
   const R = 6371;

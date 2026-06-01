@@ -2,7 +2,7 @@
  * AI Platform - Cliente unico para invocar edge functions de IA.
  * Centraliza tratamento de erros e mensagens amigaveis.
  */
-import { supabase } from "@/core/infrastructure/supabase";
+import { supabase } from "@/integrations/supabase";
 import type {
   AiError,
   AiImageRequest,

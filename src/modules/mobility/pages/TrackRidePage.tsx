@@ -20,11 +20,11 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/shared/components/ui/button";
-import { RIDE_STATUS } from "@/modules/mobility/constants";
+import { RIDE_STATUS } from "@/core/mobility/constants";
 import { trackError } from "@/shared/utils/errorTracking";
 import { profileService } from "@/core/profiles/services/ProfileService"; // ✅ MIGRADO - Usa ProfileService
-import { getRideByShareToken, getDriverCompleteProfile } from "@/modules/mobility/services/mobility.queries";
-import { incrementRideViewCount } from "@/modules/mobility/services/mobility.mutations";
+import { getRideByShareToken, getDriverCompleteProfile } from "@/core/mobility/services/mobility.queries";
+import { incrementRideViewCount } from "@/core/mobility/services/mobility.mutations";
 import type { ProfileContext } from "@/core/profiles/views/ProfileContext"; // ✅ MIGRADO - views/ProfileContext
 
 interface RideTrackingData {

@@ -1,4 +1,4 @@
-import { supabase } from "@/core/infrastructure/supabase/supabase";
+import { supabase } from "@/integrations/supabase";
 import { postService } from "@/core/posts/services";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { jobPublicRoutes } from "@/core/verticals/jobs/routes/jobPublicRoutes";

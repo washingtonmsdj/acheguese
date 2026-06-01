@@ -1,4 +1,4 @@
-import { supabase } from "@/core/infrastructure/supabase";
+import { supabase } from "@/integrations/supabase";
 
 export type TableHealthState = "ok" | "missing" | "error" | "not_provisioned";
 

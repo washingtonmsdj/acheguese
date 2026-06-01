@@ -9,6 +9,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { supabase } from '@/integrations/supabase';
 import { DriverRepository, type Driver } from '../DriverRepository';
 import { DatabaseError, DatabaseErrorCode } from '../../errors/DatabaseError';
 
@@ -48,7 +49,6 @@ describe('DriverRepository', () => {
     repository = new DriverRepository();
     
     // Setup mock Supabase
-    const { supabase } = require('@/integrations/supabase');
     mockSupabase = {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
@@ -62,7 +62,7 @@ describe('DriverRepository', () => {
       single: vi.fn(),
       update: vi.fn().mockReturnThis(),
     };
-    supabase.from.mockReturnValue(mockSupabase);
+    (supabase.from as any).mockReturnValue(mockSupabase);
   });
 
   describe('findByProfileId', () => {

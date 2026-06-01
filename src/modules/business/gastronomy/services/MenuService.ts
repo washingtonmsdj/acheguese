@@ -2,7 +2,7 @@
  * MenuService - SSOT de cardápio com validação de plano.
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/core/infrastructure/supabase';
+import { supabase } from '@/integrations/supabase';
 import { sanitizeString } from '@/shared/utils/sanitization';
 import { SubscriptionService } from '@/core/billing/SubscriptionService';
 import { EntitlementsService } from '@/core/billing/entitlements';

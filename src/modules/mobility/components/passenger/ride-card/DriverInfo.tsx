@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
 import { MessageCircle, Phone, Star, Navigation } from "lucide-react";
 import { ShareRideButton } from "../../ShareRideButton";
 import { EmergencyButton } from "../../EmergencyButton";
-import type { RideRequest } from "@/modules/mobility/types";
+import type { RideRequest } from "@/core/mobility/types";
 import { buildTelUrl, openContactUrl } from "@/shared/utils/contactLinks";
 
 interface DriverInfoProps {

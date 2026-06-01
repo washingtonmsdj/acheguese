@@ -13,11 +13,23 @@
  * 3. Quando completo, substituir ProfileService.ts
  */
 
-import { ProfileRepository, type Profile as ProfileEntity } from '@/core/infrastructure/database';
+import {
+  ProfileRepository,
+  type DatabaseProfileVerificationStatus,
+  type Profile as ProfileEntity,
+} from '@/core/infrastructure/database';
 import { DatabaseError } from '@/core/infrastructure/database';
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 import type { Profile, CreateProfileData, UpdateProfileData } from "./types";
+
+function toServiceProfile(profile: ProfileEntity): Profile {
+  return profile as unknown as Profile;
+}
+
+function toServiceProfiles(profiles: ProfileEntity[]): Profile[] {
+  return profiles as unknown as Profile[];
+}
 
 /**
  * ProfileService refatorado usando Repository Pattern
@@ -39,7 +51,7 @@ export class ProfileServiceRefactored {
   async getProfileById(profileId: string): Promise<Profile | null> {
     try {
       const profile = await this.repo.findById(profileId);
-      return profile as Profile | null;
+      return profile ? toServiceProfile(profile) : null;
     } catch (error) {
       if (error instanceof DatabaseError) {
         if (error.isNotFound()) {
@@ -65,7 +77,7 @@ export class ProfileServiceRefactored {
   async getProfilesByIds(ids: string[]): Promise<Profile[]> {
     try {
       const profiles = await this.repo.findByIds(ids);
-      return profiles as Profile[];
+      return toServiceProfiles(profiles);
     } catch (error) {
       trackError(error as Error, {
         component: "ProfileService",
@@ -85,7 +97,7 @@ export class ProfileServiceRefactored {
   async getByUsername(username: string): Promise<Profile | null> {
     try {
       const profile = await this.repo.findByUsername(username);
-      return profile as Profile | null;
+      return profile ? toServiceProfile(profile) : null;
     } catch (error) {
       if (error instanceof DatabaseError) {
         if (error.isNotFound()) {
@@ -111,7 +123,7 @@ export class ProfileServiceRefactored {
   async getProfilesByUserId(userId: string): Promise<Profile[]> {
     try {
       const profiles = await this.repo.findByUserId(userId);
-      return profiles as Profile[];
+      return toServiceProfiles(profiles);
     } catch (error) {
       trackError(error as Error, {
         component: "ProfileService",
@@ -171,7 +183,7 @@ export class ProfileServiceRefactored {
   async getVerifiedProfiles(): Promise<Profile[]> {
     try {
       const profiles = await this.repo.findVerified();
-      return profiles as Profile[];
+      return toServiceProfiles(profiles);
     } catch (error) {
       trackError(error as Error, {
         component: "ProfileService",
@@ -190,7 +202,7 @@ export class ProfileServiceRefactored {
   async getPendingVerificationProfiles(): Promise<Profile[]> {
     try {
       const profiles = await this.repo.findPendingVerification();
-      return profiles as Profile[];
+      return toServiceProfiles(profiles);
     } catch (error) {
       trackError(error as Error, {
         component: "ProfileService",
@@ -207,7 +219,7 @@ export class ProfileServiceRefactored {
    * DEPOIS: Usa repository
    */
   async countByVerificationStatus(
-    status: 'pending' | 'verified' | 'rejected'
+    status: DatabaseProfileVerificationStatus
   ): Promise<number> {
     try {
       return await this.repo.countByVerificationStatus(status);
@@ -230,7 +242,7 @@ export class ProfileServiceRefactored {
   async getProfilesByCity(city: string): Promise<Profile[]> {
     try {
       const profiles = await this.repo.findByCity(city);
-      return profiles as Profile[];
+      return toServiceProfiles(profiles);
     } catch (error) {
       trackError(error as Error, {
         component: "ProfileService",
@@ -250,7 +262,7 @@ export class ProfileServiceRefactored {
   async getProfilesByNeighborhood(neighborhood: string): Promise<Profile[]> {
     try {
       const profiles = await this.repo.findByNeighborhood(neighborhood);
-      return profiles as Profile[];
+      return toServiceProfiles(profiles);
     } catch (error) {
       trackError(error as Error, {
         component: "ProfileService",
@@ -270,7 +282,7 @@ export class ProfileServiceRefactored {
   async getRanking(limit: number = 50): Promise<Profile[]> {
     try {
       const profiles = await this.repo.findTopByPoints(limit);
-      return profiles as Profile[];
+      return toServiceProfiles(profiles);
     } catch (error) {
       trackError(error as Error, {
         component: "ProfileService",
@@ -290,7 +302,7 @@ export class ProfileServiceRefactored {
   async incrementPoints(profileId: string, points: number): Promise<Profile> {
     try {
       const profile = await this.repo.incrementPoints(profileId, points);
-      return profile as Profile;
+      return toServiceProfile(profile);
     } catch (error) {
       trackError(error as Error, {
         component: "ProfileService",
@@ -310,7 +322,7 @@ export class ProfileServiceRefactored {
   async createProfile(data: CreateProfileData): Promise<Profile> {
     try {
       const profile = await this.repo.create(data as any);
-      return profile as Profile;
+      return toServiceProfile(profile);
     } catch (error) {
       if (error instanceof DatabaseError) {
         if (error.isDuplicate()) {
@@ -339,7 +351,7 @@ export class ProfileServiceRefactored {
   ): Promise<Profile> {
     try {
       const profile = await this.repo.update(profileId, updates as any);
-      return profile as Profile;
+      return toServiceProfile(profile);
     } catch (error) {
       if (error instanceof DatabaseError) {
         if (error.isNotFound()) {

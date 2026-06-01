@@ -10,7 +10,7 @@
  *  - Verificao de existncia
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/core/infrastructure/supabase';
+import { supabase } from '@/integrations/supabase';
 import { isEligibleForVertical } from '@/core/verticals/config';
 import type { BusinessCategory } from '@/core/business/types/Business';
 import { GASTRONOMY_PROFILE_STATUSES } from '@/core/business/constants';

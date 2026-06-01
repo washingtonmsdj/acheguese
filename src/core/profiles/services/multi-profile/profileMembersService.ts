@@ -4,7 +4,7 @@
  * Fonte: ARQUITETURA_MULTI_PERFIL_DEFINITIVA.md v3.0
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase/supabase';
+import { supabase } from '@/integrations/supabase';
 import { SessionService } from '@/core/session/services/SessionService';
 import type { ProfileMember, ProfileRole, ServiceResponse } from './types';
 

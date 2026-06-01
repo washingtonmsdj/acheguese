@@ -14,7 +14,7 @@ import { useSessionContext } from "@/core/session";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { useClassificadoDetail } from "@/modules/classifieds/hooks/useClassificadoDetail";
 import { useClassifiedFavorite } from "@/modules/classifieds/hooks/useClassifiedFavorite";
-import { useClassificados } from "@/modules/classifieds/hooks/useClassificados";
+import { useClassificados } from "@/core/classifieds/hooks/useClassificados";
 import { useSellerAds } from "@/modules/classifieds/hooks/useSellerAds";
 import { getCategoryLabel } from "@/modules/classifieds/constants/categories";
 import { CLASSIFIED_STATUS, type ClassifiedStatusValue } from "@/core/classifieds/constants/statuses";
@@ -36,7 +36,7 @@ import {
   markAsSold,
   reactivateClassified,
   updateClassified,
-} from "@/modules/classifieds/services";
+} from "@/core/classifieds/services";
 import { useToast } from "@/shared/components/ui/use-toast";
 import { cn } from "@/shared/utils/cn";
 import { buildWhatsAppUrl } from "@/shared/utils/contactLinks";

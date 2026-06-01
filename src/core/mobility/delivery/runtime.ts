@@ -7,4 +7,4 @@ export type {
   CreateDeliveryData,
   DeliveryProof,
 } from '@/modules/mobility/hooks/useDelivery';
-export { RideOperationalService } from '@/modules/mobility/core/RideOperationalService';
+export { RideOperationalService } from '@/core/mobility/core/RideOperationalService';

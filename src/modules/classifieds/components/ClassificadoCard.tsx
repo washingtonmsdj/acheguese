@@ -26,7 +26,7 @@ import { cn } from '@/shared/utils/cn';
 import { getRecordValue } from '@/shared/utils/recordLookup';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from '@/shared/utils/dateLocale';
-import type { ClassificadoWithVendedor } from '@/modules/classifieds/hooks/useClassificados';
+import type { ClassificadoWithVendedor } from '@/core/classifieds/hooks/useClassificados';
 
 // ============================================================================
 // CONSTANTS

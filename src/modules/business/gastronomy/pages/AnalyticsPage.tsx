@@ -5,7 +5,7 @@
  * Consome hooks (SSOT).
  */
 
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Button } from '@/shared/components/ui/button';
 import { Calendar } from '@/shared/components/ui/calendar';
@@ -15,12 +15,19 @@ import {
   PopoverTrigger,
 } from '@/shared/components/ui/popover';
 import { AnalyticsOverviewCard } from '@/modules/business/gastronomy/components/analytics/AnalyticsOverviewCard';
-import { AnalyticsChartCard } from '@/modules/business/gastronomy/components/analytics/AnalyticsChartCard';
 import { AnalyticsEngagementCard } from '@/modules/business/gastronomy/components/analytics/AnalyticsEngagementCard';
 import { CalendarIcon, Download, Lightbulb } from 'lucide-react';
 import { format, subDays } from 'date-fns';
 import { ptBR } from '@/shared/utils/dateLocale';
 import { cn } from '@/shared/utils/cn';
+
+const AnalyticsChartCard = lazy(() =>
+  import('@/modules/business/gastronomy/components/analytics/AnalyticsChartCard').then(
+    (module) => ({
+      default: module.AnalyticsChartCard,
+    }),
+  ),
+);
 
 export default function AnalyticsPage() {
   const { businessId } = useParams<{ businessId: string }>();
@@ -163,11 +170,15 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Gráfico (2 colunas) */}
         <div className="lg:col-span-2">
-          <AnalyticsChartCard
-            businessId={businessId}
-            dateFrom={dateFrom}
-            dateTo={dateTo}
-          />
+          <Suspense
+            fallback={<div className="h-[390px] rounded-lg border bg-card animate-pulse" />}
+          >
+            <AnalyticsChartCard
+              businessId={businessId}
+              dateFrom={dateFrom}
+              dateTo={dateTo}
+            />
+          </Suspense>
         </div>
 
         {/* Engajamento (1 coluna) */}

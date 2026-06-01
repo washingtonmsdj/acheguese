@@ -8,7 +8,7 @@ import { cn } from "@/shared/utils/cn";
 import {
   DriverPresenceService,
   type DriverPresenceStats as PresenceStats,
-} from "@/modules/mobility/services";
+} from "@/core/mobility/services";
 
 interface DriverPresenceStatsProps {
   driverProfileId: string;

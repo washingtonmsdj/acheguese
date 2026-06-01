@@ -12,6 +12,10 @@ import { supabase } from '@/integrations/supabase';
 import { BaseRepository } from './BaseRepository';
 import { DatabaseError, DatabaseErrorCode } from '../errors/DatabaseError';
 import type { Filter } from '../interfaces/IRepository';
+import {
+  DATABASE_DRIVER_STATUS,
+  type DatabaseDriverStatus,
+} from '../constants/statuses';
 
 /**
  * Interface do Driver (SSOT)
@@ -31,7 +35,7 @@ export interface Driver {
   rating: number | null;
   total_rides: number;
   total_earnings: number;
-  status: 'active' | 'inactive' | 'suspended' | null;
+  status: DatabaseDriverStatus | null;
   created_at: string;
   updated_at: string;
   last_location_update: string | null;
@@ -84,7 +88,7 @@ export class DriverRepository extends BaseRepository<Driver> {
   async findAvailable(): Promise<Driver[]> {
     const filters: Filter[] = [
       this.createFilter('is_available', 'eq', true),
-      this.createFilter('status', 'eq', 'active'),
+      this.createFilter('status', 'eq', DATABASE_DRIVER_STATUS.ACTIVE),
     ];
 
     return this.findAll(filters);
@@ -107,7 +111,7 @@ export class DriverRepository extends BaseRepository<Driver> {
         .from(this.table)
         .select('*')
         .eq('is_available', true)
-        .eq('status', 'active')
+        .eq('status', DATABASE_DRIVER_STATUS.ACTIVE)
         .not('current_lat', 'is', null)
         .not('current_lng', 'is', null)
         .gte('current_lat', centerLat - latDelta)
@@ -137,10 +141,10 @@ export class DriverRepository extends BaseRepository<Driver> {
    * Atualiza disponibilidade do motorista
    */
   async updateAvailability(
-    driverId: string,
+    driverDataId: string,
     isAvailable: boolean
   ): Promise<Driver> {
-    return this.update(driverId, {
+    return this.update(driverDataId, {
       is_available: isAvailable,
       updated_at: new Date().toISOString(),
     } as Partial<Driver>);
@@ -150,11 +154,11 @@ export class DriverRepository extends BaseRepository<Driver> {
    * Atualiza localização do motorista
    */
   async updateLocation(
-    driverId: string,
+    driverDataId: string,
     lat: number,
     lng: number
   ): Promise<Driver> {
-    return this.update(driverId, {
+    return this.update(driverDataId, {
       current_lat: lat,
       current_lng: lng,
       last_location_update: new Date().toISOString(),
@@ -165,20 +169,20 @@ export class DriverRepository extends BaseRepository<Driver> {
   /**
    * Incrementa total de corridas
    */
-  async incrementTotalRides(driverId: string): Promise<Driver> {
+  async incrementTotalRides(driverDataId: string): Promise<Driver> {
     try {
-      const driver = await this.findById(driverId);
+      const driver = await this.findById(driverDataId);
       if (!driver) {
         throw new DatabaseError({
           code: DatabaseErrorCode.NOT_FOUND,
-          message: `Driver not found: ${driverId}`,
+          message: `Driver not found: ${driverDataId}`,
           table: this.table,
           operation: 'incrementTotalRides',
-          context: { driverId },
+          context: { driverDataId },
         });
       }
 
-      return this.update(driverId, {
+      return this.update(driverDataId, {
         total_rides: driver.total_rides + 1,
         updated_at: new Date().toISOString(),
       } as Partial<Driver>);
@@ -186,11 +190,11 @@ export class DriverRepository extends BaseRepository<Driver> {
       if (error instanceof DatabaseError) throw error;
       throw new DatabaseError({
         code: DatabaseErrorCode.QUERY_ERROR,
-        message: `Failed to increment total rides for driver: ${driverId}`,
+        message: `Failed to increment total rides for driver: ${driverDataId}`,
         originalError: error,
         table: this.table,
         operation: 'incrementTotalRides',
-        context: { driverId },
+        context: { driverDataId },
       });
     }
   }
@@ -198,20 +202,20 @@ export class DriverRepository extends BaseRepository<Driver> {
   /**
    * Incrementa ganhos totais
    */
-  async incrementEarnings(driverId: string, amount: number): Promise<Driver> {
+  async incrementEarnings(driverDataId: string, amount: number): Promise<Driver> {
     try {
-      const driver = await this.findById(driverId);
+      const driver = await this.findById(driverDataId);
       if (!driver) {
         throw new DatabaseError({
           code: DatabaseErrorCode.NOT_FOUND,
-          message: `Driver not found: ${driverId}`,
+          message: `Driver not found: ${driverDataId}`,
           table: this.table,
           operation: 'incrementEarnings',
-          context: { driverId },
+          context: { driverDataId },
         });
       }
 
-      return this.update(driverId, {
+      return this.update(driverDataId, {
         total_earnings: driver.total_earnings + amount,
         updated_at: new Date().toISOString(),
       } as Partial<Driver>);
@@ -219,11 +223,11 @@ export class DriverRepository extends BaseRepository<Driver> {
       if (error instanceof DatabaseError) throw error;
       throw new DatabaseError({
         code: DatabaseErrorCode.QUERY_ERROR,
-        message: `Failed to increment earnings for driver: ${driverId}`,
+        message: `Failed to increment earnings for driver: ${driverDataId}`,
         originalError: error,
         table: this.table,
         operation: 'incrementEarnings',
-        context: { driverId, amount },
+        context: { driverDataId, amount },
       });
     }
   }
@@ -231,8 +235,8 @@ export class DriverRepository extends BaseRepository<Driver> {
   /**
    * Atualiza rating do motorista
    */
-  async updateRating(driverId: string, newRating: number): Promise<Driver> {
-    return this.update(driverId, {
+  async updateRating(driverDataId: string, newRating: number): Promise<Driver> {
+    return this.update(driverDataId, {
       rating: newRating,
       updated_at: new Date().toISOString(),
     } as Partial<Driver>);
@@ -241,7 +245,7 @@ export class DriverRepository extends BaseRepository<Driver> {
   /**
    * Busca motoristas por status
    */
-  async findByStatus(status: 'active' | 'inactive' | 'suspended'): Promise<Driver[]> {
+  async findByStatus(status: DatabaseDriverStatus): Promise<Driver[]> {
     const filters: Filter[] = [
       this.createFilter('status', 'eq', status),
     ];
@@ -257,7 +261,7 @@ export class DriverRepository extends BaseRepository<Driver> {
       const { data, error } = await this.client
         .from(this.table)
         .select('*')
-        .eq('status', 'active')
+        .eq('status', DATABASE_DRIVER_STATUS.ACTIVE)
         .not('rating', 'is', null)
         .order('rating', { ascending: false })
         .limit(limit);
@@ -286,7 +290,7 @@ export class DriverRepository extends BaseRepository<Driver> {
   async findByVehicleType(vehicleType: string): Promise<Driver[]> {
     const filters: Filter[] = [
       this.createFilter('vehicle_type', 'eq', vehicleType),
-      this.createFilter('status', 'eq', 'active'),
+      this.createFilter('status', 'eq', DATABASE_DRIVER_STATUS.ACTIVE),
     ];
 
     return this.findAll(filters);
@@ -298,7 +302,7 @@ export class DriverRepository extends BaseRepository<Driver> {
   async countAvailable(): Promise<number> {
     const filters: Filter[] = [
       this.createFilter('is_available', 'eq', true),
-      this.createFilter('status', 'eq', 'active'),
+      this.createFilter('status', 'eq', DATABASE_DRIVER_STATUS.ACTIVE),
     ];
 
     return this.count(filters);
@@ -307,9 +311,9 @@ export class DriverRepository extends BaseRepository<Driver> {
   /**
    * Suspende motorista
    */
-  async suspend(driverId: string): Promise<Driver> {
-    return this.update(driverId, {
-      status: 'suspended',
+  async suspend(driverDataId: string): Promise<Driver> {
+    return this.update(driverDataId, {
+      status: DATABASE_DRIVER_STATUS.SUSPENDED,
       is_available: false,
       updated_at: new Date().toISOString(),
     } as Partial<Driver>);
@@ -318,9 +322,9 @@ export class DriverRepository extends BaseRepository<Driver> {
   /**
    * Reativa motorista
    */
-  async reactivate(driverId: string): Promise<Driver> {
-    return this.update(driverId, {
-      status: 'active',
+  async reactivate(driverDataId: string): Promise<Driver> {
+    return this.update(driverDataId, {
+      status: DATABASE_DRIVER_STATUS.ACTIVE,
       updated_at: new Date().toISOString(),
     } as Partial<Driver>);
   }

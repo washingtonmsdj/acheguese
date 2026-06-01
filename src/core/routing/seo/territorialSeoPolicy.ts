@@ -34,8 +34,11 @@ export function resolveSeoPolicy(pathname: string): TerritorialSeoPolicy {
     }
 
     if (firstAfterCity === "area") {
+      const legacyScopedSlug = parts[4];
       return {
-        canonicalPath: `/${MODULE_SLUGS.community}/${state}/${city}`,
+        canonicalPath: legacyScopedSlug
+          ? `/${MODULE_SLUGS.community}/${state}/${city}/${legacyScopedSlug}`
+          : `/${MODULE_SLUGS.community}/${state}/${city}`,
         robots: "noindex, follow",
       };
     }
@@ -49,21 +52,21 @@ export function resolveSeoPolicy(pathname: string): TerritorialSeoPolicy {
 
     if (secondAfterCity && embeddedCommunityModules.has(secondAfterCity)) {
       return {
-        canonicalPath: `/${secondAfterCity}/${state}/${city}`,
+        canonicalPath: `/${secondAfterCity}/${state}/${city}/${firstAfterCity}`,
         robots: "noindex, follow",
       };
     }
 
     if (secondAfterCity && isCommunityCanonicalSuffixSegment(secondAfterCity)) {
       return {
-        canonicalPath: `/${MODULE_SLUGS.community}/${state}/${city}/${parts.slice(4).join("/")}`,
-        robots: "noindex, follow",
+        canonicalPath: cleanPath,
+        robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
       };
     }
 
     return {
-      canonicalPath: `/${MODULE_SLUGS.community}/${state}/${city}`,
-      robots: "noindex, follow",
+      canonicalPath: cleanPath,
+      robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
     };
   }
 

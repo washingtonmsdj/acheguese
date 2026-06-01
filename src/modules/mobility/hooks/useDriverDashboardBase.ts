@@ -5,21 +5,21 @@ import { toast } from "sonner";
 import { useIsAdmin } from "@/core/auth/hooks/useIsAdmin";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { useDriverOperationalStatus } from "@/modules/mobility/hooks/useDriverOperationalStatus";
-import { useDriverProfileIdentity } from "@/modules/mobility/hooks/useDriverProfileIdentity";
+import { useDriverProfileIdentity } from "@/core/mobility/hooks/useDriverProfileIdentity";
 import { useMobilityUrls } from "@/modules/mobility/hooks/useMobilityUrls";
 import { useRideRealtime } from "@/modules/mobility/hooks/useRideRealtime";
 import {
   getRideDispatchContextById,
   getRidesByDriverProfile,
-} from "@/modules/mobility/services/mobility.queries";
+} from "@/core/mobility/services/mobility.queries";
 import {
   startRide as startRideMutation,
   completeRide,
   cancelRide,
-} from "@/modules/mobility/services/mobility.mutations";
+} from "@/core/mobility/services/mobility.mutations";
 import { logger } from "@/shared/utils/logger";
-import { RIDE_STATUS, TIMEOUTS } from "../constants";
-import { RideRatingService } from "@/modules/mobility/services/RideRatingService";
+import { RIDE_STATUS, TIMEOUTS } from "@/core/mobility/constants";
+import { RideRatingService } from "@/core/mobility/services/RideRatingService";
 import {
   TRUST_ACTOR_ROLES,
   TRUST_CONTEXT_TYPES,
@@ -186,7 +186,7 @@ export function useDriverDashboardBase({
       if (!driverProfileId) return [];
       if (!canAcceptRideOffers && !canAcceptDeliveryOffers) return [];
 
-      const { MobilityOfferService } = await import('@/modules/mobility/services/MobilityOfferService');
+      const { MobilityOfferService } = await import('@/core/mobility/services/MobilityOfferService');
       const rides: MobilityRide[] = [];
 
       if (canAcceptRideOffers) {
@@ -410,8 +410,8 @@ export function useDriverDashboardBase({
       setActionsLoading(true);
       try {
         // Importar dinamicamente
-        const { MobilityOfferService } = await import('@/modules/mobility/services/MobilityOfferService');
-        const { MobilityDispatchConfigService } = await import('@/modules/mobility/services/MobilityDispatchConfigService');
+        const { MobilityOfferService } = await import('@/core/mobility/services/MobilityOfferService');
+        const { MobilityDispatchConfigService } = await import('@/core/mobility/services/MobilityDispatchConfigService');
         
         // Buscar dados da corrida para determinar estrategia.
         const rideData = await getRideDispatchContextById(rideId);

@@ -62,6 +62,5 @@ export {
   BusinessSectionSkeleton,
   BusinessGallerySkeleton,
 } from "./BusinessSkeleton";
-export { ErrorBoundary } from "./ErrorBoundary";
 export { OptimizedImage } from "./optimized-image";
 export { InfiniteScrollTrigger } from "./InfiniteScrollTrigger";

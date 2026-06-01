@@ -1,12 +1,81 @@
+/**
+ * Classifieds services - canonical barrel.
+ */
+
 export {
+  ClassifiedsService,
+  CLASSIFIED_CONDITIONS,
+  CLASSIFIED_STATUSES,
+} from "@/core/classifieds/services/ClassifiedService";
+
+export {
+  getNeighborhoodsWithClassifieds,
+  getAllClassifieds,
   getClassifiedById,
+  getClassifiedsByCategory,
   getUserClassifieds,
-} from "@/modules/classifieds/services/ClassifiedService";
-export { classifiedUrlService, ClassifiedUrlService } from "@/modules/classifieds/services/ClassifiedUrlService";
+  getClassifiedsBySeller,
+  getSellersWithAds,
+  getTotalClassifiedsCount,
+  getRecentClassifieds,
+  getClassifiedsCreatedInPeriod,
+} from "@/core/classifieds/services/classifieds.queries";
+
+export {
+  createClassified,
+  updateClassified,
+  deleteClassified,
+  markAsSold,
+  reactivateClassified,
+} from "@/core/classifieds/services/classifieds.mutations";
+
 export type {
-  ClassifiedPublicUrlInput,
+  ClassifiedData,
+  CreateClassifiedInput,
+  UpdateClassifiedInput,
+  NeighborhoodWithClassifiedCount,
+  SellerWithAds,
+  ClassifiedCondition,
+  ClassifiedStatus,
+} from "./types";
+
+export {
+  mapToClassificadoWithVendedor,
+  mapToClassificadoList,
+} from "./classifieds.mappers";
+
+export { classifiedUrlService, ClassifiedUrlService } from "./ClassifiedUrlService";
+export type {
   ClassifiedUrlContext,
-} from "@/modules/classifieds/services/ClassifiedUrlService";
-export { classifiedReportService } from "@/modules/classifieds/services/ClassifiedReportService";
-export type { ClassifiedData } from "@/modules/classifieds/services/ClassifiedService";
-export type { ClassifiedReport } from "@/modules/classifieds/services/ClassifiedReportService";
+  ClassifiedPublicUrlInput,
+  ResolvedClassifiedUrl,
+  ClassifiedResolution,
+} from "./ClassifiedUrlService";
+
+export {
+  CLASSIFIED_REPORT_REASON_OPTIONS,
+  classifiedReportService,
+  isClassifiedReportReason,
+} from "@/core/classifieds/services/ClassifiedReportService";
+export type {
+  ClassifiedReport,
+  CreateReportInput,
+  ReportReason,
+} from "@/core/classifieds/services/ClassifiedReportService";
+
+export { ClassifiedFavoriteService } from "./ClassifiedFavoriteService";
+
+export { classifiedCommentService } from "./ClassifiedCommentService";
+export type { ClassifiedComment } from "./ClassifiedCommentService";
+
+export {
+  classifiedsLocationService,
+  ClassifiedsLocationService,
+} from "./ClassifiedsLocationService";
+
+export {
+  classifiedsRolloutService,
+  ClassifiedsRolloutService,
+} from "./ClassifiedsRolloutService";
+
+export { ClassifiedTrustService } from "./ClassifiedTrustService";

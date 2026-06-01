@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { MobilityFacade } from "@/modules/mobility/services/MobilityService";
+import { MobilityFacade } from "@/core/mobility/services/MobilityService";
 import { useAuth } from "@/core/auth";
-import { RIDE_STATUS, MOBILITY_QUERY_KEYS } from "../constants";
+import { RIDE_STATUS, MOBILITY_QUERY_KEYS } from "@/core/mobility/constants";
 import type { RideRequest } from "../types/types";
 
 export function useActiveRide() {

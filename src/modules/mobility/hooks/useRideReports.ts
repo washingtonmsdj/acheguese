@@ -12,8 +12,8 @@ import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/core/auth";
 import { profileService } from "@/core/profiles/services/ProfileService";
-import { RideReportsService, type CreateReportInput, type RideReport } from "@/modules/mobility/services/RideReportsService";
-import { MOBILITY_QUERY_KEYS } from "@/modules/mobility/constants";
+import { RideReportsService, type CreateReportInput, type RideReport } from "@/core/mobility/services/RideReportsService";
+import { MOBILITY_QUERY_KEYS } from "@/core/mobility/constants";
 import { toast } from "sonner";
 import { logger } from "@/shared/utils/logger";
 

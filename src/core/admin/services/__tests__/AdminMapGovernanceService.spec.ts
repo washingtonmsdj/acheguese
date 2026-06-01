@@ -35,7 +35,7 @@ vi.mock("@/core/maps/config/markerConfig", () => ({
   getLayerConfig: () => ({ label: "Layer" }),
 }));
 
-vi.mock("@/modules/guide/tourist-points", () => ({
+vi.mock("@/core/guide/tourist-points", () => ({
   CATEGORY_LABELS: {},
   TouristPointService: {
     list: vi.fn(),

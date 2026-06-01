@@ -8,7 +8,7 @@
  * @module mobility/utils/rideHelpers
  */
 
-import type { RideStatus, RideMode } from '../services/validators';
+import type { RideStatus, RideMode } from '@/core/mobility/services/validators';
 
 /**
  * Interface mínima de RideRequest para helpers

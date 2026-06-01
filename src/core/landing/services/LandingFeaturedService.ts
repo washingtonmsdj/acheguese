@@ -5,7 +5,7 @@
  * Queries leves, limitadas, respeitando TerritoryFilter canonico.
  */
 import { logger } from "@/shared/utils/logger";
-import { supabase } from "@/core/infrastructure/supabase";
+import { supabase } from "@/integrations/supabase";
 import { applyTerritoryFilter } from "@/core/location/utils";
 import type { TerritoryFilter } from "@/core/location/types";
 

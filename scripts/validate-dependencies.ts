@@ -55,6 +55,49 @@ const ALLOWED_IMPORT_PATH_EXCEPTIONS: Array<{
   },
 ];
 
+const FORBIDDEN_IMPORT_PATHS: Array<{
+  pattern: RegExp;
+  message: string;
+}> = [
+  {
+    pattern: /^@\/core\/infrastructure\/supabase(?:\/.*)?$/,
+    message: 'Use @/integrations/supabase as the single Supabase entrypoint',
+  },
+  {
+    pattern:
+      /^@\/integrations\/supabase\/(?:supabase|types(?:\.generated)?|services\/supabaseHelpers)$/,
+    message: 'Import Supabase client, generated types and helpers from @/integrations/supabase',
+  },
+];
+
+const DATA_BOUNDARY_PATH_PATTERNS = [
+  /\/services\//,
+  /\/repositories\//,
+  /\/adapters\//,
+  /\/types\//,
+  /\/scripts\//,
+  /\/__tests__\//,
+  /\.test\./,
+  /\.spec\./,
+  /(?:Service|Client)\.ts$/,
+];
+
+function isSupabaseEntrypointAllowedForFile(
+  sourceLayer: string,
+  sourceFile: string,
+  importPath: string,
+): boolean {
+  if (importPath !== '@/integrations/supabase') {
+    return false;
+  }
+
+  if (!['app', 'modules'].includes(sourceLayer)) {
+    return false;
+  }
+
+  return DATA_BOUNDARY_PATH_PATTERNS.some((pattern) => pattern.test(sourceFile));
+}
+
 function normalizeImportLayer(importLayer: string): string {
   return NORMALIZED_LAYER_ALIASES[importLayer] || importLayer;
 }
@@ -295,6 +338,16 @@ function validateDependencyRules(graph: Map<string, DependencyNode>): Validation
   
   for (const [file, node] of graph.entries()) {
     for (const importPath of node.imports) {
+      const forbiddenImport = FORBIDDEN_IMPORT_PATHS.find((rule) => rule.pattern.test(importPath));
+      if (forbiddenImport) {
+        errors.push(
+          `❌ Forbidden Supabase import: ${file}\n` +
+          `   ${forbiddenImport.message}\n` +
+          `   Import: ${importPath}`
+        );
+        continue;
+      }
+
       const rawImportLayer = importPath.split('/')[1];
       const importLayer = normalizeImportLayer(rawImportLayer);
       
@@ -325,6 +378,10 @@ function validateDependencyRules(graph: Map<string, DependencyNode>): Validation
       const allowedLayers = ALLOWED_DEPENDENCIES[node.layer] || [];
 
       if (isAllowedImportPathException(node.layer, importLayer, importPath)) {
+        continue;
+      }
+
+      if (isSupabaseEntrypointAllowedForFile(node.layer, file, importPath)) {
         continue;
       }
       

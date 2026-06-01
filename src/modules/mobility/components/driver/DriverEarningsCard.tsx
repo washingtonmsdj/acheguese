@@ -1,7 +1,7 @@
 import React from "react";
 import { DollarSign, TrendingUp, Calendar, Wallet } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
-import type { DriverEarnings } from "@/modules/mobility/types";
+import type { DriverEarnings } from "@/core/mobility/types";
 
 interface DriverEarningsCardProps {
   earnings: DriverEarnings;

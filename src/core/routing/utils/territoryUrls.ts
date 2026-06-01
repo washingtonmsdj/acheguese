@@ -11,13 +11,12 @@
  *   Módulo:   /[modulo]/:state/:city/:district?
  *   Grupo em módulo (não-comunidade): /[modulo]/:state/:city/:groupSlug
  *
- * Comunidade — padrão único, sem distinção técnica pública:
+ * Comunidade:
  *   /comunidade/:state/:city
- *   (bairro, grupo e localidade são resolvidos internamente para filtros de domínio)
+ *   /comunidade/:state/:city/:districtOrGroup
  */
 
 import type { Location, TerritorialGroup } from '@/core/location/types';
-import { TERRITORY_CONFIG } from '@/config/territory';
 import { ROUTING_MODULE_SLUGS } from '@/config/moduleSlugs';
 
 // ── Slugs de módulo canônicos ────────────────────────────────────────────────
@@ -39,9 +38,56 @@ export type CommunityCanonicalSuffixSegment = (typeof COMMUNITY_CANONICAL_SUFFIX
 
 const COMMUNITY_CANONICAL_SUFFIX_SET = new Set<string>(COMMUNITY_CANONICAL_SUFFIX_SEGMENTS);
 const LEGACY_COMMUNITY_AREA_SEGMENT = 'area';
+const COMMUNITY_EMBEDDED_MODULE_SEGMENTS = new Set<string>([
+  MODULE_SLUGS.business,
+  MODULE_SLUGS.services,
+  MODULE_SLUGS.classifieds,
+  MODULE_SLUGS.gastronomy,
+  MODULE_SLUGS.education,
+  MODULE_SLUGS.jobs,
+  MODULE_SLUGS.events,
+  MODULE_SLUGS.map,
+  MODULE_SLUGS.mobility,
+]);
+
+function cleanUrlSegment(value: string, label: string): string {
+  const segment = value.trim().replace(/^\/+|\/+$/g, '');
+  if (!segment || /[/?#]/.test(segment)) {
+    throw new Error(`${label} exige um unico segmento de URL.`);
+  }
+  return segment;
+}
 
 export function isCommunityCanonicalSuffixSegment(segment: string | undefined): boolean {
   return Boolean(segment && COMMUNITY_CANONICAL_SUFFIX_SET.has(segment));
+}
+
+export function isCommunityEmbeddedModuleSegment(segment: string | undefined): boolean {
+  return Boolean(segment && COMMUNITY_EMBEDDED_MODULE_SEGMENTS.has(segment));
+}
+
+export function isCommunityRouteSuffixSegment(segment: string | undefined): boolean {
+  return (
+    isCommunityCanonicalSuffixSegment(segment) ||
+    isCommunityEmbeddedModuleSegment(segment)
+  );
+}
+
+export function extractCommunityTerritoryBaseUrl(pathname: string): string | null {
+  const parts = pathname.split('/').filter(Boolean);
+  if (parts[0] !== MODULE_SLUGS.community || parts.length < 3) return null;
+  if (!/^[a-z]{2}$/i.test(parts[1])) return null;
+
+  const firstAfterCity = parts[3];
+  if (
+    firstAfterCity &&
+    firstAfterCity !== LEGACY_COMMUNITY_AREA_SEGMENT &&
+    !isCommunityRouteSuffixSegment(firstAfterCity)
+  ) {
+    return `/${parts[1]}/${parts[2]}/${firstAfterCity}`;
+  }
+
+  return `/${parts[1]}/${parts[2]}`;
 }
 
 // ── Helpers internos ─────────────────────────────────────────────────────────
@@ -99,6 +145,22 @@ export function buildCityTerritoryBaseUrl(territoryBaseUrl: string): string {
   }
 
   return `/${parts[0]}/${parts[1]}`;
+}
+
+function buildScopedTerritoryBaseUrl(territoryBaseUrl: string): string {
+  const normalizedBase = normalizePublicTerritoryPath(territoryBaseUrl);
+  const rawParts = normalizedBase.split('/').filter(Boolean);
+  const parts = rawParts[0] === MODULE_SLUGS.community ? rawParts.slice(1) : rawParts;
+
+  if (parts.length < 2) {
+    throw new Error('buildScopedTerritoryBaseUrl exige /:state/:city.');
+  }
+
+  if (parts[2] === LEGACY_COMMUNITY_AREA_SEGMENT) {
+    throw new Error('buildScopedTerritoryBaseUrl nao aceita /area/. Use /:state/:city/:territorySlug.');
+  }
+
+  return `/${parts.slice(0, 3).join('/')}`;
 }
 
 export function hasPublicCityTerritoryPath(path: string | null | undefined): boolean {
@@ -197,27 +259,40 @@ export function buildModuleTerritoryEntityUrl(
 }
 
 /**
- * Constrói a URL canônica de comunidade para uma cidade.
+ * Constrói a URL canônica de comunidade para cidade, bairro ou grupo.
  *
- * Padrão único: /comunidade/:state/:city
- * O tipo territorial (grupo, bairro, localidade) é resolvido internamente —
- * nunca exposto na URL pública de comunidade.
+ * Padrões:
+ *   /comunidade/:state/:city
+ *   /comunidade/:state/:city/:districtOrGroup
  *
  * Aceita base territorial pública no formato:
- *   /:state/:city ou /:state/:city/:internalTerritorySlug
+ *   /:state/:city ou /:state/:city/:territorySlug
  * Nunca usar /area/ em URLs públicas de comunidade.
  *
  * Exemplos:
  *   buildCommunityTerritoryUrl('/ba/salvador/pituba')
- *   → '/comunidade/ba/salvador'
+ *   → '/comunidade/ba/salvador/pituba'
  *
  *   buildCommunityTerritoryUrl('/ba/salvador/pituba', 'feed')
- *   → '/comunidade/ba/salvador/feed'
+ *   → '/comunidade/ba/salvador/pituba/feed'
  */
 export function buildCommunityTerritoryUrl(territoryBaseUrl: string, suffix = ''): string {
-  const cityBase = buildCityTerritoryBaseUrl(territoryBaseUrl);
+  const scopedBase = buildScopedTerritoryBaseUrl(territoryBaseUrl);
   const normalizedSuffix = suffix ? `/${suffix.replace(/^\/+/, '')}` : '';
-  return `/${MODULE_SLUGS.community}${cityBase}${normalizedSuffix}`;
+  return `/${MODULE_SLUGS.community}${scopedBase}${normalizedSuffix}`;
+}
+
+/**
+ * URL publica curta da comunidade.
+ *
+ * Esta URL depende de um alias explicito/unico resolvido pelo backend
+ * ou pela tabela community_public_aliases. A rota territorial completa
+ * continua disponivel como fallback tecnico via buildCommunityTerritoryUrl.
+ */
+export function buildCommunityAliasUrl(alias: string, suffix = ''): string {
+  const cleanAlias = cleanUrlSegment(alias, 'alias publico da comunidade');
+  const normalizedSuffix = suffix ? `/${suffix.replace(/^\/+/, '')}` : '';
+  return `/${cleanAlias}${normalizedSuffix}`;
 }
 
 export type CommunityTabSuffix = 'feed' | 'grupos';
@@ -232,6 +307,10 @@ export function buildCommunityTabUrlFromPath(pathname: string, tab: CommunityTab
   if (isCommunityCanonicalSuffixSegment(parts[3])) return null;
 
   const base = [MODULE_SLUGS.community, parts[1], parts[2]];
+  const territorySlug = parts[3];
+  if (territorySlug && territorySlug !== LEGACY_COMMUNITY_AREA_SEGMENT) {
+    base.push(territorySlug);
+  }
 
   return `/${base.join('/')}/${tab}`;
 }

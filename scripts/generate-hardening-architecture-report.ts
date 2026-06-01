@@ -22,7 +22,7 @@ const LAYER_VIOLATION_EXCLUSIONS = [
   "src/core/verticals/gastronomy/pages/GastronomySetupPage.tsx",
 ];
 const DB_ACCESS_ALLOWED_PREFIXES = [
-  "src/core/infrastructure/supabase/",
+  "src/integrations/supabase/",
   "src/core/ai/providers/",
   "src/core/territorial/highlights/",
   "src/core/ai/actions/SearchBusinessesActionHandler.ts",

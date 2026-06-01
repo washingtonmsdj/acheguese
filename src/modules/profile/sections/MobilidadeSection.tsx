@@ -12,11 +12,9 @@ import {
 } from "@/modules/profile/components/cards";
 
 import type { MobilidadeSectionProps } from "./types";
-import type { Tables } from "@/core/infrastructure/supabase";
+import type { DriverDataRecord } from "@/core/mobility/types/DriverDataRecord";
 import { getMobilityServiceStatus } from "@/core/profile/utils/mobilityServiceStatus";
 import type { MobilityRide } from "@/core/mobility/types/ride";
-
-type DriverDataRecord = Tables<"driver_data">;
 
 export function MobilidadeSection({
   hasDriverProfile,

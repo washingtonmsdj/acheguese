@@ -502,7 +502,7 @@ export class ClassifiedRepository extends BaseRepository<Classified> {
   /**
    * Busca classificados ativos de um vendedor
    */
-  async findActiveByS ellerId(sellerId: string): Promise<Classified[]> {
+  async findActiveBySellerId(sellerId: string): Promise<Classified[]> {
     const filters: Filter[] = [
       this.createFilter('seller_id', 'eq', sellerId),
       this.createFilter('status', 'eq', 'active'),

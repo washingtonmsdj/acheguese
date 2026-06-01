@@ -12,6 +12,10 @@ import { supabase } from '@/integrations/supabase';
 import { BaseRepository } from './BaseRepository';
 import { DatabaseError, DatabaseErrorCode } from '../errors/DatabaseError';
 import type { Filter } from '../interfaces/IRepository';
+import {
+  DATABASE_PROFILE_VERIFICATION_STATUS,
+  type DatabaseProfileVerificationStatus,
+} from '../constants/statuses';
 
 /**
  * Interface do Profile (SSOT)
@@ -29,7 +33,7 @@ export interface Profile {
   street: string | null;
   telefone: string | null;
   pontos: number;
-  verification_status: 'pending' | 'verified' | 'rejected' | null;
+  verification_status: DatabaseProfileVerificationStatus | null;
   created_at: string;
   updated_at: string;
 }
@@ -131,7 +135,7 @@ export class ProfileRepository extends BaseRepository<Profile> {
    */
   async findVerified(): Promise<Profile[]> {
     const filters: Filter[] = [
-      this.createFilter('verification_status', 'eq', 'verified'),
+      this.createFilter('verification_status', 'eq', DATABASE_PROFILE_VERIFICATION_STATUS.VERIFIED),
     ];
 
     return this.findAll(filters);
@@ -142,7 +146,7 @@ export class ProfileRepository extends BaseRepository<Profile> {
    */
   async findPendingVerification(): Promise<Profile[]> {
     const filters: Filter[] = [
-      this.createFilter('verification_status', 'eq', 'pending'),
+      this.createFilter('verification_status', 'eq', DATABASE_PROFILE_VERIFICATION_STATUS.PENDING),
     ];
 
     return this.findAll(filters);
@@ -152,7 +156,7 @@ export class ProfileRepository extends BaseRepository<Profile> {
    * Conta profiles por status de verificação
    */
   async countByVerificationStatus(
-    status: 'pending' | 'verified' | 'rejected'
+    status: DatabaseProfileVerificationStatus
   ): Promise<number> {
     const filters: Filter[] = [
       this.createFilter('verification_status', 'eq', status),

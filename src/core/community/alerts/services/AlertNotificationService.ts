@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase";
 import {
   selectLooseRows,
   updateLooseRows,
-} from "@/integrations/supabase/services/supabaseHelpers";
+} from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { NotificationService } from "@/core/notifications/services/NotificationService";
 import { profileService } from "@/core/profiles/services/ProfileService";

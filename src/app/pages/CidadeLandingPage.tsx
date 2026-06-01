@@ -24,9 +24,9 @@ import { useCityFeatured } from "@/core/city/hooks/useCityFeatured";
 import { useHomeCommunityHref } from "@/core/routing/hooks/useHomeCommunityHref";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 import { APP_MODULE_SLUGS, buildAppModulePath } from "@/config/moduleSlugs";
-import { classifiedUrlService } from "@/modules/classifieds/services/ClassifiedUrlService";
-import { useTouristPoints } from "@/modules/guide/tourist-points/hooks/useTouristPoints";
-import { CATEGORY_ICONS } from "@/modules/guide/tourist-points/types";
+import { classifiedUrlService } from "@/core/classifieds/services/ClassifiedUrlService";
+import { useTouristPoints } from "@/core/guide/tourist-points/hooks/useTouristPoints";
+import { CATEGORY_ICONS } from "@/core/guide/tourist-points/types";
 
 import { formatCategory, formatMetric, formatPrice } from "./CidadeLanding.constants";
 import {

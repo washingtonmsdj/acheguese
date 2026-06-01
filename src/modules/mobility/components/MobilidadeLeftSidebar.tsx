@@ -4,7 +4,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Switch } from "@/shared/components/ui/switch";
 import { cn } from "@/shared/utils/cn";
-import type { MobilidadeFilters, RideType } from "@/modules/mobility/types";
+import type { MobilidadeFilters, RideType } from "@/core/mobility/types";
 
 interface MobilidadeLeftSidebarProps {
   filters: MobilidadeFilters;

@@ -5,7 +5,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { DriverNotifications } from "@/modules/mobility/components/driver/DriverNotifications";
 import { DriverSettingsPanel } from "@/modules/mobility/components/driver/DriverSettingsPanel";
-import { useDriverProfileIdentity } from "@/modules/mobility/hooks/useDriverProfileIdentity";
+import { useDriverProfileIdentity } from "@/core/mobility/hooks/useDriverProfileIdentity";
 import { getMobilityServicePath } from "@/modules/mobility/routes/mobilityNavigation";
 
 export interface DriverSettingsLayoutProps {

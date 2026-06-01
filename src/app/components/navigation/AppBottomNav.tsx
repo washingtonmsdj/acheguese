@@ -17,10 +17,11 @@ import {
 import { useAppUrls } from '@/core/routing/hooks/useAppUrls';
 import { useHomeCommunityHref } from '@/core/routing/hooks/useHomeCommunityHref';
 import { buildModuleTerritoryUrl, MODULE_SLUGS } from '@/core/routing/utils/territoryUrls';
+import { useCommunityNavigationContext } from '@/core/routing/hooks/useCommunityNavigationContext';
+import { buildCommunityNavigationModuleUrls } from '@/core/routing/utils/communityNavigationContext';
 import { cn } from '@/shared/utils/cn';
 import { MOBILE_NAV_ITEMS, type NavItem } from './navigation.config';
 import { usePublicBrowsingCity } from '@/core/location/hooks/usePublicBrowsingCity';
-import { useResolveTerritoryFromUrl } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
 import { useGroupAvailability } from '@/core/territorial/hooks/useGroupAvailability';
 import { ModuleKey } from '@/core/rollout/types';
 import { GastronomyUrlService } from '@/core/verticals/gastronomy/services/GastronomyUrlService';
@@ -109,28 +110,11 @@ export function AppBottomNav() {
   const appUrls = useAppUrls();
   const homeCommunityHref = useHomeCommunityHref();
   const { active } = usePublicBrowsingCity();
-  const territoryResolve = useResolveTerritoryFromUrl();
-
-  const communityContext = useMemo(() => {
-    const parts = location.pathname.split('/').filter(Boolean);
-    if (parts[0] !== 'comunidade' || !parts[1] || !parts[2]) {
-      return null;
-    }
-    if (parts[3] === 'area') {
-      return null;
-    }
-    return {
-      state: parts[1],
-      city: parts[2],
-      territorySlug: parts[2],
-    };
-  }, [location.pathname]);
+  const communityContext = useCommunityNavigationContext();
 
   const communityGroupId = useMemo(() => {
-    if (!communityContext) return null;
-    if (territoryResolve.status !== 'resolved_group') return null;
-    return territoryResolve.resolved?.kind === 'group' ? territoryResolve.resolved.group.id : null;
-  }, [communityContext, territoryResolve.resolved, territoryResolve.status]);
+    return communityContext?.groupId ?? null;
+  }, [communityContext]);
 
   const businessAvailability = useGroupAvailability(communityGroupId, ModuleKey.BUSINESS);
   const gastronomyAvailability = useGroupAvailability(communityGroupId, ModuleKey.GASTRONOMY);
@@ -138,15 +122,18 @@ export function AppBottomNav() {
   const classifiedsAvailability = useGroupAvailability(communityGroupId, ModuleKey.CLASSIFIEDS);
   const activeModuleUrls = useMemo(() => {
     const cityBase = `/${active.state}/${active.city}`;
+    const communityModuleUrls = communityContext
+      ? buildCommunityNavigationModuleUrls(communityContext)
+      : null;
 
     return {
-      business: buildModuleTerritoryUrl(MODULE_SLUGS.business, cityBase),
-      gastronomy: GastronomyUrlService.getTerritoryUrl(cityBase),
-      services: buildModuleTerritoryUrl(MODULE_SLUGS.services, cityBase),
-      classifieds: buildModuleTerritoryUrl(MODULE_SLUGS.classifieds, cityBase),
-      map: buildModuleTerritoryUrl(MODULE_SLUGS.map, cityBase),
+      business: communityModuleUrls?.business ?? buildModuleTerritoryUrl(MODULE_SLUGS.business, cityBase),
+      gastronomy: communityModuleUrls?.gastronomy ?? GastronomyUrlService.getTerritoryUrl(cityBase),
+      services: communityModuleUrls?.services ?? buildModuleTerritoryUrl(MODULE_SLUGS.services, cityBase),
+      classifieds: communityModuleUrls?.classifieds ?? buildModuleTerritoryUrl(MODULE_SLUGS.classifieds, cityBase),
+      map: communityModuleUrls?.map ?? buildModuleTerritoryUrl(MODULE_SLUGS.map, cityBase),
     } as const;
-  }, [active.city, active.state]);
+  }, [active.city, active.state, communityContext]);
 
   const isActive = (href: string): boolean => {
     if (!href) return false;

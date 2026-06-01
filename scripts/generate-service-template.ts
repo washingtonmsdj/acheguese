@@ -33,7 +33,7 @@ const serviceTemplate = `/**
  * - Logging estruturado
  */
 
-import { supabase } from '@/core/infrastructure/supabase';
+import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -348,7 +348,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ${serviceName} } from './${serviceName}';
 
 // Mock do Supabase
-vi.mock('@/core/infrastructure/supabase', () => ({
+vi.mock('@/integrations/supabase', () => ({
   supabase: {
     from: vi.fn(() => ({
       select: vi.fn(() => ({

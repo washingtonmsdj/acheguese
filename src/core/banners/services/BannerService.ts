@@ -7,7 +7,7 @@
  * @version 1.0.0
  */
 
-import { supabase } from "@/integrations/supabase/supabase";
+import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { mediaService } from "@/core/media/services/MediaService";
 

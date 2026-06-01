@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/supabase";
+import { supabase } from "@/integrations/supabase";
 
 export interface ApplicationLogRecord {
   level: "debug" | "info" | "warn" | "error" | "fatal";

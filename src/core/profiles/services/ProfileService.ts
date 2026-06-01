@@ -5,7 +5,7 @@ import { getServicesByProfile } from "@/core/professional/services/professional.
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 import { adminRolesService } from "@/core/admin/services/AdminRolesService";
 import { publicIdentityService, PublicIdentityService } from "@/core/public-identity";
-import { callRPC } from "@/integrations/supabase/services/supabaseHelpers";
+import { callRPC } from "@/integrations/supabase";
 import { PROFILE_VERIFICATION_STATUS } from "@/core/profile/constants/verificationStatus";
 import type {
   AdminFilters,

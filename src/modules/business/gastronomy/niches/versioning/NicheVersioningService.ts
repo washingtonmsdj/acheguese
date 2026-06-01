@@ -5,7 +5,7 @@
  * Garante que upgrades n?o quebrem registros antigos.
  */
 
-import { supabase } from '@/core/infrastructure/supabase';
+import { supabase } from '@/integrations/supabase';
 import type { NicheCapability, NicheStatus } from '../types';
 import type {
   AddCapabilityParams,

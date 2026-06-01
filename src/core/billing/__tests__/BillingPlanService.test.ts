@@ -19,7 +19,7 @@ const basePlanRow = {
   updated_at: '2024-01-01T00:00:00Z',
 };
 
-vi.mock('@/integrations/supabase/supabase', () => ({
+vi.mock('@/integrations/supabase', () => ({
   supabase: {
     from: vi.fn(() => {
       let currentCode: string | null = null;

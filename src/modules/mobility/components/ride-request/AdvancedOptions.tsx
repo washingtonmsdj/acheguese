@@ -22,7 +22,7 @@ import { cn } from '@/shared/utils/cn';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Textarea } from '@/shared/components/ui/textarea';
-import type { PaymentMethod, RideType } from '@/modules/mobility/types';
+import type { PaymentMethod, RideType } from '@/core/mobility/types';
 import { PAYMENT_METHOD } from '@/shared/types/constants';
 
 export interface AdvancedOptionsProps {

@@ -11,7 +11,7 @@
  * - Sempre usar as funções do banco (has_role, is_admin, etc)
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase/supabase';
+import { supabase } from '@/integrations/supabase';
 import { SessionService } from '@/core/session/services/SessionService';
 import { adminRolesService } from '@/core/admin/services/AdminRolesService';
 import type {

@@ -3,10 +3,16 @@ import { readFileSync } from "node:fs";
 
 describe("community route SSOT", () => {
   it("keeps city-level community routes canonical and generated from routing SSOT", () => {
-    const routes = readFileSync("src/app/routes/AppRoutes.tsx", "utf8");
+    const routes = [
+      readFileSync("src/app/routes/AppRoutes.tsx", "utf8"),
+      readFileSync("src/app/routes/sections/CommunityTerritoryRoutes.tsx", "utf8"),
+    ].join("\n");
 
     expect(routes).toContain("buildCommunityTerritoryRoutePath");
+    expect(routes).toContain("buildCommunityAliasRoutePath");
+    expect(routes).toContain("buildCommunityRootAliasRoutePath");
     expect(routes).toContain("CommunityTerritorialShell");
+    expect(routes).toContain("CommunityShortAliasShellRoute");
     expect(routes).not.toContain("buildCommunityLegacyAreaRoutePath");
     expect(routes).not.toContain("CommunityAreaCanonicalRedirect");
     expect(routes).not.toContain('path="/comunidade/:state/:city/:territorySlug"');

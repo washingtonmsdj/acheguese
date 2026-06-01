@@ -5,9 +5,9 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { mobilityRolloutService } from '../services/MobilityRolloutService';
+import { mobilityRolloutService } from '@/core/mobility/services/MobilityRolloutService';
 import { useMobilityLocation } from './useMobilityLocation';
-import { MOBILITY_QUERY_KEYS, TIMEOUTS } from '../constants';
+import { MOBILITY_QUERY_KEYS, TIMEOUTS } from '@/core/mobility/constants';
 
 export function useMobilityRollout() {
   const { locationId, hasActiveLocation } = useMobilityLocation();

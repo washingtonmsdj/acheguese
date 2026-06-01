@@ -13,11 +13,11 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { EducationTrackingService } from '../EducationTrackingService';
-import { supabase } from '@/core/infrastructure/supabase';
+import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
 
 // Mocks
-vi.mock('@/core/infrastructure/supabase');
+vi.mock('@/integrations/supabase');
 vi.mock('@/shared/utils/logger');
 
 const mockInsert = vi.fn();

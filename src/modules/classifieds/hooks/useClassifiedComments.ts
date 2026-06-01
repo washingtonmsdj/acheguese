@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { classifiedCommentService } from "@/modules/classifieds/services/ClassifiedCommentService";
+import { classifiedCommentService } from "@/core/classifieds/services/ClassifiedCommentService";
 
 export function useClassifiedComments(classifiedId?: string) {
   return useQuery({

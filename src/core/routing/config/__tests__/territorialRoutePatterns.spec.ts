@@ -5,6 +5,8 @@ import {
   REQUIRED_CITY_TERRITORIAL_MODULES,
   TERRITORIAL_ROUTE_PARAMS,
   TERRITORIAL_ROUTE_STATIC_SEGMENTS,
+  buildCommunityAliasRoutePath,
+  buildCommunityRootAliasRoutePath,
   buildCommunityTerritoryRoutePath,
   buildTerritorialBareRoutePath,
   buildTerritorialModuleRoutePath,
@@ -36,6 +38,11 @@ describe("territorial route patterns", () => {
     expect(
       buildCommunityTerritoryRoutePath([TERRITORIAL_ROUTE_PARAMS.slug]),
     ).toBe("/comunidade/:state/:city/:slug");
+    expect(buildCommunityAliasRoutePath()).toBe("/comunidade/:communitySlug");
+    expect(buildCommunityRootAliasRoutePath()).toBe("/:communitySlug");
+    expect(
+      buildCommunityRootAliasRoutePath([APP_MODULE_SLUGS.business]),
+    ).toBe("/:communitySlug/empresas");
   });
 
   it("builds non-module territorial aliases from shared params", () => {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { TrendingUp } from "lucide-react";
 import { Card } from "@/shared/components/ui/card";
-import { MobilityService } from "@/modules/mobility/services/MobilityService";
+import { MobilityService } from "@/core/mobility/services/MobilityService";
 import { logger } from "@/shared/utils/logger";
 
 interface WeeklyEarningsChartProps {

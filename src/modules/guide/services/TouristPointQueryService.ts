@@ -1,1 +1,1 @@
-export { TouristPointQueryService } from '@/modules/guide/tourist-points/services/TouristPointQueryService';
+export { TouristPointQueryService } from '@/core/guide/tourist-points/services/TouristPointQueryService';

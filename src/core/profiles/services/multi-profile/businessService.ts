@@ -4,7 +4,7 @@
  * Fonte: ARQUITETURA_MULTI_PERFIL_DEFINITIVA.md v3.0
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase/supabase';
+import { supabase } from '@/integrations/supabase';
 import type { BusinessData, ServiceResponse } from './types';
 
 const errorMessage = (error: unknown, fallback: string): string =>

@@ -8,7 +8,7 @@ import { AlertCircle, Loader2, Store } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { BusinessCard } from "./BusinessCard";
 import { useBusinessAd } from "@/modules/business/hooks/useBusinessAd";
-import { SponsoredAdCard } from "@/modules/business/promotions";
+import { SponsoredAdCard } from "@/core/business/promotions";
 
 interface BusinessGridItem {
   business: import("@/core/business/types").Business;

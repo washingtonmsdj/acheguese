@@ -1,1 +1,1 @@
-export { TouristPointService } from '@/modules/guide/tourist-points/services/TouristPointService';
+export { TouristPointService } from '@/core/guide/tourist-points/services/TouristPointService';

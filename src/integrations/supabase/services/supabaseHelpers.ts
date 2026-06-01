@@ -1,12 +1,12 @@
 /**
  * Typed Supabase helpers.
  *
- * This file lives under a core service boundary because these helpers execute
- * database operations and are consumed only by services.
+ * This file lives inside the Supabase integration boundary because these
+ * helpers execute database operations and are consumed only by services.
  */
 
-import { supabase } from "@/integrations/supabase";
-import type { Database } from "@/integrations/supabase/types.generated";
+import { supabase } from "../supabase";
+import type { Database } from "../types.generated";
 
 type PublicSchema = Database["public"];
 type TableName = Extract<keyof PublicSchema["Tables"], string>;
