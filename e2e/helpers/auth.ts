@@ -2,13 +2,13 @@ import { Page } from "@playwright/test";
 
 // Credenciais de teste — lidas de variáveis de ambiente
 export const TEST_USER = {
-  email: process.env.E2E_USER_EMAIL ?? "test@example.com",
-  password: process.env.E2E_USER_PASSWORD ?? "test123456",
+  email: process.env.E2E_USER_EMAIL ?? "e2e-user@example.com",
+  password: process.env.E2E_USER_PASSWORD ?? "E2eTest@2024!",
 };
 
 export const TEST_ADMIN = {
-  email: process.env.E2E_ADMIN_EMAIL ?? "admin@example.com",
-  password: process.env.E2E_ADMIN_PASSWORD ?? "admin123456",
+  email: process.env.E2E_ADMIN_EMAIL ?? "e2e-admin@example.com",
+  password: process.env.E2E_ADMIN_PASSWORD ?? "E2eAdmin@2024!",
 };
 
 export async function login(page: Page, email: string, password: string) {

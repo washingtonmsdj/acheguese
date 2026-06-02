@@ -144,11 +144,11 @@ BEGIN
       bd.business_name,
       bd.slug as business_slug,
       CASE 
-        WHEN o.delivery_mode = 'delivery' THEN 'pediu delivery de'
+        WHEN o.delivery_mode = 'platform_courier_network' THEN 'pediu delivery de'
         ELSE 'fez pedido no'
       END as action_label,
       CASE 
-        WHEN o.delivery_mode = 'delivery' THEN '🛵'
+        WHEN o.delivery_mode = 'platform_courier_network' THEN '🛵'
         ELSE '🍽️'
       END as emoji,
       o.created_at

@@ -17,37 +17,53 @@
 -- ============================================================================
 
 -- Status de classificados
-CREATE TYPE classified_status AS ENUM (
-  'active',
-  'inactive',
-  'sold',
-  'expired',
-  'deleted'
-);
+DO $$ BEGIN
+  CREATE TYPE classified_status AS ENUM (
+    'active',
+    'inactive',
+    'sold',
+    'expired',
+    'deleted'
+  );
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Condição do item
-CREATE TYPE item_condition AS ENUM (
-  'new',
-  'like_new',
-  'good',
-  'fair',
-  'poor'
-);
+DO $$ BEGIN
+  CREATE TYPE item_condition AS ENUM (
+    'new',
+    'like_new',
+    'good',
+    'fair',
+    'poor'
+  );
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Status de trabalhos profissionais
-CREATE TYPE job_status AS ENUM (
-  'pending',
-  'in_progress',
-  'completed',
-  'cancelled'
-);
+DO $$ BEGIN
+  CREATE TYPE job_status AS ENUM (
+    'pending',
+    'in_progress',
+    'completed',
+    'cancelled'
+  );
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Tipo de review
-CREATE TYPE review_type AS ENUM (
-  'business',
-  'professional',
-  'service'
-);
+DO $$ BEGIN
+  CREATE TYPE review_type AS ENUM (
+    'business',
+    'professional',
+    'service'
+  );
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
 -- ============================================================================
 -- 1. PROFESSIONAL_DATA - Dados de Profissionais

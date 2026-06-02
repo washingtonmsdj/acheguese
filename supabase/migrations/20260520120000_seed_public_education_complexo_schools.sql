@@ -29,7 +29,7 @@ BEGIN
   LIMIT 1;
 
   IF v_platform_custody_user_id IS NULL THEN
-    RAISE EXCEPTION 'public_education_seed_requires_admin_user';
+    RAISE NOTICE 'No admin user found; seeding public education profiles without initial user custody.';
   END IF;
 
   -- Institutional custody profiles. They are public placeholders until an

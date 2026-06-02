@@ -191,6 +191,7 @@ async function seedE2EUsers(options: SeedOptions = {}) {
       const { error: roleError } = await supabase.from("user_roles").insert({
         user_id: newUser.user.id,
         role: "admin",
+        role_enum: "admin",
         is_active: true,
         granted_at: new Date().toISOString(),
       });
