@@ -17,7 +17,7 @@ import { format } from "date-fns";
 import { ptBR } from "@/shared/utils/dateLocale";
 import { useQuery } from "@tanstack/react-query";
 import { BusinessService } from "@/core/business/services/BusinessService";
-import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
+import { useBusinessUrls } from "@/core/business/hooks/useBusinessUrls";
 import { usePublicBrowsingCity } from "@/core/location/hooks/usePublicBrowsingCity";
 import {
   isTerritoryFilterReady,
@@ -80,14 +80,22 @@ function formatSlugLabel(value: string): string {
     .join(" ");
 }
 
-function buildBusinessHref(business: Business): string | null {
+function buildBusinessHref(
+  business: Business,
+  canonicalUrl: (ctx: {
+    id: string;
+    slug: string;
+    is_premium?: boolean;
+    geographic_path: string;
+  }) => string,
+): string | null {
   if (!business.slug) return null;
 
   const geographicPath = business.geographic_path ?? business.location?.geographic_path;
   if (!geographicPath) return null;
 
   try {
-    return BusinessUrlService.getCanonicalUrl({
+    return canonicalUrl({
       id: business.id,
       slug: business.slug,
       is_premium: business.is_premium,
@@ -126,6 +134,7 @@ export const CommunityRightSidebar = memo(
   ({ resolved, territoryFilter }: CommunityRightSidebarProps) => {
     const { active } = usePublicBrowsingCity();
     const moduleUrls = useFriendlyModuleUrls();
+    const businessUrls = useBusinessUrls(resolved);
     const filterReady = isTerritoryFilterReady(territoryFilter);
     const filterKey = territoryFilterKey(territoryFilter);
     const cityLabel = formatSlugLabel(active.city);
@@ -278,7 +287,7 @@ export const CommunityRightSidebar = memo(
           ) : (
             <div className="space-y-2">
               {businesses.map((business) => {
-                const href = buildBusinessHref(business);
+                const href = buildBusinessHref(business, businessUrls.canonical);
                 const rating =
                   typeof business.rating === "number" && business.rating > 0
                     ? business.rating.toFixed(1).replace(".", ",")

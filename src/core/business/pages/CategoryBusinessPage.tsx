@@ -26,7 +26,6 @@ import { useBusinessList } from "@/core/business/hooks/useBusinessList";
 import { useBusinessUrls } from "@/core/business/hooks/useBusinessUrls";
 import { useUserPosition } from "@/core/business/hooks/useUserPosition";
 import { useBusinessDistance, useSortedByDistance } from "@/core/business/hooks/useBusinessDistance";
-import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 import { getCategoryConfig } from "@/core/business/config/categoryFilters";
 import { formatDistance } from "@/shared/utils/geolocation";
 import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
@@ -244,7 +243,7 @@ export default function CategoryBusinessPage({
   const handleBusinessClick = useCallback(
     (business: Business) => {
       if (!business.slug || !business.geographic_path) return;
-      const url = BusinessUrlService.getCanonicalUrl({
+      const url = businessUrls.canonical({
         id: business.id,
         slug: business.slug,
         is_premium: business.is_premium,
@@ -252,7 +251,7 @@ export default function CategoryBusinessPage({
       });
       navigate(url);
     },
-    [navigate],
+    [businessUrls, navigate],
   );
 
   // ── Fallback if unknown category ───────────────────────────────────

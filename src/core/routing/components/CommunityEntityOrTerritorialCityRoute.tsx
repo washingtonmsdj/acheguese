@@ -88,6 +88,7 @@ export function CommunityEntityOrTerritorialCityRoute() {
       <EmpresaDetailLandingPage
         routeParams={resolution.routeParams}
         canonicalPathOverride={resolution.canonicalPath}
+        communityAliasOverride={state}
       />
     </Suspense>
   );

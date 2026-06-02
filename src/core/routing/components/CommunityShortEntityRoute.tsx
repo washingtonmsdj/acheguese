@@ -112,6 +112,7 @@ export function CommunityShortEntityRoute() {
         <EmpresaDetailLandingPage
           routeParams={state.routeParams}
           canonicalPathOverride={state.canonicalPath}
+          communityAliasOverride={communitySlug}
         />
       )}
     </Suspense>

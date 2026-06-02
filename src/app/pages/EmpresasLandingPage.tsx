@@ -10,7 +10,7 @@
  */
 
 import { useNavigate } from "react-router-dom";
-import { useState, useMemo, useEffect } from "react";
+import { useCallback, useState, useMemo, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { BadgeCheck, MapPin, Star, Store, ThumbsUp } from "lucide-react";
 import { useAuth } from "@/core/auth/hooks/useAuth";
@@ -118,6 +118,11 @@ export default function EmpresasLandingPage({
   const moduleTerritory = useModuleTerritoryFilter({ routeResolved: resolved });
   const businessUrls = useBusinessUrls(resolved);
   const moduleUrls = useFriendlyModuleUrls();
+  const buildBusinessUrl = useCallback(
+    (business: Business, fallbackUrl: string) =>
+      getBusinessUrl(business, fallbackUrl, businessUrls.canonical),
+    [businessUrls],
+  );
 
   // ============================================
   // State Management
@@ -443,7 +448,7 @@ export default function EmpresasLandingPage({
         onToggleSave={toggleSave}
         businessUrls={businessUrls}
         moduleUrls={moduleUrls}
-        getBusinessUrl={getBusinessUrl}
+        getBusinessUrl={buildBusinessUrl}
         navigate={navigate}
       />
 
@@ -451,7 +456,7 @@ export default function EmpresasLandingPage({
       <EmpresasRecomendacoesSection
         topBusinesses={topBusinesses}
         moduleUrls={moduleUrls}
-        getBusinessUrl={getBusinessUrl}
+        getBusinessUrl={buildBusinessUrl}
         navigate={navigate}
       />
 

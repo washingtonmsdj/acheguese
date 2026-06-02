@@ -37,7 +37,7 @@ import { BusinessLogo } from "@/shared/components/ui/business-logo";
 import { cn } from "@/shared/utils/cn";
 import { buildWhatsAppUrl } from "@/shared/utils/contactLinks";
 import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
-import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
+import { useBusinessUrls } from "@/core/business/hooks/useBusinessUrls";
 import type { Business } from "@/core/business/types";
 
 // 🎯 TYPES
@@ -77,6 +77,7 @@ export const BusinessCard = memo(
       ref,
     ) => {
       const navigate = useNavigate();
+      const businessUrls = useBusinessUrls();
       const latitude = business.address?.latitude ?? null;
       const longitude = business.address?.longitude ?? null;
       const locationLabel =
@@ -92,14 +93,14 @@ export const BusinessCard = memo(
         if (!business.slug) return;
         if (!business.geographic_path) return;
         
-        const url = BusinessUrlService.getCanonicalUrl({
+        const url = businessUrls.canonical({
           id: business.id,
           slug: business.slug,
           is_premium: business.is_premium,
           geographic_path: business.geographic_path,
         });
         navigate(url);
-      }, [navigate, business]);
+      }, [navigate, business, businessUrls]);
 
       const handleFavoriteClick = useCallback(
         (e: React.MouseEvent) => {

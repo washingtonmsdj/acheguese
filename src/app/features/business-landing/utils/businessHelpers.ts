@@ -12,15 +12,23 @@ import type { Business } from "../sections/types";
  */
 export function getBusinessUrl(
   business: Business,
-  fallbackUrl: string
+  fallbackUrl: string,
+  canonicalUrl?: (ctx: {
+    id: string;
+    slug: string;
+    is_premium?: boolean;
+    geographic_path: string;
+  }) => string,
 ): string {
   if (business.slug && business.geographic_path) {
-    return BusinessUrlService.getCanonicalUrl({
+    const ctx = {
       id: business.id,
       slug: business.slug,
       is_premium: business.is_premium || false,
       geographic_path: business.geographic_path,
-    });
+    };
+
+    return canonicalUrl ? canonicalUrl(ctx) : BusinessUrlService.getCanonicalUrl(ctx);
   }
 
   return fallbackUrl;

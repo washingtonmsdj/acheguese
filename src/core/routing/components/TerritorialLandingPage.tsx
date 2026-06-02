@@ -42,7 +42,7 @@ import { useTerritorialHighlights } from '@/core/territorial/highlights/useTerri
 import { useTerritoryStats } from '@/core/territorial/hooks/useTerritoryStats';
 import { getCityStateFromResolved, formatCityState } from '@/core/location/utils/territoryHelpers';
 import { MODULE_SLUGS, buildModuleTerritoryUrl } from '../utils/territoryUrls';
-import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
+import { useBusinessUrls } from '@/core/business/hooks/useBusinessUrls';
 import { classifiedUrlService } from "@/core/classifieds/services";
 import type { FeaturedBusiness, FeaturedService, FeaturedClassified } from '@/core/landing/types';
 import type { TerritorialHighlight, HighlightType } from '@/core/territorial/highlights/types';
@@ -139,11 +139,13 @@ function BlockLoader() {
 // ── Cards ────────────────────────────────────────────────────────────────────
 
 function BusinessCard({ b, onNavigate }: { b: FeaturedBusiness; onNavigate: (to: string) => void }) {
+  const businessUrls = useBusinessUrls();
+
   return (
     <button
       onClick={() => {
         if (!b.slug) return;
-        const url = BusinessUrlService.getCanonicalUrl({ id: b.id, slug: b.slug, is_premium: b.is_premium, geographic_path: b.geographic_path });
+        const url = businessUrls.canonical({ id: b.id, slug: b.slug, is_premium: b.is_premium, geographic_path: b.geographic_path });
         onNavigate(url);
       }}
       className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border hover:border-blue-500/40 hover:bg-accent transition-all text-left w-full"
@@ -305,6 +307,7 @@ const MODULE_ITEMS = [
 export function TerritorialLandingPage() {
   const { resolved, baseUrl } = useTerritorialContext();
   const navigate = useNavigate();
+  const businessUrls = useBusinessUrls(resolved);
 
   const filter = useTerritoryFilter(resolved);
   const { businesses, services, classifieds, stats, isLoading } = useLandingFeatured(filter);
@@ -591,7 +594,7 @@ export function TerritorialLandingPage() {
                   key={b.id}
                   onClick={() => {
                     if (!b.slug) return;
-                    const url = BusinessUrlService.getCanonicalUrl({ id: b.id, slug: b.slug, is_premium: b.is_premium, geographic_path: b.geographic_path });
+                    const url = businessUrls.canonical({ id: b.id, slug: b.slug, is_premium: b.is_premium, geographic_path: b.geographic_path });
                     navigate(url);
                   }}
                   className="flex items-center gap-3 p-4 rounded-xl bg-card border border-border hover:border-orange-500/40 hover:bg-accent transition-all text-left w-full group"

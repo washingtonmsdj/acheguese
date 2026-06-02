@@ -7,8 +7,8 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import BusinessSEO from "@/core/business/components/seo/BusinessSEO";
 import BranchNetworkBlock from "@/core/business/components/BranchNetworkBlock";
 import { BusinessService } from "@/core/business/services/BusinessService";
+import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 import { BusinessHoursService } from "@/core/business";
-import { buildBusinessPublicUrlFromTerritory } from "@/core/business/utils/businessPublicUrls";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { useBusinessFavorite } from "@/modules/business/hooks/useBusinessFavorite";
 import { useBusinessProducts } from "@/modules/business/hooks/useBusinessProducts";
@@ -50,6 +50,7 @@ interface EmpresaDetailLandingPageProps {
     slug?: string;
   };
   canonicalPathOverride?: string;
+  communityAliasOverride?: string;
 }
 
 export default function EmpresaDetailLandingPage(
@@ -253,7 +254,17 @@ export default function EmpresaDetailLandingPage(
               rating: detail?.rating || 0,
               isOpen: undefined,
               canonicalUrl: detail?.slug && detail?.geographic_path
-                ? buildBusinessPublicUrlFromTerritory(detail.geographic_path, detail.slug)
+                ? BusinessUrlService.getCanonicalUrl({
+                    id: detail.id,
+                    slug: detail.slug,
+                    is_premium: detail.is_premium,
+                    geographic_path: detail.geographic_path,
+                    community_alias:
+                      props.communityAliasOverride &&
+                      detail.geographic_path === business.geographic_path
+                        ? props.communityAliasOverride
+                        : null,
+                  })
                 : undefined,
             } satisfies NearbyBusiness;
           })
@@ -275,7 +286,7 @@ export default function EmpresaDetailLandingPage(
     return () => {
       cancelled = true;
     };
-  }, [business?.id, business?.category]);
+  }, [business?.id, business?.category, business?.geographic_path, props.communityAliasOverride]);
 
   const handleCopyPhone = () => {
     if (!snapshot?.institutional.phone) return;
@@ -459,6 +470,8 @@ export default function EmpresaDetailLandingPage(
                 currentBranchId={business.id}
                 brandHubId={business.id}
                 brandName={business.business_name || business.name}
+                communityAliasOverride={props.communityAliasOverride}
+                currentBusinessGeographicPath={business.geographic_path}
               />
             </section>
           )}

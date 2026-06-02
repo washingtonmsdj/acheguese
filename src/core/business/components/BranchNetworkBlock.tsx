@@ -12,6 +12,8 @@ interface BranchNetworkBlockProps {
   brandHubId?: string;
   businessRole?: 'standalone' | 'brand_hub' | 'branch';
   brandName?: string;
+  communityAliasOverride?: string;
+  currentBusinessGeographicPath?: string | null;
 }
 
 export default function BranchNetworkBlock({
@@ -20,6 +22,8 @@ export default function BranchNetworkBlock({
   brandHubId,
   businessRole,
   brandName,
+  communityAliasOverride,
+  currentBusinessGeographicPath,
 }: BranchNetworkBlockProps) {
   const navigate = useNavigate();
   const [branches, setBranches] = useState<BranchSummary[]>([]);
@@ -61,7 +65,13 @@ export default function BranchNetworkBlock({
       ) : (
         <ul className="space-y-2">
           {branches.map((branch) => (
-            <BranchItem key={branch.id} branch={branch} onNavigate={navigate} />
+            <BranchItem
+              key={branch.id}
+              branch={branch}
+              onNavigate={navigate}
+              communityAliasOverride={communityAliasOverride}
+              currentBusinessGeographicPath={currentBusinessGeographicPath}
+            />
           ))}
         </ul>
       )}
@@ -72,14 +82,28 @@ export default function BranchNetworkBlock({
 function BranchItem({
   branch,
   onNavigate,
+  communityAliasOverride,
+  currentBusinessGeographicPath,
 }: {
   branch: BranchSummary;
   onNavigate: (path: string) => void;
+  communityAliasOverride?: string;
+  currentBusinessGeographicPath?: string | null;
 }) {
   const handleClick = async () => {
     const ctx = await BusinessUrlService.resolveById(branch.profile_id);
     if (ctx) {
-      onNavigate(BusinessUrlService.getCanonicalUrl(ctx));
+      onNavigate(
+        BusinessUrlService.getCanonicalUrl({
+          ...ctx,
+          community_alias:
+            communityAliasOverride &&
+            currentBusinessGeographicPath &&
+            ctx.geographic_path === currentBusinessGeographicPath
+              ? communityAliasOverride
+              : null,
+        }),
+      );
     }
   };
 
