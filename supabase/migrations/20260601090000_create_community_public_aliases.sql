@@ -98,7 +98,7 @@ GRANT SELECT ON community_public_aliases TO anon, authenticated;
 
 -- Backfill seguro: so cria alias curto para slugs nao ambiguos no pais.
 WITH unique_community_slugs AS (
-  SELECT slug, MIN(id) AS territory_community_id
+  SELECT slug, (array_agg(id ORDER BY id))[1] AS territory_community_id
   FROM territory_communities
   WHERE status <> 'inactive'
     AND slug !~ '^[a-z]{2}$'
