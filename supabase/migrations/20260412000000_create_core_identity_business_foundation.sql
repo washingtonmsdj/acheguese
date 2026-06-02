@@ -8,6 +8,7 @@
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 CREATE EXTENSION IF NOT EXISTS citext;
+CREATE EXTENSION IF NOT EXISTS postgis;
 
 CREATE OR REPLACE FUNCTION public.update_updated_at_column()
 RETURNS TRIGGER
@@ -169,6 +170,29 @@ EXCEPTION
   WHEN duplicate_object THEN NULL;
 END $migration$;
 
+DO $migration$ BEGIN
+  CREATE TYPE public.address_precision AS ENUM (
+    'exact',
+    'interpolated',
+    'street',
+    'neighborhood',
+    'district',
+    'city'
+  );
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $migration$;
+
+DO $migration$ BEGIN
+  CREATE TYPE public.address_verification_status AS ENUM (
+    'pending',
+    'verified',
+    'rejected'
+  );
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $migration$;
+
 CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -285,6 +309,90 @@ CREATE TRIGGER update_locations_updated_at
 
 ALTER TABLE public.locations ENABLE ROW LEVEL SECURITY;
 
+CREATE TABLE IF NOT EXISTS public.addresses (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  location_id UUID NOT NULL REFERENCES public.locations(id) ON DELETE RESTRICT,
+  owner_user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  address_type TEXT NOT NULL DEFAULT 'primary',
+  street TEXT,
+  number TEXT,
+  complement TEXT,
+  postal_code TEXT,
+  latitude DECIMAL(10,7) CHECK (latitude IS NULL OR latitude BETWEEN -90 AND 90),
+  longitude DECIMAL(10,7) CHECK (longitude IS NULL OR longitude BETWEEN -180 AND 180),
+  point GEOGRAPHY(Point, 4326) GENERATED ALWAYS AS (
+    CASE
+      WHEN latitude IS NOT NULL AND longitude IS NOT NULL
+        THEN ST_SetSRID(ST_MakePoint(longitude::double precision, latitude::double precision), 4326)::geography
+      ELSE NULL
+    END
+  ) STORED,
+  precision public.address_precision DEFAULT 'neighborhood',
+  is_verified BOOLEAN DEFAULT false,
+  verification_status public.address_verification_status DEFAULT 'pending',
+  verified_at TIMESTAMPTZ,
+  verified_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  verified_reason TEXT,
+  geocoding_source TEXT,
+  geocoding_confidence DECIMAL(5,2) CHECK (
+    geocoding_confidence IS NULL OR geocoding_confidence BETWEEN 0 AND 100
+  ),
+  geocoded_at TIMESTAMPTZ,
+  metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_addresses_location_id ON public.addresses(location_id);
+CREATE INDEX IF NOT EXISTS idx_addresses_owner_user_id
+  ON public.addresses(owner_user_id)
+  WHERE owner_user_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_addresses_point
+  ON public.addresses
+  USING GIST (point)
+  WHERE point IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_addresses_postal_code
+  ON public.addresses(postal_code)
+  WHERE postal_code IS NOT NULL;
+
+DROP TRIGGER IF EXISTS update_addresses_updated_at ON public.addresses;
+CREATE TRIGGER update_addresses_updated_at
+  BEFORE UPDATE ON public.addresses
+  FOR EACH ROW
+  EXECUTE FUNCTION public.update_updated_at_column();
+
+ALTER TABLE public.addresses ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Addresses public verified read" ON public.addresses;
+CREATE POLICY "Addresses public verified read"
+  ON public.addresses FOR SELECT
+  TO anon, authenticated
+  USING (is_verified = true OR verification_status = 'verified');
+
+DROP POLICY IF EXISTS "Users manage own addresses" ON public.addresses;
+CREATE POLICY "Users manage own addresses"
+  ON public.addresses FOR ALL
+  TO authenticated
+  USING (owner_user_id = auth.uid())
+  WITH CHECK (owner_user_id = auth.uid());
+
+DROP VIEW IF EXISTS public.addresses_public;
+CREATE VIEW public.addresses_public AS
+SELECT
+  id,
+  location_id,
+  address_type,
+  latitude,
+  longitude,
+  precision,
+  is_verified,
+  verification_status,
+  created_at
+FROM public.addresses
+WHERE is_verified = true OR verification_status = 'verified';
+
+GRANT SELECT ON public.addresses_public TO anon, authenticated;
+
 DO $migration$
 BEGIN
   IF NOT EXISTS (
@@ -400,7 +508,7 @@ CREATE TABLE IF NOT EXISTS public.business_data (
   business_address TEXT,
   business_city TEXT,
   business_state TEXT,
-  address_id UUID,
+  address_id UUID REFERENCES public.addresses(id) ON DELETE SET NULL,
   latitude DECIMAL(10,7),
   longitude DECIMAL(10,7),
   location_id UUID REFERENCES public.locations(id) ON DELETE SET NULL,
@@ -574,7 +682,7 @@ CREATE TABLE IF NOT EXISTS public.professional_data (
   is_verified BOOLEAN NOT NULL DEFAULT false,
   verified_at TIMESTAMPTZ,
   rating DECIMAL(3,2) DEFAULT 0 CHECK (rating >= 0 AND rating <= 5),
-  address_id UUID,
+  address_id UUID REFERENCES public.addresses(id) ON DELETE SET NULL,
   location_id UUID REFERENCES public.locations(id) ON DELETE SET NULL,
   metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
