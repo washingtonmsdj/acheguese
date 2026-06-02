@@ -36,13 +36,25 @@ BEGIN
     RAISE NOTICE 'Nenhuma location encontrada. Criando location padrão...';
     
     -- Criar location padrão se não existir
-    INSERT INTO locations (id, name, type, parent_id, is_active)
+    INSERT INTO locations (
+      id,
+      name,
+      full_name,
+      type,
+      slug,
+      geographic_path,
+      parent_id,
+      status
+    )
     VALUES (
       gen_random_uuid(),
       'São Paulo - SP',
+      'São Paulo, SP, Brasil',
       'city',
+      'sao-paulo',
+      '/br/sp/sao-paulo',
       NULL,
-      true
+      'active'
     )
     RETURNING id INTO default_location_id;
   END IF;
