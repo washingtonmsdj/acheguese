@@ -74,7 +74,7 @@ test.describe("community territorial routes", () => {
     await expectRouteResolved(page);
 
     const educationLink = page
-      .locator('a[href="/comunidade/ba/salvador/educacao"]')
+      .locator('a[href="/educacao/ba/salvador"]')
       .first();
 
     await expect(educationLink).toBeVisible({ timeout: 30_000 });
@@ -82,7 +82,7 @@ test.describe("community territorial routes", () => {
 
     await expect
       .poll(() => page.url(), { timeout: 30_000 })
-      .toContain("/comunidade/ba/salvador/educacao");
+      .toContain("/educacao/ba/salvador");
     await expectRouteResolved(page);
   });
 });

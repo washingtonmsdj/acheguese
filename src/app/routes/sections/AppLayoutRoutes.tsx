@@ -7,7 +7,7 @@
  * @version 1.0.0
  */
 
-import { Routes, Route } from "react-router-dom";
+import { Navigate, Routes, Route } from "react-router-dom";
 import { APP_MODULE_SLUGS } from "@/config/moduleSlugs";
 import {
   TERRITORIAL_ROUTE_PARAMS,
@@ -36,6 +36,7 @@ import * as P from "../lazyImports";
 
 const TERRITORIAL_PARAMS = TERRITORIAL_ROUTE_PARAMS;
 const TERRITORIAL_STATIC = TERRITORIAL_ROUTE_STATIC_SEGMENTS;
+const LEGACY_DRIVER_CREATE_ROUTE = "/create-driver";
 
 export function AppLayoutRoutes() {
   const aiVirtualTryOnEnabled = isFeatureEnabled('AI_VIRTUAL_TRYON');
@@ -62,6 +63,10 @@ export function AppLayoutRoutes() {
       <Route path="/login" element={<P.LoginPage />} />
       <Route path="/cadastro" element={<P.CadastroPage />} />
       <Route path="/cadastro/confirmacao" element={<P.CadastroConfirmacaoPage />} />
+      <Route
+        path={LEGACY_DRIVER_CREATE_ROUTE}
+        element={<Navigate to="/central/motorista/cadastro" replace />}
+      />
       <Route path="/sobre" element={<P.AboutPage />} />
       <Route path="/contato" element={<P.ContactPage />} />
       <Route path="/onboarding" element={<P.OnboardingPage />} />
