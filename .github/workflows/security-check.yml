@@ -29,9 +29,11 @@ jobs:
       
       - name: Check for .env.local in commits
         run: |
-          if git ls-files | grep -q "\.env\.local"; then
+          tracked_env_local="$(git ls-files | grep -E '(^|/)\.env(\.[^.]+)?\.local$' || true)"
+          if [ -n "$tracked_env_local" ]; then
             echo "❌ Error: .env.local file found in repository!"
             echo "This file should be in .gitignore and never committed."
+            echo "$tracked_env_local"
             exit 1
           fi
           echo "✅ No .env.local file found in repository"

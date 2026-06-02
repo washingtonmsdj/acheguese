@@ -13,7 +13,7 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "./types.generated";
 import { createBrowserAuthStorage } from "./cookieStorage";
-import { AUTH_BROWSER_STORAGE_CONFIG, AUTH_STORAGE_KEY } from "@/config/security.config";
+import { AUTH_STORAGE_KEY } from "@/config/security.config";
 import { PUBLIC_SUPABASE_CONFIG } from "@/shared/config/publicSupabase";
 
 const viteEnv = typeof import.meta !== "undefined" ? import.meta.env : undefined;
@@ -22,17 +22,18 @@ const DEBUG_BOOT =
   (viteEnv?.DEV ?? nodeEnv?.NODE_ENV !== "production") &&
   (viteEnv?.VITE_DEBUG_BOOT === "true" || nodeEnv?.VITE_DEBUG_BOOT === "true");
 
-// Limpa tokens expirados da URL
-if (typeof window !== "undefined") {
+function hasAuthReturnParams(): boolean {
+  if (typeof window === "undefined") return false;
   const url = new URL(window.location.href);
-  if (url.hash.includes("access_token") || url.searchParams.has("code")) {
-    setTimeout(() => {
-      const cleanUrl = new URL(window.location.href);
-      cleanUrl.hash = "";
-      cleanUrl.searchParams.delete("code");
-      window.history.replaceState({}, document.title, cleanUrl.toString());
-    }, AUTH_BROWSER_STORAGE_CONFIG.authUrlCleanupDelayMs);
-  }
+  return url.hash.includes("access_token") || url.searchParams.has("code");
+}
+
+function cleanAuthReturnUrl(): void {
+  if (typeof window === "undefined") return;
+  const cleanUrl = new URL(window.location.href);
+  cleanUrl.hash = "";
+  cleanUrl.searchParams.delete("code");
+  window.history.replaceState({}, document.title, `${cleanUrl.pathname}${cleanUrl.search}`);
 }
 
 // Log de inicializacao (apenas em desenvolvimento)
@@ -72,3 +73,9 @@ export const supabase = createClient<Database>(
     },
   },
 );
+
+if (hasAuthReturnParams()) {
+  void supabase.auth.getSession().finally(() => {
+    cleanAuthReturnUrl();
+  });
+}

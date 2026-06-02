@@ -95,6 +95,22 @@ export const SECURITY_DOMAINS = {
     justification: 'Routing service for mobility features',
     alternatives: 'Self-hosted OSRM instance',
   },
+
+  IPAPI_GEOLOCATION: {
+    url: 'https://ipapi.co',
+    purpose: 'IP-based geolocation fallback',
+    risk: 'LOW',
+    justification: 'Used only when browser GPS is unavailable or denied',
+    alternatives: 'Server-side geolocation proxy or self-hosted GeoIP database',
+  },
+
+  IPWHOIS_GEOLOCATION: {
+    url: 'https://ipwho.is',
+    purpose: 'Secondary IP-based geolocation fallback',
+    risk: 'LOW',
+    justification: 'HTTPS replacement for insecure ip-api.com fallback',
+    alternatives: 'Server-side geolocation proxy or self-hosted GeoIP database',
+  },
   
   // Monitoring - Sentry
   SENTRY_INGEST: {
@@ -292,6 +308,8 @@ export const CSP_DIRECTIVES = {
     SECURITY_DOMAINS.OPENSTREETMAP_NOMINATIM.url,
     SECURITY_DOMAINS.OPENFREEMAP_TILES.url,
     SECURITY_DOMAINS.OSRM_ROUTER.url,
+    SECURITY_DOMAINS.IPAPI_GEOLOCATION.url,
+    SECURITY_DOMAINS.IPWHOIS_GEOLOCATION.url,
     SECURITY_DOMAINS.SENTRY_INGEST.url,
     SECURITY_DOMAINS.VERCEL_VITALS.url,
     SECURITY_DOMAINS.CLOUDFLARE_INSIGHTS_COLLECT.url,
@@ -660,9 +678,9 @@ export const INPUT_VALIDATION = {
  * MUST be updated on every security config change.
  */
 export const SECURITY_AUDIT_LOG = {
-  lastReview: '2026-05-29',
+  lastReview: '2026-06-01',
   reviewer: 'Codex',
-  version: '2.8.0',
+  version: '2.8.1',
   changes: [
     'Initial SSOT implementation',
     'CSP directives centralized',
@@ -714,8 +732,10 @@ export const SECURITY_AUDIT_LOG = {
     // v2.8.0 - URL/media safety centralization
     'FIX: validacao segura de URLs de links e imagens centralizada em utilitario unico',
     'FIX: data URLs de imagem limitadas a MIME types raster seguros',
+    // v2.8.1 - IP geolocation CSP
+    'FIX: provedores de geolocalizacao por IP registrados no SECURITY_DOMAINS e connect-src',
   ],
-  nextReview: '2026-06-29',
+  nextReview: '2026-07-01',
 } as const;
 
 /**
@@ -788,9 +808,9 @@ export const CACHE_HEADERS = {
  * Metadata about this configuration file.
  */
 export const SECURITY_CONFIG_METADATA = {
-  version: '2.8.0',
+  version: '2.8.1',
   created: '2026-04-18',
-  lastModified: '2026-05-29',
+  lastModified: '2026-06-01',
   author: 'Kiro AI',
   purpose: 'Single Source of Truth for security configurations',
   criticality: 'CRITICAL',

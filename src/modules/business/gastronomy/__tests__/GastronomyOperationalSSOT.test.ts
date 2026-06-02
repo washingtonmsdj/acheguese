@@ -12,7 +12,7 @@ function readProjectFile(path: string): string {
 
 describe("gastronomy operational SSOT flow", () => {
   it("keeps customer order details reachable outside merchant Central", () => {
-    const routesSource = readProjectFile("src/app/routes/AppRoutes.tsx");
+    const routesSource = readProjectFile("src/app/routes/sections/AppLayoutRoutes.tsx");
     const notificationSource = readProjectFile(
       "src/core/mobility/delivery/services/OrderDeliveryNotificationService.ts",
     );
@@ -92,7 +92,7 @@ describe("gastronomy operational SSOT flow", () => {
   it("keeps trust notifications with canonical audience URLs", () => {
     const trustSource = readProjectFile("src/core/trust/services/TrustEventService.ts");
 
-    expect(trustSource).toContain("const subjectActionUrl = linkedEvent ? trustContextActionUrl(linkedEvent) : \"/conta\"");
+    expect(trustSource).toContain("const subjectActionUrl = linkedEvent ? await trustContextActionUrl(linkedEvent) : \"/conta\"");
     expect(trustSource).toContain("const adminActionUrl = \"/admin/moderacao\"");
     expect(trustSource).toContain("action_url: subjectActionUrl");
     expect(trustSource).toContain("action_url: adminActionUrl");

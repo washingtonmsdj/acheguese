@@ -29,10 +29,10 @@ export class IpGeolocationService {
     }
 
     try {
-      const result = await this.fetchFromIpApi();
+      const result = await this.fetchFromIpWhoIs();
       if (result) return result;
     } catch (error) {
-      logger.warn("ip-api.com falhou:", error);
+      logger.warn("ipwho.is falhou:", error);
     }
 
     logger.info("Usando fallback configurado de mapa", MAP_DEFAULT_LOCATION);
@@ -86,12 +86,12 @@ export class IpGeolocationService {
     }
   }
 
-  private static async fetchFromIpApi(): Promise<IpGeolocationResult | null> {
+  private static async fetchFromIpWhoIs(): Promise<IpGeolocationResult | null> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.TIMEOUT_MS);
 
     try {
-      const response = await fetch("http://ip-api.com/json/", {
+      const response = await fetch("https://ipwho.is/", {
         signal: controller.signal,
       });
 
@@ -101,17 +101,17 @@ export class IpGeolocationService {
 
       const data = await response.json();
 
-      if (data.status !== "success" || !data.lat || !data.lon) {
+      if (!data.success || !data.latitude || !data.longitude) {
         return null;
       }
 
       return {
         coordinates: {
-          latitude: data.lat,
-          longitude: data.lon,
+          latitude: data.latitude,
+          longitude: data.longitude,
         },
         city: data.city,
-        region: data.regionName,
+        region: data.region,
         country: data.country,
         accuracy: "ip-based",
         source: "ip-geolocation",

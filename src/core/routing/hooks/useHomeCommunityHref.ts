@@ -91,7 +91,6 @@ export function useHomeCommunityHref(): string {
       fallbackCityPath,
       fallbackGroup,
       groups,
-      homeCity?.id,
       homeCity?.path,
       homeDistrict?.id,
       homeDistrict?.path,

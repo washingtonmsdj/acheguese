@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect, beforeAll } from 'vitest';
-import { TouristPointService } from '../src/modules/guide/tourist-points/services/TouristPointService';
+import { TouristPointService } from '../src/core/guide/tourist-points/services/TouristPointService';
 import { supabase } from '../src/integrations/supabase';
 
 describe('SSOT Territorial - tourist_points (Runtime Services)', () => {

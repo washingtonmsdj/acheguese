@@ -83,7 +83,7 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
     return null;
   }
 
-  // Gerar CSS de forma segura sem dangerouslySetInnerHTML
+  // Gerar CSS de forma segura sem injetar HTML bruto
   const cssContent = Object.entries(THEMES)
     .map(
       ([theme, prefix]) => `

@@ -67,6 +67,8 @@ describe('RideRepository', () => {
       limit: vi.fn().mockReturnThis(),
       maybeSingle: vi.fn(),
       single: vi.fn(),
+      update: vi.fn().mockReturnThis(),
+      then: vi.fn((resolve) => resolve({ data: [mockRide], error: null })),
     };
     (supabase.from as any).mockReturnValue(mockSupabase);
   });
@@ -274,10 +276,10 @@ describe('RideRepository', () => {
     });
 
     it('deve lançar DatabaseError em caso de erro', async () => {
-      mockSupabase.maybeSingle.mockResolvedValue({
+      mockSupabase.then.mockImplementationOnce((resolve: any) => resolve({
         data: null,
         error: { message: 'Database error' },
-      });
+      }));
 
       await expect(
         repository.findInArea(-23.5505, -46.6333, 5)
@@ -436,10 +438,10 @@ describe('RideRepository', () => {
     });
 
     it('deve lançar DatabaseError em caso de erro', async () => {
-      mockSupabase.maybeSingle.mockResolvedValue({
+      mockSupabase.then.mockImplementationOnce((resolve: any) => resolve({
         data: null,
         error: { message: 'Database error' },
-      });
+      }));
 
       await expect(repository.findRecent()).rejects.toThrow(DatabaseError);
     });
@@ -477,10 +479,10 @@ describe('RideRepository', () => {
     });
 
     it('deve lançar DatabaseError em caso de erro', async () => {
-      mockSupabase.maybeSingle.mockResolvedValue({
+      mockSupabase.then.mockImplementationOnce((resolve: any) => resolve({
         data: null,
         error: { message: 'Database error' },
-      });
+      }));
 
       const startDate = new Date('2026-05-01');
       const endDate = new Date('2026-05-31');

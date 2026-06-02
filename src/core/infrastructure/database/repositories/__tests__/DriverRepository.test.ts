@@ -61,6 +61,7 @@ describe('DriverRepository', () => {
       maybeSingle: vi.fn(),
       single: vi.fn(),
       update: vi.fn().mockReturnThis(),
+      then: vi.fn((resolve) => resolve({ data: [mockDriver], error: null })),
     };
     (supabase.from as any).mockReturnValue(mockSupabase);
   });
@@ -165,10 +166,10 @@ describe('DriverRepository', () => {
     });
 
     it('deve lançar DatabaseError em caso de erro', async () => {
-      mockSupabase.maybeSingle.mockResolvedValue({
+      mockSupabase.then.mockImplementationOnce((resolve: any) => resolve({
         data: null,
         error: { message: 'Database error' },
-      });
+      }));
 
       await expect(
         repository.findAvailableInArea(-23.5505, -46.6333, 5)
@@ -233,10 +234,10 @@ describe('DriverRepository', () => {
     });
 
     it('deve lançar DatabaseError em caso de erro', async () => {
-      mockSupabase.maybeSingle.mockResolvedValue({
+      mockSupabase.then.mockImplementationOnce((resolve: any) => resolve({
         data: null,
         error: { message: 'Database error' },
-      });
+      }));
 
       await expect(
         repository.incrementTotalRides('driver-123')
@@ -385,10 +386,10 @@ describe('DriverRepository', () => {
     });
 
     it('deve lançar DatabaseError em caso de erro', async () => {
-      mockSupabase.maybeSingle.mockResolvedValue({
+      mockSupabase.then.mockImplementationOnce((resolve: any) => resolve({
         data: null,
         error: { message: 'Database error' },
-      });
+      }));
 
       await expect(repository.findTopByRating()).rejects.toThrow(DatabaseError);
     });

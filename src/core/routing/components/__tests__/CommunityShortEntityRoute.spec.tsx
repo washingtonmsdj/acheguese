@@ -17,13 +17,13 @@ vi.mock("@/core/business/services/BusinessUrlService", () => ({
 }));
 
 vi.mock("@/app/pages/EmpresaDetailLandingPage", () => ({
-  default: ({
+  default: function MockEmpresaDetailLandingPage({
     routeParams,
     canonicalPathOverride,
   }: {
     routeParams: { state: string; city: string; district: string; slug: string };
     canonicalPathOverride: string;
-  }) => {
+  }) {
     const location = useLocation();
     return (
       <div>

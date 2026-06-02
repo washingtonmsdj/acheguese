@@ -9,7 +9,7 @@
  * 3. Testes de violação intencional (devem falhar corretamente)
  */
 
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import { existsSync } from 'fs';
 
 const COLORS = {
@@ -31,10 +31,13 @@ function section(title) {
   console.log('='.repeat(60) + '\n');
 }
 
-function runCommand(command, description) {
+const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+const npxCmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';
+
+function runCommand(command, args, description) {
   try {
     log(`▶ ${description}...`, 'blue');
-    const output = execSync(command, { encoding: 'utf-8', stdio: 'pipe' });
+    const output = execFileSync(command, args, { encoding: 'utf-8', stdio: 'pipe' });
     log(`✅ ${description} - SUCESSO`, 'green');
     return { success: true, output };
   } catch (error) {
@@ -59,7 +62,8 @@ function main() {
   section('1. LINT DO MÓDULO MAPS');
   
   const lintResult = runCommand(
-    'npm run lint:maps',
+    npmCmd,
+    ['run', 'lint:maps'],
     'Validando código do módulo maps'
   );
   
@@ -77,7 +81,8 @@ function main() {
   section('2. TESTES DO MÓDULO MAPS');
   
   const testResult = runCommand(
-    'npm run test:maps',
+    npmCmd,
+    ['run', 'test:maps'],
     'Executando testes do módulo maps'
   );
   
@@ -116,7 +121,8 @@ function main() {
     
     // Usar --no-ignore para forçar lint nos arquivos de violação intencional
     const violationResult = runCommand(
-      `npx eslint "${file}" --no-ignore --config eslint.config.js`,
+      npxCmd,
+      ['eslint', file, '--no-ignore', '--config', 'eslint.config.js'],
       `Testando detecção de violação: ${file.split('/').pop()}`
     );
     
