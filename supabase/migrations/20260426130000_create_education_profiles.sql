@@ -16,7 +16,7 @@ END $$;
 -- Criar tabela education_profiles
 CREATE TABLE IF NOT EXISTS education_profiles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  business_id UUID NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+  business_id UUID NOT NULL REFERENCES business_data(id) ON DELETE CASCADE,
   
   -- Dados da instituicao
   institution_type VARCHAR(50) NOT NULL DEFAULT 'school',
@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS education_profiles (
 );
 
 -- Comentarios
-COMMENT ON TABLE education_profiles IS 'Perfis de instituicoes de educacao vinculadas a businesses';
+COMMENT ON TABLE education_profiles IS 'Perfis de instituicoes de educacao vinculadas a business_data';
 COMMENT ON COLUMN education_profiles.niche_key IS 'Chave do nicho (regular_school, daycare, language_school, etc)';
 COMMENT ON COLUMN education_profiles.support_level IS 'Nivel de suporte: full_enabled, basic_enabled, beta, planned';
 COMMENT ON COLUMN education_profiles.niche_config_overrides IS 'Overrides de configuracao do nicho (JSONB)';
@@ -93,8 +93,10 @@ CREATE POLICY education_profiles_owner_all
   FOR ALL
   USING (
     EXISTS (
-      SELECT 1 FROM business_data bd
+      SELECT 1
+      FROM business_data bd
+      JOIN profiles p ON p.id = bd.profile_id
       WHERE bd.id = education_profiles.business_id
-        AND bd.profile_id = auth.uid()
+        AND p.user_id = auth.uid()
     )
   );

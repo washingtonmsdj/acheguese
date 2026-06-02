@@ -5560,22 +5560,22 @@ export type Database = {
             foreignKeyName: "education_profiles_business_id_fkey"
             columns: ["business_id"]
             isOneToOne: false
-            referencedRelation: "personal_social_profiles"
-            referencedColumns: ["profile_id"]
-          },
-          {
-            foreignKeyName: "education_profiles_business_id_fkey"
-            columns: ["business_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "business_data"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "education_profiles_business_id_fkey"
             columns: ["business_id"]
             isOneToOne: false
-            referencedRelation: "public_profiles"
+            referencedRelation: "public_business_search"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "education_profiles_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "user_companies"
+            referencedColumns: ["company_id"]
           },
         ]
       }
@@ -11057,43 +11057,43 @@ export type Database = {
             foreignKeyName: "question_answers_business_id_fkey"
             columns: ["business_id"]
             isOneToOne: false
-            referencedRelation: "personal_social_profiles"
-            referencedColumns: ["profile_id"]
-          },
-          {
-            foreignKeyName: "question_answers_business_id_fkey"
-            columns: ["business_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "business_data"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "question_answers_business_id_fkey"
             columns: ["business_id"]
             isOneToOne: false
-            referencedRelation: "public_profiles"
+            referencedRelation: "public_business_search"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "question_answers_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "user_companies"
+            referencedColumns: ["company_id"]
+          },
+          {
+            foreignKeyName: "question_answers_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professional_data"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "question_answers_professional_id_fkey"
             columns: ["professional_id"]
             isOneToOne: false
-            referencedRelation: "personal_social_profiles"
-            referencedColumns: ["profile_id"]
-          },
-          {
-            foreignKeyName: "question_answers_professional_id_fkey"
-            columns: ["professional_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "public_professional_search"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "question_answers_professional_id_fkey"
             columns: ["professional_id"]
             isOneToOne: false
-            referencedRelation: "public_profiles"
-            referencedColumns: ["id"]
+            referencedRelation: "user_professional_profiles"
+            referencedColumns: ["professional_profile_id"]
           },
           {
             foreignKeyName: "question_answers_question_id_fkey"
