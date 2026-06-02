@@ -109,7 +109,7 @@ BEGIN
     UPDATE profiles
     SET deleted_at = NULL,
         display_name = 'Restaurado', -- Usuário precisa atualizar
-        slug = 'restaurado-' || gen_random_uuid()::text[:8]
+        slug = 'restaurado-' || substring(gen_random_uuid()::text from 1 for 8)
     WHERE user_id = p_user_id;
     
     -- Reativar auth.user
