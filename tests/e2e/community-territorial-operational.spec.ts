@@ -30,15 +30,15 @@ async function hasGlobalLoader(page: Page) {
   return (await bodyText(page)).includes("Preparando a casa");
 }
 
-async function expectRouteResolved(page: Page) {
+async function expectRouteResolved(page: Page, expectedPathPart = "/comunidade/") {
   await page.waitForLoadState("domcontentloaded");
   await expect
     .poll(async () => {
       const hasMainLandmark = await hasMain(page);
       const text = await bodyText(page);
       const currentUrl = page.url();
-      const hasCommunityPath = currentUrl.includes("/comunidade/");
-      return hasCommunityPath && (hasMainLandmark || text.trim().length > 120);
+      const hasExpectedPath = currentUrl.includes(expectedPathPart);
+      return hasExpectedPath && (hasMainLandmark || text.trim().length > 120);
     }, { timeout: 120_000 })
     .toBe(true);
 
@@ -83,6 +83,6 @@ test.describe("community territorial routes", () => {
     await expect
       .poll(() => page.url(), { timeout: 30_000 })
       .toContain("/educacao/ba/salvador");
-    await expectRouteResolved(page);
+    await expectRouteResolved(page, "/educacao/ba/salvador");
   });
 });
