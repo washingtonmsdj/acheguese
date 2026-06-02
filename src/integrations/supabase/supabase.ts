@@ -53,7 +53,7 @@ if (DEBUG_BOOT) {
  *
  * Seguranca:
  * - PKCE auth flow avoids access tokens in URL fragments
- * - XSS controls are CSP, sanitization, validation, and no localStorage token copy
+ * - XSS controls are CSP, sanitization, validation, and cookie-only auth persistence
  * - CSRF reduction via SameSite=Strict
  * - Transmissao segura (Secure flag em HTTPS)
  *

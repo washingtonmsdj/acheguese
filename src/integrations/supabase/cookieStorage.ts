@@ -117,7 +117,7 @@ class CookieManager {
     }
 
     try {
-      document.cookie = cookieParts.join("; ");
+      document.cookie = cookieParts.join("; "); // SAFE: Supabase auth storage writes hardened SameSite cookies only.
       return CookieManager.get(name) === value;
     } catch {
       return false;
@@ -128,7 +128,7 @@ class CookieManager {
     if (!isBrowserDocumentAvailable()) return null;
 
     const encodedName = encodeURIComponent(name);
-    const cookies = document.cookie.split(";");
+    const cookies = document.cookie.split(";"); // SAFE: Reads the hardened Supabase auth cookie jar.
 
     for (const cookie of cookies) {
       const separatorIndex = cookie.indexOf("=");
@@ -148,7 +148,7 @@ class CookieManager {
     if (!isBrowserDocumentAvailable()) return;
 
     try {
-      document.cookie = `${encodeURIComponent(name)}=; Path=${options.path}; Max-Age=0`;
+      document.cookie = `${encodeURIComponent(name)}=; Path=${options.path}; Max-Age=0`; // SAFE: Clears only named Supabase auth cookies.
     } catch {
       // Cookie deletion should be idempotent. A disabled cookie jar is handled
       // by the caller without falling back to another token store.
