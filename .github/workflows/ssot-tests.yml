@@ -19,6 +19,9 @@ on:
       - 'tests/**'
       - 'supabase/migrations/**'
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 jobs:
   phase-core-gate:
     name: Phase Core Gate (SSOT)
@@ -30,7 +33,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
 
       - name: Install dependencies
@@ -92,7 +95,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
       
       - name: Install dependencies
@@ -109,6 +112,7 @@ jobs:
         with:
           name: runtime-test-results
           path: test-results/
+          if-no-files-found: ignore
           retention-days: 7
 
   e2e-tests:
@@ -121,7 +125,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
       
       - name: Install dependencies
@@ -189,6 +193,7 @@ jobs:
         with:
           name: e2e-test-results
           path: test-results/
+          if-no-files-found: ignore
           retention-days: 7
 
   regression-check:
@@ -202,7 +207,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
       
       - name: Install dependencies
