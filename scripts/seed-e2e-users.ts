@@ -199,15 +199,32 @@ async function seedE2EUsers(options: SeedOptions = {}) {
     // Se for admin, adicionar role na tabela user_roles
     if (testUser.role === "admin") {
       console.log(`   📝 Adicionando role de admin...`);
-      const { error: roleError } = await supabase.from("user_roles").upsert({
+      const { data: existingAdminRole, error: roleLookupError } = await supabase
+        .from("user_roles")
+        .select("id")
+        .eq("user_id", newUser.user.id)
+        .eq("role", "admin")
+        .limit(1)
+        .maybeSingle();
+
+      if (roleLookupError) {
+        console.error(`   ❌ Erro ao buscar role: ${roleLookupError.message}`);
+        await supabase.from("profiles").delete().eq("user_id", newUser.user.id);
+        await supabase.auth.admin.deleteUser(newUser.user.id);
+        throw new Error(`Erro ao buscar role admin E2E: ${roleLookupError.message}`);
+      }
+
+      const rolePayload = {
         user_id: newUser.user.id,
         role: "admin",
         role_enum: "admin",
         is_active: true,
         granted_at: new Date().toISOString(),
-      }, {
-        onConflict: "user_id,role",
-      });
+      };
+
+      const { error: roleError } = existingAdminRole
+        ? await supabase.from("user_roles").update(rolePayload).eq("id", existingAdminRole.id)
+        : await supabase.from("user_roles").insert(rolePayload);
 
       if (roleError) {
         console.error(`   ❌ Erro ao adicionar role: ${roleError.message}`);
