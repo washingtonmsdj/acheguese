@@ -26,6 +26,14 @@ BEGIN
     JOIN pg_namespace n ON n.oid = p.pronamespace
     WHERE p.prosecdef = TRUE
       AND n.nspname = 'public'
+      AND NOT EXISTS (
+        SELECT 1
+        FROM pg_depend d
+        JOIN pg_extension e ON e.oid = d.refobjid
+        WHERE d.classid = 'pg_proc'::regclass
+          AND d.objid = p.oid
+          AND d.refclassid = 'pg_extension'::regclass
+      )
   LOOP
     EXECUTE format(
       'ALTER FUNCTION %I.%I(%s) SET search_path = public, pg_temp',
