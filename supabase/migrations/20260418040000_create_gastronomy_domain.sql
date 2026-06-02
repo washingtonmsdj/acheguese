@@ -17,7 +17,7 @@
 -- ============================================================================
 
 -- Status de perfil gastronômico
-DO $$ BEGIN
+DO $migration$ BEGIN
   CREATE TYPE gastronomy_status AS ENUM (
     'active',
     'inactive',
@@ -25,10 +25,10 @@ DO $$ BEGIN
   );
 EXCEPTION
   WHEN duplicate_object THEN NULL;
-END $$;
+END $migration$;
 
 -- Faixa de preço
-DO $$ BEGIN
+DO $migration$ BEGIN
   CREATE TYPE price_range AS ENUM (
     '$',
     '$$',
@@ -36,10 +36,10 @@ DO $$ BEGIN
   );
 EXCEPTION
   WHEN duplicate_object THEN NULL;
-END $$;
+END $migration$;
 
 -- Tipo de desconto
-DO $$ BEGIN
+DO $migration$ BEGIN
   CREATE TYPE discount_type AS ENUM (
     'percentage',
     'fixed_amount',
@@ -47,7 +47,7 @@ DO $$ BEGIN
   );
 EXCEPTION
   WHEN duplicate_object THEN NULL;
-END $$;
+END $migration$;
 
 -- ============================================================================
 -- 1. GASTRONOMY_PROFILES - Perfil Gastronômico (extensão de business)

@@ -19,7 +19,7 @@ BEGIN
 END;
 $$;
 
-DO $$ BEGIN
+DO $migration$ BEGIN
   CREATE TYPE public.location_type AS ENUM (
     'country',
     'state',
@@ -29,15 +29,15 @@ DO $$ BEGIN
   );
 EXCEPTION
   WHEN duplicate_object THEN NULL;
-END $$;
+END $migration$;
 
-DO $$ BEGIN
+DO $migration$ BEGIN
   CREATE TYPE public.location_status AS ENUM ('active', 'inactive');
 EXCEPTION
   WHEN duplicate_object THEN NULL;
-END $$;
+END $migration$;
 
-DO $$ BEGIN
+DO $migration$ BEGIN
   CREATE TYPE public.business_status AS ENUM (
     'active',
     'inactive',
@@ -47,15 +47,15 @@ DO $$ BEGIN
   );
 EXCEPTION
   WHEN duplicate_object THEN NULL;
-END $$;
+END $migration$;
 
-DO $$ BEGIN
+DO $migration$ BEGIN
   CREATE TYPE public.price_range AS ENUM ('$', '$$', '$$$', '$$$$');
 EXCEPTION
   WHEN duplicate_object THEN NULL;
-END $$;
+END $migration$;
 
-DO $$ BEGIN
+DO $migration$ BEGIN
   CREATE TYPE public.gastronomy_status AS ENUM (
     'active',
     'inactive',
@@ -64,9 +64,9 @@ DO $$ BEGIN
   );
 EXCEPTION
   WHEN duplicate_object THEN NULL;
-END $$;
+END $migration$;
 
-DO $$ BEGIN
+DO $migration$ BEGIN
   CREATE TYPE public.order_source_type AS ENUM (
     'manual',
     'business',
@@ -75,27 +75,27 @@ DO $$ BEGIN
   );
 EXCEPTION
   WHEN duplicate_object THEN NULL;
-END $$;
+END $migration$;
 
-DO $$ BEGIN
+DO $migration$ BEGIN
   CREATE TYPE public.payment_mode AS ENUM (
     'direct_to_merchant',
     'platform_checkout'
   );
 EXCEPTION
   WHEN duplicate_object THEN NULL;
-END $$;
+END $migration$;
 
-DO $$ BEGIN
+DO $migration$ BEGIN
   CREATE TYPE public.delivery_mode AS ENUM (
     'merchant_own_fleet',
     'platform_courier_network'
   );
 EXCEPTION
   WHEN duplicate_object THEN NULL;
-END $$;
+END $migration$;
 
-DO $$ BEGIN
+DO $migration$ BEGIN
   CREATE TYPE public.logistics_status AS ENUM (
     'pending',
     'accepted',
@@ -108,9 +108,9 @@ DO $$ BEGIN
   );
 EXCEPTION
   WHEN duplicate_object THEN NULL;
-END $$;
+END $migration$;
 
-DO $$ BEGIN
+DO $migration$ BEGIN
   CREATE TYPE public.financial_status AS ENUM (
     'not_applicable',
     'pending_payment',
@@ -123,9 +123,9 @@ DO $$ BEGIN
   );
 EXCEPTION
   WHEN duplicate_object THEN NULL;
-END $$;
+END $migration$;
 
-DO $$ BEGIN
+DO $migration$ BEGIN
   CREATE TYPE public.ride_status AS ENUM (
     'pending',
     'accepted',
@@ -135,9 +135,9 @@ DO $$ BEGIN
   );
 EXCEPTION
   WHEN duplicate_object THEN NULL;
-END $$;
+END $migration$;
 
-DO $$ BEGIN
+DO $migration$ BEGIN
   CREATE TYPE public.route_status AS ENUM (
     'active',
     'full',
@@ -146,9 +146,9 @@ DO $$ BEGIN
   );
 EXCEPTION
   WHEN duplicate_object THEN NULL;
-END $$;
+END $migration$;
 
-DO $$ BEGIN
+DO $migration$ BEGIN
   CREATE TYPE public.recurrence_type AS ENUM (
     'once',
     'daily',
@@ -157,9 +157,9 @@ DO $$ BEGIN
   );
 EXCEPTION
   WHEN duplicate_object THEN NULL;
-END $$;
+END $migration$;
 
-DO $$ BEGIN
+DO $migration$ BEGIN
   CREATE TYPE public.review_type AS ENUM (
     'business',
     'professional',
@@ -167,7 +167,7 @@ DO $$ BEGIN
   );
 EXCEPTION
   WHEN duplicate_object THEN NULL;
-END $$;
+END $migration$;
 
 CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -285,7 +285,7 @@ CREATE TRIGGER update_locations_updated_at
 
 ALTER TABLE public.locations ENABLE ROW LEVEL SECURITY;
 
-DO $$
+DO $migration$
 BEGIN
   IF NOT EXISTS (
     SELECT 1
@@ -312,7 +312,7 @@ BEGIN
       REFERENCES public.locations(id)
       ON DELETE SET NULL;
   END IF;
-END $$;
+END $migration$;
 
 CREATE TABLE IF NOT EXISTS public.profile_members (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

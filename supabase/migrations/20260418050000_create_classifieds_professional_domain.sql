@@ -17,7 +17,7 @@
 -- ============================================================================
 
 -- Status de classificados
-DO $$ BEGIN
+DO $migration$ BEGIN
   CREATE TYPE classified_status AS ENUM (
     'active',
     'inactive',
@@ -27,10 +27,10 @@ DO $$ BEGIN
   );
 EXCEPTION
   WHEN duplicate_object THEN NULL;
-END $$;
+END $migration$;
 
 -- Condição do item
-DO $$ BEGIN
+DO $migration$ BEGIN
   CREATE TYPE item_condition AS ENUM (
     'new',
     'like_new',
@@ -40,10 +40,10 @@ DO $$ BEGIN
   );
 EXCEPTION
   WHEN duplicate_object THEN NULL;
-END $$;
+END $migration$;
 
 -- Status de trabalhos profissionais
-DO $$ BEGIN
+DO $migration$ BEGIN
   CREATE TYPE job_status AS ENUM (
     'pending',
     'in_progress',
@@ -52,10 +52,10 @@ DO $$ BEGIN
   );
 EXCEPTION
   WHEN duplicate_object THEN NULL;
-END $$;
+END $migration$;
 
 -- Tipo de review
-DO $$ BEGIN
+DO $migration$ BEGIN
   CREATE TYPE review_type AS ENUM (
     'business',
     'professional',
@@ -63,7 +63,7 @@ DO $$ BEGIN
   );
 EXCEPTION
   WHEN duplicate_object THEN NULL;
-END $$;
+END $migration$;
 
 -- ============================================================================
 -- 1. PROFESSIONAL_DATA - Dados de Profissionais
@@ -371,7 +371,7 @@ CREATE TABLE IF NOT EXISTS classifieds (
 );
 
 -- Adicionar colunas se não existirem
-DO $$ 
+DO $migration$
 BEGIN
   -- Anunciante
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'classifieds' AND column_name = 'profile_id') THEN
@@ -432,7 +432,7 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'classifieds' AND column_name = 'updated_at') THEN
     ALTER TABLE classifieds ADD COLUMN updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
   END IF;
-END $$;
+END $migration$;
 
 -- Índices
 CREATE INDEX IF NOT EXISTS idx_classifieds_profile_id ON classifieds(profile_id);
