@@ -36,27 +36,30 @@ COMMENT ON FUNCTION prevent_legacy_writes() IS
 -- STEP 2: Aplicar trigger em gastronomy_subscriptions
 -- ──────────────────────────────────────────────────────────────────────────
 
--- Remover trigger existente se houver
-DROP TRIGGER IF EXISTS prevent_gastronomy_subscriptions_writes ON gastronomy_subscriptions;
+DO $migration$
+BEGIN
+  IF to_regclass('public.gastronomy_subscriptions') IS NOT NULL THEN
+    DROP TRIGGER IF EXISTS prevent_gastronomy_subscriptions_writes ON public.gastronomy_subscriptions;
 
--- Criar trigger para bloquear INSERT/UPDATE
-CREATE TRIGGER prevent_gastronomy_subscriptions_writes
-  BEFORE INSERT OR UPDATE ON gastronomy_subscriptions
-  FOR EACH ROW
-  EXECUTE FUNCTION prevent_legacy_writes();
+    CREATE TRIGGER prevent_gastronomy_subscriptions_writes
+      BEFORE INSERT OR UPDATE ON public.gastronomy_subscriptions
+      FOR EACH ROW
+      EXECUTE FUNCTION public.prevent_legacy_writes();
 
--- Adicionar comentário de deprecação
-COMMENT ON TABLE gastronomy_subscriptions IS 
-  '⚠️ DEPRECATED: Read-only table. Use user_subscriptions instead. 
-   Migration: All data migrated to user_subscriptions with subscription_scope = ''business''.
-   Removal date: 2026-05-21 (30 days from deprecation).
-   See: F8_SUNSET_LEGADO.md';
+    COMMENT ON TABLE public.gastronomy_subscriptions IS
+      'DEPRECATED: Read-only table. Use user_subscriptions instead. Migration: all data migrated to user_subscriptions with subscription_scope = business.';
+
+    RAISE NOTICE 'gastronomy_subscriptions marked as read-only';
+  ELSE
+    RAISE NOTICE 'gastronomy_subscriptions does not exist, skipping read-only guard';
+  END IF;
+END $migration$;
 
 -- ──────────────────────────────────────────────────────────────────────────
 -- STEP 3: Aplicar trigger em business_subscriptions (se existir)
 -- ──────────────────────────────────────────────────────────────────────────
 
-DO $$
+DO $migration$
 BEGIN
   -- Verificar se tabela existe
   IF EXISTS (
@@ -83,13 +86,13 @@ BEGIN
   ELSE
     RAISE NOTICE 'business_subscriptions does not exist, skipping';
   END IF;
-END $$;
+END $migration$;
 
 -- ──────────────────────────────────────────────────────────────────────────
 -- STEP 4: Marcar subscription_plans como deprecated (se existir)
 -- ──────────────────────────────────────────────────────────────────────────
 
-DO $$
+DO $migration$
 BEGIN
   IF EXISTS (
     SELECT 1 FROM information_schema.tables 
@@ -102,7 +105,7 @@ BEGIN
     
     RAISE NOTICE 'subscription_plans marked as deprecated';
   END IF;
-END $$;
+END $migration$;
 
 -- ──────────────────────────────────────────────────────────────────────────
 -- STEP 5: Criar view de auditoria para monitorar tentativas de write
@@ -116,7 +119,7 @@ END $$;
 -- STEP 6: Registrar deprecação
 -- ──────────────────────────────────────────────────────────────────────────
 
-DO $$
+DO $migration$
 BEGIN
   RAISE NOTICE '═══════════════════════════════════════════════════════════';
   RAISE NOTICE 'Legacy tables marked as read-only:';
@@ -127,7 +130,7 @@ BEGIN
   RAISE NOTICE 'All new subscriptions must use user_subscriptions.';
   RAISE NOTICE 'Removal date: 2026-05-21 (30 days)';
   RAISE NOTICE '═══════════════════════════════════════════════════════════';
-END $$;
+END $migration$;
 
 -- ══════════════════════════════════════════════════════════════════════════
 -- FIM DA MIGRATION

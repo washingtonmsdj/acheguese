@@ -478,6 +478,35 @@ CREATE TRIGGER update_user_favorite_businesses_updated_at
 
 ALTER TABLE public.user_favorite_businesses ENABLE ROW LEVEL SECURITY;
 
+CREATE TABLE IF NOT EXISTS public.user_subscriptions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  plan_type TEXT NOT NULL DEFAULT 'free',
+  status TEXT NOT NULL DEFAULT 'active',
+  active BOOLEAN NOT NULL DEFAULT true,
+  amount_cents INTEGER NOT NULL DEFAULT 0,
+  started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  expires_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT user_subscriptions_status_base_check
+    CHECK (status IN ('active', 'canceled', 'past_due', 'trialing')),
+  CONSTRAINT user_subscriptions_amount_cents_check CHECK (amount_cents >= 0)
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_subscriptions_user_id_base
+  ON public.user_subscriptions(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_subscriptions_status_base
+  ON public.user_subscriptions(status);
+
+DROP TRIGGER IF EXISTS update_user_subscriptions_updated_at ON public.user_subscriptions;
+CREATE TRIGGER update_user_subscriptions_updated_at
+  BEFORE UPDATE ON public.user_subscriptions
+  FOR EACH ROW
+  EXECUTE FUNCTION public.update_updated_at_column();
+
+ALTER TABLE public.user_subscriptions ENABLE ROW LEVEL SECURITY;
+
 CREATE TABLE IF NOT EXISTS public.driver_data (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   profile_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
@@ -744,6 +773,7 @@ COMMENT ON TABLE public.business_data IS 'SSOT for business identity and public 
 COMMENT ON TABLE public.profile_members IS 'Profile membership and ownership registry.';
 COMMENT ON TABLE public.reviews IS 'Profile and business reviews.';
 COMMENT ON TABLE public.user_favorite_businesses IS 'Saved business favorites by user.';
+COMMENT ON TABLE public.user_subscriptions IS 'Canonical user subscription foundation extended by billing migrations.';
 COMMENT ON TABLE public.driver_data IS 'Driver capability extension for profiles.';
 COMMENT ON TABLE public.professional_data IS 'Professional service extension for profiles.';
 COMMENT ON TABLE public.gastronomy_profiles IS 'Gastronomy extension for business_data.';
