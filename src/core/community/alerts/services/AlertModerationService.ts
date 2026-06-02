@@ -24,9 +24,21 @@ class AlertModerationServiceClass {
       const user = await SessionService.getCurrentUser();
       if (!user) throw new Error("not_authenticated");
 
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("is_active", true)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      if (profileError) throw profileError;
+      if (!profile?.id) throw new Error("profile_not_found");
+
       const { error } = await supabase.from("community_alert_reports").insert({
         alert_id: payload.alert_id,
-        reporter_id: user.id,
+        reporter_id: profile.id,
         reason: payload.reason,
       });
 

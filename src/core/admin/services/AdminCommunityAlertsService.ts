@@ -206,6 +206,7 @@ class AdminCommunityAlertsServiceClass {
         .from(this.TABLE)
         .select(`
           *,
+          category:type,
           author_profile:profiles!community_alerts_profile_id_fkey(
             display_name,
             avatar_url
@@ -218,7 +219,7 @@ class AdminCommunityAlertsServiceClass {
       }
 
       if (category) {
-        query = query.eq('category', category);
+        query = query.eq('type', category);
       }
 
       if (underReview !== undefined) {
@@ -295,7 +296,7 @@ class AdminCommunityAlertsServiceClass {
     try {
       const { data: alerts, error } = await supabase
         .from(this.TABLE)
-        .select('*')
+        .select('*, category:type')
         .eq('under_review', true)
         .in('status', ['ativo'])
         .order('report_count', { ascending: false });
@@ -590,6 +591,7 @@ class AdminCommunityAlertsServiceClass {
         .from(this.TABLE)
         .select(`
           *,
+          category:type,
           author_profile:profiles!community_alerts_profile_id_fkey(
             display_name,
             avatar_url
