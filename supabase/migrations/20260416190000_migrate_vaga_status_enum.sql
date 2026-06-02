@@ -1,131 +1,101 @@
--- ══════════════════════════════════════════════════════════════════════════
--- MIGRATE vaga_status ENUM — Alinhar banco com SSOT do código
--- ══════════════════════════════════════════════════════════════════════════
---
--- Problema: O enum vaga_status foi criado com valores antigos:
---   ('ativa', 'pausada', 'encerrada', 'preenchida')
---
--- O SSOT do código (vagas.types.ts) usa:
---   ('draft', 'pending_review', 'published', 'paused', 'closed',
---    'expired', 'rejected', 'removed')
---
--- Esta migration:
---   1. Adiciona os novos valores ao enum existente (fora de transação)
---   2. Migra os dados existentes para os novos valores
---   3. Recria o tipo sem os valores antigos
---   4. Atualiza RLS policies e índices
---
--- ══════════════════════════════════════════════════════════════════════════
+-- ============================================================================
+-- MIGRATION: Normalize vagas enums to the code SSOT
+-- ============================================================================
+-- Avoid ALTER TYPE ... ADD VALUE followed by same-transaction usage. Supabase
+-- applies each migration in a prepared statement/transaction context, so enum
+-- migrations must normalize through TEXT and recreate the canonical enum types.
+-- ============================================================================
 
--- ─────────────────────────────────────────────────────────────────────────
--- PASSO 1: Adicionar novos valores ao enum existente
--- ALTER TYPE ADD VALUE IF NOT EXISTS é idempotente (PostgreSQL 9.6+)
--- NOTA: Estes comandos NÃO podem estar dentro de um bloco DO/transação
--- ─────────────────────────────────────────────────────────────────────────
+DROP POLICY IF EXISTS "vagas_public_read" ON public.vagas;
 
-ALTER TYPE vaga_status ADD VALUE IF NOT EXISTS 'draft';
-ALTER TYPE vaga_status ADD VALUE IF NOT EXISTS 'pending_review';
-ALTER TYPE vaga_status ADD VALUE IF NOT EXISTS 'published';
-ALTER TYPE vaga_status ADD VALUE IF NOT EXISTS 'closed';
-ALTER TYPE vaga_status ADD VALUE IF NOT EXISTS 'expired';
-ALTER TYPE vaga_status ADD VALUE IF NOT EXISTS 'rejected';
-ALTER TYPE vaga_status ADD VALUE IF NOT EXISTS 'removed';
+DROP INDEX IF EXISTS public.idx_vagas_location;
+DROP INDEX IF EXISTS public.idx_vagas_status;
+DROP INDEX IF EXISTS public.idx_vagas_urgencia;
+DROP INDEX IF EXISTS public.idx_vagas_destaque;
+DROP INDEX IF EXISTS public.idx_vagas_highlight;
 
--- Outros enums: adicionar valores lowercase que faltam
-ALTER TYPE vaga_contrato ADD VALUE IF NOT EXISTS 'temporario';
-ALTER TYPE vaga_contrato ADD VALUE IF NOT EXISTS 'estagio';
-ALTER TYPE vaga_contrato ADD VALUE IF NOT EXISTS 'freelancer';
-ALTER TYPE vaga_contrato ADD VALUE IF NOT EXISTS 'aprendiz';
+ALTER TABLE public.vagas ALTER COLUMN status DROP DEFAULT;
+ALTER TABLE public.vagas ALTER COLUMN urgencia DROP DEFAULT;
 
-ALTER TYPE vaga_modalidade ADD VALUE IF NOT EXISTS 'presencial';
-ALTER TYPE vaga_modalidade ADD VALUE IF NOT EXISTS 'hibrido';
-ALTER TYPE vaga_modalidade ADD VALUE IF NOT EXISTS 'remoto';
+ALTER TABLE public.vagas ALTER COLUMN status TYPE TEXT USING status::TEXT;
+ALTER TABLE public.vagas ALTER COLUMN contrato TYPE TEXT USING contrato::TEXT;
+ALTER TABLE public.vagas ALTER COLUMN modalidade TYPE TEXT USING modalidade::TEXT;
+ALTER TABLE public.vagas ALTER COLUMN nivel TYPE TEXT USING nivel::TEXT;
+ALTER TABLE public.vagas ALTER COLUMN urgencia TYPE TEXT USING urgencia::TEXT;
 
-ALTER TYPE vaga_nivel ADD VALUE IF NOT EXISTS 'junior';
-ALTER TYPE vaga_nivel ADD VALUE IF NOT EXISTS 'pleno';
-ALTER TYPE vaga_nivel ADD VALUE IF NOT EXISTS 'senior';
-ALTER TYPE vaga_nivel ADD VALUE IF NOT EXISTS 'especialista';
-ALTER TYPE vaga_nivel ADD VALUE IF NOT EXISTS 'gerente';
-ALTER TYPE vaga_nivel ADD VALUE IF NOT EXISTS 'diretor';
-ALTER TYPE vaga_nivel ADD VALUE IF NOT EXISTS 'auxiliar';
-
-ALTER TYPE vaga_urgencia ADD VALUE IF NOT EXISTS 'extrema';
-
--- ─────────────────────────────────────────────────────────────────────────
--- PASSO 2: Migrar dados existentes para os novos valores
--- ─────────────────────────────────────────────────────────────────────────
-
-UPDATE vagas SET status = 'published'  WHERE status::text = 'ativa';
-UPDATE vagas SET status = 'paused'     WHERE status::text = 'pausada';
-UPDATE vagas SET status = 'closed'     WHERE status::text = 'encerrada';
-UPDATE vagas SET status = 'closed'     WHERE status::text = 'preenchida';
-
--- Migrar contrato se a coluna existir
-DO $contrato_data$
+DO $migration$
 BEGIN
   IF EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_name = 'vagas' AND column_name = 'contrato'
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'vagas'
+      AND column_name = 'contrato_tipo'
   ) THEN
-    UPDATE vagas SET contrato = 'temporario' WHERE contrato::text = 'Temporário';
-    UPDATE vagas SET contrato = 'estagio'    WHERE contrato::text = 'Estágio';
-    UPDATE vagas SET contrato = 'freelancer' WHERE contrato::text = 'Freelance';
+    ALTER TABLE public.vagas ALTER COLUMN contrato_tipo TYPE TEXT USING contrato_tipo::TEXT;
   END IF;
-  IF EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_name = 'vagas' AND column_name = 'contrato_tipo'
-  ) THEN
-    UPDATE vagas SET contrato_tipo = 'temporario' WHERE contrato_tipo::text = 'Temporário';
-    UPDATE vagas SET contrato_tipo = 'estagio'    WHERE contrato_tipo::text = 'Estágio';
-    UPDATE vagas SET contrato_tipo = 'freelancer' WHERE contrato_tipo::text = 'Freelance';
-  END IF;
-END $contrato_data$;
+END $migration$;
 
--- Migrar modalidade
-DO $modalidade_data$
+UPDATE public.vagas
+SET status = CASE status
+  WHEN 'ativa' THEN 'published'
+  WHEN 'pausada' THEN 'paused'
+  WHEN 'encerrada' THEN 'closed'
+  WHEN 'preenchida' THEN 'closed'
+  ELSE status
+END;
+
+UPDATE public.vagas
+SET contrato = CASE contrato
+  WHEN 'Temporário' THEN 'temporario'
+  WHEN 'Estágio' THEN 'estagio'
+  WHEN 'Freelance' THEN 'freelancer'
+  ELSE contrato
+END;
+
+UPDATE public.vagas
+SET modalidade = CASE modalidade
+  WHEN 'Presencial' THEN 'presencial'
+  WHEN 'Remoto' THEN 'remoto'
+  WHEN 'Híbrido' THEN 'hibrido'
+  ELSE modalidade
+END;
+
+UPDATE public.vagas
+SET nivel = CASE nivel
+  WHEN 'Júnior' THEN 'junior'
+  WHEN 'Pleno' THEN 'pleno'
+  WHEN 'Sênior' THEN 'senior'
+  WHEN 'Especialista' THEN 'especialista'
+  ELSE nivel
+END;
+
+DO $migration$
 BEGIN
   IF EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_name = 'vagas' AND column_name = 'modalidade'
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'vagas'
+      AND column_name = 'contrato_tipo'
   ) THEN
-    UPDATE vagas SET modalidade = 'presencial' WHERE modalidade::text = 'Presencial';
-    UPDATE vagas SET modalidade = 'remoto'     WHERE modalidade::text = 'Remoto';
-    UPDATE vagas SET modalidade = 'hibrido'    WHERE modalidade::text = 'Híbrido';
+    UPDATE public.vagas
+    SET contrato_tipo = CASE contrato_tipo
+      WHEN 'Temporário' THEN 'temporario'
+      WHEN 'Estágio' THEN 'estagio'
+      WHEN 'Freelance' THEN 'freelancer'
+      ELSE contrato_tipo
+    END;
   END IF;
-END $modalidade_data$;
+END $migration$;
 
--- Migrar nivel
-DO $nivel_data$
-BEGIN
-  IF EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_name = 'vagas' AND column_name = 'nivel'
-  ) THEN
-    UPDATE vagas SET nivel = 'junior'       WHERE nivel::text = 'Júnior';
-    UPDATE vagas SET nivel = 'pleno'        WHERE nivel::text = 'Pleno';
-    UPDATE vagas SET nivel = 'senior'       WHERE nivel::text = 'Sênior';
-    UPDATE vagas SET nivel = 'especialista' WHERE nivel::text = 'Especialista';
-  END IF;
-END $nivel_data$;
+DROP TYPE IF EXISTS public.vaga_status;
+DROP TYPE IF EXISTS public.vaga_contrato;
+DROP TYPE IF EXISTS public.vaga_modalidade;
+DROP TYPE IF EXISTS public.vaga_nivel;
+DROP TYPE IF EXISTS public.vaga_urgencia;
 
--- ─────────────────────────────────────────────────────────────────────────
--- PASSO 3: Recriar o enum vaga_status sem os valores antigos
--- Para remover valores de um enum no PostgreSQL é necessário recriar o tipo.
--- ─────────────────────────────────────────────────────────────────────────
-
--- Dropar índices condicionais que dependem do enum antes de recriar o tipo
-DROP INDEX IF EXISTS idx_vagas_location;
-DROP INDEX IF EXISTS idx_vagas_urgencia;
-DROP INDEX IF EXISTS idx_vagas_destaque;
-
--- Converter coluna para TEXT temporariamente
-ALTER TABLE vagas ALTER COLUMN status TYPE TEXT;
-
--- Remover o enum antigo (agora sem dependências na coluna)
-DROP TYPE vaga_status;
-
--- Recriar com apenas os valores corretos (SSOT)
-CREATE TYPE vaga_status AS ENUM (
+CREATE TYPE public.vaga_status AS ENUM (
   'draft',
   'pending_review',
   'published',
@@ -136,48 +106,95 @@ CREATE TYPE vaga_status AS ENUM (
   'removed'
 );
 
--- Restaurar a coluna com o novo tipo
-ALTER TABLE vagas ALTER COLUMN status TYPE vaga_status USING status::vaga_status;
+CREATE TYPE public.vaga_contrato AS ENUM (
+  'CLT',
+  'PJ',
+  'temporario',
+  'estagio',
+  'freelancer',
+  'aprendiz'
+);
 
--- Restaurar o DEFAULT correto (draft = rascunho, estado inicial)
-ALTER TABLE vagas ALTER COLUMN status SET DEFAULT 'draft';
+CREATE TYPE public.vaga_modalidade AS ENUM (
+  'presencial',
+  'hibrido',
+  'remoto'
+);
 
--- ─────────────────────────────────────────────────────────────────────────
--- PASSO 4: Atualizar RLS policy para usar 'published'
--- ─────────────────────────────────────────────────────────────────────────
+CREATE TYPE public.vaga_nivel AS ENUM (
+  'junior',
+  'pleno',
+  'senior',
+  'especialista',
+  'gerente',
+  'diretor',
+  'estagio',
+  'auxiliar'
+);
 
-DROP POLICY IF EXISTS "vagas_public_read" ON vagas;
+CREATE TYPE public.vaga_urgencia AS ENUM (
+  'normal',
+  'urgente',
+  'extrema'
+);
+
+ALTER TABLE public.vagas
+  ALTER COLUMN status TYPE public.vaga_status USING status::public.vaga_status,
+  ALTER COLUMN contrato TYPE public.vaga_contrato USING contrato::public.vaga_contrato,
+  ALTER COLUMN modalidade TYPE public.vaga_modalidade USING modalidade::public.vaga_modalidade,
+  ALTER COLUMN nivel TYPE public.vaga_nivel USING nivel::public.vaga_nivel,
+  ALTER COLUMN urgencia TYPE public.vaga_urgencia USING urgencia::public.vaga_urgencia;
+
+DO $migration$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'vagas'
+      AND column_name = 'contrato_tipo'
+  ) THEN
+    ALTER TABLE public.vagas
+      ALTER COLUMN contrato_tipo TYPE public.vaga_contrato
+      USING contrato_tipo::public.vaga_contrato;
+  END IF;
+END $migration$;
+
+ALTER TABLE public.vagas ALTER COLUMN status SET DEFAULT 'draft';
+ALTER TABLE public.vagas ALTER COLUMN urgencia SET DEFAULT 'normal';
 
 CREATE POLICY "vagas_public_read"
-  ON vagas
+  ON public.vagas
   FOR SELECT
   USING (
     status = 'published'
     AND (expires_at IS NULL OR expires_at > now())
   );
 
--- ─────────────────────────────────────────────────────────────────────────
--- PASSO 5: Recriar índices condicionais com os novos valores
--- ─────────────────────────────────────────────────────────────────────────
-
-CREATE INDEX idx_vagas_location
-  ON vagas(location_id)
+CREATE INDEX IF NOT EXISTS idx_vagas_location
+  ON public.vagas(location_id)
   WHERE status = 'published';
 
-CREATE INDEX idx_vagas_urgencia
-  ON vagas(urgencia)
+CREATE INDEX IF NOT EXISTS idx_vagas_status
+  ON public.vagas(status);
+
+CREATE INDEX IF NOT EXISTS idx_vagas_urgencia
+  ON public.vagas(urgencia)
   WHERE status = 'published';
 
-DO $idx$
+CREATE INDEX IF NOT EXISTS idx_vagas_destaque
+  ON public.vagas(destaque)
+  WHERE status = 'published' AND destaque = true;
+
+DO $migration$
 BEGIN
   IF EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_name = 'vagas' AND column_name = 'highlight_type'
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'vagas'
+      AND column_name = 'highlight_type'
   ) THEN
-    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_vagas_highlight ON vagas(highlight_type) WHERE status = ''published''';
+    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_vagas_highlight ON public.vagas(highlight_type) WHERE status = ''published''';
   END IF;
-END $idx$;
-
--- ══════════════════════════════════════════════════════════════════════════
--- FIM DA MIGRATION
--- ══════════════════════════════════════════════════════════════════════════
+END $migration$;
