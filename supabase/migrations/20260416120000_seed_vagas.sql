@@ -20,6 +20,8 @@ DO $$
 DECLARE
   vaga_count INTEGER;
   default_location_id UUID;
+  country_location_id UUID;
+  state_location_id UUID;
 BEGIN
   -- Contar vagas existentes
   SELECT COUNT(*) INTO vaga_count FROM vagas;
@@ -33,11 +35,67 @@ BEGIN
   SELECT id INTO default_location_id FROM locations LIMIT 1;
   
   IF default_location_id IS NULL THEN
+    INSERT INTO locations (
+      name,
+      full_name,
+      type,
+      slug,
+      geographic_path,
+      parent_id,
+      status,
+      metadata
+    )
+    VALUES (
+      'Brasil',
+      'Brasil',
+      'country',
+      'br',
+      '/br',
+      NULL,
+      'active',
+      jsonb_build_object('country_code', 'BR')
+    )
+    ON CONFLICT (geographic_path) DO UPDATE SET
+      name = EXCLUDED.name,
+      full_name = EXCLUDED.full_name,
+      metadata = COALESCE(locations.metadata, '{}'::jsonb) || EXCLUDED.metadata,
+      status = 'active',
+      updated_at = NOW()
+    RETURNING id INTO country_location_id;
+
+    INSERT INTO locations (
+      name,
+      full_name,
+      type,
+      slug,
+      geographic_path,
+      parent_id,
+      status,
+      metadata
+    )
+    VALUES (
+      'Sao Paulo',
+      'Sao Paulo, Brasil',
+      'state',
+      'sp',
+      '/br/sp',
+      country_location_id,
+      'active',
+      jsonb_build_object('state_code', 'SP', 'country_code', 'BR')
+    )
+    ON CONFLICT (geographic_path) DO UPDATE SET
+      parent_id = EXCLUDED.parent_id,
+      name = EXCLUDED.name,
+      full_name = EXCLUDED.full_name,
+      metadata = COALESCE(locations.metadata, '{}'::jsonb) || EXCLUDED.metadata,
+      status = 'active',
+      updated_at = NOW()
+    RETURNING id INTO state_location_id;
+
     RAISE NOTICE 'Nenhuma location encontrada. Criando location padrão...';
     
     -- Criar location padrão se não existir
     INSERT INTO locations (
-      id,
       name,
       full_name,
       type,
@@ -47,13 +105,12 @@ BEGIN
       status
     )
     VALUES (
-      gen_random_uuid(),
       'São Paulo - SP',
       'São Paulo, SP, Brasil',
       'city',
       'sao-paulo',
       '/br/sp/sao-paulo',
-      NULL,
+      state_location_id,
       'active'
     )
     RETURNING id INTO default_location_id;
