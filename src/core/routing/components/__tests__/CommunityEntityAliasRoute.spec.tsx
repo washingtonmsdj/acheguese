@@ -2,26 +2,11 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
-import { createTerritorialGroupRepository } from "@/core/location/repositories/createTerritorialGroupRepository";
-import { CommunityPublicAliasService } from "@/core/routing/services/CommunityPublicAliasService";
+import { resolveBusinessEntityFromCommunityAlias } from "@/core/routing/services/CommunityBusinessEntityResolver";
 import { CommunityEntityAliasRoute } from "../CommunityEntityAliasRoute";
 
-vi.mock("@/core/routing/services/CommunityPublicAliasService", () => ({
-  CommunityPublicAliasService: {
-    resolve: vi.fn(),
-  },
-}));
-
-vi.mock("@/core/business/services/BusinessUrlService", () => ({
-  BusinessUrlService: {
-    resolveBySlug: vi.fn(),
-    resolveByTerritoryAndSlug: vi.fn(),
-  },
-}));
-
-vi.mock("@/core/location/repositories/createTerritorialGroupRepository", () => ({
-  createTerritorialGroupRepository: vi.fn(),
+vi.mock("@/core/routing/services/CommunityBusinessEntityResolver", () => ({
+  resolveBusinessEntityFromCommunityAlias: vi.fn(),
 }));
 
 function LocationProbe() {
@@ -32,24 +17,22 @@ function LocationProbe() {
 describe("CommunityEntityAliasRoute", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(createTerritorialGroupRepository).mockReturnValue({
-      findWithMembers: vi.fn(),
-    } as never);
   });
 
   it("redireciona alias legado de empresa para a URL curta raiz", async () => {
-    vi.mocked(CommunityPublicAliasService.resolve).mockResolvedValue({
+    vi.mocked(resolveBusinessEntityFromCommunityAlias).mockResolvedValue({
       status: "resolved",
-      alias: "santa-cruz",
-      canonicalPath: "/comunidade/ba/salvador/santa-cruz",
-      publicTerritoryPath: "/ba/salvador/santa-cruz",
-      territoryType: "district",
-      territoryId: "district-1",
-    });
-    vi.mocked(BusinessUrlService.resolveByTerritoryAndSlug).mockResolvedValue({
-      id: "business-1",
-      slug: "padaria-x",
-      geographic_path: "/br/ba/salvador/santa-cruz",
+      business: {
+        id: "business-1",
+        slug: "padaria-x",
+        geographic_path: "/br/ba/salvador/santa-cruz",
+      },
+      routeParams: {
+        state: "ba",
+        city: "salvador",
+        district: "santa-cruz",
+        slug: "padaria-x",
+      },
     });
 
     render(
@@ -59,34 +42,32 @@ describe("CommunityEntityAliasRoute", () => {
             path="/comunidade/:communitySlug/empresas/:slug"
             element={<CommunityEntityAliasRoute />}
           />
-          <Route
-            path="/santa-cruz/empresas/padaria-x"
-            element={<LocationProbe />}
-          />
+          <Route path="/santa-cruz/padaria-x" element={<LocationProbe />} />
         </Routes>
       </MemoryRouter>,
     );
 
     await waitFor(() =>
       expect(
-        screen.getByText("/santa-cruz/empresas/padaria-x?origem=zap#topo"),
+        screen.getByText("/santa-cruz/padaria-x?origem=zap#topo"),
       ).toBeInTheDocument(),
     );
   });
 
   it("redireciona alias legado de gastronomia para a URL curta raiz", async () => {
-    vi.mocked(CommunityPublicAliasService.resolve).mockResolvedValue({
+    vi.mocked(resolveBusinessEntityFromCommunityAlias).mockResolvedValue({
       status: "resolved",
-      alias: "santa-cruz",
-      canonicalPath: "/comunidade/ba/salvador/santa-cruz",
-      publicTerritoryPath: "/ba/salvador/santa-cruz",
-      territoryType: "district",
-      territoryId: "district-1",
-    });
-    vi.mocked(BusinessUrlService.resolveByTerritoryAndSlug).mockResolvedValue({
-      id: "business-1",
-      slug: "pizzaria-x",
-      geographic_path: "/br/ba/salvador/santa-cruz",
+      business: {
+        id: "business-1",
+        slug: "pizzaria-x",
+        geographic_path: "/br/ba/salvador/santa-cruz",
+      },
+      routeParams: {
+        state: "ba",
+        city: "salvador",
+        district: "santa-cruz",
+        slug: "pizzaria-x",
+      },
     });
 
     render(
@@ -96,45 +77,33 @@ describe("CommunityEntityAliasRoute", () => {
             path="/comunidade/:communitySlug/gastronomia/:slug"
             element={<CommunityEntityAliasRoute />}
           />
-          <Route
-            path="/santa-cruz/gastronomia/pizzaria-x"
-            element={<LocationProbe />}
-          />
+          <Route path="/santa-cruz/pizzaria-x" element={<LocationProbe />} />
         </Routes>
       </MemoryRouter>,
     );
 
     await waitFor(() =>
       expect(
-        screen.getByText("/santa-cruz/gastronomia/pizzaria-x"),
+        screen.getByText("/santa-cruz/pizzaria-x"),
       ).toBeInTheDocument(),
     );
   });
 
   it("resolve empresa dentro de grupo territorial antes de redirecionar", async () => {
-    vi.mocked(CommunityPublicAliasService.resolve).mockResolvedValue({
+    vi.mocked(resolveBusinessEntityFromCommunityAlias).mockResolvedValue({
       status: "resolved",
-      alias: "complexo",
-      canonicalPath: "/comunidade/ba/salvador/complexo",
-      publicTerritoryPath: "/ba/salvador/complexo",
-      territoryType: "territorial_group",
-      territoryId: "group-1",
+      business: {
+        id: "business-1",
+        slug: "mercado-x",
+        geographic_path: "/br/ba/salvador/chapada-do-rio-vermelho",
+      },
+      routeParams: {
+        state: "ba",
+        city: "salvador",
+        district: "chapada-do-rio-vermelho",
+        slug: "mercado-x",
+      },
     });
-    vi.mocked(BusinessUrlService.resolveBySlug).mockResolvedValue({
-      id: "business-1",
-      slug: "mercado-x",
-      geographic_path: "/br/ba/salvador/chapada-do-rio-vermelho",
-    });
-    vi.mocked(createTerritorialGroupRepository).mockReturnValue({
-      findWithMembers: vi.fn().mockResolvedValue({
-        id: "group-1",
-        members: [
-          {
-            geographic_path: "/br/ba/salvador/chapada-do-rio-vermelho",
-          },
-        ],
-      }),
-    } as never);
 
     render(
       <MemoryRouter initialEntries={["/comunidade/complexo/empresas/mercado-x"]}>
@@ -143,17 +112,14 @@ describe("CommunityEntityAliasRoute", () => {
             path="/comunidade/:communitySlug/empresas/:slug"
             element={<CommunityEntityAliasRoute />}
           />
-          <Route
-            path="/complexo/empresas/mercado-x"
-            element={<LocationProbe />}
-          />
+          <Route path="/complexo/mercado-x" element={<LocationProbe />} />
         </Routes>
       </MemoryRouter>,
     );
 
     await waitFor(() =>
       expect(
-        screen.getByText("/complexo/empresas/mercado-x"),
+        screen.getByText("/complexo/mercado-x"),
       ).toBeInTheDocument(),
     );
   });

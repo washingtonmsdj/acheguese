@@ -16,6 +16,7 @@ import { PublicIdentityService } from '@/core/public-identity/services/PublicIde
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 import {
   buildBusinessPremiumUrl,
+  buildBusinessPublicUrlFromCommunityAlias,
   buildBusinessPublicUrlFromTerritory,
 } from '@/core/business/utils/businessPublicUrls';
 
@@ -26,6 +27,8 @@ export interface BusinessUrlContext {
   id: string;
   slug: string;
   is_premium?: boolean;
+  /** alias publico da comunidade, quando ja resolvido pelo contexto territorial */
+  community_alias?: string | null;
   /** geographic_path da location associada, ex: /br/ba/salvador/pituba */
   geographic_path: string;
 }
@@ -79,7 +82,7 @@ export class BusinessUrlService {
    * @param ctx - Contexto da empresa
    */
   static buildUrls(ctx: BusinessUrlContext): ResolvedBusinessUrl {
-    const { id, slug, is_premium, geographic_path } = ctx;
+    const { id, slug, is_premium, geographic_path, community_alias } = ctx;
 
     if (!geographic_path) {
       throw new Error(
@@ -97,10 +100,12 @@ export class BusinessUrlService {
       );
     }
 
-    const canonical = buildBusinessPublicUrlFromTerritory(
-      `/${territory.uf}/${territory.cidade}/${territory.bairro}`,
-      slug,
-    );
+    const canonical = community_alias
+      ? buildBusinessPublicUrlFromCommunityAlias(community_alias, slug)
+      : buildBusinessPublicUrlFromTerritory(
+          `/${territory.uf}/${territory.cidade}/${territory.bairro}`,
+          slug,
+        );
     const dashboard = businessManagementRoutes.overview(id);
 
     return {

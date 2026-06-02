@@ -2,11 +2,9 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import { APP_MODULE_SLUGS } from "@/config/moduleSlugs";
 import {
-  BusinessUrlService,
-  type BusinessUrlContext,
-} from "@/core/business/services/BusinessUrlService";
-import { createTerritorialGroupRepository } from "@/core/location/repositories/createTerritorialGroupRepository";
-import { resolveCommunityPublicAliasTerritory } from "@/core/routing/services/CommunityPublicAliasTerritoryResolver";
+  resolveBusinessEntityFromCommunityAlias,
+  type BusinessEntityRouteParams,
+} from "@/core/routing/services/CommunityBusinessEntityResolver";
 import { PageLoader } from "@/shared/components/loading/PageLoader";
 import { TerritorialNotFound } from "./TerritorialNotFound";
 
@@ -19,12 +17,7 @@ type EntityState =
   | { status: "loading" }
   | {
       status: "resolved";
-      routeParams: {
-        state: string;
-        city: string;
-        district: string;
-        slug: string;
-      };
+      routeParams: BusinessEntityRouteParams;
       canonicalPath: string;
     }
   | { status: "not-found"; message: string };
@@ -40,80 +33,6 @@ function getModuleFromPath(pathname: string): SupportedEntityModule | null {
     return moduleSlug;
   }
   return null;
-}
-
-function parsePublicTerritoryPath(path: string): {
-  state: string;
-  city: string;
-  territorySlug?: string;
-} | null {
-  const parts = path.split("/").filter(Boolean);
-  const [state, city, territorySlug] = parts;
-  if (!state || !city) return null;
-  return { state, city, territorySlug };
-}
-
-function extractBusinessTerritory(ctx: BusinessUrlContext): {
-  state: string;
-  city: string;
-  district: string;
-} | null {
-  const parts = ctx.geographic_path.split("/").filter(Boolean);
-  const [, state, city, district] = parts;
-  if (!state || !city || !district) return null;
-  return { state, city, district };
-}
-
-async function businessBelongsToTerritorialGroup(
-  business: BusinessUrlContext,
-  groupId: string,
-): Promise<boolean> {
-  const group = await createTerritorialGroupRepository().findWithMembers(groupId);
-  if (!group) return false;
-
-  return group.members.some(
-    (member) => member.geographic_path === business.geographic_path,
-  );
-}
-
-async function resolveBusinessFromAlias(
-  communitySlug: string,
-  entitySlug: string,
-): Promise<BusinessUrlContext | null> {
-  const community = await resolveCommunityPublicAliasTerritory(communitySlug);
-  if (community.status !== "resolved") return null;
-
-  const territory = parsePublicTerritoryPath(community.publicTerritoryPath);
-  if (!territory) return null;
-
-  if (community.resolved.kind === "group") {
-    const business = await BusinessUrlService.resolveBySlug(entitySlug);
-    if (!business) return null;
-
-    const cityPrefix = `/br/${territory.state}/${territory.city}/`;
-    if (!business.geographic_path.startsWith(cityPrefix)) return null;
-
-    const belongsToGroup = await businessBelongsToTerritorialGroup(
-      business,
-      community.resolved.group.id,
-    );
-    return belongsToGroup ? business : null;
-  }
-
-  if (!territory.territorySlug) {
-    const business = await BusinessUrlService.resolveBySlug(entitySlug);
-    if (!business) return null;
-
-    const cityPrefix = `/br/${territory.state}/${territory.city}/`;
-    return business.geographic_path.startsWith(cityPrefix) ? business : null;
-  }
-
-  return BusinessUrlService.resolveByTerritoryAndSlug(
-    territory.state,
-    territory.city,
-    territory.territorySlug,
-    entitySlug,
-  );
 }
 
 export function CommunityShortEntityRoute() {
@@ -138,26 +57,23 @@ export function CommunityShortEntityRoute() {
         return;
       }
 
-      const business = await resolveBusinessFromAlias(communitySlug, slug);
+      const resolution = await resolveBusinessEntityFromCommunityAlias(
+        communitySlug,
+        slug,
+      );
       if (cancelled) return;
 
-      const territory = business ? extractBusinessTerritory(business) : null;
-      if (!business || !territory) {
+      if (resolution.status !== "resolved") {
         setState({
           status: "not-found",
-          message: "Empresa nao encontrada nesta comunidade.",
+          message: resolution.message,
         });
         return;
       }
 
       setState({
         status: "resolved",
-        routeParams: {
-          state: territory.state,
-          city: territory.city,
-          district: territory.district,
-          slug: business.slug,
-        },
+        routeParams: resolution.routeParams,
         canonicalPath: location.pathname,
       });
     }

@@ -33,6 +33,9 @@ export const CommunityShortAliasShellRoute = lazy(() =>
 export const CommunityShortEntityRoute = lazy(() =>
   import("@/core/routing/components/CommunityShortEntityRoute").then((m) => ({ default: m.CommunityShortEntityRoute }))
 );
+export const CommunityEntityOrTerritorialCityRoute = lazy(() =>
+  import("@/core/routing/components/CommunityEntityOrTerritorialCityRoute").then((m) => ({ default: m.CommunityEntityOrTerritorialCityRoute }))
+);
 export const TerritorialIndexPage = lazy(() =>
   import("@/core/routing/components/TerritorialIndexPage").then((m) => ({ default: m.TerritorialIndexPage }))
 );

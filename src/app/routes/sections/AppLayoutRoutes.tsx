@@ -208,7 +208,7 @@ export function AppLayoutRoutes() {
         <Route path={buildTerritorialBareRoutePath([TERRITORIAL_PARAMS.district])} element={<P.TerritorialLayout />}>
           <Route index element={<P.TerritorialIndexPage CityLandingComponent={P.CidadeLandingPage} />} />
         </Route>
-        <Route path={buildTerritorialBareRoutePath()} element={<P.TerritorialLayout />}>
+        <Route path={buildTerritorialBareRoutePath()} element={<P.CommunityEntityOrTerritorialCityRoute />}>
           <Route index element={<P.TerritorialIndexPage CityLandingComponent={P.CidadeLandingPage} />} />
         </Route>
 

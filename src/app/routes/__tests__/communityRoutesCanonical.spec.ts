@@ -92,6 +92,7 @@ describe("community canonical routes", () => {
     const routesSource = [
       readProjectFile("src/app/routes/AppRoutes.tsx"),
       readProjectFile("src/app/routes/sections/CommunityTerritoryRoutes.tsx"),
+      readProjectFile("src/app/routes/sections/AppLayoutRoutes.tsx"),
     ].join("\n");
 
     expect(routesSource).toContain("COMMUNITY_ROUTE_DEFINITIONS");
@@ -102,6 +103,7 @@ describe("community canonical routes", () => {
     expect(routesSource).toContain("buildCommunityRootAliasRoutePath");
     expect(routesSource).toContain("CommunityShortAliasShellRoute");
     expect(routesSource).toContain("CommunityShortEntityRoute");
+    expect(routesSource).toContain("CommunityEntityOrTerritorialCityRoute");
     expect(routesSource).toContain("TERRITORIAL_STATIC.feed");
     expect(routesSource).toContain("TERRITORIAL_STATIC.groups");
     expect(routesSource).toContain("TERRITORIAL_PARAMS.id");

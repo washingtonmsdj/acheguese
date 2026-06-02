@@ -1,5 +1,6 @@
 import { APP_MODULE_SLUGS } from '@/config/moduleSlugs';
 import {
+  buildCommunityAliasUrl,
   buildModuleTerritoryEntityUrl,
   buildModuleTerritoryUrl,
 } from '@/core/routing/utils/territoryUrls';
@@ -19,6 +20,7 @@ export const BUSINESS_PUBLIC_URL_PREVIEW_TERRITORY = {
   district: ':bairro',
 } as const;
 
+export const BUSINESS_PUBLIC_URL_PREVIEW_COMMUNITY_ALIAS = ':comunidade';
 export const BUSINESS_PUBLIC_URL_PREVIEW_SLUG = 'seu-link';
 
 export interface BusinessPublicTerritorySegments {
@@ -62,8 +64,22 @@ export function buildBusinessPublicUrlFromTerritory(
   );
 }
 
+export function buildBusinessPublicUrlFromCommunityAlias(
+  communityAlias: string,
+  slug: string,
+): string {
+  return buildCommunityAliasUrl(
+    communityAlias,
+    cleanPathSegment(slug, 'slug publico da empresa'),
+  );
+}
+
 export function buildBusinessPublicUrlFromSegments(parts: BusinessPublicUrlSegments): string {
   return buildBusinessPublicUrlFromTerritory(buildTerritoryPathFromSegments(parts), parts.slug);
+}
+
+export function buildBusinessPublicListingUrlFromCommunityAlias(communityAlias: string): string {
+  return buildCommunityAliasUrl(communityAlias, APP_MODULE_SLUGS.business);
 }
 
 export function buildBusinessPublicListingUrl(parts: BusinessPublicTerritorySegments): string {
@@ -76,10 +92,10 @@ export function buildBusinessCityListingUrl(state: string, city: string): string
 
 export function buildBusinessPublicUrlPreview(slug: string): string {
   if (!slug) return '';
-  return buildBusinessPublicUrlFromSegments({
-    ...BUSINESS_PUBLIC_URL_PREVIEW_TERRITORY,
+  return buildBusinessPublicUrlFromCommunityAlias(
+    BUSINESS_PUBLIC_URL_PREVIEW_COMMUNITY_ALIAS,
     slug,
-  });
+  );
 }
 
 export function buildBusinessPremiumUrl(slug: string): string {
