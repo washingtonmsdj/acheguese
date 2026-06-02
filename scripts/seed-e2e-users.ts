@@ -42,12 +42,22 @@ const TEST_USERS: TestUser[] = [
   },
 ];
 
+function getEnvValue(name: string): string | undefined {
+  const value = process.env[name]?.trim();
+
+  if (!value) {
+    return undefined;
+  }
+
+  return value.replace(/^['"]|['"]$/g, "");
+}
+
 async function seedE2EUsers(options: SeedOptions = {}) {
   const { reset = false, verbose = false } = options;
 
   // Validar variáveis de ambiente
-  const supabaseUrl = process.env.VITE_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseUrl = getEnvValue("VITE_SUPABASE_URL");
+  const serviceRoleKey = getEnvValue("SUPABASE_SERVICE_ROLE_KEY");
 
   if (!supabaseUrl || !serviceRoleKey) {
     console.error("❌ Erro: Variáveis de ambiente não configuradas");

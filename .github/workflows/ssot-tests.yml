@@ -55,7 +55,7 @@ jobs:
           supabase status -o env > supabase.env
 
           get_env_value() {
-            grep "^$1=" supabase.env | cut -d= -f2-
+            grep "^$1=" supabase.env | cut -d= -f2- | sed -e 's/^"//' -e 's/"$//'
           }
 
           api_url="$(get_env_value API_URL)"
@@ -146,7 +146,7 @@ jobs:
           supabase status -o env > supabase.env
 
           get_env_value() {
-            grep "^$1=" supabase.env | cut -d= -f2-
+            grep "^$1=" supabase.env | cut -d= -f2- | sed -e 's/^"//' -e 's/"$//'
           }
 
           api_url="$(get_env_value API_URL)"
