@@ -393,6 +393,45 @@ WHERE is_verified = true OR verification_status = 'verified';
 
 GRANT SELECT ON public.addresses_public TO anon, authenticated;
 
+CREATE TABLE IF NOT EXISTS public.user_residences (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  address_id UUID NOT NULL REFERENCES public.addresses(id) ON DELETE CASCADE,
+  location_id UUID NOT NULL REFERENCES public.locations(id) ON DELETE RESTRICT,
+  country TEXT NOT NULL DEFAULT 'BR',
+  is_primary BOOLEAN NOT NULL DEFAULT false,
+  is_verified BOOLEAN NOT NULL DEFAULT false,
+  verification_requested_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT user_residences_unique_address UNIQUE (user_id, address_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_residences_user_id
+  ON public.user_residences(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_residences_address_id
+  ON public.user_residences(address_id);
+CREATE INDEX IF NOT EXISTS idx_user_residences_location_id
+  ON public.user_residences(location_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_user_residences_one_primary
+  ON public.user_residences(user_id)
+  WHERE is_primary = true;
+
+DROP TRIGGER IF EXISTS update_user_residences_updated_at ON public.user_residences;
+CREATE TRIGGER update_user_residences_updated_at
+  BEFORE UPDATE ON public.user_residences
+  FOR EACH ROW
+  EXECUTE FUNCTION public.update_updated_at_column();
+
+ALTER TABLE public.user_residences ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users manage own residences" ON public.user_residences;
+CREATE POLICY "Users manage own residences"
+  ON public.user_residences FOR ALL
+  TO authenticated
+  USING (user_id = auth.uid())
+  WITH CHECK (user_id = auth.uid());
+
 DO $migration$
 BEGIN
   IF NOT EXISTS (
