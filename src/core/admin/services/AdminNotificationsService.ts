@@ -153,7 +153,7 @@ class AdminNotificationsService {
     try {
       const { data, error } = await supabase
         .from(this.TABLE)
-        .select("user_id, type, priority, read, is_read, deleted_at, created_at");
+        .select("user_id, type, priority, read, deleted_at, created_at");
 
       if (error) throw error;
 
