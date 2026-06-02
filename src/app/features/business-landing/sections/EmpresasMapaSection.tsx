@@ -18,6 +18,7 @@ export function EmpresasMapaSection({
   isLoadingBounds,
   filteredCount,
   moduleUrls,
+  getBusinessUrl,
   navigate,
 }: EmpresasMapaSectionProps) {
   return (
@@ -63,7 +64,7 @@ export function EmpresasMapaSection({
               }))}
             onMarkerClick={(id) => {
               const biz = businesses.find(b => b.id === id);
-              if (biz?.slug) navigate(`${moduleUrls.business}/${biz.slug}`);
+              if (biz?.slug) navigate(getBusinessUrl(biz, moduleUrls.business));
             }}
             controls={{
               search: {

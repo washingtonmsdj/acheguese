@@ -10,8 +10,8 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/shared/components/ui/dialog';
 import { NetworkService, type BranchSummary } from '@/core/business/services/NetworkService';
+import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
 import { useLocationCascade, type LocationOption } from '@/core/location/hooks/useLocationCascade';
-import { geoPathToPublicUrl } from '@/core/routing/utils/territoryUrls';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 import type {
   ConvertToNetworkPanelProps,
@@ -357,9 +357,11 @@ function CreateBranchDialog({ open, onClose, brandHubId, profileId, toast, onCre
   // Preview da URL pública final
   const urlPreview = useMemo(() => {
     if (!selectedDistrict?.geographic_path || !form.slug) return null;
-    // Usar geoPathToPublicUrl para converter o geographic_path interno em URL pública.
-    const publicPath = geoPathToPublicUrl(selectedDistrict.geographic_path);
-    return `/empresas${publicPath}/${form.slug}`;
+    return BusinessUrlService.getCanonicalUrl({
+      id: 'preview',
+      slug: form.slug,
+      geographic_path: selectedDistrict.geographic_path,
+    });
   }, [selectedDistrict, form.slug]);
 
   // Validações

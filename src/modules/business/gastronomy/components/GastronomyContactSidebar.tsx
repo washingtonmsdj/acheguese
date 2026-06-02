@@ -33,6 +33,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Card } from '@/shared/components/ui/card';
 import { Separator } from '@/shared/components/ui/separator';
 import { LazyMiniMap } from '@/shared/components/maps/LazyMiniMap';
+import { useBusinessUrls } from '@/core/business/hooks/useBusinessUrls';
 import { GastronomyUrlService } from '@/core/verticals/gastronomy/services/GastronomyUrlService';
 import {
   buildGoogleMapsDirectionsUrl,
@@ -54,6 +55,7 @@ interface GastronomyContactSidebarProps {
 
 export function GastronomyContactSidebar({ business }: GastronomyContactSidebarProps) {
   const navigate = useNavigate();
+  const businessUrls = useBusinessUrls();
   const [shareOpen, setShareOpen] = useState(false);
 
   const profile = business.gastronomy_profile;
@@ -412,10 +414,11 @@ export function GastronomyContactSidebar({ business }: GastronomyContactSidebarP
                     onClick={() => {
                       if (sim.geographic_path && sim.slug) {
                         navigate(
-                          GastronomyUrlService.getCanonicalUrlFromTerritory(
-                            sim.geographic_path,
-                            sim.slug,
-                          ),
+                          businessUrls.canonical({
+                            id: sim.business_data_id,
+                            slug: sim.slug,
+                            geographic_path: sim.geographic_path,
+                          }),
                         );
                       } else {
                         navigate(GastronomyUrlService.getHomeUrl());

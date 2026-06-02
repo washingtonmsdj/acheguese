@@ -20,7 +20,7 @@ import { resolveFallbackCityStatus, type CityStatus } from '@/core/city/services
 import { TERRITORY_CONFIG } from '@/config/territory';
 import { buildPublicAbsoluteUrl } from '@/shared/config/publicAppOrigin';
 import { getRequiredRecordValue } from '@/shared/utils/recordLookup';
-import { buildCommunityTerritoryUrl } from '@/core/routing/utils/territoryUrls';
+import { MODULE_SLUGS, buildCommunityTerritoryUrl, buildModuleTerritoryUrl } from '@/core/routing/utils/territoryUrls';
 
 // Lazy imports dos módulos existentes
 const ComunidadePage       = lazy(() => import('@/modules/community-feed/pages/ComunidadePage'));
@@ -151,7 +151,7 @@ function CityStatusGate({ module, enforceActive = false, children }: CityStatusG
       ? `/${safeState}/${safeCity}`
       : `/${safeState}/${safeCity}/${resolved.location.slug}`;
   const communityEntryHref = buildCommunityTerritoryUrl(moduleTerritoryBase);
-  const primaryCtaHref = `/empresas${moduleTerritoryBase}`;
+  const primaryCtaHref = buildModuleTerritoryUrl(MODULE_SLUGS.business, moduleTerritoryBase);
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10">

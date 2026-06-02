@@ -23,7 +23,7 @@ export function useBusinessNavigation() {
 
   const resolveBusinessUrl = useCallback(async (business: BusinessData) => {
     if (business.slug && business.geographic_path) {
-      return BusinessUrlService.getCanonicalUrl({
+      return businessUrls.canonical({
         id: business.id ?? "",
         slug: business.slug,
         is_premium: business.is_premium,
@@ -34,7 +34,7 @@ export function useBusinessNavigation() {
     if (business.id) {
       const resolvedById = await BusinessUrlService.resolveById(business.id);
       if (resolvedById) {
-        return BusinessUrlService.getCanonicalUrl(resolvedById);
+        return businessUrls.canonical(resolvedById);
       }
     }
 
@@ -43,7 +43,7 @@ export function useBusinessNavigation() {
         business.slug,
       );
       if (resolvedBySlug) {
-        return BusinessUrlService.getCanonicalUrl(resolvedBySlug);
+        return businessUrls.canonical(resolvedBySlug);
       }
 
       if (business.is_premium) {
@@ -52,7 +52,7 @@ export function useBusinessNavigation() {
     }
 
     return null;
-  }, []);
+  }, [businessUrls]);
 
   /**
    * Navega para a URL canônica da empresa.
@@ -78,7 +78,7 @@ export function useBusinessNavigation() {
    */
   const getBusinessUrl = useCallback((business: BusinessData): string => {
     if (business.slug && business.geographic_path) {
-      return BusinessUrlService.getCanonicalUrl({
+      return businessUrls.canonical({
         id: business.id ?? "",
         slug: business.slug,
         is_premium: business.is_premium,
@@ -100,7 +100,7 @@ export function useBusinessNavigation() {
 
     logger.warn("[useBusinessNavigation] Empresa sem slug:", business.id);
     return businessUrls.list;
-  }, [businessUrls.list]);
+  }, [businessUrls]);
 
   /**
    * Navega para listagem de empresas

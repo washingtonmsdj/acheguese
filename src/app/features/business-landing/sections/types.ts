@@ -173,6 +173,7 @@ export interface EmpresasMapaSectionProps extends BaseSectionProps {
   readonly moduleUrls: {
     readonly business: string;
   };
+  readonly getBusinessUrl: (business: Business, fallbackUrl: string) => string;
 }
 
 export interface EmpresasListaSectionProps extends BaseSectionProps {

@@ -434,6 +434,7 @@ export default function EmpresasLandingPage({
         isLoadingBounds={isLoadingBounds}
         filteredCount={filteredBusinesses.length}
         moduleUrls={moduleUrls}
+        getBusinessUrl={buildBusinessUrl}
         navigate={navigate}
       />
 

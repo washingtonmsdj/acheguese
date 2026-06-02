@@ -17,6 +17,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { BusinessLogo } from '@/shared/components/ui/business-logo';
 import { buildMailtoUrl, buildTelUrl } from '@/shared/utils/contactLinks';
+import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
 import { useNationalFeatured } from '@/core/landing/hooks/useNationalFeatured';
 import type { NationalBusiness } from '@/core/landing/types';
 import { useAppUrls } from '@/core/routing/hooks/useAppUrls';
@@ -373,7 +374,12 @@ export function BrasilShowcasePage() {
                   transition={{ delay: i * 0.05 }}
                   onClick={() => {
                     if (!business.slug || !business.geographic_path) return;
-                    const url = `/empresas${business.geographic_path}/${business.slug}`;
+                    const url = BusinessUrlService.getCanonicalUrl({
+                      id: business.id,
+                      slug: business.slug,
+                      is_premium: business.is_premium,
+                      geographic_path: business.geographic_path,
+                    });
                     navigate(url);
                   }}
                   className="bg-card border border-border rounded-2xl p-5 hover:shadow-xl hover:border-blue-500/40 transition-all cursor-pointer group"

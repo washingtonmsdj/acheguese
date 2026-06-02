@@ -38,7 +38,7 @@ import {
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/utils/cn';
-import { GastronomyUrlService } from '@/core/verticals/gastronomy/services/GastronomyUrlService';
+import { useBusinessUrls } from '@/core/business/hooks/useBusinessUrls';
 import { OpeningHoursService } from '@/core/business/services/OpeningHoursService';
 import { getCuisineLabel } from '../constants';
 import { formatBrl } from '../utils/currency';
@@ -137,6 +137,7 @@ export const GastronomyCard = memo<GastronomyCardProps>(
     className,
   }) => {
     const navigate = useNavigate();
+    const businessUrls = useBusinessUrls();
     const { gastronomy_profile: gp } = business;
 
     // ========================================================================
@@ -146,12 +147,14 @@ export const GastronomyCard = memo<GastronomyCardProps>(
     const url = useMemo(
       () =>
         business.slug && business.geographic_path
-          ? GastronomyUrlService.getCanonicalUrlFromTerritory(
-              business.geographic_path,
-              business.slug,
-            )
+          ? businessUrls.canonical({
+              id: business.id,
+              slug: business.slug,
+              is_premium: business.is_premium,
+              geographic_path: business.geographic_path,
+            })
           : null,
-      [business.slug, business.geographic_path],
+      [business.id, business.is_premium, business.slug, business.geographic_path, businessUrls],
     );
 
     const openingStatus = useMemo(
