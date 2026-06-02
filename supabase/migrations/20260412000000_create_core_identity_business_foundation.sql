@@ -309,6 +309,36 @@ CREATE TRIGGER update_locations_updated_at
 
 ALTER TABLE public.locations ENABLE ROW LEVEL SECURITY;
 
+CREATE TABLE IF NOT EXISTS public.location_aliases (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  location_id UUID NOT NULL REFERENCES public.locations(id) ON DELETE CASCADE,
+  alias_type TEXT NOT NULL,
+  alias_value TEXT NOT NULL,
+  valid_from TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  valid_until TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT location_aliases_validity_check CHECK (
+    valid_until IS NULL OR valid_until > valid_from
+  ),
+  CONSTRAINT location_aliases_unique_active UNIQUE (location_id, alias_type, alias_value, valid_from)
+);
+
+CREATE INDEX IF NOT EXISTS idx_location_aliases_location_id
+  ON public.location_aliases(location_id);
+CREATE INDEX IF NOT EXISTS idx_location_aliases_value
+  ON public.location_aliases(lower(alias_value));
+CREATE INDEX IF NOT EXISTS idx_location_aliases_active
+  ON public.location_aliases(location_id, alias_type)
+  WHERE valid_until IS NULL;
+
+ALTER TABLE public.location_aliases ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Location aliases public read" ON public.location_aliases;
+CREATE POLICY "Location aliases public read"
+  ON public.location_aliases FOR SELECT
+  TO anon, authenticated
+  USING (valid_until IS NULL OR valid_until > NOW());
+
 CREATE TABLE IF NOT EXISTS public.addresses (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   location_id UUID NOT NULL REFERENCES public.locations(id) ON DELETE RESTRICT,
