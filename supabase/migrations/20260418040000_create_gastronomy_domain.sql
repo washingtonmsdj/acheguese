@@ -142,6 +142,20 @@ CREATE POLICY "Owners manage own gastronomy profile"
 -- 2. MENUS - Container do Cardápio
 -- ============================================================================
 
+CREATE OR REPLACE FUNCTION public.is_valid_weekday_array(days INTEGER[])
+RETURNS BOOLEAN
+LANGUAGE sql
+IMMUTABLE
+PARALLEL SAFE
+AS $function$
+  SELECT days IS NULL
+    OR NOT EXISTS (
+      SELECT 1
+      FROM unnest(days) AS day
+      WHERE day < 0 OR day > 6
+    );
+$function$;
+
 CREATE TABLE IF NOT EXISTS menus (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   
@@ -157,11 +171,7 @@ CREATE TABLE IF NOT EXISTS menus (
   display_order INTEGER NOT NULL DEFAULT 0,
   
   -- Disponibilidade temporal (opcional)
-  available_days INTEGER[] CHECK (
-    available_days IS NULL OR 
-    (array_length(available_days, 1) IS NULL OR 
-     (SELECT bool_and(day >= 0 AND day <= 6) FROM unnest(available_days) AS day))
-  ),
+  available_days INTEGER[] CHECK (public.is_valid_weekday_array(available_days)),
   available_start_time TIME,
   available_end_time TIME,
   
