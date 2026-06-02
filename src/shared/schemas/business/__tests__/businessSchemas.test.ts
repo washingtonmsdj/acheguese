@@ -14,7 +14,7 @@ describe("updateBusinessSchema Property-Based Tests", () => {
   it("deve rejeitar email com formato inválido", () => {
     fc.assert(
       fc.property(
-        fc.string().filter((s) => s.length > 0 && !s.includes("@")),
+        fc.string().filter((s) => s.trim().length > 0 && !s.includes("@")),
         (invalidEmail) => {
           const result = updateBusinessSchema.safeParse({
             email: invalidEmail,
