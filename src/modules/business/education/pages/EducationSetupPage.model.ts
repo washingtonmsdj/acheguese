@@ -122,8 +122,27 @@ export function applyEducationInfrastructurePreset(
 ): EducationSetupFormData {
   return {
     ...formData,
-    ...EDUCATION_INFRASTRUCTURE_PRESETS[preset],
+    ...resolveEducationInfrastructurePreset(preset),
   };
+}
+
+function resolveEducationInfrastructurePreset(
+  preset: EducationInfrastructurePreset,
+): Pick<
+  EducationSetupFormData,
+  | 'schoolBasicResources'
+  | 'schoolAccessibilityFeatures'
+  | 'schoolEquipmentFeatures'
+  | 'schoolFacilityFeatures'
+> {
+  switch (preset) {
+    case 'daycare':
+      return EDUCATION_INFRASTRUCTURE_PRESETS.daycare;
+    case 'basic_school':
+      return EDUCATION_INFRASTRUCTURE_PRESETS.basic_school;
+    case 'accessible':
+      return EDUCATION_INFRASTRUCTURE_PRESETS.accessible;
+  }
 }
 
 export const INSTITUTION_TYPES = [

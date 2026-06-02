@@ -13,7 +13,6 @@
 import { describe, it, expect } from 'vitest';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as glob from 'glob';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -21,10 +20,37 @@ function readSrc(filePath: string): string {
   return fs.readFileSync(path.resolve(filePath), 'utf-8');
 }
 
-function grepFiles(pattern: RegExp, globs: string[]): string[] {
+function listSourceFiles(rootDir: string): string[] {
+  const results: string[] = [];
+
+  function walk(currentDir: string) {
+    if (!fs.existsSync(currentDir)) return;
+
+    for (const entry of fs.readdirSync(currentDir, { withFileTypes: true })) {
+      const absolutePath = path.join(currentDir, entry.name);
+      if (entry.isDirectory()) {
+        walk(absolutePath);
+        continue;
+      }
+
+      if (/\.tsx?$/.test(entry.name)) {
+        results.push(path.relative(process.cwd(), absolutePath).replace(/\\/g, '/'));
+      }
+    }
+  }
+
+  walk(path.resolve(rootDir));
+  return results;
+}
+
+function findFilesByName(rootDir: string, fileName: string): string[] {
+  return listSourceFiles(rootDir).filter((file) => path.basename(file) === fileName);
+}
+
+function grepFiles(pattern: RegExp, roots: string[]): string[] {
   const matches: string[] = [];
-  for (const g of globs) {
-    const files = glob.sync(g, { cwd: process.cwd() });
+  for (const root of roots) {
+    const files = listSourceFiles(root);
     for (const file of files) {
       const content = readSrc(file);
       if (pattern.test(content)) {
@@ -36,8 +62,7 @@ function grepFiles(pattern: RegExp, globs: string[]): string[] {
 }
 
 const SRC_GLOBS = [
-  'src/**/*.ts',
-  'src/**/*.tsx',
+  'src',
 ];
 
 // ─── Testes ──────────────────────────────────────────────────────────────────
@@ -66,15 +91,15 @@ describe('Regressão: Cleanup Pós-Sprint 2', () => {
   it('zero referências a community_posts no módulo posts (src/core/posts)', () => {
     // Escopo: apenas src/core/posts — CommunityQAService (src/core/community)
     // ainda usa community_posts para Q&A (débito técnico separado, fora deste escopo).
-    const files = grepFiles(/community_posts/, ['src/core/posts/**/*.ts', 'src/core/posts/**/*.tsx']);
+    const files = grepFiles(/community_posts/, ['src/core/posts']);
     expect(files, `Referências a community_posts em src/core/posts: ${files.join(', ')}`).toHaveLength(0);
   });
 
   it('zero referências a community_posts nos hooks de posts (src/core/community/hooks)', () => {
     const files = grepFiles(/community_posts/, [
-      'src/core/community/hooks/composer/**/*.ts',
-      'src/core/community/hooks/feed/**/*.ts',
-      'src/core/community/hooks/posts/**/*.ts',
+      'src/core/community/hooks/composer',
+      'src/core/community/hooks/feed',
+      'src/core/community/hooks/posts',
     ]);
     expect(files, `Referências a community_posts em hooks de posts: ${files.join(', ')}`).toHaveLength(0);
   });
@@ -133,7 +158,7 @@ describe('Regressão: Cleanup Pós-Sprint 2', () => {
 
   it('usePostCard não usa city/neighborhood/street como fallback de localização', () => {
     // Buscar o arquivo usePostCard em qualquer subpasta
-    const files = glob.sync('src/**/usePostCard.ts', { cwd: process.cwd() });
+    const files = findFilesByName('src', 'usePostCard.ts');
     expect(files.length).toBeGreaterThan(0);
     const content = readSrc(files[0]);
     expect(content).not.toMatch(/\|\|\s*city/);
@@ -149,7 +174,7 @@ describe('Regressão: Cleanup Pós-Sprint 2', () => {
   });
 
   it('useCreatePost usa location_id do activeProfile', () => {
-    const files = glob.sync('src/**/useCreatePost.ts', { cwd: process.cwd() });
+    const files = findFilesByName('src', 'useCreatePost.ts');
     expect(files.length).toBeGreaterThan(0);
     const content = readSrc(files[0]);
     expect(content).toMatch(/location_id.*activeProfile|activeProfile.*location/i);

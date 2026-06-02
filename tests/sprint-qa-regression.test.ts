@@ -12,10 +12,32 @@
 import { describe, it, expect } from 'vitest';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as glob from 'glob';
 
 function read(filePath: string): string {
   return fs.readFileSync(path.resolve(filePath), 'utf-8');
+}
+
+function listSourceFiles(rootDir: string): string[] {
+  const results: string[] = [];
+
+  function walk(currentDir: string) {
+    if (!fs.existsSync(currentDir)) return;
+
+    for (const entry of fs.readdirSync(currentDir, { withFileTypes: true })) {
+      const absolutePath = path.join(currentDir, entry.name);
+      if (entry.isDirectory()) {
+        walk(absolutePath);
+        continue;
+      }
+
+      if (/\.tsx?$/.test(entry.name)) {
+        results.push(path.relative(process.cwd(), absolutePath).replace(/\\/g, '/'));
+      }
+    }
+  }
+
+  walk(path.resolve(rootDir));
+  return results;
 }
 
 function findMigration(matchers: RegExp[]): { filePath: string; content: string } {
@@ -228,7 +250,7 @@ describe('Zero regressao em Posts Sociais', () => {
   });
 
   it('zero chamadas a createCommunityPost/createSimplePost no codigo', () => {
-    const files = glob.sync('src/**/*.{ts,tsx}', { cwd: process.cwd() });
+    const files = listSourceFiles('src');
     const matches = files.filter((f) => {
       const c = fs.readFileSync(f, 'utf-8');
       return /createCommunityPost\s*\(|createSimplePost\s*\(/.test(c);

@@ -9,7 +9,7 @@ import { describe, it, expect } from 'vitest';
 describe('Integração - Módulo de Mobilidade', () => {
   describe('Estrutura de Arquivos', () => {
     it('deve ter MotoboyAuthorizationService exportado', async () => {
-      const module = await import('../src/modules/mobility/services/MotoboyAuthorizationService');
+      const module = await import('../src/core/mobility/services/MotoboyAuthorizationService');
       expect(module.MotoboyAuthorizationService).toBeDefined();
       expect(typeof module.MotoboyAuthorizationService.canRequestDelivery).toBe('function');
       expect(typeof module.MotoboyAuthorizationService.canOperateDelivery).toBe('function');
@@ -17,7 +17,7 @@ describe('Integração - Módulo de Mobilidade', () => {
     });
 
     it('deve ter RideReportsService exportado', async () => {
-      const module = await import('../src/modules/mobility/services/RideReportsService');
+      const module = await import('../src/core/mobility/services/RideReportsService');
       expect(module.RideReportsService).toBeDefined();
       expect(typeof module.RideReportsService.createReport).toBe('function');
       expect(typeof module.RideReportsService.listReports).toBe('function');
@@ -26,7 +26,7 @@ describe('Integração - Módulo de Mobilidade', () => {
     });
 
     it('deve ter RideOperationalService exportado', async () => {
-      const module = await import('../src/modules/mobility/core/RideOperationalService');
+      const module = await import('../src/core/mobility/core/RideOperationalService');
       expect(module.RideOperationalService).toBeDefined();
       expect(typeof module.RideOperationalService.createDelivery).toBe('function');
       expect(typeof module.RideOperationalService.confirmPickup).toBe('function');
@@ -55,7 +55,7 @@ describe('Integração - Módulo de Mobilidade', () => {
     });
 
     it('deve ter MOBILITY_QUERY_KEYS exportado', async () => {
-      const module = await import('../src/modules/mobility/constants');
+      const module = await import('../src/core/mobility/constants');
       expect(module.MOBILITY_QUERY_KEYS).toBeDefined();
       expect(module.MOBILITY_QUERY_KEYS.deliveries).toBeDefined();
       expect(module.MOBILITY_QUERY_KEYS.reports).toBeDefined();
@@ -64,7 +64,7 @@ describe('Integração - Módulo de Mobilidade', () => {
 
   describe('Tipos e Interfaces', () => {
     it('deve ter tipos de autorização definidos', async () => {
-      const module = await import('../src/modules/mobility/services/MotoboyAuthorizationService');
+      const module = await import('../src/core/mobility/services/MotoboyAuthorizationService');
       
       // Validar que os tipos existem (TypeScript garante em compile-time)
       const sourceTypes: Array<'passenger' | 'business' | 'gastronomy' | 'service'> = [
@@ -78,7 +78,7 @@ describe('Integração - Módulo de Mobilidade', () => {
     });
 
     it('deve ter tipos de report definidos', async () => {
-      const module = await import('../src/modules/mobility/services/RideReportsService');
+      const module = await import('../src/core/mobility/services/RideReportsService');
       
       const reportTypes = [
         'safety_concern',
@@ -98,7 +98,7 @@ describe('Integração - Módulo de Mobilidade', () => {
 
   describe('Constantes', () => {
     it('deve ter query keys centralizadas', async () => {
-      const { MOBILITY_QUERY_KEYS } = await import('../src/modules/mobility/constants');
+      const { MOBILITY_QUERY_KEYS } = await import('../src/core/mobility/constants');
       
       expect(MOBILITY_QUERY_KEYS).toBeDefined();
       expect(typeof MOBILITY_QUERY_KEYS.deliveries).toBe('function');
@@ -107,7 +107,7 @@ describe('Integração - Módulo de Mobilidade', () => {
     });
 
     it('deve gerar query keys consistentes', async () => {
-      const { MOBILITY_QUERY_KEYS } = await import('../src/modules/mobility/constants');
+      const { MOBILITY_QUERY_KEYS } = await import('../src/core/mobility/constants');
       
       const key1 = MOBILITY_QUERY_KEYS.deliveries('business', 'business-123');
       const key2 = MOBILITY_QUERY_KEYS.deliveries('business', 'business-123');
@@ -182,9 +182,9 @@ describe('Integração - Módulo de Mobilidade', () => {
     it('não deve ter imports circulares críticos', async () => {
       // Tentar importar todos os módulos principais
       const imports = await Promise.all([
-        import('../src/modules/mobility/services/MotoboyAuthorizationService'),
-        import('../src/modules/mobility/services/RideReportsService'),
-        import('../src/modules/mobility/core/RideOperationalService'),
+        import('../src/core/mobility/services/MotoboyAuthorizationService'),
+        import('../src/core/mobility/services/RideReportsService'),
+        import('../src/core/mobility/core/RideOperationalService'),
         import('../src/modules/mobility/hooks/useDelivery'),
         import('../src/modules/mobility/hooks/useMobilidade'),
       ]);
@@ -250,7 +250,7 @@ describe('Validação de Arquitetura', () => {
   describe('Autorização Centralizada', () => {
     it('deve ter autorização no backend', async () => {
       const { MotoboyAuthorizationService } = await import(
-        '../src/modules/mobility/services/MotoboyAuthorizationService'
+        '../src/core/mobility/services/MotoboyAuthorizationService'
       );
 
       // Validar que o service existe e tem os métodos corretos
@@ -265,7 +265,7 @@ describe('Validação de Qualidade', () => {
   describe('TypeScript', () => {
     it('deve ter tipagem forte em services', async () => {
       const { MotoboyAuthorizationService } = await import(
-        '../src/modules/mobility/services/MotoboyAuthorizationService'
+        '../src/core/mobility/services/MotoboyAuthorizationService'
       );
 
       // Se o import funciona, a tipagem está correta

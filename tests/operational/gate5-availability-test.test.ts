@@ -13,7 +13,7 @@
 
 import { it, expect, beforeEach, afterEach } from 'vitest';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { DriverAvailabilityService } from '@/modules/mobility/services/DriverAvailabilityService';
+import { DriverAvailabilityService } from '@/core/mobility/services/DriverAvailabilityService';
 import { authenticateAsProfile, signOut } from '../helpers/auth-helper';
 import { createOperationalAdminClient, describeOperational } from '../helpers/operational-env';
 

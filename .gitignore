@@ -166,3 +166,4 @@ test-output.txt
 /playwright-report/
 /test-results/
 /testsprite_tests/tmp/
+/tests/e2e/**/.auth/

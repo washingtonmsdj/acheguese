@@ -12,7 +12,7 @@ function readProjectFile(path: string): string {
 
 describe("mobility operational notifications ssot", () => {
   it("keeps ride transition notifications transactional and audience-aware", () => {
-    const source = readProjectFile("src/modules/mobility/core/RideOperationalPostTransition.ts");
+    const source = readProjectFile("src/core/mobility/core/RideOperationalPostTransition.ts");
 
     expect(source).toContain("NotificationService.createNotification");
     expect(source).toContain('category: "transactional"');

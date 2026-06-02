@@ -145,6 +145,21 @@ function ensurePgEnv() {
   }
 }
 
+function buildPostgresConnectionString({ user, password, host, port, database }) {
+  return [
+    "postgresql://",
+    encodeURIComponent(user),
+    ":",
+    encodeURIComponent(password),
+    "@",
+    host,
+    ":",
+    port,
+    "/",
+    database,
+  ].join("");
+}
+
 function buildPgConnectionCandidates() {
   const candidates = [];
   const databaseUrl = process.env.DATABASE_URL?.trim();
@@ -163,7 +178,7 @@ function buildPgConnectionCandidates() {
   if (host && port && database && user && password) {
     candidates.push({
       label: "PG*",
-      connectionString: `postgresql://${encodeURIComponent(user)}:${encodeURIComponent(password)}@${host}:${port}/${database}`,
+      connectionString: buildPostgresConnectionString({ user, password, host, port, database }),
     });
   }
 
@@ -203,14 +218,26 @@ function buildPgConnectionCandidates() {
           for (const dbUser of userCandidates) {
             candidates.push({
               label: `SUPABASE_POOLER:${projectRef}:${poolHost}:${dbUser}`,
-              connectionString: `postgresql://${encodeURIComponent(dbUser)}:${encodeURIComponent(supabaseDbPassword)}@${poolHost}:${poolPort}/${dbName}`,
+              connectionString: buildPostgresConnectionString({
+                user: dbUser,
+                password: supabaseDbPassword,
+                host: poolHost,
+                port: poolPort,
+                database: dbName,
+              }),
             });
           }
         }
         for (const dbUser of userCandidates) {
           candidates.push({
             label: `SUPABASE_DIRECT_DB:${projectRef}:${dbUser}`,
-            connectionString: `postgresql://${encodeURIComponent(dbUser)}:${encodeURIComponent(supabaseDbPassword)}@db.${projectRef}.supabase.co:5432/${dbName}`,
+            connectionString: buildPostgresConnectionString({
+              user: dbUser,
+              password: supabaseDbPassword,
+              host: `db.${projectRef}.supabase.co`,
+              port: "5432",
+              database: dbName,
+            }),
           });
         }
       }

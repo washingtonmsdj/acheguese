@@ -6,7 +6,7 @@
  */
 
 import { createOperationalAdminClient } from './operational-env';
-import type { RideState } from '@/modules/mobility/core/RideStateMachine';
+import type { RideState } from '@/core/mobility/core/RideStateMachine';
 
 let supabaseAdmin: ReturnType<typeof createOperationalAdminClient> | undefined;
 

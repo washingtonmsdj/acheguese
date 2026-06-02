@@ -16,7 +16,10 @@ import { useAppUrls } from '@/core/routing/hooks/useAppUrls';
 import { usePublicBrowsingCity } from '@/core/location/hooks/usePublicBrowsingCity';
 import { useHomeCommunityHref } from '@/core/routing/hooks/useHomeCommunityHref';
 import { useCommunityNavigationContext } from '@/core/routing/hooks/useCommunityNavigationContext';
-import { buildCommunityNavigationModuleUrls } from '@/core/routing/utils/communityNavigationContext';
+import {
+  buildCommunityNavigationModuleUrls,
+  type CommunityNavigationModuleUrls,
+} from '@/core/routing/utils/communityNavigationContext';
 import {
   Sheet,
   SheetContent,
@@ -40,6 +43,34 @@ interface BottomNavProps {
 
 const noopPrefetch = () => undefined;
 
+function resolveCommunityModuleUrl(
+  urls: CommunityNavigationModuleUrls | null,
+  key: keyof CommunityNavigationModuleUrls,
+): string | null {
+  if (!urls) return null;
+
+  switch (key) {
+    case 'business':
+      return urls.business;
+    case 'gastronomy':
+      return urls.gastronomy;
+    case 'education':
+      return urls.education;
+    case 'services':
+      return urls.services;
+    case 'classifieds':
+      return urls.classifieds;
+    case 'events':
+      return urls.events;
+    case 'jobs':
+      return urls.jobs;
+    case 'map':
+      return urls.map;
+    case 'mobility':
+      return urls.mobility;
+  }
+}
+
 export function BottomNav({ prefetchRoute = noopPrefetch }: BottomNavProps) {
   const navigate = useNavigate();
   const { pathname } = useRouterLocation();
@@ -55,9 +86,9 @@ export function BottomNav({ prefetchRoute = noopPrefetch }: BottomNavProps) {
     ? buildCommunityNavigationModuleUrls(communityContext)
     : null;
   const modulePath = (
-    key: keyof NonNullable<typeof communityModuleUrls>,
+    key: keyof CommunityNavigationModuleUrls,
     fallbackModule: string,
-  ) => communityModuleUrls?.[key] ?? cityModule(fallbackModule);
+  ) => resolveCommunityModuleUrl(communityModuleUrls, key) ?? cityModule(fallbackModule);
 
   const isActive = (path: string) => {
     if (path === '/') return pathname === '/';
@@ -77,7 +108,7 @@ export function BottomNav({ prefetchRoute = noopPrefetch }: BottomNavProps) {
     { path: modulePath('events', 'eventos'), label: 'Eventos', icon: Calendar, badge: 0 },
     { path: modulePath('jobs', 'vagas'), label: 'Vagas', icon: Briefcase, badge: 0 },
     { path: modulePath('map', 'mapa'), label: 'Mapa', icon: Map, badge: 0 },
-    { path: communityModuleUrls?.mobility ?? appUrls.mobility.home, label: 'Mobilidade', icon: Car, badge: 0 },
+    { path: resolveCommunityModuleUrl(communityModuleUrls, 'mobility') ?? appUrls.mobility.home, label: 'Mobilidade', icon: Car, badge: 0 },
     { path: cityModule('buscar'), label: 'Busca', icon: Search, badge: 0 },
   ];
 

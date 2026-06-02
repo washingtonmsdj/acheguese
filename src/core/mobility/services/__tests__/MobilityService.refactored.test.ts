@@ -14,7 +14,8 @@ import type { Ride, Driver, RideStatus } from '@/core/infrastructure/database';
 
 // Mock dos repositories
 vi.mock('@/core/infrastructure/database', () => ({
-  RideRepository: vi.fn().mockImplementation(() => ({
+  RideRepository: vi.fn().mockImplementation(function MockRideRepository() {
+    return {
     findById: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
@@ -37,8 +38,10 @@ vi.mock('@/core/infrastructure/database', () => ({
     countByDriverId: vi.fn(),
     count: vi.fn(),
     createOrderBy: vi.fn((field, direction) => ({ field, direction })),
-  })),
-  DriverRepository: vi.fn().mockImplementation(() => ({
+    };
+  }),
+  DriverRepository: vi.fn().mockImplementation(function MockDriverRepository() {
+    return {
     findById: vi.fn(),
     findByProfileId: vi.fn(),
     findAvailable: vi.fn(),
@@ -54,7 +57,8 @@ vi.mock('@/core/infrastructure/database', () => ({
     suspend: vi.fn(),
     reactivate: vi.fn(),
     count: vi.fn(),
-  })),
+    };
+  }),
 }));
 
 describe('MobilityServiceRefactored', () => {

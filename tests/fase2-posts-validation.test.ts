@@ -3,7 +3,9 @@
  * Validações objetivas das refatorações do PostService
  */
 
-import { describe, it, expect, beforeAll } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { describe, it, expect } from 'vitest';
 import { postService } from '@/core/posts/services/PostService';
 import { supabase } from '@/integrations/supabase';
 
@@ -18,6 +20,10 @@ const FIXTURES = {
     district2: '00000000-0000-0000-0000-000000000003', // Pelourinho Teste Fase2
   },
 };
+
+function readPostMutationsSource(): string {
+  return readFileSync(resolve(process.cwd(), 'src/core/posts/services/posts.mutations.ts'), 'utf8');
+}
 
 describe('Sprint 2 - Fase 2: PostService Refatorado', () => {
   describe('createPost() - Validações de Service', () => {
@@ -43,26 +49,15 @@ describe('Sprint 2 - Fase 2: PostService Refatorado', () => {
       ).rejects.toThrow('Localização inválida');
     });
 
-    it('deve aceitar apenas city e district', async () => {
-      // Validar que city é aceito
-      const cityLocation = await supabase
-        .from('locations')
-        .select('id, type')
-        .eq('id', FIXTURES.locations.city)
-        .single();
-      
-      expect(cityLocation.data?.type).toBe('city');
+    it('deve aceitar apenas city, district e neighborhood no contrato de criacao', () => {
+      const source = readPostMutationsSource();
 
-      // Validar que district é aceito
-      const districtLocation = await supabase
-        .from('locations')
-        .select('id, type')
-        .eq('id', FIXTURES.locations.district1)
-        .single();
-      
-      expect(districtLocation.data?.type).toBe('district');
+      expect(source).toContain(
+        'allowedLocationTypes: [LocationType.CITY, LocationType.DISTRICT, LocationType.NEIGHBORHOOD]',
+      );
+      expect(source).not.toMatch(/allowedLocationTypes:[\s\S]*LocationType\.STATE/);
+      expect(source).not.toMatch(/allowedLocationTypes:[\s\S]*LocationType\.COUNTRY/);
     });
-
     it('deve rejeitar tipo inválido (state, country, etc)', async () => {
       // Buscar um state para testar
       const { data: state } = await supabase

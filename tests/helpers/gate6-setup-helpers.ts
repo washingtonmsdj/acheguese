@@ -5,7 +5,7 @@
  * Valida estado no banco, não confia apenas em retorno de API.
  */
 
-import { DriverAvailabilityService } from '@/modules/mobility/services/DriverAvailabilityService';
+import { DriverAvailabilityService } from '@/core/mobility/services/DriverAvailabilityService';
 import { authenticateAsProfile } from './auth-helper';
 import { validateDriverAvailable } from './gate6-polling-helpers';
 import { createOperationalAdminClient } from './operational-env';

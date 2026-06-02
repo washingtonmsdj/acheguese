@@ -37,8 +37,8 @@ describe("mobility canonical onboarding routes", () => {
   });
 
   it("keeps passenger tracking notifications bound to mobilityRoutes helper", () => {
-    const rideOperationalSource = readProjectFile("src/modules/mobility/core/RideOperationalService.ts");
-    const postTransitionSource = readProjectFile("src/modules/mobility/core/RideOperationalPostTransition.ts");
+    const rideOperationalSource = readProjectFile("src/core/mobility/core/RideOperationalService.ts");
+    const postTransitionSource = readProjectFile("src/core/mobility/core/RideOperationalPostTransition.ts");
 
     expect(rideOperationalSource).toContain("handleRidePostTransition(rideId, toState, ride)");
     expect(postTransitionSource).toContain("mobilityRoutes.passageiro.buscando(rideId)");

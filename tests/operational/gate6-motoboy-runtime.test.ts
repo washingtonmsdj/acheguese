@@ -16,10 +16,10 @@ import { it, expect, beforeEach, afterEach } from 'vitest';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { RideOperationalService } from '@/modules/mobility/core/RideOperationalService';
-import { RideDispatchService } from '@/modules/mobility/core/RideDispatchService';
-import { DriverAvailabilityService } from '@/modules/mobility/services/DriverAvailabilityService';
-import { RIDE_STATUS } from '@/modules/mobility/constants';
+import { RideOperationalService } from '@/core/mobility/core/RideOperationalService';
+import { RideDispatchService } from '@/core/mobility/core/RideDispatchService';
+import { DriverAvailabilityService } from '@/core/mobility/services/DriverAvailabilityService';
+import { RIDE_STATUS } from '@/core/mobility/constants';
 import { authenticateAsProfile, signOut } from '../helpers/auth-helper';
 import { 
   waitForRideStatus, 

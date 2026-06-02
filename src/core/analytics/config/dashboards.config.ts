@@ -10,10 +10,12 @@ export interface DashboardConfig {
   requiredRole?: string[];
 }
 
+const POWERBI_GERAL_URL = import.meta.env.VITE_POWERBI_GERAL_URL?.trim() ?? "";
+
 export const POWERBI_DASHBOARDS: Record<string, DashboardConfig> = {
   geral: {
     id: "geral",
-    url: "https://app.powerbi.com/view?r=eyJrIjoiNjU1Yzc2M2UtYTQyNC00NmRlLWFjYzEtMmQ0MDYyYWM5NWUzIiwidCI6IjNhNTRiNmNkLTBlZDQtNDk5Zi05MDllLTM5NTY1NzUxYWRlZCJ9",
+    url: POWERBI_GERAL_URL,
     title: "Visao Geral",
     description: "Metricas gerais e indicadores principais do sistema",
     icon: "BarChart3",

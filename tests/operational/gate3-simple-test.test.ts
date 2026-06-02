@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { RideStateMachine, RIDE_STATE } from '../../src/modules/mobility/core/RideStateMachine';
+import { RideStateMachine, RIDE_STATE } from '../../src/core/mobility/core/RideStateMachine';
 
 describe('GATE 3 - Teste Simples', () => {
   it('1. State machine - passageiro pode cancelar em estados iniciais', () => {

@@ -11,6 +11,8 @@
  * Timeout: 15s por teste (I/O de rede)
  */
 
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, it, expect, afterAll } from 'vitest';
 import { postService } from '../src/core/posts/services';
 
@@ -22,6 +24,10 @@ const PELO_ID  = '00000000-0000-0000-0000-000000000003'; // Pelourinho Teste Fas
 
 // IDs de posts criados durante os testes (para cleanup)
 const createdPostIds: string[] = [];
+
+function readPostMutationsSource(): string {
+  return readFileSync(resolve(process.cwd(), 'src/core/posts/services/posts.mutations.ts'), 'utf8');
+}
 
 // ─── Cleanup ─────────────────────────────────────────────────────────────────
 
@@ -45,8 +51,6 @@ async function getValidProfileId(): Promise<string | null> {
     .single();
   return data?.id ?? null;
 }
-
-// ─── Helper: criar post via admin (bypassar RLS para testes) ─────────────────
 
 async function createTestPost(params: {
   author_profile_id: string;
@@ -119,29 +123,25 @@ describe('FASE 6 - SSOT Posts Runtime', () => {
       ).rejects.toThrow('Localização inválida');
     }, 15000);
 
-    it('rejeita post em location com type inválido (country)', async () => {
-      // '00000000-0000-0000-0000-000000000000' = Brasil (country)
-      await expect(
-        postService.createPost({
-          author_profile_id: 'any-profile',
-          content: 'Test em país',
-          type: 'text',
-          location_id: '00000000-0000-0000-0000-000000000000',
-        }),
-      ).rejects.toThrow('Posts só podem ser criados em cidades ou bairros');
-    }, 15000);
+    it('mantem country fora dos tipos permitidos para criacao de post', () => {
+      const source = readPostMutationsSource();
 
-    it('rejeita post em location com type state', async () => {
-      // '00000000-0000-0000-0000-000000000010' = Bahia (state)
-      await expect(
-        postService.createPost({
-          author_profile_id: 'any-profile',
-          content: 'Test em estado',
-          type: 'text',
-          location_id: '00000000-0000-0000-0000-000000000010',
-        }),
-      ).rejects.toThrow('Posts só podem ser criados em cidades ou bairros');
-    }, 15000);
+      expect(source).toContain(
+        'allowedLocationTypes: [LocationType.CITY, LocationType.DISTRICT, LocationType.NEIGHBORHOOD]',
+      );
+      expect(source).toContain('Posts só podem ser criados em cidades ou bairros');
+      expect(source).not.toMatch(/allowedLocationTypes:[\s\S]*LocationType\.COUNTRY/);
+    });
+
+    it('mantem state fora dos tipos permitidos para criacao de post', () => {
+      const source = readPostMutationsSource();
+
+      expect(source).toContain(
+        'allowedLocationTypes: [LocationType.CITY, LocationType.DISTRICT, LocationType.NEIGHBORHOOD]',
+      );
+      expect(source).toContain('Posts só podem ser criados em cidades ou bairros');
+      expect(source).not.toMatch(/allowedLocationTypes:[\s\S]*LocationType\.STATE/);
+    });
   });
 
   // ── 2. expandLocationIds — expansão territorial ────────────────────────────

@@ -36,7 +36,26 @@ function resolveCommunityUrlForTerritory(
   input: Pick<HomeCommunityHrefInput, "communityUrlsByTerritoryBaseUrl">,
 ): string {
   const key = normalizeTerritoryBaseKey(territoryBaseUrl);
-  return input.communityUrlsByTerritoryBaseUrl?.[key] ?? buildCommunityTerritoryUrl(key);
+  const mappedUrl = findCommunityUrlForTerritoryKey(
+    input.communityUrlsByTerritoryBaseUrl,
+    key,
+  );
+  return mappedUrl ?? buildCommunityTerritoryUrl(key);
+}
+
+function findCommunityUrlForTerritoryKey(
+  urlsByTerritoryBaseUrl: Record<string, string | null | undefined> | undefined,
+  key: string,
+): string | null | undefined {
+  if (!urlsByTerritoryBaseUrl) return undefined;
+
+  for (const [territoryBaseUrl, communityUrl] of Object.entries(urlsByTerritoryBaseUrl)) {
+    if (territoryBaseUrl === key) {
+      return communityUrl;
+    }
+  }
+
+  return undefined;
 }
 
 function isShortCommunityBaseHref(href: string | null | undefined): href is string {

@@ -21,23 +21,33 @@ type AliasShellState =
   | { status: "resolved"; resolution: Extract<CommunityPublicAliasTerritoryResolution, { status: "resolved" }> }
   | { status: "not-found"; message: string };
 
-const ALIAS_MODULE_KEYS: Record<string, ModuleKey> = {
-  [APP_MODULE_SLUGS.community]: ModuleKey.COMMUNITY,
-  [APP_MODULE_SLUGS.business]: ModuleKey.BUSINESS,
-  [APP_MODULE_SLUGS.services]: ModuleKey.SERVICES,
-  [APP_MODULE_SLUGS.classifieds]: ModuleKey.CLASSIFIEDS,
-  [APP_MODULE_SLUGS.gastronomy]: ModuleKey.GASTRONOMY,
-  [APP_MODULE_SLUGS.education]: ModuleKey.BUSINESS,
-  [APP_MODULE_SLUGS.events]: ModuleKey.EVENTS,
-  [APP_MODULE_SLUGS.jobs]: ModuleKey.JOBS,
-  [APP_MODULE_SLUGS.map]: ModuleKey.BUSINESS,
-  [APP_MODULE_SLUGS.mobility]: ModuleKey.MOBILITY,
-};
-
 function resolveModuleKeyFromAliasPath(pathname: string): ModuleKey {
   const parts = pathname.split("/").filter(Boolean);
   const moduleSlug = parts[1] ?? APP_MODULE_SLUGS.community;
-  return ALIAS_MODULE_KEYS[moduleSlug] ?? ModuleKey.COMMUNITY;
+
+  switch (moduleSlug) {
+    case APP_MODULE_SLUGS.business:
+      return ModuleKey.BUSINESS;
+    case APP_MODULE_SLUGS.services:
+      return ModuleKey.SERVICES;
+    case APP_MODULE_SLUGS.classifieds:
+      return ModuleKey.CLASSIFIEDS;
+    case APP_MODULE_SLUGS.gastronomy:
+      return ModuleKey.GASTRONOMY;
+    case APP_MODULE_SLUGS.education:
+      return ModuleKey.BUSINESS;
+    case APP_MODULE_SLUGS.events:
+      return ModuleKey.EVENTS;
+    case APP_MODULE_SLUGS.jobs:
+      return ModuleKey.JOBS;
+    case APP_MODULE_SLUGS.map:
+      return ModuleKey.BUSINESS;
+    case APP_MODULE_SLUGS.mobility:
+      return ModuleKey.MOBILITY;
+    case APP_MODULE_SLUGS.community:
+    default:
+      return ModuleKey.COMMUNITY;
+  }
 }
 
 function isStateSlugFallback(value: string | undefined): boolean {

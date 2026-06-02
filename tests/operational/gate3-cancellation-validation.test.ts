@@ -15,9 +15,9 @@
 
 import { it, expect, beforeAll, afterAll } from 'vitest';
 import { type SupabaseClient } from '@supabase/supabase-js';
-import { RideOperationalService } from '../../src/modules/mobility/core/RideOperationalService';
-import { RideDispatchService } from '../../src/modules/mobility/core/RideDispatchService';
-import { RIDE_STATE } from '../../src/modules/mobility/core/RideStateMachine';
+import { RideOperationalService } from '../../src/core/mobility/core/RideOperationalService';
+import { RideDispatchService } from '../../src/core/mobility/core/RideDispatchService';
+import { RIDE_STATE } from '../../src/core/mobility/core/RideStateMachine';
 import {
   authenticateGate3Driver,
   authenticateGate3RuntimeAs,

@@ -5,8 +5,8 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { RideReportsService } from '../src/modules/mobility/services/RideReportsService';
-import type { ReportType, ReportSeverity, ReportStatus } from '../src/modules/mobility/services/RideReportsService';
+import { RideReportsService } from '../src/core/mobility/services/RideReportsService';
+import type { ReportType, ReportSeverity, ReportStatus } from '../src/core/mobility/services/RideReportsService';
 
 const TEST_RIDE_ID = '7b9817cb-d0c3-46f3-b57f-b2c4d5a20ed3';
 const TEST_REPORTER_PROFILE_ID = 'c64a8e34-16be-474c-b4f8-0585afce7d14';
