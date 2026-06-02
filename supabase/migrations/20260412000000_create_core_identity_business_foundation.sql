@@ -265,7 +265,7 @@ CREATE TABLE IF NOT EXISTS public.locations (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   CONSTRAINT unique_location_slug_per_parent UNIQUE (parent_id, slug),
-  CONSTRAINT valid_geographic_path CHECK (geographic_path ~ '^/[a-z0-9-/]+$'),
+  CONSTRAINT valid_geographic_path CHECK (geographic_path ~ '^/[a-z0-9/-]+$'),
   CONSTRAINT valid_slug CHECK (slug ~ '^[a-z0-9-]+$')
 );
 

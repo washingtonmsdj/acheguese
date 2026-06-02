@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS locations (
   CONSTRAINT unique_location_slug_per_parent UNIQUE (parent_id, slug),
   
   -- Validações
-  CONSTRAINT valid_geographic_path CHECK (geographic_path ~ '^/[a-z0-9-/]+$'),
+  CONSTRAINT valid_geographic_path CHECK (geographic_path ~ '^/[a-z0-9/-]+$'),
   CONSTRAINT valid_slug CHECK (slug ~ '^[a-z0-9-]+$')
 );
 
