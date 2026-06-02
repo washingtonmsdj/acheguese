@@ -10,6 +10,7 @@ import {
 } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { SessionService } from "@/core/session/services/SessionService";
+import { profileService } from "@/core/profiles/services/ProfileService";
 import type {
   CommunityAlertAudit,
   CommunityAlertReport,
@@ -24,16 +25,7 @@ class AlertModerationServiceClass {
       const user = await SessionService.getCurrentUser();
       if (!user) throw new Error("not_authenticated");
 
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("is_active", true)
-        .order("created_at", { ascending: true })
-        .limit(1)
-        .maybeSingle();
-
-      if (profileError) throw profileError;
+      const profile = await profileService.getRequiredActiveProfile(user.id);
       if (!profile?.id) throw new Error("profile_not_found");
 
       const { error } = await supabase.from("community_alert_reports").insert({

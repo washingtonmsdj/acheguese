@@ -9,6 +9,7 @@
  */
 
 import { createClient } from "@supabase/supabase-js";
+import type { User } from "@supabase/supabase-js";
 import dotenv from "dotenv";
 
 // Carregar variáveis de ambiente
@@ -108,7 +109,7 @@ async function seedE2EUsers(options: SeedOptions = {}) {
 
     // Verificar se usuário já existe
     const { data: existingUsers } = await supabase.auth.admin.listUsers();
-    const existingUser = existingUsers?.users.find(
+    const existingUser = ((existingUsers?.users ?? []) as User[]).find(
       (u) => u.email === testUser.email
     );
 
@@ -135,7 +136,7 @@ async function seedE2EUsers(options: SeedOptions = {}) {
       const { error: profileError } = await supabase
         .from("profiles")
         .delete()
-        .eq("id", existingUser.id);
+        .eq("user_id", existingUser.id);
 
       if (profileError && verbose) {
         console.log(`   ⚠️  Aviso ao deletar perfil: ${profileError.message}`);
@@ -148,7 +149,7 @@ async function seedE2EUsers(options: SeedOptions = {}) {
 
       if (userError) {
         console.error(`   ❌ Erro ao deletar usuário: ${userError.message}`);
-        continue;
+        throw new Error(`Erro ao deletar usuário existente: ${userError.message}`);
       }
 
       console.log(`   ✅ Usuário deletado`);
@@ -168,51 +169,53 @@ async function seedE2EUsers(options: SeedOptions = {}) {
 
     if (createError || !newUser.user) {
       console.error(`   ❌ Erro ao criar usuário: ${createError?.message}`);
-      continue;
+      throw new Error(`Erro ao criar usuário E2E: ${createError?.message}`);
     }
 
     console.log(`   ✅ Usuário criado (ID: ${newUser.user.id})`);
 
-    // Criar perfil associado
-    console.log(`   📝 Criando perfil...`);
-    const { error: profileError } = await supabase.from("profiles").insert({
-      id: newUser.user.id,
-      user_id: newUser.user.id,
+    // O trigger handle_new_user cria o perfil pessoal; aqui garantimos os dados E2E.
+    console.log(`   📝 Atualizando perfil...`);
+    const { data: savedProfile, error: profileError } = await supabase.from("profiles").update({
       name: testUser.fullName,
+      display_name: testUser.fullName,
       profile_type: "personal",
       neighborhood: neighborhoodId ? neighborhoods?.name : null,
       city: neighborhoodId ? (neighborhoods?.cities as any)?.name : null,
       location_id: neighborhoodId,
-    });
+    }).eq("user_id", newUser.user.id).eq("profile_type", "personal").select("id").maybeSingle();
 
-    if (profileError) {
-      console.error(`   ❌ Erro ao criar perfil: ${profileError.message}`);
+    if (profileError || !savedProfile) {
+      const errorMessage = profileError?.message ?? "perfil pessoal nao encontrado apos criar usuario";
+      console.error(`   ❌ Erro ao criar perfil: ${errorMessage}`);
       
       // Tentar deletar usuário órfão
       await supabase.auth.admin.deleteUser(newUser.user.id);
-      continue;
+      throw new Error(`Erro ao salvar perfil E2E: ${errorMessage}`);
     }
 
-    console.log(`   ✅ Perfil criado`);
+    console.log(`   ✅ Perfil atualizado`);
 
     // Se for admin, adicionar role na tabela user_roles
     if (testUser.role === "admin") {
       console.log(`   📝 Adicionando role de admin...`);
-      const { error: roleError } = await supabase.from("user_roles").insert({
+      const { error: roleError } = await supabase.from("user_roles").upsert({
         user_id: newUser.user.id,
         role: "admin",
         role_enum: "admin",
         is_active: true,
         granted_at: new Date().toISOString(),
+      }, {
+        onConflict: "user_id,role",
       });
 
       if (roleError) {
         console.error(`   ❌ Erro ao adicionar role: ${roleError.message}`);
         
         // Tentar deletar perfil e usuário órfãos
-        await supabase.from("profiles").delete().eq("id", newUser.user.id);
+        await supabase.from("profiles").delete().eq("user_id", newUser.user.id);
         await supabase.auth.admin.deleteUser(newUser.user.id);
-        continue;
+        throw new Error(`Erro ao adicionar role admin E2E: ${roleError.message}`);
       }
 
       console.log(`   ✅ Role de admin adicionada`);
