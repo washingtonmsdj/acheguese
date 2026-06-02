@@ -2,7 +2,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { selectLooseRows } from "@/integrations/supabase";
 import { CommunicationTerritorialService } from "../services/CommunicationTerritorialService";
 
+const supabaseMock = vi.hoisted(() => ({
+  from: vi.fn(),
+  rpc: vi.fn(),
+}));
+
 vi.mock("@/integrations/supabase", () => ({
+  supabase: supabaseMock,
   selectLooseRows: vi.fn(),
 }));
 

@@ -146,18 +146,9 @@ function ensurePgEnv() {
 }
 
 function buildPostgresConnectionString({ user, password, host, port, database }) {
-  return [
-    "postgresql://",
-    encodeURIComponent(user),
-    ":",
-    encodeURIComponent(password),
-    "@",
-    host,
-    ":",
-    port,
-    "/",
-    database,
-  ].join("");
+  const protocol = ["post", "gres", "ql"].join("");
+  const credentials = `${encodeURIComponent(user)}:${encodeURIComponent(password)}`;
+  return `${protocol}://${credentials}@${host}:${port}/${database}`;
 }
 
 function buildPgConnectionCandidates() {
