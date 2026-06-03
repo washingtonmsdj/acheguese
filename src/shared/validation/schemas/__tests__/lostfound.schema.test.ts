@@ -65,7 +65,7 @@ describe("NovoAchadoPerdidoSchema Property-Based Tests", () => {
         fc.constantFrom("perdido", "encontrado" as const),
         fc.constantFrom("animal", "celular", "documentos", "chaves", "carteira", "objetos", "outro" as const),
         fc.string({ minLength: 3, maxLength: 150 }).map((s) => s.replace(/[^a-zA-Z0-9\s]/g, '')).filter((s) => s.trim().length >= 3),
-        fc.date({ min: new Date(2020, 0, 1), max: new Date() }),
+        fc.date({ min: new Date(2020, 0, 1), max: new Date(), noInvalidDate: true }),
         (tipo, category, titulo, dateOcorrido) => {
           const result = NovoAchadoPerdidoSchema.safeParse({
             tipo,
@@ -86,7 +86,7 @@ describe("NovoAchadoPerdidoSchema Property-Based Tests", () => {
         fc.constantFrom("perdido", "encontrado" as const),
         fc.constantFrom("animal", "celular", "documentos", "chaves", "carteira", "objetos", "outro" as const),
         fc.string({ minLength: 3, maxLength: 150 }),
-        fc.date(),
+        fc.date({ noInvalidDate: true }),
         (tipo, category, titulo, dateOcorrido) => {
           const result = NovoAchadoPerdidoSchema.safeParse({
             tipo,
