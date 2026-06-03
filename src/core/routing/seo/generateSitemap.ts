@@ -62,6 +62,36 @@ function generateTerritoryUrls(
   isGroup: boolean,
   communityAlias?: string | null,
 ): SitemapUrl[] {
+  if (communityAlias) {
+    return [
+      {
+        loc: `${baseUrl}${buildCommunityAliasUrl(communityAlias)}`,
+        changefreq: 'daily',
+        priority: isGroup ? 0.9 : 0.8,
+      },
+      {
+        loc: `${baseUrl}${buildCommunityAliasUrl(communityAlias, 'empresas')}`,
+        changefreq: 'daily',
+        priority: 0.7,
+      },
+      {
+        loc: `${baseUrl}${buildCommunityAliasUrl(communityAlias, 'gastronomia')}`,
+        changefreq: 'daily',
+        priority: 0.7,
+      },
+      {
+        loc: `${baseUrl}${buildCommunityAliasUrl(communityAlias, 'feed')}`,
+        changefreq: 'hourly',
+        priority: 0.8,
+      },
+      {
+        loc: `${baseUrl}${buildCommunityAliasUrl(communityAlias, 'grupos')}`,
+        changefreq: 'daily',
+        priority: 0.7,
+      },
+    ];
+  }
+
   const urls: SitemapUrl[] = [
     {
       loc: `${baseUrl}${publicPath}`,
@@ -84,36 +114,6 @@ function generateTerritoryUrls(
       priority: 0.7,
     });
   });
-
-  if (communityAlias) {
-    urls.push(
-      {
-        loc: `${baseUrl}${buildCommunityAliasUrl(communityAlias)}`,
-        changefreq: 'daily',
-        priority: 0.8,
-      },
-      {
-        loc: `${baseUrl}${buildCommunityAliasUrl(communityAlias, 'empresas')}`,
-        changefreq: 'daily',
-        priority: 0.7,
-      },
-      {
-        loc: `${baseUrl}${buildCommunityAliasUrl(communityAlias, 'gastronomia')}`,
-        changefreq: 'daily',
-        priority: 0.7,
-      },
-      {
-        loc: `${baseUrl}${buildCommunityAliasUrl(communityAlias, 'feed')}`,
-        changefreq: 'hourly',
-        priority: 0.8,
-      },
-      {
-        loc: `${baseUrl}${buildCommunityAliasUrl(communityAlias, 'grupos')}`,
-        changefreq: 'daily',
-        priority: 0.7,
-      },
-    );
-  }
 
   return urls;
 }

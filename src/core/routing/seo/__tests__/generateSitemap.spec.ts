@@ -29,6 +29,12 @@ describe("generateSitemap", () => {
 
     expect(sitemap).not.toContain("/area/");
     expect(sitemap).not.toContain("https://acheguese.com.br/comunidade/");
+    expect(sitemap).not.toContain(
+      "https://acheguese.com.br/ba/salvador/chapada-do-rio-vermelho",
+    );
+    expect(sitemap).not.toContain(
+      "https://acheguese.com.br/empresas/ba/salvador/chapada-do-rio-vermelho",
+    );
     expect(sitemap).toContain(
       "https://acheguese.com.br/chapada-do-rio-vermelho",
     );
