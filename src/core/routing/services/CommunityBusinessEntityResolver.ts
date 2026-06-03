@@ -15,6 +15,7 @@ export interface BusinessEntityRouteParams {
 export type CommunityBusinessEntityResolution =
   | {
       status: "resolved";
+      alias: string;
       business: BusinessUrlContext;
       routeParams: BusinessEntityRouteParams;
     }
@@ -57,6 +58,7 @@ async function businessBelongsToTerritorialGroup(
 
 function resolvedBusiness(
   business: BusinessUrlContext | null,
+  alias: string,
 ): CommunityBusinessEntityResolution {
   const territory = business ? extractBusinessTerritory(business) : null;
 
@@ -69,6 +71,7 @@ function resolvedBusiness(
 
   return {
     status: "resolved",
+    alias,
     business,
     routeParams: {
       state: territory.state,
@@ -101,11 +104,11 @@ export async function resolveBusinessEntityFromCommunityAlias(
 
   if (community.resolved.kind === "group") {
     const business = await BusinessUrlService.resolveBySlug(entitySlug);
-    if (!business) return resolvedBusiness(null);
+    if (!business) return resolvedBusiness(null, community.alias);
 
     const cityPrefix = `/br/${territory.state}/${territory.city}/`;
     if (!business.geographic_path.startsWith(cityPrefix)) {
-      return resolvedBusiness(null);
+      return resolvedBusiness(null, community.alias);
     }
 
     const belongsToGroup = await businessBelongsToTerritorialGroup(
@@ -113,16 +116,17 @@ export async function resolveBusinessEntityFromCommunityAlias(
       community.resolved.group.id,
     );
 
-    return resolvedBusiness(belongsToGroup ? business : null);
+    return resolvedBusiness(belongsToGroup ? business : null, community.alias);
   }
 
   if (!territory.territorySlug) {
     const business = await BusinessUrlService.resolveBySlug(entitySlug);
-    if (!business) return resolvedBusiness(null);
+    if (!business) return resolvedBusiness(null, community.alias);
 
     const cityPrefix = `/br/${territory.state}/${territory.city}/`;
     return resolvedBusiness(
       business.geographic_path.startsWith(cityPrefix) ? business : null,
+      community.alias,
     );
   }
 
@@ -133,5 +137,6 @@ export async function resolveBusinessEntityFromCommunityAlias(
       territory.territorySlug,
       entitySlug,
     ),
+    community.alias,
   );
 }

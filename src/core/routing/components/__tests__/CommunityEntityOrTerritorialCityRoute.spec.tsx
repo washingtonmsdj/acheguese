@@ -43,6 +43,7 @@ describe("CommunityEntityOrTerritorialCityRoute", () => {
   it("renderiza empresa em URL curta direta sem prefixo de modulo", async () => {
     vi.mocked(resolveBusinessEntityFromCommunityAlias).mockResolvedValue({
       status: "resolved",
+      alias: "santa-cruz",
       business: {
         id: "business-1",
         slug: "padaria-x",
@@ -58,6 +59,43 @@ describe("CommunityEntityOrTerritorialCityRoute", () => {
 
     render(
       <MemoryRouter initialEntries={["/santa-cruz/padaria-x"]}>
+        <Routes>
+          <Route
+            path="/:state/:city"
+            element={<CommunityEntityOrTerritorialCityRoute />}
+          />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() =>
+      expect(
+        screen.getByText(
+          "/santa-cruz/padaria-x|/santa-cruz/padaria-x|ba/salvador/santa-cruz/padaria-x",
+        ),
+      ).toBeInTheDocument(),
+    );
+  });
+
+  it("redireciona para alias e slug canonicos quando a rota direta usa apelido antigo", async () => {
+    vi.mocked(resolveBusinessEntityFromCommunityAlias).mockResolvedValue({
+      status: "resolved",
+      alias: "santa-cruz",
+      business: {
+        id: "business-1",
+        slug: "padaria-x",
+        geographic_path: "/br/ba/salvador/santa-cruz",
+      },
+      routeParams: {
+        state: "ba",
+        city: "salvador",
+        district: "santa-cruz",
+        slug: "padaria-x",
+      },
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/santa-cruz-antigo/padaria-antiga?origem=zap#topo"]}>
         <Routes>
           <Route
             path="/:state/:city"

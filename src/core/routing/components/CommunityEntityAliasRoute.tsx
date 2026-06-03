@@ -59,7 +59,7 @@ export function CommunityEntityAliasRoute() {
 
       setState({
         status: "resolved",
-        targetPath: `/${communitySlug}/${resolution.business.slug}`,
+        targetPath: `/${resolution.alias}/${resolution.business.slug}`,
       });
     }
 

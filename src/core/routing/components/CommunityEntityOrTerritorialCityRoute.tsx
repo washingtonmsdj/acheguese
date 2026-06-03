@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from "react";
-import { useLocation, useParams } from "react-router-dom";
+import { Navigate, useLocation, useParams } from "react-router-dom";
 import {
   resolveBusinessEntityFromCommunityAlias,
   type BusinessEntityRouteParams,
@@ -17,6 +17,7 @@ type ResolutionState =
       status: "entity";
       routeParams: BusinessEntityRouteParams;
       canonicalPath: string;
+      canonicalAlias: string;
     }
   | { status: "not-found"; message: string };
 
@@ -60,7 +61,8 @@ export function CommunityEntityOrTerritorialCityRoute() {
       setResolution({
         status: "entity",
         routeParams: entity.routeParams,
-        canonicalPath: location.pathname,
+        canonicalPath: `/${entity.alias}/${entity.business.slug}`,
+        canonicalAlias: entity.alias,
       });
     }
 
@@ -85,11 +87,18 @@ export function CommunityEntityOrTerritorialCityRoute() {
 
   return (
     <Suspense fallback={<PageLoader fullScreen message="Abrindo empresa..." />}>
-      <EmpresaDetailLandingPage
-        routeParams={resolution.routeParams}
-        canonicalPathOverride={resolution.canonicalPath}
-        communityAliasOverride={state}
-      />
+      {resolution.canonicalPath !== location.pathname ? (
+        <Navigate
+          to={`${resolution.canonicalPath}${location.search}${location.hash}`}
+          replace
+        />
+      ) : (
+        <EmpresaDetailLandingPage
+          routeParams={resolution.routeParams}
+          canonicalPathOverride={resolution.canonicalPath}
+          communityAliasOverride={resolution.canonicalAlias}
+        />
+      )}
     </Suspense>
   );
 }

@@ -22,6 +22,7 @@ describe("CommunityEntityAliasRoute", () => {
   it("redireciona alias legado de empresa para a URL curta raiz", async () => {
     vi.mocked(resolveBusinessEntityFromCommunityAlias).mockResolvedValue({
       status: "resolved",
+      alias: "santa-cruz",
       business: {
         id: "business-1",
         slug: "padaria-x",
@@ -57,6 +58,7 @@ describe("CommunityEntityAliasRoute", () => {
   it("redireciona alias legado de gastronomia para a URL curta raiz", async () => {
     vi.mocked(resolveBusinessEntityFromCommunityAlias).mockResolvedValue({
       status: "resolved",
+      alias: "santa-cruz",
       business: {
         id: "business-1",
         slug: "pizzaria-x",
@@ -92,6 +94,7 @@ describe("CommunityEntityAliasRoute", () => {
   it("resolve empresa dentro de grupo territorial antes de redirecionar", async () => {
     vi.mocked(resolveBusinessEntityFromCommunityAlias).mockResolvedValue({
       status: "resolved",
+      alias: "complexo",
       business: {
         id: "business-1",
         slug: "mercado-x",
@@ -121,6 +124,40 @@ describe("CommunityEntityAliasRoute", () => {
       expect(
         screen.getByText("/complexo/mercado-x"),
       ).toBeInTheDocument(),
+    );
+  });
+
+  it("usa o alias canonico resolvido ao redirecionar", async () => {
+    vi.mocked(resolveBusinessEntityFromCommunityAlias).mockResolvedValue({
+      status: "resolved",
+      alias: "santa-cruz",
+      business: {
+        id: "business-1",
+        slug: "padaria-x",
+        geographic_path: "/br/ba/salvador/santa-cruz",
+      },
+      routeParams: {
+        state: "ba",
+        city: "salvador",
+        district: "santa-cruz",
+        slug: "padaria-x",
+      },
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/comunidade/santa-cruz-antigo/empresas/padaria-x"]}>
+        <Routes>
+          <Route
+            path="/comunidade/:communitySlug/empresas/:slug"
+            element={<CommunityEntityAliasRoute />}
+          />
+          <Route path="/santa-cruz/padaria-x" element={<LocationProbe />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByText("/santa-cruz/padaria-x")).toBeInTheDocument(),
     );
   });
 });
