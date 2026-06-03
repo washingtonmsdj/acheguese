@@ -1,17 +1,20 @@
 /**
- * territoryUrls — Helpers canônicos de URL territorial
+ * territoryUrls - SSOT para URLs territoriais e aliases publicos.
  *
- * SSOT para construção de URLs territoriais públicas (sem /br).
- * Nunca concatenar paths manualmente no app — usar estas funções.
+ * Nunca concatenar paths manualmente no app; usar estas funcoes.
  *
- * Padrões canônicos (públicos):
+ * Padroes publicos territoriais:
  *   Cidade:   /:state/:city
  *   Bairro:   /:state/:city/:district
  *   Grupo:    /:state/:city/:groupSlug
- *   Módulo:   /[modulo]/:state/:city/:district?
- *   Grupo em módulo (não-comunidade): /[modulo]/:state/:city/:groupSlug
+ *   Modulo:   /[modulo]/:state/:city/:district?
  *
- * Comunidade:
+ * Comunidade publica preferencial:
+ *   /:communityAlias
+ *   /:communityAlias/:module
+ *   /:communityAlias/:businessSlug
+ *
+ * Fallback tecnico de comunidade:
  *   /comunidade/:state/:city
  *   /comunidade/:state/:city/:districtOrGroup
  */

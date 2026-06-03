@@ -1,14 +1,17 @@
 /**
- * BusinessUrlService — Camada autorizada SSOT para URLs públicas de empresas.
+ * BusinessUrlService - SSOT autorizado para URLs publicas de empresas.
  *
- * REGRAS ARQUITETURAIS:
- *   - Nenhum componente, hook ou página monta URL de empresa manualmente.
- *   - Toda geração, resolução e validação de URL passa por aqui.
+ * Regras arquiteturais:
+ *   - Nenhum componente, hook ou pagina monta URL de empresa manualmente.
+ *   - Toda geracao, resolucao e validacao de URL passa por aqui.
  *   - Hooks apenas consomem este service.
  *
- * PADRÃO OFICIAL DE URLs:
- *   Canônica pública:  /empresas/:uf/:cidade/:bairro/:slug
- *   Premium (curta):   /p/:slug  → mini-site premium isolado
+ * Padrao publico preferencial:
+ *   Comunidade com alias: /:communityAlias/:slug
+ *   Premium isolado:      /p/:slug
+ *
+ * Fallback tecnico territorial:
+ *   /empresas/:uf/:cidade/:bairro/:slug
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
@@ -35,9 +38,9 @@ export interface BusinessUrlContext {
 
 
 export interface ResolvedBusinessUrl {
-  /** URL canônica pública: /empresas/ba/salvador/pituba/tonecos-studios */
+  /** URL publica preferencial: /santa-cruz/tonecos-studios quando houver alias. */
   canonical: string;
-  /** URL premium curta (só para is_premium): /p/tonecos-studios */
+  /** URL premium curta (so para is_premium): /p/tonecos-studios */
   premium: string | null;
 
   /** URL interna de gestao: /central/empresas/:id */

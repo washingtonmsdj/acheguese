@@ -1,24 +1,17 @@
-import { lazy, Suspense, useEffect, useState } from "react";
-import { useLocation, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Navigate, useLocation, useParams } from "react-router-dom";
 import { APP_MODULE_SLUGS } from "@/config/moduleSlugs";
 import {
   resolveBusinessEntityFromCommunityAlias,
-  type BusinessEntityRouteParams,
 } from "@/core/routing/services/CommunityBusinessEntityResolver";
 import { PageLoader } from "@/shared/components/loading/PageLoader";
 import { TerritorialNotFound } from "./TerritorialNotFound";
-
-const EmpresaDetailLandingPage = lazy(() => import("@/app/pages/EmpresaDetailLandingPage"));
-const GastronomyDetailPage = lazy(() =>
-  import("@/modules/business/gastronomy/pages/GastronomyDetailPage"),
-);
 
 type EntityState =
   | { status: "loading" }
   | {
       status: "resolved";
-      routeParams: BusinessEntityRouteParams;
-      canonicalPath: string;
+      targetPath: string;
     }
   | { status: "not-found"; message: string };
 
@@ -73,8 +66,7 @@ export function CommunityShortEntityRoute() {
 
       setState({
         status: "resolved",
-        routeParams: resolution.routeParams,
-        canonicalPath: location.pathname,
+        targetPath: `/${communitySlug}/${resolution.business.slug}`,
       });
     }
 
@@ -102,19 +94,9 @@ export function CommunityShortEntityRoute() {
   }
 
   return (
-    <Suspense fallback={<PageLoader fullScreen message="Abrindo empresa..." />}>
-      {moduleSlug === APP_MODULE_SLUGS.gastronomy ? (
-        <GastronomyDetailPage
-          routeParams={state.routeParams}
-          canonicalPathOverride={state.canonicalPath}
-        />
-      ) : (
-        <EmpresaDetailLandingPage
-          routeParams={state.routeParams}
-          canonicalPathOverride={state.canonicalPath}
-          communityAliasOverride={communitySlug}
-        />
-      )}
-    </Suspense>
+    <Navigate
+      to={`${state.targetPath}${location.search}${location.hash}`}
+      replace
+    />
   );
 }
