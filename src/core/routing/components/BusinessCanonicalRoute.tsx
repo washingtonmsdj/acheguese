@@ -1,7 +1,8 @@
 ﻿/**
- * BusinessCanonicalRoute - rota pública canônica de empresa.
+ * BusinessCanonicalRoute - fallback territorial legado de empresa.
  *
- * URL: /empresas/:uf/:cidade/:bairro/:slug
+ * URL legada: /empresas/:uf/:cidade/:bairro/:slug
+ * Destino preferencial: /:communityAlias/:slug quando ha alias publico.
  */
 import { logger } from '@/shared/utils/logger';
 import { useEffect, useState } from 'react';
@@ -11,8 +12,6 @@ import { BusinessUrlService } from '@/core/business/services/BusinessUrlService'
 import { buildBusinessPublicUrlFromSegments } from '@/core/business/utils/businessPublicUrls';
 import { Loader2 } from 'lucide-react';
 import { logPageNotFound } from '@/core/public-identity/utils/identity-logger';
-import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
-import { CommunityPublicAliasService } from '@/core/routing/services/CommunityPublicAliasService';
 
 interface BusinessCanonicalRouteProps {
   BusinessDetailComponent?: ComponentType<{ businessId?: string }>;
@@ -76,27 +75,9 @@ export default function BusinessCanonicalRoute({
           return;
         }
 
-        let redirectPath: string | null = null;
-
-        try {
-          const locationRepository = createLocationRepository();
-          const businessLocation = await locationRepository.findByPath(ctx.geographic_path);
-          const communityBaseUrl = businessLocation
-            ? await CommunityPublicAliasService.findPublicUrlForTerritory({
-                kind: 'location',
-                territoryId: businessLocation.id,
-              })
-            : null;
-
-          if (communityBaseUrl) {
-            redirectPath = `${communityBaseUrl}/${ctx.slug}`;
-          }
-        } catch (aliasError) {
-          logger.warn(
-            '[BusinessCanonicalRoute] Alias publico da comunidade indisponivel; usando fallback territorial.',
-            aliasError,
-          );
-        }
+        const canonicalPath =
+          await BusinessUrlService.getCanonicalUrlWithResolvedCommunityAlias(ctx);
+        const redirectPath = canonicalPath !== location.pathname ? canonicalPath : null;
 
         if (!cancelled) {
           setRouteState({
@@ -118,7 +99,7 @@ export default function BusinessCanonicalRoute({
     return () => {
       cancelled = true;
     };
-  }, [state, city, district, slug]);
+  }, [location.pathname, state, city, district, slug]);
 
   if (routeState.status === 'loading') {
     return (

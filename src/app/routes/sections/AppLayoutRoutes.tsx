@@ -220,7 +220,7 @@ export function AppLayoutRoutes() {
         <Route path="/br" element={<P.CountryLandingPage />} />
 
         {/* Modulo empresas - estrutura hierarquica clara */}
-        {/* 5 segmentos = empresa especifica: /empresas/:uf/:cidade/:bairro/:slug */}
+        {/* 5 segmentos = fallback legado de empresa; redireciona para /:comunidade/:slug quando houver alias */}
         <Route path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.business, [TERRITORIAL_PARAMS.district, TERRITORIAL_PARAMS.slug])} element={<P.BusinessRouteResolver BusinessDetailComponent={P.EmpresaDetailLandingPage} />} />
 
         {/* Categoria: /empresas/:uf/:cidade/categoria/:category */}

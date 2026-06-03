@@ -8,7 +8,7 @@ import { BusinessIdentityField } from "@/core/public-identity/components/domains
 import {
   BUSINESS_PUBLIC_URL_PREVIEW_SLUG,
   buildBusinessPremiumUrl,
-  buildBusinessPublicUrlFromSegments,
+  buildBusinessPublicUrlPreview,
 } from "@/core/business/utils/businessPublicUrls";
 import { IdentityImpactNotice } from "@/core/public-identity/components/IdentityImpactNotice";
 import { IdentityChangeConfirmDialog } from "@/core/public-identity/components/IdentityChangeConfirmDialog";
@@ -37,17 +37,6 @@ interface BusinessSlugSectionProps {
   onSaveWithIdentityChange?: () => void;
 }
 
-function toUrlSegment(value: string | undefined, fallback: string): string {
-  const normalized = (value || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-
-  return normalized || fallback;
-}
-
 export function BusinessSlugSection({
   slug,
   onSlugChange,
@@ -57,9 +46,6 @@ export function BusinessSlugSection({
   category,
   businessName,
   isVerifiedOfficial = false,
-  stateName,
-  cityName,
-  districtName,
   manualMode = true,
   onManualModeChange,
   onResetToAuto,
@@ -69,35 +55,16 @@ export function BusinessSlugSection({
   const [confirmOpen, setConfirmOpen] = useState(false);
   const copy = getBusinessCreateFieldCopy(category);
 
-  const stateSegment = toUrlSegment(stateName, "uf");
-  const citySegment = toUrlSegment(cityName, "cidade");
-  const districtSegment = toUrlSegment(districtName, "bairro");
-  const previewTerritory = {
-    state: stateSegment,
-    city: citySegment,
-    district: districtSegment,
-  };
-
   const canonicalPreviewFn = (value: string) => {
     if (!value) return "";
-    return buildPublicAbsoluteUrl(
-      buildBusinessPublicUrlFromSegments({
-        ...previewTerritory,
-        slug: value,
-      }),
-    );
+    return buildPublicAbsoluteUrl(buildBusinessPublicUrlPreview(value));
   };
 
   const canonicalPreviewSkeleton = buildPublicAbsoluteUrl(
-    buildBusinessPublicUrlFromSegments({
-      ...previewTerritory,
-      slug: BUSINESS_PUBLIC_URL_PREVIEW_SLUG,
-    }),
+    buildBusinessPublicUrlPreview(BUSINESS_PUBLIC_URL_PREVIEW_SLUG),
   );
 
-  const previewFn = isPremium
-    ? (value: string) => (value ? buildPublicAbsoluteUrl(buildBusinessPremiumUrl(value)) : "")
-    : canonicalPreviewFn;
+  const previewFn = canonicalPreviewFn;
 
   const slugSafety =
     manualMode && businessName && slug

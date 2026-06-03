@@ -1,13 +1,10 @@
 /**
- * BusinessRouteResolver — Resolve se /empresas/:state/:city/:district/:slug é:
- *   1. Rota canônica de empresa específica (slug de business)
- *   2. Rota territorial (slug de grupo ou bairro)
+ * BusinessRouteResolver - resolve se /empresas/:state/:city/:district/:slug e:
+ *   1. fallback legado de empresa especifica (slug de business)
+ *   2. rota territorial (slug de grupo ou bairro)
  *
- * Estratégia:
- *   - Tenta resolver como business primeiro
- *   - Se não encontrar, delega para TerritorialLayout
- *
- * Isso elimina ambiguidade de rotas sem duplicar lógica.
+ * A rota de business pode redirecionar para /:communityAlias/:slug quando
+ * houver alias publico da comunidade.
  */
 
 import { useEffect, useState } from 'react';
@@ -40,7 +37,6 @@ export default function BusinessRouteResolver({
     }
 
     async function resolve() {
-      // Tenta resolver como business (5 segmentos: /empresas/:uf/:cidade/:bairro/:slug)
       const ctx = await BusinessUrlService.resolveByTerritoryAndSlug(
         state!,
         city!,
@@ -48,13 +44,7 @@ export default function BusinessRouteResolver({
         slug!,
       );
 
-      if (ctx) {
-        // É uma empresa específica
-        setResolved('business');
-      } else {
-        // Não é empresa, deve ser território (grupo ou bairro)
-        setResolved('territorial');
-      }
+      setResolved(ctx ? 'business' : 'territorial');
     }
 
     resolve();

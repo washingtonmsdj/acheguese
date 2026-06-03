@@ -16,6 +16,10 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import { PublicIdentityService } from '@/core/public-identity/services/PublicIdentityService';
+import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
+import { createTerritorialGroupRepository } from '@/core/location/repositories/createTerritorialGroupRepository';
+import { CommunityPublicAliasService } from '@/core/routing/services/CommunityPublicAliasService';
+import { buildCommunityAliasUrl } from '@/core/routing/utils/territoryUrls';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 import {
   buildBusinessPremiumUrl,
@@ -125,6 +129,65 @@ export class BusinessUrlService {
    */
   static getCanonicalUrl(ctx: BusinessUrlContext): string {
     return this.buildUrls(ctx).canonical;
+  }
+
+  /**
+   * Resolve a base publica curta da comunidade da empresa, quando existir.
+   * Mantem retorno nulo para preservar fallback territorial em links antigos.
+   */
+  static async findCommunityPublicBaseUrl(ctx: BusinessUrlContext): Promise<string | null> {
+    if (ctx.community_alias) {
+      return buildCommunityAliasUrl(ctx.community_alias);
+    }
+
+    if (!ctx.geographic_path) return null;
+
+    try {
+      const locationRepository = createLocationRepository();
+      const businessLocation = await locationRepository.findByPath(ctx.geographic_path);
+      if (!businessLocation?.id) return null;
+
+      const locationAlias = await CommunityPublicAliasService.findPublicUrlForTerritory({
+        kind: 'location',
+        territoryId: businessLocation.id,
+      });
+      if (locationAlias) return locationAlias;
+
+      const groupRepository = createTerritorialGroupRepository();
+      const containingGroups = await groupRepository.findGroupsContainingLocation(
+        businessLocation.id,
+      );
+
+      for (const group of containingGroups) {
+        const groupAlias = await CommunityPublicAliasService.findPublicUrlForTerritory({
+          kind: 'group',
+          territoryId: group.id,
+        });
+        if (groupAlias) return groupAlias;
+      }
+
+      return null;
+    } catch (err) {
+      logger.warn(
+        '[BusinessUrlService] Nao foi possivel resolver alias publico da comunidade.',
+        err,
+      );
+      return null;
+    }
+  }
+
+  /**
+   * Gera a URL publica preferencial resolvendo alias de comunidade por territorio.
+   * Retorna fallback territorial quando ainda nao existe alias publico.
+   */
+  static async getCanonicalUrlWithResolvedCommunityAlias(
+    ctx: BusinessUrlContext,
+  ): Promise<string> {
+    const communityBaseUrl = await this.findCommunityPublicBaseUrl(ctx);
+    if (!communityBaseUrl) return this.getCanonicalUrl(ctx);
+
+    const communityAlias = communityBaseUrl.replace(/^\/+|\/+$/g, '');
+    return buildBusinessPublicUrlFromCommunityAlias(communityAlias, ctx.slug);
   }
 
   /**
@@ -289,7 +352,7 @@ export class BusinessUrlService {
   }
 
   /**
-   * Resolve empresa por UF + cidade + bairro + slug (rota canônica territorial).
+   * Resolve empresa por UF + cidade + bairro + slug (fallback territorial legado).
    * Valida que a empresa pertence ao território informado.
    *
    * Retorna null se não encontrada, inativa, ou território não bate.

@@ -30,7 +30,7 @@ export default function BusinessPremiumSitePage() {
             <p className="text-muted-foreground">{premiumUrl || "Nao disponivel no plano atual"}</p>
           </div>
           <div className="rounded-md border p-3 text-sm">
-            <p className="font-medium">Pagina publica canonica</p>
+            <p className="font-medium">Pagina publica comum</p>
             <p className="text-muted-foreground">{publicUrl || "Nao disponivel"}</p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -52,4 +52,3 @@ export default function BusinessPremiumSitePage() {
     </div>
   );
 }
-

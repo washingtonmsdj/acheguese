@@ -1,4 +1,4 @@
-import { useEffect, type ComponentType } from "react";
+import { useEffect, useState, type ComponentType } from "react";
 import {
   NavLink,
   Outlet,
@@ -55,6 +55,35 @@ export default function BusinessDashboardShellPage() {
     useBusinessSubscription(businessId);
   const { status: gastronomyStatus, isLoading: loadingGastronomy } =
     useGastronomyStatus(businessId || "", true);
+  const [publicUrl, setPublicUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!business?.id || !business.slug || !business.geographic_path) {
+      setPublicUrl(null);
+      return;
+    }
+
+    const context = {
+      id: business.id,
+      slug: business.slug,
+      is_premium: business.is_premium,
+      geographic_path: business.geographic_path,
+    };
+
+    setPublicUrl(BusinessUrlService.getCanonicalUrl(context));
+
+    void BusinessUrlService.getCanonicalUrlWithResolvedCommunityAlias(context).then((url) => {
+      if (!cancelled) {
+        setPublicUrl(url);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [business?.id, business?.slug, business?.is_premium, business?.geographic_path]);
 
   if (loadingBusiness || loadingSubscription || loadingGastronomy) {
     return (
@@ -77,15 +106,6 @@ export default function BusinessDashboardShellPage() {
   const isEducationEligible = isEligibleForVertical(business.category, "education");
   const isGastronomyActive = gastronomyStatus === "active";
 
-  const publicUrl =
-    business.slug && business.geographic_path
-      ? BusinessUrlService.getCanonicalUrl({
-          id: business.id,
-          slug: business.slug,
-          is_premium: business.is_premium,
-          geographic_path: business.geographic_path,
-        })
-      : null;
   const premiumUrl =
     business.slug && entitlements.canUseShortPremiumLink
       ? `/p/${business.slug}`

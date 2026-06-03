@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { Breadcrumbs } from "@/app/components/Breadcrumbs";
 
 describe("Breadcrumbs", () => {
-  it("usa a rota publica canonica de empresas no breadcrumb", () => {
+  it("usa a rota publica do modulo empresas no breadcrumb", () => {
     render(
       <MemoryRouter initialEntries={["/empresas"]}>
         <Breadcrumbs />

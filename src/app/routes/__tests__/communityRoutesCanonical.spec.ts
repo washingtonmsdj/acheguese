@@ -19,8 +19,8 @@ function readProjectFile(path: string): string {
   return readFileSync(resolve(repoRoot, path), "utf8");
 }
 
-describe("community canonical routes", () => {
-  it("keeps canonical community route patterns in routing SSOT", () => {
+describe("community route patterns", () => {
+  it("keeps community route patterns in routing SSOT", () => {
     expect(buildCommunityTerritoryRoutePath()).toBe(
       "/comunidade/:state/:city",
     );

@@ -83,13 +83,14 @@ No arquivo `AppRoutes.tsx`, adicione dentro do componente `Routes`:
 /empresas/:state/:city/:groupSlug             # Vitrine publica do modulo no grupo
 /:communitySlug                               # URL curta publica da comunidade
 /:communitySlug/empresas                      # Empresas da comunidade
-/:communitySlug/empresas/:slug                # Detalhe de empresa mantendo URL curta
+/:communitySlug/:slug                         # Detalhe publico preferencial de empresa
+/:communitySlug/empresas/:slug                # Alias legado; redireciona para /:communitySlug/:slug
 /:communitySlug/gastronomia                   # Gastronomia da comunidade
-/:communitySlug/gastronomia/:slug             # Detalhe gastronomico mantendo URL curta
+/:communitySlug/gastronomia/:slug             # Alias legado; redireciona para /:communitySlug/:slug
 /comunidade/:state/:city                      # Comunidade municipal (canonica publica)
 /comunidade/:state/:city/:communitySlug       # Comunidade de bairro/grupo (deterministica)
 /comunidade/:state/:city/feed                 # Feed comunitario municipal
-/empresas/:state/:city/:district/:businessSlug # Detalhe especifico de empresa
+/empresas/:state/:city/:district/:businessSlug # Fallback legado de detalhe; redireciona se houver alias
 ```
 
 Regra de intencao:
@@ -98,9 +99,11 @@ Regra de intencao:
 - Rotas curtas `/:communitySlug/...` sao a experiencia social/local com contexto comunitario.
 - `/:communitySlug` so e valido quando existe alias publico unico em
   `community_public_aliases`; em caso de colisao, use a rota completa com estado e cidade.
-- Detalhes em `/:communitySlug/empresas/:slug` e
-  `/:communitySlug/gastronomia/:slug` mantem a URL curta visivel e resolvem a
-  entidade pelo SSOT territorial.
+- Detalhes publicos de empresa usam `/:communitySlug/:slug`.
+- Detalhes em `/:communitySlug/empresas/:slug`,
+  `/:communitySlug/gastronomia/:slug` e
+  `/empresas/:state/:city/:district/:slug` sao aliases legados e redirecionam
+  para a URL curta quando ha alias publico resolvido pelo SSOT territorial.
 - `/comunidade/:communitySlug...` e alias legado; deve redirecionar para
   `/:communitySlug...`.
 - Em comunidade, a URL publica nao expoe tipo tecnico (`district` vs `territorial_group`):

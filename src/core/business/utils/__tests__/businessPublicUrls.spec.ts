@@ -15,7 +15,7 @@ import {
 } from '@/core/business/utils/businessPublicUrls';
 
 describe('businessPublicUrls', () => {
-  it('builds canonical public business URLs from internal geographic_path', () => {
+  it('builds fallback territorial business URLs from internal geographic_path', () => {
     expect(
       buildBusinessPublicUrlFromTerritory('/br/ba/salvador/rio-vermelho', 'cafe-central'),
     ).toBe('/empresas/ba/salvador/rio-vermelho/cafe-central');
@@ -27,7 +27,7 @@ describe('businessPublicUrls', () => {
     ).toBe('/santa-cruz/padaria-x');
   });
 
-  it('builds canonical public business URLs from explicit territory segments', () => {
+  it('builds fallback territorial business URLs from explicit territory segments', () => {
     expect(
       buildBusinessPublicUrlFromSegments({
         state: 'ba',
