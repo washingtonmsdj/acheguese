@@ -6,31 +6,40 @@
 import { logger } from '@/shared/utils/logger';
 import { useEffect, useState } from 'react';
 import type { ComponentType } from 'react';
-import { useParams } from 'react-router-dom';
+import { Navigate, useLocation, useParams } from 'react-router-dom';
 import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
 import { buildBusinessPublicUrlFromSegments } from '@/core/business/utils/businessPublicUrls';
 import { Loader2 } from 'lucide-react';
 import { logPageNotFound } from '@/core/public-identity/utils/identity-logger';
+import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
+import { CommunityPublicAliasService } from '@/core/routing/services/CommunityPublicAliasService';
 
 interface BusinessCanonicalRouteProps {
   BusinessDetailComponent?: ComponentType<{ businessId?: string }>;
 }
 
+type RouteState =
+  | { status: 'loading' }
+  | { status: 'found'; businessId: string; redirectPath: string | null }
+  | { status: 'not-found' };
+
 export default function BusinessCanonicalRoute({
   BusinessDetailComponent,
 }: BusinessCanonicalRouteProps = {}) {
+  const location = useLocation();
   const { state, city, district, slug } = useParams<{
     state: string;
     city: string;
     district: string;
     slug: string;
   }>();
-  const [businessId, setBusinessId] = useState<string | null>(null);
-  const [status, setStatus] = useState<'loading' | 'found' | 'not-found'>('loading');
+  const [routeState, setRouteState] = useState<RouteState>({ status: 'loading' });
 
   useEffect(() => {
+    let cancelled = false;
+
     if (!state || !city || !district || !slug) {
-      setStatus('not-found');
+      setRouteState({ status: 'not-found' });
       return;
     }
 
@@ -61,22 +70,57 @@ export default function BusinessCanonicalRoute({
             identifier: slug,
             attemptedUrl,
           });
-          setStatus('not-found');
+          if (!cancelled) {
+            setRouteState({ status: 'not-found' });
+          }
           return;
         }
 
-        setBusinessId(ctx.id);
-        setStatus('found');
+        let redirectPath: string | null = null;
+
+        try {
+          const locationRepository = createLocationRepository();
+          const businessLocation = await locationRepository.findByPath(ctx.geographic_path);
+          const communityBaseUrl = businessLocation
+            ? await CommunityPublicAliasService.findPublicUrlForTerritory({
+                kind: 'location',
+                territoryId: businessLocation.id,
+              })
+            : null;
+
+          if (communityBaseUrl) {
+            redirectPath = `${communityBaseUrl}/${ctx.slug}`;
+          }
+        } catch (aliasError) {
+          logger.warn(
+            '[BusinessCanonicalRoute] Alias publico da comunidade indisponivel; usando fallback territorial.',
+            aliasError,
+          );
+        }
+
+        if (!cancelled) {
+          setRouteState({
+            status: 'found',
+            businessId: ctx.id,
+            redirectPath,
+          });
+        }
       } catch (err) {
         logger.error('[BusinessCanonicalRoute] Erro:', err);
-        setStatus('not-found');
+        if (!cancelled) {
+          setRouteState({ status: 'not-found' });
+        }
       }
     }
 
     resolve();
+
+    return () => {
+      cancelled = true;
+    };
   }, [state, city, district, slug]);
 
-  if (status === 'loading') {
+  if (routeState.status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -84,7 +128,7 @@ export default function BusinessCanonicalRoute({
     );
   }
 
-  if (status === 'not-found' || !businessId) {
+  if (routeState.status === 'not-found') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
         <div className="max-w-md text-center">
@@ -101,10 +145,19 @@ export default function BusinessCanonicalRoute({
     );
   }
 
+  if (routeState.redirectPath && routeState.redirectPath !== location.pathname) {
+    return (
+      <Navigate
+        to={`${routeState.redirectPath}${location.search}${location.hash}`}
+        replace
+      />
+    );
+  }
+
   if (!BusinessDetailComponent) {
     logger.error('[BusinessCanonicalRoute] BusinessDetailComponent não informado.');
     return null;
   }
 
-  return <BusinessDetailComponent businessId={businessId} />;
+  return <BusinessDetailComponent businessId={routeState.businessId} />;
 }
