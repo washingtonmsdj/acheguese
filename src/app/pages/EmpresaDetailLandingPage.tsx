@@ -355,7 +355,24 @@ export default function EmpresaDetailLandingPage(
   }
 
   const yearsActive = getYearsActive(business.created_at);
-  const gastronomyUrl = snapshot.verticals.canonicalVerticalUrl;
+  const contextualBusinessUrl = props.communityAliasOverride
+    ? BusinessUrlService.getCanonicalUrl({
+        id: business.id,
+        slug: business.slug,
+        is_premium: business.is_premium,
+        geographic_path: business.geographic_path,
+        community_alias: props.communityAliasOverride,
+      })
+    : null;
+  const gastronomyUrl = snapshot.verticals.canonicalVerticalUrl
+    ? contextualBusinessUrl ?? snapshot.verticals.canonicalVerticalUrl
+    : null;
+  const verticalPublicUrls = contextualBusinessUrl && snapshot.verticals.verticalPublicUrls.gastronomy
+    ? {
+        ...snapshot.verticals.verticalPublicUrls,
+        gastronomy: contextualBusinessUrl,
+      }
+    : snapshot.verticals.verticalPublicUrls;
   const isDeliveryBusiness =
     business.tem_delivery || business.modos_atendimento?.includes("delivery");
   const previewItems = snapshot.gastronomyPreview.map((item) => ({
@@ -402,7 +419,7 @@ export default function EmpresaDetailLandingPage(
           business={business}
           isDeliveryBusiness={Boolean(isDeliveryBusiness)}
           gastronomyUrl={gastronomyUrl}
-          verticalPublicUrls={snapshot.verticals.verticalPublicUrls}
+          verticalPublicUrls={verticalPublicUrls}
           isFavorite={isFavorite}
           hasRecommended={hasRecommended}
           showRouteOptions={showRouteOptions}
