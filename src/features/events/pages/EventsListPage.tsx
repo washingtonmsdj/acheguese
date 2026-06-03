@@ -35,7 +35,6 @@ import {
 import { cn } from '@/shared/utils/cn';
 import { useFavorites } from '../hooks/useFavorites';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
-import { buildCommunityTerritoryUrl, geoPathToPublicUrl } from '@/core/routing/utils/territoryUrls';
 import { useCommunityUrls } from '@/core/routing/hooks/useCommunityUrls';
 import { communityEventsRuntimeService } from '@/core/community/services/CommunityEventsRuntimeService';
 import { mapCommunityEventToEvent } from '../utils/eventAdapters';
@@ -184,7 +183,7 @@ export default function EventsListPage({ resolved, activeMemberIds }: EventsList
                   {resolved.kind === 'location' && (
                     <>
                       <Link
-                        to={geoPathToPublicUrl(resolved.location.geographic_path)}
+                        to={eventUrls.feed}
                         className="transition-colors hover:text-foreground"
                       >
                         {resolved.location.name}
@@ -195,9 +194,7 @@ export default function EventsListPage({ resolved, activeMemberIds }: EventsList
                   {resolved.kind === 'group' && (
                     <>
                       <Link
-                        to={buildCommunityTerritoryUrl(
-                          `${geoPathToPublicUrl(resolved.group.members[0].geographic_path)}/${resolved.group.slug}`,
-                        )}
+                        to={eventUrls.feed}
                         className="transition-colors hover:text-foreground"
                       >
                         {resolved.group.name}

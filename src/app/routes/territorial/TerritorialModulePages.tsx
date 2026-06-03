@@ -126,7 +126,7 @@ interface CityStatusGateProps {
 }
 
 function CityStatusGate({ module, enforceActive = false, children }: CityStatusGateProps) {
-  const { resolved } = useTerritorialContext();
+  const { resolved, communityBaseUrl } = useTerritorialContext();
   const { pathname } = useLocation();
   const locationPath = resolved.kind === 'location'
     ? resolved.location.geographic_path
@@ -150,7 +150,7 @@ function CityStatusGate({ module, enforceActive = false, children }: CityStatusG
     : resolved.location.type === 'city'
       ? `/${safeState}/${safeCity}`
       : `/${safeState}/${safeCity}/${resolved.location.slug}`;
-  const communityEntryHref = buildCommunityTerritoryUrl(moduleTerritoryBase);
+  const communityEntryHref = communityBaseUrl || buildCommunityTerritoryUrl(moduleTerritoryBase);
   const primaryCtaHref = buildModuleTerritoryUrl(MODULE_SLUGS.business, moduleTerritoryBase);
 
   return (
