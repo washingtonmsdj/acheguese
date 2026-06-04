@@ -42,9 +42,9 @@ describe("PublicBusinessSnapshotService", () => {
       verticals: {
         activeVerticals: ["gastronomy"],
         primaryVertical: "gastronomy",
-        canonicalVerticalUrl: "/gastronomia/ba/salvador/pituba/restaurante-central",
+        canonicalVerticalUrl: "/empresas/ba/salvador/pituba/restaurante-central",
         verticalPublicUrls: {
-          gastronomy: "/gastronomia/ba/salvador/pituba/restaurante-central",
+          gastronomy: "/empresas/ba/salvador/pituba/restaurante-central",
         },
       },
       gastronomyPreview: [
@@ -54,7 +54,7 @@ describe("PublicBusinessSnapshotService", () => {
           imageUrl: "/m.jpg",
           priceFrom: 42,
           priceLabel: "A partir de R$ 42,00",
-          menuUrl: "/gastronomia/ba/salvador/pituba/restaurante-central",
+          menuUrl: "/empresas/ba/salvador/pituba/restaurante-central",
         },
       ],
       seo: {
@@ -79,7 +79,7 @@ describe("PublicBusinessSnapshotService", () => {
     expect(snapshot).not.toBeNull();
     expect(snapshot?.gastronomyPreview).toHaveLength(1);
     expect(snapshot?.verticals.canonicalVerticalUrl).toBe(
-      "/gastronomia/ba/salvador/pituba/restaurante-central",
+      "/empresas/ba/salvador/pituba/restaurante-central",
     );
     expect(snapshot?.institutional.business.id).toBe("profile-1");
     expect(vi.mocked(PublicSnapshotRpcService.getBusinessSnapshotBySlug)).toHaveBeenCalledTimes(1);

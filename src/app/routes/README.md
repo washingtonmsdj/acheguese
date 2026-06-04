@@ -83,7 +83,7 @@ No arquivo `AppRoutes.tsx`, adicione dentro do componente `Routes`:
 /empresas/:state/:city/:groupSlug             # Vitrine publica do modulo no grupo
 /:communitySlug                               # URL curta publica da comunidade
 /:communitySlug/empresas                      # Empresas da comunidade
-/:communitySlug/:slug                         # Detalhe publico preferencial de empresa
+/:communitySlug/:slug                         # Detalhe publico preferencial de empresa/restaurante
 /:communitySlug/empresas/:slug                # Alias legado; redireciona para /:communitySlug/:slug
 /:communitySlug/gastronomia                   # Gastronomia da comunidade
 /:communitySlug/gastronomia/:slug             # Alias legado; redireciona para /:communitySlug/:slug
@@ -91,6 +91,7 @@ No arquivo `AppRoutes.tsx`, adicione dentro do componente `Routes`:
 /comunidade/:state/:city/:communitySlug       # Fallback tecnico de bairro/grupo
 /comunidade/:state/:city/feed                 # Fallback tecnico do feed comunitario municipal
 /empresas/:state/:city/:district/:businessSlug # Fallback legado de detalhe; redireciona se houver alias
+/gastronomia/:state/:city/:district/:slug     # Fallback legado de detalhe; redireciona para URL publica da empresa
 /p/:slug                                      # Mini-site premium, separado da URL publica da empresa
 ```
 
@@ -105,6 +106,8 @@ Regra de intencao:
   `/:communitySlug/gastronomia/:slug` e
   `/empresas/:state/:city/:district/:slug` sao aliases legados e redirecionam
   para a URL curta quando ha alias publico resolvido pelo SSOT territorial.
+- Detalhe em `/gastronomia/:state/:city/:district/:slug` e legado; quando o
+  snapshot resolve a empresa, redireciona para a URL publica da empresa.
 - `/comunidade/:communitySlug...` e alias legado; deve redirecionar para
   `/:communitySlug...`.
 - Em comunidade, a URL publica nao expoe tipo tecnico (`district` vs `territorial_group`):

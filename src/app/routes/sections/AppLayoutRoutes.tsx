@@ -311,7 +311,7 @@ export function AppLayoutRoutes() {
           <Route path="checkout" element={<P.GastronomyCheckoutPage />} />
         </Route>
 
-        {/* Detalhe: /gastronomia/:uf/:cidade/:bairro/:slug */}
+        {/* Alias legado de detalhe; redireciona para URL publica da empresa */}
         <Route path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.gastronomy, [TERRITORIAL_PARAMS.district, TERRITORIAL_PARAMS.slug])} element={<P.TerritorialLayout />}>
           <Route index element={<P.GastronomyDetailPage />} />
           <Route path="checkout" element={<P.GastronomyCheckoutPage />} />

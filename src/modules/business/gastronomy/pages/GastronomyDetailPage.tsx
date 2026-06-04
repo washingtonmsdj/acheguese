@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { UtensilsCrossed } from 'lucide-react';
 
@@ -48,6 +48,7 @@ export default function GastronomyDetailPage({
   const city = routeParams?.city ?? urlParams.city;
   const district = routeParams?.district ?? urlParams.district;
   const slug = routeParams?.slug ?? urlParams.slug;
+  const location = useLocation();
   const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<MenuItemWithRelations | null>(null);
@@ -64,8 +65,10 @@ export default function GastronomyDetailPage({
   const profile = snapshot?.gastronomy.profile ?? business?.gastronomy_profile ?? null;
   const menu = snapshot?.gastronomy.menu ?? null;
   const promotions = snapshot?.gastronomy.promotions ?? [];
+  const businessPublicUrl =
+    snapshot?.seo.canonicalBusinessUrl ?? snapshot?.identity.canonicalBusinessUrl ?? null;
   const gastronomyCanonicalUrl =
-    snapshot?.seo.canonicalGastronomyUrl ?? snapshot?.seo.canonical ?? null;
+    businessPublicUrl ?? snapshot?.seo.canonical ?? null;
   const gastronomyHomeUrl = GastronomyUrlService.getHomeUrl();
 
   const openingStatus = useGastronomyOpeningStatus(business);
@@ -148,6 +151,19 @@ export default function GastronomyDetailPage({
       },
     ],
   };
+
+  if (
+    businessPublicUrl &&
+    !canonicalPathOverride &&
+    businessPublicUrl !== location.pathname
+  ) {
+    return (
+      <Navigate
+        to={`${businessPublicUrl}${location.search}${location.hash}`}
+        replace
+      />
+    );
+  }
 
   if (!business && !isLoadingSnapshot) {
     return (

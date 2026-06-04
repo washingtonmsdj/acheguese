@@ -41,9 +41,9 @@ describe("PublicGastronomySnapshotService", () => {
       verticals: {
         activeVerticals: ["gastronomy"],
         primaryVertical: "gastronomy",
-        canonicalVerticalUrl: "/gastronomia/ba/salvador/pituba/restaurante-central",
+        canonicalVerticalUrl: "/empresas/ba/salvador/pituba/restaurante-central",
         verticalPublicUrls: {
-          gastronomy: "/gastronomia/ba/salvador/pituba/restaurante-central",
+          gastronomy: "/empresas/ba/salvador/pituba/restaurante-central",
         },
       },
       gastronomy: {
@@ -65,12 +65,12 @@ describe("PublicGastronomySnapshotService", () => {
       seo: {
         title: "Restaurante Central - Cardapio e pedidos | Achegue-se",
         description: "Comida regional",
-        canonical: "/gastronomia/ba/salvador/pituba/restaurante-central",
+        canonical: "/empresas/ba/salvador/pituba/restaurante-central",
         robots: "index, follow",
         schemaType: "Restaurant",
         hasLocalBusinessSchema: true,
         hasRestaurantSchema: true,
-        canonicalGastronomyUrl: "/gastronomia/ba/salvador/pituba/restaurante-central",
+        canonicalGastronomyUrl: "/empresas/ba/salvador/pituba/restaurante-central",
         canonicalBusinessUrl: "/empresas/ba/salvador/pituba/restaurante-central",
         shouldNoIndex: false,
       },
@@ -89,9 +89,9 @@ describe("PublicGastronomySnapshotService", () => {
       "/empresas/ba/salvador/pituba/restaurante-central",
     );
     expect(snapshot?.seo.canonicalGastronomyUrl).toBe(
-      "/gastronomia/ba/salvador/pituba/restaurante-central",
+      "/empresas/ba/salvador/pituba/restaurante-central",
     );
-    expect(snapshot?.seo.canonicalBusinessUrl).not.toBe(snapshot?.seo.canonicalGastronomyUrl);
+    expect(snapshot?.seo.canonicalBusinessUrl).toBe(snapshot?.seo.canonicalGastronomyUrl);
     expect(snapshot?.gastronomy.commerce.businessDataId).toBe("business-data-1");
     expect(snapshot?.identity.profileId).toBe("profile-1");
     expect(vi.mocked(PublicSnapshotRpcService.getGastronomySnapshotBySlug)).toHaveBeenCalledTimes(1);

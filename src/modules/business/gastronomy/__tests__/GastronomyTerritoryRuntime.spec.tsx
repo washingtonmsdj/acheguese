@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -114,6 +114,10 @@ vi.mock("@/modules/business/gastronomy/hooks", async () => {
     useMenu: (...args: unknown[]) => useMenuMock(...args),
     useActivePromotions: (...args: unknown[]) => useActivePromotionsMock(...args),
     useDeliveryDestination: (...args: unknown[]) => useDeliveryDestinationMock(...args),
+    useFavoritesManager: () => ({
+      isFavorited: false,
+      toggleFavorite: vi.fn(),
+    }),
   };
 });
 
@@ -286,5 +290,121 @@ describe("Gastronomy territorial runtime", () => {
     expect(
       screen.getByText(/não pertence a um estabelecimento ativo neste território/i),
     ).toBeInTheDocument();
+  });
+  it("redirects legacy gastronomy detail to the public business URL", async () => {
+    usePublicGastronomySnapshotMock.mockReturnValue({
+      data: {
+        identity: {
+          profileId: "profile-1",
+          businessId: "business-1",
+          slug: "pasta-lab",
+          displayName: "Pasta Lab",
+          canonicalBusinessUrl: "/empresas/ba/salvador/pituba/pasta-lab",
+        },
+        institutional: {
+          name: "Pasta Lab",
+          description: "Massas artesanais",
+          category: "restaurante",
+          photos: [],
+          addressText: "Rua A, 10",
+          locationText: "Pituba, Salvador - BA",
+          openStatus: { open: true, todayHours: "11:00 - 22:00" },
+          rating: 4.8,
+          reviewCount: 12,
+          business: {
+            id: "profile-1",
+            profile_id: "profile-1",
+          },
+        },
+        verticals: {
+          activeVerticals: ["gastronomy"],
+          primaryVertical: "gastronomy",
+          canonicalVerticalUrl: "/empresas/ba/salvador/pituba/pasta-lab",
+          verticalPublicUrls: {
+            gastronomy: "/empresas/ba/salvador/pituba/pasta-lab",
+          },
+        },
+        gastronomy: {
+          profile: {
+            business_id: "business-1",
+            cuisine_type: "italiana",
+            delivery_enabled: true,
+            takeout_enabled: true,
+            dine_in_enabled: true,
+          },
+          business: {
+            id: "profile-1",
+            profile_id: "profile-1",
+            business_data_id: "business-1",
+            slug: "pasta-lab",
+            name: "Pasta Lab",
+            description: "Massas artesanais",
+            rating: 4.8,
+            total_reviews: 12,
+            is_verified: true,
+            is_premium: false,
+            geographic_path: "/br/ba/salvador/pituba",
+            location: {
+              name: "Pituba",
+              full_name: "Pituba, Salvador - BA",
+              geographic_path: "/br/ba/salvador/pituba",
+            },
+            address: {},
+            gastronomy_profile: {
+              business_id: "business-1",
+              cuisine_type: "italiana",
+              delivery_enabled: true,
+              takeout_enabled: true,
+              dine_in_enabled: true,
+            },
+          },
+          menu: null,
+          promotions: [],
+          hasUsefulMenuContent: false,
+          commerce: {
+            businessDataId: "business-1",
+            deliveryEnabled: true,
+            takeoutEnabled: true,
+            dineInEnabled: true,
+            currency: "BRL",
+          },
+        },
+        seo: {
+          title: "Pasta Lab - Cardapio e pedidos | Achegue-se",
+          description: "Massas artesanais",
+          canonical: "/empresas/ba/salvador/pituba/pasta-lab",
+          robots: "index, follow",
+          schemaType: "Restaurant",
+          hasLocalBusinessSchema: true,
+          hasRestaurantSchema: true,
+          canonicalGastronomyUrl: "/empresas/ba/salvador/pituba/pasta-lab",
+          canonicalBusinessUrl: "/empresas/ba/salvador/pituba/pasta-lab",
+          shouldNoIndex: false,
+        },
+      },
+      isLoading: false,
+    });
+
+    const queryClient = createQueryClient();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/gastronomia/ba/salvador/pituba/pasta-lab?origem=zap#menu"]}>
+          <Routes>
+            <Route
+              path="/gastronomia/:state/:city/:district/:slug"
+              element={<GastronomyDetailPage />}
+            />
+            <Route
+              path="/empresas/:state/:city/:district/:slug"
+              element={<div>Empresa publica canonica</div>}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Empresa publica canonica")).toBeInTheDocument();
+    });
   });
 });
