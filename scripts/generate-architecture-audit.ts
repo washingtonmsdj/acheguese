@@ -286,16 +286,13 @@ function inferDomainFromRoute(route: RouteEntry): string | null {
     ["/perfil", "profile"],
     ["/profile", "profile"],
     ["/u/", "profile"],
-    ["/p/", "profile"],
+    ["/p/", "business"],
     ["/br", "core-routing-location-public-identity"],
     ["/brasil", "core-routing-location-public-identity"],
   ];
 
   for (const [prefix, domainId] of prefixChecks) {
     if (routePath === prefix || routePath.startsWith(prefix)) {
-      if (routePath === "/p/:slug" && route.component === "BusinessPremiumRoute") {
-        return "business";
-      }
       return domainId;
     }
   }

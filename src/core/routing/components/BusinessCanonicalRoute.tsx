@@ -1,7 +1,7 @@
 ﻿/**
  * BusinessCanonicalRoute - fallback territorial legado de empresa.
  *
- * URL legada: /empresas/:uf/:cidade/:bairro/:slug
+ * URL legada: /empresas/:state/:city/:district/:slug
  * Destino preferencial: /:communityAlias/:slug quando ha alias publico.
  */
 import { logger } from '@/shared/utils/logger';

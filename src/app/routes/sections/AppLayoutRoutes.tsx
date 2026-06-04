@@ -223,22 +223,22 @@ export function AppLayoutRoutes() {
         {/* 5 segmentos = fallback legado de empresa; redireciona para /:comunidade/:slug quando houver alias */}
         <Route path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.business, [TERRITORIAL_PARAMS.district, TERRITORIAL_PARAMS.slug])} element={<P.BusinessRouteResolver BusinessDetailComponent={P.EmpresaDetailLandingPage} />} />
 
-        {/* Categoria: /empresas/:uf/:cidade/categoria/:category */}
+        {/* Categoria: /empresas/:state/:city/categoria/:category */}
         <Route path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.business, [TERRITORIAL_STATIC.category, TERRITORIAL_PARAMS.category])} element={<P.TerritorialLayout />}>
           <Route index element={<P.TerritorialCategoryBusinessPage />} />
         </Route>
 
-        {/* Categoria no bairro: /empresas/:uf/:cidade/:bairro/categoria/:category */}
+        {/* Categoria no bairro: /empresas/:state/:city/:district/categoria/:category */}
         <Route path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.business, [TERRITORIAL_PARAMS.district, TERRITORIAL_STATIC.category, TERRITORIAL_PARAMS.category])} element={<P.TerritorialLayout />}>
           <Route index element={<P.TerritorialCategoryBusinessPage />} />
         </Route>
 
-        {/* 4 segmentos = hub do bairro: /empresas/:uf/:cidade/:bairro */}
+        {/* 4 segmentos = hub do bairro: /empresas/:state/:city/:district */}
         <Route path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.business, [TERRITORIAL_PARAMS.district])} element={<P.TerritorialLayout />}>
           <Route index element={<P.EmpresasLandingPage />} />
         </Route>
 
-        {/* 3 segmentos = hub da cidade: /empresas/:uf/:cidade */}
+        {/* 3 segmentos = hub da cidade: /empresas/:state/:city */}
         <Route path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.business)} element={<P.TerritorialLayout />}>
           <Route index element={<P.EmpresasLandingPage />} />
         </Route>

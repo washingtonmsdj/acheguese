@@ -14,7 +14,7 @@ Este documento consolida a politica atual de URLs publicas e a separacao entre U
 | Empresas da comunidade | `/:communitySlug/empresas` | `/empresas/:state/:city/:territorySlug` | `BusinessUrlService` + territory SSOT |
 | Gastronomia da comunidade | `/:communitySlug/gastronomia` | `/gastronomia/:state/:city/:territorySlug` | `GastronomyUrlService` + territory SSOT |
 | Empresa/restaurante | `/:communitySlug/:slug` | `/empresas/:state/:city/:district/:slug` | `BusinessUrlService` |
-| Mini-site premium | `/p/:slug` | - | `BusinessUrlService.getPremiumUrl()` |
+| Mini-site premium | `/p/:slug` | - | `buildBusinessPremiumUrl()` + `BusinessUrlService` |
 | Profissional | `/profissionais/:state/:city/:slug` | - | `ProfessionalUrlService` |
 
 ## Regras de Produto

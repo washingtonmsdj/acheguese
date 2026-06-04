@@ -30,7 +30,7 @@ A principal conclusao e objetiva: a fase correta agora nao e expandir feature. E
 Fase executada: consolidacao de identidade publica, extracao inicial de regras de `profile`, saneamento do cluster administrativo mais acoplado, eliminacao completa de imports cruzados entre modulos e fechamento total do gate arquitetural.
 
 ### Entregue nesta fase
-- `/p/:slug` foi reservado para business premium em `BusinessPremiumRoute`, com compatibilidade legada de perfil redirecionando para `/u/:username`.
+- `/p/:slug` foi reservado para mini-site premium de empresa em `PremiumBusinessSiteRoute`, com compatibilidade legada de perfil redirecionando para `/u/:username`.
 - `/p/:handle` saiu do roteamento ativo.
 - `/perfil/:userId` foi removido do roteamento publico.
 - `PublicProfilePage.tsx`, `PerfilPublicoPage.tsx` e `PerfilHubPageLegacy.tsx` foram removidos do fluxo ativo.

@@ -187,6 +187,9 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
       "src/core/business/services/NetworkService.ts",
     ],
     routePrefixes: [
+      "/:communitySlug/empresas",
+      "/:communitySlug/:businessSlug",
+      "/p/:slug",
       "/empresas/:state/:city",
       "/empresas/:state/:city/:district",
       "/empresas/:state/:city/:district/:slug",
@@ -201,16 +204,17 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     adminSummary:
       "Boa cobertura administrativa para catalogo e reivindicacoes, mas ainda sem matriz formal do que e governado por admin vs dashboard do proprio negocio.",
     docsSummary:
-      "Parcial e desatualizada. O README do modulo business fala em etapas futuras e ainda mistura integracao geografica com backlog ja executado.",
+      "Boa para URLs publicas: o contrato canonico esta documentado em docs/ROTAS_PUBLICAS_CANONICAS.md e os documentos de identidade apontam para esse SSOT.",
     ssotSummary:
-      "BusinessService e o SSOT de dados, enquanto modules/business concentra UI. O problema atual nao e ausencia de SSOT, e excesso de hooks/view models e componentes legados em paralelo.",
+      "BusinessService e o SSOT de dados. BusinessUrlService e o SSOT das URLs publicas de empresa, incluindo detalhe por comunidade, fallback tecnico e mini-site premium.",
   },
   {
     id: "gastronomy",
     label: "gastronomy",
-    sourceRoots: ["src/modules/business/gastronomy"],
+    sourceRoots: ["src/core/verticals/gastronomy", "src/modules/business/gastronomy"],
     docsPaths: ["src/modules/business/gastronomy/README.md"],
     ssotPaths: [
+      "src/core/verticals/gastronomy/services/GastronomyUrlService.ts",
       "src/modules/business/gastronomy/services/GastronomyService.ts",
       "src/modules/business/gastronomy/services/gastronomy-runtime.queries.ts",
       "src/modules/business/gastronomy/services/GastronomyProfileService.ts",
@@ -218,6 +222,8 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
       "src/modules/business/gastronomy/services/GastronomyMapService.ts",
     ],
     routePrefixes: [
+      "/:communitySlug/gastronomia",
+      "/:communitySlug/:restaurantSlug",
       "/gastronomia/:state/:city",
       "/gastronomia/:state/:city/:groupSlugOrDistrict",
       "/gastronomia/:state/:city/:district/:slug",
@@ -236,7 +242,7 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     docsSummary:
       "Boa no modulo, mas restrita ao runtime publico e delivery. Faltam contratos administrativos e matriz de ownership entre business_data, gastronomy_profiles e menu_*.",
     ssotSummary:
-      "Ownership consolidado no modulo business/gastronomy (inclusive contrato tecnico antes em core). O dominio depende de business_data como identidade principal e exige fronteira explicita com business para evitar duplicacao de regras.",
+      "GastronomyService centraliza dados do vertical. GastronomyUrlService centraliza home/listagem e compatibilidade legada; detalhe publico de restaurante delega para BusinessUrlService para evitar duplicacao de URL de entidade.",
   },
   {
     id: "professionals-services",

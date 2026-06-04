@@ -5,7 +5,7 @@ Atualizado em: 2026-04-21
 ## P0 - Bloquear nova desorganizacao
 - [x] Rodar `npm run audit:architecture` e anexar o inventario atual ao fluxo de consolidacao.
 - [x] Rodar `npm run validate:architecture:governance` em toda validacao estrutural.
-- [x] Proibir novas rotas publicas de identidade fora do namespace canonico `/u/:username` e `/p/:slug`.
+- [x] Proibir novas rotas publicas de identidade fora dos SSOTs canonicos de profile, business, professional e comunidade.
 - [ ] Proibir novo service paralelo sem ADR curta ou decisao equivalente.
 - [ ] Proibir novo acesso direto ao Supabase fora de service/repository.
 - [ ] Remover arquivos SQL avulsos da raiz do projeto (>80 arquivos identificados).

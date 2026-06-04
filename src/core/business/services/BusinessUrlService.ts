@@ -11,7 +11,7 @@
  *   Premium isolado:      /p/:slug
  *
  * Fallback tecnico territorial:
- *   /empresas/:uf/:cidade/:bairro/:slug
+ *   /empresas/:state/:city/:district/:slug
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
