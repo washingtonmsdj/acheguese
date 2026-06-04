@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { buildBusinessVerticalSummary } from '../businessVerticalSummary';
 
 describe('buildBusinessVerticalSummary', () => {
-  it('exposes active verticals, primary vertical and canonical gastronomy URL', () => {
+  it('exposes active verticals, primary vertical and canonical business URL for gastronomy', () => {
     const summary = buildBusinessVerticalSummary(
       {
         id: 'business-1',
@@ -15,7 +15,7 @@ describe('buildBusinessVerticalSummary', () => {
     expect(summary.activeVerticals).toEqual(['gastronomy']);
     expect(summary.primaryVertical).toBe('gastronomy');
     expect(summary.canonicalVerticalUrl).toBe(
-      '/gastronomia/ba/salvador/rio-vermelho/cafe-central',
+      '/empresas/ba/salvador/rio-vermelho/cafe-central',
     );
   });
 
@@ -67,7 +67,7 @@ describe('buildBusinessVerticalSummary', () => {
     expect(summary.activeVerticals).toEqual(['gastronomy', 'education']);
     expect(summary.primaryVertical).toBe('gastronomy');
     expect(summary.verticalPublicUrls).toMatchObject({
-      gastronomy: '/gastronomia/ba/salvador/pituba/hub-completo',
+      gastronomy: '/empresas/ba/salvador/pituba/hub-completo',
       education: '/educacao/ba/salvador/pituba/hub-completo',
     });
   });
