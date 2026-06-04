@@ -679,7 +679,7 @@ export const INPUT_VALIDATION = {
 export const SECURITY_AUDIT_LOG = {
   lastReview: '2026-06-04',
   reviewer: 'Codex',
-  version: '2.11.0',
+  version: '2.12.0',
   changes: [
     'Initial SSOT implementation',
     'CSP directives centralized',
@@ -745,6 +745,9 @@ export const SECURITY_AUDIT_LOG = {
     'FIX: comprovante de residencia PDF preserva extensao/contentType e foto aceita apenas JPG/PNG',
     'FIX: documentos de verificacao migrados para bucket privado com referencia storage:// e RLS',
     'FIX: territory-ai-content exige admin antes de escrever com service_role',
+    // v2.12.0 - Security regression guardrails
+    'FIX: security:validate bloqueia Edge Function com service_role sem auth/admin/cron/webhook guard',
+    'FIX: security:validate bloqueia getPublicUrl em verification-documents e exige bucket privado com RLS',
   ],
   nextReview: '2026-07-04',
 } as const;
@@ -819,7 +822,7 @@ export const CACHE_HEADERS = {
  * Metadata about this configuration file.
  */
 export const SECURITY_CONFIG_METADATA = {
-  version: '2.11.0',
+  version: '2.12.0',
   created: '2026-04-18',
   lastModified: '2026-06-04',
   author: 'Kiro AI',

@@ -102,6 +102,16 @@ const SCAN_EXTENSIONS = new Set([
 const VERSIONABLE_ENV_FILES = ['.env', '.env.production'];
 const SENSITIVE_ENV_NAME_PATTERN =
   /(^|_)(SECRET|TOKEN|PASSWORD|PRIVATE|SERVICE_ROLE|API_KEY|APIKEY|WEBHOOK_SECRET)(_|$)/i;
+const EDGE_FUNCTIONS_DIR = join(ROOT_DIR, 'supabase/functions');
+const EDGE_FUNCTION_SERVICE_ROLE_PATTERN = /SUPABASE_SERVICE_ROLE_KEY|SERVICE_ROLE/g;
+const EDGE_FUNCTION_GUARD_PATTERNS = [
+  { label: 'admin auth', pattern: /require(?:Admin|SuperAdmin)\s*\(/ },
+  { label: 'authenticated user', pattern: /requireAuthenticatedUser\s*\(|\.auth\.getUser\s*\(/ },
+  { label: 'cron secret', pattern: /requireCronSecret\s*\(|CRON_SECRET|AUTO_DISPATCH_SECRET|PROCESS_TIMEOUTS_SECRET/ },
+  { label: 'webhook signature', pattern: /stripe-signature|Stripe-Signature|constructEvent\s*\(|WEBHOOK_SECRET|verify.*signature/i },
+];
+const VERIFICATION_DOCUMENTS_MIGRATION =
+  'supabase/migrations/20260604143000_private_verification_documents_storage.sql';
 
 function toPosix(p) {
   return p.replace(/\\/g, '/');
@@ -259,6 +269,122 @@ function scanFile(relativePath, check) {
   }
 }
 
+function validateEdgeFunctionServiceRoleGuards() {
+  const issues = [];
+  if (!existsSync(EDGE_FUNCTIONS_DIR)) return issues;
+
+  const functionDirs = readdirSync(EDGE_FUNCTIONS_DIR, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && !entry.name.startsWith('_'))
+    .map((entry) => entry.name);
+
+  for (const functionName of functionDirs) {
+    const indexPath = join(EDGE_FUNCTIONS_DIR, functionName, 'index.ts');
+    if (!existsSync(indexPath)) continue;
+
+    const content = readFileSync(indexPath, 'utf-8');
+    if (!EDGE_FUNCTION_SERVICE_ROLE_PATTERN.test(content)) continue;
+    EDGE_FUNCTION_SERVICE_ROLE_PATTERN.lastIndex = 0;
+
+    const matchedGuard = EDGE_FUNCTION_GUARD_PATTERNS.find(({ pattern }) => pattern.test(content));
+    if (matchedGuard) continue;
+
+    issues.push({
+      severity: 'CRITICO',
+      check: 'Edge Function com service_role sem guarda explicita',
+      file: toPosix(`supabase/functions/${functionName}/index.ts`),
+      message: `${functionName} usa service_role sem requireAdmin/auth.getUser/requireCronSecret/assinatura webhook`,
+    });
+  }
+
+  return issues;
+}
+
+function validatePrivateVerificationDocuments() {
+  const issues = [];
+  const mediaServicePath = 'src/core/media/services/MediaService.ts';
+  const mediaServiceAbsolutePath = join(ROOT_DIR, mediaServicePath);
+
+  if (!existsSync(mediaServiceAbsolutePath)) {
+    issues.push({
+      severity: 'CRITICO',
+      check: 'Bucket privado de documentos de verificacao',
+      file: mediaServicePath,
+      message: 'MediaService.ts nao encontrado para validar documentos de verificacao',
+    });
+    return issues;
+  }
+
+  const mediaService = readFileSync(mediaServiceAbsolutePath, 'utf-8');
+  if (/\.from\(\s*['"]verification-documents['"]\s*\)[\s\S]{0,200}\.getPublicUrl\s*\(/.test(mediaService)) {
+    issues.push({
+      severity: 'CRITICO',
+      check: 'Documento de verificacao exposto por URL publica',
+      file: mediaServicePath,
+      message: 'verification-documents nao deve usar getPublicUrl; use referencia storage:// ou signed URL controlada',
+    });
+  }
+
+  if (!mediaService.includes('storage://verification-documents/')) {
+    issues.push({
+      severity: 'CRITICO',
+      check: 'Documento de verificacao sem referencia privada',
+      file: mediaServicePath,
+      message: 'MediaService deve retornar storage://verification-documents/<path> para documentos privados',
+    });
+  }
+
+  const migrationPath = join(ROOT_DIR, VERIFICATION_DOCUMENTS_MIGRATION);
+  if (!existsSync(migrationPath)) {
+    issues.push({
+      severity: 'CRITICO',
+      check: 'Migracao do bucket privado ausente',
+      file: VERIFICATION_DOCUMENTS_MIGRATION,
+      message: 'Crie a migracao do bucket privado verification-documents com RLS',
+    });
+    return issues;
+  }
+
+  const migration = readFileSync(migrationPath, 'utf-8');
+  const migrationChecks = [
+    {
+      ok: /['"]verification-documents['"]/.test(migration),
+      message: 'Migracao nao declara o bucket verification-documents',
+    },
+    {
+      ok: /\bpublic\s*=\s*false\b/i.test(migration) || /,\s*false\s*,/.test(migration),
+      message: 'Bucket verification-documents deve ser privado (public = false)',
+    },
+    {
+      ok: /allowed_mime_types[\s\S]*application\/pdf[\s\S]*image\/jpeg[\s\S]*image\/png/i.test(migration),
+      message: 'Bucket verification-documents deve limitar MIME types a PDF/JPEG/PNG',
+    },
+    {
+      ok: /CREATE\s+POLICY/i.test(migration) && /storage\.objects/i.test(migration),
+      message: 'Migracao deve criar politicas RLS em storage.objects',
+    },
+    {
+      ok: /public\.profiles/i.test(migration) && /p\.user_id\s*=\s*auth\.uid\(\)/i.test(migration),
+      message: 'Politicas devem validar ownership via public.profiles.user_id = auth.uid()',
+    },
+    {
+      ok: /public\.is_admin_from_roles\s*\(\s*auth\.uid\(\)\s*\)/i.test(migration),
+      message: 'Politica de leitura deve permitir auditoria/admin via is_admin_from_roles(auth.uid())',
+    },
+  ];
+
+  for (const check of migrationChecks) {
+    if (check.ok) continue;
+    issues.push({
+      severity: 'CRITICO',
+      check: 'Migracao do bucket privado invalida',
+      file: VERIFICATION_DOCUMENTS_MIGRATION,
+      message: check.message,
+    });
+  }
+
+  return issues;
+}
+
 function main() {
   console.log('SECURITY VALIDATION\n');
 
@@ -271,15 +397,27 @@ function main() {
 
   console.log('2) Escaneando arquivos de risco...');
   const trackedFiles = listTrackedFiles().filter(shouldScan);
+  const scanIssues = [];
 
   for (const file of trackedFiles) {
     for (const check of CHECKS) {
       const issues = scanFile(file, check);
-      allIssues.push(...issues);
+      scanIssues.push(...issues);
     }
   }
 
-  console.log(allIssues.length === 0 ? '   Nenhum problema\n' : `   ${allIssues.length} problema(s)\n`);
+  allIssues.push(...scanIssues);
+  console.log(scanIssues.length === 0 ? '   Nenhum problema\n' : `   ${scanIssues.length} problema(s)\n`);
+
+  console.log('3) Validando service_role em Edge Functions...');
+  const edgeFunctionIssues = validateEdgeFunctionServiceRoleGuards();
+  allIssues.push(...edgeFunctionIssues);
+  console.log(edgeFunctionIssues.length === 0 ? '   OK\n' : `   ${edgeFunctionIssues.length} problema(s)\n`);
+
+  console.log('4) Validando documentos privados de verificacao...');
+  const verificationDocumentIssues = validatePrivateVerificationDocuments();
+  allIssues.push(...verificationDocumentIssues);
+  console.log(verificationDocumentIssues.length === 0 ? '   OK\n' : `   ${verificationDocumentIssues.length} problema(s)\n`);
 
   const critical = allIssues.filter((issue) => issue.severity === 'CRITICO');
   const high = allIssues.filter((issue) => issue.severity === 'ALTO');
@@ -289,6 +427,7 @@ function main() {
     console.log('CRITICO:');
     for (const issue of critical) {
       console.log(`- ${issue.check || issue.message}`);
+      if (issue.message && issue.check) console.log(`  detalhe: ${issue.message}`);
       if (issue.file) console.log(`  arquivo: ${issue.file}`);
       if (issue.matches) console.log(`  ocorrencias: ${issue.matches}`);
     }
