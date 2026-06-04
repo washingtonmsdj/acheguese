@@ -5,7 +5,7 @@ import { SearchBusinessesActionHandler } from "../actions/SearchBusinessesAction
 const mocks = vi.hoisted(() => ({
   getBusinessesList: vi.fn(),
   getBusinessesByIds: vi.fn(),
-  getShareUrl: vi.fn(),
+  getCanonicalUrlWithResolvedCommunityAlias: vi.fn(),
   searchHybrid: vi.fn(),
 }));
 
@@ -15,7 +15,8 @@ vi.mock("@/core/business", () => ({
     getBusinessesByIds: mocks.getBusinessesByIds,
   },
   BusinessUrlService: {
-    getShareUrl: mocks.getShareUrl,
+    getCanonicalUrlWithResolvedCommunityAlias:
+      mocks.getCanonicalUrlWithResolvedCommunityAlias,
   },
 }));
 
@@ -37,7 +38,7 @@ const baseIntent: AIIntent = {
 describe("SearchBusinessesActionHandler", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.getShareUrl.mockReturnValue("/p/teste");
+    mocks.getCanonicalUrlWithResolvedCommunityAlias.mockResolvedValue("/santa-cruz/teste");
   });
 
   it("chama BusinessService em business_search", async () => {

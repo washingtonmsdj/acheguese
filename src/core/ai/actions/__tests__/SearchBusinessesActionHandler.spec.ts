@@ -9,14 +9,9 @@ vi.mock('@/core/business', () => ({
     getBusinessesByIds: vi.fn(),
   },
   BusinessUrlService: {
-    getShareUrl: vi.fn((ctx) => `/empresas/${ctx.slug}`),
-  },
-  hasGastronomyProfile: vi.fn(),
-}));
-
-vi.mock('@/core/verticals/gastronomy', () => ({
-  GastronomyUrlService: {
-    getCanonicalUrl: vi.fn((ctx) => `/gastronomia/${ctx.slug}`),
+    getCanonicalUrlWithResolvedCommunityAlias: vi.fn((ctx) =>
+      Promise.resolve(`/santa-cruz/${ctx.slug}`),
+    ),
   },
 }));
 
@@ -121,11 +116,9 @@ describe('SearchBusinessesActionHandler', () => {
     expect(results[0].distanceMeters).toBe(500);
   });
 
-  it('deve usar URL de gastronomia quando negócio tem perfil gastronômico', async () => {
-    const { BusinessService, hasGastronomyProfile } = await import('@/core/business');
-    
-    (hasGastronomyProfile as any).mockResolvedValue(true);
-    
+  it('deve usar URL publica preferencial para negocio gastronomico', async () => {
+    const { BusinessService } = await import('@/core/business');
+
     (BusinessService.getBusinessesList as any).mockResolvedValue({
       businesses: [
         {
@@ -142,14 +135,12 @@ describe('SearchBusinessesActionHandler', () => {
 
     const results = await handler.execute(mockIntent, mockContext);
 
-    expect(results[0].url).toContain('/gastronomia/');
+    expect(results[0].url).toBe('/santa-cruz/restaurante-gourmet');
   });
 
-  it('deve usar URL premium quando negócio é premium', async () => {
-    const { BusinessService, hasGastronomyProfile } = await import('@/core/business');
-    
-    (hasGastronomyProfile as any).mockResolvedValue(false);
-    
+  it('deve manter URL publica preferencial mesmo quando negócio é premium', async () => {
+    const { BusinessService } = await import('@/core/business');
+
     (BusinessService.getBusinessesList as any).mockResolvedValue({
       businesses: [
         {
@@ -166,7 +157,7 @@ describe('SearchBusinessesActionHandler', () => {
 
     const results = await handler.execute(mockIntent, mockContext);
 
-    expect(results[0].url).toContain('/empresas/');
+    expect(results[0].url).toBe('/santa-cruz/empresa-premium');
   });
 
   it('deve fazer fallback quando busca geoespacial falhar', async () => {

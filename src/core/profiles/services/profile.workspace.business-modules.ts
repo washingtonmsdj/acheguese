@@ -19,7 +19,7 @@ type BusinessUrlBuilder = (params: {
   slug: string;
   is_premium?: boolean;
   geographic_path: string;
-}) => string;
+}) => string | Promise<string>;
 
 type SubscriptionLike = {
   status?: string | null;
@@ -53,7 +53,7 @@ type QrCodeLike = {
   destination_variant?: string | null;
 } | null;
 
-export function buildBusinessModuleSnapshot(params: {
+export async function buildBusinessModuleSnapshot(params: {
   business: BusinessWorkspaceInput;
   planTier: string;
   subscription: SubscriptionLike | null | undefined;
@@ -63,7 +63,7 @@ export function buildBusinessModuleSnapshot(params: {
   qrCode: QrCodeLike;
   getCanonicalUrl: BusinessUrlBuilder;
   getShareUrl: BusinessUrlBuilder;
-}): ProfileBusinessModuleSnapshot {
+}): Promise<ProfileBusinessModuleSnapshot> {
   const {
     business,
     planTier,
@@ -78,7 +78,7 @@ export function buildBusinessModuleSnapshot(params: {
 
   const publicUrl =
     business.slug && business.geographic_path
-      ? getCanonicalUrl({
+      ? await getCanonicalUrl({
           id: business.id,
           slug: business.slug,
           is_premium: business.is_premium,
@@ -86,14 +86,14 @@ export function buildBusinessModuleSnapshot(params: {
         })
       : undefined;
   const shareUrl =
-    business.slug && business.geographic_path
-      ? getShareUrl({
+    business.slug && business.geographic_path && entitlements.canUseShortPremiumLink
+      ? await getShareUrl({
           id: business.id,
           slug: business.slug,
           is_premium: business.is_premium,
           geographic_path: business.geographic_path,
         })
-      : undefined;
+      : publicUrl;
   const dashboardUrl = businessManagementRoutes.overview(business.id);
 
   return {

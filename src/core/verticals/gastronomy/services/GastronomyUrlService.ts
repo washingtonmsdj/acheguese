@@ -12,10 +12,9 @@ import { gastronomyPublicRoutes } from "../routes/gastronomyPublicRoutes";
 export class GastronomyUrlService {
   static buildUrls(ctx: BusinessUrlContext) {
     const businessUrls = BusinessUrlService.buildUrls(ctx);
-    const canonical = this.getCanonicalUrlFromTerritory(ctx.geographic_path, ctx.slug);
 
     return {
-      canonical,
+      canonical: businessUrls.canonical,
       business: businessUrls.canonical,
       dashboard: businessUrls.dashboard,
     };
@@ -39,6 +38,12 @@ export class GastronomyUrlService {
 
   static getCanonicalUrl(ctx: BusinessUrlContext): string {
     return this.buildUrls(ctx).canonical;
+  }
+
+  static async getCanonicalUrlWithResolvedCommunityAlias(
+    ctx: BusinessUrlContext,
+  ): Promise<string> {
+    return BusinessUrlService.getCanonicalUrlWithResolvedCommunityAlias(ctx);
   }
 
   static async resolveBySlug(slug: string): Promise<BusinessUrlContext | null> {

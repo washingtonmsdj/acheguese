@@ -87,10 +87,11 @@ No arquivo `AppRoutes.tsx`, adicione dentro do componente `Routes`:
 /:communitySlug/empresas/:slug                # Alias legado; redireciona para /:communitySlug/:slug
 /:communitySlug/gastronomia                   # Gastronomia da comunidade
 /:communitySlug/gastronomia/:slug             # Alias legado; redireciona para /:communitySlug/:slug
-/comunidade/:state/:city                      # Comunidade municipal (canonica publica)
-/comunidade/:state/:city/:communitySlug       # Comunidade de bairro/grupo (deterministica)
-/comunidade/:state/:city/feed                 # Feed comunitario municipal
+/comunidade/:state/:city                      # Fallback tecnico de comunidade municipal
+/comunidade/:state/:city/:communitySlug       # Fallback tecnico de bairro/grupo
+/comunidade/:state/:city/feed                 # Fallback tecnico do feed comunitario municipal
 /empresas/:state/:city/:district/:businessSlug # Fallback legado de detalhe; redireciona se houver alias
+/p/:slug                                      # Mini-site premium, separado da URL publica da empresa
 ```
 
 Regra de intencao:
@@ -98,8 +99,8 @@ Regra de intencao:
 - Rotas diretas de modulo (`/empresas/...`, `/servicos/...`) sao vitrines publicas e SEO.
 - Rotas curtas `/:communitySlug/...` sao a experiencia social/local com contexto comunitario.
 - `/:communitySlug` so e valido quando existe alias publico unico em
-  `community_public_aliases`; em caso de colisao, use a rota completa com estado e cidade.
-- Detalhes publicos de empresa usam `/:communitySlug/:slug`.
+  `community_public_aliases`; em caso de colisao, a rota territorial fica como fallback tecnico.
+- Detalhes publicos de empresa e restaurante usam `/:communitySlug/:slug`.
 - Detalhes em `/:communitySlug/empresas/:slug`,
   `/:communitySlug/gastronomia/:slug` e
   `/empresas/:state/:city/:district/:slug` sao aliases legados e redirecionam
@@ -108,6 +109,7 @@ Regra de intencao:
   `/:communitySlug...`.
 - Em comunidade, a URL publica nao expoe tipo tecnico (`district` vs `territorial_group`):
   `/:communitySlug` ou `/comunidade/:state/:city/:communitySlug` como fallback tecnico.
+- O premium usa `/p/:slug`; ele nao substitui a URL publica canonica da empresa.
 - Nenhuma rota publica de comunidade usa `/area/`.
 - Rotas operacionais ficam em `/central`.
 - Rotas de identidade/configuracao pessoal ficam em `/conta`.

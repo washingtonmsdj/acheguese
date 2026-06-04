@@ -231,8 +231,9 @@ export async function getPrivateWorkspaceAggregate(
           gastronomyEligible,
           gastronomyProfile,
           qrCode,
-          getCanonicalUrl: BusinessUrlService.getCanonicalUrl,
-          getShareUrl: BusinessUrlService.getShareUrl,
+          getCanonicalUrl: (ctx) =>
+            BusinessUrlService.getCanonicalUrlWithResolvedCommunityAlias(ctx),
+          getShareUrl: (ctx) => BusinessUrlService.getShareUrl(ctx),
         });
       }),
     );

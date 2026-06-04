@@ -1,7 +1,6 @@
-import { BusinessService, BusinessUrlService, type Business, hasGastronomyProfile } from "@/core/business";
+import { BusinessService, BusinessUrlService, type Business } from "@/core/business";
 import { BusinessHoursService } from "@/core/business/BusinessHoursService";
 import { isOpenNow } from "@/core/business/utils/openingHoursHelpers";
-import { GastronomyUrlService } from "@/core/verticals/gastronomy";
 import { spatialSearchService, type SpatialSearchResult } from "@/core/geospatial";
 import { logger } from "@/shared/utils/logger";
 import type { AIActionContext, AIActionResultItem, AIIntent } from "../domain/types";
@@ -14,7 +13,6 @@ async function businessUrlFromContext(input: {
   slug?: string;
   is_premium?: boolean;
   geographic_path?: string | null;
-  category?: string;
 }): Promise<string | undefined> {
   if (!input.slug || !input.geographic_path) return undefined;
 
@@ -26,19 +24,7 @@ async function businessUrlFromContext(input: {
       geographic_path: input.geographic_path,
     };
 
-    // Regra: se premium com short link, usar /p/:slug
-    if (input.is_premium) {
-      return BusinessUrlService.getShareUrl(urlContext);
-    }
-
-    // Regra: se tem perfil gastronômico ativo, usar GastronomyUrlService
-    const hasGastronomy = await hasGastronomyProfile(input.id);
-    if (hasGastronomy) {
-      return GastronomyUrlService.getCanonicalUrl(urlContext);
-    }
-
-    // Fallback: usar BusinessUrlService
-    return BusinessUrlService.getShareUrl(urlContext);
+    return BusinessUrlService.getCanonicalUrlWithResolvedCommunityAlias(urlContext);
   } catch (error) {
     logger.warn("[AI] Business URL unavailable for search result", {
       businessId: input.id,
@@ -67,7 +53,6 @@ async function toBusinessResult(
     slug: business.slug,
     is_premium: business.is_premium,
     geographic_path: business.geographic_path,
-    category: business.category,
   });
 
   return {

@@ -262,7 +262,7 @@ export function buildModuleTerritoryEntityUrl(
 }
 
 /**
- * Constrói a URL canônica de comunidade para cidade, bairro ou grupo.
+ * Constrói a URL territorial de fallback da comunidade para cidade, bairro ou grupo.
  *
  * Padrões:
  *   /comunidade/:state/:city
@@ -270,7 +270,7 @@ export function buildModuleTerritoryEntityUrl(
  *
  * Aceita base territorial pública no formato:
  *   /:state/:city ou /:state/:city/:territorySlug
- * Nunca usar /area/ em URLs públicas de comunidade.
+ * Nunca usar /area/ em URLs publicas de comunidade.
  *
  * Exemplos:
  *   buildCommunityTerritoryUrl('/ba/salvador/pituba')
@@ -301,8 +301,8 @@ export function buildCommunityAliasUrl(alias: string, suffix = ''): string {
 export type CommunityTabSuffix = 'feed' | 'grupos';
 
 /**
- * Deriva URL canônica de aba da comunidade a partir de uma rota territorial atual.
- * Suporta /comunidade/:state/:city e normaliza rotas antigas com slug territorial.
+ * Deriva URL de aba da comunidade a partir de uma rota territorial atual.
+ * Suporta o fallback /comunidade/:state/:city e normaliza rotas antigas com slug territorial.
  */
 export function buildCommunityTabUrlFromPath(pathname: string, tab: CommunityTabSuffix): string | null {
   const parts = pathname.split('/').filter(Boolean);
