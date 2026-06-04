@@ -8,6 +8,7 @@ import { useMemo } from 'react';
 import { buildBusinessPublicUrlPreview } from '@/core/business/utils/businessPublicUrls';
 import { COMMUNICATION_CHANNEL_URL_PREVIEW_PATTERN } from '@/core/communication-territorial/utils/communicationTerritorialUrls';
 import { professionalPublicRoutes } from '@/core/professional/routes/professionalPublicRoutes';
+import { buildPublicProfileUrl } from '@/core/profiles/utils/publicProfileUrl';
 import type { EntityType } from '@/core/public-identity/domain/types';
 
 export type UrlPreviewFn = (identifier: string) => string;
@@ -15,7 +16,7 @@ export type UrlPreviewFn = (identifier: string) => string;
 /** Funções de preview por domínio - sem estado, sem IO */
 export const URL_PREVIEW_FNS: Record<EntityType, UrlPreviewFn> = {
   business: buildBusinessPublicUrlPreview,
-  profile: (username) => (username ? `/u/${username}` : ''),
+  profile: (username) => (username ? buildPublicProfileUrl(username) : ''),
   professional: (slug) => (slug ? professionalPublicRoutes.detailPreview(slug) : ''),
   communication_channel: (slug) => (slug ? COMMUNICATION_CHANNEL_URL_PREVIEW_PATTERN.replace(":canal", slug) : ''),
 };

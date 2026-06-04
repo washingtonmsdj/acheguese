@@ -15,7 +15,11 @@ import { useBusinessUrls } from '@/core/business/hooks/useBusinessUrls';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 import { useServiceUrls } from '@/core/professional/hooks/useServiceUrls';
 import { useCommunityUrls } from './useCommunityUrls';
-import { buildProfileEditUrl, buildProfileSettingsUrl } from '@/core/profiles/utils/publicProfileUrl';
+import {
+  buildProfileEditUrl,
+  buildProfileSettingsUrl,
+  buildPublicProfileUrl,
+} from '@/core/profiles/utils/publicProfileUrl';
 import type { ResolvedTerritory } from './useResolveTerritoryFromUrl';
 import { usePublicBrowsingCity } from '@/core/location/hooks/usePublicBrowsingCity';
 import { useActiveTerritory } from '@/core/location/hooks/useActiveTerritory';
@@ -189,7 +193,7 @@ export function useAppUrls(routeResolved?: ResolvedTerritory | null): AppUrls {
         motorista: mobility.motorista,
         motoboy: mobility.motoboy,
       },
-      public: (username: string) => `/u/${username}`,
+      public: (username: string) => buildPublicProfileUrl(username),
       manage: '/conta',
       edit: (profileId: string) => buildProfileEditUrl(profileId),
       account: '/conta/seguranca',

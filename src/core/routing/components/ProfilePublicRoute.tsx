@@ -17,6 +17,7 @@ import { logger } from '@/shared/utils/logger';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { profileService } from '@/core/profiles/services/ProfileService';
+import { buildPublicProfileUrl } from '@/core/profiles/utils/publicProfileUrl';
 import { ProfilePublicPage } from '@/core/profile/pages/ProfilePublicPage';
 import { logPageNotFound } from '@/core/public-identity/utils/identity-logger';
 
@@ -107,7 +108,7 @@ export default function ProfilePublicRoute() {
       logPageNotFound({
         entityType: 'profile',
         identifier: username,
-        attemptedUrl: `/u/${username}`,
+        attemptedUrl: buildPublicProfileUrl(username),
       });
     }
 

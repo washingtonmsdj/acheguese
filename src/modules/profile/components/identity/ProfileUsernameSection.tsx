@@ -6,6 +6,7 @@
 
 import { ProfileIdentityField } from '@/core/public-identity/components/domains/ProfileIdentityField';
 import { IdentityImpactNotice } from '@/core/public-identity/components/IdentityImpactNotice';
+import { buildPublicProfileUrl } from '@/core/profiles/utils/publicProfileUrl';
 
 interface ProfileUsernameSectionProps {
   username: string;
@@ -22,8 +23,8 @@ export function ProfileUsernameSection({
   profileId,
   disabled,
 }: ProfileUsernameSectionProps) {
-  const originalUrl = originalUsername ? `/u/${originalUsername}` : '';
-  const newUrl = username ? `/u/${username}` : '';
+  const originalUrl = originalUsername ? buildPublicProfileUrl(originalUsername) : '';
+  const newUrl = username ? buildPublicProfileUrl(username) : '';
 
   return (
     <div className="rounded-lg border bg-card p-4 space-y-3">

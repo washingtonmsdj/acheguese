@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Navigate, useLocation, useParams } from "react-router-dom";
 import { APP_MODULE_SLUGS } from "@/config/moduleSlugs";
+import { buildBusinessPublicUrlFromCommunityAlias } from "@/core/business/utils/businessPublicUrls";
 import { resolveBusinessEntityFromCommunityAlias } from "@/core/routing/services/CommunityBusinessEntityResolver";
 import { PageLoader } from "@/shared/components/loading/PageLoader";
 import { TerritorialNotFound } from "./TerritorialNotFound";
@@ -59,7 +60,10 @@ export function CommunityEntityAliasRoute() {
 
       setState({
         status: "resolved",
-        targetPath: `/${resolution.alias}/${resolution.business.slug}`,
+        targetPath: buildBusinessPublicUrlFromCommunityAlias(
+          resolution.alias,
+          resolution.business.slug,
+        ),
       });
     }
 

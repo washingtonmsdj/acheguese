@@ -25,6 +25,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Separator } from '@/shared/components/ui/separator';
 import { cn } from '@/shared/utils/cn';
 import { getProfileTypeLabel } from '@/core/profile/utils/profileDomainRules';
+import { buildPublicProfileUrl } from '@/core/profiles/utils/publicProfileUrl';
 
 import type { Profile } from '@/core/profiles/types';
 
@@ -108,7 +109,7 @@ export function ProfilePublicPage({ profile }: ProfilePublicPageProps) {
   };
 
   const handleShare = async () => {
-    const url = `${window.location.origin}/u/${profile.username}`;
+    const url = new URL(buildPublicProfileUrl(profile.username), window.location.origin).toString();
 
     if (navigator.share) {
       try {

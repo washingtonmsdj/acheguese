@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { Navigate, useLocation, useParams } from "react-router-dom";
+import { buildBusinessPublicUrlFromCommunityAlias } from "@/core/business/utils/businessPublicUrls";
 import {
   resolveBusinessEntityFromCommunityAlias,
   type BusinessEntityRouteParams,
@@ -61,7 +62,10 @@ export function CommunityEntityOrTerritorialCityRoute() {
       setResolution({
         status: "entity",
         routeParams: entity.routeParams,
-        canonicalPath: `/${entity.alias}/${entity.business.slug}`,
+        canonicalPath: buildBusinessPublicUrlFromCommunityAlias(
+          entity.alias,
+          entity.business.slug,
+        ),
         canonicalAlias: entity.alias,
       });
     }

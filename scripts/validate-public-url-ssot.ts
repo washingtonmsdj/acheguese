@@ -42,13 +42,12 @@ const PUBLIC_BUSINESS_URL_SSOT_FILES = [
   /src\/core\/business\/services\/BusinessUrlService\.ts$/,
   /src\/core\/verticals\/gastronomy\/services\/GastronomyUrlService\.ts$/,
   /src\/core\/routing\/utils\/territoryUrls\.ts$/,
-  /src\/core\/routing\/services\/CommunityBusinessEntityResolver\.ts$/,
-  /src\/core\/routing\/components\/BusinessCanonicalRoute\.tsx$/,
-  /src\/core\/routing\/components\/BusinessRouteResolver\.tsx$/,
-  /src\/core\/routing\/components\/CommunityEntityAliasRoute\.tsx$/,
-  /src\/core\/routing\/components\/CommunityShortEntityRoute\.tsx$/,
   /src\/app\/routes\//,
   /supabase\/functions\/sitemap\/index\.ts$/,
+] as const;
+
+const PUBLIC_PROFILE_URL_SSOT_FILES = [
+  /src\/core\/profiles\/utils\/publicProfileUrl\.ts$/,
 ] as const;
 
 const PREMIUM_URL_SSOT_FILES = [
@@ -65,6 +64,21 @@ const RULES: Rule[] = [
     severity: "error",
     suggestion: "Use buildBusinessPremiumUrl() ou BusinessUrlService.getShareUrl*().",
     allowedFiles: PREMIUM_URL_SSOT_FILES,
+  },
+  {
+    name: "Nao montar rota publica de perfil /u manualmente",
+    pattern: /[`'"]\/u\/[^`'"]*\$\{|\+[^;\n]*[`'"]\/u\/|[`'"]\/u\/[`'"][^;\n]*\+/,
+    severity: "error",
+    suggestion: "Use buildPublicProfileUrl().",
+    allowedFiles: PUBLIC_PROFILE_URL_SSOT_FILES,
+  },
+  {
+    name: "Nao montar detalhe publico curto de empresa manualmente",
+    pattern:
+      /`\/\$\{[^}]*?(?:alias|communityAlias|communitySlug)[^}]*\}\/\$\{[^}]*?(?:business|slug)[^}]*\}`/,
+    severity: "error",
+    suggestion: "Use buildBusinessPublicUrlFromCommunityAlias() ou BusinessUrlService.",
+    allowedFiles: PUBLIC_BUSINESS_URL_SSOT_FILES,
   },
   {
     name: "Nao montar detalhe publico de empresa manualmente",

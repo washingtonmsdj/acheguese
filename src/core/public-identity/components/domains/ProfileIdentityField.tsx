@@ -1,4 +1,5 @@
 import { IdentityField, type IdentityFieldProps } from '../IdentityField';
+import { buildPublicProfileUrl } from '@/core/profiles/utils/publicProfileUrl';
 
 type ProfileIdentityFieldProps = Omit<IdentityFieldProps, 'entityType' | 'label' | 'previewFn'> & {
   label?: string;
@@ -15,10 +16,9 @@ export function ProfileIdentityField({
       {...props}
       entityType="profile"
       label={label}
-      previewFn={(username) => (username ? `/u/${username}` : '')}
+      previewFn={(username) => (username ? buildPublicProfileUrl(username) : '')}
       showHistory={showHistory}
       showCooldown={showCooldown}
     />
   );
 }
-
