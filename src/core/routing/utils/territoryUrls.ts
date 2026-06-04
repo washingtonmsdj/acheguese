@@ -98,9 +98,11 @@ export function extractCommunityTerritoryBaseUrl(pathname: string): string | nul
 /**
  * Detecta se um pathname corresponde a uma página de detalhe de entidade.
  *
- * Páginas de detalhe têm 5+ segmentos: /[modulo]/:state/:city/:district/:slug
- * Ex: /gastronomia/ba/salvador/rio-vermelho/pizza-do-forno
- *     /empresas/ba/salvador/pituba/nome-do-negocio
+ * Paginas de detalhe/fallback de entidade tem 5+ segmentos:
+ * /[modulo]/:state/:city/:district/:slug
+ *
+ * Ex: /empresas/ba/salvador/pituba/nome-do-negocio
+ *     /gastronomia/ba/salvador/rio-vermelho/pizza-do-forno (legado)
  *
  * Páginas territoriais (listagem) têm no máximo 4 segmentos:
  * Ex: /gastronomia/ba/salvador           (3 segmentos)

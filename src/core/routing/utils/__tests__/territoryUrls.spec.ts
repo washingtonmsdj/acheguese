@@ -64,27 +64,27 @@ describe("module-first territory urls", () => {
     ).toBe("/educacao/ba/salvador/pituba");
     expect(
       buildModuleTerritoryEntityUrl(
-        MODULE_SLUGS.gastronomy,
+        MODULE_SLUGS.business,
         "/br/ba/salvador/rio-vermelho",
         "cafe-central",
       ),
-    ).toBe("/gastronomia/ba/salvador/rio-vermelho/cafe-central");
+    ).toBe("/empresas/ba/salvador/rio-vermelho/cafe-central");
   });
 
   it("rejeita slug de entidade vazio ou com separadores de rota", () => {
     expect(() =>
-      buildModuleTerritoryEntityUrl(MODULE_SLUGS.gastronomy, "/ba/salvador/pituba", ""),
+      buildModuleTerritoryEntityUrl(MODULE_SLUGS.business, "/ba/salvador/pituba", ""),
     ).toThrow("segmento unico");
     expect(() =>
       buildModuleTerritoryEntityUrl(
-        MODULE_SLUGS.gastronomy,
+        MODULE_SLUGS.business,
         "/ba/salvador/pituba",
         "cafe/extra",
       ),
     ).toThrow("segmento unico");
     expect(() =>
       buildModuleTerritoryEntityUrl(
-        MODULE_SLUGS.gastronomy,
+        MODULE_SLUGS.business,
         "/ba/salvador/pituba",
         "cafe?tab=menu",
       ),

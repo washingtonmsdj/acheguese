@@ -3,13 +3,13 @@ import { describe, expect, it } from 'vitest';
 import { GastronomyUrlService } from '@/core/verticals/gastronomy/services/GastronomyUrlService';
 
 describe('GastronomyUrlService', () => {
-  it('centraliza home, listagem territorial e detalhe legado', () => {
+  it('centraliza home, listagem territorial e detalhe legado explicitamente nomeado', () => {
     expect(GastronomyUrlService.getHomeUrl()).toBe('/gastronomia');
     expect(GastronomyUrlService.getTerritoryUrl('/br/ba/salvador/pituba')).toBe(
       '/gastronomia/ba/salvador/pituba',
     );
     expect(
-      GastronomyUrlService.getCanonicalUrlFromTerritory(
+      GastronomyUrlService.getLegacyDetailUrlFromTerritory(
         '/br/ba/salvador/rio-vermelho',
         'cafe-central',
       ),
@@ -37,7 +37,7 @@ describe('GastronomyUrlService', () => {
 
   it('rejeita slugs com separadores para evitar path injection', () => {
     expect(() =>
-      GastronomyUrlService.getCanonicalUrlFromTerritory(
+      GastronomyUrlService.getLegacyDetailUrlFromTerritory(
         '/br/ba/salvador/pituba',
         'cafe/extra',
       ),

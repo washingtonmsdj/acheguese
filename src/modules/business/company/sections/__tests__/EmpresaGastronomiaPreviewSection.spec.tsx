@@ -9,7 +9,7 @@ describe('EmpresaGastronomiaPreviewSection', () => {
       <MemoryRouter>
         <EmpresaGastronomiaPreviewSection
           businessName="Cafe Central"
-          canonicalUrl="/gastronomia/ba/salvador/rio-vermelho/cafe-central"
+          canonicalUrl="/empresas/ba/salvador/rio-vermelho/cafe-central"
           items={[
             {
               id: 'item-1',
@@ -31,7 +31,7 @@ describe('EmpresaGastronomiaPreviewSection', () => {
     const cta = screen.getByRole('link', { name: /ver cardápio e pedir/i });
     expect(cta).toHaveAttribute(
       'href',
-      '/gastronomia/ba/salvador/rio-vermelho/cafe-central',
+      '/empresas/ba/salvador/rio-vermelho/cafe-central',
     );
     expect(screen.getByText('Cafe coado')).toBeInTheDocument();
     expect(screen.queryByText(/adicionar/i)).not.toBeInTheDocument();

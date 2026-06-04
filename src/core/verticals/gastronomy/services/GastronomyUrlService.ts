@@ -28,7 +28,7 @@ export class GastronomyUrlService {
     return buildModuleTerritoryUrl(APP_MODULE_SLUGS.gastronomy, territoryBaseUrl);
   }
 
-  static getCanonicalUrlFromTerritory(territoryBaseUrl: string, slug: string): string {
+  static getLegacyDetailUrlFromTerritory(territoryBaseUrl: string, slug: string): string {
     return buildModuleTerritoryEntityUrl(
       APP_MODULE_SLUGS.gastronomy,
       territoryBaseUrl,

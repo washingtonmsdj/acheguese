@@ -1,342 +1,87 @@
-# Rotas Públicas Canônicas - Guia Definitivo
+# Rotas Publicas Canonicas
 
-## 📋 Rotas por Tipo de Entidade
+Atualizado: 2026-06-04
+Status: ativo
 
-### **1. Perfil Pessoal**
-- **Rota**: `/u/:username`
-- **Exemplo**: `/u/joaosilva`
-- **Contexto**: Identidade pessoal/social
-- **Página**: `ProfilePublicPage`
-- **Resolver**: `ProfilePublicRoute`
-- **Service**: `buildPublicProfileUrl(username)`
+Este guia resume as URLs que o usuario deve ver e os fallbacks tecnicos que o sistema ainda aceita. A decisao de produto/SEO completa esta em `docs/DECISAO_ROTEAMENTO_TERRITORIAL.md`.
 
-**Características:**
-- ✅ Username único globalmente
-- ✅ Representa a identidade social do usuário
-- ✅ Perfil obrigatório (criado no signup)
-- ✅ Pode ter verificação de identidade
+## Contrato Publico
 
----
+| Entidade | URL preferencial | Fallback tecnico |
+| --- | --- | --- |
+| Perfil pessoal | `/u/:username` | - |
+| Comunidade | `/:communitySlug` | `/comunidade/:state/:city/:territorySlug` |
+| Empresas da comunidade | `/:communitySlug/empresas` | `/empresas/:state/:city/:territorySlug` |
+| Gastronomia da comunidade | `/:communitySlug/gastronomia` | `/gastronomia/:state/:city/:territorySlug` |
+| Empresa ou restaurante | `/:communitySlug/:slug` | `/empresas/:state/:city/:district/:slug` |
+| Mini-site premium | `/p/:slug` | - |
+| Profissional | `/profissionais/:state/:city/:slug` | - |
 
-### **2. Empresa**
+Exemplos:
 
-#### **Rota Completa (Canônica)**
-- **Rota**: `/empresas/:uf/:cidade/:bairro/:slug`
-- **Exemplo**: `/empresas/ba/salvador/barra/restaurante-bom-sabor`
-- **Contexto**: Negócio/empresa com localização territorial
-- **Página**: `BusinessPublicPage`
-- **Resolver**: `BusinessPublicRoute`
-- **Service**: `BusinessUrlService.getCanonicalUrl(ctx)`
-
-#### **Rota Premium (Curta)**
-- **Rota**: `/p/:slug`
-- **Exemplo**: `/p/restaurante-bom-sabor`
-- **Comportamento**: Redireciona 308 para rota canônica
-- **Resolver**: `BusinessPremiumRoute`
-- **Service**: `BusinessUrlService.getShareUrl(ctx)`
-
-**Características:**
-- ✅ Slug único por localização
-- ✅ Obrigatório ter bairro (location_id)
-- ✅ Empresas premium têm rota curta adicional
-- ✅ Rota territorial para SEO local
-
----
-
-### **3. Profissional**
-- **Rota**: `/profissionais/:uf/:cidade/:slug`
-- **Exemplo**: `/profissionais/ba/salvador/joao-silva-dev`
-- **Contexto**: Serviços profissionais autônomos
-- **Página**: `ProfessionalPublicPage` (✅ Existe)
-- **Resolver**: `ProfessionalPublicRoute` (✅ Existe)
-- **Service**: `ProfessionalUrlService` (✅ Implementado)
-
-**Características:**
-- ✅ Slug único por cidade
-- ✅ Não requer bairro específico
-- ✅ Rota territorial para SEO local
-- ✅ Implementação completa
-
----
-
-### **4. Motorista/Motoboy**
-- **Rota**: ❌ **Não possui página pública genérica**
-- **Contexto**: Informações aparecem em:
-  - Perfil pessoal (se houver)
-  - Contexto de corrida (para passageiros)
-  - Dashboard interno de mobilidade
-
-**Características:**
-- ❌ Sem página pública `/u/:username`
-- ✅ Informações visíveis apenas em contexto operacional
-- ✅ Privacidade por design
-
----
-
-## 🔑 Regras de Negócio
-
-### **Username vs Slug vs Handle**
-
-| Conceito | Tipo | Formato | Escopo | Usado em |
-|----------|------|---------|--------|----------|
-| **Username** | Personal | `joaosilva` | Global | `/u/:username` |
-| **Slug** | Business | `restaurante-bom-sabor` | Por localização | `/empresas/.../:slug` |
-| **Slug** | Professional | `joao-silva-dev` | Por cidade | `/profissionais/.../:slug` |
-| **Handle** | Genérico | `@joaosilva` | Variável | Legado (evitar) |
-
-### **Redirecionamentos Automáticos**
-
-#### **ProfilePublicRoute (`/u/:username`)**
-```typescript
-// ✅ Personal → Renderiza ProfilePublicPage
-/u/joaosilva (personal) → ProfilePublicPage
-
-// ✅ Business → Redireciona para rota canônica
-/u/restaurante-bom-sabor (business) → /empresas/ba/salvador/barra/restaurante-bom-sabor
-
-// ✅ Professional → Redireciona para rota canônica
-/u/joao-dev (professional) → /profissionais/ba/salvador/joao-dev
-
-// ✅ Driver → 404 (não tem página pública)
-/u/joao-driver (driver) → 404
+```text
+/santa-cruz
+/santa-cruz/empresas
+/santa-cruz/gastronomia
+/santa-cruz/padaria-do-joao
+/santa-cruz/pizzaria-estrela
+/p/padaria-do-joao
 ```
 
-#### **BusinessPremiumRoute (`/p/:slug`)**
-```typescript
-// ✅ Premium → Redireciona para rota canônica
-/p/restaurante-bom-sabor → /empresas/ba/salvador/barra/restaurante-bom-sabor
+## Regras
 
-// ✅ Não premium → 404
-/p/empresa-basica → 404
-```
+- Alias curto de comunidade vem de `community_public_aliases` e so e publico quando for unico.
+- Empresa e restaurante compartilham o mesmo detalhe publico: `/:communitySlug/:slug`.
+- Listagem de gastronomia continua em `/:communitySlug/gastronomia` ou `/gastronomia/:state/:city/:territorySlug`.
+- Detalhe antigo em `/gastronomia/:state/:city/:district/:slug` e legado e redireciona/canonicaliza para a URL publica da empresa.
+- `/p/:slug` e somente mini-site premium. Nao usar como URL publica geral da empresa.
+- Nunca montar URL manualmente em componente; usar os services/helper SSOT.
 
----
+## Services SSOT
 
-## 🔧 Funções SSOT
-
-### **Personal**
-```typescript
+```ts
 import { buildPublicProfileUrl } from '@/core/profiles/utils/publicProfileUrl';
-
-// ✅ Construir URL pública de perfil pessoal
-const url = buildPublicProfileUrl('joaosilva');
-// → /u/joaosilva
-```
-
-### **Business**
-```typescript
 import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
-
-// ✅ Construir URL canônica
-const canonical = BusinessUrlService.getCanonicalUrl({
-  id: 'uuid',
-  slug: 'restaurante-bom-sabor',
-  is_premium: false,
-  geographic_path: '/br/ba/salvador/barra'
-});
-// → /empresas/ba/salvador/barra/restaurante-bom-sabor
-
-// ✅ Construir URL de compartilhamento (premium ou canônica)
-const share = BusinessUrlService.getShareUrl({
-  id: 'uuid',
-  slug: 'restaurante-bom-sabor',
-  is_premium: true,
-  geographic_path: '/br/ba/salvador/barra'
-});
-// → /p/restaurante-bom-sabor (se premium)
-// → /empresas/ba/salvador/barra/restaurante-bom-sabor (se não premium)
-```
-
-### **Professional** (✅ IMPLEMENTADO)
-```typescript
+import { GastronomyUrlService } from '@/core/verticals/gastronomy/services/GastronomyUrlService';
 import { ProfessionalUrlService } from '@/core/professional/services/ProfessionalUrlService';
+import { buildCommunityAliasUrl } from '@/core/routing/utils/territoryUrls';
+```
 
-// ✅ Construir URL canônica
-const url = ProfessionalUrlService.getCanonicalUrl({
-  id: 'uuid',
-  slug: 'joao-silva-dev',
-  state: 'BA',
-  city: 'Salvador'
+Uso esperado:
+
+```ts
+BusinessUrlService.getCanonicalUrl({
+  id: 'business-1',
+  slug: 'padaria-do-joao',
+  geographic_path: '/br/ba/salvador/santa-cruz',
+  community_alias: 'santa-cruz',
 });
-// → /profissionais/ba/salvador/joao-silva-dev
+// /santa-cruz/padaria-do-joao
 
-// ✅ Resolver por slug + localização
-const ctx = await ProfessionalUrlService.resolveBySlug('joao-silva-dev', 'ba', 'salvador');
-if (ctx) {
-  const url = ProfessionalUrlService.getCanonicalUrl(ctx);
-  navigate(url);
-}
-
-// ✅ Resolver por ID
-const ctx = await ProfessionalUrlService.resolveById(professionalProfile.id);
-if (ctx) {
-  const url = ProfessionalUrlService.getCanonicalUrl(ctx);
-  navigate(url);
-}
+GastronomyUrlService.getCanonicalUrl({
+  id: 'business-2',
+  slug: 'pizzaria-estrela',
+  geographic_path: '/br/ba/salvador/santa-cruz',
+  community_alias: 'santa-cruz',
+});
+// /santa-cruz/pizzaria-estrela
 ```
 
-### **Função Universal**
-```typescript
-import { buildCanonicalPublicUrl } from '@/core/profiles/utils/publicProfileUrl';
+## Redirecionamentos Esperados
 
-// ✅ Construir URL canônica baseada no tipo de perfil
-const url = buildCanonicalPublicUrl(profile);
-
-// Personal → /u/:username
-// Business → null (usar BusinessUrlService)
-// Professional → null (usar ProfessionalUrlService)
-// Driver → null (não tem página pública)
+```text
+/comunidade/santa-cruz                  -> /santa-cruz
+/comunidade/santa-cruz/empresas         -> /santa-cruz/empresas
+/santa-cruz/empresas/padaria-do-joao    -> /santa-cruz/padaria-do-joao
+/santa-cruz/gastronomia/pizzaria-x      -> /santa-cruz/pizzaria-x
+/empresas/ba/salvador/santa-cruz/x      -> /santa-cruz/x quando alias existir
+/gastronomia/ba/salvador/santa-cruz/x   -> URL publica da empresa
 ```
 
----
+## Checklist Para Codigo Novo
 
-## ✅ Checklist de Implementação
-
-### **FASE 1: ProfilePublicRoute (✅ CONCLUÍDO)**
-- [x] Aceita apenas perfil personal
-- [x] Redireciona business para rota canônica
-- [x] Retorna 404 para professional
-- [x] Retorna 404 para driver
-- [x] Logs de redirecionamento
-
-### **FASE 2: Funções SSOT (✅ CONCLUÍDO)**
-- [x] `buildPublicProfileUrl` documentado como personal-only
-- [x] `buildCanonicalPublicUrl` criado
-- [x] `canHavePublicUrl` criado
-- [x] Tipos TypeScript atualizados
-
-### **FASE 3: Correção de Usos (✅ CONCLUÍDO)**
-- [x] `CadastrarServicoPage.tsx` - Redireciona para `/services`
-- [x] `CriarMotoristaPage.tsx` - Redireciona para dashboard
-- [x] `PerfilIdentidadesPage.tsx` - Usa `buildCanonicalPublicUrl`
-- [x] Imports não utilizados removidos
-
-### **FASE 4: Documentação (✅ CONCLUÍDO)**
-- [x] `ProfilePublicPage` documentada como personal-only
-- [x] `ProfilePublicRoute` documentado com redirecionamentos
-- [x] Guia de rotas públicas criado
-
-### **FASE 5: ProfessionalUrlService (✅ CONCLUÍDO)**
-- [x] Criar `ProfessionalUrlService`
-- [x] Implementar `buildCanonicalUrl`
-- [x] Implementar `resolveBySlug`
-- [x] Implementar `resolveById`
-- [x] Atualizar `ProfilePublicRoute` para redirecionar professional
-- [x] Atualizar `buildCanonicalPublicUrl` documentação
-
-### **FASE 6: Testes e Monitoramento (⚠️ TODO)**
-- [ ] Testes de redirecionamento
-- [ ] Logs de uso de rotas legadas
-- [ ] Monitoramento de 404s
-- [ ] Analytics de rotas públicas
-
----
-
-## 📊 Impacto das Mudanças
-
-### **Antes (Ambíguo)**
-```
-❌ /u/:username aceita qualquer tipo de perfil
-❌ Confusão entre pessoa e empresa
-❌ SEO prejudicado por ambiguidade
-❌ Experiência inconsistente
-```
-
-### **Depois (Canônico)**
-```
-✅ /u/:username = APENAS perfil pessoal
-✅ Empresas têm rotas territoriais claras
-✅ Profissionais têm rotas territoriais claras
-✅ Motoristas sem página pública (privacidade)
-✅ SEO otimizado por tipo
-✅ Experiência consistente e previsível
-```
-
----
-
-## 🚀 Exemplos de Uso
-
-### **Criar link para perfil pessoal**
-```typescript
-import { buildPublicProfileUrl } from '@/core/profiles/utils/publicProfileUrl';
-
-// ✅ CORRETO
-const url = buildPublicProfileUrl(personalProfile.username);
-navigate(url);
-```
-
-### **Criar link para empresa**
-```typescript
-import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
-
-// ✅ CORRETO
-const businessContext = await BusinessUrlService.resolveById(businessProfile.id);
-if (businessContext) {
-  const url = BusinessUrlService.getCanonicalUrl(businessContext);
-  navigate(url);
-}
-```
-
-### **Verificar se perfil pode ter URL pública**
-```typescript
-import { buildCanonicalPublicUrl } from '@/core/profiles/utils/publicProfileUrl';
-
-// ✅ CORRETO - Funciona para qualquer tipo
-const publicUrl = buildCanonicalPublicUrl(profile);
-if (publicUrl) {
-  navigate(publicUrl);
-} else {
-  toast.error('Este perfil não possui página pública');
-}
-```
-
-### **Abrir perfil público de qualquer tipo**
-```typescript
-import { buildCanonicalPublicUrl } from '@/core/profiles/utils/publicProfileUrl';
-import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
-import { ProfessionalUrlService } from '@/core/professional/services/ProfessionalUrlService';
-
-// ✅ CORRETO - Lógica universal
-async function openPublicProfile(profile: Profile) {
-  if (profile.profile_type === 'personal') {
-    const url = buildCanonicalPublicUrl(profile);
-    if (url) navigate(url);
-  } else if (profile.profile_type === 'business') {
-    const ctx = await BusinessUrlService.resolveById(profile.id);
-    if (ctx) navigate(BusinessUrlService.getCanonicalUrl(ctx));
-  } else if (profile.profile_type === 'professional') {
-    const ctx = await ProfessionalUrlService.resolveById(profile.id);
-    if (ctx) navigate(ProfessionalUrlService.getCanonicalUrl(ctx));
-  } else {
-    toast.error('Este perfil não possui página pública');
-  }
-}
-```
-
----
-
-## 🎯 Resultado Final
-
-### **Clareza Conceitual**
-- ✅ Cada tipo de entidade tem sua rota específica
-- ✅ Sem ambiguidade de multi-perfil
-- ✅ Contexto apropriado por URL
-
-### **SEO Otimizado**
-- ✅ URLs descritivas e hierárquicas
-- ✅ Estrutura territorial para negócios locais
-- ✅ Sem conteúdo duplicado
-
-### **Experiência do Usuário**
-- ✅ Expectativas claras por tipo de URL
-- ✅ Navegação intuitiva
-- ✅ Privacidade respeitada (driver)
-
-### **Manutenibilidade**
-- ✅ SSOT para geração de URLs
-- ✅ Código limpo e type-safe
-- ✅ Sem gambiarras
-
----
-
-**Arquitetura limpa, sem ambiguidade, seguindo SSOT!** 🚀
+- Use `BusinessUrlService` para detalhe publico de empresa/restaurante.
+- Use `GastronomyUrlService.getTerritoryUrl()` apenas para listagens de gastronomia.
+- Use `GastronomyUrlService.getLegacyDetailUrlFromTerritory()` somente em rotas legadas ou testes de compatibilidade.
+- Use `/p/:slug` apenas quando a regra premium permitir mini-site.
+- Atualize testes quando uma rota antiga for mantida apenas como redirect/fallback.

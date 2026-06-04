@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, UtensilsCrossed } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Skeleton } from '@/shared/components/ui/skeleton';
+import { SafeImage } from '@/shared/components/security';
 import { formatBrl } from '@/modules/business/gastronomy/utils/currency';
 import type { EmpresaGastronomiaPreviewSectionProps } from './types';
 
@@ -36,7 +37,7 @@ export function EmpresaGastronomiaPreviewSection({
                 Cardápio de {businessName}
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                A experiência de cardápio e pedidos fica na página de gastronomia.
+                O cardápio completo e os pedidos ficam na página pública do estabelecimento.
               </p>
             </div>
             <Button asChild className="shrink-0 gap-2">
@@ -65,7 +66,7 @@ export function EmpresaGastronomiaPreviewSection({
             </h2>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
-            Veja uma prévia. O cardápio completo e os pedidos ficam em Gastronomia.
+            Veja uma prévia. O cardápio completo e os pedidos ficam na página pública do estabelecimento.
           </p>
         </div>
         <Button asChild className="shrink-0 gap-2">
@@ -83,7 +84,7 @@ export function EmpresaGastronomiaPreviewSection({
             className="overflow-hidden rounded-xl border border-border bg-card"
           >
             {item.imageUrl ? (
-              <img
+              <SafeImage
                 src={item.imageUrl}
                 alt={item.name}
                 className="h-32 w-full object-cover"
