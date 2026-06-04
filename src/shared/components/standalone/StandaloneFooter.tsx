@@ -6,9 +6,16 @@ import React from "react";
  */
 
 import { Phone, Mail, MapPin, Instagram, Facebook, Globe } from "lucide-react";
+import { SafeLink } from "@/shared/components/security";
 import { BusinessLogo } from "@/shared/components/ui/business-logo";
 import { Button } from "@/shared/components/ui/button";
-import { buildMailtoUrl, buildTelUrl } from "@/shared/utils/contactLinks";
+import {
+  buildFacebookUrl,
+  buildInstagramUrl,
+  buildMailtoUrl,
+  buildTelUrl,
+  buildWebsiteUrl,
+} from "@/shared/utils/contactLinks";
 import type { Business } from "@/shared/types/business";
 
 interface StandaloneFooterProps {
@@ -16,6 +23,10 @@ interface StandaloneFooterProps {
 }
 
 export default function StandaloneFooter({ business }: StandaloneFooterProps) {
+  const instagramUrl = buildInstagramUrl(business.instagram);
+  const facebookUrl = buildFacebookUrl(business.facebook);
+  const websiteUrl = buildWebsiteUrl(business.website);
+
   return (
     <footer id="contact" className="bg-muted/50 border-t">
       <div className="container mx-auto px-4 py-12">
@@ -83,37 +94,37 @@ export default function StandaloneFooter({ business }: StandaloneFooterProps) {
             <div className="space-y-4">
               <h4 className="font-semibold">Redes Sociais</h4>
               <div className="flex gap-2">
-                {business.instagram && (
+                {instagramUrl && (
                   <Button variant="outline" size="icon" asChild>
-                    <a
-                      href={business.instagram}
+                    <SafeLink
+                      href={instagramUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
                       <Instagram className="h-4 w-4" />
-                    </a>
+                    </SafeLink>
                   </Button>
                 )}
-                {business.facebook && (
+                {facebookUrl && (
                   <Button variant="outline" size="icon" asChild>
-                    <a
-                      href={business.facebook}
+                    <SafeLink
+                      href={facebookUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
                       <Facebook className="h-4 w-4" />
-                    </a>
+                    </SafeLink>
                   </Button>
                 )}
-                {business.website && (
+                {websiteUrl && (
                   <Button variant="outline" size="icon" asChild>
-                    <a
-                      href={business.website}
+                    <SafeLink
+                      href={websiteUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
                       <Globe className="h-4 w-4" />
-                    </a>
+                    </SafeLink>
                   </Button>
                 )}
               </div>

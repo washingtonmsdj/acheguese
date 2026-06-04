@@ -679,7 +679,7 @@ export const INPUT_VALIDATION = {
 export const SECURITY_AUDIT_LOG = {
   lastReview: '2026-06-04',
   reviewer: 'Codex',
-  version: '2.9.0',
+  version: '2.10.0',
   changes: [
     'Initial SSOT implementation',
     'CSP directives centralized',
@@ -737,6 +737,9 @@ export const SECURITY_AUDIT_LOG = {
     'FIX: send-email restrito ao proprio usuario autenticado e email da sessao',
     'FIX: rate limit por usuario adicionado ao send-email para reduzir abuso',
     'FIX: X-XSS-Protection definido como 0 e defesa de XSS mantida em CSP/sanitizacao',
+    // v2.10.0 - Public URL hardening
+    'FIX: links de website/redes sociais normalizados e validados antes de renderizar',
+    'FIX: imagens de banners, portfolio, CNH e cards publicos migradas para SafeImage',
   ],
   nextReview: '2026-07-04',
 } as const;
@@ -811,7 +814,7 @@ export const CACHE_HEADERS = {
  * Metadata about this configuration file.
  */
 export const SECURITY_CONFIG_METADATA = {
-  version: '2.9.0',
+  version: '2.10.0',
   created: '2026-04-18',
   lastModified: '2026-06-04',
   author: 'Kiro AI',

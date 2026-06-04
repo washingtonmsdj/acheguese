@@ -5,6 +5,7 @@
  */
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { SafeImage, SafeLink } from "@/shared/components/security";
 import { MapPin, CarFront, FileText } from "lucide-react";
 import type { DriverInfoCardProps } from "../../sections/types";
 import { getDriverInitials } from "../../utils";
@@ -64,18 +65,18 @@ export function DriverInfoCard({ driver }: DriverInfoCardProps) {
           <FileText className="h-4 w-4" /> CNH / Documento
         </h4>
         {driver.cnh_image_url ? (
-          <a
+          <SafeLink
             href={driver.cnh_image_url}
             target="_blank"
             rel="noopener noreferrer"
             className="block w-full h-48 rounded-lg border-2 border-dashed hover:border-primary transition-colors overflow-hidden bg-secondary/30 flex items-center justify-center"
           >
-            <img
+            <SafeImage
               src={driver.cnh_image_url}
               alt="CNH"
               className="w-full h-full object-contain"
             />
-          </a>
+          </SafeLink>
         ) : (
           <div className="w-full h-32 rounded-lg border-2 border-dashed flex items-center justify-center bg-secondary/30">
             <p className="text-sm text-muted-foreground">

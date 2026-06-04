@@ -1,6 +1,7 @@
 import React from "react";
 import { Card } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
+import { SafeLink } from "@/shared/components/security";
 import {
   Store,
   Truck,
@@ -14,6 +15,7 @@ import {
   Star,
 } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
+import { buildFacebookUrl, buildInstagramUrl, buildWebsiteUrl } from "@/shared/utils/contactLinks";
 import { getRecordValue } from "@/shared/utils/recordLookup";
 import PhotoGallery from "@/modules/business/components/PhotoGallery.tsx";
 import type { VisaoGeralTabProps, ModoAtendimentoIcon } from "@/modules/business/types/components";
@@ -54,6 +56,10 @@ export function VisaoGeralTab({
     ...photo,
     caption: photo.caption ?? "",
   }));
+  const instagramUrl = buildInstagramUrl(business.instagram);
+  const facebookUrl = buildFacebookUrl(business.facebook);
+  const websiteUrl = buildWebsiteUrl(business.website);
+  const hasSafeSocialLinks = Boolean(instagramUrl || facebookUrl || websiteUrl);
 
   return (
     <div className="space-y-5 sm:space-y-6">
@@ -242,7 +248,7 @@ export function VisaoGeralTab({
       )}
 
       {/* Redes Sociais */}
-      {(business.instagram || business.facebook || business.website) && (
+      {hasSafeSocialLinks && (
         <Card className="p-5 sm:p-7 border-2 shadow-md hover:shadow-lg transition-shadow">
           <div className="flex items-center gap-3 mb-5">
             <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -251,9 +257,9 @@ export function VisaoGeralTab({
             <h2 className="text-lg sm:text-xl font-bold">Redes Sociais</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
-            {business.instagram && (
-              <a
-                href={`https://instagram.com/${business.instagram.replace("@", "")}`}
+            {instagramUrl && (
+              <SafeLink
+                href={instagramUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group flex flex-col items-center gap-3 p-5 rounded-xl bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 text-white hover:scale-105 hover:shadow-xl transition-all"
@@ -269,12 +275,12 @@ export function VisaoGeralTab({
                   <p className="font-semibold text-sm">Instagram</p>
                   <p className="text-xs opacity-90 truncate max-w-full px-2">{business.instagram}</p>
                 </div>
-              </a>
+              </SafeLink>
             )}
 
-            {business.facebook && (
-              <a
-                href={business.facebook}
+            {facebookUrl && (
+              <SafeLink
+                href={facebookUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group flex flex-col items-center gap-3 p-5 rounded-xl bg-[#1877F2] text-white hover:scale-105 hover:shadow-xl transition-all"
@@ -290,12 +296,12 @@ export function VisaoGeralTab({
                   <p className="font-semibold text-sm">Facebook</p>
                   <p className="text-xs opacity-90">Visitar página</p>
                 </div>
-              </a>
+              </SafeLink>
             )}
 
-            {business.website && (
-              <a
-                href={business.website}
+            {websiteUrl && (
+              <SafeLink
+                href={websiteUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group flex flex-col items-center gap-3 p-5 rounded-xl bg-primary text-primary-foreground hover:scale-105 hover:shadow-xl transition-all"
@@ -305,7 +311,7 @@ export function VisaoGeralTab({
                   <p className="font-semibold text-sm">Website</p>
                   <p className="text-xs opacity-90">Visitar website</p>
                 </div>
-              </a>
+              </SafeLink>
             )}
           </div>
         </Card>

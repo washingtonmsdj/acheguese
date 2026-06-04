@@ -33,15 +33,19 @@ import { Button } from '@/shared/components/ui/button';
 import { Card } from '@/shared/components/ui/card';
 import { Separator } from '@/shared/components/ui/separator';
 import { LazyMiniMap } from '@/shared/components/maps/LazyMiniMap';
+import { SafeImage, SafeLink } from '@/shared/components/security';
 import { useBusinessUrls } from '@/core/business/hooks/useBusinessUrls';
 import { GastronomyUrlService } from '@/core/verticals/gastronomy/services/GastronomyUrlService';
 import {
+  buildFacebookUrl,
   buildGoogleMapsDirectionsUrl,
+  buildInstagramUrl,
   buildMailtoUrl,
   buildTelUrl,
+  buildWebsiteUrl,
   buildWhatsAppUrl,
 } from '@/shared/utils/contactLinks';
-import { openSafeExternalUrl, resolveSafeRedirectUrl } from '@/shared/utils/safeRedirect';
+import { openSafeExternalUrl } from '@/shared/utils/safeRedirect';
 import { GastronomyShareDialog } from './GastronomyShareDialog';
 import { useGastronomySimilar } from '../hooks/useGastronomySimilar';
 import { useGastronomyOpeningStatus } from '../hooks/useGastronomyOpeningStatus';
@@ -75,30 +79,9 @@ export function GastronomyContactSidebar({ business }: GastronomyContactSidebarP
     `Olá! Vi o ${business.name} no Achegue-se e gostaria de mais informações.`,
   );
   const phoneUrl = buildTelUrl(business.phone);
-  const instagramUrl = business.instagram
-    ? resolveSafeRedirectUrl(`https://instagram.com/${business.instagram.replace('@', '')}`, {
-        allowRelative: false,
-        allowAnyHttpOrigin: true,
-        context: "gastronomy-contact-instagram",
-      })
-    : null;
-  const facebookUrl = business.facebook
-    ? resolveSafeRedirectUrl(business.facebook, {
-        allowRelative: false,
-        allowAnyHttpOrigin: true,
-        context: "gastronomy-contact-facebook",
-      })
-    : null;
-  const websiteUrl = business.website
-    ? resolveSafeRedirectUrl(
-        business.website.startsWith('http') ? business.website : `https://${business.website}`,
-        {
-          allowRelative: false,
-          allowAnyHttpOrigin: true,
-          context: "gastronomy-contact-website",
-        },
-      )
-    : null;
+  const instagramUrl = buildInstagramUrl(business.instagram);
+  const facebookUrl = buildFacebookUrl(business.facebook);
+  const websiteUrl = buildWebsiteUrl(business.website);
 
   const handleNavigate = () => {
     if (hasCoords) {
@@ -297,14 +280,14 @@ export function GastronomyContactSidebar({ business }: GastronomyContactSidebarP
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium text-muted-foreground mb-1">Instagram</p>
-                  <a
+                  <SafeLink
                     href={instagramUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-sm font-semibold hover:text-pink-600 transition-colors block truncate"
                   >
                     {business.instagram}
-                  </a>
+                  </SafeLink>
                 </div>
               </div>
             )}
@@ -317,14 +300,14 @@ export function GastronomyContactSidebar({ business }: GastronomyContactSidebarP
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium text-muted-foreground mb-1">Facebook</p>
-                  <a
+                  <SafeLink
                     href={facebookUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-sm font-semibold hover:text-[#1877F2] transition-colors block truncate"
                   >
                     Facebook
-                  </a>
+                  </SafeLink>
                 </div>
               </div>
             )}
@@ -337,14 +320,14 @@ export function GastronomyContactSidebar({ business }: GastronomyContactSidebarP
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium text-muted-foreground mb-1">Website</p>
-                  <a
+                  <SafeLink
                     href={websiteUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-sm font-semibold hover:text-primary transition-colors block truncate"
                   >
                     {business.website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}
-                  </a>
+                  </SafeLink>
                 </div>
               </div>
             )}
@@ -428,7 +411,7 @@ export function GastronomyContactSidebar({ business }: GastronomyContactSidebarP
                   >
                     <div className="h-12 w-12 rounded-xl overflow-hidden border-2 flex-shrink-0 bg-muted flex items-center justify-center">
                       {sim.banner_url ? (
-                        <img
+                        <SafeImage
                           src={sim.banner_url}
                           alt=""
                           className="w-full h-full object-cover"

@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { BannerService } from "@/core/banners";
+import { SafeImage, SafeLink } from "@/shared/components/security";
 import { logger } from "@/shared/utils/logger";
 
 interface Banner {
@@ -94,7 +95,7 @@ export function BannerDisplay({
           }}
         >
           {banner.link_url ? (
-            <a
+            <SafeLink
               href={banner.link_url}
               target="_blank"
               rel="noopener noreferrer"
@@ -102,7 +103,7 @@ export function BannerDisplay({
               className="block"
             >
               <BannerContent banner={banner} position={position} />
-            </a>
+            </SafeLink>
           ) : (
             <BannerContent banner={banner} position={position} />
           )}
@@ -121,7 +122,7 @@ function BannerContent({
 }) {
   return (
     <div className="relative w-full h-full">
-      <img
+      <SafeImage
         src={banner.image_url}
         alt={banner.title}
         className="w-full h-full object-cover"

@@ -11,7 +11,13 @@ export interface SafeRedirectOptions {
   context?: string;
 }
 
+export interface SafeHttpUrlOptions {
+  context?: string;
+  forceHttps?: boolean;
+}
+
 const publicEnv = ((import.meta as ImportMeta & { env?: PublicEnv }).env ?? {}) as PublicEnv;
+const EXPLICIT_PROTOCOL_REGEX = /^[a-z][a-z\d+.-]*:/i;
 
 function normalizeOrigin(origin: string): string {
   return origin.trim().replace(/\/+$/, '');
@@ -32,6 +38,21 @@ function parseOriginList(value: string | undefined): string[] {
 
 function isRelativeUrl(value: string): boolean {
   return value.startsWith('/') && !value.startsWith('//');
+}
+
+function hasControlCharacters(input: string): boolean {
+  for (let index = 0; index < input.length; index += 1) {
+    const charCode = input.charCodeAt(index);
+    if (charCode <= 31 || charCode === 127) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function hasExplicitProtocol(input: string): boolean {
+  return EXPLICIT_PROTOCOL_REGEX.test(input);
 }
 
 export function getAllowedRedirectOriginsFromEnv(
@@ -58,6 +79,11 @@ export function resolveSafeRedirectUrl(
 
   if (!input || input.length > INPUT_VALIDATION.MAX_URL_LENGTH) {
     logger.warn('[safeRedirect] URL vazia ou acima do limite', { context: options.context });
+    return null;
+  }
+
+  if (hasControlCharacters(input)) {
+    logger.warn('[safeRedirect] URL com caracteres de controle bloqueada', { context: options.context });
     return null;
   }
 
@@ -91,6 +117,54 @@ export function resolveSafeRedirectUrl(
     return null;
   } catch {
     logger.warn('[safeRedirect] URL invalida', { context: options.context });
+    return null;
+  }
+}
+
+export function resolveSafeHttpUrl(
+  rawUrl: string | null | undefined,
+  options: SafeHttpUrlOptions = {},
+): string | null {
+  const input = (rawUrl ?? '').trim();
+  const context = options.context ?? 'safe-http-url';
+
+  if (!input || input.length > INPUT_VALIDATION.MAX_URL_LENGTH) {
+    logger.warn('[safeRedirect] URL HTTP vazia ou acima do limite', { context });
+    return null;
+  }
+
+  if (hasControlCharacters(input) || input.startsWith('/')) {
+    logger.warn('[safeRedirect] URL HTTP invalida bloqueada', { context });
+    return null;
+  }
+
+  if (hasExplicitProtocol(input) && !/^https?:/i.test(input)) {
+    logger.warn('[safeRedirect] Protocolo HTTP bloqueado', { context });
+    return null;
+  }
+
+  const candidate = /^https?:/i.test(input) ? input : `https://${input}`;
+  const safeUrl = resolveSafeRedirectUrl(candidate, {
+    allowRelative: false,
+    allowAnyHttpOrigin: true,
+    context,
+  });
+
+  if (!safeUrl) return null;
+
+  try {
+    const parsed = new URL(safeUrl);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return null;
+    }
+
+    if (options.forceHttps ?? true) {
+      parsed.protocol = 'https:';
+    }
+
+    return parsed.href;
+  } catch {
+    logger.warn('[safeRedirect] URL HTTP invalida', { context });
     return null;
   }
 }

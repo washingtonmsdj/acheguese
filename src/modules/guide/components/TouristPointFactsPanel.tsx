@@ -3,6 +3,7 @@
  */
 
 import { Clock, MapPin, DollarSign, Accessibility, ExternalLink } from 'lucide-react';
+import { SafeLink } from '@/shared/components/security';
 import { Card, CardContent } from '@/shared/components/ui/card';
 import type { TouristPoint } from '../types';
 import { PRICE_TYPE_LABELS } from '../types';
@@ -27,7 +28,7 @@ function FactRow({ icon, label, value, href }: FactRowProps) {
       <div className="flex-1 min-w-0">
         <p className="text-xs text-muted-foreground mb-0.5">{label}</p>
         {href ? (
-          <a
+          <SafeLink
             href={href}
             target="_blank"
             rel="noopener noreferrer"
@@ -35,7 +36,7 @@ function FactRow({ icon, label, value, href }: FactRowProps) {
           >
             {value}
             <ExternalLink className="h-3 w-3" />
-          </a>
+          </SafeLink>
         ) : (
           <p className="text-sm font-medium text-foreground">{value}</p>
         )}

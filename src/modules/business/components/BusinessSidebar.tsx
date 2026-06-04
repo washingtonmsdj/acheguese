@@ -15,6 +15,7 @@ import { useBusinessNavigation } from "@/modules/business/hooks/useBusinessNavig
 import { BusinessService } from "@/core/business/services/BusinessService";
 import type { BizData } from "@/modules/business/types";
 import { logger } from "@/shared/utils/logger";
+import { SafeImage } from "@/shared/components/security";
 import { buildGoogleMapsDirectionsUrl, buildTelUrl, buildWhatsAppUrl } from "@/shared/utils/contactLinks";
 import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
 
@@ -199,7 +200,7 @@ export function BusinessSidebar({
                   >
                     <div className="h-10 w-10 rounded-lg overflow-hidden border flex-shrink-0">
                       {sim.logo ? (
-                        <img
+                        <SafeImage
                           src={sim.logo}
                           alt=""
                           className="w-full h-full object-cover"

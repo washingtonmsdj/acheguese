@@ -16,7 +16,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/shared/components/ui/card";
-import { Separator } from "@/shared/components/ui/separator";
+import { SafeImage, SafeLink } from "@/shared/components/security";
+import {
+  buildFacebookUrl,
+  buildInstagramUrl,
+  buildLinkedInUrl,
+  buildWebsiteUrl,
+} from "@/shared/utils/contactLinks";
 import type { ProfessionalData } from "@/modules/professionals/services/hooks/useProfessionalDetail";
 
 interface ProfessionalDetailsProps {
@@ -26,11 +32,11 @@ interface ProfessionalDetailsProps {
 export function ProfessionalDetails({
   professional,
 }: ProfessionalDetailsProps) {
-  const hasSocialLinks =
-    professional.instagram ||
-    professional.facebook ||
-    professional.linkedin ||
-    professional.website;
+  const instagramUrl = buildInstagramUrl(professional.instagram);
+  const facebookUrl = buildFacebookUrl(professional.facebook);
+  const linkedInUrl = buildLinkedInUrl(professional.linkedin);
+  const websiteUrl = buildWebsiteUrl(professional.website);
+  const hasSocialLinks = Boolean(instagramUrl || facebookUrl || linkedInUrl || websiteUrl);
 
   return (
     <div className="px-4 py-4 space-y-4">
@@ -145,7 +151,7 @@ export function ProfessionalDetails({
           <CardContent>
             <div className="grid grid-cols-3 gap-2">
               {professional.portfolio_images.map((img, i) => (
-                <img
+                <SafeImage
                   key={i}
                   src={img}
                   alt={`Trabalho ${i + 1}`}
@@ -166,49 +172,49 @@ export function ProfessionalDetails({
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
-              {professional.instagram && (
-                <a
-                  href={`https://instagram.com/${professional.instagram.replace("@", "")}`}
+              {instagramUrl && (
+                <SafeLink
+                  href={instagramUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary text-sm hover:bg-secondary/80 transition-colors"
                 >
                   <Instagram className="h-4 w-4" />
                   {professional.instagram}
-                </a>
+                </SafeLink>
               )}
-              {professional.facebook && (
-                <a
-                  href={professional.facebook}
+              {facebookUrl && (
+                <SafeLink
+                  href={facebookUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary text-sm hover:bg-secondary/80 transition-colors"
                 >
                   <Facebook className="h-4 w-4" />
                   Facebook
-                </a>
+                </SafeLink>
               )}
-              {professional.linkedin && (
-                <a
-                  href={professional.linkedin}
+              {linkedInUrl && (
+                <SafeLink
+                  href={linkedInUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary text-sm hover:bg-secondary/80 transition-colors"
                 >
                   <Linkedin className="h-4 w-4" />
                   LinkedIn
-                </a>
+                </SafeLink>
               )}
-              {professional.website && (
-                <a
-                  href={professional.website}
+              {websiteUrl && (
+                <SafeLink
+                  href={websiteUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary text-sm hover:bg-secondary/80 transition-colors"
                 >
                   <Globe className="h-4 w-4" />
                   Website
-                </a>
+                </SafeLink>
               )}
             </div>
           </CardContent>

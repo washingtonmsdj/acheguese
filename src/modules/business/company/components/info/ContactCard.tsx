@@ -21,7 +21,15 @@ import {
   Award,
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
-import { buildMailtoUrl, buildTelUrl, buildWhatsAppUrl } from '@/shared/utils/contactLinks';
+import { SafeLink } from '@/shared/components/security';
+import {
+  buildFacebookUrl,
+  buildInstagramUrl,
+  buildMailtoUrl,
+  buildTelUrl,
+  buildWebsiteUrl,
+  buildWhatsAppUrl,
+} from '@/shared/utils/contactLinks';
 import type { ContactCardProps } from '../../sections/types';
 
 export function ContactCard({
@@ -30,6 +38,10 @@ export function ContactCard({
   onCopyPhone,
   navigate,
 }: ContactCardProps) {
+  const websiteUrl = buildWebsiteUrl(business.website);
+  const instagramUrl = buildInstagramUrl(business.instagram);
+  const facebookUrl = buildFacebookUrl(business.facebook);
+
   return (
     <div className="space-y-4">
       {/* Contact info */}
@@ -81,18 +93,18 @@ export function ContactCard({
               </a>
             </div>
           )}
-          {business.website && (
+          {websiteUrl && (
             <div className="flex items-center gap-3">
               <Globe className="h-4 w-4 text-primary shrink-0" />
-              <a
-                href={business.website}
+              <SafeLink
+                href={websiteUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-sm text-primary hover:underline truncate flex items-center gap-1"
               >
                 {business.website.replace(/^https?:\/\//, "")}{" "}
                 <ExternalLink className="h-3 w-3" />
-              </a>
+              </SafeLink>
             </div>
           )}
         </div>
@@ -100,9 +112,9 @@ export function ContactCard({
         {/* Social */}
         {(business.instagram || business.facebook) && (
           <div className="flex gap-2 mt-4 pt-4 border-t border-border">
-            {business.instagram && (
-              <a
-                href={`https://instagram.com/${business.instagram.replace("@", "")}`}
+            {instagramUrl && (
+              <SafeLink
+                href={instagramUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex-1 flex items-center justify-center gap-2 h-10 rounded-lg bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 hover:border-purple-500/40 transition-colors"
@@ -111,17 +123,17 @@ export function ContactCard({
                 <span className="text-xs font-medium text-purple-400">
                   @{business.instagram}
                 </span>
-              </a>
+              </SafeLink>
             )}
-            {business.facebook && (
-              <a
-                href={`https://facebook.com/${business.facebook}`}
+            {facebookUrl && (
+              <SafeLink
+                href={facebookUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="h-10 w-10 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center hover:border-sky-500/40 transition-colors"
               >
                 <Facebook className="h-4 w-4 text-sky-400" />
-              </a>
+              </SafeLink>
             )}
           </div>
         )}

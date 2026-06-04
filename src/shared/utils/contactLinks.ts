@@ -1,3 +1,5 @@
+import { resolveSafeHttpUrl } from "@/shared/utils/safeRedirect";
+
 export function onlyDigits(value: string | null | undefined): string {
   return (value ?? "").replace(/\D/g, "");
 }
@@ -59,6 +61,60 @@ export function buildMailtoShareUrl(
 
   const query = params.toString();
   return query ? `mailto:?${query}` : "mailto:";
+}
+
+const SOCIAL_HANDLE_REGEX = /^[A-Za-z0-9._-]{1,100}$/;
+const EXPLICIT_PROTOCOL_REGEX = /^[a-z][a-z\d+.-]*:/i;
+
+function hostMatches(hostname: string, allowedHost: string): boolean {
+  const normalized = hostname.toLowerCase();
+  return normalized === allowedHost || normalized.endsWith(`.${allowedHost}`);
+}
+
+function buildSocialUrl(
+  value: string | null | undefined,
+  allowedHost: string,
+  pathPrefix = "",
+): string | null {
+  const raw = (value ?? "").trim();
+  if (!raw) return null;
+
+  const withoutAt = raw.replace(/^@/, "");
+  const shouldParseAsUrl = EXPLICIT_PROTOCOL_REGEX.test(raw) || raw.includes("/");
+  const normalizedUrl = shouldParseAsUrl
+    ? resolveSafeHttpUrl(raw, { context: `contact-social-${allowedHost}` })
+    : SOCIAL_HANDLE_REGEX.test(withoutAt)
+      ? resolveSafeHttpUrl(`${allowedHost}/${pathPrefix}${withoutAt}`, {
+          context: `contact-social-${allowedHost}`,
+        })
+      : null;
+
+  if (!normalizedUrl) {
+    return null;
+  }
+
+  const parsed = new URL(normalizedUrl);
+  if (!hostMatches(parsed.hostname, allowedHost)) {
+    return null;
+  }
+
+  return parsed.href;
+}
+
+export function buildWebsiteUrl(value: string | null | undefined): string | null {
+  return resolveSafeHttpUrl(value, { context: "contact-website" });
+}
+
+export function buildInstagramUrl(value: string | null | undefined): string | null {
+  return buildSocialUrl(value, "instagram.com");
+}
+
+export function buildFacebookUrl(value: string | null | undefined): string | null {
+  return buildSocialUrl(value, "facebook.com");
+}
+
+export function buildLinkedInUrl(value: string | null | undefined): string | null {
+  return buildSocialUrl(value, "linkedin.com", "in/");
 }
 
 export function openContactUrl(url: string | null | undefined): boolean {

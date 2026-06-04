@@ -19,7 +19,15 @@ import { ViewOnMapButton } from "@/core/maps/components/ViewOnMapButton";
 import { useBusinessNavigation } from "@/modules/business/hooks/useBusinessNavigation";
 import { BusinessService } from "@/core/business/services/BusinessService";
 import { logger } from "@/shared/utils/logger";
-import { buildMailtoUrl, buildTelUrl, buildWhatsAppUrl } from "@/shared/utils/contactLinks";
+import { SafeImage, SafeLink } from "@/shared/components/security";
+import {
+  buildFacebookUrl,
+  buildInstagramUrl,
+  buildMailtoUrl,
+  buildTelUrl,
+  buildWebsiteUrl,
+  buildWhatsAppUrl,
+} from "@/shared/utils/contactLinks";
 import type { BizData } from "@/modules/business/types";
 
 interface SimilarBusiness {
@@ -51,6 +59,9 @@ export function BusinessContactSidebar({
     typeof business.address === "object" && business.address
       ? business.address
       : null;
+  const instagramUrl = buildInstagramUrl(business.instagram);
+  const facebookUrl = buildFacebookUrl(business.facebook);
+  const websiteUrl = buildWebsiteUrl(business.website);
 
   useEffect(() => {
     async function fetchSimilar() {
@@ -289,7 +300,7 @@ export function BusinessContactSidebar({
             )}
 
             {/* Instagram */}
-            {business.instagram && (
+            {instagramUrl && (
               <div className="flex items-start gap-3">
                 <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 flex items-center justify-center shrink-0">
                   <svg
@@ -302,20 +313,20 @@ export function BusinessContactSidebar({
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium text-muted-foreground mb-1">Instagram</p>
-                  <a
-                    href={`https://instagram.com/${business.instagram.replace("@", "")}`}
+                  <SafeLink
+                    href={instagramUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-sm font-semibold hover:text-pink-600 transition-colors block truncate"
                   >
                     {business.instagram}
-                  </a>
+                  </SafeLink>
                 </div>
               </div>
             )}
 
             {/* Facebook */}
-            {business.facebook && (
+            {facebookUrl && (
               <div className="flex items-start gap-3">
                 <div className="h-9 w-9 rounded-lg bg-[#1877F2] flex items-center justify-center shrink-0">
                   <svg
@@ -328,32 +339,28 @@ export function BusinessContactSidebar({
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium text-muted-foreground mb-1">Facebook</p>
-                  <a
-                    href={business.facebook}
+                  <SafeLink
+                    href={facebookUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-sm font-semibold hover:text-[#1877F2] transition-colors block truncate"
                   >
                     Facebook
-                  </a>
+                  </SafeLink>
                 </div>
               </div>
             )}
 
             {/* Website */}
-            {business.website && (
+            {websiteUrl && (
               <div className="flex items-start gap-3">
                 <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                   <Globe className="h-4 w-4 text-primary" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium text-muted-foreground mb-1">Website</p>
-                  <a
-                    href={
-                      business.website.startsWith("http")
-                        ? business.website
-                        : `https://${business.website}`
-                    }
+                  <SafeLink
+                    href={websiteUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-sm font-semibold hover:text-primary transition-colors block truncate"
@@ -361,7 +368,7 @@ export function BusinessContactSidebar({
                     {business.website
                       .replace(/^https?:\/\/(www\.)?/, "")
                       .replace(/\/$/, "")}
-                  </a>
+                  </SafeLink>
                 </div>
               </div>
             )}
@@ -427,7 +434,7 @@ export function BusinessContactSidebar({
                   >
                     <div className="h-12 w-12 rounded-xl overflow-hidden border-2 flex-shrink-0 shadow-sm">
                       {sim.logo ? (
-                        <img
+                        <SafeImage
                           src={sim.logo}
                           alt=""
                           className="w-full h-full object-cover"

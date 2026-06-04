@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/shared/hooks/use-toast";
 import { useConfirmActionDialog } from "@/shared/hooks/useConfirmActionDialog";
+import { SafeImage, SafeLink } from "@/shared/components/security";
 import { logger } from "@/shared/utils/logger";
 import { SessionService } from "@/core/session/services/SessionService";
 import {
@@ -257,7 +258,7 @@ export default function BannersPage() {
                 <label className="block text-sm font-medium mb-2">
                   Preview
                 </label>
-                <img
+                <SafeImage
                   src={imagePreview}
                   alt="Preview"
                   className="w-full max-h-64 object-cover rounded-lg"
@@ -504,7 +505,7 @@ export default function BannersPage() {
             key={banner.id}
             className="bg-card p-4 rounded-lg border flex items-center gap-4"
           >
-            <img
+            <SafeImage
               src={banner.image_url}
               alt={banner.title}
               className="w-32 h-20 object-cover rounded"
@@ -547,13 +548,13 @@ export default function BannersPage() {
               </Button>
               {banner.link_url && (
                 <Button size="sm" variant="outline" asChild>
-                  <a
+                  <SafeLink
                     href={banner.link_url}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
                     <ExternalLink className="h-4 w-4" />
-                  </a>
+                  </SafeLink>
                 </Button>
               )}
               <Button
