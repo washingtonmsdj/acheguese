@@ -392,9 +392,8 @@ export const SECURITY_HEADERS = {
   // Force HTTPS
   'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
   
-  // XSS Protection header kept as defense-in-depth for older browsers.
-  // Note: Deprecated but kept for older browsers
-  'X-XSS-Protection': '1; mode=block',
+  // Disable deprecated browser XSS filters; CSP and sanitization are the controls.
+  'X-XSS-Protection': '0',
 } as const;
 
 /**
@@ -678,9 +677,9 @@ export const INPUT_VALIDATION = {
  * MUST be updated on every security config change.
  */
 export const SECURITY_AUDIT_LOG = {
-  lastReview: '2026-06-01',
+  lastReview: '2026-06-04',
   reviewer: 'Codex',
-  version: '2.8.1',
+  version: '2.9.0',
   changes: [
     'Initial SSOT implementation',
     'CSP directives centralized',
@@ -734,8 +733,12 @@ export const SECURITY_AUDIT_LOG = {
     'FIX: data URLs de imagem limitadas a MIME types raster seguros',
     // v2.8.1 - IP geolocation CSP
     'FIX: provedores de geolocalizacao por IP registrados no SECURITY_DOMAINS e connect-src',
+    // v2.9.0 - SaaS hardening review
+    'FIX: send-email restrito ao proprio usuario autenticado e email da sessao',
+    'FIX: rate limit por usuario adicionado ao send-email para reduzir abuso',
+    'FIX: X-XSS-Protection definido como 0 e defesa de XSS mantida em CSP/sanitizacao',
   ],
-  nextReview: '2026-07-01',
+  nextReview: '2026-07-04',
 } as const;
 
 /**
@@ -808,9 +811,9 @@ export const CACHE_HEADERS = {
  * Metadata about this configuration file.
  */
 export const SECURITY_CONFIG_METADATA = {
-  version: '2.8.1',
+  version: '2.9.0',
   created: '2026-04-18',
-  lastModified: '2026-06-01',
+  lastModified: '2026-06-04',
   author: 'Kiro AI',
   purpose: 'Single Source of Truth for security configurations',
   criticality: 'CRITICAL',

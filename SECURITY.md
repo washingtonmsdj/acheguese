@@ -26,6 +26,8 @@ Run these before release or security-sensitive changes:
 
 ```powershell
 npm run security:validate
+npm run security:config:validate
+npm audit
 npm run validate:ssot
 npm run validate:hardcodes
 npm run validate:architecture:incremental

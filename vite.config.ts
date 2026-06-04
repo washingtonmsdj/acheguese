@@ -77,7 +77,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     server: {
-      host: "::",
+      host: process.env.VITE_DEV_HOST || "127.0.0.1",
       port: 8080,
       proxy: {
         "/api": {
@@ -171,7 +171,7 @@ export default defineConfig(({ mode }) => {
 
     preview: {
       port: 8080,
-      host: true,
+      host: process.env.VITE_PREVIEW_HOST || "127.0.0.1",
     },
   };
 });

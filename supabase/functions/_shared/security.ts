@@ -106,8 +106,8 @@ export function getSecurityHeaders(): Record<string, string> {
     // Prevent clickjacking
     'X-Frame-Options': 'DENY',
     
-    // XSS Protection (legacy, but defense-in-depth)
-    'X-XSS-Protection': '1; mode=block',
+    // Disable deprecated browser XSS filters; CSP and sanitization are the controls.
+    'X-XSS-Protection': '0',
     
     // Force HTTPS
     'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',

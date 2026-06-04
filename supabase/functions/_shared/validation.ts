@@ -406,7 +406,7 @@ export interface SendEmailBody {
   subject: string;
   html: string;
   text?: string;
-  userId?: string;
+  userId: string;
   category?: "transactional" | "social" | "system" | "marketing";
 }
 
@@ -415,7 +415,7 @@ export const sendEmailSchema: Schema<SendEmailBody> = {
   subject: { required: true, validator: v.string(1, 200) },
   html: { required: true, validator: v.string(1, 100000) },
   text: { required: false, validator: v.string(1, 100000) },
-  userId: { required: false, validator: v.uuid() },
+  userId: { required: true, validator: v.uuid() },
   category: {
     required: false,
     validator: v.enum(["transactional", "social", "system", "marketing"] as const),

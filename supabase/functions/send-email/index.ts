@@ -4,13 +4,14 @@
  * Sends emails using Resend API.
  * Respects user preferences and quiet hours.
  * 
- * Rate Limit: 50 requests per minute per user
+ * Rate Limit: 50 requests per minute per client plus 10 per minute per user
  */
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { validateBody, sendEmailSchema, validationErrorResponse, type SendEmailBody } from '../_shared/validation.ts';
 import {
+  checkRateLimit,
   errorResponse,
   getAllSecurityHeaders,
   getRequiredEnv,
@@ -94,44 +95,69 @@ serve(async (req: Request) => {
     }
     const { to, subject, html, text, userId, category = 'transactional' } = validation.data!;
 
-    // 4. Check user preferences (if userId provided)
-    if (userId) {
-      const { data: preferences } = await supabase
-        .from('notification_preferences')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
+    if (userId !== user.id) {
+      return errorResponse('Cannot send email for another user', 403);
+    }
 
-      if (preferences) {
-        // Check if email is enabled
-        if (!preferences.email_enabled) {
-          return errorResponse('Email notifications disabled by user', 403);
-        }
+    const requesterEmail = user.email?.trim().toLowerCase();
+    if (!requesterEmail || to.trim().toLowerCase() !== requesterEmail) {
+      return errorResponse('Email recipient must match authenticated user', 403);
+    }
 
-        // Check category preferences
-        if (!isCategoryEmailEnabled(preferences, category)) {
-          return errorResponse(`${category} emails disabled by user`, 403);
-        }
+    const userRateLimit = await checkRateLimit(`send-email:user:${user.id}`, 10, 60_000);
+    if (!userRateLimit.allowed) {
+      const retryAfter = Math.max(1, Math.ceil((userRateLimit.resetAt - Date.now()) / 1000));
+      return new Response(
+        JSON.stringify({
+          error: 'Rate limit exceeded',
+          retryAfter,
+        }),
+        {
+          status: 429,
+          headers: {
+            ...getAllSecurityHeaders(ALLOWED_METHODS, req),
+            'Retry-After': String(retryAfter),
+          },
+        },
+      );
+    }
 
-        // Check quiet hours
-        if (preferences.quiet_hours_start && preferences.quiet_hours_end) {
-          const now = new Date();
-          const currentHour = now.getHours();
-          const currentMinute = now.getMinutes();
-          const currentTime = currentHour * 60 + currentMinute;
+    // 4. Check user preferences
+    const { data: preferences } = await supabase
+      .from('notification_preferences')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
 
-          const [startHour, startMinute] = preferences.quiet_hours_start.split(':').map(Number);
-          const [endHour, endMinute] = preferences.quiet_hours_end.split(':').map(Number);
-          const startTime = startHour * 60 + startMinute;
-          const endTime = endHour * 60 + endMinute;
+    if (preferences) {
+      // Check if email is enabled
+      if (!preferences.email_enabled) {
+        return errorResponse('Email notifications disabled by user', 403);
+      }
 
-          const currentDay = now.getDay() || 7;
-          const isQuietDay = preferences.quiet_hours_days?.includes(currentDay);
+      // Check category preferences
+      if (!isCategoryEmailEnabled(preferences, category)) {
+        return errorResponse(`${category} emails disabled by user`, 403);
+      }
 
-          if (isQuietDay && currentTime >= startTime && currentTime <= endTime) {
-            if (category !== 'transactional') {
-              return errorResponse('User is in quiet hours', 403);
-            }
+      // Check quiet hours
+      if (preferences.quiet_hours_start && preferences.quiet_hours_end) {
+        const now = new Date();
+        const currentHour = now.getHours();
+        const currentMinute = now.getMinutes();
+        const currentTime = currentHour * 60 + currentMinute;
+
+        const [startHour, startMinute] = preferences.quiet_hours_start.split(':').map(Number);
+        const [endHour, endMinute] = preferences.quiet_hours_end.split(':').map(Number);
+        const startTime = startHour * 60 + startMinute;
+        const endTime = endHour * 60 + endMinute;
+
+        const currentDay = now.getDay() || 7;
+        const isQuietDay = preferences.quiet_hours_days?.includes(currentDay);
+
+        if (isQuietDay && currentTime >= startTime && currentTime <= endTime) {
+          if (category !== 'transactional') {
+            return errorResponse('User is in quiet hours', 403);
           }
         }
       }
@@ -178,7 +204,7 @@ serve(async (req: Request) => {
       }
     // 6. Log email
     const { error: logError } = await supabase.from('email_logs').insert({
-      user_id: userId || null,
+      user_id: userId,
       recipient_email: to,
       subject,
       category,

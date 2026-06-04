@@ -17,7 +17,6 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import { DPO_REQUEST_STATUS } from '@/core/privacy/constants/dpoRequestStatus';
-import { getDpoEmail } from '@/shared/config/privacyContacts';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -87,32 +86,10 @@ export class PrivacyService {
       throw new Error(dbError.message);
     }
 
-    // Notifica o DPO por email — falha silenciosa para não bloquear o usuário
-    try {
-      const dpoEmail = getDpoEmail();
-      if (!dpoEmail) {
-        logger.warn('[PrivacyService] Email DPO nao configurado; notificacao por email ignorada');
-        return;
-      }
-
-      await supabase.functions.invoke('send-email', {
-        body: {
-          to: dpoEmail,
-          subject: `[DPO] ${params.subject}`,
-          template: 'dpo-request',
-          data: {
-            requester_name: params.requesterName,
-            requester_email: params.requesterEmail,
-            request_type: params.requestType,
-            message: params.message,
-            user_id: params.userId,
-            submitted_at: new Date().toISOString(),
-          },
-        },
-      });
-    } catch (emailError) {
-      logger.warn('[PrivacyService] Falha ao enviar email DPO (não crítico)', emailError);
-    }
+    logger.info('[PrivacyService] Solicitacao DPO registrada', {
+      requestType: params.requestType,
+      hasUserId: Boolean(params.userId),
+    });
   }
 
   /**

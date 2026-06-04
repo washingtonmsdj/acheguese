@@ -99,8 +99,22 @@ const SCAN_EXTENSIONS = new Set([
   '.env',
 ]);
 
+const VERSIONABLE_ENV_FILES = ['.env', '.env.production'];
+const SENSITIVE_ENV_NAME_PATTERN =
+  /(^|_)(SECRET|TOKEN|PASSWORD|PRIVATE|SERVICE_ROLE|API_KEY|APIKEY|WEBHOOK_SECRET)(_|$)/i;
+
 function toPosix(p) {
   return p.replace(/\\/g, '/');
+}
+
+function isPlaceholderEnvValue(value) {
+  const normalized = value.trim().replace(/^['"]|['"]$/g, '');
+  if (!normalized) return true;
+  if (/^(placeholder|example|your_|sua_|seu_|change-me|changeme|xxx|fake|mock|demo|test|\[)/i.test(normalized)) {
+    return true;
+  }
+  if (normalized.includes('process.env.')) return true;
+  return false;
 }
 
 function shouldExclude(filePath, excludePatterns) {
@@ -186,6 +200,29 @@ function validateEnvironment() {
       issues.push({
         severity: 'CRITICO',
         message: '.env contem credenciais de teste - mova para .env.local',
+      });
+    }
+  }
+
+  for (const envFile of VERSIONABLE_ENV_FILES) {
+    const filePath = join(ROOT_DIR, envFile);
+    if (!existsSync(filePath)) continue;
+
+    const envContent = readFileSync(filePath, 'utf-8');
+    for (const rawLine of envContent.split(/\r?\n/)) {
+      const line = rawLine.trim();
+      if (!line || line.startsWith('#')) continue;
+
+      const match = line.match(/^([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/);
+      if (!match) continue;
+
+      const [, name, value] = match;
+      if (!SENSITIVE_ENV_NAME_PATTERN.test(name)) continue;
+      if (isPlaceholderEnvValue(value)) continue;
+
+      issues.push({
+        severity: 'CRITICO',
+        message: `${envFile} contem valor real em variavel sensivel (${name}) - mova para .env.local ou secrets do provedor`,
       });
     }
   }
