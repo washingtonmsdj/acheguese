@@ -59,12 +59,62 @@ class MediaServiceClass {
     "image/gif",
   ];
 
+  private readonly ALLOWED_ADDRESS_PROOF_TYPES = [
+    "application/pdf",
+    "image/jpeg",
+    "image/png",
+  ];
+
   private getSafeExtensionFromMime(mimeType: string): string {
+    if (mimeType === "application/pdf") return "pdf";
     if (mimeType === "image/jpeg") return "jpg";
     if (mimeType === "image/png") return "png";
     if (mimeType === "image/webp") return "webp";
     if (mimeType === "image/gif") return "gif";
     return "jpg";
+  }
+
+  private assertMaxFileSize(file: File, maxSizeBytes: number, message: string): void {
+    if (file.size > maxSizeBytes) {
+      throw new MediaError(message, "FILE_TOO_LARGE");
+    }
+  }
+
+  private assertAllowedMimeType(file: File, allowedTypes: string[], message: string): void {
+    if (!allowedTypes.includes(file.type)) {
+      throw new MediaError(message, "INVALID_FILE_TYPE");
+    }
+  }
+
+  private assertImageFileAllowed(
+    file: File,
+    maxSizeBytes = MEDIA_UPLOAD_LIMITS.FILE_SIZE_BYTES,
+  ): void {
+    this.assertMaxFileSize(file, maxSizeBytes, "Imagem muito grande. Maximo 5MB");
+    this.assertAllowedMimeType(
+      file,
+      this.ALLOWED_IMAGE_TYPES,
+      "Tipo de arquivo nao permitido. Use JPEG, PNG, WebP ou GIF",
+    );
+  }
+
+  private assertVerificationDocumentAllowed(file: File, type: "proof" | "photo"): void {
+    this.assertMaxFileSize(file, MEDIA_UPLOAD_LIMITS.FILE_SIZE_BYTES, "Arquivo muito grande. Maximo 5MB");
+
+    if (type === "proof") {
+      this.assertAllowedMimeType(
+        file,
+        this.ALLOWED_ADDRESS_PROOF_TYPES,
+        "Tipo de comprovante nao permitido. Use PDF, JPG ou PNG",
+      );
+      return;
+    }
+
+    this.assertAllowedMimeType(
+      file,
+      ["image/jpeg", "image/png"],
+      "Tipo de foto nao permitido. Use JPG ou PNG",
+    );
   }
 
   private async optimizeForPreset(
@@ -78,8 +128,12 @@ class MediaServiceClass {
       | "business_banner"
       | "verification_photo",
   ): Promise<File> {
+    this.assertImageFileAllowed(file);
+
     try {
-      return await optimizeImage(file, getImageOptimizePreset(preset));
+      const optimizedFile = await optimizeImage(file, getImageOptimizePreset(preset));
+      this.assertImageFileAllowed(optimizedFile);
+      return optimizedFile;
     } catch (error) {
       logger.warn("Image optimization failed, fallback to original file:", error);
       return file;
@@ -152,6 +206,8 @@ class MediaServiceClass {
     options: UploadPostImageOptions = {},
   ): Promise<UploadResult> {
     try {
+      this.assertImageFileAllowed(file);
+
       const preset = options.preset ?? "post_image";
       const optimizedFile = await optimizeImage(file, {
         ...getImageOptimizePreset(preset),
@@ -162,22 +218,8 @@ class MediaServiceClass {
         logger.warn("Image optimization failed, fallback to original file:", error);
         return file;
       });
-      // Validações
-      if (optimizedFile.size > MEDIA_UPLOAD_LIMITS.FILE_SIZE_BYTES) {
-        throw new MediaError(
-          "Imagem muito grande. Máximo 5MB",
-          "FILE_TOO_LARGE",
-        );
-      }
+      this.assertImageFileAllowed(optimizedFile);
 
-      if (!this.ALLOWED_IMAGE_TYPES.includes(optimizedFile.type)) {
-        throw new MediaError(
-          "Tipo de arquivo não permitido",
-          "INVALID_FILE_TYPE",
-        );
-      }
-
-      // Gerar path único
       const timestamp = Date.now();
       const ext = this.getSafeExtensionFromMime(optimizedFile.type);
       const path = `${userId}/posts/${timestamp}.${ext}`;
@@ -398,15 +440,11 @@ class MediaServiceClass {
     type: "proof" | "photo"
   ): Promise<string> {
     try {
+      this.assertVerificationDocumentAllowed(file, type);
+
       const optimizedFile =
         type === "photo" ? await this.optimizeForPreset(file, "verification_photo") : file;
-      // Validações
-      if (optimizedFile.size > MEDIA_UPLOAD_LIMITS.FILE_SIZE_BYTES) {
-        throw new MediaError(
-          "Arquivo muito grande. Máximo 5MB",
-          "FILE_TOO_LARGE",
-        );
-      }
+      this.assertVerificationDocumentAllowed(optimizedFile, type);
 
       const timestamp = Date.now();
       const ext = this.getSafeExtensionFromMime(optimizedFile.type);
@@ -421,11 +459,7 @@ class MediaServiceClass {
         throw new MediaError("Erro ao fazer upload do documento", "UPLOAD_FAILED");
       }
 
-      const { data: urlData } = supabase.storage
-        .from("verification-documents")
-        .getPublicUrl(path);
-
-      return urlData.publicUrl;
+      return `storage://verification-documents/${path}`;
     } catch (error) {
       if (error instanceof MediaError) throw error;
       logger.error("Unexpected error uploading verification document:", error);
@@ -437,15 +471,15 @@ class MediaServiceClass {
   }
 
   async uploadToBucket(file: File, options: UploadToBucketOptions): Promise<UploadResult> {
+    this.assertImageFileAllowed(file);
+
     const preset = options.preset ?? "site_asset";
     const optimizedFile = await optimizeImage(file, getImageOptimizePreset(preset)).catch((error) => {
       logger.warn("Image optimization failed, fallback to original file:", error);
       return file;
     });
 
-    if (!this.ALLOWED_IMAGE_TYPES.includes(optimizedFile.type)) {
-      throw new MediaError("Tipo de arquivo nao permitido", "INVALID_FILE_TYPE");
-    }
+    this.assertImageFileAllowed(optimizedFile);
 
     const ext = this.getSafeExtensionFromMime(optimizedFile.type);
     const prefix = options.pathPrefix?.replace(/^\/+|\/+$/g, "") || "uploads";

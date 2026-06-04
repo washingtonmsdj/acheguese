@@ -7,7 +7,8 @@ import {
   readJsonBody,
   requireHttpMethod,
 } from "../_shared/security.ts";
-import { jsonSecurityResponse, requireAuthenticatedUser } from "../_shared/businessAuth.ts";
+import { jsonSecurityResponse } from "../_shared/businessAuth.ts";
+import { requireAdmin } from "../_shared/adminAuth.ts";
 import {
   territoryAiContentSchema,
   validateBody,
@@ -44,12 +45,12 @@ serve(async (req: Request) => {
     return respond({ error: "LOVABLE_API_KEY not configured" }, 500);
   }
 
-  const authResult = await requireAuthenticatedUser(req, supabase);
+  const authResult = await requireAdmin(req);
   if (authResult instanceof Response) {
     return authResult;
   }
 
-  const rateLimit = await checkRateLimit(`territory-ai:${authResult.user.id}`, 10, 60 * 60 * 1000);
+  const rateLimit = await checkRateLimit(`territory-ai:${authResult.userId}`, 10, 60 * 60 * 1000);
   if (!rateLimit.allowed) {
     return respond(
       { error: "Rate limit exceeded. Try again later." },
