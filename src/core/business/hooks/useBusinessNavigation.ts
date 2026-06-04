@@ -21,9 +21,26 @@ export function useBusinessNavigation() {
   const navigate = useNavigate();
   const businessUrls = useBusinessUrls();
 
+  const resolvePreferredUrl = useCallback(
+    async (ctx: {
+      id: string;
+      slug: string;
+      is_premium?: boolean;
+      geographic_path: string;
+    }) => {
+      const contextualUrl = businessUrls.canonical(ctx);
+      if (!contextualUrl.startsWith("/empresas/")) {
+        return contextualUrl;
+      }
+
+      return BusinessUrlService.getCanonicalUrlWithResolvedCommunityAlias(ctx);
+    },
+    [businessUrls],
+  );
+
   const resolveBusinessUrl = useCallback(async (business: BusinessData) => {
     if (business.slug && business.geographic_path) {
-      return businessUrls.canonical({
+      return resolvePreferredUrl({
         id: business.id ?? "",
         slug: business.slug,
         is_premium: business.is_premium,
@@ -34,7 +51,7 @@ export function useBusinessNavigation() {
     if (business.id) {
       const resolvedById = await BusinessUrlService.resolveById(business.id);
       if (resolvedById) {
-        return businessUrls.canonical(resolvedById);
+        return resolvePreferredUrl(resolvedById);
       }
     }
 
@@ -43,7 +60,7 @@ export function useBusinessNavigation() {
         business.slug,
       );
       if (resolvedBySlug) {
-        return businessUrls.canonical(resolvedBySlug);
+        return resolvePreferredUrl(resolvedBySlug);
       }
 
       if (business.is_premium) {
@@ -52,7 +69,7 @@ export function useBusinessNavigation() {
     }
 
     return null;
-  }, [businessUrls]);
+  }, [resolvePreferredUrl]);
 
   /**
    * Navega para a URL canônica da empresa.

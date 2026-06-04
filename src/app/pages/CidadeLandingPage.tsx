@@ -198,6 +198,18 @@ export default function CidadeLandingPage() {
     }
   };
 
+  const handleFeaturedBusinessClick = async (business: (typeof businesses)[number]) => {
+    if (!business.slug || !business.geographic_path) return;
+
+    const url = await BusinessUrlService.getCanonicalUrlWithResolvedCommunityAlias({
+      id: business.id,
+      slug: business.slug,
+      is_premium: business.is_premium,
+      geographic_path: business.geographic_path,
+    });
+    navigate(url);
+  };
+
   return (
     <div className="min-h-screen w-full bg-background text-foreground flex flex-col">
 
@@ -412,14 +424,7 @@ export default function CidadeLandingPage() {
                   key={business.id}
                   {...fadeUp}
                   onClick={() => {
-                    if (!business.slug) return;
-                    const url = BusinessUrlService.getCanonicalUrl({
-                      id: business.id,
-                      slug: business.slug,
-                      is_premium: business.is_premium,
-                      geographic_path: business.geographic_path
-                    });
-                    navigate(url);
+                    void handleFeaturedBusinessClick(business);
                   }}
                   className="bg-card border rounded-2xl p-5 hover:shadow-xl transition-all cursor-pointer group border-border hover:border-primary/30"
                 >

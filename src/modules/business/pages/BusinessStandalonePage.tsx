@@ -2,9 +2,9 @@
  * Página Standalone para Empresas Premium
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { BusinessService } from "@/core/business/services/BusinessService";
-import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
+import { useResolvedBusinessPublicUrl } from "@/core/business/hooks/useResolvedBusinessPublicUrl";
 import type { Business } from "@/core/business/types";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Store } from "lucide-react";
@@ -57,6 +57,21 @@ export default function BusinessStandalonePage({
     loadBusiness();
   }, [businessId]);
 
+  const businessGeographicPath =
+    (business as (Business & { geographic_path?: string | null }) | null)
+      ?.geographic_path ?? null;
+  const businessPublicUrlContext = useMemo(() => {
+    if (!business?.slug || !businessGeographicPath) return null;
+    return {
+      id: business.id,
+      slug: business.slug,
+      is_premium: business.is_premium,
+      geographic_path: businessGeographicPath,
+    };
+  }, [business?.id, business?.is_premium, business?.slug, businessGeographicPath]);
+  const { url: resolvedCanonicalUrl } =
+    useResolvedBusinessPublicUrl(businessPublicUrlContext);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -89,14 +104,7 @@ export default function BusinessStandalonePage({
     );
   }
 
-  const canonicalUrl = business.slug
-    ? BusinessUrlService.getCanonicalUrl({
-        id: business.id,
-        slug: business.slug,
-        is_premium: business.is_premium,
-        geographic_path: (business as Business & { geographic_path?: string | null }).geographic_path ?? null,
-      })
-    : "/empresas";
+  const canonicalUrl = business.slug ? resolvedCanonicalUrl ?? "/empresas" : "/empresas";
   const seoAddress =
     typeof business.address === "string"
       ? business.address

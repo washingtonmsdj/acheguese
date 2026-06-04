@@ -10,7 +10,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/shared/components/ui/dialog';
 import { NetworkService, type BranchSummary } from '@/core/business/services/NetworkService';
-import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
+import { useResolvedBusinessPublicUrl } from '@/core/business/hooks/useResolvedBusinessPublicUrl';
 import { useLocationCascade, type LocationOption } from '@/core/location/hooks/useLocationCascade';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 import type {
@@ -355,14 +355,15 @@ function CreateBranchDialog({ open, onClose, brandHubId, profileId, toast, onCre
   }, [form.unitName]);
 
   // Preview da URL pública final
-  const urlPreview = useMemo(() => {
+  const previewContext = useMemo(() => {
     if (!selectedDistrict?.geographic_path || !form.slug) return null;
-    return BusinessUrlService.getCanonicalUrl({
+    return {
       id: 'preview',
       slug: form.slug,
       geographic_path: selectedDistrict.geographic_path,
-    });
+    };
   }, [selectedDistrict, form.slug]);
+  const { url: urlPreview } = useResolvedBusinessPublicUrl(previewContext);
 
   // Validações
   const errors = useMemo(() => {

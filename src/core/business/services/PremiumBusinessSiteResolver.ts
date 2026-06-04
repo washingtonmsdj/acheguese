@@ -58,7 +58,8 @@ export class PremiumBusinessSiteResolver {
     return {
       premiumSlug: slug,
       profileId: context.id,
-      canonicalBusinessUrl: BusinessUrlService.getCanonicalUrl(context),
+      canonicalBusinessUrl:
+        await BusinessUrlService.getCanonicalUrlWithResolvedCommunityAlias(context),
       territoryRoute: {
         ...territory,
         businessSlug: context.slug,

@@ -421,9 +421,9 @@ export function useProfileHub() {
     if (result) toast.success('Perfil ativo alterado');
   };
 
-  const handleBusinessClick = (business: ProfileAssociatedBusiness) => {
+  const handleBusinessClick = async (business: ProfileAssociatedBusiness) => {
     if (!business.slug) return;
-    const url = BusinessUrlService.getCanonicalUrl({
+    const url = await BusinessUrlService.getCanonicalUrlWithResolvedCommunityAlias({
       id: business.id,
       slug: business.slug,
       is_premium: business.is_premium,

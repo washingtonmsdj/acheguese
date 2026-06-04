@@ -93,16 +93,19 @@ function BranchItem({
   const handleClick = async () => {
     const ctx = await BusinessUrlService.resolveById(branch.profile_id);
     if (ctx) {
+      const routeContext = {
+        ...ctx,
+        community_alias:
+          communityAliasOverride &&
+          currentBusinessGeographicPath &&
+          ctx.geographic_path === currentBusinessGeographicPath
+            ? communityAliasOverride
+            : null,
+      };
       onNavigate(
-        BusinessUrlService.getCanonicalUrl({
-          ...ctx,
-          community_alias:
-            communityAliasOverride &&
-            currentBusinessGeographicPath &&
-            ctx.geographic_path === currentBusinessGeographicPath
-              ? communityAliasOverride
-              : null,
-        }),
+        await BusinessUrlService.getCanonicalUrlWithResolvedCommunityAlias(
+          routeContext,
+        ),
       );
     }
   };

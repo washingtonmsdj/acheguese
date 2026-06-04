@@ -243,18 +243,13 @@ export default function EmpresaDetailLandingPage(
         const details = await BusinessService.getBusinessesByIds(ids);
         const detailsMap = new Map(details.map((item) => [item.id, item]));
 
-        const mapped = similar
-          .map((item) => {
+        const mapped = (await Promise.all(similar
+          .map(async (item) => {
             if (!item.id) return null;
             const detail = detailsMap.get(item.id);
-            return {
-              id: item.id,
-              name: detail?.name || item.name || "Empresa",
-              category: detail?.category || item.category || "Empresa",
-              rating: detail?.rating || 0,
-              isOpen: undefined,
-              canonicalUrl: detail?.slug && detail?.geographic_path
-                ? BusinessUrlService.getCanonicalUrl({
+            const routeContext =
+              detail?.slug && detail?.geographic_path
+                ? {
                     id: detail.id,
                     slug: detail.slug,
                     is_premium: detail.is_premium,
@@ -264,10 +259,23 @@ export default function EmpresaDetailLandingPage(
                       detail.geographic_path === business.geographic_path
                         ? props.communityAliasOverride
                         : null,
-                  })
-                : undefined,
+                  }
+                : null;
+            const canonicalUrl = routeContext
+              ? await BusinessUrlService.getCanonicalUrlWithResolvedCommunityAlias(
+                  routeContext,
+                )
+              : undefined;
+
+            return {
+              id: item.id,
+              name: detail?.name || item.name || "Empresa",
+              category: detail?.category || item.category || "Empresa",
+              rating: detail?.rating || 0,
+              isOpen: undefined,
+              canonicalUrl,
             } satisfies NearbyBusiness;
-          })
+          })))
           .filter((item): item is NonNullable<typeof item> => Boolean(item))
           .slice(0, 4);
 

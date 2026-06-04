@@ -1,4 +1,4 @@
-import { useEffect, useState, type ComponentType } from "react";
+import { useEffect, useMemo, type ComponentType } from "react";
 import {
   NavLink,
   Outlet,
@@ -22,10 +22,10 @@ import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { useBusiness } from "@/core/business/hooks/useBusiness";
+import { useResolvedBusinessPublicUrl } from "@/core/business/hooks/useResolvedBusinessPublicUrl";
 import { useBusinessSubscription } from "@/core/billing/hooks/useBusinessSubscription";
 import { useGastronomyStatus } from "@/core/verticals/gastronomy/hooks/useGastronomyStatus";
 import { isEligibleForVertical } from "@/core/verticals/config";
-import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 import {
   businessManagementRoutes,
   getBusinessManagementSectionLabel,
@@ -55,35 +55,17 @@ export default function BusinessDashboardShellPage() {
     useBusinessSubscription(businessId);
   const { status: gastronomyStatus, isLoading: loadingGastronomy } =
     useGastronomyStatus(businessId || "", true);
-  const [publicUrl, setPublicUrl] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    if (!business?.id || !business.slug || !business.geographic_path) {
-      setPublicUrl(null);
-      return;
-    }
-
-    const context = {
+  const publicUrlContext = useMemo(() => {
+    if (!business?.id || !business.slug || !business.geographic_path) return null;
+    return {
       id: business.id,
       slug: business.slug,
       is_premium: business.is_premium,
       geographic_path: business.geographic_path,
     };
-
-    setPublicUrl(BusinessUrlService.getCanonicalUrl(context));
-
-    void BusinessUrlService.getCanonicalUrlWithResolvedCommunityAlias(context).then((url) => {
-      if (!cancelled) {
-        setPublicUrl(url);
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
   }, [business?.id, business?.slug, business?.is_premium, business?.geographic_path]);
+  const { url: publicUrl } = useResolvedBusinessPublicUrl(publicUrlContext);
 
   if (loadingBusiness || loadingSubscription || loadingGastronomy) {
     return (

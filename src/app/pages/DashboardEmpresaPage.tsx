@@ -5,7 +5,7 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import { toast } from "sonner";
 import { useDashboardAccess } from "@/core/business/hooks/useDashboardAccess";
 import { useBusiness } from "@/core/business/hooks/useBusiness";
-import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
+import { useResolvedBusinessPublicUrl } from "@/core/business/hooks/useResolvedBusinessPublicUrl";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { useDashboardTabs } from "@/core/business/hooks/useDashboardTabs";
 import { DashboardBreadcrumb } from "@/shared/components/dashboard/DashboardBreadcrumb";
@@ -75,20 +75,16 @@ export default function DashboardEmpresaPage() {
 
   const handleBack = () => navigate(appUrls.profile.home);
 
-  const businessCanonicalUrl = useMemo(() => {
+  const businessPublicUrlContext = useMemo(() => {
     if (!business?.slug || !business.geographic_path) return null;
-
-    try {
-      return BusinessUrlService.getCanonicalUrl({
-        id: business.id,
-        slug: business.slug,
-        is_premium: business.is_premium,
-        geographic_path: business.geographic_path,
-      });
-    } catch {
-      return null;
-    }
+    return {
+      id: business.id,
+      slug: business.slug,
+      is_premium: business.is_premium,
+      geographic_path: business.geographic_path,
+    };
   }, [business?.geographic_path, business?.id, business?.is_premium, business?.slug]);
+  const { url: businessCanonicalUrl } = useResolvedBusinessPublicUrl(businessPublicUrlContext);
 
   const handleViewPublic = () => {
     if (businessCanonicalUrl) {

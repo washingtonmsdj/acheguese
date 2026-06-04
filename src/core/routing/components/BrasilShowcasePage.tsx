@@ -67,6 +67,18 @@ export function BrasilShowcasePage() {
     if (searchUrl) navigate(searchUrl);
   };
 
+  const handleFeaturedBusinessClick = async (business: NationalBusiness) => {
+    if (!business.slug || !business.geographic_path) return;
+
+    const url = await BusinessUrlService.getCanonicalUrlWithResolvedCommunityAlias({
+      id: business.id,
+      slug: business.slug,
+      is_premium: business.is_premium,
+      geographic_path: business.geographic_path,
+    });
+    navigate(url);
+  };
+
   const homeUrl = getBrasilShowcaseHomeUrl(activeLocation);
 
   // Mostrar loading enquanto verifica autenticação
@@ -373,14 +385,7 @@ export function BrasilShowcasePage() {
                   {...fadeUp}
                   transition={{ delay: i * 0.05 }}
                   onClick={() => {
-                    if (!business.slug || !business.geographic_path) return;
-                    const url = BusinessUrlService.getCanonicalUrl({
-                      id: business.id,
-                      slug: business.slug,
-                      is_premium: business.is_premium,
-                      geographic_path: business.geographic_path,
-                    });
-                    navigate(url);
+                    void handleFeaturedBusinessClick(business);
                   }}
                   className="bg-card border border-border rounded-2xl p-5 hover:shadow-xl hover:border-blue-500/40 transition-all cursor-pointer group"
                 >

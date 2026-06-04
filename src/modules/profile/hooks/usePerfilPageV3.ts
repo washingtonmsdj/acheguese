@@ -124,7 +124,7 @@ export function useContaWorkspace() {
     navigate(appUrls.profile.account);
   };
 
-  const handleBusinessClick = (business: ProfileAssociatedBusiness) => {
+  const handleBusinessClick = async (business: ProfileAssociatedBusiness) => {
     if (!business.slug) {
       logger.warn("[useContaWorkspace] Empresa sem slug para navegacao", {
         businessId: business.id,
@@ -132,7 +132,7 @@ export function useContaWorkspace() {
       return;
     }
 
-    const url = BusinessUrlService.getCanonicalUrl({
+    const url = await BusinessUrlService.getCanonicalUrlWithResolvedCommunityAlias({
       id: business.id,
       slug: business.slug,
       is_premium: business.is_premium,
