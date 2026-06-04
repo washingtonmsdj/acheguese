@@ -55,12 +55,17 @@ const STATIC_PAGES: SitemapURL[] = [
 ];
 
 type LocationRelation = { geographic_path?: string | null } | null;
+type BusinessLocationRelation = {
+  id?: string | null;
+  geographic_path?: string | null;
+} | null;
+type SupabaseClient = ReturnType<typeof createClient>;
 
 interface BusinessSitemapRow {
   profile_id: string;
   slug: string | null;
   updated_at: string | null;
-  location: LocationRelation;
+  location: BusinessLocationRelation;
 }
 
 interface EventSitemapRow {
@@ -77,6 +82,21 @@ interface ClassifiedSitemapRow {
   locations: LocationRelation;
   classified_categories: { slug?: string | null } | null;
   classified_subcategories: { slug?: string | null } | null;
+}
+
+interface TerritoryCommunityRow {
+  id?: string | null;
+  territory_id?: string | null;
+}
+
+interface CommunityAliasRow {
+  territory_community_id?: string | null;
+  alias?: string | null;
+}
+
+interface TerritorialGroupMemberRow {
+  location_id?: string | null;
+  group_id?: string | null;
 }
 
 function cleanUrlSegment(value: string | null | undefined): string | null {
@@ -105,10 +125,159 @@ function getTerritoryParts(geographicPath: string | null | undefined): {
   return district ? { state, city, district } : { state, city };
 }
 
-function buildBusinessSitemapUrl(row: BusinessSitemapRow): string | null {
+function uniqueValues(values: Array<string | null | undefined>): string[] {
+  return [...new Set(values.filter((value): value is string => Boolean(value)))];
+}
+
+async function fetchActiveAliasesByCommunityId(
+  supabase: SupabaseClient,
+  communityIds: string[],
+): Promise<Map<string, string>> {
+  const aliasesByCommunityId = new Map<string, string>();
+  if (!communityIds.length) return aliasesByCommunityId;
+
+  const { data, error } = await supabase
+    .from('community_public_aliases')
+    .select('territory_community_id, alias')
+    .eq('status', 'active')
+    .in('territory_community_id', communityIds);
+
+  if (error || !data) return aliasesByCommunityId;
+
+  (data as CommunityAliasRow[]).forEach((row) => {
+    const communityId = cleanPublicId(row.territory_community_id);
+    const alias = cleanUrlSegment(row.alias);
+    if (communityId && alias) aliasesByCommunityId.set(communityId, alias);
+  });
+
+  return aliasesByCommunityId;
+}
+
+function buildSingleAliasByTerritoryId(
+  communities: TerritoryCommunityRow[],
+  aliasesByCommunityId: Map<string, string>,
+): Map<string, string> {
+  const aliasesByTerritoryId = new Map<string, string>();
+  const candidatesByTerritoryId = new Map<string, Set<string>>();
+
+  communities.forEach((community) => {
+    const communityId = cleanPublicId(community.id);
+    const territoryId = cleanPublicId(community.territory_id);
+    if (!communityId || !territoryId) return;
+
+    const alias = aliasesByCommunityId.get(communityId);
+    if (!alias) return;
+
+    const candidates = candidatesByTerritoryId.get(territoryId) ?? new Set<string>();
+    candidates.add(alias);
+    candidatesByTerritoryId.set(territoryId, candidates);
+  });
+
+  candidatesByTerritoryId.forEach((aliases, territoryId) => {
+    if (aliases.size === 1) {
+      aliasesByTerritoryId.set(territoryId, [...aliases][0]);
+    }
+  });
+
+  return aliasesByTerritoryId;
+}
+
+async function findBusinessCommunityAliasesByLocationId(
+  supabase: SupabaseClient,
+  locationIds: string[],
+): Promise<Map<string, string>> {
+  const result = new Map<string, string>();
+  const safeLocationIds = uniqueValues(locationIds.map(cleanPublicId));
+  if (!safeLocationIds.length) return result;
+
+  try {
+    const { data: locationCommunities } = await supabase
+      .from('territory_communities')
+      .select('id, territory_id')
+      .in('territory_id', safeLocationIds)
+      .in('territory_type', ['district', 'neighborhood'])
+      .neq('status', 'inactive');
+
+    const locationCommunityRows = (locationCommunities ?? []) as TerritoryCommunityRow[];
+    const locationAliasesByCommunityId = await fetchActiveAliasesByCommunityId(
+      supabase,
+      uniqueValues(locationCommunityRows.map((row) => row.id)),
+    );
+    const directAliasesByLocationId = buildSingleAliasByTerritoryId(
+      locationCommunityRows,
+      locationAliasesByCommunityId,
+    );
+
+    directAliasesByLocationId.forEach((alias, locationId) => {
+      result.set(locationId, alias);
+    });
+
+    const unresolvedLocationIds = safeLocationIds.filter((locationId) => !result.has(locationId));
+    if (!unresolvedLocationIds.length) return result;
+
+    const { data: groupMembers } = await supabase
+      .from('territorial_group_members')
+      .select('location_id, group_id')
+      .in('location_id', unresolvedLocationIds);
+
+    const memberRows = (groupMembers ?? []) as TerritorialGroupMemberRow[];
+    const groupIds = uniqueValues(memberRows.map((row) => cleanPublicId(row.group_id)));
+    if (!groupIds.length) return result;
+
+    const { data: groupCommunities } = await supabase
+      .from('territory_communities')
+      .select('id, territory_id')
+      .eq('territory_type', 'territorial_group')
+      .neq('status', 'inactive')
+      .in('territory_id', groupIds);
+
+    const groupCommunityRows = (groupCommunities ?? []) as TerritoryCommunityRow[];
+    const groupAliasesByCommunityId = await fetchActiveAliasesByCommunityId(
+      supabase,
+      uniqueValues(groupCommunityRows.map((row) => row.id)),
+    );
+    const aliasesByGroupId = buildSingleAliasByTerritoryId(
+      groupCommunityRows,
+      groupAliasesByCommunityId,
+    );
+
+    const groupAliasCandidatesByLocationId = new Map<string, Set<string>>();
+    memberRows.forEach((member) => {
+      const locationId = cleanPublicId(member.location_id);
+      const groupId = cleanPublicId(member.group_id);
+      if (!locationId || !groupId || result.has(locationId)) return;
+
+      const alias = aliasesByGroupId.get(groupId);
+      if (!alias) return;
+
+      const candidates = groupAliasCandidatesByLocationId.get(locationId) ?? new Set<string>();
+      candidates.add(alias);
+      groupAliasCandidatesByLocationId.set(locationId, candidates);
+    });
+
+    groupAliasCandidatesByLocationId.forEach((aliases, locationId) => {
+      if (aliases.size === 1) {
+        result.set(locationId, [...aliases][0]);
+      }
+    });
+  } catch (error) {
+    console.warn('Failed to resolve community aliases for business sitemap:', error);
+  }
+
+  return result;
+}
+
+function buildBusinessSitemapUrl(
+  row: BusinessSitemapRow,
+  communityAliasesByLocationId: Map<string, string>,
+): string | null {
   const slug = cleanUrlSegment(row.slug);
   const territory = getTerritoryParts(row.location?.geographic_path);
   if (!slug || !territory?.district) return null;
+
+  const locationId = cleanPublicId(row.location?.id);
+  const communityAlias = locationId ? communityAliasesByLocationId.get(locationId) : null;
+  if (communityAlias) return `/${communityAlias}/${slug}`;
 
   return `/empresas/${territory.state}/${territory.city}/${territory.district}/${slug}`;
 }
@@ -186,7 +355,7 @@ Deno.serve(async (req: Request) => {
           profile_id,
           slug,
           updated_at,
-          location:locations!location_id(geographic_path)
+          location:locations!location_id(id, geographic_path)
         `)
         .eq('status', 'active')
         .in('business_role', ['standalone', 'branch'])
@@ -195,8 +364,14 @@ Deno.serve(async (req: Request) => {
         .limit(1000);
       
       if (businesses) {
-        (businesses as BusinessSitemapRow[]).forEach((business) => {
-          const loc = buildBusinessSitemapUrl(business);
+        const businessRows = businesses as BusinessSitemapRow[];
+        const communityAliasesByLocationId = await findBusinessCommunityAliasesByLocationId(
+          supabase,
+          uniqueValues(businessRows.map((business) => business.location?.id)),
+        );
+
+        businessRows.forEach((business) => {
+          const loc = buildBusinessSitemapUrl(business, communityAliasesByLocationId);
           if (!loc) return;
           urls.push({
             loc,

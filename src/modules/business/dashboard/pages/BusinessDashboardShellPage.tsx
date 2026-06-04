@@ -30,6 +30,7 @@ import {
   businessManagementRoutes,
   getBusinessManagementSectionLabel,
 } from "@/core/business/utils/businessManagementRoutes";
+import { buildBusinessPremiumUrl } from "@/core/business/utils/businessPublicUrls";
 import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-runtime-context";
 import type { BusinessDashboardContextValue } from "@/modules/business/dashboard/businessDashboardContext";
 
@@ -90,7 +91,7 @@ export default function BusinessDashboardShellPage() {
 
   const premiumUrl =
     business.slug && entitlements.canUseShortPremiumLink
-      ? `/p/${business.slug}`
+      ? buildBusinessPremiumUrl(business.slug)
       : null;
 
   const basePath = businessManagementRoutes.overview(businessId);

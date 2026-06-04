@@ -25,6 +25,7 @@ import type { LucideIcon } from "lucide-react";
 import { logger } from "@/shared/utils/logger";
 import { openSafeUrlInNewTab } from "@/shared/utils/safeRedirect";
 import { getRecordValue } from "@/shared/utils/recordLookup";
+import { buildBusinessPremiumUrl } from "@/core/business/utils/businessPublicUrls";
 
 interface User {
   id: string;
@@ -168,7 +169,7 @@ export function BusinessHeader({
             className="absolute bottom-4 sm:bottom-6 right-4 sm:right-6"
           >
             <Button
-              onClick={() => openSafeUrlInNewTab(`/p/${business.slug}`, {
+              onClick={() => openSafeUrlInNewTab(buildBusinessPremiumUrl(business.slug), {
                 context: "business-header-premium-page",
               })}
               className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-xl gap-2 hover:shadow-2xl transition-all"

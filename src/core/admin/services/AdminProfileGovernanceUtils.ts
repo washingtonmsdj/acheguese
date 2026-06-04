@@ -1,6 +1,7 @@
 import {
   ADMIN_PROFILE_PERMISSION_GOVERNANCE_STATUS,
 } from '@/core/admin/config/profile-governance';
+import { buildBusinessPremiumUrl } from '@/core/business/utils/businessPublicUrls';
 
 import type {
   AdminProfileIdentityIssue,
@@ -66,6 +67,7 @@ export function buildLinkedEntities(payload: {
 
   if (payload.business) {
     const row = payload.business;
+    const businessSlug = normalizeText(row.slug);
     entities.push({
       kind: 'business',
       id: requiredText(row.id, 'business'),
@@ -75,7 +77,7 @@ export function buildLinkedEntities(payload: {
         normalizeText(row.status) ??
         ADMIN_PROFILE_PERMISSION_GOVERNANCE_STATUS.ACTIVE,
       verified: Boolean(row.is_verified),
-      publicUrl: normalizeText(row.slug) ? `/p/${row.slug}` : null,
+      publicUrl: businessSlug ? buildBusinessPremiumUrl(businessSlug) : null,
       metadata: [
         row.is_premium ? 'premium' : 'standard',
         row.location_id ? 'com location_id' : 'sem location_id',
