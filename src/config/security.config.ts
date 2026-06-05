@@ -677,9 +677,9 @@ export const INPUT_VALIDATION = {
  * MUST be updated on every security config change.
  */
 export const SECURITY_AUDIT_LOG = {
-  lastReview: '2026-06-04',
+  lastReview: '2026-06-05',
   reviewer: 'Codex',
-  version: '2.12.0',
+  version: '2.13.0',
   changes: [
     'Initial SSOT implementation',
     'CSP directives centralized',
@@ -748,6 +748,11 @@ export const SECURITY_AUDIT_LOG = {
     // v2.12.0 - Security regression guardrails
     'FIX: security:validate bloqueia Edge Function com service_role sem auth/admin/cron/webhook guard',
     'FIX: security:validate bloqueia getPublicUrl em verification-documents e exige bucket privado com RLS',
+    // v2.13.0 - SaaS RLS and view hardening
+    'FIX: tabelas publicas de pizzaria agora tem RLS com leitura publica segura e escrita owner/admin',
+    'FIX: trigger impede referencias cross-tenant em defaults de pizza_menu_items',
+    'FIX: views com GRANT SELECT para anon/authenticated endurecidas com security_invoker=true',
+    'FIX: validate:migrations bloqueia tabela publica sem RLS e view publica sem security_invoker',
   ],
   nextReview: '2026-07-04',
 } as const;
@@ -822,9 +827,9 @@ export const CACHE_HEADERS = {
  * Metadata about this configuration file.
  */
 export const SECURITY_CONFIG_METADATA = {
-  version: '2.12.0',
+  version: '2.13.0',
   created: '2026-04-18',
-  lastModified: '2026-06-04',
+  lastModified: '2026-06-05',
   author: 'Kiro AI',
   purpose: 'Single Source of Truth for security configurations',
   criticality: 'CRITICAL',
