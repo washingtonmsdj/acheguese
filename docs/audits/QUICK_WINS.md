@@ -3,7 +3,7 @@
 Atualizado em: 2026-04-10
 
 ## Executados em 2026-04-09 (fase anterior)
-1. Namespace publico consolidado: `/u/:username` para perfil publico e `/p/:slug` para premium business.
+1. Namespace publico consolidado por entidade: `/u/:username` para perfil pessoal, `/:communitySlug/:slug` para empresa/restaurante e `/p/:slug` para mini-site premium.
 2. `/p/:handle` removido do roteamento ativo.
 3. `PublicProfilePage.tsx`, `PerfilPublicoPage.tsx` e `PerfilHubPageLegacy.tsx` retirados do fluxo ativo.
 4. Regras inline de tipo/verificacao removidas de hooks/pages prioritarios de `profile`.

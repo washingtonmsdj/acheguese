@@ -14,7 +14,7 @@ Atualizado em: 2026-04-21
 ## P1 - Identidade e profile
 - [x] Escolher namespace publico oficial para profile, business e identidade premium.
 - [x] Consolidar `PublicProfilePage`, `ProfilePublicRoute` e `PerfilPublicoPage`.
-- [x] Reservar `/p/:slug` para premium business e redirecionar legado publico para `/u/:username`.
+- [x] Reservar `/p/:slug` para mini-site premium e manter `/u/:username` exclusivo de perfil pessoal.
 - [x] Remover `/perfil/:userId` do roteamento publico e deixar apenas `/u/:username` como identidade canonica.
 - [x] Extrair negocio de `usePerfilPageV3` para camada formal de dominio.
 - [ ] Extrair negocio residual de `PerfilHubPage` (tipagem e ts-nocheck remanescentes).

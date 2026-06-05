@@ -43,6 +43,8 @@ const PUBLIC_BUSINESS_URL_SSOT_FILES = [
   /src\/core\/verticals\/gastronomy\/services\/GastronomyUrlService\.ts$/,
   /src\/core\/routing\/utils\/territoryUrls\.ts$/,
   /src\/app\/routes\//,
+  // Edge Function deploys cannot import frontend aliases; sitemap is the only
+  // approved server-side mirror for public business URL generation.
   /supabase\/functions\/sitemap\/index\.ts$/,
 ] as const;
 

@@ -30,7 +30,7 @@ A principal conclusao e objetiva: a fase correta agora nao e expandir feature. E
 Fase executada: consolidacao de identidade publica, extracao inicial de regras de `profile`, saneamento do cluster administrativo mais acoplado, eliminacao completa de imports cruzados entre modulos e fechamento total do gate arquitetural.
 
 ### Entregue nesta fase
-- `/p/:slug` foi reservado para mini-site premium de empresa em `PremiumBusinessSiteRoute`, com compatibilidade legada de perfil redirecionando para `/u/:username`.
+- `/p/:slug` foi reservado para mini-site premium de empresa em `PremiumBusinessSiteRoute`; perfil publico pessoal ficou exclusivo em `/u/:username`.
 - `/p/:handle` saiu do roteamento ativo.
 - `/perfil/:userId` foi removido do roteamento publico.
 - `PublicProfilePage.tsx`, `PerfilPublicoPage.tsx` e `PerfilHubPageLegacy.tsx` foram removidos do fluxo ativo.
@@ -104,7 +104,7 @@ Fase executada: consolidacao de identidade publica, extracao inicial de regras d
 ### Efeito objetivo
 - Reducao liquida de 58 violacoes no gate estrutural.
 - Eliminacao completa da categoria `business-logic-in-ui` do baseline atual.
-- Namespace publico consolidado em dois papeis claros: `/u/:username` para identidade publica e `/p/:slug` para premium business.
+- Namespace publico consolidado por entidade: `/u/:username` para perfil pessoal, `/:communitySlug/:slug` para empresa/restaurante e `/p/:slug` para mini-site premium.
 - Remocao completa da rota publica legada `/perfil/:userId`.
 - Eliminacao completa dos imports cruzados remanescentes do dominio `profile`.
 - Eliminacao completa do cluster de imports cruzados do `admin` para `mobility`, `community-alerts`, `community-issues`, `gastronomy` e `notifications`.
@@ -384,14 +384,14 @@ O gate esta verde no baseline atual. Ele deixou de ser cerca reativa e passou a 
 
 ## Auditoria do perfil como centro de identidade
 - Dados publicos vs privados: o contrato documental agora existe em `docs/audits/PROFILE_IDENTITY_GOVERNANCE.md`, tem reflexo administrativo em `/admin/identidade` e passou a ter snapshot privado canonico em `ProfileService`; o ponto restante de mistura estrutural ficou concentrado em `PerfilEditarPage`.
-- Username e slug: o conflito publico foi resolvido. O sistema usa `/u/:username` para perfil publico e `/p/:slug` para business premium; o backlog agora e garantir que nenhuma rota legada retorne.
+- Username e slug: o conflito publico foi resolvido. O sistema usa `/u/:username` para perfil pessoal, `/:communitySlug/:slug` para empresa/restaurante e `/p/:slug` para mini-site premium; o backlog agora e garantir que nenhuma rota legada retorne fora dos SSOTs.
 - Reputacao: `ProfileService` continua como fonte agregada e `AdminProfileGovernanceService` agora decompone a leitura por origem; o backlog restante esta em politica administrativa de override e ajuste excepcional.
 - Plano: `ProfileService` trata `user_subscriptions`, enquanto o admin tem `AdminSubscriptionsService`. Falta um contrato explicito entre plano do usuario, plano do perfil e cobertura administrativa.
 - Preferencias: o admin agora separa preferencias por escopo entre perfil publico, vinculos, visibilidade de reputacao e notificacoes; ainda falta historico administrativo e ownership de persistencia por escopo.
 - Entidades do usuario: business, professional, driver, family e members existem; residence canonica ja entrou na coverage administrativa, `family` agora possui `FamilyService`, hook tipado e migration local formalizada; o backlog remanescente esta na aplicacao/validacao dessa migration nos ambientes.
 - Permissoes: `ProfileService` concentra permissao base e o admin agora le snapshot efetivo via `AuthorizationEngine`, mas ainda falta historico administrativo formal dessas mudancas.
 - Consistencia do `ProfileService`: o service e o nucleo correto, mas esta sobrecarregado com compatibilidade, leitura direta de tabelas e contratos antigos; precisa ser mantido como centro e cercado por view-models limpos.
-- Rotas publicas e privadas: privadas estao em `/perfil`, `/perfil/editar/:profileId`, `/perfil/identidades`, `/perfil/conta` e afins; publicas ficaram restritas a `/u/:username` e `/p/:slug`, removendo o principal conflito de identidade do ecossistema.
+- Rotas publicas e privadas: privadas estao em `/perfil`, `/perfil/editar/:profileId`, `/perfil/identidades`, `/perfil/conta` e afins; publicas seguem os SSOTs de profile, business, professional e comunidade, removendo o principal conflito de identidade do ecossistema.
 
 ## Plano de execucao em fases
 ### Fase 0 - Congelamento e cerca arquitetural
