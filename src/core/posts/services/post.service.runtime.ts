@@ -567,6 +567,7 @@ export class PostService {
     Array<{
       id: string;
       name: string;
+      username: string | null;
       avatar: string | null;
       location: string | null;
       type: string;

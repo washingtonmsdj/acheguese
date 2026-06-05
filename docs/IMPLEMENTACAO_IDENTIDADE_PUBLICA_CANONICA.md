@@ -1,6 +1,6 @@
 # Implementacao de Identidade Publica Canonica
 
-Atualizado: 2026-06-04
+Atualizado: 2026-06-05
 Status: consolidado
 
 Este relatorio historico foi substituido pelo contrato vivo em `docs/ROTAS_PUBLICAS_CANONICAS.md`.

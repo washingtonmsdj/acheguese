@@ -13,6 +13,7 @@ interface Suggestion {
   id: string;
   type: "group" | "event" | "person";
   name: string;
+  username?: string | null;
   description: string;
   icon?: string;
   trending?: boolean;
@@ -58,7 +59,7 @@ export const SuggestionsWidgetSSOT = memo(() => {
       case "event":
         return appUrls.community.feed;
       case "person":
-        return buildPublicProfileUrl(suggestion.id);
+        return suggestion.username ? buildPublicProfileUrl(suggestion.username) : appUrls.search;
     }
   };
 

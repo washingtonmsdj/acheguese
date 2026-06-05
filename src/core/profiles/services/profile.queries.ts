@@ -304,6 +304,7 @@ export async function getProfilesSummaryExtended(
   return (data || []).map((profile) => ({
     id: profile.id,
     name: profile.display_name,
+    username: profile.username,
     avatarUrl: profile.avatar_url,
     verified: false,
     neighborhood: profile.public_neighborhood,

@@ -81,6 +81,7 @@ export async function getPostMentions(postId: string): Promise<
   Array<{
     id: string;
     name: string;
+    username: string | null;
     avatar: string | null;
     location: string | null;
     type: string;
@@ -95,6 +96,7 @@ export async function getPostMentions(postId: string): Promise<
           mentioned_profile:profiles!mentioned_profile_id (
             id,
             name,
+            username,
             avatar_url,
             neighborhood,
             type
@@ -107,6 +109,7 @@ export async function getPostMentions(postId: string): Promise<
     return (mentions || []).map((m: any) => ({
       id: m.mentioned_profile.id,
       name: m.mentioned_profile.name,
+      username: m.mentioned_profile.username,
       avatar: m.mentioned_profile.avatar_url,
       location: m.mentioned_profile.neighborhood,
       type: m.mentioned_profile.type,

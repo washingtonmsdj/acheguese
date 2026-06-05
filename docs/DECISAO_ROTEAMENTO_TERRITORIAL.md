@@ -1,7 +1,7 @@
 # Decisao Canonica: Roteamento Territorial
 
 Data: 2026-05-07
-Atualizado: 2026-06-04
+Atualizado: 2026-06-05
 Status: ativo
 
 Este documento e o SSOT de produto/SEO para rotas territoriais publicas do Achegue-se.
@@ -184,7 +184,8 @@ Antes de criar uma rota nova, responder:
 6. A rota e configuracao de identidade pessoal? Use `/conta`.
 7. A rota e mini-site premium de empresa? Use `/p/:slug`.
 
-## Pendencias
+## Status de Fechamento
 
-- Criar testes E2E para alias curto de comunidade, listagens e detalhe de empresa/restaurante.
-- Atualizar sitemap dinamico conectado ao banco para garantir preferencia por alias curto em producao.
+- Runtime de URL curta de comunidade, listagens e detalhe `/:communitySlug/:slug` fechado em testes unitarios de roteamento.
+- Sitemap dinamico do app e Edge Function prioriza alias curto quando houver alias unico e usa fallback tecnico quando necessario.
+- E2E amplo pode ser ampliado por fluxo de produto, mas nao e pre-requisito para o contrato SSOT de URL.

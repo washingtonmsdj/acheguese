@@ -1,6 +1,6 @@
 # Consolidacao: URLs Publicas e Permissoes
 
-Atualizado: 2026-06-04
+Atualizado: 2026-06-05
 Status: ativo
 
 Este documento consolida a politica atual de URLs publicas e a separacao entre URL publica de entidade e mini-site premium.
@@ -62,6 +62,7 @@ Regra de implementacao:
 - Nunca testar plano diretamente em UI compartilhada quando existir helper em `GastronomyPermissions`.
 - Nunca construir URL de empresa/restaurante manualmente em componente; usar service SSOT.
 - Nunca usar `/p/:slug` como link publico geral da empresa sem permissao premium apropriada.
+- Nunca gerar perfil publico com `id`/UUID; `/u/:username` exige `username` publico.
 
 ## Redirecionamentos Esperados
 

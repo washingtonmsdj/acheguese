@@ -340,6 +340,10 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
       "src/core/comments/services/CommentService.ts",
     ],
     routePrefixes: [
+      "/:communitySlug",
+      "/:communitySlug/feed",
+      "/:communitySlug/grupos",
+      "/:communitySlug/grupos/:id",
       "/comunidade/:state/:city",
       "/comunidade/:state/:city/:groupSlugOrDistrict",
       "/comunidade/:communitySlug",
@@ -355,7 +359,7 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     docsSummary:
       "Parcial. Ha README do modulo e pastas em docs/posts e docs/qa, mas falta documento mestre do dominio comunidade com SSOT e ownership.",
     ssotSummary:
-      "Feed transversal usa core/posts, core/comments, core/social e core/feed. A UI canonica fica em modules/community-feed e as rotas publicas exigem territorio canonico.",
+      "Feed transversal usa core/posts, core/comments, core/social e core/feed. A URL publica preferencial usa alias curto de comunidade; /comunidade/... permanece como fallback tecnico/legado.",
   },
   {
     id: "community-alerts",
@@ -371,6 +375,7 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
       "src/core/community/alerts/services/CommunityAlertService.ts",
     ],
     routePrefixes: [
+      "/:communitySlug/feed?tab=alertas",
       "/comunidade/:state/:city/feed?tab=alertas",
       "/comunidade/:state/:city/:groupSlugOrDistrict/feed?tab=alertas",
     ],
@@ -400,6 +405,7 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
       "src/core/community/issues/services/CommunityIssueService.ts",
     ],
     routePrefixes: [
+      "/:communitySlug/problemas",
       "/comunidade/:state/:city/problemas",
       "/comunidade/:state/:city/:groupSlugOrDistrict/problemas",
     ],
@@ -421,6 +427,8 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     docsPaths: ["src/modules/community-groups/README.md"],
     ssotPaths: ["src/core/social/services/GroupService.ts"],
     routePrefixes: [
+      "/:communitySlug/grupos",
+      "/:communitySlug/grupos/:id",
       "/comunidade/:state/:city/grupos",
       "/comunidade/:state/:city/grupos/:id",
       "/comunidade/:state/:city/:groupSlugOrDistrict/grupos",

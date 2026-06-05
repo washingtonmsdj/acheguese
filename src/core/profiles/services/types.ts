@@ -185,6 +185,7 @@ export interface ProfileSummary {
   id: string;
   userId?: string;
   name: string;
+  username?: string | null;
   avatarUrl?: string;
   verified: boolean;
 }

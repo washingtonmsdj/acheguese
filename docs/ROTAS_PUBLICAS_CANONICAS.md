@@ -1,6 +1,6 @@
 # Rotas Publicas Canonicas
 
-Atualizado: 2026-06-04
+Atualizado: 2026-06-05
 Status: ativo
 
 Este guia resume as URLs que o usuario deve ver e os fallbacks tecnicos que o sistema ainda aceita. A decisao de produto/SEO completa esta em `docs/DECISAO_ROTEAMENTO_TERRITORIAL.md`.
@@ -35,6 +35,7 @@ Exemplos:
 - Listagem de gastronomia continua em `/:communitySlug/gastronomia` ou `/gastronomia/:state/:city/:territorySlug`.
 - Detalhe antigo em `/gastronomia/:state/:city/:district/:slug` e legado e redireciona/canonicaliza para a URL publica da empresa.
 - `/p/:slug` e somente mini-site premium. Nao usar como URL publica geral da empresa.
+- Perfil publico usa `username`. Nunca passe `id`, `profileId` ou UUID para `buildPublicProfileUrl()`.
 - Nunca montar URL manualmente em componente; usar os services/helper SSOT.
 
 ## Services SSOT
@@ -84,4 +85,5 @@ GastronomyUrlService.getCanonicalUrl({
 - Use `GastronomyUrlService.getTerritoryUrl()` apenas para listagens de gastronomia.
 - Use `GastronomyUrlService.getLegacyDetailUrlFromTerritory()` somente em rotas legadas ou testes de compatibilidade.
 - Use `/p/:slug` apenas quando a regra premium permitir mini-site.
+- Use `buildPublicProfileUrl(username)` somente com `username` publico carregado do perfil.
 - Atualize testes quando uma rota antiga for mantida apenas como redirect/fallback.

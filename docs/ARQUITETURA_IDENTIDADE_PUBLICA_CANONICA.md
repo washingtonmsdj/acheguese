@@ -1,6 +1,6 @@
 # Arquitetura de Identidade Publica Canonica
 
-Atualizado: 2026-06-04
+Atualizado: 2026-06-05
 Status: consolidado
 
 Este documento substitui o plano historico de identidade publica. O contrato vivo de URLs esta em `docs/ROTAS_PUBLICAS_CANONICAS.md`.
@@ -20,6 +20,7 @@ Este documento substitui o plano historico de identidade publica. O contrato viv
 ## Regras
 
 - `/u/:username` e apenas perfil pessoal.
+- `/u/:username` deve receber `username` publico. IDs/UUIDs de perfil nao sao URL publica.
 - Empresa e restaurante nao usam `/u/:username`.
 - Empresa e restaurante compartilham o detalhe publico `/:communitySlug/:slug` quando existe alias de comunidade unico.
 - `/empresas/:state/:city/:district/:slug` e fallback tecnico/legado para detalhe de empresa.

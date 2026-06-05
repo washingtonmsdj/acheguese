@@ -18,7 +18,12 @@ export interface EditHistory {
 export interface MentionedProfile {
   id: string;
   name: string;
+  username?: string | null;
   avatar_url?: string;
+  avatar?: string | null;
+  location?: string | null;
+  type?: string;
+  rank?: number;
 }
 
 export interface PollOptionBasic {

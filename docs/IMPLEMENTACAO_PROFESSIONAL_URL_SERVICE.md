@@ -1,6 +1,6 @@
 # Implementacao do ProfessionalUrlService
 
-Atualizado: 2026-06-04
+Atualizado: 2026-06-05
 Status: consolidado
 
 `ProfessionalUrlService` e o SSOT para URLs publicas de profissionais.

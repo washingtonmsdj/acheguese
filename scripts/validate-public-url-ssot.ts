@@ -75,6 +75,13 @@ const RULES: Rule[] = [
     allowedFiles: PUBLIC_PROFILE_URL_SSOT_FILES,
   },
   {
+    name: "Nao usar id como username em buildPublicProfileUrl",
+    pattern:
+      /buildPublicProfileUrl\(\s*(?:profile|suggestion)\.id\s*\)|buildPublicProfileUrl\(\s*[^)]*(?:profileId|userId|authorId|mentionedProfileId|recipientProfileId)[^)]*\)/,
+    severity: "error",
+    suggestion: "Use username/handle publico; se nao houver username, nao gere /u/:username.",
+  },
+  {
     name: "Nao montar detalhe publico curto de empresa manualmente",
     pattern:
       /`\/\$\{[^}]*?(?:alias|communityAlias|communitySlug)[^}]*\}\/\$\{[^}]*?(?:business|slug)[^}]*\}`/,
