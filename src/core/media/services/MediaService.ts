@@ -11,6 +11,11 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { MEDIA_UPLOAD_LIMITS } from "@/core/media/config/uploadLimits";
+import {
+  MEDIA_STORAGE_BUCKETS,
+  type PublicImageUploadBucket,
+  type PublicMediaBucket,
+} from "@/core/media/config/storageBuckets";
 import { getImageOptimizePreset, optimizeImage } from "@/shared/utils/imageOptimizer";
 import { secureRandomString } from "@/shared/utils/secureRandom";
 
@@ -37,14 +42,7 @@ interface UploadPostImageOptions {
 }
 
 interface UploadToBucketOptions {
-  bucket:
-    | "banners"
-    | "business-images"
-    | "posts"
-    | "classified-images"
-    | "safety-evidence"
-    | "tryon"
-    | "community-posts";
+  bucket: PublicImageUploadBucket;
   pathPrefix?: string;
   fileName?: string;
   preset?: "site_asset" | "banner_image" | "post_image" | "classified_image" | "classified_thumbnail";
@@ -167,7 +165,7 @@ class MediaServiceClass {
 
       // Upload para storage
       const { error: uploadError } = await supabase.storage
-        .from("avatars")
+        .from(MEDIA_STORAGE_BUCKETS.AVATARS)
         .upload(path, optimizedFile, {
           upsert: true,
           contentType: optimizedFile.type,
@@ -180,7 +178,7 @@ class MediaServiceClass {
 
       // Obter URL pública
       const { data: urlData } = supabase.storage
-        .from("avatars")
+        .from(MEDIA_STORAGE_BUCKETS.AVATARS)
         .getPublicUrl(path);
 
       // Adicionar timestamp para cache busting
@@ -226,7 +224,7 @@ class MediaServiceClass {
 
       // Upload para storage
       const { error: uploadError } = await supabase.storage
-        .from("post-images")
+        .from(MEDIA_STORAGE_BUCKETS.POST_IMAGES)
         .upload(path, optimizedFile, {
           contentType: optimizedFile.type,
         });
@@ -238,7 +236,7 @@ class MediaServiceClass {
 
       // Obter URL pública
       const { data: urlData } = supabase.storage
-        .from("post-images")
+        .from(MEDIA_STORAGE_BUCKETS.POST_IMAGES)
         .getPublicUrl(path);
 
       return { url: urlData.publicUrl, path };
@@ -278,7 +276,7 @@ class MediaServiceClass {
    * Deletar arquivo do storage
    */
   async deleteFile(
-    bucket: "avatars" | "post-images",
+    bucket: PublicMediaBucket,
     path: string,
   ): Promise<boolean> {
     try {
@@ -333,7 +331,7 @@ class MediaServiceClass {
 
       // Upload para storage
       const { error: uploadError } = await supabase.storage
-        .from("avatars")
+        .from(MEDIA_STORAGE_BUCKETS.AVATARS)
         .upload(path, optimizedFile, {
           contentType: optimizedFile.type,
         });
@@ -345,7 +343,7 @@ class MediaServiceClass {
 
       // Obter URL pública
       const { data: urlData } = supabase.storage
-        .from("avatars")
+        .from(MEDIA_STORAGE_BUCKETS.AVATARS)
         .getPublicUrl(path);
 
       return { url: urlData.publicUrl, path };
@@ -395,7 +393,7 @@ class MediaServiceClass {
 
       // Upload para storage
       const { error: uploadError } = await supabase.storage
-        .from("business-logos")
+        .from(MEDIA_STORAGE_BUCKETS.BUSINESS_LOGOS)
         .upload(path, optimizedFile, {
           contentType: optimizedFile.type,
         });
@@ -407,7 +405,7 @@ class MediaServiceClass {
 
       // Obter URL pública
       const { data: urlData } = supabase.storage
-        .from("business-logos")
+        .from(MEDIA_STORAGE_BUCKETS.BUSINESS_LOGOS)
         .getPublicUrl(path);
 
       return { url: urlData.publicUrl, path };
@@ -424,7 +422,7 @@ class MediaServiceClass {
   /**
    * Obter URL pública de um arquivo
    */
-  getPublicUrl(bucket: "avatars" | "post-images", path: string): string {
+  getPublicUrl(bucket: PublicMediaBucket, path: string): string {
     const { data } = supabase.storage.from(bucket).getPublicUrl(path);
 
     return data.publicUrl;
@@ -451,7 +449,7 @@ class MediaServiceClass {
       const path = `${profileId}/${type}_${timestamp}.${ext}`;
 
       const { error: uploadError } = await supabase.storage
-        .from("verification-documents")
+        .from(MEDIA_STORAGE_BUCKETS.VERIFICATION_DOCUMENTS)
         .upload(path, optimizedFile, { upsert: true, contentType: optimizedFile.type });
 
       if (uploadError) {
@@ -508,14 +506,7 @@ class MediaServiceClass {
   }
 
   async deleteFromBucket(
-    bucket:
-      | "banners"
-      | "business-images"
-      | "posts"
-      | "classified-images"
-      | "safety-evidence"
-      | "tryon"
-      | "community-posts",
+    bucket: PublicImageUploadBucket,
     paths: string[],
   ): Promise<void> {
     if (!paths.length) return;

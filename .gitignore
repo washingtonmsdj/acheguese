@@ -117,6 +117,7 @@ firebase-config.json
 
 # Backups de scripts
 scripts/backups/
+backups/
 
 # Exceto arquivos importantes
 !README.md

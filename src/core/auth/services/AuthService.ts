@@ -11,6 +11,7 @@ import { SessionService } from "@/core/session/services/SessionService";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { mediaService } from "@/core/media/services/MediaService";
+import { isPublicImageUploadBucket } from "@/core/media/config/storageBuckets";
 import { RoleService } from "@/core/authorization/services/RoleService";
 import type { User, Session, AuthChangeEvent, Subscription } from "@supabase/supabase-js";
 
@@ -398,28 +399,12 @@ export class AuthService {
       throw new Error("Imagem muito grande. Tamanho máximo: 5MB");
     }
 
-    const allowedBuckets = new Set([
-      "community-posts",
-      "tryon",
-      "classified-images",
-      "banners",
-      "business-images",
-      "posts",
-      "safety-evidence",
-    ]);
-    if (!allowedBuckets.has(bucket)) {
+    if (!isPublicImageUploadBucket(bucket)) {
       throw new Error("Bucket nao permitido para upload.");
     }
 
     const upload = await mediaService.uploadToBucket(file, {
-      bucket: bucket as
-        | "community-posts"
-        | "tryon"
-        | "classified-images"
-        | "banners"
-        | "business-images"
-        | "posts"
-        | "safety-evidence",
+      bucket,
       pathPrefix: userId,
       preset: "site_asset",
       upsert: false,
