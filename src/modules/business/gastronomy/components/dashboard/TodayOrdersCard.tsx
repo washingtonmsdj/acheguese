@@ -12,6 +12,7 @@ import { Package, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { startOfDay, endOfDay } from 'date-fns';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
+import { formatBrl } from '../../utils/currency';
 
 interface TodayOrdersCardProps {
   businessId: string;
@@ -77,7 +78,7 @@ export function TodayOrdersCard({ businessId }: TodayOrdersCardProps) {
         <div className="pt-4 border-t">
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Receita do dia:</span>
-            <span className="text-lg font-bold">R$ {totalRevenue.toFixed(2)}</span>
+            <span className="text-lg font-bold">{formatBrl(totalRevenue)}</span>
           </div>
         </div>
 

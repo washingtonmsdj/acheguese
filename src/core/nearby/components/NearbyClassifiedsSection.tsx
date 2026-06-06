@@ -10,6 +10,7 @@ import {
   useClassificados,
   type ClassificadoWithVendedor,
 } from "@/core/classifieds/hooks";
+import { formatBrlNoCents } from "@/shared/utils/currency";
 import { NearbySection } from "./NearbySection";
 
 interface NearbyClassifiedsSectionProps {
@@ -95,7 +96,7 @@ export function NearbyClassifiedsSection({
                 </h3>
                 {ad.preco != null && (
                   <p className="text-xs font-bold text-primary mt-1">
-                    R$ {ad.preco.toLocaleString("pt-BR")}
+                    {formatBrlNoCents(ad.preco)}
                   </p>
                 )}
               </div>

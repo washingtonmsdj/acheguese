@@ -17,12 +17,10 @@ import {
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
 import { cn } from "@/shared/utils/cn";
+import { formatBrl } from "@/shared/utils/currency";
 import { useRealtimeMetrics } from "@/core/admin/hooks/useRealtimeMetrics";
 
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(
-    value,
-  );
+const formatCurrency = formatBrl;
 
 export function RealtimeStatsWidget() {
   const { metrics, loading, error } = useRealtimeMetrics();

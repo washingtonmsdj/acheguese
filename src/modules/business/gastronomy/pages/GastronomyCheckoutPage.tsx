@@ -21,6 +21,7 @@ import {
 import type { OrderRecord } from "@/core/mobility/delivery/order/types";
 import type { GastronomyBusiness } from "../types/gastronomy";
 import type { CartItem } from "../types/menu";
+import { formatBrl } from "../utils/currency";
 
 type DeliveryFulfillmentMode = "own_fleet" | "platform_courier" | "unspecified";
 
@@ -382,7 +383,7 @@ function GastronomyCheckoutContent({ business }: GastronomyCheckoutContentProps)
                         {summary.map((entry) => <p key={`${item.line_id}-${entry}`} className="text-xs text-muted-foreground">{entry}</p>)}
                       </div>
                       <div className="flex items-center gap-2">
-                        <p className="font-semibold">R$ {item.subtotal.toFixed(2)}</p>
+                        <p className="font-semibold">{formatBrl(item.subtotal)}</p>
                         <Button size="icon" variant="ghost" onClick={() => removeItem(item.line_id!)}><Trash2 className="h-4 w-4" /></Button>
                       </div>
                     </div>
@@ -425,12 +426,12 @@ function GastronomyCheckoutContent({ business }: GastronomyCheckoutContentProps)
 
           <section className="rounded-xl border bg-card p-4">
             <div className="space-y-2 text-sm">
-              <div className="flex justify-between"><span>Subtotal</span><span>R$ {cart.subtotal.toFixed(2)}</span></div>
-              <div className="flex justify-between"><span>Entrega</span><span>R$ {cart.delivery_fee.toFixed(2)}</span></div>
+              <div className="flex justify-between"><span>Subtotal</span><span>{formatBrl(cart.subtotal)}</span></div>
+              <div className="flex justify-between"><span>Entrega</span><span>{formatBrl(cart.delivery_fee)}</span></div>
               <Separator />
-              <div className="flex justify-between font-semibold"><span>Total</span><span>R$ {cart.total.toFixed(2)}</span></div>
+              <div className="flex justify-between font-semibold"><span>Total</span><span>{formatBrl(cart.total)}</span></div>
             </div>
-            {minimumOrderRemaining > 0 && <p className="mt-3 text-xs text-amber-700">Faltam R$ {minimumOrderRemaining.toFixed(2)} para o mínimo.</p>}
+            {minimumOrderRemaining > 0 && <p className="mt-3 text-xs text-amber-700">Faltam {formatBrl(minimumOrderRemaining)} para o mínimo.</p>}
             {requiresDeliveryDestination && !hasDeliveryDestination && (
               <p className="mt-3 text-xs text-amber-700">Informe o endereço completo de entrega para continuar.</p>
             )}

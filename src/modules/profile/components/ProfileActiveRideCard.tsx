@@ -4,6 +4,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
 import { useAppUrls } from "@/core/routing/hooks";
+import { formatBrl } from "@/shared/utils/currency";
 
 interface ProfileActiveRide {
   id: string;
@@ -94,7 +95,7 @@ export function ProfileActiveRideCard({ ride }: ProfileActiveRideCardProps) {
           <div className="text-sm text-muted-foreground">
             {typeof ride.final_price === "number" ? (
               <span>
-                Valor estimado: <strong className="text-foreground">R$ {ride.final_price.toFixed(2)}</strong>
+                Valor estimado: <strong className="text-foreground">{formatBrl(ride.final_price)}</strong>
               </span>
             ) : (
               <span>Abra a central de mobilidade para acompanhar os detalhes.</span>

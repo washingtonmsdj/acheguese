@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
+import { formatBrl } from "@/shared/utils/currency";
 import { toast } from "sonner";
 interface Product {
   id: string;
@@ -184,7 +185,7 @@ export default function DigitalMenu({
   const shareProduct = (product: Product) => {
     const priceText =
       product.price && typeof product.price === "number"
-        ? `R$ ${product.price.toFixed(2)}`
+        ? formatBrl(product.price)
         : "--";
     const text = `Olha esta opção do cardápio:\n\n*${product.name}*\n${product.description || ""}\n\nPreço: ${priceText}\n\nConfira no cardápio de ${businessName}`;
     navigator.clipboard.writeText(text);
@@ -383,10 +384,9 @@ export default function DigitalMenu({
                             <div className="flex items-center justify-between mt-3">
                               <div className="flex items-center gap-4">
                                 <span className="font-bold text-lg">
-                                  R${" "}
                                   {product.price &&
                                   typeof product.price === "number"
-                                    ? product.price.toFixed(2)
+                                    ? formatBrl(product.price)
                                     : "--"}
                                 </span>
 
@@ -483,7 +483,7 @@ export default function DigitalMenu({
                         {qty}x {product.name}
                       </span>
                       <span className="font-medium">
-                        R$ {(product.price || 0) * qty}
+                        {formatBrl((product.price || 0) * qty)}
                       </span>
                     </div>
                   );

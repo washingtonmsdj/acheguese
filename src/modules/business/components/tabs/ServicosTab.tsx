@@ -13,6 +13,7 @@ import {
 } from "@/shared/components/ui/select";
 import { Plus, Award, Clock, Edit, X } from "lucide-react";
 import type { ServicosTabProps } from "@/modules/business/types/components";
+import { formatBrl } from "@/shared/utils/currency";
 
 export function ServicosTab({
   business,
@@ -232,9 +233,8 @@ export function ServicosTab({
                 <div>
                   {service.price !== null ? (
                     <p className="text-xl font-bold text-primary">
-                      R${" "}
                       {typeof service.price === "number"
-                        ? service.price.toFixed(2)
+                        ? formatBrl(service.price)
                         : "--"}
                     </p>
                   ) : (

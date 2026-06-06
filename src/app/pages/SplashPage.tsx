@@ -6,14 +6,7 @@ import { Button } from "@/shared/components/ui/button";
 import { TERRITORY_CONFIG } from "@/config/territory";
 import { useCityMetadata } from "@/core/city/hooks/useCityMetadata";
 import { useHomeCommunityHref } from "@/core/routing/hooks/useHomeCommunityHref";
-
-function formatMetric(value?: number): string {
-  if (!value) return "-";
-  return new Intl.NumberFormat("pt-BR", {
-    notation: "compact",
-    maximumFractionDigits: 1,
-  }).format(value);
-}
+import { formatMetric } from "@/shared/utils/formatters";
 
 export default function SplashPage() {
   const navigate = useNavigate();

@@ -3,6 +3,7 @@ import { TrendingUp } from "lucide-react";
 import { Card } from "@/shared/components/ui/card";
 import { MobilityService } from "@/core/mobility/services/MobilityService";
 import { logger } from "@/shared/utils/logger";
+import { formatBrlNoCents } from "@/shared/utils/currency";
 
 interface WeeklyEarningsChartProps {
   driverProfileId: string;
@@ -132,7 +133,7 @@ export function WeeklyEarningsChart({
               />
             </div>
             <span className="text-xs font-semibold text-primary w-12 text-right">
-              R$ {data.amount.toFixed(0)}
+              {formatBrlNoCents(data.amount)}
             </span>
           </div>
         ))}
@@ -140,7 +141,7 @@ export function WeeklyEarningsChart({
       <div className="mt-3 pt-2 border-t border-border flex items-center justify-between">
         <span className="text-xs text-muted-foreground">Total da semana</span>
         <span className="text-sm font-bold text-success">
-          R$ {totalWeek.toFixed(0)}
+          {formatBrlNoCents(totalWeek)}
         </span>
       </div>
     </Card>

@@ -22,6 +22,7 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import { PassengerTrustBadge } from "@/shared/components/badges/PassengerTrustBadge";
 import { RideChatDialog } from "../RideChatDialog";
 import { cn } from "@/shared/utils/cn";
+import { formatBrl } from "@/shared/utils/currency";
 import { getRecordValue } from "@/shared/utils/recordLookup";
 import type { MobilityRide } from "@/core/mobility/types/ride";
 import { useSessionContext } from "@/core/session";
@@ -382,7 +383,7 @@ export function DriverRidesList({
               <div className="flex items-center gap-1">
                 <DollarSign className="h-3.5 w-3.5 text-success" />
                 <span className="text-success font-bold text-sm">
-                  R$ {((ride.final_price ?? ride.suggested_price) != null ? (ride.final_price ?? ride.suggested_price) : 0).toFixed(2)}
+                  {formatBrl((ride.final_price ?? ride.suggested_price) != null ? (ride.final_price ?? ride.suggested_price) : 0)}
                 </span>
               </div>
               {ride.payment_method && (

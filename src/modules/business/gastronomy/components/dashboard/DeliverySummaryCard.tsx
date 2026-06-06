@@ -11,6 +11,7 @@ import { Button } from '@/shared/components/ui/button';
 import { MapPin, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
+import { formatBrl } from '../../utils/currency';
 
 interface DeliverySummaryCardProps {
   businessId: string;
@@ -65,8 +66,8 @@ export function DeliverySummaryCard({ businessId }: DeliverySummaryCardProps) {
                 <span className="text-muted-foreground">Taxa de entrega: </span>
                 <span className="font-medium">
                   {minDeliveryFee === maxDeliveryFee
-                    ? `R$ ${minDeliveryFee.toFixed(2)}`
-                    : `R$ ${minDeliveryFee.toFixed(2)} - ${maxDeliveryFee.toFixed(2)}`}
+                    ? formatBrl(minDeliveryFee)
+                    : `${formatBrl(minDeliveryFee)} - ${formatBrl(maxDeliveryFee)}`}
                 </span>
               </div>
             )}

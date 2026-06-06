@@ -3,6 +3,7 @@ import { MapPin, Clock, Tag } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/shared/utils/cn";
 import { getRecordValue } from "@/shared/utils/recordLookup";
+import { formatBrlNoCents } from "@/shared/utils/currency";
 
 interface AdInfoProps {
   title: string;
@@ -97,7 +98,7 @@ export function AdInfo({
               Preço
             </p>
             <p className="text-2xl font-bold text-primary font-display">
-              R$ {price.toLocaleString("pt-BR")}
+              {formatBrlNoCents(price)}
             </p>
           </div>
           <div className="flex items-center gap-3 text-muted-foreground">

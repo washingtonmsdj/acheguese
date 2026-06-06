@@ -7,6 +7,7 @@ import { pricingService } from "@/core/pricing/services/PricingService";
 import { PricingError } from "@/core/pricing/types";
 import { useSessionContext } from "@/core/session/hooks/useSessionContext";
 import { logger } from "@/shared/utils/logger";
+import { formatBrl } from "@/shared/utils/currency";
 import { toast } from "sonner";
 import type { PricingRule } from "@/core/pricing/types";
 
@@ -137,21 +138,21 @@ export function PricingRulesList({
                     </div>
                     <div className="text-sm text-muted-foreground space-y-1">
                       <div className="flex gap-4">
-                        <span>Base: R$ {rule.baseFare.toFixed(2)}</span>
+                        <span>Base: {formatBrl(rule.baseFare)}</span>
                         <span>
-                          Por km: R$ {rule.pricePerKm.toFixed(2)}
+                          Por km: {formatBrl(rule.pricePerKm)}
                         </span>
                         <span>
-                          Por min: R$ {rule.pricePerMinute.toFixed(2)}
+                          Por min: {formatBrl(rule.pricePerMinute)}
                         </span>
                       </div>
                       <div className="flex gap-4">
                         <span>
-                          Mínimo: R$ {rule.minimumFare.toFixed(2)}
+                          Mínimo: {formatBrl(rule.minimumFare)}
                         </span>
                         {rule.maximumFare && (
                           <span>
-                            Máximo: R$ {rule.maximumFare.toFixed(2)}
+                            Máximo: {formatBrl(rule.maximumFare)}
                           </span>
                         )}
                       </div>

@@ -11,12 +11,7 @@ import {
   AlertTriangle,
   Heart,
 } from "lucide-react";
-
-function formatNumber(num: number): string {
-  if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
-  if (num >= 1000) return `${(num / 1000).toFixed(0)}k+`;
-  return num.toString();
-}
+import { formatCompactMetricNumber } from "@/shared/utils/formatters";
 
 export const BRASIL_INFO = {
   populacao: 203000000,
@@ -31,9 +26,9 @@ export const BRASIL_INFO = {
 };
 
 export const BRASIL_STATS = [
-  { icon: Users, value: formatNumber(BRASIL_INFO.populacao), label: "Habitantes", color: "text-primary", bg: "bg-primary/10", border: "border-primary/20" },
+  { icon: Users, value: formatCompactMetricNumber(BRASIL_INFO.populacao), label: "Habitantes", color: "text-primary", bg: "bg-primary/10", border: "border-primary/20" },
   { icon: Map, value: `${BRASIL_INFO.estados}+1`, label: "UFs", color: "text-accent", bg: "bg-accent/10", border: "border-accent/20" },
-  { icon: Building2, value: formatNumber(BRASIL_INFO.municipios), label: "Municipios", color: "text-warning", bg: "bg-warning/10", border: "border-warning/20" },
+  { icon: Building2, value: formatCompactMetricNumber(BRASIL_INFO.municipios), label: "Municipios", color: "text-warning", bg: "bg-warning/10", border: "border-warning/20" },
   { icon: MapPinned, value: `${(BRASIL_INFO.area_km2 / 1000000).toFixed(1)}M km2`, label: "Area", color: "text-success", bg: "bg-success/10", border: "border-success/20" },
   { icon: Globe, value: BRASIL_INFO.idioma, label: "Idioma oficial", color: "text-violet-500", bg: "bg-violet-500/10", border: "border-violet-500/20" },
   { icon: Landmark, value: BRASIL_INFO.capital, label: "Capital", color: "text-rose-500", bg: "bg-rose-500/10", border: "border-rose-500/20" },

@@ -25,6 +25,7 @@ import {
   AvatarImage,
 } from "@/shared/components/ui/avatar";
 import { Badge } from "@/shared/components/ui/badge";
+import { formatBrl } from "@/shared/utils/currency";
 
 type CompletionRide = RideRequest & {
   driver?: {
@@ -160,7 +161,7 @@ export function RideCompletionConfirmation({
                     </span>
                   </div>
                   <span className="text-lg font-bold text-success">
-                    R$ {(ride.final_price || ride.suggested_price).toFixed(2)}
+                    {formatBrl(ride.final_price || ride.suggested_price)}
                   </span>
                 </div>
               )}

@@ -2,6 +2,7 @@ import React from "react";
 import { useState } from "react";
 import { Search, SlidersHorizontal, Clock } from "lucide-react";
 import { Service } from "@/modules/business/types";
+import { formatBrl } from "@/shared/utils/currency";
 interface BusinessServicesProps {
   services: Service[];
   isLoading: boolean;
@@ -111,7 +112,7 @@ export function BusinessServices({
             <div className="flex items-center justify-between">
               {service.price && (
                 <p className="text-lg font-bold text-blue-600">
-                  R$ {service.price.toFixed(2)}
+                  {formatBrl(service.price)}
                 </p>
               )}
 

@@ -15,6 +15,7 @@ import { Badge } from '@/shared/components/ui/badge';
 import { ConfirmActionDialog } from '@/shared/components/ConfirmActionDialog';
 import { MapPin, Plus, Trash2, X, Edit2 } from 'lucide-react';
 import type { DeliveryArea, DeliveryNeighborhood } from '@/modules/business/gastronomy/services/DeliveryAreaService';
+import { formatBrl } from '../../utils/currency';
 
 interface NeighborhoodManagerProps {
   area: DeliveryArea;
@@ -107,13 +108,13 @@ export function NeighborhoodManager({ area, onClose }: NeighborhoodManagerProps)
           <div className="grid grid-cols-3 gap-4 text-sm">
             <div>
               <p className="text-muted-foreground">Taxa</p>
-              <p className="font-medium">R$ {area.delivery_fee.toFixed(2)}</p>
+              <p className="font-medium">{formatBrl(area.delivery_fee)}</p>
             </div>
             <div>
               <p className="text-muted-foreground">Mínimo</p>
               <p className="font-medium">
                 {area.minimum_order_value
-                  ? `R$ ${area.minimum_order_value.toFixed(2)}`
+                  ? formatBrl(area.minimum_order_value)
                   : 'Sem mínimo'}
               </p>
             </div>
@@ -154,12 +155,12 @@ export function NeighborhoodManager({ area, onClose }: NeighborhoodManagerProps)
                       <div className="flex gap-2 mt-2">
                         {n.custom_delivery_fee && (
                           <Badge variant="secondary" className="text-xs">
-                            Taxa: R$ {n.custom_delivery_fee.toFixed(2)}
+                            Taxa: {formatBrl(n.custom_delivery_fee)}
                           </Badge>
                         )}
                         {n.custom_minimum_order && (
                           <Badge variant="secondary" className="text-xs">
-                            Mín: R$ {n.custom_minimum_order.toFixed(2)}
+                            Mín: {formatBrl(n.custom_minimum_order)}
                           </Badge>
                         )}
                         {n.custom_estimated_time && (

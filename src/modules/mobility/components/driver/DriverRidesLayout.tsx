@@ -9,6 +9,7 @@ import { DriverRidesList } from "@/modules/mobility/components/driver/DriverRide
 import { useMotoristaPage } from "@/modules/mobility/hooks/useMotoristaPage";
 import { getMobilityServicePath } from "@/modules/mobility/routes/mobilityNavigation";
 import { getRecordValue } from "@/shared/utils/recordLookup";
+import { formatBrl } from "@/shared/utils/currency";
 import type { MobilityRide } from "@/core/mobility/types/ride";
 
 type RideLike = MobilityRide & {
@@ -129,7 +130,7 @@ export function DriverRidesLayout() {
                           ) : null}
                         </div>
                         <Badge variant="outline">
-                          {typeof ride.suggested_price === "number" ? `R$ ${ride.suggested_price.toFixed(2)}` : "Sem valor"}
+                          {typeof ride.suggested_price === "number" ? formatBrl(ride.suggested_price) : "Sem valor"}
                         </Badge>
                       </div>
                       <Button className="w-full" disabled={!shell.isDriverOnline || shell.actionsLoading} onClick={() => shell.acceptRide(ride.id)}>

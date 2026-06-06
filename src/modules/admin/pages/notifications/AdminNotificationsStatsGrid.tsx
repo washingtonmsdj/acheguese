@@ -13,7 +13,7 @@ import type {
 import {
   AdminStatsCard,
   AdminStatsGrid,
-} from "@/modules/admin/components";
+} from "@/core/admin/components";
 import { formatPercent } from "./AdminNotifications.helpers";
 
 interface AdminNotificationsStatsGridProps {

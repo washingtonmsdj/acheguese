@@ -48,6 +48,7 @@ import type { FeaturedBusiness, FeaturedService, FeaturedClassified } from '@/co
 import type { TerritorialHighlight, HighlightType } from '@/core/territorial/highlights/types';
 import { TerritoryAIContentSection } from '@/core/territorial/components/TerritoryAIContentSection';
 import { TERRITORIAL_LANDING_LIMITS } from '@/core/routing/config/territorialLanding.limits';
+import { formatBrlNoCents } from '@/shared/utils/currency';
 
 // ── Regra editorial ───────────────────────────────────────────────────────────
 
@@ -80,7 +81,7 @@ function getMemberList(resolved: ReturnType<typeof useTerritorialContext>['resol
 }
 
 function formatPrice(price: number): string {
-  return price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
+  return formatBrlNoCents(price);
 }
 
 function formatCategory(cat: string): string {

@@ -15,6 +15,8 @@ import {
 } from "@/shared/components/ui/select";
 import { Search, RefreshCw } from "lucide-react";
 
+const ALL_OPTION_VALUE = "__all__";
+
 export interface FilterOption {
   label: string;
   value: string;
@@ -64,14 +66,16 @@ export function AdminFiltersBar({
           {filters.map((filter) => (
             <Select
               key={filter.value}
-              value={filterValues[filter.value] || ""}
-              onValueChange={(value) => onFilterChange?.(filter.value, value)}
+              value={filterValues[filter.value] || ALL_OPTION_VALUE}
+              onValueChange={(value) =>
+                onFilterChange?.(filter.value, value === ALL_OPTION_VALUE ? "" : value)
+              }
             >
               <SelectTrigger className="w-full md:w-[200px]">
                 <SelectValue placeholder={filter.placeholder || filter.label} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value={ALL_OPTION_VALUE}>Todos</SelectItem>
                 {filter.options.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}

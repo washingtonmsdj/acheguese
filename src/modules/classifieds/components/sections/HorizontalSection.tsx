@@ -8,6 +8,7 @@
 import { motion } from "framer-motion";
 import { ArrowRight, MapPin, Camera, Zap } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
+import { formatBrlNoCents } from "@/shared/utils/currency";
 import type { Classificado } from "../../sections/types";
 
 // ============================================
@@ -89,7 +90,7 @@ export function HorizontalSection({
                 {badgeText}
               </span>
               <span className="absolute bottom-1.5 left-1.5 text-xs font-bold text-white drop-shadow-lg">
-                R$ {ad.preco?.toLocaleString("pt-BR")}
+                {ad.preco != null ? formatBrlNoCents(ad.preco) : "Sob consulta"}
               </span>
               {ad.fotos && ad.fotos.length > 1 && (
                 <span className="absolute bottom-1.5 right-1.5 flex items-center gap-0.5 bg-black/50 backdrop-blur-sm text-[8px] font-bold text-white px-1 py-0.5 rounded-full">

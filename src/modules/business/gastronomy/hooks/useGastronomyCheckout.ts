@@ -12,6 +12,7 @@ import type { OrderRecord } from "@/core/mobility/delivery/order/types";
 import type { GastronomyBusiness } from "../types/gastronomy";
 import type { Cart } from "../types/menu";
 import { logger } from "@/shared/utils/logger";
+import { formatBrl } from "../utils/currency";
 
 export interface DeliveryAddress {
   id: string;
@@ -245,9 +246,9 @@ export function useGastronomyCheckout() {
           const orderSubtotal = Number.isFinite(input.cart.subtotal) ? input.cart.subtotal : 0;
           const orderDeliveryFee = Number.isFinite(input.cart.delivery_fee) ? input.cart.delivery_fee : 0;
           const orderTotal = Number.isFinite(input.cart.total) ? input.cart.total : 0;
-          const orderSubtotalLabel = `R$ ${orderSubtotal.toFixed(2)}`;
-          const orderDeliveryFeeLabel = `R$ ${orderDeliveryFee.toFixed(2)}`;
-          const orderTotalLabel = `R$ ${orderTotal.toFixed(2)}`;
+          const orderSubtotalLabel = formatBrl(orderSubtotal);
+          const orderDeliveryFeeLabel = formatBrl(orderDeliveryFee);
+          const orderTotalLabel = formatBrl(orderTotal);
           const motoboyNotes = [
             `PEDIDO_SUBTOTAL: ${orderSubtotalLabel}`,
             `TAXA_ENTREGA_CLIENTE: ${orderDeliveryFeeLabel}`,

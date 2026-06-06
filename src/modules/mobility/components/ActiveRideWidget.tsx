@@ -16,6 +16,7 @@ import {
 import { Badge } from "@/shared/components/ui/badge";
 import { motion } from "framer-motion";
 import { cn } from "@/shared/utils/cn";
+import { formatBrl } from "@/shared/utils/currency";
 import type { RideRequest } from "@/core/mobility/types/types";
 import { mobilityRoutes } from "@/core/mobility/routes/mobilityRoutes";
 
@@ -222,7 +223,7 @@ export const ActiveRideWidget = memo(
               <div className="flex items-center justify-between p-3 rounded-lg bg-white/5 mb-4">
                 <span className="text-sm text-gray-400">Valor</span>
                 <span className="text-lg font-bold text-teal-400">
-                  R$ {ride.final_price.toFixed(2)}
+                  {formatBrl(ride.final_price)}
                 </span>
               </div>
             )}

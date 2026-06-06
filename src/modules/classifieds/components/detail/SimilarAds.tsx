@@ -1,6 +1,7 @@
 import { memo } from "react";
 import { Layers, MapPin } from "lucide-react";
 import { motion } from "framer-motion";
+import { formatBrlNoCents } from "@/shared/utils/currency";
 
 interface SimilarAd {
   id: string;
@@ -61,7 +62,7 @@ export const SimilarAds = memo(function SimilarAds({
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
               <span className="absolute bottom-1.5 left-1.5 text-[11px] font-bold text-white drop-shadow-lg">
-                R$ {ad.preco.toLocaleString("pt-BR")}
+                {formatBrlNoCents(ad.preco)}
               </span>
             </div>
             <div className="p-2">

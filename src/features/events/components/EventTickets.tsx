@@ -11,6 +11,7 @@ import { Check, Ticket, Users, Clock, AlertCircle, Sparkles } from 'lucide-react
 import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
 import { cn } from '@/shared/utils/cn';
+import { formatBrl } from '@/shared/utils/currency';
 import type { EventTicket } from '../types';
 
 interface EventTicketsProps {
@@ -142,9 +143,8 @@ export function EventTickets({
                     </div>
                   ) : (
                     <div className="flex items-baseline gap-2">
-                      <span className="text-sm text-muted-foreground">R$</span>
                       <span className="text-3xl font-bold text-foreground">
-                        {ticket.price.toFixed(2).replace('.', ',')}
+                        {formatBrl(ticket.price)}
                       </span>
                     </div>
                   )}

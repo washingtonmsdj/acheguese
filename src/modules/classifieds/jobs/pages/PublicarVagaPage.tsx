@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/utils/cn";
+import { formatBrlNoCents } from "@/shared/utils/currency";
 import { toast } from "sonner";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { useSessionContext } from "@/core/session";
@@ -371,16 +372,17 @@ export default function PublicarVagaPage() {
 
   // Categories without "todos"
   const formCategories = VAGA_CATEGORIAS.filter((c) => c.id !== "todos");
+  const formatSalaryInput = (value: string) => formatBrlNoCents(Number(value));
 
   // Salary display helper
   const salaryDisplay = ocultarSalario
     ? "A combinar"
     : salarioMin && salarioMax
-    ? `R$ ${Number(salarioMin).toLocaleString("pt-BR")} – R$ ${Number(salarioMax).toLocaleString("pt-BR")}`
+    ? `${formatSalaryInput(salarioMin)} – ${formatSalaryInput(salarioMax)}`
     : salarioMin
-    ? `A partir de R$ ${Number(salarioMin).toLocaleString("pt-BR")}`
+    ? `A partir de ${formatSalaryInput(salarioMin)}`
     : salarioMax
-    ? `Até R$ ${Number(salarioMax).toLocaleString("pt-BR")}`
+    ? `Até ${formatSalaryInput(salarioMax)}`
     : "A combinar";
 
   // ─── Render ─────────────────────────────────────
@@ -542,6 +544,5 @@ export default function PublicarVagaPage() {
     </div>
   );
 }
-
 
 

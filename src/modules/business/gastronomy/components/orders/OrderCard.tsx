@@ -11,6 +11,7 @@ import { OrderStatusBadge } from './OrderStatusBadge';
 import { OrderTrackingBadge } from './OrderTrackingBadge';
 import { buildTelUrl } from '@/shared/utils/contactLinks';
 import type { Order } from '@/modules/business/gastronomy/services/OrderService';
+import { formatBrl } from '../../utils/currency';
 
 interface OrderCardProps {
   order: Order;
@@ -43,7 +44,7 @@ export function OrderCard({ order, onViewDetails }: OrderCardProps) {
             </p>
           </div>
           <div className="sm:text-right">
-            <p className="text-2xl font-bold">R$ {order.total.toFixed(2)}</p>
+            <p className="text-2xl font-bold">{formatBrl(order.total)}</p>
             <p className="text-xs text-muted-foreground">{ORDER_TYPE_LABELS[order.order_type]}</p>
           </div>
         </div>
@@ -92,18 +93,18 @@ export function OrderCard({ order, onViewDetails }: OrderCardProps) {
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm pt-2 border-t">
           <div>
             <p className="text-muted-foreground">Subtotal</p>
-            <p className="font-medium">R$ {order.subtotal.toFixed(2)}</p>
+            <p className="font-medium">{formatBrl(order.subtotal)}</p>
           </div>
           {order.delivery_fee > 0 && (
             <div>
               <p className="text-muted-foreground">Entrega</p>
-              <p className="font-medium">R$ {order.delivery_fee.toFixed(2)}</p>
+              <p className="font-medium">{formatBrl(order.delivery_fee)}</p>
             </div>
           )}
           {order.discount > 0 && (
             <div>
               <p className="text-muted-foreground">Desconto</p>
-              <p className="font-medium text-green-600">-R$ {order.discount.toFixed(2)}</p>
+              <p className="font-medium text-green-600">{formatBrl(-order.discount)}</p>
             </div>
           )}
         </div>
@@ -113,14 +114,14 @@ export function OrderCard({ order, onViewDetails }: OrderCardProps) {
             {order.delivery_courier_cost !== null && (
               <div>
                 <p className="text-muted-foreground">Custo logistica (motoboy)</p>
-                <p className="font-medium">R$ {order.delivery_courier_cost.toFixed(2)}</p>
+                <p className="font-medium">{formatBrl(order.delivery_courier_cost)}</p>
               </div>
             )}
             {order.delivery_margin !== null && (
               <div>
                 <p className="text-muted-foreground">Margem da taxa de entrega</p>
                 <p className={`font-medium ${order.delivery_margin >= 0 ? 'text-emerald-600' : 'text-destructive'}`}>
-                  R$ {order.delivery_margin.toFixed(2)}
+                  {formatBrl(order.delivery_margin)}
                 </p>
               </div>
             )}

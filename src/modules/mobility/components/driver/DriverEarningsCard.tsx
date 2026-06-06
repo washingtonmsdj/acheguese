@@ -1,6 +1,7 @@
 import React from "react";
 import { DollarSign, TrendingUp, Calendar, Wallet } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
+import { formatBrlNoCents } from "@/shared/utils/currency";
 import type { DriverEarnings } from "@/core/mobility/types";
 
 interface DriverEarningsCardProps {
@@ -65,7 +66,7 @@ export function DriverEarningsCard({
                 </span>
               </div>
               <p className={cn("text-base font-bold", item.color)}>
-                R$ {item.value.toFixed(0)}
+                {formatBrlNoCents(item.value)}
               </p>
             </button>
           ))}

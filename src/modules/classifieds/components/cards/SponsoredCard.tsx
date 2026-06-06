@@ -7,6 +7,7 @@
 
 import { motion } from "framer-motion";
 import { MapPin, Megaphone } from "lucide-react";
+import { formatBrlNoCents } from "@/shared/utils/currency";
 import type { Classificado } from "../../sections/types";
 
 // ============================================
@@ -45,7 +46,7 @@ export function SponsoredCard({ ad, index, onClick }: SponsoredCardProps) {
           Patrocinado
         </span>
         <span className="absolute bottom-2 left-2 text-sm font-bold text-white drop-shadow-lg">
-          R$ {ad.preco?.toLocaleString("pt-BR")}
+          {ad.preco != null ? formatBrlNoCents(ad.preco) : "Sob consulta"}
         </span>
       </div>
       <div className="p-2.5">

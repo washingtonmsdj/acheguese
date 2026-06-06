@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "@/shared/utils/dateLocale";
+import { formatBrl } from "@/shared/utils/currency";
 import { RIDE_STATUS } from "@/shared/types/constants";
 export function RideHistoryList() {
   const [filters, setFilters] = useState<RideHistoryFilters>({
@@ -102,7 +103,7 @@ export function RideHistoryList() {
                 <div>
                   <p className="text-sm text-muted-foreground">Total Gasto</p>
                   <p className="text-2xl font-bold">
-                    R$ {(stats?.totalSpent ?? 0).toFixed(2)}
+                    {formatBrl(stats?.totalSpent ?? 0)}
                   </p>
                 </div>
                 <DollarSign className="h-8 w-8 text-orange-600" />
@@ -286,7 +287,7 @@ export function RideHistoryList() {
 
                   <div className="text-right">
                     <p className="text-2xl font-bold text-primary">
-                      R$ {ride.final_price?.toFixed(2) || "0.00"}
+                      {formatBrl(ride.final_price ?? 0)}
                     </p>
                   </div>
                 </div>

@@ -17,6 +17,7 @@ import {
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Badge } from '@/shared/components/ui/badge';
+import { formatBrl } from '@/shared/utils/currency';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -87,7 +88,7 @@ export function EventsOrganizerStatsSection({ stats }: EventsOrganizerStatsSecti
             icon={<DollarSign className="h-6 w-6 text-amber-600" />}
             iconClassName="bg-amber-500/10"
             label="Receita Total"
-            value={`R$ ${stats.totalRevenue.toLocaleString('pt-BR')}`}
+            value={formatBrl(stats.totalRevenue)}
             helper="+15% este mes"
             helperClassName="text-amber-600"
           />

@@ -4,7 +4,13 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { formatBrl, formatBrlCompact } from './currency';
+import {
+  formatBrl,
+  formatBrlCompact,
+  formatBrlFromCents,
+  formatBrlFromCentsNoCents,
+  formatBrlNoCents,
+} from './currency';
 
 describe('currency', () => {
   describe('formatBrl', () => {
@@ -53,6 +59,25 @@ describe('currency', () => {
 
     it('deve formatar zero', () => {
       expect(formatBrlCompact(0)).toBe('R$\xa00,00');
+    });
+  });
+
+  describe('formatBrlNoCents', () => {
+    it('deve formatar valores sem centavos', () => {
+      expect(formatBrlNoCents(100)).toBe('R$\xa0100');
+      expect(formatBrlNoCents(1234.56)).toBe('R$\xa01.235');
+    });
+  });
+
+  describe('formatBrlFromCents', () => {
+    it('deve formatar centavos como reais', () => {
+      expect(formatBrlFromCents(12345)).toBe('R$\xa0123,45');
+    });
+  });
+
+  describe('formatBrlFromCentsNoCents', () => {
+    it('deve formatar centavos como reais sem centavos', () => {
+      expect(formatBrlFromCentsNoCents(12345)).toBe('R$\xa0123');
     });
   });
 });

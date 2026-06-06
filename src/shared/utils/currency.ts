@@ -17,8 +17,27 @@ const BRL_COMPACT_FORMATTER = new Intl.NumberFormat('pt-BR', {
   compactDisplay: 'short',
 });
 
+const BRL_NO_CENTS_FORMATTER = new Intl.NumberFormat('pt-BR', {
+  style: 'currency',
+  currency: 'BRL',
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0,
+});
+
 export function formatBrl(value: number): string {
   return BRL_FORMATTER.format(value);
+}
+
+export function formatBrlNoCents(value: number): string {
+  return BRL_NO_CENTS_FORMATTER.format(value);
+}
+
+export function formatBrlFromCents(valueInCents: number): string {
+  return formatBrl(valueInCents / 100);
+}
+
+export function formatBrlFromCentsNoCents(valueInCents: number): string {
+  return formatBrlNoCents(valueInCents / 100);
 }
 
 export function formatBrlCompact(value: number): string {

@@ -16,6 +16,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Input } from "@/shared/components/ui/input";
 import { cn } from "@/shared/utils/cn";
+import { formatBrl, formatBrlNoCents } from "@/shared/utils/currency";
 import type { RideRequest } from "@/core/mobility/types";
 import { RIDE_STATUS, PAYMENT_METHOD } from "@/shared/types/constants";
 
@@ -194,7 +195,7 @@ export function PassengerRideHistory({
         </div>
         <div className="bg-card border-border rounded-xl p-3 text-center">
           <p className="text-lg font-bold text-success">
-            R$ {stats.totalSpent.toFixed(0)}
+            {formatBrlNoCents(stats.totalSpent)}
           </p>
           <p className="text-[0.6rem] text-muted-foreground uppercase">Gasto</p>
         </div>
@@ -443,7 +444,7 @@ export function PassengerRideHistory({
                   <div className="flex items-center gap-1">
                     <DollarSign className="h-3 w-3" />
                     <span className="text-success font-bold">
-                      R$ {(ride.final_price || ride.suggested_price || 0).toFixed(2)}
+                      {formatBrl(ride.final_price || ride.suggested_price || 0)}
                     </span>
                   </div>
                   {ride.payment_method && (

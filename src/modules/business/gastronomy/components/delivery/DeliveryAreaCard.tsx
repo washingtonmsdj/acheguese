@@ -12,6 +12,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
 import { MapPin, Edit, Trash2, GripVertical, ChevronDown, ChevronUp } from 'lucide-react';
 import type { DeliveryArea } from '@/modules/business/gastronomy/services/DeliveryAreaService';
+import { formatBrl } from '../../utils/currency';
 
 interface DeliveryAreaCardProps {
   area: DeliveryArea;
@@ -85,14 +86,14 @@ export function DeliveryAreaCard({
           <div>
             <p className="text-muted-foreground">Taxa de Entrega</p>
             <p className="font-medium">
-              R$ {area.delivery_fee.toFixed(2)}
+              {formatBrl(area.delivery_fee)}
             </p>
           </div>
           <div>
             <p className="text-muted-foreground">Pedido Mínimo</p>
             <p className="font-medium">
               {area.minimum_order_value
-                ? `R$ ${area.minimum_order_value.toFixed(2)}`
+                ? formatBrl(area.minimum_order_value)
                 : 'Sem mínimo'}
             </p>
           </div>

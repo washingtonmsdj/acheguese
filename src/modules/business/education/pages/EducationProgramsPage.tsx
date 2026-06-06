@@ -41,6 +41,7 @@ import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { Switch } from '@/shared/components/ui/switch';
+import { formatBrl } from '@/shared/utils/currency';
 import { useConfirmActionDialog } from '@/shared/hooks/useConfirmActionDialog';
 import { useToast } from '@/shared/hooks/use-toast';
 import { useEducationProfile } from '../hooks/useEducationProfile';
@@ -454,7 +455,7 @@ export function EducationProgramsPage() {
                     {program.price_from && (
                       <Badge variant="outline" className="gap-1">
                         <DollarSign className="w-3 h-3" />
-                        A partir de R$ {program.price_from}
+                        A partir de {formatBrl(program.price_from)}
                       </Badge>
                     )}
                   </div>

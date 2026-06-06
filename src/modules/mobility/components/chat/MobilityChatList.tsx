@@ -21,6 +21,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { cn } from "@/shared/utils/cn";
+import { formatBrl } from "@/shared/utils/currency";
 import { motion, AnimatePresence } from "framer-motion";
 import { RIDE_STATUS, USER_ROLE } from "@/shared/types/constants";
 import { FILTER_TYPES } from "@/core/mobility/constants";
@@ -447,7 +448,7 @@ export function MobilityChatList({ role }: MobilityChatListProps) {
                         {status.label}
                       </Badge>
                       <span className="text-[11px] font-semibold text-emerald-400">
-                        R$ {chat.ride_price.toFixed(2)}
+                        {formatBrl(chat.ride_price)}
                       </span>
                     </div>
                   </motion.div>

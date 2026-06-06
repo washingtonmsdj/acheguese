@@ -23,6 +23,7 @@ import {
   Zap,
 } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
+import { formatBrl, formatBrlNoCents } from "@/shared/utils/currency";
 
 interface DriverEarning {
   id: string;
@@ -85,7 +86,7 @@ export function DriverEarningsMetrics({ drivers }: DriverEarningsMetricsProps) {
               <DollarSign className="h-4 w-4 text-emerald-500" />
             </div>
             <div className="text-2xl font-bold text-emerald-500">
-              R$ {totalEarnings.toFixed(2)}
+              {formatBrl(totalEarnings)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               {totalRides} corridas realizadas
@@ -102,7 +103,7 @@ export function DriverEarningsMetrics({ drivers }: DriverEarningsMetricsProps) {
               <Target className="h-4 w-4 text-blue-500" />
             </div>
             <div className="text-2xl font-bold text-blue-500">
-              R$ {avgEarningsPerRide.toFixed(2)}
+              {formatBrl(avgEarningsPerRide)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">Por corrida</p>
           </CardContent>
@@ -161,7 +162,7 @@ export function DriverEarningsMetrics({ drivers }: DriverEarningsMetricsProps) {
                 </span>
               </div>
               <div className="text-2xl font-bold text-emerald-600">
-                R$ {todayEarnings.toFixed(2)}
+                {formatBrl(todayEarnings)}
               </div>
             </div>
 
@@ -173,7 +174,7 @@ export function DriverEarningsMetrics({ drivers }: DriverEarningsMetricsProps) {
                 </span>
               </div>
               <div className="text-2xl font-bold text-blue-600">
-                R$ {weekEarnings.toFixed(2)}
+                {formatBrl(weekEarnings)}
               </div>
             </div>
 
@@ -185,7 +186,7 @@ export function DriverEarningsMetrics({ drivers }: DriverEarningsMetricsProps) {
                 </span>
               </div>
               <div className="text-2xl font-bold text-purple-600">
-                R$ {monthEarnings.toFixed(2)}
+                {formatBrl(monthEarnings)}
               </div>
             </div>
           </div>
@@ -243,7 +244,7 @@ export function DriverEarningsMetrics({ drivers }: DriverEarningsMetricsProps) {
 
                   <div className="text-right">
                     <p className="font-bold text-emerald-600">
-                      R$ {driver.total_earnings.toFixed(2)}
+                      {formatBrl(driver.total_earnings)}
                     </p>
                     {driver.subscription_plan === "prioritario" && (
                       <Badge
@@ -316,7 +317,7 @@ export function DriverEarningsMetrics({ drivers }: DriverEarningsMetricsProps) {
                       </p>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      R$ {driver.total_earnings.toFixed(0)}
+                      {formatBrlNoCents(driver.total_earnings)}
                     </p>
                   </div>
                 </div>

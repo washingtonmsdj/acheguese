@@ -38,6 +38,7 @@ import {
 import { format } from "date-fns";
 import { ptBR } from "@/shared/utils/dateLocale";
 import { cn } from "@/shared/utils/cn";
+import { formatBrl } from "@/shared/utils/currency";
 import { RIDE_STATUS, RIDE_MODE, MOBILITY_QUERY_KEYS } from "@/core/mobility/constants";
 import type { RideRequest } from "@/core/mobility/types/types";
 import {
@@ -241,7 +242,7 @@ export function RideHistoryUnified({
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Total Gasto</p>
-                  <p className="text-2xl font-bold">R$ {stats.totalSpent.toFixed(2)}</p>
+                  <p className="text-2xl font-bold">{formatBrl(stats.totalSpent)}</p>
                 </div>
                 <DollarSign className="h-8 w-8 text-orange-600" />
               </div>
@@ -482,7 +483,7 @@ export function RideHistoryUnified({
 
                     <div className="text-right">
                       <p className="text-2xl font-bold text-primary">
-                        R$ {(ride.final_price || ride.suggested_price || 0).toFixed(2)}
+                        {formatBrl(ride.final_price || ride.suggested_price || 0)}
                       </p>
                     </div>
                   </div>

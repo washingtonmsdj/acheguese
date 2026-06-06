@@ -4,6 +4,8 @@
  * SSOT: Single Source of Truth para todos os textos da UI
  */
 
+import { formatBrl } from "@/shared/utils/currency";
+
 export const BUSCANDO_MOTORISTA_PAGE_LABELS = {
   // Search Status
   SEARCH_TITLE: "Buscando motorista...",
@@ -17,7 +19,7 @@ export const BUSCANDO_MOTORISTA_PAGE_LABELS = {
 
   // Price
   PRICE_LABEL: "Valor estimado",
-  PRICE_FORMAT: (price: number) => `R$ ${price.toFixed(2)}`,
+  PRICE_FORMAT: formatBrl,
 
   // Actions
   BUTTON_CANCEL: "Cancelar solicitação",

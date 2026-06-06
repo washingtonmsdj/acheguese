@@ -8,6 +8,8 @@ import {
   getInitials,
   getRelativeTime,
   formatNumber,
+  formatCompactMetricNumber,
+  formatMetric,
   truncateText,
 } from './formatters';
 
@@ -78,6 +80,26 @@ describe('formatters', () => {
 
     it('deve lidar com zero', () => {
       expect(formatNumber(0)).toBe('0');
+    });
+  });
+
+  describe('formatCompactMetricNumber', () => {
+    it('deve formatar métricas compactas para UI territorial', () => {
+      expect(formatCompactMetricNumber(999)).toBe('999');
+      expect(formatCompactMetricNumber(1500)).toBe('2k+');
+      expect(formatCompactMetricNumber(1500000)).toBe('1.5M');
+    });
+  });
+
+  describe('formatMetric', () => {
+    it('deve retornar "-" para métrica ausente ou inválida', () => {
+      expect(formatMetric(null)).toBe('-');
+      expect(formatMetric(undefined)).toBe('-');
+      expect(formatMetric(Number.NaN)).toBe('-');
+    });
+
+    it('deve formatar métrica numérica válida', () => {
+      expect(formatMetric(1000)).toBe('1k+');
     });
   });
 

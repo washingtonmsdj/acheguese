@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Tag, Plus, Edit, Loader2, MapPin, DollarSign } from "lucide-react";
+import { formatBrlNoCents } from "@/shared/utils/currency";
 
 interface UserClassifiedsSectionProps {
   profileId: string;
@@ -146,7 +147,7 @@ function ClassifiedBlock({
 
                     <Badge variant="outline" className="gap-1">
                       <DollarSign className="h-3 w-3" />
-                      R$ {classified.price}
+                      {formatBrlNoCents(classified.price)}
                     </Badge>
                   </div>
                 </div>

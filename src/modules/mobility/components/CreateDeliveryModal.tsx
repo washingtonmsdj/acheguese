@@ -32,6 +32,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
+import { formatBrl } from "@/shared/utils/currency";
 import { toast } from "sonner";
 import { usePriceEstimate } from "@/core/pricing/hooks/usePriceEstimate";
 import { AddressService } from "@/core/address/services/AddressService";
@@ -644,7 +645,7 @@ export function CreateDeliveryModal({
           {priceEstimate && (
             <div className="p-3 rounded-xl bg-primary/5 border border-primary/20">
               <p className="text-xs text-muted-foreground">Estimativa</p>
-              <p className="text-lg font-bold text-primary">R$ {priceEstimate.estimatedPrice.toFixed(2)}</p>
+              <p className="text-lg font-bold text-primary">{formatBrl(priceEstimate.estimatedPrice)}</p>
               <p className="text-xs text-muted-foreground">Valor final pode variar</p>
             </div>
           )}

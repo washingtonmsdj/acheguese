@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/utils/cn";
+import { formatBrlNoCents } from "@/shared/utils/currency";
 import { getRecordValue } from "@/shared/utils/recordLookup";
 import { getRelativeTime } from "../../utils";
 import { STATUS_CONFIG } from "../../sections/types";
@@ -138,7 +139,7 @@ export const ClassifiedCard = React.forwardRef<HTMLDivElement, ClassifiedCardPro
             </h3>
             <div className="text-right shrink-0">
               <span className="text-base font-bold text-primary whitespace-nowrap">
-                R$ {ad.preco?.toLocaleString("pt-BR")}
+                {ad.preco != null ? formatBrlNoCents(ad.preco) : "Sob consulta"}
               </span>
             </div>
           </div>

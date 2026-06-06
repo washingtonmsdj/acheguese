@@ -17,7 +17,7 @@ import { useMenuItem } from "../hooks";
 import { useGastronomyCartStore } from "../cart/useGastronomyCartStore";
 import type { GastronomyBusiness } from "../types/gastronomy";
 import type { MenuItemAddon, MenuItemVariant, MenuItemWithRelations } from "../types";
-import { money } from "../utils/currency";
+import { formatBrl, money } from "../utils/currency";
 import {
   PizzaAdminService,
   PizzaBuilder,
@@ -398,7 +398,7 @@ export function MenuItemDetailDrawer({
               <div className="flex items-center justify-between rounded-xl border bg-muted/30 p-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Preço base</p>
-                  <p className="text-2xl font-bold text-primary">R$ {resolvedItem.base_price.toFixed(2)}</p>
+                  <p className="text-2xl font-bold text-primary">{formatBrl(resolvedItem.base_price)}</p>
                   {resolvedItem.calories && (
                     <p className="text-xs text-muted-foreground mt-1">{resolvedItem.calories} kcal</p>
                   )}
@@ -452,7 +452,7 @@ export function MenuItemDetailDrawer({
                           <span className="font-medium">{variant.name}</span>
                           <span className="text-sm text-muted-foreground">
                             {variant.price_adjustment > 0
-                              ? `+ R$ ${variant.price_adjustment.toFixed(2)}`
+                              ? `+ ${formatBrl(variant.price_adjustment)}`
                               : "Sem ajuste"}
                           </span>
                         </button>
@@ -473,7 +473,7 @@ export function MenuItemDetailDrawer({
                         <div key={addon.id} className="flex items-center justify-between rounded-xl border p-4">
                           <div>
                             <p className="font-medium">{addon.name}</p>
-                            <p className="text-sm text-muted-foreground">R$ {addon.price.toFixed(2)} cada</p>
+                            <p className="text-sm text-muted-foreground">{formatBrl(addon.price)} cada</p>
                           </div>
 
                           <div className="flex items-center gap-2">
@@ -559,17 +559,16 @@ export function MenuItemDetailDrawer({
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Base da linha</span>
                     <span>
-                      R${" "}
-                      {money((basePrice + selectedVariantAdjustment) * quantity).toFixed(2)}
+                      {formatBrl(money((basePrice + selectedVariantAdjustment) * quantity))}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Adicionais</span>
-                    <span>R$ {addonsTotal.toFixed(2)}</span>
+                    <span>{formatBrl(addonsTotal)}</span>
                   </div>
                   <div className="flex items-center justify-between text-base font-semibold">
                     <span>Total do item</span>
-                    <span className="text-primary">R$ {lineTotal.toFixed(2)}</span>
+                    <span className="text-primary">{formatBrl(lineTotal)}</span>
                   </div>
                 </div>
               </section>
@@ -583,7 +582,7 @@ export function MenuItemDetailDrawer({
               <div className="min-w-0">
                 <p className="text-xs text-muted-foreground">Total do item</p>
                 <p className="truncate text-lg font-semibold text-primary">
-                  R$ {lineTotal.toFixed(2)}
+                  {formatBrl(lineTotal)}
                 </p>
               </div>
               <Button

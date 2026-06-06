@@ -18,6 +18,7 @@ import { PizzaSliceVisualizer } from "./PizzaSliceVisualizer";
 import { findFlavorByMenuItemName } from "../utils/flavorMatch";
 import { resolvePizzaRenderSize, textHasPizzaCrustHint } from "../utils/pizzaVisualRules";
 import { getRecordValue, setRecordValue } from "@/shared/utils/recordLookup";
+import { formatBrl } from "../../../utils/currency";
 
 interface Props {
   businessId: string;
@@ -401,7 +402,7 @@ export function PizzaPredefinedBuilder({
                             </span>
                             {selectedFlavor && (
                               <span className="text-xs text-muted-foreground">
-                                R$ {selectedFlavor.base_price.toFixed(2)}
+                                {formatBrl(selectedFlavor.base_price)}
                               </span>
                             )}
                           </div>
@@ -422,7 +423,7 @@ export function PizzaPredefinedBuilder({
                               </span>
                             )}
                             <span className="text-xs font-medium text-primary">
-                              R$ {flavor.base_price.toFixed(2)}
+                              {formatBrl(flavor.base_price)}
                             </span>
                           </DropdownMenuItem>
                         ))}
@@ -506,7 +507,7 @@ export function PizzaPredefinedBuilder({
                   onClick={() => setEdgeId(e.id)}
                   size="sm"
                 >
-                  {e.name} +R$ {e.price.toFixed(2)}
+                  {e.name} +{formatBrl(e.price)}
                 </Button>
               ))}
           </div>
@@ -527,7 +528,7 @@ export function PizzaPredefinedBuilder({
                   size="sm"
                 >
                   {d.name}
-                  {d.price_adjustment > 0 && ` +R$ ${d.price_adjustment.toFixed(2)}`}
+                  {d.price_adjustment > 0 && ` +${formatBrl(d.price_adjustment)}`}
                 </Button>
               ))}
           </div>
@@ -548,7 +549,7 @@ export function PizzaPredefinedBuilder({
                     <div>
                       <p className="font-medium text-sm">{extra.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        + R$ {extra.price.toFixed(2)} cada
+                        + {formatBrl(extra.price)} cada
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -622,33 +623,33 @@ export function PizzaPredefinedBuilder({
             <div className="space-y-2 text-sm">
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Tamanho</span>
-                <span>R$ {price.size_price.toFixed(2)}</span>
+                <span>{formatBrl(price.size_price)}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Sabores</span>
-                <span>R$ {price.flavor_price.toFixed(2)}</span>
+                <span>{formatBrl(price.flavor_price)}</span>
               </div>
               {price.dough_price > 0 && (
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Massa</span>
-                  <span>+ R$ {price.dough_price.toFixed(2)}</span>
+                  <span>+ {formatBrl(price.dough_price)}</span>
                 </div>
               )}
               {price.edge_price > 0 && (
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Borda</span>
-                  <span>+ R$ {price.edge_price.toFixed(2)}</span>
+                  <span>+ {formatBrl(price.edge_price)}</span>
                 </div>
               )}
               {price.addons_total > 0 && (
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Extras</span>
-                  <span>+ R$ {price.addons_total.toFixed(2)}</span>
+                  <span>+ {formatBrl(price.addons_total)}</span>
                 </div>
               )}
               <div className="border-t pt-2 flex items-center justify-between text-base font-semibold">
                 <span>Total</span>
-                <span className="text-primary">R$ {price.line_total.toFixed(2)}</span>
+                <span className="text-primary">{formatBrl(price.line_total)}</span>
               </div>
             </div>
           </section>

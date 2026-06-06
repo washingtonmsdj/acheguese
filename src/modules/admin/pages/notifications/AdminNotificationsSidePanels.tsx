@@ -15,7 +15,7 @@ import {
   AdminDataState,
   AdminErrorState,
   AdminSectionCard,
-} from "@/modules/admin/components";
+} from "@/core/admin/components";
 import { Badge } from "@/shared/components/ui/badge";
 import {
   formatNotificationType,

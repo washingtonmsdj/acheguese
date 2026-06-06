@@ -1,4 +1,5 @@
 import { Clock3, MapPinned, Wallet } from "lucide-react";
+import { formatBrl } from "@/shared/utils/currency";
 
 interface RouteFare {
   base: number;
@@ -50,7 +51,7 @@ export function RouteEstimateCard({ estimate, variant = "default" }: RouteEstima
           <div>
             <p className="text-[10px] text-muted-foreground">Estimativa</p>
             <p className="text-xs font-semibold">
-              {estimate.fare?.formatted ?? `R$ ${estimate.price.toFixed(2)}`}
+              {estimate.fare?.formatted ?? formatBrl(estimate.price)}
             </p>
           </div>
         </div>
@@ -58,4 +59,3 @@ export function RouteEstimateCard({ estimate, variant = "default" }: RouteEstima
     </div>
   );
 }
-

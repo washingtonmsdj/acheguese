@@ -11,6 +11,7 @@ import { acceptRide, startRide, completeRide, cancelRide } from "@/core/mobility
 import { RideOperationalService } from "@/core/mobility/core/RideOperationalService";
 import { RideDispatchService } from "@/core/mobility/core/RideDispatchService";
 import { logger } from "@/shared/utils/logger";
+import { formatBrl } from "@/shared/utils/currency";
 import { useRideRealtime } from "./useRideRealtime";
 import { RIDE_STATUS, MOBILITY_QUERY_KEYS, TIMEOUTS } from "@/core/mobility/constants";
 
@@ -292,7 +293,7 @@ export function useMobilidade() {
         
         // Toast com preço calculado OFICIAL
         if (normalizedSuggestedPrice !== undefined) {
-          toast.success(`Corrida solicitada! Preco oficial: R$ ${normalizedSuggestedPrice.toFixed(2)}`);
+          toast.success(`Corrida solicitada! Preco oficial: ${formatBrl(normalizedSuggestedPrice)}`);
         } else {
           toast.success("Corrida solicitada!");
         }
@@ -509,9 +510,9 @@ export function useMobilidade() {
         
         // Toast com preço final oficial
         if (finalPrice) {
-          toast.success(`Corrida completada! Valor ajustado: R$ ${calculatedFinalPrice.toFixed(2)}`);
+          toast.success(`Corrida completada! Valor ajustado: ${formatBrl(calculatedFinalPrice)}`);
         } else {
-          toast.success(`Corrida completada! Valor confirmado: R$ ${calculatedFinalPrice.toFixed(2)}`);
+          toast.success(`Corrida completada! Valor confirmado: ${formatBrl(calculatedFinalPrice)}`);
         }
       } catch (error) {
         logger.error("useMobilidade.completeRide", error as Error);

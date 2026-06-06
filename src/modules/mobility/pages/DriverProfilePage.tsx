@@ -22,6 +22,7 @@ import { Card } from "@/shared/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { cn } from "@/shared/utils/cn";
+import { formatBrlNoCents } from "@/shared/utils/currency";
 
 function formatNumber(value: unknown, digits = 0): string {
   if (typeof value !== "number" || Number.isNaN(value)) {
@@ -98,7 +99,10 @@ export default function DriverProfilePage() {
   const ratingText = formatNumber(profile.rating, 1);
   const totalRidesText =
     typeof profile.total_rides === "number" ? String(profile.total_rides) : "0";
-  const totalEarningsText = formatNumber(profileAny.total_earnings, 0);
+  const totalEarningsText =
+    typeof profileAny.total_earnings === "number" && !Number.isNaN(profileAny.total_earnings)
+      ? formatBrlNoCents(profileAny.total_earnings)
+      : "Nao informado";
   const acceptanceRateText = formatNumber(profile.acceptance_rate, 0);
   const totalRatingsText =
     typeof profileAny.total_ratings === "number"
@@ -214,9 +218,7 @@ export default function DriverProfilePage() {
                 <div className="rounded-lg border border-emerald-500/10 bg-emerald-500/5 p-3 text-center">
                   <TrendingUp className="mx-auto mb-1 h-4 w-4 text-emerald-400" />
                   <p className="text-lg font-bold text-emerald-400">
-                    {totalEarningsText === "Nao informado"
-                      ? totalEarningsText
-                      : `R$ ${totalEarningsText}`}
+                    {totalEarningsText}
                   </p>
                   <p className="text-xs text-muted-foreground">Total ganho</p>
                 </div>

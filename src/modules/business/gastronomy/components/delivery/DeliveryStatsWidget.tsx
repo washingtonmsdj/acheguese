@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui
 import { useOrderStats } from '@/modules/business/gastronomy/hooks';
 import { Package, Clock, DollarSign, TrendingUp } from 'lucide-react';
 import { Skeleton } from '@/shared/components/ui/skeleton';
+import { formatBrl } from '../../utils/currency';
 
 interface DeliveryStatsWidgetProps {
   businessId: string;
@@ -103,7 +104,7 @@ export function DeliveryStatsWidget({
             <DollarSign className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm text-muted-foreground">Receita</span>
           </div>
-          <span className="text-lg font-bold">R$ {(stats.total_revenue ?? 0).toFixed(2)}</span>
+          <span className="text-lg font-bold">{formatBrl(stats.total_revenue ?? 0)}</span>
         </div>
 
         <div className="flex items-center justify-between">
@@ -111,7 +112,7 @@ export function DeliveryStatsWidget({
             <Clock className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm text-muted-foreground">Ticket Médio</span>
           </div>
-          <span className="text-lg font-bold">R$ {(stats.average_order_value ?? 0).toFixed(2)}</span>
+          <span className="text-lg font-bold">{formatBrl(stats.average_order_value ?? 0)}</span>
         </div>
       </CardContent>
     </Card>

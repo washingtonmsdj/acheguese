@@ -8,6 +8,7 @@
 import { useDeliverySummary } from '../../hooks';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { MapPin, TrendingUp, Clock } from 'lucide-react';
+import { formatBrl } from '../../utils/currency';
 
 interface DeliverySummaryWidgetProps {
   businessId: string;
@@ -94,9 +95,9 @@ export function DeliverySummaryWidget({ businessId }: DeliverySummaryWidgetProps
             <p className="text-2xl font-bold">
               {minDeliveryFee !== null && maxDeliveryFee !== null ? (
                 minDeliveryFee === maxDeliveryFee ? (
-                  `R$ ${minDeliveryFee.toFixed(2)}`
+                  formatBrl(minDeliveryFee)
                 ) : (
-                  `R$ ${minDeliveryFee.toFixed(2)} - ${maxDeliveryFee.toFixed(2)}`
+                  `${formatBrl(minDeliveryFee)} - ${formatBrl(maxDeliveryFee)}`
                 )
               ) : (
                 '-'

@@ -25,6 +25,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '@/shared/components/ui/card';
 import { Badge } from '@/shared/components/ui/badge';
 import { cn } from '@/shared/utils/cn';
+import { formatBrl } from '@/shared/utils/currency';
 type RouteEstimate = {
   distance: { distanceFormatted: string };
   eta: { durationFormatted: string; arrivalTime: Date };
@@ -126,7 +127,7 @@ export const RouteEstimateSummaryCard = memo(
           <div className="w-px h-4 bg-border" />
           <div className="flex items-center gap-1.5 text-muted-foreground">
             <DollarSign className="h-4 w-4 text-success" />
-            <span className="font-bold text-success">R$ {(fare?.finalFare ?? 0).toFixed(2)}</span>
+            <span className="font-bold text-success">{formatBrl(fare?.finalFare ?? 0)}</span>
           </div>
         </motion.div>
       );
@@ -191,7 +192,7 @@ export const RouteEstimateSummaryCard = memo(
               >
                 <DollarSign className="h-6 w-6 text-success mx-auto mb-2" />
                 <p className="text-xl font-bold text-success">
-                  R$ {(fare?.finalFare ?? 0).toFixed(2)}
+                  {formatBrl(fare?.finalFare ?? 0)}
                 </p>
                 <p className="text-xs text-muted-foreground uppercase tracking-wider mt-1">Preço</p>
               </motion.div>
@@ -220,7 +221,7 @@ export const RouteEstimateSummaryCard = memo(
                     >
                       <span className="text-muted-foreground">{item.label}</span>
                       <span className="font-semibold text-foreground">
-                        R$ {(item?.value ?? 0).toFixed(2)}
+                        {formatBrl(item?.value ?? 0)}
                       </span>
                     </motion.div>
                   ))}
@@ -228,7 +229,7 @@ export const RouteEstimateSummaryCard = memo(
                     <div className="flex items-center justify-between text-sm pt-2 border-t border-border">
                       <span className="text-muted-foreground">Tarifa mínima aplicada</span>
                       <span className="font-semibold text-foreground">
-                        R$ {(fare?.minimumFare ?? 0).toFixed(2)}
+                        {formatBrl(fare?.minimumFare ?? 0)}
                       </span>
                     </div>
                   )}
@@ -308,7 +309,7 @@ export const RouteEstimateSummaryCard = memo(
             >
               <DollarSign className="h-5 w-5 text-success mx-auto mb-1" />
               <p className="text-lg font-bold text-success">
-                R$ {(fare?.finalFare ?? 0).toFixed(2)}
+                {formatBrl(fare?.finalFare ?? 0)}
               </p>
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Preço</p>
             </motion.div>
@@ -337,7 +338,7 @@ export const RouteEstimateSummaryCard = memo(
                   >
                     <span className="text-muted-foreground">{item.label}</span>
                     <span className="font-semibold text-foreground">
-                      R$ {(item?.value ?? 0).toFixed(2)}
+                      {formatBrl(item?.value ?? 0)}
                     </span>
                   </motion.div>
                 ))}
@@ -345,7 +346,7 @@ export const RouteEstimateSummaryCard = memo(
                   <div className="flex items-center justify-between text-xs pt-2 border-t border-border">
                     <span className="text-muted-foreground">Tarifa mínima aplicada</span>
                     <span className="font-semibold text-foreground">
-                      R$ {(fare?.minimumFare ?? 0).toFixed(2)}
+                      {formatBrl(fare?.minimumFare ?? 0)}
                     </span>
                   </div>
                 )}

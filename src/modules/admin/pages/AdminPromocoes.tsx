@@ -32,12 +32,13 @@ import {
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "@/shared/utils/dateLocale";
+import { formatBrl } from "@/shared/utils/currency";
 import {
   AdminStatsCard,
   AdminFiltersBar,
   AdminPagination,
   type FilterOption,
-} from "@/modules/admin/components";
+} from "@/core/admin/components";
 import type { Promotion } from "@/core/admin/services/AdminPromotionsService";
 import { useConfirmActionDialog } from "@/shared/hooks/useConfirmActionDialog";
 
@@ -483,7 +484,7 @@ export default function AdminPromocoes() {
               </CardHeader>
               <CardContent>
                 <p className="text-3xl font-bold">
-                  R$ {(stats?.totalDiscountValue ?? 0).toLocaleString("pt-BR")}
+                  {formatBrl(stats?.totalDiscountValue ?? 0)}
                 </p>
                 <p className="text-sm text-muted-foreground">em descontos aplicados</p>
               </CardContent>

@@ -1,6 +1,7 @@
 import { RIDE_STATUS } from "../constants";
 import { secureRandomString } from "@/shared/utils/secureRandom";
 import { getRecordValue } from "@/shared/utils/recordLookup";
+import { formatBrl } from "@/shared/utils/currency";
 
 export function isRideActive(status: string): boolean {
   const activeStatuses: string[] = [
@@ -83,7 +84,7 @@ export function formatDuration(minutes: number): string {
 }
 
 export function formatPrice(value: number): string {
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
+  return formatBrl(value);
 }
 
 export function generateShareToken(): string {

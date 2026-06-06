@@ -1,3 +1,5 @@
+import { formatBrlFromCentsNoCents } from "@/shared/utils/currency";
+
 /**
  * ═══════════════════════════════════════════════════════════════════════════════
  * VAGAS TYPES — SSOT NÍVEL AAA
@@ -360,13 +362,7 @@ export const SORT_OPTIONS: { value: VagaSortOption; label: string }[] = [
 export function formatSalary(vaga: Vaga): string {
   if (vaga.salarioTexto) return vaga.salarioTexto;
   
-  const formatValue = (cents: number) =>
-    new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(cents / 100);
+  const formatValue = formatBrlFromCentsNoCents;
 
   switch (vaga.salaryMode) {
     case 'fixed':

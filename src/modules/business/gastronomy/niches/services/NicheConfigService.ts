@@ -39,6 +39,7 @@ import {
   getNicheOrDefault,
   DEFAULT_NICHE_KEY,
 } from '../registry';
+import { formatBrl } from '../../utils/currency';
 
 // ── Tipos ───────────────────────────────────────────────────────────────────
 
@@ -267,7 +268,7 @@ export const NicheConfigService = {
     if (rules.minPrice !== undefined && itemData.base_price !== undefined) {
       const price = Number(itemData.base_price);
       if (price < rules.minPrice) {
-        errors.push(`Preço mínimo para ${niche.publicLabel} é R$ ${rules.minPrice.toFixed(2)}.`);
+        errors.push(`Preço mínimo para ${niche.publicLabel} é ${formatBrl(rules.minPrice)}.`);
       }
     }
 
@@ -275,7 +276,7 @@ export const NicheConfigService = {
     if (rules.maxPrice !== undefined && itemData.base_price !== undefined) {
       const price = Number(itemData.base_price);
       if (price > rules.maxPrice) {
-        errors.push(`Preço máximo para ${niche.publicLabel} é R$ ${rules.maxPrice.toFixed(2)}.`);
+        errors.push(`Preço máximo para ${niche.publicLabel} é ${formatBrl(rules.maxPrice)}.`);
       }
     }
 

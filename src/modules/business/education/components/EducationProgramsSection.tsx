@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { BookOpen, Clock, Users, ChevronRight } from 'lucide-react';
 import { Badge } from '@/shared/components/ui/badge';
 import { cn } from '@/shared/utils/cn';
+import { formatBrl } from '@/shared/utils/currency';
 import type { EducationProgram } from '../types';
 
 export interface EducationProgramsSectionProps {
@@ -115,7 +116,7 @@ export const EducationProgramsSection = memo(function EducationProgramsSection({
                 )}
                 {program.price_from !== null && (
                   <span className="text-green-600 font-medium">
-                    A partir de R$ {program.price_from.toFixed(2)}
+                    A partir de {formatBrl(program.price_from)}
                   </span>
                 )}
               </div>

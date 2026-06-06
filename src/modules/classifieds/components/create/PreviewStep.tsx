@@ -14,6 +14,7 @@ import { getSubcategoryLabel } from "@/modules/classifieds/constants/subcategori
 import { getPriceTypeLabel } from "@/modules/classifieds/constants/price-types";
 import { getCategoryFields } from "@/modules/classifieds/constants/category-fields";
 import { getRecordValue } from "@/shared/utils/recordLookup";
+import { formatBrlNoCents } from "@/shared/utils/currency";
 
 interface PreviewStepProps {
   titulo: string;
@@ -51,7 +52,7 @@ export function PreviewStep({
       ? "Grátis"
       : priceType === "sob_consulta"
       ? "Sob consulta"
-      : `R$ ${parseFloat(price || "0").toLocaleString("pt-BR")}`;
+      : formatBrlNoCents(parseFloat(price || "0"));
 
   const categoryFields = getCategoryFields(category);
   const filledDetails = categoryFields.filter((f) => getRecordValue(details, f.key));

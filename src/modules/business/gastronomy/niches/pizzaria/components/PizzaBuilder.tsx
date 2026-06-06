@@ -10,6 +10,7 @@ import type { MenuItemWithRelations } from "@/modules/business/gastronomy/types/
 import { PizzaSliceVisualizer } from "./PizzaSliceVisualizer";
 import { findFlavorByMenuItemName } from "../utils/flavorMatch";
 import { resolvePizzaRenderSize, textHasPizzaCrustHint } from "../utils/pizzaVisualRules";
+import { formatBrl } from "../../../utils/currency";
 
 interface Props {
   businessId: string;
@@ -216,7 +217,7 @@ export function PizzaBuilder({ businessId, item, catalog, onAddToCart, defaultEd
                 }`}
               >
                 <p className="font-medium">{flavor.name}</p>
-                <p className="text-sm text-muted-foreground">R$ {flavor.base_price.toFixed(2)}</p>
+                <p className="text-sm text-muted-foreground">{formatBrl(flavor.base_price)}</p>
               </button>
             ))}
           </div>
@@ -251,7 +252,7 @@ export function PizzaBuilder({ businessId, item, catalog, onAddToCart, defaultEd
                 variant={edgeId === entry.id ? "default" : "outline"}
                 onClick={() => setEdgeId(entry.id)}
               >
-                {entry.name} +R$ {entry.price.toFixed(2)}
+                {entry.name} +{formatBrl(entry.price)}
               </Button>
             ))}
           </div>
@@ -267,7 +268,7 @@ export function PizzaBuilder({ businessId, item, catalog, onAddToCart, defaultEd
                 variant={doughId === entry.id ? "default" : "outline"}
                 onClick={() => setDoughId(entry.id)}
               >
-                {entry.name} +R$ {entry.price_adjustment.toFixed(2)}
+                {entry.name} +{formatBrl(entry.price_adjustment)}
               </Button>
             ))}
           </div>
@@ -305,7 +306,7 @@ export function PizzaBuilder({ businessId, item, catalog, onAddToCart, defaultEd
             </div>
           </div>
           <span className="text-lg font-bold text-primary">
-            {price ? `R$ ${price.line_total.toFixed(2)}` : "--"}
+            {price ? formatBrl(price.line_total) : "--"}
           </span>
         </div>
 

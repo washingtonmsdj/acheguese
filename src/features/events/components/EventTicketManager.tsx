@@ -34,6 +34,7 @@ import { Badge } from '@/shared/components/ui/badge';
 import { cn } from '@/shared/utils/cn';
 import { useConfirmActionDialog } from '@/shared/hooks/useConfirmActionDialog';
 import { useToast } from '@/shared/hooks/use-toast';
+import { formatBrl } from '@/shared/utils/currency';
 
 interface Ticket {
   id: string;
@@ -228,7 +229,7 @@ export function EventTicketManager({
                         <div className="flex items-center gap-1.5 text-foreground">
                           <DollarSign className="h-4 w-4 text-green-600" />
                           <span className="font-semibold">
-                            R$ {ticket.price.toFixed(2)}
+                            {formatBrl(ticket.price)}
                           </span>
                         </div>
                         <div className="flex items-center gap-1.5 text-muted-foreground">
@@ -302,7 +303,7 @@ export function EventTicketManager({
             <div>
               <p className="text-xs text-muted-foreground">Receita Total</p>
               <p className="text-lg font-bold text-green-600">
-                R$ {totals.revenue.toLocaleString('pt-BR')}
+                {formatBrl(totals.revenue)}
               </p>
             </div>
             <div>

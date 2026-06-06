@@ -2,7 +2,7 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { adminStatsService } from "@/core/admin/services/AdminStatsService";
 import type { ActivityData, RecentActivity } from "@/core/admin/services/AdminStatsService";
-import { TrendIndicator, TrendData } from "../components/TrendIndicator";
+import { TrendIndicator, TrendData } from "@/core/admin/components/TrendIndicator";
 import {
   Building2,
   Wrench,

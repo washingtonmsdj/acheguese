@@ -2,7 +2,7 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
-import { TrendIndicator, TrendData } from "./TrendIndicator";
+import { TrendIndicator, TrendData } from "@/core/admin/components/TrendIndicator";
 import { Users, MessageSquare, Heart, Layers, TrendingUp } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/shared/utils/cn";

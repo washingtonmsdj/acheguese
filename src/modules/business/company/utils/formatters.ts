@@ -1,3 +1,5 @@
+import { formatBrl } from "@/shared/utils/currency";
+
 /**
  * Formatters - Funções utilitárias para formatação
  * 
@@ -46,5 +48,5 @@ export function getYearsActive(createdAt: string): string {
  * Formata preço para formato brasileiro
  */
 export function formatPrice(price: number): string {
-  return `R$ ${price.toFixed(2).replace(".", ",")}`;
+  return formatBrl(price);
 }

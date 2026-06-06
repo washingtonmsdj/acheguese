@@ -31,6 +31,7 @@ import { Skeleton } from '@/shared/components/ui/skeleton';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 import { GastronomyUrlService } from '@/core/verticals/gastronomy/services/GastronomyUrlService';
 import { buildTelUrl } from '@/shared/utils/contactLinks';
+import { formatBrl } from '../utils/currency';
 
 const ORDER_TYPE_LABELS = {
   pickup: 'Retirada',
@@ -185,7 +186,7 @@ export default function OrderDetailsPage() {
         </div>
 
         <div className="sm:text-right">
-          <p className="text-2xl sm:text-3xl font-bold">R$ {order.total.toFixed(2)}</p>
+          <p className="text-2xl sm:text-3xl font-bold">{formatBrl(order.total)}</p>
           <p className="text-sm text-muted-foreground">{ORDER_TYPE_LABELS[order.order_type]}</p>
         </div>
       </div>
@@ -300,24 +301,24 @@ export default function OrderDetailsPage() {
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Subtotal</span>
-                <span className="font-medium">R$ {order.subtotal.toFixed(2)}</span>
+                <span className="font-medium">{formatBrl(order.subtotal)}</span>
               </div>
               {order.delivery_fee > 0 && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Taxa de entrega</span>
-                  <span className="font-medium">R$ {order.delivery_fee.toFixed(2)}</span>
+                  <span className="font-medium">{formatBrl(order.delivery_fee)}</span>
                 </div>
               )}
               {order.discount > 0 && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Desconto</span>
-                  <span className="font-medium text-green-600">-R$ {order.discount.toFixed(2)}</span>
+                  <span className="font-medium text-green-600">{formatBrl(-order.discount)}</span>
                 </div>
               )}
               <Separator />
               <div className="flex justify-between text-lg font-bold">
                 <span>Total</span>
-                <span>R$ {order.total.toFixed(2)}</span>
+                <span>{formatBrl(order.total)}</span>
               </div>
             </div>
             {(order.delivery_courier_cost !== null || order.delivery_margin !== null) && (
@@ -330,14 +331,14 @@ export default function OrderDetailsPage() {
                   {order.delivery_courier_cost !== null && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Custo logística (motoboy)</span>
-                      <span className="font-medium">R$ {order.delivery_courier_cost.toFixed(2)}</span>
+                      <span className="font-medium">{formatBrl(order.delivery_courier_cost)}</span>
                     </div>
                   )}
                   {order.delivery_margin !== null && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Margem da taxa de entrega</span>
                       <span className={`font-medium ${order.delivery_margin >= 0 ? 'text-emerald-600' : 'text-destructive'}`}>
-                        R$ {order.delivery_margin.toFixed(2)}
+                        {formatBrl(order.delivery_margin)}
                       </span>
                     </div>
                   )}
@@ -472,7 +473,7 @@ export default function OrderDetailsPage() {
                     </div>
                   </div>
                 </div>
-                <p className="font-medium whitespace-nowrap">R$ {item.total.toFixed(2)}</p>
+                <p className="font-medium whitespace-nowrap">{formatBrl(item.total)}</p>
               </div>
             ))}
           </div>

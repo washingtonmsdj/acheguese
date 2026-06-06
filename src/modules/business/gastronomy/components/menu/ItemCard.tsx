@@ -8,6 +8,7 @@ import { Badge } from '@/shared/components/ui/badge';
 import { Switch } from '@/shared/components/ui/switch';
 import { Pencil, Trash2, Image as ImageIcon, Clock, PackageX } from 'lucide-react';
 import type { MenuItem } from '@/modules/business/gastronomy/services/MenuService';
+import { formatBrl } from '../../utils/currency';
 
 interface ItemCardProps {
   item: MenuItem;
@@ -88,7 +89,7 @@ export function ItemCard({
             </div>
 
             <div className="flex items-center gap-4 mt-2">
-              <span className="text-lg font-semibold text-primary">R$ {item.price.toFixed(2)}</span>
+              <span className="text-lg font-semibold text-primary">{formatBrl(item.price)}</span>
 
               {item.preparation_time_min && (
                 <div className="flex items-center gap-1 text-sm text-muted-foreground">

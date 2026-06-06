@@ -19,7 +19,7 @@ import {
   AdminTable,
   AdminDataState,
   AdminErrorState,
-} from "@/modules/admin/components";
+} from "@/core/admin/components";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";

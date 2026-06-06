@@ -9,6 +9,7 @@ import { MotoboyDeliveryActions } from "@/modules/mobility/components/driver/Mot
 import { useMotoristaPage } from "@/modules/mobility/hooks/useMotoristaPage";
 import { getMobilityServicePath } from "@/modules/mobility/routes/mobilityNavigation";
 import { getRecordValue } from "@/shared/utils/recordLookup";
+import { formatBrl } from "@/shared/utils/currency";
 
 type DeliveryLike = {
   id: string;
@@ -146,7 +147,7 @@ export function DriverDeliveriesLayout() {
                   ) : null}
                 </div>
                 <Badge variant="outline">
-                  {typeof delivery.suggested_price === "number" ? `R$ ${delivery.suggested_price.toFixed(2)}` : "Sem valor"}
+                  {typeof delivery.suggested_price === "number" ? formatBrl(delivery.suggested_price) : "Sem valor"}
                 </Badge>
               </div>
               <Button className="w-full" disabled={!shell.isDriverOnline || shell.actionsLoading} onClick={() => shell.acceptRide(delivery.id)}>

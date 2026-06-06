@@ -34,6 +34,7 @@ import { CompleteRideDialog } from "../components/driver/CompleteRideDialog";
 import { CancelRideDialog } from "../components/driver/CancelRideDialog";
 import { RatePassengerDialog } from "../components/driver/RatePassengerDialog";
 import { cn } from "@/shared/utils/cn";
+import { formatBrl } from "@/shared/utils/currency";
 import {
   ArrowLeft,
   Package,
@@ -221,7 +222,7 @@ export default function MotoboyPage() {
                           </p>
                         </div>
                         <Badge className="bg-orange-500/10 text-orange-600">
-                          R$ {typeof delivery.suggested_price === "number" ? delivery.suggested_price.toFixed(2) : "0.00"}
+                          {typeof delivery.suggested_price === "number" ? formatBrl(delivery.suggested_price) : "Sem valor"}
                         </Badge>
                       </div>
                       <Button

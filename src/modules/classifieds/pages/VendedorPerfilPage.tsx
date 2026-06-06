@@ -20,6 +20,7 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import { VendedorAdFilters, applyAdFilters, type AdFilters } from "../components/profile/VendedorAdFilters";
 import { VendedorContactBar } from "../components/profile/VendedorContactBar";
 import { classifiedUrlService } from "@/core/classifieds/services";
+import { formatBrlNoCents } from "@/shared/utils/currency";
 
 export default function VendedorPerfilPage() {
   const { sellerId } = useParams<{ sellerId: string }>();
@@ -208,7 +209,7 @@ export default function VendedorPerfilPage() {
                     </h3>
                     <div className="flex items-center justify-between mt-1.5">
                       <span className="text-base font-bold text-primary">
-                        R$ {ad.price.toLocaleString("pt-BR")}
+                        {formatBrlNoCents(ad.price)}
                       </span>
                       <span className="text-[10px] text-muted-foreground">{ad.category}</span>
                     </div>

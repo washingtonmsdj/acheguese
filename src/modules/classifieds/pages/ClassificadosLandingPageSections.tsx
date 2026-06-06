@@ -17,6 +17,7 @@ import { Input } from "@/shared/components/ui/input";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/shared/components/ui/sheet";
 import { cn } from "@/shared/utils/cn";
+import { formatBrlNoCents } from "@/shared/utils/currency";
 import type { ClassificadoWithVendedor } from "@/core/classifieds/hooks/useClassificados";
 
 interface LandingFilters {
@@ -275,7 +276,7 @@ export function FeaturedSection({ ads, onAdClick }: { ads: ClassificadoWithVende
                 Destaque
               </div>
               <span className="absolute bottom-1.5 left-1.5 text-xs font-bold text-white drop-shadow-lg">
-                R$ {ad.preco?.toLocaleString("pt-BR")}
+                {ad.preco != null ? formatBrlNoCents(ad.preco) : "Sob consulta"}
               </span>
             </div>
             <div className="p-2">
@@ -427,7 +428,7 @@ const ItemCard = React.forwardRef<
 
         <div className="absolute bottom-2 left-2">
           <span className="text-sm font-bold text-white drop-shadow-lg">
-            R$ {ad.preco?.toLocaleString("pt-BR")}
+            {ad.preco != null ? formatBrlNoCents(ad.preco) : "Sob consulta"}
           </span>
         </div>
       </div>

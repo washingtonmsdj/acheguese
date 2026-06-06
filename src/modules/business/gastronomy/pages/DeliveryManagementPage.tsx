@@ -33,6 +33,7 @@ import { useOrders } from '../hooks/useOrders';
 import { OrderDeliveryLinkService } from '@/core/mobility/delivery/services/OrderDeliveryLinkService';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 import { getRecordValue } from '@/shared/utils/recordLookup';
+import { formatBrl } from '../utils/currency';
 
 type DeliveryFilterTab = 'all' | 'pending' | 'in_progress' | 'delivered' | 'failed' | 'cancelled';
 
@@ -105,7 +106,7 @@ function canCancel(status: string): boolean {
 
 function formatMoney(value?: number | null): string {
   const safeValue = typeof value === 'number' && Number.isFinite(value) ? value : 0;
-  return `R$ ${safeValue.toFixed(2)}`;
+  return formatBrl(safeValue);
 }
 
 export default function DeliveryManagementPage() {

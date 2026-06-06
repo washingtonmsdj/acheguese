@@ -29,7 +29,7 @@ import {
   AdminStatsGrid,
   AdminTable,
   type FilterOption,
-} from "@/modules/admin/components";
+} from "@/core/admin/components";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { useToast } from "@/shared/hooks/use-toast";

@@ -44,6 +44,7 @@ import {
 import { toast } from "sonner";
 import { CUISINE_TYPES } from "@/core/verticals/gastronomy";
 import { openSafeUrlInNewTab } from "@/shared/utils/safeRedirect";
+import { formatBrl } from "@/shared/utils/currency";
 
 const PAGE_SIZE = 20;
 
@@ -474,7 +475,7 @@ export default function AdminGastronomia() {
                         <TableCell>{item.categoryName || "-"}</TableCell>
                         <TableCell>{item.menuName || "-"}</TableCell>
                         <TableCell>{item.businessName || "-"}</TableCell>
-                        <TableCell>R$ {Number(item.basePrice || 0).toFixed(2)}</TableCell>
+                        <TableCell>{formatBrl(Number(item.basePrice || 0))}</TableCell>
                         <TableCell>
                           {item.image_url ? (
                             <Badge variant="secondary">Com imagem</Badge>

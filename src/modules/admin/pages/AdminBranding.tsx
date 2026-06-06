@@ -16,7 +16,7 @@ import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { useConfirmActionDialog } from '@/shared/hooks/useConfirmActionDialog';
 import { toast } from 'sonner';
-import { AdminPageHeader } from '../components';
+import { AdminPageHeader } from '@/core/admin/components';
 import { SiteSettingsService } from '@/core/admin/services/SiteSettingsService';
 import { SITE_SETTINGS_STORAGE } from '@/core/admin/config/siteSettings.config';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';

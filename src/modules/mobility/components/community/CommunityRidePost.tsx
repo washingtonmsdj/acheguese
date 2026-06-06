@@ -15,6 +15,7 @@ import {
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { cn } from "@/shared/utils/cn";
+import { formatBrl } from "@/shared/utils/currency";
 import { toast } from "sonner";
 
 export type CommunityRideIntent = "offering" | "requesting";
@@ -269,7 +270,7 @@ export function CommunityRidePost({
           )}
           {post.price !== undefined && (
             <div className="flex items-center gap-1 font-semibold text-emerald-400">
-              <span>R$ {post.price.toFixed(2)}</span>
+              <span>{formatBrl(post.price)}</span>
             </div>
           )}
         </div>

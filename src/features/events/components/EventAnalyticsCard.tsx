@@ -21,6 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui
 import { Badge } from '@/shared/components/ui/badge';
 import { Progress } from '@/shared/components/ui/progress';
 import { cn } from '@/shared/utils/cn';
+import { formatBrl } from '@/shared/utils/currency';
 import type { Event } from '../types';
 
 interface EventAnalyticsCardProps {
@@ -100,7 +101,7 @@ export function EventAnalyticsCard({ event, className }: EventAnalyticsCardProps
                 delay={0.4}
                 icon={<DollarSign className="h-5 w-5 text-amber-600" />}
                 iconClassName="bg-amber-500/10"
-                value={`R$ ${revenueTotal.toLocaleString('pt-BR')}`}
+                value={formatBrl(revenueTotal)}
                 label="Receita total"
               >
                 <p className="mt-1 text-xs text-muted-foreground">
@@ -141,9 +142,9 @@ export function EventAnalyticsCard({ event, className }: EventAnalyticsCardProps
                       </div>
                       <Progress value={soldPercentage} className="h-2" />
                       <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
-                        <span>R$ {ticket.price.toFixed(2)}</span>
+                        <span>{formatBrl(ticket.price)}</span>
                         <span>
-                          R$ {(ticket.quantity_sold * ticket.price).toLocaleString('pt-BR')}
+                          {formatBrl(ticket.quantity_sold * ticket.price)}
                         </span>
                       </div>
                     </div>

@@ -32,12 +32,13 @@ import {
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "@/shared/utils/dateLocale";
+import { formatBrl } from "@/shared/utils/currency";
 import {
   AdminStatsCard,
   AdminFiltersBar,
   AdminPagination,
   type FilterOption,
-} from "@/modules/admin/components";
+} from "@/core/admin/components";
 import { useConfirmActionDialog } from "@/shared/hooks/useConfirmActionDialog";
 
 export default function AdminAssinaturas() {
@@ -302,7 +303,7 @@ export default function AdminAssinaturas() {
                           </TableCell>
                           <TableCell>{getPlanBadge(sub.plan_type)}</TableCell>
                           <TableCell>
-                            R$ {(sub.amount_cents / 100).toFixed(2)}
+                            {formatBrl(sub.amount_cents / 100)}
                           </TableCell>
                           <TableCell>
                             {format(new Date(sub.started_at), "dd/MM/yyyy", {
@@ -389,7 +390,7 @@ export default function AdminAssinaturas() {
                             })}
                           </p>
                           <p className="text-sm text-muted-foreground">
-                            Valor: R$ {(sub.amount_cents / 100).toFixed(2)}/mês
+                            Valor: {formatBrl(sub.amount_cents / 100)}/mês
                           </p>
                         </div>
                         <Button

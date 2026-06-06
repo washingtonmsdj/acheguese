@@ -6,6 +6,7 @@ import { memo } from "react";
 import { MapPin, Package, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/shared/utils/cn";
+import { formatBrlNoCents } from "@/shared/utils/currency";
 import type { VendedorWithAds } from "@/modules/classifieds/hooks/useVendedores";
 
 interface VendedorCardProps {
@@ -89,7 +90,7 @@ export const VendedorCard = memo(function VendedorCard({
               )}
               <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent p-1">
                 <span className="text-[8px] font-bold text-white">
-                  R$ {ad.price?.toLocaleString("pt-BR")}
+                  {ad.price != null ? formatBrlNoCents(ad.price) : "Sob consulta"}
                 </span>
               </div>
             </div>

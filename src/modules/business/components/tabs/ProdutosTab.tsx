@@ -13,6 +13,7 @@ import {
 import { Plus, ShoppingBag, Package, Edit, X } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import type { ProdutosTabProps } from "@/modules/business/types/components";
+import { formatBrl } from "@/shared/utils/currency";
 
 export function ProdutosTab({
   business,
@@ -259,9 +260,8 @@ export function ProdutosTab({
                 {product.price !== null ? (
                   <div className="flex items-baseline gap-1">
                     <span className="text-2xl font-bold text-primary">
-                      R${" "}
                       {typeof product.price === "number"
-                        ? product.price.toFixed(2)
+                        ? formatBrl(product.price)
                         : "--"}
                     </span>
                   </div>

@@ -3,6 +3,7 @@ import { MapPin, MessageCircle, Package, Phone, Shield } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { CLASSIFIED_STATUS, type ClassifiedStatusValue } from "@/core/classifieds/constants/statuses";
 import { cn } from "@/shared/utils/cn";
+import { formatBrlNoCents } from "@/shared/utils/currency";
 import { getClassifiedStatusLabel } from "./ClassificadoDetailStatus";
 
 export function MetaChip({ icon: Icon, text }: { icon: any; text: string }) {
@@ -168,7 +169,7 @@ export function MiniAdCard({ ad, index, onClick }: { ad: any; index: number; onC
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
         <span className="absolute bottom-1.5 left-1.5 text-xs font-bold text-white drop-shadow-lg">
-          R$ {ad.preco?.toLocaleString("pt-BR")}
+          {ad.preco != null ? formatBrlNoCents(ad.preco) : "Sob consulta"}
         </span>
 
         {ad.condition && (

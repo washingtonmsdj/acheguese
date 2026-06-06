@@ -26,6 +26,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
+import { formatBrl } from "@/shared/utils/currency";
 import { toast } from "sonner";
 import type { RideType, PaymentMethod } from "@/core/mobility/types";
 import { BoardingPointsPanel, type BoardingPoint } from "./BoardingPointsPanel";
@@ -563,7 +564,7 @@ export function CreateRideModal({ open, onOpenChange, onSubmit, initialType = "v
                       distance: priceEstimate.breakdown?.distanceFare || 0,
                       time: priceEstimate.breakdown?.timeFare || 0,
                       total: priceEstimate.estimatedPrice,
-                      formatted: `R$ ${priceEstimate.estimatedPrice.toFixed(2)}`,
+                      formatted: formatBrl(priceEstimate.estimatedPrice),
                     },
                   }}
                   variant="compact"

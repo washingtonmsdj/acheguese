@@ -24,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/components/ui/select';
+import { formatBrl } from '../utils/currency';
 
 export default function OrdersPage() {
   const { businessId } = useParams<{ businessId: string }>();
@@ -183,7 +184,7 @@ export default function OrdersPage() {
                         locale: ptBR,
                       })}
                     </span>
-                    <span className="font-semibold">R$ {customer.totalSpent.toFixed(2)}</span>
+                    <span className="font-semibold">{formatBrl(customer.totalSpent)}</span>
                   </div>
                 </div>
               ))}

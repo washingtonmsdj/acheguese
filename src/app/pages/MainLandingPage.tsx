@@ -16,6 +16,7 @@ import { LandingFooter } from "@/shared/components/landing/LandingFooter";
 import { LAUNCH_URLS, TERRITORY_CONFIG } from "@/config/territory";
 import { useCityMetadata } from "@/core/city/hooks/useCityMetadata";
 import { useHomeCommunityHref } from "@/core/routing/hooks/useHomeCommunityHref";
+import { formatMetric } from "@/shared/utils/formatters";
 
 import heroImg from "@/assets/hero-landing-main.jpg";
 import personaMorador from "@/assets/persona-morador.jpg";
@@ -115,14 +116,6 @@ const PERSONAS = [
     description: "Vagas e classificados com recorte territorial.",
   },
 ] as const;
-
-function formatMetric(value?: number): string {
-  if (!value) return "-";
-  return new Intl.NumberFormat("pt-BR", {
-    notation: "compact",
-    maximumFractionDigits: 1,
-  }).format(value);
-}
 
 export default function MainLandingPage() {
   const navigate = useNavigate();

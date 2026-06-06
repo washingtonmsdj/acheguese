@@ -35,6 +35,7 @@ import {
   AvatarImage,
 } from "@/shared/components/ui/avatar";
 import { cn } from "@/shared/utils/cn";
+import { formatBrl } from "@/shared/utils/currency";
 import { useRealtimeMetrics } from "@/core/admin/hooks/useRealtimeMetrics";
 import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
 
@@ -78,8 +79,7 @@ const StatusIndicator = ({
   );
 };
 
-const formatCurrency = (value: number) =>
-  `R$ ${value.toFixed(2).replace(".", ",")}`;
+const formatCurrency = formatBrl;
 
 const formatTime = (dateString: string) => {
   const date = new Date(dateString);

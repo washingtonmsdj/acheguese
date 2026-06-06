@@ -5,6 +5,7 @@
 import { useOrderStats } from '../../hooks';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Package, Clock, CheckCircle, XCircle, TrendingUp, DollarSign } from 'lucide-react';
+import { formatBrl } from '../../utils/currency';
 
 interface OrderStatsWidgetProps {
   businessId: string;
@@ -77,7 +78,7 @@ export function OrderStatsWidget({ businessId, dateFrom, dateTo }: OrderStatsWid
               <DollarSign className="w-3 h-3" />
               Receita
             </p>
-            <p className="text-xl font-bold sm:text-2xl">R$ {totalRevenue.toFixed(2)}</p>
+            <p className="text-xl font-bold sm:text-2xl">{formatBrl(totalRevenue)}</p>
           </div>
 
           <div className="space-y-1 rounded-xl border bg-muted/30 p-3">
@@ -85,7 +86,7 @@ export function OrderStatsWidget({ businessId, dateFrom, dateTo }: OrderStatsWid
               <TrendingUp className="w-3 h-3" />
               Ticket medio
             </p>
-            <p className="text-xl font-bold sm:text-2xl">R$ {averageOrderValue.toFixed(2)}</p>
+            <p className="text-xl font-bold sm:text-2xl">{formatBrl(averageOrderValue)}</p>
           </div>
         </div>
       </CardContent>

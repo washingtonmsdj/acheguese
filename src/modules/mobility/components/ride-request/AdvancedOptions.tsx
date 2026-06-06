@@ -19,6 +19,7 @@ import {
   MessageSquare,
 } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
+import { formatBrl } from '@/shared/utils/currency';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Textarea } from '@/shared/components/ui/textarea';
@@ -142,7 +143,7 @@ export const AdvancedOptions = memo<AdvancedOptionsProps>(function AdvancedOptio
           </span>
           {!isExpanded && estimatedPrice && (
             <span className="text-xs text-muted-foreground">
-              • R$ {estimatedPrice.toFixed(2)}
+              • {formatBrl(estimatedPrice)}
             </span>
           )}
         </div>
@@ -210,7 +211,7 @@ export const AdvancedOptions = memo<AdvancedOptionsProps>(function AdvancedOptio
                   Valor sugerido
                   {estimatedPrice && (
                     <span className="text-success ml-1">
-                      (calculado: R$ {estimatedPrice.toFixed(2)})
+                      (calculado: {formatBrl(estimatedPrice)})
                     </span>
                   )}
                 </Label>

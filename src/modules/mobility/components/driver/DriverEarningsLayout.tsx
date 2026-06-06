@@ -7,6 +7,7 @@ import { DriverEarningsCard } from "@/modules/mobility/components/driver/DriverE
 import { WeeklyEarningsChart } from "@/modules/mobility/components/driver/WeeklyEarningsChart";
 import { useMotoristaPage } from "@/modules/mobility/hooks/useMotoristaPage";
 import { getMobilityServicePath } from "@/modules/mobility/routes/mobilityNavigation";
+import { formatBrlNoCents } from "@/shared/utils/currency";
 
 export interface DriverEarningsLayoutProps {
   /**
@@ -16,8 +17,8 @@ export interface DriverEarningsLayoutProps {
 }
 
 function formatMoney(value?: number | null): string {
-  if (typeof value !== "number" || Number.isNaN(value)) return "R$ 0";
-  return `R$ ${value.toFixed(0)}`;
+  if (typeof value !== "number" || Number.isNaN(value)) return formatBrlNoCents(0);
+  return formatBrlNoCents(value);
 }
 
 /**

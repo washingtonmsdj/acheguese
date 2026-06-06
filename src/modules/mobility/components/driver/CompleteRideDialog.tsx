@@ -11,6 +11,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { DollarSign, CheckCircle2 } from "lucide-react";
+import { formatBrl } from "@/shared/utils/currency";
 
 interface RideLike {
   id: string;
@@ -51,6 +52,9 @@ export function CompleteRideDialog({
   };
 
   const suggestedPrice = ride?.suggested_price || 0;
+  const suggestedPriceLabel = formatBrl(suggestedPrice);
+  const finalPriceValue = finalPrice ? parseFloat(finalPrice.replace(",", ".")) : suggestedPrice;
+  const finalPriceLabel = formatBrl(Number.isNaN(finalPriceValue) ? suggestedPrice : finalPriceValue);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -81,7 +85,7 @@ export function CompleteRideDialog({
             <div className="flex justify-between text-sm">
               <span className="text-gray-400">Valor acordado:</span>
               <span className="text-emerald-400 font-bold">
-                R$ {suggestedPrice.toFixed(2)}
+                {suggestedPriceLabel}
               </span>
             </div>
           </div>
@@ -89,7 +93,7 @@ export function CompleteRideDialog({
           {/* Explicação do contrato de pricing */}
           <div className="rounded-lg bg-blue-500/10 border border-blue-500/20 p-3">
             <p className="text-xs text-blue-300">
-              <strong>Contrato de Pricing:</strong> O valor acordado foi R$ {suggestedPrice.toFixed(2)}. 
+              <strong>Contrato de Pricing:</strong> O valor acordado foi {suggestedPriceLabel}.
               Você pode confirmar este valor ou informar o valor real pago pelo passageiro.
             </p>
           </div>
@@ -104,7 +108,7 @@ export function CompleteRideDialog({
               <Input
                 id="finalPrice"
                 type="text"
-                placeholder={`Deixe vazio para confirmar R$ ${suggestedPrice.toFixed(2)}`}
+                placeholder={`Deixe vazio para confirmar ${suggestedPriceLabel}`}
                 value={finalPrice}
                 onChange={(e) => {
                   const value = e.target.value.replace(/[^\d,]/g, "");
@@ -115,8 +119,8 @@ export function CompleteRideDialog({
             </div>
             <p className="text-xs text-gray-500">
               {finalPrice 
-                ? `Será registrado R$ ${parseFloat(finalPrice.replace(",", ".")).toFixed(2)} como valor final`
-                : `Será confirmado R$ ${suggestedPrice.toFixed(2)} como valor final`
+                ? `Será registrado ${finalPriceLabel} como valor final`
+                : `Será confirmado ${suggestedPriceLabel} como valor final`
               }
             </p>
           </div>

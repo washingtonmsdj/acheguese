@@ -26,6 +26,7 @@ import { cn } from '@/shared/utils/cn';
 import { getRecordValue } from '@/shared/utils/recordLookup';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from '@/shared/utils/dateLocale';
+import { formatBrlNoCents } from '@/shared/utils/currency';
 import type { ClassificadoWithVendedor } from '@/core/classifieds/hooks/useClassificados';
 
 // ============================================================================
@@ -91,12 +92,7 @@ interface ClassificadoCardProps {
  * Formata preço em BRL
  */
 function formatPrice(price: number): string {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(price);
+  return formatBrlNoCents(price);
 }
 
 /**

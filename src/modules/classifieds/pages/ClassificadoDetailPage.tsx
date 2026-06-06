@@ -41,6 +41,7 @@ import { useToast } from "@/shared/components/ui/use-toast";
 import { cn } from "@/shared/utils/cn";
 import { buildWhatsAppUrl } from "@/shared/utils/contactLinks";
 import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
+import { formatBrlNoCents } from "@/shared/utils/currency";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "@/shared/utils/dateLocale";
 import { messagingService } from "@/core/messaging";
@@ -387,7 +388,7 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
                   </h1>
                 </div>
                 <span className="text-xl sm:text-3xl font-bold text-primary drop-shadow-lg shrink-0">
-                  R$ {classificado.preco?.toLocaleString("pt-BR")}
+                  {classificado.preco != null ? formatBrlNoCents(classificado.preco) : "Sob consulta"}
                 </span>
               </div>
             </div>

@@ -8,7 +8,7 @@ import {
   AdminPagination,
   AdminSectionCard,
   AdminTable,
-} from "@/modules/admin/components";
+} from "@/core/admin/components";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import {

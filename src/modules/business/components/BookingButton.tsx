@@ -34,6 +34,7 @@ import {
 import { format } from "date-fns";
 import { ptBR } from "@/shared/utils/dateLocale";
 import { cn } from "@/shared/utils/cn";
+import { formatBrl } from "@/shared/utils/currency";
 import { toast } from "sonner";
 import { buildTelUrl, buildWhatsAppUrl, openContactUrl } from "@/shared/utils/contactLinks";
 import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
@@ -243,7 +244,7 @@ export default function BookingButton({
                   {services.map((service) => (
                     <SelectItem key={service.id} value={service.id}>
                       {service.name}
-                      {service.price && ` - R$ ${service.price.toFixed(2)}`}
+                      {service.price && ` - ${formatBrl(service.price)}`}
                       {service.duracao && ` (${service.duracao})`}
                     </SelectItem>
                   ))}

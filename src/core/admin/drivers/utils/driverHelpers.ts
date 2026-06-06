@@ -4,6 +4,7 @@
  * Funções utilitárias para manipulação de dados de motoristas
  */
 
+import { formatBrl } from "@/shared/utils/currency";
 import type { DriverRequest } from "../sections/types";
 
 /**
@@ -69,5 +70,5 @@ export function getDriverInitials(name: string): string {
  * Formata valor monetário
  */
 export function formatCurrency(value: number): string {
-  return `R$ ${value.toFixed(2).replace(".", ",")}`;
+  return formatBrl(value);
 }

@@ -21,6 +21,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
 import { cn } from "@/shared/utils/cn";
+import { formatBrlNoCents } from "@/shared/utils/currency";
 import type { DriverPlan, DriverEarnings } from "@/core/mobility/types";
 
 interface DriverProfileCardProps {
@@ -126,7 +127,7 @@ export function DriverProfileCard({
           <div className="p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10 text-center">
             <Wallet className="h-4 w-4 text-emerald-400 mx-auto mb-1" />
             <p className="text-lg font-bold text-emerald-400">
-              R$ {earnings?.today?.toFixed(0) || "0"}
+              {formatBrlNoCents(earnings?.today ?? 0)}
             </p>
             <p className="text-[0.55rem] text-gray-500">Hoje</p>
           </div>

@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui
 import { useAnalyticsMetrics } from '@/modules/business/gastronomy/hooks';
 import { Eye, QrCode, ShoppingCart, TrendingUp, DollarSign, Bike } from 'lucide-react';
 import { Skeleton } from '@/shared/components/ui/skeleton';
+import { formatBrl } from '../../utils/currency';
 
 interface AnalyticsOverviewCardProps {
   businessId: string;
@@ -83,7 +84,7 @@ export function AnalyticsOverviewCard({
     {
       icon: DollarSign,
       label: 'Receita',
-      value: `R$ ${metrics.total_order_value.toFixed(2)}`,
+      value: formatBrl(metrics.total_order_value),
       subValue: `${metrics.orders_completed} pedidos`,
       color: 'text-emerald-600',
     },
@@ -91,7 +92,7 @@ export function AnalyticsOverviewCard({
       icon: Bike,
       label: 'Entregas',
       value: metrics.deliveries_completed,
-      subValue: `R$ ${metrics.total_delivery_fees.toFixed(2)} em taxas`,
+      subValue: `${formatBrl(metrics.total_delivery_fees)} em taxas`,
       color: 'text-indigo-600',
     },
     {

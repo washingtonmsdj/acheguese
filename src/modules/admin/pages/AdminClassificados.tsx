@@ -27,10 +27,11 @@ import {
   AdminStatsCard,
   AdminStatsGrid,
   AdminTable,
-} from "@/modules/admin/components";
+} from "@/core/admin/components";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { useConfirmActionDialog } from "@/shared/hooks/useConfirmActionDialog";
+import { formatBrl } from "@/shared/utils/currency";
 import {
   Dialog,
   DialogContent,
@@ -69,7 +70,7 @@ function statusBadge(status: string) {
 
 function toCurrency(value?: number | null) {
   if (!value) return "-";
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
+  return formatBrl(value);
 }
 
 function toDate(value?: string | null) {

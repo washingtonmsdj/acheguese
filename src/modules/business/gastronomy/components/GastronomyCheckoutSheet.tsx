@@ -27,6 +27,7 @@ import type { OrderRecord } from "@/core/mobility/delivery/order/types";
 import type { GastronomyBusiness } from "../types/gastronomy";
 import type { CartItem } from "../types/menu";
 import { GastronomyDeliveryDestinationPanel } from "./GastronomyDeliveryDestinationPanel";
+import { formatBrl } from "../utils/currency";
 
 interface Props {
   business: GastronomyBusiness;
@@ -281,7 +282,7 @@ export function GastronomyCheckoutSheet({
 
   const minimumOrderLabel = useMemo(() => {
     if (minimumOrderRemaining <= 0) return null;
-    return `Faltam R$ ${minimumOrderRemaining.toFixed(2)} para atingir o pedido mínimo.`;
+    return `Faltam ${formatBrl(minimumOrderRemaining)} para atingir o pedido mínimo.`;
   }, [minimumOrderRemaining]);
 
   useEffect(() => {
@@ -386,10 +387,10 @@ export function GastronomyCheckoutSheet({
                       <div className="flex items-start gap-2">
                         <div className="text-right">
                           <p className="font-semibold text-primary">
-                            R$ {item.subtotal.toFixed(2)}
+                            {formatBrl(item.subtotal)}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            Base R$ {item.base_price.toFixed(2)}
+                            Base {formatBrl(item.base_price)}
                           </p>
                         </div>
 
@@ -508,15 +509,15 @@ export function GastronomyCheckoutSheet({
             <div className="space-y-2 text-sm">
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Subtotal</span>
-                <span>R$ {cart.subtotal.toFixed(2)}</span>
+                <span>{formatBrl(cart.subtotal)}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Entrega</span>
-                <span>R$ {cart.delivery_fee.toFixed(2)}</span>
+                <span>{formatBrl(cart.delivery_fee)}</span>
               </div>
               <div className="flex items-center justify-between text-base font-semibold">
                 <span>Total</span>
-                <span className="text-primary">R$ {cart.total.toFixed(2)}</span>
+                <span className="text-primary">{formatBrl(cart.total)}</span>
               </div>
             </div>
 

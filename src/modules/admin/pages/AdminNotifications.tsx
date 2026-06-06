@@ -8,7 +8,7 @@ import {
   AdminFiltersBar,
   AdminPageHeader,
   type FilterOption,
-} from "@/modules/admin/components";
+} from "@/core/admin/components";
 import { Button } from "@/shared/components/ui/button";
 import { AdminNotificationDetailDialog } from "./notifications/AdminNotificationDetailDialog";
 import { AdminNotificationsDeliveryAudit } from "./notifications/AdminNotificationsDeliveryAudit";

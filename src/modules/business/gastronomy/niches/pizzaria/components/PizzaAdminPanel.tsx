@@ -17,6 +17,7 @@ import { PizzaAdminService } from "../PizzaAdminService";
 import { toast } from "sonner";
 import { getRecordValue } from "@/shared/utils/recordLookup";
 import type { PizzaCatalog, PizzaSize, PizzaFlavor, PizzaEdge, PizzaDough, PizzaPriceRuleType } from "../types";
+import { formatBrl } from "../../../utils/currency";
 
 interface Props {
   businessId: string;
@@ -329,7 +330,7 @@ export function PizzaAdminPanel({ businessId, userId }: Props) {
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-sm text-muted-foreground">
-                    até {size.max_flavors} sabor(es) · R$ {size.base_price.toFixed(2)}
+                    até {size.max_flavors} sabor(es) · {formatBrl(size.base_price)}
                   </span>
                   <Button variant="ghost" size="sm" onClick={() => openDialog("size", size)}>Editar</Button>
                 </div>
@@ -362,7 +363,7 @@ export function PizzaAdminPanel({ businessId, userId }: Props) {
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-sm text-muted-foreground">
-                    R$ {flavor.base_price.toFixed(2)} · {flavor.is_available ? "disponível" : "indisponível"}
+                    {formatBrl(flavor.base_price)} · {flavor.is_available ? "disponível" : "indisponível"}
                   </span>
                   <Button variant="ghost" size="sm" onClick={() => openDialog("flavor", flavor)}>Editar</Button>
                 </div>
@@ -395,7 +396,7 @@ export function PizzaAdminPanel({ businessId, userId }: Props) {
                     <span className="font-medium">{edge.name}</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-sm text-muted-foreground">R$ {edge.price.toFixed(2)}</span>
+                    <span className="text-sm text-muted-foreground">{formatBrl(edge.price)}</span>
                     <Button variant="ghost" size="sm" onClick={() => openDialog("edge", edge)}>Editar</Button>
                   </div>
                 </div>
@@ -427,7 +428,7 @@ export function PizzaAdminPanel({ businessId, userId }: Props) {
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-sm text-muted-foreground">
-                      + R$ {dough.price_adjustment.toFixed(2)}
+                      + {formatBrl(dough.price_adjustment)}
                     </span>
                     <Button variant="ghost" size="sm" onClick={() => openDialog("dough", dough)}>Editar</Button>
                   </div>

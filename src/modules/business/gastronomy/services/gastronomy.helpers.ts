@@ -14,6 +14,7 @@ import type {
   MenuCategory,
   Menu,
 } from '../types';
+import { formatBrl } from '../utils/currency';
 
 // ============================================================
 // VALIDAÇÕES
@@ -169,14 +170,14 @@ export function formatDeliveryFee(fee: number | undefined): string {
   if (fee === 0) {
     return 'Grátis';
   }
-  return `R$ ${fee.toFixed(2).replace('.', ',')}`;
+  return formatBrl(fee);
 }
 
 /**
  * Formata preço para exibição
  */
 export function formatPrice(price: number): string {
-  return `R$ ${price.toFixed(2).replace('.', ',')}`;
+  return formatBrl(price);
 }
 
 /**

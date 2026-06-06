@@ -2,6 +2,7 @@ import React from "react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Clock, DollarSign } from "lucide-react";
 import { PAYMENT_METHOD } from "@/shared/types/constants";
+import { formatBrl } from "@/shared/utils/currency";
 interface RideInfoProps {
   departureTime: string;
   price: number;
@@ -31,7 +32,7 @@ export const RideInfo = ({
         <div className="flex items-center gap-1.5">
           <DollarSign className="h-3.5 w-3.5 text-emerald-400" />
           <span className="text-emerald-400 font-bold text-sm">
-            R$ {price.toFixed(2)}
+            {formatBrl(price)}
           </span>
         </div>
         {paymentMethod && (

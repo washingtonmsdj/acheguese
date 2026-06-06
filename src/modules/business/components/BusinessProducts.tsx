@@ -2,6 +2,7 @@ import React from "react";
 import { useState } from "react";
 import { Search, SlidersHorizontal } from "lucide-react";
 import type { Product } from "@/core/business/types";
+import { formatBrl } from "@/shared/utils/currency";
 interface BusinessProductsProps {
   products: Product[];
   isLoading: boolean;
@@ -110,7 +111,7 @@ export function BusinessProducts({
 
             {product.price && (
               <p className="text-lg font-bold text-blue-600">
-                R$ {product.price.toFixed(2)}
+                {formatBrl(product.price)}
               </p>
             )}
           </div>
