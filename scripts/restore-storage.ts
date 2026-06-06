@@ -1,180 +1,177 @@
 /**
- * Restore Supabase Storage
- * 
- * Uploads all files from backup directory to Supabase Storage.
- * 
+ * Restore Supabase Storage.
+ *
+ * Uploads all files from a recursive backup directory to Supabase Storage.
+ *
  * Usage:
  *   npx tsx scripts/restore-storage.ts <backup-dir>
- * 
+ *
  * Example:
  *   npx tsx scripts/restore-storage.ts backups/storage-2026-04-19
- * 
+ *
  * Environment:
  *   SUPABASE_URL - Supabase project URL
- *   SUPABASE_SERVICE_ROLE_KEY - Service role key (admin access)
- * 
- * @version 1.0.0
+ *   SUPABASE_SERVICE_ROLE_KEY - Service role key with storage admin access
  */
 
-import { createClient } from '@supabase/supabase-js';
-import { readdirSync, readFileSync, statSync } from 'fs';
-import { join } from 'path';
+import { createClient } from "@supabase/supabase-js";
+import { existsSync, readdirSync, readFileSync, statSync } from "fs";
+import { join, relative } from "path";
 
-async function restoreBucket(
-  supabase: ReturnType<typeof createClient>,
-  bucketName: string,
-  backupDir: string
-) {
-  console.log(`📦 Restoring bucket: ${bucketName}`);
-  
-  const bucketDir = join(backupDir, bucketName);
-  
-  try {
-    const files = readdirSync(bucketDir);
-    
-    if (files.length === 0) {
-      console.log(`   ℹ️  No files to restore`);
-      return 0;
-    }
-    
-    let count = 0;
-    let errors = 0;
-    
-    for (const file of files) {
-      const filePath = join(bucketDir, file);
-      
-      // Skip directories
-      const stat = statSync(filePath);
-      if (stat.isDirectory()) {
-        continue;
-      }
-      
-      try {
-        const fileBuffer = readFileSync(filePath);
-        
-        const { error } = await supabase
-          .storage
-          .from(bucketName)
-          .upload(file, fileBuffer, {
-            upsert: true,
-            contentType: getContentType(file),
-          });
-        
-        if (error) {
-          console.error(`   ❌ Error uploading ${file}:`, error.message);
-          errors++;
-          continue;
-        }
-        
-        count++;
-        
-        if (count % 10 === 0) {
-          console.log(`   📤 Uploaded ${count} files...`);
-        }
-      } catch (err) {
-        console.error(`   ❌ Exception uploading ${file}:`, err);
-        errors++;
-      }
-    }
-    
-    console.log(`✅ Restored ${count} files to ${bucketName}${errors > 0 ? ` (${errors} errors)` : ''}`);
-    return count;
-  } catch (error) {
-    console.error(`❌ Error restoring bucket ${bucketName}:`, error);
-    return 0;
-  }
-}
+type SupabaseClient = ReturnType<typeof createClient>;
 
 function getContentType(filename: string): string {
-  const ext = filename.toLowerCase().split('.').pop();
-  
+  const ext = filename.toLowerCase().split(".").pop();
+
   const contentTypes: Record<string, string> = {
-    // Images
-    jpg: 'image/jpeg',
-    jpeg: 'image/jpeg',
-    png: 'image/png',
-    gif: 'image/gif',
-    webp: 'image/webp',
-    avif: 'image/avif',
-    svg: 'image/svg+xml',
-    
-    // Documents
-    pdf: 'application/pdf',
-    doc: 'application/msword',
-    docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    
-    // Videos
-    mp4: 'video/mp4',
-    webm: 'video/webm',
-    
-    // Audio
-    mp3: 'audio/mpeg',
-    wav: 'audio/wav',
-    
-    // Default
-    default: 'application/octet-stream',
+    avif: "image/avif",
+    doc: "application/msword",
+    docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    gif: "image/gif",
+    jpeg: "image/jpeg",
+    jpg: "image/jpeg",
+    mp3: "audio/mpeg",
+    mp4: "video/mp4",
+    pdf: "application/pdf",
+    png: "image/png",
+    svg: "image/svg+xml",
+    wav: "audio/wav",
+    webm: "video/webm",
+    webp: "image/webp",
+    default: "application/octet-stream",
   };
-  
-  return contentTypes[ext || ''] || contentTypes.default;
+
+  return contentTypes[ext || ""] || contentTypes.default;
+}
+
+function listLocalFiles(rootDir: string, currentDir = rootDir): string[] {
+  const files: string[] = [];
+
+  for (const entry of readdirSync(currentDir)) {
+    const entryPath = join(currentDir, entry);
+    const stat = statSync(entryPath);
+
+    if (stat.isDirectory()) {
+      files.push(...listLocalFiles(rootDir, entryPath));
+      continue;
+    }
+
+    files.push(entryPath);
+  }
+
+  return files;
+}
+
+function toStoragePath(rootDir: string, filePath: string): string {
+  return relative(rootDir, filePath).replace(/\\/g, "/");
+}
+
+async function restoreBucket(
+  supabase: SupabaseClient,
+  bucketName: string,
+  backupDir: string,
+): Promise<number> {
+  console.log(`Restoring bucket: ${bucketName}`);
+
+  const bucketDir = join(backupDir, bucketName);
+  const files = listLocalFiles(bucketDir);
+
+  if (files.length === 0) {
+    console.log("   No files to restore");
+    return 0;
+  }
+
+  let count = 0;
+  let errors = 0;
+
+  for (const filePath of files) {
+    const objectPath = toStoragePath(bucketDir, filePath);
+
+    try {
+      const fileBuffer = readFileSync(filePath);
+
+      const { error } = await supabase.storage.from(bucketName).upload(objectPath, fileBuffer, {
+        upsert: true,
+        contentType: getContentType(objectPath),
+      });
+
+      if (error) {
+        console.error(`   Error uploading ${objectPath}:`, error.message);
+        errors++;
+        continue;
+      }
+
+      count++;
+
+      if (count % 10 === 0) {
+        console.log(`   Uploaded ${count} files...`);
+      }
+    } catch (error) {
+      console.error(`   Exception uploading ${objectPath}:`, error);
+      errors++;
+    }
+  }
+
+  console.log(`Restored ${count} files to ${bucketName}${errors > 0 ? ` (${errors} errors)` : ""}`);
+  return count;
 }
 
 async function main() {
-  console.log('🚀 Starting Supabase Storage Restore\n');
-  
-  // Get backup directory from args
+  console.log("Starting Supabase Storage Restore\n");
+
   const backupDir = process.argv[2];
-  
+
   if (!backupDir) {
-    console.error('❌ Usage: npx tsx scripts/restore-storage.ts <backup-dir>');
-    console.error('\nExample:');
-    console.error('  npx tsx scripts/restore-storage.ts backups/storage-2026-04-19');
+    console.error("Usage: npx tsx scripts/restore-storage.ts <backup-dir>");
+    console.error("\nExample:");
+    console.error("  npx tsx scripts/restore-storage.ts backups/storage-2026-04-19");
     process.exit(1);
   }
-  
-  // Validate environment
+
+  if (!existsSync(backupDir)) {
+    console.error(`Backup directory not found: ${backupDir}`);
+    process.exit(1);
+  }
+
   const supabaseUrl = process.env.SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  
+
   if (!supabaseUrl || !supabaseKey) {
-    console.error('❌ Missing environment variables:');
-    console.error('   SUPABASE_URL');
-    console.error('   SUPABASE_SERVICE_ROLE_KEY');
-    console.error('\n💡 Load from .env file or set manually');
+    console.error("Missing environment variables:");
+    console.error("   SUPABASE_URL");
+    console.error("   SUPABASE_SERVICE_ROLE_KEY");
+    console.error("\nLoad from .env file or set manually");
     process.exit(1);
   }
-  
-  // Create Supabase client
+
   const supabase = createClient(supabaseUrl, supabaseKey);
-  
-  console.log(`📁 Backup directory: ${backupDir}\n`);
-  
-  // Get list of buckets from backup directory
-  const buckets = readdirSync(backupDir);
-  
+  const buckets = readdirSync(backupDir).filter((entry) => statSync(join(backupDir, entry)).isDirectory());
+
+  console.log(`Backup directory: ${backupDir}\n`);
+
   if (buckets.length === 0) {
-    console.error('❌ No buckets found in backup directory');
+    console.error("No buckets found in backup directory");
     process.exit(1);
   }
-  
-  console.log(`📦 Found ${buckets.length} buckets to restore\n`);
-  
-  // Restore each bucket
+
+  console.log(`Found ${buckets.length} buckets to restore\n`);
+
   let totalFiles = 0;
   const startTime = Date.now();
-  
+
   for (const bucket of buckets) {
     const count = await restoreBucket(supabase, bucket, backupDir);
     totalFiles += count;
   }
-  
+
   const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-  
-  console.log('\n✅ Storage restore complete!');
-  console.log(`📊 Total files: ${totalFiles}`);
-  console.log(`⏱️  Duration: ${duration}s`);
+
+  console.log("\nStorage restore complete.");
+  console.log(`Total files: ${totalFiles}`);
+  console.log(`Duration: ${duration}s`);
 }
 
 main().catch((error) => {
-  console.error('\n❌ Restore failed:', error);
+  console.error("\nRestore failed:", error);
   process.exit(1);
 });

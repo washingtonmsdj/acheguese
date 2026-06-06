@@ -1,7 +1,7 @@
 /**
  * Backup Supabase Storage.
  *
- * Downloads all files from every bucket returned by Supabase Storage. The
+ * Downloads every object from every bucket returned by Supabase Storage. The
  * environment is the source of truth because migrations and optional features
  * can create buckets outside the frontend upload surface.
  *
@@ -14,8 +14,10 @@
  */
 
 import { createClient } from "@supabase/supabase-js";
+import { dirname, join, relative, resolve } from "path";
 import { existsSync, mkdirSync, writeFileSync } from "fs";
-import { join } from "path";
+
+const PAGE_SIZE = 1000;
 
 type SupabaseClient = ReturnType<typeof createClient>;
 
@@ -24,8 +26,33 @@ type StorageBucket = {
   name?: string;
 };
 
+type StorageEntry = {
+  id?: string | null;
+  name: string;
+  metadata?: unknown;
+};
+
 function getBucketId(bucket: StorageBucket): string {
   return bucket.id || bucket.name || "";
+}
+
+function isFolderEntry(entry: StorageEntry): boolean {
+  return !entry.id && entry.metadata == null;
+}
+
+function toStoragePath(...parts: string[]): string {
+  return parts.filter(Boolean).join("/");
+}
+
+function safeLocalPath(rootDir: string, objectPath: string): string {
+  const target = resolve(rootDir, ...objectPath.split("/"));
+  const relativeTarget = relative(rootDir, target);
+
+  if (relativeTarget.startsWith("..") || resolve(relativeTarget) === relativeTarget) {
+    throw new Error(`Unsafe storage object path: ${objectPath}`);
+  }
+
+  return target;
 }
 
 async function listStorageBucketIds(supabase: SupabaseClient): Promise<string[]> {
@@ -42,6 +69,46 @@ async function listStorageBucketIds(supabase: SupabaseClient): Promise<string[]>
   return Array.from(new Set(bucketIds)).sort();
 }
 
+async function listBucketObjectPaths(
+  supabase: SupabaseClient,
+  bucketName: string,
+  prefix = "",
+): Promise<string[]> {
+  const objectPaths: string[] = [];
+  let offset = 0;
+
+  while (true) {
+    const { data, error } = await supabase.storage.from(bucketName).list(prefix, {
+      limit: PAGE_SIZE,
+      offset,
+      sortBy: { column: "name", order: "asc" },
+    });
+
+    if (error) {
+      throw new Error(`Could not list ${bucketName}/${prefix}: ${error.message}`);
+    }
+
+    const entries = (data ?? []) as StorageEntry[];
+    if (entries.length === 0) break;
+
+    for (const entry of entries) {
+      const objectPath = toStoragePath(prefix, entry.name);
+
+      if (isFolderEntry(entry)) {
+        objectPaths.push(...(await listBucketObjectPaths(supabase, bucketName, objectPath)));
+        continue;
+      }
+
+      objectPaths.push(objectPath);
+    }
+
+    if (entries.length < PAGE_SIZE) break;
+    offset += PAGE_SIZE;
+  }
+
+  return objectPaths;
+}
+
 async function backupBucket(
   supabase: SupabaseClient,
   bucketName: string,
@@ -54,17 +121,15 @@ async function backupBucket(
     mkdirSync(bucketDir, { recursive: true });
   }
 
-  const { data: files, error } = await supabase.storage.from(bucketName).list("", {
-    limit: 1000,
-    sortBy: { column: "name", order: "asc" },
-  });
-
-  if (error) {
-    console.error(`Error listing files in ${bucketName}:`, error.message);
+  let objectPaths: string[];
+  try {
+    objectPaths = await listBucketObjectPaths(supabase, bucketName);
+  } catch (error) {
+    console.error(error);
     return 0;
   }
 
-  if (!files || files.length === 0) {
+  if (objectPaths.length === 0) {
     console.log(`   No files in ${bucketName}`);
     return 0;
   }
@@ -72,32 +137,32 @@ async function backupBucket(
   let count = 0;
   let errors = 0;
 
-  for (const file of files) {
+  for (const objectPath of objectPaths) {
     try {
-      const { data, error } = await supabase.storage.from(bucketName).download(file.name);
+      const { data, error } = await supabase.storage.from(bucketName).download(objectPath);
 
       if (error) {
-        console.error(`   Error downloading ${file.name}:`, error.message);
+        console.error(`   Error downloading ${objectPath}:`, error.message);
         errors++;
         continue;
       }
 
       if (!data) {
-        console.error(`   No data for ${file.name}`);
+        console.error(`   No data for ${objectPath}`);
         errors++;
         continue;
       }
 
-      const filePath = join(bucketDir, file.name);
-      const buffer = Buffer.from(await data.arrayBuffer());
-      writeFileSync(filePath, buffer);
+      const filePath = safeLocalPath(bucketDir, objectPath);
+      mkdirSync(dirname(filePath), { recursive: true });
+      writeFileSync(filePath, Buffer.from(await data.arrayBuffer()));
       count++;
 
       if (count % 10 === 0) {
         console.log(`   Downloaded ${count} files...`);
       }
-    } catch (err) {
-      console.error(`   Exception downloading ${file.name}:`, err);
+    } catch (error) {
+      console.error(`   Exception downloading ${objectPath}:`, error);
       errors++;
     }
   }
