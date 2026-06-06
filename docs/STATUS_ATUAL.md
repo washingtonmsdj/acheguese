@@ -1,11 +1,16 @@
 # Status Atual do Projeto
 
-Data: 2026-05-26
-Branch: workspace local
-Ultimo commit base: indisponivel neste ambiente (`git` nao esta acessivel no PATH local)
+Data: 2026-06-06
+Branch: codex/ssot-cleanup
+Ultimo commit validado: b0bedaaa (`refactor: consolida SSOT de formatacao e admin`)
+
+Observacao: este documento e a fonte operacional atual. O historico abaixo fica preservado por contexto, mas qualquer registro antigo de bloqueio por falta de `git`/`node` nao representa o ambiente validado em 2026-06-06.
 
 ## Validacoes Recentes
 
+- Auditoria SSOT/admin em 2026-06-06: duplicatas e orfaos de componentes admin foram removidos de `src/modules/admin/components`, mantendo `src/core/admin/components` como fonte canonica para componentes compartilhados.
+- Auditoria de formatacao em 2026-06-06: formatacao BRL foi consolidada em `src/shared/utils/currency.ts`; formatacao de metricas compactas foi consolidada em `src/shared/utils/formatters.ts`.
+- Validacoes em 2026-06-06: `npm run lint`, `npm run typecheck:app`, `npx vitest run src/shared/utils/currency.test.ts src/shared/utils/formatters.test.ts`, `npm run validate:deps`, `npm run validate:hardcodes`, `npm run validate:ssot` e `git diff --check` passaram.
 - Auditoria estatica de lancamento em 2026-05-26: scripts de teste passaram a apontar para arquivos versionados; assets PWA/SEO foram recriados; runtime de billing legado de gastronomia foi removido; `stripe-webhook` e edge functions antigas de assinatura de gastronomia foram excluidas do repositorio.
 - Auditoria SSOT de billing em 2026-05-26: acessos runtime a `gastronomy_subscriptions` e `business_subscriptions` foram removidos de `src`, mantendo `user_subscriptions` como tabela canonica.
 - Bloqueio de validacao em 2026-05-26: `npm`, `node` via shell e `git` nao estao acessiveis no ambiente local atual; validacoes de build/typecheck/lint/E2E precisam ser reexecutadas em ambiente com toolchain Node instalada.

@@ -3,6 +3,7 @@
 # Logs
 logs
 *.log
+.lint-report.json
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -20,6 +21,7 @@ PLANO_*.md
 PROVA_*.md
 RELATORIO_*.md
 STATUS_*.md
+!docs/STATUS_ATUAL.md
 DIAGNOSTICO_*.md
 UNIFICACAO_*.md
 RESUMO_*.md
@@ -76,6 +78,7 @@ build/
 *.temp
 .temp/
 temp/
+testsprite_tests/
 
 # OS files
 Thumbs.db
