@@ -8,15 +8,16 @@
  * - Image caching (Stale-While-Revalidate)
  * - Offline fallback
  * 
- * @version 2.0.1
+ * @version 2.0.2
  */
 
 // Service Worker version
-const SW_VERSION = '2.0.1';
+const SW_VERSION = '2.0.2';
 const IS_LOCALHOST =
   self.location.hostname === 'localhost' ||
   self.location.hostname === '127.0.0.1' ||
   self.location.hostname === '::1';
+const OFFLINE_FALLBACK_URL = '/offline.html';
 
 // Cache names
 const CACHE_NAMES = {
@@ -36,6 +37,9 @@ const CACHE_LIMITS = {
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
+  OFFLINE_FALLBACK_URL,
+  '/offline.js',
+  '/images/logo-icon.png',
   '/icon-192x192.png',
   '/icon-512x512.png',
   '/badge-72x72.png',
@@ -404,6 +408,14 @@ async function networkFirst(request, cacheName) {
     
     if (cached) {
       return cached;
+    }
+
+    if (request.mode === 'navigate') {
+      const offlineFallback = await caches.match(OFFLINE_FALLBACK_URL);
+
+      if (offlineFallback) {
+        return offlineFallback;
+      }
     }
     
     return new Response('Offline', { status: 503 });
