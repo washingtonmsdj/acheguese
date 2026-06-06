@@ -8,6 +8,14 @@ const INVALID_DO_BLOCK_PATTERNS = [/^DO \$$/m, /^END \$;$/m];
 const SECURITY_DEFINER_HARDENING_VERSION = "20260526000001";
 const SQL_IDENTIFIER =
   String.raw`(?:"[^"]+"|[A-Za-z_][\w$]*)(?:\s*\.\s*(?:"[^"]+"|[A-Za-z_][\w$]*))?`;
+const MUTATING_RPC_NAME_PATTERN =
+  /^public\.(create|update|delete|remove|insert|upsert|set|switch|revoke|mark|add|increment|decrement|accept|activate|cancel|log|record|track|process|expire|release|toggle|invite|approve|reject|publish|request)_/i;
+const EXPOSED_MUTATING_RPC_ALLOWLIST = new Set([
+  // Public counter for published job views; does not expose or mutate tenant-owned private state.
+  "public.increment_vaga_view_count",
+]);
+const RPC_AUTH_GUARD_PATTERN =
+  /auth\.uid\s*\(|auth\.role\s*\(|\bis_admin\b|\bis_admin_user\b|\bis_admin_from_roles\b|\bhas_role\b|current_setting\s*\(|jwt\s*\(/i;
 
 interface MigrationFile {
   name: string;
@@ -22,6 +30,18 @@ interface TableCreation {
 
 interface ViewGrant {
   view: string;
+  file: string;
+}
+
+interface FunctionDefinition {
+  name: string;
+  file: string;
+  securityDefiner: boolean;
+  hasAuthGuard: boolean;
+}
+
+interface FunctionGrant {
+  name: string;
   file: string;
 }
 
@@ -196,10 +216,71 @@ function validatePublicViewSecurityInvoker(files: MigrationFile[]): string[] {
   return violations;
 }
 
+function validateExposedMutatingRpcGuards(files: MigrationFile[]): string[] {
+  const violations: string[] = [];
+  const functions = new Map<string, FunctionDefinition>();
+  const functionGrants: FunctionGrant[] = [];
+
+  const createFunctionRegex = new RegExp(
+    String.raw`\bCREATE\s+(?:OR\s+REPLACE\s+)?FUNCTION\s+(${SQL_IDENTIFIER})\s*\([^)]*\)([\s\S]*?)(?=\n\s*(?:CREATE|ALTER|DROP|GRANT|REVOKE|COMMENT|NOTIFY|DO\b|$))`,
+    "gi",
+  );
+  const grantExecuteRegex = new RegExp(
+    String.raw`\bGRANT\s+EXECUTE\s+ON\s+FUNCTION\s+(${SQL_IDENTIFIER})\s*\([^)]*\)\s+TO\s+([^;]+)`,
+    "gi",
+  );
+
+  for (const file of files) {
+    const content = stripSqlComments(fs.readFileSync(file.fullPath, "utf8"));
+    let match: RegExpExecArray | null;
+
+    while ((match = createFunctionRegex.exec(content))) {
+      const name = normalizeSqlIdentifier(match[1]);
+      if (!isPublicSchemaIdentifier(name)) continue;
+
+      const body = match[2];
+      functions.set(name, {
+        name,
+        file: file.name,
+        securityDefiner: /\bSECURITY\s+DEFINER\b/i.test(body),
+        hasAuthGuard: RPC_AUTH_GUARD_PATTERN.test(body),
+      });
+    }
+
+    while ((match = grantExecuteRegex.exec(content))) {
+      const grantees = match[2].toLowerCase();
+      if (!/\banon\b|\bauthenticated\b/.test(grantees)) continue;
+
+      const name = normalizeSqlIdentifier(match[1]);
+      if (isPublicSchemaIdentifier(name)) {
+        functionGrants.push({ name, file: file.name });
+      }
+    }
+  }
+
+  const reported = new Set<string>();
+  for (const grant of functionGrants) {
+    if (reported.has(grant.name)) continue;
+    if (EXPOSED_MUTATING_RPC_ALLOWLIST.has(grant.name)) continue;
+    if (!MUTATING_RPC_NAME_PATTERN.test(grant.name)) continue;
+
+    const definition = functions.get(grant.name);
+    if (!definition?.securityDefiner || definition.hasAuthGuard) continue;
+
+    reported.add(grant.name);
+    violations.push(
+      `RPC mutante SECURITY DEFINER exposto sem guarda de auth: ${grant.name} (funcao em ${definition.file}, grant em ${grant.file}).`,
+    );
+  }
+
+  return violations;
+}
+
 function validateMigrationAccessControl(files: MigrationFile[]): string[] {
   return [
     ...validatePublicTableRls(files),
     ...validatePublicViewSecurityInvoker(files),
+    ...validateExposedMutatingRpcGuards(files),
   ];
 }
 

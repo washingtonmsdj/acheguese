@@ -679,7 +679,7 @@ export const INPUT_VALIDATION = {
 export const SECURITY_AUDIT_LOG = {
   lastReview: '2026-06-05',
   reviewer: 'Codex',
-  version: '2.13.0',
+  version: '2.14.0',
   changes: [
     'Initial SSOT implementation',
     'CSP directives centralized',
@@ -753,6 +753,12 @@ export const SECURITY_AUDIT_LOG = {
     'FIX: trigger impede referencias cross-tenant em defaults de pizza_menu_items',
     'FIX: views com GRANT SELECT para anon/authenticated endurecidas com security_invoker=true',
     'FIX: validate:migrations bloqueia tabela publica sem RLS e view publica sem security_invoker',
+    // v2.14.0 - Exposed RPC authorization hardening
+    'FIX: accept_ride_atomic agora exige driver_profile_id pertencente ao usuario/admin/service_role',
+    'FIX: mark_best_answer agora exige autor da pergunta/admin/service_role',
+    'FIX: increment_alert_edit_count agora exige dono do alerta/admin/service_role',
+    'FIX: expire_stale_work_opportunities ignora p_now de clientes e aceita override apenas service_role',
+    'FIX: validate:migrations bloqueia RPC mutante SECURITY DEFINER exposto sem guarda de auth',
   ],
   nextReview: '2026-07-04',
 } as const;
@@ -827,7 +833,7 @@ export const CACHE_HEADERS = {
  * Metadata about this configuration file.
  */
 export const SECURITY_CONFIG_METADATA = {
-  version: '2.13.0',
+  version: '2.14.0',
   created: '2026-04-18',
   lastModified: '2026-06-05',
   author: 'Kiro AI',
