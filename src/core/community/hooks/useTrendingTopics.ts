@@ -1,21 +1,38 @@
 import { useQuery } from "@tanstack/react-query";
 import { TrendingTopic } from "@/shared/types/community";
 import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
+import { territoryFilterKey } from "@/core/location/hooks/useTerritoryFilter";
 import { postService } from "@/core/posts/services";
+import type { TerritoryFilter } from "@/core/location/types";
+
+function resolveTrendingLocationIds(
+  territoryFilter: TerritoryFilter | undefined,
+  fallbackLocationId: string | null | undefined,
+): string[] {
+  if (territoryFilter?.scope === "location") return [territoryFilter.location_id];
+  if (territoryFilter?.scope === "group") return territoryFilter.location_ids;
+  return fallbackLocationId ? [fallbackLocationId] : [];
+}
 
 /**
  * Hook para tendencias do bairro do usuario.
  * Usa location_id canonico (UUID) como chave de cache.
  */
-export function useTrendingTopics(limit: number = 3) {
+export function useTrendingTopics(limit: number = 3, territoryFilter?: TerritoryFilter) {
   const { homeDistrict, hasHome } = useUserTerritory();
+  const locationIds = resolveTrendingLocationIds(territoryFilter, homeDistrict?.id);
+  const effectiveKey = territoryFilter
+    ? territoryFilterKey(territoryFilter)
+    : homeDistrict?.id ?? "none";
 
   return useQuery({
-    queryKey: ["trending-topics", homeDistrict?.id ?? null, limit],
+    queryKey: ["trending-topics", effectiveKey, limit],
     queryFn: async (): Promise<TrendingTopic[]> => {
-      if (!homeDistrict?.id) return [];
+      if (locationIds.length === 0) return [];
 
-      const topPosts = await postService.getTopPosts(homeDistrict.id, 30);
+      const topPosts = (
+        await Promise.all(locationIds.map((locationId) => postService.getTopPosts(locationId, 30)))
+      ).flat();
 
       const hashtagCounts = new Map<string, number>();
       for (const post of topPosts) {
@@ -37,7 +54,7 @@ export function useTrendingTopics(limit: number = 3) {
           position: index + 1,
         }));
     },
-    enabled: hasHome && !!homeDistrict?.id,
+    enabled: locationIds.length > 0 && (Boolean(territoryFilter) || hasHome),
     staleTime: 10 * 60 * 1000,
     gcTime: 15 * 60 * 1000,
   });
