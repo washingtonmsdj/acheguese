@@ -2975,13 +2975,7 @@
   }
 
   .neighborhood-community-hero-map {
-    min-height: 96px;
-    margin-block: -8px;
-  }
-
-  .neighborhood-community-hero-map .neighborhood-territory-art {
-    width: min(118%, 390px);
-    max-height: 130px;
+    display: none;
   }
 
   .neighborhood-community-summary-top {
