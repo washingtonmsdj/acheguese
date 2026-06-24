@@ -24,12 +24,20 @@ async function expandFeedLocationIds(locationIds: string[]): Promise<string[]> {
   const expanded: string[] = [];
 
   for (const locationId of locationIds) {
-    const { data: location } = await supabase
+    const { data: location, error } = await supabase
       .from("locations")
       .select("id, type, parent_id")
       .eq("id", locationId)
       .eq("status", "active")
-      .single();
+      .maybeSingle();
+
+    if (error) {
+      logger.warn("[posts.queries] Failed to resolve feed location:", {
+        location_id: locationId,
+        error: error.message,
+      });
+      continue;
+    }
 
     if (!location) {
       logger.warn("[posts.queries] Location not found or inactive:", {
