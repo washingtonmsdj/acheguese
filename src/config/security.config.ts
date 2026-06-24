@@ -104,6 +104,14 @@ export const SECURITY_DOMAINS = {
     alternatives: 'Self-hosted style JSON and tiles',
   },
 
+  CARTO_BASEMAP_TILES: {
+    url: 'https://tiles.basemaps.cartocdn.com',
+    purpose: 'MapLibre vector tile metadata and sprites for CARTO basemaps',
+    risk: 'LOW',
+    justification: 'Required by CARTO style JSON references used by the configured base map',
+    alternatives: 'Self-hosted style assets and vector tiles',
+  },
+
   OPEN_METEO_API: {
     url: 'https://api.open-meteo.com',
     purpose: 'Public weather forecast and current temperature API',
@@ -325,6 +333,7 @@ export const CSP_DIRECTIVES = {
     SECURITY_DOMAINS.OPENFREEMAP_TILES.url,
     SECURITY_DOMAINS.OSRM_ROUTER.url,
     SECURITY_DOMAINS.CARTO_BASEMAPS.url,
+    SECURITY_DOMAINS.CARTO_BASEMAP_TILES.url,
     SECURITY_DOMAINS.OPEN_METEO_API.url,
     SECURITY_DOMAINS.IPAPI_GEOLOCATION.url,
     SECURITY_DOMAINS.IPWHOIS_GEOLOCATION.url,
