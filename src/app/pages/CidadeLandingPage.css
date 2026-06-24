@@ -2936,18 +2936,27 @@
   }
 
   .neighborhood-community-hero {
-    gap: 8px;
-    padding-top: 8px;
+    gap: 10px;
+    padding: 14px 0 10px;
   }
 
   .neighborhood-community-hero h1 {
-    margin-top: 6px;
+    max-width: 18rem;
+    margin: 8px 0 2px;
+    font-size: clamp(1.55rem, 7.4vw, 2.05rem);
+    line-height: 1.06;
+  }
+
+  .neighborhood-community-hero p {
+    max-width: 18.5rem;
+    font-size: 0.92rem;
+    line-height: 1.28;
   }
 
   .neighborhood-community-badges,
   .neighborhood-community-rules {
     gap: 6px;
-    margin-top: 8px;
+    margin-top: 9px;
   }
 
   .neighborhood-community-badges span,
@@ -2970,11 +2979,14 @@
   }
 
   .neighborhood-community-hero-summary {
-    gap: 8px;
-    padding: 10px;
+    display: none;
   }
 
   .neighborhood-community-hero-map {
+    display: none;
+  }
+
+  .neighborhood-community-rules {
     display: none;
   }
 
