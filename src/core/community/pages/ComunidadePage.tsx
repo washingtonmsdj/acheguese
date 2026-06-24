@@ -54,7 +54,7 @@ import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritory
 import type { TerritoryFilter } from "@/core/location";
 import { buildCommunityTabUrlFromPath } from "@/core/routing/utils/territoryUrls";
 import type { TerritorialFeedChannel } from "@/core/community/hooks/feed/territorialFeedEngine";
-import { getPublicPostPreview } from "@/core/community/utils/publicPostContent";
+import { getPublicPostPreview } from "@/core/posts/utils/publicPostContent";
 
 const GruposPage = lazy(() => import("./GruposPage"));
 

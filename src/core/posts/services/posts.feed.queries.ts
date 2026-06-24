@@ -8,6 +8,8 @@ import { trackError } from "@/shared/utils/errorTracking";
 import { PAGINATION } from "@/shared/constants";
 import type { FeedParams, FeedResult, Post } from "../types";
 import { PostError } from "../types";
+import { hasTechnicalSeedMarker } from "../utils/publicPostContent";
+
 function encodeCursor(data: { created_at: string }): string {
   return Buffer.from(JSON.stringify(data)).toString("base64");
 }
@@ -168,6 +170,10 @@ export async function getTerritorialFeed(params: FeedParams = {}): Promise<FeedR
       )
       .in("location_id", expandedIds)
       .eq("is_published", true)
+      .not("content", "ilike", "[MOCK%")
+      .not("content", "ilike", "[SEED%")
+      .not("content", "ilike", "[DEV%")
+      .not("content", "ilike", "[TEST%")
       .order("created_at", { ascending: false })
       .limit(limit + 1);
 
@@ -189,7 +195,7 @@ export async function getTerritorialFeed(params: FeedParams = {}): Promise<FeedR
       throw new PostError(error.message, error.code || "FETCH_FAILED");
     }
 
-    const rows = posts ?? [];
+    const rows = (posts ?? []).filter((post) => !hasTechnicalSeedMarker(post.content));
     const hasMore = rows.length > limit;
     const resultPosts = hasMore ? rows.slice(0, limit) : rows;
     const nextCursor =

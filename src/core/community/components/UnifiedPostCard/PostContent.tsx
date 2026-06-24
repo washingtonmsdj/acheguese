@@ -18,7 +18,7 @@ import {
   getOpportunityTypeLabel,
   getOpportunityUrgencyLabel,
 } from "@/core/work-opportunities";
-import { normalizePublicPostContent } from "@/core/community/utils/publicPostContent";
+import { normalizePublicPostContent } from "@/core/posts/utils/publicPostContent";
 
 const civicTypeConfigMap = new Map(
   Object.entries(CIVIC_PROBLEM_TYPES) as Array<

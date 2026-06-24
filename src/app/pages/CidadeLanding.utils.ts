@@ -1,5 +1,5 @@
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
-import { getPublicPostPreview } from "@/core/community/utils/publicPostContent";
+import { getPublicPostPreview } from "@/core/posts/utils/publicPostContent";
 
 export function withQueryParams(path: string, params: Record<string, string>): string {
   const [pathWithoutHash, hash = ""] = path.split("#", 2);

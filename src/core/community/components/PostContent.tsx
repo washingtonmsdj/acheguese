@@ -2,7 +2,7 @@ import React, { memo } from "react";
 import { cn } from "@/shared/utils/cn";
 import { INLINE_STYLES, TYPOGRAPHY } from "./styles/communityDesignSystem";
 import { ImageGallery } from "./ImageGallery";
-import { normalizePublicPostContent } from "@/core/community/utils/publicPostContent";
+import { normalizePublicPostContent } from "@/core/posts/utils/publicPostContent";
 /**
  * Conteúdo do post (texto e imagens)
  *

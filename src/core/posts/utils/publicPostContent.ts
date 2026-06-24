@@ -1,5 +1,9 @@
 const TECHNICAL_SEED_PREFIX_PATTERN = /^\s*(?:\[(?:MOCK|SEED|DEV|TEST)[A-Z0-9_-]*\]\s*)+/i;
 
+export function hasTechnicalSeedMarker(content: string | null | undefined): boolean {
+  return TECHNICAL_SEED_PREFIX_PATTERN.test(content ?? "");
+}
+
 export function normalizePublicPostContent(content: string | null | undefined): string {
   return (content ?? "")
     .replace(TECHNICAL_SEED_PREFIX_PATTERN, "")
