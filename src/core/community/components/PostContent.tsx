@@ -2,6 +2,7 @@ import React, { memo } from "react";
 import { cn } from "@/shared/utils/cn";
 import { INLINE_STYLES, TYPOGRAPHY } from "./styles/communityDesignSystem";
 import { ImageGallery } from "./ImageGallery";
+import { normalizePublicPostContent } from "@/core/community/utils/publicPostContent";
 /**
  * Conteúdo do post (texto e imagens)
  *
@@ -49,7 +50,7 @@ export const PostContent = memo(function PostContent({
   content,
   images = [],
 }: PostContentProps) {
-  const { prefix, text } = parseContentPrefix(content);
+  const { prefix, text } = parseContentPrefix(normalizePublicPostContent(content));
 
   return (
     <div className="space-y-3">

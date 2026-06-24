@@ -1,4 +1,5 @@
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
+import { getPublicPostPreview } from "@/core/community/utils/publicPostContent";
 
 export function withQueryParams(path: string, params: Record<string, string>): string {
   const [pathWithoutHash, hash = ""] = path.split("#", 2);
@@ -32,9 +33,7 @@ export function getBusinessPublicUrl(
 }
 
 export function getTextPreview(value: string | null | undefined, maxLength: number): string {
-  const normalized = value?.replace(/\s+/g, " ").trim() ?? "";
-  if (!normalized) return "Publicação da comunidade local.";
-  return normalized.length > maxLength ? `${normalized.slice(0, maxLength - 1).trim()}...` : normalized;
+  return getPublicPostPreview(value, maxLength, "Publicação da comunidade local.");
 }
 
 export function formatRelativeTime(value: string | null | undefined): string {

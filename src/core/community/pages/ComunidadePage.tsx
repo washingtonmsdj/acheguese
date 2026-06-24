@@ -54,6 +54,7 @@ import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritory
 import type { TerritoryFilter } from "@/core/location";
 import { buildCommunityTabUrlFromPath } from "@/core/routing/utils/territoryUrls";
 import type { TerritorialFeedChannel } from "@/core/community/hooks/feed/territorialFeedEngine";
+import { getPublicPostPreview } from "@/core/community/utils/publicPostContent";
 
 const GruposPage = lazy(() => import("./GruposPage"));
 
@@ -73,12 +74,6 @@ function getPublicPostAuthor(post: unknown): string {
   const authorName = typeof record.author_name === "string" ? record.author_name.trim() : "";
   const authorDisplayName = typeof author?.display_name === "string" ? author.display_name.trim() : "";
   return authorName || authorDisplayName || "Morador";
-}
-
-function getPublicPostPreview(content: string | null | undefined, maxLength: number): string {
-  const normalized = (content ?? "").replace(/\s+/g, " ").trim();
-  if (!normalized) return "Publicacao da comunidade.";
-  return normalized.length > maxLength ? `${normalized.slice(0, maxLength - 1).trim()}...` : normalized;
 }
 
 function formatPublicPostDate(value: string | null | undefined): string {

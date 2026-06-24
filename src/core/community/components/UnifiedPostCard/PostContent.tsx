@@ -18,6 +18,7 @@ import {
   getOpportunityTypeLabel,
   getOpportunityUrgencyLabel,
 } from "@/core/work-opportunities";
+import { normalizePublicPostContent } from "@/core/community/utils/publicPostContent";
 
 const civicTypeConfigMap = new Map(
   Object.entries(CIVIC_PROBLEM_TYPES) as Array<
@@ -47,6 +48,7 @@ interface PostContentProps {
 
 export const PostContent = memo<PostContentProps>(
   ({ postType, content, image, civicType, status, urgency, contentIntent, displayFormat, contentPayload, tags, onTagClick }) => {
+    const displayContent = normalizePublicPostContent(content);
     const civicTypeConfig = civicType ? civicTypeConfigMap.get(civicType) : undefined;
     const statusConfig = status ? statusConfigMap.get(status) : undefined;
     const urgencyConfig = urgency ? urgencyConfigMap.get(urgency) : undefined;
@@ -89,7 +91,7 @@ export const PostContent = memo<PostContentProps>(
               {COMMUNITY_POST_CARD_COPY.territoryOpportunityLabel}
             </p>
             <p className="mt-2 text-base font-semibold text-emerald-100">
-              {opportunityPayload.headline ?? content}
+              {opportunityPayload.headline ?? displayContent}
             </p>
             <div className="mt-2 space-y-1.5 text-sm text-emerald-100/85">
               <p className="flex items-center gap-2">
@@ -110,14 +112,14 @@ export const PostContent = memo<PostContentProps>(
         )}
 
         <p className="mb-4 whitespace-pre-wrap break-words text-[15px] leading-7 text-white/82">
-          {content}
+          {displayContent}
         </p>
 
         {image && (
           <div className="mb-4 overflow-hidden rounded-xl border border-white/10 bg-black/20">
             <img
               src={image}
-              alt={`Imagem anexada ao post: ${content.substring(0, 100)}${content.length > 100 ? "..." : ""}`}
+              alt={`Imagem anexada ao post: ${displayContent.substring(0, 100)}${displayContent.length > 100 ? "..." : ""}`}
               className="aspect-[4/5] max-h-[680px] w-full object-cover sm:aspect-[1/1]"
             />
           </div>
