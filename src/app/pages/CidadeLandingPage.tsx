@@ -1181,7 +1181,8 @@ function NeighborhoodLandingContent({
   const enterLoginHref = withQueryParams("/login", { redirect: urls.feed });
   const publishLoginHref = withQueryParams("/login", { redirect: urls.publish });
   const signupHref = withQueryParams("/cadastro", { redirect: urls.community });
-  const verifyHref = "/conta/enderecos";
+  const residenceHref = "/conta/enderecos";
+  const verifyHref = accessStatus === "visitor" ? withQueryParams("/login", { redirect: residenceHref }) : residenceHref;
   const interactionHref = canInteract ? urls.publish : accessStatus === "visitor" ? publishLoginHref : verifyHref;
   const enterHref = accessStatus === "verified" ? urls.feed : accessStatus === "visitor" ? enterLoginHref : verifyHref;
   const lockedActionHref = accessStatus === "visitor" ? enterLoginHref : verifyHref;
