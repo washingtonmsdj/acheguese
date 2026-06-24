@@ -2919,12 +2919,12 @@
   }
 
   .neighborhood-community-hero {
-    gap: 10px;
-    padding-top: 12px;
+    gap: 8px;
+    padding-top: 8px;
   }
 
   .neighborhood-community-hero h1 {
-    margin-top: 8px;
+    margin-top: 6px;
   }
 
   .neighborhood-community-badges,
@@ -2942,29 +2942,29 @@
   }
 
   .neighborhood-community-hero-actions {
-    gap: 8px;
-    margin-top: 10px;
+    gap: 7px;
+    margin-top: 8px;
   }
 
   .neighborhood-community-hero-actions a {
-    min-height: 40px;
+    min-height: 38px;
     border-radius: 8px;
-    font-size: 0.82rem;
+    font-size: 0.8rem;
   }
 
   .neighborhood-community-hero-summary {
-    gap: 10px;
-    padding: 12px;
+    gap: 8px;
+    padding: 10px;
   }
 
   .neighborhood-community-hero-map {
-    min-height: 116px;
-    margin-block: -4px;
+    min-height: 96px;
+    margin-block: -8px;
   }
 
   .neighborhood-community-hero-map .neighborhood-territory-art {
     width: min(118%, 390px);
-    max-height: 154px;
+    max-height: 130px;
   }
 
   .neighborhood-community-summary-top {
@@ -2983,7 +2983,7 @@
 
   .neighborhood-community-summary-stats {
     gap: 6px;
-    padding: 8px 0;
+    padding: 6px 0;
   }
 
   .neighborhood-community-summary-stats svg {
@@ -2996,7 +2996,7 @@
   }
 
   .neighborhood-community-summary-cta {
-    gap: 8px;
+    gap: 6px;
   }
 
   .neighborhood-community-summary-cta small {
@@ -3004,7 +3004,7 @@
   }
 
   .neighborhood-community-summary-cta a {
-    min-height: 38px;
+    min-height: 34px;
     font-size: 0.78rem;
   }
 
@@ -3568,12 +3568,12 @@
     height: 32px;
   }
 
-  .neighborhood-community-rules span:nth-child(3) {
+  .neighborhood-community-rules {
     display: none;
   }
 
   .neighborhood-community-hero-actions {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .neighborhood-community-summary-top {
