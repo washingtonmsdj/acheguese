@@ -48,6 +48,19 @@ export type NeighborhoodStreamMoreConfig = {
   emptyAction: string;
 };
 
+function getUnlockedActionLabel(item: NeighborhoodStreamItem): string {
+  switch (item.category) {
+    case "feed":
+      return "Comentar";
+    case "services":
+      return "Recomendar";
+    case "gastronomy":
+      return "Avaliar";
+    default:
+      return "Interagir";
+  }
+}
+
 function NeighborhoodStreamEmpty({ config }: { config: NeighborhoodStreamMoreConfig }) {
   return (
     <Link to={config.href} className="city-op-empty-action">
@@ -121,6 +134,8 @@ export function NeighborhoodStream({
         {items.length > 0 ? (
           items.map((item) => {
             const FallbackIcon = item.mediaFallback;
+            const showLockedAction = Boolean(item.lockedActionLabel) && !canInteract;
+            const showEngagementAction = Boolean(item.engagementLabel) && !showLockedAction;
             return (
               <article key={item.id} className={`neighborhood-community-stream-item is-${item.tone}`}>
                 <Link to={item.href} className="neighborhood-community-stream-media" aria-label={item.title}>
@@ -133,7 +148,7 @@ export function NeighborhoodStream({
                   <small>{item.meta}</small>
                 </div>
                 <div className="neighborhood-community-stream-action">
-                  {item.engagementLabel ? (
+                  {showEngagementAction ? (
                     <Link to={item.href}>
                       <MessageCircle aria-hidden="true" />
                       {item.engagementLabel}
@@ -142,7 +157,7 @@ export function NeighborhoodStream({
                   {item.lockedActionLabel ? (
                     <Link to={canInteract ? item.href : lockedActionHref} className={!canInteract ? "is-locked" : undefined}>
                       {!canInteract ? <Lock aria-hidden="true" /> : <MessageCircle aria-hidden="true" />}
-                      {canInteract ? "Comentar" : item.lockedActionLabel}
+                      {canInteract ? getUnlockedActionLabel(item) : item.lockedActionLabel}
                     </Link>
                   ) : null}
                 </div>

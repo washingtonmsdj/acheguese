@@ -50,6 +50,34 @@ function getPostTypeLabel(type: string | undefined): { label: string; tone: Neig
   }
 }
 
+function buildFallbackItem({
+  id,
+  category,
+  label,
+  tone,
+  title,
+  description,
+  href,
+  mediaFallback,
+  meta,
+  engagementLabel,
+  lockedActionLabel,
+}: NeighborhoodStreamItem): NeighborhoodStreamItem {
+  return {
+    id: `fallback-${id}`,
+    category,
+    label,
+    tone,
+    title,
+    description,
+    href,
+    mediaFallback,
+    meta,
+    engagementLabel,
+    lockedActionLabel,
+  };
+}
+
 export function buildNeighborhoodStreamItems({
   posts,
   businesses,
@@ -158,22 +186,93 @@ export function buildNeighborhoodStreamItems({
     engagementLabel: "Abrir mapa completo",
   }];
 
+  const fallbackPostItem = buildFallbackItem({
+    id: "feed",
+    category: "feed",
+    label: "COMUNIDADE",
+    tone: "cyan",
+    title: "Acompanhe o feed público do bairro",
+    description: "Avisos, pedidos, recomendações e conversas de moradores aparecem aqui quando publicados.",
+    href: urls.feed,
+    mediaFallback: MessageCircle,
+    meta: "Leitura pública",
+    engagementLabel: "Abrir feed",
+  });
+
+  const fallbackBusinessItem = buildFallbackItem({
+    id: "business",
+    category: "business",
+    label: "NEGÓCIOS",
+    tone: "blue",
+    title: "Empresas do bairro",
+    description: "Veja estabelecimentos cadastrados neste território e filtros por categoria.",
+    href: urls.business,
+    mediaFallback: Store,
+    meta: "Cadastros ativos",
+    engagementLabel: "Ver empresas",
+  });
+
+  const fallbackServiceItem = buildFallbackItem({
+    id: "services",
+    category: "services",
+    label: "SERVIÇO LOCAL",
+    tone: "cyan",
+    title: "Serviços próximos",
+    description: "Encontre profissionais do bairro e recomendações conectadas à comunidade.",
+    href: urls.services,
+    mediaFallback: Wrench,
+    meta: "Profissionais locais",
+    engagementLabel: "Ver serviços",
+  });
+
+  const fallbackClassifiedItem = buildFallbackItem({
+    id: "classifieds",
+    category: "classifieds",
+    label: "CLASSIFICADOS",
+    tone: "amber",
+    title: "Classificados da comunidade",
+    description: "Anúncios de compra, venda, aluguel e oportunidades aparecem no contexto do bairro.",
+    href: urls.classifieds,
+    mediaFallback: Tag,
+    meta: "Anúncios locais",
+    engagementLabel: "Ver classificados",
+  });
+
+  const fallbackGastronomyItem = buildFallbackItem({
+    id: "gastronomy",
+    category: "gastronomy",
+    label: "GASTRONOMIA",
+    tone: "green",
+    title: "Gastronomia perto de você",
+    description: "Restaurantes, bares e comidas locais aparecem por proximidade e território.",
+    href: urls.gastronomy,
+    mediaFallback: UtensilsCrossed,
+    meta: "Comida local",
+    engagementLabel: "Ver gastronomia",
+  });
+
+  const feedGroup = postItems.length > 0 ? postItems : [fallbackPostItem];
+  const businessGroup = businessItem.length > 0 ? businessItem : [fallbackBusinessItem];
+  const serviceGroup = serviceItem.length > 0 ? serviceItem : [fallbackServiceItem];
+  const classifiedGroup = classifiedItem.length > 0 ? classifiedItem : [fallbackClassifiedItem];
+  const gastronomyGroup = gastronomyItem.length > 0 ? gastronomyItem : [fallbackGastronomyItem];
+
   return {
     all: [
-      postItems[0],
-      serviceItem[0],
-      classifiedItem[0],
-      gastronomyItem[0],
-      postItems[1],
-      businessItem[0],
-      postItems[2],
+      feedGroup[0],
+      serviceGroup[0],
+      classifiedGroup[0],
+      gastronomyGroup[0],
+      feedGroup[1],
+      businessGroup[0],
+      feedGroup[2],
       mapItem[0],
     ].filter((item): item is NeighborhoodStreamItem => Boolean(item)).slice(0, 7),
-    feed: postItems,
-    business: businessItem,
-    services: serviceItem,
-    classifieds: classifiedItem,
-    gastronomy: gastronomyItem,
+    feed: feedGroup,
+    business: businessGroup,
+    services: serviceGroup,
+    classifieds: classifiedGroup,
+    gastronomy: gastronomyGroup,
     map: mapItem,
   };
 }
