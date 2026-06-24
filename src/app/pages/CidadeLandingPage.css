@@ -2900,15 +2900,30 @@
 
 @media (max-width: 679px) {
   .neighborhood-community-header {
+    grid-template-columns: minmax(96px, auto) minmax(0, 1fr);
     gap: 8px;
     padding-bottom: 8px;
   }
 
   .neighborhood-community-location {
+    grid-column: 1;
+    grid-row: 2;
+    width: 100%;
     min-height: 34px;
+    padding-inline: 9px;
+    justify-content: center;
+    font-size: 0.76rem;
+  }
+
+  .neighborhood-community-location span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .neighborhood-community-top-search {
+    grid-column: 2;
+    grid-row: 2;
     min-height: 42px;
     padding-inline: 12px;
     border-radius: 10px;
@@ -3566,6 +3581,36 @@
   .neighborhood-community-brand .city-op-brand-mark {
     width: 32px;
     height: 32px;
+  }
+
+  .neighborhood-community-header {
+    grid-template-columns: minmax(92px, 0.44fr) minmax(0, 1fr);
+  }
+
+  .neighborhood-community-location {
+    min-height: 32px;
+    padding-inline: 8px;
+    font-size: 0.7rem;
+  }
+
+  .neighborhood-community-location svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .neighborhood-community-top-search {
+    min-height: 38px;
+    gap: 7px;
+    padding-inline: 10px;
+  }
+
+  .neighborhood-community-top-search svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .neighborhood-community-top-search input {
+    font-size: 0.82rem;
   }
 
   .neighborhood-community-rules {
