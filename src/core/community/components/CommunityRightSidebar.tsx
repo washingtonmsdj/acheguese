@@ -1,20 +1,14 @@
 import React, { memo, useMemo } from "react";
 import { Link } from "react-router-dom";
 import {
-  AlertTriangle,
-  BriefcaseBusiness,
   Building2,
-  CalendarDays,
   ChevronRight,
   Compass,
   MapPinned,
-  ShieldAlert,
   Store,
   UtensilsCrossed,
   Wrench,
 } from "lucide-react";
-import { format } from "date-fns";
-import { ptBR } from "@/shared/utils/dateLocale";
 import { useQuery } from "@tanstack/react-query";
 import { BusinessService } from "@/core/business/services/BusinessService";
 import { useBusinessUrls } from "@/core/business/hooks/useBusinessUrls";
@@ -24,8 +18,6 @@ import {
   territoryFilterKey,
 } from "@/core/location/hooks/useTerritoryFilter";
 import { useFriendlyModuleUrls } from "@/core/routing/hooks/useFriendlyModuleUrls";
-import { communityEventsRuntimeService } from "@/core/community/services/CommunityEventsRuntimeService";
-import { communityAlertService } from "@/core/community/alerts";
 import type { Business } from "@/core/business/types/Business";
 import type { TerritoryFilter } from "@/core/location";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
@@ -106,25 +98,6 @@ function buildBusinessHref(
   }
 }
 
-function formatEventDate(value: string): { day: string; month: string; date: string; time: string } {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return {
-      day: "--",
-      month: "--",
-      date: "Data a confirmar",
-      time: "Horario a confirmar",
-    };
-  }
-
-  return {
-    day: format(date, "dd", { locale: ptBR }),
-    month: format(date, "MMM", { locale: ptBR }).replace(".", "").toUpperCase(),
-    date: format(date, "dd 'de' MMMM", { locale: ptBR }),
-    time: format(date, "HH'h'mm", { locale: ptBR }),
-  };
-}
-
 function normalizeCategoryLabel(value?: string | null): string {
   if (!value) return "Local";
   return value.replace(/[_-]/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
@@ -150,11 +123,15 @@ export const CommunityRightSidebar = memo(
       () => [
         { icon: Building2, label: "Empresas", href: moduleUrls.business },
         { icon: UtensilsCrossed, label: "Gastronomia", href: moduleUrls.gastronomy },
-        { icon: Wrench, label: "Serviços", href: moduleUrls.services },
-        { icon: CalendarDays, label: "Classificados", href: moduleUrls.classifieds },
-        { icon: BriefcaseBusiness, label: "Vagas", href: moduleUrls.jobs },
+        { icon: Wrench, label: "Servicos", href: moduleUrls.services },
+        { icon: Store, label: "Classificados", href: moduleUrls.classifieds },
       ],
-      [moduleUrls.business, moduleUrls.classifieds, moduleUrls.gastronomy, moduleUrls.jobs, moduleUrls.services],
+      [
+        moduleUrls.business,
+        moduleUrls.classifieds,
+        moduleUrls.gastronomy,
+        moduleUrls.services,
+      ],
     );
 
     const { data: businesses = [], isLoading: loadingBusinesses } = useQuery({
@@ -171,30 +148,6 @@ export const CommunityRightSidebar = memo(
       staleTime: 5 * 60 * 1000,
     });
 
-    const { data: events = [], isLoading: loadingEvents } = useQuery({
-      queryKey: ["community-sidebar", "events", filterKey],
-      queryFn: async () => {
-        const result = await communityEventsRuntimeService.getEventsPage({
-          territoryFilter,
-          upcoming: true,
-          status: "upcoming",
-          pageSize: 3,
-          sortBy: "date",
-          sortOrder: "asc",
-        });
-        return result.items;
-      },
-      enabled: filterReady,
-      staleTime: 5 * 60 * 1000,
-    });
-
-    const { data: alerts = [], isLoading: loadingAlerts } = useQuery({
-      queryKey: ["community-sidebar", "alerts", filterKey],
-      queryFn: () => communityAlertService.getByTerritory(territoryFilter, { limit: 3 }),
-      enabled: filterReady && territoryFilter.scope !== "none",
-      staleTime: 60 * 1000,
-    });
-
     return (
       <div className="flex w-full flex-col gap-3">
         <section className="rounded-2xl border border-border bg-card p-4">
@@ -202,7 +155,7 @@ export const CommunityRightSidebar = memo(
             <Compass className="mt-0.5 h-8 w-8 text-primary" />
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Território
+                Territorio
               </p>
               <h3 className="mt-1 truncate text-base font-bold text-foreground">{territoryLabel}</h3>
               <p className="text-xs text-muted-foreground">
@@ -242,48 +195,11 @@ export const CommunityRightSidebar = memo(
           </div>
         </SidebarSection>
 
-        <SidebarSection title="Próximos eventos" actionHref={moduleUrls.events} actionLabel="Ver todos">
-          {loadingEvents ? (
-            <EmptyState>Carregando eventos do território...</EmptyState>
-          ) : events.length === 0 ? (
-            <EmptyState>Nenhum evento público cadastrado neste território.</EmptyState>
-          ) : (
-            <div className="space-y-1">
-              {events.map((event) => {
-                const eventDate = formatEventDate(event.date);
-                return (
-                  <Link
-                    key={event.id}
-                    to={`${moduleUrls.events}/${event.id}`}
-                    className="flex items-start gap-3 border-b border-border py-2.5 transition-colors hover:bg-accent/50 last:border-b-0"
-                  >
-                    <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl border border-border bg-accent">
-                      <span className="text-base font-bold leading-none text-foreground">
-                        {eventDate.day}
-                      </span>
-                      <span className="text-[10px] font-semibold text-muted-foreground">
-                        {eventDate.month}
-                      </span>
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="line-clamp-2 text-sm font-semibold leading-tight text-foreground">
-                        {event.title}
-                      </p>
-                      <p className="mt-1 text-xs text-muted-foreground">{eventDate.date}</p>
-                      <p className="text-xs text-muted-foreground">{eventDate.time}</p>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          )}
-        </SidebarSection>
-
-        <SidebarSection title="Empresas do território" actionHref={moduleUrls.business} actionLabel="Ver todas">
+        <SidebarSection title="Empresas do territorio" actionHref={moduleUrls.business} actionLabel="Ver todas">
           {loadingBusinesses ? (
-            <EmptyState>Carregando empresas reais do território...</EmptyState>
+            <EmptyState>Carregando empresas reais do territorio...</EmptyState>
           ) : businesses.length === 0 ? (
-            <EmptyState>Nenhuma empresa ativa cadastrada neste território.</EmptyState>
+            <EmptyState>Nenhuma empresa ativa cadastrada neste territorio.</EmptyState>
           ) : (
             <div className="space-y-2">
               {businesses.map((business) => {
@@ -311,7 +227,7 @@ export const CommunityRightSidebar = memo(
                         {normalizeCategoryLabel(business.category)}
                       </p>
                       <p className="text-xs text-primary">
-                        {rating ? `${rating} (${business.total_reviews ?? 0})` : "Sem avaliações"}
+                        {rating ? `${rating} (${business.total_reviews ?? 0})` : "Sem avaliacoes"}
                       </p>
                     </div>
                   </>
@@ -338,37 +254,6 @@ export const CommunityRightSidebar = memo(
           )}
         </SidebarSection>
 
-        <SidebarSection title="Alertas do bairro" actionHref={moduleUrls.community} actionLabel="Ver feed">
-          {loadingAlerts ? (
-            <EmptyState>Carregando alertas ativos...</EmptyState>
-          ) : alerts.length === 0 ? (
-            <EmptyState>Nenhum alerta ativo neste território.</EmptyState>
-          ) : (
-            <div className="space-y-1">
-              {alerts.map((alert) => {
-                const Icon = alert.category === "risco_na_via" ? AlertTriangle : ShieldAlert;
-                return (
-                  <div
-                    key={alert.id}
-                    className="flex items-start gap-3 border-b border-border py-2.5 last:border-b-0"
-                  >
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent text-primary">
-                      <Icon className="h-4.5 w-4.5" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="line-clamp-2 text-sm leading-snug text-foreground">
-                        {alert.description}
-                      </p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {normalizeCategoryLabel(alert.category)}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </SidebarSection>
       </div>
     );
   },

@@ -23,7 +23,7 @@ export default function NotificationsPage() {
         <div>
           <h1 className="text-3xl font-bold">Notificações</h1>
           <p className="text-muted-foreground mt-1">
-            Acompanhe suas atualizações e mensagens
+            Acompanhe suas atualizacoes e avisos
           </p>
         </div>
         <Button

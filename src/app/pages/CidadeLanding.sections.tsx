@@ -247,7 +247,7 @@ export function CityCommunityCtaSection({
           </h2>
 
           <p className="text-muted-foreground text-base md:text-lg mb-8 max-w-2xl mx-auto leading-relaxed">
-            Conecte-se com moradores do seu bairro, descubra serviços locais e acompanhe oportunidades da cidade.
+            Conecte-se com moradores do seu bairro, descubra serviços locais e acompanhe classificados da cidade.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

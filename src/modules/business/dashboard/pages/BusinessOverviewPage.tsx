@@ -5,6 +5,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { useBusinessDashboardContext } from "@/modules/business/dashboard/businessDashboardContext";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
+import { isLaunchSurfaceEnabled } from "@/config/launchScope";
 
 export default function BusinessOverviewPage() {
   const {
@@ -16,6 +17,7 @@ export default function BusinessOverviewPage() {
     publicUrl,
     premiumUrl,
   } = useBusinessDashboardContext();
+  const showAnalytics = isLaunchSurfaceEnabled("publicAnalytics");
 
   return (
     <div className="space-y-4">
@@ -75,12 +77,14 @@ export default function BusinessOverviewPage() {
               Link premium
             </Button>
           </Link>
-          <Link to={businessManagementRoutes.analytics(businessId)}>
-            <Button variant="outline" className="gap-2">
-              <BarChart3 className="h-4 w-4" />
-              Analytics
-            </Button>
-          </Link>
+          {showAnalytics && (
+            <Link to={businessManagementRoutes.analytics(businessId)}>
+              <Button variant="outline" className="gap-2">
+                <BarChart3 className="h-4 w-4" />
+                Analytics
+              </Button>
+            </Link>
+          )}
         </CardContent>
       </Card>
 

@@ -1,14 +1,16 @@
-import { useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import { LAUNCH_URLS } from '@/config/territory';
 import { isReservedSlug } from '@/core/routing/reservedSlugs';
 import { useTerritorialContextOptional } from '@/core/routing/components/TerritorialLayout';
 import {
   buildCommunityTerritoryUrl,
-  buildModuleTerritoryUrl,
   hasPublicCityTerritoryPath,
-  type ModuleSlug,
   MODULE_SLUGS,
 } from '@/core/routing/utils/territoryUrls';
+import {
+  buildContextualModuleUrl,
+  shouldUseCommunityScopedModuleUrls,
+} from '@/core/routing/utils/communityModuleUrls';
 
 export interface ModuleUrls {
   community: string;
@@ -20,6 +22,7 @@ export interface ModuleUrls {
 }
 
 export function useModuleUrls(): ModuleUrls {
+  const { pathname } = useLocation();
   const territorialContext = useTerritorialContextOptional();
   const { state, city, district, groupSlug, groupSlugOrDistrict } = useParams<{
     state?: string;
@@ -39,6 +42,11 @@ export function useModuleUrls(): ModuleUrls {
       territorialContext.baseUrl,
       territoryName,
       territorialContext.communityBaseUrl,
+      shouldUseCommunityScopedModuleUrls({
+        pathname,
+        territoryBaseUrl: territorialContext.baseUrl,
+        communityBaseUrl: territorialContext.communityBaseUrl,
+      }),
     );
   }
 
@@ -64,22 +72,11 @@ export function useModuleUrls(): ModuleUrls {
   };
 }
 
-function buildScopedModuleUrl(
-  module: ModuleSlug,
-  base: string,
-  communityBaseUrl?: string | null,
-): string {
-  if (communityBaseUrl === base) {
-    return `${base}/${module}`;
-  }
-
-  return buildModuleTerritoryUrl(module, base);
-}
-
 function buildTerritorialModuleUrls(
   base: string,
   territoryName: string | null,
   communityBaseUrl?: string | null,
+  useCommunityScopedModules = false,
 ): ModuleUrls {
   const community = communityBaseUrl ??
     (hasPublicCityTerritoryPath(base)
@@ -90,9 +87,24 @@ function buildTerritorialModuleUrls(
     base,
     territoryName,
     community,
-    business: buildScopedModuleUrl(MODULE_SLUGS.business, base, communityBaseUrl),
-    services: buildScopedModuleUrl(MODULE_SLUGS.services, base, communityBaseUrl),
-    classifieds: buildScopedModuleUrl(MODULE_SLUGS.classifieds, base, communityBaseUrl),
+    business: buildContextualModuleUrl({
+      module: MODULE_SLUGS.business,
+      territoryBaseUrl: base,
+      communityBaseUrl,
+      useCommunityScopedModules,
+    }),
+    services: buildContextualModuleUrl({
+      module: MODULE_SLUGS.services,
+      territoryBaseUrl: base,
+      communityBaseUrl,
+      useCommunityScopedModules,
+    }),
+    classifieds: buildContextualModuleUrl({
+      module: MODULE_SLUGS.classifieds,
+      territoryBaseUrl: base,
+      communityBaseUrl,
+      useCommunityScopedModules,
+    }),
   };
 }
 

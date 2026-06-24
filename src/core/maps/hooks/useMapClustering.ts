@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 /**
  * useMapClustering - Hook para clustering de marcadores no mapa
  * 
@@ -7,7 +6,7 @@
  * @module core/maps/hooks
  */
 
-import { useMemo, useEffect, useRef } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { clusteringService } from '../services/ClusteringService';
 import type { MapMarker, BoundingBox } from '../types/core';
 import type { ClusterPoint } from '../services/ClusteringService';
@@ -25,6 +24,10 @@ export interface UseMapClusteringOptions {
 export interface UseMapClusteringResult {
   clusters: ClusterPoint[];
   isReady: boolean;
+}
+
+function hasFiniteCoordinates(marker: MapMarker): boolean {
+  return Number.isFinite(marker.coordinates?.latitude) && Number.isFinite(marker.coordinates?.longitude);
 }
 
 /**
@@ -62,13 +65,13 @@ export function useMapClustering(options: UseMapClusteringOptions): UseMapCluste
     minPoints = 2,
   } = options;
 
-  const isInitialized = useRef(false);
+  const [isReady, setIsReady] = useState(false);
 
   // Carregar marcadores no clustering quando mudarem
   useEffect(() => {
     if (!enabled || markers.length === 0) {
       clusteringService.clear();
-      isInitialized.current = false;
+      setIsReady(false);
       return;
     }
 
@@ -78,16 +81,16 @@ export function useMapClustering(options: UseMapClusteringOptions): UseMapCluste
       minPoints,
     });
 
-    isInitialized.current = true;
+    setIsReady(true);
   }, [markers, enabled, radius, maxZoom, minPoints]);
 
   // Obter clusters para o viewport atual
   const clusters = useMemo(() => {
-    if (!enabled || !isInitialized.current || !bounds) {
+    if (!enabled || !isReady || !bounds) {
       // Retornar marcadores individuais sem clustering
       // ✅ SSOT: Filtrar marcadores com coordenadas válidas
       return markers
-        .filter((marker) => marker?.coordinates?.longitude != null && marker?.coordinates?.latitude != null)
+        .filter(hasFiniteCoordinates)
         .map((marker, index) => ({
           type: 'Feature' as const,
           id: index,
@@ -106,11 +109,11 @@ export function useMapClustering(options: UseMapClusteringOptions): UseMapCluste
     }
 
     return clusteringService.getClusters(bounds, zoom);
-  }, [enabled, bounds, zoom, markers, isInitialized.current]);
+  }, [enabled, isReady, bounds, zoom, markers]);
 
   return {
     clusters,
-    isReady: isInitialized.current,
+    isReady,
   };
 }
 

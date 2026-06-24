@@ -52,6 +52,10 @@ const COMMUNITY_SELECT = [
   "status",
 ].join(",");
 
+const explicitCommunityAliasLookupEnabled =
+  import.meta.env.MODE === "test" ||
+  import.meta.env.VITE_ENABLE_COMMUNITY_PUBLIC_ALIASES === "true";
+
 const RESERVED_ROOT_ALIAS_SEGMENTS = new Set([
   "admin",
   "ai",
@@ -188,6 +192,8 @@ async function findCommunityByTerritoryReference(
 }
 
 async function findCommunityByExplicitAlias(alias: string): Promise<TerritoryCommunityRow | null> {
+  if (!explicitCommunityAliasLookupEnabled) return null;
+
   const { data, error } = await supabase
     .from("community_public_aliases" as never)
     .select("alias, territory_community_id, status")
@@ -203,6 +209,8 @@ async function findCommunityByExplicitAlias(alias: string): Promise<TerritoryCom
 }
 
 async function findExplicitAliasByCommunityId(communityId: string): Promise<string | null> {
+  if (!explicitCommunityAliasLookupEnabled) return null;
+
   const { data, error } = await supabase
     .from("community_public_aliases" as never)
     .select("alias, territory_community_id, status")

@@ -26,8 +26,6 @@ import {
   ContentTabsSection,
 } from "@/modules/profile/components/hub";
 import { ResidentVerificationCard } from "@/modules/profile/components/ResidentVerificationCard";
-import { ReputationLevelCard } from "@/modules/profile/components/ReputationLevelCard";
-import { GamificationCard } from "@/modules/profile/components/GamificationCard";
 import { CivicEngagementCard } from "@/modules/profile/components/CivicEngagementCard";
 import { ActivityTimeline } from "@/modules/profile/components/ActivityTimeline";
 
@@ -35,14 +33,10 @@ import type { DadosPessoaisSectionProps } from "./types";
 
 export function DadosPessoaisSection({
   user,
-  personalProfile,
   personalProfileId,
   profile,
-  identity,
-  context,
   stats,
   operations,
-  isVerified,
   verificationStatus,
   verificationRejectionReason,
   favorites,
@@ -86,19 +80,6 @@ export function DadosPessoaisSection({
       />
 
       {/* Reputação e Gamificação */}
-      {(identity?.reputation || context?.reputation) && personalProfile ? (
-        <div className="grid gap-6 lg:grid-cols-2">
-          <ReputationLevelCard
-            reputation={(identity?.reputation?.score || context?.reputation?.score) ?? 0}
-            isVerified={isVerified}
-          />
-          <GamificationCard
-            profile={personalProfile}
-            onViewRanking={() => navigate("/ranking")}
-          />
-        </div>
-      ) : null}
-
       {/* Engajamento Cívico */}
       {(stats.reportsCount || stats.supportsCount) ? (
         <CivicEngagementCard
@@ -154,7 +135,7 @@ export function DadosPessoaisSection({
           <HubLinkCard
             icon={Bell}
             title="Notificações"
-            description="Alertas e inbox"
+            description="Preferencias de avisos"
             onClick={() => navigate(appUrls.notifications)}
           />
           <HubLinkCard

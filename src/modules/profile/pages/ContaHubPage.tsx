@@ -20,19 +20,14 @@ import { Button } from "@/shared/components/ui/button";
 import { useProfileHub } from "@/modules/profile/hooks/useProfileHub";
 import { ContaHubLayout } from "./ContaHubLayout";
 
-import {
-  ResumoSection,
-  DadosPessoaisSection,
-  EmpresasSection,
-  MobilidadeSection,
-  DeliverySection,
-  PlanosSection,
-  NotificacoesSection,
-  PreferenciasSection,
-  SegurancaSection,
-  type ProfileSectionId,
-  type SectionPropsMap,
-} from "@/modules/profile/sections";
+import { ResumoSection } from "@/modules/profile/sections/ResumoSection";
+import { DadosPessoaisSection } from "@/modules/profile/sections/DadosPessoaisSection";
+import { EmpresasSection } from "@/modules/profile/sections/EmpresasSection";
+import { PlanosSection } from "@/modules/profile/sections/PlanosSection";
+import { NotificacoesSection } from "@/modules/profile/sections/NotificacoesSection";
+import { PreferenciasSection } from "@/modules/profile/sections/PreferenciasSection";
+import { SegurancaSection } from "@/modules/profile/sections/SegurancaSection";
+import type { ProfileSectionId } from "@/modules/profile/config/profile-sections.config";
 
 import type { SectionNavItem } from "@/modules/profile/components/hub/ProfileSectionsNav";
 import { buildProfileSectionItems, getProfileSectionPath } from "@/modules/profile/utils/profileNavigation";
@@ -46,13 +41,33 @@ const SECTION_MAP = {
   resumo: ResumoSection,
   "dados-pessoais": DadosPessoaisSection,
   empresas: EmpresasSection,
-  mobilidade: MobilidadeSection,
-  delivery: DeliverySection,
+  mobilidade: LaunchPausedProfileSection,
+  delivery: LaunchPausedProfileSection,
   planos: PlanosSection,
   notificacoes: NotificacoesSection,
   preferencias: PreferenciasSection,
   seguranca: SegurancaSection,
 } as const satisfies Record<ProfileSectionId, React.ComponentType<any>>;
+
+function LaunchPausedProfileSection({ navigate }: { navigate: (path: string) => void }) {
+  return (
+    <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+        MVP publico
+      </p>
+      <h2 className="mt-3 text-xl font-bold text-foreground">
+        Este modulo esta separado para ajustes.
+      </h2>
+      <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+        A conta fica focada em identidade, empresas, servicos e notificacoes do lancamento.
+        Rotinas operacionais pausadas continuam preservadas fora da superficie publica.
+      </p>
+      <Button className="mt-5" variant="outline" onClick={() => navigate("/central")}>
+        Abrir Central
+      </Button>
+    </div>
+  );
+}
 
 // ============================================
 // Helper: Construir Props por Section

@@ -11,13 +11,38 @@ export const TEST_ADMIN = {
   password: process.env.E2E_ADMIN_PASSWORD ?? "E2eAdmin@2024!",
 };
 
+async function waitForLoginForm(page: Page) {
+  const identifier = page.locator("#login-identifier");
+
+  for (let attempt = 1; attempt <= 2; attempt += 1) {
+    try {
+      await identifier.waitFor({ state: "visible", timeout: 30_000 });
+      await page.locator("#login-password").waitFor({ state: "visible", timeout: 30_000 });
+      return;
+    } catch (error) {
+      if (attempt === 2) {
+        throw error;
+      }
+
+      const bodyText = await page.locator("body").innerText().catch(() => "");
+      if (/Preparando a casa/i.test(bodyText)) {
+        await page.reload({ waitUntil: "domcontentloaded", timeout: 60_000 }).catch(() => undefined);
+        continue;
+      }
+
+      await page.goto("/login", { waitUntil: "domcontentloaded", timeout: 60_000 }).catch(
+        () => undefined,
+      );
+    }
+  }
+}
+
 export async function login(page: Page, email: string, password: string) {
   await page.goto("/login");
 
   await page.waitForLoadState("domcontentloaded");
 
-  await page.locator("#login-identifier").waitFor({ state: "visible", timeout: 10_000 });
-  await page.locator("#login-password").waitFor({ state: "visible", timeout: 10_000 });
+  await waitForLoginForm(page);
 
   await page.locator("#login-identifier").fill(email);
   await page.locator("#login-password").fill(password);

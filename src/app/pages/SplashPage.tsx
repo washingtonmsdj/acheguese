@@ -63,7 +63,7 @@ export default function SplashPage() {
           </h1>
 
           <p className="mx-auto mt-3 max-w-[300px] text-sm leading-relaxed text-muted-foreground">
-            Empresas, serviços, escolas, oportunidades e comunidade organizados por território.
+            Empresas, gastronomia, serviços, classificados, mapa e comunidade organizados por território.
           </p>
 
           <p className="mt-1.5 text-xs text-muted-foreground/70">

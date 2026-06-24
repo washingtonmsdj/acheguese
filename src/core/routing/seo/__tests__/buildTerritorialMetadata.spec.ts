@@ -45,7 +45,7 @@ describe("buildTerritorialMetadata", () => {
 
     expect(meta.title).toBe("Complexo do Nordeste de Amaralina | Achegue-se");
     expect(meta.description).toContain("Conheça Complexo do Nordeste de Amaralina, Salvador.");
-    expect(meta.description).toContain("Comunidade, empresas, serviços e mobilidade hiperlocal.");
+    expect(meta.description).toContain("Comunidade, empresas, serviços, classificados, mapa e guia local.");
   });
 
   it("preserva titulo operacional em modulo territorial", () => {

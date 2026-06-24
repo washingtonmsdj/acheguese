@@ -217,10 +217,10 @@ export default function EmailLogsPage() {
               (confirmações, redefinição de senha, etc.)
             </p>
             <p>
-              <strong>Sistema:</strong> Notificações do sistema (alertas de segurança, MFA, etc.)
+              <strong>Sistema:</strong> Notificacoes do sistema (seguranca, MFA, etc.)
             </p>
             <p>
-              <strong>Sociais:</strong> Notificações de interações sociais (mensagens, comentários, etc.)
+              <strong>Sociais:</strong> Notificacoes de interacoes sociais (comentarios, mencoes, etc.)
             </p>
             <p>
               <strong>Marketing:</strong> Promoções e novidades (pode ser desativado nas preferências)

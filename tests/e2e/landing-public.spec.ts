@@ -35,21 +35,21 @@ test.describe('public landing routes', () => {
       .toBe('Achegue-se - Comunidade hiperlocal');
   });
 
-  test("home CTA 'Ver meu bairro' opens a city-level community route", async ({ page }) => {
+  test("home CTA 'Ver meu bairro' opens the launch community route", async ({ page }) => {
     test.setTimeout(60_000);
     await openPublicRoute(page, '/');
 
     const neighborhoodButton = page.getByRole('button', { name: /Ver meu bairro/i }).first();
     await expect(neighborhoodButton).toBeVisible({ timeout: 30_000 });
-    await Promise.all([
-      page.waitForURL(/\/comunidade\/[a-z]{2}\/[^/?#]+/i, { timeout: 15_000 }),
-      neighborhoodButton.click(),
-    ]);
+    await neighborhoodButton.click();
+    await expect
+      .poll(() => new URL(page.url()).pathname, { timeout: 15_000 })
+      .not.toBe('/');
 
     const path = new URL(page.url()).pathname;
     const segments = path.split('/').filter(Boolean);
-    expect(segments.length).toBeGreaterThanOrEqual(3);
-    expect(segments[0]).toBe('comunidade');
+    expect(segments.length).toBeGreaterThanOrEqual(1);
+    expect(path).toMatch(/^\/(?:comunidade\/)?[a-z0-9-]+/i);
   });
 
   test('complexo short route remains direct entry without redirect', async ({ page }) => {
@@ -125,8 +125,6 @@ test.describe('public landing routes', () => {
       { path: '/empresas/ba/salvador', text: /Empresas|Salvador/i },
       { path: '/empresas/ba/salvador/nordeste-de-amaralina', text: /Empresas|Nordeste de Amaralina/i },
       { path: '/empresas/ba/salvador/complexo-do-nordeste-de-amaralina', text: /Empresas|Complexo do Nordeste de Amaralina/i },
-      { path: '/educacao/ba/salvador', text: /Educação|Educacao|Salvador/i },
-      { path: '/educacao/ba/salvador/complexo-do-nordeste-de-amaralina', text: /Educação|Educacao|Complexo do Nordeste de Amaralina/i },
       { path: '/comunidade/ba/salvador/feed', text: /Feed|Comunidade|Salvador/i },
       { path: '/comunidade/ba/salvador/grupos', text: /Grupos|Comunidade|Salvador/i },
     ];
@@ -141,6 +139,16 @@ test.describe('public landing routes', () => {
           timeout: 15_000,
         })
         .toBe(false);
+    }
+
+    for (const path of [
+      '/educacao/ba/salvador',
+      '/educacao/ba/salvador/complexo-do-nordeste-de-amaralina',
+    ]) {
+      await openPublicRoute(page, path);
+      await expect
+        .poll(() => readBodyText(page), { timeout: 60_000 })
+        .toMatch(/MVP publico|MVP público|separado para ajustes/i);
     }
   });
 });

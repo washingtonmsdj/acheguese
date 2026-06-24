@@ -20,7 +20,7 @@ export default function ContaProfissionalPage() {
           <div>
             <h1 className="text-lg font-semibold">Central profissional</h1>
             <p className="text-xs text-muted-foreground">
-              Hub operacional para empresas, profissionais e mobilidade.
+              Hub operacional para empresas, profissionais e dashboards.
             </p>
           </div>
         </div>

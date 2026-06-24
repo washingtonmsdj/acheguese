@@ -221,7 +221,7 @@ export default function EditarServicoPage() {
       if (slugSafety.status === "review") {
         toast({
           title:
-            "O link p?blico est? muito diferente do nome do profissional. Ajuste para manter autenticidade.",
+            "O link público está muito diferente do nome do profissional. Ajuste para manter autenticidade.",
           variant: "destructive",
         });
         setActiveTab("info");

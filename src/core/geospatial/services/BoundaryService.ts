@@ -49,6 +49,11 @@ interface CachedTerritoryIndex {
   districtsByCityId: Map<string, Location[]>;
 }
 
+interface GeoJsonBoundary {
+  type: 'Polygon' | 'MultiPolygon' | string;
+  coordinates: unknown;
+}
+
 interface BoundaryRow {
   boundary: {
     type: 'Polygon' | 'MultiPolygon';
@@ -56,6 +61,20 @@ interface BoundaryRow {
   } | null;
   center_lat: number | null;
   center_lng: number | null;
+}
+
+interface InlineLocationBoundaryRow {
+  boundary: GeoJsonBoundary | null;
+}
+
+interface NeighborhoodBoundaryRow {
+  geometry: GeoJsonBoundary | string | null;
+}
+
+interface GeoJsonFeatureCollection {
+  features?: Array<{
+    geometry?: GeoJsonBoundary | null;
+  }>;
 }
 
 interface BoundaryQueryError {
@@ -84,12 +103,26 @@ function getLocationCenterFromMetadata(location: Location): [number, number] | n
   const latitude = location.metadata?.center_latitude;
   const longitude = location.metadata?.center_longitude;
 
-  return typeof latitude === 'number' &&
-    Number.isFinite(latitude) &&
-    typeof longitude === 'number' &&
-    Number.isFinite(longitude)
-    ? [latitude, longitude]
+  return isUsableCenter(latitude, longitude)
+    ? [latitude as number, longitude as number]
     : null;
+}
+
+function isUsableCenter(
+  latitude: unknown,
+  longitude: unknown,
+): boolean {
+  return (
+    typeof latitude === 'number' &&
+    Number.isFinite(latitude) &&
+    latitude >= -90 &&
+    latitude <= 90 &&
+    typeof longitude === 'number' &&
+    Number.isFinite(longitude) &&
+    longitude >= -180 &&
+    longitude <= 180 &&
+    !(Math.abs(latitude) < 0.000001 && Math.abs(longitude) < 0.000001)
+  );
 }
 
 class BoundaryServiceClass {
@@ -103,6 +136,10 @@ class BoundaryServiceClass {
   private territoryIndex: CachedTerritoryIndex | null = null;
   private territoryIndexPromise: Promise<CachedTerritoryIndex> | null = null;
   private locationBoundariesAvailable: boolean | null = null;
+  private locationBoundariesUnavailableLogged = false;
+  private inlineLocationBoundaryAvailable: boolean | null = null;
+  private neighborhoodBoundariesAvailable: boolean | null = null;
+  private metadataSourceBoundaryCache = new Map<string, BoundsResult | null>();
 
   constructor(deps: BoundaryServiceDeps = {}) {
     this.locationRepository = deps.locationRepository ?? createLocationRepository();
@@ -165,13 +202,16 @@ class BoundaryServiceClass {
       if (error) {
         if (this.isLocationBoundariesTableUnavailable(error)) {
           this.locationBoundariesAvailable = false;
-          logger.warn(
-            '[BoundaryService] location_boundaries indisponivel; usando centro canonico do territorio',
-            {
-              code: error.code,
-              message: error.message,
-            },
-          );
+          if (!this.locationBoundariesUnavailableLogged) {
+            this.locationBoundariesUnavailableLogged = true;
+            logger.warn(
+              '[BoundaryService] location_boundaries unavailable; using canonical fallback sources',
+              {
+                code: error.code,
+                message: error.message,
+              },
+            );
+          }
         }
         return null;
       }
@@ -185,8 +225,13 @@ class BoundaryServiceClass {
       const rings = row.boundary
         ? this.extractRingsFromGeoJSON(row.boundary)
         : [];
+
+      if (rings.length === 0) {
+        return null;
+      }
+
       const center = this.toCenter(row.center_lat, row.center_lng)
-        ?? (rings.length > 0 ? this.calculateCenter(rings) : null);
+        ?? this.calculateCenter(rings);
 
       if (!center) {
         return null;
@@ -214,6 +259,10 @@ class BoundaryServiceClass {
 
     try {
       const rings = this.extractRingsFromGeoJSON(boundary);
+      if (rings.length === 0) {
+        throw new Error('Invalid boundary geometry');
+      }
+
       const resolvedCenter = center ?? this.calculateCenter(rings);
 
       const { error } = await this.supabaseClient.from('location_boundaries').upsert(
@@ -252,12 +301,160 @@ class BoundaryServiceClass {
     }
 
     const customBoundary = await this.getCustomBoundary(location.id);
-    if (customBoundary) {
-      return customBoundary;
-    }
+    if (customBoundary) return customBoundary;
+
+    const inlineLocationBoundary = await this.getInlineLocationBoundary(location.id);
+    if (inlineLocationBoundary) return inlineLocationBoundary;
+
+    const neighborhoodBoundary = await this.getNeighborhoodBoundary(location.id);
+    if (neighborhoodBoundary) return neighborhoodBoundary;
+
+    const metadataSourceBoundary = await this.getMetadataSourceBoundary(location);
+    if (metadataSourceBoundary) return metadataSourceBoundary;
 
     const center = await this.resolveLocationCenter(location);
     return { rings: [], center };
+  }
+
+  private async getInlineLocationBoundary(
+    locationId: string,
+  ): Promise<BoundsResult | null> {
+    if (this.inlineLocationBoundaryAvailable === false) {
+      return null;
+    }
+
+    try {
+      const { data, error } = await this.supabaseClient
+        .from('locations')
+        .select('boundary')
+        .eq('id', locationId)
+        .maybeSingle();
+
+      if (error) {
+        if (this.isQueryTargetUnavailable(error, ['locations', 'boundary'])) {
+          this.inlineLocationBoundaryAvailable = false;
+        }
+        return null;
+      }
+
+      this.inlineLocationBoundaryAvailable = true;
+
+      const row = data as InlineLocationBoundaryRow | null;
+      if (!row?.boundary) {
+        return null;
+      }
+
+      const rings = this.extractRingsFromGeoJSON(row.boundary);
+      if (rings.length === 0) {
+        return null;
+      }
+
+      return { rings, center: this.calculateCenter(rings) };
+    } catch (error) {
+      logger.error('[BoundaryService] Error getting inline location boundary', error);
+      return null;
+    }
+  }
+
+  private async getNeighborhoodBoundary(
+    locationId: string,
+  ): Promise<BoundsResult | null> {
+    if (this.neighborhoodBoundariesAvailable === false) {
+      return null;
+    }
+
+    try {
+      const { data, error } = await this.supabaseClient
+        .from('neighborhood_boundaries')
+        .select('geometry')
+        .eq('location_id', locationId)
+        .maybeSingle();
+
+      if (error) {
+        if (this.isQueryTargetUnavailable(error, ['neighborhood_boundaries'])) {
+          this.neighborhoodBoundariesAvailable = false;
+        }
+        return null;
+      }
+
+      this.neighborhoodBoundariesAvailable = true;
+
+      const row = data as NeighborhoodBoundaryRow | null;
+      const geometry = this.parseBoundaryGeometry(row?.geometry ?? null);
+      if (!geometry) {
+        return null;
+      }
+
+      const rings = this.extractRingsFromGeoJSON(geometry);
+      if (rings.length === 0) {
+        return null;
+      }
+
+      return { rings, center: this.calculateCenter(rings) };
+    } catch (error) {
+      logger.error('[BoundaryService] Error getting neighborhood boundary', error);
+      return null;
+    }
+  }
+
+  private async getMetadataSourceBoundary(
+    location: Location,
+  ): Promise<BoundsResult | null> {
+    const source = this.getOfficialFeatureServerSource(location);
+    if (!source) {
+      return null;
+    }
+
+    const cacheKey = `${source.sourceUrl}::${source.objectId}`;
+    if (this.metadataSourceBoundaryCache.has(cacheKey)) {
+      return this.metadataSourceBoundaryCache.get(cacheKey) ?? null;
+    }
+
+    if (typeof fetch !== 'function') {
+      this.metadataSourceBoundaryCache.set(cacheKey, null);
+      return null;
+    }
+
+    try {
+      const url = new URL(`${source.sourceUrl.replace(/\/+$/, '')}/query`);
+      url.search = new URLSearchParams({
+        where: `OBJECTID = ${source.objectId}`,
+        outFields: '*',
+        returnGeometry: 'true',
+        f: 'geojson',
+        outSR: '4326',
+      }).toString();
+
+      const response = await fetch(url.toString());
+      if (!response.ok) {
+        throw new Error(`FeatureServer responded with ${response.status}`);
+      }
+
+      const payload = (await response.json()) as GeoJsonFeatureCollection;
+      const geometry = payload.features?.find((feature) => feature.geometry)?.geometry;
+      const rings = geometry ? this.extractRingsFromGeoJSON(geometry) : [];
+
+      if (rings.length === 0) {
+        this.metadataSourceBoundaryCache.set(cacheKey, null);
+        return null;
+      }
+
+      const result = {
+        rings,
+        center: getLocationCenterFromMetadata(location) ?? this.calculateCenter(rings),
+      };
+      this.metadataSourceBoundaryCache.set(cacheKey, result);
+      return result;
+    } catch (error) {
+      logger.warn('[BoundaryService] Official boundary source unavailable', {
+        locationId: location.id,
+        sourceUrl: source.sourceUrl,
+        sourceObjectId: source.objectId,
+        error,
+      });
+      this.metadataSourceBoundaryCache.set(cacheKey, null);
+      return null;
+    }
   }
 
   private async resolveLocationCenter(location: Location): Promise<[number, number]> {
@@ -442,16 +639,20 @@ class BoundaryServiceClass {
     latitude: number | null | undefined,
     longitude: number | null | undefined,
   ): [number, number] | null {
-    return typeof latitude === 'number' &&
-      Number.isFinite(latitude) &&
-      typeof longitude === 'number' &&
-      Number.isFinite(longitude)
-      ? [latitude, longitude]
+    return isUsableCenter(latitude, longitude)
+      ? [latitude as number, longitude as number]
       : null;
   }
 
   private isLocationBoundariesTableUnavailable(
     error: BoundaryQueryError | null | undefined,
+  ): boolean {
+    return this.isQueryTargetUnavailable(error, ['location_boundaries']);
+  }
+
+  private isQueryTargetUnavailable(
+    error: BoundaryQueryError | null | undefined,
+    requiredTokens: string[],
   ): boolean {
     if (!error) {
       return false;
@@ -467,14 +668,56 @@ class BoundaryServiceClass {
       .join(' ')
       .toLowerCase();
 
-    return combinedMessage.includes('location_boundaries')
+    return requiredTokens.every((token) => combinedMessage.includes(token.toLowerCase()))
       && (
         combinedMessage.includes('pgrst205')
+        || combinedMessage.includes('pgrst204')
         || combinedMessage.includes('404')
         || combinedMessage.includes('does not exist')
         || combinedMessage.includes('could not find')
         || combinedMessage.includes('undefined table')
+        || combinedMessage.includes('schema cache')
       );
+  }
+
+  private parseBoundaryGeometry(value: GeoJsonBoundary | string | null): GeoJsonBoundary | null {
+    if (!value) {
+      return null;
+    }
+
+    if (typeof value !== 'string') {
+      return value;
+    }
+
+    try {
+      const parsed = JSON.parse(value) as GeoJsonBoundary;
+      return parsed && typeof parsed.type === 'string' ? parsed : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private getOfficialFeatureServerSource(
+    location: Location,
+  ): { sourceUrl: string; objectId: number } | null {
+    const sourceUrl = location.metadata?.source_url;
+    const sourceObjectId = location.metadata?.source_object_id;
+
+    if (
+      typeof sourceUrl !== 'string' ||
+      !sourceUrl.includes('/FeatureServer/') ||
+      sourceObjectId === null ||
+      sourceObjectId === undefined
+    ) {
+      return null;
+    }
+
+    const objectId = Number(sourceObjectId);
+    if (!Number.isFinite(objectId)) {
+      return null;
+    }
+
+    return { sourceUrl, objectId };
   }
 
   private extractRingsFromGeoJSON(geojson: {

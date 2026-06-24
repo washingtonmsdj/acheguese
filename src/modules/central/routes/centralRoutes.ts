@@ -1,6 +1,24 @@
 import type { CommunicationDashboardView } from "@/core/communication-territorial/types/communicationDashboard";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
-import { mobilityRoutes } from "@/core/mobility/routes/mobilityRoutes";
+
+const centralMobilityRoutes = {
+  motorista: {
+    home: "/central/motorista",
+    cadastro: "/central/motorista/cadastro",
+    disponibilidade: "/central/motorista/disponibilidade",
+    corridas: "/central/motorista/corridas",
+    ganhos: "/central/motorista/ganhos",
+    configuracoes: "/central/motorista/configuracoes",
+  },
+  motoboy: {
+    home: "/central/motoboy",
+    cadastro: "/central/motoboy/cadastro",
+    disponibilidade: "/central/motoboy/disponibilidade",
+    entregas: "/central/motoboy/entregas",
+    ganhos: "/central/motoboy/ganhos",
+    configuracoes: "/central/motoboy/configuracoes",
+  },
+} as const;
 
 export const centralRoutes = {
   home: "/central",
@@ -31,8 +49,8 @@ export const centralRoutes = {
     create: "/servicos/cadastrar",
     edit: (serviceId: string) => `/servicos/${serviceId}/editar`,
   },
-  motorista: mobilityRoutes.motorista,
-  motoboy: mobilityRoutes.motoboy,
+  motorista: centralMobilityRoutes.motorista,
+  motoboy: centralMobilityRoutes.motoboy,
   admin: {
     home: "/admin",
   },

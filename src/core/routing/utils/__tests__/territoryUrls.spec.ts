@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   MODULE_SLUGS,
   buildCommunityAliasUrl,
+  buildCommunityScopedUrl,
   buildCommunityTabUrlFromPath,
   buildCommunityTerritoryUrl,
   buildGroupModuleUrl,
@@ -138,6 +139,24 @@ describe("community territory urls", () => {
       "/santa-cruz/empresas",
     );
     expect(() => buildCommunityAliasUrl("santa/cruz")).toThrow("segmento de URL");
+  });
+
+  it("monta modulos dentro da base publica da comunidade", () => {
+    expect(
+      buildCommunityScopedUrl(
+        "/comunidade/ba/salvador/nordeste-de-amaralina",
+        "empresas",
+      ),
+    ).toBe("/comunidade/ba/salvador/nordeste-de-amaralina/empresas");
+    expect(buildCommunityScopedUrl("/nordeste-de-amaralina", "feed")).toBe(
+      "/nordeste-de-amaralina/feed",
+    );
+    expect(buildCommunityScopedUrl("/nordeste-de-amaralina")).toBe(
+      "/nordeste-de-amaralina",
+    );
+    expect(() => buildCommunityScopedUrl("/nordeste-de-amaralina", "feed?tab=x")).toThrow(
+      "segmento de URL",
+    );
   });
 
   it("extrai o territorio de rotas comunitarias sem confundir modulos com bairro", () => {

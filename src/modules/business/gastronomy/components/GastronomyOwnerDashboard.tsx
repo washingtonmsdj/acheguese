@@ -32,6 +32,7 @@ import {
 } from '@/shared/components/ui/tabs';
 import { cn } from '@/shared/utils/cn';
 import { PlanTier } from '@/core/billing/types';
+import { isLaunchSurfaceEnabled } from '@/config/launchScope';
 import { fetchGastronomyQuickMetrics } from '@/modules/business/gastronomy/services/gastronomy-runtime.queries';
 
 // Componentes de empresa reutilizados a partir do dominio de business
@@ -180,7 +181,7 @@ function QuickMetricsPanel({
   );
 }
 
-// Mapa do bairro
+        {/* Mapa do bairro */}
 
 function GastronomyNeighborhoodMap({ business }: { business: GastronomyBusiness }) {
   const latitude = business.address?.latitude;
@@ -258,22 +259,34 @@ export function GastronomyOwnerDashboard({
   businessDataId,
   business,
 }: GastronomyOwnerDashboardProps) {
+  const showAnalytics = isLaunchSurfaceEnabled('publicAnalytics');
+  const showCoupons = isLaunchSurfaceEnabled('coupons');
+  const tabsGridClass = showAnalytics && showCoupons
+    ? 'grid-cols-4'
+    : showAnalytics || showCoupons
+      ? 'grid-cols-3'
+      : 'grid-cols-2';
+
   return (
     <div className="space-y-6">
       <Tabs defaultValue="visao-geral">
-        <TabsList className="w-full grid grid-cols-4">
+        <TabsList className={cn('w-full grid', tabsGridClass)}>
           <TabsTrigger value="visao-geral" className="gap-1.5">
             <Eye className="h-4 w-4" />
             <span className="hidden sm:inline">Visao Geral</span>
           </TabsTrigger>
-          <TabsTrigger value="analytics" className="gap-1.5">
-            <BarChart3 className="h-4 w-4" />
-            <span className="hidden sm:inline">Analytics</span>
-          </TabsTrigger>
-          <TabsTrigger value="cupons" className="gap-1.5">
-            <Gift className="h-4 w-4" />
-            <span className="hidden sm:inline">Cupons</span>
-          </TabsTrigger>
+          {showAnalytics && (
+            <TabsTrigger value="analytics" className="gap-1.5">
+              <BarChart3 className="h-4 w-4" />
+              <span className="hidden sm:inline">Analytics</span>
+            </TabsTrigger>
+          )}
+          {showCoupons && (
+            <TabsTrigger value="cupons" className="gap-1.5">
+              <Gift className="h-4 w-4" />
+              <span className="hidden sm:inline">Cupons</span>
+            </TabsTrigger>
+          )}
           <TabsTrigger value="mapa" className="gap-1.5">
             <Map className="h-4 w-4" />
             <span className="hidden sm:inline">Mapa</span>
@@ -298,17 +311,21 @@ export function GastronomyOwnerDashboard({
         </TabsContent>
 
         {/* Analytics - mesmo componente do DashboardEmpresaPage */}
-        <TabsContent value="analytics" className="mt-6">
-          <AnalyticsDashboard businessId={businessProfileId} />
-        </TabsContent>
+        {showAnalytics && (
+          <TabsContent value="analytics" className="mt-6">
+            <AnalyticsDashboard businessId={businessProfileId} />
+          </TabsContent>
+        )}
 
         {/* Cupons - mesmo componente do DashboardEmpresaPage */}
-        <TabsContent value="cupons" className="mt-6">
-          <CouponManager
-            businessId={businessProfileId}
-            planType={PlanTier.PRO}
-          />
-        </TabsContent>
+        {showCoupons && (
+          <TabsContent value="cupons" className="mt-6">
+            <CouponManager
+              businessId={businessProfileId}
+              planType={PlanTier.PRO}
+            />
+          </TabsContent>
+        )}
 
 // Mapa do bairro
         <TabsContent value="mapa" className="mt-6">

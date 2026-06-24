@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { NotificationService } from "@/core/notifications";
+import { isLaunchSurfaceEnabled } from "@/config/launchScope";
 
 interface NotificationSettingsProps {
   userId: string;
@@ -128,6 +129,7 @@ export function NotificationSettings({
 }: NotificationSettingsProps) {
   const notificationService = new NotificationService();
   const [settings, setSettings] = useState<NotificationSettingsForm>(DEFAULT_FORM);
+  const showInternalMessages = isLaunchSurfaceEnabled("communityCommunication");
 
   const settingsQuery = useQuery({
     queryKey: ["profile", "notification-settings", userId],
@@ -248,7 +250,7 @@ export function NotificationSettings({
             id="pushNotifications"
             icon={Bell}
             label="Notificações push"
-            description="Receba alertas em tempo real no navegador."
+            description="Receba avisos em tempo real no navegador."
             checked={settings.pushNotifications}
             onToggle={() => handleToggle("pushNotifications")}
           />
@@ -269,14 +271,18 @@ export function NotificationSettings({
           </h3>
         </div>
         <div className="p-5 space-y-5">
-          <ToggleRow
-            id="newMessages"
-            label="Novas mensagens"
-            description="Quando alguém enviar uma mensagem direta."
-            checked={settings.newMessages}
-            onToggle={() => handleToggle("newMessages")}
-          />
-          <Separator />
+          {showInternalMessages ? (
+            <>
+              <ToggleRow
+                id="newMessages"
+                label="Novas mensagens"
+                description="Quando alguém enviar uma mensagem direta."
+                checked={settings.newMessages}
+                onToggle={() => handleToggle("newMessages")}
+              />
+              <Separator />
+            </>
+          ) : null}
           <ToggleRow
             id="newComments"
             label="Novos comentários"
@@ -328,7 +334,7 @@ export function NotificationSettings({
           <ToggleRow
             id="communityUpdates"
             label="Atualizações da comunidade"
-            description="Alertas e novidades da sua comunidade."
+            description="Novidades da sua comunidade."
             checked={settings.communityUpdates}
             onToggle={() => handleToggle("communityUpdates")}
           />

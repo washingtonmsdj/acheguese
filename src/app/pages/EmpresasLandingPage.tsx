@@ -282,7 +282,6 @@ export default function EmpresasLandingPage({
       );
     }
     if (activeFilters.includes("Abertos agora")) result = result.filter((b) => b.isOpen);
-    if (activeFilters.includes("Com delivery")) result = result.filter((b) => b.tags.includes("Delivery"));
     if (activeFilters.includes("Recomendados")) result = result.filter((b) => b.neighborRecs > 100);
     if (activeFilters.includes("Perto de mim")) {
       result = [...result].sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));

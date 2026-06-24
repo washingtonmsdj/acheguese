@@ -30,20 +30,20 @@ interface EvaluatePublishPermissionInput {
 }
 
 const DENIED_MESSAGES: Record<VagaPublishDeniedReason, string> = {
-  NOT_AUTHENTICATED: "Fa?a login para publicar vagas.",
+  NOT_AUTHENTICATED: "Faça login para publicar vagas.",
   NO_ACTIVE_PROFILE: "Selecione um perfil ativo para publicar vagas.",
-  NO_ACTIVE_LOCATION: "Selecione um territ?rio ativo para publicar vagas.",
+  NO_ACTIVE_LOCATION: "Selecione um território ativo para publicar vagas.",
   PROFILE_NOT_BUSINESS:
     "Somente perfis do tipo empresa podem publicar vagas.",
   INSUFFICIENT_PROFILE_ROLE:
-    "Voc? precisa ser owner/admin do perfil para publicar vagas.",
+    "Você precisa ser owner/admin do perfil para publicar vagas.",
   BUSINESS_NOT_FOUND:
     "Complete o cadastro da empresa antes de publicar vagas.",
   BUSINESS_INACTIVE:
     "A empresa precisa estar ativa para publicar vagas.",
   BUSINESS_POSTING_DISABLED:
-    "A publica??o de vagas foi desativada para esta empresa. Contate o administrador.",
-  UNKNOWN: "N?o foi poss?vel validar as permiss?es para publicar vagas.",
+    "A publicação de vagas foi desativada para esta empresa. Contate o administrador.",
+  UNKNOWN: "Não foi possível validar as permissões para publicar vagas.",
 };
 
 function getDeniedMessageByReason(reason: VagaPublishDeniedReason): string {
@@ -186,8 +186,8 @@ export class VagasPublishPermissionService {
         canPublish: true,
         isAdmin,
         message: isAdmin
-          ? "Permiss?o liberada (admin)."
-          : "Permiss?o liberada para publicar vagas.",
+          ? "Permissão liberada (admin)."
+          : "Permissão liberada para publicar vagas.",
         activeProfileId,
         businessId: businessDataTyped?.id ?? undefined,
         businessName,

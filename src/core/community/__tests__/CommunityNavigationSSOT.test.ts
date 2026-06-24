@@ -5,15 +5,19 @@ import {
 } from "../utils/communityFeedTab";
 
 describe("community navigation SSOT", () => {
-  it("maps public tabs to canonical feed channels", () => {
+  it("maps launch-enabled public tabs to canonical feed channels", () => {
     expect(resolveCommunityFeedChannelFromTab("empresas")).toBe("empresas");
-    expect(resolveCommunityFeedChannelFromTab("eventos")).toBe("eventos");
-    expect(resolveCommunityFeedChannelFromTab("vagas")).toBe("oportunidades");
     expect(resolveCommunityFeedChannelFromTab("desconhecido")).toBe("para_voce");
   });
 
-  it("maps channels back to URL query tabs without duplicating vacancies", () => {
+  it("falls back for paused launch tabs", () => {
+    expect(resolveCommunityFeedChannelFromTab("eventos")).toBe("para_voce");
+    expect(resolveCommunityFeedChannelFromTab("vagas")).toBe("para_voce");
+  });
+
+  it("does not map paused channels back to URL query tabs", () => {
     expect(resolveCommunityFeedQueryTabFromChannel("para_voce")).toBeNull();
-    expect(resolveCommunityFeedQueryTabFromChannel("vagas")).toBe("oportunidades");
+    expect(resolveCommunityFeedQueryTabFromChannel("vagas")).toBeNull();
+    expect(resolveCommunityFeedQueryTabFromChannel("eventos")).toBeNull();
   });
 });

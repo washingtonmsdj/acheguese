@@ -13,6 +13,7 @@
 import type { TileProviderConfig } from '../types/providers';
 import {
   DEFAULT_TILE_STYLE as SHARED_DEFAULT_TILE_STYLE,
+  MAP_TILE_STYLES as SHARED_MAP_TILE_STYLES,
   MAP_DEFAULT_CENTER_LNGLAT,
   MAP_DEFAULT_ZOOM,
 } from '@/shared/config/mapDefaults';
@@ -24,6 +25,7 @@ interface MapCamera {
 
 /** Style URL compativel com MapLibre GL - OpenFreeMap (OSM, sem token) */
 export const DEFAULT_TILE_STYLE: TileProviderConfig = SHARED_DEFAULT_TILE_STYLE;
+export const DARK_TILE_STYLE: TileProviderConfig = SHARED_MAP_TILE_STYLES.dark;
 
 export const DEFAULT_CAMERA: MapCamera = {
   center: MAP_DEFAULT_CENTER_LNGLAT,

@@ -470,10 +470,10 @@ export function ProfileHeaderCompact({
                 {totalAlerts > 0 ? (
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Alertas prioritários
+                      Prioridade
                     </p>
                     <p className="mt-1 text-sm font-semibold text-destructive">
-                      {totalAlerts} alertas urgentes
+                      {totalAlerts} pendencias urgentes
                     </p>
                   </div>
                 ) : null}
@@ -530,11 +530,11 @@ export function ProfileHeaderCompact({
             </>
           ) : null}
 
-          {/* Alertas prioritários */}
+          {/* Prioridade */}
           {totalAlerts > 0 ? (
             <div className="flex items-center gap-1.5">
               <span className="font-semibold text-destructive">
-                ! {totalAlerts} {totalAlerts === 1 ? "alerta prioritário" : "alertas prioritários"}
+                ! {totalAlerts} {totalAlerts === 1 ? "pendencia prioritaria" : "pendencias prioritarias"}
               </span>
             </div>
           ) : null}

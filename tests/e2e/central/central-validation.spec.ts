@@ -18,6 +18,14 @@ async function expectOperationalRoute(page: Page, path: string, expected: RegExp
   expect(new URL(page.url()).pathname).toMatch(expected);
 }
 
+async function expectPausedRoute(page: Page, path: string) {
+  await page.goto(path, { waitUntil: "domcontentloaded", timeout: 90_000 });
+
+  await expect
+    .poll(() => page.locator("body").innerText().catch(() => ""), { timeout: 45_000 })
+    .toMatch(/MVP publico|MVP público|separado para ajustes/i);
+}
+
 test.describe("central canonical routes", () => {
   test.setTimeout(180_000);
 
@@ -25,14 +33,13 @@ test.describe("central canonical routes", () => {
     await loginAsUser(page);
   });
 
-  test("central, driver and courier routes remain canonical", async ({ page }) => {
+  test("central remains canonical and paused mobility routes stay isolated", async ({ page }) => {
     await expectOperationalRoute(page, "/central", /^\/central/);
-    await expectOperationalRoute(page, "/central/motorista/corridas", /^\/central\/motorista\/corridas/);
-    await expectOperationalRoute(page, "/central/motoboy/entregas", /^\/central\/motoboy\/(entregas|cadastro)/);
+    await expectPausedRoute(page, "/central/motorista/corridas");
+    await expectPausedRoute(page, "/central/motoboy/entregas");
   });
 
-  test("legacy create-driver route is not reintroduced", async ({ page }) => {
-    await page.goto("/create-driver", { waitUntil: "domcontentloaded", timeout: 90_000 });
-    await expect.poll(() => new URL(page.url()).pathname, { timeout: 45_000 }).not.toBe("/create-driver");
+  test("legacy create-driver route stays isolated while mobility is paused", async ({ page }) => {
+    await expectPausedRoute(page, "/create-driver");
   });
 });

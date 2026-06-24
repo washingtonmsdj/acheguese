@@ -21,6 +21,7 @@ import {
 import { BusinessOwnerQuickAccess } from "@/modules/profile/components/BusinessOwnerQuickAccess";
 
 import type { EmpresasSectionProps } from "./types";
+import { isLaunchSurfaceEnabled } from "@/config/launchScope";
 
 export function EmpresasSection({
   businessModules,
@@ -31,6 +32,8 @@ export function EmpresasSection({
 }: EmpresasSectionProps) {
   const primaryBusinessModule = businessModules[0] ?? null;
   const primaryGastronomyModule = businessModules.find((item) => item.gastronomy.active) ?? null;
+  const showJobs = isLaunchSurfaceEnabled("jobs");
+  const showPublicAnalytics = isLaunchSurfaceEnabled("publicAnalytics");
 
   return (
     <div className="space-y-6">
@@ -52,7 +55,7 @@ export function EmpresasSection({
 
       <SectionFrame
         title="Ações empresariais"
-        description="Atalhos para gerir empresa, classificados, vagas, analytics e operação gastronômica."
+        description="Atalhos para gerir empresa, classificados e operação gastronômica."
       >
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           <HubLinkCard
@@ -67,24 +70,28 @@ export function EmpresasSection({
             description="Ver ecossistema de empresas e referências locais."
             onClick={() => navigate(appUrls.business.list)}
           />
-          <HubLinkCard
-            icon={Briefcase}
-            title="Publicar vaga"
-            description="Abra uma vaga e publique no módulo de empregos."
-            onClick={() => navigate(`${appUrls.jobs}/publicar`)}
-          />
+          {showJobs ? (
+            <HubLinkCard
+              icon={Briefcase}
+              title="Publicar vaga"
+              description="Abra uma vaga e publique no módulo de empregos."
+              onClick={() => navigate(`${appUrls.jobs}/publicar`)}
+            />
+          ) : null}
           <HubLinkCard
             icon={LayoutGrid}
             title="Novo classificado"
             description="Publique produto/serviço nos classificados."
             onClick={() => navigate(appUrls.classifieds.new)}
           />
-          <HubLinkCard
-            icon={BarChart3}
-            title="Analytics geral"
-            description="Acesse indicadores agregados e visitantes."
-            onClick={() => navigate("/analytics")}
-          />
+          {showPublicAnalytics ? (
+            <HubLinkCard
+              icon={BarChart3}
+              title="Analytics geral"
+              description="Acesse indicadores agregados e visitantes."
+              onClick={() => navigate("/analytics")}
+            />
+          ) : null}
           {primaryBusinessModule ? (
             <HubLinkCard
               icon={Building2}
@@ -93,7 +100,7 @@ export function EmpresasSection({
               onClick={() => navigate(primaryBusinessModule.dashboardUrl)}
             />
           ) : null}
-          {primaryGastronomyModule?.gastronomy.analyticsUrl ? (
+          {showPublicAnalytics && primaryGastronomyModule?.gastronomy.analyticsUrl ? (
             <HubLinkCard
               icon={BarChart3}
               title="Analytics gastronomia"

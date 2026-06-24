@@ -7,8 +7,10 @@
  * @version 1.0.0
  */
 
+import type { ReactNode } from "react";
 import { Navigate, Routes, Route } from "react-router-dom";
-import { APP_MODULE_SLUGS } from "@/config/moduleSlugs";
+import { APP_MODULE_SLUGS, buildAppModulePath } from "@/config/moduleSlugs";
+import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from "@/config/launchScope";
 import {
   TERRITORIAL_ROUTE_PARAMS,
   TERRITORIAL_ROUTE_STATIC_SEGMENTS,
@@ -22,12 +24,6 @@ import {
 } from "@/core/verticals/gastronomy/routes/gastronomyPublicRoutes";
 import { professionalPublicRoutes } from "@/core/professional/routes/professionalPublicRoutes";
 import { touristPointPublicRoutes } from "@/core/verticals/guide/routes/touristPointPublicRoutes";
-import {
-  EVENT_PUBLIC_ROUTE_PARAMS,
-  eventPublicRoutes,
-  eventTerritorialRoutePaths,
-} from "@/core/verticals/events/routes/eventPublicRoutes";
-import { jobPublicRoutes } from "@/core/verticals/jobs/routes/jobPublicRoutes";
 import { isFeatureEnabled } from "@/shared/utils/featureFlags";
 import { CommunityTerritoryRoutes } from "./CommunityTerritoryRoutes";
 
@@ -37,12 +33,97 @@ import * as P from "../lazyImports";
 const TERRITORIAL_PARAMS = TERRITORIAL_ROUTE_PARAMS;
 const TERRITORIAL_STATIC = TERRITORIAL_ROUTE_STATIC_SEGMENTS;
 const LEGACY_DRIVER_CREATE_ROUTE = "/create-driver";
+const EVENT_ROUTES = {
+  home: buildAppModulePath(APP_MODULE_SLUGS.events),
+  favorites: buildAppModulePath(APP_MODULE_SLUGS.events, TERRITORIAL_STATIC.favorites),
+  calendar: buildAppModulePath(APP_MODULE_SLUGS.events, TERRITORIAL_STATIC.calendar),
+  map: buildAppModulePath(APP_MODULE_SLUGS.events, TERRITORIAL_STATIC.map),
+  detail: buildAppModulePath(
+    APP_MODULE_SLUGS.events,
+    `${TERRITORIAL_STATIC.eventDetail}/${TERRITORIAL_PARAMS.eventId}`,
+  ),
+  legacyDetail: buildAppModulePath(APP_MODULE_SLUGS.events, TERRITORIAL_PARAMS.eventId),
+} as const;
+const EVENT_TERRITORIAL_ROUTES = {
+  home: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.events),
+  district: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.events, [TERRITORIAL_PARAMS.district]),
+  favorites: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.events, [TERRITORIAL_STATIC.favorites]),
+  calendar: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.events, [TERRITORIAL_STATIC.calendar]),
+  map: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.events, [TERRITORIAL_STATIC.map]),
+  detail: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.events, [
+    TERRITORIAL_STATIC.eventDetail,
+    TERRITORIAL_PARAMS.eventId,
+  ]),
+} as const;
+const JOB_ROUTES = {
+  home: buildAppModulePath(APP_MODULE_SLUGS.jobs),
+  publish: buildAppModulePath(APP_MODULE_SLUGS.jobs, TERRITORIAL_STATIC.publish),
+} as const;
+
+const DIRECT_PAUSED_ROUTES: Array<{
+  path: string;
+  surface: LaunchSurfaceKey;
+  moduleName: string;
+}> = [
+  { path: EVENT_ROUTES.home, surface: "events", moduleName: "Eventos" },
+  { path: EVENT_ROUTES.favorites, surface: "events", moduleName: "Eventos" },
+  { path: EVENT_ROUTES.calendar, surface: "events", moduleName: "Eventos" },
+  { path: EVENT_ROUTES.map, surface: "events", moduleName: "Eventos" },
+  { path: EVENT_ROUTES.detail, surface: "events", moduleName: "Eventos" },
+  { path: EVENT_ROUTES.legacyDetail, surface: "events", moduleName: "Eventos" },
+  { path: JOB_ROUTES.home, surface: "jobs", moduleName: "Vagas" },
+  { path: JOB_ROUTES.publish, surface: "jobs", moduleName: "Vagas" },
+  { path: "/oportunidades", surface: "jobs", moduleName: "Oportunidades" },
+  { path: "/oportunidades/:id", surface: "jobs", moduleName: "Oportunidades" },
+  { path: "/educacao", surface: "education", moduleName: "Educacao" },
+  { path: "/comunicacao", surface: "communication", moduleName: "Comunicacao" },
+  { path: "/comunicacao/solicitar", surface: "communication", moduleName: "Comunicacao" },
+  { path: "/comunicacao/empresa/:channelSlug", surface: "communication", moduleName: "Comunicacao" },
+  { path: "/comunicacao/agente/:channelSlug", surface: "communication", moduleName: "Comunicacao" },
+  { path: "/cupons", surface: "coupons", moduleName: "Cupons" },
+  { path: "/cupons/:id", surface: "coupons", moduleName: "Cupons" },
+  { path: "/analytics", surface: "publicAnalytics", moduleName: "Analytics" },
+  { path: "/mobilidade", surface: "mobility", moduleName: "Mobilidade" },
+  { path: "/mobilidade/passageiro", surface: "mobility", moduleName: "Mobilidade" },
+  { path: "/mobilidade/buscando/:rideId", surface: "mobility", moduleName: "Mobilidade" },
+  { path: "/mobilidade/motorista", surface: "mobility", moduleName: "Mobilidade" },
+  { path: "/mobilidade/motoboy", surface: "mobility", moduleName: "Mobilidade" },
+  { path: "/mobilidade/motorista/perfil", surface: "mobility", moduleName: "Mobilidade" },
+  { path: "/mobilidade/historico", surface: "mobility", moduleName: "Mobilidade" },
+  { path: "/mobilidade/contatos-emergencia", surface: "mobility", moduleName: "Mobilidade" },
+  { path: "/track/:token", surface: "mobility", moduleName: "Mobilidade" },
+  { path: LEGACY_DRIVER_CREATE_ROUTE, surface: "mobility", moduleName: "Mobilidade" },
+  { path: "/ranking", surface: "gamification", moduleName: "Ranking" },
+  { path: "/gamificacao", surface: "gamification", moduleName: "Gamificacao" },
+  { path: "/alertas", surface: "communityAlerts", moduleName: "Alertas" },
+  { path: "/problemas", surface: "communityIssues", moduleName: "Problemas" },
+  { path: "/achados-perdidos", surface: "communityLostFound", moduleName: "Achados e perdidos" },
+  { path: "/achados-perdidos/novo", surface: "communityLostFound", moduleName: "Achados e perdidos" },
+  { path: "/achados-perdidos/:id", surface: "communityLostFound", moduleName: "Achados e perdidos" },
+  { path: "/mensagens", surface: "communityCommunication", moduleName: "Mensagens" },
+  { path: "/chat/:conversationId", surface: "communityCommunication", moduleName: "Mensagens" },
+];
 
 export function AppLayoutRoutes() {
   const aiVirtualTryOnEnabled = isFeatureEnabled('AI_VIRTUAL_TRYON');
+  const launchElement = (
+    surface: LaunchSurfaceKey,
+    moduleName: string,
+    element: ReactNode,
+  ) => (isLaunchSurfaceEnabled(surface) ? element : <P.LaunchPausedPage moduleName={moduleName} />);
+  const launchTerritorialLayout = (surface: LaunchSurfaceKey, moduleName: string) =>
+    launchElement(surface, moduleName, <P.TerritorialLayout />);
 
   return (
     <Routes>
+      {DIRECT_PAUSED_ROUTES.filter((route) => !isLaunchSurfaceEnabled(route.surface)).map((route) => (
+        <Route
+          key={route.path}
+          path={route.path}
+          element={<P.LaunchPausedPage moduleName={route.moduleName} />}
+        />
+      ))}
+
       {/* QR Code Resolver - DEVE VIR ANTES DE OUTRAS ROTAS */}
       <Route path="/q/:token" element={<P.QrResolverPage />} />
 
@@ -50,14 +131,14 @@ export function AppLayoutRoutes() {
       <Route path="/status" element={<P.StatusPage />} />
 
       {/* EVENTS - Sistema de Eventos */}
-      <Route path={eventPublicRoutes.home()} element={<P.EventsErrorBoundary><P.EventsListPage /></P.EventsErrorBoundary>} />
-      <Route path={eventPublicRoutes.favorites()} element={<P.EventsErrorBoundary><P.EventsFavoritesPage /></P.EventsErrorBoundary>} />
-      <Route path={eventPublicRoutes.calendar()} element={<P.EventsErrorBoundary><P.EventsCalendarPage /></P.EventsErrorBoundary>} />
-      <Route path={eventPublicRoutes.map()} element={<P.EventsErrorBoundary><P.EventsMapPage /></P.EventsErrorBoundary>} />
-      <Route path={eventPublicRoutes.detail(EVENT_PUBLIC_ROUTE_PARAMS.eventId)} element={<P.EventsErrorBoundary><P.EventDetailPage /></P.EventsErrorBoundary>} />
+      <Route path={EVENT_ROUTES.home} element={launchElement("events", "Eventos", <P.EventsErrorBoundary><P.EventsListPage /></P.EventsErrorBoundary>)} />
+      <Route path={EVENT_ROUTES.favorites} element={launchElement("events", "Eventos", <P.EventsErrorBoundary><P.EventsFavoritesPage /></P.EventsErrorBoundary>)} />
+      <Route path={EVENT_ROUTES.calendar} element={launchElement("events", "Eventos", <P.EventsErrorBoundary><P.EventsCalendarPage /></P.EventsErrorBoundary>)} />
+      <Route path={EVENT_ROUTES.map} element={launchElement("events", "Eventos", <P.EventsErrorBoundary><P.EventsMapPage /></P.EventsErrorBoundary>)} />
+      <Route path={EVENT_ROUTES.detail} element={launchElement("events", "Eventos", <P.EventsErrorBoundary><P.EventDetailPage /></P.EventsErrorBoundary>)} />
 
       {/* Event Detail - Deve vir depois das rotas especificas */}
-      <Route path={eventPublicRoutes.legacyDetail(EVENT_PUBLIC_ROUTE_PARAMS.eventId)} element={<P.EventsErrorBoundary><P.EventDetailPage /></P.EventsErrorBoundary>} />
+      <Route path={EVENT_ROUTES.legacyDetail} element={launchElement("events", "Eventos", <P.EventsErrorBoundary><P.EventDetailPage /></P.EventsErrorBoundary>)} />
 
       <Route path="/splash" element={<P.SplashPage />} />
       <Route path="/login" element={<P.LoginPage />} />
@@ -65,7 +146,7 @@ export function AppLayoutRoutes() {
       <Route path="/cadastro/confirmacao" element={<P.CadastroConfirmacaoPage />} />
       <Route
         path={LEGACY_DRIVER_CREATE_ROUTE}
-        element={<Navigate to="/central/motorista/cadastro" replace />}
+        element={launchElement("mobility", "Mobilidade", <Navigate to="/central/motorista/cadastro" replace />)}
       />
       <Route path="/sobre" element={<P.AboutPage />} />
       <Route path="/contato" element={<P.ContactPage />} />
@@ -102,9 +183,9 @@ export function AppLayoutRoutes() {
         {/* Rotas globais */}
         <Route path="/u/:username" element={<P.ProfilePublicRoute />} />
         <Route path="/c/:publicId" element={<P.ClassifiedShortRoute />} />
-        <Route path={jobPublicRoutes.publish()} element={<P.PublicarVagaPage />} />
-        <Route path="/oportunidades" element={<P.WorkOpportunitiesPage />} />
-        <Route path="/oportunidades/:id" element={<P.WorkOpportunityDetailPage />} />
+        <Route path={JOB_ROUTES.publish} element={launchElement("jobs", "Vagas", <P.PublicarVagaPage />)} />
+        <Route path="/oportunidades" element={launchElement("jobs", "Oportunidades", <P.WorkOpportunitiesPage />)} />
+        <Route path="/oportunidades/:id" element={launchElement("jobs", "Oportunidades", <P.WorkOpportunityDetailPage />)} />
         <Route path="/servicos/cadastrar" element={<P.CadastrarServicoPage />} />
         <Route path="/servicos/:id/editar" element={<P.EditarServicoPage />} />
         <Route path="/servicos/orcamentos/:leadId" element={<P.ProfessionalLeadTrackingPage />} />
@@ -112,8 +193,8 @@ export function AppLayoutRoutes() {
         <Route path="/classificados/editar/:id" element={<P.EditarClassificadoPage />} />
         <Route path="/classificados/vendedor/:sellerId" element={<P.VendedorPerfilPage />} />
 
-        <Route path="/cupons" element={<P.CuponsPage />} />
-        <Route path="/cupons/:id" element={<P.CupomDetailPage />} />
+        <Route path="/cupons" element={launchElement("coupons", "Cupons", <P.CuponsPage />)} />
+        <Route path="/cupons/:id" element={launchElement("coupons", "Cupons", <P.CupomDetailPage />)} />
         <Route path="/conta/preferencias" element={<P.ContaPreferenciasPage />} />
         <Route path="/conta/notificacoes" element={<P.NotificationPreferencesPage />} />
         <Route path="/conta/privacidade" element={<P.PrivacySettingsPage />} />
@@ -123,27 +204,31 @@ export function AppLayoutRoutes() {
         <Route path="/conta/editar" element={<P.ContaEditarPage />} />
         <Route path="/conta/editar/:profileId" element={<P.ContaEditarPerfilPage />} />
         <Route path="/conta" element={<P.ContaPage />} />
-        <Route path="/gamificacao" element={<P.GamificacaoPage />} />
+        <Route path="/gamificacao" element={launchElement("gamification", "Gamificação", <P.GamificacaoPage />)} />
         <Route path="/empresas" element={<P.EmpresasLandingPage />} />
         <Route path="/empresas/cadastrar" element={<P.EmpresasCadastroLandingPage />} />
         <Route path="/edit-business/:profileId" element={<P.EditarEmpresaPage />} />
 
-        <Route path="/mensagens" element={<P.MensagensPage />} />
-        <Route path="/chat/:conversationId" element={<P.ChatPage />} />
+        <Route path="/mensagens" element={launchElement("communityCommunication", "Mensagens", <P.MensagensPage />)} />
+        <Route path="/chat/:conversationId" element={launchElement("communityCommunication", "Mensagens", <P.ChatPage />)} />
         <Route path="/mapa" element={<P.MapaPage />} />
         <Route path="/perto-de-mim" element={<P.NearbyPage />} />
-        <Route path="/analytics" element={<P.GeneralAnalyticsPage />} />
+        <Route path="/analytics" element={launchElement("publicAnalytics", "Analytics", <P.GeneralAnalyticsPage />)} />
+        <Route path="/alertas" element={launchElement("communityAlerts", "Alertas", <P.TerritorialCommunityPage />)} />
+        <Route path="/problemas" element={launchElement("communityIssues", "Problemas", <P.TerritorialCommunityIssuesPage />)} />
         <Route path="/recomendacoes" element={<P.RecomendacoesPage />} />
         <Route path="/recomendacoes/nova" element={<P.NovaRecomendacaoPage />} />
         <Route path="/recomendacoes/:id" element={<P.RecomendacaoDetailPage />} />
-        <Route path="/achados-perdidos" element={<P.AchadosPerdidosPage />} />
-        <Route path="/achados-perdidos/novo" element={<P.NovoAchadoPerdidoPage />} />
-        <Route path="/achados-perdidos/:id" element={<P.AchadoPerdidoDetailPage />} />
-        <Route path="/ranking" element={<P.RankingPage />} />
-        <Route path="/track/:token" element={<P.TrackRidePage />} />
+        <Route path="/achados-perdidos" element={launchElement("communityLostFound", "Achados e perdidos", <P.AchadosPerdidosPage />)} />
+        <Route path="/achados-perdidos/novo" element={launchElement("communityLostFound", "Achados e perdidos", <P.NovoAchadoPerdidoPage />)} />
+        <Route path="/achados-perdidos/:id" element={launchElement("communityLostFound", "Achados e perdidos", <P.AchadoPerdidoDetailPage />)} />
+        <Route path="/ranking" element={launchElement("gamification", "Ranking", <P.RankingPage />)} />
+        <Route path="/track/:token" element={launchElement("mobility", "Mobilidade", <P.TrackRidePage />)} />
         <Route path="/novo-post" element={<P.NovoPostPage />} />
         <Route path="/busca" element={<P.BuscaPage />} />
         <Route path="/buscar" element={<P.BuscarPage />} />
+        <Route path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.search)} element={<P.BuscarPage />} />
+        <Route path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.search, [TERRITORIAL_PARAMS.district])} element={<P.BuscarPage />} />
         <Route path={buildTerritorialRoutePath(TERRITORIAL_STATIC.searchAlias)} element={<P.BuscarPage />} />
         <Route path={buildTerritorialRoutePath(TERRITORIAL_STATIC.searchAlias, [TERRITORIAL_PARAMS.district])} element={<P.BuscarPage />} />
         {aiVirtualTryOnEnabled && (
@@ -157,19 +242,19 @@ export function AppLayoutRoutes() {
         {/* LGPD / Privacidade */}
         <Route path="/dpo" element={<P.DPOContactPage />} />
         {/* Rotas globais sem territorio */}
-        <Route path="/educacao" element={<P.EducationExplorerPage />} />
-        <Route path="/comunicacao" element={<P.CommunicationLandingPage />} />
-        <Route path="/comunicacao/solicitar" element={<P.CommunicationRequestPage />} />
+        <Route path="/educacao" element={launchElement("education", "Educação", <P.EducationExplorerPage />)} />
+        <Route path="/comunicacao" element={launchElement("communication", "Comunicação", <P.CommunicationLandingPage />)} />
+        <Route path="/comunicacao/solicitar" element={launchElement("communication", "Comunicação", <P.CommunicationRequestPage />)} />
         <Route path="/servicos" element={<P.ServicosLandingPage />} />
         <Route path="/classificados" element={<P.ClassificadosPage />} />
-        <Route path="/mobilidade/passageiro" element={<P.PassageiroPage />} />
-        <Route path="/mobilidade/buscando/:rideId" element={<P.BuscandoMotoristaPage />} />
-        <Route path="/mobilidade/motorista" element={<P.MotoristaPage />} />
-        <Route path="/mobilidade/motoboy" element={<P.MotoboyPage />} />
-        <Route path="/mobilidade/motorista/perfil" element={<P.DriverProfilePage />} />
-        <Route path="/mobilidade/historico" element={<P.HistoricoPage />} />
-        <Route path="/mobilidade/contatos-emergencia" element={<P.EmergencyContactsPage />} />
-        <Route path="/mobilidade" element={<P.MobilidadePage />} />
+        <Route path="/mobilidade/passageiro" element={launchElement("mobility", "Mobilidade", <P.PassageiroPage />)} />
+        <Route path="/mobilidade/buscando/:rideId" element={launchElement("mobility", "Mobilidade", <P.BuscandoMotoristaPage />)} />
+        <Route path="/mobilidade/motorista" element={launchElement("mobility", "Mobilidade", <P.MotoristaPage />)} />
+        <Route path="/mobilidade/motoboy" element={launchElement("mobility", "Mobilidade", <P.MotoboyPage />)} />
+        <Route path="/mobilidade/motorista/perfil" element={launchElement("mobility", "Mobilidade", <P.DriverProfilePage />)} />
+        <Route path="/mobilidade/historico" element={launchElement("mobility", "Mobilidade", <P.HistoricoPage />)} />
+        <Route path="/mobilidade/contatos-emergencia" element={launchElement("mobility", "Mobilidade", <P.EmergencyContactsPage />)} />
+        <Route path="/mobilidade" element={launchElement("mobility", "Mobilidade", <P.MobilidadePage />)} />
 
         {/* Rotas canonicas especificas - DEVEM VIR ANTES DAS TERRITORIAIS GENERICAS */}
 
@@ -177,10 +262,10 @@ export function AppLayoutRoutes() {
         <Route path={professionalPublicRoutes.detailRoutePath()} element={<P.ProfissionalPublicPage />} />
 
         {/* Comunicacao Territorial - rotas especificas antes das territoriais genericas */}
-        <Route path={buildTerritorialRoutePath(TERRITORIAL_STATIC.communication, [TERRITORIAL_PARAMS.channelSlug])} element={<P.CommunicationChannelPage />} />
-        <Route path="/comunicacao/empresa/:channelSlug" element={<P.CommunicationCompanyDetailsPage />} />
-        <Route path="/comunicacao/agente/:channelSlug" element={<P.CommunicationAgentPage />} />
-        <Route path={buildTerritorialRoutePath(TERRITORIAL_STATIC.communication)} element={<P.CommunicationCityPage />} />
+        <Route path={buildTerritorialRoutePath(TERRITORIAL_STATIC.communication, [TERRITORIAL_PARAMS.channelSlug])} element={launchElement("communication", "Comunicação", <P.CommunicationChannelPage />)} />
+        <Route path="/comunicacao/empresa/:channelSlug" element={launchElement("communication", "Comunicação", <P.CommunicationCompanyDetailsPage />)} />
+        <Route path="/comunicacao/agente/:channelSlug" element={launchElement("communication", "Comunicação", <P.CommunicationAgentPage />)} />
+        <Route path={buildTerritorialRoutePath(TERRITORIAL_STATIC.communication)} element={launchElement("communication", "Comunicação", <P.CommunicationCityPage />)} />
 
         {/* Modulo Pontos Turisticos - vertical tourism */}
 
@@ -276,22 +361,22 @@ export function AppLayoutRoutes() {
         </Route>
 
         {/* Rotas de eventos */}
-        <Route path={eventTerritorialRoutePaths.detail()} element={<P.TerritorialLayout />}>
+        <Route path={EVENT_TERRITORIAL_ROUTES.detail} element={launchTerritorialLayout("events", "Eventos")}>
           <Route index element={<P.EventsErrorBoundary><P.EventDetailPage /></P.EventsErrorBoundary>} />
         </Route>
-        <Route path={eventTerritorialRoutePaths.favorites()} element={<P.TerritorialLayout />}>
+        <Route path={EVENT_TERRITORIAL_ROUTES.favorites} element={launchTerritorialLayout("events", "Eventos")}>
           <Route index element={<P.EventsErrorBoundary><P.EventsFavoritesPage /></P.EventsErrorBoundary>} />
         </Route>
-        <Route path={eventTerritorialRoutePaths.calendar()} element={<P.TerritorialLayout />}>
+        <Route path={EVENT_TERRITORIAL_ROUTES.calendar} element={launchTerritorialLayout("events", "Eventos")}>
           <Route index element={<P.EventsErrorBoundary><P.EventsCalendarPage /></P.EventsErrorBoundary>} />
         </Route>
-        <Route path={eventTerritorialRoutePaths.map()} element={<P.TerritorialLayout />}>
+        <Route path={EVENT_TERRITORIAL_ROUTES.map} element={launchTerritorialLayout("events", "Eventos")}>
           <Route index element={<P.EventsErrorBoundary><P.EventsMapPage /></P.EventsErrorBoundary>} />
         </Route>
-        <Route path={eventTerritorialRoutePaths.district()} element={<P.TerritorialLayout />}>
+        <Route path={EVENT_TERRITORIAL_ROUTES.district} element={launchTerritorialLayout("events", "Eventos")}>
           <Route index element={<P.TerritorialEventosPage />} />
         </Route>
-        <Route path={eventTerritorialRoutePaths.home()} element={<P.TerritorialLayout />}>
+        <Route path={EVENT_TERRITORIAL_ROUTES.home} element={launchTerritorialLayout("events", "Eventos")}>
           <Route index element={<P.TerritorialEventosPage />} />
         </Route>
 
@@ -333,33 +418,33 @@ export function AppLayoutRoutes() {
 
         {/* Rotas de Education - publicas territoriais (vitrine premium consolidada) */}
         {/* Detalhe: /educacao/:uf/:cidade/:bairro/:slug */}
-        <Route path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.education, [TERRITORIAL_PARAMS.district, TERRITORIAL_PARAMS.slug])} element={<P.TerritorialLayout />}>
+        <Route path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.education, [TERRITORIAL_PARAMS.district, TERRITORIAL_PARAMS.slug])} element={launchTerritorialLayout("education", "Educação")}>
           <Route index element={<P.EducationDetailPage />} />
         </Route>
 
         {/* Listagem bairro: /educacao/:uf/:cidade/:bairro */}
-        <Route path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.education, [TERRITORIAL_PARAMS.district])} element={<P.TerritorialLayout />}>
+        <Route path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.education, [TERRITORIAL_PARAMS.district])} element={launchTerritorialLayout("education", "Educação")}>
           <Route index element={<P.EducationExplorerPage />} />
         </Route>
 
         {/* Listagem cidade: /educacao/:uf/:cidade */}
-        <Route path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.education)} element={<P.TerritorialLayout />}>
+        <Route path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.education)} element={launchTerritorialLayout("education", "Educação")}>
           <Route index element={<P.EducationExplorerPage />} />
         </Route>
 
         {/* Rotas de vagas */}
 
-        <Route path={jobPublicRoutes.home()} element={<P.VagasPublicPage />} />
+        <Route path={JOB_ROUTES.home} element={launchElement("jobs", "Vagas", <P.VagasPublicPage />)} />
         {/* Detalhe canonico: /vagas/:uf/:cidade/:slug */}
-        <Route path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.jobs, [TERRITORIAL_PARAMS.slug])} element={<P.VagaDetailPublicPage />} />
+        <Route path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.jobs, [TERRITORIAL_PARAMS.slug])} element={launchElement("jobs", "Vagas", <P.VagaDetailPublicPage />)} />
 
         {/* Listagem territorial: /vagas/:uf/:cidade/:bairro */}
-        <Route path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.jobs, [TERRITORIAL_PARAMS.district])} element={<P.TerritorialLayout />}>
+        <Route path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.jobs, [TERRITORIAL_PARAMS.district])} element={launchTerritorialLayout("jobs", "Vagas")}>
           <Route index element={<P.TerritorialVagasPage />} />
         </Route>
 
         {/* Listagem territorial cidade: /vagas/:uf/:cidade */}
-        <Route path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.jobs)} element={<P.TerritorialLayout />}>
+        <Route path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.jobs)} element={launchTerritorialLayout("jobs", "Vagas")}>
           <Route index element={<P.TerritorialVagasPage />} />
         </Route>
       </Route>

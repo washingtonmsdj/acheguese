@@ -308,6 +308,13 @@ async function bodyText(page: Page) {
   return page.evaluate(() => document.body.innerText).catch(() => "");
 }
 
+function comparableText(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
 test.describe("professional leads authenticated flow", () => {
   test.describe.configure({ timeout: 180_000 });
 
@@ -333,10 +340,10 @@ test.describe("professional leads authenticated flow", () => {
     await open(page, `/servicos/orcamentos/${leadId}`);
     await expect(page.getByText(/propostas recebidas/i)).toBeVisible({ timeout: 20_000 });
     await expect(page.getByText(/atendimento contratado/i)).toBeVisible({ timeout: 20_000 });
-    await expect(page.getByText(/avaliar atendimento concluido/i)).toBeVisible({ timeout: 20_000 });
-    await expect(page.getByText(/conversa do orcamento/i)).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByText(/avaliar atendimento conclu[ií]do/i)).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByText(/conversa do or[cç]amento/i)).toBeVisible({ timeout: 20_000 });
     await page.getByPlaceholder(/conte como foi o atendimento/i).fill(reviewToken);
-    await page.getByRole("button", { name: /enviar avaliacao/i }).click();
+    await page.getByRole("button", { name: /enviar avalia[cç][aã]o/i }).click();
 
     const verifySession = await signInTestUser();
     test.skip(!verifySession, "Nao foi possivel iniciar sessao de verificacao para review.");
@@ -369,7 +376,7 @@ test.describe("professional leads authenticated flow", () => {
 
     await expect
       .poll(async () => {
-        const text = (await bodyText(page)).toLowerCase();
+        const text = comparableText(await bodyText(page));
         const hasOperationalPanel =
           text.includes("operacao profissional") ||
           text.includes("pedidos de orcamento") ||
@@ -381,7 +388,7 @@ test.describe("professional leads authenticated flow", () => {
       .toBe(true);
 
     const centralText = await bodyText(page);
-    const centralTextLower = centralText.toLowerCase();
+    const centralTextLower = comparableText(centralText);
     const hasOperationalPanel =
       centralTextLower.includes("operacao profissional") ||
       centralTextLower.includes("pedidos de orcamento") ||
@@ -392,34 +399,34 @@ test.describe("professional leads authenticated flow", () => {
 
     if (hasOperationalPanel && !hasNoServiceState) {
       await expect
-        .poll(() => bodyText(page), { timeout: 60_000 })
+        .poll(async () => comparableText(await bodyText(page)), { timeout: 60_000 })
         .toMatch(/pedidos de orcamento/i);
       await expect
-        .poll(() => bodyText(page), { timeout: 60_000 })
+        .poll(async () => comparableText(await bodyText(page)), { timeout: 60_000 })
         .toMatch(/atendimentos contratados/i);
       await expect
-        .poll(() => bodyText(page), { timeout: 60_000 })
+        .poll(async () => comparableText(await bodyText(page)), { timeout: 60_000 })
         .toMatch(/servico e2e/i);
       await expect
-        .poll(() => bodyText(page), { timeout: 60_000 })
+        .poll(async () => comparableText(await bodyText(page)), { timeout: 60_000 })
         .toMatch(/dados operacionais do perfil/i);
       await expect
-        .poll(() => bodyText(page), { timeout: 60_000 })
+        .poll(async () => comparableText(await bodyText(page)), { timeout: 60_000 })
         .toMatch(/raio de atendimento/i);
       await expect
-        .poll(() => bodyText(page), { timeout: 60_000 })
+        .poll(async () => comparableText(await bodyText(page)), { timeout: 60_000 })
         .toMatch(/(7 km|nao informado)/i);
       await expect
-        .poll(() => bodyText(page), { timeout: 60_000 })
+        .poll(async () => comparableText(await bodyText(page)), { timeout: 60_000 })
         .toMatch(/nordeste de amaralina/i);
       await expect
-        .poll(() => bodyText(page), { timeout: 60_000 })
+        .poll(async () => comparableText(await bodyText(page)), { timeout: 60_000 })
         .toMatch(/(segunda: 08:00-18:00|nao informado)/i);
     }
 
     if (hasNoServiceState) {
       await expect
-        .poll(() => bodyText(page), { timeout: 60_000 })
+        .poll(async () => comparableText(await bodyText(page)), { timeout: 60_000 })
         .toMatch(/cadastrar servico/i);
     }
 

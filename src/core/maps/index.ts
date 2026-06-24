@@ -42,7 +42,7 @@ export type { MapRadiusControlProps } from './components/v3/controls/MapRadiusCo
 // ============================================
 // PROVIDERS (SSOT de configuração)
 // ============================================
-export { DEFAULT_TILE_STYLE, DEFAULT_CAMERA, NEIGHBORHOOD_COLORS } from './providers/MapProvider';
+export { DEFAULT_TILE_STYLE, DARK_TILE_STYLE, DEFAULT_CAMERA, NEIGHBORHOOD_COLORS } from './providers/MapProvider';
 export { MAP_RUNTIME_LAYER_KEYS, MAP_PRODUCT_SURFACES } from './config/runtimeConfig';
 export type { MapProductSurface } from './config/runtimeConfig';
 

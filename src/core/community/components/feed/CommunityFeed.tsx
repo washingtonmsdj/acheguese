@@ -23,6 +23,7 @@ import {
   type CommunityFeedComposerActionId,
   type CommunityFeedSortType,
 } from "@/core/community/utils/communityFeedTab";
+import { isLaunchCommunityPostEnabled } from "@/config/launchScope";
 import { COMMUNITY_FEED_COPY } from "@/core/community/utils/communityCopy";
 import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
@@ -140,12 +141,14 @@ export function CommunityFeed({
   const filterType = useMemo(() => activeHeaderFilter, [activeHeaderFilter]);
   const unifiedPosts = useMemo(
     () =>
-      posts.map((post) => ({
-        ...post,
-        type: (post.type === "texto" ? "discussao" : post.type) as UnifiedPost["type"],
-        author_name: (post as { author_name?: string }).author_name ?? "Morador",
-        tags: (post as { tags?: string[] }).tags ?? [],
-      })),
+      posts
+        .filter(isLaunchCommunityPostEnabled)
+        .map((post) => ({
+          ...post,
+          type: (post.type === "texto" ? "discussao" : post.type) as UnifiedPost["type"],
+          author_name: (post as { author_name?: string }).author_name ?? "Morador",
+          tags: (post as { tags?: string[] }).tags ?? [],
+        })),
     [posts],
   );
 

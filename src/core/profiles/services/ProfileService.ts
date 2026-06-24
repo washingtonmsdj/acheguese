@@ -519,13 +519,8 @@ export class ProfileService {
     return getRankingQuery(limit);
   }
   async getDriverData(profileId: string): Promise<unknown | null> {
-    try {
-      const { mobilityService } = await import("@/core/mobility/services/runtime");
-      return await mobilityService.getDriverData(profileId);
-    } catch (error) {
-      logger.error("Error in getDriverData:", error);
-      return null;
-    }
+    void profileId;
+    return null;
   }
   async getUserMentions(
     userId: string,

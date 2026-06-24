@@ -1,721 +1,1802 @@
 /**
- * CidadeLandingPage - Vitrine publica da cidade
- * SSOT territorial, sem hardcodes de cidade.
+ * CidadeLandingPage
+ *
+ * Página operacional territorial da cidade. Usa o contexto resolvido da rota,
+ * filtros territoriais canônicos e o mapa real do produto.
  */
 
-import { type FormEvent, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { motion } from "framer-motion";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { Link, Navigate, useLocation, useNavigate, useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import {
-  Search, MapPin, Users, Store, Wrench,
-  ArrowRight, ChevronRight, Star,
-  Briefcase, Camera, GraduationCap, Shield, MapPinned,
-  AlertTriangle, Ambulance, Flame,
-  Loader2, BadgeCheck, Tag,
+  Bell,
+  Building2,
+  CalendarDays,
+  ChevronDown,
+  ChevronRight,
+  CloudSun,
+  ExternalLink,
+  Heart,
+  HelpCircle,
+  Home,
+  LayoutGrid,
+  List,
+  Map as MapIcon,
+  MapPin,
+  MessageCircle,
+  Moon,
+  Plus,
+  Repeat2,
+  Search,
+  ShieldCheck,
+  Star,
+  Store,
+  Sun,
+  Tag,
+  Users,
+  UtensilsCrossed,
+  Wrench,
+  type LucideIcon,
 } from "lucide-react";
-import { Button } from "@/shared/components/ui/button";
-import { Input } from "@/shared/components/ui/input";
-import { BusinessLogo } from "@/shared/components/ui/business-logo";
-import { useAuth } from "@/core/auth/hooks/useAuth";
-import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
-import { getStateByCode } from "@/core/location/data/brazilianStates";
-import { useCityMetadata } from "@/core/city/hooks/useCityMetadata";
-import { useCityFeatured } from "@/core/city/hooks/useCityFeatured";
-import { useHomeCommunityHref } from "@/core/routing/hooks/useHomeCommunityHref";
-import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
+
+import heroImg from "@/assets/hero-landing-main.jpg";
+import bairroPituba from "@/assets/bairro-pituba.jpg";
+import bairroRioVermelho from "@/assets/bairro-riovermelho.jpg";
+import empresasHero from "@/assets/empresas-hero.jpg";
+import neighborhoodFeatured from "@/assets/neighborhood-featured.jpg";
 import { APP_MODULE_SLUGS, buildAppModulePath } from "@/config/moduleSlugs";
-import { classifiedUrlService } from "@/core/classifieds/services/ClassifiedUrlService";
-import { useTouristPoints } from "@/core/guide/tourist-points/hooks/useTouristPoints";
-import { CATEGORY_ICONS } from "@/core/guide/tourist-points/types";
-
-import { formatCategory, formatMetric, formatPrice } from "./CidadeLanding.constants";
+import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from "@/config/launchScope";
+import { BusinessLogo } from "@/shared/components/ui/business-logo";
+import { useTheme } from "@/shared/hooks/useTheme";
+import { useAuth } from "@/core/auth/hooks/useAuth";
+import { BusinessService } from "@/core/business/services/BusinessService";
+import type { Business } from "@/core/business/types/Business";
+import { useCityFeatured } from "@/core/city/hooks/useCityFeatured";
+import { useCityMetadata } from "@/core/city/hooks/useCityMetadata";
 import {
-  CityCommunityCtaSection,
-  CityElectedOfficialsSection,
-  CityHallFooter,
-  CityUsefulContactsSection,
-} from "./CidadeLanding.sections";
+  LandingFeaturedService,
+  type FeaturedBusiness,
+  type FeaturedClassified,
+  type FeaturedService,
+} from "@/core/landing/services/LandingFeaturedService";
+import { classifiedUrlService } from "@/core/classifieds/services/ClassifiedUrlService";
+import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
+import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
+import { LocationService } from "@/core/location/services/LocationService";
+import { LocationStatus, LocationType, type Location, type TerritoryFilter } from "@/core/location/types";
+import {
+  DARK_TILE_STYLE,
+  DEFAULT_TILE_STYLE,
+  MapLibreAdapter,
+  mapEntityProjection,
+  useTerritoryPolygon,
+  type MapMarker,
+  type TerritoryPolygon,
+} from "@/core/maps";
+import { mapClassifiedsLayerRuntimeService } from "@/core/maps/services/MapClassifiedsLayerRuntimeService";
+import { mapGastronomyLayerRuntimeService } from "@/core/maps/services/MapGastronomyLayerRuntimeService";
+import { mapServicesLayerRuntimeService } from "@/core/maps/services/MapServicesLayerRuntimeService";
+import type { BoundingBox } from "@/core/maps/types/core";
+import { useCommunityFeedSimple } from "@/core/community/hooks/feed/useCommunityFeed";
+import { useTouristPoints } from "@/core/guide/tourist-points/hooks/useTouristPoints";
+import type { TouristPoint } from "@/core/guide/tourist-points/types";
+import { residenceService } from "@/core/residence/services/ResidenceService";
+import type { Post } from "@/core/posts/types";
+import { useTerritorialContextOptional } from "@/core/routing/components/TerritorialLayout";
+import { useCommunityUrls } from "@/core/routing/hooks/useCommunityUrls";
+import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
+import { buildCommunityScopedUrl } from "@/core/routing/utils/territoryUrls";
+import { formatCategory, formatMetric, formatPrice } from "./CidadeLanding.constants";
+import { formatRelativeTime, getBusinessPublicUrl, getTextPreview, withQueryParams } from "./CidadeLanding.utils";
+import {
+  NeighborhoodStream,
+  type NeighborhoodCommunityTab,
+  type NeighborhoodCommunityTabId,
+} from "./CidadeLanding.neighborhood-stream";
+import { buildNeighborhoodStreamItems, getNeighborhoodStreamMoreConfig } from "./CidadeLanding.neighborhood-stream-model";
+import {
+  NeighborhoodAlertsPanel,
+  NeighborhoodGateCard,
+  NeighborhoodStatsPanel,
+  type NeighborhoodAccessStatus,
+  type PopulationMetric,
+} from "./CidadeLanding.neighborhood-panels";
+import { NeighborhoodTerritoryHero } from "./CidadeLanding.neighborhood-hero";
+import "./CidadeLandingPage.css";
 
-// Animação base
-const fadeUp = {
-  initial: { opacity: 0, y: 20 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true },
+type Coordinates = {
+  latitude: number;
+  longitude: number;
 };
 
-function toDisplayName(slug: string): string {
-  return slug
+type WeatherBadgeState = {
+  label: string;
+  ariaLabel: string;
+  isLoading: boolean;
+};
+
+type CityModuleUrls = {
+  home: string;
+  community: string;
+  feed: string;
+  business: string;
+  gastronomy: string;
+  services: string;
+  classifieds: string;
+  map: string;
+  search: string;
+  publish: string;
+  touristPoints: string;
+};
+
+type NavItem = {
+  label: string;
+  href: string;
+  surface: LaunchSurfaceKey;
+};
+
+type StatCard = {
+  label: string;
+  value: string;
+  href: string;
+  icon: LucideIcon;
+  tone: "cyan" | "blue" | "amber" | "pink";
+};
+
+type DistrictCard = {
+  name: string;
+  description: string;
+  image: string;
+  href: string;
+  meta: string;
+};
+
+const salvadorCenter: Coordinates = { latitude: -12.94, longitude: -38.45 };
+
+const salvadorFallbackCoordinates: [number, number][] = [
+  [-13.0127, -38.5856],
+  [-13.0149, -38.4687],
+  [-12.956, -38.385],
+  [-12.9571, -38.3535],
+  [-12.9109, -38.3043],
+  [-12.8947, -38.3549],
+  [-12.8391, -38.3534],
+  [-12.8243, -38.374],
+  [-12.867, -38.416],
+  [-12.8294, -38.464],
+  [-12.7915, -38.4623],
+  [-12.7793, -38.5038],
+  [-12.7483, -38.5085],
+  [-12.7387, -38.535],
+  [-12.7339, -38.5879],
+  [-12.754, -38.5879],
+  [-12.7541, -38.6952],
+  [-12.8006, -38.6986],
+  [-12.8454, -38.6749],
+  [-12.8926, -38.5888],
+  [-12.9327, -38.5611],
+  [-13.0127, -38.5856],
+];
+
+const salvadorFallbackTerritoryPolygons: TerritoryPolygon[] = [
+  {
+    name: "Salvador",
+    coordinates: salvadorFallbackCoordinates,
+    center: [salvadorCenter.latitude, salvadorCenter.longitude],
+    color: "#18d6cd",
+  },
+];
+
+const salvadorBounds: BoundingBox = [-38.72, -13.04, -38.27, -12.71];
+const weatherCacheTtlMs = 10 * 60 * 1000;
+const currentWeatherCache = new globalThis.Map<string, { temperatureCelsius: number; expiresAt: number }>();
+const locationReadService = new LocationService(createLocationRepository());
+const districtImages = [bairroRioVermelho, bairroPituba, neighborhoodFeatured, empresasHero];
+
+function toDisplayName(value: string): string {
+  return value
     .split("-")
+    .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
 }
 
-export default function CidadeLandingPage() {
-  const navigate = useNavigate();
-  const { user } = useAuth();
-  const homeCommunityHref = useHomeCommunityHref();
-  const { state = "", city = "" } = useParams();
-  const [searchQuery, setSearchQuery] = useState("");
+function normalizeText(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
 
-  // Busca metadados da cidade (população, bairros, etc.)
-  const { data: cityMetadata, isLoading: metadataLoading } = useCityMetadata(state, city);
-  const moduleTerritory = useModuleTerritoryFilter({ nearbyEnabled: false, includeDescendants: true });
+function slugify(value: string): string {
+  return normalizeText(value)
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
 
-  // Busca conteúdo em destaque (SSOT)
-  const { businesses: businessesReal, services: servicesReal, classifieds: classifiedsReal, isLoading: featuredLoading } =
-    useCityFeatured(state, city, moduleTerritory.territoryFilter);
-  const businesses = businessesReal.slice(0, 6);
-  const services = servicesReal.slice(0, 6);
-  const classifieds = classifiedsReal.slice(0, 6);
+function isSalvadorRoute(state: string, city: string): boolean {
+  return normalizeText(state) === "ba" && normalizeText(city) === "salvador";
+}
 
-  // Pontos turísticos via SSOT
-  const { data: touristPoints = [] } = useTouristPoints({ state, city, limit: 6 });
-  const updatedAtLabel = cityMetadata?.updated_at
-    ? new Date(cityMetadata.updated_at).toLocaleDateString("pt-BR")
-    : null;
+function getFiniteNumber(value: unknown): number | null {
+  if (typeof value !== "number" && typeof value !== "string") return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
 
-  if (!state || !city) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background p-6 text-center">
-        <div>
-          <h1 className="text-xl font-bold text-foreground">Cidade não informada</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Use a rota com UF e cidade.</p>
-        </div>
-      </div>
-    );
+function getLocationCenter(location: Location | null | undefined): Coordinates | null {
+  const metadata = location?.metadata;
+  if (!metadata) return null;
+
+  const latitude =
+    getFiniteNumber(metadata.center_latitude) ??
+    getFiniteNumber(metadata.center_lat) ??
+    getFiniteNumber(metadata.canonical_lat) ??
+    getFiniteNumber(metadata.latitude) ??
+    getFiniteNumber(metadata.lat);
+  const longitude =
+    getFiniteNumber(metadata.center_longitude) ??
+    getFiniteNumber(metadata.center_lng) ??
+    getFiniteNumber(metadata.canonical_lng) ??
+    getFiniteNumber(metadata.longitude) ??
+    getFiniteNumber(metadata.lng);
+
+  return latitude != null && longitude != null ? { latitude, longitude } : null;
+}
+
+function getResolvedTerritoryLocations(resolved: ResolvedTerritory | null): Location[] {
+  if (!resolved) return [];
+  return resolved.kind === "group" ? resolved.group.members : [resolved.location];
+}
+
+function getCityPartsFromResolved(resolved: ResolvedTerritory | null): { state?: string; city?: string } {
+  const location = getResolvedTerritoryLocations(resolved)[0];
+  const parts = location?.geographic_path.split("/").filter(Boolean) ?? [];
+  const publicParts = parts[0] === "br" ? parts.slice(1) : parts;
+  return {
+    state: publicParts[0],
+    city: publicParts[1],
+  };
+}
+
+function getResolvedTerritoryName(resolved: ResolvedTerritory | null, fallback: string): string {
+  if (!resolved) return fallback;
+  return resolved.kind === "group" ? resolved.group.name : resolved.location.name;
+}
+
+function getResolvedTerritoryCenter(resolved: ResolvedTerritory | null): Coordinates | null {
+  const locations = getResolvedTerritoryLocations(resolved);
+  const centers = locations.map(getLocationCenter).filter((center): center is Coordinates => Boolean(center));
+  if (centers.length === 0) return null;
+
+  const latitude = centers.reduce((sum, center) => sum + center.latitude, 0) / centers.length;
+  const longitude = centers.reduce((sum, center) => sum + center.longitude, 0) / centers.length;
+  return Number.isFinite(latitude) && Number.isFinite(longitude) ? { latitude, longitude } : null;
+}
+
+const POPULATION_METADATA_FIELDS = [
+  { key: "ibge_population_2022", sourceLabel: "IBGE 2022" },
+  { key: "population_2022", sourceLabel: "IBGE 2022" },
+  { key: "ibge_population", sourceLabel: "IBGE" },
+  { key: "population", sourceLabel: "metadata territorial" },
+  { key: "residents_count", sourceLabel: "cadastro local" },
+  { key: "moradores_count", sourceLabel: "cadastro local" },
+  { key: "residents", sourceLabel: "cadastro local" },
+] as const;
+
+function getLocationPopulationMetric(location: Location): PopulationMetric | null {
+  for (const { key, sourceLabel } of POPULATION_METADATA_FIELDS) {
+    const value = getFiniteNumber(location.metadata[key]);
+    if (value != null) return { value, sourceLabel };
+  }
+  return null;
+}
+
+function getResolvedPopulationMetric(resolved: ResolvedTerritory | null): PopulationMetric {
+  const values = getResolvedTerritoryLocations(resolved)
+    .map(getLocationPopulationMetric)
+    .filter((metric): metric is PopulationMetric => Boolean(metric?.value && metric.value > 0));
+
+  if (values.length === 0) {
+    return { sourceLabel: "IBGE pendente" };
   }
 
-  const communityUrl = homeCommunityHref;
-  const cityPath = `/${state}/${city}`;
-  const cityModuleUrls = {
-    business: buildAppModulePath(APP_MODULE_SLUGS.business, cityPath),
-    services: buildAppModulePath(APP_MODULE_SLUGS.services, cityPath),
-    classifieds: buildAppModulePath(APP_MODULE_SLUGS.classifieds, cityPath),
-    jobs: buildAppModulePath(APP_MODULE_SLUGS.jobs, cityPath),
-    touristPoints: buildAppModulePath(APP_MODULE_SLUGS.touristPoints, cityPath),
+  const sourceLabel = values.every((metric) => metric.sourceLabel.includes("IBGE"))
+    ? values[0].sourceLabel
+    : "metadata territorial";
+  return {
+    value: values.reduce((sum, metric) => sum + (metric.value ?? 0), 0),
+    sourceLabel,
   };
-  const cityDisplayName = toDisplayName(city);
-  const stateDisplayName = getStateByCode(state)?.name ?? state.toUpperCase();
-  const cityDescription =
-    cityMetadata?.description ||
-    `Plataforma territorial de ${cityDisplayName} para descobrir negócios, profissionais, classificados e oportunidades perto de você.`;
-  const heroBadgeText = cityMetadata?.founded_year
-    ? `${cityDisplayName} | fundada em ${cityMetadata.founded_year}`
-    : `${cityDisplayName} | ${stateDisplayName}`;
-  const searchPlaceholder = `Buscar em ${cityDisplayName}: mercado, diarista, vaga...`;
+}
+
+function getNeighborhoodAccessStatus(
+  isAuthenticated: boolean,
+  isResidenceVerifiedInTerritory: boolean,
+): NeighborhoodAccessStatus {
+  if (!isAuthenticated) return "visitor";
+  return isResidenceVerifiedInTerritory ? "verified" : "unverified";
+}
+
+function getCenterFromPolygons(polygons: TerritoryPolygon[]): Coordinates | null {
+  const center = polygons.find((polygon) => polygon.center)?.center;
+  if (!center) return null;
+  const [latitude, longitude] = center;
+  return Number.isFinite(latitude) && Number.isFinite(longitude) ? { latitude, longitude } : null;
+}
+
+function getBoundsFromPolygons(polygons: TerritoryPolygon[]): BoundingBox | null {
+  const coordinates = polygons.flatMap((polygon) => polygon.coordinates);
+  if (!coordinates.length) return null;
+
+  const latitudes = coordinates.map(([latitude]) => latitude);
+  const longitudes = coordinates.map(([, longitude]) => longitude);
+  const west = Math.min(...longitudes);
+  const south = Math.min(...latitudes);
+  const east = Math.max(...longitudes);
+  const north = Math.max(...latitudes);
+
+  return [west, south, east, north];
+}
+
+function isInsideBounds(latitude: number | null | undefined, longitude: number | null | undefined, bounds: BoundingBox): boolean {
+  if (latitude == null || longitude == null) return false;
+  const [west, south, east, north] = bounds;
+  return longitude >= west && longitude <= east && latitude >= south && latitude <= north;
+}
+
+function hasValidCoordinates(latitude: number | null | undefined, longitude: number | null | undefined): boolean {
+  return typeof latitude === "number" && Number.isFinite(latitude) && typeof longitude === "number" && Number.isFinite(longitude);
+}
+
+function formatLocationFromGeoPath(path: string | null | undefined): string {
+  if (!path) return "Salvador";
+  const parts = path.split("/").filter(Boolean);
+  const last = parts.at(-1);
+  return last ? toDisplayName(last) : "Salvador";
+}
+
+function firstMetric(...values: Array<number | null | undefined>): number | undefined {
+  const positive = values.find((value) => typeof value === "number" && Number.isFinite(value) && value > 0);
+  if (positive != null) return positive;
+  return values.find((value) => typeof value === "number" && Number.isFinite(value));
+}
+
+function isGastronomyBusiness(business: FeaturedBusiness): boolean {
+  const haystack = ` ${normalizeText(`${business.name} ${business.category}`).replace(/[^a-z0-9]+/g, " ")} `;
+  const blockedTerms = [
+    "academia",
+    "beleza",
+    "colegio",
+    "educacao",
+    "escola",
+    "farmacia",
+    "saude",
+    "servico",
+    "servicos",
+    "tecnologia",
+  ];
+  if (blockedTerms.some((term) => haystack.includes(` ${term} `))) return false;
+
+  return [
+    "acaraje",
+    "acai",
+    "adega",
+    "alimentacao",
+    "alimentos",
+    "restaurante",
+    "gastronomia",
+    "bar",
+    "cafeteria",
+    "lanchonete",
+    "marmitaria",
+    "padaria",
+    "pastelaria",
+    "pizzaria",
+    "cafe",
+    "sorveteria",
+    "comida",
+  ].some((term) => haystack.includes(` ${term} `));
+}
+
+async function fetchCurrentTemperature(point: Coordinates): Promise<number> {
+  const cacheKey = `${point.latitude.toFixed(3)},${point.longitude.toFixed(3)}`;
+  const cached = currentWeatherCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) return cached.temperatureCelsius;
+
+  const params = new URLSearchParams({
+    latitude: String(point.latitude),
+    longitude: String(point.longitude),
+    current: "temperature_2m",
+    temperature_unit: "celsius",
+    timezone: "auto",
+  });
+  const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params.toString()}`);
+  if (!response.ok) throw new Error("Weather request failed");
+
+  const payload = (await response.json()) as { current?: { temperature_2m?: number } };
+  const temperature = payload.current?.temperature_2m;
+  if (typeof temperature !== "number" || !Number.isFinite(temperature)) {
+    throw new Error("Weather response missing temperature");
+  }
+
+  currentWeatherCache.set(cacheKey, {
+    temperatureCelsius: temperature,
+    expiresAt: Date.now() + weatherCacheTtlMs,
+  });
+  return temperature;
+}
+
+function useCurrentTemperature(point: Coordinates | null, label: string): WeatherBadgeState {
+  const [state, setState] = useState<WeatherBadgeState>({
+    label: "--°C",
+    ariaLabel: `Temperatura atual em ${label} indisponível`,
+    isLoading: true,
+  });
+
+  useEffect(() => {
+    if (!point) {
+      setState({
+        label: "--°C",
+        ariaLabel: `Temperatura atual em ${label} indisponível`,
+        isLoading: false,
+      });
+      return;
+    }
+
+    let cancelled = false;
+    setState((current) => ({ ...current, isLoading: true }));
+
+    fetchCurrentTemperature(point)
+      .then((temperature) => {
+        if (cancelled) return;
+        const rounded = Math.round(temperature);
+        setState({
+          label: `${rounded}°C`,
+          ariaLabel: `Temperatura atual em ${label}: ${rounded} graus Celsius`,
+          isLoading: false,
+        });
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setState({
+          label: "--°C",
+          ariaLabel: `Temperatura atual em ${label} indisponível`,
+          isLoading: false,
+        });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [point, label]);
+
+  return state;
+}
+
+function projectBusinessMarkers(businesses: Business[], bounds: BoundingBox, urls: CityModuleUrls): MapMarker[] {
+  const entities = businesses
+    .filter((business) => isInsideBounds(business.address?.latitude, business.address?.longitude, bounds))
+    .slice(0, 90)
+    .map((business) => ({
+      id: `business-${business.profile_id || business.id}`,
+      name: business.name,
+      latitude: business.address?.latitude ?? null,
+      longitude: business.address?.longitude ?? null,
+      status: business.status,
+      subtitle: formatLocationFromGeoPath(business.location?.geographic_path ?? business.geographic_path),
+      category: business.category,
+      slug: business.slug,
+      url: getBusinessPublicUrl(
+        {
+          id: business.profile_id || business.id,
+          slug: business.slug,
+          is_premium: business.is_premium,
+          geographic_path: business.location?.geographic_path ?? business.geographic_path,
+        },
+        urls.business,
+      ),
+      is_premium: business.is_premium,
+      is_verified: business.is_verified,
+      rating: business.rating,
+      map_layer_key: "businesses",
+    }));
+
+  return mapEntityProjection.projectEntities(entities, "business", {
+    includeMetadata: true,
+    calculateScore: true,
+  });
+}
+
+async function fetchCityMapMarkers(
+  bounds: BoundingBox,
+  territoryFilter: TerritoryFilter,
+  urls: CityModuleUrls,
+): Promise<MapMarker[]> {
+  if (territoryFilter.scope === "none") return [];
+
+  const [businesses, gastronomy, services, classifieds] = await Promise.all([
+    BusinessService.getBusinesses({ sortBy: "rating", territoryFilter }),
+    mapGastronomyLayerRuntimeService.getGastronomyByBounds(bounds, { territoryFilter, limit: 80 }),
+    mapServicesLayerRuntimeService.getServicesByBounds(bounds, { territoryFilter, limit: 80 }),
+    mapClassifiedsLayerRuntimeService.getClassifiedsByBounds(bounds, { territoryFilter, limit: 80 }),
+  ]);
+
+  const businessMarkers = projectBusinessMarkers(businesses, bounds, urls);
+  const gastronomyMarkers = mapEntityProjection.projectEntities(
+    gastronomy.map((item) => ({
+      id: item.id,
+      name: item.name,
+      latitude: item.latitude,
+      longitude: item.longitude,
+      status: "active",
+      subtitle: item.cuisine_type || item.category || "Gastronomia",
+      slug: item.slug,
+      url: item.slug ? `${urls.gastronomy}/${item.slug}` : urls.gastronomy,
+      is_premium: item.is_premium,
+      is_verified: item.is_verified,
+      rating: item.rating,
+      map_layer_key: "gastronomy",
+    })),
+    "business",
+    { includeMetadata: true, calculateScore: true },
+  );
+  const serviceMarkers = mapEntityProjection.projectEntities(
+    services.map((item) => ({
+      id: item.id,
+      name: item.name,
+      latitude: item.latitude,
+      longitude: item.longitude,
+      status: "active",
+      subtitle: item.subcategory || item.category || "Serviço",
+      url: item.url ?? urls.services,
+      is_verified: item.is_verified,
+      rating: item.rating,
+      map_layer_key: "services",
+    })),
+    "service",
+    { includeMetadata: true, calculateScore: true },
+  );
+  const classifiedMarkers = mapEntityProjection.projectEntities(
+    classifieds.map((item) => ({
+      id: item.id,
+      name: item.name,
+      latitude: item.latitude,
+      longitude: item.longitude,
+      status: "active",
+      subtitle: item.price ? formatPrice(item.price) : item.category || "Classificado",
+      url: item.url ?? urls.classifieds,
+      map_layer_key: "classifieds",
+    })),
+    "classified",
+    { includeMetadata: true, calculateScore: true },
+  );
+
+  return [...businessMarkers, ...gastronomyMarkers, ...serviceMarkers, ...classifiedMarkers];
+}
+
+function buildTouristPointMarkers(points: TouristPoint[], urls: CityModuleUrls): MapMarker[] {
+  return mapEntityProjection.projectEntities(
+    points
+      .filter((point) => hasValidCoordinates(point.latitude, point.longitude))
+      .map((point) => ({
+        id: `tourist-${point.id}`,
+        name: point.name,
+        latitude: point.latitude,
+        longitude: point.longitude,
+        status: "active",
+        subtitle: point.neighborhood || formatCategory(point.category),
+        slug: point.slug,
+        url: point.slug ? `${urls.touristPoints}/${point.slug}` : urls.touristPoints,
+        rating: point.rating,
+        map_layer_key: "tourist_points",
+      })),
+    "tourist_point",
+    { includeMetadata: true, calculateScore: true },
+  );
+}
+
+function buildLocationMarkers(locations: Location[], bounds: BoundingBox, cityPath: string): MapMarker[] {
+  const entities = locations
+    .map((location) => {
+      const center = getLocationCenter(location);
+      if (!center || !isInsideBounds(center.latitude, center.longitude, bounds)) return null;
+
+      return {
+        id: `location-${location.id}`,
+        name: location.name,
+        latitude: center.latitude,
+        longitude: center.longitude,
+        subtitle: location.type === LocationType.NEIGHBORHOOD ? "Bairro" : "Distrito",
+        status: "active",
+        url: `${cityPath}/${location.slug}`,
+        location_id: location.id,
+        geographic_path: location.geographic_path,
+        map_layer_key: "territory",
+        coordinate_source: "location_metadata",
+      };
+    })
+    .filter((entity): entity is NonNullable<typeof entity> => Boolean(entity))
+    .slice(0, 60);
+
+  return mapEntityProjection.projectEntities(entities, "user_location", {
+    includeMetadata: true,
+    calculateScore: true,
+  });
+}
+
+function buildTerritoryAnchorMarker(center: Coordinates, label: string, urls: CityModuleUrls): MapMarker {
+  return mapEntityProjection.projectEntity(
+    {
+      id: "territory-anchor",
+      name: label,
+      latitude: center.latitude,
+      longitude: center.longitude,
+      subtitle: "Território ativo",
+      status: "active",
+      url: urls.map,
+      map_layer_key: "territory",
+      coordinate_source: "territory_center",
+    },
+    "user_location",
+    {
+      includeMetadata: true,
+      calculateScore: true,
+    },
+  )!;
+}
+
+function EmptyAction({
+  title,
+  description,
+  href,
+  action,
+}: {
+  title: string;
+  description: string;
+  href: string;
+  action: string;
+}) {
+  return (
+    <Link to={href} className="city-op-empty-action">
+      <span>
+        <strong>{title}</strong>
+        <small>{description}</small>
+      </span>
+      <span className="city-op-empty-action-icon" aria-hidden="true">
+        <ChevronRight />
+      </span>
+      <span className="sr-only">{action}</span>
+    </Link>
+  );
+}
+
+function CityHeader({
+  navItems,
+  cityLabel,
+  theme,
+  onToggleTheme,
+  publishHref,
+  authHref,
+  authLabel,
+}: {
+  navItems: NavItem[];
+  cityLabel: string;
+  theme: "dark" | "light";
+  onToggleTheme: () => void;
+  publishHref: string;
+  authHref: string;
+  authLabel: string;
+}) {
+  return (
+    <header className="city-op-header">
+      <Link to="/" className="city-op-brand" aria-label="Achegue-se">
+        <span className="city-op-brand-mark" aria-hidden="true">
+          <MapPin />
+        </span>
+        <span>Achegue-se</span>
+      </Link>
+
+      <Link to={navItems[0]?.href ?? "/"} className="city-op-location-switch">
+        <MapPin aria-hidden="true" />
+        <span>{cityLabel}</span>
+        <ChevronDown aria-hidden="true" />
+      </Link>
+
+      <nav className="city-op-nav" aria-label="Navegação da cidade">
+        {navItems.map((item) => (
+          <Link key={item.label} to={item.href}>
+            {item.label}
+          </Link>
+        ))}
+      </nav>
+
+      <div className="city-op-header-actions">
+        <button type="button" className="city-op-icon-button" onClick={onToggleTheme} aria-label="Alternar tema">
+          {theme === "dark" ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}
+        </button>
+        <Link to="/notificacoes" className="city-op-icon-button city-op-notification" aria-label="Notificações">
+          <Bell aria-hidden="true" />
+          <span aria-hidden="true">3</span>
+        </Link>
+        <Link to={authHref} className="city-op-login-link">
+          {authLabel}
+        </Link>
+        <Link to={publishHref} className="city-op-publish-link">
+          <Plus aria-hidden="true" />
+          <span>Publicar</span>
+        </Link>
+      </div>
+    </header>
+  );
+}
+
+function StatGrid({ stats }: { stats: StatCard[] }) {
+  return (
+    <div className="city-op-stat-grid" aria-label="Indicadores da cidade">
+      {stats.map((stat) => {
+        const Icon = stat.icon;
+        return (
+          <Link key={stat.label} to={stat.href} className={`city-op-stat-card is-${stat.tone}`}>
+            <span className="city-op-stat-icon" aria-hidden="true">
+              <Icon />
+            </span>
+            <span>
+              <strong>{stat.value}</strong>
+              <small>{stat.label}</small>
+            </span>
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+
+function CityMapPanel({
+  urls,
+  markers,
+  polygons,
+  resolved,
+  center,
+  cityLabel,
+  isLoading,
+  onMarkerClick,
+  mapStyleUrl = DEFAULT_TILE_STYLE.styleUrl,
+  zoom = 10.35,
+  showFilters = true,
+  fitTerritoryBounds = false,
+  territoryFitPadding,
+  territoryFitMaxZoom,
+}: {
+  urls: CityModuleUrls;
+  markers: MapMarker[];
+  polygons: TerritoryPolygon[];
+  resolved: ResolvedTerritory | null;
+  center: Coordinates;
+  cityLabel: string;
+  isLoading: boolean;
+  onMarkerClick: (id: string) => void;
+  mapStyleUrl?: string;
+  zoom?: number;
+  showFilters?: boolean;
+  fitTerritoryBounds?: boolean;
+  territoryFitPadding?: number;
+  territoryFitMaxZoom?: number;
+}) {
+  const filters = [
+    { label: "Todos", icon: MapIcon, href: urls.map, tone: "cyan" },
+    { label: "Empresas", icon: Store, href: withQueryParams(urls.map, { layer: "businesses" }), tone: "blue" },
+    { label: "Gastronomia", icon: UtensilsCrossed, href: withQueryParams(urls.map, { layer: "gastronomy" }), tone: "amber" },
+    { label: "Serviços", icon: Wrench, href: withQueryParams(urls.map, { layer: "services" }), tone: "blue" },
+    { label: "Classificados", icon: Tag, href: withQueryParams(urls.map, { layer: "classifieds" }), tone: "pink" },
+    { label: "Comunidade", icon: Users, href: urls.community, tone: "green" },
+  ];
+  const showMapLoading = isLoading && markers.length === 0 && polygons.length === 0;
+
+  return (
+    <section className="city-op-map-panel" aria-labelledby="city-op-map-title">
+      {showFilters && (
+        <div className="city-op-map-filter-row" aria-label="Filtros do mapa">
+          {filters.map((filter) => {
+            const Icon = filter.icon;
+            return (
+              <Link key={filter.label} to={filter.href} className={`city-op-map-filter is-${filter.tone}`}>
+                <Icon aria-hidden="true" />
+                <span>{filter.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+
+      <div className="city-op-map-canvas" aria-label={`Mapa territorial de ${cityLabel}`}>
+        <MapLibreAdapter
+          styleUrl={mapStyleUrl}
+          initialViewport={{ center, zoom }}
+          territoryPolygons={polygons}
+          markers={markers}
+          resolved={resolved}
+          fitTerritoryBounds={fitTerritoryBounds}
+          territoryFitPadding={territoryFitPadding}
+          territoryFitMaxZoom={territoryFitMaxZoom}
+          enableClustering
+          clusterOptions={{ radius: 42, maxZoom: 13, minPoints: 2 }}
+          markerPresentation="compact"
+          userLocationMarker={{ enabled: false, autoAdd: false }}
+          onMarkerClick={onMarkerClick}
+          className="city-op-real-map"
+        />
+        <div className="city-op-map-label" aria-hidden="true">
+          <strong id="city-op-map-title">{cityLabel}</strong>
+          <span>{markers.length === 1 ? "1 ponto" : `${markers.length} pontos`}</span>
+        </div>
+        {showMapLoading && (
+          <div className="city-op-map-loading" role="status" aria-live="polite">
+            Carregando mapa local
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function DistrictsPanel({ cards, href, isLoading }: { cards: DistrictCard[]; href: string; isLoading: boolean }) {
+  return (
+    <section className="city-op-panel city-op-districts-panel" aria-labelledby="city-op-districts-title">
+      <div className="city-op-panel-heading">
+        <h2 id="city-op-districts-title">Bairros em destaque</h2>
+        <Link to={href}>Ver todos</Link>
+      </div>
+      {cards.length > 0 ? (
+        <div className="city-op-district-strip">
+          {cards.map((card) => (
+            <Link key={card.name} to={card.href} className="city-op-district-card">
+              <img src={card.image} alt="" loading="lazy" />
+              <span className="city-op-district-shade" aria-hidden="true" />
+              <span>
+                <strong>{card.name}</strong>
+                <small>{card.meta}</small>
+              </span>
+            </Link>
+          ))}
+        </div>
+      ) : (
+        <EmptyAction
+          title={isLoading ? "Carregando bairros" : "Bairros serão listados aqui"}
+          description="Abra a busca territorial para explorar áreas da cidade."
+          href={href}
+          action="Ver bairros"
+        />
+      )}
+    </section>
+  );
+}
+
+function NearbyBusinessesPanel({ businesses, href }: { businesses: FeaturedBusiness[]; href: string }) {
+  return (
+    <section className="city-op-panel" aria-labelledby="city-op-business-title">
+      <div className="city-op-panel-heading">
+        <h2 id="city-op-business-title">Empresas próximas</h2>
+        <Link to={href}>Ver todas</Link>
+      </div>
+      {businesses.length > 0 ? (
+        <div className="city-op-list">
+          {businesses.slice(0, 3).map((business) => (
+            <Link
+              key={business.id}
+              to={getBusinessPublicUrl(business, href)}
+              className="city-op-row-card"
+            >
+              <span className="city-op-row-media">
+                <BusinessLogo name={business.name} logoUrl={business.logo_url} />
+              </span>
+              <span className="city-op-row-copy">
+                <strong>{business.name || "Empresa local"}</strong>
+                <small>{formatLocationFromGeoPath(business.geographic_path)} · {formatCategory(business.category || "empresa")}</small>
+              </span>
+              <span className={`city-op-row-badge ${business.is_verified ? "is-green" : ""}`}>
+                {business.is_verified ? "Verificada" : "Local"}
+              </span>
+            </Link>
+          ))}
+        </div>
+      ) : (
+        <EmptyAction
+          title="Empresas serão exibidas aqui"
+          description="Abra o módulo de empresas para ver negócios cadastrados."
+          href={href}
+          action="Ver empresas"
+        />
+      )}
+    </section>
+  );
+}
+
+function GastronomyPanel({ items, href }: { items: FeaturedBusiness[]; href: string }) {
+  return (
+    <section className="city-op-panel city-op-gastronomy-panel" aria-labelledby="city-op-gastronomy-title">
+      <div className="city-op-panel-heading">
+        <h2 id="city-op-gastronomy-title">Gastronomia</h2>
+        <Link to={href}>Ver todas</Link>
+      </div>
+      {items.length > 0 ? (
+        <div className="city-op-list">
+          {items.slice(0, 3).map((business) => (
+            <Link
+              key={business.id}
+              to={getBusinessPublicUrl(business, href)}
+              className="city-op-row-card city-op-food-row"
+            >
+              <span className="city-op-row-media">
+                <BusinessLogo name={business.name} logoUrl={business.logo_url} />
+              </span>
+              <span className="city-op-row-copy">
+                <strong>{business.name || "Restaurante local"}</strong>
+                <small>{formatCategory(business.category || "gastronomia")} · {formatLocationFromGeoPath(business.geographic_path)}</small>
+              </span>
+              <span className="city-op-rating">
+                <Star aria-hidden="true" />
+                {business.rating ? business.rating.toFixed(1).replace(".", ",") : "-"}
+              </span>
+            </Link>
+          ))}
+        </div>
+      ) : (
+        <EmptyAction
+          title="Gastronomia local"
+          description="Acesse restaurantes, bares e cardápios disponíveis."
+          href={href}
+          action="Ver gastronomia"
+        />
+      )}
+    </section>
+  );
+}
+
+function ClassifiedsPreview({ classifieds, href }: { classifieds: FeaturedClassified[]; href: string }) {
+  if (!classifieds.length) return null;
+
+  return (
+    <div className="city-op-classified-strip" aria-label="Classificados recentes">
+      {classifieds.slice(0, 2).map((classified) => {
+        const publicHref =
+          classifiedUrlService.buildPublicUrl({
+            id: classified.id,
+            public_id: classified.public_id,
+            slug: classified.slug,
+            geographic_path: classified.geographic_path,
+            category_slug: classified.category_slug,
+            subcategory_slug: classified.subcategory_slug,
+          }) ?? href;
+        return (
+          <Link key={classified.id} to={publicHref}>
+            <Tag aria-hidden="true" />
+            <span>
+              <strong>{classified.titulo}</strong>
+              <small>{classified.price ? formatPrice(classified.price) : formatCategory(classified.category || "classificado")}</small>
+            </span>
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+
+function CommunityPanel({
+  urls,
+  cityLabel,
+  isAuthenticated,
+  classifieds,
+}: {
+  urls: CityModuleUrls;
+  cityLabel: string;
+  isAuthenticated: boolean;
+  classifieds: FeaturedClassified[];
+}) {
+  const actions = [
+    {
+      label: "Feed local",
+      detail: `Acompanhe conversas de ${cityLabel}.`,
+      href: urls.community,
+      icon: MessageCircle,
+    },
+    {
+      label: "Publicar",
+      detail: isAuthenticated ? "Compartilhe uma atualização local." : "Entre para publicar no território.",
+      href: urls.publish,
+      icon: Plus,
+    },
+    {
+      label: "Classificados",
+      detail: "Veja anúncios e oportunidades próximos.",
+      href: urls.classifieds,
+      icon: Tag,
+    },
+  ];
+
+  return (
+    <section className="city-op-panel" aria-labelledby="city-op-community-title">
+      <div className="city-op-panel-heading">
+        <h2 id="city-op-community-title">Comunidade</h2>
+        <Link to={urls.community}>Ver tudo</Link>
+      </div>
+      <div className="city-op-community-actions">
+        {actions.map((action) => {
+          const Icon = action.icon;
+          return (
+            <Link key={action.label} to={action.href} className="city-op-community-action">
+              <span aria-hidden="true">
+                <Icon />
+              </span>
+              <span>
+                <strong>{action.label}</strong>
+                <small>{action.detail}</small>
+              </span>
+              <ChevronRight aria-hidden="true" />
+            </Link>
+          );
+        })}
+      </div>
+      <ClassifiedsPreview classifieds={classifieds} href={urls.classifieds} />
+    </section>
+  );
+}
+
+function NeighborhoodCommunityHeader({
+  cityLabel,
+  cityHref,
+  searchQuery,
+  onSearchChange,
+  onSearchSubmit,
+  theme,
+  onToggleTheme,
+  authHref,
+  authLabel,
+  signupHref,
+  showSignup,
+}: {
+  cityLabel: string;
+  cityHref: string;
+  searchQuery: string;
+  onSearchChange: (value: string) => void;
+  onSearchSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  theme: "dark" | "light";
+  onToggleTheme: () => void;
+  authHref: string;
+  authLabel: string;
+  signupHref: string;
+  showSignup: boolean;
+}) {
+  return (
+    <header className="neighborhood-community-header">
+      <Link to="/" className="city-op-brand neighborhood-community-brand" aria-label="Achegue-se">
+        <span className="city-op-brand-mark" aria-hidden="true">
+          <Home />
+        </span>
+        <span>Achegue-se</span>
+      </Link>
+
+      <Link to={cityHref} className="city-op-location-switch neighborhood-community-location">
+        <MapPin aria-hidden="true" />
+        <span>{cityLabel}</span>
+        <ChevronDown aria-hidden="true" />
+      </Link>
+
+      <form className="neighborhood-community-top-search" onSubmit={onSearchSubmit}>
+        <Search aria-hidden="true" />
+        <input
+          value={searchQuery}
+          onChange={(event) => onSearchChange(event.target.value)}
+          placeholder="Buscar no bairro"
+          aria-label="Buscar no bairro"
+        />
+      </form>
+
+      <div className="neighborhood-community-actions">
+        <button type="button" className="city-op-icon-button" onClick={onToggleTheme} aria-label="Alternar tema">
+          {theme === "dark" ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}
+        </button>
+        <Link to={authHref} className="city-op-login-link">
+          {authLabel}
+        </Link>
+        {showSignup ? (
+          <Link to={signupHref} className="city-op-publish-link neighborhood-community-create">
+            <span>Criar conta</span>
+          </Link>
+        ) : null}
+      </div>
+    </header>
+  );
+}
+
+function NeighborhoodLandingContent({
+  urls,
+  communityUrls,
+  cityLabel,
+  cityHref,
+  cityName,
+  stateLabel,
+  resolved,
+  markers,
+  polygons,
+  center,
+  businesses,
+  services,
+  classifieds,
+  gastronomyItems,
+  feedPosts,
+  stats,
+  searchQuery,
+  onSearchChange,
+  onSearchSubmit,
+  onMarkerClick,
+  theme,
+  onToggleTheme,
+  authHref,
+  authLabel,
+  isAuthenticated,
+  accessStatus,
+  residenceLoading,
+  isLoading,
+}: {
+  urls: CityModuleUrls;
+  communityUrls: ReturnType<typeof useCommunityUrls>;
+  cityLabel: string;
+  cityHref: string;
+  cityName: string;
+  stateLabel: string;
+  resolved: NonNullable<ResolvedTerritory>;
+  markers: MapMarker[];
+  polygons: TerritoryPolygon[];
+  center: Coordinates;
+  businesses: FeaturedBusiness[];
+  services: FeaturedService[];
+  classifieds: FeaturedClassified[];
+  gastronomyItems: FeaturedBusiness[];
+  feedPosts: Post[];
+  stats: { businesses?: number; services?: number; classifieds?: number } | undefined;
+  searchQuery: string;
+  onSearchChange: (value: string) => void;
+  onSearchSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  onMarkerClick: (id: string) => void;
+  theme: "dark" | "light";
+  onToggleTheme: () => void;
+  authHref: string;
+  authLabel: string;
+  isAuthenticated: boolean;
+  accessStatus: NeighborhoodAccessStatus;
+  residenceLoading: boolean;
+  isLoading: boolean;
+}) {
+  const [activeStreamTab, setActiveStreamTab] = useState<NeighborhoodCommunityTabId>("all");
+  const territoryName = getResolvedTerritoryName(resolved, cityLabel);
+  const memberLocations = getResolvedTerritoryLocations(resolved);
+  const memberCount = Math.max(memberLocations.length, 1);
+  const isGroup = resolved.kind === "group";
+  const population = getResolvedPopulationMetric(resolved);
+  const businessCount = firstMetric(stats?.businesses, businesses.length);
+  const servicesCount = firstMetric(stats?.services, services.length);
+  const mapZoom = polygons.length > 1 ? 12.3 : polygons.length === 1 ? 13.3 : 12.2;
+  const canInteract = accessStatus === "verified";
+  const enterLoginHref = withQueryParams("/login", { redirect: urls.feed });
+  const publishLoginHref = withQueryParams("/login", { redirect: urls.publish });
+  const signupHref = withQueryParams("/cadastro", { redirect: urls.community });
+  const verifyHref = "/conta/enderecos";
+  const interactionHref = canInteract ? urls.publish : accessStatus === "visitor" ? publishLoginHref : verifyHref;
+  const enterHref = accessStatus === "verified" ? urls.feed : accessStatus === "visitor" ? enterLoginHref : verifyHref;
+  const lockedActionHref = accessStatus === "visitor" ? enterLoginHref : verifyHref;
+  const alertPosts = feedPosts.filter((post) => post.type === "alerta");
+  const streamGroups = buildNeighborhoodStreamItems({
+    posts: feedPosts,
+    businesses,
+    services,
+    classifieds,
+    gastronomyItems,
+    urls,
+  });
+  const streamItems = streamGroups[activeStreamTab] ?? streamGroups.all;
+  const streamMoreConfig = getNeighborhoodStreamMoreConfig(activeStreamTab, urls);
+  const tabs: NeighborhoodCommunityTab[] = [
+    { id: "all", label: "Tudo", icon: LayoutGrid },
+    { id: "feed", label: "Feed", icon: List },
+    { id: "business", label: "Empresas", icon: Store },
+    { id: "services", label: "Serviços", icon: Wrench },
+    { id: "classifieds", label: "Classificados", icon: Tag },
+    { id: "gastronomy", label: "Gastronomia", icon: UtensilsCrossed },
+    { id: "map", label: "Mapa", icon: MapPin },
+  ];
+
+  return (
+    <main className="city-op-page neighborhood-community-page" data-page="bairro-landing" data-community-home="meu-bairro">
+      <div className="city-op-backdrop neighborhood-community-backdrop" aria-hidden="true">
+        <span />
+      </div>
+
+      <NeighborhoodCommunityHeader
+        cityLabel={cityLabel}
+        cityHref={cityHref}
+        searchQuery={searchQuery}
+        onSearchChange={onSearchChange}
+        onSearchSubmit={onSearchSubmit}
+        theme={theme}
+        onToggleTheme={onToggleTheme}
+        authHref={authHref}
+        authLabel={authLabel}
+        signupHref={signupHref}
+        showSignup={!isAuthenticated}
+      />
+
+      <NeighborhoodTerritoryHero
+        territoryName={territoryName}
+        cityName={cityName}
+        stateLabel={stateLabel}
+        isGroup={isGroup}
+        memberCount={memberCount}
+        population={population}
+        businessCount={businessCount ?? businesses.length}
+        servicesCount={servicesCount ?? services.length}
+        polygons={polygons}
+        markers={markers}
+        enterHref={enterHref}
+        interactionHref={interactionHref}
+        verifyHref={verifyHref}
+        canInteract={canInteract}
+      />
+
+      <section className="neighborhood-community-shell" aria-label={`Meu bairro em ${territoryName}`}>
+        <div className="neighborhood-community-main">
+          <NeighborhoodStream
+            items={streamItems}
+            tabs={tabs}
+            activeTab={activeStreamTab}
+            moreConfig={streamMoreConfig}
+            onTabChange={setActiveStreamTab}
+            canInteract={canInteract}
+            lockedActionHref={lockedActionHref}
+          />
+        </div>
+
+        <aside className="neighborhood-community-sidebar">
+          <section className="neighborhood-community-card neighborhood-community-map" aria-labelledby="neighborhood-community-map-title">
+            <div className="city-op-panel-heading">
+              <h2 id="neighborhood-community-map-title">Mapa do bairro</h2>
+              <Link to={urls.map}>
+                Ver no mapa
+                <ExternalLink aria-hidden="true" />
+              </Link>
+            </div>
+            <CityMapPanel
+              urls={urls}
+              markers={markers}
+              polygons={polygons}
+              resolved={resolved}
+              center={center}
+              cityLabel={territoryName}
+              isLoading={isLoading}
+              onMarkerClick={onMarkerClick}
+              mapStyleUrl={DARK_TILE_STYLE.styleUrl}
+              zoom={mapZoom}
+              showFilters={false}
+              fitTerritoryBounds={polygons.length > 0}
+              territoryFitPadding={14}
+              territoryFitMaxZoom={12.8}
+            />
+            <div className="neighborhood-community-map-legend" aria-label="Categorias do mapa do bairro">
+              <span className="is-blue">
+                <Store aria-hidden="true" />
+                Negócios
+              </span>
+              <span className="is-cyan">
+                <Wrench aria-hidden="true" />
+                Serviços
+              </span>
+              <span className="is-amber">
+                <UtensilsCrossed aria-hidden="true" />
+                Gastronomia
+              </span>
+              <span className="is-green">
+                <Users aria-hidden="true" />
+                Comunidade
+              </span>
+            </div>
+          </section>
+
+          <NeighborhoodGateCard status={accessStatus} loading={residenceLoading} actionHref={interactionHref} />
+          <NeighborhoodStatsPanel
+            population={population}
+            businessCount={businessCount ?? businesses.length}
+            servicesCount={servicesCount ?? services.length}
+          />
+          <NeighborhoodAlertsPanel
+            alerts={alertPosts}
+            alertsHref={withQueryParams(urls.feed, { tab: "alertas" })}
+            actionHref={interactionHref}
+          />
+        </aside>
+      </section>
+
+      <footer className="city-op-footer neighborhood-community-footer">
+        <span>
+          <strong>Achegue-se</strong>
+          <small>{territoryName} - {cityLabel}</small>
+        </span>
+        <nav aria-label="Rodapé do bairro">
+          <Link to="/termos">Termos</Link>
+          <Link to="/privacidade">Privacidade</Link>
+          <Link to={urls.feed}>Feed</Link>
+          <Link to={urls.business}>Empresas</Link>
+          <Link to={communityUrls.groups}>Grupos</Link>
+          <Link to={urls.map}>Mapa</Link>
+        </nav>
+        <small>{new Date().getFullYear()}</small>
+      </footer>
+    </main>
+  );
+}
+
+export default function CidadeLandingPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useAuth();
+  const { theme, toggleTheme } = useTheme();
+  const { state: routeState = "", city: routeCity = "" } = useParams();
+  const [searchQuery, setSearchQuery] = useState("");
+  const territorialContext = useTerritorialContextOptional();
+  const routeResolved = territorialContext?.resolved ?? null;
+  const cityPartsFromResolved = useMemo(() => getCityPartsFromResolved(routeResolved), [routeResolved]);
+  const state = routeState || cityPartsFromResolved.state || "";
+  const city = routeCity || cityPartsFromResolved.city || "";
+  const communityUrls = useCommunityUrls(routeResolved);
+  const moduleTerritory = useModuleTerritoryFilter({
+    routeResolved,
+    nearbyEnabled: false,
+    includeDescendants: true,
+  });
+  const territoryKey = moduleTerritory.resolvedLocationIds.join("|");
+
+  const { data: cityMetadata, isLoading: metadataLoading } = useCityMetadata(state, city);
+  const {
+    businesses: featuredBusinesses,
+    services: featuredServices,
+    classifieds: featuredClassifieds,
+    isLoading: featuredLoading,
+  } = useCityFeatured(state, city, moduleTerritory.territoryFilter);
+  const { data: touristPoints = [] } = useTouristPoints({ state, city, limit: 24 });
+  const { polygons, isLoading: polygonLoading } = useTerritoryPolygon(routeResolved);
+
+  const cityDisplayName = cityMetadata?.city ? toDisplayName(cityMetadata.city) : toDisplayName(city);
+  const stateDisplayName = (cityMetadata?.state || state).toUpperCase();
+  const territoryLabel = `${cityDisplayName}, ${stateDisplayName}`;
+  const cityPath = territorialContext?.baseUrl ?? `/${state}/${city}`;
+  const cityHomeHref = `/${state}/${city}`;
+
+  const cityModuleUrls = useMemo<CityModuleUrls>(
+    () => ({
+      home: cityPath,
+      community: communityUrls.feed,
+      feed: buildCommunityScopedUrl(communityUrls.feed, "feed"),
+      business: buildAppModulePath(APP_MODULE_SLUGS.business, cityPath),
+      gastronomy: buildAppModulePath(APP_MODULE_SLUGS.gastronomy, cityPath),
+      services: buildAppModulePath(APP_MODULE_SLUGS.services, cityPath),
+      classifieds: buildAppModulePath(APP_MODULE_SLUGS.classifieds, cityPath),
+      map: buildAppModulePath(APP_MODULE_SLUGS.map, cityPath),
+      search: buildAppModulePath(APP_MODULE_SLUGS.search, cityPath),
+      publish: withQueryParams(buildCommunityScopedUrl(communityUrls.feed, "feed"), { action: "publicar" }),
+      touristPoints: buildAppModulePath(APP_MODULE_SLUGS.touristPoints, cityPath),
+    }),
+    [cityPath, communityUrls.feed],
+  );
+
+  const neighborhoodCommunityUrls = useMemo<CityModuleUrls>(
+    () => ({
+      home: communityUrls.feed,
+      community: communityUrls.feed,
+      feed: buildCommunityScopedUrl(communityUrls.feed, "feed"),
+      business: buildCommunityScopedUrl(communityUrls.feed, APP_MODULE_SLUGS.business),
+      gastronomy: buildCommunityScopedUrl(communityUrls.feed, APP_MODULE_SLUGS.gastronomy),
+      services: buildCommunityScopedUrl(communityUrls.feed, APP_MODULE_SLUGS.services),
+      classifieds: buildCommunityScopedUrl(communityUrls.feed, APP_MODULE_SLUGS.classifieds),
+      map: buildCommunityScopedUrl(communityUrls.feed, APP_MODULE_SLUGS.map),
+      search: buildAppModulePath(APP_MODULE_SLUGS.search, cityPath),
+      publish: withQueryParams(buildCommunityScopedUrl(communityUrls.feed, "feed"), { action: "publicar" }),
+      touristPoints: buildCommunityScopedUrl(communityUrls.feed, APP_MODULE_SLUGS.map),
+    }),
+    [cityPath, communityUrls.feed],
+  );
+
+  const isNeighborhoodLanding =
+    routeResolved?.kind === "group" ||
+    (routeResolved?.kind === "location" && routeResolved.location.type !== LocationType.CITY);
+  const activeModuleUrls = isNeighborhoodLanding ? neighborhoodCommunityUrls : cityModuleUrls;
+
+  const navItems = useMemo<NavItem[]>(() => {
+    const items: NavItem[] = [
+      { label: "Início", href: cityModuleUrls.home, surface: "home" },
+      { label: "Bairros", href: withQueryParams(cityModuleUrls.search, { tipo: "bairros" }), surface: "search" },
+      { label: "Empresas", href: cityModuleUrls.business, surface: "business" },
+      { label: "Gastronomia", href: cityModuleUrls.gastronomy, surface: "gastronomy" },
+      { label: "Serviços", href: cityModuleUrls.services, surface: "services" },
+      { label: "Classificados", href: cityModuleUrls.classifieds, surface: "classifieds" },
+      { label: "Comunidade", href: cityModuleUrls.community, surface: "community" },
+      { label: "Mapa", href: cityModuleUrls.map, surface: "map" },
+    ];
+    return items.filter((item) => isLaunchSurfaceEnabled(item.surface));
+  }, [cityModuleUrls]);
+
+  const territoryPolygons = useMemo(() => {
+    if (polygons.length > 0) return polygons;
+    const isResolvedCity = routeResolved?.kind === "location" && routeResolved.location.type === LocationType.CITY;
+    return isResolvedCity && isSalvadorRoute(state, city) ? salvadorFallbackTerritoryPolygons : [];
+  }, [city, polygons, routeResolved, state]);
+
+  const mapBounds = useMemo<BoundingBox>(() => {
+    return getBoundsFromPolygons(territoryPolygons) ?? (isSalvadorRoute(state, city) ? salvadorBounds : salvadorBounds);
+  }, [city, state, territoryPolygons]);
+
+  const territoryCenter = useMemo<Coordinates>(() => {
+    return (
+      getCenterFromPolygons(territoryPolygons) ??
+      getResolvedTerritoryCenter(routeResolved) ??
+      moduleTerritory.centerCoords ??
+      getLocationCenter(moduleTerritory.location) ??
+      (isSalvadorRoute(state, city) ? salvadorCenter : null) ??
+      salvadorCenter
+    );
+  }, [city, moduleTerritory.centerCoords, moduleTerritory.location, routeResolved, state, territoryPolygons]);
+
+  const weatherLabel = routeResolved ? getResolvedTerritoryName(routeResolved, territoryLabel) : territoryLabel;
+  const temperature = useCurrentTemperature(territoryCenter, weatherLabel);
+
+  const cityLocationId =
+    routeResolved?.kind === "location" ? routeResolved.location.id : moduleTerritory.location?.id ?? null;
+
+  const { data: cityDistricts = [], isLoading: districtsLoading } = useQuery({
+    queryKey: ["city-landing", "districts", cityLocationId],
+    queryFn: async () => {
+      if (!cityLocationId) return [];
+      const output = await locationReadService.getDescendants({
+        location_id: cityLocationId,
+        include_self: false,
+        page_size: 200,
+      });
+      return output.descendants.filter(
+        (location) =>
+          location.status === LocationStatus.ACTIVE &&
+          (location.type === LocationType.DISTRICT || location.type === LocationType.NEIGHBORHOOD),
+      );
+    },
+    enabled: Boolean(cityLocationId),
+    staleTime: 10 * 60 * 1000,
+  });
+
+  const { data: territoryStats } = useQuery({
+    queryKey: ["city-landing", "territory-stats", territoryKey],
+    queryFn: () => LandingFeaturedService.getTerritoryStats(moduleTerritory.territoryFilter),
+    enabled: moduleTerritory.territoryFilter.scope !== "none",
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: runtimeMapMarkers = [] } = useQuery({
+    queryKey: [
+      "city-landing",
+      "map-markers",
+      territoryKey,
+      activeModuleUrls.community,
+      mapBounds.map((value) => value.toFixed(4)).join(","),
+    ],
+    queryFn: () => fetchCityMapMarkers(mapBounds, moduleTerritory.territoryFilter, activeModuleUrls),
+    enabled: moduleTerritory.territoryFilter.scope !== "none",
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const touristMarkers = useMemo(
+    () => buildTouristPointMarkers(touristPoints, activeModuleUrls),
+    [activeModuleUrls, touristPoints],
+  );
+  const locationMarkers = useMemo(
+    () => buildLocationMarkers(cityDistricts, mapBounds, cityPath),
+    [cityDistricts, cityPath, mapBounds],
+  );
+  const mapMarkers = useMemo(
+    () => {
+      const resolvedMarkers = [...runtimeMapMarkers, ...touristMarkers, ...locationMarkers].slice(0, 240);
+      return resolvedMarkers.length > 0 ? resolvedMarkers : [buildTerritoryAnchorMarker(territoryCenter, territoryLabel, activeModuleUrls)];
+    },
+    [activeModuleUrls, locationMarkers, runtimeMapMarkers, territoryCenter, territoryLabel, touristMarkers],
+  );
+  const mapMarkersById = useMemo(
+    () => new globalThis.Map(mapMarkers.map((marker) => [marker.id, marker])),
+    [mapMarkers],
+  );
+  const communityFeed = useCommunityFeedSimple({
+    locationScope: "neighborhood",
+    territoryFilter: moduleTerritory.territoryFilter,
+    limit: 8,
+  });
+  const authUserId = typeof user?.id === "string" ? user.id : null;
+  const { data: primaryResidence, isLoading: residenceLoading } = useQuery({
+    queryKey: ["bairro-landing", "primary-residence", authUserId],
+    queryFn: () => residenceService.getPrimaryResidenceWithRelations(authUserId as string),
+    enabled: Boolean(authUserId),
+    staleTime: 2 * 60 * 1000,
+  });
+  const isResidenceVerifiedInTerritory = useMemo(() => {
+    if (!primaryResidence?.is_verified || !primaryResidence.location_id) return false;
+    return moduleTerritory.resolvedLocationIds.includes(primaryResidence.location_id);
+  }, [moduleTerritory.resolvedLocationIds, primaryResidence]);
+  const neighborhoodAccessStatus = getNeighborhoodAccessStatus(Boolean(user), isResidenceVerifiedInTerritory);
+
+  const metadataDistrictCards = useMemo<DistrictCard[]>(
+    () =>
+      (cityMetadata?.featured_districts ?? []).map((district, index) => ({
+        name: district.name,
+        description: district.description || `Explore ${district.name}`,
+        image: district.image_url || districtImages[index % districtImages.length],
+        href: `${cityPath}/${slugify(district.name)}`,
+        meta: district.posts_count
+          ? `${formatMetric(district.posts_count)} posts`
+          : district.residents_count
+            ? `${formatMetric(district.residents_count)} moradores`
+            : "Explorar",
+      })),
+    [cityMetadata?.featured_districts, cityPath],
+  );
+
+  const locationDistrictCards = useMemo<DistrictCard[]>(
+    () =>
+      cityDistricts.map((location, index) => ({
+        name: location.name,
+        description: location.full_name || location.name,
+        image: districtImages[index % districtImages.length],
+        href: `${cityPath}/${location.slug}`,
+        meta: location.type === LocationType.NEIGHBORHOOD ? "Bairro" : "Distrito",
+      })),
+    [cityDistricts, cityPath],
+  );
+
+  const districtCards = (metadataDistrictCards.length > 0 ? metadataDistrictCards : locationDistrictCards).slice(0, 4);
+  const gastronomyItems = featuredBusinesses.filter(isGastronomyBusiness);
+  const servicePreview = getServicePreview(featuredServices);
+
+  const stats: StatCard[] = [
+    {
+      label: "Bairros",
+      value: formatMetric(firstMetric(cityMetadata?.districts_count, cityDistricts.length)),
+      href: withQueryParams(cityModuleUrls.search, { tipo: "bairros" }),
+      icon: Building2,
+      tone: "cyan",
+    },
+    {
+      label: "Empresas",
+      value: formatMetric(firstMetric(cityMetadata?.active_businesses, territoryStats?.businesses, featuredBusinesses.length)),
+      href: cityModuleUrls.business,
+      icon: Store,
+      tone: "blue",
+    },
+    {
+      label: "Profissionais",
+      value: formatMetric(firstMetric(cityMetadata?.professionals_count, territoryStats?.services, featuredServices.length)),
+      href: cityModuleUrls.services,
+      icon: Users,
+      tone: "amber",
+    },
+    {
+      label: "Classificados",
+      value: formatMetric(firstMetric(territoryStats?.classifieds, featuredClassifieds.length)),
+      href: cityModuleUrls.classifieds,
+      icon: Tag,
+      tone: "pink",
+    },
+  ];
 
   const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const query = searchQuery.trim();
-    const target = "/buscar/" + state + "/" + city + (query ? "?q=" + encodeURIComponent(query) : "");
-    navigate(target);
+    navigate(query ? withQueryParams(activeModuleUrls.search, { q: query }) : activeModuleUrls.search);
   };
 
-  const heroModules = [
-    { icon: Store, label: "Empresas", value: "Negócios locais", path: cityModuleUrls.business },
-    { icon: Wrench, label: "Serviços", value: "Profissionais", path: cityModuleUrls.services },
-    { icon: Tag, label: "Classificados", value: "Compra e venda", path: cityModuleUrls.classifieds },
-    { icon: Briefcase, label: "Vagas", value: "Oportunidades", path: cityModuleUrls.jobs },
-  ];
-
-  // Estatísticas dinâmicas da cidade
-  const CITY_STATS = [
-    { icon: MapPinned, value: formatMetric(cityMetadata?.districts_count), label: "Bairros", color: "text-cyan-200", bg: "bg-cyan-400/15", border: "border-cyan-200/20" },
-    { icon: Users, value: formatMetric(cityMetadata?.population), label: "Habitantes", color: "text-amber-200", bg: "bg-amber-400/15", border: "border-amber-200/20" },
-    { icon: Store, value: formatMetric(cityMetadata?.active_businesses), label: "Empresas ativas", color: "text-emerald-200", bg: "bg-emerald-400/15", border: "border-emerald-200/20" },
-    { icon: GraduationCap, value: formatMetric(cityMetadata?.schools_count), label: "Escolas", color: "text-sky-200", bg: "bg-sky-400/15", border: "border-sky-200/20" },
-    { icon: Wrench, value: formatMetric(cityMetadata?.professionals_count), label: "Profissionais", color: "text-fuchsia-200", bg: "bg-fuchsia-400/15", border: "border-fuchsia-200/20" },
-  ];
-
-  const featuredDistricts = cityMetadata?.featured_districts?.length
-    ? cityMetadata.featured_districts.slice(0, 4).map((district) => ({
-        nome: district.name,
-        resumo: district.description || "Sem descrição cadastrada",
-        imagem: district.image_url || "",
-      }))
-    : [];
-
-  const emergencyContacts = cityMetadata?.emergency_contacts?.length
-    ? cityMetadata.emergency_contacts.map((contact) => ({
-        nome: contact.name,
-        telefone: contact.phone,
-        icone: contact.name.toLowerCase().includes("bombeiro")
-          ? Flame
-          : contact.name.toLowerCase().includes("defesa")
-            ? AlertTriangle
-            : contact.name.toLowerCase().includes("pol")
-              ? Shield
-              : Ambulance,
-        cor: "text-destructive",
-      }))
-    : [];
-
-  const utilityContacts = cityMetadata?.utility_contacts?.length
-    ? cityMetadata.utility_contacts.map((contact) => ({
-        nome: contact.name,
-        telefone: contact.phone,
-        tipo: contact.type,
-      }))
-    : [];
-
-  const cityHallInfo = cityMetadata?.city_hall_info ?? null;
-  const prefeituraInfo = {
-    nome: cityHallInfo?.name || `Prefeitura de ${cityDisplayName}`,
-    endereco: cityHallInfo?.address || "Endereço municipal não informado",
-    telefone: cityHallInfo?.phone || "Não informado",
-    email: cityHallInfo?.email || "Não informado",
-    site: cityHallInfo?.website || "",
-    horario: cityHallInfo?.hours || "Não informado",
-    instagram: cityHallInfo?.social?.instagram || "",
-    facebook: cityHallInfo?.social?.facebook || "",
-    twitter: cityHallInfo?.social?.twitter || "",
-    youtube: cityHallInfo?.social?.youtube || "",
-  };
-  const civicChannels = [];
-
-  const electedCards = cityMetadata?.elected_officials
-    ? [
-        ...(cityMetadata.elected_officials.executive ?? []).map((official) => ({
-          nome: official.name,
-          cargo: official.position || "Executivo Municipal",
-          partido: official.party,
-          mandato: official.term || "Mandato atual",
-        })),
-        ...(cityMetadata.elected_officials.legislative?.featured ?? []).slice(0, 2).map((official) => ({
-          nome: official.name,
-          cargo: official.position || "Legislativo Municipal",
-          partido: official.party,
-          mandato: official.term || "Mandato atual",
-        })),
-      ].slice(0, 3)
-    : [];
-
-  const scrollTo = (id: string) => {
-    if (id.startsWith("#")) {
-      document.getElementById(id.slice(1))?.scrollIntoView({ behavior: "smooth" });
-    } else {
-      navigate(id);
-    }
+  const handleMarkerClick = (id: string) => {
+    const marker = mapMarkersById.get(id);
+    if (marker?.url) navigate(marker.url);
   };
 
-  const handleFeaturedBusinessClick = async (business: (typeof businesses)[number]) => {
-    if (!business.slug || !business.geographic_path) return;
+  if (!state || !city) {
+    return (
+      <main className="city-op-missing-route">
+        <h1>Cidade não informada</h1>
+        <p>Use uma rota territorial com UF e cidade.</p>
+      </main>
+    );
+  }
 
-    const url = await BusinessUrlService.getCanonicalUrlWithResolvedCommunityAlias({
-      id: business.id,
-      slug: business.slug,
-      is_premium: business.is_premium,
-      geographic_path: business.geographic_path,
-    });
-    navigate(url);
-  };
+  if (
+    isNeighborhoodLanding &&
+    routeResolved &&
+    territorialContext?.communityBaseUrl &&
+    territorialContext.communityBaseUrl !== territorialContext.baseUrl &&
+    !location.pathname.startsWith(territorialContext.communityBaseUrl)
+  ) {
+    return <Navigate to={`${territorialContext.communityBaseUrl}${location.search}${location.hash}`} replace />;
+  }
+
+  if (isNeighborhoodLanding && routeResolved) {
+    return (
+      <NeighborhoodLandingContent
+        urls={neighborhoodCommunityUrls}
+        communityUrls={communityUrls}
+        cityLabel={territoryLabel}
+        cityHref={cityHomeHref}
+        cityName={cityDisplayName}
+        stateLabel={stateDisplayName}
+        resolved={routeResolved}
+        markers={mapMarkers}
+        polygons={territoryPolygons}
+        center={territoryCenter}
+        businesses={featuredBusinesses}
+        services={featuredServices}
+        classifieds={featuredClassifieds}
+        gastronomyItems={gastronomyItems}
+        feedPosts={communityFeed.posts}
+        stats={territoryStats}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onSearchSubmit={handleSearchSubmit}
+        onMarkerClick={handleMarkerClick}
+        theme={theme}
+        onToggleTheme={toggleTheme}
+        authHref={user ? "/conta" : "/login"}
+        authLabel={user ? "Conta" : "Entrar"}
+        isAuthenticated={Boolean(user)}
+        accessStatus={neighborhoodAccessStatus}
+        residenceLoading={residenceLoading}
+        isLoading={polygonLoading || featuredLoading || moduleTerritory.isLoading}
+      />
+    );
+  }
 
   return (
-    <div className="min-h-screen w-full bg-background text-foreground flex flex-col">
+    <main className="city-op-page" data-page="cidade-landing">
+      <div className="city-op-backdrop" aria-hidden="true">
+        <img src={heroImg} alt="" />
+        <span />
+      </div>
 
-      {/* A. HERO */}
-      <section className="relative flex min-h-[620px] w-full items-center overflow-hidden md:min-h-[720px]">
-        <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-[linear-gradient(120deg,hsl(var(--background)/0.98)_0%,hsl(var(--background)/0.92)_42%,hsl(var(--background)/0.84)_100%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_82%_18%,rgba(251,191,36,0.18),transparent_35%),radial-gradient(circle_at_15%_78%,rgba(6,182,212,0.18),transparent_42%)]" />
-          <div className="absolute inset-x-0 bottom-0 h-52 bg-gradient-to-t from-background via-background/74 to-transparent" />
-        </div>
-
-        <div className="relative mx-auto grid w-full max-w-7xl items-center gap-10 px-4 py-20 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(340px,0.62fr)] lg:py-24">
-          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: "easeOut" }}>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2, duration: 0.5 }}
-              className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-white shadow-2xl shadow-black/20 backdrop-blur-md"
-            >
-              <MapPin className="h-4 w-4 text-amber-200" />
-              <span className="text-xs font-bold uppercase tracking-[0.22em]">
-                {heroBadgeText}
-              </span>
-            </motion.div>
-            {updatedAtLabel && (
-              <p className="mb-3 text-xs text-white/70">Dados municipais atualizados em {updatedAtLabel}</p>
-            )}
-
-            <h1 className="max-w-4xl text-5xl font-black leading-[0.95] tracking-[-0.06em] text-white drop-shadow-2xl sm:text-6xl md:text-7xl lg:text-8xl">
-              {cityDisplayName}
-              <span className="block bg-gradient-to-r from-amber-200 via-orange-300 to-cyan-200 bg-clip-text text-transparent">
-                em tempo real
-              </span>
-            </h1>
-
-            <p className="mt-6 max-w-2xl text-base leading-8 text-white/82 md:text-lg">
-              {cityDescription}
-            </p>
-
-            <form onSubmit={handleSearchSubmit} className="mt-8 max-w-2xl rounded-2xl border border-white/15 bg-white/12 p-2 shadow-2xl shadow-black/25 backdrop-blur-xl">
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <div className="relative flex-1">
-                  <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/55" />
-                  <Input
-                    value={searchQuery}
-                    onChange={(event) => setSearchQuery(event.target.value)}
-                    placeholder={searchPlaceholder}
-                    className="h-12 border-white/10 bg-black/24 pl-12 text-white placeholder:text-white/48 focus-visible:ring-amber-300"
-                  />
-                </div>
-                <Button type="submit" className="h-12 rounded-xl bg-amber-300 px-6 font-black text-slate-950 hover:bg-amber-200">
-                  Buscar
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
-            </form>
-
-            <div className="mt-7 flex flex-wrap gap-3">
-              <Button onClick={() => navigate(user ? communityUrl : "/login")} className="h-12 rounded-full bg-white text-slate-950 hover:bg-white/90">
-                {user ? "Ver meu bairro" : "Entrar na comunidade"}
-                <Users className="ml-2 h-4 w-4" />
-              </Button>
-              <Button variant="outline" onClick={() => scrollTo("#turismo")} className="h-12 rounded-full border-white/24 bg-white/8 text-white hover:bg-white/16 hover:text-white">
-                Explorar turismo
-                <Camera className="ml-2 h-4 w-4" />
-              </Button>
-            </div>
-
-            <div className="mt-8 grid max-w-3xl grid-cols-2 gap-3 sm:grid-cols-4">
-              {heroModules.map((module, index) => (
-                <motion.button
-                  key={module.label}
-                  type="button"
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.18 + index * 0.06 }}
-                  onClick={() => navigate(module.path)}
-                  className="group rounded-2xl border border-white/20 bg-background/20 p-4 text-left text-white shadow-xl shadow-black/10 backdrop-blur-md transition hover:-translate-y-1 hover:border-primary/60 hover:bg-background/35"
-                >
-                  <module.icon className="mb-3 h-5 w-5 text-amber-200 transition group-hover:scale-110" />
-                  <span className="block text-sm font-black">{module.label}</span>
-                  <span className="mt-1 block text-xs text-white/58">{module.value}</span>
-                </motion.button>
-              ))}
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, scale: 0.96, y: 22 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ delay: 0.28, duration: 0.7, ease: "easeOut" }}
-            className="relative hidden lg:block"
-          >
-            <div className="absolute -left-8 -top-8 h-32 w-32 rounded-full bg-amber-300/25 blur-3xl" />
-            <div className="absolute -bottom-10 right-0 h-40 w-40 rounded-full bg-cyan-300/20 blur-3xl" />
-            <div className="rounded-[2rem] border border-white/18 bg-white/10 p-6 text-white shadow-2xl shadow-black/30 backdrop-blur-xl">
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-200">Dados territoriais</p>
-              <p className="mt-2 text-2xl font-black">{cityDisplayName}</p>
-              <p className="mt-1 text-sm text-white/70">{stateDisplayName}</p>
-              <div className="mt-6 grid grid-cols-1 gap-3">
-                {CITY_STATS.slice(0, 3).map((stat) => (
-                  <div key={`hero-${stat.label}`} className="rounded-xl border border-white/15 bg-white/5 p-3">
-                    <p className="text-xs text-white/70">{stat.label}</p>
-                    <p className="text-lg font-bold text-white">{stat.value}</p>
-                  </div>
-                ))}
-              </div>
-              {updatedAtLabel && (
-                <p className="mt-5 text-xs text-white/70">Atualizado em {updatedAtLabel}</p>
-              )}
-              <div className="mt-5">
-                <Button
-                  variant="outline"
-                  onClick={() => scrollTo("#turismo")}
-                  className="w-full border-white/20 bg-white/5 text-white hover:bg-white/10"
-                >
-                  Explorar cidade
-                  <ChevronRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* CARDS DE ESTATISTICAS */}
-      <section className="relative z-10 mt-0 w-full pb-8 pt-6">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="grid gap-3 rounded-[1.75rem] border border-border bg-card p-3 shadow-sm sm:grid-cols-2 lg:grid-cols-5">
-            {CITY_STATS.map((stat, i) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.03 * i }}
-                whileHover={{ y: -4 }}
-                whileTap={{ scale: 0.95 }}
-                className={["group rounded-2xl border p-4 text-foreground transition duration-200 hover:border-primary/30", stat.border, stat.bg].join(" ")}
-              >
-                <div className="mb-4 flex items-center justify-between">
-                  <stat.icon className={["h-5 w-5", stat.color].join(" ")} />
-                  {metadataLoading && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
-                </div>
-                <span className="block text-2xl font-black leading-none tracking-tight">{stat.value}</span>
-                <span className="mt-1 block text-xs font-medium text-muted-foreground">{stat.label}</span>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-8 md:pb-10 w-full">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">Bairros em Destaque</h2>
-            <p className="text-sm text-muted-foreground mt-1">Panorama territorial para navegar {cityDisplayName} por região</p>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {featuredDistricts.length > 0 ? (
-            featuredDistricts.map((bairro, i) => (
-              <motion.article
-                key={bairro.nome}
-                {...fadeUp}
-                transition={{ delay: i * 0.06 }}
-                className="group overflow-hidden rounded-2xl border border-border bg-card hover:border-primary/30 hover:shadow-lg transition-all"
-              >
-                {bairro.imagem ? (
-                  <div className="h-32 overflow-hidden">
-                    <img src={bairro.imagem} alt={`Foto de ${bairro.nome}, ${cityDisplayName}`} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                  </div>
-                ) : null}
-                <div className="p-4">
-                  <h3 className="text-sm font-bold text-foreground mb-1">{bairro.nome}</h3>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{bairro.resumo}</p>
-                </div>
-              </motion.article>
-            ))
-          ) : (
-            <div className="col-span-full rounded-2xl border border-border bg-card p-6 text-center text-sm text-muted-foreground">
-              Ainda não há bairros em destaque cadastrados para {cityDisplayName}.
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* Empresas reais da cidade */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8 md:py-10 w-full">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">Empresas em Destaque</h2>
-            <p className="text-sm text-muted-foreground mt-1">Negócios locais verificados</p>
-          </div>
-          <Button
-            variant="outline"
-            onClick={() => navigate(cityModuleUrls.business)}
-            className="border-border text-muted-foreground hover:border-primary hover:text-primary font-medium text-sm rounded-xl hidden sm:flex"
-          >
-            Ver todas
-          </Button>
-        </div>
-
-        {featuredLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          </div>
-        ) : businesses.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {businesses.map((business) => {
-              return (
-                <motion.div
-                  key={business.id}
-                  {...fadeUp}
-                  onClick={() => {
-                    void handleFeaturedBusinessClick(business);
-                  }}
-                  className="bg-card border rounded-2xl p-5 hover:shadow-xl transition-all cursor-pointer group border-border hover:border-primary/30"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="h-14 w-14 rounded-xl bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center">
-                      <BusinessLogo
-                        name={business.name}
-                        logoUrl={business.logo_url}
-                        alt={business.name}
-                        initialsClassName="text-xl"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="mb-2 flex flex-wrap items-center gap-2">
-                        <h3 className="max-w-full break-words pr-1 text-base font-bold leading-snug text-foreground group-hover:text-primary transition-colors">
-                          {business.name}
-                        </h3>
-                        {business.is_verified && <BadgeCheck className="h-4 w-4 text-blue-500 flex-shrink-0" />}
-                        {business.is_premium && (
-                          <span className="text-[9px] bg-amber-500/15 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded font-bold">
-                            PRO
-                          </span>
-                        )}
-                      </div>
-                      <p className="mb-2 text-sm text-muted-foreground">{formatCategory(business.category)}</p>
-                      {business.rating > 0 && (
-                        <div className="flex items-center gap-1.5">
-                          <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
-                          <span className="text-sm font-medium text-foreground">{business.rating.toFixed(1)}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="text-center py-16 text-muted-foreground">
-            <Store className="h-12 w-12 mx-auto mb-3 opacity-30" />
-            <p className="text-sm">Nenhuma empresa cadastrada ainda</p>
-          </div>
-        )}
-      </section>
-
-      {/* SERVIÇOS REAIS DA CIDADE */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8 md:py-10 w-full">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">Profissionais em Destaque</h2>
-            <p className="text-sm text-muted-foreground mt-1">Serviços verificados na cidade</p>
-          </div>
-          <Button
-            variant="outline"
-            onClick={() => navigate(cityModuleUrls.services)}
-            className="border-border text-muted-foreground hover:border-primary hover:text-primary font-medium text-sm rounded-xl hidden sm:flex"
-          >
-            Ver todos
-          </Button>
-        </div>
-
-        {featuredLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          </div>
-        ) : services.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {services.map((service) => {
-              return (
-                <motion.div
-                  key={service.id}
-                  {...fadeUp}
-                  onClick={() => navigate(cityModuleUrls.services)}
-                  className="bg-card border rounded-2xl p-5 hover:shadow-xl transition-all cursor-pointer group border-border hover:border-violet-500/30"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="h-14 w-14 rounded-xl bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center">
-                      <BusinessLogo
-                        name={service.name}
-                        logoUrl={service.logo_url}
-                        alt={service.name}
-                        initialsClassName="text-xl"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="mb-2 flex flex-wrap items-center gap-2">
-                        <h3 className="max-w-full break-words pr-1 text-base font-bold leading-snug text-foreground group-hover:text-violet-500 transition-colors">
-                          {service.name}
-                        </h3>
-                        {service.is_verified && <BadgeCheck className="h-4 w-4 text-blue-500 flex-shrink-0" />}
-                      </div>
-                      <p className="mb-2 text-sm text-muted-foreground">{formatCategory(service.category)}</p>
-                      {service.price_range && (
-                        <p className="text-sm text-violet-500 font-semibold">{service.price_range}</p>
-                      )}
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="text-center py-16 text-muted-foreground">
-            <Wrench className="h-12 w-12 mx-auto mb-3 opacity-30" />
-            <p className="text-sm">Nenhum profissional cadastrado ainda</p>
-          </div>
-        )}
-      </section>
-
-      {/* Classificados reais da cidade */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8 md:py-10 w-full">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">Classificados Recentes</h2>
-            <p className="text-sm text-muted-foreground mt-1">Anúncios ativos na cidade</p>
-          </div>
-          <Button
-            variant="outline"
-            onClick={() => navigate(cityModuleUrls.classifieds)}
-            className="border-border text-muted-foreground hover:border-primary hover:text-primary font-medium text-sm rounded-xl hidden sm:flex"
-          >
-            Ver todos
-          </Button>
-        </div>
-
-        {featuredLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          </div>
-        ) : classifieds.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {classifieds.map((classified) => {
-              const thumb = classified.photos?.[0];
-
-              const publicUrl = classifiedUrlService.buildPublicUrl(classified);
-
-              return (
-                <motion.div
-                  key={classified.id}
-                  {...fadeUp}
-                  onClick={() => {
-                    if (publicUrl) navigate(publicUrl);
-                  }}
-                  className="bg-card border rounded-2xl p-5 hover:shadow-xl transition-all cursor-pointer group border-border hover:border-orange-500/30"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="h-14 w-14 rounded-xl bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center">
-                      {thumb ? (
-                        <img src={thumb} alt={classified.titulo} className="h-full w-full object-cover" />
-                      ) : (
-                        <Tag className="h-6 w-6 text-muted-foreground" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-base font-bold truncate mb-1.5 text-foreground group-hover:text-orange-500 transition-colors">
-                        {classified.titulo}
-                      </h3>
-                      <p className="text-sm text-muted-foreground truncate mb-2">{formatCategory(classified.category)}</p>
-                      <p className="text-base font-bold text-orange-500">{formatPrice(classified.price)}</p>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="text-center py-16 text-muted-foreground">
-            <Tag className="h-12 w-12 mx-auto mb-3 opacity-30" />
-            <p className="text-sm">Nenhum classificado ativo no momento</p>
-          </div>
-        )}
-      </section>
-
-      {/* Vagas de emprego */}
-      <section id="vagas" className="w-full bg-gradient-to-br from-primary/8 via-card to-accent/8 border-y border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 md:py-10 text-center">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <Briefcase className="h-5 w-5 text-primary" />
-            <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">Vagas de Emprego</h2>
-          </div>
-          <p className="text-sm text-muted-foreground">Oportunidades de trabalho em {cityDisplayName}</p>
-          <div className="mt-6">
-            <Button
-              variant="outline"
-              className="border-primary/30 text-primary hover:bg-primary/10 font-semibold rounded-xl h-11 px-6"
-              onClick={() => navigate(cityModuleUrls.jobs)}
-            >
-              Ver vagas da cidade <ArrowRight className="h-4 w-4 ml-2" />
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* E. PONTOS TURÍSTICOS */}
-      <section id="turismo" className="max-w-7xl mx-auto px-4 sm:px-6 py-12 md:py-16 w-full">
-        <div className="flex items-center justify-between mb-8">
-          <div className="text-center flex-1">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <Camera className="h-5 w-5 text-warning" />
-              <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">Pontos Turísticos</h2>
-            </div>
-            <p className="text-sm text-muted-foreground">Descubra as belezas de {cityDisplayName}</p>
-          </div>
-          <Button
-            variant="outline"
-            onClick={() => navigate(cityModuleUrls.touristPoints)}
-            className="border-warning/30 text-warning hover:bg-warning/10 font-semibold text-sm rounded-lg hidden sm:flex"
-          >
-            Ver todos <ArrowRight className="h-4 w-4 ml-2" />
-          </Button>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {touristPoints.length > 0 ? touristPoints.map((ponto, i) => (
-              <motion.div
-              key={ponto.id}
-              {...fadeUp}
-              transition={{ delay: i * 0.08 }}
-              className={`bg-card border rounded-2xl p-5 hover:shadow-xl transition-all cursor-pointer ${
-                ponto.is_featured
-                  ? "border-warning/30 hover:border-warning/50"
-                  : "border-border hover:border-primary/30"
-              }`}
-              onClick={() => navigate(`${cityModuleUrls.touristPoints}/${ponto.slug}`)}
-            >
-              <div className="space-y-3">
-                {ponto.photo_url && (
-                  <div className="h-32 w-full overflow-hidden rounded-xl">
-                    <img src={ponto.photo_url} alt={ponto.name} className="h-full w-full object-cover" />
-                  </div>
-                )}
-                <div className="flex items-start gap-3">
-                  {(() => {
-                    const TouristIcon = CATEGORY_ICONS[ponto.category] ?? MapPin;
-                    return <TouristIcon className="h-7 w-7 shrink-0 text-warning" aria-hidden="true" />;
-                  })()}
-                  <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-sm font-bold text-foreground">{ponto.name}</h3>
-                    {ponto.is_featured && (
-                      <Star className="h-3 w-3 text-warning fill-warning" />
-                    )}
-                  </div>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{ponto.short_description || ponto.description}</p>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )) : (
-            <div className="col-span-full rounded-2xl border border-border bg-card p-6 text-center text-sm text-muted-foreground">
-              Ainda não há pontos turísticos cadastrados para {cityDisplayName}.
-            </div>
-          )}
-        </div>
-
-        {/* Mobile CTA */}
-        <div className="text-center mt-6 sm:hidden">
-          <Button
-            variant="outline"
-            className="border-warning/30 text-warning hover:bg-warning/10 font-semibold rounded-lg"
-            onClick={() => navigate(cityModuleUrls.touristPoints)}
-          >
-            Ver todos os pontos <ArrowRight className="h-4 w-4 ml-2" />
-          </Button>
-        </div>
-      </section>
-
-      <CityElectedOfficialsSection electedCards={electedCards} cityDisplayName={cityDisplayName} />
-      <CityUsefulContactsSection
-        emergencyContacts={emergencyContacts}
-        utilityContacts={utilityContacts}
-        civicChannels={civicChannels}
-        cityDisplayName={cityDisplayName}
-      />
-      <CityCommunityCtaSection
-        isAuthenticated={Boolean(user)}
-        cityDisplayName={cityDisplayName}
-        onOpenCommunity={() => navigate(user ? communityUrl : "/login")}
-        onOpenBusiness={() => navigate(cityModuleUrls.business)}
-      />
-      <CityHallFooter
-        prefeituraInfo={prefeituraInfo}
-        cityDisplayName={cityDisplayName}
-        stateCode={state.toUpperCase()}
-        onNavigate={navigate}
-        communityUrl={communityUrl}
-        businessPath={cityModuleUrls.business}
-        servicesPath={cityModuleUrls.services}
-        classifiedsPath={cityModuleUrls.classifieds}
+      <CityHeader
+        navItems={navItems}
+        cityLabel={territoryLabel}
+        theme={theme}
+        onToggleTheme={toggleTheme}
+        publishHref={cityModuleUrls.publish}
+        authHref={user ? "/conta" : "/login"}
+        authLabel={user ? "Conta" : "Entrar"}
       />
 
-    </div>
+      <section className="city-op-hero-layout">
+        <div className="city-op-intro">
+          <div className="city-op-chip-row" aria-label="Status territorial">
+            <span>
+              <MapPin aria-hidden="true" />
+              {territoryLabel}
+            </span>
+            <span aria-label={temperature.ariaLabel}>
+              <CloudSun aria-hidden="true" />
+              {temperature.isLoading ? "..." : temperature.label}
+            </span>
+            <span>
+              <ShieldCheck aria-hidden="true" />
+              Mapa ativo
+            </span>
+          </div>
+
+          <h1>
+            <span>{cityDisplayName}</span> em tempo real
+          </h1>
+          <p>
+            Explore bairros, empresas, serviços e tudo que acontece na cidade com busca territorial e mapa vivo.
+          </p>
+
+          <form className="city-op-search" onSubmit={handleSearchSubmit}>
+            <Search aria-hidden="true" />
+            <input
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder={`Buscar em ${cityDisplayName}`}
+              aria-label={`Buscar em ${cityDisplayName}`}
+            />
+            <button type="submit" aria-label="Buscar">
+              <Search aria-hidden="true" />
+            </button>
+          </form>
+
+          <div className="city-op-meta-line">
+            <span>
+              <MapPin aria-hidden="true" />
+              {territoryLabel}
+            </span>
+            <span>{new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "2-digit", month: "long" }).format(new Date())}</span>
+            <span>{servicePreview}</span>
+          </div>
+
+          <StatGrid stats={stats} />
+        </div>
+
+        <CityMapPanel
+          urls={cityModuleUrls}
+          markers={mapMarkers}
+          polygons={territoryPolygons}
+          resolved={routeResolved}
+          center={territoryCenter}
+          cityLabel={cityDisplayName}
+          isLoading={false}
+          onMarkerClick={handleMarkerClick}
+        />
+      </section>
+
+      <section className="city-op-content-grid" aria-label={`Resumo operacional de ${cityDisplayName}`}>
+        <DistrictsPanel
+          cards={districtCards}
+          href={withQueryParams(cityModuleUrls.search, { tipo: "bairros" })}
+          isLoading={districtsLoading || metadataLoading}
+        />
+        <NearbyBusinessesPanel businesses={featuredBusinesses} href={cityModuleUrls.business} />
+        <GastronomyPanel items={gastronomyItems} href={cityModuleUrls.gastronomy} />
+        <CommunityPanel
+          urls={cityModuleUrls}
+          cityLabel={cityDisplayName}
+          isAuthenticated={Boolean(user)}
+          classifieds={featuredClassifieds}
+        />
+      </section>
+
+      <section className="city-op-trust-strip" aria-label="Confiança da plataforma">
+        <Link to={cityModuleUrls.community}>
+          <ShieldCheck aria-hidden="true" />
+          <span>
+            <strong>Território verificado</strong>
+            <small>Conteúdo moderado e contexto local</small>
+          </span>
+        </Link>
+        <Link to={cityModuleUrls.map}>
+          <MapIcon aria-hidden="true" />
+          <span>
+            <strong>Mapa vivo</strong>
+            <small>Área de {cityDisplayName} com pins agrupados</small>
+          </span>
+        </Link>
+        <Link to={cityModuleUrls.community}>
+          <Heart aria-hidden="true" />
+          <span>
+            <strong>Comunidade ativa</strong>
+            <small>{featuredLoading ? "Atualizando dados" : "Empresas, anúncios e conversas locais"}</small>
+          </span>
+        </Link>
+        <Link to={cityModuleUrls.search}>
+          <Repeat2 aria-hidden="true" />
+          <span>
+            <strong>Busca territorial</strong>
+            <small>Resultados conectados ao território atual</small>
+          </span>
+        </Link>
+      </section>
+
+      <footer className="city-op-footer">
+        <span>
+          <strong>Achegue-se</strong>
+          <small>{territoryLabel}</small>
+        </span>
+        <nav aria-label="Rodapé da cidade">
+          <Link to="/termos">Termos</Link>
+          <Link to="/privacidade">Privacidade</Link>
+          <Link to={cityModuleUrls.business}>Empresas</Link>
+          <Link to={cityModuleUrls.community}>Comunidade</Link>
+        </nav>
+        <small>{new Date().getFullYear()}</small>
+      </footer>
+    </main>
   );
+}
+
+function getServicePreview(services: FeaturedService[]): string {
+  const category = services.find((service) => service.category)?.category;
+  return category ? `${formatCategory(category)} em destaque` : "Serviços locais";
 }

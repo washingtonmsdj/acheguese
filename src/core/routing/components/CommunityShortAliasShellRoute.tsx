@@ -116,7 +116,7 @@ export function CommunityShortAliasShellRoute() {
 
     return {
       resolved: state.resolution.resolved,
-      baseUrl: `/${state.resolution.alias}`,
+      baseUrl: state.resolution.publicTerritoryPath,
       communityBaseUrl: `/${state.resolution.alias}`,
       groupAvailability: effectiveAvailability,
       activeMemberIds:
@@ -133,8 +133,16 @@ export function CommunityShortAliasShellRoute() {
     });
   }, [state, territoryName]);
 
-  if (state.status === "loading" || (resolved && profileQuery.isLoading)) {
-    return <PageLoader fullScreen message="Abrindo comunidade..." />;
+  if (state.status === "loading") {
+    return (
+      <PageLoader
+        fullScreen
+        message="Abrindo comunidade..."
+        recoveryAfterMs={9000}
+        recoveryTitle="A comunidade está demorando para abrir"
+        recoveryDescription="A URL curta depende da resolução do território. Recarregue se a página não avançar."
+      />
+    );
   }
 
   if (state.status === "not-found" || !outletContext) {

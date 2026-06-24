@@ -1,13 +1,13 @@
 /**
- * useResolvedUserLocation - Hook SSOT para posi??o do usu?rio com fallback.
+ * useResolvedUserLocation - Hook SSOT para posição do usuário com fallback.
  *
- * Resolve a posi??o do usu?rio com estrat?gia progressiva:
+ * Resolve a posição do usuário com estratégia progressiva:
  * 1. GPS, se permitido.
- * 2. Territ?rio ativo no seletor.
- * 3. Centro padr?o configurado por ambiente.
+ * 2. Território ativo no seletor.
+ * 3. Centro padrão configurado por ambiente.
  *
- * Diferente de useGeolocation, este hook sempre retorna uma posi??o ?til
- * ap?s a resolu??o, mesmo sem GPS.
+ * Diferente de useGeolocation, este hook sempre retorna uma posição útil
+ * após a resolução, mesmo sem GPS.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -31,21 +31,21 @@ export interface UseResolvedUserLocationOptions {
 }
 
 export interface UseResolvedUserLocationReturn {
-  /** Posi??o resolvida. */
+  /** Posição resolvida. */
   location: ResolvedEntityLocation | null;
-  /** Status da resolu??o. */
+  /** Status da resolução. */
   status: LocationResolutionStatus;
-  /** Se a posi??o veio de GPS real. */
+  /** Se a posição veio de GPS real. */
   isGps: boolean;
-  /** Se a posi??o ? boa o suficiente para proximidade precisa. */
+  /** Se a posição é boa o suficiente para proximidade precisa. */
   isGoodForProximity: boolean;
   /** Coordenadas simplificadas. */
   coords: { latitude: number; longitude: number } | null;
-  /** Solicitar resolu??o ou re-resolu??o. */
+  /** Solicitar resolução ou re-resolução. */
   resolve: () => Promise<void>;
-  /** Se est? carregando. */
+  /** Se está carregando. */
   isLoading: boolean;
-  /** Mensagem explicativa para o usu?rio sobre a fonte. */
+  /** Mensagem explicativa para o usuário sobre a fonte. */
   sourceMessage: string;
 }
 
@@ -109,13 +109,13 @@ export function useResolvedUserLocation(
   const sourceMessage = (() => {
     switch (status) {
       case 'gps':
-        return 'Usando sua localiza??o GPS';
+        return 'Usando sua localização GPS';
       case 'territory':
-        return `Mostrando resultados ${location?.locationName ? `em ${location.locationName}` : 'do territ?rio selecionado'}`;
+        return `Mostrando resultados ${location?.locationName ? `em ${location.locationName}` : 'do território selecionado'}`;
       case 'fallback':
-        return 'Mostrando resultados da regi?o padr?o';
+        return 'Mostrando resultados da região padrão';
       case 'resolving':
-        return 'Obtendo localiza??o...';
+        return 'Obtendo localização...';
       default:
         return '';
     }

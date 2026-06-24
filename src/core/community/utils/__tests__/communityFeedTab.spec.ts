@@ -8,17 +8,21 @@ import {
 } from "@/core/community/utils/communityFeedTab";
 
 describe("communityFeedTab SSOT", () => {
-  it("maps vagas tab to oportunidades channel", () => {
-    expect(resolveCommunityFeedChannelFromTab("vagas")).toBe("oportunidades");
+  it("redirects paused public tabs to para_voce", () => {
+    expect(resolveCommunityFeedChannelFromTab("vagas")).toBe("para_voce");
+    expect(resolveCommunityFeedChannelFromTab("eventos")).toBe("para_voce");
+    expect(resolveCommunityFeedChannelFromTab("alertas")).toBe("para_voce");
   });
 
   it("defaults unknown tab to para_voce", () => {
     expect(resolveCommunityFeedChannelFromTab("desconhecido")).toBe("para_voce");
   });
 
-  it("maps opportunities and vagas channels back to oportunidades query tab", () => {
-    expect(resolveCommunityFeedQueryTabFromChannel("oportunidades")).toBe("oportunidades");
-    expect(resolveCommunityFeedQueryTabFromChannel("vagas")).toBe("oportunidades");
+  it("does not emit query tabs for paused channels", () => {
+    expect(resolveCommunityFeedQueryTabFromChannel("oportunidades")).toBeNull();
+    expect(resolveCommunityFeedQueryTabFromChannel("vagas")).toBeNull();
+    expect(resolveCommunityFeedQueryTabFromChannel("eventos")).toBeNull();
+    expect(resolveCommunityFeedQueryTabFromChannel("alertas")).toBeNull();
   });
 
   it("returns null for para_voce and unsupported channels", () => {
@@ -26,13 +30,10 @@ describe("communityFeedTab SSOT", () => {
     expect(resolveCommunityFeedQueryTabFromChannel("moradores")).toBeNull();
   });
 
-  it("keeps header filter order and labels aligned with unified feed tabs", () => {
+  it("keeps only launch-enabled header filters", () => {
     expect(COMMUNITY_FEED_HEADER_FILTERS).toEqual([
-      { id: "para_voce", label: "Para você" },
-      { id: "alertas", label: "Alertas" },
+      { id: "para_voce", label: "Para voce" },
       { id: "empresas", label: "Empresas" },
-      { id: "eventos", label: "Eventos" },
-      { id: "oportunidades", label: "Oportunidades" },
     ]);
   });
 
@@ -44,12 +45,11 @@ describe("communityFeedTab SSOT", () => {
     ]);
   });
 
-  it("keeps composer actions stable", () => {
+  it("keeps only launch-enabled composer actions", () => {
     expect(COMMUNITY_FEED_COMPOSER_ACTIONS).toEqual([
       { id: "text", label: "Texto" },
-      { id: "media", label: "Foto/vídeo" },
+      { id: "media", label: "Foto/video" },
       { id: "poll", label: "Enquete" },
-      { id: "alert", label: "Aviso" },
       { id: "file", label: "Arquivo" },
     ]);
   });

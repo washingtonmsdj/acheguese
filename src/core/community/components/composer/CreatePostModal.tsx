@@ -11,14 +11,13 @@ import { AlertCircle, Bell, BriefcaseBusiness, Calendar, ClipboardList, HelpCirc
 import { useSessionContext } from "@/core/session";
 import { useCreatePostForm } from "../../hooks/composer/useCreatePostForm";
 import { postService } from "@/core/posts/services";
-import { workOpportunitiesService } from "@/core/work-opportunities";
-import type { WorkOpportunityType } from "@/core/work-opportunities";
 import { toast } from "sonner";
 import { cn } from "@/shared/utils/cn";
 import type { PostType } from "@/core/posts/types/Post";
 import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-runtime-context";
 import { ActiveProfileBadge } from "@/core/profiles/components/ActiveProfileBadge";
 import { useTerritoryFilter } from "@/core/location/hooks/useTerritoryFilter";
+import { isLaunchSurfaceEnabled } from "@/config/launchScope";
 
 interface CreatePostModalProps {
   open: boolean;
@@ -48,6 +47,12 @@ type IntentId =
 
 type DistributionChannel = "moradores" | "empresas" | "eventos" | "alertas" | "classificados" | "oportunidades" | "para_voce" | "todos";
 type TerritorialLevel = "street" | "neighborhood" | "region" | "city";
+type WorkOpportunityType =
+  | "looking_for_work"
+  | "offering_work"
+  | "freelance"
+  | "quick_job"
+  | "service_availability";
 
 type PostProfileLocation = {
   location_id?: string | null;
@@ -69,7 +74,7 @@ interface IntentDef {
   tooltip: string;
 }
 
-const INTENT_GROUPS: Array<{ title: string; items: IntentDef[] }> = [
+const RAW_INTENT_GROUPS: Array<{ title: string; items: IntentDef[] }> = [
   {
     title: "Comunidade",
     items: [
@@ -105,6 +110,32 @@ const INTENT_GROUPS: Array<{ title: string; items: IntentDef[] }> = [
     ],
   },
 ];
+
+function isLaunchIntentEnabled(id: IntentId): boolean {
+  switch (id) {
+    case "alerta_urgente":
+      return isLaunchSurfaceEnabled("communityAlerts");
+    case "reportar_problema":
+      return isLaunchSurfaceEnabled("communityIssues");
+    case "evento":
+    case "mutirao":
+    case "encontro":
+      return isLaunchSurfaceEnabled("events");
+    case "oportunidade":
+      return isLaunchSurfaceEnabled("jobs");
+    case "promocao":
+      return isLaunchSurfaceEnabled("coupons");
+    default:
+      return true;
+  }
+}
+
+const INTENT_GROUPS: Array<{ title: string; items: IntentDef[] }> = RAW_INTENT_GROUPS
+  .map((group) => ({
+    ...group,
+    items: group.items.filter((item) => isLaunchIntentEnabled(item.id)),
+  }))
+  .filter((group) => group.items.length > 0);
 
 const DISTRIBUTION_LEVEL_OPTIONS: Array<{ value: TerritorialLevel; label: string }> = [
   { value: "street", label: "Minha rua" },
@@ -151,6 +182,10 @@ function flattenIntents(): IntentDef[] {
   return INTENT_GROUPS.flatMap((group) => group.items);
 }
 
+function getLaunchIntent(id: IntentId): IntentId {
+  return isLaunchIntentEnabled(id) ? id : (flattenIntents()[0]?.id ?? "discussao");
+}
+
 function reachFromTerritorialLevel(level: TerritorialLevel): "street" | "neighborhood" | "city" {
   if (level === "street") return "street";
   if (level === "city") return "city";
@@ -171,7 +206,9 @@ export function CreatePostModal({ open, onClose, defaultType, editPostId, initia
   const form = useCreatePostForm();
   const territoryFilter = useTerritoryFilter();
   const [publishing, setPublishing] = React.useState(false);
-  const [intent, setIntent] = React.useState<IntentId>(intentFromPostType(initialType ?? defaultType));
+  const [intent, setIntent] = React.useState<IntentId>(
+    getLaunchIntent(intentFromPostType(initialType ?? defaultType)),
+  );
   const [distributionLevel, setDistributionLevel] = React.useState<TerritorialLevel>("neighborhood");
   const [genericDescription, setGenericDescription] = React.useState("");
   const [pollQuestion, setPollQuestion] = React.useState("");
@@ -212,7 +249,7 @@ export function CreatePostModal({ open, onClose, defaultType, editPostId, initia
     const initialDistributionLevel = initialReach === "street" ? "street" : initialReach === "city" ? "city" : "neighborhood";
     form.setReach(initialReach ?? "neighborhood");
     form.setContent("");
-    setIntent(intentFromPostType(initialType ?? defaultType));
+    setIntent(getLaunchIntent(intentFromPostType(initialType ?? defaultType)));
     setGenericDescription(initialContent ?? "");
     setDistributionLevel(initialDistributionLevel);
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -247,36 +284,6 @@ export function CreatePostModal({ open, onClose, defaultType, editPostId, initia
     isOpportunityIntent ? opportunityWorkType.trim().length >= 3 && opportunityCategory.trim().length >= 2 && opportunityContact.trim().length >= 3 && opportunityDuration.trim().length >= 2 && opportunityDescription.trim().length >= 10 :
     genericDescription.trim().length >= 10 && genericDescription.trim().length <= 2000;
   const canPublish = !!profile?.id && !locationError && !publishing && baseValid;
-
-  React.useEffect(() => {
-    if (!open || !isOpportunityIntent) return;
-
-    let active = true;
-    setLoadingOwnedProfessionalProfiles(true);
-
-    void workOpportunitiesService
-      .listMyProfessionalProfiles()
-      .then((rows) => {
-        if (!active) return;
-        setOwnedProfessionalProfiles(rows.map((row) => ({
-          id: row.id,
-          professional_name: row.professional_name,
-          service_category: row.service_category,
-        })));
-      })
-      .catch(() => {
-        if (!active) return;
-        setOwnedProfessionalProfiles([]);
-      })
-      .finally(() => {
-        if (!active) return;
-        setLoadingOwnedProfessionalProfiles(false);
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [open, isOpportunityIntent]);
 
   React.useEffect(() => {
     if (!selectedLinkedProfessional?.service_category) return;
@@ -371,24 +378,7 @@ export function CreatePostModal({ open, onClose, defaultType, editPostId, initia
         await postService.updatePost(editPostId, { content: payload.content });
         toast.success("Conteúdo atualizado.");
       } else if (isOpportunityIntent) {
-        await workOpportunitiesService.createOpportunity({
-          authorProfileId: profile.id,
-          professionalId: opportunityLinkedProfessionalId === "none" ? null : opportunityLinkedProfessionalId,
-          opportunityType,
-          title: opportunityWorkType.trim(),
-          description: opportunityDescription.trim(),
-          professionalCategory: opportunityCategory.trim(),
-          territoryLocationId: resolvedLocationId,
-          urgency: opportunityUrgency,
-          availabilityNotes: opportunityDuration.trim(),
-          compensationNotes: opportunityAmount.trim() || undefined,
-          contactNotes: opportunityContact.trim(),
-          reach: reachFromTerritorialLevel(distributionLevel),
-          distributionChannels: selectedIntent.distribution,
-          visibility: "public_listed",
-          sourceContext: "community_feed",
-        });
-        toast.success("Oportunidade publicada.");
+        toast.error("Oportunidades estao pausadas neste MVP.");
       } else {
         await postService.createPost({
           author_profile_id: profile.id,

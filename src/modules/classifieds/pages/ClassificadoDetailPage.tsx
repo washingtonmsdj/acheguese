@@ -45,6 +45,7 @@ import { formatBrlNoCents } from "@/shared/utils/currency";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "@/shared/utils/dateLocale";
 import { messagingService } from "@/core/messaging";
+import { isLaunchSurfaceEnabled } from "@/config/launchScope";
 
 interface ClassificadoDetailPageProps { classifiedId?: string; }
 
@@ -79,6 +80,7 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
     toggleFavorite,
   } = useClassifiedFavorite(id);
   const isOwner = Boolean(activeProfile?.id && classificado?.vendedor?.id === activeProfile.id);
+  const showInternalChat = isLaunchSurfaceEnabled("communityCommunication");
   const statusMutation = useMutation({
     mutationFn: async (nextStatus: ClassifiedStatusValue) => {
       if (!id || !activeProfile?.id) throw new Error("Perfil ativo ausente");
@@ -445,7 +447,7 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
               <SellerCard
                 vendedor={classificado.vendedor}
                 onWhatsApp={handleWhatsApp}
-                onChat={handleChat}
+                onChat={showInternalChat ? handleChat : undefined}
                 isChatLoading={startingChat}
                 activeAdsCount={sellerAds.length + 1}
               />
@@ -496,7 +498,7 @@ export default function ClassificadoDetailPage({ classifiedId: propId }: Classif
               <SellerCard
                 vendedor={classificado.vendedor}
                 onWhatsApp={handleWhatsApp}
-                onChat={handleChat}
+                onChat={showInternalChat ? handleChat : undefined}
                 isChatLoading={startingChat}
                 activeAdsCount={sellerAds.length + 1}
               />

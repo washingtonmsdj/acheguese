@@ -27,12 +27,7 @@ import {
 } from "@/shared/components/ui/sheet";
 import { cn } from "@/shared/utils/cn";
 import { motion } from "framer-motion";
-import { CLASSIFIED_CATEGORY_LABELS } from "@/config/categories";
-
-const CATEGORY_OPTIONS = [
-  { id: "todos", label: "Todos" },
-  ...Object.entries(CLASSIFIED_CATEGORY_LABELS).map(([id, label]) => ({ id, label })),
-];
+import { CLASSIFIED_CATEGORIES } from "@/modules/classifieds/constants/categories";
 
 const SORT_OPTIONS = [
   { id: "recente", label: "Mais recentes" },
@@ -222,7 +217,7 @@ export const ClassificadoFilters = memo(function ClassificadoFilters({
 
       {/* Categories */}
       <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-        {CATEGORY_OPTIONS.map((cat) => {
+        {CLASSIFIED_CATEGORIES.map((cat) => {
           const isActive = category === cat.id;
 
           return (

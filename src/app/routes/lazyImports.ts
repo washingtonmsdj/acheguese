@@ -4,6 +4,7 @@
  */
 
 import { lazy } from "react";
+import { createLaunchPausedRoute } from "./launchPausedComponent";
 
 // ============================================================
 // LAYOUT E PROVIDERS
@@ -95,6 +96,7 @@ export const OnboardingPage = lazy(() => import("@/app/pages/OnboardingPage"));
 export const BuscaPage = lazy(() => import("@/app/pages/BuscaPage"));
 export const BuscarPage = lazy(() => import("@/app/pages/BuscarPage"));
 export const NearbyPage = lazy(() => import("@/app/pages/NearbyPage"));
+export { default as LaunchPausedPage } from "@/app/pages/LaunchPausedPage";
 export const NotFound = lazy(() => import("@/app/pages/NotFound"));
 export const StatusPage = lazy(() => import("@/app/pages/StatusPage"));
 export const VirtualTryOnPage = lazy(() => import("@/app/pages/VirtualTryOnPage"));
@@ -159,7 +161,7 @@ export const BusinessOverviewPage = lazy(() => import("@/modules/business/dashbo
 export const BusinessDetailsPage = lazy(() => import("@/modules/business/dashboard/pages/BusinessDetailsPage"));
 export const BusinessPlansPage = lazy(() => import("@/modules/business/dashboard/pages/BusinessPlansPage"));
 export const BusinessPremiumSitePage = lazy(() => import("@/modules/business/dashboard/pages/BusinessPremiumSitePage"));
-export const BusinessAnalyticsPage = lazy(() => import("@/modules/business/dashboard/pages/BusinessAnalyticsPage"));
+export const BusinessAnalyticsPage = createLaunchPausedRoute("Analytics");
 export const BusinessSettingsPage = lazy(() => import("@/modules/business/dashboard/pages/BusinessSettingsPage"));
 export const EmpresaDetailLandingPage = lazy(() => import("@/app/pages/EmpresaDetailLandingPage"));
 export const EmpresaCatalogoPublicoPage = lazy(() => import("@/modules/business/pages/EmpresaCatalogoPublicoPage"));
@@ -170,7 +172,7 @@ export const PremiumBusinessHomePage = lazy(() => import("@/modules/business/pre
 export const PremiumBusinessMenuPage = lazy(() => import("@/modules/business/premium/pages/PremiumBusinessMenuPage"));
 export const PremiumBusinessProductPage = lazy(() => import("@/modules/business/premium/pages/PremiumBusinessProductPage"));
 export const PremiumBusinessCartPage = lazy(() => import("@/modules/business/premium/pages/PremiumBusinessCartPage"));
-export const PremiumBusinessCheckoutPage = lazy(() => import("@/modules/business/premium/pages/PremiumBusinessCheckoutPage"));
+export const PremiumBusinessCheckoutPage = createLaunchPausedRoute("Checkout");
 
 // ============================================================
 // GASTRONOMIA
@@ -178,31 +180,31 @@ export const PremiumBusinessCheckoutPage = lazy(() => import("@/modules/business
 export const GastronomyLandingPage = lazy(() => import("@/modules/business/gastronomy/pages/GastronomyLandingPage"));
 export const GastronomyDetailPage = lazy(() => import("@/modules/business/gastronomy/pages/GastronomyDetailPage"));
 export const GastronomyPremiumDetailPage = lazy(() => import("@/modules/business/gastronomy/pages/GastronomyPremiumDetailPage"));
-export const GastronomyCheckoutPage = lazy(() => import("@/modules/business/gastronomy/pages/GastronomyCheckoutPage"));
+export const GastronomyCheckoutPage = createLaunchPausedRoute("Checkout");
 export const MyFavoritesPage = lazy(() => import("@/modules/business/gastronomy/pages/MyFavoritesPage"));
-export const GastronomySetupPage = lazy(() => import("@/modules/business/gastronomy/pages/GastronomySetupPage"));
-export const GastronomyDashboardPage = lazy(() => import("@/modules/business/gastronomy/pages/GastronomyDashboardPage"));
-export const MenuManagementPage = lazy(() => import("@/modules/business/gastronomy/pages/MenuManagementPage"));
-export const BusinessHoursPage = lazy(() => import("@/modules/business/gastronomy/pages/BusinessHoursPage"));
-export const DeliveryAreaPage = lazy(() => import("@/modules/business/gastronomy/pages/DeliveryAreaPage"));
-export const OrdersPage = lazy(() => import("@/modules/business/gastronomy/pages/OrdersPage"));
-export const OrderDetailsPage = lazy(() => import("@/modules/business/gastronomy/pages/OrderDetailsPage"));
-export const DeliveryManagementPage = lazy(() => import("@/modules/business/gastronomy/pages/DeliveryManagementPage"));
-export const AnalyticsPage = lazy(() => import("@/modules/business/gastronomy/pages/AnalyticsPage"));
-export const GastronomyPromotionsPage = lazy(() => import("@/modules/business/gastronomy/pages/GastronomyPromotionsPage"));
+export const GastronomySetupPage = createLaunchPausedRoute("Gastronomia operacional");
+export const GastronomyDashboardPage = createLaunchPausedRoute("Gastronomia operacional");
+export const MenuManagementPage = createLaunchPausedRoute("Gastronomia operacional");
+export const BusinessHoursPage = createLaunchPausedRoute("Gastronomia operacional");
+export const DeliveryAreaPage = createLaunchPausedRoute("Gastronomia operacional");
+export const OrdersPage = createLaunchPausedRoute("Pedidos");
+export const OrderDetailsPage = createLaunchPausedRoute("Pedidos");
+export const DeliveryManagementPage = createLaunchPausedRoute("Entregas");
+export const AnalyticsPage = createLaunchPausedRoute("Analytics");
+export const GastronomyPromotionsPage = createLaunchPausedRoute("Promocoes");
 
 // ============================================================
 // EDUCATION
 // ============================================================
-export const EducationExplorerPage = lazy(() => import("@/modules/business/education/pages/EducationExplorerPage"));
-export const EducationDetailPage = lazy(() => import("@/modules/business/education/pages/EducationDetailPage"));
-export const EducationDashboardPage = lazy(() => import("@/modules/business/education/pages/EducationDashboardPage"));
-export const EducationSetupPage = lazy(() => import("@/modules/business/education/pages/EducationSetupPage"));
-export const EducationLeadsPage = lazy(() => import("@/modules/business/education/pages/EducationLeadsPage"));
-export const EducationEventsPage = lazy(() => import("@/modules/business/education/pages/EducationEventsPage"));
-export const EducationProgramsPage = lazy(() => import("@/modules/business/education/pages/EducationProgramsPage"));
-export const EducationAnalyticsPage = lazy(() => import("@/modules/business/education/pages/EducationAnalyticsPage"));
-export const EducationPlansPage = lazy(() => import("@/modules/business/education/pages/EducationPlansPage"));
+export const EducationExplorerPage = createLaunchPausedRoute("Educacao");
+export const EducationDetailPage = createLaunchPausedRoute("Educacao");
+export const EducationDashboardPage = createLaunchPausedRoute("Educacao");
+export const EducationSetupPage = createLaunchPausedRoute("Educacao");
+export const EducationLeadsPage = createLaunchPausedRoute("Educacao");
+export const EducationEventsPage = createLaunchPausedRoute("Educacao");
+export const EducationProgramsPage = createLaunchPausedRoute("Educacao");
+export const EducationAnalyticsPage = createLaunchPausedRoute("Educacao");
+export const EducationPlansPage = createLaunchPausedRoute("Educacao");
 
 // ============================================================
 // SERVICOS E PROFISSIONAIS
@@ -227,11 +229,11 @@ export const ClassifiedShortRoute = lazy(() => import("@/app/routes/classifieds/
 // ============================================================
 // VAGAS/EMPREGOS
 // ============================================================
-export const PublicarVagaPage = lazy(() => import("@/modules/classifieds/jobs/pages/PublicarVagaPage"));
-export const VagasPublicPage = lazy(() => import("@/modules/classifieds/jobs/pages/VagasPublicPage"));
-export const VagaDetailPublicPage = lazy(() => import("@/modules/classifieds/jobs/pages/VagaDetailPublicPage"));
-export const WorkOpportunitiesPage = lazy(() => import("@/modules/work-opportunities/pages/WorkOpportunitiesPage"));
-export const WorkOpportunityDetailPage = lazy(() => import("@/modules/work-opportunities/pages/WorkOpportunityDetailPage"));
+export const PublicarVagaPage = createLaunchPausedRoute("Vagas");
+export const VagasPublicPage = createLaunchPausedRoute("Vagas");
+export const VagaDetailPublicPage = createLaunchPausedRoute("Vagas");
+export const WorkOpportunitiesPage = createLaunchPausedRoute("Oportunidades");
+export const WorkOpportunityDetailPage = createLaunchPausedRoute("Oportunidades");
 
 // ============================================================
 // COMUNIDADE (GRUPOS, EVENTOS, POSTS)
@@ -239,50 +241,48 @@ export const WorkOpportunityDetailPage = lazy(() => import("@/modules/work-oppor
 export const GruposPage = lazy(() => import("@/modules/community-groups/pages/GruposPage"));
 export const ComunidadePage = lazy(() => import("@/modules/community-feed/pages/ComunidadePage"));
 export const GrupoDetailPage = lazy(() => import("@/modules/community-groups/pages/GrupoDetailPage"));
-export const EventosPage = lazy(() => import("@/features/events/pages/EventsListPage"));
-export const EventoDetailPage = lazy(() => import("@/features/events/pages/EventDetailPage"));
-export const EventsListPage = lazy(() => import("@/features/events/pages/EventsListPage"));
-export const EventDetailPage = lazy(() => import("@/features/events/pages/EventDetailPage"));
-export const EventsFavoritesPage = lazy(() => import("@/features/events/pages/EventsFavoritesPage"));
-export const EventsCalendarPage = lazy(() => import("@/features/events/pages/EventsCalendarPage"));
-export const EventsMapPage = lazy(() => import("@/features/events/pages/EventsMapPage"));
-export const EventsOrganizerDashboard = lazy(() => import("@/features/events/pages/EventsOrganizerDashboard"));
-export const EventsOrganizerForm = lazy(() => import("@/features/events/pages/EventsOrganizerForm"));
-export const EventsOrganizerAnalyticsPage = lazy(() => import("@/features/events/pages/EventsOrganizerAnalyticsPage"));
-export const EventsErrorBoundary = lazy(() =>
-  import("@/features/events/components/EventsErrorBoundary").then(m => ({ default: m.EventsErrorBoundary }))
-);
+export const EventosPage = createLaunchPausedRoute("Eventos");
+export const EventoDetailPage = createLaunchPausedRoute("Eventos");
+export const EventsListPage = createLaunchPausedRoute("Eventos");
+export const EventDetailPage = createLaunchPausedRoute("Eventos");
+export const EventsFavoritesPage = createLaunchPausedRoute("Eventos");
+export const EventsCalendarPage = createLaunchPausedRoute("Eventos");
+export const EventsMapPage = createLaunchPausedRoute("Eventos");
+export const EventsOrganizerDashboard = createLaunchPausedRoute("Eventos");
+export const EventsOrganizerForm = createLaunchPausedRoute("Eventos");
+export const EventsOrganizerAnalyticsPage = createLaunchPausedRoute("Eventos");
+export const EventsErrorBoundary = createLaunchPausedRoute("Eventos");
 export const RecomendacoesPage = lazy(() => import("@/modules/community-recommendations/pages/RecomendacoesPage"));
 export const NovaRecomendacaoPage = lazy(() => import("@/modules/community-recommendations/pages/NovaRecomendacaoPage"));
 export const RecomendacaoDetailPage = lazy(() => import("@/modules/community-recommendations/pages/RecomendacaoDetailPage"));
-export const AchadosPerdidosPage = lazy(() => import("@/modules/community-lost-found/pages/AchadosPerdidosPage"));
-export const NovoAchadoPerdidoPage = lazy(() => import("@/modules/community-lost-found/pages/NovoAchadoPerdidoPage"));
-export const AchadoPerdidoDetailPage = lazy(() => import("@/modules/community-lost-found/pages/AchadoPerdidoDetailPage"));
-export const ProblemasPage = lazy(() => import("@/modules/community-issues/pages/ProblemasPage"));
+export const AchadosPerdidosPage = createLaunchPausedRoute("Achados e perdidos");
+export const NovoAchadoPerdidoPage = createLaunchPausedRoute("Achados e perdidos");
+export const AchadoPerdidoDetailPage = createLaunchPausedRoute("Achados e perdidos");
+export const ProblemasPage = createLaunchPausedRoute("Problemas");
 export const NovoPostPage = lazy(() => import("@/modules/community-feed/pages/NovoPostPage"));
 
 // Comunicacao Territorial
-export const CommunicationLandingPage = lazy(() => import("@/modules/communication-territorial/pages/CommunicationLandingPage").then(module => ({ default: module.default })));
-export const CommunicationRequestPage = lazy(() => import("@/modules/communication-territorial/pages/CommunicationRequestPage"));
-export const CommunicationCityPage = lazy(() => import("@/modules/communication-territorial/pages/CommunicationCityPage"));
-export const CommunicationChannelPage = lazy(() => import("@/modules/communication-territorial/pages/CommunicationChannelPage"));
-export const CommunicationCompanyDetailsPage = lazy(() => import("@/modules/communication-territorial/pages/CommunicationCompanyDetailsPage"));
-export const CommunicationAgentPage = lazy(() => import("@/modules/communication-territorial/pages/CommunicationAgentPage"));
-export const CommunicationAgentDashboard = lazy(() => import("@/modules/communication-territorial/pages/CommunicationAgentDashboard"));
+export const CommunicationLandingPage = createLaunchPausedRoute("Comunicacao");
+export const CommunicationRequestPage = createLaunchPausedRoute("Comunicacao");
+export const CommunicationCityPage = createLaunchPausedRoute("Comunicacao");
+export const CommunicationChannelPage = createLaunchPausedRoute("Comunicacao");
+export const CommunicationCompanyDetailsPage = createLaunchPausedRoute("Comunicacao");
+export const CommunicationAgentPage = createLaunchPausedRoute("Comunicacao");
+export const CommunicationAgentDashboard = createLaunchPausedRoute("Comunicacao");
 
 // ============================================================
 // MOBILIDADE (CORRIDAS, MOTORISTAS, MOTOBOY)
 // ============================================================
-export const MobilidadePage = lazy(() => import("@/modules/mobility/pages/MobilidadeLandingPage"));
-export const PassageiroPage = lazy(() => import("@/modules/mobility/pages/PassageiroPage"));
-export const BuscandoMotoristaPage = lazy(() => import("@/modules/mobility/pages/BuscandoMotoristaPage"));
-export const MotoristaPage = lazy(() => import("@/modules/mobility/pages/MotoristaPage"));
-export const MotoboyPage = lazy(() => import("@/modules/mobility/pages/MotoboyPage"));
-export const CriarMotoristaPage = lazy(() => import("@/modules/mobility/pages/CriarMotoristaPage"));
-export const DriverProfilePage = lazy(() => import("@/modules/mobility/pages/DriverProfilePage"));
-export const HistoricoPage = lazy(() => import("@/modules/mobility/pages/HistoricoPage"));
-export const TrackRidePage = lazy(() => import("@/modules/mobility/pages/TrackRidePage"));
-export const EmergencyContactsPage = lazy(() => import("@/modules/mobility/pages/EmergencyContactsPage"));
+export const MobilidadePage = createLaunchPausedRoute("Mobilidade");
+export const PassageiroPage = createLaunchPausedRoute("Mobilidade");
+export const BuscandoMotoristaPage = createLaunchPausedRoute("Mobilidade");
+export const MotoristaPage = createLaunchPausedRoute("Mobilidade");
+export const MotoboyPage = createLaunchPausedRoute("Mobilidade");
+export const CriarMotoristaPage = createLaunchPausedRoute("Mobilidade");
+export const DriverProfilePage = createLaunchPausedRoute("Mobilidade");
+export const HistoricoPage = createLaunchPausedRoute("Mobilidade");
+export const TrackRidePage = createLaunchPausedRoute("Mobilidade");
+export const EmergencyContactsPage = createLaunchPausedRoute("Mobilidade");
 
 // ============================================================
 // PONTOS TURISTICOS (GUIDE)
@@ -298,20 +298,20 @@ export const AdminGuideTouristPointFormPage = lazy(() => import("@/modules/guide
 // ============================================================
 // CUPONS E PROMOCOES
 // ============================================================
-export const CuponsPage = lazy(() => import("@/modules/business/pages/CuponsPage"));
-export const CupomDetailPage = lazy(() => import("@/modules/business/pages/CupomDetailPage"));
+export const CuponsPage = createLaunchPausedRoute("Cupons");
+export const CupomDetailPage = createLaunchPausedRoute("Cupons");
 
 // ============================================================
 // GAMIFICACAO E RANKING
 // ============================================================
-export const GamificacaoPage = lazy(() => import("@/app/pages/gamification/GamificacaoPage"));
-export const RankingPage = lazy(() => import("@/app/pages/gamification/RankingPage"));
+export const GamificacaoPage = createLaunchPausedRoute("Gamificacao");
+export const RankingPage = createLaunchPausedRoute("Ranking");
 
 // ============================================================
 // MENSAGENS E CHAT
 // ============================================================
-export const MensagensPage = lazy(() => import("@/core/messaging/pages/MensagensPage"));
-export const ChatPage = lazy(() => import("@/core/messaging/pages/ChatPage"));
+export const MensagensPage = createLaunchPausedRoute("Mensagens");
+export const ChatPage = createLaunchPausedRoute("Mensagens");
 
 // ============================================================
 // MAPAS E GEOLOCALIZACAO
@@ -321,7 +321,7 @@ export const MapaPage = lazy(() => import("@/core/maps/pages/MapaPageV4"));
 // ============================================================
 // ANALYTICS
 // ============================================================
-export const GeneralAnalyticsPage = lazy(() => import("@/core/analytics/pages/AnalyticsPage"));
+export const GeneralAnalyticsPage = createLaunchPausedRoute("Analytics");
 
 // ============================================================
 // QR CODE
@@ -344,7 +344,7 @@ export const OfflineSettingsPage = lazy(() => import("@/app/pages/OfflineSetting
 export const PrivacySettingsPage = lazy(() => import("@/app/pages/PrivacySettingsPage"));
 export const DPOContactPage = lazy(() => import("@/app/pages/DPOContactPage"));
 
-export const LocationsAdminPage = lazy(() => import("@/modules/admin/pages/LocationsAdminPage"));
+export const LocationsAdminPage = createLaunchPausedRoute("Admin");
 
 // ============================================================
 // ADMIN DASHBOARD E MODULOS
@@ -353,81 +353,79 @@ export const LocationsAdminPage = lazy(() => import("@/modules/admin/pages/Locat
 // ============================================================
 // ADMIN LAYOUT E PAGINAS
 // ============================================================
-export const AdminLayout = lazy(() => import("@/modules/admin/pages/AdminLayout"));
-export const AdminDashboard = lazy(() => import("@/modules/admin/pages/AdminDashboard"));
-export const AdminBanners = lazy(() => import("@/modules/admin/pages/BannersPage"));
-export const AdminEmpresas = lazy(() => import("@/modules/admin/pages/AdminEmpresas"));
-export const AdminGastronomia = lazy(() => import("@/modules/admin/pages/AdminGastronomia"));
-export const AdminServicos = lazy(() => import("@/modules/admin/pages/AdminServicos"));
-export const AdminClassificados = lazy(() => import("@/modules/admin/pages/AdminClassificados"));
-export const AdminClassificadosDenuncias = lazy(() => import("@/modules/admin/pages/AdminClassificadosDenuncias"));
-export const AdminVagas = lazy(() => import("@/modules/admin/pages/AdminVagas"));
-export const AdminEventos = lazy(() => import("@/modules/admin/pages/AdminEventos"));
-export const AdminUsuarios = lazy(() => import("@/modules/admin/pages/AdminUsuarios"));
-export const AdminMotoristas = lazy(() => import("@/core/admin/drivers/pages/AdminMotoristasPage"));
-export const AdminReportsPassageiros = lazy(() => import("@/modules/admin/pages/AdminReportsPassageiros"));
-export const AdminPontosEmbarque = lazy(() => import("@/modules/admin/pages/AdminPontosEmbarque"));
-export const AdminVerificacoes = lazy(() => import("@/core/verification/pages/AdminVerificationsPage"));
-export const AdminZeladoria = lazy(() => import("@/modules/admin/pages/AdminZeladoria"));
-export const AdminAnalyticsMobilidade = lazy(() => import("@/modules/admin/pages/AdminAnalyticsMobilidade"));
-export const AdminRealtimeDashboard = lazy(() => import("@/modules/admin/pages/AdminRealtimeDashboard"));
-export const AdminModeracaoCompleta = lazy(() => import("@/modules/admin/pages/AdminModeracaoCompleta"));
-export const AdminModeracao = lazy(() => import("@/modules/admin/pages/AdminModeracao"));
-export const AdminAnalytics = lazy(() => import("@/modules/admin/pages/AdminAnalytics"));
-export const AdminGamificacao = lazy(() => import("@/modules/admin/pages/AdminGamificacao"));
-export const AdminCupons = lazy(() => import("@/modules/admin/pages/AdminCupons"));
-export const AdminPromocoes = lazy(() => import("@/modules/admin/pages/AdminPromocoes"));
-export const AdminAssinaturas = lazy(() => import("@/modules/admin/pages/AdminAssinaturas"));
-export const AdminRoles = lazy(() => import("@/modules/admin/pages/AdminRoles"));
-export const AdminPricing = lazy(() => import("@/modules/admin/pages/AdminPricing"));
-export const AdminBranding = lazy(() => import("@/modules/admin/pages/AdminBranding"));
-export const AdminMensagens = lazy(() => import("@/modules/admin/pages/AdminMensagens"));
-export const AdminNotifications = lazy(() => import("@/modules/admin/pages/AdminNotifications"));
-export const AdminCommunityAlerts = lazy(() => import("@/modules/admin/pages/AdminCommunityAlerts"));
-export const AdminCommunityIssues = lazy(() => import("@/modules/admin/pages/AdminCommunityIssues"));
-export const AdminComunicacao = lazy(() => import("@/modules/admin/pages/AdminComunicacao"));
-export const AdminIdentidade = lazy(() => import("@/core/admin/identity/pages/AdminIdentidadePage"));
-export const AdminMapa = lazy(() => import("@/modules/admin/pages/AdminMapa"));
-export const AdminConfiguracoes = lazy(() => import("@/modules/admin/pages/AdminConfiguracoes"));
-export const AdminOperacoes = lazy(() => import("@/modules/admin/pages/AdminOperacoes"));
-export const AdminMotoboyOperations = lazy(() => import("@/modules/admin/pages/AdminMotoboyOperations"));
-export const AdminReivindicacoes = lazy(() => import("@/modules/admin/pages/AdminReivindicacoes"));
-export const AdminSSOT = lazy(() => import("@/modules/admin/pages/AdminSSOT"));
-export const AdminHighlights = lazy(() => import("@/modules/admin/pages/AdminHighlights"));
-export const AdminTerritoryContent = lazy(() => import("@/modules/admin/pages/AdminTerritoryContent"));
-export const AdminTerritorialGroups = lazy(() => import("@/modules/admin/pages/AdminTerritorialGroups"));
-export const AdminCityMetadata = lazy(() => import("@/modules/admin/pages/AdminCityMetadata"));
-export const AdminTerritoryManagement = lazy(() => import("@/modules/admin/pages/AdminTerritoryManagement"));
+export const AdminLayout = createLaunchPausedRoute("Admin");
+export const AdminDashboard = createLaunchPausedRoute("Admin");
+export const AdminBanners = createLaunchPausedRoute("Admin");
+export const AdminEmpresas = createLaunchPausedRoute("Admin");
+export const AdminGastronomia = createLaunchPausedRoute("Admin");
+export const AdminServicos = createLaunchPausedRoute("Admin");
+export const AdminClassificados = createLaunchPausedRoute("Admin");
+export const AdminClassificadosDenuncias = createLaunchPausedRoute("Admin");
+export const AdminVagas = createLaunchPausedRoute("Admin");
+export const AdminEventos = createLaunchPausedRoute("Admin");
+export const AdminUsuarios = createLaunchPausedRoute("Admin");
+export const AdminMotoristas = createLaunchPausedRoute("Admin");
+export const AdminReportsPassageiros = createLaunchPausedRoute("Admin");
+export const AdminPontosEmbarque = createLaunchPausedRoute("Admin");
+export const AdminVerificacoes = createLaunchPausedRoute("Admin");
+export const AdminZeladoria = createLaunchPausedRoute("Admin");
+export const AdminAnalyticsMobilidade = createLaunchPausedRoute("Admin");
+export const AdminRealtimeDashboard = createLaunchPausedRoute("Admin");
+export const AdminModeracaoCompleta = createLaunchPausedRoute("Admin");
+export const AdminModeracao = createLaunchPausedRoute("Admin");
+export const AdminAnalytics = createLaunchPausedRoute("Admin");
+export const AdminGamificacao = createLaunchPausedRoute("Admin");
+export const AdminCupons = createLaunchPausedRoute("Admin");
+export const AdminPromocoes = createLaunchPausedRoute("Admin");
+export const AdminAssinaturas = createLaunchPausedRoute("Admin");
+export const AdminRoles = createLaunchPausedRoute("Admin");
+export const AdminPricing = createLaunchPausedRoute("Admin");
+export const AdminBranding = createLaunchPausedRoute("Admin");
+export const AdminMensagens = createLaunchPausedRoute("Admin");
+export const AdminNotifications = createLaunchPausedRoute("Admin");
+export const AdminCommunityAlerts = createLaunchPausedRoute("Admin");
+export const AdminCommunityIssues = createLaunchPausedRoute("Admin");
+export const AdminComunicacao = createLaunchPausedRoute("Admin");
+export const AdminIdentidade = createLaunchPausedRoute("Admin");
+export const AdminMapa = createLaunchPausedRoute("Admin");
+export const AdminConfiguracoes = createLaunchPausedRoute("Admin");
+export const AdminOperacoes = createLaunchPausedRoute("Admin");
+export const AdminMotoboyOperations = createLaunchPausedRoute("Admin");
+export const AdminReivindicacoes = createLaunchPausedRoute("Admin");
+export const AdminSSOT = createLaunchPausedRoute("Admin");
+export const AdminHighlights = createLaunchPausedRoute("Admin");
+export const AdminTerritoryContent = createLaunchPausedRoute("Admin");
+export const AdminTerritorialGroups = createLaunchPausedRoute("Admin");
+export const AdminCityMetadata = createLaunchPausedRoute("Admin");
+export const AdminTerritoryManagement = createLaunchPausedRoute("Admin");
 
 // ============================================================
 // CENTRAL - Gestao e Operacao
 // ============================================================
-export const CentralHubPage = lazy(() => import("@/modules/central/pages/CentralHubPage"));
-export const CentralEmpresasPage = lazy(() => import("@/modules/central/pages/CentralEmpresasPage"));
-export const CentralProfissionalPage = lazy(() => import("@/modules/central/pages/CentralProfissionalPage"));
-export const CentralMotoristaPage = lazy(() => import("@/modules/central/pages/CentralMotoristaPage"));
-export const CentralMotoboyPage = lazy(() => import("@/modules/central/pages/CentralMotoboyPage"));
-export const CentralComunicacaoPage = lazy(() => import("@/modules/central/pages/CentralComunicacaoPage"));
+export const CentralHubPage = createLaunchPausedRoute("Central");
+export const CentralEmpresasPage = createLaunchPausedRoute("Central");
+export const CentralProfissionalPage = createLaunchPausedRoute("Central");
+export const CentralMotoristaPage = createLaunchPausedRoute("Mobilidade");
+export const CentralMotoboyPage = createLaunchPausedRoute("Mobilidade");
+export const CentralComunicacaoPage = createLaunchPausedRoute("Comunicacao");
 // Sub-rotas de motorista
-export const CentralMotoristaCadastroPage = lazy(() => import("@/modules/central/pages/motorista/CentralMotoristaCadastroPage"));
-export const CentralMotoristaDisponibilidadePage = lazy(() => import("@/modules/central/pages/motorista/CentralMotoristaDisponibilidadePage"));
-export const CentralMotoristaCorridasPage = lazy(() => import("@/modules/central/pages/motorista/CentralMotoristaCorridasPage"));
-export const CentralMotoristaGanhosPage = lazy(() => import("@/modules/central/pages/motorista/CentralMotoristaGanhosPage"));
-export const CentralMotoristaConfiguracoesPage = lazy(() => import("@/modules/central/pages/motorista/CentralMotoristaConfiguracoesPage"));
+export const CentralMotoristaCadastroPage = createLaunchPausedRoute("Mobilidade");
+export const CentralMotoristaDisponibilidadePage = createLaunchPausedRoute("Mobilidade");
+export const CentralMotoristaCorridasPage = createLaunchPausedRoute("Mobilidade");
+export const CentralMotoristaGanhosPage = createLaunchPausedRoute("Mobilidade");
+export const CentralMotoristaConfiguracoesPage = createLaunchPausedRoute("Mobilidade");
 // Sub-rotas de motoboy
-export const CentralMotoboyCadastroPage = lazy(() => import("@/modules/central/pages/motoboy/CentralMotoboyCadastroPage"));
-export const CentralMotoboyDisponibilidadePage = lazy(() => import("@/modules/central/pages/motoboy/CentralMotoboyDisponibilidadePage"));
-export const CentralMotoboyEntregasPage = lazy(() => import("@/modules/central/pages/motoboy/CentralMotoboyEntregasPage"));
-export const CentralMotoboyGanhosPage = lazy(() => import("@/modules/central/pages/motoboy/CentralMotoboyGanhosPage"));
-export const CentralMotoboyConfiguracoesPage = lazy(() => import("@/modules/central/pages/motoboy/CentralMotoboyConfiguracoesPage"));
+export const CentralMotoboyCadastroPage = createLaunchPausedRoute("Mobilidade");
+export const CentralMotoboyDisponibilidadePage = createLaunchPausedRoute("Mobilidade");
+export const CentralMotoboyEntregasPage = createLaunchPausedRoute("Mobilidade");
+export const CentralMotoboyGanhosPage = createLaunchPausedRoute("Mobilidade");
+export const CentralMotoboyConfiguracoesPage = createLaunchPausedRoute("Mobilidade");
 // Layout e guards
-export const CentralLayout = lazy(() =>
-  import("@/modules/central/components/CentralLayout").then((m) => ({ default: m.CentralLayout }))
-);
-export const CentralAccessGuard = lazy(() => import("@/modules/central/guards/CentralAccessGuard").then(m => ({ default: m.CentralAccessGuard })));
-export const BusinessAdminGuard = lazy(() => import("@/modules/central/guards/BusinessAdminGuard").then(m => ({ default: m.BusinessAdminGuard })));
-export const ProfessionalGuard = lazy(() => import("@/modules/central/guards/ProfessionalGuard").then(m => ({ default: m.ProfessionalGuard })));
-export const DriverGuard = lazy(() => import("@/modules/central/guards/DriverGuard").then(m => ({ default: m.DriverGuard })));
+export const CentralLayout = createLaunchPausedRoute("Central");
+export const CentralAccessGuard = createLaunchPausedRoute("Central");
+export const BusinessAdminGuard = createLaunchPausedRoute("Central");
+export const ProfessionalGuard = createLaunchPausedRoute("Central");
+export const DriverGuard = createLaunchPausedRoute("Mobilidade");
 
 
 

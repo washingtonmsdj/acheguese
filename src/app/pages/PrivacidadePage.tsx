@@ -21,11 +21,11 @@ Dados fornecidos pelo Usuário no cadastro: nome completo, nome de usuário (han
 
 Dados de uso e navegação: endereço IP, tipo e versão do navegador, sistema operacional, páginas acessadas, data e hora de acesso, tempo de permanência e interações com a Plataforma.
 
-Conteúdo gerado pelo Usuário: publicações, comentários, mensagens, imagens, alertas e demais conteúdos inseridos na Plataforma.
+Conteúdo gerado pelo Usuário: publicações, comentários, imagens, classificados e demais conteúdos inseridos na Plataforma.
 
 Dados de localização: informações de localização geográfica fornecidas voluntariamente pelo Usuário para personalização do conteúdo comunitário.
 
-Dados de comunicação: mensagens trocadas entre usuários por meio dos canais da Plataforma.`,
+Dados de comunicação: solicitações, respostas de suporte e demais contatos enviados pelo Usuário por meio dos canais da Plataforma.`,
   },
   {
     icon: Eye,

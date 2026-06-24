@@ -207,7 +207,7 @@ export default function NotificationPreferencesPage() {
               <div>
                 <Label htmlFor="social">Sociais</Label>
                 <p className="text-sm text-muted-foreground">
-                  Mensagens, comentários, menções
+                  Comentarios, mencoes e interacoes
                 </p>
               </div>
               <Switch
@@ -239,7 +239,7 @@ export default function NotificationPreferencesPage() {
               <div>
                 <Label htmlFor="marketing">Marketing</Label>
                 <p className="text-sm text-muted-foreground">
-                  Promoções, cupons, eventos
+                  Promocoes e novidades da plataforma
                 </p>
               </div>
               <Switch

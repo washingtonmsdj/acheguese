@@ -20,20 +20,27 @@ import { useMapViewportFetch } from '../hooks/useMapViewportFetch';
 import { mapEntityProjection } from '../services/MapEntityProjectionService';
 import { DEFAULT_TILE_STYLE } from '../providers/MapProvider';
 import { MAP_DEFAULT_BOUNDS, MAP_DEFAULT_ZOOM } from '../config/defaultCoordinates';
-import { MAP_RUNTIME_LAYER_KEYS } from '../config/runtimeConfig';
+import {
+  MAP_PUBLIC_RUNTIME_LAYER_KEYS,
+  isMapRuntimeLayerEnabled,
+} from '../config/runtimeConfig';
 import { BusinessService } from '@/core/business/services/BusinessService';
-import { communityEventsRuntimeService, type CommunityEvent } from '@/core/community/services/CommunityEventsRuntimeService';
-import { mapLayerRuntimeService } from '@/core/maps/services/MapLayerRuntimeService';
+import { mapClassifiedsLayerRuntimeService } from '@/core/maps/services/MapClassifiedsLayerRuntimeService';
+import { mapGastronomyLayerRuntimeService } from '@/core/maps/services/MapGastronomyLayerRuntimeService';
+import { mapServicesLayerRuntimeService } from '@/core/maps/services/MapServicesLayerRuntimeService';
+import { usePublicBrowsingCity } from '@/core/location/hooks/usePublicBrowsingCity';
 import { useResolvedUserLocation } from '@/core/location/hooks/useResolvedUserLocation';
 import { useTerritoryFilter, territoryFilterKey } from '@/core/location/hooks/useTerritoryFilter';
 import { useTerritoryPolygon } from '../hooks/useTerritoryPolygon';
 import { useQuery } from '@tanstack/react-query';
+import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
 import { APP_MODULE_SLUGS, buildAppModulePath } from '@/config/moduleSlugs';
+import { boundaryService } from '@/core/geospatial';
 import { spatialSearchService } from '@/core/geospatial/services/SpatialSearchService';
 import { useTouristPointPublicUrls } from '@/core/verticals/guide/routes/useTouristPointPublicUrls';
 import { EntityStatus } from '@/shared/types/enums';
 import type { BoundingBox, MapLayerKey, MapMarker, MapViewport } from '../types/core';
-import type { TerritoryFilter } from '@/core/location/types';
+import { LocationStatus, type Location, type TerritoryFilter } from '@/core/location/types';
 import type { Business } from '@/core/business/types/Business';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
 
@@ -52,7 +59,6 @@ interface MapaPageV4Props {
 // styleimagemissing no MapLibreAdapter — não trocamos de estilo por isso.
 const TILE_STYLE_URL = DEFAULT_TILE_STYLE.styleUrl;
 const BUSINESS_MAP_BASE_URL = buildAppModulePath(APP_MODULE_SLUGS.business);
-const EVENTS_MAP_BASE_URL = buildAppModulePath(APP_MODULE_SLUGS.events);
 const GASTRONOMY_MAP_BASE_URL = buildAppModulePath(APP_MODULE_SLUGS.gastronomy);
 
 // ─── Bounds e zoom iniciais vindos do SSOT de mapas ───────────────────────────
@@ -61,8 +67,157 @@ const INITIAL_ZOOM = MAP_DEFAULT_ZOOM;
 
 function createInitialVisibleLayers(): Partial<Record<MapLayerKey, boolean>> {
   return Object.fromEntries(
-    MAP_RUNTIME_LAYER_KEYS.map((layer) => [layer, true]),
+    MAP_PUBLIC_RUNTIME_LAYER_KEYS.map((layer) => [layer, true]),
   ) as Partial<Record<MapLayerKey, boolean>>;
+}
+
+function parseLayerQuery(searchParams: URLSearchParams): MapLayerKey[] {
+  const rawValues = [
+    ...searchParams.getAll('layer'),
+    ...searchParams.getAll('layers'),
+  ];
+
+  const requested = rawValues
+    .flatMap((value) => value.split(','))
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+  return requested.filter((value): value is MapLayerKey =>
+    MAP_PUBLIC_RUNTIME_LAYER_KEYS.includes(value as MapLayerKey),
+  );
+}
+
+function createFocusedVisibleLayers(layers: readonly MapLayerKey[]): Partial<Record<MapLayerKey, boolean>> {
+  if (layers.length === 0) return createInitialVisibleLayers();
+  const activeLayers = new Set(layers);
+  return Object.fromEntries(
+    MAP_PUBLIC_RUNTIME_LAYER_KEYS.map((layer) => [layer, activeLayers.has(layer)]),
+  ) as Partial<Record<MapLayerKey, boolean>>;
+}
+
+function buildCityGeoPath(state: string, city: string): string | null {
+  const safeState = state.trim();
+  const safeCity = city.trim();
+  if (!safeState || !safeCity) return null;
+  return `/br/${safeState}/${safeCity}`;
+}
+
+function readLocationCenter(location: Location | null | undefined): MapViewport['center'] | null {
+  const metadata = location?.metadata;
+  if (!metadata) return null;
+
+  const latitude = Number(
+    metadata.center_latitude ?? metadata.canonical_lat ?? metadata.latitude,
+  );
+  const longitude = Number(
+    metadata.center_longitude ?? metadata.canonical_lng ?? metadata.longitude,
+  );
+
+  if (
+    !Number.isFinite(latitude) ||
+    !Number.isFinite(longitude) ||
+    latitude < -90 ||
+    latitude > 90 ||
+    longitude < -180 ||
+    longitude > 180 ||
+    (Math.abs(latitude) < 0.000001 && Math.abs(longitude) < 0.000001)
+  ) {
+    return null;
+  }
+
+  return { latitude, longitude };
+}
+
+function toViewportCenter(center: [number, number] | null | undefined): MapViewport['center'] | null {
+  if (!center) return null;
+  const [latitude, longitude] = center;
+  if (
+    !Number.isFinite(latitude) ||
+    !Number.isFinite(longitude) ||
+    latitude < -90 ||
+    latitude > 90 ||
+    longitude < -180 ||
+    longitude > 180 ||
+    (Math.abs(latitude) < 0.000001 && Math.abs(longitude) < 0.000001)
+  ) {
+    return null;
+  }
+  return { latitude, longitude };
+}
+
+function parseLocationGeoPath(geoPath: string): { state: string; city: string; neighborhood: string | null } | null {
+  const parts = geoPath.split('/').filter(Boolean);
+  if (parts.length === 3) {
+    return {
+      state: parts[1],
+      city: parts[2].replace(/-/g, ' '),
+      neighborhood: null,
+    };
+  }
+  if (parts.length >= 4) {
+    return {
+      state: parts[1],
+      city: parts[2].replace(/-/g, ' '),
+      neighborhood: parts[3].replace(/-/g, ' '),
+    };
+  }
+  return null;
+}
+
+async function resolveCanonicalCenter(resolved: ResolvedTerritory | null): Promise<MapViewport['center'] | null> {
+  if (!resolved) return null;
+
+  if (resolved.kind === 'location') {
+    const parsed = parseLocationGeoPath(resolved.location.geographic_path);
+    if (!parsed) return readLocationCenter(resolved.location);
+
+    const bounds = parsed.neighborhood
+      ? await boundaryService.getNeighborhoodBounds({
+          neighborhood: parsed.neighborhood,
+          city: parsed.city,
+          state: parsed.state,
+          locationId: resolved.location.id,
+        })
+      : await boundaryService.getCityBounds({
+          city: parsed.city,
+          state: parsed.state,
+        });
+
+    return toViewportCenter(bounds.center) ?? readLocationCenter(resolved.location);
+  }
+
+  const centers = await Promise.all(
+    resolved.group.members.map(async (member) => {
+      const parsed = parseLocationGeoPath(member.geographic_path);
+      if (!parsed) return readLocationCenter(member);
+      const bounds = parsed.neighborhood
+        ? await boundaryService.getNeighborhoodBounds({
+            neighborhood: parsed.neighborhood,
+            city: parsed.city,
+            state: parsed.state,
+            locationId: member.id,
+          })
+        : await boundaryService.getCityBounds({
+            city: parsed.city,
+            state: parsed.state,
+          });
+      return toViewportCenter(bounds.center) ?? readLocationCenter(member);
+    }),
+  );
+
+  const validCenters = centers.filter((center): center is MapViewport['center'] => Boolean(center));
+  if (validCenters.length === 0) return null;
+
+  return {
+    latitude: validCenters.reduce((sum, center) => sum + center.latitude, 0) / validCenters.length,
+    longitude: validCenters.reduce((sum, center) => sum + center.longitude, 0) / validCenters.length,
+  };
+}
+
+function resolvedCenterKey(resolved: ResolvedTerritory | null): string {
+  if (!resolved) return 'none';
+  if (resolved.kind === 'location') return `location:${resolved.location.id}`;
+  return `group:${resolved.group.id}`;
 }
 
 // ─── Helper de filtro por bounds (client-side) ────────────────────────────────
@@ -110,38 +265,10 @@ function makeBusinessFetcher(territoryFilter: TerritoryFilter) {
   };
 }
 
-function makeEventFetcher(territoryFilter: TerritoryFilter) {
-  return async (bounds: BoundingBox): Promise<MapMarker[]> => {
-    try {
-      const events: CommunityEvent[] = await communityEventsRuntimeService.getByBounds(bounds, {
-        limit: 200,
-        territoryFilter,
-      });
-      return mapEntityProjection.projectEntities(
-        events.map((e) => ({
-          id: e.id,
-          name: e.title,
-          latitude: e.latitude ?? null,
-          longitude: e.longitude ?? null,
-          status: e.status, // normalizeStatus no MapEntityProjectionService
-          description: e.description,
-          created_at: e.created_at,
-          coordinate_source: e.coordinate_source,
-          map_layer_key: 'events',
-        })),
-        'event',
-        { includeMetadata: true, baseUrl: EVENTS_MAP_BASE_URL },
-      );
-    } catch {
-      return [];
-    }
-  };
-}
-
 function makeGastronomyFetcher(territoryFilter: TerritoryFilter) {
   return async (bounds: BoundingBox): Promise<MapMarker[]> => {
     try {
-      const gastronomyBusinesses = await mapLayerRuntimeService.getGastronomyByBounds(bounds, {
+      const gastronomyBusinesses = await mapGastronomyLayerRuntimeService.getGastronomyByBounds(bounds, {
         territoryFilter,
         limit: 200,
       });
@@ -171,38 +298,63 @@ function makeGastronomyFetcher(territoryFilter: TerritoryFilter) {
   };
 }
 
-function makeAlertFetcher(territoryFilter: TerritoryFilter) {
+function makeServicesFetcher(territoryFilter: TerritoryFilter) {
   return async (bounds: BoundingBox): Promise<MapMarker[]> => {
     try {
-      // Calcular centro e raio dos bounds
-      const [west, south, east, north] = bounds;
-      const centerLat = (south + north) / 2;
-      const centerLng = (west + east) / 2;
-      
-      // Calcular raio aproximado em metros (distância do centro ao canto)
-      const latDiff = north - south;
-      const lngDiff = east - west;
-      const radiusMeters = Math.sqrt(latDiff * latDiff + lngDiff * lngDiff) * 111000 / 2; // 111km por grau
-      
-      const alerts = await mapLayerRuntimeService.getAlertsBySpatialRadius(
-        [centerLat, centerLng],
-        radiusMeters,
-        { territoryFilter, limit: 50 }
-      );
-      
+      const services = await mapServicesLayerRuntimeService.getServicesByBounds(bounds, {
+        territoryFilter,
+        limit: 200,
+      });
+
       return mapEntityProjection.projectEntities(
-        alerts.map((a) => ({
-          id: a.id,
-          name: `Alerta em ${a.neighborhood_display || 'região'}`,
-          latitude: a.latitude,
-          longitude: a.longitude,
+        services.map((service) => ({
+          id: service.id,
+          name: service.name,
+          url: service.url ?? undefined,
+          latitude: service.latitude,
+          longitude: service.longitude,
           status: EntityStatus.ACTIVE,
-          description: a.description,
-          created_at: a.created_at,
-          map_layer_key: 'alerts',
+          is_verified: service.is_verified,
+          rating: service.rating,
+          category: service.category,
+          subcategory: service.subcategory,
+          description: service.description,
+          map_layer_key: 'services',
         })),
-        'alert',
-        { includeMetadata: true, baseUrl: '/alertas' },
+        'service',
+        { includeMetadata: true, calculateScore: true },
+      );
+    } catch {
+      return [];
+    }
+  };
+}
+
+function makeClassifiedsFetcher(territoryFilter: TerritoryFilter) {
+  return async (bounds: BoundingBox): Promise<MapMarker[]> => {
+    try {
+      const classifieds = await mapClassifiedsLayerRuntimeService.getClassifiedsByBounds(bounds, {
+        territoryFilter,
+        limit: 200,
+      });
+
+      return mapEntityProjection.projectEntities(
+        classifieds.map((classified) => ({
+          id: classified.id,
+          name: classified.name,
+          url: classified.url ?? undefined,
+          latitude: classified.latitude,
+          longitude: classified.longitude,
+          status: EntityStatus.ACTIVE,
+          category: classified.category,
+          description: classified.description,
+          price: classified.price,
+          condition: classified.condition,
+          created_at: classified.created_at,
+          map_layer_key: 'classifieds',
+        })),
+        'classified',
+        { includeMetadata: true, calculateScore: true },
       );
     } catch {
       return [];
@@ -222,12 +374,19 @@ export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV
   );
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { active: publicBrowsingCity } = usePublicBrowsingCity();
+  const requestedLayers = React.useMemo(() => parseLayerQuery(searchParams), [searchParams]);
+  const requestedLayersKey = React.useMemo(() => requestedLayers.join(','), [requestedLayers]);
 
   const focusTarget = React.useMemo(() => {
-    const rawLat = Number(searchParams.get('lat'));
-    const rawLng = Number(searchParams.get('lng'));
-    const rawZoom = Number(searchParams.get('z') ?? 16);
-    const name = searchParams.get('name') ?? 'Estabelecimento';
+    const latParam = searchParams.get('lat');
+    const lngParam = searchParams.get('lng');
+    if (!latParam || !lngParam) return null;
+
+    const rawLat = Number(latParam);
+    const rawLng = Number(lngParam);
+    const rawZoom = Number(searchParams.get('z') ?? searchParams.get('zoom') ?? 16);
+    const name = searchParams.get('name') ?? searchParams.get('highlight') ?? 'Estabelecimento';
 
     const validLat = Number.isFinite(rawLat) && rawLat >= -90 && rawLat <= 90;
     const validLng = Number.isFinite(rawLng) && rawLng >= -180 && rawLng <= 180;
@@ -243,18 +402,58 @@ export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV
     };
   }, [searchParams]);
 
+  const fallbackCityGeoPath = React.useMemo(
+    () => buildCityGeoPath(publicBrowsingCity.state, publicBrowsingCity.city),
+    [publicBrowsingCity.city, publicBrowsingCity.state],
+  );
+
+  const { data: fallbackMapLocation = null } = useQuery({
+    queryKey: ['mapa-v4-fallback-location', fallbackCityGeoPath],
+    queryFn: async () => {
+      if (!fallbackCityGeoPath) return null;
+      const location = await createLocationRepository().findByPath(fallbackCityGeoPath);
+      return location?.status === LocationStatus.ACTIVE ? location : null;
+    },
+    enabled: !resolved && !focusTarget && Boolean(fallbackCityGeoPath),
+    staleTime: 30 * 60 * 1000,
+  });
+
+  const effectiveResolved = React.useMemo<ResolvedTerritory | null>(() => {
+    if (resolved) return resolved;
+    if (focusTarget || !fallbackMapLocation) return null;
+    return { kind: 'location', location: fallbackMapLocation };
+  }, [fallbackMapLocation, focusTarget, resolved]);
+
+  const effectiveResolvedCenterKey = React.useMemo(
+    () => resolvedCenterKey(effectiveResolved),
+    [effectiveResolved],
+  );
+
+  const { data: canonicalTerritoryCenter = null } = useQuery({
+    queryKey: ['mapa-v4-canonical-center', effectiveResolvedCenterKey],
+    queryFn: () => resolveCanonicalCenter(effectiveResolved),
+    enabled: !focusTarget && Boolean(effectiveResolved),
+    staleTime: 30 * 60 * 1000,
+  });
+
   const initialViewport = React.useMemo(
-    () =>
-      focusTarget
-        ? {
-            center: {
-              latitude: focusTarget.latitude,
-              longitude: focusTarget.longitude,
-            },
-            zoom: focusTarget.zoom,
-          }
-        : undefined,
-    [focusTarget],
+    () => {
+      if (focusTarget) {
+        return {
+          center: {
+            latitude: focusTarget.latitude,
+            longitude: focusTarget.longitude,
+          },
+          zoom: focusTarget.zoom,
+        };
+      }
+
+      const fallbackCenter = readLocationCenter(fallbackMapLocation) ?? canonicalTerritoryCenter;
+      return fallbackCenter
+        ? { center: fallbackCenter, zoom: 12 }
+        : undefined;
+    },
+    [canonicalTerritoryCenter, fallbackMapLocation, focusTarget],
   );
 
   // Localização do usuário com fallback territorial
@@ -269,15 +468,15 @@ export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV
   });
 
   // SSOT territorial
-  const territoryFilter = useTerritoryFilter(resolved, activeMemberIds);
-  const { polygons: territoryPolygons } = useTerritoryPolygon(resolved);
-  const guideUrls = useTouristPointPublicUrls(resolved);
+  const territoryFilter = useTerritoryFilter(effectiveResolved, activeMemberIds);
+  const { polygons: territoryPolygons } = useTerritoryPolygon(effectiveResolved);
+  const guideUrls = useTouristPointPublicUrls(effectiveResolved);
 
-  const touristLayerVisible = visibleLayers.tourist_points !== false;
-  const businessesLayerVisible = visibleLayers.businesses !== false;
-  const gastronomyLayerVisible = visibleLayers.gastronomy !== false;
-  const eventsLayerVisible = visibleLayers.events !== false;
-  const alertsLayerVisible = visibleLayers.alerts !== false;
+  const touristLayerVisible = isMapRuntimeLayerEnabled('tourist_points') && visibleLayers.tourist_points !== false;
+  const businessesLayerVisible = isMapRuntimeLayerEnabled('businesses') && visibleLayers.businesses !== false;
+  const gastronomyLayerVisible = isMapRuntimeLayerEnabled('gastronomy') && visibleLayers.gastronomy !== false;
+  const servicesLayerVisible = isMapRuntimeLayerEnabled('services') && visibleLayers.services !== false;
+  const classifiedsLayerVisible = isMapRuntimeLayerEnabled('classifieds') && visibleLayers.classifieds !== false;
 
   const touristBounds = React.useMemo(
     () => ({
@@ -308,11 +507,11 @@ export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV
     () => ({
       ...(businessesLayerVisible ? { businesses: makeBusinessFetcher(territoryFilter) } : {}),
       ...(gastronomyLayerVisible ? { gastronomy: makeGastronomyFetcher(territoryFilter) } : {}),
-      ...(eventsLayerVisible ? { events: makeEventFetcher(territoryFilter) } : {}),
-      ...(alertsLayerVisible ? { alerts: makeAlertFetcher(territoryFilter) } : {}),
+      ...(servicesLayerVisible ? { services: makeServicesFetcher(territoryFilter) } : {}),
+      ...(classifiedsLayerVisible ? { classifieds: makeClassifiedsFetcher(territoryFilter) } : {}),
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [filterKey, businessesLayerVisible, gastronomyLayerVisible, eventsLayerVisible, alertsLayerVisible],
+    [filterKey, businessesLayerVisible, gastronomyLayerVisible, servicesLayerVisible, classifiedsLayerVisible],
   );
 
   const { layerData, loadingLayers, fetchByBounds, clearLayer } = useMapViewportFetch({
@@ -322,19 +521,20 @@ export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV
   });
 
   const handleLayerToggle = useCallback((key: string, visible: boolean) => {
-    if (!MAP_RUNTIME_LAYER_KEYS.includes(key as MapLayerKey)) return;
+    if (!MAP_PUBLIC_RUNTIME_LAYER_KEYS.includes(key as MapLayerKey)) return;
 
     setVisibleLayers((prev) => ({
       ...prev,
       [key]: visible,
     }));
 
-    if (!visible) {
-      if (key === 'businesses' || key === 'gastronomy' || key === 'events' || key === 'alerts') {
-        clearLayer(key as MapLayerKey);
-      }
-    }
+    if (!visible) clearLayer(key as MapLayerKey);
   }, [clearLayer]);
+
+  useEffect(() => {
+    if (requestedLayers.length === 0) return;
+    setVisibleLayers(createFocusedVisibleLayers(requestedLayers));
+  }, [requestedLayers, requestedLayersKey]);
 
   // Fetch inicial com bounds configurados.
   // Quando os polígonos do território chegarem, o MapLibreAdapter centraliza
@@ -427,7 +627,7 @@ export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV
           initialViewport={initialViewport}
           territoryPolygons={territoryPolygons}
           markers={markers}
-          resolved={resolved}
+          resolved={effectiveResolved}
           enableClustering={false}
           onMarkerClick={(id) => {
             const marker = markers.find((m) => m.id === id);
@@ -452,7 +652,7 @@ export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV
             layers: {
               enabled: true,
               position: 'bottom-left',
-              layers: MAP_RUNTIME_LAYER_KEYS,
+              layers: MAP_PUBLIC_RUNTIME_LAYER_KEYS,
               layout: 'vertical',
               visibleLayers,
               onLayerToggle: handleLayerToggle,
@@ -465,7 +665,7 @@ export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV
               compact: true,
             },
           }}
-          userLocationMarker={{ enabled: true, autoAdd: true }}
+          userLocationMarker={{ enabled: true, autoAdd: false }}
         />
       </div>
 

@@ -34,7 +34,7 @@ import { useTerritoryLabels } from '@/core/location/hooks/useTerritoryLabels';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
 import { useFriendlyModuleUrls } from '@/core/routing/hooks/useFriendlyModuleUrls';
 import {
-  MapPin, Navigation, Loader2, Store, Calendar, AlertTriangle,
+  MapPin, Navigation, Loader2, Store, AlertTriangle,
   Landmark, Compass, ChevronRight, TrendingUp, Sparkles,
   UtensilsCrossed, Briefcase, Map, Info,
 } from 'lucide-react';
@@ -43,23 +43,25 @@ import {
 // TYPES & CONSTANTS
 // ============================================================================
 
-const ALL_ENTITY_TYPES = ['business', 'event', 'alert', 'tourist_point'] as const;
+type NearbyEntityType = 'business' | 'tourist_point';
 
-const CATEGORY_TO_TYPES: Record<QuickCategoryKey, typeof ALL_ENTITY_TYPES[number][]> = {
+const ALL_ENTITY_TYPES: NearbyEntityType[] = [
+  'business',
+  'tourist_point',
+];
+
+const CATEGORY_TO_TYPES: Record<QuickCategoryKey, NearbyEntityType[]> = {
   all: [...ALL_ENTITY_TYPES],
   food: ['business'],
   shopping: ['business'],
   services: ['business'],
   health: ['business'],
-  education: ['business'],
-  leisure: ['event', 'tourist_point'],
+  leisure: ['tourist_point'],
   fitness: ['business'],
   tourism: ['tourist_point'],
-  events: ['event'],
-  alerts: ['alert'],
 };
 
-function resolveEntityTypesByCategory(category: QuickCategoryKey): typeof ALL_ENTITY_TYPES[number][] {
+function resolveEntityTypesByCategory(category: QuickCategoryKey): NearbyEntityType[] {
   switch (category) {
     case 'all':
       return CATEGORY_TO_TYPES.all;
@@ -71,18 +73,12 @@ function resolveEntityTypesByCategory(category: QuickCategoryKey): typeof ALL_EN
       return CATEGORY_TO_TYPES.services;
     case 'health':
       return CATEGORY_TO_TYPES.health;
-    case 'education':
-      return CATEGORY_TO_TYPES.education;
     case 'leisure':
       return CATEGORY_TO_TYPES.leisure;
     case 'fitness':
       return CATEGORY_TO_TYPES.fitness;
     case 'tourism':
       return CATEGORY_TO_TYPES.tourism;
-    case 'events':
-      return CATEGORY_TO_TYPES.events;
-    case 'alerts':
-      return CATEGORY_TO_TYPES.alerts;
     default:
       return [...ALL_ENTITY_TYPES];
   }
@@ -170,8 +166,6 @@ export default function NearbyPage() {
   // ── Grouped entities ───────────────────────────────────────────────
   const grouped = useMemo(() => groupByType(entities), [entities]);
   const businesses = grouped.business || [];
-  const events = grouped.event || [];
-  const alerts = grouped.alert || [];
   const touristPoints = grouped.tourist_point || [];
 
   // ── Visible for "all results" list ──────────────────────────────────
@@ -212,7 +206,7 @@ export default function NearbyPage() {
         <title>{`${territoryLabels.nearbyLabel} — ${entities.length} resultados em ${radiusKm}km`}</title>
         <meta
           name="description"
-          content={`Descubra empresas, eventos, serviços e pontos turísticos ${proximityLabel} em um raio de ${radiusKm}km.`}
+            content={`Descubra empresas, gastronomia, serviços, classificados e pontos turísticos ${proximityLabel} em um raio de ${radiusKm}km.`}
         />
       </Helmet>
 
@@ -225,7 +219,7 @@ export default function NearbyPage() {
           moduleIcon={Compass}
           title="Descubra o que está"
           titleHighlight={proximityLabel}
-          subtitle={`Empresas, gastronomia, serviços, eventos e pontos turísticos — tudo organizado ${
+          subtitle={`Empresas, gastronomia, serviços, classificados e pontos turísticos, tudo organizado ${
             isGps ? 'por proximidade' : `${territoryLabels.inTerritory}`
           }.`}
           stats={[
@@ -412,24 +406,6 @@ export default function NearbyPage() {
               onShowInMap={handleShowClassifiedInMap}
             />
 
-            {/* ── Eventos ─────────────────────────────────────────── */}
-            <NearbySection
-              title={`Eventos ${proximityLabel}`}
-              subtitle={isGps ? "O que está acontecendo por perto" : `Eventos ${territoryLabels.inTerritory}`}
-              icon={Calendar}
-              iconColorClass="bg-green-500/10 text-green-500"
-              count={events.length}
-              isEmpty={events.length === 0}
-              isLoading={isLoading}
-              onSeeAll={events.length > 6 ? () => navigate(moduleUrls.events) : undefined}
-            >
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {events.slice(0, 6).map((e) => (
-                  <NearbyCard key={e.id} entity={e} onNavigate={navigate} />
-                ))}
-              </div>
-            </NearbySection>
-
             {/* ── Pontos Turísticos ────────────────────────────────── */}
             <NearbySection
               title={`Pontos turísticos ${proximityLabel}`}
@@ -443,23 +419,6 @@ export default function NearbyPage() {
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {touristPoints.slice(0, 6).map((e) => (
-                  <NearbyCard key={e.id} entity={e} onNavigate={navigate} />
-                ))}
-              </div>
-            </NearbySection>
-
-            {/* ── Alertas ─────────────────────────────────────────── */}
-            <NearbySection
-              title={`Alertas ${proximityLabel}`}
-              subtitle={isGps ? "Fique informado sobre o que acontece por perto" : `Alertas ${territoryLabels.inTerritory}`}
-              icon={AlertTriangle}
-              iconColorClass="bg-red-500/10 text-red-500"
-              count={alerts.length}
-              isEmpty={alerts.length === 0}
-              isLoading={isLoading}
-            >
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {alerts.slice(0, 6).map((e) => (
                   <NearbyCard key={e.id} entity={e} onNavigate={navigate} />
                 ))}
               </div>

@@ -75,10 +75,10 @@ export function ConsentBanner() {
 
   return (
     <>
-      <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background p-4 shadow-lg">
+      <div className="fixed inset-x-3 bottom-[calc(4rem+env(safe-area-inset-bottom)+0.75rem)] z-50 rounded-2xl border bg-background/95 p-3 shadow-2xl backdrop-blur md:inset-x-0 md:bottom-0 md:rounded-none md:border-x-0 md:border-b-0 md:border-t md:p-4">
         <div className="container mx-auto max-w-6xl">
-          <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
-            <div className="flex flex-1 items-start gap-3">
+          <div className="relative flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-4">
+            <div className="flex flex-1 items-start gap-3 pr-8 sm:pr-0">
               <div className="shrink-0 rounded-full bg-primary/10 p-2">
                 <Cookie className="h-5 w-5 text-primary" />
               </div>
@@ -89,13 +89,19 @@ export function ConsentBanner() {
                 </p>
               </div>
             </div>
-            <div className="flex shrink-0 flex-wrap items-center gap-2">
-              <Button variant="ghost" size="sm" onClick={() => setShowDetails(true)}>
+            <div className="grid w-full shrink-0 grid-cols-2 gap-2 sm:w-auto sm:flex sm:flex-wrap sm:items-center">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-9 w-full sm:w-auto"
+                onClick={() => setShowDetails(true)}
+              >
                 Personalizar
               </Button>
               <Button
                 variant="outline"
                 size="sm"
+                className="h-9 w-full sm:w-auto"
                 onClick={() =>
                   saveConsentsMutation.mutate({
                     necessary: true,
@@ -110,6 +116,7 @@ export function ConsentBanner() {
               </Button>
               <Button
                 size="sm"
+                className="col-span-2 h-9 w-full sm:col-span-1 sm:w-auto"
                 onClick={() =>
                   saveConsentsMutation.mutate({
                     necessary: true,
@@ -124,7 +131,7 @@ export function ConsentBanner() {
               </Button>
               <button
                 onClick={() => setShowBanner(false)}
-                className="ml-2 rounded p-1 hover:bg-muted"
+                className="absolute right-0 top-0 rounded p-1 hover:bg-muted sm:static sm:ml-2"
                 aria-label="Fechar"
               >
                 <X className="h-4 w-4" />

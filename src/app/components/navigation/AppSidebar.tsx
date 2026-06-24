@@ -58,6 +58,7 @@ import { buildCommunityNavigationModuleUrls } from '@/core/routing/utils/communi
 import { useGroupAvailability } from '@/core/territorial/hooks/useGroupAvailability';
 import { ModuleKey } from '@/core/rollout/types';
 import { GastronomyUrlService } from '@/core/verticals/gastronomy/services/GastronomyUrlService';
+import { isLaunchSurfaceEnabled } from '@/config/launchScope';
 
 function getInitials(value?: string | null): string {
   if (!value) return 'U';
@@ -80,6 +81,14 @@ function formatSlugLabel(slug?: string): string {
 }
 
 const OFFICIAL_LOGO_SRC = '/images/logo-icon.png';
+
+type SidebarNavItem = NavItem & { visible?: boolean };
+
+function visibleNavItems(items: readonly SidebarNavItem[]): NavItem[] {
+  return items
+    .filter((item) => item.visible !== false)
+    .map(({ visible: _visible, ...item }) => item);
+}
 
 export function AppSidebar() {
   const location = useLocation();
@@ -119,14 +128,22 @@ export function AppSidebar() {
     };
 
     return {
-      community: isAvailable(communityModuleAvailability),
-      business: isAvailable(businessModuleAvailability),
-      gastronomy: isAvailable(gastronomyModuleAvailability),
-      services: isAvailable(servicesModuleAvailability),
-      classifieds: isAvailable(classifiedsModuleAvailability),
-      jobs: isAvailable(jobsModuleAvailability),
-      events: isAvailable(eventsModuleAvailability),
-      mobility: isAvailable(mobilityModuleAvailability),
+      community: isLaunchSurfaceEnabled("community") && isAvailable(communityModuleAvailability),
+      business: isLaunchSurfaceEnabled("business") && isAvailable(businessModuleAvailability),
+      gastronomy: isLaunchSurfaceEnabled("gastronomy") && isAvailable(gastronomyModuleAvailability),
+      services: isLaunchSurfaceEnabled("services") && isAvailable(servicesModuleAvailability),
+      classifieds: isLaunchSurfaceEnabled("classifieds") && isAvailable(classifiedsModuleAvailability),
+      education: isLaunchSurfaceEnabled("education"),
+      jobs: isLaunchSurfaceEnabled("jobs") && isAvailable(jobsModuleAvailability),
+      events: isLaunchSurfaceEnabled("events") && isAvailable(eventsModuleAvailability),
+      mobility: isLaunchSurfaceEnabled("mobility") && isAvailable(mobilityModuleAvailability),
+      map: isLaunchSurfaceEnabled("map"),
+      nearby: isLaunchSurfaceEnabled("nearby"),
+      search: isLaunchSurfaceEnabled("search"),
+      communityAlerts: isLaunchSurfaceEnabled("communityAlerts"),
+      communityIssues: isLaunchSurfaceEnabled("communityIssues"),
+      communityLostFound: isLaunchSurfaceEnabled("communityLostFound"),
+      communityCommunication: isLaunchSurfaceEnabled("communityCommunication"),
     };
   }, [
     communityGroupId,
@@ -154,20 +171,20 @@ export function AppSidebar() {
       {
         id: 'community',
         label: 'Comunidade',
-        items: [
-          { id: 'community-home', icon: Home, label: 'Meu bairro', description: 'O que está acontecendo no bairro hoje', href: base },
-          { id: 'community-feed', icon: LayoutList, label: 'Feed', description: 'Feed da comunidade', href: `${base}/feed` },
-          { id: 'community-groups', icon: Users, label: 'Grupos', description: 'Núcleos e interesses locais', href: `${base}/grupos` },
-          { id: 'community-comms', icon: Newspaper, label: 'Comunicação', description: 'Mídias e canais locais', href: `${base}/comunicacao` },
-          { id: 'community-alerts', icon: Bell, label: 'Alertas', description: 'Alertas da comunidade', href: `${base}/feed?tab=alertas` },
-          { id: 'community-issues', icon: MessageSquare, label: 'Problemas', description: 'Problemas da região', href: `${base}/problemas` },
-          { id: 'community-lost-found', icon: Search, label: 'Achados e perdidos', description: 'Itens perdidos e encontrados', href: `${base}/achados-e-perdidos` },
-        ].filter(() => moduleVisibility.community) as NavItem[],
+        items: visibleNavItems([
+          { id: 'community-home', icon: Home, label: 'Meu bairro', description: 'O que está acontecendo no bairro hoje', href: base, visible: moduleVisibility.community },
+          { id: 'community-feed', icon: LayoutList, label: 'Feed', description: 'Feed da comunidade', href: `${base}/feed`, visible: moduleVisibility.community },
+          { id: 'community-groups', icon: Users, label: 'Grupos', description: 'Núcleos e interesses locais', href: `${base}/grupos`, visible: moduleVisibility.community },
+          { id: 'community-comms', icon: Newspaper, label: 'Comunicação', description: 'Mídias e canais locais', href: `${base}/comunicacao`, visible: moduleVisibility.community && moduleVisibility.communityCommunication },
+          { id: 'community-alerts', icon: Bell, label: 'Alertas', description: 'Alertas da comunidade', href: `${base}/feed?tab=alertas`, visible: moduleVisibility.community && moduleVisibility.communityAlerts },
+          { id: 'community-issues', icon: MessageSquare, label: 'Problemas', description: 'Problemas da região', href: `${base}/problemas`, visible: moduleVisibility.community && moduleVisibility.communityIssues },
+          { id: 'community-lost-found', icon: Search, label: 'Achados e perdidos', description: 'Itens perdidos e encontrados', href: `${base}/achados-e-perdidos`, visible: moduleVisibility.community && moduleVisibility.communityLostFound },
+        ]),
       },
       {
         id: 'local',
         label: 'Comércio local',
-        items: [
+        items: visibleNavItems([
           {
             id: 'community-business',
             icon: Building2,
@@ -190,8 +207,7 @@ export function AppSidebar() {
             label: 'Educação',
             description: `Escolas e cursos do ${territoryName}`,
             href: communityModuleUrls.education,
-            // Educação usa a base de disponibilidade de negócio local.
-            visible: moduleVisibility.business,
+            visible: moduleVisibility.education,
           },
           {
             id: 'community-services',
@@ -201,14 +217,12 @@ export function AppSidebar() {
             href: communityModuleUrls.services,
             visible: moduleVisibility.services,
           },
-        ]
-          .filter((item) => item.visible !== false)
-          .map(({ visible: _visible, ...item }) => item) as NavItem[],
+        ]),
       },
       {
         id: 'opportunities',
-        label: 'Oportunidades',
-        items: [
+        label: 'Anuncios locais',
+        items: visibleNavItems([
           {
             id: 'community-classifieds',
             icon: Tag,
@@ -233,17 +247,15 @@ export function AppSidebar() {
             href: communityModuleUrls.events,
             visible: moduleVisibility.events,
           },
-        ]
-          .filter((item) => item.visible !== false)
-          .map(({ visible: _visible, ...item }) => item) as NavItem[],
+        ]),
       },
       {
         id: 'tools',
         label: 'Ferramentas',
-        items: [
-          { id: 'community-map', icon: MapPin, label: 'Mapa', description: 'Camadas territoriais', href: communityModuleUrls.map },
-          { id: 'community-search', icon: Search, label: 'Busca', description: 'Busca no contexto local', href: `/buscar/${communityContext.state}/${communityContext.city}` },
-          { id: 'community-nearby', icon: MapPin, label: 'Perto de mim', description: 'Explorar o que está por perto', href: '/perto-de-mim' },
+        items: visibleNavItems([
+          { id: 'community-map', icon: MapPin, label: 'Mapa', description: 'Camadas territoriais', href: communityModuleUrls.map, visible: moduleVisibility.map },
+          { id: 'community-search', icon: Search, label: 'Busca', description: 'Busca no contexto local', href: `/buscar/${communityContext.state}/${communityContext.city}`, visible: moduleVisibility.search },
+          { id: 'community-nearby', icon: MapPin, label: 'Perto de mim', description: 'Explorar o que está por perto', href: '/perto-de-mim', visible: moduleVisibility.nearby },
           {
             id: 'community-mobility',
             icon: Car,
@@ -252,9 +264,7 @@ export function AppSidebar() {
             href: communityModuleUrls.mobility,
             visible: moduleVisibility.mobility,
           },
-        ]
-          .filter((item) => item.visible !== false)
-          .map(({ visible: _visible, ...item }) => item) as NavItem[],
+        ]),
       },
     ].filter((section) => section.items.length > 0);
   }, [communityContext, moduleVisibility]);

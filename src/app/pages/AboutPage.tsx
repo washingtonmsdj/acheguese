@@ -43,8 +43,8 @@ export default function AboutPage() {
               <div>
                 <h2 className="mb-2 text-xl font-semibold">Nossa missão</h2>
                 <p className="leading-relaxed text-white/70">
-                  Criar uma plataforma territorial que aproxima moradores, empresas, profissionais, escolas,
-                  poder público e oportunidades locais com dados organizados em uma fonte única.
+                  Criar uma plataforma territorial que aproxima moradores, empresas, profissionais,
+                  classificados e serviços locais com dados organizados em uma fonte única.
                 </p>
               </div>
             </div>
@@ -66,7 +66,7 @@ export default function AboutPage() {
               <div className="rounded-xl border border-white/10 bg-white/5 p-5">
                 <Heart className="mb-3 h-8 w-8 text-teal-400" />
                 <h3 className="mb-2 font-semibold">Comunidade ativa</h3>
-                <p className="text-sm text-white/60">Apoiamos feed, alertas, eventos, recomendações e comunicação local.</p>
+                <p className="text-sm text-white/60">Apoiamos feed, recomendações, mapa e descoberta local.</p>
               </div>
               <div className="rounded-xl border border-white/10 bg-white/5 p-5">
                 <Target className="mb-3 h-8 w-8 text-teal-400" />
@@ -80,7 +80,7 @@ export default function AboutPage() {
             <h2 className="mb-4 text-xl font-semibold">Nossa história</h2>
             <p className="mb-4 leading-relaxed text-white/70">
               O Achegue-se nasceu da necessidade de criar conexões mais fortes entre vizinhos,
-              serviços públicos, escolas, profissionais e comércio local.
+              serviços públicos, profissionais, classificados e comércio local.
             </p>
             <p className="leading-relaxed text-white/70">
               A plataforma foi desenhada para começar por uma cidade de referência e escalar para

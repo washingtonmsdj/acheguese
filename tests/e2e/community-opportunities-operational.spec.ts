@@ -7,7 +7,7 @@ async function readBodyText(page: Page) {
 test.describe("community opportunities public surface", () => {
   test.setTimeout(180_000);
 
-  test("opportunities route renders without falling back to global loader", async ({ page }) => {
+  test("paused opportunities tab falls back to the community surface", async ({ page }) => {
     await page.goto(
       "/comunidade/ba/salvador/feed?tab=oportunidades",
       { waitUntil: "domcontentloaded", timeout: 120_000 },
@@ -15,7 +15,11 @@ test.describe("community opportunities public surface", () => {
 
     await expect
       .poll(() => readBodyText(page), { timeout: 60_000 })
-      .toMatch(/Oportunidades|Vagas|Comunidade|Complexo/i);
+      .toMatch(/Feed|Comunidade|Complexo|Salvador/i);
+
+    await expect
+      .poll(() => readBodyText(page), { timeout: 60_000 })
+      .not.toMatch(/Publicar vaga|Vagas proximas|Vagas próximas/i);
 
     await expect
       .poll(async () => (await readBodyText(page)).includes("Preparando a casa"), { timeout: 30_000 })

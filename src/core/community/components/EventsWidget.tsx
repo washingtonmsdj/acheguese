@@ -5,30 +5,33 @@ import {
   CardHeader,
   CardTitle,
 } from "@/shared/components/ui/card";
-import { Calendar, MapPin, Clock } from "lucide-react";
+import { Calendar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { isLaunchSurfaceEnabled } from "@/config/launchScope";
 import { Button } from "@/shared/components/ui/button";
-import { useAppUrls } from "@/core/routing/hooks"; // ✅ SSOT URLs
+import { useAppUrls } from "@/core/routing/hooks";
 
 export function EventsWidget() {
   const navigate = useNavigate();
-  const appUrls = useAppUrls(); // ✅ SSOT URLs
+  const appUrls = useAppUrls();
+
+  if (!isLaunchSurfaceEnabled("events")) return null;
 
   return (
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-semibold flex items-center gap-2">
           <Calendar className="h-4 w-4 text-primary" />
-          Próximos Eventos
+          Proximos Eventos
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="text-sm text-muted-foreground text-center py-4">
-          Nenhum evento próximo
+          Nenhum evento proximo
         </div>
 
         <Button
-          onClick={() => navigate(appUrls.community.events)} // ✅ SSOT
+          onClick={() => navigate(appUrls.community.events)}
           variant="outline"
           size="sm"
           className="w-full"

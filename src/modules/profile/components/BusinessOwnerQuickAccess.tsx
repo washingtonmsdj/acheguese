@@ -21,6 +21,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Card } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
 import type { ProfileBusinessModuleSnapshot } from "@/core/profiles/services/ProfileBusinessTypes";
+import { isLaunchSurfaceEnabled } from "@/config/launchScope";
 
 interface BusinessOwnerQuickAccessProps {
   businesses: readonly ProfileBusinessModuleSnapshot[];
@@ -29,6 +30,9 @@ interface BusinessOwnerQuickAccessProps {
 
 export function BusinessOwnerQuickAccess({ businesses, onNavigate }: BusinessOwnerQuickAccessProps) {
   if (businesses.length === 0) return null;
+
+  const showMobility = isLaunchSurfaceEnabled("mobility");
+  const showPublicAnalytics = isLaunchSurfaceEnabled("publicAnalytics");
 
   return (
     <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 shadow-lg">
@@ -45,7 +49,7 @@ export function BusinessOwnerQuickAccess({ businesses, onNavigate }: BusinessOwn
             <Crown className="h-4 w-4 text-amber-500" />
           </div>
           <p className="text-sm text-muted-foreground">
-            Gerencie suas empresas, produtos, analytics e pedidos
+            Gerencie suas empresas, produtos e pedidos
           </p>
         </div>
         <Badge variant="secondary" className="text-xs">
@@ -132,7 +136,7 @@ export function BusinessOwnerQuickAccess({ businesses, onNavigate }: BusinessOwn
                     </Button>
                   )}
 
-                  {biz.gastronomy.analyticsUrl && (
+                  {showPublicAnalytics && biz.gastronomy.analyticsUrl && (
                     <Button
                       size="sm"
                       variant="outline"
@@ -171,12 +175,12 @@ export function BusinessOwnerQuickAccess({ businesses, onNavigate }: BusinessOwn
                       Painel de Pedidos
                     </Badge>
                   )}
-                  {biz.subscription.canUseMotoboyNetwork && (
+                  {showMobility && biz.subscription.canUseMotoboyNetwork && (
                     <Badge variant="secondary" className="text-[9px]">
                       Rede Motoboy
                     </Badge>
                   )}
-                  {biz.subscription.canTrackDelivery && (
+                  {showMobility && biz.subscription.canTrackDelivery && (
                     <Badge variant="secondary" className="text-[9px]">
                       Rastreio
                     </Badge>

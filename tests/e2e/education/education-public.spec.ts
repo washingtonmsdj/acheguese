@@ -15,7 +15,8 @@ import {
 
 const PUBLIC_BUSINESS_ID = '7ed16389-6768-4eda-904d-ebaec0d2f400'; // profile_id do E2E business
 
-test.describe('Education Public Pages', () => {
+// Public Education is preserved for maintenance but paused in the MVP launch scope.
+test.describe.skip('Education Public Pages', () => {
   test.describe('Explorer Page (Vitrine)', () => {
     test('should load education explorer page', async ({ page }) => {
       const response = await page.goto('/educacao/ba/salvador', {

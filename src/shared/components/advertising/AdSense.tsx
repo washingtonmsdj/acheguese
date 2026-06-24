@@ -72,8 +72,16 @@ declare global {
 /**
  * Hook para carregar o script do AdSense dinamicamente (SSOT)
  */
-function useAdSenseScript(clientId: string) {
+function isConfiguredAdSenseClient(clientId: string | undefined): clientId is string {
+  return Boolean(clientId && clientId !== 'ca-pub-XXXXXXXXXXXXXXXX');
+}
+
+function useAdSenseScript(clientId: string | null) {
   useEffect(() => {
+    if (!clientId) {
+      return;
+    }
+
     // Verifica se o script já foi carregado
     const existingScript = document.querySelector(
       `script[src*="adsbygoogle.js"][src*="${clientId}"]`
@@ -111,11 +119,16 @@ export function AdSense(props: AdSenseProps) {
 
   const adRef = useRef<HTMLModElement>(null);
   const isInitialized = useRef(false);
+  const adsenseConfigured = isConfiguredAdSenseClient(client);
 
   // Carrega o script do AdSense dinamicamente (SSOT)
-  useAdSenseScript(client);
+  useAdSenseScript(adsenseConfigured ? client : null);
 
   useEffect(() => {
+    if (!adsenseConfigured) {
+      return;
+    }
+
     // Evita inicialização duplicada
     if (isInitialized.current) {
       return;
@@ -141,7 +154,7 @@ export function AdSense(props: AdSenseProps) {
       const timer = setTimeout(initAd, 100);
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [adsenseConfigured]);
 
   const defaultStyle: React.CSSProperties = {
     display: 'block',
@@ -151,8 +164,10 @@ export function AdSense(props: AdSenseProps) {
   };
 
   // Validação: se não houver client ID configurado, mostra placeholder
-  if (!client || client === 'ca-pub-XXXXXXXXXXXXXXXX') {
-    return <AdSensePlaceholder text="Configure VITE_ADSENSE_CLIENT_ID no .env.local" />;
+  if (!adsenseConfigured) {
+    return import.meta.env.DEV ? (
+      <AdSensePlaceholder text="Configure VITE_ADSENSE_CLIENT_ID no .env.local" />
+    ) : null;
   }
 
   return (

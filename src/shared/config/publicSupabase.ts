@@ -11,7 +11,12 @@ const nodeEnv =
 function requirePublicRuntimeEnv(name: string): string {
   const value = getRecordValue(viteEnv, name) ?? getRecordValue(nodeEnv, name);
   if (typeof value === "string" && value.trim().length > 0) {
-    return value.trim();
+    const trimmed = value.trim();
+    if (/your[-_]|placeholder|publishable_key|anon_key|example/i.test(trimmed)) {
+      throw new Error(`[PublicSupabase] Variavel de ambiente contem placeholder: ${name}`);
+    }
+
+    return trimmed;
   }
 
   throw new Error(`[PublicSupabase] Variavel de ambiente obrigatoria ausente: ${name}`);

@@ -12,7 +12,7 @@
  */
 
 // Service Worker version
-const SW_VERSION = '2.0.2';
+const SW_VERSION = '2.0.3';
 const IS_LOCALHOST =
   self.location.hostname === 'localhost' ||
   self.location.hostname === '127.0.0.1' ||
@@ -197,16 +197,23 @@ self.addEventListener('notificationclose', (event) => {
 /**
  * Get URL for notification click based on notification data
  */
+function getLaunchSafeNotificationUrl(url, fallback = '/notifications') {
+  if (!url) return fallback;
+  const value = String(url);
+  const pausedRoutePattern = /^\/(messages|mensagens|chat|mobility|mobilidade|track|eventos|vagas|oportunidades|educacao|comunicacao|cupons|ranking|gamificacao|analytics|alertas|achados-perdidos|achados-e-perdidos|problemas)\b/i;
+  return pausedRoutePattern.test(value) ? fallback : value;
+}
+
 function getNotificationUrl(data) {
   if (!data) return '/';
 
   // Handle different notification types
   switch (data.type) {
     case 'message':
-      return `/messages/${data.conversationId || ''}`;
+      return '/notifications';
     
     case 'ride':
-      return `/mobility/track/${data.rideId || ''}`;
+      return '/perto-de-mim';
     
     case 'order':
       return `/orders/${data.orderId || ''}`;
@@ -218,13 +225,13 @@ function getNotificationUrl(data) {
       return '/settings/sessions';
     
     case 'social':
-      return data.url || '/notifications';
+      return getLaunchSafeNotificationUrl(data.url);
     
     case 'system':
-      return data.url || '/notifications';
+      return getLaunchSafeNotificationUrl(data.url);
     
     default:
-      return data.url || '/notifications';
+      return getLaunchSafeNotificationUrl(data.url);
   }
 }
 
@@ -237,13 +244,13 @@ function getActionUrl(action, data) {
       return getNotificationUrl(data);
     
     case 'reply':
-      return `/messages/${data.conversationId || ''}`;
+      return '/notifications';
     
     case 'accept':
-      return data.acceptUrl || '/';
+      return getLaunchSafeNotificationUrl(data.acceptUrl, '/');
     
     case 'decline':
-      return data.declineUrl || '/';
+      return getLaunchSafeNotificationUrl(data.declineUrl, '/');
     
     case 'settings':
       return '/settings/notifications';

@@ -42,8 +42,20 @@ describe("generateSitemap", () => {
       "https://acheguese.com.br/chapada-do-rio-vermelho/empresas",
     );
     expect(sitemap).toContain(
+      "https://acheguese.com.br/chapada-do-rio-vermelho/servicos",
+    );
+    expect(sitemap).toContain(
+      "https://acheguese.com.br/chapada-do-rio-vermelho/classificados",
+    );
+    expect(sitemap).toContain(
+      "https://acheguese.com.br/chapada-do-rio-vermelho/mapa",
+    );
+    expect(sitemap).toContain(
       "https://acheguese.com.br/complexo-do-nordeste-de-amaralina/feed",
     );
+    expect(sitemap).not.toContain("/mobilidade");
+    expect(sitemap).not.toContain("/eventos");
+    expect(sitemap).not.toContain("/vagas");
   });
 
   it("mantem artefatos publicos sem URLs legadas de comunidade", () => {
@@ -58,5 +70,10 @@ describe("generateSitemap", () => {
     expect(publicArtifacts).toContain(
       "https://acheguese.com.br/complexo-do-nordeste-de-amaralina/feed",
     );
+    expect(publicArtifacts).not.toContain("https://acheguese.com.br/mobilidade/");
+    expect(publicArtifacts).not.toContain("https://acheguese.com.br/eventos/");
+    expect(publicArtifacts).not.toContain("https://acheguese.com.br/vagas/");
+    expect(publicArtifacts).not.toContain("https://acheguese.com.br/educacao/");
+    expect(publicArtifacts).not.toContain("https://acheguese.com.br/comunicacao/");
   });
 });

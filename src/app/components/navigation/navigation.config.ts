@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { APP_MODULE_SLUGS, buildAppModulePath } from '@/config/moduleSlugs';
 import { LAUNCH_URLS } from '@/config/territory';
+import { filterLaunchItems, filterLaunchSections } from '@/config/launchScope';
 import { gastronomyPublicRoutes } from '@/core/verticals/gastronomy/routes/gastronomyPublicRoutes';
 
 export interface NavItem {
@@ -60,7 +61,7 @@ const NAV_MODULE_ROOTS = {
  * A sidebar deve levar a destinos principais. Fluxos especificos de comunidade
  * ficam dentro de "Meu Bairro", onde o usuario ja tem contexto territorial.
  */
-export const NAV_SECTIONS: NavSection[] = [
+const RAW_NAV_SECTIONS: NavSection[] = [
   {
     id: 'main',
     label: 'Principal',
@@ -191,7 +192,7 @@ export const NAV_SECTIONS: NavSection[] = [
  * Itens de navegacao para mobile (bottom nav).
  * Versao simplificada com os itens mais importantes.
  */
-export const MOBILE_NAV_ITEMS: NavItem[] = [
+const RAW_MOBILE_NAV_ITEMS: NavItem[] = [
   {
     id: 'home',
     icon: Home,
@@ -242,6 +243,9 @@ export const MOBILE_NAV_ITEMS: NavItem[] = [
     description: 'Mapa',
   },
 ];
+
+export const NAV_SECTIONS: NavSection[] = filterLaunchSections(RAW_NAV_SECTIONS);
+export const MOBILE_NAV_ITEMS: NavItem[] = filterLaunchItems(RAW_MOBILE_NAV_ITEMS);
 
 export function findNavItem(id: string): NavItem | undefined {
   for (const section of NAV_SECTIONS) {

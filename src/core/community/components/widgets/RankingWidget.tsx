@@ -8,15 +8,21 @@ import { useRankingUsers } from "../../hooks/useRankingUsers";
 import { WidgetSkeleton } from "./WidgetSkeleton";
 import { useSessionContext } from "@/core/session";
 import { useAppUrls } from "@/core/routing/hooks";
+import { isLaunchSurfaceEnabled } from "@/config/launchScope";
 
 /**
  * Widget de Ranking Melhorado
  * Mostra top 3 usuários com medalhas e destaque para usuário atual
  */
 export const RankingWidget = memo(() => {
-  const { data: users, isLoading } = useRankingUsers(5);
+  const showRanking = isLaunchSurfaceEnabled("gamification");
+  const { data: users, isLoading } = useRankingUsers(5, showRanking);
   const { activeProfile } = useSessionContext();
   const appUrls = useAppUrls();
+
+  if (!showRanking) {
+    return null;
+  }
 
   if (isLoading) {
     return <WidgetSkeleton hasHeader itemCount={3} />;

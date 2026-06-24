@@ -7,6 +7,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { SectionFrame, EmptyPanel } from "@/modules/profile/components/hub";
 import { useEntitlements } from "@/core/billing/hooks/useEntitlements";
+import { isLaunchSurfaceEnabled } from "@/config/launchScope";
 
 import type { DeliverySectionProps } from "./types";
 import type { ProfileBusinessModuleSnapshot } from "@/core/profiles/services/ProfileBusinessTypes";
@@ -31,14 +32,16 @@ function formatPlanLabel(value?: string | null): string {
 }
 
 function hasDeliveryCapability(item: ProfileBusinessModuleSnapshot): boolean {
+  const showMobility = isLaunchSurfaceEnabled("mobility");
+
   return (
     item.gastronomy.deliveryEnabled ||
-    item.subscription.canUseMotoboyNetwork ||
     item.subscription.canRequestDelivery ||
-    item.subscription.canTrackDelivery ||
     item.subscription.canConfigureDeliveryArea ||
     item.subscription.canSetDeliveryFees ||
-    item.subscription.canUseOwnDelivery
+    item.subscription.canUseOwnDelivery ||
+    (showMobility &&
+      (item.subscription.canUseMotoboyNetwork || item.subscription.canTrackDelivery))
   );
 }
 
@@ -48,6 +51,7 @@ interface DeliveryBusinessCardProps {
 }
 
 function DeliveryBusinessCard({ item, navigate }: DeliveryBusinessCardProps) {
+  const showMobility = isLaunchSurfaceEnabled("mobility");
   const { entitlements, isLoading } = useEntitlements({
     business_id: item.businessId,
     subscription_scope: "business",
@@ -68,19 +72,19 @@ function DeliveryBusinessCard({ item, navigate }: DeliveryBusinessCardProps) {
 
   const features = [
     item.gastronomy.deliveryEnabled ? "Delivery ativo" : null,
-    canUseMotoboyNetwork ? "Rede motoboy" : null,
+    showMobility && canUseMotoboyNetwork ? "Rede motoboy" : null,
     canConfigureDeliveryArea ? "Area de entrega" : null,
     canSetDeliveryFees ? "Taxas configuraveis" : null,
-    canTrackDelivery ? "Rastreio" : null,
+    showMobility && canTrackDelivery ? "Rastreio" : null,
     canUseOwnDelivery ? "Entrega propria" : null,
   ].filter(Boolean) as string[];
 
   const actions = [
     { label: "Dashboard", url: item.dashboardUrl },
     { label: "Pedidos", url: item.gastronomy.ordersUrl },
-    { label: "Entregas", url: item.gastronomy.deliveriesUrl },
+    showMobility ? { label: "Entregas", url: item.gastronomy.deliveriesUrl } : null,
     { label: "Area de entrega", url: item.gastronomy.deliveryAreaUrl },
-  ].filter((action): action is { label: string; url: string } => Boolean(action.url));
+  ].filter((action): action is { label: string; url: string } => Boolean(action?.url));
 
   const effectivePlanTier = entitlements?.planTier ?? item.subscription.planTier;
 
@@ -142,13 +146,13 @@ export function DeliverySection({
 
   return (
     <SectionFrame
-      title="Delivery e motoboy"
-      description="Mostra apenas dados e atalhos de entrega, sem mistura com outras areas."
+      title="Delivery"
+      description="Mostra dados e atalhos de entrega da operacao gastronomica."
     >
       {deliveryModules.length === 0 ? (
         <EmptyPanel
-          title="Sem operação de delivery ativa"
-          description="Nenhuma empresa com delivery/motoboy ativo foi encontrada no perfil atual."
+          title="Sem operacao de delivery ativa"
+          description="Nenhuma empresa com delivery ativo foi encontrada no perfil atual."
           actionLabel="Ver area de empresas"
           onAction={() => setActiveSection("empresas")}
         />

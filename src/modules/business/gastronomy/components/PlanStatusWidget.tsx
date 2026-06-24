@@ -1,15 +1,3 @@
-/**
- * PlanStatusWidget — Widget de status do plano no dashboard gastronômico
- *
- * Mostra:
- * - Plano atual
- * - Recursos disponíveis
- * - Limites e uso atual
- * - CTAs de upgrade
- *
- * SSOT: Usa useEntitlements do core/billing
- */
-
 import { useEntitlements } from '@/core/billing/hooks/useEntitlements';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Badge } from '@/shared/components/ui/badge';
@@ -17,6 +5,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Progress } from '@/shared/components/ui/progress';
 import { AlertTriangle, CheckCircle2, Crown, TrendingUp, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { isLaunchSurfaceEnabled } from '@/config/launchScope';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 
 interface PlanStatusWidgetProps {
@@ -36,6 +25,9 @@ export function PlanStatusWidget({
     business_id: businessId,
     subscription_scope: 'business',
   });
+  const showCoupons = isLaunchSurfaceEnabled('coupons');
+  const showAnalytics = isLaunchSurfaceEnabled('publicAnalytics');
+  const showMobility = isLaunchSurfaceEnabled('mobility');
 
   if (isLoading) {
     return (
@@ -46,33 +38,30 @@ export function PlanStatusWidget({
       </Card>
     );
   }
-  
+
   if (!entitlements) {
     return null;
   }
 
-  // Calcular progresso dos limites
   const menuItemsProgress = entitlements.maxMenuItems
     ? (currentMenuItems / entitlements.maxMenuItems) * 100
     : 0;
-
   const imagesProgress = entitlements.maxImages
     ? (currentImages / entitlements.maxImages) * 100
     : 0;
-
   const promotionsProgress = entitlements.maxPromotions
     ? (currentPromotions / entitlements.maxPromotions) * 100
     : 0;
 
-  // Determinar cor do badge
   const isDelivery = entitlements.planTier === 'delivery';
   const isPro = entitlements.planTier === 'pro';
   const isFree = entitlements.planTier === 'free';
-  
   const badgeVariant = isDelivery ? 'default' : isPro ? 'secondary' : 'outline';
-  const badgeIcon = isDelivery ? <Zap className="w-3 h-3 mr-1" /> : isPro ? <Crown className="w-3 h-3 mr-1" /> : null;
-
-  // Determinar se deve mostrar CTA de upgrade
+  const badgeIcon = isDelivery
+    ? <Zap className="w-3 h-3 mr-1" />
+    : isPro
+      ? <Crown className="w-3 h-3 mr-1" />
+      : null;
   const showUpgradeCTA = !isDelivery;
 
   return (
@@ -88,9 +77,9 @@ export function PlanStatusWidget({
               </Badge>
             </CardTitle>
             <CardDescription>
-              {isFree && 'Recursos básicos para começar'}
-              {isPro && 'Recursos avançados para crescer'}
-              {isDelivery && 'Todos os recursos + pedidos internos'}
+              {isFree && 'Recursos basicos para comecar'}
+              {isPro && 'Recursos avancados para crescer'}
+              {isDelivery && 'Recursos ampliados para operacao de pedidos'}
             </CardDescription>
           </div>
           {showUpgradeCTA && (
@@ -105,11 +94,10 @@ export function PlanStatusWidget({
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {/* Limite de Itens do Cardápio */}
         {entitlements.maxMenuItems !== null && (
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Itens do Cardápio</span>
+              <span className="text-muted-foreground">Itens do Cardapio</span>
               <span className="font-medium">
                 {currentMenuItems} / {entitlements.maxMenuItems}
               </span>
@@ -118,13 +106,12 @@ export function PlanStatusWidget({
             {menuItemsProgress >= 90 && (
               <p className="flex items-start gap-1.5 text-xs text-amber-600">
                 <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" aria-hidden="true" />
-                <span>Você está próximo do limite. Faça upgrade para adicionar mais itens.</span>
+                <span>Voce esta proximo do limite. Faca upgrade para adicionar mais itens.</span>
               </p>
             )}
           </div>
         )}
 
-        {/* Limite de Imagens */}
         {entitlements.maxImages !== null && (
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
@@ -137,17 +124,16 @@ export function PlanStatusWidget({
             {imagesProgress >= 90 && (
               <p className="flex items-start gap-1.5 text-xs text-amber-600">
                 <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" aria-hidden="true" />
-                <span>Você está próximo do limite de imagens.</span>
+                <span>Voce esta proximo do limite de imagens.</span>
               </p>
             )}
           </div>
         )}
 
-        {/* Limite de Promoções */}
-        {entitlements.maxPromotions !== null && can('canUsePromotions') && (
+        {showCoupons && entitlements.maxPromotions !== null && can('canUsePromotions') && (
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Promoções</span>
+              <span className="text-muted-foreground">Promocoes</span>
               <span className="font-medium">
                 {currentPromotions} / {entitlements.maxPromotions}
               </span>
@@ -156,47 +142,44 @@ export function PlanStatusWidget({
             {promotionsProgress >= 90 && (
               <p className="flex items-start gap-1.5 text-xs text-amber-600">
                 <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" aria-hidden="true" />
-                <span>Você está próximo do limite de promoções.</span>
+                <span>Voce esta proximo do limite de promocoes.</span>
               </p>
             )}
           </div>
         )}
 
-        {/* Recursos Ilimitados */}
         {(entitlements.maxMenuItems === null || entitlements.maxImages === null) && (
           <div className="pt-2 border-t">
             <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
               <CheckCircle2 className="h-4 w-4 text-success" aria-hidden="true" />
-              Recursos ilimitados disponíveis no seu plano
+              Recursos ilimitados disponiveis no seu plano
             </p>
           </div>
         )}
 
-        {/* Recursos Bloqueados (Free) */}
         {isFree && (
           <div className="pt-2 border-t space-y-1">
             <p className="text-sm font-medium">Desbloqueie com Pro:</p>
             <ul className="text-xs text-muted-foreground space-y-1 ml-4">
-              <li>• Página premium</li>
-              <li>• Link curto (/p/seu-slug)</li>
-              <li>• QR Code personalizado</li>
-              <li>• Cardápio ilimitado</li>
-              <li>• Promoções</li>
-              <li>• Analytics</li>
+              <li>- Pagina premium</li>
+              <li>- Link curto (/p/seu-slug)</li>
+              <li>- QR Code personalizado</li>
+              <li>- Cardapio ilimitado</li>
+              {showCoupons && <li>- Promocoes</li>}
+              {showAnalytics && <li>- Analytics</li>}
             </ul>
           </div>
         )}
 
-        {/* Recursos Bloqueados (Pro) */}
         {isPro && (
           <div className="pt-2 border-t space-y-1">
             <p className="text-sm font-medium">Desbloqueie com Delivery:</p>
             <ul className="text-xs text-muted-foreground space-y-1 ml-4">
-              <li>• Pedidos internos</li>
-              <li>• Painel de pedidos</li>
-              <li>• Rede de motoboys</li>
-              <li>• Rastreamento de entrega</li>
-              <li>• Analytics avançado</li>
+              <li>- Pedidos internos</li>
+              <li>- Painel de pedidos</li>
+              {showMobility && <li>- Rede de motoboys</li>}
+              {showMobility && <li>- Rastreamento de entrega</li>}
+              {showAnalytics && <li>- Analytics avancado</li>}
             </ul>
           </div>
         )}

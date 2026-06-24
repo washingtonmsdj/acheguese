@@ -17,8 +17,6 @@ import {
 } from "@/shared/components/dashboard/DashboardTabs";
 import { SettingsTab } from "@/core/business/components/SettingsTab";
 import EmpresaDashboardTab from '@/core/business/components/EmpresaDashboardTab';
-import AnalyticsDashboard from '@/core/business/components/AnalyticsDashboard';
-import CouponManager from '@/core/business/components/CouponManager';
 import SubscriptionPlans from '@/core/business/components/SubscriptionPlans';
 import { NetworkTab } from '@/core/business';
 import { QrCodeWidget } from '@/core/qr';
@@ -33,6 +31,10 @@ import { isEligibleForVertical } from '@/core/verticals/config';
 import { useGastronomyStatus } from "@/core/verticals/gastronomy/hooks/useGastronomyStatus";
 import { GastronomyVerticalCTA } from "@/core/verticals/gastronomy/components/GastronomyVerticalCTA";
 import GastronomySetupPage from "@/modules/business/gastronomy/pages/GastronomySetupPage";
+import { isLaunchSurfaceEnabled } from "@/config/launchScope";
+
+const AnalyticsDashboard = React.lazy(() => import("@/core/business/components/AnalyticsDashboard"));
+const CouponManager = React.lazy(() => import("@/core/business/components/CouponManager"));
 
 export default function DashboardEmpresaPage() {
   const { profileId } = useParams<{ profileId: string }>();
@@ -74,6 +76,8 @@ export default function DashboardEmpresaPage() {
   }, [accessLoading, dataLoading, permissions.hasAccess, business, navigate, appUrls]);
 
   const handleBack = () => navigate(appUrls.profile.home);
+  const showAnalytics = isLaunchSurfaceEnabled("publicAnalytics");
+  const showCoupons = isLaunchSurfaceEnabled("coupons");
 
   const businessPublicUrlContext = useMemo(() => {
     if (!business?.slug || !business.geographic_path) return null;
@@ -146,9 +150,13 @@ export default function DashboardEmpresaPage() {
           <EmpresaDashboardTab businessId={business.id} />
         </TabPanel>
 
-        <TabPanel value="analytics">
-          <AnalyticsDashboard businessId={business.id} />
-        </TabPanel>
+        {showAnalytics && (
+          <TabPanel value="analytics">
+            <React.Suspense fallback={<div className="py-8 text-sm text-muted-foreground">Carregando analytics...</div>}>
+              <AnalyticsDashboard businessId={business.id} />
+            </React.Suspense>
+          </TabPanel>
+        )}
 
         <TabPanel value="qr-code">
           <div className="space-y-6">
@@ -177,9 +185,13 @@ export default function DashboardEmpresaPage() {
           </div>
         </TabPanel>
 
-        <TabPanel value="cupons">
-          <CouponManager businessId={business.id} planType={planTier} />
-        </TabPanel>
+        {showCoupons && (
+          <TabPanel value="cupons">
+            <React.Suspense fallback={<div className="py-8 text-sm text-muted-foreground">Carregando cupons...</div>}>
+              <CouponManager businessId={business.id} planType={planTier} />
+            </React.Suspense>
+          </TabPanel>
+        )}
 
         <TabPanel value="plano">
           <SubscriptionPlans currentPlan={planTier} onSelectPlan={handlePlanSelect} />

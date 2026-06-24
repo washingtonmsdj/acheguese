@@ -7,7 +7,6 @@ import {
   Star,
   Heart,
   TrendingUp,
-  Users,
   Calendar,
   Settings,
   BarChart3,
@@ -24,14 +23,16 @@ import {
 } from "@/shared/components/ui/tabs";
 import { cn } from "@/shared/utils/cn";
 import SecoesAtivasManager from "./SecoesAtivasManager";
-import AnalyticsDashboard from "./AnalyticsDashboard";
-import CouponManager from "./CouponManager";
 import SubscriptionPlans from "./SubscriptionPlans";
 import { Separator } from "@/shared/components/ui/separator";
 import { getFavoritersOfProfile } from "@/core/favorites/services";
 import { SubscriptionService, useBusinessSubscription } from "@/core/billing";
 import { PlanTier } from "@/core/billing/types";
 import { toast } from "sonner";
+import { isLaunchSurfaceEnabled } from "@/config/launchScope";
+
+const AnalyticsDashboard = React.lazy(() => import("./AnalyticsDashboard"));
+const CouponManager = React.lazy(() => import("./CouponManager"));
 
 interface Props {
   businessId: string;
@@ -57,9 +58,22 @@ export default function EmpresaDashboardTab({
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("visao-geral");
+  const showAnalytics = isLaunchSurfaceEnabled("publicAnalytics");
+  const showCoupons = isLaunchSurfaceEnabled("coupons");
+  const tabsGridClass = showAnalytics && showCoupons
+    ? "grid-cols-4"
+    : showAnalytics || showCoupons
+      ? "grid-cols-3"
+      : "grid-cols-2";
 
   const { planTier, refetch: refetchSubscription } =
     useBusinessSubscription(businessId);
+
+  useEffect(() => {
+    if ((activeTab === "analytics" && !showAnalytics) || (activeTab === "cupons" && !showCoupons)) {
+      setActiveTab("visao-geral");
+    }
+  }, [activeTab, showAnalytics, showCoupons]);
 
   useEffect(() => {
     async function load() {
@@ -183,19 +197,23 @@ export default function EmpresaDashboardTab({
   return (
     <div className="space-y-6 pt-3">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className={cn("grid w-full", tabsGridClass)}>
           <TabsTrigger value="visao-geral">
             <Eye className="h-4 w-4 mr-2" />
             Visão Geral
           </TabsTrigger>
-          <TabsTrigger value="analytics">
-            <BarChart3 className="h-4 w-4 mr-2" />
-            Analytics
-          </TabsTrigger>
-          <TabsTrigger value="cupons">
-            <Gift className="h-4 w-4 mr-2" />
-            Cupons
-          </TabsTrigger>
+          {showAnalytics && (
+            <TabsTrigger value="analytics">
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Analytics
+            </TabsTrigger>
+          )}
+          {showCoupons && (
+            <TabsTrigger value="cupons">
+              <Gift className="h-4 w-4 mr-2" />
+              Cupons
+            </TabsTrigger>
+          )}
           <TabsTrigger value="plano">
             <CreditCard className="h-4 w-4 mr-2" />
             Plano
@@ -281,13 +299,21 @@ export default function EmpresaDashboardTab({
           )}
         </TabsContent>
 
-        <TabsContent value="analytics" className="mt-6">
-          <AnalyticsDashboard businessId={businessId} />
-        </TabsContent>
+        {showAnalytics && (
+          <TabsContent value="analytics" className="mt-6">
+            <React.Suspense fallback={<div className="py-8 text-sm text-muted-foreground">Carregando analytics...</div>}>
+              <AnalyticsDashboard businessId={businessId} />
+            </React.Suspense>
+          </TabsContent>
+        )}
 
-        <TabsContent value="cupons" className="mt-6">
-          <CouponManager businessId={businessId} planType={planTier} />
-        </TabsContent>
+        {showCoupons && (
+          <TabsContent value="cupons" className="mt-6">
+            <React.Suspense fallback={<div className="py-8 text-sm text-muted-foreground">Carregando cupons...</div>}>
+              <CouponManager businessId={businessId} planType={planTier} />
+            </React.Suspense>
+          </TabsContent>
+        )}
 
         <TabsContent value="plano" className="mt-6">
           <SubscriptionPlans

@@ -5,6 +5,7 @@
  */
 
 import { logger } from '@/shared/utils/logger';
+import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from '@/config/launchScope';
 import type { Location, TerritorialGroupWithMembers } from '@/core/location/types';
 import {
   MODULE_SLUGS,
@@ -13,6 +14,7 @@ import {
   buildModuleTerritoryUrl,
   geoPathToPublicUrl,
 } from '@/core/routing/utils/territoryUrls';
+import { touristPointPublicRoutes } from '@/core/verticals/guide/routes/touristPointPublicRoutes';
 import { LocationsReadService } from '@/core/location/services/LocationsReadService';
 import { TerritorialGroupsReadService } from '@/core/location/services/TerritorialGroupsReadService';
 import {
@@ -28,6 +30,53 @@ interface SitemapUrl {
   changefreq?: 'always' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'never';
   priority?: number;
 }
+
+interface TerritorySitemapModule {
+  surface: LaunchSurfaceKey;
+  buildUrl: (territoryPath: string) => string;
+}
+
+const TERRITORY_SITEMAP_MODULES: readonly TerritorySitemapModule[] = [
+  {
+    surface: 'business',
+    buildUrl: (territoryPath) => buildModuleTerritoryUrl(MODULE_SLUGS.business, territoryPath),
+  },
+  {
+    surface: 'gastronomy',
+    buildUrl: (territoryPath) => buildModuleTerritoryUrl(MODULE_SLUGS.gastronomy, territoryPath),
+  },
+  {
+    surface: 'services',
+    buildUrl: (territoryPath) => buildModuleTerritoryUrl(MODULE_SLUGS.services, territoryPath),
+  },
+  {
+    surface: 'classifieds',
+    buildUrl: (territoryPath) => buildModuleTerritoryUrl(MODULE_SLUGS.classifieds, territoryPath),
+  },
+  {
+    surface: 'touristPoints',
+    buildUrl: (territoryPath) => touristPointPublicRoutes.listFromTerritoryPath(territoryPath),
+  },
+  {
+    surface: 'map',
+    buildUrl: (territoryPath) => buildModuleTerritoryUrl(MODULE_SLUGS.map, territoryPath),
+  },
+];
+
+const COMMUNITY_ALIAS_SITEMAP_SUFFIXES: readonly {
+  suffix: string;
+  surface: LaunchSurfaceKey;
+  changefreq: SitemapUrl['changefreq'];
+  priority: number;
+}[] = [
+  { suffix: 'empresas', surface: 'business', changefreq: 'daily', priority: 0.7 },
+  { suffix: 'gastronomia', surface: 'gastronomy', changefreq: 'daily', priority: 0.7 },
+  { suffix: 'servicos', surface: 'services', changefreq: 'daily', priority: 0.7 },
+  { suffix: 'classificados', surface: 'classifieds', changefreq: 'daily', priority: 0.7 },
+  { suffix: 'mapa', surface: 'map', changefreq: 'weekly', priority: 0.6 },
+  { suffix: 'feed', surface: 'community', changefreq: 'hourly', priority: 0.8 },
+  { suffix: 'grupos', surface: 'community', changefreq: 'daily', priority: 0.7 },
+];
 
 function normalizeBaseUrl(value: string): string {
   return value.trim().replace(/\/+$/, "");
@@ -69,26 +118,13 @@ function generateTerritoryUrls(
         changefreq: 'daily',
         priority: isGroup ? 0.9 : 0.8,
       },
-      {
-        loc: `${baseUrl}${buildCommunityAliasUrl(communityAlias, 'empresas')}`,
-        changefreq: 'daily',
-        priority: 0.7,
-      },
-      {
-        loc: `${baseUrl}${buildCommunityAliasUrl(communityAlias, 'gastronomia')}`,
-        changefreq: 'daily',
-        priority: 0.7,
-      },
-      {
-        loc: `${baseUrl}${buildCommunityAliasUrl(communityAlias, 'feed')}`,
-        changefreq: 'hourly',
-        priority: 0.8,
-      },
-      {
-        loc: `${baseUrl}${buildCommunityAliasUrl(communityAlias, 'grupos')}`,
-        changefreq: 'daily',
-        priority: 0.7,
-      },
+      ...COMMUNITY_ALIAS_SITEMAP_SUFFIXES
+        .filter((item) => isLaunchSurfaceEnabled(item.surface))
+        .map((item) => ({
+          loc: `${baseUrl}${buildCommunityAliasUrl(communityAlias, item.suffix)}`,
+          changefreq: item.changefreq,
+          priority: item.priority,
+        })),
     ];
   }
 
@@ -100,16 +136,9 @@ function generateTerritoryUrls(
     },
   ];
 
-  const modules = [
-    MODULE_SLUGS.business,
-    MODULE_SLUGS.services,
-    MODULE_SLUGS.classifieds,
-    MODULE_SLUGS.mobility,
-  ];
-
-  modules.forEach((module) => {
+  TERRITORY_SITEMAP_MODULES.filter((module) => isLaunchSurfaceEnabled(module.surface)).forEach((module) => {
     urls.push({
-      loc: `${baseUrl}${buildModuleTerritoryUrl(module, publicPath)}`,
+      loc: `${baseUrl}${module.buildUrl(publicPath)}`,
       changefreq: 'daily',
       priority: 0.7,
     });

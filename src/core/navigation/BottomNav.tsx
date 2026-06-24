@@ -7,12 +7,10 @@
 import React, { useState } from 'react';
 import {
   Users, Building2, Wrench, Tag, Home,
-  MoreHorizontal, Calendar, Car, Map, Search,
-  Briefcase, GraduationCap,
+  MoreHorizontal, Map, Search,
 } from 'lucide-react';
 import { useNavigate, useLocation as useRouterLocation } from 'react-router-dom';
 import { cn } from '@/shared/utils/cn';
-import { useAppUrls } from '@/core/routing/hooks/useAppUrls';
 import { usePublicBrowsingCity } from '@/core/location/hooks/usePublicBrowsingCity';
 import { useHomeCommunityHref } from '@/core/routing/hooks/useHomeCommunityHref';
 import { useCommunityNavigationContext } from '@/core/routing/hooks/useCommunityNavigationContext';
@@ -20,6 +18,7 @@ import {
   buildCommunityNavigationModuleUrls,
   type CommunityNavigationModuleUrls,
 } from '@/core/routing/utils/communityNavigationContext';
+import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from '@/config/launchScope';
 import {
   Sheet,
   SheetContent,
@@ -74,7 +73,6 @@ function resolveCommunityModuleUrl(
 export function BottomNav({ prefetchRoute = noopPrefetch }: BottomNavProps) {
   const navigate = useNavigate();
   const { pathname } = useRouterLocation();
-  const appUrls = useAppUrls();
   const homeCommunityHref = useHomeCommunityHref();
   const communityContext = useCommunityNavigationContext();
   const { active } = usePublicBrowsingCity();
@@ -102,15 +100,17 @@ export function BottomNav({ prefetchRoute = noopPrefetch }: BottomNavProps) {
     { path: modulePath('classifieds', 'classificados'), label: 'Anuncios', icon: Tag, badge: 0 },
   ];
 
-  const moreItems = [
-    { path: modulePath('services', 'servicos'), label: 'Servicos', icon: Wrench, badge: 0 },
-    { path: modulePath('education', 'educacao'), label: 'Educacao', icon: GraduationCap, badge: 0 },
-    { path: modulePath('events', 'eventos'), label: 'Eventos', icon: Calendar, badge: 0 },
-    { path: modulePath('jobs', 'vagas'), label: 'Vagas', icon: Briefcase, badge: 0 },
-    { path: modulePath('map', 'mapa'), label: 'Mapa', icon: Map, badge: 0 },
-    { path: resolveCommunityModuleUrl(communityModuleUrls, 'mobility') ?? appUrls.mobility.home, label: 'Mobilidade', icon: Car, badge: 0 },
-    { path: cityModule('buscar'), label: 'Busca', icon: Search, badge: 0 },
-  ];
+  const moreItems: Array<{
+    path: string;
+    label: string;
+    icon: React.ComponentType<{ className?: string }>;
+    badge: number;
+    surface: LaunchSurfaceKey;
+  }> = [
+    { path: modulePath('services', 'servicos'), label: 'Servicos', icon: Wrench, badge: 0, surface: 'services' as const },
+    { path: modulePath('map', 'mapa'), label: 'Mapa', icon: Map, badge: 0, surface: 'map' as const },
+    { path: cityModule('buscar'), label: 'Busca', icon: Search, badge: 0, surface: 'search' as const },
+  ].filter((item) => isLaunchSurfaceEnabled(item.surface));
 
   const handleNavigate = (path: string) => {
     prefetchRoute(path);

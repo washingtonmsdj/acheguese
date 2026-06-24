@@ -9,6 +9,7 @@ import {
 import { Eye, BarChart3, CreditCard, Settings, GitBranch, UtensilsCrossed, QrCode } from "lucide-react";
 import { DashboardTab } from "@/shared/types/dashboard";
 import { ReactNode } from "react";
+import { isLaunchSurfaceEnabled } from "@/config/launchScope";
 
 interface DashboardTabsProps {
   activeTab: DashboardTab;
@@ -28,6 +29,12 @@ const BASE_TABS: { value: DashboardTab; label: string; icon: React.ElementType }
   { value: "cupons",          label: "Cupons",         icon: CreditCard },
 ];
 
+function isDashboardTabEnabled(tab: DashboardTab): boolean {
+  if (tab === "analytics") return isLaunchSurfaceEnabled("publicAnalytics");
+  if (tab === "cupons") return isLaunchSurfaceEnabled("coupons");
+  return true;
+}
+
 export const GASTRONOMY_TAB = { value: "gastronomia" as DashboardTab, label: "Gastronomia", icon: UtensilsCrossed };
 
 export function DashboardTabs({
@@ -36,17 +43,28 @@ export function DashboardTabs({
   children,
   extraTabs = [],
 }: DashboardTabsProps) {
-  const allTabs = [...BASE_TABS, ...extraTabs];
+  const allTabs = [...BASE_TABS, ...extraTabs].filter((tab) => isDashboardTabEnabled(tab.value));
+  const visibleActiveTab = allTabs.some((tab) => tab.value === activeTab) ? activeTab : "visao-geral";
   const cols = allTabs.length;
+  const colsClass: Record<number, string> = {
+    1: "grid-cols-1",
+    2: "grid-cols-2",
+    3: "grid-cols-3",
+    4: "grid-cols-4",
+    5: "grid-cols-5",
+    6: "grid-cols-6",
+    7: "grid-cols-7",
+    8: "grid-cols-8",
+  };
 
   return (
     <Card className="border-2">
       <CardContent className="p-6">
         <Tabs
-          value={activeTab}
+          value={visibleActiveTab}
           onValueChange={(value) => onTabChange(value as DashboardTab)}
         >
-          <TabsList className={`grid w-full grid-cols-${cols} mb-6`}>
+          <TabsList className={`grid w-full ${colsClass[cols] ?? "grid-cols-5"} mb-6`}>
             {allTabs.map(({ value, label, icon: Icon }) => (
               <TabsTrigger key={value} value={value} className="gap-2">
                 <Icon className="h-4 w-4" />

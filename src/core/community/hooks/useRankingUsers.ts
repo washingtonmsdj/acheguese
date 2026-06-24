@@ -6,10 +6,10 @@ import { COMMUNITY_LEADERBOARD_ENABLED } from "@/core/community/config/community
 /**
  * Hook for search ranking de vizinhos via SSOT.
  */
-export function useRankingUsers(limit: number = 3) {
+export function useRankingUsers(limit: number = 3, enabled: boolean = true) {
   return useQuery({
     queryKey: ["ranking-users", limit],
-    enabled: COMMUNITY_LEADERBOARD_ENABLED,
+    enabled: enabled && COMMUNITY_LEADERBOARD_ENABLED,
     queryFn: async (): Promise<RankingUser[]> => {
       const leaderboard = await CommunityService.getLeaderboard(limit);
       return leaderboard.map((user, index) => ({

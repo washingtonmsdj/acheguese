@@ -16,6 +16,7 @@ import { Badge } from '@/shared/components/ui/badge';
 import { SectionFrame } from './SectionFrame';
 import { EmptyPanel } from './EmptyPanel';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
+import { isLaunchSurfaceEnabled } from '@/config/launchScope';
 
 import type { ProfileBusinessModuleSnapshot } from '@/core/profiles/services/ProfileBusinessTypes';
 
@@ -63,7 +64,7 @@ export function BusinessModulesSection({
   return (
     <SectionFrame
       title="Negocios, módulos e dashboards"
-      description="Operação empresarial consolidada com dashboard, analytics, visitantes, imagens, produtos e delivery."
+      description="Operacao empresarial consolidada com dashboard, imagens, produtos e delivery."
       action={
         <Button className="gap-2" onClick={onCreateBusiness}>
           <Sparkles className="h-4 w-4" />
@@ -136,19 +137,22 @@ function BusinessModuleCard({
   onNavigate: (url: string) => void;
   onCopy: (url: string, label: string) => void;
 }) {
+  const showMobility = isLaunchSurfaceEnabled("mobility");
+  const showPublicAnalytics = isLaunchSurfaceEnabled("publicAnalytics");
+
   const featureBadges = [
     business.subscription.canUseShortPremiumLink && business.shareUrl ? 'Link premium' : null,
     business.qrCode.hasActive ? 'QR pronto' : null,
     business.gastronomy.active ? 'Gastronomia ativa' : null,
     business.gastronomy.deliveryEnabled ? 'Delivery ativo' : null,
-    business.subscription.canUseMotoboyNetwork ? 'Rede motoboy' : null,
+    showMobility && business.subscription.canUseMotoboyNetwork ? 'Rede motoboy' : null,
   ].filter(Boolean) as string[];
 
   const gastronomyOwnerActions = [
     business.gastronomy.dashboardUrl
       ? { label: 'Painel gastro', url: business.gastronomy.dashboardUrl }
       : null,
-    business.gastronomy.analyticsUrl
+    showPublicAnalytics && business.gastronomy.analyticsUrl
       ? { label: 'Analytics', url: business.gastronomy.analyticsUrl }
       : null,
     business.gastronomy.menuUrl
@@ -157,7 +161,7 @@ function BusinessModuleCard({
     business.gastronomy.ordersUrl
       ? { label: 'Pedidos', url: business.gastronomy.ordersUrl }
       : null,
-    business.gastronomy.deliveriesUrl
+    showMobility && business.gastronomy.deliveriesUrl
       ? { label: 'Entregas', url: business.gastronomy.deliveriesUrl }
       : null,
     !business.gastronomy.active && business.gastronomy.setupUrl

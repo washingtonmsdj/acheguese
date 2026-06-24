@@ -118,18 +118,10 @@ export async function getPrivateWorkspaceAggregate(
     }
 
     const { postService } = await import("@/core/posts/services");
-    const { mobilityService, MobilityService } = await import("@/core/mobility/services/runtime");
     const { VerificationService } = await import(
       "@/core/verification/services/VerificationService"
     );
     const { getUserClassifieds } = await import("@/core/classifieds/services");
-    const { eventService } = await import(
-      "@/core/community/services/CommunityEventsRuntimeService"
-    );
-    const { communityAlertService } = await import("@/core/community/alerts");
-    const { communityIssueService } = await import(
-      "@/core/community/issues/services/CommunityIssueService"
-    );
     const { notificationService } = await import("@/core/notifications/services");
 
     const profileContextPromise = deps.getProfileContext(deps.userId);
@@ -138,23 +130,21 @@ export async function getPrivateWorkspaceAggregate(
     const postsPromise = postService.getPostsCountByProfile(activeProfile.id).catch(() => 0);
     const likesPromise = deps.getUserLikesCount(activeProfile.id);
     const favoritesPromise = getFavoriteStats(activeProfile.id);
-    const activeRidePromise = MobilityService.getActiveRide(activeProfile.id).catch(() => null);
     const verificationPromise = VerificationService.getVerification(
       activeProfile.id,
       "resident",
     );
     const servicesPromise = getServicesByProfile(activeProfile.id).catch(() => []);
     const classifiedsPromise = getUserClassifieds(activeProfile.id).catch(() => []);
-    const eventsPromise = eventService
-      .getEventsByOrganizerProfile(activeProfile.id, 20)
-      .catch(() => []);
-    const alertsCountPromise = communityAlertService.getCountByProfile(activeProfile.id).catch(() => 0);
-    const issuesCountPromise = communityIssueService.getCountByProfile(activeProfile.id).catch(() => 0);
+    const activeRidePromise = Promise.resolve(null);
+    const eventsPromise = Promise.resolve([]);
+    const alertsCountPromise = Promise.resolve(0);
+    const issuesCountPromise = Promise.resolve(0);
     const notificationStatsPromise = notificationService.getStats(deps.userId).catch(() => null);
     const notificationFeedPromise = notificationService
       .fetchNotifications({ limit: 5 })
       .catch(() => []);
-    const ridesPromise = mobilityService.getUserRides(deps.userId).catch(() => []);
+    const ridesPromise = Promise.resolve([]);
 
     const [
       profileContext,

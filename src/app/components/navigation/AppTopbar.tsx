@@ -6,6 +6,7 @@ import { Button } from "@/shared/components/ui/button";
 import { useSessionContext } from "@/core/session";
 import { AuthService } from "@/core/auth/services/AuthService";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
+import { isLaunchSurfaceEnabled } from "@/config/launchScope";
 
 function getInitials(value?: string | null): string {
   if (!value) return "U";
@@ -27,6 +28,7 @@ function getInitials(value?: string | null): string {
 export function AppTopbar() {
   const { activeProfile, user } = useSessionContext();
   const appUrls = useAppUrls();
+  const showMessages = isLaunchSurfaceEnabled("communityCommunication");
 
   const handleLogout = async () => {
     await AuthService.signOut();
@@ -46,9 +48,11 @@ export function AppTopbar() {
         <Link to={appUrls.notifications} className="relative text-muted-foreground transition-colors hover:text-foreground">
           <Bell className="h-5 w-5" />
         </Link>
-        <Link to={appUrls.messages} className="relative text-muted-foreground transition-colors hover:text-foreground">
-          <MessageCircle className="h-5 w-5" />
-        </Link>
+        {showMessages ? (
+          <Link to={appUrls.messages} className="relative text-muted-foreground transition-colors hover:text-foreground">
+            <MessageCircle className="h-5 w-5" />
+          </Link>
+        ) : null}
         <Link to={appUrls.profile.home}>
           <Avatar className="h-8 w-8 border border-primary/30">
             <AvatarImage src={activeProfile?.avatarUrl || ""} />

@@ -64,7 +64,7 @@ export function ContactStep({
       <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/50 border border-border">
         <div>
           <p className="text-sm font-medium text-foreground">Exibir telefone no anúncio</p>
-          <p className="text-[10px] text-muted-foreground">Se desativado, contato será somente via WhatsApp/chat</p>
+          <p className="text-[10px] text-muted-foreground">Se desativado, contato será somente via WhatsApp</p>
         </div>
         <Switch checked={showPhone} onCheckedChange={onShowPhoneChange} />
       </div>

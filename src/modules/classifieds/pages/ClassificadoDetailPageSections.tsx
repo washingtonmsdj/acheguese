@@ -84,7 +84,7 @@ export function SellerCard({
 }: {
   vendedor: any;
   onWhatsApp: () => void;
-  onChat: () => void;
+  onChat?: () => void;
   isChatLoading?: boolean;
   activeAdsCount: number;
 }) {
@@ -120,10 +120,12 @@ export function SellerCard({
           <Phone className="h-4 w-4 mr-2" />
           WhatsApp
         </Button>
-        <Button onClick={onChat} variant="outline" className="w-full h-11 rounded-xl font-bold" disabled={isChatLoading}>
-          <MessageCircle className="h-4 w-4 mr-2" />
-          {isChatLoading ? "Abrindo..." : "Chat"}
-        </Button>
+        {onChat ? (
+          <Button onClick={onChat} variant="outline" className="w-full h-11 rounded-xl font-bold" disabled={isChatLoading}>
+            <MessageCircle className="h-4 w-4 mr-2" />
+            {isChatLoading ? "Abrindo..." : "Chat"}
+          </Button>
+        ) : null}
       </div>
     </motion.div>
   );

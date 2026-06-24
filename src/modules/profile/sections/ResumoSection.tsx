@@ -9,7 +9,6 @@ import {
   Bookmark,
   Briefcase,
   Building2,
-  Car,
   CreditCard,
   LayoutDashboard,
   MapPin,
@@ -26,45 +25,25 @@ import {
   HubLinkCard,
   NextActionsPanel,
 } from "@/modules/profile/components/hub";
-import { ProfileActiveRideCard } from "@/modules/profile/components/ProfileActiveRideCard";
 import { DashboardMetricCard } from "@/modules/profile/components/cards";
 
 import type { ResumoSectionProps } from "./types";
-import { getMobilityServiceStatus } from "@/core/profile/utils/mobilityServiceStatus";
-import type { MobilityRide } from "@/core/mobility/types/ride";
+import { isLaunchSurfaceEnabled } from "@/config/launchScope";
 
 export function ResumoSection({
   operations,
   notifications,
   nextActions,
-  hasActiveRide,
-  activeRide,
-  driverProfileId,
-  driverData,
   setActiveSection,
   navigate,
   appUrls,
 }: ResumoSectionProps) {
-  const motoristaStatus = getMobilityServiceStatus({
-    driverProfileId,
-    driverData: driverData ?? null,
-    service: "motorista",
-  });
-  const motoboyStatus = getMobilityServiceStatus({
-    driverProfileId,
-    driverData: driverData ?? null,
-    service: "motoboy",
-  });
-
   const totalPersonalActivity = operations.posts + operations.favoritesGiven;
   const totalOperationalAssets = operations.businesses + operations.services + operations.classifieds;
+  const showFamilySafetyLinks = isLaunchSurfaceEnabled("familySafety");
 
   return (
     <div className="space-y-6">
-      {hasActiveRide && activeRide ? (
-        <ProfileActiveRideCard ride={activeRide as MobilityRide} />
-      ) : null}
-
       <section className="relative overflow-hidden rounded-[2rem] border border-border/70 bg-[radial-gradient(circle_at_15%_0%,hsl(var(--primary)/0.18),transparent_32%),linear-gradient(135deg,hsl(var(--card)),hsl(var(--muted)/0.46))] p-5 shadow-sm sm:p-7">
         <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-primary/10 blur-3xl" aria-hidden="true" />
         <div className="relative grid gap-6 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
@@ -78,7 +57,7 @@ export function ResumoSection({
                 Sua identidade, dados pessoais e atalhos seguros em um único lugar.
               </h2>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-                A conta mostra sua área pessoal. Empresas, motorista, motoboy e rotinas administrativas ficam na Central para manter a separação de responsabilidades.
+                A conta mostra sua area pessoal. Empresas e rotinas administrativas ficam na Central para manter a separacao de responsabilidades.
               </p>
             </div>
           </div>
@@ -139,12 +118,6 @@ export function ResumoSection({
             highlight={notifications.unread > 0}
             description="Não lidas"
           />
-          <DashboardMetricCard
-            icon={Car}
-            label="Mobilidade"
-            value={operations.ridesTotal}
-            description="Corridas e entregas"
-          />
         </div>
       </SectionFrame>
 
@@ -170,7 +143,7 @@ export function ResumoSection({
           <HubLinkCard
             icon={Bell}
             title="Notificações"
-            description="Inbox com pendências e alertas recentes."
+            description="Avisos e pendencias recentes."
             badge={notifications.unread > 0 ? `${notifications.unread}` : undefined}
             onClick={() => setActiveSection("notificacoes")}
           />
@@ -198,12 +171,14 @@ export function ResumoSection({
             description="Conta, dados sensíveis e proteção."
             onClick={() => setActiveSection("seguranca")}
           />
-          <HubLinkCard
-            icon={Users}
-            title="Familia"
-            description="Vinculos familiares e zonas seguras."
-            onClick={() => navigate(appUrls.family.home)}
-          />
+          {showFamilySafetyLinks ? (
+            <HubLinkCard
+              icon={Users}
+              title="Familia"
+              description="Vinculos familiares e zonas seguras."
+              onClick={() => navigate(appUrls.family.home)}
+            />
+          ) : null}
         </div>
       </SectionFrame>
 
@@ -215,7 +190,7 @@ export function ResumoSection({
           <HubLinkCard
             icon={LayoutDashboard}
             title="Central operacional"
-            description="Hub profissional com empresas, mobilidade e dashboards."
+            description="Hub profissional com empresas e dashboards."
             onClick={() => navigate("/central")}
           />
           <HubLinkCard
@@ -224,18 +199,6 @@ export function ResumoSection({
             description="Gestão das empresas vinculadas ao usuário."
             badge={operations.businesses > 0 ? `${operations.businesses}` : undefined}
             onClick={() => navigate(appUrls.profile.businesses)}
-          />
-          <HubLinkCard
-            icon={Car}
-            title="Motorista"
-            description={`Status do cadastro: ${motoristaStatus}.`}
-            onClick={() => navigate(appUrls.profile.mobilidade.motorista.home)}
-          />
-          <HubLinkCard
-            icon={Briefcase}
-            title="Motoboy"
-            description={`Status do cadastro: ${motoboyStatus}.`}
-            onClick={() => navigate(appUrls.profile.mobilidade.motoboy.home)}
           />
         </div>
       </SectionFrame>

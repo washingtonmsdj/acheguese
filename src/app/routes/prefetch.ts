@@ -6,77 +6,88 @@
  */
 
 import { APP_MODULE_SLUGS, buildAppModulePath, isAppModulePath } from "@/config/moduleSlugs";
+import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from "@/config/launchScope";
 import { LAUNCH_URLS } from "@/config/territory";
 
-const PREFETCHERS: Array<{ test: (path: string) => boolean; load: () => Promise<unknown> }> = [
+const PREFETCHERS: Array<{
+  test: (path: string) => boolean;
+  load: () => Promise<unknown>;
+  surface?: LaunchSurfaceKey;
+}> = [
   {
     test: (path) => path === "/",
     load: () => import("@/app/pages/MainLandingPage"),
+    surface: "home",
   },
   {
     test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.business),
     load: () => import("@/app/pages/EmpresasLandingPage"),
+    surface: "business",
   },
   {
     test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.services),
     load: () => import("@/modules/professionals/services/pages/ServicosLandingPage"),
+    surface: "services",
   },
   {
     test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.classifieds),
     load: () => import("@/modules/classifieds/pages/ClassificadosPage"),
+    surface: "classifieds",
   },
   {
     test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.gastronomy),
     load: () => import("@/modules/business/gastronomy/pages/GastronomyLandingPage"),
-  },
-  {
-    test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.events),
-    load: () => import("@/features/events/pages/EventsListPage"),
-  },
-  {
-    test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.jobs),
-    load: () => import("@/modules/classifieds/jobs/pages/VagasPublicPage"),
+    surface: "gastronomy",
   },
   {
     test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.community),
     load: () => import("@/modules/community-feed/pages/ComunidadePage"),
+    surface: "community",
   },
   {
     test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.map),
     load: () => import("@/core/maps/pages/MapaPageV4"),
+    surface: "map",
   },
   {
     test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.search),
     load: () => import("@/app/pages/BuscaPage"),
-  },
-  {
-    test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.mobility),
-    load: () => import("@/modules/mobility/pages/MobilidadeLandingPage"),
-  },
-  {
-    test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.ranking),
-    load: () => import("@/app/pages/gamification/RankingPage"),
+    surface: "search",
   },
   {
     test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.touristPoints),
     load: () => import("@/modules/guide/pages/TouristPointsPage"),
-  },
-  {
-    test: (path) => path.startsWith("/mensagens") || path.startsWith("/chat/"),
-    load: () => import("@/core/messaging/pages/MensagensPage"),
+    surface: "touristPoints",
   },
   {
     test: (path) => path.startsWith("/notifications"),
     load: () => import("@/app/pages/NotificationsPage"),
   },
-  {
-    test: (path) => path.startsWith("/conta"),
-    load: () => import("@/modules/profile/pages/ContaHubPage"),
-  },
 ];
 
 const prefetchedPaths = new Set<string>();
 let idleWarmupScheduled = false;
+
+const IDLE_WARMUP_ROUTES: Array<{
+  href: string;
+  surface?: LaunchSurfaceKey;
+}> = [
+  { href: buildAppModulePath(APP_MODULE_SLUGS.business), surface: "business" },
+  { href: buildAppModulePath(APP_MODULE_SLUGS.gastronomy), surface: "gastronomy" },
+  { href: buildAppModulePath(APP_MODULE_SLUGS.classifieds), surface: "classifieds" },
+  { href: LAUNCH_URLS.community, surface: "community" },
+  { href: buildAppModulePath(APP_MODULE_SLUGS.services), surface: "services" },
+  { href: buildAppModulePath(APP_MODULE_SLUGS.map), surface: "map" },
+  { href: buildAppModulePath(APP_MODULE_SLUGS.search), surface: "search" },
+  { href: LAUNCH_URLS.touristPoints, surface: "touristPoints" },
+  { href: "/notifications" },
+];
+
+export function getLaunchWarmupHrefs(): string[] {
+  return IDLE_WARMUP_ROUTES
+    .filter((entry) => !entry.surface || isLaunchSurfaceEnabled(entry.surface))
+    .map((entry) => entry.href);
+}
 
 function normalizePath(href: string): string {
   const [path] = href.split("?");
@@ -89,6 +100,7 @@ export function prefetchRouteByHref(href: string): void {
 
   const candidate = PREFETCHERS.find((entry) => entry.test(path));
   if (!candidate) return;
+  if (candidate.surface && !isLaunchSurfaceEnabled(candidate.surface)) return;
 
   prefetchedPaths.add(path);
   void candidate.load().catch(() => {
@@ -117,22 +129,6 @@ export function scheduleIdleRouteWarmup(): void {
   idleWarmupScheduled = true;
 
   runIdle(() => {
-    [
-      buildAppModulePath(APP_MODULE_SLUGS.business),
-      buildAppModulePath(APP_MODULE_SLUGS.gastronomy),
-      buildAppModulePath(APP_MODULE_SLUGS.events),
-      buildAppModulePath(APP_MODULE_SLUGS.classifieds),
-      buildAppModulePath(APP_MODULE_SLUGS.jobs),
-      LAUNCH_URLS.community,
-      buildAppModulePath(APP_MODULE_SLUGS.services),
-      buildAppModulePath(APP_MODULE_SLUGS.map),
-      buildAppModulePath(APP_MODULE_SLUGS.search),
-      buildAppModulePath(APP_MODULE_SLUGS.mobility),
-      buildAppModulePath(APP_MODULE_SLUGS.ranking),
-      LAUNCH_URLS.touristPoints,
-      "/mensagens",
-      "/notifications",
-      "/conta",
-    ].forEach((href) => prefetchRouteByHref(href));
+    getLaunchWarmupHrefs().forEach((href) => prefetchRouteByHref(href));
   });
 }

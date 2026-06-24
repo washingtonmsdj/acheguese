@@ -26,7 +26,7 @@ export function PreferenciasSection({
           <HubLinkCard
             icon={Shield}
             title="Privacidade do perfil"
-            description="Controle visibilidade, mensagens e dados públicos."
+            description="Controle visibilidade e dados publicos."
             onClick={() => navigate(appUrls.profile.settings("privacy"))}
           />
           <HubLinkCard
@@ -52,7 +52,7 @@ export function PreferenciasSection({
           <HubLinkCard
             icon={Settings2}
             title="Central profissional"
-            description="Empresas, mobilidade, verticais e dashboards operacionais."
+            description="Empresas, verticais e dashboards operacionais."
             onClick={() => navigate("/conta/profissional")}
           />
         </div>

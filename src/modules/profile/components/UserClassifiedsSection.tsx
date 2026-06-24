@@ -44,7 +44,7 @@ export function UserClassifiedsSection({
           <Tag className="mx-auto mb-4 h-16 w-16 text-muted-foreground" />
           <h3 className="mb-2 text-lg font-semibold">Nenhum classificado cadastrado</h3>
           <p className="mx-auto mb-6 max-w-md text-sm text-muted-foreground">
-            Anuncie produtos, serviços ou oportunidades para sua comunidade.
+            Anuncie produtos e serviços para sua comunidade.
           </p>
           <Button onClick={onCreateNew} className="gap-2">
             <Plus className="h-4 w-4" />

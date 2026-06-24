@@ -671,13 +671,58 @@ test.describe('Gastronomia operacional autenticada', () => {
       )
       .toBe(true);
 
-    const hasDeliveriesLayout = await page
-      .getByText(/entregas em andamento|pedidos de entrega disponiveis|modo motoboy/i)
-      .first()
-      .isVisible()
-      .catch(() => false);
+    const motoboySurfaceState = String(
+      await page
+        .waitForFunction(
+          () => {
+            const text = document.body?.innerText ?? '';
+            const comparableText = text
+              .normalize('NFD')
+              .replace(/[\u0300-\u036f]/g, '')
+              .toLowerCase();
 
-    if (hasDeliveriesLayout) {
+            if (
+              comparableText.includes('mvp publico') ||
+              comparableText.includes('mobilidade esta separado para ajustes') ||
+              comparableText.includes('separado para ajustes')
+            ) {
+              return 'paused';
+            }
+
+            if (
+              comparableText.includes('entregas em andamento') ||
+              comparableText.includes('pedidos de entrega disponiveis') ||
+              comparableText.includes('modo motoboy')
+            ) {
+              return 'deliveries';
+            }
+
+            if (
+              comparableText.includes('cadastrar como motoboy') ||
+              comparableText.includes('perfil de motoboy')
+            ) {
+              return 'onboarding';
+            }
+
+            return '';
+          },
+          undefined,
+          { timeout: 60_000 },
+        )
+        .then((handle) => handle.jsonValue())
+        .catch(() => ''),
+    );
+
+    expect(motoboySurfaceState).not.toBe('');
+
+    if (motoboySurfaceState === 'paused') {
+      await expect(
+        page.getByText(/Mobilidade esta separado para ajustes|separado para ajustes/i).first(),
+      ).toBeVisible({ timeout: 20_000 });
+      return;
+    }
+
+    if (motoboySurfaceState === 'deliveries') {
       await expect(
         page.getByText(/entregas em andamento|pedidos de entrega disponiveis|nenhuma entrega/i).first(),
       ).toBeVisible({ timeout: 20_000 });

@@ -1,10 +1,12 @@
+import type { ElementType } from 'react';
 import { Building2, Car, Home, User, Bike, Calendar, Radio } from 'lucide-react';
+import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from '@/config/launchScope';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 import { centralRoutes } from '@/modules/central/routes/centralRoutes';
 
 export interface CentralNavItem {
   id: string;
-  icon: React.ElementType;
+  icon: ElementType;
   label: string;
   href: string;
   description?: string;
@@ -28,27 +30,40 @@ const CENTRAL_PRIMARY_NAV_IDS = [
   'motoboy-home',
 ] as const;
 
-/**
- * Estrutura de navegação da Central
- *
- * Areas:
- * - Visão geral
- * - Empresas
- * - Profissional
- * - Motorista
- * - Motoboy
- */
-export const CENTRAL_NAV_SECTIONS: CentralNavSection[] = [
+const CENTRAL_NAV_ITEM_SURFACES: Partial<Record<string, LaunchSurfaceKey>> = {
+  'events-list': 'events',
+  'events-new': 'events',
+  'communication-home': 'communication',
+  'driver-home': 'mobility',
+  'driver-cadastro': 'mobility',
+  'driver-disponibilidade': 'mobility',
+  'driver-corridas': 'mobility',
+  'driver-ganhos': 'mobility',
+  'driver-configuracoes': 'mobility',
+  'motoboy-home': 'mobility',
+  'motoboy-cadastro': 'mobility',
+  'motoboy-disponibilidade': 'mobility',
+  'motoboy-entregas': 'mobility',
+  'motoboy-ganhos': 'mobility',
+  'motoboy-configuracoes': 'mobility',
+};
+
+function isCentralNavItemEnabled(item: CentralNavItem): boolean {
+  const surface = CENTRAL_NAV_ITEM_SURFACES[item.id];
+  return surface ? isLaunchSurfaceEnabled(surface) : true;
+}
+
+const RAW_CENTRAL_NAV_SECTIONS: CentralNavSection[] = [
   {
     id: 'overview',
-    label: 'Visão Geral',
+    label: 'Visao Geral',
     items: [
       {
         id: 'central-home',
         icon: Home,
-        label: 'Início',
+        label: 'Inicio',
         href: centralRoutes.home,
-        description: 'Visão geral da Central',
+        description: 'Visao geral da Central',
       },
     ],
   },
@@ -87,14 +102,14 @@ export const CENTRAL_NAV_SECTIONS: CentralNavSection[] = [
   },
   {
     id: 'communication',
-    label: 'Comunicação',
+    label: 'Comunicacao',
     items: [
       {
         id: 'communication-home',
         icon: Radio,
         label: 'Meus Canais',
         href: centralRoutes.comunicacao.home,
-        description: 'Publicar conteúdo territorial',
+        description: 'Publicar conteudo territorial',
       },
     ],
   },
@@ -118,7 +133,7 @@ export const CENTRAL_NAV_SECTIONS: CentralNavSection[] = [
       {
         id: 'driver-home',
         icon: Car,
-        label: 'Início',
+        label: 'Inicio',
         href: centralRoutes.motorista.home,
         description: 'Resumo operacional',
       },
@@ -153,9 +168,9 @@ export const CENTRAL_NAV_SECTIONS: CentralNavSection[] = [
       {
         id: 'driver-configuracoes',
         icon: Car,
-        label: 'Configurações',
+        label: 'Configuracoes',
         href: centralRoutes.motorista.configuracoes,
-        description: 'Preferências e notificações',
+        description: 'Preferencias e notificacoes',
       },
     ],
   },
@@ -166,7 +181,7 @@ export const CENTRAL_NAV_SECTIONS: CentralNavSection[] = [
       {
         id: 'motoboy-home',
         icon: Bike,
-        label: 'Início',
+        label: 'Inicio',
         href: centralRoutes.motoboy.home,
         description: 'Resumo operacional',
       },
@@ -201,13 +216,20 @@ export const CENTRAL_NAV_SECTIONS: CentralNavSection[] = [
       {
         id: 'motoboy-configuracoes',
         icon: Bike,
-        label: 'Configurações',
+        label: 'Configuracoes',
         href: centralRoutes.motoboy.configuracoes,
-        description: 'Preferências e notificações',
+        description: 'Preferencias e notificacoes',
       },
     ],
   },
 ];
+
+export const CENTRAL_NAV_SECTIONS: CentralNavSection[] = RAW_CENTRAL_NAV_SECTIONS
+  .map((section) => ({
+    ...section,
+    items: section.items.filter(isCentralNavItemEnabled),
+  }))
+  .filter((section) => section.items.length > 0);
 
 export function getCentralPrimaryNavItems(): CentralNavItem[] {
   const allItems = CENTRAL_NAV_SECTIONS.flatMap((section) => section.items);

@@ -4,7 +4,6 @@
  * Busca unificada de:
  * - Negocios
  * - Profissionais
- * - Oportunidades territoriais
  *
  */
 
@@ -14,7 +13,6 @@ import {
   Search,
   Store,
   Wrench,
-  BriefcaseBusiness,
   ArrowLeft,
   X,
   Star,
@@ -22,16 +20,12 @@ import {
   Loader2,
 } from "lucide-react";
 import { Input } from "@/shared/components/ui/input";
-import { Badge } from "@/shared/components/ui/badge";
 import { BusinessLogo } from "@/shared/components/ui/business-logo";
 import { cn } from "@/shared/utils/cn";
 import { motion, AnimatePresence } from "framer-motion";
 import { useBusinessNavigation } from "@/modules/business/hooks/useBusinessNavigation";
 import { useGlobalSearch } from "@/core/search/hooks/useGlobalSearch";
-import { useSessionContext } from "@/core/session";
 import { professionalPublicRoutes } from "@/core/professional/routes/professionalPublicRoutes";
-import { workOpportunityTelemetryService } from "@/core/work-opportunities/services/WorkOpportunityTelemetryService";
-import { analyticsService } from "@/core/analytics/services/AnalyticsService";
 import type { SearchCategory } from "@/core/search";
 
 // ============================================================================
@@ -67,17 +61,6 @@ interface ProfessionalSearchItem {
 interface SearchResultsViewModel {
   businesses: BusinessSearchItem[];
   professionals: ProfessionalSearchItem[];
-  opportunities: Array<{
-    id: string;
-    headline: string;
-    professional_category: string;
-    territory_name?: string | null;
-    urgency: string;
-    availability_notes?: string | null;
-    source_kind?: "work_opportunity" | "vaga";
-    target_url?: string;
-    company_name?: string | null;
-  }>;
   total: number;
 }
 
@@ -97,11 +80,6 @@ const FILTERS: FilterOption[] = [
     label: "Profissões e Serviços",
     icon: <Wrench className="h-3.5 w-3.5" />,
   },
-  {
-    id: "opportunities",
-    label: "Oportunidades",
-    icon: <BriefcaseBusiness className="h-3.5 w-3.5" />,
-  },
 ];
 
 // ============================================================================
@@ -111,7 +89,6 @@ const FILTERS: FilterOption[] = [
 export default function BuscaPage() {
   const navigate = useNavigate();
   const { navigateToBusiness } = useBusinessNavigation();
-  const { activeProfile } = useSessionContext();
   const [activeFilter, setActiveFilter] = useState<SearchCategory>("all");
 
   const {
@@ -153,7 +130,7 @@ export default function BuscaPage() {
               autoFocus
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Buscar empresas, profissionais e oportunidades..."
+              placeholder="Buscar empresas, profissionais e serviços..."
               className="pl-9 pr-9 h-10 rounded-full bg-secondary border-none"
               aria-label="Campo de busca"
             />
@@ -208,64 +185,16 @@ export default function BuscaPage() {
             activeFilter={activeFilter}
             onBusinessClick={navigateToBusiness}
             onProfessionalClick={(professional) =>
-              navigate(professional.target_url || professionalPublicRoutes.home())
+              navigate(
+                professional.target_url || professionalPublicRoutes.home(),
+              )
             }
-            onOpportunityClick={(opportunity) => {
-              if (opportunity.source_kind !== "vaga") {
-                void workOpportunityTelemetryService.trackOpportunityClick({
-                  opportunityId: opportunity.id,
-                  source: "search",
-                  actorProfileId: activeProfile?.id,
-                  actorUserId: activeProfile?.userId ?? null,
-                  metadata: {
-                    search_query: query,
-                    search_category: activeFilter,
-                    click_path: "global_search_results",
-                  },
-                });
-                void workOpportunityTelemetryService.trackOpportunityOpen({
-                  opportunityId: opportunity.id,
-                  source: "search",
-                  actorProfileId: activeProfile?.id,
-                  actorUserId: activeProfile?.userId ?? null,
-                  metadata: {
-                    search_query: query,
-                    search_category: activeFilter,
-                    territory_name: opportunity.territory_name ?? null,
-                  },
-                });
-              } else {
-                void analyticsService.trackEvent({
-                  event_type: "structured_vaga_click_search",
-                  user_id: activeProfile?.userId ?? undefined,
-                  metadata: {
-                    vaga_id: opportunity.id,
-                    search_query: query,
-                    search_category: activeFilter,
-                    click_path: "global_search_results",
-                    territory_name: opportunity.territory_name ?? null,
-                  },
-                });
-                void analyticsService.trackEvent({
-                  event_type: "structured_vaga_open_search",
-                  user_id: activeProfile?.userId ?? undefined,
-                  metadata: {
-                    vaga_id: opportunity.id,
-                    search_query: query,
-                    search_category: activeFilter,
-                    territory_name: opportunity.territory_name ?? null,
-                  },
-                });
-              }
-              navigate(opportunity.target_url || `/oportunidades/${opportunity.id}?source=search`);
-            }}
           />
         )}
       </div>
     </div>
   );
 }
-
 // ============================================================================
 // SUB-COMPONENTS
 // ============================================================================
@@ -284,7 +213,7 @@ function EmptyState({
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <Search className="h-12 w-12 text-muted-foreground/30 mb-4" />
         <p className="text-sm text-muted-foreground">
-          Digite para buscar empresas, profissionais e oportunidades
+          Digite para buscar empresas, profissionais e serviços
         </p>
       </div>
 
@@ -322,7 +251,6 @@ function EmptyState({
     </div>
   );
 }
-
 function LoadingState() {
   return (
     <div className="flex flex-col items-center justify-center py-16">
@@ -351,13 +279,11 @@ function ResultsView({
   activeFilter,
   onBusinessClick,
   onProfessionalClick,
-  onOpportunityClick,
 }: {
   results: SearchResultsViewModel;
   activeFilter: SearchCategory;
   onBusinessClick: (business: BusinessSearchItem) => void;
   onProfessionalClick: (professional: ProfessionalSearchItem) => void;
-  onOpportunityClick: (opportunity: SearchResultsViewModel["opportunities"][number]) => void;
 }) {
   return (
     <AnimatePresence mode="wait">
@@ -399,21 +325,6 @@ function ResultsView({
                 key={professional.id}
                 professional={professional}
                 onClick={() => onProfessionalClick(professional)}
-              />
-            ))}
-          </Section>
-        )}
-
-        {results.opportunities.length > 0 && (
-          <Section
-            title="Oportunidades territoriais"
-            icon={<BriefcaseBusiness className="h-4 w-4 text-primary" />}
-          >
-            {results.opportunities.map((opportunity) => (
-              <OpportunityCard
-                key={opportunity.id}
-                opportunity={opportunity}
-                onClick={() => onOpportunityClick(opportunity)}
               />
             ))}
           </Section>
@@ -535,52 +446,4 @@ function ProfessionalCard({
       </div>
     </button>
   );
-}
-
-function OpportunityCard({
-  opportunity,
-  onClick,
-}: {
-  opportunity: SearchResultsViewModel["opportunities"][number];
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className="w-full rounded-xl border bg-card p-3 text-left transition-colors hover:bg-accent/50"
-    >
-      <p className="text-sm font-semibold">{opportunity.headline}</p>
-      <div className="mt-1 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
-        {opportunity.source_kind === "vaga" && (
-          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-            Vaga estruturada
-          </Badge>
-        )}
-        <span>{opportunity.professional_category}</span>
-        {opportunity.territory_name && (
-          <>
-            <span>·</span>
-            <MapPin className="h-3 w-3" />
-            <span>{opportunity.territory_name}</span>
-          </>
-        )}
-        <span>·</span>
-        <ClockDot urgency={opportunity.urgency} />
-      </div>
-      {opportunity.availability_notes && (
-        <p className="mt-1 text-xs text-muted-foreground">
-          Disponibilidade: {opportunity.availability_notes}
-        </p>
-      )}
-      {opportunity.company_name && (
-        <p className="mt-1 text-xs text-muted-foreground">
-          Empresa: {opportunity.company_name}
-        </p>
-      )}
-    </button>
-  );
-}
-
-function ClockDot({ urgency }: { urgency: string }) {
-  return <span>{urgency === "hoje" ? "Hoje" : urgency === "24h" ? "24h" : urgency === "semana" ? "Semana" : "Flexivel"}</span>;
 }

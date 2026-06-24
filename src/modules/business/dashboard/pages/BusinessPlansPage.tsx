@@ -5,23 +5,35 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { useBusinessDashboardContext } from "@/modules/business/dashboard/businessDashboardContext";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
+import { isLaunchSurfaceEnabled } from "@/config/launchScope";
 
 export default function BusinessPlansPage() {
   const { businessId, planTier, entitlements, isGastronomyActive } =
     useBusinessDashboardContext();
+  const showCoupons = isLaunchSurfaceEnabled("coupons");
+  const showMobility = isLaunchSurfaceEnabled("mobility");
+  const showAnalytics = isLaunchSurfaceEnabled("publicAnalytics");
 
   const entitledFeatures = [
     ["Cardapio avancado", entitlements.canUseAdvancedCatalog],
-    ["Promocoes", entitlements.canUsePromotions],
+    ...(showCoupons ? [["Promocoes", entitlements.canUsePromotions] as const] : []),
     ["Pedidos internos", entitlements.canUseInternalOrders ?? entitlements.canReceiveInternalOrders],
     ["Carrinho", entitlements.canReceiveInternalOrders],
     ["Checkout", entitlements.canManageOrderStatus],
     ["Painel de pedidos", entitlements.canUseOrdersPanel],
-    ["Solicitacao de entrega", entitlements.canUseDeliveryRequests],
-    ["Rede de motoboy", entitlements.canUseMotoboyNetwork],
-    ["Rastreamento", entitlements.canUseDeliveryTracking],
-    ["Analytics basico", entitlements.canUseBasicAnalytics],
-    ["Analytics avancado", entitlements.canUseAdvancedAnalytics],
+    ...(showMobility
+      ? [
+          ["Solicitacao de entrega", entitlements.canUseDeliveryRequests] as const,
+          ["Rede de motoboy", entitlements.canUseMotoboyNetwork] as const,
+          ["Rastreamento", entitlements.canUseDeliveryTracking] as const,
+        ]
+      : []),
+    ...(showAnalytics
+      ? [
+          ["Analytics basico", entitlements.canUseBasicAnalytics] as const,
+          ["Analytics avancado", entitlements.canUseAdvancedAnalytics] as const,
+        ]
+      : []),
   ] as const;
 
   return (

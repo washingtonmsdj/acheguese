@@ -45,5 +45,7 @@ export const LAUNCH_URLS = {
   education: buildAppModulePath(APP_MODULE_SLUGS.education, LAUNCH_CITY_PATH),
   events: buildAppModulePath(APP_MODULE_SLUGS.events, LAUNCH_CITY_PATH),
   jobs: buildAppModulePath(APP_MODULE_SLUGS.jobs, LAUNCH_CITY_PATH),
+  map: buildAppModulePath(APP_MODULE_SLUGS.map, LAUNCH_CITY_PATH),
+  search: buildAppModulePath(APP_MODULE_SLUGS.search, LAUNCH_CITY_PATH),
   touristPoints: buildAppModulePath(APP_MODULE_SLUGS.touristPoints, LAUNCH_CITY_PATH),
 } as const;

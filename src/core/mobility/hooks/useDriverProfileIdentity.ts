@@ -2,16 +2,17 @@ import { useQuery } from "@tanstack/react-query";
 import { useIsAdmin } from "@/core/auth/hooks/useIsAdmin";
 import { useSessionContext } from "@/core/session";
 import type { DriverDataRecord } from "@/core/mobility/types/DriverDataRecord";
-import { mobilityService } from "@/core/mobility/services";
 
 interface UseDriverProfileIdentityOptions {
   allowAdminBootstrap?: boolean;
+  enabled?: boolean;
   queryKey?: readonly unknown[];
   queryScope?: string;
 }
 
 export function useDriverProfileIdentity({
   allowAdminBootstrap = false,
+  enabled = true,
   queryKey,
   queryScope = "default",
 }: UseDriverProfileIdentityOptions) {
@@ -32,6 +33,7 @@ export function useDriverProfileIdentity({
         return null;
       }
 
+      const { mobilityService } = await import("@/core/mobility/services/runtime");
       const existing = (await mobilityService.getDriverData(user.id)) as DriverDataRecord | null;
       if (existing || !allowAdminBootstrap || !isAdmin) {
         return existing;
@@ -39,7 +41,7 @@ export function useDriverProfileIdentity({
 
       return (await mobilityService.createAdminDriverProfile(user.id)) as DriverDataRecord | null;
     },
-    enabled: !!user,
+    enabled: enabled && !!user,
     retry: false,
   });
 

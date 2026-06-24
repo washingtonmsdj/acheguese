@@ -21,6 +21,7 @@ import { PortfolioTab } from "./tabs/PortfolioTab";
 import { PromocoesTab } from "./tabs/PromocoesTab";
 import { AgendamentosTab } from "./tabs/AgendamentosTab";
 import { logger } from "@/shared/utils/logger";
+import { isLaunchSurfaceEnabled } from "@/config/launchScope";
 
 export function BusinessTabs({
   business,
@@ -36,6 +37,7 @@ export function BusinessTabs({
   const [services, setServices] = useState<BusinessServiceType[]>([]);
   const [gallery, setGallery] = useState<GalleryPhoto[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
+  const showPromotions = isLaunchSurfaceEnabled("coupons");
 
   const fetchProducts = useCallback(async () => {
     if (!business.id) return;
@@ -97,7 +99,7 @@ export function BusinessTabs({
   if (sections.cardapio || products.length > 0)
     activeTabs.push("cardapio");
   if (sections.portfolio) activeTabs.push("portfolio");
-  if (sections.promocoes) activeTabs.push("promocoes");
+  if (showPromotions && sections.promocoes) activeTabs.push("promocoes");
   if (isOwner && services.length > 0) activeTabs.push("agendamentos");
 
   const gridColsMap: Record<number, string> = {
@@ -114,7 +116,7 @@ export function BusinessTabs({
   return (
     <>
       {/* Promo Banner - Mostra se houver products em promocao */}
-      {products.some((p) => p.promotion) && (
+      {showPromotions && products.some((p) => p.promotion) && (
         <PromoBanner
           title="Produtos em Promocao!"
           description="Aproveite nossos products com descontos especiais"
@@ -198,7 +200,7 @@ export function BusinessTabs({
               Portfolio
             </TabsTrigger>
           )}
-          {sections.promocoes && (
+          {showPromotions && sections.promocoes && (
             <TabsTrigger
               value="promocoes"
               className="data-[state=active]:bg-background data-[state=active]:shadow-md transition-all"
@@ -264,7 +266,7 @@ export function BusinessTabs({
           </TabsContent>
         )}
 
-        {sections.promocoes && (
+        {showPromotions && sections.promocoes && (
           <TabsContent value="promocoes">
             <PromocoesTab business={business} isOwner={isOwner} />
           </TabsContent>

@@ -1,13 +1,21 @@
-﻿import { useEffect, useLayoutEffect, useState } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+﻿import { useEffect, useLayoutEffect, useMemo, useState } from "react";
+import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import {
+  AlertTriangle,
   MapPin,
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
+import { PageLoader } from "@/shared/components/loading/PageLoader";
 import { useCommunityScopeResolver } from "@/core/community/hooks/useCommunityScopeResolver";
 import { useCommunityProfile } from "@/core/community-experience/hooks/useCommunityProfile";
-import { TerritorialLayout } from "./TerritorialLayout";
+import { useGroupAvailability } from "@/core/territorial/hooks/useGroupAvailability";
+import type { GroupModuleAvailability } from "@/core/territorial/types";
+import { ModuleKey } from "@/core/rollout/types";
+import { ErrorBoundary } from "@/shared/components/errors/ErrorBoundary";
+import { lastTerritoryStore } from "@/core/routing/stores/LastTerritoryStore";
+import { TerritorialSEO } from "@/core/routing/seo/TerritorialSEO";
+import type { TerritorialLayoutContext } from "./TerritorialLayout";
 import { TerritorialNotFound } from "./TerritorialNotFound";
 import {
   buildCommunityTerritoryUrl,
@@ -44,10 +52,65 @@ function useCommunitySeoHead(canonicalHref: string, robots: string) {
   }, [canonicalHref, robots]);
 }
 
+function resolveModuleKeyFromCommunityPath(pathname: string, hasScopedTerritory: boolean): ModuleKey {
+  const parts = pathname.split("/").filter(Boolean);
+  const moduleSlug = parts[hasScopedTerritory ? 4 : 3] ?? MODULE_SLUGS.community;
+
+  switch (moduleSlug) {
+    case MODULE_SLUGS.business:
+      return ModuleKey.BUSINESS;
+    case MODULE_SLUGS.services:
+      return ModuleKey.SERVICES;
+    case MODULE_SLUGS.classifieds:
+      return ModuleKey.CLASSIFIEDS;
+    case MODULE_SLUGS.gastronomy:
+      return ModuleKey.GASTRONOMY;
+    case MODULE_SLUGS.education:
+      return ModuleKey.BUSINESS;
+    case MODULE_SLUGS.events:
+      return ModuleKey.EVENTS;
+    case MODULE_SLUGS.jobs:
+      return ModuleKey.JOBS;
+    case MODULE_SLUGS.mobility:
+      return ModuleKey.MOBILITY;
+    case MODULE_SLUGS.map:
+      return ModuleKey.BUSINESS;
+    case "feed":
+    case "grupos":
+    case "alertas":
+    case "problemas":
+    case "achados-e-perdidos":
+    case "comunicacao":
+    case MODULE_SLUGS.community:
+    default:
+      return ModuleKey.COMMUNITY;
+  }
+}
+
+function PartialCoverageBanner({ activeCount, totalCount }: { activeCount: number; totalCount: number }) {
+  return (
+    <div className="flex items-center gap-2 border-b border-amber-500/20 bg-amber-500/10 px-4 py-2 text-xs text-amber-700 dark:text-amber-400">
+      <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0" />
+      <span>
+        Cobertura parcial: {activeCount} de {totalCount} bairros disponiveis neste modulo.
+      </span>
+    </div>
+  );
+}
+
+function UnavailableModuleBanner() {
+  return (
+    <div className="flex items-center gap-2 border-b border-border bg-muted/60 px-4 py-3 text-xs text-muted-foreground">
+      <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0" />
+      <span>Este modulo ainda nao esta disponivel neste territorio.</span>
+    </div>
+  );
+}
+
 export function CommunityTerritorialShell() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { resolved } = useCommunityScopeResolver();
+  const { resolved, isLoading: scopeLoading } = useCommunityScopeResolver();
   const params = useParams<{
     state?: string;
     city?: string;
@@ -86,12 +149,32 @@ export function CommunityTerritorialShell() {
       ? resolved.group.name
       : resolved.location.name
     : cityName;
+  const currentModuleKey = useMemo(
+    () => resolveModuleKeyFromCommunityPath(location.pathname, Boolean(scopedSlug)),
+    [location.pathname, scopedSlug],
+  );
+  const groupId = resolved?.kind === "group" ? resolved.group.id : null;
+  const {
+    availability,
+    active_member_ids,
+    result: availabilityResult,
+    isLoading: availabilityLoading,
+  } = useGroupAvailability(groupId, currentModuleKey);
 
   useEffect(() => {
     setTransitionMessage(`Bem-vindo ao ${territoryName}`);
     const timer = window.setTimeout(() => setTransitionMessage(null), TRANSITION_MS);
     return () => window.clearTimeout(timer);
   }, [territoryName]);
+
+  useEffect(() => {
+    if (!resolved || !territoryName || hasInvalidCommunityRoute) return;
+
+    lastTerritoryStore.set({
+      name: territoryName,
+      baseUrl: territoryBase,
+    });
+  }, [hasInvalidCommunityRoute, resolved, territoryBase, territoryName]);
 
   const profile = communityProfileQuery.data;
   const communityStatus = profile?.status ?? "active";
@@ -113,11 +196,27 @@ export function CommunityTerritorialShell() {
     );
   }
 
-  if (communityProfileQuery.isLoading) {
+  if (scopeLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
-        Carregando comunidade...
-      </div>
+      <PageLoader
+        fullScreen
+        message="Carregando comunidade..."
+        recoveryAfterMs={9000}
+        recoveryTitle="A comunidade está demorando para abrir"
+        recoveryDescription="A resolução territorial pode levar alguns segundos. Recarregue se a página não avançar."
+      />
+    );
+  }
+
+  if (!resolved) {
+    return (
+      <>
+        <Helmet>
+          <link rel="canonical" href={canonicalHref} />
+          <meta name="robots" content="noindex, follow" />
+        </Helmet>
+        <TerritorialNotFound message="Nao foi possivel resolver esta comunidade." />
+      </>
     );
   }
 
@@ -172,8 +271,18 @@ export function CommunityTerritorialShell() {
     );
   }
 
+  const effectiveAvailability: GroupModuleAvailability = resolved.kind === "group" ? availability : "full";
+  const outletContext: TerritorialLayoutContext = {
+    resolved,
+    baseUrl: territoryBase,
+    communityBaseUrl: communityBase,
+    groupAvailability: effectiveAvailability,
+    activeMemberIds: resolved.kind === "group" ? active_member_ids ?? [] : [],
+  };
+
   return (
     <>
+      <TerritorialSEO resolved={resolved} baseUrl={territoryBase} />
       <Helmet>
         <link rel="canonical" href={canonicalHref} />
         <meta name="robots" content={seoPolicy.robots} />
@@ -199,7 +308,21 @@ export function CommunityTerritorialShell() {
       ) : null}
 
       <div className="min-h-0 overflow-x-hidden">
-        <TerritorialLayout />
+        {resolved.kind === "group" && currentModuleKey ? (
+          <>
+            {effectiveAvailability === "partial" && availabilityResult ? (
+              <PartialCoverageBanner
+                activeCount={availabilityResult.active_module_members}
+                totalCount={availabilityResult.total_active_members}
+              />
+            ) : null}
+            {effectiveAvailability === "none" && !availabilityLoading ? <UnavailableModuleBanner /> : null}
+          </>
+        ) : null}
+
+        <ErrorBoundary>
+          <Outlet context={outletContext} />
+        </ErrorBoundary>
       </div>
     </>
   );

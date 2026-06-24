@@ -21,7 +21,7 @@ import { buildPublicAbsoluteUrl, getPublicAppOrigin } from '@/shared/config/publ
 const HUB_COPY = {
   label: 'Vitrine',
   focus: 'Hub territorial',
-  descriptionSuffix: 'Comunidade, empresas, serviços e mobilidade hiperlocal.',
+  descriptionSuffix: 'Comunidade, empresas, serviços, classificados, mapa e guia local.',
 };
 
 // Configuração da marca

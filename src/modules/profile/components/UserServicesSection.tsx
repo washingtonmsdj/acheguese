@@ -3,17 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { ProfessionalService } from "@/core/professional/services/ProfessionalService";
 import { ProfessionalUrlService } from "@/core/professional/services/ProfessionalUrlService";
 import { professionalPublicRoutes } from "@/core/professional/routes/professionalPublicRoutes";
-import {
-  getOpportunityUrgencyLabel,
-} from "@/core/work-opportunities";
-import { workOpportunitiesService } from "@/core/work-opportunities/services/WorkOpportunitiesService";
-import { workOpportunityTelemetryService } from "@/core/work-opportunities/services/WorkOpportunityTelemetryService";
-import { useSessionContext } from "@/core/session";
 import type { Professional } from "@/core/professional/types";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
-import { Wrench, Plus, Edit, Eye, Loader2, MapPin, Phone, Clock3 } from "lucide-react";
+import { Wrench, Plus, Edit, Eye, Loader2, MapPin, Phone } from "lucide-react";
 
 interface UserServicesSectionProps {
   profileId: string;
@@ -31,7 +25,6 @@ export function UserServicesSection({
   onEdit,
 }: UserServicesSectionProps) {
   const navigate = useNavigate();
-  const { activeProfile } = useSessionContext();
 
   const { data: services = [], isLoading } = useQuery<Professional[]>({
     queryKey: ["profile-services", profileId],
@@ -41,12 +34,6 @@ export function UserServicesSection({
       }
       return ProfessionalService.getServicesByProfile(profileId);
     },
-    enabled: Boolean(profileId),
-  });
-
-  const { data: recentOpportunities = [] } = useQuery({
-    queryKey: ["profile-recent-work-opportunities", profileId],
-    queryFn: () => workOpportunitiesService.listRecentOpportunitiesByAuthorProfile(profileId, 6),
     enabled: Boolean(profileId),
   });
 
@@ -65,7 +52,7 @@ export function UserServicesSection({
           <Wrench className="mx-auto mb-4 h-16 w-16 text-muted-foreground" />
           <h3 className="mb-2 text-lg font-semibold">Nenhum serviço cadastrado</h3>
           <p className="mx-auto mb-6 max-w-md text-sm text-muted-foreground">
-            Receba oportunidades na sua região com um perfil profissional leve e territorial.
+            Receba contatos na sua região com um perfil profissional leve e territorial.
           </p>
           <Button onClick={onCreateNew} className="gap-2">
             <Plus className="h-4 w-4" />
@@ -104,14 +91,6 @@ export function UserServicesSection({
                 type="button"
                 className="rounded-full border border-border bg-background px-3 py-1 text-xs hover:border-primary/50"
                 onClick={() => {
-                  void workOpportunityTelemetryService.trackProfessionalProfileClick({
-                    opportunityId: "profile-professions",
-                    professionalId: service.professional_data_id || service.id,
-                    source: "profile_professions",
-                    actorProfileId: activeProfile?.id,
-                    actorUserId: activeProfile?.userId ?? activeProfile?.userId ?? null,
-                    metadata: { entrypoint: "profile_professions_chip" },
-                  });
                   navigate(resolveServicePublicUrl(service));
                 }}
               >
@@ -124,9 +103,9 @@ export function UserServicesSection({
 
       <Card className="border-emerald-300/30 bg-emerald-500/5">
         <CardContent className="p-4">
-          <p className="text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Ative sua circulacao local</p>
+          <p className="text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Ative sua presença local</p>
           <div className="mt-2 grid gap-1 text-sm">
-            <p>Receba oportunidades na sua região.</p>
+            <p>Receba pedidos de orçamento e contatos na sua região.</p>
             <p>Mostre seus trabalhos para pessoas próximas.</p>
             <p>Apareça para quem procura profissionais no seu bairro.</p>
           </div>
@@ -188,14 +167,6 @@ export function UserServicesSection({
                     size="sm"
                     variant="ghost"
                     onClick={() => {
-                      void workOpportunityTelemetryService.trackProfessionalProfileClick({
-                        opportunityId: "profile-professions",
-                        professionalId: service.professional_data_id || service.id,
-                        source: "profile_professions",
-                        actorProfileId: activeProfile?.id,
-                        actorUserId: activeProfile?.userId ?? activeProfile?.userId ?? null,
-                        metadata: { entrypoint: "profile_professions_card" },
-                      });
                       navigate(resolveServicePublicUrl(service));
                     }}
                     className="gap-2"
@@ -219,53 +190,6 @@ export function UserServicesSection({
         ))}
       </div>
 
-      <Card>
-        <CardContent className="p-6">
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-base font-semibold">Oportunidades recentes</h3>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/oportunidades")}>Explorar</Button>
-          </div>
-
-          {recentOpportunities.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Nenhuma oportunidade recente vinculada ao seu perfil pessoal.
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {recentOpportunities.map((opportunity) => (
-                <button
-                  key={opportunity.id}
-                  type="button"
-                  onClick={() => {
-                    void workOpportunityTelemetryService.trackOpportunityOpen({
-                      opportunityId: opportunity.id,
-                      professionalId: opportunity.professional_id,
-                      territoryLocationId: opportunity.territory_location_id,
-                      source: "profile_professions",
-                      actorProfileId: activeProfile?.id,
-                      actorUserId: activeProfile?.userId ?? activeProfile?.userId ?? null,
-                      metadata: {
-                        open_path: "profile_recent_opportunities",
-                      },
-                    });
-                    navigate(`/oportunidades/${opportunity.id}?source=profile_professions`);
-                  }}
-                  className="w-full rounded-lg border border-border p-3 text-left transition-colors hover:border-primary/50"
-                >
-                  <p className="text-sm font-semibold">{opportunity.headline}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {opportunity.professional_category} - {opportunity.territory_name ?? "Territorio"}
-                  </p>
-                  <p className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground">
-                    <Clock3 className="h-3.5 w-3.5" />
-                    {getOpportunityUrgencyLabel(opportunity.urgency)}
-                  </p>
-                </button>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 }

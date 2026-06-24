@@ -1,5 +1,5 @@
 import React from "react";
-import { ArrowLeft, FileText, Shield, AlertTriangle, Scale, Users, Lock, Bell } from "lucide-react";
+import { ArrowLeft, FileText, Shield, AlertTriangle, Scale, Users, Lock } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 
 const legalForum = import.meta.env.VITE_LEGAL_FORUM ?? "foro competente definido pela legislação aplicável";
@@ -19,7 +19,7 @@ A Plataforma é destinada exclusivamente a maiores de 18 anos ou a menores de 18
     title: "2. Descrição do Serviço",
     content: `A Achegue-se é uma plataforma digital de comunicação comunitária que permite a usuários cadastrados publicar, compartilhar e interagir com conteúdos relacionados ao seu bairro e cidade.
 
-Os serviços incluem, mas não se limitam a: publicação de posts e alertas comunitários, listagem de negócios e serviços locais, classificados, eventos, grupos de discussão e sistema de mensagens entre usuários.
+Os serviços incluem, mas não se limitam a: publicação de conteúdo comunitário, listagem de negócios e serviços locais, classificados, mapas, recomendações e recursos de interação entre usuários.
 
 A Plataforma atua como intermediária tecnológica (art. 19 do Marco Civil da Internet — Lei 12.965/2014), não sendo responsável pelo conteúdo gerado por terceiros, salvo nas hipóteses legais expressamente previstas.`,
   },
@@ -53,13 +53,13 @@ Ao constatar violações, a Plataforma poderá, a seu critério e de forma progr
 O Usuário poderá contestar decisões de moderação por meio dos canais de suporte disponíveis na Plataforma. A Plataforma analisará as contestações em prazo razoável, mas não se obriga a reverter decisões de moderação.`,
   },
   {
-    icon: Bell,
-    title: "6. Sistema de Alertas e Segurança",
-    content: `O sistema de alertas comunitários destina-se exclusivamente à comunicação de situações de risco real e imediato à segurança da comunidade.
+    icon: Shield,
+    title: "6. Segurança e Uso Responsável",
+    content: `Os recursos comunitários da Plataforma devem ser usados de forma responsável, precisa e respeitosa, sempre com atenção à segurança dos usuários e da comunidade.
 
-É expressamente proibido: (a) emitir alertas falsos ou sem fundamento; (b) utilizar o sistema para causar pânico desnecessário; (c) divulgar localização de operações policiais, blitz ou ações de fiscalização; (d) usar alertas para fins comerciais ou publicitários.
+É expressamente proibido: (a) publicar informações falsas ou sem fundamento; (b) utilizar a Plataforma para causar pânico desnecessário; (c) divulgar localização de operações policiais, blitz ou ações de fiscalização; (d) usar recursos comunitários para fraude, assédio ou fins incompatíveis com estes Termos.
 
-O uso indevido do sistema de alertas resultará em suspensão imediata da funcionalidade e poderá ensejar responsabilidade civil e criminal nos termos da legislação aplicável, incluindo o art. 266 do Código Penal (perturbação de serviço de utilidade pública).`,
+O uso indevido dos recursos comunitários poderá resultar em remoção de conteúdo, suspensão de funcionalidades, bloqueio de conta e responsabilização civil ou criminal nos termos da legislação aplicável.`,
   },
   {
     icon: Lock,

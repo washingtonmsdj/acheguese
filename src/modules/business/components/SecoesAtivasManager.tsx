@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { BusinessService } from '@/core/business';
+import { isLaunchSurfaceEnabled } from "@/config/launchScope";
 
 interface SecoesConfig {
   services: boolean;
@@ -92,6 +93,10 @@ export default function SecoesAtivasManager({
 }: Props) {
   const [config, setConfig] = useState<SecoesConfig>(currentConfig);
   const [saving, setSaving] = useState(false);
+  const showPromotions = isLaunchSurfaceEnabled("coupons");
+  const visibleSections = SECOES.filter((secao) => secao.id !== "promocoes" || showPromotions);
+  const normalizeLaunchConfig = (value: SecoesConfig): SecoesConfig =>
+    showPromotions ? value : { ...value, promocoes: false };
 
   const toggleSecao = (secao: keyof SecoesConfig) => {
     setConfig((prev) => toggleSectionConfig(prev, secao));
@@ -101,7 +106,9 @@ export default function SecoesAtivasManager({
     setSaving(true);
 
     try {
-      await BusinessService.updateActiveSections(businessId, config);
+      const configToSave = normalizeLaunchConfig(config);
+      await BusinessService.updateActiveSections(businessId, configToSave);
+      onSaved(configToSave);
     } catch (error) {
       setSaving(false);
       toast.error("Erro ao salvar configurações");
@@ -110,10 +117,10 @@ export default function SecoesAtivasManager({
     setSaving(false);
 
     toast.success("Seções atualizadas com sucesso!");
-    onSaved(config);
   };
 
-  const hasChanges = JSON.stringify(config) !== JSON.stringify(currentConfig);
+  const hasChanges =
+    JSON.stringify(normalizeLaunchConfig(config)) !== JSON.stringify(normalizeLaunchConfig(currentConfig));
 
   return (
     <div className="space-y-4">
@@ -125,7 +132,7 @@ export default function SecoesAtivasManager({
       </div>
 
       <div className="space-y-3">
-        {SECOES.map((secao) => {
+        {visibleSections.map((secao) => {
           const Icon = secao.icon;
           const isActive = config[secao.id];
 

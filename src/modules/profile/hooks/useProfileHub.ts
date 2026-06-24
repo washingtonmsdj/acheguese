@@ -10,8 +10,6 @@ import { toast } from 'sonner';
 import {
   User,
   Building2,
-  Briefcase,
-  Car,
   Settings2,
   Shield,
   Globe,
@@ -20,12 +18,9 @@ import {
   MessageSquare,
   MapPin,
   Users,
-  Route,
   Wrench,
   UtensilsCrossed,
   Bookmark,
-  CalendarDays,
-  Crown,
 } from 'lucide-react';
 
 import { useAuth } from '@/core/auth/hooks/useAuth';
@@ -33,9 +28,9 @@ import { useMultiProfileContext } from '@/core/profiles/contexts/multi-profile-r
 import { useAppUrls } from '@/core/routing/hooks/useAppUrls';
 import { useHomeCommunityHref } from '@/core/routing/hooks/useHomeCommunityHref';
 import { APP_MODULE_SLUGS, buildAppModulePath } from '@/config/moduleSlugs';
+import { isLaunchSurfaceEnabled } from '@/config/launchScope';
 import { LAUNCH_URLS } from '@/config/territory';
 import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
-import { useDriverProfileIdentity } from '@/core/mobility/hooks';
 import { useContaWorkspace } from './usePerfilPageV3';
 import { buildProfileEditUrl, buildPublicProfileUrl } from '@/core/profiles/utils/publicProfileUrl';
 import { canProfileHaveMembers, isProfileVerified } from '../utils/profileDomainRules';
@@ -48,11 +43,7 @@ const GLOBAL_MODULE_URLS = {
   gastronomy: buildAppModulePath(APP_MODULE_SLUGS.gastronomy),
   gastronomyFavorites: buildAppModulePath(APP_MODULE_SLUGS.gastronomy, "/favoritos"),
   community: LAUNCH_URLS.community,
-  jobs: buildAppModulePath(APP_MODULE_SLUGS.jobs),
-  events: buildAppModulePath(APP_MODULE_SLUGS.events),
   touristPoints: LAUNCH_URLS.touristPoints,
-  ranking: buildAppModulePath(APP_MODULE_SLUGS.ranking),
-  analytics: '/analytics',
 } as const;
 
 export function useProfileHub() {
@@ -110,15 +101,10 @@ export function useProfileHub() {
   const territoryLabel = identity?.territoryLabel;
 
   const canManageProfileMembers = canProfileHaveMembers(activeProfile);
-  const hasDriverProfile = allProfiles.some((item) => item.profile_type === 'driver');
+  const hasDriverProfile = false;
   const hasBusinesses = businessModules.length > 0;
-  const driverIdentity = useDriverProfileIdentity({
-    queryScope: 'profile-hub',
-  });
-  const fallbackDriverProfile = allProfiles.find((item) => item.profile_type === 'driver') ?? null;
-  const resolvedDriverProfile =
-    allProfiles.find((item) => item.id === driverIdentity.driverProfileId) ?? fallbackDriverProfile;
-  const resolvedDriverProfileId = driverIdentity.driverProfileId ?? fallbackDriverProfile?.id ?? null;
+  const resolvedDriverProfile = null;
+  const resolvedDriverProfileId = null;
 
   const statsData = useMemo(
     () => [
@@ -136,15 +122,9 @@ export function useProfileHub() {
       },
       {
         icon: Bell,
-        label: 'Inbox',
+        label: 'Avisos',
         value: notifications.unread,
         hint: 'Notificacoes nao lidas aguardando acao.',
-      },
-      {
-        icon: Car,
-        label: 'Mobilidade',
-        value: operations.activeRides > 0 ? `${operations.activeRides} ativa(s)` : operations.ridesTotal,
-        hint: 'Operacao de corridas, historico e estado atual.',
       },
     ],
     [operations, notifications],
@@ -164,7 +144,7 @@ export function useProfileHub() {
       {
         icon: Users,
         title: 'Identidades e perfis',
-        description: 'Troque, ative e gerencie perfis pessoal, empresa, profissional e motorista.',
+        description: 'Troque, ative e gerencie perfis pessoal, empresa e profissional.',
         badge: `${allProfiles.length}`,
         onClick: () => navigate(appUrls.profile.manage),
       },
@@ -204,8 +184,8 @@ export function useProfileHub() {
       },
       {
         icon: Bell,
-        title: 'Inbox de notificacoes',
-        description: 'Veja alertas recentes, nao lidas e acessos do sistema.',
+        title: 'Notificacoes',
+        description: 'Veja avisos recentes, nao lidas e acessos do sistema.',
         badge: notifications.unread > 0 ? `${notifications.unread}` : undefined,
         onClick: () => navigate(appUrls.notifications),
       },
@@ -242,6 +222,7 @@ export function useProfileHub() {
         title: 'Mensagens',
         description: 'Central de conversas e relacionamento.',
         onClick: () => navigate(appUrls.messages),
+        surface: 'communityCommunication' as const,
       },
       {
         icon: MapPin,
@@ -254,6 +235,7 @@ export function useProfileHub() {
         title: 'Familia',
         description: 'Vinculos familiares, rastreamento e zonas seguras.',
         onClick: () => navigate(appUrls.family.home),
+        surface: 'familySafety' as const,
       },
       {
         icon: Settings2,
@@ -261,23 +243,8 @@ export function useProfileHub() {
         description: 'Residencia, areas de atuacao e preferencias operacionais.',
         onClick: () => navigate(appUrls.profile.addresses),
       },
-      {
-        icon: Car,
-        title: 'Mobilidade',
-        description: hasDriverProfile
-          ? 'Abra seu painel operacional de mobilidade com cadastro, disponibilidade e rotinas.'
-          : 'Abra seu painel operacional de mobilidade e complete o cadastro se necessario.',
-        onClick: () => navigate(appUrls.profile.mobilidade.home),
-      },
-      {
-        icon: Route,
-        title: 'Corridas e entregas',
-        description: 'Resumo de corridas, entregas, solicitacoes e operacao em andamento.',
-        badge: operations.ridesTotal > 0 ? `${operations.ridesTotal}` : undefined,
-        onClick: () => navigate(appUrls.profile.mobilidade.motorista.corridas),
-      },
-    ],
-    [hasDriverProfile, operations.ridesTotal, navigate, appUrls],
+    ].filter((item) => !item.surface || isLaunchSurfaceEnabled(item.surface)),
+    [navigate, appUrls],
   );
 
   const ecosystemLinks = useMemo(
@@ -309,20 +276,9 @@ export function useProfileHub() {
       {
         icon: MessageSquare,
         title: 'Comunidade',
-        description: 'Postagens, recomendacoes, conversas e conteudo territorial.',
+        description: 'Postagens, recomendacoes e conteudo territorial.',
         onClick: () => navigate(appUrls.community.feed),
-      },
-      {
-        icon: Briefcase,
-        title: 'Vagas',
-        description: 'Veja oportunidades e movimentacao economica local.',
-        onClick: () => navigate(appUrls.jobs),
-      },
-      {
-        icon: CalendarDays,
-        title: 'Eventos',
-        description: 'Acompanhe eventos ativos e programacao territorial existente.',
-        onClick: () => navigate(GLOBAL_MODULE_URLS.events),
+        surface: 'community' as const,
       },
       {
         icon: Globe,
@@ -330,13 +286,7 @@ export function useProfileHub() {
         description: 'Vertical publica de pontos turisticos e conteudo territorial.',
         onClick: () => navigate(GLOBAL_MODULE_URLS.touristPoints),
       },
-      {
-        icon: Crown,
-        title: 'Ranking local',
-        description: 'Acesse ranking, relevancia e sinais de destaque do territorio.',
-        onClick: () => navigate(appUrls.ranking),
-      },
-    ],
+    ].filter((item) => !item.surface || isLaunchSurfaceEnabled(item.surface)),
     [navigate, appUrls],
   );
 
@@ -384,16 +334,8 @@ export function useProfileHub() {
           ? {
               title: 'Triar notificacoes pendentes',
               description: `Existem ${notifications.unread} notificacoes nao lidas aguardando acao.`,
-              actionLabel: 'Abrir inbox',
+              actionLabel: 'Ver avisos',
               onClick: () => navigate(appUrls.notifications),
-            }
-          : null,
-        hasDriverProfile && operations.ridesTotal === 0
-          ? {
-              title: 'Revisar mobilidade',
-              description: 'O perfil operacional existe, mas ainda nao ha historico recente consolidado.',
-              actionLabel: 'Abrir mobilidade',
-              onClick: () => navigate(appUrls.profile.mobilidade.home),
             }
           : null,
       ].filter(Boolean) as Array<{
@@ -407,8 +349,6 @@ export function useProfileHub() {
       canOpenPublicProfile,
       showBusinessOnboarding,
       notifications.unread,
-      hasDriverProfile,
-      operations.ridesTotal,
       activeProfileId,
       navigate,
       appUrls,
@@ -469,9 +409,9 @@ export function useProfileHub() {
     canManageProfileMembers,
     driverProfile: resolvedDriverProfile,
     driverProfileId: resolvedDriverProfileId,
-    driverData: driverIdentity.driverData ?? null,
-    driverDataLoading: driverIdentity.isLoading,
-    driverDataError: driverIdentity.error ?? null,
+    driverData: null,
+    driverDataLoading: false,
+    driverDataError: null,
 
     loading,
     error,

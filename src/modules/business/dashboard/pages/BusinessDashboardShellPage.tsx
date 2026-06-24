@@ -32,6 +32,7 @@ import {
 } from "@/core/business/utils/businessManagementRoutes";
 import { buildBusinessPremiumUrl } from "@/core/business/utils/businessPublicUrls";
 import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-runtime-context";
+import { isLaunchSurfaceEnabled } from "@/config/launchScope";
 import type { BusinessDashboardContextValue } from "@/modules/business/dashboard/businessDashboardContext";
 
 interface NavItem {
@@ -86,7 +87,8 @@ export default function BusinessDashboardShellPage() {
   }
 
   const isGastronomyEligible = isEligibleForVertical(business.category, "gastronomy");
-  const isEducationEligible = isEligibleForVertical(business.category, "education");
+  const isEducationEligible =
+    isLaunchSurfaceEnabled("education") && isEligibleForVertical(business.category, "education");
   const isGastronomyActive = gastronomyStatus === "active";
 
   const premiumUrl =
@@ -118,7 +120,9 @@ export default function BusinessDashboardShellPage() {
       : []),
     { label: "Planos", to: businessManagementRoutes.planos(businessId), icon: CreditCard },
     { label: "Link premium", to: businessManagementRoutes.linkPremium(businessId), icon: LinkIcon },
-    { label: "Analytics", to: businessManagementRoutes.analytics(businessId), icon: BarChart3 },
+    ...(isLaunchSurfaceEnabled("publicAnalytics")
+      ? [{ label: "Analytics", to: businessManagementRoutes.analytics(businessId), icon: BarChart3 }]
+      : []),
     { label: "Configuracoes", to: businessManagementRoutes.configuracoes(businessId), icon: Settings },
   ];
 
@@ -214,7 +218,7 @@ export default function BusinessDashboardShellPage() {
               </NavLink>
             ))}
             <div className="mt-3 rounded-md border border-dashed p-3 text-xs text-muted-foreground">
-              Verticais futuras: Saude, Educacao, Loja e Servicos.
+              Verticais futuras ficam separadas para evolucao.
             </div>
           </CardContent>
         </Card>

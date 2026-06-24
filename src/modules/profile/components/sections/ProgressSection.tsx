@@ -25,6 +25,7 @@ import {
 } from "@/core/gamification/data/gamification";
 import { cn } from "@/shared/utils/cn";
 import type { Profile } from "@/modules/profile/types";
+import { isLaunchSurfaceEnabled } from "@/config/launchScope";
 
 interface ProgressSectionProps {
   profile: Profile;
@@ -42,6 +43,7 @@ export function ProgressSection({ profile }: ProgressSectionProps) {
   const memberSince = profile.createdAt
     ? new Date(profile.createdAt).getFullYear()
     : new Date().getFullYear();
+  const showRanking = isLaunchSurfaceEnabled("gamification");
 
   return (
     <Card className="border-2 bg-gradient-to-br from-primary/5 to-primary/10">
@@ -121,14 +123,16 @@ export function ProgressSection({ profile }: ProgressSectionProps) {
           </div>
         )}
 
-        <Button
-          variant="outline"
-          className="w-full"
-          onClick={() => navigate(appUrls.ranking)}
-        >
-          <BarChart3 className="h-4 w-4 mr-2" />
-          Ver Ranking Completo
-        </Button>
+        {showRanking && (
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => navigate(appUrls.ranking)}
+          >
+            <BarChart3 className="h-4 w-4 mr-2" />
+            Ver Ranking Completo
+          </Button>
+        )}
       </CardContent>
     </Card>
   );

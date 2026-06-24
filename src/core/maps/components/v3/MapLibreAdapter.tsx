@@ -54,6 +54,14 @@ export interface MapLibreAdapterHandle {
   getMapId: () => string;
 }
 
+export interface MapClusterRenderOptions {
+  radius?: number;
+  maxZoom?: number;
+  minPoints?: number;
+}
+
+export type MapMarkerPresentation = 'default' | 'compact';
+
 export interface MapLibreAdapterProps {
   /** URL do estilo de tiles */
   styleUrl: string;
@@ -82,8 +90,13 @@ export interface MapLibreAdapterProps {
   userLocationMarker?: UserLocationMarkerConfig;
   /** Território resolvido (para controle territorial) */
   resolved?: ResolvedTerritory | null;
+  fitTerritoryBounds?: boolean;
+  territoryFitPadding?: number | maplibregl.PaddingOptions;
+  territoryFitMaxZoom?: number;
   /** Habilitar clustering de marcadores */
   enableClustering?: boolean;
+  clusterOptions?: MapClusterRenderOptions;
+  markerPresentation?: MapMarkerPresentation;
   /** Configuração de raio de busca */
   radiusControl?: {
     enabled: boolean;
@@ -102,6 +115,25 @@ export interface MapLibreAdapterProps {
     };
   };
   className?: string;
+}
+
+function hasFiniteMapCoordinates(latitude: unknown, longitude: unknown): latitude is number {
+  return (
+    typeof latitude === 'number' &&
+    typeof longitude === 'number' &&
+    Number.isFinite(latitude) &&
+    Number.isFinite(longitude) &&
+    latitude >= -90 &&
+    latitude <= 90 &&
+    longitude >= -180 &&
+    longitude <= 180
+  );
+}
+
+function toFiniteMapCoordinates(latitude: unknown, longitude: unknown): [number, number] | null {
+  const lat = typeof latitude === 'number' || typeof latitude === 'string' ? Number(latitude) : NaN;
+  const lng = typeof longitude === 'number' || typeof longitude === 'string' ? Number(longitude) : NaN;
+  return hasFiniteMapCoordinates(lat, lng) ? [lat, lng] : null;
 }
 
 
@@ -137,7 +169,12 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
       controls,
       userLocationMarker,
       resolved,
+      fitTerritoryBounds = false,
+      territoryFitPadding,
+      territoryFitMaxZoom,
       enableClustering = false,
+      clusterOptions,
+      markerPresentation = 'default',
       radiusControl,
       className 
     },
@@ -147,6 +184,7 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
     const mapRef = useRef<maplibregl.Map | null>(null);
     // Map<markerId, Marker> para diffing eficiente
     const markersRef = useRef<Map<string, maplibregl.Marker>>(new Map());
+    const markerSignaturesRef = useRef<Map<string, string>>(new Map());
     const { handleMapMove } = useViewportBridge();
 
     // Estado do viewport para clustering
@@ -156,6 +194,34 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
     // ID único do mapa para componentes filhos
     const reactMapId = React.useId();
     const mapId = React.useMemo(() => `map-${reactMapId.replace(/[^a-zA-Z0-9_-]/g, '')}`, [reactMapId]);
+    const markerSizing = React.useMemo(() => {
+      if (markerPresentation === 'compact') {
+        return {
+          marker: 28,
+          markerFont: 10,
+          markerBorder: 1.5,
+          clusterSmall: 30,
+          clusterMedium: 34,
+          clusterLarge: 38,
+          clusterFont: 11,
+          clusterBorder: 2,
+        };
+      }
+
+      return {
+        marker: 36,
+        markerFont: 12,
+        markerBorder: 2,
+        clusterSmall: 40,
+        clusterMedium: 50,
+        clusterLarge: 60,
+        clusterFont: 14,
+        clusterBorder: 3,
+      };
+    }, [markerPresentation]);
+    const clusterRadius = clusterOptions?.radius ?? 60;
+    const clusterMaxZoom = clusterOptions?.maxZoom ?? 16;
+    const clusterMinPoints = clusterOptions?.minPoints ?? 2;
 
     // Expor handle imperativo
     useImperativeHandle(ref, () => ({
@@ -163,11 +229,13 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
       flyTo: (viewport) => {
         const map = mapRef.current;
         if (!map) return;
+        const requestedCenter = viewport.center;
+        if (requestedCenter && !hasFiniteMapCoordinates(requestedCenter.latitude, requestedCenter.longitude)) return;
         map.flyTo({
-          center: viewport.center
-            ? [viewport.center.longitude, viewport.center.latitude]
+          center: requestedCenter
+            ? [requestedCenter.longitude, requestedCenter.latitude]
             : undefined,
-          zoom: viewport.zoom,
+          zoom: Number.isFinite(viewport.zoom) ? viewport.zoom : undefined,
           duration: 800,
         });
       },
@@ -184,8 +252,9 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
     useEffect(() => {
       if (!containerRef.current || mapRef.current) return;
 
-      const center: [number, number] = initialViewport?.center
-        ? [initialViewport.center.longitude, initialViewport.center.latitude]
+      const initialCenter = initialViewport?.center;
+      const center: [number, number] = initialCenter && hasFiniteMapCoordinates(initialCenter.latitude, initialCenter.longitude)
+        ? [initialCenter.longitude, initialCenter.latitude]
         : DEFAULT_CENTER;
 
       const map = new maplibregl.Map({
@@ -213,6 +282,8 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
 
       // Evento: mapa carregado
       map.on('load', () => {
+        setCurrentBounds(extractBounds(map));
+        setCurrentZoom(map.getZoom());
         onLoad?.();
       });
 
@@ -304,6 +375,11 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
         }
       });
 
+      map.on('zoomend', () => {
+        setCurrentBounds(extractBounds(map));
+        setCurrentZoom(map.getZoom());
+      });
+
       // Evento: clique no mapa
       map.on('click', (e) => {
         onMapClick?.({
@@ -315,11 +391,13 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
       mapRef.current = map;
 
       const markerRegistry = markersRef.current;
+      const markerSignatures = markerSignaturesRef.current;
 
       return () => {
         map.remove();
         mapRef.current = null;
         markerRegistry.clear();
+        markerSignatures.clear();
       };
     // Inicialização única — dependências intencionalmente omitidas
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -341,9 +419,10 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
       if (isFirstRender.current) { isFirstRender.current = false; return; }
       const map = mapRef.current;
       if (!map || !initialViewport?.center) return;
+      if (!hasFiniteMapCoordinates(initialViewport.center.latitude, initialViewport.center.longitude)) return;
       map.flyTo({
         center: [initialViewport.center.longitude, initialViewport.center.latitude],
-        zoom: initialViewport.zoom,
+        zoom: Number.isFinite(initialViewport.zoom) ? initialViewport.zoom : map.getZoom(),
         duration: 1000,
         essential: true,
       });
@@ -368,23 +447,68 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
       centeredOnTerritory.current = true;
 
       const fly = () => {
+        if (fitTerritoryBounds) {
+          const bounds = new maplibregl.LngLatBounds();
+          let points = 0;
+
+          territoryPolygons.forEach((poly) => {
+            poly.coordinates.forEach(([lat, lng]) => {
+              const normalized = toFiniteMapCoordinates(lat, lng);
+              if (!normalized) return;
+
+              const [safeLat, safeLng] = normalized;
+              bounds.extend([safeLng, safeLat]);
+              points += 1;
+            });
+          });
+
+          if (points >= 2) {
+            const west = bounds.getWest();
+            const east = bounds.getEast();
+            const south = bounds.getSouth();
+            const north = bounds.getNorth();
+            const isValidBox =
+              [west, east, south, north].every(Number.isFinite) &&
+              Math.abs(east - west) > 0.000001 &&
+              Math.abs(north - south) > 0.000001;
+
+            if (isValidBox) {
+              try {
+                map.fitBounds(bounds, {
+                  padding: territoryFitPadding ?? 32,
+                  maxZoom: territoryFitMaxZoom,
+                  duration: 800,
+                });
+                return;
+              } catch (error) {
+                logger.debug('[MapLibreAdapter] Ignorando fitBounds territorial invalido:', error);
+              }
+            }
+          }
+        }
+
         if (territoryPolygons.length === 1) {
           const [lat, lng] = territoryPolygons[0].center;
+          if (!hasFiniteMapCoordinates(lat, lng)) return;
           const isCity =
             resolved?.kind === 'location' &&
             resolved.location.geographic_path.split('/').filter(Boolean).length === 3;
-          map.flyTo({ center: [lng, lat], zoom: isCity ? 12 : 14, duration: 800 });
+          map.flyTo({ center: [lng, lat], zoom: territoryFitMaxZoom ?? (isCity ? 12 : 14), duration: 800 });
         } else {
-          const n = territoryPolygons.length;
-          const lat = territoryPolygons.reduce((s, p) => s + p.center[0], 0) / n;
-          const lng = territoryPolygons.reduce((s, p) => s + p.center[1], 0) / n;
+          const validCenters = territoryPolygons
+            .map((polygon) => polygon.center)
+            .filter(([lat, lng]) => hasFiniteMapCoordinates(lat, lng));
+          if (validCenters.length === 0) return;
+          const n = validCenters.length;
+          const lat = validCenters.reduce((s, p) => s + p[0], 0) / n;
+          const lng = validCenters.reduce((s, p) => s + p[1], 0) / n;
           map.flyTo({ center: [lng, lat], zoom: 13, duration: 800 });
         }
       };
 
       if (map.isStyleLoaded()) fly();
       else map.once('load', fly);
-    }, [territoryPolygons, resolved]);
+    }, [territoryPolygons, resolved, fitTerritoryBounds, territoryFitPadding, territoryFitMaxZoom]);
 
     // ── Camada de território (polígonos de bairro/cidade) ──────────────────────
     // Renderiza os polígonos do território ativo sobre o mapa base.
@@ -400,6 +524,12 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
       const apply = () => {
         // Remover layers/sources anteriores
         const style = map.getStyle();
+        let appliedPolygons = 0;
+        let appliedCoordinates = 0;
+        let west = Infinity;
+        let south = Infinity;
+        let east = -Infinity;
+        let north = -Infinity;
         if (style?.sources) {
           Object.keys(style.sources)
             .filter((id) => id.startsWith(TERRITORY_SOURCE_PREFIX))
@@ -421,11 +551,8 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
           // Projeto usa [lat, lng]; GeoJSON exige [lng, lat]
           // Validar coordenadas antes de converter
           const ring = poly.coordinates
-            .filter(([lat, lng]) => 
-              lat != null && lng != null && 
-              !isNaN(lat) && !isNaN(lng) &&
-              isFinite(lat) && isFinite(lng)
-            )
+            .map(([lat, lng]) => toFiniteMapCoordinates(lat, lng))
+            .filter((coords): coords is [number, number] => Boolean(coords))
             .map(([lat, lng]) => [lng, lat] as [number, number]);
           
           // Verificar se temos coordenadas válidas suficientes
@@ -456,16 +583,35 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
             id: fillId,
             type: 'fill',
             source: sourceId,
-            paint: { 'fill-color': poly.color, 'fill-opacity': 0.12 },
+            paint: { 'fill-color': poly.color, 'fill-opacity': 0.18 },
           });
 
           map.addLayer({
             id: lineId,
             type: 'line',
             source: sourceId,
-            paint: { 'line-color': poly.color, 'line-width': 2, 'line-opacity': 0.8 },
+            paint: { 'line-color': poly.color, 'line-width': 3, 'line-opacity': 1 },
+          });
+          appliedPolygons += 1;
+          appliedCoordinates += ring.length;
+          ring.forEach(([lng, lat]) => {
+            west = Math.min(west, lng);
+            south = Math.min(south, lat);
+            east = Math.max(east, lng);
+            north = Math.max(north, lat);
           });
         });
+
+        if (typeof window !== 'undefined') {
+          const state = readMapState();
+          state.territoryPolygonCount = appliedPolygons;
+          state.territoryCoordinateCount = appliedCoordinates;
+          state.territoryBounds =
+            appliedCoordinates > 0 && [west, south, east, north].every(Number.isFinite)
+              ? { west, south, east, north }
+              : undefined;
+          writeMapState(state);
+        }
       };
 
       if (map.isStyleLoaded()) {
@@ -629,31 +775,38 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
       bounds: currentBounds,
       zoom: currentZoom,
       enabled: enableClustering,
-      radius: 60,
-      maxZoom: 16,
-      minPoints: 2,
+      radius: clusterRadius,
+      maxZoom: clusterMaxZoom,
+      minPoints: clusterMinPoints,
     });
 
     // Usar clusters se clustering estiver habilitado, senão usar marcadores diretos
     const markersToRender = React.useMemo<RenderMarker[]>(() => {
-      if (!enableClustering || !clusteringReady) {
+      const shouldRenderIndividualMarkers = currentZoom >= clusterMaxZoom + 1;
+
+      if (!enableClustering || shouldRenderIndividualMarkers || !clusteringReady) {
         return allMarkers;
       }
 
       // Converter clusters para marcadores
-      return clusters.map((cluster) => {
+      return clusters.flatMap((cluster) => {
         if (cluster.properties.cluster) {
+          const [longitude, latitude] = cluster.geometry.coordinates;
+          const normalized = toFiniteMapCoordinates(latitude, longitude);
+          if (!normalized) return [];
+          const [safeLat, safeLng] = normalized;
+
           // É um cluster
-          return createClusterRenderMarker(
+          return [createClusterRenderMarker(
             cluster.id,
             cluster.properties.point_count ?? 0,
-            cluster.geometry.coordinates,
-          );
+            [safeLng, safeLat],
+          )];
         }
 
-        return cluster.properties.marker;
+        return cluster.properties.marker ? [cluster.properties.marker] : [];
       });
-    }, [enableClustering, clusteringReady, clusters, allMarkers]);
+    }, [enableClustering, clusteringReady, clusters, allMarkers, currentZoom, clusterMaxZoom]);
 
     // ── Marcadores com diffing por ID ─────────────────────────────────────────
     // Só remove/adiciona marcadores que mudaram — evita recriar todos a cada pan/zoom.
@@ -663,6 +816,7 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
 
       const syncMarkers = () => {
         const current = markersRef.current;
+        const markerSignatures = markerSignaturesRef.current;
         const nextIds = new Set(markersToRender.map((m) => m.id));
 
         // Remover marcadores que não existem mais
@@ -670,22 +824,45 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
           if (!nextIds.has(id)) {
             marker.remove();
             current.delete(id);
+            markerSignatures.delete(id);
           }
         });
 
         // Adicionar marcadores novos
         markersToRender.forEach((marker) => {
-          if (current.has(marker.id)) return; // já existe
-
           // ✅ SSOT: Validar coordenadas antes de desestruturar
           if (!marker.coordinates) return;
           
           const { latitude: lat, longitude: lng } = marker.coordinates;
-          if (lat == null || lng == null || isNaN(lat) || isNaN(lng)) return;
+          const normalized = toFiniteMapCoordinates(lat, lng);
+          if (!normalized) return;
+          const [safeLat, safeLng] = normalized;
 
           const metadata = (marker.metadata ?? {}) as Record<string, unknown>;
           const isUserLocation = metadata.isUserLocation === true;
           const isCluster = metadata.isCluster === true;
+          const pointCount = typeof metadata.pointCount === 'number' ? metadata.pointCount : 0;
+          const markerSignature = [
+            marker.type,
+            safeLat.toFixed(6),
+            safeLng.toFixed(6),
+            isUserLocation ? 'user' : 'poi',
+            isCluster ? pointCount : '',
+            markerPresentation,
+          ].join('|');
+          const currentMarker = current.get(marker.id);
+
+          if (currentMarker && markerSignatures.get(marker.id) === markerSignature) {
+            currentMarker.setLngLat([safeLng, safeLat]);
+            return;
+          }
+
+          if (currentMarker) {
+            currentMarker.remove();
+            current.delete(marker.id);
+            markerSignatures.delete(marker.id);
+          }
+
           const el = document.createElement('div');
 
           if (isUserLocation) {
@@ -695,45 +872,54 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
             el.appendChild(svg);
           } else if (isCluster) {
             // Renderizar cluster
-            const pointCount = typeof metadata.pointCount === 'number' ? metadata.pointCount : 0;
-            const size = pointCount < 10 ? 40 : pointCount < 50 ? 50 : 60;
+            const size = pointCount < 10
+              ? markerSizing.clusterSmall
+              : pointCount < 50
+                ? markerSizing.clusterMedium
+                : markerSizing.clusterLarge;
             el.style.cssText = [
               `width:${size}px`, `height:${size}px`,
               'display:flex', 'align-items:center', 'justify-content:center',
               'border-radius:50%',
               'background:#3b82f6',
-              'border:3px solid white',
+              `border:${markerSizing.clusterBorder}px solid white`,
               'box-shadow:0 2px 12px rgba(0,0,0,0.4)',
               'cursor:pointer',
               'font-weight:bold',
               'color:white',
-              'font-size:14px',
+              `font-size:${markerSizing.clusterFont}px`,
             ].join(';');
             el.textContent = String(pointCount);
 
             // Ao clicar no cluster, dar zoom
             el.addEventListener('click', () => {
+              const targetZoom = map.getZoom() + 2;
+              setCurrentZoom(targetZoom);
               map.flyTo({
-                center: [lng, lat],
-                zoom: map.getZoom() + 2,
+                center: [safeLng, safeLat],
+                zoom: targetZoom,
                 duration: 500,
               });
+              window.setTimeout(() => {
+                setCurrentBounds(extractBounds(map));
+                setCurrentZoom(map.getZoom());
+              }, 650);
             });
           } else {
             // Usa SSOT: getMarkerConfig de markerConfig.ts
             const markerType = marker.type === 'cluster' ? 'business' : marker.type;
             const cfg = getMarkerConfig(markerType);
             el.style.cssText = [
-              'width:36px', 'height:36px',
+              `width:${markerSizing.marker}px`, `height:${markerSizing.marker}px`,
               'display:flex', 'align-items:center', 'justify-content:center',
               'border-radius:50% 50% 50% 0', 'transform:rotate(-45deg)',
               `background:${cfg.color}`,
-              'border:2px solid white',
+              `border:${markerSizing.markerBorder}px solid white`,
               'box-shadow:0 2px 8px rgba(0,0,0,0.35)',
               'cursor:pointer',
             ].join(';');
             const inner = document.createElement('span');
-            inner.style.cssText = 'transform:rotate(45deg);font-size:12px;line-height:1;font-weight:800;color:white;font-family:Arial,sans-serif;';
+            inner.style.cssText = `transform:rotate(45deg);font-size:${markerSizing.markerFont}px;line-height:1;font-weight:800;color:white;font-family:Arial,sans-serif;`;
             inner.textContent = cfg.abbr;
             el.appendChild(inner);
           }
@@ -745,15 +931,16 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
           const m = new maplibregl.Marker({
             element: el,
             anchor: isUserLocation ? 'center' : isCluster ? 'center' : 'bottom-left',
-          }).setLngLat([lng, lat]).addTo(map);
+          }).setLngLat([safeLng, safeLat]).addTo(map);
 
           current.set(marker.id, m);
+          markerSignatures.set(marker.id, markerSignature);
         });
       };
 
       if (map.isStyleLoaded()) syncMarkers();
       else map.once('load', syncMarkers);
-    }, [markersToRender, onMarkerClick]);
+    }, [markersToRender, onMarkerClick, markerPresentation, markerSizing, extractBounds]);
 
     return (
       <div style={{ position: 'relative', width: '100%', height: '100%' }}>

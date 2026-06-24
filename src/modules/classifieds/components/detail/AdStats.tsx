@@ -1,5 +1,6 @@
 import { Eye, Heart, MessageCircle, Clock } from "lucide-react";
 import { motion } from "framer-motion";
+import { isLaunchSurfaceEnabled } from "@/config/launchScope";
 
 interface AdStatsProps {
   views?: number;
@@ -14,11 +15,14 @@ export function AdStats({
   messages = 3,
   postedAt,
 }: AdStatsProps) {
+  const showMessages = isLaunchSurfaceEnabled("communityCommunication");
   const stats = [
     { icon: Eye, label: "Visualizações", value: views },
     { icon: Heart, label: "Favoritos", value: favorites },
-    { icon: MessageCircle, label: "Mensagens", value: messages },
   ];
+  if (showMessages) {
+    stats.push({ icon: MessageCircle, label: "Mensagens", value: messages });
+  }
 
   return (
     <motion.div

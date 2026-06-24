@@ -13,6 +13,9 @@ type MapRuntimeState = {
   idle?: boolean;
   zoom?: number;
   lastCenter?: { lat: number; lng: number };
+  territoryPolygonCount?: number;
+  territoryCoordinateCount?: number;
+  territoryBounds?: { west: number; south: number; east: number; north: number };
   errors?: string[];
   webglContextLost?: boolean;
 };

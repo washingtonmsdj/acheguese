@@ -17,6 +17,8 @@ import { AppTopbar } from './navigation/AppTopbar';
 import { BottomNav } from './BottomNav';
 import { TerritoryMismatchBanner } from '@/core/location/components/TerritoryMismatchBanner';
 import { scheduleIdleRouteWarmup } from '@/app/routes/prefetch';
+import { isReservedSlug } from '@/core/routing/reservedSlugs';
+import { MODULE_SLUGS, isCommunityRouteSuffixSegment } from '@/core/routing/utils/territoryUrls';
 
 export function AppLayoutSidebar() {
   const { pathname } = useLocation();
@@ -25,9 +27,35 @@ export function AppLayoutSidebar() {
   }, []);
 
   const pathSegments = pathname.split('/').filter(Boolean);
+  const isBarePublicTerritorialRoute =
+    pathSegments.length >= 2 &&
+    pathSegments.length <= 3 &&
+    /^[a-z]{2}$/i.test(pathSegments[0] ?? '') &&
+    !isReservedSlug(pathSegments[0] ?? '');
+  const isCommunityPublicLandingRoute =
+    pathSegments[0] === MODULE_SLUGS.community &&
+    /^[a-z]{2}$/i.test(pathSegments[1] ?? '') &&
+    Boolean(pathSegments[2]) &&
+    (
+      pathSegments.length === 3 ||
+      (pathSegments.length === 4 && !isCommunityRouteSuffixSegment(pathSegments[3]))
+    );
+  const isShortCommunityRoute =
+    Boolean(pathSegments[0]) &&
+    !/^[a-z]{2}$/i.test(pathSegments[0] ?? '') &&
+    !isReservedSlug(pathSegments[0] ?? '') &&
+    (
+      pathSegments.length === 1 ||
+      isCommunityRouteSuffixSegment(pathSegments[1])
+    );
 
   // Ocultar sidebar na home e na página de perfil (que tem sua própria sidebar)
-  const hideGlobalSidebar = pathname === '/' || pathname.startsWith('/conta');
+  const hideGlobalSidebar =
+    pathname === '/' ||
+    pathname.startsWith('/conta') ||
+    isBarePublicTerritorialRoute ||
+    isCommunityPublicLandingRoute ||
+    isShortCommunityRoute;
 
   const isInternalGroupRoute =
     pathSegments[0] === 'grupos' && pathSegments.length >= 2;

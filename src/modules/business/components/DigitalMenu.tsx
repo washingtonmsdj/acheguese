@@ -27,6 +27,7 @@ import type { LucideIcon } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import { formatBrl } from "@/shared/utils/currency";
 import { toast } from "sonner";
+import { isLaunchSurfaceEnabled } from "@/config/launchScope";
 interface Product {
   id: string;
   name: string;
@@ -89,6 +90,11 @@ export default function DigitalMenu({
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
   const [quantities, setQuantities] = useState<Map<string, number>>(new Map());
+  const showPromotions = isLaunchSurfaceEnabled("coupons");
+  const filterOptions = useMemo(
+    () => (showPromotions ? FILTER_OPTIONS : FILTER_OPTIONS.filter((filter) => filter.id !== "promocoes")),
+    [showPromotions],
+  );
 
   // Filtra products
   const filteredProducts = useMemo(() => {
@@ -109,29 +115,32 @@ export default function DigitalMenu({
       filtered = filtered.filter(
         (p) =>
           activeFilters.includes(p.category) ||
-          (activeFilters.includes("promocoes") && p.promocao) ||
+          (showPromotions && activeFilters.includes("promocoes") && p.promocao) ||
           (activeFilters.includes("destaques") && p.destaque),
       );
     }
 
     return filtered;
-  }, [products, searchTerm, activeFilters]);
+  }, [products, searchTerm, activeFilters, showPromotions]);
 
   // Agrupa products por category
   const productsByCategory = useMemo(() => {
     const grouped = new Map<string, Product[]>();
 
     filteredProducts.forEach((product) => {
-      const existing = grouped.get(product.category);
+      const category = !showPromotions && product.category === "promocoes"
+        ? "geral"
+        : product.category;
+      const existing = grouped.get(category);
       if (existing) {
         existing.push(product);
         return;
       }
-      grouped.set(product.category, [product]);
+      grouped.set(category, [product]);
     });
 
     return grouped;
-  }, [filteredProducts]);
+  }, [filteredProducts, showPromotions]);
 
   const getQuantity = (productId: string): number => quantities.get(productId) ?? 0;
 
@@ -255,7 +264,7 @@ export default function DigitalMenu({
           Filtros
         </div>
         <div className="flex flex-wrap gap-2">
-          {FILTER_OPTIONS.map((filter) => {
+          {filterOptions.map((filter) => {
             const Icon = filter.icon;
             const isActive = activeFilters.includes(filter.id);
             return (
@@ -369,7 +378,7 @@ export default function DigitalMenu({
                                     Destaque
                                   </Badge>
                                 )}
-                                {product.promocao && (
+                                {showPromotions && product.promocao && (
                                   <Badge
                                     variant="destructive"
                                     className="text-xs"

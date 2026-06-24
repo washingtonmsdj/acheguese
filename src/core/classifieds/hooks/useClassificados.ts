@@ -12,6 +12,7 @@ import {
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import type { ClassifiedData } from "../services/types";
 import type { TerritoryFilter } from "@/core/location/types";
+import { isLaunchClassifiedCategoryEnabled } from "@/config/launchScope";
 export interface ClassificadoWithVendedor {
   id: string;
   public_id: string;
@@ -88,7 +89,7 @@ export function useClassificados(options: UseClassificadosOptions = {}) {
         const data = await ClassifiedsService.queries.getAllClassifieds(filter);
 
         // Filtros locais de UI (categoria, busca, preço)
-        let filtered = data;
+        let filtered = data.filter((item) => isLaunchClassifiedCategoryEnabled(item.category));
 
         if (filters?.category) {
           filtered = filtered.filter((item) => item.category === filters.category);

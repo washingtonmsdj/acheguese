@@ -1,6 +1,6 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CommunityShortAliasShellRoute } from "../CommunityShortAliasShellRoute";
 import { useTerritorialContext } from "../TerritorialLayout";
 import { resolveCommunityPublicAliasTerritory } from "@/core/routing/services/CommunityPublicAliasTerritoryResolver";
@@ -57,7 +57,11 @@ describe("CommunityShortAliasShellRoute", () => {
     vi.clearAllMocks();
   });
 
-  it("mantem a URL curta raiz como endereço visivel e injeta contexto territorial", async () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("mantem a URL curta visivel e injeta base territorial canonica no contexto", async () => {
     vi.mocked(resolveCommunityPublicAliasTerritory).mockResolvedValue({
       status: "resolved",
       alias: "santa-cruz",
@@ -78,8 +82,33 @@ describe("CommunityShortAliasShellRoute", () => {
 
     await waitFor(() =>
       expect(
-        screen.getByText("/santa-cruz/empresas|/santa-cruz|Santa Cruz"),
+        screen.getByText("/santa-cruz/empresas|/ba/salvador/santa-cruz|Santa Cruz"),
       ).toBeInTheDocument(),
     );
+  });
+
+  it("mostra recuperacao quando a URL curta demora para resolver", () => {
+    vi.useFakeTimers();
+    vi.mocked(resolveCommunityPublicAliasTerritory).mockImplementation(
+      () => new Promise(() => undefined),
+    );
+
+    render(
+      <MemoryRouter initialEntries={["/santa-cruz"]}>
+        <Routes>
+          <Route path="/:communitySlug" element={<CommunityShortAliasShellRoute />}>
+            <Route index element={<ContextProbe />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText("Abrindo comunidade...")).toBeInTheDocument();
+
+    act(() => {
+      vi.advanceTimersByTime(9000);
+    });
+
+    expect(screen.getByText("A comunidade está demorando para abrir")).toBeInTheDocument();
   });
 });

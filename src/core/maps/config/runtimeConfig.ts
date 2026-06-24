@@ -3,15 +3,36 @@ import {
   TERRITORIAL_ROUTE_PARAMS,
   buildTerritorialModuleRoutePath,
 } from "@/core/routing/config/territorialRoutePatterns";
+import { isLaunchSurfaceEnabled } from "@/config/launchScope";
 import type { MapLayerKey } from "../types/core";
 
 export const MAP_RUNTIME_LAYER_KEYS: MapLayerKey[] = [
   "businesses",
   "gastronomy",
+  "services",
+  "classifieds",
   "events",
   "alerts",
   "tourist_points",
 ];
+
+const MAP_LAYER_LAUNCH_SURFACES: Partial<Record<MapLayerKey, Parameters<typeof isLaunchSurfaceEnabled>[0]>> = {
+  businesses: "business",
+  gastronomy: "gastronomy",
+  services: "services",
+  classifieds: "classifieds",
+  events: "events",
+  alerts: "communityAlerts",
+  tourist_points: "touristPoints",
+};
+
+export function isMapRuntimeLayerEnabled(key: MapLayerKey): boolean {
+  const surface = MAP_LAYER_LAUNCH_SURFACES[key];
+  return surface ? isLaunchSurfaceEnabled(surface) : true;
+}
+
+export const MAP_PUBLIC_RUNTIME_LAYER_KEYS: MapLayerKey[] =
+  MAP_RUNTIME_LAYER_KEYS.filter(isMapRuntimeLayerEnabled);
 
 export interface MapProductSurface {
   route: string;

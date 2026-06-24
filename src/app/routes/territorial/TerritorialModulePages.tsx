@@ -21,23 +21,21 @@ import { TERRITORY_CONFIG } from '@/config/territory';
 import { buildPublicAbsoluteUrl } from '@/shared/config/publicAppOrigin';
 import { getRequiredRecordValue } from '@/shared/utils/recordLookup';
 import { MODULE_SLUGS, buildCommunityTerritoryUrl, buildModuleTerritoryUrl } from '@/core/routing/utils/territoryUrls';
+import { createLaunchPausedRoute } from '@/app/routes/launchPausedComponent';
 
 // Lazy imports dos módulos existentes
 const ComunidadePage       = lazy(() => import('@/modules/community-feed/pages/ComunidadePage'));
 const CidadeLandingPage    = lazy(() => import('@/app/pages/CidadeLandingPage'));
-const TerritorialLandingPage = lazy(() =>
-  import('@/core/routing/components/TerritorialLandingPage').then((module) => ({ default: module.TerritorialLandingPage })),
-);
-const CommunityCommunicationTabPage = lazy(() => import('@/modules/communication-territorial/pages/CommunityCommunicationTabPage'));
-const ProblemasPage        = lazy(() => import('@/modules/community-issues/pages/ProblemasPage'));
+const CommunityCommunicationTabPage = createLaunchPausedRoute('Comunicacao');
+const ProblemasPage        = createLaunchPausedRoute('Problemas');
 const EmpresasPage         = lazy(() => import('@/app/pages/EmpresasLandingPage'));
 const ServicosPage         = lazy(() => import('@/modules/professionals/services/pages/ServicosLandingPage'));
 const ClassificadosPage    = lazy(() => import('@/modules/classifieds/pages/ClassificadosPage'));
-const EventsListPage     = lazy(() => import('@/features/events/pages/EventsListPage'));
+const EventsListPage     = createLaunchPausedRoute('Eventos');
 const GastronomyPage        = lazy(() => import('@/modules/business/gastronomy/pages/GastronomyLandingPage'));
-const EducationPage         = lazy(() => import('@/modules/business/education/pages/EducationExplorerPage'));
-const MobilidadePage       = lazy(() => import('@/modules/mobility/pages/MobilidadeLandingPage'));
-const VagasPage            = lazy(() => import('@/modules/classifieds/jobs/pages/VagasPublicPage'));
+const EducationPage         = createLaunchPausedRoute('Educacao');
+const MobilidadePage       = createLaunchPausedRoute('Mobilidade');
+const VagasPage            = createLaunchPausedRoute('Vagas');
 const CategoryBusinessPage = lazy(() => import('@/core/business/pages/CategoryBusinessPage'));
 const MapaPage             = lazy(() => import('@/core/maps/pages/MapaPageV4'));
 
@@ -167,7 +165,7 @@ function CityStatusGate({ module, enforceActive = false, children }: CityStatusG
         </p>
         <h1 className="text-2xl font-semibold">{copy.title}</h1>
         <p className="mt-3 text-muted-foreground">
-          {`Estamos chegando em ${cityName}. O Achegue-se ainda está organizando empresas, eventos, serviços e conteúdos locais nesta região.`}
+          {`Estamos chegando em ${cityName}. O Achegue-se ainda está organizando empresas, gastronomia, serviços, classificados e conteúdos locais nesta região.`}
         </p>
         <p className="mt-2 text-muted-foreground">{copy.description(cityName)}</p>
         <div className="mt-6 flex flex-wrap gap-3">
@@ -206,16 +204,6 @@ export function TerritorialCommunityPage() {
 }
 
 export function TerritorialCommunityHomePage() {
-  const { resolved } = useTerritorialContext();
-
-  if (resolved.kind === 'group') {
-    return (
-      <Suspense fallback={<ModulePageLoader />}>
-        <TerritorialLandingPage />
-      </Suspense>
-    );
-  }
-
   return (
     <Suspense fallback={<ModulePageLoader />}>
       <CidadeLandingPage />
@@ -234,7 +222,7 @@ export function TerritorialCommunityEntryPage() {
     return <TerritorialCommunityHomePage />;
   }
 
-  return <TerritorialCommunityPage />;
+  return <TerritorialCommunityHomePage />;
 }
 
 export function TerritorialCommunityIssuesPage() {

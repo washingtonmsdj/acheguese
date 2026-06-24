@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { useClassificadosPage } from "@/modules/classifieds/hooks/useClassificadosPage";
 import { CLASSIFIED_CATEGORIES, CLASSIFIED_CATEGORY_LABELS } from "@/config/categories";
+import { isLaunchClassifiedCategoryEnabled } from "@/config/launchScope";
 import { ClassificadosLayout } from "./ClassificadosLayout";
 import {
   ClassifiedsHeroSection,
@@ -179,7 +180,9 @@ export default function ClassificadosPage({
       <ClassifiedsCategoriesSection
         territoryName={territoryName}
         navigate={() => {}}
-        categories={HIGHLIGHT_CATEGORIES}
+        categories={HIGHLIGHT_CATEGORIES.filter((category) =>
+          isLaunchClassifiedCategoryEnabled(category.id)
+        )}
         selectedCategory={filters.category}
         onCategoryChange={handleCategoryChange}
       />

@@ -8,6 +8,7 @@
  */
 
 import type { MapTileProvider, TileStyle, TileProviderConfig } from '@/core/maps/types';
+import { MAP_TILE_STYLES } from '@/shared/config/mapDefaults';
 
 /**
  * Estilos disponiveis para OSM.
@@ -16,39 +17,7 @@ import type { MapTileProvider, TileStyle, TileProviderConfig } from '@/core/maps
  * a entregar expressoes com `null` que quebram o parse do worker do MapLibre.
  * Enquanto isso, `positron` vira o baseline seguro para estilos claros.
  */
-const OSM_STYLES: Record<TileStyle, TileProviderConfig> = {
-  streets: {
-    name: 'osm-streets',
-    styleUrl: 'https://tiles.openfreemap.org/styles/positron',
-    attribution: '&copy; OpenStreetMap contributors',
-  },
-  light: {
-    name: 'osm-light',
-    styleUrl: 'https://tiles.openfreemap.org/styles/positron',
-    attribution: '&copy; OpenStreetMap contributors',
-  },
-  dark: {
-    name: 'osm-dark',
-    styleUrl: 'https://tiles.openfreemap.org/styles/dark-matter',
-    attribution: '&copy; OpenStreetMap contributors',
-  },
-  // Fallback para estilos nao suportados
-  satellite: {
-    name: 'osm-streets',
-    styleUrl: 'https://tiles.openfreemap.org/styles/positron',
-    attribution: '&copy; OpenStreetMap contributors',
-  },
-  hybrid: {
-    name: 'osm-streets',
-    styleUrl: 'https://tiles.openfreemap.org/styles/positron',
-    attribution: '&copy; OpenStreetMap contributors',
-  },
-  terrain: {
-    name: 'osm-streets',
-    styleUrl: 'https://tiles.openfreemap.org/styles/positron',
-    attribution: '&copy; OpenStreetMap contributors',
-  },
-};
+const OSM_STYLES = MAP_TILE_STYLES satisfies Record<TileStyle, TileProviderConfig>;
 
 /**
  * Provider de tiles OpenStreetMap.

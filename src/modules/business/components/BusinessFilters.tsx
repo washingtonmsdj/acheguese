@@ -17,6 +17,7 @@ import {
 import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/utils/cn";
+import { isLaunchSurfaceEnabled } from "@/config/launchScope";
 
 export interface Category {
   id: string;
@@ -143,6 +144,15 @@ export const BusinessFilters = memo(
     const [localSearch, setLocalSearch] = useState(searchQuery);
     const debouncedSearch = useDebounce(localSearch, debounceMs);
     const isFirstRender = useRef(true);
+    const educationEnabled = isLaunchSurfaceEnabled("education");
+    const visibleCategories = categories.filter((category) => category.id !== "educacao" || educationEnabled);
+    const selectedCategoryIsVisible = visibleCategories.some((category) => category.id === selectedCategory);
+
+    useEffect(() => {
+      if (!selectedCategoryIsVisible) {
+        onCategoryChange("todos");
+      }
+    }, [selectedCategoryIsVisible, onCategoryChange]);
 
     // Sincroniza a busca apenas após o debounce.
     useEffect(() => {
@@ -220,7 +230,7 @@ export const BusinessFilters = memo(
           role="tablist"
           aria-label="Categorias de empresas"
         >
-          {categories.map((category) => (
+          {visibleCategories.map((category) => (
             <CategoryButton
               key={category.id}
               category={category}
@@ -269,7 +279,7 @@ export const BusinessFilters = memo(
             )}
             {selectedCategory !== "todos" && (
               <span className="px-2 py-1 rounded-lg bg-teal-400/10 text-teal-400">
-                {categories.find((c) => c.id === selectedCategory)?.label}
+                {visibleCategories.find((c) => c.id === selectedCategory)?.label}
               </span>
             )}
             {selectedSortBy !== "rating" && (

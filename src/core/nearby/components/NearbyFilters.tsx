@@ -1,10 +1,7 @@
 import {
-  AlertTriangle,
   Briefcase,
-  Calendar,
   Camera,
   Dumbbell,
-  GraduationCap,
   LayoutGrid,
   Music,
   Navigation,
@@ -12,6 +9,7 @@ import {
   Stethoscope,
   UtensilsCrossed,
 } from "lucide-react";
+import type { ComponentType } from "react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 
@@ -29,13 +27,14 @@ export const QUICK_CATEGORIES = [
   { key: "shopping", label: "Compras", icon: ShoppingBag },
   { key: "services", label: "Servicos", icon: Briefcase },
   { key: "health", label: "Saude", icon: Stethoscope },
-  { key: "education", label: "Educacao", icon: GraduationCap },
   { key: "leisure", label: "Lazer", icon: Music },
   { key: "fitness", label: "Fitness", icon: Dumbbell },
   { key: "tourism", label: "Turismo", icon: Camera },
-  { key: "events", label: "Eventos", icon: Calendar },
-  { key: "alerts", label: "Alertas", icon: AlertTriangle },
-] as const;
+] as const satisfies readonly {
+  key: string;
+  label: string;
+  icon: ComponentType<{ className?: string }>;
+}[];
 
 export type QuickCategoryKey = (typeof QUICK_CATEGORIES)[number]["key"];
 

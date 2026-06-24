@@ -13,6 +13,7 @@
 
 import { Badge } from "@/shared/components/ui/badge";
 import { SectionFrame } from "@/modules/profile/components/hub";
+import { isLaunchSurfaceEnabled } from "@/config/launchScope";
 
 import type { PlanosSectionProps } from "./types";
 
@@ -40,6 +41,8 @@ export function PlanosSection({
   context,
   businessModules,
 }: PlanosSectionProps) {
+  const showMobility = isLaunchSurfaceEnabled("mobility");
+
   return (
     <div className="space-y-6">
       <SectionFrame
@@ -100,12 +103,12 @@ export function PlanosSection({
                       Painel de pedidos
                     </Badge>
                   ) : null}
-                  {item.subscription.canUseMotoboyNetwork ? (
+                  {showMobility && item.subscription.canUseMotoboyNetwork ? (
                     <Badge variant="outline" className="text-[10px]">
                       Rede motoboy
                     </Badge>
                   ) : null}
-                  {item.subscription.canTrackDelivery ? (
+                  {showMobility && item.subscription.canTrackDelivery ? (
                     <Badge variant="outline" className="text-[10px]">
                       Rastreio de entrega
                     </Badge>

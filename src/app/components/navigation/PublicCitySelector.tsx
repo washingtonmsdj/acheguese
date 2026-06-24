@@ -9,6 +9,7 @@ import {
 } from "@/shared/components/ui/popover";
 import { Input } from "@/shared/components/ui/input";
 import { APP_MODULE_SLUGS, buildAppModulePath, type AppModuleSlug } from "@/config/moduleSlugs";
+import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from "@/config/launchScope";
 import { useLocations } from "@/core/location/hooks/useLocations";
 import { usePublicBrowsingCity } from "@/core/location/hooks/usePublicBrowsingCity";
 import { useCityMetadataList } from "@/core/city/hooks/useCityMetadataList";
@@ -21,22 +22,26 @@ function buildModulePath(module: string, state: string, city: string): string {
     : buildAppModulePath(module as AppModuleSlug, territoryPath);
 }
 
-const PUBLIC_CITY_MODULES = [
-  APP_MODULE_SLUGS.business,
-  APP_MODULE_SLUGS.services,
-  APP_MODULE_SLUGS.gastronomy,
-  APP_MODULE_SLUGS.events,
-  APP_MODULE_SLUGS.classifieds,
-  APP_MODULE_SLUGS.jobs,
-  APP_MODULE_SLUGS.search,
-  "buscar",
-  APP_MODULE_SLUGS.map,
-  APP_MODULE_SLUGS.education,
-  APP_MODULE_SLUGS.touristPoints,
-  APP_MODULE_SLUGS.community,
-] as const;
+const PUBLIC_CITY_MODULE_SURFACES = {
+  [APP_MODULE_SLUGS.business]: "business",
+  [APP_MODULE_SLUGS.services]: "services",
+  [APP_MODULE_SLUGS.gastronomy]: "gastronomy",
+  [APP_MODULE_SLUGS.events]: "events",
+  [APP_MODULE_SLUGS.classifieds]: "classifieds",
+  [APP_MODULE_SLUGS.jobs]: "jobs",
+  [APP_MODULE_SLUGS.search]: "search",
+  buscar: "search",
+  [APP_MODULE_SLUGS.map]: "map",
+  [APP_MODULE_SLUGS.education]: "education",
+  [APP_MODULE_SLUGS.touristPoints]: "touristPoints",
+  [APP_MODULE_SLUGS.community]: "community",
+} as const satisfies Record<string, LaunchSurfaceKey>;
 
-const PUBLIC_CITY_MODULE_SET = new Set<string>(PUBLIC_CITY_MODULES);
+const PUBLIC_CITY_MODULE_SET = new Set<string>(
+  Object.entries(PUBLIC_CITY_MODULE_SURFACES)
+    .filter(([, surface]) => isLaunchSurfaceEnabled(surface))
+    .map(([module]) => module),
+);
 
 function buildPathForCurrentContext(pathname: string, state: string, city: string): string {
   const parts = pathname.split("/").filter(Boolean);

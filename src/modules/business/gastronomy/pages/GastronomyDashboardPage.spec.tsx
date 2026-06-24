@@ -84,11 +84,11 @@ describe('GastronomyDashboardPage', () => {
     expect(screen.getByText('Dashboard Gastronomia')).toBeInTheDocument();
     expect(screen.getByText('Cardápio')).toBeInTheDocument();
     expect(screen.getByText('Pedidos Internos')).toBeInTheDocument();
-    expect(screen.getByText('Rede de Motoboys')).toBeInTheDocument();
+    expect(screen.queryByText('Rede de Motoboys')).not.toBeInTheDocument();
     expect(screen.getByText('Gerenciar Cardápio')).toBeInTheDocument();
     expect(screen.queryByTestId('upgrade-Cardápio Avançado')).not.toBeInTheDocument();
     expect(screen.getByTestId('upgrade-Pedidos Internos')).toHaveAttribute('data-offer-key', 'delivery');
-    expect(screen.getByTestId('upgrade-Rede de Motoboys')).toHaveAttribute('data-offer-key', 'delivery');
-    expect(screen.getByTestId('upgrade-Analytics')).toHaveAttribute('data-offer-key', 'catalog');
+    expect(screen.queryByTestId('upgrade-Rede de Motoboys')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('upgrade-Analytics')).not.toBeInTheDocument();
   });
 });

@@ -14,23 +14,21 @@ import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useEntitlements } from '@/core/billing/hooks/useEntitlements';
 import {
-  DeliverySummaryCard,
   MenuSummaryCard,
   OperationalStatusCard,
   PlanStatusWidget,
   QuickActionsCard,
-  TodayOrdersCard,
   UpgradePromptInline,
 } from '../components';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
+import { isLaunchSurfaceEnabled } from '@/config/launchScope';
 import { getMenuUsageStats } from '@/modules/business/gastronomy/services';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 import {
   UtensilsCrossed,
   QrCode,
   TrendingUp,
-  Package,
   Truck,
   BarChart3,
   Settings,
@@ -50,6 +48,9 @@ export default function GastronomyDashboardPage() {
     enabled: !!businessId,
     queryFn: async () => getMenuUsageStats(businessId!),
   });
+  const showCoupons = isLaunchSurfaceEnabled('coupons');
+  const showMobility = isLaunchSurfaceEnabled('mobility');
+  const showAnalytics = isLaunchSurfaceEnabled('publicAnalytics');
 
   if (isLoading) {
     return (
@@ -79,9 +80,7 @@ export default function GastronomyDashboardPage() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <OperationalStatusCard businessId={businessId!} />
-        <TodayOrdersCard businessId={businessId!} />
         <MenuSummaryCard businessId={businessId!} />
-        <DeliverySummaryCard businessId={businessId!} />
       </div>
 
       <QuickActionsCard businessId={businessId!} />
@@ -153,7 +152,8 @@ export default function GastronomyDashboardPage() {
         </Card>
 
         {/* Promoções */}
-        <Card>
+        {showCoupons && (
+          <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="w-5 h-5" />
@@ -184,44 +184,12 @@ export default function GastronomyDashboardPage() {
               />
             )}
           </CardContent>
-        </Card>
-
-        {/* Pedidos Internos */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Package className="w-5 h-5" />
-              Pedidos Internos
-            </CardTitle>
-            <CardDescription>
-              Receba e gerencie pedidos
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {can('canUseInternalOrders') ? (
-              <>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Pedidos hoje</span>
-                  <span className="font-medium">Resumo acima</span>
-                </div>
-                <Link to={businessManagementRoutes.gastronomyPedidos(businessId!)}>
-                  <Button className="w-full">
-                    Ver Pedidos
-                  </Button>
-                </Link>
-              </>
-            ) : (
-              <UpgradePromptInline
-                businessId={businessId!}
-                feature="Pedidos Internos"
-                offerKey="delivery"
-              />
-            )}
-          </CardContent>
-        </Card>
+          </Card>
+        )}
 
         {/* Rede de Motoboys */}
-        <Card>
+        {showMobility && (
+          <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Truck className="w-5 h-5" />
@@ -252,10 +220,12 @@ export default function GastronomyDashboardPage() {
               />
             )}
           </CardContent>
-        </Card>
+          </Card>
+        )}
 
         {/* Analytics */}
-        <Card>
+        {showAnalytics && (
+          <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="w-5 h-5" />
@@ -292,7 +262,8 @@ export default function GastronomyDashboardPage() {
               />
             )}
           </CardContent>
-        </Card>
+          </Card>
+        )}
 
         {/* Horário de Funcionamento */}
         <Card>

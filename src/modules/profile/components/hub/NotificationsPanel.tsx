@@ -37,7 +37,7 @@ export function NotificationsPanel({
       action={
         <Button variant="ghost" size="sm" className="gap-1.5" onClick={onViewAll}>
           <Bell className="h-4 w-4" />
-          Abrir inbox
+          Ver avisos
         </Button>
       }
     >

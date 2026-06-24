@@ -1,6 +1,7 @@
 import React, { lazy, memo, Suspense } from "react";
 import { WidgetErrorBoundary } from "./WidgetErrorBoundary";
 import { WidgetSkeleton } from "./widgets/WidgetSkeleton";
+import { isLaunchSurfaceEnabled } from "@/config/launchScope";
 
 const RankingWidget = lazy(() =>
   import("./widgets/RankingWidget").then((module) => ({
@@ -12,6 +13,8 @@ const RankingWidget = lazy(() =>
  * Sidebar esquerda com lazy loading.
  */
 export const CommunityLeftSidebar = memo(() => {
+  if (!isLaunchSurfaceEnabled("gamification")) return null;
+
   return (
     <div className="w-full space-y-2">
       <WidgetErrorBoundary widgetName="RankingWidget">

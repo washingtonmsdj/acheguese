@@ -69,7 +69,7 @@ test.describe("community territorial routes", () => {
     await expectRouteResolved(page);
   });
 
-  test("community sidebar exposes Educacao and route resolves", async ({ page }) => {
+  test("community sidebar hides paused education surface", async ({ page }) => {
     await open(page, "/comunidade/ba/salvador/feed");
     await expectRouteResolved(page);
 
@@ -77,12 +77,11 @@ test.describe("community territorial routes", () => {
       .locator('a[href="/educacao/ba/salvador"]')
       .first();
 
-    await expect(educationLink).toBeVisible({ timeout: 30_000 });
-    await educationLink.click();
+    await expect(educationLink).toHaveCount(0);
 
+    await open(page, "/educacao/ba/salvador");
     await expect
-      .poll(() => page.url(), { timeout: 30_000 })
-      .toContain("/educacao/ba/salvador");
-    await expectRouteResolved(page, "/educacao/ba/salvador");
+      .poll(() => bodyText(page), { timeout: 60_000 })
+      .toMatch(/MVP publico|MVP público|separado para ajustes/i);
   });
 });

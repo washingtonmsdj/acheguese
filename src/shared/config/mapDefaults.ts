@@ -21,11 +21,40 @@ const latitude = parseNumber(publicEnv.VITE_DEFAULT_MAP_LATITUDE, -14.235);
 const longitude = parseNumber(publicEnv.VITE_DEFAULT_MAP_LONGITUDE, -51.9253);
 const boundsDelta = parseNumber(publicEnv.VITE_DEFAULT_MAP_BOUNDS_DELTA, 0.15);
 
-export const DEFAULT_TILE_STYLE = {
-  name: "openfreemap",
-  styleUrl: "https://tiles.openfreemap.org/styles/positron",
-  attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+export const MAP_TILE_STYLES = {
+  streets: {
+    name: "openfreemap",
+    styleUrl: "https://tiles.openfreemap.org/styles/positron",
+    attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+  },
+  light: {
+    name: "openfreemap-light",
+    styleUrl: "https://tiles.openfreemap.org/styles/positron",
+    attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+  },
+  dark: {
+    name: "carto-dark-matter",
+    styleUrl: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
+    attribution: '&copy; <a href="https://carto.com">CARTO</a> &copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+  },
+  satellite: {
+    name: "openfreemap",
+    styleUrl: "https://tiles.openfreemap.org/styles/positron",
+    attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+  },
+  hybrid: {
+    name: "openfreemap",
+    styleUrl: "https://tiles.openfreemap.org/styles/positron",
+    attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+  },
+  terrain: {
+    name: "openfreemap",
+    styleUrl: "https://tiles.openfreemap.org/styles/positron",
+    attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+  },
 } as const;
+
+export const DEFAULT_TILE_STYLE = MAP_TILE_STYLES.streets;
 
 export const MAP_DEFAULT_COORDINATES: SharedCoordinates = {
   latitude,

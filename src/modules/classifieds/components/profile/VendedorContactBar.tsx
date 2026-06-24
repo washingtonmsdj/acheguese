@@ -19,6 +19,7 @@ import { messagingService } from "@/core/messaging";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { buildWhatsAppUrl } from "@/shared/utils/contactLinks";
 import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
+import { isLaunchSurfaceEnabled } from "@/config/launchScope";
 
 interface VendedorContactBarProps {
   vendedorId: string;
@@ -40,6 +41,7 @@ export function VendedorContactBar({
   const appUrls = useAppUrls();
   const [chatOpen, setChatOpen] = useState(false);
   const [message, setMessage] = useState("");
+  const showInternalChat = isLaunchSurfaceEnabled("communityCommunication");
 
   const whatsappNumber = vendedorWhatsapp || vendedorPhone;
 
@@ -113,17 +115,20 @@ export function VendedorContactBar({
           <Phone className="h-4 w-4" />
           WhatsApp
         </Button>
-        <Button
-          onClick={() => setChatOpen(true)}
-          variant="outline"
-          className="flex-1 gap-2"
-          size="sm"
-        >
-          <MessageCircle className="h-4 w-4" />
-          Enviar mensagem
-        </Button>
+        {showInternalChat ? (
+          <Button
+            onClick={() => setChatOpen(true)}
+            variant="outline"
+            className="flex-1 gap-2"
+            size="sm"
+          >
+            <MessageCircle className="h-4 w-4" />
+            Enviar mensagem
+          </Button>
+        ) : null}
       </div>
 
+      {showInternalChat ? (
       <Dialog open={chatOpen} onOpenChange={setChatOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -154,6 +159,7 @@ export function VendedorContactBar({
           </div>
         </DialogContent>
       </Dialog>
+      ) : null}
     </>
   );
 }

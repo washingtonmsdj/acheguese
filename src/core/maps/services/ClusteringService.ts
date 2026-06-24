@@ -41,6 +41,10 @@ export interface ClusterOptions {
   minPoints?: number;
 }
 
+function hasFiniteCoordinates(marker: MapMarker): boolean {
+  return Number.isFinite(marker.coordinates?.latitude) && Number.isFinite(marker.coordinates?.longitude);
+}
+
 // ============================================
 // SERVICE
 // ============================================
@@ -68,7 +72,7 @@ export class ClusteringService {
 
     // Converter marcadores para formato GeoJSON
     const points: ClusterPoint[] = markers
-      .filter((m) => m.coordinates.latitude != null && m.coordinates.longitude != null)
+      .filter(hasFiniteCoordinates)
       .map((marker, index) => ({
         type: 'Feature',
         id: index,

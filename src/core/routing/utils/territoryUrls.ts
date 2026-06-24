@@ -300,6 +300,31 @@ export function buildCommunityAliasUrl(alias: string, suffix = ''): string {
   return `/${cleanAlias}${normalizedSuffix}`;
 }
 
+/**
+ * Constrói uma URL dentro da base pública da comunidade.
+ *
+ * Funciona tanto para fallback técnico:
+ *   /comunidade/ba/salvador/pituba + empresas
+ *   → /comunidade/ba/salvador/pituba/empresas
+ *
+ * quanto para alias curto:
+ *   /pituba + empresas
+ *   → /pituba/empresas
+ */
+export function buildCommunityScopedUrl(communityBaseUrl: string, suffix = ''): string {
+  const cleanBase = communityBaseUrl.trim().replace(/\/+$/g, '');
+  if (!cleanBase.startsWith('/') || cleanBase === '/' || /[?#]/.test(cleanBase)) {
+    throw new Error('buildCommunityScopedUrl exige uma base publica de comunidade.');
+  }
+
+  const suffixSegments = suffix
+    .split('/')
+    .filter(Boolean)
+    .map((segment) => cleanUrlSegment(segment, 'sufixo da comunidade'));
+
+  return suffixSegments.length ? `${cleanBase}/${suffixSegments.join('/')}` : cleanBase;
+}
+
 export type CommunityTabSuffix = 'feed' | 'grupos';
 
 /**
