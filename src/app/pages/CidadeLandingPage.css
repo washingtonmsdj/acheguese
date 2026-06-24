@@ -1707,6 +1707,9 @@
 .neighborhood-community-page {
   --neighborhood-card: rgba(7, 19, 26, 0.82);
   --neighborhood-card-strong: rgba(7, 19, 26, 0.94);
+  min-height: 100svh;
+  overflow-x: clip;
+  overflow-y: visible;
   background:
     linear-gradient(180deg, rgba(3, 11, 18, 0.2), var(--city-bg) 72%),
     var(--city-bg);
@@ -1842,9 +1845,9 @@
 
 .neighborhood-community-hero {
   display: grid;
-  gap: 16px;
+  gap: 12px;
   align-items: center;
-  padding: 22px 0 16px;
+  padding: 18px 0 12px;
 }
 
 .neighborhood-community-hero-territorial {
@@ -1897,15 +1900,15 @@
   position: relative;
   z-index: 1;
   display: grid;
-  min-height: 180px;
+  min-height: 136px;
   place-items: center;
   overflow: hidden;
 }
 
 .neighborhood-community-hero-summary {
   display: grid;
-  gap: 14px;
-  padding: 16px;
+  gap: 12px;
+  padding: 14px;
   border: 1px solid rgba(180, 220, 235, 0.22);
   border-radius: 8px;
   background:
@@ -2170,9 +2173,9 @@
 }
 
 .neighborhood-community-hero h1 {
-  margin: 12px 0 4px;
+  margin: 10px 0 4px;
   color: white;
-  font-size: clamp(2.7rem, 13vw, 5rem);
+  font-size: clamp(2.45rem, 12vw, 4.85rem);
   font-weight: 950;
   line-height: 1.02;
   letter-spacing: 0;
@@ -2186,7 +2189,7 @@
 }
 
 .neighborhood-community-badges {
-  margin-top: 16px;
+  margin-top: 12px;
 }
 
 .neighborhood-community-badges span,
@@ -2221,7 +2224,7 @@
 }
 
 .neighborhood-community-rules {
-  margin-top: 14px;
+  margin-top: 10px;
 }
 
 .neighborhood-community-rules span {
@@ -2232,7 +2235,9 @@
 }
 
 .neighborhood-community-hero-actions {
-  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 14px;
 }
 
 .neighborhood-community-hero-actions a {
@@ -2240,9 +2245,9 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-height: 48px;
+  min-height: 44px;
   min-width: 0;
-  padding: 0 20px;
+  padding: 0 12px;
   border: 1px solid rgba(180, 220, 235, 0.38);
   border-radius: 9px;
   color: white;
@@ -2890,6 +2895,49 @@
     grid-column: 2;
     justify-content: start;
     text-align: left;
+  }
+}
+
+@media (max-width: 679px) {
+  .neighborhood-community-hero-map {
+    min-height: 116px;
+    margin-block: -4px;
+  }
+
+  .neighborhood-community-hero-map .neighborhood-territory-art {
+    width: min(118%, 390px);
+    max-height: 154px;
+  }
+
+  .neighborhood-community-summary-top {
+    grid-template-columns: 82px minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .neighborhood-territory-art.is-compact {
+    width: 82px;
+    max-height: 64px;
+  }
+
+  .neighborhood-community-summary-stats {
+    gap: 6px;
+    padding: 10px 0;
+  }
+
+  .neighborhood-community-summary-cta small {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .neighborhood-community-tabs {
+    margin-inline: -4px;
+    padding-inline: 4px;
+  }
+
+  .neighborhood-community-stream-item {
+    align-items: start;
   }
 }
 
