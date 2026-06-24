@@ -43,13 +43,6 @@ import heroImg from "@/assets/servicos-hero.jpg";
 
 // ── Dados estáticos ──────────────────────────────────────────────────
 
-const STATS = [
-  { icon: Users,  value: "250+",  label: "profissionais",      color: "text-primary" },
-  { icon: Star,   value: "4.8",   label: "avaliação média",    color: "text-warning" },
-  { icon: Shield, value: "100%",  label: "verificados",        color: "text-success" },
-  { icon: Clock,  value: "< 2h",  label: "tempo de resposta",  color: "text-accent"  },
-];
-
 const HOW_IT_WORKS = [
   { step: "01", icon: Search, title: "Busque o serviço",    description: "Encontre o profissional ideal filtrando por categoria, avaliação ou proximidade." },
   { step: "02", icon: Phone,  title: "Entre em contato",    description: "Fale diretamente via WhatsApp ou chat. Sem intermediários, sem taxas." },
@@ -57,10 +50,10 @@ const HOW_IT_WORKS = [
 ];
 
 const BENEFITS = [
-  { icon: BadgeCheck, title: "Profissionais Verificados", description: "Todos os prestadores passam por verificação de identidade e histórico.",                                    color: "text-primary", bgColor: "bg-primary/10" },
+  { icon: BadgeCheck, title: "Perfis verificados", description: "Profissionais verificados aparecem identificados no perfil e nos resultados.",                                    color: "text-primary", bgColor: "bg-primary/10" },
   { icon: MapPin,     title: "Perto de Você",             description: "Profissionais da sua região, com menor tempo de deslocamento e maior compromisso.",                        color: "text-accent",  bgColor: "bg-accent/10"  },
   { icon: Shield,     title: "Garantia Comunitária",      description: "Avaliações reais de moradores como você. Transparência total.",                                            color: "text-success", bgColor: "bg-success/10" },
-  { icon: Zap,        title: "Resposta Rápida",           description: "Os profissionais se comprometem a responder em até 2 horas durante o horário comercial.",                  color: "text-warning", bgColor: "bg-warning/10" },
+  { icon: Zap,        title: "Contato direto",           description: "Quando o profissional informa WhatsApp ou prazo de resposta, esses dados aparecem no perfil.",                  color: "text-warning", bgColor: "bg-warning/10" },
 ];
 
 // ── Componentes auxiliares ────────────────────────────────────────────
@@ -93,6 +86,13 @@ const SERVICE_CATEGORY_RAIL = SERVICE_FORM_CATEGORY_OPTIONS.map((category) => ({
   ...(SERVICE_CATEGORY_STYLE_BY_ID[category.id] ?? SERVICE_CATEGORY_STYLE_BY_ID.outros),
 }));
 
+function formatServicesMetric(value: number): string {
+  return new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 0 }).format(value);
+}
+
+function formatAverageRating(value: number | null): string {
+  return value == null ? "Sem nota" : value.toFixed(1).replace(".", ",");
+}
 
 function ProfessionalCard({ pro, index, onClick }: { pro: ProfessionalItem; index: number; onClick: () => void }) {
   const CategoryIcon = getServiceCategoryIcon(pro.category);
@@ -268,6 +268,43 @@ export default function ServicosLandingPage({ resolved, activeMemberIds }: Servi
     activeMemberIds,
   });
 
+  const serviceStats = useMemo(() => {
+    const ratings = professionals
+      .map((professional) => professional.rating)
+      .filter((rating) => Number.isFinite(rating) && rating > 0);
+    const averageRating =
+      ratings.length > 0 ? ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length : null;
+    const verifiedCount = professionals.filter((professional) => professional.is_verified).length;
+    const responseTime = professionals.find((professional) => professional.response_time.trim())?.response_time.trim();
+
+    return [
+      {
+        icon: Users,
+        value: initialLoading ? "..." : formatServicesMetric(professionals.length),
+        label: professionals.length === 1 ? "profissional" : "profissionais",
+        color: "text-primary",
+      },
+      {
+        icon: Star,
+        value: initialLoading ? "..." : formatAverageRating(averageRating),
+        label: "avaliação média",
+        color: "text-warning",
+      },
+      {
+        icon: Shield,
+        value: initialLoading ? "..." : formatServicesMetric(verifiedCount),
+        label: verifiedCount === 1 ? "verificado" : "verificados",
+        color: "text-success",
+      },
+      {
+        icon: Clock,
+        value: initialLoading ? "..." : responseTime || "Sob consulta",
+        label: "tempo de resposta",
+        color: "text-accent",
+      },
+    ];
+  }, [initialLoading, professionals]);
+
   const handleProfessionalClick = useCallback(
     (pro: ProfessionalItem) =>
       navigate(
@@ -378,7 +415,7 @@ export default function ServicosLandingPage({ resolved, activeMemberIds }: Servi
       {/* ── ESTATÍSTICAS ──────────────────────────────────────────── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-10 md:py-14 w-full">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {STATS.map((stat) => (
+          {serviceStats.map((stat) => (
             <motion.div key={stat.label} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
               className="bg-card border border-border rounded-2xl p-5 text-center hover:shadow-lg hover:border-primary/20 transition-all">
               <div className="flex justify-center mb-2">

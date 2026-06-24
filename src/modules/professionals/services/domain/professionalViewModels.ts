@@ -19,6 +19,8 @@ export interface ProfessionalItem {
   whatsapp: string | null;
   latitude: number | null;
   longitude: number | null;
+  is_verified: boolean;
+  response_time: string;
   created_at: string;
 }
 
@@ -80,6 +82,8 @@ export function mapProfessionalToItem(professional: Professional): ProfessionalI
     whatsapp: professional.whatsapp || null,
     latitude: professional.latitude ?? null,
     longitude: professional.longitude ?? null,
+    is_verified: professional.is_verified,
+    response_time: professional.response_time || "",
     created_at: professional.created_at,
   };
 }
