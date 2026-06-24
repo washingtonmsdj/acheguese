@@ -199,7 +199,7 @@ export function NeighborhoodTerritoryHero({
           </span>
           <span>
             <Users aria-hidden="true" />
-            Interação para moradores
+            Moradores verificados
           </span>
         </div>
         <div className="neighborhood-community-rules">

@@ -2941,14 +2941,15 @@
   }
 
   .neighborhood-community-hero h1 {
-    max-width: 18rem;
+    max-width: 100%;
     margin: 8px 0 2px;
-    font-size: clamp(1.55rem, 7.4vw, 2.05rem);
-    line-height: 1.06;
+    font-size: clamp(1.42rem, 6.1vw, 1.72rem);
+    line-height: 1.04;
+    white-space: nowrap;
   }
 
   .neighborhood-community-hero p {
-    max-width: 18.5rem;
+    max-width: 19.5rem;
     font-size: 0.92rem;
     line-height: 1.28;
   }
@@ -2962,8 +2963,8 @@
   .neighborhood-community-badges span,
   .neighborhood-community-rules span {
     min-height: 28px;
-    padding-inline: 9px;
-    font-size: 0.72rem;
+    padding-inline: 8px;
+    font-size: 0.7rem;
     line-height: 1.15;
   }
 
