@@ -2174,7 +2174,7 @@
   color: white;
   font-size: clamp(2.7rem, 13vw, 5rem);
   font-weight: 950;
-  line-height: 0.95;
+  line-height: 1.02;
   letter-spacing: 0;
 }
 
@@ -2877,7 +2877,7 @@
   }
 
   .neighborhood-community-stream-item {
-    grid-template-columns: 72px minmax(0, 1fr) minmax(112px, 140px);
+    grid-template-columns: 72px minmax(0, 1fr);
     align-items: center;
   }
 
@@ -2887,9 +2887,9 @@
   }
 
   .neighborhood-community-stream-action {
-    grid-column: 3;
-    justify-content: end;
-    text-align: right;
+    grid-column: 2;
+    justify-content: start;
+    text-align: left;
   }
 }
 
@@ -2964,6 +2964,7 @@
   .neighborhood-community-hero h1 {
     margin-top: 8px;
     font-size: clamp(3rem, 4.4vw, 5.3rem);
+    line-height: 0.98;
   }
 
   .neighborhood-community-badges {
