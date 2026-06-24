@@ -1185,6 +1185,7 @@ function NeighborhoodLandingContent({
   const verifyHref = accessStatus === "visitor" ? withQueryParams("/login", { redirect: residenceHref }) : residenceHref;
   const interactionHref = canInteract ? urls.publish : accessStatus === "visitor" ? publishLoginHref : verifyHref;
   const enterHref = accessStatus === "verified" ? urls.feed : accessStatus === "visitor" ? enterLoginHref : verifyHref;
+  const gateActionHref = accessStatus === "verified" ? urls.publish : accessStatus === "visitor" ? enterLoginHref : verifyHref;
   const lockedActionHref = accessStatus === "visitor" ? enterLoginHref : verifyHref;
   const alertPosts = feedPosts.filter((post) => post.type === "alerta");
   const streamGroups = buildNeighborhoodStreamItems({
@@ -1302,7 +1303,7 @@ function NeighborhoodLandingContent({
             </div>
           </section>
 
-          <NeighborhoodGateCard status={accessStatus} loading={residenceLoading} actionHref={interactionHref} />
+          <NeighborhoodGateCard status={accessStatus} loading={residenceLoading} actionHref={gateActionHref} />
           <NeighborhoodStatsPanel
             population={population}
             businessCount={businessCount ?? businesses.length}
