@@ -96,6 +96,22 @@ export const SECURITY_DOMAINS = {
     alternatives: 'Self-hosted OSRM instance',
   },
 
+  CARTO_BASEMAPS: {
+    url: 'https://basemaps.cartocdn.com',
+    purpose: 'MapLibre base map style and tile metadata',
+    risk: 'LOW',
+    justification: 'Required by the configured dark matter base map style',
+    alternatives: 'Self-hosted style JSON and tiles',
+  },
+
+  OPEN_METEO_API: {
+    url: 'https://api.open-meteo.com',
+    purpose: 'Public weather forecast and current temperature API',
+    risk: 'LOW',
+    justification: 'Used to show local temperature for the selected territory',
+    alternatives: 'Server-side weather proxy or another weather provider',
+  },
+
   IPAPI_GEOLOCATION: {
     url: 'https://ipapi.co',
     purpose: 'IP-based geolocation fallback',
@@ -308,6 +324,8 @@ export const CSP_DIRECTIVES = {
     SECURITY_DOMAINS.OPENSTREETMAP_NOMINATIM.url,
     SECURITY_DOMAINS.OPENFREEMAP_TILES.url,
     SECURITY_DOMAINS.OSRM_ROUTER.url,
+    SECURITY_DOMAINS.CARTO_BASEMAPS.url,
+    SECURITY_DOMAINS.OPEN_METEO_API.url,
     SECURITY_DOMAINS.IPAPI_GEOLOCATION.url,
     SECURITY_DOMAINS.IPWHOIS_GEOLOCATION.url,
     SECURITY_DOMAINS.SENTRY_INGEST.url,
