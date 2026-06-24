@@ -11,16 +11,20 @@ import { Button } from "@/shared/components/ui/button";
 import type { ClassifiedsFooterSectionProps } from "./types";
 
 export function ClassifiedsFooterSection({
+  navigate,
   onNewClassificado,
 }: ClassifiedsFooterSectionProps) {
   return (
     <>
       {/* Mini Banner Patrocínio */}
-      <motion.div
+      <motion.button
+        type="button"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.3 }}
-        className="mx-4 mt-4 rounded-xl bg-gradient-to-r from-primary/10 via-card to-primary/10 border border-primary/15 p-3 flex items-center gap-3 cursor-pointer hover:border-primary/30 transition-colors"
+        onClick={() => navigate("/empresas/cadastrar")}
+        className="mx-4 mt-4 rounded-xl bg-gradient-to-r from-primary/10 via-card to-primary/10 border border-primary/15 p-3 flex items-center gap-3 text-left hover:border-primary/30 transition-colors"
+        aria-label="Anunciar marca cadastrando uma empresa"
       >
         <div className="h-8 w-8 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
           <Megaphone className="h-4 w-4 text-primary" />
@@ -34,7 +38,7 @@ export function ClassifiedsFooterSection({
           </p>
         </div>
         <ArrowRight className="h-3.5 w-3.5 text-primary shrink-0" />
-      </motion.div>
+      </motion.button>
 
       {/* CTA Banner Final */}
       <motion.div

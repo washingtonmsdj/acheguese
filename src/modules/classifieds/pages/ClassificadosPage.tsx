@@ -12,6 +12,7 @@
  */
 
 import { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Building2,
   Car,
@@ -106,6 +107,7 @@ export default function ClassificadosPage({
   resolved,
   activeMemberIds,
 }: ClassificadosPageProps) {
+  const navigate = useNavigate();
   const {
     viewMode,
     setViewMode,
@@ -179,7 +181,7 @@ export default function ClassificadosPage({
       {/* Categorias de Destaque (Topo) */}
       <ClassifiedsCategoriesSection
         territoryName={territoryName}
-        navigate={() => {}}
+        navigate={navigate}
         categories={HIGHLIGHT_CATEGORIES.filter((category) =>
           isLaunchClassifiedCategoryEnabled(category.id)
         )}
@@ -190,7 +192,7 @@ export default function ClassificadosPage({
       {/* Hero */}
       <ClassifiedsHeroSection
         territoryName={territoryName}
-        navigate={() => {}}
+        navigate={navigate}
         activeCount={activeCount}
         onNewClassificado={handleNewClassificado}
       />
@@ -198,7 +200,7 @@ export default function ClassificadosPage({
       {/* Filtros e Busca */}
       <ClassifiedsFiltrosSection
         territoryName={territoryName}
-        navigate={() => {}}
+        navigate={navigate}
         filters={filters}
         onSearchChange={handleSearchChange}
         onSortChange={handleSortChange}
@@ -217,7 +219,7 @@ export default function ClassificadosPage({
       {!isLoading && viewMode === "anuncios" && (
         <ClassifiedsTrendingSection
           territoryName={territoryName}
-          navigate={() => {}}
+          navigate={navigate}
           title="Em alta"
           subtitle="Anúncios com maior tração"
           icon={<Flame className="h-4 w-4 text-orange-400" />}
@@ -232,7 +234,7 @@ export default function ClassificadosPage({
       {!isLoading && viewMode === "anuncios" && (
         <ClassifiedsPopularSection
           territoryName={territoryName}
-          navigate={() => {}}
+          navigate={navigate}
           title="Mais procurados"
           subtitle="Categorias com maior procura"
           icon={<Sparkles className="h-4 w-4 text-emerald-400" />}
@@ -247,7 +249,7 @@ export default function ClassificadosPage({
       {!isLoading && viewMode === "anuncios" && (
         <ClassifiedsFeaturedSection
           territoryName={territoryName}
-          navigate={() => {}}
+          navigate={navigate}
           title="Destaques"
           subtitle="Itens premium selecionados"
           icon={<Star className="h-4 w-4 text-amber-400" />}
@@ -261,14 +263,14 @@ export default function ClassificadosPage({
       {/* Mini Banner + Patrocinados */}
       <ClassifiedsFooterSection
         territoryName={territoryName}
-        navigate={() => {}}
+        navigate={navigate}
         onNewClassificado={handleNewClassificado}
       />
 
       {!isLoading && viewMode === "anuncios" && (
         <ClassifiedsSponsoredSection
           territoryName={territoryName}
-          navigate={() => {}}
+          navigate={navigate}
           ads={featuredAds}
           onAdClick={handleClassificadoClick}
         />
@@ -277,7 +279,7 @@ export default function ClassificadosPage({
       {/* Listagem Principal */}
       <ClassifiedsListagemSection
         territoryName={territoryName}
-        navigate={() => {}}
+        navigate={navigate}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         classificados={classificados}
