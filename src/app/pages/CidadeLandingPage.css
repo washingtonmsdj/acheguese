@@ -2959,35 +2959,44 @@
   }
 
   .neighborhood-community-hero {
-    gap: 10px;
-    padding: 14px 0 10px;
+    gap: 8px;
+    padding: 10px 0 8px;
+  }
+
+  .neighborhood-community-eyebrow {
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 0.7rem;
+    line-height: 1.15;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .neighborhood-community-hero h1 {
     max-width: 100%;
-    margin: 8px 0 2px;
-    font-size: clamp(1.42rem, 6.1vw, 1.72rem);
+    margin: 6px 0 1px;
+    font-size: clamp(1.16rem, 4.8vw, 1.38rem);
     line-height: 1.04;
     white-space: nowrap;
   }
 
   .neighborhood-community-hero p {
-    max-width: 19.5rem;
-    font-size: 0.92rem;
+    max-width: 17.5rem;
+    font-size: 0.84rem;
     line-height: 1.28;
   }
 
   .neighborhood-community-badges,
   .neighborhood-community-rules {
-    gap: 6px;
-    margin-top: 9px;
+    gap: 5px;
+    margin-top: 7px;
   }
 
   .neighborhood-community-badges span,
   .neighborhood-community-rules span {
-    min-height: 28px;
-    padding-inline: 8px;
-    font-size: 0.7rem;
+    min-height: 26px;
+    padding-inline: 7px;
+    font-size: 0.66rem;
     line-height: 1.15;
   }
 
@@ -2997,9 +3006,9 @@
   }
 
   .neighborhood-community-hero-actions a {
-    min-height: 38px;
+    min-height: 36px;
     border-radius: 8px;
-    font-size: 0.8rem;
+    font-size: 0.76rem;
   }
 
   .neighborhood-community-hero-summary {
@@ -3081,28 +3090,57 @@
     height: 15px;
   }
 
+  .neighborhood-community-card {
+    padding: 10px;
+  }
+
   .neighborhood-community-stream-list {
     gap: 8px;
     padding-top: 4px;
   }
 
   .neighborhood-community-stream-item {
+    grid-template-columns: 50px minmax(0, 1fr);
+    gap: 9px;
     align-items: start;
-    padding: 9px;
+    padding: 8px;
     border: 1px solid rgba(180, 220, 235, 0.1);
     border-radius: 8px;
     background: rgba(7, 22, 31, 0.5);
   }
 
+  .neighborhood-community-stream-media {
+    width: 50px;
+    height: 50px;
+  }
+
+  .neighborhood-community-stream-media svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .neighborhood-community-stream-copy span {
+    margin-bottom: 3px;
+    font-size: 0.64rem;
+  }
+
   .neighborhood-community-stream-copy > a {
-    font-size: 0.96rem;
+    font-size: 0.9rem;
+    line-height: 1.16;
   }
 
   .neighborhood-community-stream-copy p {
     -webkit-line-clamp: 2;
   }
 
+  .neighborhood-community-stream-copy p,
+  .neighborhood-community-stream-copy small {
+    font-size: 0.73rem;
+    line-height: 1.28;
+  }
+
   .neighborhood-community-stream-action {
+    grid-column: 2;
     gap: 8px;
     padding-top: 2px;
   }
@@ -3782,23 +3820,30 @@
     display: none;
   }
 
+  .neighborhood-community-card {
+    padding: 10px;
+  }
+
   .neighborhood-community-stream-item {
-    grid-template-columns: 56px minmax(0, 1fr);
-    gap: 10px;
+    grid-template-columns: 48px minmax(0, 1fr);
+    gap: 8px;
+    padding: 8px;
   }
 
   .neighborhood-community-stream-media {
-    width: 54px;
-    height: 54px;
+    width: 46px;
+    height: 46px;
   }
 
   .neighborhood-community-stream-copy > a {
     font-size: 0.9rem;
+    line-height: 1.16;
   }
 
   .neighborhood-community-stream-copy p,
   .neighborhood-community-stream-copy small {
     font-size: 0.74rem;
+    line-height: 1.28;
   }
 
   .neighborhood-community-stream-action {

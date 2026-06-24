@@ -267,7 +267,7 @@ export function buildNeighborhoodStreamItems({
       businessGroup[0],
       feedGroup[2],
       mapItem[0],
-    ].filter((item): item is NeighborhoodStreamItem => Boolean(item)).slice(0, 7),
+    ].filter((item): item is NeighborhoodStreamItem => Boolean(item)).slice(0, 4),
     feed: feedGroup,
     business: businessGroup,
     services: serviceGroup,
