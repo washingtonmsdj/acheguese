@@ -3464,8 +3464,12 @@
   }
 
   .neighborhood-community-summary-top {
-    grid-template-columns: 88px minmax(0, 1fr);
-    gap: 10px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+
+  .neighborhood-community-summary-map {
+    display: none;
   }
 
   .neighborhood-territory-art.is-compact {
@@ -3507,6 +3511,10 @@
 
   .neighborhood-community-summary-cta a {
     width: 100%;
+  }
+
+  .neighborhood-community-summary-cta small {
+    display: none;
   }
 
   .neighborhood-community-stream-item {
