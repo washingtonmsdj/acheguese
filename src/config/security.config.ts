@@ -120,6 +120,14 @@ export const SECURITY_DOMAINS = {
     alternatives: 'Server-side weather proxy or another weather provider',
   },
 
+  ARCGIS_BOUNDARIES: {
+    url: 'https://services6.arcgis.com',
+    purpose: 'Official territorial boundary GeoJSON source',
+    risk: 'LOW',
+    justification: 'Used to fetch municipal neighborhood geometries registered in location_boundaries',
+    alternatives: 'Store normalized GeoJSON in Supabase and serve from first-party API',
+  },
+
   IPAPI_GEOLOCATION: {
     url: 'https://ipapi.co',
     purpose: 'IP-based geolocation fallback',
@@ -335,6 +343,7 @@ export const CSP_DIRECTIVES = {
     SECURITY_DOMAINS.CARTO_BASEMAPS.url,
     SECURITY_DOMAINS.CARTO_BASEMAP_TILES.url,
     SECURITY_DOMAINS.OPEN_METEO_API.url,
+    SECURITY_DOMAINS.ARCGIS_BOUNDARIES.url,
     SECURITY_DOMAINS.IPAPI_GEOLOCATION.url,
     SECURITY_DOMAINS.IPWHOIS_GEOLOCATION.url,
     SECURITY_DOMAINS.SENTRY_INGEST.url,
