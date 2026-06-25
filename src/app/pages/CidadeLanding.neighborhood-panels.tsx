@@ -79,7 +79,7 @@ export function NeighborhoodStatsPanel({
   const stats = [
     {
       label: "moradores",
-      value: population.value ? formatMetric(population.value) : "IBGE pendente",
+      value: population.value ? formatMetric(population.value) : "--",
       detail: population.sourceLabel,
       icon: Users,
     },
