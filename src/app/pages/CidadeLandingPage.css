@@ -2961,10 +2961,10 @@
   }
 
   .neighborhood-community-hero {
-    min-height: 300px;
+    min-height: 286px;
     gap: 8px;
     align-items: end;
-    padding: 106px 0 18px;
+    padding: 92px 0 16px;
     border-bottom: 1px solid rgba(180, 220, 235, 0.08);
   }
 
@@ -3003,7 +3003,7 @@
   .neighborhood-community-hero h1 {
     max-width: 100%;
     margin: 5px 0 1px;
-    font-size: clamp(1.42rem, 7vw, 1.78rem);
+    font-size: clamp(1.34rem, 6.6vw, 1.62rem);
     line-height: 1.04;
     white-space: nowrap;
   }
@@ -3045,14 +3045,14 @@
 
   .neighborhood-community-hero-map {
     position: absolute;
-    right: -76px;
-    top: 10px;
+    right: -92px;
+    top: 16px;
     bottom: auto;
     z-index: 1;
     display: grid;
-    width: min(76vw, 314px);
-    min-height: 226px;
-    opacity: 0.58;
+    width: min(72vw, 286px);
+    min-height: 198px;
+    opacity: 0.42;
     pointer-events: none;
   }
 
@@ -3187,6 +3187,9 @@
   }
 
   .neighborhood-community-stream-copy > a {
+    display: inline-flex;
+    min-height: 30px;
+    align-items: center;
     font-size: 0.9rem;
     line-height: 1.16;
   }
@@ -3833,9 +3836,9 @@
   }
 
   .neighborhood-community-hero {
-    min-height: 286px;
-    padding-top: 96px;
-    padding-bottom: 16px;
+    min-height: 270px;
+    padding-top: 86px;
+    padding-bottom: 15px;
   }
 
   .neighborhood-community-hero-copy {
@@ -3843,12 +3846,12 @@
   }
 
   .neighborhood-community-hero h1 {
-    font-size: clamp(1.34rem, 7vw, 1.58rem);
+    font-size: clamp(1.22rem, 6.4vw, 1.46rem);
   }
 
   .neighborhood-community-hero p {
     max-width: 15.25rem;
-    font-size: 0.82rem;
+    font-size: 0.8rem;
   }
 
   .neighborhood-community-badges span {
@@ -3859,12 +3862,12 @@
   }
 
   .neighborhood-community-hero-map {
-    right: -78px;
-    top: 12px;
+    right: -96px;
+    top: 18px;
     bottom: auto;
-    width: min(78vw, 292px);
-    min-height: 210px;
-    opacity: 0.52;
+    width: min(72vw, 262px);
+    min-height: 186px;
+    opacity: 0.36;
   }
 
   .neighborhood-community-rules {
