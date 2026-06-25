@@ -2007,10 +2007,14 @@
 }
 
 .neighborhood-community-summary-stats strong {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  overflow-wrap: anywhere;
   color: white;
   font-size: 1rem;
   font-weight: 940;
-  line-height: 1;
+  line-height: 1.05;
 }
 
 .neighborhood-community-summary-stats small {
@@ -2963,8 +2967,9 @@
   }
 
   .neighborhood-community-location span {
-    overflow: hidden;
-    text-overflow: ellipsis;
+    flex: 0 1 auto;
+    overflow: visible;
+    text-overflow: clip;
     white-space: nowrap;
   }
 
@@ -3216,13 +3221,22 @@
   }
 
   .neighborhood-community-stream-copy p {
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 3;
   }
 
   .neighborhood-community-stream-copy p,
   .neighborhood-community-stream-copy small {
     font-size: 0.73rem;
     line-height: 1.28;
+  }
+
+  .neighborhood-community-alert-list small,
+  .neighborhood-community-empty-alert small {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.18;
   }
 
   .neighborhood-community-stream-action {
@@ -3335,6 +3349,7 @@
 
   .neighborhood-community-brand {
     font-size: clamp(1.35rem, 2vw, 2rem);
+    width: max-content;
   }
 
   .neighborhood-community-top-search {
@@ -3541,7 +3556,8 @@
     display: -webkit-box;
     overflow: hidden;
     font-size: 0.72rem;
-    -webkit-line-clamp: 1;
+    line-height: 1.22;
+    -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
   }
 
@@ -3588,6 +3604,10 @@
   .neighborhood-community-empty-alert small {
     margin-top: 1px;
     font-size: 0.64rem;
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    line-height: 1.18;
   }
 
   .neighborhood-community-alert-action {
@@ -3780,6 +3800,10 @@
 }
 
 @media (max-width: 420px) {
+  .neighborhood-community-header {
+    gap: 6px;
+  }
+
   .neighborhood-community-actions {
     gap: 5px;
   }
@@ -3806,17 +3830,18 @@
   .neighborhood-community-brand {
     width: min(100%, 168px);
     min-width: 0;
-    font-size: 0.98rem;
+    font-size: 0.94rem;
+    gap: 6px;
   }
 
   .neighborhood-community-brand > span:last-child {
-    overflow: hidden;
-    text-overflow: ellipsis;
+    overflow: visible;
+    text-overflow: clip;
   }
 
   .neighborhood-community-brand .city-op-brand-mark {
-    width: 28px;
-    height: 28px;
+    width: 26px;
+    height: 26px;
   }
 
   .neighborhood-community-header {
@@ -3947,6 +3972,7 @@
   .neighborhood-community-summary-stats strong,
   .neighborhood-community-summary-stats small {
     white-space: normal;
+    overflow-wrap: anywhere;
   }
 
   .neighborhood-community-summary-stats small {
