@@ -2928,12 +2928,14 @@
 @media (max-width: 679px) {
   .neighborhood-community-header {
     grid-template-columns: minmax(0, 1fr) auto;
-    gap: 8px 7px;
-    padding-bottom: 7px;
+    gap: 7px 9px;
+    align-items: start;
+    padding-bottom: 4px;
   }
 
   .neighborhood-community-actions {
-    gap: 4px;
+    gap: 6px;
+    align-self: center;
   }
 
   .neighborhood-community-actions .city-op-icon-button {
@@ -2942,55 +2944,59 @@
 
   .neighborhood-community-actions .city-op-login-link,
   .neighborhood-community-actions .city-op-publish-link {
-    min-height: 40px;
-    padding-inline: 11px;
+    min-height: 38px;
+    padding-inline: 10px;
     border-radius: 8px;
-    font-size: 0.75rem;
+    font-size: 0.72rem;
+    font-weight: 850;
   }
 
   .neighborhood-community-actions .city-op-login-link {
-    min-width: 70px;
+    min-width: 66px;
   }
 
   .neighborhood-community-actions .city-op-publish-link {
-    min-width: 114px;
+    min-width: 108px;
   }
 
   .neighborhood-community-location {
     grid-column: 1;
     grid-row: 2;
-    width: 100%;
-    min-height: 40px;
+    width: fit-content;
+    max-width: 100%;
+    min-height: 38px;
     padding-inline: 9px;
-    justify-content: center;
-    font-size: 0.76rem;
+    justify-content: flex-start;
+    font-size: 0.74rem;
+    justify-self: start;
   }
 
   .neighborhood-community-location span {
     flex: 0 1 auto;
-    overflow: visible;
-    text-overflow: clip;
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   .neighborhood-community-top-search {
     grid-column: 2;
     grid-row: 2;
-    min-height: 40px;
-    gap: 8px;
+    min-height: 38px;
+    gap: 7px;
+    width: 100%;
     padding-inline: 10px;
     border-radius: 9px;
   }
 
   .neighborhood-community-top-search input {
-    font-size: 0.82rem;
+    font-size: 0.8rem;
   }
 
   .neighborhood-community-hero {
-    min-height: 258px;
-    gap: 8px;
+    min-height: 236px;
+    gap: 6px;
     align-items: end;
-    padding: 88px 0 14px;
+    padding: 74px 0 10px;
     border-bottom: 1px solid rgba(180, 220, 235, 0.08);
   }
 
@@ -3018,9 +3024,9 @@
   }
 
   .neighborhood-community-eyebrow {
-    max-width: 84%;
+    max-width: 80%;
     overflow: hidden;
-    font-size: 0.66rem;
+    font-size: 0.62rem;
     line-height: 1.15;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -3028,41 +3034,42 @@
 
   .neighborhood-community-hero h1 {
     max-width: 100%;
-    margin: 5px 0 1px;
-    font-size: clamp(1.22rem, 6vw, 1.46rem);
-    line-height: 1.04;
-    white-space: nowrap;
+    margin: 4px 0 0;
+    font-size: clamp(1.08rem, 5.1vw, 1.28rem);
+    line-height: 1.06;
   }
 
   .neighborhood-community-hero p {
-    max-width: 16.25rem;
-    font-size: 0.86rem;
-    line-height: 1.3;
+    max-width: 14.1rem;
+    margin-top: 4px;
+    font-size: 0.78rem;
+    line-height: 1.26;
   }
 
   .neighborhood-community-badges,
   .neighborhood-community-rules {
-    gap: 5px;
-    margin-top: 8px;
+    gap: 4px;
+    margin-top: 7px;
   }
 
   .neighborhood-community-badges span,
   .neighborhood-community-rules span {
-    min-height: 25px;
-    padding-inline: 7px;
-    font-size: 0.62rem;
+    min-height: 24px;
+    padding-inline: 6px;
+    font-size: 0.58rem;
     line-height: 1.15;
   }
 
   .neighborhood-community-hero-actions {
-    gap: 7px;
-    margin-top: 12px;
+    gap: 8px;
+    margin-top: 10px;
   }
 
   .neighborhood-community-hero-actions a {
-    min-height: 40px;
+    min-height: 38px;
     border-radius: 8px;
     font-size: 0.72rem;
+    padding-inline: 12px;
   }
 
   .neighborhood-community-hero-summary {
@@ -3119,23 +3126,23 @@
   }
 
   .neighborhood-community-tabs {
-    margin-inline: -4px;
+    margin-inline: -2px;
     flex-wrap: wrap;
-    gap: 8px 7px;
+    gap: 6px 8px;
     overflow-x: visible;
-    padding: 12px 4px 12px;
+    padding: 8px 2px 10px;
     border-bottom: 0;
   }
 
   .neighborhood-community-tabs button {
     flex: 0 1 auto;
-    min-height: 40px;
-    padding-inline: 8px;
+    min-height: 34px;
+    padding-inline: 6px;
     border: 0;
     border-bottom: 3px solid transparent;
     border-radius: 0;
     background: transparent;
-    font-size: 0.78rem;
+    font-size: 0.74rem;
   }
 
   .neighborhood-community-tabs button.is-active {
@@ -3150,22 +3157,22 @@
   }
 
   .neighborhood-community-card {
-    padding: 10px;
+    padding: 10px 10px 11px;
   }
 
   .neighborhood-community-stream-list {
-    gap: 8px;
-    padding-top: 14px;
+    gap: 7px;
+    padding-top: 10px;
   }
 
   .neighborhood-community-stream-item {
     grid-template-columns: 50px minmax(0, 1fr);
-    gap: 9px;
+    gap: 10px;
     align-items: start;
-    padding: 8px;
+    padding: 9px 8px;
     border: 1px solid rgba(180, 220, 235, 0.1);
     border-radius: 8px;
-    background: rgba(7, 22, 31, 0.5);
+    background: rgba(7, 20, 29, 0.42);
   }
 
   .neighborhood-community-stream-media {
@@ -3179,16 +3186,15 @@
   }
 
   .neighborhood-community-stream-copy span {
-    margin-bottom: 3px;
-    font-size: 0.64rem;
+    margin-bottom: 4px;
+    font-size: 0.61rem;
   }
 
   .neighborhood-community-stream-copy > a {
-    display: inline-flex;
-    min-height: 36px;
-    align-items: center;
-    font-size: 0.9rem;
-    line-height: 1.16;
+    display: block;
+    min-height: 0;
+    font-size: 0.88rem;
+    line-height: 1.18;
   }
 
   .neighborhood-community-stream-copy p {
@@ -3197,8 +3203,8 @@
 
   .neighborhood-community-stream-copy p,
   .neighborhood-community-stream-copy small {
-    font-size: 0.73rem;
-    line-height: 1.28;
+    font-size: 0.71rem;
+    line-height: 1.24;
   }
 
   .neighborhood-community-alert-list small,
@@ -3212,17 +3218,17 @@
 
   .neighborhood-community-stream-action {
     grid-column: 2;
-    gap: 8px;
-    padding-top: 2px;
+    gap: 7px;
+    padding-top: 3px;
   }
 
   .neighborhood-community-stream-action a {
-    min-height: 40px;
-    padding: 5px 10px;
+    min-height: 36px;
+    padding: 4px 10px;
     border: 1px solid rgba(180, 220, 235, 0.14);
     border-radius: 999px;
     background: rgba(8, 22, 31, 0.46);
-    font-size: 0.7rem;
+    font-size: 0.68rem;
   }
 
   .neighborhood-community-more,
