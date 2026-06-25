@@ -23,6 +23,7 @@ import {
   List,
   Map as MapIcon,
   MapPin,
+  Menu,
   MessageCircle,
   Moon,
   Plus,
@@ -36,6 +37,7 @@ import {
   Users,
   UtensilsCrossed,
   Wrench,
+  X,
   type LucideIcon,
 } from "lucide-react";
 
@@ -1067,6 +1069,8 @@ function NeighborhoodCommunityHeader({
   signupHref: string;
   showSignup: boolean;
 }) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   return (
     <header className="neighborhood-community-header">
       <Link to="/" className="city-op-brand neighborhood-community-brand" aria-label="Achegue-se">
@@ -1093,17 +1097,64 @@ function NeighborhoodCommunityHeader({
       </form>
 
       <div className="neighborhood-community-actions">
-        <button type="button" className="city-op-icon-button" onClick={onToggleTheme} aria-label="Alternar tema">
+        <button
+          type="button"
+          className="city-op-icon-button neighborhood-community-theme-button"
+          onClick={onToggleTheme}
+          aria-label="Alternar tema"
+        >
           {theme === "dark" ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}
         </button>
-        <Link to={authHref} className="city-op-login-link">
+
+        <div className="neighborhood-community-mobile-tools">
+          <Link to={authHref} className="city-op-icon-button neighborhood-community-mobile-bell" aria-label={authLabel}>
+            <Bell aria-hidden="true" />
+          </Link>
+          <button
+            type="button"
+            className="city-op-icon-button neighborhood-community-mobile-menu-toggle"
+            aria-label={mobileMenuOpen ? "Fechar menu" : "Abrir menu"}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="neighborhood-community-mobile-menu"
+            onClick={() => setMobileMenuOpen((current) => !current)}
+          >
+            {mobileMenuOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
+          </button>
+        </div>
+
+        <Link to={authHref} className="city-op-login-link neighborhood-community-desktop-auth">
           {authLabel}
         </Link>
         {showSignup ? (
-          <Link to={signupHref} className="city-op-publish-link neighborhood-community-create">
+          <Link to={signupHref} className="city-op-publish-link neighborhood-community-create neighborhood-community-desktop-auth">
             <span>Criar conta</span>
           </Link>
         ) : null}
+
+        <div
+          id="neighborhood-community-mobile-menu"
+          className={`neighborhood-community-mobile-menu${mobileMenuOpen ? " is-open" : ""}`}
+        >
+          <Link to={authHref} className="city-op-login-link" onClick={() => setMobileMenuOpen(false)}>
+            {authLabel}
+          </Link>
+          {showSignup ? (
+            <Link to={signupHref} className="city-op-publish-link neighborhood-community-create" onClick={() => setMobileMenuOpen(false)}>
+              <span>Criar conta</span>
+            </Link>
+          ) : null}
+          <button
+            type="button"
+            className="city-op-login-link neighborhood-community-mobile-theme-action"
+            onClick={() => {
+              onToggleTheme();
+              setMobileMenuOpen(false);
+            }}
+          >
+            {theme === "dark" ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}
+            <span>{theme === "dark" ? "Tema claro" : "Tema escuro"}</span>
+          </button>
+        </div>
       </div>
     </header>
   );
