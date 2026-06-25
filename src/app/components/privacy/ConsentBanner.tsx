@@ -75,25 +75,25 @@ export function ConsentBanner() {
 
   return (
     <>
-      <div className="fixed inset-x-3 bottom-[calc(4rem+env(safe-area-inset-bottom)+0.75rem)] z-50 rounded-2xl border bg-background/95 p-3 shadow-2xl backdrop-blur md:inset-x-0 md:bottom-0 md:rounded-none md:border-x-0 md:border-b-0 md:border-t md:p-4">
+      <div className="fixed inset-x-2 bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] z-50 rounded-xl border bg-background/95 p-2 shadow-2xl backdrop-blur md:inset-x-0 md:bottom-0 md:rounded-none md:border-x-0 md:border-b-0 md:border-t md:p-4">
         <div className="container mx-auto max-w-6xl">
-          <div className="relative flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-4">
-            <div className="flex flex-1 items-start gap-3 pr-8 sm:pr-0">
-              <div className="shrink-0 rounded-full bg-primary/10 p-2">
-                <Cookie className="h-5 w-5 text-primary" />
+          <div className="relative flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-4">
+            <div className="flex flex-1 items-start gap-2 pr-8 sm:gap-3 sm:pr-0">
+              <div className="shrink-0 rounded-full bg-primary/10 p-1.5 sm:p-2">
+                <Cookie className="h-4 w-4 text-primary sm:h-5 sm:w-5" />
               </div>
-              <div className="space-y-1">
-                <h3 className="text-sm font-medium">Privacidade e Cookies</h3>
-                <p className="text-xs text-muted-foreground">
+              <div className="min-w-0 space-y-0.5 sm:space-y-1">
+                <h3 className="text-xs font-medium sm:text-sm">Privacidade e Cookies</h3>
+                <p className="hidden text-xs text-muted-foreground sm:block">
                   Utilizamos cookies e dados pessoais para melhorar sua experiencia.
                 </p>
               </div>
             </div>
-            <div className="grid w-full shrink-0 grid-cols-2 gap-2 sm:w-auto sm:flex sm:flex-wrap sm:items-center">
+            <div className="grid w-full shrink-0 grid-cols-3 gap-1.5 sm:w-auto sm:flex sm:flex-wrap sm:items-center sm:gap-2">
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-9 w-full sm:w-auto"
+                className="h-8 w-full px-2 text-xs sm:h-9 sm:w-auto sm:text-sm"
                 onClick={() => setShowDetails(true)}
               >
                 Personalizar
@@ -101,7 +101,7 @@ export function ConsentBanner() {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-9 w-full sm:w-auto"
+                className="h-8 w-full px-2 text-xs sm:h-9 sm:w-auto sm:text-sm"
                 onClick={() =>
                   saveConsentsMutation.mutate({
                     necessary: true,
@@ -116,7 +116,7 @@ export function ConsentBanner() {
               </Button>
               <Button
                 size="sm"
-                className="col-span-2 h-9 w-full sm:col-span-1 sm:w-auto"
+                className="h-8 w-full px-2 text-xs sm:h-9 sm:w-auto sm:text-sm"
                 onClick={() =>
                   saveConsentsMutation.mutate({
                     necessary: true,
@@ -127,7 +127,8 @@ export function ConsentBanner() {
                 }
                 disabled={saveConsentsMutation.isPending}
               >
-                Aceitar Todos
+                <span className="sm:hidden">Aceitar</span>
+                <span className="hidden sm:inline">Aceitar Todos</span>
               </Button>
               <button
                 onClick={() => setShowBanner(false)}
