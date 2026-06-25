@@ -2987,10 +2987,10 @@
   }
 
   .neighborhood-community-hero {
-    min-height: 272px;
+    min-height: 258px;
     gap: 8px;
     align-items: end;
-    padding: 92px 0 16px;
+    padding: 88px 0 14px;
     border-bottom: 1px solid rgba(180, 220, 235, 0.08);
   }
 
@@ -3070,36 +3070,7 @@
   }
 
   .neighborhood-community-hero-map {
-    position: absolute;
-    right: -96px;
-    top: 22px;
-    bottom: auto;
-    z-index: 1;
-    display: grid;
-    width: min(58vw, 232px);
-    min-height: 172px;
-    opacity: 0.22;
-    pointer-events: none;
-  }
-
-  .neighborhood-community-hero-map .neighborhood-territory-art {
-    width: 100%;
-    max-height: 204px;
-    filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.18));
-  }
-
-  .neighborhood-community-hero-map .neighborhood-territory-grid,
-  .neighborhood-community-hero-map .neighborhood-territory-road {
-    opacity: 0.54;
-  }
-
-  .neighborhood-community-hero-map .neighborhood-territory-boundary {
-    fill: rgba(34, 224, 212, 0.075);
-    stroke-width: 2.2;
-  }
-
-  .neighborhood-community-hero-map .neighborhood-territory-pin {
-    opacity: 0.78;
+    display: none;
   }
 
   .neighborhood-community-rules {
