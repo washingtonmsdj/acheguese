@@ -2938,7 +2938,7 @@
 
   .neighborhood-community-actions .city-op-login-link,
   .neighborhood-community-actions .city-op-publish-link {
-    min-height: 36px;
+    min-height: 40px;
     padding-inline: 11px;
     border-radius: 8px;
     font-size: 0.75rem;
@@ -2956,7 +2956,7 @@
     grid-column: 1;
     grid-row: 2;
     width: 100%;
-    min-height: 34px;
+    min-height: 40px;
     padding-inline: 9px;
     justify-content: center;
     font-size: 0.76rem;
@@ -2971,7 +2971,7 @@
   .neighborhood-community-top-search {
     grid-column: 2;
     grid-row: 2;
-    min-height: 38px;
+    min-height: 40px;
     gap: 8px;
     padding-inline: 10px;
     border-radius: 9px;
@@ -3055,7 +3055,7 @@
   }
 
   .neighborhood-community-hero-actions a {
-    min-height: 34px;
+    min-height: 40px;
     border-radius: 8px;
     font-size: 0.72rem;
   }
@@ -3209,7 +3209,7 @@
 
   .neighborhood-community-stream-copy > a {
     display: inline-flex;
-    min-height: 30px;
+    min-height: 36px;
     align-items: center;
     font-size: 0.9rem;
     line-height: 1.16;
@@ -3232,7 +3232,7 @@
   }
 
   .neighborhood-community-stream-action a {
-    min-height: 34px;
+    min-height: 40px;
     padding: 5px 10px;
     border: 1px solid rgba(180, 220, 235, 0.14);
     border-radius: 999px;
@@ -3781,7 +3781,7 @@
 
   .neighborhood-community-actions .city-op-login-link,
   .neighborhood-community-actions .city-op-publish-link {
-    min-height: 34px;
+    min-height: 40px;
     padding-inline: 7px;
     font-size: 0.69rem;
   }
@@ -3815,7 +3815,7 @@
   }
 
   .neighborhood-community-location {
-    min-height: 32px;
+    min-height: 40px;
     padding-inline: 8px;
     font-size: 0.7rem;
   }
@@ -3826,7 +3826,7 @@
   }
 
   .neighborhood-community-top-search {
-    min-height: 36px;
+    min-height: 40px;
     gap: 7px;
     padding-inline: 9px;
   }
@@ -3846,7 +3846,7 @@
 
   .neighborhood-community-tabs button {
     gap: 4px;
-    min-height: 36px;
+    min-height: 40px;
     padding-inline: 4px;
     font-size: 0.69rem;
   }
@@ -3969,6 +3969,7 @@
   }
 
   .neighborhood-community-stream-copy > a {
+    min-height: 36px;
     font-size: 0.9rem;
     line-height: 1.16;
   }
@@ -3985,6 +3986,7 @@
   }
 
   .neighborhood-community-stream-action a {
+    min-height: 40px;
     max-width: 100%;
   }
 }
