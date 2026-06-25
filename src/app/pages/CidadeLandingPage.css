@@ -2908,7 +2908,7 @@
   }
 
   .neighborhood-community-actions {
-    gap: 5px;
+    gap: 4px;
   }
 
   .neighborhood-community-actions .city-op-icon-button {
@@ -3758,22 +3758,22 @@
   .neighborhood-community-actions .city-op-login-link,
   .neighborhood-community-actions .city-op-publish-link {
     min-height: 34px;
-    padding-inline: 8px;
-    font-size: 0.72rem;
+    padding-inline: 7px;
+    font-size: 0.69rem;
   }
 
   .neighborhood-community-actions .city-op-login-link {
-    min-width: 62px;
+    min-width: 58px;
   }
 
   .neighborhood-community-actions .city-op-publish-link {
-    min-width: 106px;
+    min-width: 96px;
   }
 
   .neighborhood-community-brand {
-    width: min(100%, 138px);
+    width: min(100%, 168px);
     min-width: 0;
-    font-size: 1.02rem;
+    font-size: 0.98rem;
   }
 
   .neighborhood-community-brand > span:last-child {
@@ -3782,8 +3782,8 @@
   }
 
   .neighborhood-community-brand .city-op-brand-mark {
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
   }
 
   .neighborhood-community-header {
@@ -3814,6 +3814,22 @@
 
   .neighborhood-community-top-search input {
     font-size: 0.78rem;
+  }
+
+  .neighborhood-community-tabs {
+    gap: 6px 5px;
+  }
+
+  .neighborhood-community-tabs button {
+    gap: 4px;
+    min-height: 36px;
+    padding-inline: 4px;
+    font-size: 0.69rem;
+  }
+
+  .neighborhood-community-tabs svg {
+    width: 13px;
+    height: 13px;
   }
 
   .neighborhood-community-hero {
