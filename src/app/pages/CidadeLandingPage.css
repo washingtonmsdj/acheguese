@@ -657,6 +657,9 @@
 }
 
 .city-op-panel-heading a {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
   flex: 0 0 auto;
   color: var(--city-cyan);
   font-size: 0.78rem;
@@ -1054,6 +1057,10 @@
 }
 
 .city-op-footer a {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  padding-inline: 3px;
   color: var(--city-muted);
   font-size: 0.78rem;
   font-weight: 800;
@@ -1311,6 +1318,7 @@
   }
 
   .city-op-panel-heading a {
+    min-height: 34px;
     font-size: 0.72rem;
   }
 
@@ -1472,6 +1480,10 @@
   .city-op-footer small,
   .city-op-footer a {
     font-size: 0.66rem;
+  }
+
+  .city-op-footer a {
+    min-height: 34px;
   }
 
   .city-op-footer nav {
@@ -1649,6 +1661,10 @@
   .city-op-footer small,
   .city-op-footer a {
     font-size: 0.62rem;
+  }
+
+  .city-op-footer a {
+    min-height: 32px;
   }
 }
 
@@ -2513,6 +2529,10 @@
 }
 
 .neighborhood-community-more {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  justify-content: center;
   align-self: center;
   margin-top: 10px;
   color: var(--city-cyan);
@@ -2809,6 +2829,7 @@
 
 .neighborhood-community-alert-action {
   display: inline-flex;
+  min-height: 34px;
   align-items: center;
   gap: 7px;
   color: var(--city-cyan);
