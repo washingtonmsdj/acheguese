@@ -190,7 +190,7 @@ export function NeighborhoodTerritoryHero({
           <MapPin aria-hidden="true" />
           {territoryName.toUpperCase()}
         </span>
-        <h1>Comunidade do bairro</h1>
+        <h1>Meu bairro</h1>
         <p>Serviços, avisos e negócios perto de você</p>
         <div className="neighborhood-community-badges">
           <span>
