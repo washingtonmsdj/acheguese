@@ -3239,6 +3239,15 @@
     background: rgba(8, 22, 31, 0.46);
     font-size: 0.7rem;
   }
+
+  .neighborhood-community-more,
+  .neighborhood-community-map .city-op-panel-heading a,
+  .neighborhood-community-alerts .city-op-panel-heading a,
+  .neighborhood-community-alert-action,
+  .neighborhood-community-footer a {
+    min-height: 40px;
+    align-items: center;
+  }
 }
 
 @media (min-width: 680px) and (max-width: 1023px) {
