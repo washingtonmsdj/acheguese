@@ -66,13 +66,6 @@ export interface ProfileContext {
 
   /** Se o perfil foi verificado */
   verified: boolean;
-
-  /** Compatibilidade com código legado */
-  activeProfile?: {
-    id: string;
-    name: string;
-    avatar_url?: string;
-  };
 }
 
 /**
