@@ -16,7 +16,7 @@ import { getUserClassifieds } from "@/core/classifieds/services";
 import { ProfileLinksService } from '@/core/profiles/services/multi-profile/profileLinksService';
 import { ProfileMembersService } from '@/core/profiles/services/multi-profile/profileMembersService';
 import type { ProfileType } from '@/core/profiles/services/multi-profile/types';
-import { canProfileHaveMembers } from '../utils/profileDomainRules';
+import { canProfileHaveMembers } from "@/core/profile/utils/profileDomainRules";
 
 export interface EcosystemSummary {
   postsCount: number;

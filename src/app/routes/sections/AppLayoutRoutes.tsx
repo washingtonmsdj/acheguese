@@ -200,7 +200,7 @@ export function AppLayoutRoutes() {
         <Route path="/conta/privacidade" element={<P.PrivacySettingsPage />} />
         <Route path="/conta/seguranca" element={<P.ContaSegurancaPage />} />
         <Route path="/conta/enderecos" element={<P.ContaEnderecosPage />} />
-        <Route path="/conta/profissional" element={<P.ContaProfissionalPage />} />
+        <Route path="/conta/profissional" element={<Navigate to="/central" replace />} />
         <Route path="/conta/editar" element={<P.ContaEditarPage />} />
         <Route path="/conta/editar/:profileId" element={<P.ContaEditarPerfilPage />} />
         <Route path="/conta" element={<P.ContaPage />} />

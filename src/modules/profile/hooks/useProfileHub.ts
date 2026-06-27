@@ -33,7 +33,7 @@ import { LAUNCH_URLS } from '@/config/territory';
 import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
 import { useContaWorkspace } from './usePerfilPageV3';
 import { buildProfileEditUrl, buildPublicProfileUrl } from '@/core/profiles/utils/publicProfileUrl';
-import { canProfileHaveMembers, isProfileVerified } from '../utils/profileDomainRules';
+import { canProfileHaveMembers, isProfileVerified } from '@/core/profile/utils/profileDomainRules';
 
 import type { ProfileAssociatedBusiness } from '@/core/profiles/services/ProfileBusinessTypes';
 

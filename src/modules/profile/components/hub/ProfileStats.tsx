@@ -1,6 +1,6 @@
 /**
  * ProfileStats - Estatísticas do perfil
- * 
+ *
  * Exibe métricas principais em cards visuais
  */
 

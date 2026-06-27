@@ -42,7 +42,7 @@ import {
   buildProfileEditUrl,
   buildPublicProfileUrl,
 } from "@/core/profiles/utils/publicProfileUrl";
-import { getProfileTypeLabel } from "@/modules/profile/utils/profileDomainRules";
+import { getProfileTypeLabel } from "@/core/profile/utils/profileDomainRules";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { ProfileCompletenessWidget } from "@/modules/profile/components/ProfileCompletenessWidget";
 

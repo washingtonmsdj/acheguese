@@ -1,31 +1,17 @@
 /**
- * ProfileBusinessTypes — Tipos de negócios associados ao perfil
+ * Profile-associated business read models.
  *
- * Estes tipos descrevem empresas e módulos empresariais no contexto
- * do perfil do usuário. NÃO são a entidade canônica do domínio Business.
+ * These snapshots describe businesses and business modules in the private
+ * profile workspace. They are not the canonical Business domain entity.
+ * Canonical business behavior belongs to `src/core/business`.
  *
- * A entidade canônica de Business vive em src/core/business/.
- * Estes tipos são read models específicos do ProfileService.
- *
- * Usado por:
- * - ProfileService.getPrivateWorkspace() (retorna businessModules)
- * - useContaWorkspace, useProfileHub (consomem businessModules)
- * - BusinessList, FavoritesList, ContentTabsSection (exibem businesses)
- * - BusinessOwnerQuickAccess, BusinessModulesSection (exibem módulos)
- *
- * @version 1.0.0
+ * Used by:
+ * - ProfileService.getPrivateWorkspace() for `businessModules`.
+ * - useContaWorkspace and useProfileHub.
+ * - FavoritesList and ContentTabsSection for associated businesses.
+ * - BusinessOwnerQuickAccess and BusinessModulesSection for business modules.
  */
 
-// ── Business associado ao perfil ─────────────────────────────────────────
-
-/**
- * ProfileAssociatedBusiness — Empresa associada ao perfil do usuário
- *
- * Read model retornado por ProfileService para exibição no hub de perfil.
- * Não é a entidade canônica de Business — é um snapshot para UI.
- *
- * @see src/core/business/ para a entidade canônica
- */
 export interface ProfileAssociatedBusiness {
   id: string;
   name?: string;
@@ -43,8 +29,6 @@ export interface ProfileAssociatedBusiness {
   nicho?: string;
   description?: string;
 }
-
-// ── Módulos empresariais ─────────────────────────────────────────────────
 
 export interface ProfileBusinessSubscriptionSnapshot {
   planTier: string;
@@ -92,12 +76,7 @@ export interface ProfileBusinessQrSnapshot {
 }
 
 /**
- * ProfileBusinessModuleSnapshot — Módulo empresarial no hub de perfil
- *
- * Agrega dados de dashboard, subscription, gastronomy e QR
- * para exibição no hub de perfil do dono da empresa.
- *
- * Não é a entidade canônica de Business — é um snapshot agregado.
+ * Aggregated business module snapshot for owner-facing profile UI.
  */
 export interface ProfileBusinessModuleSnapshot {
   businessId: string;

@@ -129,7 +129,6 @@ export const ContaEditarPerfilPage = lazy(() => import("@/modules/profile/pages/
 export const ContaSegurancaPage = lazy(() => import("@/modules/profile/pages/ContaSegurancaPage"));
 export const ContaPreferenciasPage = lazy(() => import("@/modules/profile/pages/ContaPreferenciasPage"));
 export const ContaEnderecosPage = lazy(() => import("@/modules/profile/pages/ContaEnderecosPage"));
-export const ContaProfissionalPage = lazy(() => import("@/modules/profile/pages/ContaProfissionalPage"));
 export const ContaEditarPage = lazy(() => import("@/modules/profile/pages/ContaEditarPage"));
 
 // ============================================================

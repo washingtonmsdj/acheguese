@@ -13,7 +13,7 @@ import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { PrivacySettings } from "@/core/profiles/components/PrivacySettings";
 import { ProfileLinksManager } from "@/core/profiles/components/ProfileLinksManager";
 import { ProfileMembersManagerImproved } from "@/core/profiles/components/ProfileMembersManagerImproved";
-import { getProfileTypeLabel } from "@/modules/profile/utils/profileDomainRules";
+import { getProfileTypeLabel } from "@/core/profile/utils/profileDomainRules";
 
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";

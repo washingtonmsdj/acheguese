@@ -1,7 +1,7 @@
 export type MobilityServiceStatus =
   | "Não cadastrado"
   | "Cadastro incompleto"
-  | "Aguardando aprovacao"
+  | "Aguardando aprovação"
   | "Ativo"
   | "Suspenso";
 
@@ -39,5 +39,5 @@ export function getMobilityServiceStatus(params: {
   }
 
   if (driverData?.is_verified === true) return "Ativo";
-  return "Aguardando aprovacao";
+  return "Aguardando aprovação";
 }

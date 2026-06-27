@@ -1,8 +1,7 @@
 /**
- * Cards - Barrel export para todos os cards
- * 
- * SSOT: Ponto único de exportação
- * Sem gambiarras: Exports explícitos
+ * Profile card barrel.
+ *
+ * SSOT: one explicit export point for reusable profile cards.
  */
 
 export { DashboardMetricCard } from "./DashboardMetricCard";

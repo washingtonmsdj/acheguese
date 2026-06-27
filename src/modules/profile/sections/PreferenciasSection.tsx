@@ -53,7 +53,7 @@ export function PreferenciasSection({
             icon={Settings2}
             title="Central profissional"
             description="Empresas, verticais e dashboards operacionais."
-            onClick={() => navigate("/conta/profissional")}
+            onClick={() => navigate("/central")}
           />
         </div>
       </SectionFrame>
