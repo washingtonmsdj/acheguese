@@ -1,12 +1,14 @@
-import React, { useMemo, useState } from 'react';
-import { Helmet } from 'react-helmet-async';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { ArrowRight, Home, Loader2, MailCheck, RefreshCcw } from 'lucide-react';
-import { Button } from '@/shared/components/ui/button';
-import { useAuth } from '@/core/auth/hooks/useAuth';
-import { getAuthErrorMessage } from '@/core/auth/utils/authMessages';
-import { getPendingSignupEmail } from '@/core/auth/utils/pendingSignup';
-import { useToast } from '@/shared/hooks/use-toast';
+import React, { useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
+import { useLocation, useNavigate } from "react-router-dom";
+import { ArrowRight, Loader2, MailCheck, RefreshCcw } from "lucide-react";
+
+import { AuthBrandHeader } from "@/app/components/auth/AuthBrandHeader";
+import { useAuth } from "@/core/auth/hooks/useAuth";
+import { getAuthErrorMessage } from "@/core/auth/utils/authMessages";
+import { getPendingSignupEmail } from "@/core/auth/utils/pendingSignup";
+import { Button } from "@/shared/components/ui/button";
+import { useToast } from "@/shared/hooks/use-toast";
 
 export default function CadastroConfirmacaoPage() {
   const navigate = useNavigate();
@@ -23,9 +25,9 @@ export default function CadastroConfirmacaoPage() {
   const handleResend = async () => {
     if (!email) {
       toast({
-        title: 'Email nao encontrado',
-        description: 'Refaca o cadastro para solicitar um novo email de confirmacao.',
-        variant: 'destructive',
+        title: "Email não encontrado",
+        description: "Refaça o cadastro para solicitar um novo email de confirmação.",
+        variant: "destructive",
       });
       return;
     }
@@ -35,14 +37,14 @@ export default function CadastroConfirmacaoPage() {
     try {
       await resendConfirmationEmail(email);
       toast({
-        title: 'Email reenviado',
-        description: 'Verifique sua caixa de entrada e a pasta de spam.',
+        title: "Email reenviado",
+        description: "Verifique sua caixa de entrada e a pasta de spam.",
       });
     } catch (error) {
       toast({
-        title: 'Nao foi possivel reenviar',
+        title: "Não foi possível reenviar",
         description: getAuthErrorMessage(error),
-        variant: 'destructive',
+        variant: "destructive",
       });
     } finally {
       setIsResending(false);
@@ -50,7 +52,7 @@ export default function CadastroConfirmacaoPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4">
+    <>
       <Helmet>
         <title>Confirmar email | Achegue-se</title>
         <meta
@@ -59,92 +61,93 @@ export default function CadastroConfirmacaoPage() {
         />
       </Helmet>
 
-      <main id="main-content" tabIndex={-1} className="w-full max-w-sm space-y-6 text-center focus:outline-none">
-        <div className="mx-auto w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
-          <MailCheck className="h-10 w-10 text-primary" />
-        </div>
+      <div className="min-h-screen bg-background">
+        <AuthBrandHeader secondaryHref="/login" secondaryLabel="Entrar" />
 
-        <div className="space-y-2">
-          <h1 className="text-2xl font-bold font-heading text-foreground">
-            Confirme seu email
-          </h1>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            Enviamos um link de confirmacao para{' '}
-            {email ? (
-              <span className="font-medium text-foreground">{email}</span>
-            ) : (
-              'o email informado no cadastro'
-            )}
-            . Abra a mensagem e conclua a ativacao da sua conta.
-          </p>
-        </div>
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="mx-auto flex min-h-[calc(100vh-3.5rem)] w-full max-w-5xl items-start justify-center px-4 pb-28 pt-6 focus:outline-none sm:min-h-[calc(100vh-4rem)] sm:px-6 sm:pb-10 sm:pt-10 lg:items-center"
+        >
+          <section className="w-full max-w-md rounded-[28px] border border-border/70 bg-card/78 p-5 text-center shadow-[0_32px_120px_-64px_rgba(0,0,0,0.9)] backdrop-blur-sm sm:p-8">
+            <div className="space-y-5 sm:space-y-6">
+              <div className="space-y-3 sm:space-y-4">
+                <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/12 text-primary sm:h-12 sm:w-12">
+                  <MailCheck className="h-6 w-6" />
+                </div>
 
-        <div className="bg-card border border-border rounded-xl p-4 text-left space-y-3">
-          <p className="text-xs font-semibold text-foreground uppercase tracking-wide">
-            Proximos passos
-          </p>
-          <ol className="space-y-2">
-            {[
-              'Abra sua caixa de entrada',
-              'Procure o email do Achegue-se',
-              'Clique em "Confirmar email"',
-              'Volte para fazer login ou continuar autenticado',
-            ].map((step, index) => (
-              <li key={step} className="flex items-start gap-3 text-sm text-muted-foreground">
-                <span className="h-5 w-5 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
-                  {index + 1}
-                </span>
-                {step}
-              </li>
-            ))}
-          </ol>
-        </div>
+                <div className="space-y-1.5 sm:space-y-2">
+                  <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-primary/90">
+                    Confirmação de conta
+                  </p>
+                  <h1 className="font-heading text-2xl font-bold text-foreground sm:text-[2rem]">
+                    Confirme seu email
+                  </h1>
+                  <p className="text-sm leading-5 text-muted-foreground sm:leading-6">
+                    Enviamos um link de confirmação para{" "}
+                    {email ? <span className="font-medium text-foreground">{email}</span> : "o email informado"}.
+                  </p>
+                </div>
+              </div>
 
-        <div className="space-y-3">
-          <Button
-            className="w-full h-11 gap-2"
-            onClick={() => navigate('/login')}
-          >
-            Ir para o login
-            <ArrowRight className="h-4 w-4" />
-          </Button>
+              <div className="rounded-2xl border border-border/70 bg-secondary/30 p-3.5 text-left sm:p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-foreground">
+                  Próximos passos
+                </p>
+                <ol className="mt-3 space-y-2">
+                  {[
+                    "Abra sua caixa de entrada.",
+                    "Procure o email do Achegue-se.",
+                    'Clique em "Confirmar email".',
+                    "Volte para entrar na sua conta.",
+                  ].map((step, index) => (
+                    <li key={step} className="flex items-start gap-2.5 text-sm text-muted-foreground">
+                      <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/12 text-[0.68rem] font-bold text-primary">
+                        {index + 1}
+                      </span>
+                      <span className="leading-5">{step}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
 
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full h-11 gap-2"
-            onClick={handleResend}
-            disabled={isResending}
-          >
-            {isResending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <RefreshCcw className="h-4 w-4" />
-            )}
-            Reenviar email
-          </Button>
+              <div className="space-y-2.5 sm:space-y-3">
+                <Button className="h-10.5 w-full gap-2 sm:h-11" onClick={() => navigate("/login")}>
+                  Ir para o login
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
 
-          <Button
-            variant="ghost"
-            className="w-full h-11 gap-2 text-muted-foreground"
-            onClick={() => navigate('/')}
-          >
-            <Home className="h-4 w-4" />
-            Voltar ao inicio
-          </Button>
-        </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-10.5 w-full gap-2 sm:h-11"
+                  onClick={handleResend}
+                  disabled={isResending}
+                >
+                  {isResending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <RefreshCcw className="h-4 w-4" />
+                  )}
+                  Reenviar email
+                </Button>
 
-        <p className="text-xs text-muted-foreground">
-          Nao recebeu o email? Verifique a pasta de spam ou{' '}
-          <button
-            onClick={() => navigate('/cadastro')}
-            className="text-primary hover:underline font-medium"
-          >
-            refaca o cadastro
-          </button>
-          .
-        </p>
-      </main>
-    </div>
+                <Button
+                  variant="ghost"
+                  className="h-10.5 w-full text-sm text-muted-foreground sm:h-11"
+                  onClick={() => navigate("/cadastro")}
+                >
+                  Voltar ao cadastro
+                </Button>
+              </div>
+
+              <p className="text-[0.76rem] leading-5 text-muted-foreground">
+                Não recebeu o email? Verifique a pasta de spam ou tente reenviar.
+              </p>
+            </div>
+          </section>
+        </main>
+      </div>
+    </>
   );
 }

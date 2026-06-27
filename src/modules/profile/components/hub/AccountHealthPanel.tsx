@@ -1,16 +1,16 @@
 /**
  * AccountHealthPanel - Painel de saude da conta
  *
- * Exibe estado, verificacao, plano e reputacao
+ * Exibe estado, verificacao, plano e reputacao.
  */
 
-import { Badge } from '@/shared/components/ui/badge';
-import { SectionFrame } from './SectionFrame';
-import { getProfileTypeLabel } from '@/modules/profile/utils/profileDomainRules';
+import { Badge } from "@/shared/components/ui/badge";
+import { SectionFrame } from "./SectionFrame";
+import { getProfileTypeLabel } from "@/modules/profile/utils/profileDomainRules";
 
-import type { MultiProfileRecord } from '@/core/profiles/services/multi-profile/types';
-import type { ProfileAccountSnapshot } from '@/core/profiles/views/ProfileAccountSnapshot';
-import type { Context, Identity } from '@/modules/profile/sections/types';
+import type { MultiProfileRecord } from "@/core/profiles/services/multi-profile/types";
+import type { ProfileAccountSnapshot } from "@/core/profiles/views/ProfileAccountSnapshot";
+import type { Context, Identity } from "@/modules/profile/sections/types";
 
 type EffectivePermission = {
   key: string;
@@ -29,46 +29,46 @@ interface AccountHealthPanelProps {
 
 function formatPlanLabel(value?: string | null): string {
   switch (value) {
-    case 'free':
-      return 'Free';
-    case 'pro':
-      return 'Pro';
-    case 'delivery':
-      return 'Delivery';
-    case 'basic':
-      return 'Básico';
-    case 'premium':
-      return 'Premium';
-    case 'enterprise':
-      return 'Enterprise';
+    case "free":
+      return "Free";
+    case "pro":
+      return "Pro";
+    case "delivery":
+      return "Delivery";
+    case "basic":
+      return "Básico";
+    case "premium":
+      return "Premium";
+    case "enterprise":
+      return "Enterprise";
     default:
-      return value ? value[0].toUpperCase() + value.slice(1) : 'Básico';
+      return value ? value[0].toUpperCase() + value.slice(1) : "Básico";
   }
 }
 
-function getAccountStateLabel(state: ProfileAccountSnapshot['accountState']): string {
+function getAccountStateLabel(state: ProfileAccountSnapshot["accountState"]): string {
   switch (state) {
-    case 'active':
-      return 'Conta ativa';
-    case 'blocked':
-      return 'Conta bloqueada';
-    case 'suspended':
-      return 'Conta suspensa';
+    case "active":
+      return "Conta ativa";
+    case "blocked":
+      return "Conta bloqueada";
+    case "suspended":
+      return "Conta suspensa";
     default:
-      return 'Conta inativa';
+      return "Conta inativa";
   }
 }
 
-function getAccountTone(state: ProfileAccountSnapshot['accountState']): string {
+function getAccountTone(state: ProfileAccountSnapshot["accountState"]): string {
   switch (state) {
-    case 'active':
-      return 'border-emerald-500/20 bg-emerald-500/10 text-emerald-700';
-    case 'blocked':
-      return 'border-destructive/20 bg-destructive/10 text-destructive';
-    case 'suspended':
-      return 'border-amber-500/20 bg-amber-500/10 text-amber-700';
+    case "active":
+      return "border-emerald-500/20 bg-emerald-500/10 text-emerald-700";
+    case "blocked":
+      return "border-destructive/20 bg-destructive/10 text-destructive";
+    case "suspended":
+      return "border-amber-500/20 bg-amber-500/10 text-amber-700";
     default:
-      return 'border-border bg-muted text-muted-foreground';
+      return "border-border bg-muted text-muted-foreground";
   }
 }
 
@@ -82,8 +82,8 @@ export function AccountHealthPanel({
 }: AccountHealthPanelProps) {
   return (
     <SectionFrame
-      title="Saude da conta"
-      description="Estado atual, verificação, reputacao e sinais de risco do perfil ativo."
+      title="Saúde da conta"
+      description="Estado atual, verificação, reputação e sinais de risco do perfil ativo."
     >
       <div className="space-y-4">
         <div className="rounded-2xl border border-border bg-background p-4">
@@ -98,14 +98,16 @@ export function AccountHealthPanel({
               {accountSnapshot.accountState}
             </Badge>
           </div>
-          {accountSnapshot.suspensionReason && (
-            <p className="mt-3 text-xs text-muted-foreground">Motivo: {accountSnapshot.suspensionReason}</p>
-          )}
-          {accountSnapshot.suspendedUntil && (
-            <p className="mt-1 text-xs text-muted-foreground">
-              Suspensa ate {new Date(accountSnapshot.suspendedUntil).toLocaleString('pt-BR')}
+          {accountSnapshot.suspensionReason ? (
+            <p className="mt-3 text-xs text-muted-foreground">
+              Motivo: {accountSnapshot.suspensionReason}
             </p>
-          )}
+          ) : null}
+          {accountSnapshot.suspendedUntil ? (
+            <p className="mt-1 text-xs text-muted-foreground">
+              Suspensa até {new Date(accountSnapshot.suspendedUntil).toLocaleString("pt-BR")}
+            </p>
+          ) : null}
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
@@ -115,16 +117,16 @@ export function AccountHealthPanel({
               {formatPlanLabel(identity?.plan.type || context?.plan.type)}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Premium: {identity?.plan.isPremium || context?.plan.isPremium ? 'sim' : 'não'}
+              Premium: {identity?.plan.isPremium || context?.plan.isPremium ? "sim" : "não"}
             </p>
           </div>
           <div className="rounded-2xl border border-border bg-background p-4">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">Reputacao</p>
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">Reputação</p>
             <p className="mt-2 text-lg font-semibold text-foreground">
               {identity?.reputation.score ?? context?.reputation.score ?? 0}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Nivel {identity?.reputation.level ?? context?.reputation.level ?? 1}
+              Nível {identity?.reputation.level ?? context?.reputation.level ?? 1}
             </p>
           </div>
         </div>
@@ -150,12 +152,12 @@ export function AccountHealthPanel({
         </div>
 
         <div className="rounded-2xl border border-border bg-background p-4">
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">Permissoes efetivas</p>
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">Permissões efetivas</p>
           <div className="mt-3 flex flex-wrap gap-2">
             {permissions.map((permission) => (
               <Badge
                 key={permission.key}
-                variant={permission.allowed ? 'default' : 'outline'}
+                variant={permission.allowed ? "default" : "outline"}
                 className="text-[10px]"
               >
                 {permission.label}

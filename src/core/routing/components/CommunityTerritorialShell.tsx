@@ -1,10 +1,7 @@
-﻿import { useEffect, useLayoutEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo } from "react";
 import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import {
-  AlertTriangle,
-  MapPin,
-} from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { PageLoader } from "@/shared/components/loading/PageLoader";
 import { useCommunityScopeResolver } from "@/core/community/hooks/useCommunityScopeResolver";
@@ -23,8 +20,9 @@ import {
   MODULE_SLUGS,
 } from "@/core/routing/utils/territoryUrls";
 import { resolveSeoPolicy } from "@/core/routing/seo/territorialSeoPolicy";
+import { parsePublicTerritoryPath } from "@/core/routing/utils/publicTerritoryPath";
+import { resolvePublicTerritoryFallback } from "@/core/routing/utils/publicTerritoryFallbacks";
 
-const TRANSITION_MS = 720;
 function cityLabelFromSlug(value?: string): string {
   if (!value) return "Cidade";
   return value
@@ -118,16 +116,32 @@ export function CommunityTerritorialShell() {
     district?: string;
     groupSlugOrDistrict?: string;
   }>();
-  const [transitionMessage, setTransitionMessage] = useState<string | null>(null);
-  const communityProfileQuery = useCommunityProfile(resolved);
+  const parsedPath = parsePublicTerritoryPath(location.pathname);
 
-  const state = params.state?.trim() ?? "";
-  const city = params.city?.trim() ?? "";
+  const state = params.state?.trim() || parsedPath.state || "";
+  const city = params.city?.trim() || parsedPath.city || "";
   const scopedSlug =
     params.territorySlug?.trim() ||
     params.district?.trim() ||
     params.groupSlugOrDistrict?.trim() ||
+    parsedPath.territorySlug ||
     "";
+  const publicCommunityFallback = useMemo(
+    () =>
+      scopedSlug
+        ? resolvePublicTerritoryFallback({
+            state,
+            city,
+            territorySlug: scopedSlug,
+          })
+        : resolvePublicTerritoryFallback({
+            state,
+            city,
+          }),
+    [city, scopedSlug, state],
+  );
+  const effectiveResolved = resolved ?? publicCommunityFallback;
+  const communityProfileQuery = useCommunityProfile(effectiveResolved);
   const routeParts = location.pathname.split("/").filter(Boolean);
   const hasInvalidRouteParams = !state || !city;
   const hasLegacyAreaSegment = routeParts[0] === MODULE_SLUGS.community && routeParts[3] === "area";
@@ -149,11 +163,16 @@ export function CommunityTerritorialShell() {
       ? resolved.group.name
       : resolved.location.name
     : cityName;
+  const effectiveTerritoryName = effectiveResolved
+    ? effectiveResolved.kind === "group"
+      ? effectiveResolved.group.name
+      : effectiveResolved.location.name
+    : territoryName;
   const currentModuleKey = useMemo(
     () => resolveModuleKeyFromCommunityPath(location.pathname, Boolean(scopedSlug)),
     [location.pathname, scopedSlug],
   );
-  const groupId = resolved?.kind === "group" ? resolved.group.id : null;
+  const groupId = effectiveResolved?.kind === "group" ? effectiveResolved.group.id : null;
   const {
     availability,
     active_member_ids,
@@ -162,22 +181,16 @@ export function CommunityTerritorialShell() {
   } = useGroupAvailability(groupId, currentModuleKey);
 
   useEffect(() => {
-    setTransitionMessage(`Bem-vindo ao ${territoryName}`);
-    const timer = window.setTimeout(() => setTransitionMessage(null), TRANSITION_MS);
-    return () => window.clearTimeout(timer);
-  }, [territoryName]);
-
-  useEffect(() => {
-    if (!resolved || !territoryName || hasInvalidCommunityRoute) return;
+    if (!effectiveResolved || !effectiveTerritoryName || hasInvalidCommunityRoute) return;
 
     lastTerritoryStore.set({
-      name: territoryName,
+      name: effectiveTerritoryName,
       baseUrl: territoryBase,
     });
-  }, [hasInvalidCommunityRoute, resolved, territoryBase, territoryName]);
+  }, [effectiveResolved, effectiveTerritoryName, hasInvalidCommunityRoute, territoryBase]);
 
   const profile = communityProfileQuery.data;
-  const communityStatus = profile?.status ?? "active";
+  const communityStatus = publicCommunityFallback ? "active" : profile?.status ?? "active";
   const seoPolicy = resolveSeoPolicy(location.pathname);
   const canonicalHref = typeof window !== "undefined"
     ? `${window.location.origin}${seoPolicy.canonicalPath}`
@@ -196,7 +209,7 @@ export function CommunityTerritorialShell() {
     );
   }
 
-  if (scopeLoading) {
+  if (scopeLoading && !effectiveResolved) {
     return (
       <PageLoader
         fullScreen
@@ -208,7 +221,7 @@ export function CommunityTerritorialShell() {
     );
   }
 
-  if (!resolved) {
+  if (!effectiveResolved) {
     return (
       <>
         <Helmet>
@@ -271,13 +284,13 @@ export function CommunityTerritorialShell() {
     );
   }
 
-  const effectiveAvailability: GroupModuleAvailability = resolved.kind === "group" ? availability : "full";
+  const effectiveAvailability: GroupModuleAvailability = effectiveResolved.kind === "group" ? availability : "full";
   const outletContext: TerritorialLayoutContext = {
-    resolved,
+    resolved: effectiveResolved,
     baseUrl: territoryBase,
     communityBaseUrl: communityBase,
     groupAvailability: effectiveAvailability,
-    activeMemberIds: resolved.kind === "group" ? active_member_ids ?? [] : [],
+    activeMemberIds: effectiveResolved.kind === "group" ? active_member_ids ?? [] : [],
   };
 
   return (
@@ -287,28 +300,9 @@ export function CommunityTerritorialShell() {
         <link rel="canonical" href={canonicalHref} />
         <meta name="robots" content={seoPolicy.robots} />
       </Helmet>
-      {transitionMessage ? (
-        <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-background/85 backdrop-blur-md">
-          <div className="w-[min(90vw,420px)] rounded-2xl border border-primary/25 bg-card/95 p-6 text-center shadow-2xl shadow-primary/10">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
-              <MapPin className="h-6 w-6" />
-            </div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-              Comunidade
-            </p>
-            <h2 className="mt-2 text-xl font-bold text-foreground">{transitionMessage}</h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Carregando a experiência local do território.
-            </p>
-            <div className="mt-5 h-1 overflow-hidden rounded-full bg-muted">
-              <div className="h-full w-2/3 animate-pulse rounded-full bg-primary" />
-            </div>
-          </div>
-        </div>
-      ) : null}
 
       <div className="min-h-0 overflow-x-hidden">
-        {resolved.kind === "group" && currentModuleKey ? (
+        {effectiveResolved.kind === "group" && currentModuleKey ? (
           <>
             {effectiveAvailability === "partial" && availabilityResult ? (
               <PartialCoverageBanner

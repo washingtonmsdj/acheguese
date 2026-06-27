@@ -3,6 +3,7 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { TERRITORY_CONFIG } from '@/config/territory';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
+import { isPublicTerritoryFallbackLocation } from '@/core/routing/utils/publicTerritoryFallbacks';
 import { createLocationRepository } from '../repositories/createLocationRepository';
 import { useResolvedUserLocation } from './useResolvedUserLocation';
 import { useUserTerritory } from './useUserTerritory';
@@ -102,6 +103,15 @@ export function useModuleTerritoryFilter({
   });
 
   const routeLocation = useMemo(() => getRouteLocation(routeResolved), [routeResolved]);
+  const isFallbackRouteResolved = useMemo(() => {
+    if (!routeResolved) return false;
+
+    if (routeResolved.kind === 'location') {
+      return isPublicTerritoryFallbackLocation(routeResolved.location);
+    }
+
+    return routeResolved.group.members.some((member) => isPublicTerritoryFallbackLocation(member));
+  }, [routeResolved]);
 
   const queryLocationSlug = searchParamKeys
     .map((key) => searchParams.get(key))
@@ -137,13 +147,29 @@ export function useModuleTerritoryFilter({
     staleTime: 30 * 60 * 1000,
   });
 
+  const canonicalRouteLocation = useMemo(() => {
+    if (
+      !isFallbackRouteResolved ||
+      filterLocation?.status !== LocationStatus.ACTIVE ||
+      !routeLocation.ids.length
+    ) {
+      return routeLocation;
+    }
+
+    return {
+      location: filterLocation,
+      ids: [filterLocation.id],
+      label: filterLocation.name,
+    };
+  }, [filterLocation, isFallbackRouteResolved, routeLocation]);
+
   const selected = useMemo(() => {
-    if (routeLocation.ids.length > 0) {
+    if (canonicalRouteLocation.ids.length > 0) {
       return {
         source: 'url' as const,
-        location: routeLocation.location,
-        ids: routeLocation.ids,
-        label: routeLocation.label ?? 'Localidade',
+        location: canonicalRouteLocation.location,
+        ids: canonicalRouteLocation.ids,
+        label: canonicalRouteLocation.label ?? 'Localidade',
         centerCoords: null,
       };
     }
@@ -209,12 +235,12 @@ export function useModuleTerritoryFilter({
       centerCoords: null,
     };
   }, [
+    canonicalRouteLocation,
     fallbackLocation,
     filterLocation,
     nearbyEnabled,
     nearbyLocation.location?.locationId,
     nearbyLocation.coords,
-    routeLocation,
     userTerritory.homeCity,
     userTerritory.homeDistrict,
   ]);
@@ -232,11 +258,14 @@ export function useModuleTerritoryFilter({
         ? result.locations.map((location) => location.id)
         : selected.ids;
     },
-    enabled: selected.ids.length === 1,
+    enabled: selected.ids.length === 1 && !isPublicTerritoryFallbackLocation(selected.location),
     staleTime: 10 * 60 * 1000,
   });
 
-  const resolvedLocationIds = selected.ids.length === 1 ? descendantIds : selected.ids;
+  const resolvedLocationIds =
+    selected.ids.length === 1 && !isPublicTerritoryFallbackLocation(selected.location)
+      ? descendantIds
+      : selected.ids;
   const territoryFilter: TerritoryFilter =
     resolvedLocationIds.length === 0
       ? { scope: 'none' }
@@ -254,7 +283,7 @@ export function useModuleTerritoryFilter({
     isLoading:
       isFilterLoading ||
       isFallbackLoading ||
-      isDescendantsLoading ||
+      (!isPublicTerritoryFallbackLocation(selected.location) && isDescendantsLoading) ||
       userTerritory.loading ||
       (nearbyEnabled && nearbyLocation.isLoading),
   };

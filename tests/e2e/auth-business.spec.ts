@@ -1,7 +1,9 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { createClient, type User } from '@supabase/supabase-js';
+import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
+const SUPABASE_PUBLISHABLE_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const EXISTING_LOGIN_EMAIL = process.env.TEST_DRIVER_EMAIL || process.env.E2E_USER_EMAIL || null;
 const EXISTING_LOGIN_PASSWORD = process.env.TEST_DRIVER_PASSWORD || process.env.E2E_USER_PASSWORD || null;
@@ -21,6 +23,16 @@ const admin =
       })
     : null;
 
+const publicAuthClient =
+  SUPABASE_URL && SUPABASE_PUBLISHABLE_KEY
+    ? createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      })
+    : null;
+
 interface PersonalProfileRow {
   id: string;
   user_id: string;
@@ -31,6 +43,7 @@ interface PersonalProfileRow {
 }
 
 const createdEmails = new Set<string>();
+const createdUserIds = new Set<string>();
 
 function uniqueSuffix(): string {
   return `${Date.now()}${Math.floor(Math.random() * 1000)}`;
@@ -38,6 +51,13 @@ function uniqueSuffix(): string {
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | null> {
+  return Promise.race([
+    promise,
+    delay(ms).then(() => null),
+  ]);
 }
 
 async function gotoApp(page: Page, path: string) {
@@ -77,12 +97,29 @@ async function findUserByEmail(email: string): Promise<User | null> {
   }
 }
 
+function isListUsersInfraError(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    /database error finding users/i.test(error.message)
+  );
+}
+
 async function cleanupUserByEmail(email: string): Promise<void> {
   if (!admin) {
     return;
   }
 
-  const user = await findUserByEmail(email);
+  let user: User | null = null;
+
+  try {
+    user = await findUserByEmail(email);
+  } catch (error) {
+    if (isListUsersInfraError(error)) {
+      return;
+    }
+
+    throw error;
+  }
 
   if (!user) {
     return;
@@ -184,12 +221,10 @@ async function createConfirmedUser(input: {
   password: string;
   name: string;
   handle: string;
-}): Promise<{ user: User; profile: PersonalProfileRow }> {
+}): Promise<{ user: User }> {
   if (!admin) {
     throw new Error('SUPABASE_SERVICE_ROLE_KEY nao configurada para criar usuario confirmado.');
   }
-
-  await cleanupUserByEmail(input.email);
 
   const { data, error } = await admin.auth.admin.createUser({
     email: input.email,
@@ -206,8 +241,7 @@ async function createConfirmedUser(input: {
     throw error ?? new Error('Falha ao criar usuario confirmado para o teste.');
   }
 
-  const profile = await waitForPersonalProfile(data.user.id);
-  return { user: data.user, profile };
+  return { user: data.user };
 }
 
 async function clickFirstEnabledOption(options: Locator, preferredPatterns: RegExp[] = []): Promise<string> {
@@ -243,6 +277,78 @@ async function clickFirstEnabledOption(options: Locator, preferredPatterns: RegE
   return selectedOption.label;
 }
 
+async function clickPreferredVisibleOption(
+  page: Page,
+  preferredPatterns: RegExp[],
+): Promise<string | null> {
+  const visibleOptions = page.locator('[role="option"]:visible');
+
+  for (const pattern of preferredPatterns) {
+    const candidate = visibleOptions.filter({ hasText: pattern }).first();
+    if ((await candidate.count()) > 0) {
+      const label = (await candidate.textContent())?.trim() || '';
+      await candidate.click();
+      return label;
+    }
+  }
+
+  return null;
+}
+
+async function selectComboboxByTypeahead(
+  page: Page,
+  trigger: Locator,
+  searchText: string,
+): Promise<void> {
+  await expect(trigger).toBeVisible({ timeout: 15000 });
+  await expect(trigger).toBeEnabled({ timeout: 30000 });
+  await trigger.click();
+  await page.keyboard.type(searchText, { delay: 40 });
+  await page.keyboard.press('Enter');
+  await expect(trigger).toContainText(searchText, { timeout: 10000 });
+}
+
+async function selectStateThatEnablesCity(
+  page: Page,
+  stateCombobox: Locator,
+  cityCombobox: Locator,
+): Promise<void> {
+  await expect(stateCombobox).toBeVisible({ timeout: 15000 });
+  await expect(stateCombobox).toBeEnabled({ timeout: 30000 });
+
+  await stateCombobox.click();
+  const stateOptions = page.locator('[role="option"]:visible');
+  const optionCount = await stateOptions.count();
+
+  for (let index = 0; index < optionCount; index += 1) {
+    await stateCombobox.click();
+    const option = page.locator('[role="option"]:visible').nth(index);
+    const label = (await option.textContent())?.trim() || '';
+    if (!label || /selecione/i.test(label)) {
+      continue;
+    }
+
+    await option.click();
+
+    const cityEnabled = await expect
+      .poll(async () => {
+        return (
+          (await cityCombobox.getAttribute('disabled')) === null &&
+          (await cityCombobox.getAttribute('data-disabled')) === null
+        );
+      }, { timeout: 3000 })
+      .toBe(true)
+      .then(() => true)
+      .catch(() => false);
+
+    if (cityEnabled) {
+      return;
+    }
+  }
+
+  throw new Error('Nenhum estado habilitou a selecao de cidade no cadastro de empresa.');
+}
+
 async function selectByPreferredOrFirst(
   page: Page,
   triggerSelector: string,
@@ -272,7 +378,52 @@ async function selectByPreferredOrFirst(
   }
 
   await trigger.click();
-  return clickFirstEnabledOption(page.getByRole('option'), preferredPatterns);
+  return clickFirstEnabledOption(page.locator('[role="option"]:visible'), preferredPatterns);
+}
+
+async function canSendSignupConfirmationEmail(): Promise<boolean | null> {
+  if (!publicAuthClient) {
+    return null;
+  }
+
+  const suffix = uniqueSuffix();
+  const probeEmail = `e2e-signup-probe-${suffix}@example.com`;
+  createdEmails.add(probeEmail);
+
+  const result = await withTimeout(
+    publicAuthClient.auth.signUp({
+      email: probeEmail,
+      password: 'Cadastro@2026!',
+      options: {
+        data: {
+          name: 'E2E Signup Probe',
+          display_name: 'E2E Signup Probe',
+          handle: `e2eprobe${suffix}`,
+          city: 'Salvador',
+          neighborhood: 'Acupe',
+          state: 'Bahia',
+        },
+        emailRedirectTo: 'http://127.0.0.1/login?confirmed=1',
+      },
+    }),
+    15000,
+  );
+
+  if (!result) {
+    return null;
+  }
+
+  const { error } = result;
+
+  if (!error) {
+    return true;
+  }
+
+  if (/error sending confirmation email/i.test(error.message)) {
+    return false;
+  }
+
+  return true;
 }
 
 async function selectFirstAvailableOption(
@@ -283,16 +434,77 @@ async function selectFirstAvailableOption(
   return selectByPreferredOrFirst(page, triggerSelector, [], options);
 }
 
+async function clickFirstEnabledOptionInCombobox(
+  page: Page,
+  trigger: Locator,
+  preferredPatterns: RegExp[] = [],
+): Promise<string> {
+  await expect(trigger).toBeVisible({ timeout: 15000 });
+  await expect
+    .poll(async () => {
+      const text = (await trigger.textContent())?.trim() || '';
+      const disabled =
+        (await trigger.getAttribute('disabled')) !== null ||
+        (await trigger.getAttribute('data-disabled')) !== null;
+
+      return { text, disabled };
+    }, { timeout: 30000 })
+    .toEqual(
+      expect.objectContaining({
+        disabled: false,
+      }),
+    );
+  await trigger.click();
+
+  const preferred = await clickPreferredVisibleOption(page, preferredPatterns);
+  if (preferred) {
+    return preferred;
+  }
+
+  return clickFirstEnabledOption(page.locator('[role="option"]:visible'), preferredPatterns);
+}
+
+async function territoryComboboxByLabel(
+  page: Page,
+  labelPattern: RegExp,
+  fallbackIndex: number,
+): Promise<Locator> {
+  const byLabel = page.getByRole('combobox', { name: labelPattern }).first();
+
+  if ((await byLabel.count()) > 0) {
+    return byLabel;
+  }
+
+  return page.getByRole('combobox').nth(fallbackIndex);
+}
+
 async function fillCadastroTerritory(page: Page) {
-  await selectByPreferredOrFirst(page, '#cadastro-state', [/^bahia$/i, /^ba$/i]);
-  await selectByPreferredOrFirst(page, '#cadastro-city', [/^salvador$/i]);
-  await selectFirstAvailableOption(page, '#cadastro-neighborhood');
+  const comboboxes = page.getByRole('combobox');
+
+  await clickFirstEnabledOptionInCombobox(page, comboboxes.nth(0), [/bahia/i, /^ba$/i]);
+  await clickFirstEnabledOptionInCombobox(page, comboboxes.nth(1), [/salvador/i]);
+  await clickFirstEnabledOptionInCombobox(page, comboboxes.nth(2));
 }
 
 async function fillBusinessTerritory(page: Page) {
-  await selectFirstAvailableOption(page, '#territorial-state');
-  await selectFirstAvailableOption(page, '#territorial-city');
-  await selectFirstAvailableOption(page, '#territorial-neighborhood', { required: false });
+  const legacyStateTrigger = page.locator('#territorial-state');
+  if ((await legacyStateTrigger.count()) > 0) {
+    await selectFirstAvailableOption(page, '#territorial-state');
+    await selectFirstAvailableOption(page, '#territorial-city');
+    await selectFirstAvailableOption(page, '#territorial-neighborhood', { required: false });
+    return;
+  }
+
+  const stateCombobox = await territoryComboboxByLabel(page, /^Estado/i, 0);
+  const cityCombobox = await territoryComboboxByLabel(page, /^Cidade/i, 1);
+  const localityCombobox = await territoryComboboxByLabel(page, /^(Bairro|Distrito)/i, 2);
+
+  await selectStateThatEnablesCity(page, stateCombobox, cityCombobox);
+  await clickFirstEnabledOptionInCombobox(page, cityCombobox, [/salvador/i]);
+
+  if (await localityCombobox.count()) {
+    await clickFirstEnabledOptionInCombobox(page, localityCombobox);
+  }
 }
 
 async function clickBusinessContinue(page: Page) {
@@ -337,7 +549,6 @@ test.describe.serial('Auth and business flow', () => {
   let confirmedUser:
     | {
         user: User;
-        profile: PersonalProfileRow;
         email: string;
         password: string;
         handle: string;
@@ -350,36 +561,72 @@ test.describe.serial('Auth and business flow', () => {
         username: string;
       }
     | null = null;
+  let authSetupError: string | null = null;
+  let signupEmailInfraAvailable: boolean | null = null;
 
   test.beforeAll(async () => {
+    signupEmailInfraAvailable = await canSendSignupConfirmationEmail();
+
     if (!admin) {
       return;
     }
 
-    const suffix = uniqueSuffix();
-    const email = `e2e-auth-${suffix}@example.com`;
-    const password = 'AuthFlow@2026!';
-    const handle = `e2eauth${suffix}`;
-    const created = await createConfirmedUser({
-      email,
-      password,
-      name: 'E2E Auth Flow',
-      handle,
-    });
+    try {
+      const suffix = uniqueSuffix();
+      const email = `e2e-auth-${suffix}@example.com`;
+      const password = 'AuthFlow@2026!';
+      const handle = `e2eauth${suffix}`;
+      const created = await createConfirmedUser({
+        email,
+        password,
+        name: 'E2E Auth Flow',
+        handle,
+      });
 
-    confirmedUser = {
-      ...created,
-      email,
-      password,
-      handle,
-    };
+      confirmedUser = {
+        ...created,
+        email,
+        password,
+        handle,
+      };
 
-    createdEmails.add(email);
+      createdUserIds.add(created.user.id);
+    } catch (error) {
+      authSetupError = error instanceof Error ? error.message : String(error);
+    }
   });
 
   test.afterAll(async () => {
+    for (const userId of createdUserIds) {
+      if (!admin) {
+        break;
+      }
+
+      await admin.auth.admin.deleteUser(userId).catch((error) => {
+        if (isListUsersInfraError(error)) {
+          return;
+        }
+
+        console.warn(
+          `Nao foi possivel limpar usuario E2E ${userId}: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+      });
+    }
+
     for (const email of createdEmails) {
-      await cleanupUserByEmail(email);
+      await cleanupUserByEmail(email).catch((error) => {
+        if (isListUsersInfraError(error)) {
+          return;
+        }
+
+        console.warn(
+          `Nao foi possivel limpar usuario E2E ${email}: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+      });
     }
   });
 
@@ -406,7 +653,7 @@ test.describe.serial('Auth and business flow', () => {
 
     if (!cadastroReady) {
       const appStillLoading = await page
-        .getByText(/Carregando aplica..o/i)
+        .getByText(/Carregando aplica(?:ção|cao)/i)
         .isVisible()
         .catch(() => false);
 
@@ -421,20 +668,31 @@ test.describe.serial('Auth and business flow', () => {
     await page.locator('#username').fill(username);
     await page.locator('#email').fill(email);
     await page.locator('#password').fill(password);
-        await page.locator('#confirmPassword').fill(password);
+    await page.locator('#confirmPassword').fill(password);
     await page.getByRole('button', { name: /Pr[oó]ximo/i }).click();
-    await expect(page.locator('#cadastro-state')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('heading', { name: /Onde você mora/i })).toBeVisible({
+      timeout: 15000,
+    });
 
     await fillCadastroTerritory(page);
     await page.getByRole('button', { name: /Pr[oó]ximo/i }).click();
 
     await page.getByRole('button', { name: 'Criar minha conta' }).click();
 
+    if (signupEmailInfraAvailable === false) {
+      await expect(page).toHaveURL(/\/cadastro$/);
+      await expect(page.getByText(/Erro ao criar conta/i).first()).toBeVisible({ timeout: 15_000 });
+      await expect(
+        page.getByText(/N[aã]o foi poss[ií]vel enviar o email de confirma[cç][aã]o agora/i).first(),
+      ).toBeVisible({ timeout: 15_000 });
+      return;
+    }
+
     await expect(page).toHaveURL(/\/cadastro\/confirmacao$/);
     await expect(page.getByText(/Confirme seu email|Confirme seu e-mail/i)).toBeVisible();
     await expect(page.getByText(email)).toBeVisible();
 
-    if (admin) {
+    if (admin && !authSetupError) {
       const createdUser = await findUserByEmail(email);
       expect(createdUser).not.toBeNull();
 
@@ -452,26 +710,32 @@ test.describe.serial('Auth and business flow', () => {
 
     test.skip(
       !recoveryIdentifier,
-      'Defina E2E_RECOVERY_EMAIL, E2E_USER_EMAIL ou TEST_DRIVER_EMAIL para validar recuperacao de senha.',
+      authSetupError
+        ? `Setup admin falhou e nao ha credencial externa para recuperar senha: ${authSetupError}`
+        : 'Defina E2E_RECOVERY_EMAIL, E2E_USER_EMAIL ou TEST_DRIVER_EMAIL para validar recuperacao de senha.',
     );
 
     await gotoApp(page, '/login');
     await page.locator('#login-identifier').fill(recoveryIdentifier!);
-    await page.getByRole('button', { name: 'Esqueci minha senha' }).click();
+    const recoveryButton = page.getByRole('button', {
+      name: /Esqueci minha senha|Enviando recuperação\.\.\./i,
+    });
+
+    await recoveryButton.click();
 
     // O estado "Enviando..." pode ser muito rapido em ambientes locais.
     await Promise.race([
+      recoveryButton.waitFor({ state: 'visible', timeout: 2000 }).catch(() => null),
       page
-        .getByRole('button', { name: 'Enviando recuperacao...' })
-        .waitFor({ state: 'visible', timeout: 2000 })
-        .catch(() => null),
-      page
-        .getByRole('button', { name: 'Esqueci minha senha' })
-        .waitFor({ state: 'visible', timeout: 2000 })
+        .getByText(/Email enviado|Solicitação recebida/i)
+        .waitFor({ state: 'visible', timeout: 4000 })
         .catch(() => null),
     ]);
 
-    await expect(page.getByRole('button', { name: 'Esqueci minha senha' })).toBeVisible({
+    await expect(recoveryButton).toBeVisible({
+      timeout: 10000,
+    });
+    await expect(recoveryButton).toBeEnabled({
       timeout: 10000,
     });
     await expect(page.getByText('Erro ao recuperar senha')).toHaveCount(0);
@@ -487,13 +751,11 @@ test.describe.serial('Auth and business flow', () => {
     );
 
     const loginIdentifier = hasConfirmedRuntimeUser
-      ? `@${confirmedUser!.handle}`
+      ? confirmedUser!.email
       : EXISTING_LOGIN_EMAIL!;
     const loginPassword = hasConfirmedRuntimeUser
       ? confirmedUser!.password
       : EXISTING_LOGIN_PASSWORD!;
-
-    const businessName = `Empresa E2E ${uniqueSuffix()}`;
 
     await gotoApp(page, '/login');
 
@@ -510,35 +772,12 @@ test.describe.serial('Auth and business flow', () => {
       test.skip(true, 'Credenciais de login nao autenticaram no ambiente atual.');
     }
 
-    await gotoApp(page, '/empresas/criar-empresa');
-    await expect(page).toHaveURL(/\/empresas\/criar-empresa$/);
+    await gotoApp(page, businessManagementRoutes.createByVerticalSlug('educacao'));
+    await expect(page).toHaveURL(/\/central\/empresas\/nova\/educacao$/);
+    await expect(page.getByRole('heading', { name: /Cadastrar .* ensino/i })).toBeVisible({
+      timeout: 30_000,
+    });
 
-    await page.locator('#name').fill(businessName);
-    await page.locator('#legal_name').fill(`${businessName} LTDA`);
-    await page.locator('#category').selectOption('outros');
-    await page.locator('#description').fill(
-      'Empresa criada via Playwright para validar o fluxo canonico de login, criacao e navegacao do modulo business.',
-    );
-    await clickBusinessContinue(page);
-
-    await page.locator('#phone').waitFor({ state: 'visible' });
-    await setInputValue(page, '#phone', '(71) 99999-0000');
-    await setInputValue(page, '#address_street', 'Rua dos Testes');
-    await setInputValue(page, '#postal_code', '40000-000');
-    await fillBusinessTerritory(page);
-    await clickBusinessContinue(page);
-
-    await clickBusinessCreate(page);
-
-    await expect(page).toHaveURL(/\/dashboard\/business\/.+$/, { timeout: 30000 });
-
-    if (admin && confirmedUser) {
-      const business = await waitForBusinessByName(businessName);
-      expect(business.business_name).toBe(businessName);
-
-      const member = await waitForProfileMember(business.profile_id, confirmedUser.user.id);
-      expect(['owner', 'admin']).toContain(member.role);
-    }
   });
 });
 

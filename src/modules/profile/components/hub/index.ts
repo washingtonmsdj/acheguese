@@ -4,7 +4,6 @@
  * Exportação centralizada de todos os componentes do hub
  */
 
-export { ProfileHeader } from './ProfileHeader';
 export { ProfileHeaderCompact } from './ProfileHeaderCompact';
 export { ProfileStats } from './ProfileStats';
 export { ProfileSwitcher } from './ProfileSwitcher';

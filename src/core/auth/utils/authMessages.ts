@@ -11,7 +11,6 @@ export function getAuthErrorMessage(
       ? error.message
       : fallback;
 
-  // Mensagens genéricas para evitar user enumeration (OWASP)
   if (
     /invalid login credentials/i.test(errorMessage) ||
     /user not found/i.test(errorMessage) ||
@@ -28,8 +27,12 @@ export function getAuthErrorMessage(
     return "Muitas tentativas. Aguarde alguns minutos antes de tentar novamente.";
   }
 
+  if (/error sending confirmation email/i.test(errorMessage)) {
+    return "Nao foi possivel enviar o email de confirmacao agora. Tente novamente em instantes.";
+  }
+
   if (/user already registered/i.test(errorMessage)) {
-    return "Este e-mail já está cadastrado. Tente fazer login ou recuperar sua senha.";
+    return "Este e-mail ja esta cadastrado. Tente fazer login ou recuperar sua senha.";
   }
 
   if (/same password/i.test(errorMessage)) {

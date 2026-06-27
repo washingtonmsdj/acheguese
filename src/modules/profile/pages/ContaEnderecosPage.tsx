@@ -64,7 +64,7 @@ export default function ContaEnderecosPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
-            Areas de atuacao de empresas e servicos ficam em{" "}
+            Áreas de atuação de empresas e serviços ficam em{" "}
             <button
               type="button"
               className="font-medium text-primary underline underline-offset-2"

@@ -1,19 +1,19 @@
 /**
  * Profile Sections Configuration - SSOT
  *
- * Single Source of Truth for profile navigation sections.
+ * Single source of truth for profile navigation sections.
  * Used by ProfileSectionsNav (desktop sidebar and mobile tabs).
  */
 
 import type { LucideIcon } from "lucide-react";
 import {
-  LayoutGrid,
-  UserRound,
+  Bell,
   Building2,
   CreditCard,
-  Bell,
+  LayoutGrid,
   Settings2,
   Shield,
+  UserRound,
 } from "lucide-react";
 
 export const PROFILE_SECTION_IDS = [
@@ -85,7 +85,7 @@ export const PROFILE_SECTIONS: readonly ProfileSectionItem[] = [
     id: "notificacoes",
     icon: Bell,
     label: "Notificações",
-    description: "Avisos e preferencias do sistema.",
+    description: "Avisos e preferências do sistema.",
     category: "system",
     order: 7,
     requiresAuth: true,
@@ -163,8 +163,8 @@ export const PROFILE_SECTION_CATEGORIES = {
   },
   operations: {
     id: "operations",
-    label: "Operacoes",
-    description: "Operacao profissional e entregas",
+    label: "Operações",
+    description: "Operação profissional e entregas",
   },
   system: {
     id: "system",

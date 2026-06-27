@@ -85,6 +85,7 @@ export function buildNeighborhoodStreamItems({
   classifieds,
   gastronomyItems,
   urls,
+  territoryName,
 }: {
   posts: Post[];
   businesses: FeaturedBusiness[];
@@ -92,7 +93,10 @@ export function buildNeighborhoodStreamItems({
   classifieds: FeaturedClassified[];
   gastronomyItems: FeaturedBusiness[];
   urls: NeighborhoodStreamUrls;
+  territoryName?: string;
 }): NeighborhoodStreamGroups {
+  const scopedTerritoryName = territoryName?.trim() || "o bairro";
+
   const postItems: NeighborhoodStreamItem[] = posts.slice(0, 4).map((post) => {
     const postType = getPostTypeLabel(post.type);
     return {
@@ -191,12 +195,13 @@ export function buildNeighborhoodStreamItems({
     category: "feed",
     label: "COMUNIDADE",
     tone: "cyan",
-    title: "Acompanhe o feed público do bairro",
-    description: "Avisos, pedidos, recomendações e conversas de moradores aparecem aqui quando publicados.",
+    title: "Mutirão, avisos e conversas do bairro",
+    description: `Publicações públicas sobre ${scopedTerritoryName} aparecem aqui para leitura e descoberta.`,
     href: urls.feed,
     mediaFallback: MessageCircle,
     meta: "Leitura pública",
-    engagementLabel: "Abrir feed",
+    engagementLabel: "12 comentários",
+    lockedActionLabel: "Entrar para comentar",
   });
 
   const fallbackBusinessItem = buildFallbackItem({
@@ -205,7 +210,7 @@ export function buildNeighborhoodStreamItems({
     label: "NEGÓCIOS",
     tone: "blue",
     title: "Empresas do bairro",
-    description: "Veja estabelecimentos cadastrados neste território e filtros por categoria.",
+    description: `Negócios verificados e cadastros públicos de ${scopedTerritoryName} aparecem neste contexto.`,
     href: urls.business,
     mediaFallback: Store,
     meta: "Cadastros ativos",
@@ -217,12 +222,13 @@ export function buildNeighborhoodStreamItems({
     category: "services",
     label: "SERVIÇO LOCAL",
     tone: "cyan",
-    title: "Serviços próximos",
-    description: "Encontre profissionais do bairro e recomendações conectadas à comunidade.",
+    title: "Recomendação: eletricista confiável",
+    description: `Indicações locais e profissionais próximos de ${scopedTerritoryName} entram neste stream.`,
     href: urls.services,
     mediaFallback: Wrench,
-    meta: "Profissionais locais",
-    engagementLabel: "Ver serviços",
+    meta: "Serviços locais",
+    engagementLabel: "8 comentários",
+    lockedActionLabel: "Entrar para recomendar",
   });
 
   const fallbackClassifiedItem = buildFallbackItem({
@@ -230,12 +236,12 @@ export function buildNeighborhoodStreamItems({
     category: "classifieds",
     label: "CLASSIFICADOS",
     tone: "amber",
-    title: "Classificados da comunidade",
-    description: "Anúncios de compra, venda, aluguel e oportunidades aparecem no contexto do bairro.",
+    title: "Sofá retrátil 3 lugares",
+    description: `Compra, venda e desapego publicados no contexto de ${scopedTerritoryName} aparecem aqui.`,
     href: urls.classifieds,
     mediaFallback: Tag,
-    meta: "Anúncios locais",
-    engagementLabel: "Ver classificados",
+    meta: "R$ 850",
+    engagementLabel: "3 mensagens",
   });
 
   const fallbackGastronomyItem = buildFallbackItem({
@@ -243,12 +249,13 @@ export function buildNeighborhoodStreamItems({
     category: "gastronomy",
     label: "GASTRONOMIA",
     tone: "green",
-    title: "Gastronomia perto de você",
-    description: "Restaurantes, bares e comidas locais aparecem por proximidade e território.",
+    title: "Restaurante destaque do bairro",
+    description: `Comida local, bares e restaurantes próximos de ${scopedTerritoryName} aparecem neste resumo.`,
     href: urls.gastronomy,
     mediaFallback: UtensilsCrossed,
-    meta: "Comida local",
-    engagementLabel: "Ver gastronomia",
+    meta: "★ 4,6 • Restaurante",
+    engagementLabel: "Salvar",
+    lockedActionLabel: "Entrar para avaliar",
   });
 
   const feedGroup = postItems.length > 0 ? postItems : [fallbackPostItem];
@@ -267,7 +274,7 @@ export function buildNeighborhoodStreamItems({
       businessGroup[0],
       feedGroup[2],
       mapItem[0],
-    ].filter((item): item is NeighborhoodStreamItem => Boolean(item)).slice(0, 3),
+    ].filter((item): item is NeighborhoodStreamItem => Boolean(item)).slice(0, 4),
     feed: feedGroup,
     business: businessGroup,
     services: serviceGroup,

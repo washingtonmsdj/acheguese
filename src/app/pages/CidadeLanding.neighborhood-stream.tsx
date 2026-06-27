@@ -18,6 +18,7 @@ export type NeighborhoodCommunityTabId =
 export type NeighborhoodCommunityTab = {
   id: NeighborhoodCommunityTabId;
   label: string;
+  shortLabel?: string;
   icon: LucideIcon;
 };
 
@@ -61,6 +62,12 @@ function getUnlockedActionLabel(item: NeighborhoodStreamItem): string {
   }
 }
 
+function getCompactActionLabel(label: string | undefined): string | null {
+  if (!label) return null;
+  const match = label.match(/\d+(?:[.,]\d+)?/);
+  return match?.[0] ?? null;
+}
+
 function NeighborhoodStreamEmpty({ config }: { config: NeighborhoodStreamMoreConfig }) {
   return (
     <Link to={config.href} className="city-op-empty-action">
@@ -100,7 +107,8 @@ function NeighborhoodCommunityTabs({
             onClick={() => onTabChange(tab.id)}
           >
             <Icon aria-hidden="true" />
-            <span>{tab.label}</span>
+            <span className="neighborhood-community-tab-label-full">{tab.label}</span>
+            <span className="neighborhood-community-tab-label-short">{tab.shortLabel ?? tab.label}</span>
           </button>
         );
       })}
@@ -151,13 +159,25 @@ export function NeighborhoodStream({
                   {showEngagementAction ? (
                     <Link to={item.href}>
                       <MessageCircle aria-hidden="true" />
-                      {item.engagementLabel}
+                      <span className="neighborhood-community-stream-action-full">{item.engagementLabel}</span>
+                      {getCompactActionLabel(item.engagementLabel) ? (
+                        <span className="neighborhood-community-stream-action-compact" aria-hidden="true">
+                          {getCompactActionLabel(item.engagementLabel)}
+                        </span>
+                      ) : null}
                     </Link>
                   ) : null}
                   {item.lockedActionLabel ? (
                     <Link to={canInteract ? item.href : lockedActionHref} className={!canInteract ? "is-locked" : undefined}>
                       {!canInteract ? <Lock aria-hidden="true" /> : <MessageCircle aria-hidden="true" />}
-                      {canInteract ? getUnlockedActionLabel(item) : item.lockedActionLabel}
+                      <span className="neighborhood-community-stream-action-full">
+                        {canInteract ? getUnlockedActionLabel(item) : item.lockedActionLabel}
+                      </span>
+                      {getCompactActionLabel(canInteract ? getUnlockedActionLabel(item) : item.lockedActionLabel) ? (
+                        <span className="neighborhood-community-stream-action-compact" aria-hidden="true">
+                          {getCompactActionLabel(canInteract ? getUnlockedActionLabel(item) : item.lockedActionLabel)}
+                        </span>
+                      ) : null}
                     </Link>
                   ) : null}
                 </div>

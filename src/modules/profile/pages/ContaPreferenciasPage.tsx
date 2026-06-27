@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { ArrowLeft, Bell, Link2, Shield, SlidersHorizontal } from "lucide-react";
+
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
@@ -14,6 +15,7 @@ export default function ContaPreferenciasPage() {
       <Helmet>
         <title>Preferências da conta</title>
       </Helmet>
+
       <div className="mx-auto max-w-4xl space-y-6 px-4 py-6">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={() => navigate(appUrls.profile.home)}>
@@ -50,7 +52,10 @@ export default function ContaPreferenciasPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <Button variant="outline" onClick={() => navigate(appUrls.profile.settings("privacy"))}>
+              <Button
+                variant="outline"
+                onClick={() => navigate(appUrls.profile.settings("privacy"))}
+              >
                 Abrir privacidade e LGPD
               </Button>
             </CardContent>
@@ -64,7 +69,10 @@ export default function ContaPreferenciasPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <Button variant="outline" onClick={() => navigate(appUrls.profile.settings("links"))}>
+              <Button
+                variant="outline"
+                onClick={() => navigate(appUrls.profile.settings("links"))}
+              >
                 Gerenciar vínculos
               </Button>
             </CardContent>
@@ -78,7 +86,10 @@ export default function ContaPreferenciasPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <Button variant="outline" onClick={() => navigate(appUrls.profile.settings("privacy"))}>
+              <Button
+                variant="outline"
+                onClick={() => navigate(appUrls.profile.settings("privacy"))}
+              >
                 Ajustar identidade ativa
               </Button>
             </CardContent>

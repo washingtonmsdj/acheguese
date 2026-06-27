@@ -494,7 +494,7 @@ export default function ContaEditarPerfilPage() {
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Editor de identidade</p>
               <h1 className="truncate text-xl font-bold tracking-tight text-foreground sm:text-2xl">Editar perfil</h1>
               <p className="truncate text-xs text-muted-foreground">
-                {profile.display_name} ? {getProfileTypeLabel(profile)}
+                {profile.display_name} • {getProfileTypeLabel(profile)}
               </p>
             </div>
           </div>

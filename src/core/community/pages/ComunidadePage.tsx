@@ -8,16 +8,24 @@
  */
 
 import React, { lazy, Suspense, useCallback, useMemo } from "react";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
+  BadgeCheck,
   Bookmark,
+  Building2,
   Heart,
   LayoutList,
   Lock,
   LogIn,
+  MapPin,
   MessageCircle,
+  Megaphone,
   Share2,
+  Store,
+  Tag,
+  UtensilsCrossed,
   Users,
+  Wrench,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -55,6 +63,8 @@ import type { TerritoryFilter } from "@/core/location";
 import { buildCommunityTabUrlFromPath } from "@/core/routing/utils/territoryUrls";
 import type { TerritorialFeedChannel } from "@/core/community/hooks/feed/territorialFeedEngine";
 import { getPublicPostPreview } from "@/core/posts/utils/publicPostContent";
+import { useFriendlyModuleUrls } from "@/core/routing/hooks/useFriendlyModuleUrls";
+import { withQueryParams } from "@/app/pages/CidadeLanding.utils";
 
 const GruposPage = lazy(() => import("./GruposPage"));
 
@@ -64,6 +74,15 @@ const TABS: { id: CommunityTab; label: string; icon: React.ElementType }[] = [
   { id: "feed",   label: "Feed",   icon: LayoutList },
   { id: "grupos", label: "Grupos", icon: Users },
 ];
+
+const PUBLIC_FEED_MODULES = [
+  { key: "feed", label: "Feed", icon: LayoutList },
+  { key: "business", label: "Empresas", icon: Building2 },
+  { key: "services", label: "Servicos", icon: Wrench },
+  { key: "classifieds", label: "Classificados", icon: Tag },
+  { key: "gastronomy", label: "Gastronomia", icon: UtensilsCrossed },
+  { key: "map", label: "Mapa", icon: MapPin },
+] as const;
 
 function getPublicPostAuthor(post: unknown): string {
   if (!post || typeof post !== "object") return "Morador";
@@ -105,6 +124,19 @@ function getPublicPostTypeLabel(type: string | null | undefined): string {
   }
 }
 
+function getPublicPostTypeIcon(type: string | null | undefined) {
+  switch (type) {
+    case "alerta":
+      return Megaphone;
+    case "recomendacao":
+      return BadgeCheck;
+    case "desapego":
+      return Tag;
+    default:
+      return MessageCircle;
+  }
+}
+
 function PublicTerritorialFeed({
   resolved,
   territoryName,
@@ -112,6 +144,8 @@ function PublicTerritorialFeed({
   activeHeaderFilter,
   onHeaderFilterChange,
   onRequireLogin,
+  loginHref,
+  publishHref,
 }: {
   resolved?: ResolvedTerritory;
   territoryName: string;
@@ -119,6 +153,8 @@ function PublicTerritorialFeed({
   activeHeaderFilter: TerritorialFeedChannel;
   onHeaderFilterChange: (filter: TerritorialFeedChannel) => void;
   onRequireLogin: () => void;
+  loginHref: string;
+  publishHref: string;
 }) {
   const { posts, isLoading, isError, error, hasNextPage, isFetchingNextPage, loadMore } =
     useCommunityFeedSimple({
@@ -126,7 +162,17 @@ function PublicTerritorialFeed({
       territoryFilter,
       limit: 12,
     });
+  const moduleUrls = useFriendlyModuleUrls();
   const visiblePosts = posts.filter(isLaunchCommunityPostEnabled);
+  const alertCount = visiblePosts.filter((post) => post.type === "alerta").length;
+  const moduleLinks = [
+    { ...PUBLIC_FEED_MODULES[0], href: moduleUrls.community, isActive: true },
+    { ...PUBLIC_FEED_MODULES[1], href: moduleUrls.business, isActive: false },
+    { ...PUBLIC_FEED_MODULES[2], href: moduleUrls.services, isActive: false },
+    { ...PUBLIC_FEED_MODULES[3], href: moduleUrls.classifieds, isActive: false },
+    { ...PUBLIC_FEED_MODULES[4], href: moduleUrls.gastronomy, isActive: false },
+    { ...PUBLIC_FEED_MODULES[5], href: moduleUrls.map, isActive: false },
+  ] as const;
 
   const handleShare = useCallback((postId: string) => {
     const shareUrl = typeof window !== "undefined"
@@ -146,12 +192,113 @@ function PublicTerritorialFeed({
   return (
     <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
       <main className="min-w-0 max-w-full overflow-x-hidden" role="feed" aria-label="Feed publico da comunidade">
+        <section className="mb-4 overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(10,24,32,0.98),rgba(7,17,24,0.98))] text-white shadow-xl shadow-black/10">
+          <div className="border-b border-white/10 px-4 py-3 sm:px-5">
+            <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {moduleLinks.map((item) => {
+                const Icon = item.icon;
+                return item.isActive ? (
+                  <span
+                    key={item.key}
+                    className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border border-teal-300/35 bg-teal-300/12 px-4 text-xs font-semibold text-teal-100"
+                  >
+                    <Icon className="h-4 w-4" />
+                    {item.label}
+                  </span>
+                ) : (
+                  <Link
+                    key={item.key}
+                    to={item.href}
+                    className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 text-xs font-semibold text-white/65 transition-colors hover:border-white/20 hover:text-white"
+                  >
+                    <Icon className="h-4 w-4" />
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="grid gap-4 px-4 py-4 sm:px-5 sm:py-5 lg:grid-cols-[minmax(0,1fr)_18rem]">
+            <div className="min-w-0">
+              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-teal-300">
+                {territoryName}
+              </p>
+              <h1 className="mt-2 text-2xl font-semibold leading-tight sm:text-[2rem]">
+                Feed publico do bairro
+              </h1>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-white/62">
+                Veja publicacoes, avisos e recomendacoes locais. Para publicar, comentar e participar dos grupos, e preciso entrar e verificar a moradia.
+              </p>
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                <span className="inline-flex min-h-8 items-center rounded-full border border-teal-300/30 bg-teal-300/10 px-3 text-xs font-semibold text-teal-100">
+                  Leitura publica
+                </span>
+                <span className="inline-flex min-h-8 items-center rounded-full border border-amber-300/25 bg-amber-300/10 px-3 text-xs font-semibold text-amber-100">
+                  Interacao para moradores verificados
+                </span>
+              </div>
+
+              <div className="mt-4 grid gap-2 sm:grid-cols-2 sm:gap-3 sm:max-w-xl">
+                <Link
+                  to={loginHref}
+                  className="inline-flex min-h-11 items-center justify-center rounded-xl bg-teal-500 px-4 text-sm font-semibold text-slate-950 transition-colors hover:bg-teal-400"
+                >
+                  <LogIn className="mr-2 h-4 w-4" />
+                  Entrar no bairro
+                </Link>
+                <Link
+                  to={publishHref}
+                  className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/14 bg-white/[0.03] px-4 text-sm font-semibold text-white transition-colors hover:bg-white/[0.08]"
+                >
+                  <MessageCircle className="mr-2 h-4 w-4" />
+                  Publicar no bairro
+                </Link>
+              </div>
+            </div>
+
+            <div className="grid gap-3 rounded-[20px] border border-white/10 bg-black/20 p-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
+                  Agora no territorio
+                </p>
+                <p className="mt-1 text-sm text-white/65">
+                  {visiblePosts.length} publicacoes publicas e {alertCount} alertas recentes em {territoryName}.
+                </p>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-3">
+                  <p className="text-lg font-semibold text-white">{visiblePosts.length}</p>
+                  <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/45">Posts</p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-3">
+                  <p className="text-lg font-semibold text-white">{alertCount}</p>
+                  <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/45">Alertas</p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-3">
+                  <p className="text-lg font-semibold text-white">{COMMUNITY_FEED_HEADER_FILTERS.length}</p>
+                  <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/45">Canais</p>
+                </div>
+              </div>
+              <Link
+                to={moduleUrls.map}
+                className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] px-4 text-sm font-semibold text-white transition-colors hover:bg-white/[0.08]"
+              >
+                <MapPin className="mr-2 h-4 w-4 text-teal-300" />
+                Ver mapa do bairro
+              </Link>
+            </div>
+          </div>
+        </section>
+
         <section className="mb-4 rounded-2xl border border-white/10 bg-[#0f171a] p-4 text-white shadow-xl shadow-black/10">
           <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-wide text-teal-300">Leitura publica</p>
-              <h1 className="mt-1 text-xl font-semibold">Feed de {territoryName}</h1>
-              <p className="mt-1 text-sm text-white/55">Entre para publicar, comentar, recomendar e participar dos grupos.</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-teal-300">Explorar o feed</p>
+              <p className="mt-1 text-sm text-white/55">
+                Filtre o que aparece no stream publico do bairro sem sair desta pagina.
+              </p>
             </div>
             <Button onClick={onRequireLogin} className="shrink-0 bg-teal-500 text-slate-950 hover:bg-teal-400">
               <LogIn className="mr-2 h-4 w-4" />
@@ -203,6 +350,9 @@ function PublicTerritorialFeed({
             {visiblePosts.map((post) => (
               <article key={post.id} className="rounded-2xl border border-white/10 bg-[#10191d] p-4 text-white shadow-xl shadow-black/10">
                 <div className="flex min-w-0 items-start justify-between gap-3">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-teal-200">
+                    {React.createElement(getPublicPostTypeIcon(post.type), { className: "h-5 w-5" })}
+                  </div>
                   <div className="min-w-0">
                     <span className="text-xs font-semibold uppercase tracking-wide text-teal-300">
                       {getPublicPostTypeLabel(post.type)}
@@ -259,7 +409,32 @@ function PublicTerritorialFeed({
       </main>
 
       <aside className="hidden lg:block w-80 flex-shrink-0" aria-label="Widgets da comunidade">
-        <div className="sticky top-6">
+        <div className="sticky top-6 space-y-3">
+          <section className="rounded-2xl border border-white/10 bg-[#0f171a] p-4 text-white shadow-xl shadow-black/10">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-teal-300">
+              Participacao local
+            </p>
+            <h2 className="mt-2 text-lg font-semibold leading-tight">
+              Morar aqui libera publicacao e grupos
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-white/60">
+              Entre com sua conta e confirme o endereco para comentar, publicar e participar da comunidade do bairro.
+            </p>
+            <div className="mt-4 grid gap-2">
+              <Link
+                to={loginHref}
+                className="inline-flex min-h-10 items-center justify-center rounded-xl bg-teal-500 px-4 text-sm font-semibold text-slate-950 transition-colors hover:bg-teal-400"
+              >
+                Entrar agora
+              </Link>
+              <Link
+                to={publishHref}
+                className="inline-flex min-h-10 items-center justify-center rounded-xl border border-white/14 bg-white/[0.03] px-4 text-sm font-semibold text-white transition-colors hover:bg-white/[0.08]"
+              >
+                Tentar publicar
+              </Link>
+            </div>
+          </section>
           <CommunityRightSidebar resolved={resolved} territoryFilter={territoryFilter} />
         </div>
       </aside>
@@ -416,10 +591,17 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
     : resolved?.kind === "location"
       ? resolved.location.name
       : "comunidade";
-  const handleRequireLogin = useCallback(() => {
+  const loginHref = useMemo(() => {
     const redirect = `${location.pathname}${location.search}`;
-    navigate(`${appUrls.auth.login}?redirect=${encodeURIComponent(redirect)}`);
-  }, [appUrls.auth.login, location.pathname, location.search, navigate]);
+    return withQueryParams(appUrls.auth.login, { redirect });
+  }, [appUrls.auth.login, location.pathname, location.search]);
+  const publishRedirectHref = useMemo(() => {
+    const targetPath = withQueryParams(location.pathname, { action: "publicar" });
+    return withQueryParams(appUrls.auth.login, { redirect: targetPath });
+  }, [appUrls.auth.login, location.pathname]);
+  const handleRequireLogin = useCallback(() => {
+    navigate(loginHref);
+  }, [loginHref, navigate]);
 
   const hasApprovedCommunityAccess = isAdmin || Boolean(homeDistrict && isHomeDistrictApproved);
 
@@ -440,28 +622,6 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
       <TooltipProvider>
         <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#12181B]" role="main">
           <div className="mx-auto w-full max-w-[1600px] min-w-0 px-4 py-6 md:px-6 lg:px-8">
-            <nav
-              className="mb-6 flex min-w-0 flex-wrap gap-1 border-b border-white/10 pb-0"
-              aria-label={COMMUNITY_PAGE_COPY.subcategoryNavAriaLabel}
-            >
-              {TABS.map(({ id, label, icon: Icon }) => (
-                <button
-                  key={id}
-                  onClick={() => setTab(id)}
-                  className={cn(
-                    "flex min-w-0 items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px",
-                    activeTab === id
-                      ? "border-teal-400 text-teal-300"
-                      : "border-transparent text-gray-400 hover:text-gray-200 hover:border-white/20",
-                  )}
-                  aria-current={activeTab === id ? "page" : undefined}
-                >
-                  <Icon className="h-4 w-4" aria-hidden="true" />
-                  {label}
-                </button>
-              ))}
-            </nav>
-
             <PublicTerritorialFeed
               resolved={resolved}
               territoryName={territoryName}
@@ -469,6 +629,8 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
               activeHeaderFilter={feedHeaderFilter}
               onHeaderFilterChange={handleFeedHeaderFilterChange}
               onRequireLogin={handleRequireLogin}
+              loginHref={loginHref}
+              publishHref={publishRedirectHref}
             />
           </div>
         </div>

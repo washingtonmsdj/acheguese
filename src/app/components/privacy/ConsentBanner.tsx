@@ -1,6 +1,10 @@
-import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Cookie, X, Shield } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Cookie, Shield, X } from "lucide-react";
+import { useLocation } from "react-router-dom";
+
+import { ConsentService } from "@/core/privacy/services/ConsentService";
+import { useAuth } from "@/core/auth/hooks/useAuth";
 import { Button } from "@/shared/components/ui/button";
 import {
   Dialog,
@@ -10,11 +14,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/components/ui/dialog";
-import { Switch } from "@/shared/components/ui/switch";
 import { Label } from "@/shared/components/ui/label";
+import { Switch } from "@/shared/components/ui/switch";
 import { useToast } from "@/shared/hooks/use-toast";
-import { useAuth } from "@/core/auth/hooks/useAuth";
-import { ConsentService } from "@/core/privacy/services/ConsentService";
 
 interface ConsentPreferences {
   necessary: boolean;
@@ -25,6 +27,7 @@ interface ConsentPreferences {
 
 export function ConsentBanner() {
   const { user } = useAuth();
+  const { pathname } = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showBanner, setShowBanner] = useState(false);
@@ -47,7 +50,7 @@ export function ConsentBanner() {
       const timer = setTimeout(() => setShowBanner(true), 1000);
       return () => clearTimeout(timer);
     }
-  }, [isLoading, existingConsents]);
+  }, [existingConsents, isLoading]);
 
   const saveConsentsMutation = useMutation({
     mutationFn: async (consents: ConsentPreferences) => {
@@ -65,104 +68,222 @@ export function ConsentBanner() {
       queryClient.invalidateQueries({ queryKey: ["user-consents-check", user?.id] });
       setShowBanner(false);
       toast({
-        title: "Preferencias salvas",
-        description: "Suas preferencias de privacidade foram registradas.",
+        title: "Preferências salvas",
+        description: "Suas preferências de privacidade foram registradas.",
       });
     },
   });
+
+  const isAuthSurface =
+    pathname === "/login" ||
+    pathname === "/cadastro" ||
+    pathname === "/cadastro/confirmacao" ||
+    pathname === "/reset-password";
+
+  const rejectOptionalConsents = () =>
+    saveConsentsMutation.mutate({
+      necessary: true,
+      analytics: false,
+      marketing: false,
+      geolocation: false,
+    });
+
+  const acceptAllConsents = () =>
+    saveConsentsMutation.mutate({
+      necessary: true,
+      analytics: true,
+      marketing: true,
+      geolocation: true,
+    });
 
   if (!showBanner) return null;
 
   return (
     <>
-      <div className="fixed inset-x-2 bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] z-50 rounded-xl border bg-background/95 p-2 shadow-2xl backdrop-blur md:inset-x-0 md:bottom-0 md:rounded-none md:border-x-0 md:border-b-0 md:border-t md:p-4">
-        <div className="container mx-auto max-w-6xl">
-          <div className="relative flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-4">
-            <div className="flex flex-1 items-start gap-2 pr-8 sm:gap-3 sm:pr-0">
-              <div className="shrink-0 rounded-full bg-primary/10 p-1.5 sm:p-2">
-                <Cookie className="h-4 w-4 text-primary sm:h-5 sm:w-5" />
-              </div>
-              <div className="min-w-0 space-y-0.5 sm:space-y-1">
-                <h3 className="text-xs font-medium sm:text-sm">Privacidade e Cookies</h3>
-                <p className="hidden text-xs text-muted-foreground sm:block">
-                  Utilizamos cookies e dados pessoais para melhorar sua experiencia.
-                </p>
-              </div>
+      {isAuthSurface ? (
+        <div
+          data-consent-banner
+          className="fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-50 mx-auto max-w-[20rem] rounded-[20px] border border-border/70 bg-background/94 px-2.5 py-2 shadow-[0_20px_48px_-28px_rgba(0,0,0,0.85)] backdrop-blur-xl"
+        >
+          <div className="grid grid-cols-[auto,1fr,auto] items-center gap-2">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/12 text-primary">
+              <Cookie className="h-3.5 w-3.5" />
             </div>
-            <div className="grid w-full shrink-0 grid-cols-3 gap-1.5 sm:w-auto sm:flex sm:flex-wrap sm:items-center sm:gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-full px-2 text-xs sm:h-9 sm:w-auto sm:text-sm"
-                onClick={() => setShowDetails(true)}
-              >
-                Personalizar
-              </Button>
+
+            <div className="min-w-0">
+              <p className="text-[0.66rem] font-semibold leading-none text-foreground">
+                Cookies
+              </p>
+              <p className="mt-0.5 truncate text-[0.56rem] leading-none text-muted-foreground">
+                {"Seguran\u00e7a e prefer\u00eancias."}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-1">
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 w-full px-2 text-xs sm:h-9 sm:w-auto sm:text-sm"
-                onClick={() =>
-                  saveConsentsMutation.mutate({
-                    necessary: true,
-                    analytics: false,
-                    marketing: false,
-                    geolocation: false,
-                  })
-                }
+                className="h-7 rounded-lg px-2 text-[0.62rem] font-medium"
+                onClick={rejectOptionalConsents}
                 disabled={saveConsentsMutation.isPending}
               >
-                Rejeitar
+                {"N\u00e3o"}
               </Button>
               <Button
                 size="sm"
-                className="h-8 w-full px-2 text-xs sm:h-9 sm:w-auto sm:text-sm"
-                onClick={() =>
-                  saveConsentsMutation.mutate({
-                    necessary: true,
-                    analytics: true,
-                    marketing: true,
-                    geolocation: true,
-                  })
-                }
+                className="h-7 rounded-lg px-2 text-[0.62rem] font-medium"
+                onClick={acceptAllConsents}
                 disabled={saveConsentsMutation.isPending}
               >
-                <span className="sm:hidden">Aceitar</span>
-                <span className="hidden sm:inline">Aceitar Todos</span>
+                OK
               </Button>
               <button
+                type="button"
+                onClick={() => setShowDetails(true)}
+                className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                aria-label="Personalizar cookies"
+              >
+                <Shield className="h-3.5 w-3.5" />
+              </button>
+              <button
+                type="button"
                 onClick={() => setShowBanner(false)}
-                className="absolute right-0 top-0 rounded p-1 hover:bg-muted sm:static sm:ml-2"
+                className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                aria-label="Fechar"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div
+          data-consent-banner
+          className="fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.2rem)] z-50 mx-auto w-[calc(100vw-1.5rem)] max-w-[17.5rem] rounded-[12px] border border-border/70 bg-background/90 p-0.5 shadow-2xl backdrop-blur-xl max-[480px]:w-fit max-[480px]:max-w-none max-[480px]:rounded-[14px] max-[480px]:border-border/45 max-[480px]:bg-background/78 max-[480px]:shadow-lg max-[360px]:bottom-[calc(env(safe-area-inset-bottom)+0.125rem)] md:left-auto md:right-4 md:mx-0 md:w-auto md:max-w-[31rem] md:rounded-[18px] md:p-3"
+        >
+          <div className="flex items-center gap-1 md:hidden max-[360px]:gap-0.5">
+            <div className="shrink-0 rounded-full bg-primary/10 p-1 max-[480px]:hidden">
+              <Cookie className="h-3 w-3 text-primary" />
+            </div>
+            <span className="min-w-0 flex-1 text-[0.58rem] font-semibold leading-none max-[480px]:hidden">
+              Cookies
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-[22px] rounded-md px-1.25 text-[0.5rem] font-medium max-[360px]:h-5 max-[360px]:rounded-[10px] max-[360px]:px-1 max-[360px]:text-[0.46rem]"
+              onClick={rejectOptionalConsents}
+              disabled={saveConsentsMutation.isPending}
+            >
+              <span className="max-[480px]:hidden">Rejeitar</span>
+              <span className="hidden max-[480px]:inline">Não</span>
+            </Button>
+            <Button
+              size="sm"
+              className="h-[22px] rounded-md px-1.25 text-[0.5rem] font-medium max-[360px]:h-5 max-[360px]:rounded-[10px] max-[360px]:px-1 max-[360px]:text-[0.46rem]"
+              onClick={acceptAllConsents}
+              disabled={saveConsentsMutation.isPending}
+            >
+              <span className="max-[480px]:hidden">Aceitar</span>
+              <span className="hidden max-[480px]:inline">OK</span>
+            </Button>
+            <button
+              type="button"
+              onClick={() => setShowDetails(true)}
+              className="inline-flex h-5.5 w-5.5 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground max-[360px]:h-4.5 max-[360px]:w-4.5"
+              aria-label="Personalizar cookies"
+            >
+              <Shield className="h-3 w-3 max-[360px]:h-2.75 max-[360px]:w-2.75" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowBanner(false)}
+              className="inline-flex h-5.5 w-5.5 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground max-[360px]:h-4.5 max-[360px]:w-4.5"
+              aria-label="Fechar"
+            >
+              <X className="h-3 w-3 max-[360px]:h-2.75 max-[360px]:w-2.75" />
+            </button>
+          </div>
+
+          <div className="hidden md:flex md:flex-row md:items-center md:gap-2">
+            <div className="flex items-center gap-2">
+              <div className="shrink-0 rounded-full bg-primary/10 p-2">
+                <Cookie className="h-3.5 w-3.5 text-primary" />
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <h3 className="text-[0.84rem] font-semibold leading-none">
+                  Privacidade e Cookies
+                </h3>
+                <p className="text-[0.72rem] leading-relaxed text-muted-foreground">
+                  Utilizamos cookies e dados pessoais para melhorar sua experiência.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowBanner(false)}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                 aria-label="Fechar"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 rounded-xl px-4 text-[0.72rem] font-medium"
+                onClick={rejectOptionalConsents}
+                disabled={saveConsentsMutation.isPending}
+              >
+                Rejeitar
+              </Button>
+
+              <Button
+                size="sm"
+                className="h-9 rounded-xl px-4 text-[0.72rem] font-medium"
+                onClick={acceptAllConsents}
+                disabled={saveConsentsMutation.isPending}
+              >
+                Aceitar todos
+              </Button>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-9 rounded-xl px-3 text-[0.72rem] text-muted-foreground"
+                onClick={() => setShowDetails(true)}
+              >
+                Personalizar
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <Dialog open={showDetails} onOpenChange={setShowDetails}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5" />
-              Preferencias de Privacidade
+              Preferências de privacidade
             </DialogTitle>
             <DialogDescription>
-              Personalize como seus dados sao utilizados.
+              Personalize como seus dados são utilizados.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-6 py-4">
             <div className="flex items-start justify-between gap-4">
               <div className="space-y-1">
-                <Label className="font-medium">Cookies Necessarios</Label>
+                <Label className="font-medium">Cookies necessários</Label>
               </div>
               <Switch checked={true} disabled />
             </div>
             <div className="flex items-start justify-between gap-4">
               <div className="space-y-1">
-                <Label className="font-medium">Analytics e Metricas</Label>
+                <Label className="font-medium">Analytics e métricas</Label>
               </div>
               <Switch
                 checked={preferences.analytics}
@@ -184,7 +305,7 @@ export function ConsentBanner() {
             </div>
             <div className="flex items-start justify-between gap-4">
               <div className="space-y-1">
-                <Label className="font-medium">Geolocalizacao</Label>
+                <Label className="font-medium">Geolocalização</Label>
               </div>
               <Switch
                 checked={preferences.geolocation}
@@ -210,7 +331,7 @@ export function ConsentBanner() {
               disabled={saveConsentsMutation.isPending}
               className="w-full sm:w-auto"
             >
-              Salvar Preferencias
+              Salvar preferências
             </Button>
           </DialogFooter>
         </DialogContent>

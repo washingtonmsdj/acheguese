@@ -19,7 +19,7 @@ export function NotificacoesSection({
     <div className="space-y-6">
       <SectionFrame
         title="Resumo de notificações"
-        description="Estado atual dos avisos para triagem rapida."
+        description="Estado atual dos avisos para triagem rápida."
       >
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <NotificationStatCard label="Não lidas" value={notifications.unread} />

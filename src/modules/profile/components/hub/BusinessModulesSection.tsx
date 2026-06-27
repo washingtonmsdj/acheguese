@@ -1,24 +1,24 @@
 /**
  * BusinessModulesSection - Secao de modulos empresariais
  *
- * Exibe empresas do usuario com seus modulos e funcionalidades
+ * Exibe empresas do usuario com seus modulos e funcionalidades.
  *
- * FASE 6 - P2: Badges visuais ja resolvidos no backend
+ * FASE 6 - P2: Badges visuais ja resolvidos no backend.
  * - business.subscription.canUse* vem de ProfileService
  * - ProfileService usa EntitlementResolver para popular subscription
  * - Componente apenas exibe, nao calcula elegibilidade
  * - Aceitavel para P2 (baixo risco - apenas visual)
  */
 
-import { Sparkles } from 'lucide-react';
-import { Button } from '@/shared/components/ui/button';
-import { Badge } from '@/shared/components/ui/badge';
-import { SectionFrame } from './SectionFrame';
-import { EmptyPanel } from './EmptyPanel';
-import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
-import { isLaunchSurfaceEnabled } from '@/config/launchScope';
+import { Sparkles } from "lucide-react";
+import { Button } from "@/shared/components/ui/button";
+import { Badge } from "@/shared/components/ui/badge";
+import { SectionFrame } from "./SectionFrame";
+import { EmptyPanel } from "./EmptyPanel";
+import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
+import { isLaunchSurfaceEnabled } from "@/config/launchScope";
 
-import type { ProfileBusinessModuleSnapshot } from '@/core/profiles/services/ProfileBusinessTypes';
+import type { ProfileBusinessModuleSnapshot } from "@/core/profiles/services/ProfileBusinessTypes";
 
 interface BusinessModulesSectionProps {
   businessModules: readonly ProfileBusinessModuleSnapshot[];
@@ -30,20 +30,20 @@ interface BusinessModulesSectionProps {
 
 function formatPlanLabel(value?: string | null): string {
   switch (value) {
-    case 'free':
-      return 'Free';
-    case 'pro':
-      return 'Pro';
-    case 'delivery':
-      return 'Delivery';
-    case 'basic':
-      return 'Básico';
-    case 'premium':
-      return 'Premium';
-    case 'enterprise':
-      return 'Enterprise';
+    case "free":
+      return "Free";
+    case "pro":
+      return "Pro";
+    case "delivery":
+      return "Delivery";
+    case "basic":
+      return "Básico";
+    case "premium":
+      return "Premium";
+    case "enterprise":
+      return "Enterprise";
     default:
-      return value ? value[0].toUpperCase() + value.slice(1) : 'Básico';
+      return value ? value[0].toUpperCase() + value.slice(1) : "Básico";
   }
 }
 
@@ -63,8 +63,8 @@ export function BusinessModulesSection({
 
   return (
     <SectionFrame
-      title="Negocios, módulos e dashboards"
-      description="Operacao empresarial consolidada com dashboard, imagens, produtos e delivery."
+      title="Negócios, módulos e dashboards"
+      description="Operação empresarial consolidada com dashboard, imagens, produtos e delivery."
       action={
         <Button className="gap-2" onClick={onCreateBusiness}>
           <Sparkles className="h-4 w-4" />
@@ -76,7 +76,7 @@ export function BusinessModulesSection({
         showOnboarding ? (
           <EmptyPanel
             title="Nenhuma empresa ativa vinculada"
-            description="A plataforma ja tem dashboard empresarial, vertical gastronômica, QR e billing. Falta apenas uma empresa sua entrar nesse fluxo."
+            description="A plataforma já tem dashboard empresarial, vertical gastronômica, QR e billing. Falta apenas uma empresa sua entrar nesse fluxo."
             actionLabel="Criar empresa"
             onAction={onCreateBusiness}
           />
@@ -96,7 +96,7 @@ export function BusinessModulesSection({
             <div className="rounded-2xl border border-border bg-background p-4">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">Gastronomia</p>
               <p className="mt-2 text-xl font-semibold text-foreground">{businessSummary.gastronomy}</p>
-              <p className="mt-1 text-xs text-muted-foreground">Verticais gastronomicos ativos</p>
+              <p className="mt-1 text-xs text-muted-foreground">Verticais gastronômicas ativas</p>
             </div>
             <div className="rounded-2xl border border-border bg-background p-4">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">Delivery</p>
@@ -108,7 +108,7 @@ export function BusinessModulesSection({
               <p className="mt-2 text-xl font-semibold text-foreground">
                 {businessSummary.qrReady}/{businessSummary.premium}
               </p>
-              <p className="mt-1 text-xs text-muted-foreground">QR pronto / negocios premium</p>
+              <p className="mt-1 text-xs text-muted-foreground">QR pronto / negócios premium</p>
             </div>
           </div>
 
@@ -141,31 +141,31 @@ function BusinessModuleCard({
   const showPublicAnalytics = isLaunchSurfaceEnabled("publicAnalytics");
 
   const featureBadges = [
-    business.subscription.canUseShortPremiumLink && business.shareUrl ? 'Link premium' : null,
-    business.qrCode.hasActive ? 'QR pronto' : null,
-    business.gastronomy.active ? 'Gastronomia ativa' : null,
-    business.gastronomy.deliveryEnabled ? 'Delivery ativo' : null,
-    showMobility && business.subscription.canUseMotoboyNetwork ? 'Rede motoboy' : null,
+    business.subscription.canUseShortPremiumLink && business.shareUrl ? "Link premium" : null,
+    business.qrCode.hasActive ? "QR pronto" : null,
+    business.gastronomy.active ? "Gastronomia ativa" : null,
+    business.gastronomy.deliveryEnabled ? "Delivery ativo" : null,
+    showMobility && business.subscription.canUseMotoboyNetwork ? "Rede motoboy" : null,
   ].filter(Boolean) as string[];
 
   const gastronomyOwnerActions = [
     business.gastronomy.dashboardUrl
-      ? { label: 'Painel gastro', url: business.gastronomy.dashboardUrl }
+      ? { label: "Painel gastro", url: business.gastronomy.dashboardUrl }
       : null,
     showPublicAnalytics && business.gastronomy.analyticsUrl
-      ? { label: 'Analytics', url: business.gastronomy.analyticsUrl }
+      ? { label: "Analytics", url: business.gastronomy.analyticsUrl }
       : null,
     business.gastronomy.menuUrl
-      ? { label: 'Produtos / cardapio', url: business.gastronomy.menuUrl }
+      ? { label: "Produtos / cardápio", url: business.gastronomy.menuUrl }
       : null,
     business.gastronomy.ordersUrl
-      ? { label: 'Pedidos', url: business.gastronomy.ordersUrl }
+      ? { label: "Pedidos", url: business.gastronomy.ordersUrl }
       : null,
     showMobility && business.gastronomy.deliveriesUrl
-      ? { label: 'Entregas', url: business.gastronomy.deliveriesUrl }
+      ? { label: "Entregas", url: business.gastronomy.deliveriesUrl }
       : null,
     !business.gastronomy.active && business.gastronomy.setupUrl
-      ? { label: 'Ativar gastronomia', url: business.gastronomy.setupUrl }
+      ? { label: "Ativar gastronomia", url: business.gastronomy.setupUrl }
       : null,
   ].filter((item): item is { label: string; url: string } => Boolean(item?.url));
 
@@ -175,16 +175,19 @@ function BusinessModuleCard({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="truncate text-base font-semibold text-foreground">{business.name}</h3>
-            {business.verified && (
-              <Badge variant="outline" className="h-5 border-emerald-500/20 bg-emerald-500/10 text-[10px] text-emerald-700">
+            {business.verified ? (
+              <Badge
+                variant="outline"
+                className="h-5 border-emerald-500/20 bg-emerald-500/10 text-[10px] text-emerald-700"
+              >
                 Verificada
               </Badge>
-            )}
-            {business.isPremium && (
+            ) : null}
+            {business.isPremium ? (
               <Badge className="h-5 bg-amber-500 px-2 text-[10px] text-white">
                 Premium
               </Badge>
-            )}
+            ) : null}
             <Badge variant="secondary" className="h-5 text-[10px]">
               Plano {formatPlanLabel(business.subscription.planTier)}
             </Badge>
@@ -225,16 +228,16 @@ function BusinessModuleCard({
           >
             Planos
           </Button>
-          {business.gastronomy.dashboardUrl && (
+          {business.gastronomy.dashboardUrl ? (
             <Button
               size="sm"
               variant="outline"
               className="gap-1.5"
-              onClick={() => onNavigate(business.gastronomy.dashboardUrl!)}
+              onClick={() => onNavigate(business.gastronomy.dashboardUrl)}
             >
               Gastronomia
             </Button>
-          )}
+          ) : null}
           <Button
             size="sm"
             variant="outline"
@@ -243,29 +246,44 @@ function BusinessModuleCard({
           >
             Link premium
           </Button>
-          <Button size="sm" variant="outline" className="gap-1.5" onClick={() => onNavigate(business.editUrl)}>
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1.5"
+            onClick={() => onNavigate(business.editUrl)}
+          >
             Editar / imagens
           </Button>
-          {business.publicUrl && (
-            <Button size="sm" variant="outline" className="gap-1.5" onClick={() => onNavigate(business.publicUrl!)}>
-              Ver pagina pública
-            </Button>
-          )}
-          {business.shareUrl && (
+          {business.publicUrl ? (
             <Button
               size="sm"
               variant="outline"
               className="gap-1.5"
-              onClick={() => onNavigate(business.shareUrl!)}
+              onClick={() => onNavigate(business.publicUrl)}
+            >
+              Ver página pública
+            </Button>
+          ) : null}
+          {business.shareUrl ? (
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1.5"
+              onClick={() => onNavigate(business.shareUrl)}
             >
               Ver mini-site
             </Button>
-          )}
-          {business.shareUrl && (
-            <Button size="sm" variant="outline" className="gap-1.5" onClick={() => onCopy(business.shareUrl!, 'link da empresa')}>
+          ) : null}
+          {business.shareUrl ? (
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1.5"
+              onClick={() => onCopy(business.shareUrl!, "link da empresa")}
+            >
               Compartilhar
             </Button>
-          )}
+          ) : null}
         </div>
       </div>
 

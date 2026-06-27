@@ -245,7 +245,7 @@ export function ProfileHeaderCompact({
                 ) : (
                   <span className="font-medium">@{handle || "sem-handle"}</span>
                 )}
-                <span className="text-border">?</span>
+                <span className="text-border">•</span>
                 <Badge variant="secondary" className="h-4 text-[9px] font-medium sm:h-5 sm:text-[10px]">
                   {getProfileTypeLabel(activeProfile)}
                 </Badge>
@@ -399,7 +399,7 @@ export function ProfileHeaderCompact({
             </>
           ) : null}
 
-          {/* Botao "Mais detalhes" - sempre visivel */}
+          {/* Botão "Mais detalhes" - sempre visível */}
           <Popover>
             <PopoverTrigger asChild>
               <button
@@ -432,7 +432,7 @@ export function ProfileHeaderCompact({
                         {identity?.reputation?.score ?? context?.reputation?.score ?? 0}
                       </p>
                       <p>
-                        <span className="font-medium">Nivel:</span>{" "}
+                        <span className="font-medium">Nível:</span>{" "}
                         {identity?.reputation?.level ?? context?.reputation?.level ?? 1}
                       </p>
                       {(identity?.reputation?.rank || context?.reputation?.rank) ? (
@@ -473,7 +473,7 @@ export function ProfileHeaderCompact({
                       Prioridade
                     </p>
                     <p className="mt-1 text-sm font-semibold text-destructive">
-                      {totalAlerts} pendencias urgentes
+                      {totalAlerts} pendências urgentes
                     </p>
                   </div>
                 ) : null}
@@ -534,14 +534,14 @@ export function ProfileHeaderCompact({
           {totalAlerts > 0 ? (
             <div className="flex items-center gap-1.5">
               <span className="font-semibold text-destructive">
-                ! {totalAlerts} {totalAlerts === 1 ? "pendencia prioritaria" : "pendencias prioritarias"}
+                ! {totalAlerts} {totalAlerts === 1 ? "pendência prioritária" : "pendências prioritárias"}
               </span>
             </div>
           ) : null}
         </div>
       </div>
 
-      {/* Widget de Completude do Perfil - Responsivo */}
+      {/* Widget de completude do perfil - responsivo */}
       {activeProfile && (
         <div className="mt-3 sm:mt-4">
           <ProfileCompletenessWidget profile={activeProfile} />

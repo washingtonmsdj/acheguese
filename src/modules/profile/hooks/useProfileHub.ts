@@ -112,19 +112,19 @@ export function useProfileHub() {
         icon: User,
         label: 'Posts',
         value: operations.posts,
-        hint: 'Conteudo autoral e presenca na comunidade.',
+        hint: 'Conteúdo autoral e presença na comunidade.',
       },
       {
         icon: Building2,
-        label: 'Negocios',
+        label: 'Negócios',
         value: operations.businesses,
-        hint: 'Empresas administradas ou operadas pelo usuario.',
+        hint: 'Empresas administradas ou operadas pelo usuário.',
       },
       {
         icon: Bell,
         label: 'Avisos',
         value: notifications.unread,
-        hint: 'Notificacoes nao lidas aguardando acao.',
+        hint: 'Notificações não lidas aguardando ação.',
       },
     ],
     [operations, notifications],
@@ -135,7 +135,7 @@ export function useProfileHub() {
       {
         icon: User,
         title: 'Editar perfil',
-        description: 'Atualize identidade, avatar, campos publicos e apresentacao.',
+        description: 'Atualize identidade, avatar, campos públicos e apresentação.',
         onClick: () => {
           if (!activeProfileId) return;
           navigate(buildProfileEditUrl(activeProfileId));
@@ -151,19 +151,19 @@ export function useProfileHub() {
       {
         icon: KeyRound,
         title: 'Minha conta',
-        description: 'Senha, email de acesso e acoes sensiveis da conta.',
+        description: 'Senha, email de acesso e ações sensíveis da conta.',
         onClick: () => navigate(appUrls.profile.account),
       },
       {
         icon: Shield,
         title: 'Privacidade do perfil',
-        description: 'Controle visibilidade, exposicao publica e regras de privacidade.',
+        description: 'Controle visibilidade, exposição pública e regras de privacidade.',
         onClick: () => navigate(appUrls.profile.settings('privacy')),
       },
       {
         icon: Globe,
-        title: 'Links e vinculos',
-        description: 'Gerencie conexoes, vinculos e relacoes da identidade ativa.',
+        title: 'Links e vínculos',
+        description: 'Gerencie conexões, vínculos e relações da identidade ativa.',
         onClick: () => navigate(appUrls.profile.settings('links')),
       },
       ...(canManageProfileMembers
@@ -178,25 +178,25 @@ export function useProfileHub() {
         : []),
       {
         icon: Settings2,
-        title: 'Configuracoes operacionais',
-        description: 'Residencia, areas de atuacao e preferencias operacionais do contexto atual.',
+        title: 'Configurações operacionais',
+        description: 'Residência, áreas de atuação e preferências operacionais do contexto atual.',
         onClick: () => navigate(appUrls.profile.addresses),
       },
       {
         icon: Bell,
-        title: 'Notificacoes',
-        description: 'Veja avisos recentes, nao lidas e acessos do sistema.',
+        title: 'Notificações',
+        description: 'Veja avisos recentes, não lidas e acessos do sistema.',
         badge: notifications.unread > 0 ? `${notifications.unread}` : undefined,
         onClick: () => navigate(appUrls.notifications),
       },
       {
         icon: Globe,
-        title: 'Perfil publico',
-        description: 'Abra a versao publica da identidade ativa.',
-        badge: canOpenPublicProfile ? 'Ativo' : 'Indisponivel',
+        title: 'Perfil público',
+        description: 'Abra a versão pública da identidade ativa.',
+        badge: canOpenPublicProfile ? 'Ativo' : 'Indisponível',
         onClick: () => {
           if (!canOpenPublicProfile) {
-            toast.error('Perfil publico indisponivel para a identidade atual');
+            toast.error('Perfil público indisponível para a identidade atual');
             return;
           }
           navigate(buildPublicProfileUrl(handle));
@@ -226,21 +226,21 @@ export function useProfileHub() {
       },
       {
         icon: MapPin,
-        title: 'Mapa e territorio',
-        description: 'Mapa principal, exploracao territorial e contexto local.',
+        title: 'Mapa e território',
+        description: 'Mapa principal, exploração territorial e contexto local.',
         onClick: () => navigate(appUrls.map),
       },
       {
         icon: Users,
-        title: 'Familia',
-        description: 'Vinculos familiares, rastreamento e zonas seguras.',
+        title: 'Família',
+        description: 'Vínculos familiares, rastreamento e zonas seguras.',
         onClick: () => navigate(appUrls.family.home),
         surface: 'familySafety' as const,
       },
       {
         icon: Settings2,
-        title: 'Residencia e areas',
-        description: 'Residencia, areas de atuacao e preferencias operacionais.',
+        title: 'Residência e áreas',
+        description: 'Residência, áreas de atuação e preferências operacionais.',
         onClick: () => navigate(appUrls.profile.addresses),
       },
     ].filter((item) => !item.surface || isLaunchSurfaceEnabled(item.surface)),
@@ -251,39 +251,39 @@ export function useProfileHub() {
     () => [
       {
         icon: Building2,
-        title: 'Empresas do territorio',
-        description: 'Explore empresas, presenca local e operacao publica ja ativa.',
+        title: 'Empresas do território',
+        description: 'Explore empresas, presença local e operação pública já ativa.',
         onClick: () => navigate(appUrls.business.list),
       },
       {
         icon: Wrench,
-        title: 'Servicos',
-        description: 'Descubra profissionais e servicos publicados no territorio atual.',
+        title: 'Serviços',
+        description: 'Descubra profissionais e serviços publicados no território atual.',
         onClick: () => navigate(appUrls.services.list),
       },
       {
         icon: UtensilsCrossed,
         title: 'Gastronomia',
-        description: 'Acesse a vitrine gastronomica e os negocios com vertical ativa.',
+        description: 'Acesse a vitrine gastronômica e os negócios com vertical ativa.',
         onClick: () => navigate(GLOBAL_MODULE_URLS.gastronomy),
       },
       {
         icon: Bookmark,
         title: 'Favoritos gastro',
-        description: 'Entrada rapida para seus favoritos de gastronomia.',
+        description: 'Entrada rápida para seus favoritos de gastronomia.',
         onClick: () => navigate(GLOBAL_MODULE_URLS.gastronomyFavorites),
       },
       {
         icon: MessageSquare,
         title: 'Comunidade',
-        description: 'Postagens, recomendacoes e conteudo territorial.',
+        description: 'Postagens, recomendações e conteúdo territorial.',
         onClick: () => navigate(appUrls.community.feed),
         surface: 'community' as const,
       },
       {
         icon: Globe,
-        title: 'Pontos turisticos',
-        description: 'Vertical publica de pontos turisticos e conteudo territorial.',
+        title: 'Pontos turísticos',
+        description: 'Vertical pública de pontos turísticos e conteúdo territorial.',
         onClick: () => navigate(GLOBAL_MODULE_URLS.touristPoints),
       },
     ].filter((item) => !item.surface || isLaunchSurfaceEnabled(item.surface)),
@@ -304,16 +304,16 @@ export function useProfileHub() {
       [
         !territoryLabel
           ? {
-              title: 'Definir residencia ou territorio',
-              description: 'Ainda faltam sinais territoriais para personalizacao e descoberta local.',
-              actionLabel: 'Abrir enderecos',
+              title: 'Definir residência ou território',
+              description: 'Ainda faltam sinais territoriais para personalização e descoberta local.',
+              actionLabel: 'Abrir endereços',
               onClick: () => navigate(appUrls.profile.addresses),
             }
           : null,
         !canOpenPublicProfile
           ? {
-              title: 'Completar identidade publica',
-              description: 'O perfil ativo ainda nao tem handle publico pronto para compartilhamento.',
+              title: 'Completar identidade pública',
+              description: 'O perfil ativo ainda não tem handle público pronto para compartilhamento.',
               actionLabel: 'Editar perfil',
               onClick: () => {
                 if (!activeProfileId) return;
@@ -323,17 +323,17 @@ export function useProfileHub() {
           : null,
         showBusinessOnboarding
           ? {
-              title: 'Ativar operacao empresarial',
+              title: 'Ativar operação empresarial',
               description:
-                'Este perfil ja pode entrar no fluxo de empresa, dashboard, billing e verticalizacao.',
+                'Este perfil já pode entrar no fluxo de empresa, dashboard, billing e verticalização.',
               actionLabel: 'Criar empresa',
               onClick: () => navigate(appUrls.business.create),
             }
           : null,
         notifications.unread > 0
           ? {
-              title: 'Triar notificacoes pendentes',
-              description: `Existem ${notifications.unread} notificacoes nao lidas aguardando acao.`,
+              title: 'Triar notificações pendentes',
+              description: `Existem ${notifications.unread} notificações não lidas aguardando ação.`,
               actionLabel: 'Ver avisos',
               onClick: () => navigate(appUrls.notifications),
             }
@@ -377,7 +377,7 @@ export function useProfileHub() {
       await navigator.clipboard.writeText(`${window.location.origin}${value}`);
       toast.success(`${label} copiado`);
     } catch {
-      toast.error(`Nao foi possivel copiar ${label.toLowerCase()}`);
+      toast.error(`Não foi possível copiar ${label.toLowerCase()}`);
     }
   };
 

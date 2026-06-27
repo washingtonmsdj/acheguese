@@ -57,7 +57,7 @@ export function ResumoSection({
                 Sua identidade, dados pessoais e atalhos seguros em um único lugar.
               </h2>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-                A conta mostra sua area pessoal. Empresas e rotinas administrativas ficam na Central para manter a separacao de responsabilidades.
+                A conta mostra sua área pessoal. Empresas e rotinas administrativas ficam na Central para manter a separação de responsabilidades.
               </p>
             </div>
           </div>
@@ -79,7 +79,7 @@ export function ResumoSection({
             >
               <MapPin className="h-5 w-5 text-primary" />
               <p className="mt-3 text-sm font-semibold text-foreground">Endereço pessoal</p>
-              <p className="mt-1 text-xs text-muted-foreground">Residencia e verificação territorial.</p>
+              <p className="mt-1 text-xs text-muted-foreground">Residência e verificação territorial.</p>
             </button>
             <button
               type="button"
@@ -107,7 +107,7 @@ export function ResumoSection({
           />
           <DashboardMetricCard
             icon={Building2}
-            label="Areas vinculadas"
+            label="Áreas vinculadas"
             value={totalOperationalAssets}
             description="Empresas, serviços e classificados"
           />
@@ -143,7 +143,7 @@ export function ResumoSection({
           <HubLinkCard
             icon={Bell}
             title="Notificações"
-            description="Avisos e pendencias recentes."
+            description="Avisos e pendências recentes."
             badge={notifications.unread > 0 ? `${notifications.unread}` : undefined}
             onClick={() => setActiveSection("notificacoes")}
           />
@@ -174,8 +174,8 @@ export function ResumoSection({
           {showFamilySafetyLinks ? (
             <HubLinkCard
               icon={Users}
-              title="Familia"
-              description="Vinculos familiares e zonas seguras."
+              title="Família"
+              description="Vínculos familiares e zonas seguras."
               onClick={() => navigate(appUrls.family.home)}
             />
           ) : null}

@@ -39,7 +39,7 @@ test.describe("Business Create Form", () => {
     });
 
     await expect(
-      page.getByRole("heading", { name: "Cadastrar instituicao de ensino" }),
+      page.getByRole("heading", { name: /Cadastrar .* ensino/i }),
     ).toBeVisible({ timeout: 30_000 });
 
     await page.locator("#name").fill(`E2E Escola Fluxo ${Date.now()}`);

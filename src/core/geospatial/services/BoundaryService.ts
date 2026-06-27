@@ -87,6 +87,7 @@ interface BoundaryQueryError {
 const DEFAULT_LOCATION_CACHE_TTL_MS = 5 * 60 * 1000;
 const DEFAULT_CUSTOM_BOUNDARIES_ENABLED =
   import.meta.env.VITE_ENABLE_LOCATION_BOUNDARIES === 'true';
+const FALLBACK_BOUNDARY_RINGS_KEY = 'fallback_boundary_rings';
 
 function normalizeText(value?: string | null): string {
   return (value ?? '')
@@ -106,6 +107,10 @@ function getLocationCenterFromMetadata(location: Location): [number, number] | n
   return isUsableCenter(latitude, longitude)
     ? [latitude as number, longitude as number]
     : null;
+}
+
+function isPublicFallbackLocation(location: Location): boolean {
+  return location.metadata?.public_fallback === true;
 }
 
 function isUsableCenter(
@@ -181,6 +186,15 @@ class BoundaryServiceClass {
       return this.resolveBoundsForLocation(city);
     } catch (error) {
       logger.error('[BoundaryService] Error getting neighborhood bounds', error);
+      return { rings: [], center: this.FALLBACK_CENTER };
+    }
+  }
+
+  async getLocationBounds(location: Location | null): Promise<BoundsResult> {
+    try {
+      return this.resolveBoundsForLocation(location);
+    } catch (error) {
+      logger.error('[BoundaryService] Error getting location bounds', error);
       return { rings: [], center: this.FALLBACK_CENTER };
     }
   }
@@ -300,6 +314,24 @@ class BoundaryServiceClass {
       return { rings: [], center: this.FALLBACK_CENTER };
     }
 
+    if (isPublicFallbackLocation(location)) {
+      const metadataFallbackBoundary = this.getFallbackBoundaryFromMetadata(location);
+      if (metadataFallbackBoundary) return metadataFallbackBoundary;
+
+      const canonicalLocation = await this.resolveCanonicalLocationForFallback(location);
+      if (canonicalLocation) {
+        return this.resolveBoundsForLocation(canonicalLocation);
+      }
+
+      const metadataSourceBoundary = await this.getMetadataSourceBoundary(location);
+      if (metadataSourceBoundary) return metadataSourceBoundary;
+
+      return {
+        rings: [],
+        center: getLocationCenterFromMetadata(location) ?? this.FALLBACK_CENTER,
+      };
+    }
+
     const customBoundary = await this.getCustomBoundary(location.id);
     if (customBoundary) return customBoundary;
 
@@ -314,6 +346,61 @@ class BoundaryServiceClass {
 
     const center = await this.resolveLocationCenter(location);
     return { rings: [], center };
+  }
+
+  private async resolveCanonicalLocationForFallback(location: Location): Promise<Location | null> {
+    if (!location.geographic_path) {
+      return null;
+    }
+
+    try {
+      const canonical = await this.locationRepository.findByPath(location.geographic_path);
+      if (!canonical || canonical.id === location.id || isPublicFallbackLocation(canonical)) {
+        return null;
+      }
+
+      return canonical;
+    } catch (error) {
+      logger.warn('[BoundaryService] Canonical fallback location unavailable', {
+        locationId: location.id,
+        geographicPath: location.geographic_path,
+        error,
+      });
+      return null;
+    }
+  }
+
+  private getFallbackBoundaryFromMetadata(location: Location): BoundsResult | null {
+    const rawRings = location.metadata?.[FALLBACK_BOUNDARY_RINGS_KEY];
+    if (!Array.isArray(rawRings)) {
+      return null;
+    }
+
+    const rings = rawRings
+      .map((rawRing) => {
+        if (!Array.isArray(rawRing)) {
+          return [];
+        }
+
+        return rawRing.filter((candidate): candidate is [number, number] => {
+          if (!Array.isArray(candidate) || candidate.length < 2) {
+            return false;
+          }
+
+          const [latitude, longitude] = candidate;
+          return isUsableCenter(latitude, longitude);
+        });
+      })
+      .filter((ring): ring is [number, number][] => ring.length >= 3);
+
+    if (rings.length === 0) {
+      return null;
+    }
+
+    return {
+      rings,
+      center: getLocationCenterFromMetadata(location) ?? this.calculateCenter(rings),
+    };
   }
 
   private async getInlineLocationBoundary(

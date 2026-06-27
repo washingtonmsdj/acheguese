@@ -25,6 +25,8 @@ import { APP_MODULE_SLUGS, isAppModulePath } from '@/config/moduleSlugs';
 import { TERRITORY_CONFIG } from '@/config/territory';
 import type { Location, TerritorialGroupWithMembers } from '@/core/location/types';
 import { isTerritoryPubliclyNavigable } from '../utils/territoryVisibility';
+import { parsePublicTerritoryPath } from '../utils/publicTerritoryPath';
+import { resolvePublicTerritoryFallback } from '../utils/publicTerritoryFallbacks';
 
 export const TERRITORY_RESOLVE_STATUS = {
   IDLE: 'idle',
@@ -51,6 +53,40 @@ export interface TerritoryResolveResult {
   error: string | null;
 }
 
+const RESOLVE_TIMEOUT_MS = 6000;
+
+function createResolvedFallbackResult(fallback: ResolvedTerritory): TerritoryResolveResult | null {
+  if (!fallback) return null;
+
+  return {
+    status:
+      fallback.kind === 'group'
+        ? TERRITORY_RESOLVE_STATUS.RESOLVED_GROUP
+        : TERRITORY_RESOLVE_STATUS.RESOLVED_LOCATION,
+    resolved: fallback,
+    error: null,
+  };
+}
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs = RESOLVE_TIMEOUT_MS): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = window.setTimeout(() => {
+      reject(new Error(`Territory resolution timeout after ${timeoutMs}ms`));
+    }, timeoutMs);
+
+    promise.then(
+      (value) => {
+        window.clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        window.clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
+
 export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
   const location = useLocation();
   const params = useParams<{
@@ -64,11 +100,16 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
   }>();
 
   const pathname = location.pathname;
+  const parsedPath = parsePublicTerritoryPath(pathname);
   const country = params.country ?? TERRITORY_CONFIG.defaultCountry;
-  const state = params.state;
-  const city = params.city;
+  const state = params.state ?? parsedPath.state;
+  const city = params.city ?? parsedPath.city;
   const groupSlug = params.groupSlug;
-  const districtSlug = params.territorySlug || params.district || params.groupSlugOrDistrict;
+  const districtSlug =
+    params.territorySlug ||
+    params.district ||
+    params.groupSlugOrDistrict ||
+    parsedPath.territorySlug;
 
   const isGuideRoute = isAppModulePath(pathname, APP_MODULE_SLUGS.touristPoints);
   const isCommunityRoute = isAppModulePath(pathname, APP_MODULE_SLUGS.community);
@@ -80,7 +121,25 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
   });
 
   useEffect(() => {
-    if (!country || !state || !city) return;
+    const fallback = resolvePublicTerritoryFallback({
+      state,
+      city,
+      territorySlug: groupSlug || districtSlug,
+    });
+
+    if (!country || !state || !city) {
+      const fallbackResult = createResolvedFallbackResult(fallback);
+      if (fallbackResult) {
+        setResult(fallbackResult);
+      } else {
+        setResult({
+          status: TERRITORY_RESOLVE_STATUS.NOT_FOUND,
+          resolved: null,
+          error: `Território inválido na URL: ${pathname}`,
+        });
+      }
+      return;
+    }
 
     let cancelled = false;
     setResult({ status: TERRITORY_RESOLVE_STATUS.LOADING, resolved: null, error: null });
@@ -89,7 +148,7 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
       try {
         const locationRepo = createLocationRepository();
         const cityPath = `/${country}/${state}/${city}`;
-        const cityLocation = await locationRepo.findByPath(cityPath);
+        const cityLocation = await withTimeout(locationRepo.findByPath(cityPath));
 
         if (!cityLocation) {
           if (!cancelled) setResult({ status: TERRITORY_RESOLVE_STATUS.NOT_FOUND, resolved: null, error: `Cidade não encontrada: ${cityPath}` });
@@ -117,7 +176,7 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
 
         if (groupSlug) {
           const groupRepo = createTerritorialGroupRepository();
-          const group = await groupRepo.findBySlugAndCity(groupSlug, cityLocation.id);
+          const group = await withTimeout(groupRepo.findBySlugAndCity(groupSlug, cityLocation.id));
 
           if (!group) {
             if (!cancelled) setResult({ status: TERRITORY_RESOLVE_STATUS.NOT_FOUND, resolved: null, error: `Grupo não encontrado: ${groupSlug}` });
@@ -136,7 +195,7 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
             return;
           }
 
-          const withMembers = await groupRepo.findWithMembers(group.id);
+          const withMembers = await withTimeout(groupRepo.findWithMembers(group.id));
           if (!withMembers) {
             if (!cancelled) setResult({ status: TERRITORY_RESOLVE_STATUS.NOT_FOUND, resolved: null, error: `Grupo sem membros: ${groupSlug}` });
             return;
@@ -157,11 +216,13 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
         }
 
         if (districtSlug) {
-          const communityRoute = await TerritoryCommunityRouteService.resolveByCityAndSlug(cityLocation.id, districtSlug);
+          const communityRoute = await withTimeout(
+            TerritoryCommunityRouteService.resolveByCityAndSlug(cityLocation.id, districtSlug),
+          );
           if (communityRoute) {
             if (communityRoute.territory_type === 'territorial_group') {
               const groupRepo = createTerritorialGroupRepository();
-              const withMembers = await groupRepo.findWithMembers(communityRoute.territory_id);
+              const withMembers = await withTimeout(groupRepo.findWithMembers(communityRoute.territory_id));
               if (withMembers && withMembers.status === 'active' && isTerritoryPubliclyNavigable(withMembers.metadata)) {
                 if (!cancelled) {
                   setResult({
@@ -173,7 +234,7 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
                 return;
               }
             } else {
-              const locationById = await locationRepo.findById(communityRoute.territory_id);
+              const locationById = await withTimeout(locationRepo.findById(communityRoute.territory_id));
               if (
                 locationById &&
                 locationById.status === 'active' &&
@@ -194,9 +255,9 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
 
           if (isCommunityRoute) {
             const groupRepo = createTerritorialGroupRepository();
-            const group = await groupRepo.findBySlugAndCity(districtSlug, cityLocation.id);
+            const group = await withTimeout(groupRepo.findBySlugAndCity(districtSlug, cityLocation.id));
             if (group && group.status === 'active' && isTerritoryPubliclyNavigable(group.metadata)) {
-              const withMembers = await groupRepo.findWithMembers(group.id);
+              const withMembers = await withTimeout(groupRepo.findWithMembers(group.id));
               if (withMembers) {
                 if (!cancelled) {
                   setResult({
@@ -212,15 +273,15 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
         }
 
         const districtPath = `${cityPath}/${districtSlug}`;
-        const districtLocation = await locationRepo.findByPath(districtPath);
+        const districtLocation = await withTimeout(locationRepo.findByPath(districtPath));
 
         if (!districtLocation) {
           // Em rotas de módulo, aceita slug de grupo no padrão público limpo.
           if (!isCommunityRoute) {
             const groupRepo = createTerritorialGroupRepository();
-            const groupBySlug = await groupRepo.findBySlugAndCity(districtSlug!, cityLocation.id);
+            const groupBySlug = await withTimeout(groupRepo.findBySlugAndCity(districtSlug!, cityLocation.id));
             if (groupBySlug && groupBySlug.status === 'active' && isTerritoryPubliclyNavigable(groupBySlug.metadata)) {
-              const withMembers = await groupRepo.findWithMembers(groupBySlug.id);
+              const withMembers = await withTimeout(groupRepo.findWithMembers(groupBySlug.id));
               if (withMembers) {
                 if (!cancelled) {
                   setResult({
@@ -268,7 +329,7 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
 
         if (isCommunityRoute) {
           const groupRepo = createTerritorialGroupRepository();
-          const containingGroups = await groupRepo.findGroupsContainingLocation(districtLocation.id);
+          const containingGroups = await withTimeout(groupRepo.findGroupsContainingLocation(districtLocation.id));
           const eligibleGroups = containingGroups.filter(
             (group) =>
               group.status === 'active' &&
@@ -278,7 +339,7 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
 
           // Evita ambiguidade: promove para grupo apenas quando há associação única.
           if (eligibleGroups.length === 1) {
-            const withMembers = await groupRepo.findWithMembers(eligibleGroups[0].id);
+            const withMembers = await withTimeout(groupRepo.findWithMembers(eligibleGroups[0].id));
             if (withMembers && withMembers.status === 'active' && isTerritoryPubliclyNavigable(withMembers.metadata)) {
               if (!cancelled) {
                 setResult({
@@ -294,6 +355,12 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
 
         if (!cancelled) setResult({ status: TERRITORY_RESOLVE_STATUS.RESOLVED_LOCATION, resolved: { kind: 'location', location: districtLocation }, error: null });
       } catch (err) {
+        const fallbackResult = createResolvedFallbackResult(fallback);
+        if (!cancelled && fallbackResult) {
+          setResult(fallbackResult);
+          return;
+        }
+
         if (!cancelled) {
           setResult({ status: TERRITORY_RESOLVE_STATUS.ERROR, resolved: null, error: err instanceof Error ? err.message : 'Erro desconhecido' });
         }

@@ -53,14 +53,14 @@ function LaunchPausedProfileSection({ navigate }: { navigate: (path: string) => 
   return (
     <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-        MVP publico
+        MVP público
       </p>
       <h2 className="mt-3 text-xl font-bold text-foreground">
-        Este modulo esta separado para ajustes.
+        Este módulo está separado para ajustes.
       </h2>
       <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-        A conta fica focada em identidade, empresas, servicos e notificacoes do lancamento.
-        Rotinas operacionais pausadas continuam preservadas fora da superficie publica.
+        A conta fica focada em identidade, empresas, serviços e notificações do lançamento.
+        Rotinas operacionais pausadas continuam preservadas fora da superfície pública.
       </p>
       <Button className="mt-5" variant="outline" onClick={() => navigate("/central")}>
         Abrir Central
@@ -275,7 +275,7 @@ export default function ContaHubPage() {
               Tentar novamente
             </Button>
             <Button variant="outline" onClick={() => navigate(data.appUrls.home)}>
-              Ir para inicio
+              Ir para início
             </Button>
           </div>
         </div>
@@ -292,7 +292,7 @@ export default function ContaHubPage() {
         <div className="w-full rounded-lg border border-border bg-card p-8 text-center shadow-sm">
           <Users className="mx-auto h-10 w-10 text-primary" />
           <h1 className="mt-4 text-xl font-semibold text-foreground">
-            Nenhuma identidade ativa disponivel
+            Nenhuma identidade ativa disponível
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Sua conta carregou, mas ainda não há um perfil operacional ativo.

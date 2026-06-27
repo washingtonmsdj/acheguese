@@ -33,7 +33,7 @@ export function NotificationsPanel({
   return (
     <SectionFrame
       title="Notificações recentes"
-      description="Ultimos sinais do sistema para o perfil ativo, sem sair do hub."
+      description="Últimos sinais do sistema para o perfil ativo, sem sair do hub."
       action={
         <Button variant="ghost" size="sm" className="gap-1.5" onClick={onViewAll}>
           <Bell className="h-4 w-4" />
@@ -79,7 +79,7 @@ export function NotificationsPanel({
         </div>
       ) : (
         <p className="text-sm text-muted-foreground">
-          Nenhuma notificacao recente consolidada para este perfil.
+          Nenhuma notificação recente consolidada para este perfil.
         </p>
       )}
     </SectionFrame>

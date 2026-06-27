@@ -73,25 +73,7 @@ export function useTerritoryPolygon(
 
       try {
         if (resolved.kind === 'location') {
-          const parsed = parseGeoPath(resolved.location.geographic_path);
-          if (!parsed) {
-            setPolygons([]);
-            return;
-          }
-
-          // Cidade: path com 3 partes (/br/state/city)
-          // Bairro: path com 4 partes (/br/state/city/district)
-          const result = parsed.neighborhood
-            ? await boundaryService.getNeighborhoodBounds({
-                neighborhood: parsed.neighborhood,
-                city: parsed.city,
-                state: parsed.state,
-                locationId: resolved.location.id,
-              })
-            : await boundaryService.getCityBounds({
-                city: parsed.city,
-                state: parsed.state,
-              });
+          const result = await boundaryService.getLocationBounds(resolved.location);
 
           if (cancelled) return;
 
@@ -111,12 +93,7 @@ export function useTerritoryPolygon(
             members.map((m) => {
               const parsed = parseGeoPath(m.geographic_path);
               if (!parsed) return Promise.resolve(null);
-              return boundaryService.getNeighborhoodBounds({
-                neighborhood: parsed.neighborhood,
-                city: parsed.city,
-                state: parsed.state,
-                locationId: m.id,
-              }).then((r) => ({ member: m, result: r }));
+              return boundaryService.getLocationBounds(m).then((r) => ({ member: m, result: r }));
             }),
           );
 

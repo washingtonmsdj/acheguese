@@ -26,9 +26,9 @@ type SortValue = "recent" | "popular";
 
 const TYPE_OPTIONS: Array<{ value: TypeFilterValue; label: string }> = [
   { value: "all", label: "Todos os tipos" },
-  { value: "discussao", label: "Discussao" },
+  { value: "discussao", label: "Discussão" },
   { value: "pergunta", label: "Pergunta" },
-  { value: "recomendacao", label: "Recomendacao" },
+  { value: "recomendacao", label: "Recomendação" },
   { value: "enquete", label: "Enquete" },
   { value: "achados_e_perdidos", label: "Achados e perdidos" },
 ];

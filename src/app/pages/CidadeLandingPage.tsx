@@ -87,6 +87,7 @@ import type { Post } from "@/core/posts/types";
 import { useTerritorialContextOptional } from "@/core/routing/components/TerritorialLayout";
 import { useCommunityUrls } from "@/core/routing/hooks/useCommunityUrls";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
+import { parsePublicTerritoryPath } from "@/core/routing/utils/publicTerritoryPath";
 import { buildCommunityScopedUrl } from "@/core/routing/utils/territoryUrls";
 import { formatCategory, formatMetric, formatPrice } from "./CidadeLanding.constants";
 import { formatRelativeTime, getBusinessPublicUrl, getTextPreview, withQueryParams } from "./CidadeLanding.utils";
@@ -103,7 +104,10 @@ import {
   type NeighborhoodAccessStatus,
   type PopulationMetric,
 } from "./CidadeLanding.neighborhood-panels";
-import { NeighborhoodTerritoryHero } from "./CidadeLanding.neighborhood-hero";
+import {
+  NeighborhoodTerritoryHero,
+} from "./CidadeLanding.neighborhood-hero";
+import { NeighborhoodTerritoryArt } from "@/core/community/components/public/NeighborhoodTerritoryArt";
 import "./CidadeLandingPage.css";
 
 type Coordinates = {
@@ -216,6 +220,18 @@ function slugify(value: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
+function slugToTerritoryLabel(slug: string): string {
+  const lowercaseWords = new Set(["de", "da", "do", "das", "dos", "e", "em", "a", "o"]);
+  return slug
+    .split("-")
+    .filter(Boolean)
+    .map((part, index) => {
+      if (index > 0 && lowercaseWords.has(part)) return part;
+      return part.charAt(0).toUpperCase() + part.slice(1);
+    })
+    .join(" ");
+}
+
 function isSalvadorRoute(state: string, city: string): boolean {
   return normalizeText(state) === "ba" && normalizeText(city) === "salvador";
 }
@@ -266,6 +282,12 @@ function getResolvedTerritoryName(resolved: ResolvedTerritory | null, fallback: 
   return resolved.kind === "group" ? resolved.group.name : resolved.location.name;
 }
 
+function getPublicTerritoryDisplayName(pathname: string, resolved: ResolvedTerritory | null, fallback: string): string {
+  const parsed = parsePublicTerritoryPath(pathname);
+  if (parsed.territorySlug) return slugToTerritoryLabel(parsed.territorySlug);
+  return getResolvedTerritoryName(resolved, fallback);
+}
+
 function getResolvedTerritoryCenter(resolved: ResolvedTerritory | null): Coordinates | null {
   const locations = getResolvedTerritoryLocations(resolved);
   const centers = locations.map(getLocationCenter).filter((center): center is Coordinates => Boolean(center));
@@ -284,6 +306,20 @@ const POPULATION_METADATA_FIELDS = [
   { key: "residents_count", sourceLabel: "cadastro local" },
   { key: "moradores_count", sourceLabel: "cadastro local" },
   { key: "residents", sourceLabel: "cadastro local" },
+] as const;
+
+const BUSINESS_COUNT_METADATA_FIELDS = [
+  "businesses_count",
+  "business_count",
+  "active_businesses",
+  "verified_businesses_count",
+] as const;
+
+const SERVICES_COUNT_METADATA_FIELDS = [
+  "services_count",
+  "service_count",
+  "professionals_count",
+  "verified_services_count",
 ] as const;
 
 function getLocationPopulationMetric(location: Location): PopulationMetric | null {
@@ -310,6 +346,30 @@ function getResolvedPopulationMetric(resolved: ResolvedTerritory | null): Popula
     value: values.reduce((sum, metric) => sum + (metric.value ?? 0), 0),
     sourceLabel,
   };
+}
+
+function getLocationNumericMetric(
+  location: Location,
+  fields: readonly string[],
+): number | null {
+  for (const field of fields) {
+    const value = getFiniteNumber(location.metadata[field]);
+    if (value != null) return value;
+  }
+
+  return null;
+}
+
+function getResolvedNumericMetric(
+  resolved: ResolvedTerritory | null,
+  fields: readonly string[],
+): number | undefined {
+  const values = getResolvedTerritoryLocations(resolved)
+    .map((location) => getLocationNumericMetric(location, fields))
+    .filter((value): value is number => typeof value === "number" && Number.isFinite(value) && value > 0);
+
+  if (values.length === 0) return undefined;
+  return values.reduce((sum, value) => sum + value, 0);
 }
 
 function getNeighborhoodAccessStatus(
@@ -1220,13 +1280,22 @@ function NeighborhoodLandingContent({
   isLoading: boolean;
 }) {
   const [activeStreamTab, setActiveStreamTab] = useState<NeighborhoodCommunityTabId>("all");
-  const territoryName = getResolvedTerritoryName(resolved, cityLabel);
+  const routeLocation = useLocation();
+  const territoryName = getPublicTerritoryDisplayName(routeLocation.pathname, resolved, cityLabel);
   const memberLocations = getResolvedTerritoryLocations(resolved);
   const memberCount = Math.max(memberLocations.length, 1);
   const isGroup = resolved.kind === "group";
   const population = getResolvedPopulationMetric(resolved);
-  const businessCount = firstMetric(stats?.businesses, businesses.length);
-  const servicesCount = firstMetric(stats?.services, services.length);
+  const businessCount = firstMetric(
+    stats?.businesses,
+    getResolvedNumericMetric(resolved, BUSINESS_COUNT_METADATA_FIELDS),
+    businesses.length,
+  );
+  const servicesCount = firstMetric(
+    stats?.services,
+    getResolvedNumericMetric(resolved, SERVICES_COUNT_METADATA_FIELDS),
+    services.length,
+  );
   const mapZoom = polygons.length > 1 ? 12.3 : polygons.length === 1 ? 13.3 : 12.2;
   const canInteract = accessStatus === "verified";
   const enterLoginHref = withQueryParams("/login", { redirect: urls.feed });
@@ -1246,17 +1315,18 @@ function NeighborhoodLandingContent({
     classifieds,
     gastronomyItems,
     urls,
+    territoryName,
   });
   const streamItems = streamGroups[activeStreamTab] ?? streamGroups.all;
   const streamMoreConfig = getNeighborhoodStreamMoreConfig(activeStreamTab, urls);
   const tabs: NeighborhoodCommunityTab[] = [
-    { id: "all", label: "Tudo", icon: LayoutGrid },
-    { id: "feed", label: "Feed", icon: List },
-    { id: "business", label: "Empresas", icon: Store },
-    { id: "services", label: "Serviços", icon: Wrench },
-    { id: "classifieds", label: "Classificados", icon: Tag },
-    { id: "gastronomy", label: "Gastronomia", icon: UtensilsCrossed },
-    { id: "map", label: "Mapa", icon: MapPin },
+    { id: "all", label: "Tudo", shortLabel: "Tudo", icon: LayoutGrid },
+    { id: "feed", label: "Feed", shortLabel: "Feed", icon: List },
+    { id: "business", label: "Empresas", shortLabel: "Emp.", icon: Store },
+    { id: "services", label: "Serviços", shortLabel: "Serv.", icon: Wrench },
+    { id: "classifieds", label: "Classificados", shortLabel: "Class.", icon: Tag },
+    { id: "gastronomy", label: "Gastronomia", shortLabel: "Gast.", icon: UtensilsCrossed },
+    { id: "map", label: "Mapa", shortLabel: "Mapa", icon: MapPin },
   ];
 
   return (
@@ -1285,14 +1355,10 @@ function NeighborhoodLandingContent({
         stateLabel={stateLabel}
         isGroup={isGroup}
         memberCount={memberCount}
-        population={population}
-        businessCount={businessCount ?? businesses.length}
-        servicesCount={servicesCount ?? services.length}
         polygons={polygons}
         markers={markers}
         enterHref={enterHref}
         interactionHref={interactionHref}
-        verifyHref={verifyHref}
         canInteract={canInteract}
       />
 
@@ -1318,22 +1384,13 @@ function NeighborhoodLandingContent({
                 <ExternalLink aria-hidden="true" />
               </Link>
             </div>
-            <CityMapPanel
-              urls={urls}
-              markers={markers}
-              polygons={polygons}
-              resolved={resolved}
-              center={center}
-              cityLabel={territoryName}
-              isLoading={isLoading}
-              onMarkerClick={onMarkerClick}
-              mapStyleUrl={DARK_TILE_STYLE.styleUrl}
-              zoom={mapZoom}
-              showFilters={false}
-              fitTerritoryBounds={polygons.length > 0}
-              territoryFitPadding={14}
-              territoryFitMaxZoom={12.8}
-            />
+            <div className="neighborhood-community-map-preview" aria-hidden="true">
+              <NeighborhoodTerritoryArt
+                polygons={polygons}
+                markers={markers}
+                decorative
+              />
+            </div>
             <div className="neighborhood-community-map-legend" aria-label="Categorias do mapa do bairro">
               <span className="is-blue">
                 <Store aria-hidden="true" />
@@ -1497,7 +1554,7 @@ export default function CidadeLandingPage() {
     );
   }, [city, moduleTerritory.centerCoords, moduleTerritory.location, routeResolved, state, territoryPolygons]);
 
-  const weatherLabel = routeResolved ? getResolvedTerritoryName(routeResolved, territoryLabel) : territoryLabel;
+  const weatherLabel = routeResolved ? getPublicTerritoryDisplayName(location.pathname, routeResolved, territoryLabel) : territoryLabel;
   const temperature = useCurrentTemperature(territoryCenter, weatherLabel);
 
   const cityLocationId =

@@ -27,6 +27,10 @@ export interface TerritorialCommunityProfile {
   sort_order: number;
 }
 
+function isPublicFallbackResolved(resolved: ResolvedTerritory): boolean {
+  return resolved.kind === "location" && resolved.location.metadata?.public_fallback === true;
+}
+
 function fallbackFromResolved(resolved: ResolvedTerritory): TerritorialCommunityProfile {
   if (resolved.kind === "location" && resolved.location.type === "city") {
     return {
@@ -97,6 +101,10 @@ export class CommunityExperienceService {
   static async getCommunityProfile(resolved: ResolvedTerritory): Promise<TerritorialCommunityProfile> {
     if (!resolved) {
       throw new Error("resolved territory is required");
+    }
+
+    if (isPublicFallbackResolved(resolved)) {
+      return fallbackFromResolved(resolved);
     }
 
     const territoryType: CommunityTerritoryType =

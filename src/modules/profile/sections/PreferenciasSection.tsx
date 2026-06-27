@@ -1,8 +1,8 @@
 /**
  * PreferenciasSection - Seção de preferências da conta
  *
- * SSOT: Componente isolado com props tipadas
- * Sem gambiarras: Lógica clara e organizada
+ * SSOT: componente isolado com props tipadas
+ * Sem gambiarras: lógica clara e organizada
  */
 
 import { Settings2, Shield, Users } from "lucide-react";
@@ -26,7 +26,7 @@ export function PreferenciasSection({
           <HubLinkCard
             icon={Shield}
             title="Privacidade do perfil"
-            description="Controle visibilidade e dados publicos."
+            description="Controle visibilidade e dados públicos."
             onClick={() => navigate(appUrls.profile.settings("privacy"))}
           />
           <HubLinkCard
@@ -39,7 +39,7 @@ export function PreferenciasSection({
             <HubLinkCard
               icon={Users}
               title="Membros do perfil"
-              description="Convites e permissões do perfil empresarial/profissional."
+              description="Convites e permissões do perfil empresarial ou profissional."
               onClick={() => navigate(appUrls.profile.settings("members"))}
             />
           ) : null}

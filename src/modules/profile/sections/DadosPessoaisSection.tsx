@@ -1,8 +1,8 @@
 /**
- * DadosPessoaisSection - Seção de dados pessoais do perfil
+ * DadosPessoaisSection - Secao de dados pessoais do perfil
  *
  * SSOT: Componente isolado com props tipadas
- * Sem gambiarras: Lógica clara e organizada
+ * Sem gambiarras: Logica clara e organizada
  */
 
 import {
@@ -20,10 +20,10 @@ import {
 } from "lucide-react";
 
 import {
-  SectionFrame,
+  ContentTabsSection,
   HubLinkCard,
   ProfileStats,
-  ContentTabsSection,
+  SectionFrame,
 } from "@/modules/profile/components/hub";
 import { ResidentVerificationCard } from "@/modules/profile/components/ResidentVerificationCard";
 import { CivicEngagementCard } from "@/modules/profile/components/CivicEngagementCard";
@@ -49,7 +49,6 @@ export function DadosPessoaisSection({
 
   return (
     <div className="space-y-6">
-      {/* Estatísticas Pessoais */}
       <ProfileStats
         stats={[
           {
@@ -79,8 +78,6 @@ export function DadosPessoaisSection({
         ]}
       />
 
-      {/* Reputação e Gamificação */}
-      {/* Engajamento Cívico */}
       {(stats.reportsCount || stats.supportsCount) ? (
         <CivicEngagementCard
           reportsCount={stats.reportsCount || 0}
@@ -89,7 +86,6 @@ export function DadosPessoaisSection({
         />
       ) : null}
 
-      {/* Ações Principais */}
       <SectionFrame
         title="Ações da conta"
         description="Gerencie identidade, endereço pessoal, privacidade e preferências sem misturar operação da Central."
@@ -135,7 +131,7 @@ export function DadosPessoaisSection({
           <HubLinkCard
             icon={Bell}
             title="Notificações"
-            description="Preferencias de avisos"
+            description="Preferências de avisos"
             onClick={() => navigate(appUrls.notifications)}
           />
           <HubLinkCard
@@ -168,7 +164,8 @@ export function DadosPessoaisSection({
             <MapPin className="h-5 w-5 text-primary" />
             <h3 className="mt-3 text-sm font-semibold text-foreground">Onde editar o endereço?</h3>
             <p className="mt-1 text-sm leading-6 text-muted-foreground">
-              Use Meus endereços para atualizar residência, território e comprovação. A conta apenas resume e direciona para o local correto.
+              Use Meus endereços para atualizar residência, território e comprovação. A conta
+              apenas resume e direciona para o local correto.
             </p>
             <button
               type="button"
@@ -188,7 +185,6 @@ export function DadosPessoaisSection({
         </div>
       </SectionFrame>
 
-      {/* Conteúdo Pessoal */}
       {user && personalProfileId ? (
         <ContentTabsSection
           userId={user.id}
@@ -204,7 +200,6 @@ export function DadosPessoaisSection({
         />
       ) : null}
 
-      {/* Atividade Recente */}
       {user && personalProfileId ? (
         <SectionFrame
           title="Atividade recente"
