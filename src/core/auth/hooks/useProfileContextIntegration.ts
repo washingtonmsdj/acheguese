@@ -11,7 +11,6 @@ import { useEffect, useState, useCallback } from "react";
 import { profileService } from "@/core/profiles/services";
 import type { ProfileContext } from "@/core/profiles/views/ProfileContext";
 import {
-  toCanonicalProfile,
   toCanonicalProfiles,
   type CanonicalProfile,
 } from "@/core/profiles/mappers";
@@ -22,11 +21,9 @@ import { logger } from "@/shared/utils/logger";
  * Shape canônico de activeProfile — camelCase, alinhado com SessionContext.Profile
  *
  * Este é o ÚNICO contrato de activeProfile no sistema.
- * AuthContext expoe este shape como adapter de compatibilidade.
  *
- * @deprecated Use CanonicalProfile from @/core/profiles/mappers instead
  */
-export interface CanonicalActiveProfile {
+interface AuthActiveProfileSnapshot {
   id: string; // profile.id (ProfileId)
   userId: string; // auth user_id (UserId)
   profileType: string; // 'personal' | 'driver' | 'business' | 'professional'
@@ -49,7 +46,7 @@ interface ProfileIntegrationResult {
   profileContextLoading: boolean;
 
   // Perfil ativo (shape canônico camelCase)
-  activeProfile: CanonicalActiveProfile | null;
+  activeProfile: AuthActiveProfileSnapshot | null;
   activeProfileLoading: boolean;
 
   // ✅ UNIFICADO: Múltiplos perfis agora em camelCase
@@ -142,7 +139,7 @@ export function useProfileContextIntegration(
   // Buscar profile_type do perfil ativo real (agora profiles[] está em camelCase)
   const activeProfileData = profiles.find((p) => p.id === profileContext?.id);
 
-  const activeProfile: CanonicalActiveProfile | null = profileContext
+  const activeProfile: AuthActiveProfileSnapshot | null = profileContext
     ? {
         id: profileContext.id,
         userId: userId || "",
