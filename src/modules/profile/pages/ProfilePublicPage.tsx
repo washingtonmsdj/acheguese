@@ -1,1 +1,0 @@
-export { ProfilePublicPage } from "@/core/profile/pages/ProfilePublicPage";
