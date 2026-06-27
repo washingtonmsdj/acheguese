@@ -55,6 +55,9 @@ export interface SessionProfileView {
   
   /** Estado (snapshot territorial) */
   state: string | null;
+
+  /** Rua (snapshot territorial, quando o usuário permite escopo de rua) */
+  street: string | null;
   
   /** Telefone */
   phone: string | null;
@@ -73,13 +76,5 @@ export interface SessionProfileView {
   
   /** Data/hora de criação */
   createdAt: string;
-  user_id?: string;
-  display_name?: string;
-  avatar_url?: string | null;
-  profile_type?: string;
-  location_id?: string | null;
-  created_at?: string;
-  street?: string | null;
-  [key: string]: unknown;
 }
 

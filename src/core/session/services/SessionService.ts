@@ -20,6 +20,7 @@ interface DbProfileRow {
   city: string | null;
   neighborhood: string | null;
   state: string | null;
+  street: string | null;
   telefone: string | null;
   whatsapp: string | null;
   location_id: string | null;
@@ -409,6 +410,7 @@ export class SessionService {
       city: dbProfile.city,
       neighborhood: dbProfile.neighborhood,
       state: dbProfile.state ?? null,
+      street: dbProfile.street ?? null,
       phone: dbProfile.telefone ?? null,
       whatsapp: dbProfile.whatsapp ?? null,
       locationId: dbProfile.location_id ?? null,
