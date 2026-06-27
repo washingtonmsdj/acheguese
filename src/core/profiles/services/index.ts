@@ -83,7 +83,7 @@ export type {
   ProfileNotificationItem,
   ProfileEffectivePermission,
   ProfilePrivacySettingsInput,
-  ProfileVerificationStatusValue,
+  ProfileVerificationStatus,
 } from "./types";
 export { ProfileError } from "./types";
 

@@ -1,4 +1,4 @@
-import type { ProfileVerificationStatus as ProfileVerificationStatusValue } from "@/core/profile/constants/verificationStatus";
+import type { ProfileVerificationStatus } from "@/core/profile/constants/verificationStatus";
 
 /**
  * Profile account snapshot for UI display.
@@ -13,6 +13,6 @@ export interface ProfileAccountSnapshot {
   suspendedAt?: string;
   suspendedUntil?: string;
   suspensionReason?: string;
-  verificationStatus: ProfileVerificationStatusValue;
+  verificationStatus: ProfileVerificationStatus;
   verificationRejectionReason?: string;
 }

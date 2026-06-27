@@ -112,7 +112,7 @@ export type {
   ProfileNotificationsSnapshot,
   ProfileNotificationItem,
   ProfileEffectivePermission,
-  ProfileVerificationStatusValue,
+  ProfileVerificationStatus,
 } from "./services/types";
 export { ProfileError } from "./services/types";
 export type {

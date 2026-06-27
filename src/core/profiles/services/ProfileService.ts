@@ -20,8 +20,8 @@ import type {
   ProfileSummary,
   ProfileSummaryExtended,
   UpdateProfileData,
-  ProfileVerificationStatusValue,
 } from "./types";
+import type { ProfileVerificationStatus } from "@/core/profile/constants/verificationStatus";
 import type {
   ProfileLikeActivityRecord,
   ProfilePollVoteActivityRecord,

@@ -27,7 +27,7 @@ export type {
   ProfilePrivacySettingsInput,
 } from "./ProfileOperationTypes";
 export type {
-  ProfileVerificationStatus as ProfileVerificationStatusValue,
+  ProfileVerificationStatus,
 } from "@/core/profile/constants/verificationStatus";
 import type { ProfileVerificationStatus } from "@/core/profile/constants/verificationStatus";
 import type { ProfileActivityStats } from "./ProfileOperationTypes";

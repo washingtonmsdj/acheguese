@@ -8,7 +8,6 @@ import type {
 } from "@/core/profiles/contracts/ProfileRuntimeContracts";
 import type {
   Profile,
-  ProfileVerificationStatusValue,
 } from "./types";
 import type { ProfileAssociatedBusiness } from "./ProfileBusinessTypes";
 import type {
