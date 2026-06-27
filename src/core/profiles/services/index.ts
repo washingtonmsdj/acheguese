@@ -62,8 +62,8 @@ export {
 export type {
   Profile,
   ProfileType,
-  CreateProfileData,
-  UpdateProfileData,
+  CreateProfilePayload,
+  UpdateProfilePayload,
   ProfileContext,
   ProfileStatus,
   ProfilePermissions,
@@ -85,7 +85,6 @@ export type {
   ProfilePrivacySettingsInput,
   ProfileVerificationStatus,
 } from "./types";
-export { ProfileError } from "./types";
 
 export type {
   PendingVerification,

@@ -1,11 +1,11 @@
 import { PublicIdentityService } from "@/core/public-identity";
-import type { Profile, UpdateProfileData } from "./types";
+import type { Profile, UpdateProfilePayload } from "./types";
 
 export async function updateProfileCommand(params: {
   profileId: string;
-  updates: UpdateProfileData;
+  updates: UpdateProfilePayload;
   getProfileById: (profileId: string) => Promise<Profile | null>;
-  updateProfileDirect: (profileId: string, updates: UpdateProfileData) => Promise<Profile>;
+  updateProfileDirect: (profileId: string, updates: UpdateProfilePayload) => Promise<Profile>;
 }): Promise<Profile> {
   const { profileId, updates, getProfileById, updateProfileDirect } = params;
 

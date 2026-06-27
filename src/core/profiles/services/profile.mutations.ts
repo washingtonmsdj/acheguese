@@ -11,10 +11,10 @@ import { SessionService } from "@/core/session/services/SessionService";
 import { mediaService } from "@/core/media/services/MediaService";
 import { PublicIdentityService } from "@/core/public-identity";
 import type {
-  CreateProfileData,
+  CreateProfilePayload,
   Profile,
   ProfilePrivacySettingsInput,
-  UpdateProfileData,
+  UpdateProfilePayload,
 } from "./types";
 import type { VerificationWorkflowStatus } from "./profile.service.types";
 import {
@@ -38,7 +38,7 @@ const TABLE = "profiles";
 /**
  * Cria um novo profile
  */
-export async function createProfile(profile: CreateProfileData): Promise<Profile> {
+export async function createProfile(profile: CreateProfilePayload): Promise<Profile> {
   const user = await SessionService.getCurrentUser();
 
   if (!user) {
@@ -81,7 +81,7 @@ export async function createProfile(profile: CreateProfileData): Promise<Profile
 }
 
 export async function createProfileWithIdentityValidation(
-  profile: CreateProfileData,
+  profile: CreateProfilePayload,
 ): Promise<Profile> {
   const user = await SessionService.getCurrentUser();
   if (!user) throw new Error("Not authenticated");
@@ -128,7 +128,7 @@ export async function createProfileWithIdentityValidation(
  */
 export async function updateProfile(
   profileId: string,
-  updates: UpdateProfileData,
+  updates: UpdateProfilePayload,
 ): Promise<Profile> {
   // Se estiver mudando username, validar disponibilidade
   if (updates.username) {
@@ -166,7 +166,7 @@ export async function updateProfile(
 
 export async function updateProfileDirect(
   profileId: string,
-  updates: UpdateProfileData,
+  updates: UpdateProfilePayload,
 ): Promise<Profile> {
   const { data, error } = await supabase
     .from(TABLE)

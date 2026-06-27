@@ -111,8 +111,7 @@ export interface Profile {
   created_at: string;
   updated_at: string;
 }
-/** @deprecated Use CreateProfileInput de @/core/profiles/operations/CreateProfileInput */
-export interface CreateProfileData {
+export interface CreateProfilePayload {
   profile_type: ProfileType;
   name: string;
   display_name?: string;
@@ -127,8 +126,7 @@ export interface CreateProfileData {
   public_location_visibility?: "hidden" | "city_only" | "district";
 }
 
-/** @deprecated Use UpdateProfileInput de @/core/profiles/operations/UpdateProfileInput */
-export interface UpdateProfileData {
+export interface UpdateProfilePayload {
   name?: string;
   display_name?: string;
   username?: string;
@@ -158,17 +156,6 @@ export interface UpdateProfileData {
   verified_at?: string | null;
   active_ride_id?: string | null;
   [key: string]: unknown;
-}
-
-export class ProfileError extends Error {
-  code: string;
-  status?: number;
-  constructor(message: string, code: string, status?: number) {
-    super(message);
-    this.name = "ProfileError";
-    this.code = code;
-    this.status = status;
-  }
 }
 
 export interface BannedUser {

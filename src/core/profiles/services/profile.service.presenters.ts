@@ -1,5 +1,5 @@
 import type {
-  CreateProfileData,
+  CreateProfilePayload,
   Profile,
   ProfileContext,
 } from "./types";
@@ -11,7 +11,7 @@ import type {
   ProfileStatus,
 } from "@/core/profiles/contracts/ProfileRuntimeContracts";
 
-export function validateCreateProfileInput(profile: CreateProfileData): void {
+export function validateCreateProfileInput(profile: CreateProfilePayload): void {
   if (!profile.profile_type) throw new Error("profile_type is required");
   if (!profile.name) throw new Error("name is required");
   if (!profile.username) throw new Error("username is required");
@@ -19,8 +19,8 @@ export function validateCreateProfileInput(profile: CreateProfileData): void {
 
 export function buildCreateProfileInsert(
   userId: string,
-  profile: CreateProfileData,
-): CreateProfileData & { user_id: string; display_name: string; is_active: boolean } {
+  profile: CreateProfilePayload,
+): CreateProfilePayload & { user_id: string; display_name: string; is_active: boolean } {
   return {
     user_id: userId,
     profile_type: profile.profile_type,

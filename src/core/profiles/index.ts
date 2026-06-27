@@ -100,8 +100,8 @@ export {
   profileVerificationAdminService,
 } from "./services/ProfileVerificationAdminService";
 export type {
-  CreateProfileData,
-  UpdateProfileData,
+  CreateProfilePayload,
+  UpdateProfilePayload,
   AdminProfileListItem,
   AdminFilters,
   BasePermissions,
@@ -114,7 +114,6 @@ export type {
   ProfileEffectivePermission,
   ProfileVerificationStatus,
 } from "./services/types";
-export { ProfileError } from "./services/types";
 export type {
   PendingVerification,
   VerificationStats,

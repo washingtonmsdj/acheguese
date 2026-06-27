@@ -11,7 +11,7 @@ import type {
   AdminFilters,
   AdminProfileListItem,
   BasePermissions,
-  CreateProfileData,
+  CreateProfilePayload,
   PlanType,
   Profile,
   ProfileContext,
@@ -19,7 +19,7 @@ import type {
   ProfilePrivacySettingsInput,
   ProfileSummary,
   ProfileSummaryExtended,
-  UpdateProfileData,
+  UpdateProfilePayload,
 } from "./types";
 import type { ProfileVerificationStatus } from "@/core/profile/constants/verificationStatus";
 import type {
@@ -180,7 +180,7 @@ export class ProfileService {
   async getByHandle(handle: string): Promise<Profile | null> {
     return this.getByUsername(handle);
   }
-  async createProfile(profile: CreateProfileData): Promise<Profile> {
+  async createProfile(profile: CreateProfilePayload): Promise<Profile> {
     return createProfileWithIdentityValidation(profile);
   }
   async switchActiveProfile(
@@ -202,7 +202,7 @@ export class ProfileService {
   }
   async updateProfile(
     profileId: string,
-    updates: UpdateProfileData,
+    updates: UpdateProfilePayload,
   ): Promise<Profile> {
     return updateProfileCommand({
       profileId,
@@ -213,7 +213,7 @@ export class ProfileService {
   }
   private async _updateProfileDirect(
     profileId: string,
-    updates: UpdateProfileData,
+    updates: UpdateProfilePayload,
   ): Promise<Profile> {
     return updateProfileDirect(profileId, updates);
   }
