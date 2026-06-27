@@ -30,10 +30,6 @@ export interface VerificationStats {
   pending: number;
   verified: number;
   rejected: number;
-  // backward compatibility
-  total_pending: number;
-  total_verified: number;
-  total_rejected: number;
 }
 
 type VerificationProfileRow = {
@@ -114,17 +110,14 @@ export class ProfileVerificationAdminService {
   static async getVerificationStats(): Promise<VerificationStats> {
     try {
       const stats = await profileService.getVerificationStats();
-      const pending = stats.total_pending ?? 0;
-      const verified = stats.total_verified ?? 0;
-      const rejected = stats.total_rejected ?? 0;
+      const pending = stats.pending ?? 0;
+      const verified = stats.verified ?? 0;
+      const rejected = stats.rejected ?? 0;
       return {
         total: pending + verified + rejected,
         pending,
         verified,
         rejected,
-        total_pending: pending,
-        total_verified: verified,
-        total_rejected: rejected,
       };
     } catch (err) {
       logger.error('ProfileVerificationAdminService.getVerificationStats failed:', err);
@@ -133,9 +126,6 @@ export class ProfileVerificationAdminService {
         pending: 0,
         verified: 0,
         rejected: 0,
-        total_pending: 0,
-        total_verified: 0,
-        total_rejected: 0,
       };
     }
   }

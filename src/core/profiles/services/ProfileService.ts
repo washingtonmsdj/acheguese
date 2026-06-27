@@ -390,9 +390,9 @@ export class ProfileService {
     return getUserIdsByCityQuery(city, limit);
   }
   async getVerificationStats(): Promise<{
-    total_pending: number;
-    total_verified: number;
-    total_rejected: number;
+    pending: number;
+    verified: number;
+    rejected: number;
   }> {
     return getVerificationStatsQuery();
   }

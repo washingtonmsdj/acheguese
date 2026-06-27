@@ -42,9 +42,9 @@ export async function getUserIdsByCity(city: string, limit = 500): Promise<strin
 }
 
 export async function getVerificationStats(): Promise<{
-  total_pending: number;
-  total_verified: number;
-  total_rejected: number;
+  pending: number;
+  verified: number;
+  rejected: number;
 }> {
   try {
     const [pending, verified, rejected] = await Promise.all([
@@ -54,9 +54,9 @@ export async function getVerificationStats(): Promise<{
     ]);
 
     return {
-      total_pending: pending.count ?? 0,
-      total_verified: verified.count ?? 0,
-      total_rejected: rejected.count ?? 0,
+      pending: pending.count ?? 0,
+      verified: verified.count ?? 0,
+      rejected: rejected.count ?? 0,
     };
   } catch (error) {
     trackError(new Error("Error getting verification stats"), {
