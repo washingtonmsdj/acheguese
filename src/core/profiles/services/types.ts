@@ -26,6 +26,10 @@ export type {
   ProfileActivityStats,
   ProfilePrivacySettingsInput,
 } from "./ProfileOperationTypes";
+export type {
+  ProfileVerificationStatus as ProfileVerificationStatusValue,
+} from "@/core/profile/constants/verificationStatus";
+import type { ProfileVerificationStatus } from "@/core/profile/constants/verificationStatus";
 import type { ProfileActivityStats } from "./ProfileOperationTypes";
 import type {
   ProfileAssociatedBusiness,
@@ -48,12 +52,6 @@ export type ProfileType =
 
 /** Alias antigo de tipo de perfil preservado para leitura de linhas antigas do banco. */
 export type ProfileTypeAlias = "personal" | "company" | "service";
-
-export type ProfileVerificationStatusValue =
-  | "not_requested"
-  | "pending"
-  | "approved"
-  | "rejected";
 
 /**
  * @deprecated Use Profile de @/core/profiles/domain/Profile
@@ -298,6 +296,6 @@ export interface ProfilePrivateWorkspace {
   businessModules: ProfileBusinessModuleSnapshot[];
   activeRide: unknown | null;
   hasActiveRide: boolean;
-  verificationStatus: ProfileVerificationStatusValue;
+  verificationStatus: ProfileVerificationStatus;
   verificationRejectionReason?: string;
 }
