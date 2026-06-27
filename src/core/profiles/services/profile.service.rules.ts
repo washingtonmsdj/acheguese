@@ -1,4 +1,4 @@
-import { PROFILE_VERIFICATION_STATUS } from "@/core/profile/constants/verificationStatus";
+export { resolveProfileVerificationStatus as resolveVerificationStatus } from "@/core/profile/constants/verificationStatus";
 import type {
   PlanType,
   ProfilePermissions,
@@ -63,33 +63,6 @@ export function calculateReputation(profile: Profile): ProfileReputation {
     score: profile.reputation || 0,
     rank: calculateRank(profile.reputation || 0),
   };
-}
-
-export function resolveVerificationStatus(
-  verification?: {
-    verified?: boolean | null;
-    rejection_reason?: string | null;
-  } | null,
-): {
-  status: ProfileVerificationStatusValue;
-  rejectionReason?: string;
-} {
-  if (!verification) {
-    return { status: PROFILE_VERIFICATION_STATUS.NOT_REQUESTED };
-  }
-
-  if (verification.verified) {
-    return { status: PROFILE_VERIFICATION_STATUS.APPROVED };
-  }
-
-  if (verification.rejection_reason) {
-    return {
-      status: PROFILE_VERIFICATION_STATUS.REJECTED,
-      rejectionReason: verification.rejection_reason,
-    };
-  }
-
-  return { status: PROFILE_VERIFICATION_STATUS.PENDING };
 }
 
 export function mapBusinessRecords(records: BusinessRow[]): ProfileAssociatedBusiness[] {
