@@ -234,15 +234,3 @@ export function domainToUpdate(profile: Partial<Profile>): Partial<ProfileRow> {
 export function rowsToDomain(rows: ProfileRow[]): Profile[] {
   return rows.map(rowToDomain);
 }
-
-/**
- * @deprecated Use as funções exportadas diretamente.
- * Mantido para compatibilidade com código que usa ProfileRowMapper.toDomain() etc.
- */
-export const ProfileRowMapper = {
-  toDomain: rowToDomain,
-  toDomains: rowsToDomain,
-  toInsert: domainToInsert,
-  toInsertWithSnapshots: domainToInsertWithSnapshots,
-  toUpdate: domainToUpdate,
-};
