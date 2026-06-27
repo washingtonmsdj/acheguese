@@ -1,7 +1,7 @@
 import type {
   CreateProfilePayload,
-  Profile,
   ProfileContext,
+  ProfileRow as Profile,
 } from "./types";
 import type { VerificationWorkflowStatus } from "./profile.service.types";
 import type {

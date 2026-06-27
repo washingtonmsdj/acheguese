@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase";
 import { getUserBusinessFavorites } from "@/core/favorites/services";
-import type { Profile } from "./types";
+import type { ProfileRow as Profile } from "./types";
 import type { BusinessRow } from "./profile.service.types";
 import { resolveOwnedProfileIds } from "./profile.queries";
 

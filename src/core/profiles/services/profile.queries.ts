@@ -13,9 +13,9 @@ import { SessionService } from "@/core/session/services/SessionService";
 import type {
   AdminFilters,
   AdminProfileListItem,
-  Profile,
   ProfileContext,
   ProfilePrivateWorkspace,
+  ProfileRow as Profile,
   ProfileSummary,
   ProfileSummaryExtended,
 } from "./types";

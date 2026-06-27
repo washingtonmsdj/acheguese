@@ -5,7 +5,7 @@
  * Garante contrato unificado em toda a aplicação
  */
 
-import type { Profile } from "../services/types";
+import type { ProfileRow as Profile } from "../services/types";
 
 const CANONICAL_PROFILE_TYPES = new Set<CanonicalProfile["profileType"]>([
   "personal",

@@ -5,9 +5,9 @@ import { getServicesByProfile } from "@/core/professional/services/professional.
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 import { getEligibleVerticals } from "@/core/verticals/config";
 import type {
-  Profile,
   ProfileContext,
   ProfilePrivateWorkspace,
+  ProfileRow as Profile,
 } from "./types";
 import type { ProfileActivityStats } from "./ProfileOperationTypes";
 import type { ProfilePermissions } from "@/core/profiles/contracts/ProfileRuntimeContracts";

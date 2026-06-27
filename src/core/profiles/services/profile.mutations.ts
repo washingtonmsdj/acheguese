@@ -12,8 +12,8 @@ import { mediaService } from "@/core/media/services/MediaService";
 import { PublicIdentityService } from "@/core/public-identity";
 import type {
   CreateProfilePayload,
-  Profile,
   ProfilePrivacySettingsInput,
+  ProfileRow as Profile,
   UpdateProfilePayload,
 } from "./types";
 import type { VerificationWorkflowStatus } from "./profile.service.types";

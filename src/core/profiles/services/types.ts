@@ -58,10 +58,9 @@ export type ProfileType =
 export type ProfileTypeAlias = "personal" | "company" | "service";
 
 /**
- * @deprecated Use Profile de @/core/profiles/domain/Profile
  * Contrato de linha usado internamente pelo ProfileService (snake_case do banco).
  */
-export interface Profile {
+export interface ProfileRow {
   id: string;
   user_id: string;
   profile_type: ProfileType;
@@ -258,7 +257,7 @@ export interface ProfileNotificationsSnapshot {
 }
 
 export interface ProfilePrivateWorkspace {
-  profile: Profile | null;
+  profile: ProfileRow | null;
   context: import("@/core/profiles/views/ProfileContext").ProfileContext | null;
   identity: ProfileIdentitySnapshot | null;
   account: import("@/core/profiles/views/ProfileAccountSnapshot").ProfileAccountSnapshot;

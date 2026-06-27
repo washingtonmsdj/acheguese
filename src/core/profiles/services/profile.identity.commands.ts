@@ -1,5 +1,5 @@
 import { PublicIdentityService } from "@/core/public-identity";
-import type { Profile, UpdateProfilePayload } from "./types";
+import type { ProfileRow as Profile, UpdateProfilePayload } from "./types";
 
 export async function updateProfileCommand(params: {
   profileId: string;

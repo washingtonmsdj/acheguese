@@ -60,7 +60,7 @@ export {
 // Types
 // ============================================================
 export type {
-  Profile,
+  ProfileRow,
   ProfileType,
   CreateProfilePayload,
   UpdateProfilePayload,

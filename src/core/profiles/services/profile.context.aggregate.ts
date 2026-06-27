@@ -2,7 +2,7 @@ import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 import { adminRolesService } from "@/core/admin/services/AdminRolesService";
-import type { Profile, ProfileContext } from "./types";
+import type { ProfileContext, ProfileRow as Profile } from "./types";
 import type { ProfilePermissions, ProfileStatus } from "@/core/profiles/contracts/ProfileRuntimeContracts";
 import type { BannedUserLike } from "./profile.service.types";
 import {

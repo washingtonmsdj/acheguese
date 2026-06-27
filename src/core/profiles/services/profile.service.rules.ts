@@ -7,7 +7,7 @@ import type {
   ProfileStatus,
 } from "@/core/profiles/contracts/ProfileRuntimeContracts";
 import type {
-  Profile,
+  ProfileRow as Profile,
 } from "./types";
 import type { ProfileAssociatedBusiness } from "./ProfileBusinessTypes";
 import type {
