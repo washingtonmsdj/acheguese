@@ -78,7 +78,7 @@ export function FraudDetectionPanel() {
       ]);
 
       const rideMap = new Map<string, FraudRideSummary>((((ridesData.data || []) as FraudRideSummary[]).map((r) => [r.id, r] as [string, FraudRideSummary])));
-      const driverMap = new Map(driversData.map((d) => [d.id, { id: d.id, name: d.name }]));
+      const driverMap = new Map(driversData.map((d) => [d.id, { id: d.id, name: d.displayName }]));
 
       setAlerts(
         rawAlerts.map((alert) => ({

@@ -254,7 +254,7 @@ export async function getProfilesSummary(ids: string[]): Promise<ProfileSummary[
 
   const { data, error } = await supabase
     .from(TABLE)
-    .select("id, user_id, name, avatar_url, verified")
+    .select("id, display_name, name, avatar_url, verified")
     .in("id", uniqueIds);
 
   if (error) {
@@ -268,9 +268,8 @@ export async function getProfilesSummary(ids: string[]): Promise<ProfileSummary[
 
   return (data || []).map((profile) => ({
     id: profile.id,
-    userId: profile.user_id,
-    name: profile.name,
-    avatarUrl: profile.avatar_url,
+    displayName: profile.display_name ?? profile.name,
+    avatarUrl: profile.avatar_url ?? null,
     verified: profile.verified || false,
   }));
 }
@@ -303,11 +302,11 @@ export async function getProfilesSummaryExtended(
 
   return (data || []).map((profile) => ({
     id: profile.id,
-    name: profile.display_name,
+    displayName: profile.display_name,
     username: profile.username,
-    avatarUrl: profile.avatar_url,
+    avatarUrl: profile.avatar_url ?? null,
     verified: false,
-    neighborhood: profile.public_neighborhood,
+    neighborhood: profile.public_neighborhood ?? null,
     whatsapp: null,
   }));
 }

@@ -71,7 +71,7 @@ class AdminCommunityService {
         return {
           id: p.id,
           author_profile_id: p.author_profile_id,
-          author_name: profile?.name || "Usuário",
+          author_name: profile?.displayName || "Usuário",
           author_neighborhood: profile?.neighborhood || "",
           content: p.content,
           intent: p.intent as "offering" | "requesting",
@@ -104,7 +104,7 @@ class AdminCommunityService {
         id: f.id,
         reason: f.reason,
         description: f.description,
-        flagged_by_name: profilesMap.get(f.flagged_by)?.name || "Usuário",
+        flagged_by_name: profilesMap.get(f.flagged_by)?.displayName || "Usuário",
         created_at: f.created_at,
       }));
     } catch (error) {

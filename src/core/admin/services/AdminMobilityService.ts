@@ -66,7 +66,7 @@ export interface AdminMobilityOperationalSnapshot {
 }
 
 type ProfileSummaryWithAvatar = {
-  name?: string | null;
+  displayName?: string | null;
   avatar_url?: string | null;
   avatarUrl?: string | null;
 };
@@ -106,7 +106,7 @@ class AdminMobilityServiceClass {
             id: driver.id,
             profile_id: driver.profile_id,
             user_id: driver.user_id,
-            name: profile?.name || "Motorista",
+            name: profile?.displayName || "Motorista",
             avatar_url: profileWithAvatar?.avatar_url ?? profileWithAvatar?.avatarUrl ?? undefined,
             rating: driver.rating || 0,
             total_rides: driver.total_rides || 0,
@@ -220,7 +220,7 @@ class AdminMobilityServiceClass {
       return {
         id: `driver-${driver.profile_id}`,
         kind: "driver",
-        label: profile?.name || `Motorista ${driver.profile_id.slice(0, 8)}`,
+        label: profile?.displayName || `Motorista ${driver.profile_id.slice(0, 8)}`,
         status: driver.is_available ? "online_available" : "online",
         updated_at: driver.last_location_update || new Date().toISOString(),
       };
@@ -236,7 +236,7 @@ class AdminMobilityServiceClass {
         kind: isDelivery ? "delivery" : "ride",
         label: isDelivery
           ? `Entrega ${ride.id.slice(0, 8)}`
-          : `Corrida ${ride.id.slice(0, 8)}${profile?.name ? ` (${profile.name})` : ""}`,
+          : `Corrida ${ride.id.slice(0, 8)}${profile?.displayName ? ` (${profile.displayName})` : ""}`,
         status: ride.status,
         updated_at: ride.updated_at || ride.created_at,
       };

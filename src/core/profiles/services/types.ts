@@ -27,6 +27,10 @@ export type {
   ProfilePrivacySettingsInput,
 } from "./ProfileOperationTypes";
 export type {
+  ProfileSummary,
+  ProfileSummaryExtended,
+} from "@/core/profiles/views/ProfileSummary";
+export type {
   ProfileVerificationStatus,
 } from "@/core/profile/constants/verificationStatus";
 import type { ProfileVerificationStatus } from "@/core/profile/constants/verificationStatus";
@@ -176,22 +180,6 @@ export interface BannedUser {
   banned_by?: string;
   is_permanent: boolean;
   created_at: string;
-}
-
-/** @deprecated Use ProfileSummary de @/core/profiles/views/ProfileSummary */
-export interface ProfileSummary {
-  id: string;
-  userId?: string;
-  name: string;
-  username?: string | null;
-  avatarUrl?: string;
-  verified: boolean;
-}
-
-/** @deprecated Use ProfileSummaryExtended de @/core/profiles/views/ProfileSummary */
-export interface ProfileSummaryExtended extends ProfileSummary {
-  neighborhood?: string;
-  whatsapp?: string;
 }
 
 export interface AdminProfileListItem {

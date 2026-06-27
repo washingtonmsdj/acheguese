@@ -136,7 +136,7 @@ export default function AdminServicos() {
             : [];
 
         const profileMap = new Map(
-          profiles.map((p) => [p.id, { name: p.name, avatar_url: p.avatarUrl }]),
+          profiles.map((p) => [p.id, { name: p.displayName, avatar_url: p.avatarUrl }]),
         );
         const proMap = new Map(
           (prosData || []).map((p: ProfessionalSimple) => [p.id, p] as const),

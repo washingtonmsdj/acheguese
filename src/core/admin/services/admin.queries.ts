@@ -135,7 +135,7 @@ async function getProfileNames(profileIds: string[]): Promise<Map<string, string
   try {
     const summaries = await profileService.getProfilesSummary(profileIds);
     return new Map(
-      summaries.map((profile) => [profile.id, profile.name || "Perfil"]),
+      summaries.map((profile) => [profile.id, profile.displayName || "Perfil"]),
     );
   } catch (error) {
     logger.error("admin.queries.getProfileNames", error as Error);
