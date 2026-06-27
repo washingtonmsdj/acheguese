@@ -127,7 +127,6 @@ export function CommunityFeed({
   const handleUpvoteReport = useCallback((_reportId: string) => {}, []);
   const profileName = activeProfile?.name?.trim() || "Usuário";
   const profileAvatar =
-    (activeProfile as { avatar_url?: string | null } | null)?.avatar_url ??
     activeProfile?.avatarUrl ??
     undefined;
   const profileInitial = profileName[0]?.toUpperCase() ?? "U";
@@ -290,9 +289,7 @@ export function CommunityFeed({
           sortCriteria={sortCriteria}
           filterType={filterType}
           userLocation={{
-            location_id:
-              activeProfile?.locationId ??
-              (activeProfile as { location_id?: string | null } | null)?.location_id,
+            location_id: activeProfile?.locationId ?? null,
           }}
           onLike={handleLike}
           onComment={handleComment}

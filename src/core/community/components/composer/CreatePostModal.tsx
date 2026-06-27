@@ -55,8 +55,18 @@ type WorkOpportunityType =
   | "service_availability";
 
 type PostProfileLocation = {
-  location_id?: string | null;
   locationId?: string | null;
+};
+
+type RuntimePostProfile = PostProfileLocation & {
+  id?: string;
+  name?: string | null;
+  displayName?: string | null;
+  avatar_url?: string | null;
+  avatarUrl?: string | null;
+  location_id?: string | null;
+  profile_type?: string | null;
+  profileType?: string | null;
 };
 
 type TerritoryFilterSnapshot = {
@@ -195,14 +205,27 @@ function reachFromTerritorialLevel(level: TerritorialLevel): "street" | "neighbo
 function getLocationIdForPost(filter: TerritoryFilterSnapshot, profile: PostProfileLocation | null): string | null {
   if (filter.scope === "group") return null;
   if (filter.scope === "location") return filter.location_id ?? filter.locationId ?? null;
-  return profile?.location_id ?? profile?.locationId ?? null;
+  return profile?.locationId ?? null;
+}
+
+function normalizeRuntimeProfile(profile: RuntimePostProfile | null) {
+  if (!profile?.id) return null;
+
+  return {
+    id: profile.id,
+    displayName: profile.displayName ?? profile.name ?? "Usuário",
+    avatarUrl: profile.avatarUrl ?? profile.avatar_url ?? null,
+    locationId: profile.locationId ?? profile.location_id ?? null,
+    profileType: profile.profileType ?? profile.profile_type ?? null,
+  };
 }
 
 export function CreatePostModal({ open, onClose, defaultType, editPostId, initialContent, initialType, initialReach }: CreatePostModalProps) {
   const { activeProfile: sessionProfile } = useSessionContext();
   const { effectiveProfile } = useMultiProfileContext();
-  const rawProfile = effectiveProfile ?? sessionProfile;
-  const profile = rawProfile as { id?: string; name?: string; avatar_url?: string; avatarUrl?: string; location_id?: string; locationId?: string; profile_type?: string } | null;
+  const profile = normalizeRuntimeProfile(
+    (effectiveProfile ?? sessionProfile) as RuntimePostProfile | null,
+  );
   const form = useCreatePostForm();
   const territoryFilter = useTerritoryFilter();
   const [publishing, setPublishing] = React.useState(false);
@@ -259,8 +282,8 @@ export function CreatePostModal({ open, onClose, defaultType, editPostId, initia
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedIntent.structuralType]);
 
-  const displayName = profile?.name ?? "Usuário";
-  const avatarUrl = profile?.avatar_url ?? profile?.avatarUrl;
+  const displayName = profile?.displayName ?? "Usuário";
+  const avatarUrl = profile?.avatarUrl;
   const initials = displayName.split(" ").map((part) => part[0] ?? "").join("").toUpperCase().slice(0, 2);
   const resolvedLocationId = React.useMemo(
     () => getLocationIdForPost(territoryFilter, profile),

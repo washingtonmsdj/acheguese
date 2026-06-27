@@ -47,9 +47,7 @@ export function usePostById(postId: string | null) {
       const interactions: CommunityPostInteractions = activeProfile
         ? await postService.getPostUserInteractions(
             postId,
-            (activeProfile as { userId?: string; user_id?: string }).userId ??
-              (activeProfile as { userId?: string; user_id?: string }).user_id ??
-              "",
+            activeProfile.user_id,
             post.type,
           )
         : {
@@ -82,7 +80,7 @@ export function usePostById(postId: string | null) {
       return {
         id: post.id,
         author_profile_id: post.author_profile_id,
-        author_name: profile?.name || "Usuário",
+        author_name: profile?.displayName || "Usuário",
         author_avatar: profile?.avatarUrl,
         author_reputation: 0,
         is_verified_resident: profile?.verified || false,

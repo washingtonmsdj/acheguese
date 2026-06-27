@@ -59,7 +59,7 @@ export function useCreatePost() {
         data.images?.map(sanitizeUrl).filter((url) => url !== "") || [];
 
       const resolvedLocationId =
-        activeProfile.locationId ?? (activeProfile as { location_id?: string | null }).location_id ?? null;
+        activeProfile.locationId ?? null;
       if (!resolvedLocationId) {
         throw new Error("Configure seu bairro no perfil antes de publicar");
       }

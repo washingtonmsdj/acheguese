@@ -37,15 +37,11 @@ const CreatePostInput = React.forwardRef<HTMLDivElement, CreatePostInputProps>(
     ref,
   ) => {
     const { activeProfile: profile } = useSessionContext();
-    const publicCity =
-      (profile as { public_city?: string | null } | null)?.public_city ?? null;
-    const publicNeighborhood =
-      (profile as { public_neighborhood?: string | null } | null)?.public_neighborhood ?? null;
     const profileData = {
-      name: profile?.name ?? null,
-      city: publicCity,
-      street: (profile as { street?: string | null } | null)?.street ?? null,
-      neighborhood: publicNeighborhood,
+      name: profile?.displayName ?? profile?.name ?? null,
+      city: profile?.city ?? null,
+      street: profile?.street ?? null,
+      neighborhood: profile?.neighborhood ?? null,
       avatarUrl: profile?.avatarUrl ?? null,
     };
     const getInitials = (name?: string | null) => {

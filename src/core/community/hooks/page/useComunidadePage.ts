@@ -117,7 +117,7 @@ export function useComunidadePage() {
   const { data: postData, isLoading: isLoadingPost } = usePostById(postId);
 
   const handleOpenCreatePost = useCallback((defaultType?: string) => {
-    const hasProfileLocation = Boolean(profile?.locationId ?? profile?.location_id);
+    const hasProfileLocation = Boolean(profile?.locationId);
     const canCreatePost = Boolean(communityLocation.canCreateContent) || hasProfileLocation;
 
     // Verificar se pode criar conteúdo
@@ -127,7 +127,7 @@ export function useComunidadePage() {
     }
 
     setModalState({ type: "create", data: { defaultType: defaultType || "discussao" } });
-  }, [communityLocation, profile?.location_id, profile?.locationId]);
+  }, [communityLocation, profile?.locationId]);
 
   const handlePostClick = useCallback(
     async (postId: string, post?: UnifiedPost) => {

@@ -132,12 +132,11 @@ export function PostDetailModal({
         {
           id: createdComment.id,
           author_name:
-            ((activeProfile as { display_name?: string } | null)?.display_name ??
-              activeProfile.displayName ??
+            (activeProfile.displayName ??
+              activeProfile.name ??
               "Usuário")
               .trim(),
           author_avatar:
-            (activeProfile as { avatar_url?: string | null } | null)?.avatar_url ??
             activeProfile.avatarUrl ??
             undefined,
           content: createdComment.content,
