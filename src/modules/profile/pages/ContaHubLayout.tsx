@@ -64,8 +64,8 @@ export function ContaHubLayout({
   reputation,
   onAvatarChange,
   children,
-  pageTitle = "Minha conta | Area organizada",
-  pageDescription = "Area privada da conta com navegacao por secoes e conteudo segmentado por contexto.",
+  pageTitle = "Minha conta | Área organizada",
+  pageDescription = "Área privada da conta com navegação por seções e conteúdo segmentado por contexto.",
 }: ContaHubLayoutProps) {
   return (
     <>

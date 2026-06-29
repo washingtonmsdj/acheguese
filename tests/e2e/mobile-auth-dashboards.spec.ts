@@ -87,6 +87,11 @@ test.describe('Mobile authenticated dashboards', () => {
     await expect(page).toHaveURL(/\/conta\/seguranca(\?|$)/i);
   });
 
+  test('conta hub em 360px', async ({ page }) => {
+    await openAndAssertMobileDashboard(page, '/conta');
+    await expect(page).toHaveURL(/\/conta(\?|$)/i);
+  });
+
   test('conta editar perfil em 360px', async ({ page }) => {
     await openAndAssertMobileDashboard(page, '/conta/editar');
     await expect(page).toHaveURL(/\/conta\/editar\/[^/?#]+(\?|$)/i);

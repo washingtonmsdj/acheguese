@@ -43,15 +43,15 @@ function LaunchPausedProfileSection({ navigate }: LaunchPausedProfileSectionProp
   return (
     <div className="rounded-[24px] border border-border/70 bg-card/80 p-6 shadow-[0_26px_100px_-70px_rgba(0,0,0,0.9)] backdrop-blur-sm">
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-        MVP publico
+        MVP público
       </p>
       <h2 className="mt-3 text-xl font-bold text-foreground">
-        Este modulo esta separado para ajustes.
+        Este módulo está separado para ajustes.
       </h2>
       <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-        A conta fica focada em identidade, empresas, servicos e notificacoes do
-        lancamento. Rotinas operacionais pausadas continuam preservadas fora da
-        superficie publica.
+        A conta fica focada em identidade, empresas, serviços e notificações do
+        lançamento. Rotinas operacionais pausadas continuam preservadas fora da
+        superfície pública.
       </p>
       <Button className="mt-5" variant="outline" onClick={() => navigate("/central")}>
         Abrir Central
@@ -243,7 +243,7 @@ export default function ContaHubPage() {
       <div className="flex min-h-[60vh] items-center justify-center px-4">
         <div className="space-y-3 text-center">
           <div className="mx-auto h-9 w-9 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          <p className="text-sm text-muted-foreground">Carregando area da conta...</p>
+          <p className="text-sm text-muted-foreground">Carregando área da conta...</p>
         </div>
       </div>
     );
@@ -253,7 +253,7 @@ export default function ContaHubPage() {
     return (
       <GuardCard
         icon={<CircleAlert className="mx-auto h-10 w-10 text-amber-600" />}
-        title="Nao foi possivel carregar a conta"
+        title="Não foi possível carregar a conta"
         description="O snapshot privado falhou. Tente novamente para recuperar os dados."
         actions={
           <>
@@ -262,7 +262,7 @@ export default function ContaHubPage() {
               Tentar novamente
             </Button>
             <Button variant="outline" onClick={() => navigate(data.appUrls.home)}>
-              Ir para inicio
+              Ir para o início
             </Button>
           </>
         }
@@ -274,8 +274,8 @@ export default function ContaHubPage() {
     return (
       <GuardCard
         icon={<Users className="mx-auto h-10 w-10 text-primary" />}
-        title="Nenhuma identidade ativa disponivel"
-        description="Sua conta carregou, mas ainda nao ha um perfil operacional ativo."
+        title="Nenhuma identidade ativa disponível"
+        description="Sua conta carregou, mas ainda não há um perfil operacional ativo."
         actions={
           <Button onClick={() => navigate(data.appUrls.business.create)}>
             Criar empresa
