@@ -66,6 +66,10 @@ export async function readRobots(page: Page) {
   return page.locator('meta[name="robots"]').first().getAttribute('content').catch(() => null);
 }
 
+export async function readCanonical(page: Page) {
+  return page.locator('link[rel="canonical"]').first().getAttribute('href').catch(() => null);
+}
+
 export async function hasMainLandmark(page: Page, selector = 'main') {
   return page.evaluate((value) => Boolean(document.querySelector(value)), selector).catch(() => false);
 }
@@ -94,18 +98,20 @@ export async function expectRouteReady(page: Page, options: ExpectRouteReadyOpti
         const text = await readBodyText(page);
         const hasMain = await hasMainLandmark(page, mainSelector);
         const urlMatches = expectedUrlPart ? page.url().includes(expectedUrlPart) : true;
-        return urlMatches && hasMain && readyPattern.test(text) && !LOADER_PATTERNS.some((pattern) => pattern.test(text));
+
+        return (
+          urlMatches &&
+          hasMain &&
+          readyPattern.test(text) &&
+          !LOADER_PATTERNS.some((pattern) => pattern.test(text))
+        );
       },
       { timeout: timeoutMs },
     )
     .toBe(true);
 }
 
-export async function expectPausedLaunchSurface(
-  page: Page,
-  path: string,
-  options: OpenRouteOptions = {},
-) {
+export async function expectPausedLaunchSurface(page: Page, path: string, options: OpenRouteOptions = {}) {
   await openPublicRoute(page, path, {
     waitUntil: 'domcontentloaded',
     dismissConsent: true,
@@ -113,15 +119,19 @@ export async function expectPausedLaunchSurface(
   });
 
   await expect
-    .poll(async () => {
-      const text = await readBodyText(page);
-      const hasMain = await hasMainLandmark(page);
-      return (
-        hasMain &&
-        PAUSED_SURFACE_PATTERNS.every((pattern) => pattern.test(text)) &&
-        !LOADER_PATTERNS.some((pattern) => pattern.test(text))
-      );
-    }, { timeout: DEFAULT_READY_TIMEOUT_MS })
+    .poll(
+      async () => {
+        const text = await readBodyText(page);
+        const hasMain = await hasMainLandmark(page);
+
+        return (
+          hasMain &&
+          PAUSED_SURFACE_PATTERNS.every((pattern) => pattern.test(text)) &&
+          !LOADER_PATTERNS.some((pattern) => pattern.test(text))
+        );
+      },
+      { timeout: DEFAULT_READY_TIMEOUT_MS },
+    )
     .toBe(true);
 }
 
