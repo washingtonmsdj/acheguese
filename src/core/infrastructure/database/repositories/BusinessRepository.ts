@@ -9,6 +9,7 @@
  */
 
 import { supabase } from '@/integrations/supabase';
+import type { Json } from '@/integrations/supabase';
 import { BaseRepository } from './BaseRepository';
 import { DatabaseError, DatabaseErrorCode } from '../errors/DatabaseError';
 import type { Filter } from '../interfaces/IRepository';
@@ -66,11 +67,11 @@ export interface Business {
   
   // Configurações
   business_role: string;
-  business_hours: any | null;
-  opening_hours: any | null;
-  payment_methods: any | null;
-  facilities: any | null;
-  specialties: any | null;
+  business_hours: Json | null;
+  opening_hours: Json | null;
+  payment_methods: Json | null;
+  facilities: Json | null;
+  specialties: Json | null;
   
   // Flags
   is_premium: boolean;
@@ -90,7 +91,7 @@ export interface Business {
   unit_name: string | null;
   
   // Metadata
-  metadata: any;
+  metadata: Json | null;
   
   // Timestamps
   created_at: string;

@@ -164,10 +164,11 @@ export function useProfessionalReviews(professionalId?: string) {
         setUserReview(newReview);
 
         return true;
-      } catch (error: any) {
+      } catch (error: unknown) {
         toast({
           title: "Erro ao enviar avaliação",
-          description: error.message,
+          description:
+            error instanceof Error ? error.message : "Tente novamente em alguns instantes.",
           variant: "destructive",
         });
         return false;

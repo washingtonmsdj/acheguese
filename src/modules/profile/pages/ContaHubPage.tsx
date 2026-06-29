@@ -1,18 +1,4 @@
-/**
- * ContaHubPage - Pagina principal do hub de conta (refatorada)
- *
- * SSOT: Usa sections modulares e layout reutilizavel
- * Sem gambiarras: Codigo limpo e organizado
- *
- * Responsabilidades:
- * - Carregar dados via useProfileHub
- * - Fazer guards (loading/error/no-user)
- * - Determinar section ativa
- * - Construir props especificas por section
- * - Renderizar layout + section ativa
- */
-
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ComponentType, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { CircleAlert, RefreshCw, Users } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
@@ -28,14 +14,14 @@ import { NotificacoesSection } from "@/modules/profile/sections/NotificacoesSect
 import { PreferenciasSection } from "@/modules/profile/sections/PreferenciasSection";
 import { SegurancaSection } from "@/modules/profile/sections/SegurancaSection";
 import type { ProfileSectionId } from "@/modules/profile/config/profile-sections.config";
+import type { Profile as RuntimeProfile } from "@/core/profiles/services/multi-profile/types";
 
 import type { SectionNavItem } from "@/modules/profile/components/hub/ProfileSectionsNav";
-import { buildProfileSectionItems, getProfileSectionPath } from "@/modules/profile/utils/profileNavigation";
+import {
+  buildProfileSectionItems,
+  getProfileSectionPath,
+} from "@/modules/profile/utils/profileNavigation";
 import { getRecordValue } from "@/shared/utils/recordLookup";
-
-// ============================================
-// Mapa de Sections (SSOT)
-// ============================================
 
 const SECTION_MAP = {
   resumo: ResumoSection,
@@ -47,20 +33,25 @@ const SECTION_MAP = {
   notificacoes: NotificacoesSection,
   preferencias: PreferenciasSection,
   seguranca: SegurancaSection,
-} as const satisfies Record<ProfileSectionId, React.ComponentType<any>>;
+} as const satisfies Record<ProfileSectionId, unknown>;
 
-function LaunchPausedProfileSection({ navigate }: { navigate: (path: string) => void }) {
+interface LaunchPausedProfileSectionProps {
+  navigate: (path: string) => void;
+}
+
+function LaunchPausedProfileSection({ navigate }: LaunchPausedProfileSectionProps) {
   return (
-    <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+    <div className="rounded-[24px] border border-border/70 bg-card/80 p-6 shadow-[0_26px_100px_-70px_rgba(0,0,0,0.9)] backdrop-blur-sm">
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-        MVP público
+        MVP publico
       </p>
       <h2 className="mt-3 text-xl font-bold text-foreground">
-        Este módulo está separado para ajustes.
+        Este modulo esta separado para ajustes.
       </h2>
       <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-        A conta fica focada em identidade, empresas, serviços e notificações do lançamento.
-        Rotinas operacionais pausadas continuam preservadas fora da superfície pública.
+        A conta fica focada em identidade, empresas, servicos e notificacoes do
+        lancamento. Rotinas operacionais pausadas continuam preservadas fora da
+        superficie publica.
       </p>
       <Button className="mt-5" variant="outline" onClick={() => navigate("/central")}>
         Abrir Central
@@ -69,21 +60,17 @@ function LaunchPausedProfileSection({ navigate }: { navigate: (path: string) => 
   );
 }
 
-// ============================================
-// Helper: Construir Props por Section
-// ============================================
-
 function buildSectionProps(
   section: ProfileSectionId,
   data: ReturnType<typeof useProfileHub> & {
-    personalProfile: ReturnType<typeof useProfileHub>["profile"];
+    personalProfile: ReturnType<typeof useProfileHub>["activeProfile"];
     personalProfileId: string | null;
     setActiveSection: (section: ProfileSectionId) => void;
-  }
-): any {
+  },
+): Record<string, unknown> {
   const baseProps = {
     user: data.user!,
-    personalProfile: data.personalProfile as any,
+    personalProfile: data.personalProfile,
     personalProfileId: data.personalProfileId,
     navigate: data.navigate,
     appUrls: data.appUrls,
@@ -108,7 +95,7 @@ function buildSectionProps(
     case "dados-pessoais":
       return {
         ...baseProps,
-        profile: data.profile as any,
+        profile: data.profile,
         identity: data.identity,
         context: data.context,
         stats: data.stats,
@@ -116,7 +103,7 @@ function buildSectionProps(
         isVerified: data.isVerified,
         verificationStatus: data.verificationStatus,
         verificationRejectionReason: data.verificationRejectionReason,
-        favorites: data.favorites as any,
+        favorites: data.favorites,
         setActiveSection: data.setActiveSection,
         handleBusinessClick: data.handleBusinessClick,
       };
@@ -132,14 +119,7 @@ function buildSectionProps(
     case "mobilidade":
       return {
         ...baseProps,
-        hasDriverProfile: data.hasDriverProfile,
-        driverProfile: data.driverProfile as any,
-        driverProfileId: data.driverProfileId,
-        driverData: data.driverData,
-        driverDataLoading: data.driverDataLoading,
-        operations: data.operations,
-        hasActiveRide: data.hasActiveRide,
-        activeRide: (data.activeRide as any) ?? undefined,
+        navigate: data.navigate,
       };
 
     case "delivery":
@@ -175,9 +155,9 @@ function buildSectionProps(
         profile: data.profile,
         identity: data.identity,
         context: data.context,
-        account: data.account as any,
-        roles: data.roles as any,
-        activeProfile: data.activeProfile as any,
+        account: data.account,
+        roles: data.roles,
+        activeProfile: data.activeProfile,
         stats: data.stats,
         verificationStatus: data.verificationStatus,
         verificationRejectionReason: data.verificationRejectionReason,
@@ -201,21 +181,40 @@ function buildSectionProps(
   }
 }
 
-// ============================================
-// Componente Principal
-// ============================================
+function GuardCard({
+  icon,
+  title,
+  description,
+  actions,
+}: {
+  icon: ReactNode;
+  title: string;
+  description: string;
+  actions: ReactNode;
+}) {
+  return (
+    <div className="mx-auto flex min-h-[60vh] max-w-3xl items-center justify-center px-4">
+      <div className="w-full rounded-[24px] border border-border/70 bg-card/80 p-8 text-center shadow-[0_26px_100px_-70px_rgba(0,0,0,0.9)] backdrop-blur-sm">
+        {icon}
+        <h1 className="mt-4 text-xl font-semibold text-foreground">{title}</h1>
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">{description}</p>
+        <div className="mt-6 flex flex-wrap justify-center gap-2">{actions}</div>
+      </div>
+    </div>
+  );
+}
 
 export default function ContaHubPage() {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState<ProfileSectionId>("resumo");
   const data = useProfileHub();
 
-  // SSOT: Perfil personal e a identidade principal
-  const personalProfile = (data.allProfiles.find((p) => p.profile_type === "personal") ||
-    data.profile) as any;
+  const personalProfile: RuntimeProfile | null =
+    data.allProfiles.find((p) => p.profile_type === "personal") ??
+    data.activeProfile ??
+    null;
   const personalProfileId = personalProfile?.id ?? null;
 
-  // Funcao para mudar de section
   const handleSectionChange = (section: ProfileSectionId) => {
     const nextPath = getProfileSectionPath(section);
 
@@ -227,91 +226,65 @@ export default function ContaHubPage() {
     navigate(nextPath, { replace: true });
   };
 
-  // SSOT: Usar configuracao de secoes com badges dinamicos
   const sectionItems: SectionNavItem<ProfileSectionId>[] = buildProfileSectionItems({
     businessModules: data.businessModules,
     operations: data.operations,
     notifications: data.notifications,
   }) as SectionNavItem<ProfileSectionId>[];
 
-  // Guard: Redirecionar se nao estiver logado
   useEffect(() => {
     if (!data.user) {
       navigate(data.appUrls.auth.login);
     }
   }, [data.user, navigate, data.appUrls.auth.login]);
 
-  // ============================================
-  // Guards: Loading
-  // ============================================
   if (data.loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center px-4">
         <div className="space-y-3 text-center">
           <div className="mx-auto h-9 w-9 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          <p className="text-sm text-muted-foreground">Carregando área da conta...</p>
+          <p className="text-sm text-muted-foreground">Carregando area da conta...</p>
         </div>
       </div>
     );
   }
 
-  // ============================================
-  // Guards: Error
-  // ============================================
   if (data.error && !data.profile && !data.identity) {
     return (
-      <div className="mx-auto flex min-h-[60vh] max-w-2xl items-center justify-center px-4">
-        <div className="w-full rounded-lg border border-border bg-card p-8 text-center shadow-sm">
-          <CircleAlert className="mx-auto h-10 w-10 text-amber-600" />
-          <h1 className="mt-4 text-xl font-semibold text-foreground">
-            Não foi possível carregar a conta
-          </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            O snapshot privado falhou. Tente novamente para recuperar os dados.
-          </p>
-          <div className="mt-6 flex justify-center gap-2">
+      <GuardCard
+        icon={<CircleAlert className="mx-auto h-10 w-10 text-amber-600" />}
+        title="Nao foi possivel carregar a conta"
+        description="O snapshot privado falhou. Tente novamente para recuperar os dados."
+        actions={
+          <>
             <Button className="gap-2" onClick={() => void data.refreshWorkspace()}>
               <RefreshCw className="h-4 w-4" />
               Tentar novamente
             </Button>
             <Button variant="outline" onClick={() => navigate(data.appUrls.home)}>
-              Ir para início
+              Ir para inicio
             </Button>
-          </div>
-        </div>
-      </div>
+          </>
+        }
+      />
     );
   }
 
-  // ============================================
-  // Guards: No Profile
-  // ============================================
   if (!data.activeProfile && !data.profile) {
     return (
-      <div className="mx-auto flex min-h-[60vh] max-w-3xl items-center justify-center px-4">
-        <div className="w-full rounded-lg border border-border bg-card p-8 text-center shadow-sm">
-          <Users className="mx-auto h-10 w-10 text-primary" />
-          <h1 className="mt-4 text-xl font-semibold text-foreground">
-            Nenhuma identidade ativa disponível
-          </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Sua conta carregou, mas ainda não há um perfil operacional ativo.
-          </p>
-          <div className="mt-6 flex justify-center">
-            <Button onClick={() => navigate(data.appUrls.business.create)}>
-              Criar empresa
-            </Button>
-          </div>
-        </div>
-      </div>
+      <GuardCard
+        icon={<Users className="mx-auto h-10 w-10 text-primary" />}
+        title="Nenhuma identidade ativa disponivel"
+        description="Sua conta carregou, mas ainda nao ha um perfil operacional ativo."
+        actions={
+          <Button onClick={() => navigate(data.appUrls.business.create)}>
+            Criar empresa
+          </Button>
+        }
+      />
     );
   }
 
-  // ============================================
-  // Renderizar Layout + Section Ativa
-  // ============================================
-
-  const ActiveSection = getRecordValue(SECTION_MAP, activeSection) ?? ResumoSection;
   const sectionProps = buildSectionProps(activeSection, {
     ...data,
     personalProfile,
@@ -319,6 +292,10 @@ export default function ContaHubPage() {
     setActiveSection,
     navigate,
   });
+  const ActiveSection =
+    (getRecordValue(SECTION_MAP, activeSection) ?? ResumoSection) as unknown as ComponentType<
+      typeof sectionProps
+    >;
 
   return (
     <ContaHubLayout
@@ -326,8 +303,8 @@ export default function ContaHubPage() {
       onSectionChange={handleSectionChange}
       sectionItems={sectionItems}
       personalProfile={personalProfile}
-      profile={data.profile as any}
-      allProfiles={data.allProfiles as any}
+      profile={data.profile}
+      allProfiles={data.allProfiles}
       isVerified={data.isVerified}
       canOpenPublicProfile={data.canOpenPublicProfile}
       handle={data.handle}
@@ -344,7 +321,7 @@ export default function ContaHubPage() {
       }
       identity={data.identity}
       context={data.context}
-      notifications={data.notifications as any}
+      notifications={data.notifications}
       reputation={data.identity?.reputation || data.context?.reputation}
       onAvatarChange={data.handleAvatarChange}
     >

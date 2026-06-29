@@ -14,7 +14,61 @@ import type {
   UserLevel,
 } from "./community.types";
 
-const db = supabase as any;
+interface CommunityBadgeRow {
+  id: string;
+  code: string;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+  category: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+interface EngagementScoreRow extends EngagementScoreEntry {
+  entity_type: string;
+  period_start?: string;
+}
+
+interface QueryResult<T> {
+  data: T | null;
+  error: PostgresError | null;
+}
+
+interface InsertBuilder<TRow> {
+  select: (_columns?: string) => {
+    single: () => Promise<QueryResult<TRow>>;
+  };
+}
+
+interface QueryBuilder<TRow> {
+  select: (_columns?: string) => QueryBuilder<TRow>;
+  insert: (payload: Record<string, unknown>) => InsertBuilder<TRow>;
+  eq: (column: string, value: string | boolean) => QueryBuilder<TRow>;
+  gte: (column: string, value: string) => QueryBuilder<TRow>;
+  order: (
+    column: string,
+    options?: { ascending?: boolean; nullsFirst?: boolean },
+  ) => QueryBuilder<TRow>;
+  limit: (count: number) => QueryBuilder<TRow>;
+  single: () => Promise<QueryResult<TRow>>;
+  then: PromiseLike<QueryResult<TRow[]>>["then"];
+}
+
+interface CommunityGamificationDbClient {
+  from: <TTable extends "community_interactions" | "community_badges" | "community_profiles" | "civic_engagement_scores">(
+    table: TTable,
+  ) => TTable extends "community_interactions"
+    ? QueryBuilder<CommunityInteraction>
+    : TTable extends "community_badges"
+      ? QueryBuilder<CommunityBadgeRow>
+      : TTable extends "community_profiles"
+        ? QueryBuilder<CommunityProfile>
+        : QueryBuilder<EngagementScoreRow>;
+}
+
+const db = supabase as unknown as CommunityGamificationDbClient;
 
 interface PostgresError {
   code?: string;

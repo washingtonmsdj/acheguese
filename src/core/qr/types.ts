@@ -94,7 +94,7 @@ export interface QrCodeMetadata {
   primary_color?: string;
   secondary_color?: string;
   background_color?: string;
-  custom_data?: Record<string, any>;
+  custom_data?: Record<string, unknown>;
 }
 
 // ══════════════════════════════════════════════════════════════════════════

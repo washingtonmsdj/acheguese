@@ -10,6 +10,32 @@ import type {
   PizzaSize,
 } from "./types";
 
+type QueryError = { code?: string; message?: string } | null;
+type QueryResult<T> = Promise<{ data: T; error: QueryError }>;
+
+interface QueryBuilder<TRow> {
+  select(columns?: string): QueryBuilder<TRow>;
+  insert(values: unknown): QueryBuilder<TRow>;
+  update(values: unknown): QueryBuilder<TRow>;
+  upsert(values: unknown, options?: { onConflict?: string }): QueryBuilder<TRow>;
+  eq(column: string, value: unknown): QueryBuilder<TRow>;
+  order(column: string, options?: { ascending?: boolean }): QueryBuilder<TRow>;
+  maybeSingle(): QueryResult<TRow | null>;
+  single(): QueryResult<TRow>;
+  then<TResult1 = { data: TRow[]; error: QueryError }, TResult2 = never>(
+    onfulfilled?:
+      | ((value: { data: TRow[]; error: QueryError }) => TResult1 | PromiseLike<TResult1>)
+      | null,
+    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
+  ): Promise<TResult1 | TResult2>;
+}
+
+interface PizzaDbClient {
+  from<TRow>(table: string): QueryBuilder<TRow>;
+}
+
+const pizzaDb = supabase as unknown as PizzaDbClient;
+
 export interface UpsertPizzaConfigInput {
   default_price_rule?: PizzaPriceRuleType;
   allow_half_half?: boolean;
@@ -82,7 +108,6 @@ async function upsertTable<T>(
   businessId: string,
   input: Record<string, unknown>,
 ): Promise<T> {
-  const db = supabase as any;
   const payload = {
     ...input,
     business_id: businessId,
@@ -91,8 +116,8 @@ async function upsertTable<T>(
   const inputId = typeof input.id === "string" ? input.id : null;
 
   const query = inputId
-    ? db.from(table).update(payload).eq("id", inputId).select().single()
-    : db.from(table).insert(payload).select().single();
+    ? pizzaDb.from<T>(table).update(payload).eq("id", inputId).select().single()
+    : pizzaDb.from<T>(table).insert(payload).select().single();
 
   const { data, error } = await query;
   if (error) throw error;

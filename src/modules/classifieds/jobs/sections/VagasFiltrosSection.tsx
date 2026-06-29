@@ -96,7 +96,7 @@ export function VagasFiltrosSection({
           <div className="relative">
             <select
               value={sort}
-              onChange={(e) => setSort(e.target.value as any)}
+              onChange={(e) => setSort(e.target.value as typeof sort)}
               className="h-10 px-3 pr-8 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring appearance-none cursor-pointer"
             >
               {SORT_OPTIONS.map((opt) => (

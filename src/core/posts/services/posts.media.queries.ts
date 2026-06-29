@@ -1,17 +1,29 @@
 /**
- * POSTS MEDIA/METRICS QUERIES - SSOT
+ * Post media and metrics queries.
  */
 
+import { resolveCityToLocationIds, resolveNeighborhoodInCity } from "@/core/location/helpers/territorialResolver";
 import { supabase } from "@/integrations/supabase";
 import { trackError } from "@/shared/utils/errorTracking";
-import { resolveCityToLocationIds, resolveNeighborhoodInCity } from "@/core/location/helpers/territorialResolver";
 import { mapPostsWithImagesRows } from "./post.service.rules";
+
+interface PostWithImageRow {
+  id: string;
+  image_url: string;
+  content?: string | null;
+  created_at: string;
+  author_profile?: {
+    display_name?: string | null;
+    avatar_url?: string | null;
+  } | null;
+}
+
 export async function getPostsCreatedInPeriod(
   startDate: Date,
   endDate: Date,
 ): Promise<number> {
   try {
-    const { count, error } = await (supabase as any)
+    const { count, error } = await supabase
       .from("posts")
       .select("*", { count: "exact", head: true })
       .gte("created_at", startDate.toISOString())
@@ -55,7 +67,7 @@ export async function getPostsWithImages(options: {
   created_at: string;
 }>> {
   try {
-    let query = (supabase as any)
+    let query = supabase
       .from("posts")
       .select(
         `
@@ -102,16 +114,7 @@ export async function getPostsWithImages(options: {
     const { data, error } = await query;
     if (error || !data) return [];
 
-    return mapPostsWithImagesRows(data as Array<{
-      id: string;
-      image_url: string;
-      content?: string | null;
-      created_at: string;
-      author_profile?: {
-        display_name?: string | null;
-        avatar_url?: string | null;
-      } | null;
-    }>);
+    return mapPostsWithImagesRows((data as PostWithImageRow[]) ?? []);
   } catch (error) {
     trackError(error as Error, {
       component: "posts.queries",
@@ -120,4 +123,3 @@ export async function getPostsWithImages(options: {
     return [];
   }
 }
-

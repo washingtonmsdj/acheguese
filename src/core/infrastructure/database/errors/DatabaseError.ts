@@ -1,10 +1,7 @@
 /**
- * DatabaseError - Erro customizado para operações de banco
- * 
- * SSOT: Centraliza tratamento de erros de banco de dados
- * 
- * @version 1.0.0
- * @since Sprint 1 - Repository Pattern
+ * DatabaseError - Custom error for database operations.
+ *
+ * SSOT: centralizes database error handling.
  */
 
 export enum DatabaseErrorCode {
@@ -18,25 +15,29 @@ export enum DatabaseErrorCode {
   PERMISSION_DENIED = 'DATABASE_ERROR_PERMISSION_DENIED',
 }
 
+type SupabaseErrorLike = {
+  message?: string | null;
+  code?: string | null;
+} | null | undefined;
+
 export interface DatabaseErrorDetails {
   code: DatabaseErrorCode;
   message: string;
-  originalError?: any;
+  originalError?: unknown;
   table?: string;
   operation?: string;
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
 }
 
 /**
- * Erro customizado para operações de banco de dados
- * Encapsula erros do Supabase/Postgres de forma agnóstica
+ * Custom error that wraps Supabase/Postgres failures behind a stable contract.
  */
 export class DatabaseError extends Error {
   public readonly code: DatabaseErrorCode;
-  public readonly originalError?: any;
+  public readonly originalError?: unknown;
   public readonly table?: string;
   public readonly operation?: string;
-  public readonly context?: Record<string, any>;
+  public readonly context?: Record<string, unknown>;
 
   constructor(details: DatabaseErrorDetails) {
     super(details.message);
@@ -47,34 +48,32 @@ export class DatabaseError extends Error {
     this.operation = details.operation;
     this.context = details.context;
 
-    // Mantém stack trace correto
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, DatabaseError);
     }
   }
 
   /**
-   * Cria DatabaseError a partir de erro do Supabase
+   * Builds a DatabaseError from a Supabase/PostgREST error shape.
    */
   static fromSupabaseError(
-    error: any,
+    error: SupabaseErrorLike,
     operation: string,
-    table?: string
+    table?: string,
   ): DatabaseError {
-    // Mapear códigos de erro do Postgres
     let code = DatabaseErrorCode.UNKNOWN;
-    let message = error.message || 'Database operation failed';
+    let message = error?.message || 'Database operation failed';
 
-    if (error.code === '23505') {
+    if (error?.code === '23505') {
       code = DatabaseErrorCode.DUPLICATE;
       message = 'Record already exists';
-    } else if (error.code === '23503') {
+    } else if (error?.code === '23503') {
       code = DatabaseErrorCode.CONSTRAINT_VIOLATION;
       message = 'Foreign key constraint violation';
-    } else if (error.code === 'PGRST116') {
+    } else if (error?.code === 'PGRST116') {
       code = DatabaseErrorCode.NOT_FOUND;
       message = 'Record not found';
-    } else if (error.message?.includes('permission denied')) {
+    } else if (error?.message?.includes('permission denied')) {
       code = DatabaseErrorCode.PERMISSION_DENIED;
       message = 'Permission denied';
     }
@@ -88,23 +87,14 @@ export class DatabaseError extends Error {
     });
   }
 
-  /**
-   * Verifica se é erro de registro não encontrado
-   */
   isNotFound(): boolean {
     return this.code === DatabaseErrorCode.NOT_FOUND;
   }
 
-  /**
-   * Verifica se é erro de duplicação
-   */
   isDuplicate(): boolean {
     return this.code === DatabaseErrorCode.DUPLICATE;
   }
 
-  /**
-   * Converte para objeto JSON
-   */
   toJSON() {
     return {
       name: this.name,

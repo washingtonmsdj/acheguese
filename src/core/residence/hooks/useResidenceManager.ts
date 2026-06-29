@@ -93,7 +93,7 @@ export function useResidenceManager() {
       // ETAPA 12 - Carregar com relacoes canonicas
       const residences = await residenceService.getUserResidencesWithRelations(user.id);
       setResidence(residences[0] || null);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error("Error fetching residence:", error);
       toast.error("Erro ao carregar residencia");
     } finally {

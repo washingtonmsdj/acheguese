@@ -1,3 +1,6 @@
+import { Database, Download, Pause, Trash2 } from "lucide-react";
+
+import { Button } from "@/shared/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -5,15 +8,19 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/components/ui/dialog";
-import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
-import { Database, Download, Pause, Trash2 } from "lucide-react";
-
-import type { Profile } from "@/core/profiles/domain/Profile";
 import type { ProfileActivityStats } from "@/core/profiles/services/ProfileOperationTypes";
 
+interface DataManagementProfile {
+  displayName?: string | null;
+  name?: string | null;
+  phone?: string | null;
+  whatsapp?: string | null;
+  createdAt?: string | null;
+}
+
 interface DataManagementDialogsProps {
-  profile: Profile | null;
+  profile: DataManagementProfile | null;
   stats: ProfileActivityStats;
   userEmail?: string;
   downloadOpen: boolean;
@@ -59,18 +66,18 @@ export function DataManagementDialogs({
               Baixar meus dados
             </DialogTitle>
             <DialogDescription>
-              Faça o download de uma cópia dos seus dados pessoais em formato JSON.
+              Faca o download de uma copia dos seus dados pessoais em formato JSON.
             </DialogDescription>
           </DialogHeader>
 
           <div className="mt-2 space-y-4">
             <div className="rounded-lg bg-secondary/50 p-4 text-sm">
-              <p className="mb-2 font-medium">O arquivo incluirá:</p>
+              <p className="mb-2 font-medium">O arquivo incluira:</p>
               <ul className="list-inside list-disc space-y-1 text-muted-foreground">
                 <li>Dados do perfil</li>
-                <li>Estatísticas de atividade</li>
+                <li>Estatisticas de atividade</li>
                 <li>Lista de empresas</li>
-                <li>Data de exportação</li>
+                <li>Data de exportacao</li>
               </ul>
             </div>
 
@@ -95,16 +102,16 @@ export function DataManagementDialogs({
               Meus dados pessoais
             </DialogTitle>
             <DialogDescription>
-              Veja todos os dados que armazenamos sobre você.
+              Veja todos os dados que armazenamos sobre voce.
             </DialogDescription>
           </DialogHeader>
 
           <div className="mt-2 space-y-3">
-            <DataField label="Nome" value={profile?.displayName || profile?.name || "Não informado"} />
-            <DataField label="Email" value={userEmail || "Não informado"} />
-            <DataField label="Localização" value="Não informado" />
-            <DataField label="Telefone" value={profile?.phone || "Não informado"} />
-            <DataField label="WhatsApp" value={profile?.whatsapp || "Não informado"} />
+            <DataField label="Nome" value={profile?.displayName || profile?.name || "Nao informado"} />
+            <DataField label="Email" value={userEmail || "Nao informado"} />
+            <DataField label="Localizacao" value="Nao informado" />
+            <DataField label="Telefone" value={profile?.phone || "Nao informado"} />
+            <DataField label="WhatsApp" value={profile?.whatsapp || "Nao informado"} />
             <DataField
               label="Membro desde"
               value={
@@ -114,8 +121,8 @@ export function DataManagementDialogs({
               }
             />
             <DataField
-              label="Estatísticas"
-              value={`${stats.posts} posts • ${stats.businesses} empresas • ${stats.favorites} favoritos`}
+              label="Estatisticas"
+              value={`${stats.posts} posts | ${stats.businesses} empresas | ${stats.favorites} favoritos`}
             />
 
             <div className="flex justify-end">
@@ -135,16 +142,16 @@ export function DataManagementDialogs({
               Pausar conta temporariamente
             </DialogTitle>
             <DialogDescription>
-              O fluxo de pausa e revisão é feito na área Minha Conta.
+              O fluxo de pausa e revisao e feito na area Minha Conta.
             </DialogDescription>
           </DialogHeader>
 
           <div className="mt-2 space-y-4">
             <div className="rounded-lg border border-warning/30 bg-warning/10 p-4 text-sm">
-              <p className="mb-2 font-medium">Próximo passo:</p>
+              <p className="mb-2 font-medium">Proximo passo:</p>
               <ul className="list-inside list-disc space-y-1 text-muted-foreground">
-                <li>Você será redirecionado para Minha Conta</li>
-                <li>A pausa é validada com contexto de segurança</li>
+                <li>Voce sera redirecionado para Minha Conta</li>
+                <li>A pausa e validada com contexto de seguranca</li>
                 <li>O sistema aplica o estado oficial da conta</li>
               </ul>
             </div>
@@ -174,17 +181,17 @@ export function DataManagementDialogs({
               Encerrar conta
             </DialogTitle>
             <DialogDescription>
-              O encerramento definitivo é iniciado pela área Minha Conta.
+              O encerramento definitivo e iniciado pela area Minha Conta.
             </DialogDescription>
           </DialogHeader>
 
           <div className="mt-2 space-y-4">
             <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm">
-              <p className="mb-2 font-medium text-destructive">ATENÇÃO:</p>
+              <p className="mb-2 font-medium text-destructive">ATENCAO:</p>
               <ul className="list-inside list-disc space-y-1 text-muted-foreground">
-                <li>Você será redirecionado para Minha Conta</li>
-                <li>O pedido de encerramento passa por validações de segurança</li>
-                <li>As regras oficiais de retenção de dados serão aplicadas</li>
+                <li>Voce sera redirecionado para Minha Conta</li>
+                <li>O pedido de encerramento passa por validacoes de seguranca</li>
+                <li>As regras oficiais de retencao de dados serao aplicadas</li>
               </ul>
             </div>
 

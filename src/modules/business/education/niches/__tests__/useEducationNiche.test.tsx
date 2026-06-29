@@ -38,7 +38,7 @@ describe('useEducationNiche', () => {
 
   it('shouldShowSection returns false for non-existing section', () => {
     const { result } = renderHook(() => useEducationNiche('regular_school'));
-    expect(result.current.shouldShowSection('attendance' as any)).toBe(false);
+    expect(result.current.shouldShowSection('attendance')).toBe(false);
   });
 
   it('returns isBeta true for beta niches', () => {

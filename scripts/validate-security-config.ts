@@ -27,6 +27,22 @@ interface ValidationResult {
   warnings: string[];
 }
 
+interface HeaderConfig {
+  key: string;
+  value: string;
+}
+
+function isHeaderConfig(value: unknown): value is HeaderConfig {
+  return Boolean(
+    value &&
+      typeof value === 'object' &&
+      'key' in value &&
+      'value' in value &&
+      typeof (value as { key: unknown }).key === 'string' &&
+      typeof (value as { value: unknown }).value === 'string',
+  );
+}
+
 const results: ValidationResult = {
   passed: true,
   errors: [],
@@ -121,8 +137,11 @@ if (!fs.existsSync(vercelJsonPath)) {
     
     
     // Check if CSP header exists
-    const headers = vercelJson.headers?.[0]?.headers || [];
-    const cspHeader = headers.find((h: any) => h.key === 'Content-Security-Policy');
+    const headerCandidates = Array.isArray(vercelJson.headers?.[0]?.headers)
+      ? vercelJson.headers[0].headers
+      : [];
+    const headers = headerCandidates.filter(isHeaderConfig);
+    const cspHeader = headers.find((header) => header.key === 'Content-Security-Policy');
     
     if (!cspHeader) {
       results.passed = false;

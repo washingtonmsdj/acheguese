@@ -7,8 +7,40 @@ import { sanitizeString } from '@/shared/utils/sanitization';
 import { SubscriptionService } from '@/core/billing/SubscriptionService';
 import { EntitlementsService } from '@/core/billing/entitlements';
 import { BillingPlanService, type PlanEntitlements } from '@/core/billing/services/BillingPlanService';
+import { PlanTier } from '@/core/billing/types';
 
-const db = supabase as any;
+type QueryResult<T> = Promise<{ data: T; error: { code?: string; message?: string } | null; count?: number | null }>;
+
+interface QueryBuilder<TRow> {
+  select(
+    columns?: string,
+    options?: { count?: "exact" | "planned" | "estimated"; head?: boolean },
+  ): QueryBuilder<TRow>;
+  insert(values: unknown): QueryBuilder<TRow>;
+  update(values: unknown): QueryBuilder<TRow>;
+  delete(): QueryBuilder<TRow>;
+  eq(column: string, value: unknown): QueryBuilder<TRow>;
+  in(column: string, values: readonly unknown[]): QueryBuilder<TRow>;
+  not(column: string, operator: string, value: unknown): QueryBuilder<TRow>;
+  order(column: string, options?: { ascending?: boolean }): QueryBuilder<TRow>;
+  maybeSingle(): QueryResult<TRow | null>;
+  single(): QueryResult<TRow>;
+  then<
+    TResult1 = { data: TRow[]; error: { code?: string; message?: string } | null; count?: number | null },
+    TResult2 = never,
+  >(
+    onfulfilled?:
+      | ((value: { data: TRow[]; error: { code?: string; message?: string } | null; count?: number | null }) => TResult1 | PromiseLike<TResult1>)
+      | null,
+    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
+  ): Promise<TResult1 | TResult2>;
+}
+
+interface MenuDbClient {
+  from<TRow>(table: string): QueryBuilder<TRow>;
+}
+
+const db = supabase as unknown as MenuDbClient;
 
 export interface ServiceResult<T> {
   data: T | null;
@@ -97,18 +129,40 @@ interface PlanContext {
   entitlements: PlanEntitlements;
 }
 
+type LooseRow = Record<string, unknown>;
+
+function asRecord(value: unknown): LooseRow {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return {};
+  }
+  return value as LooseRow;
+}
+
 function hasImageUrl(value: string | null | undefined): boolean {
   return typeof value === 'string' && value.trim().length > 0;
 }
 
-function mapMenuCategory(row: any): MenuCategory {
+function mapMenuCategory(row: LooseRow): MenuCategory {
   return {
-    ...row,
-    is_active: row.is_active ?? row.is_available ?? true,
-  } as MenuCategory;
+    id: String(row.id ?? ''),
+    menu_id: String(row.menu_id ?? ''),
+    name: String(row.name ?? ''),
+    description: typeof row.description === 'string' ? row.description : null,
+    display_order: typeof row.display_order === 'number' ? row.display_order : 0,
+    is_active:
+      typeof row.is_active === 'boolean'
+        ? row.is_active
+        : typeof row.is_available === 'boolean'
+          ? row.is_available
+          : true,
+    created_at: String(row.created_at ?? ''),
+    updated_at: String(row.updated_at ?? ''),
+  };
 }
 
-function mapMenuItem(row: any, menuId?: string | null): MenuItem {
+function mapMenuItem(row: LooseRow, menuId?: string | null): MenuItem {
+  const nestedCategory = asRecord(row.menu_categories);
+  const metadata = asRecord(row.metadata);
   const nutritionalInfo =
     row.nutritional_info && typeof row.nutritional_info === 'object'
       ? row.nutritional_info
@@ -124,15 +178,35 @@ function mapMenuItem(row: any, menuId?: string | null): MenuItem {
         };
 
   return {
-    ...row,
-    menu_id: row.menu_id ?? menuId ?? row.menu_categories?.menu_id ?? null,
+    id: String(row.id ?? ''),
+    menu_id: String(row.menu_id ?? menuId ?? nestedCategory.menu_id ?? ''),
+    category_id: typeof row.category_id === 'string' ? row.category_id : null,
+    name: String(row.name ?? ''),
+    description: typeof row.description === 'string' ? row.description : null,
     price: Number(row.price ?? row.base_price ?? 0),
-    preparation_time_min: row.preparation_time_min ?? row.preparation_time ?? null,
-    stock_quantity: row.stock_quantity ?? null,
-    stock_alert_threshold: row.stock_alert_threshold ?? null,
-    tags: row.tags ?? (Array.isArray(row.metadata?.tags) ? row.metadata.tags : null),
-    nutritional_info: nutritionalInfo,
-  } as MenuItem;
+    image_url: typeof row.image_url === 'string' ? row.image_url : null,
+    display_order: typeof row.display_order === 'number' ? row.display_order : 0,
+    is_available: typeof row.is_available === 'boolean' ? row.is_available : true,
+    is_featured: typeof row.is_featured === 'boolean' ? row.is_featured : false,
+    preparation_time_min:
+      typeof row.preparation_time_min === 'number'
+        ? row.preparation_time_min
+        : typeof row.preparation_time === 'number'
+          ? row.preparation_time
+          : null,
+    stock_quantity: typeof row.stock_quantity === 'number' ? row.stock_quantity : null,
+    stock_alert_threshold:
+      typeof row.stock_alert_threshold === 'number' ? row.stock_alert_threshold : null,
+    tags: Array.isArray(row.tags)
+      ? (row.tags as string[])
+      : Array.isArray(metadata.tags)
+        ? (metadata.tags as string[])
+        : null,
+    allergens: Array.isArray(row.allergens) ? (row.allergens as string[]) : null,
+    nutritional_info: asRecord(nutritionalInfo),
+    created_at: String(row.created_at ?? ''),
+    updated_at: String(row.updated_at ?? ''),
+  };
 }
 
 async function listCategoryIds(menuId: string): Promise<string[]> {
@@ -169,11 +243,12 @@ async function resolveMenuIdFromCategory(categoryId: string): Promise<string | n
     .eq('id', categoryId)
     .maybeSingle();
 
-  if (error || !data?.menu_id) {
+  const row = asRecord(data);
+  if (error || !row.menu_id) {
     return null;
   }
 
-  return String(data.menu_id);
+  return String(row.menu_id);
 }
 
 async function resolveItem(itemId: string): Promise<Pick<MenuItem, 'id' | 'menu_id' | 'image_url'> | null> {
@@ -183,29 +258,33 @@ async function resolveItem(itemId: string): Promise<Pick<MenuItem, 'id' | 'menu_
     .eq('id', itemId)
     .maybeSingle();
 
-  const menuId = data?.menu_categories?.menu_id;
-  if (error || !data?.id || !menuId) {
+  const row = asRecord(data);
+  const nestedCategory = asRecord(row.menu_categories);
+  const menuId = nestedCategory.menu_id;
+  if (error || !row.id || !menuId) {
     return null;
   }
 
   return {
-    id: data.id,
+    id: String(row.id),
     menu_id: String(menuId),
-    image_url: data.image_url ?? null,
+    image_url: typeof row.image_url === 'string' ? row.image_url : null,
   };
 }
 
 async function getEntitlementsForBusiness(businessId: string): Promise<PlanEntitlements> {
   const subscriptionResult = await SubscriptionService.getByBusinessId(businessId);
 
-  const planTier = (subscriptionResult.data?.plan_tier ?? 'free') as any;
+  const planTier = Object.values(PlanTier).includes(subscriptionResult.data?.plan_tier as PlanTier)
+    ? (subscriptionResult.data?.plan_tier as PlanTier)
+    : PlanTier.FREE;
   const dynamicEntitlements = await BillingPlanService.getEntitlements(planTier).catch(() => null);
 
   if (dynamicEntitlements) {
     return dynamicEntitlements;
   }
 
-  return EntitlementsService.getAll(planTier as any);
+  return EntitlementsService.getAll(planTier);
 }
 
 async function getPlanContextByMenuId(menuId: string): Promise<PlanContext | null> {
@@ -328,7 +407,7 @@ export const MenuService = {
         return { data: null, error: error.message };
       }
 
-      return { data: mapMenuCategory(data), error: null };
+      return { data: mapMenuCategory(asRecord(data)), error: null };
     } catch (err) {
       return { data: null, error: err instanceof Error ? err.message : String(err) };
     }
@@ -366,7 +445,7 @@ export const MenuService = {
         return { data: null, error: error.message };
       }
 
-      return { data: mapMenuCategory(data), error: null };
+      return { data: mapMenuCategory(asRecord(data)), error: null };
     } catch (err) {
       return { data: null, error: err instanceof Error ? err.message : String(err) };
     }
@@ -447,7 +526,7 @@ export const MenuService = {
         return { data: null, error: error.message };
       }
 
-      return { data: (data ?? []).map((row: any) => mapMenuItem(row, menuId)), error: null };
+      return { data: (data ?? []).map((row) => mapMenuItem(asRecord(row), menuId)), error: null };
     } catch (err) {
       return { data: null, error: err instanceof Error ? err.message : String(err) };
     }
@@ -466,7 +545,7 @@ export const MenuService = {
         return { data: null, error: error.message };
       }
 
-      return { data: mapMenuItem(data), error: null };
+      return { data: mapMenuItem(asRecord(data)), error: null };
     } catch (err) {
       return { data: null, error: err instanceof Error ? err.message : String(err) };
     }
@@ -550,7 +629,7 @@ export const MenuService = {
         return { data: null, error: error.message };
       }
 
-      return { data: mapMenuItem(data, input.menu_id), error: null };
+      return { data: mapMenuItem(asRecord(data), input.menu_id), error: null };
     } catch (err) {
       return { data: null, error: err instanceof Error ? err.message : String(err) };
     }
@@ -625,7 +704,7 @@ export const MenuService = {
         return { data: null, error: error.message };
       }
 
-      return { data: mapMenuItem(data), error: null };
+      return { data: mapMenuItem(asRecord(data)), error: null };
     } catch (err) {
       return { data: null, error: err instanceof Error ? err.message : String(err) };
     }

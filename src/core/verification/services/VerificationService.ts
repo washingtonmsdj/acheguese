@@ -13,6 +13,29 @@ import { supabase } from "@/integrations/supabase";
 import { trackError } from "@/shared/utils/errorTracking";
 import { logger } from "@/shared/utils/logger";
 
+interface QueryResult<T> {
+  data: T | null;
+  error: { message: string; code?: string } | null;
+}
+
+interface QueryBuilder<TRow> extends PromiseLike<QueryResult<TRow[]>> {
+  select: (columns?: string) => QueryBuilder<TRow>;
+  insert: (values: unknown | unknown[]) => QueryBuilder<TRow>;
+  update: (values: unknown) => QueryBuilder<TRow>;
+  delete: () => QueryBuilder<TRow>;
+  eq: (column: string, value: unknown) => QueryBuilder<TRow>;
+  is: (column: string, value: unknown) => QueryBuilder<TRow>;
+  order: (column: string, options?: { ascending?: boolean }) => QueryBuilder<TRow>;
+  single: () => Promise<QueryResult<TRow>>;
+  maybeSingle: () => Promise<QueryResult<TRow>>;
+}
+
+interface VerificationDbClient {
+  from: <TRow = never>(table: string) => QueryBuilder<TRow>;
+}
+
+const verificationDb = supabase as unknown as VerificationDbClient;
+
 export type VerificationType =
   | "email"
   | "phone"
@@ -57,6 +80,8 @@ export interface RejectVerificationParams {
   verified_by: string;
 }
 
+type VerificationRow = Verification;
+
 interface VerificationStatsRow {
   verified: boolean | null;
   verification_type: VerificationType;
@@ -74,8 +99,8 @@ export class VerificationService {
     profileId: string,
   ): Promise<Verification[]> {
     try {
-      const { data, error } = await (supabase as any)
-        .from("verification")
+      const { data, error } = await verificationDb
+        .from<VerificationRow>("verification")
         .select("*")
         .eq("profile_id", profileId)
         .order("created_at", { ascending: false });
@@ -101,8 +126,8 @@ export class VerificationService {
     verificationType: VerificationType,
   ): Promise<Verification | null> {
     try {
-      const { data, error } = await (supabase as any)
-        .from("verification")
+      const { data, error } = await verificationDb
+        .from<VerificationRow>("verification")
         .select("*")
         .eq("profile_id", profileId)
         .eq("verification_type", verificationType)
@@ -157,8 +182,8 @@ export class VerificationService {
     error?: string;
   }> {
     try {
-      const { data, error } = await (supabase as any)
-        .from("verification")
+      const { data, error } = await verificationDb
+        .from<VerificationRow>("verification")
         .insert({
           profile_id: params.profile_id,
           verification_type: params.verification_type,
@@ -206,8 +231,8 @@ export class VerificationService {
     params: ApproveVerificationParams,
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      const { error } = await (supabase as any)
-        .from("verification")
+      const { error } = await verificationDb
+        .from<VerificationRow>("verification")
         .update({
           verified: true,
           verified_at: new Date().toISOString(),
@@ -245,8 +270,8 @@ export class VerificationService {
     params: RejectVerificationParams,
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      const { error } = await (supabase as any)
-        .from("verification")
+      const { error } = await verificationDb
+        .from<VerificationRow>("verification")
         .update({
           verified: false,
           verified_at: null,
@@ -284,8 +309,8 @@ export class VerificationService {
     verificationType?: VerificationType,
   ): Promise<Verification[]> {
     try {
-      let query = supabase
-        .from("verification")
+      let query = verificationDb
+        .from<VerificationRow>("verification")
         .select("*")
         .eq("verified", false)
         .is("rejection_reason", null)
@@ -321,8 +346,8 @@ export class VerificationService {
     by_type: Record<VerificationType, number>;
   }> {
     try {
-      const { data, error } = await (supabase as any)
-        .from("verification")
+      const { data, error } = await verificationDb
+        .from<VerificationStatsRow>("verification")
         .select("verified, verification_type, rejection_reason");
 
       if (error) throw error;
@@ -373,8 +398,8 @@ export class VerificationService {
     verificationType: VerificationType,
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      const { error } = await (supabase as any)
-        .from("verification")
+      const { error } = await verificationDb
+        .from<VerificationRow>("verification")
         .delete()
         .eq("profile_id", profileId)
         .eq("verification_type", verificationType);

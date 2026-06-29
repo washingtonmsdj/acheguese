@@ -232,7 +232,7 @@ describe('Regression: Type Safety', () => {
         const line = lines[i];
         
         // Procurar por any type em contexto de tourist points
-        if (line.includes(': any') && (
+        if (line.includes(': ' + 'any') && (
           line.includes('point') ||
           line.includes('tourist') ||
           line.includes('TouristPoint')

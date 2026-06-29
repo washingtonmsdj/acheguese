@@ -36,21 +36,23 @@ type UpdateField = (
 ) => void;
 
 const EDIT_TABS: { key: ProfessionalEditTab; label: string; icon: React.ElementType }[] = [
-  { key: "info", label: "Informações", icon: Briefcase },
+  { key: "info", label: "Informacoes", icon: Briefcase },
   { key: "details", label: "Detalhes", icon: Award },
   { key: "contact", label: "Contato", icon: Phone },
-  { key: "portfolio", label: "Portfólio", icon: Camera },
-  { key: "availability", label: "Horários", icon: Clock },
+  { key: "portfolio", label: "Portfolio", icon: Camera },
+  { key: "availability", label: "Horarios", icon: Clock },
 ];
 
 export function EditarServicoLoadingState() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background px-4 py-3">
-        <Skeleton className="h-9 w-9 rounded-full" />
-        <Skeleton className="h-6 w-48" />
+      <div className="sticky top-0 z-10 border-b border-border/70 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <div className="mx-auto flex w-full max-w-3xl items-center gap-3 px-4 py-3 sm:px-6">
+          <Skeleton className="h-10 w-10 rounded-full" />
+          <Skeleton className="h-6 w-48" />
+        </div>
       </div>
-      <div className="space-y-4 p-4">
+      <div className="mx-auto w-full max-w-3xl space-y-4 px-4 py-4 sm:px-6 sm:py-6">
         <Skeleton className="mx-auto h-24 w-24 rounded-2xl" />
         <Skeleton className="h-10 w-full" />
         <Skeleton className="h-10 w-full" />
@@ -71,7 +73,7 @@ export function EditarServicoErrorState({
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
       <p className="mb-4 text-muted-foreground">{message}</p>
       <Button variant="outline" onClick={onBackToServices}>
-        Voltar para Serviços
+        Voltar para Servicos
       </Button>
     </div>
   );
@@ -85,17 +87,26 @@ export function EditarServicoHeader({
   onBack: () => void;
 }) {
   return (
-    <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background px-4 py-3">
+    <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-border/70 bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <button
+        type="button"
         onClick={onBack}
-        className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary"
+        className="flex h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-card text-foreground transition-colors hover:bg-secondary"
       >
         <ArrowLeft className="h-5 w-5" />
       </button>
-      <h1 className="font-display text-lg font-bold">Editar Perfil Profissional</h1>
+      <div className="min-w-0 flex-1">
+        <h1 className="truncate text-base font-semibold text-foreground sm:text-lg">
+          Editar perfil profissional
+        </h1>
+        <p className="text-xs text-muted-foreground">Ajuste dados publicos, contato e cobertura.</p>
+      </div>
       {hasChanges && (
-        <Badge variant="secondary" className="ml-auto text-xs">
-          Alterações pendentes
+        <Badge
+          variant="secondary"
+          className="ml-auto shrink-0 text-[0.68rem] uppercase tracking-[0.12em]"
+        >
+          Alteracoes pendentes
         </Badge>
       )}
     </div>
@@ -110,26 +121,31 @@ export function EditarServicoTabNavigation({
   onTabChange: (tab: ProfessionalEditTab) => void;
 }) {
   return (
-    <div className="flex overflow-x-auto border-b border-border">
-      {EDIT_TABS.map((tab) => {
-        const Icon = tab.icon;
-        const isActive = activeTab === tab.key;
+    <div className="sticky top-[4.0625rem] z-10 border-b border-border/70 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+      <div className="mx-auto w-full max-w-3xl overflow-x-auto px-4 py-3 sm:px-6 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex min-w-max gap-2">
+          {EDIT_TABS.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.key;
 
-        return (
-          <button
-            key={tab.key}
-            onClick={() => onTabChange(tab.key)}
-            className={`flex items-center gap-2 whitespace-nowrap border-b-2 px-4 py-3 text-sm font-medium transition-colors ${
-              isActive
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <Icon className="h-4 w-4" />
-            {tab.label}
-          </button>
-        );
-      })}
+            return (
+              <button
+                type="button"
+                key={tab.key}
+                onClick={() => onTabChange(tab.key)}
+                className={`flex min-h-10 items-center gap-2 rounded-full border px-3 py-2 text-sm font-medium transition-all ${
+                  isActive
+                    ? "border-primary/30 bg-primary text-primary-foreground shadow-[0_12px_30px_-18px_rgba(0,214,201,0.95)]"
+                    : "border-border/70 bg-card text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Icon className="h-4 w-4" />
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
@@ -184,7 +200,7 @@ export function EditarServicoInfoTab({
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Briefcase className="h-4 w-4 text-primary" />
-            Informações Básicas
+            Informacoes Basicas
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -218,7 +234,7 @@ export function EditarServicoInfoTab({
           </div>
 
           <div>
-            <Label htmlFor="subcategory">Título do Serviço</Label>
+            <Label htmlFor="subcategory">Titulo do Servico</Label>
             <Input
               id="subcategory"
               value={form.subcategory}
@@ -228,12 +244,12 @@ export function EditarServicoInfoTab({
           </div>
 
           <div>
-            <Label htmlFor="description">Descrição</Label>
+            <Label htmlFor="description">Descricao</Label>
             <Textarea
               id="description"
               value={form.description}
               onChange={(event) => onFieldChange("description", event.target.value)}
-              placeholder="Descreva seus serviços, experiência e diferenciais..."
+              placeholder="Descreva seus servicos, experiencia e diferenciais..."
               rows={4}
             />
             <p className="mt-1 text-xs text-muted-foreground">{form.description.length}/2000</p>
@@ -278,12 +294,12 @@ export function EditarServicoDetailsTab({
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <GraduationCap className="h-4 w-4 text-primary" />
-            Experiência e Formação
+            Experiencia e Formacao
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label htmlFor="experienceYears">Anos de Experiência</Label>
+            <Label htmlFor="experienceYears">Anos de Experiencia</Label>
             <Input
               id="experienceYears"
               type="number"
@@ -296,38 +312,38 @@ export function EditarServicoDetailsTab({
           </div>
 
           <div>
-            <Label htmlFor="education">Formação</Label>
+            <Label htmlFor="education">Formacao</Label>
             <Input
               id="education"
               value={form.education}
               onChange={(event) => onFieldChange("education", event.target.value)}
-              placeholder="Ex: Técnico em Eletrotécnica"
+              placeholder="Ex: Tecnico em Eletrotecnica"
             />
           </div>
 
           <div>
-            <Label htmlFor="certifications">Certificações</Label>
+            <Label htmlFor="certifications">Certificacoes</Label>
             <Input
               id="certifications"
               value={form.certifications}
               onChange={(event) => onFieldChange("certifications", event.target.value)}
-              placeholder="Separe por vírgula"
+              placeholder="Separe por virgula"
             />
             <p className="mt-1 text-xs text-muted-foreground">Ex: NR-10, NR-35, CREA</p>
           </div>
 
           <div>
-            <Label htmlFor="priceRange">Faixa de Preço</Label>
+            <Label htmlFor="priceRange">Faixa de Preco</Label>
             <Select value={form.priceRange} onValueChange={(value) => onFieldChange("priceRange", value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione a faixa" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="$">$ - Econômico</SelectItem>
+                <SelectItem value="$">$ - Economico</SelectItem>
                 <SelectItem value="$$">$$ - Moderado</SelectItem>
                 <SelectItem value="$$$">$$$ - Premium</SelectItem>
                 <SelectItem value="$$$$">$$$$ - Luxo</SelectItem>
-                <SelectItem value="negociavel">Negociável</SelectItem>
+                <SelectItem value="negociavel">Negociavel</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -338,18 +354,18 @@ export function EditarServicoDetailsTab({
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <MapPin className="h-4 w-4 text-primary" />
-            Áreas de Atendimento
+            Areas de Atendimento
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
             {loadingServiceAreaOptions && (
-              <p className="text-sm text-muted-foreground">Carregando áreas de atendimento...</p>
+              <p className="text-sm text-muted-foreground">Carregando areas de atendimento...</p>
             )}
 
             {!loadingServiceAreaOptions && displayOptions.length === 0 && (
               <p className="text-sm text-muted-foreground">
-                Nenhuma área disponível para o território deste profissional. Cadastre bairros no admin territorial antes de atualizar a cobertura.
+                Nenhuma area disponivel para o territorio deste profissional. Cadastre bairros no admin territorial antes de atualizar a cobertura.
               </p>
             )}
 
@@ -477,21 +493,21 @@ export function EditarServicoPortfolioTab({
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Camera className="h-4 w-4 text-primary" />
-            Portfólio de Trabalhos
+            Portfolio de Trabalhos
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Adicione fotos dos seus trabalhos para mostrar a qualidade do seu serviço. Máximo de
+            Adicione fotos dos seus trabalhos para mostrar a qualidade do seu servico. Maximo de
             10 imagens.
           </p>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {portfolioPreviews.map((preview, index) => (
               <div key={`${preview}-${index}`} className="group relative aspect-square">
                 <img
                   src={preview}
-                  alt={`Portfólio ${index + 1}`}
+                  alt={`Portfolio ${index + 1}`}
                   className="h-full w-full rounded-lg border object-cover"
                 />
                 <button
@@ -520,7 +536,7 @@ export function EditarServicoPortfolioTab({
           </div>
 
           <p className="text-xs text-muted-foreground">
-            {portfolioPreviews.length}/10 imagens - Máximo 5MB por imagem
+            {portfolioPreviews.length}/10 imagens - Maximo 5MB por imagem
           </p>
         </CardContent>
       </Card>
@@ -552,8 +568,8 @@ export function EditarServicoAvailabilityTab({
               <p className="text-sm font-medium">Aceitando novos clientes</p>
               <p className="text-xs text-muted-foreground">
                 {form.isAcceptingClients
-                  ? "Seu perfil está visível para novos clientes"
-                  : "Seu perfil está oculto para novos clientes"}
+                  ? "Seu perfil esta visivel para novos clientes"
+                  : "Seu perfil esta oculto para novos clientes"}
               </p>
             </div>
             <Switch
@@ -565,12 +581,12 @@ export function EditarServicoAvailabilityTab({
           <Separator />
 
           <div>
-            <Label htmlFor="availableHours">Horário de Atendimento</Label>
+            <Label htmlFor="availableHours">Horario de Atendimento</Label>
             <Textarea
               id="availableHours"
               value={form.availableHours}
               onChange={(event) => onFieldChange("availableHours", event.target.value)}
-              placeholder="Ex: Seg-Sex: 8h às 18h&#10;Sáb: 8h às 12h"
+              placeholder="Ex: Seg-Sex: 8h as 18h&#10;Sab: 8h as 12h"
               rows={3}
             />
           </div>
@@ -586,7 +602,7 @@ export function EditarServicoAvailabilityTab({
         </CardHeader>
         <CardContent>
           <p className="mb-3 text-sm text-muted-foreground">
-            Desativar seu perfil profissional irá ocultá-lo de todos os resultados de busca.
+            Desativar seu perfil profissional ira oculta-lo de todos os resultados de busca.
           </p>
           <Button variant="destructive" size="sm" onClick={onDeactivateProfile}>
             Desativar Perfil
@@ -609,12 +625,12 @@ export function EditarServicoSaveBar({
   onSave: () => void;
 }) {
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-border bg-background p-4">
-      <div className="mx-auto flex max-w-2xl gap-3">
-        <Button variant="outline" className="flex-1" onClick={onCancel} disabled={saving}>
+    <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-border/70 bg-background/95 px-4 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] pt-3 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-3 sm:flex-row">
+        <Button variant="outline" className="h-11 flex-1" onClick={onCancel} disabled={saving}>
           Cancelar
         </Button>
-        <Button className="flex-1" onClick={onSave} disabled={saving || !hasChanges}>
+        <Button className="h-11 flex-1" onClick={onSave} disabled={saving || !hasChanges}>
           {saving ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -623,7 +639,7 @@ export function EditarServicoSaveBar({
           ) : (
             <>
               <Save className="mr-2 h-4 w-4" />
-              Salvar Alterações
+              Salvar Alteracoes
             </>
           )}
         </Button>

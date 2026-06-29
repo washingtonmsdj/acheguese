@@ -1,18 +1,36 @@
-/**
- * AdminCommunityAlertsService - SSOT para gestão administrativa de alertas comunitários
- * 
- * IMPORTANTE: Este service usa CommunityAlertService e AlertModerationService como base (SSOT)
- * Adiciona apenas operações administrativas específicas
- * 
- * REGRAS:
- * - ZERO acesso direto ao banco
- * - Usa services existentes como base
- * - Adiciona apenas lógica administrativa
- */
-import { logger } from '@/shared/utils/logger';
 import { supabase } from "@/integrations/supabase";
-import { SessionService } from '@/core/session/services/SessionService';
-import { buildSafeOrILikeFilter } from '@/shared/utils/sqlSanitization';
+import type { Json, Tables, TablesInsert } from "@/integrations/supabase";
+import { SessionService } from "@/core/session/services/SessionService";
+import { logger } from "@/shared/utils/logger";
+import { buildSafeOrILikeFilter } from "@/shared/utils/sqlSanitization";
+
+type ErrorLike = { message?: string | null; code?: string | null } | null;
+
+type QueryPayload<TRow> = {
+  data: TRow[] | null;
+  error: ErrorLike;
+  count?: number | null;
+};
+
+type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
+  select(columns?: string, options?: { count?: "exact"; head?: boolean }): TableClient<TRow>;
+  insert(values: Record<string, unknown> | readonly Record<string, unknown>[]): TableClient<TRow>;
+  update(values: Record<string, unknown>): TableClient<TRow>;
+  delete(): TableClient<TRow>;
+  eq(column: string, value: unknown): TableClient<TRow>;
+  in(column: string, values: readonly unknown[]): TableClient<TRow>;
+  or(filter: string): TableClient<TRow>;
+  order(column: string, options?: { ascending: boolean }): TableClient<TRow>;
+  range(from: number, to: number): TableClient<TRow>;
+  gt(column: string, value: unknown): TableClient<TRow>;
+  limit(count: number): TableClient<TRow>;
+};
+
+type AdminCommunityAlertsDbClient = {
+  from<TRow = Record<string, unknown>>(table: string): TableClient<TRow>;
+};
+
+const db = supabase as unknown as AdminCommunityAlertsDbClient;
 
 type AlertCategory =
   | "tiroteio_disparos"
@@ -23,7 +41,9 @@ type AlertCategory =
   | "alagamento_deslizamento"
   | "risco_na_via"
   | "pessoa_vulneravel_em_risco";
+
 type AlertStatus = "ativo" | "encerrado" | "expirado" | "removido";
+
 type AlertReportReason =
   | "false_alert"
   | "promotes_crime"
@@ -33,17 +53,55 @@ type AlertReportReason =
   | "spam"
   | "other";
 
-interface CommunityAlert {
-  [key: string]: unknown;
+type CommunityAlertRow = Tables<"community_alerts">;
+type CommunityAlertUpdate = Partial<CommunityAlertRow>;
+type CommunityAlertReportRow = Tables<"community_alert_reports">;
+type BlockedTermRow = Tables<"alert_blocked_terms">;
+type BlockedTermInsert = TablesInsert<"alert_blocked_terms">;
+
+type CommunityAlertAuditRow = {
   id: string;
-  author_user_id?: string;
+  alert_id: string;
+  actor_id: string;
+  action_type: string;
+  metadata: Json | null;
+  created_at: string;
+};
+
+type CommunityAlertAuditInsert = {
+  alert_id: string;
+  actor_id: string;
+  action_type: string;
+  metadata?: Json | null;
+};
+
+type AlertAuthorProfile = {
+  display_name?: string | null;
+  avatar_url?: string | null;
+};
+
+type AlertReporterProfile = {
+  display_name?: string | null;
+};
+
+type CommunityAlertWithRelationsRow = CommunityAlertRow & {
+  author_profile?: AlertAuthorProfile | null;
+};
+
+type CommunityAlertReportWithRelationsRow = CommunityAlertReportRow & {
+  reporter_profile?: AlertReporterProfile | null;
+};
+
+type CommunityAlertStatsRow = Pick<CommunityAlertRow, "status" | "report_count" | "under_review">;
+
+interface CommunityAlert {
+  id: string;
   author_profile_id?: string;
   category: AlertCategory;
   status: AlertStatus;
   location_id: string;
   latitude: number | null;
   longitude: number | null;
-  neighborhood?: string | null;
   neighborhood_display: string | null;
   city: string | null;
   description: string;
@@ -55,10 +113,6 @@ interface CommunityAlert {
   removed_at?: string;
   removal_reason?: string;
 }
-
-// ============================================================================
-// TIPOS ADMINISTRATIVOS
-// ============================================================================
 
 export interface AlertStats {
   total: number;
@@ -105,29 +159,79 @@ export interface BlockedTerm {
   updated_at: string;
 }
 
-// ============================================================================
-// SERVICE
-// ============================================================================
+function toJsonMetadata(value: Record<string, unknown>): Json {
+  return JSON.parse(JSON.stringify(value)) as Json;
+}
+
+function mapAlertRow(row: CommunityAlertRow): CommunityAlert {
+  return {
+    id: row.id,
+    author_profile_id: row.profile_id,
+    category: row.type as AlertCategory,
+    status: row.status as AlertStatus,
+    location_id: row.location_id ?? "",
+    latitude: row.latitude,
+    longitude: row.longitude,
+    neighborhood_display: row.neighborhood_display,
+    city: row.city,
+    description: row.description ?? "",
+    report_count: row.report_count,
+    under_review: row.under_review,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+    ended_at: undefined,
+    removed_at: row.removed_at ?? undefined,
+    removal_reason: row.removal_reason ?? undefined,
+  };
+}
+
+function mapAlertWithDetailsRow(
+  row: CommunityAlertWithRelationsRow,
+  reports: AlertWithDetails["reports"] = [],
+): AlertWithDetails {
+  const base = mapAlertRow(row);
+  return {
+    ...base,
+    author_profile: row.author_profile?.display_name
+      ? {
+          display_name: row.author_profile.display_name,
+          avatar_url: row.author_profile.avatar_url ?? undefined,
+        }
+      : undefined,
+    reports,
+  };
+}
+
+function mapAlertReportRow(
+  row: CommunityAlertReportWithRelationsRow,
+): NonNullable<AlertWithDetails["reports"]>[number] {
+  return {
+    id: row.id,
+    reason: row.reason as AlertReportReason,
+    created_at: row.created_at,
+    reporter_profile: row.reporter_profile?.display_name
+      ? { display_name: row.reporter_profile.display_name }
+      : undefined,
+  };
+}
 
 class AdminCommunityAlertsServiceClass {
-  private readonly TABLE = 'community_alerts';
-  private readonly REPORTS_TABLE = 'community_alert_reports';
-  private readonly BLOCKED_TERMS_TABLE = 'alert_blocked_terms';
-  private readonly db = supabase as any;
+  private readonly tableName = "community_alerts";
+  private readonly reportsTable = "community_alert_reports";
+  private readonly blockedTermsTable = "alert_blocked_terms";
+  private readonly auditTable = "community_alert_audit";
 
-  /**
-   * Busca estatísticas gerais de alertas
-   */
   async getStats(): Promise<AlertStats> {
     try {
-      const { data: alerts, error } = await this.db
-        .from(this.TABLE)
-        .select('status, report_count, under_review');
+      const { data, error } = await db
+        .from<CommunityAlertStatsRow>(this.tableName)
+        .select("status, report_count, under_review");
 
       if (error) throw error;
 
+      const rows = data || [];
       const stats: AlertStats = {
-        total: alerts?.length || 0,
+        total: rows.length,
         active: 0,
         ended: 0,
         expired: 0,
@@ -137,37 +241,36 @@ class AdminCommunityAlertsServiceClass {
         avgReportsPerAlert: 0,
       };
 
-      alerts?.forEach((alert) => {
+      rows.forEach((alert) => {
         switch (alert.status) {
-          case 'ativo':
-            stats.active++;
+          case "ativo":
+            stats.active += 1;
             break;
-          case 'encerrado':
-            stats.ended++;
+          case "encerrado":
+            stats.ended += 1;
             break;
-          case 'expirado':
-            stats.expired++;
+          case "expirado":
+            stats.expired += 1;
             break;
-          case 'removido':
-            stats.removed++;
+          case "removido":
+            stats.removed += 1;
             break;
         }
 
         if (alert.under_review) {
-          stats.underReview++;
+          stats.underReview += 1;
         }
 
         stats.totalReports += alert.report_count || 0;
       });
 
-      stats.avgReportsPerAlert = stats.total > 0 
-        ? Math.round((stats.totalReports / stats.total) * 10) / 10 
-        : 0;
+      stats.avgReportsPerAlert =
+        stats.total > 0 ? Math.round((stats.totalReports / stats.total) * 10) / 10 : 0;
 
-      logger.info('AdminCommunityAlertsService.getStats', stats);
+      logger.info("AdminCommunityAlertsService.getStats", stats);
       return stats;
     } catch (error) {
-      logger.error('AdminCommunityAlertsService.getStats', error);
+      logger.error("AdminCommunityAlertsService.getStats", error);
       return {
         total: 0,
         active: 0,
@@ -181,9 +284,6 @@ class AdminCommunityAlertsServiceClass {
     }
   }
 
-  /**
-   * Busca todos os alertas com filtros e paginação
-   */
   async getAllAlerts(filters: AlertFilters = {}): Promise<{
     data: AlertWithDetails[];
     total: number;
@@ -202,258 +302,280 @@ class AdminCommunityAlertsServiceClass {
         limit = 20,
       } = filters;
 
-      let query = this.db
-        .from(this.TABLE)
-        .select(`
+      let query = db.from<CommunityAlertWithRelationsRow>(this.tableName).select(
+        `
+        *,
+        author_profile:profiles!community_alerts_profile_id_fkey(
+          display_name,
+          avatar_url
+        )
+        `,
+        { count: "exact" },
+      );
+
+      if (status) query = query.eq("status", status);
+      if (category) query = query.eq("type", category);
+      if (underReview !== undefined) query = query.eq("under_review", underReview);
+      if (city) query = query.eq("city", city);
+      if (neighborhood) query = query.eq("neighborhood_display", neighborhood);
+
+      if (search) {
+        const searchFilter = buildSafeOrILikeFilter(["description", "neighborhood_display"], search);
+        if (searchFilter) query = query.or(searchFilter);
+      }
+
+      const from = (page - 1) * limit;
+      const to = from + limit - 1;
+
+      const { data, error, count } = await query.order("created_at", { ascending: false }).range(from, to);
+      if (error) throw error;
+
+      const alertsWithReports = await Promise.all(
+        (data || []).map(async (alert) => {
+          const reports = await this.getAlertReports(alert.id);
+          return mapAlertWithDetailsRow(alert, reports);
+        }),
+      );
+
+      const total = count || 0;
+      return {
+        data: alertsWithReports,
+        total,
+        page,
+        totalPages: Math.ceil(total / limit),
+      };
+    } catch (error) {
+      logger.error("AdminCommunityAlertsService.getAllAlerts", error);
+      return { data: [], total: 0, page: 1, totalPages: 0 };
+    }
+  }
+
+  async getAlertsUnderReview(): Promise<AlertWithDetails[]> {
+    try {
+      const { data, error } = await db
+        .from<CommunityAlertWithRelationsRow>(this.tableName)
+        .select(
+          `
           *,
-          category:type,
           author_profile:profiles!community_alerts_profile_id_fkey(
             display_name,
             avatar_url
           )
-        `, { count: 'exact' });
-
-      // Filtros
-      if (status) {
-        query = query.eq('status', status);
-      }
-
-      if (category) {
-        query = query.eq('type', category);
-      }
-
-      if (underReview !== undefined) {
-        query = query.eq('under_review', underReview);
-      }
-
-      if (city) {
-        query = query.eq('city', city);
-      }
-
-      if (neighborhood) {
-        query = query.eq('neighborhood_display', neighborhood);
-      }
-
-      if (search) {
-        const searchFilter = buildSafeOrILikeFilter(['description', 'neighborhood_display'], search);
-        if (searchFilter) {
-          query = query.or(searchFilter);
-        }
-      }
-
-      // Paginação
-      const from = (page - 1) * limit;
-      const to = from + limit - 1;
-
-      const { data, error, count } = await query
-        .order('created_at', { ascending: false })
-        .range(from, to);
+          `,
+        )
+        .eq("under_review", true)
+        .in("status", ["ativo"])
+        .order("report_count", { ascending: false });
 
       if (error) throw error;
 
-      // Buscar reports para cada alerta
-      const alertsWithReports = await Promise.all(
-        (data || []).map(async (alert) => {
-          const reports = await this.getAlertReports(alert.id);
-          return {
-            ...alert,
-            reports,
-          };
-        })
+      return Promise.all(
+        (data || []).map(async (alert) => mapAlertWithDetailsRow(alert, await this.getAlertReports(alert.id))),
       );
-
-      const total = count || 0;
-      const totalPages = Math.ceil(total / limit);
-
-      logger.info('AdminCommunityAlertsService.getAllAlerts', {
-        total,
-        page,
-        totalPages,
-        filters,
-      });
-
-      return {
-        data: alertsWithReports as unknown as AlertWithDetails[],
-        total,
-        page,
-        totalPages,
-      };
     } catch (error) {
-      logger.error('AdminCommunityAlertsService.getAllAlerts', error);
-      return {
-        data: [],
-        total: 0,
-        page: 1,
-        totalPages: 0,
-      };
-    }
-  }
-
-  /**
-   * Busca alertas sob revisão (com reports)
-   */
-  async getAlertsUnderReview(): Promise<AlertWithDetails[]> {
-    try {
-      const { data: alerts, error } = await supabase
-        .from(this.TABLE)
-        .select('*, category:type')
-        .eq('under_review', true)
-        .in('status', ['ativo'])
-        .order('report_count', { ascending: false });
-
-      if (error) throw error;
-
-      // Buscar reports para cada alerta
-      const alertsWithReports = await Promise.all(
-        (alerts || []).map(async (alert) => {
-          const reports = await this.getAlertReports(alert.id);
-          return {
-            ...alert,
-            reports,
-          };
-        })
-      );
-
-      logger.info('AdminCommunityAlertsService.getAlertsUnderReview', {
-        count: alertsWithReports.length,
-      });
-
-      return alertsWithReports as unknown as AlertWithDetails[];
-    } catch (error) {
-      logger.error('AdminCommunityAlertsService.getAlertsUnderReview', error);
+      logger.error("AdminCommunityAlertsService.getAlertsUnderReview", error);
       return [];
     }
   }
 
-  /**
-   * Busca reports de um alerta específico
-   */
-  async getAlertReports(alertId: string) {
+  async getAlertReports(alertId: string): Promise<NonNullable<AlertWithDetails["reports"]>> {
     try {
-      const { data, error } = await supabase
-        .from(this.REPORTS_TABLE)
-        .select(`
+      const { data, error } = await db
+        .from<CommunityAlertReportWithRelationsRow>(this.reportsTable)
+        .select(
+          `
           *,
           reporter_profile:profiles!community_alert_reports_reporter_id_fkey(
             display_name
           )
-        `)
-        .eq('alert_id', alertId)
-        .order('created_at', { ascending: false });
+          `,
+        )
+        .eq("alert_id", alertId)
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      return (data || []).map(mapAlertReportRow);
     } catch (error) {
-      logger.error('AdminCommunityAlertsService.getAlertReports', error);
+      logger.error("AdminCommunityAlertsService.getAlertReports", error);
       return [];
     }
   }
 
-  /**
-   * Remove um alerta (ação administrativa)
-   */
   async removeAlert(alertId: string, reason: string): Promise<boolean> {
     try {
-      const { error } = await supabase
-        .from(this.TABLE)
-        .update({
-          status: 'removido',
-          removed_at: new Date().toISOString(),
-          removal_reason: reason,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', alertId);
+      const payload: CommunityAlertUpdate = {
+        status: "removido",
+        removed_at: new Date().toISOString(),
+        removal_reason: reason,
+        updated_at: new Date().toISOString(),
+      };
 
+      const { error } = await db.from<CommunityAlertRow>(this.tableName).update(payload).eq("id", alertId);
       if (error) throw error;
 
-      await this.writeAuditLog(alertId, 'removed', { reason });
-      const success = true;
-      
-      if (success) {
-        logger.info('AdminCommunityAlertsService.removeAlert', { alertId, reason });
-      }
-
-      return success;
+      await this.writeAuditLog(alertId, "removed", { reason });
+      return true;
     } catch (error) {
-      logger.error('AdminCommunityAlertsService.removeAlert', error);
+      logger.error("AdminCommunityAlertsService.removeAlert", error);
       return false;
     }
   }
 
-  /**
-   * Limpa flag de revisão após análise
-   */
   async clearUnderReview(alertId: string): Promise<boolean> {
     try {
-      const { error } = await supabase
-        .from(this.TABLE)
+      const { error } = await db
+        .from<CommunityAlertRow>(this.tableName)
         .update({ under_review: false, updated_at: new Date().toISOString() })
-        .eq('id', alertId);
+        .eq("id", alertId);
 
       if (error) throw error;
 
-      await this.writeAuditLog(alertId, 'reviewed_cleared', {
+      await this.writeAuditLog(alertId, "reviewed_cleared", {
         cleared_at: new Date().toISOString(),
       });
-      const success = true;
-      
-      if (success) {
-        logger.info('AdminCommunityAlertsService.clearUnderReview', { alertId });
-      }
-
-      return success;
+      return true;
     } catch (error) {
-      logger.error('AdminCommunityAlertsService.clearUnderReview', error);
+      logger.error("AdminCommunityAlertsService.clearUnderReview", error);
       return false;
     }
   }
 
-  /**
-   * Encerra um alerta manualmente
-   */
   async endAlert(alertId: string): Promise<boolean> {
     try {
-      const { error } = await supabase
-        .from(this.TABLE)
-        .update({
-          status: 'encerrado',
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', alertId);
+      const { error } = await db
+        .from<CommunityAlertRow>(this.tableName)
+        .update({ status: "encerrado", updated_at: new Date().toISOString() })
+        .eq("id", alertId);
 
       if (error) throw error;
 
-      await this.writeAuditLog(alertId, 'ended', {});
-      const success = true;
-      
-      if (success) {
-        logger.info('AdminCommunityAlertsService.endAlert', { alertId });
-      }
-
-      return success;
+      await this.writeAuditLog(alertId, "ended", {});
+      return true;
     } catch (error) {
-      logger.error('AdminCommunityAlertsService.endAlert', error);
+      logger.error("AdminCommunityAlertsService.endAlert", error);
       return false;
     }
   }
 
-  /**
-   * Busca histórico de auditoria de um alerta
-   */
-  async getAuditLog(alertId: string) {
+  async getAuditLog(alertId: string): Promise<CommunityAlertAuditRow[]> {
     try {
-      const db = this.db as any;
       const { data, error } = await db
-        .from('community_alert_audit')
-        .select('*')
-        .eq('alert_id', alertId)
-        .order('created_at', { ascending: true });
+        .from<CommunityAlertAuditRow>(this.auditTable)
+        .select("*")
+        .eq("alert_id", alertId)
+        .order("created_at", { ascending: true });
 
       if (error) throw error;
       return data || [];
     } catch (error) {
-      logger.error('AdminCommunityAlertsService.getAuditLog', error);
+      logger.error("AdminCommunityAlertsService.getAuditLog", error);
       return [];
+    }
+  }
+
+  async getBlockedTerms(): Promise<BlockedTerm[]> {
+    try {
+      const { data, error } = await db
+        .from<BlockedTermRow>(this.blockedTermsTable)
+        .select("*")
+        .order("term", { ascending: true });
+
+      if (error) throw error;
+      return (data || []) as BlockedTerm[];
+    } catch (error) {
+      logger.error("AdminCommunityAlertsService.getBlockedTerms", error);
+      return [];
+    }
+  }
+
+  async addBlockedTerm(term: string): Promise<boolean> {
+    try {
+      const payload: BlockedTermInsert = {
+        term: term.toLowerCase().trim(),
+        is_active: true,
+      };
+
+      const { error } = await db.from<BlockedTermRow>(this.blockedTermsTable).insert(payload);
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      logger.error("AdminCommunityAlertsService.addBlockedTerm", error);
+      return false;
+    }
+  }
+
+  async removeBlockedTerm(termId: string): Promise<boolean> {
+    try {
+      const { error } = await db.from<BlockedTermRow>(this.blockedTermsTable).delete().eq("id", termId);
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      logger.error("AdminCommunityAlertsService.removeBlockedTerm", error);
+      return false;
+    }
+  }
+
+  async toggleBlockedTerm(termId: string, isActive: boolean): Promise<boolean> {
+    try {
+      const { error } = await db
+        .from<BlockedTermRow>(this.blockedTermsTable)
+        .update({ is_active: isActive, updated_at: new Date().toISOString() })
+        .eq("id", termId);
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      logger.error("AdminCommunityAlertsService.toggleBlockedTerm", error);
+      return false;
+    }
+  }
+
+  async getTopReportedAlerts(limit = 10): Promise<AlertWithDetails[]> {
+    try {
+      const { data, error } = await db
+        .from<CommunityAlertWithRelationsRow>(this.tableName)
+        .select(
+          `
+          *,
+          author_profile:profiles!community_alerts_profile_id_fkey(
+            display_name,
+            avatar_url
+          )
+          `,
+        )
+        .gt("report_count", 0)
+        .order("report_count", { ascending: false })
+        .limit(limit);
+
+      if (error) throw error;
+
+      return Promise.all(
+        (data || []).map(async (alert) => mapAlertWithDetailsRow(alert, await this.getAlertReports(alert.id))),
+      );
+    } catch (error) {
+      logger.error("AdminCommunityAlertsService.getTopReportedAlerts", error);
+      return [];
+    }
+  }
+
+  async getStatsByCategory(): Promise<Record<AlertCategory, number>> {
+    try {
+      const { data, error } = await db
+        .from<Pick<CommunityAlertRow, "type">>(this.tableName)
+        .select("type");
+
+      if (error) throw error;
+
+      const stats: Partial<Record<AlertCategory, number>> = {};
+      (data || []).forEach((alert) => {
+        const category = alert.type as AlertCategory;
+        stats[category] = (stats[category] || 0) + 1;
+      });
+
+      return stats as Record<AlertCategory, number>;
+    } catch (error) {
+      logger.error("AdminCommunityAlertsService.getStatsByCategory", error);
+      return {} as Record<AlertCategory, number>;
     }
   }
 
@@ -463,193 +585,18 @@ class AdminCommunityAlertsServiceClass {
     metadata: Record<string, unknown>,
   ): Promise<void> {
     const user = await SessionService.getCurrentUser();
+    if (!user) return;
 
-    if (!user) {
-      return;
-    }
+    const payload: CommunityAlertAuditInsert = {
+      alert_id: alertId,
+      actor_id: user.id,
+      action_type: actionType,
+      metadata: toJsonMetadata(metadata),
+    };
 
-    const db = this.db as any;
-    const { error } = await db
-      .from('community_alert_audit')
-      .insert({
-        alert_id: alertId,
-        actor_id: user.id,
-        action_type: actionType,
-        metadata,
-      } as any);
-
-    if (error) {
-      throw error;
-    }
-  }
-
-  // ============================================================================
-  // TERMOS BLOQUEADOS
-  // ============================================================================
-
-  /**
-   * Busca todos os termos bloqueados
-   */
-  async getBlockedTerms(): Promise<BlockedTerm[]> {
-    try {
-      const { data, error } = await supabase
-        .from(this.BLOCKED_TERMS_TABLE)
-        .select('*')
-        .order('term', { ascending: true });
-
-      if (error) throw error;
-
-      logger.info('AdminCommunityAlertsService.getBlockedTerms', {
-        count: data?.length || 0,
-      });
-
-      return (data as BlockedTerm[]) || [];
-    } catch (error) {
-      logger.error('AdminCommunityAlertsService.getBlockedTerms', error);
-      return [];
-    }
-  }
-
-  /**
-   * Adiciona um termo bloqueado
-   */
-  async addBlockedTerm(term: string): Promise<boolean> {
-    try {
-      const { error } = await supabase
-        .from(this.BLOCKED_TERMS_TABLE)
-        .insert({
-          term: term.toLowerCase().trim(),
-          is_active: true,
-        });
-
-      if (error) throw error;
-
-      logger.info('AdminCommunityAlertsService.addBlockedTerm', { term });
-      return true;
-    } catch (error) {
-      logger.error('AdminCommunityAlertsService.addBlockedTerm', error);
-      return false;
-    }
-  }
-
-  /**
-   * Remove um termo bloqueado
-   */
-  async removeBlockedTerm(termId: string): Promise<boolean> {
-    try {
-      const { error } = await supabase
-        .from(this.BLOCKED_TERMS_TABLE)
-        .delete()
-        .eq('id', termId);
-
-      if (error) throw error;
-
-      logger.info('AdminCommunityAlertsService.removeBlockedTerm', { termId });
-      return true;
-    } catch (error) {
-      logger.error('AdminCommunityAlertsService.removeBlockedTerm', error);
-      return false;
-    }
-  }
-
-  /**
-   * Ativa/desativa um termo bloqueado
-   */
-  async toggleBlockedTerm(termId: string, isActive: boolean): Promise<boolean> {
-    try {
-      const { error } = await supabase
-        .from(this.BLOCKED_TERMS_TABLE)
-        .update({
-          is_active: isActive,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', termId);
-
-      if (error) throw error;
-
-      logger.info('AdminCommunityAlertsService.toggleBlockedTerm', {
-        termId,
-        isActive,
-      });
-      return true;
-    } catch (error) {
-      logger.error('AdminCommunityAlertsService.toggleBlockedTerm', error);
-      return false;
-    }
-  }
-
-  // ============================================================================
-  // ANALYTICS
-  // ============================================================================
-
-  /**
-   * Busca alertas mais reportados
-   */
-  async getTopReportedAlerts(limit: number = 10): Promise<AlertWithDetails[]> {
-    try {
-      const { data, error } = await supabase
-        .from(this.TABLE)
-        .select(`
-          *,
-          category:type,
-          author_profile:profiles!community_alerts_profile_id_fkey(
-            display_name,
-            avatar_url
-          )
-        `)
-        .gt('report_count', 0)
-        .order('report_count', { ascending: false })
-        .limit(limit);
-
-      if (error) throw error;
-
-      // Buscar reports para cada alerta
-      const alertsWithReports = await Promise.all(
-        (data || []).map(async (alert) => {
-          const reports = await this.getAlertReports(alert.id);
-          return {
-            ...alert,
-            reports,
-          };
-        })
-      );
-
-      logger.info('AdminCommunityAlertsService.getTopReportedAlerts', {
-        count: alertsWithReports.length,
-      });
-
-      return alertsWithReports as unknown as AlertWithDetails[];
-    } catch (error) {
-      logger.error('AdminCommunityAlertsService.getTopReportedAlerts', error);
-      return [];
-    }
-  }
-
-  /**
-   * Busca estatísticas por categoria
-   */
-  async getStatsByCategory(): Promise<Record<AlertCategory, number>> {
-    try {
-      const { data, error } = await supabase
-        .from(this.TABLE)
-        .select('type');
-
-      if (error) throw error;
-
-      const stats: Record<string, number> = {};
-      
-      (data as Array<{ type: string }> | null)?.forEach((alert) => {
-        stats[alert.type] = (stats[alert.type] || 0) + 1;
-      });
-
-      logger.info('AdminCommunityAlertsService.getStatsByCategory', stats);
-      return stats as Record<AlertCategory, number>;
-    } catch (error) {
-      logger.error('AdminCommunityAlertsService.getStatsByCategory', error);
-      return {} as Record<AlertCategory, number>;
-    }
+    const { error } = await db.from<CommunityAlertAuditRow>(this.auditTable).insert(payload);
+    if (error) throw error;
   }
 }
 
 export const adminCommunityAlertsService = new AdminCommunityAlertsServiceClass();
-

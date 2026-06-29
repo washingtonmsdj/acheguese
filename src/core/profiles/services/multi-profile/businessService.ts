@@ -10,14 +10,41 @@ import type { BusinessData, ServiceResponse } from './types';
 const errorMessage = (error: unknown, fallback: string): string =>
   error instanceof Error ? error.message : fallback;
 
+interface QueryError {
+  message?: string | null;
+}
+
+interface QueryArrayResult<TRow> {
+  data: TRow[] | null;
+  error: QueryError | null;
+}
+
+interface QuerySingleResult<TRow> {
+  data: TRow | null;
+  error: QueryError | null;
+}
+
+interface QueryBuilder<TRow> extends PromiseLike<QueryArrayResult<TRow>> {
+  select: (columns?: string) => QueryBuilder<TRow>;
+  update: (values: unknown) => QueryBuilder<TRow>;
+  eq: (column: string, value: unknown) => QueryBuilder<TRow>;
+  single: () => Promise<QuerySingleResult<TRow>>;
+}
+
+interface BusinessDbClient {
+  from: <TRow = never>(table: string) => QueryBuilder<TRow>;
+}
+
+const businessDb = supabase as unknown as BusinessDbClient;
+
 export class BusinessService {
   /**
    * Buscar business data (via RLS)
    */
   static async getBusinessData(profileId: string): Promise<BusinessData | null> {
     try {
-      const { data, error } = await supabase
-        .from('business_data')
+      const { data, error } = await businessDb
+        .from<BusinessData>('business_data')
         .select('*')
         .eq('profile_id', profileId)
         .single();
@@ -39,9 +66,9 @@ export class BusinessService {
     updates: Partial<Omit<BusinessData, 'profile_id' | 'created_at' | 'updated_at'>>
   ): Promise<ServiceResponse<BusinessData>> {
     try {
-      const { data, error } = await supabase
-        .from('business_data')
-        .update(updates as any)
+      const { data, error } = await businessDb
+        .from<BusinessData>('business_data')
+        .update(updates)
         .eq('profile_id', profileId)
         .select()
         .single();

@@ -137,12 +137,12 @@ function NeighborhoodMapHero({
         </div>
       </div>
 
-      <div className="grid gap-4 px-4 py-4 sm:px-5 sm:py-5 lg:grid-cols-[minmax(0,1fr)_18rem]">
+      <div className="grid gap-3 px-4 py-4 sm:gap-4 sm:px-5 sm:py-5 lg:grid-cols-[minmax(0,1fr)_18rem]">
         <div className="min-w-0">
           <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-cyan-300">
             {territoryName}
           </p>
-          <h1 className="mt-2 text-2xl font-semibold leading-tight sm:text-[2rem]">
+          <h1 className="mt-2 max-w-[12ch] text-[1.75rem] font-semibold leading-[1.05] sm:max-w-none sm:text-[2rem]">
             {mapLabel}
           </h1>
           <p className="mt-2 max-w-xl text-sm leading-6 text-white/62">
@@ -198,7 +198,7 @@ function NeighborhoodMapHero({
               </span>
             ))}
           </div>
-          <div className="hidden rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.05] px-3 py-3 text-sm text-white/68 sm:block">
+          <div className="rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.05] px-3 py-3 text-sm text-white/68">
             A descoberta visual do bairro acontece aqui, sem trocar de landing e sem quebrar o contexto da comunidade.
           </div>
         </div>
@@ -888,7 +888,7 @@ export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV
               </p>
             </div>
           </div>
-          <div className="h-[calc(100vh-33rem)] min-h-[22rem] md:h-[calc(100vh-12rem)]">
+          <div className="h-[58vh] min-h-[20rem] max-h-[38rem] md:h-[calc(100vh-12rem)] md:min-h-[28rem]">
             {mapCanvas}
           </div>
         </section>

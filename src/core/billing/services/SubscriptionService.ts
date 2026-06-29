@@ -11,7 +11,35 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import { SessionService } from '@/core/session/services/SessionService';
-const subscriptionDb = supabase as any;
+
+type QueryError = {
+  message?: string | null;
+  code?: string | null;
+};
+
+type QuerySingleResult<T> = {
+  data: T | null;
+  error: QueryError | null;
+};
+
+type QueryBuilder<T extends object> = {
+  select(columns?: string): QueryBuilder<T>;
+  eq(column: string, value: unknown): QueryBuilder<T>;
+  single(): Promise<QuerySingleResult<T>>;
+};
+
+type RpcResult<T> = {
+  data: T | null;
+  error: QueryError | null;
+};
+
+type SubscriptionDbClient = {
+  from<T extends object>(table: string): QueryBuilder<T>;
+  rpc<T>(fn: string, params?: Record<string, unknown>): Promise<RpcResult<T>>;
+};
+
+const subscriptionDb = supabase as unknown as SubscriptionDbClient;
+
 export interface UserSubscription {
   id: string;
   user_id: string;
@@ -26,7 +54,7 @@ export interface UserSubscription {
   stripe_subscription_id: string | null;
   stripe_customer_id: string | null;
   stripe_price_id: string | null;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 }
@@ -52,7 +80,7 @@ export class SubscriptionService {
     }
 
     const { data, error } = await subscriptionDb
-      .from('user_subscriptions')
+      .from<UserSubscription>('user_subscriptions')
       .select('*')
       .eq('user_id', user.id)
       .single();
@@ -79,7 +107,7 @@ export class SubscriptionService {
       throw new Error('User not authenticated');
     }
 
-    const { data, error } = await subscriptionDb.rpc('get_user_active_subscription', {
+    const { data, error } = await subscriptionDb.rpc<ActiveSubscription[]>('get_user_active_subscription', {
       p_user_id: user.id,
     });
 
@@ -101,7 +129,7 @@ export class SubscriptionService {
       return false;
     }
 
-    const { data, error } = await subscriptionDb.rpc('user_has_plan', {
+    const { data, error } = await subscriptionDb.rpc<boolean>('user_has_plan', {
       p_user_id: user.id,
       p_plan_code: planCode,
     });
@@ -124,7 +152,7 @@ export class SubscriptionService {
       return false;
     }
 
-    const { data, error } = await subscriptionDb.rpc('user_has_feature', {
+    const { data, error } = await subscriptionDb.rpc<boolean>('user_has_feature', {
       p_user_id: user.id,
       p_feature: feature,
     });
@@ -147,7 +175,7 @@ export class SubscriptionService {
       return 0;
     }
 
-    const { data, error } = await subscriptionDb.rpc('get_user_entitlement_limit', {
+    const { data, error } = await subscriptionDb.rpc<number>('get_user_entitlement_limit', {
       p_user_id: user.id,
       p_entitlement: entitlement,
     });

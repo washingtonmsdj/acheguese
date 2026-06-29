@@ -12,7 +12,6 @@ import {
 } from "@/core/public-identity/domain/businessSlugSafety";
 import { AddressService } from "@/core/address/services/AddressService";
 import { BusinessHoursService } from "@/core/business/BusinessHoursService";
-const supabaseTyped = supabase as any;
 import { callRPC } from "@/integrations/supabase";
 import {
   createBusinessSchema,
@@ -37,6 +36,62 @@ import type {
   Product,
   UpdateBusinessInput,
 } from "../types";
+
+type QueryError = { message?: string | null };
+
+type QueryResult<T> = {
+  data: T | T[] | null;
+  error: QueryError | null;
+};
+
+type QuerySingleResult<T> = {
+  data: T | null;
+  error: QueryError | null;
+};
+
+type QueryBuilder<T extends object> = PromiseLike<QueryResult<T>> & {
+  insert(values: Record<string, unknown> | Array<Record<string, unknown>>): QueryBuilder<T>;
+  update(values: Record<string, unknown>): QueryBuilder<T>;
+  select(columns?: string): QueryBuilder<T>;
+  eq(column: string, value: unknown): QueryBuilder<T>;
+  or(filters: string): QueryBuilder<T>;
+  single(): Promise<QuerySingleResult<T>>;
+  maybeSingle(): Promise<QuerySingleResult<T>>;
+};
+
+type BusinessMutationsDbClient = {
+  from<T extends object>(table: string): QueryBuilder<T>;
+};
+
+type ProfileMemberInsertRow = {
+  profile_id: string;
+  user_id: string;
+  role: string;
+};
+
+type BusinessStatsInsertRow = {
+  profile_id: string;
+  views_count: number;
+  favorites_count: number;
+  shares_count: number;
+};
+
+type BusinessCurrentRow = {
+  id: string;
+  slug?: string | null;
+  metadata?: Record<string, unknown> | null;
+  address_id?: string | null;
+  location_id?: string | null;
+  business_name?: string | null;
+  is_verified?: boolean | null;
+};
+
+type ProductInsertRow = {
+  id: string;
+};
+
+const businessMutationsDb = supabase as unknown as BusinessMutationsDbClient;
+
 const BUSINESS_SELECT = `
   *,
   profiles(id, name, avatar_url, phone, whatsapp),
@@ -102,7 +157,7 @@ function sanitizeAndValidateInput(
   input: CreateBusinessInput | UpdateBusinessInput,
   isUpdate = false,
 ): CreateBusinessInput | UpdateBusinessInput {
-  const foundedYearRaw = (input as any).founded_year as string | number | undefined;
+  const foundedYearRaw = (input as Record<string, unknown>).founded_year;
   const foundedYear =
     typeof foundedYearRaw === "number"
       ? foundedYearRaw
@@ -332,7 +387,7 @@ export async function createBusiness(
       throw new Error("Erro ao criar perfil da empresa");
     }
 
-    const { error: memberError } = await supabaseTyped.from("profile_members").insert({
+    const { error: memberError } = await businessMutationsDb.from<ProfileMemberInsertRow>("profile_members").insert({
       profile_id: profile.id,
       user_id: userId,
       role: "owner",
@@ -348,8 +403,8 @@ export async function createBusiness(
       slug,
     });
 
-    const { data: business, error } = await supabaseTyped
-      .from("business_data")
+    const { data: business, error } = await businessMutationsDb
+      .from<BusinessDataWithProfiles>("business_data")
       .insert({
         profile_id: profile.id,
         business_name: validatedInput.name,
@@ -367,18 +422,22 @@ export async function createBusiness(
       throw error;
     }
 
-    await supabaseTyped.from("business_stats").insert({
+    await businessMutationsDb.from<BusinessStatsInsertRow>("business_stats").insert({
       profile_id: profile.id,
       views_count: 0,
       favorites_count: 0,
       shares_count: 0,
     });
 
-    if (validatedInput.horario_funcionamento) {
-      await syncBusinessHoursTable((business as { id: string }).id, validatedInput.horario_funcionamento);
+    if (!business) {
+      throw new Error("Erro ao carregar empresa criada");
     }
 
-    return mapBusinessDataToBusiness(business as BusinessDataWithProfiles);
+    if (validatedInput.horario_funcionamento) {
+      await syncBusinessHoursTable(business.id ?? profile.id, validatedInput.horario_funcionamento);
+    }
+
+    return mapBusinessDataToBusiness(business);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`Erro ao criar empresa: ${message}`);
@@ -395,8 +454,8 @@ export async function updateBusiness(
   try {
     const validatedInput = sanitizeAndValidateInput(input, true) as UpdateBusinessInput;
 
-    const { data: currentBusiness, error: currentError } = await supabaseTyped
-      .from("business_data")
+    const { data: currentBusiness, error: currentError } = await businessMutationsDb
+      .from<BusinessCurrentRow>("business_data")
       .select("id, slug, metadata, address_id, location_id, business_name, is_verified")
       .eq("profile_id", id)
       .maybeSingle();
@@ -409,22 +468,12 @@ export async function updateBusiness(
       throw new Error("Empresa nao encontrada");
     }
 
-    const currentTyped = currentBusiness as {
-      id: string;
-      slug?: string | null;
-      metadata?: Record<string, unknown>;
-      address_id?: string | null;
-      location_id?: string | null;
-      business_name?: string | null;
-      is_verified?: boolean | null;
-    };
-
     const addressId = await syncAddress(
       {
         ...validatedInput,
-        location_id: validatedInput.location_id ?? currentTyped.location_id ?? undefined,
+        location_id: validatedInput.location_id ?? currentBusiness.location_id ?? undefined,
       },
-      currentTyped.address_id,
+      currentBusiness.address_id,
     );
 
     const businessData = toBusinessData({
@@ -438,7 +487,7 @@ export async function updateBusiness(
     };
 
     if (businessData.metadata !== undefined) {
-      updatePayload.metadata = mergeMetadata(currentTyped.metadata, businessData.metadata);
+      updatePayload.metadata = mergeMetadata(currentBusiness.metadata, businessData.metadata);
     }
 
     if (validatedInput.name || validatedInput.description || validatedInput.logo_url || validatedInput.city) {
@@ -450,10 +499,10 @@ export async function updateBusiness(
       });
     }
 
-    if (validatedInput.slug !== undefined && currentTyped.slug !== validatedInput.slug) {
-      if (!isBusinessSlugSafetyBypassAllowed({ isVerifiedOfficial: Boolean(currentTyped.is_verified) })) {
+    if (validatedInput.slug !== undefined && currentBusiness.slug !== validatedInput.slug) {
+      if (!isBusinessSlugSafetyBypassAllowed({ isVerifiedOfficial: Boolean(currentBusiness.is_verified) })) {
         const slugSafety = evaluateBusinessSlugSafety({
-          businessName: validatedInput.name ?? currentTyped.business_name ?? "",
+          businessName: validatedInput.name ?? currentBusiness.business_name ?? "",
           slug: validatedInput.slug,
         });
         if (slugSafety.status === "review") {
@@ -491,8 +540,8 @@ export async function updateBusiness(
       updatePayload.slug = validatedInput.slug;
     }
 
-    const { data: business, error } = await supabaseTyped
-      .from("business_data")
+    const { data: business, error } = await businessMutationsDb
+      .from<BusinessDataWithProfiles>("business_data")
       .update(updatePayload)
       .eq("profile_id", id)
       .select(BUSINESS_SELECT)
@@ -502,11 +551,15 @@ export async function updateBusiness(
       throw error;
     }
 
-    if (validatedInput.horario_funcionamento !== undefined) {
-      await syncBusinessHoursTable((business as { id: string }).id, validatedInput.horario_funcionamento);
+    if (!business) {
+      throw new Error("Erro ao carregar empresa atualizada");
     }
 
-    return mapBusinessDataToBusiness(business as BusinessDataWithProfiles);
+    if (validatedInput.horario_funcionamento !== undefined) {
+      await syncBusinessHoursTable(business.id ?? id, validatedInput.horario_funcionamento);
+    }
+
+    return mapBusinessDataToBusiness(business);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`Erro ao atualizar empresa: ${message}`);
@@ -526,7 +579,7 @@ export async function updateActiveSections(
     promocoes: boolean;
   },
 ): Promise<void> {
-  const { error } = await supabaseTyped.from("business_data")
+  const { error } = await businessMutationsDb.from<BusinessDataWithProfiles>("business_data")
     .update({
       secoes_ativas: sections,
       updated_at: new Date().toISOString(),
@@ -543,7 +596,7 @@ export async function updateActiveSections(
  */
 export async function deleteBusiness(id: string): Promise<void> {
   try {
-    const { error } = await supabaseTyped.from("business_data")
+    const { error } = await businessMutationsDb.from<BusinessDataWithProfiles>("business_data")
       .update({
         status: "deleted",
         updated_at: new Date().toISOString(),
@@ -572,7 +625,7 @@ export async function createProduct(
   }
 
   try {
-    const { data, error } = await supabaseTyped.from("business_products")
+    const { data, error } = await businessMutationsDb.from<ProductInsertRow>("business_products")
       .insert({
         profile_id: businessId,
         name: productData.nome,
@@ -590,9 +643,12 @@ export async function createProduct(
       .single();
 
     if (error) throw error;
+    if (!data) {
+      throw new Error("Erro ao carregar produto criado");
+    }
 
     return {
-      id: (data as { id: string }).id,
+      id: data.id,
       profile_id: businessId,
       name: productData.nome,
       description: productData.descricao || "",

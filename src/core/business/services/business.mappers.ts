@@ -127,6 +127,9 @@ export function toBusinessData(
   const paymentMethods = input.formas_pagamento ?? [];
   const serviceModes = input.modos_atendimento ?? [];
   const metadata = buildMetadata(input);
+  const metadataRecord: Record<string, unknown> | undefined = metadata
+    ? { ...metadata }
+    : undefined;
   const result: Partial<BusinessDataRecord> = {};
 
   setIfDefined(result, "legal_name", input.legal_name);
@@ -147,7 +150,7 @@ export function toBusinessData(
   setIfDefined(result, "payment_methods", input.formas_pagamento ? paymentMethods : undefined);
   setIfDefined(result, "specialties", input.especialidades ? input.especialidades : undefined);
   setIfDefined(result, "facilities", input.facilidades ? input.facilidades : undefined);
-  setIfDefined(result, "metadata", (metadata as any) ?? undefined);
+  setIfDefined(result, "metadata", metadataRecord);
   setIfDefined(result, "status", input.status);
   setIfDefined(result, "slug", input.slug);
 

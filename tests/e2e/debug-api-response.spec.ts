@@ -1,62 +1,73 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 
 const BASE_URL = 'http://localhost:8081';
 
-test.describe('Debug API Response', () => {
-  
-  test('Verificar resposta da API de listagem', async ({ page }) => {
-    const apiResponses: any[] = [];
+type ApiResponseLog = {
+  url: string;
+  status: number;
+  body?: unknown;
+  error?: string;
+};
 
-    // Interceptar requisições da API
+type TouristPointSummary = {
+  title?: string;
+  slug?: string;
+};
+
+function isTouristPointSummary(value: unknown): value is TouristPointSummary {
+  return typeof value === 'object' && value !== null;
+}
+
+test.describe('Debug API Response', () => {
+  test('verifica a resposta da API de listagem', async ({ page }) => {
+    const apiResponses: ApiResponseLog[] = [];
+
     page.on('response', async (response) => {
       const url = response.url();
-      
-      // Capturar apenas requisições do Supabase para tourist_points
+
       if (url.includes('tourist_points') && url.includes('supabase')) {
         try {
           const body = await response.json();
           apiResponses.push({
             url,
             status: response.status(),
-            body
+            body,
           });
-        } catch (e) {
+        } catch {
           apiResponses.push({
             url,
             status: response.status(),
-            error: 'Could not parse response'
+            error: 'Could not parse response',
           });
         }
       }
     });
 
-    // Navegar para listagem
     await page.goto(`${BASE_URL}/pontos-turisticos/ba/salvador`);
     await page.waitForLoadState('networkidle');
-
-    // Aguardar um pouco para garantir que todas as requisições foram feitas
     await page.waitForTimeout(2000);
 
-    // Exibir respostas capturadas
     console.log('\n=== RESPOSTAS DA API ===');
-    
+
     apiResponses.forEach((response, index) => {
       console.log(`\nResposta ${index + 1}:`);
       console.log('URL:', response.url);
       console.log('Status:', response.status);
-      
+
       if (response.body) {
         console.log('Total de registros:', Array.isArray(response.body) ? response.body.length : 'N/A');
-        
+
         if (Array.isArray(response.body)) {
-          console.log('\nPontos turísticos retornados:');
-          response.body.forEach((point: any) => {
-            console.log(`  - ${point.title} (${point.slug})`);
+          console.log('\nPontos turisticos retornados:');
+          response.body.forEach((point) => {
+            if (isTouristPointSummary(point)) {
+              console.log(`  - ${point.title ?? 'sem titulo'} (${point.slug ?? 'sem slug'})`);
+            }
           });
         }
       }
     });
-    
+
     console.log('\n========================\n');
   });
 });

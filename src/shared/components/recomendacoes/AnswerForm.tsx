@@ -3,19 +3,20 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { MapPin, Send, Loader2 } from "lucide-react";
+import type { MentionResult } from "@/core/community/qa-types";
 
 interface AnswerFormProps {
   answerText: string;
   submitting: boolean;
   showMention: boolean;
   mentionSearch: string;
-  mentionResults: any[];
+  mentionResults: MentionResult[];
   selectedPro: string | null;
   selectedBiz: string | null;
   onAnswerTextChange: (text: string) => void;
   onToggleMention: () => void;
   onMentionSearchChange: (query: string) => void;
-  onSelectMention: (result: any) => void;
+  onSelectMention: (result: MentionResult) => void;
   onClearMention: () => void;
   onSubmit: () => void;
 }

@@ -34,7 +34,7 @@ export interface NeighborhoodBoundsInput {
 
 export interface BoundaryServiceDeps {
   locationRepository?: ILocationRepository;
-  supabaseClient?: any;
+  supabaseClient?: BoundaryDbClient;
   locationCacheTtlMs?: number;
   customBoundariesEnabled?: boolean;
 }
@@ -82,6 +82,25 @@ interface BoundaryQueryError {
   message?: string | null;
   details?: string | null;
   hint?: string | null;
+}
+
+interface QueryResult<T> {
+  data: T | null;
+  error: BoundaryQueryError | null;
+}
+
+interface QueryBuilder<TRow> extends PromiseLike<QueryResult<TRow[]>> {
+  select: (columns?: string) => QueryBuilder<TRow>;
+  eq: (column: string, value: unknown) => QueryBuilder<TRow>;
+  maybeSingle: () => Promise<QueryResult<TRow>>;
+  upsert: (
+    values: unknown | unknown[],
+    options?: { onConflict?: string },
+  ) => QueryBuilder<TRow>;
+}
+
+interface BoundaryDbClient {
+  from: <TRow = never>(table: string) => QueryBuilder<TRow>;
 }
 
 const DEFAULT_LOCATION_CACHE_TTL_MS = 5 * 60 * 1000;
@@ -135,7 +154,7 @@ class BoundaryServiceClass {
 
   private readonly FALLBACK_CENTER: [number, number] = [-12.975, -38.476];
   private readonly locationRepository: ILocationRepository;
-  private readonly supabaseClient: any;
+  private readonly supabaseClient: BoundaryDbClient;
   private readonly locationCacheTtlMs: number;
   private readonly customBoundariesEnabled: boolean;
   private territoryIndex: CachedTerritoryIndex | null = null;
@@ -148,7 +167,7 @@ class BoundaryServiceClass {
 
   constructor(deps: BoundaryServiceDeps = {}) {
     this.locationRepository = deps.locationRepository ?? createLocationRepository();
-    this.supabaseClient = deps.supabaseClient ?? supabase;
+    this.supabaseClient = deps.supabaseClient ?? (supabase as unknown as BoundaryDbClient);
     this.locationCacheTtlMs = deps.locationCacheTtlMs ?? DEFAULT_LOCATION_CACHE_TTL_MS;
     this.customBoundariesEnabled =
       deps.customBoundariesEnabled ?? DEFAULT_CUSTOM_BOUNDARIES_ENABLED;
@@ -206,12 +225,10 @@ class BoundaryServiceClass {
 
     try {
       const { data, error } = await this.supabaseClient
-        .from('location_boundaries')
+        .from<BoundaryRow>('location_boundaries')
         .select('boundary, center_lat, center_lng')
         .eq('location_id', locationId)
         .maybeSingle();
-
-      const row = data as BoundaryRow | null;
 
       if (error) {
         if (this.isLocationBoundariesTableUnavailable(error)) {
@@ -232,19 +249,19 @@ class BoundaryServiceClass {
 
       this.locationBoundariesAvailable = true;
 
-      if (!row) {
+      if (!data) {
         return null;
       }
 
-      const rings = row.boundary
-        ? this.extractRingsFromGeoJSON(row.boundary)
+      const rings = data.boundary
+        ? this.extractRingsFromGeoJSON(data.boundary)
         : [];
 
       if (rings.length === 0) {
         return null;
       }
 
-      const center = this.toCenter(row.center_lat, row.center_lng)
+      const center = this.toCenter(data.center_lat, data.center_lng)
         ?? this.calculateCenter(rings);
 
       if (!center) {
@@ -412,7 +429,7 @@ class BoundaryServiceClass {
 
     try {
       const { data, error } = await this.supabaseClient
-        .from('locations')
+        .from<InlineLocationBoundaryRow>('locations')
         .select('boundary')
         .eq('id', locationId)
         .maybeSingle();
@@ -426,12 +443,11 @@ class BoundaryServiceClass {
 
       this.inlineLocationBoundaryAvailable = true;
 
-      const row = data as InlineLocationBoundaryRow | null;
-      if (!row?.boundary) {
+      if (!data?.boundary) {
         return null;
       }
 
-      const rings = this.extractRingsFromGeoJSON(row.boundary);
+      const rings = this.extractRingsFromGeoJSON(data.boundary);
       if (rings.length === 0) {
         return null;
       }
@@ -452,7 +468,7 @@ class BoundaryServiceClass {
 
     try {
       const { data, error } = await this.supabaseClient
-        .from('neighborhood_boundaries')
+        .from<NeighborhoodBoundaryRow>('neighborhood_boundaries')
         .select('geometry')
         .eq('location_id', locationId)
         .maybeSingle();
@@ -466,8 +482,7 @@ class BoundaryServiceClass {
 
       this.neighborhoodBoundariesAvailable = true;
 
-      const row = data as NeighborhoodBoundaryRow | null;
-      const geometry = this.parseBoundaryGeometry(row?.geometry ?? null);
+      const geometry = this.parseBoundaryGeometry(data?.geometry ?? null);
       if (!geometry) {
         return null;
       }

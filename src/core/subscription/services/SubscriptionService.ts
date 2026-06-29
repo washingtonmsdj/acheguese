@@ -1,19 +1,19 @@
 /**
  * SubscriptionService - SSOT para assinaturas e planos
  *
- * Responsável por gerenciar:
- * - Assinaturas de usuários
+ * Responsavel por gerenciar:
+ * - Assinaturas de usuarios
  * - Planos (free, basic, premium, enterprise)
  * - Status de pagamento
  * - Features por plano
  *
- * Arquitetura: Component → Hook → SubscriptionService → Supabase
+ * Arquitetura: Component -> Hook -> SubscriptionService -> Supabase
  */
 
+import { USER_SUBSCRIPTION_STATUS } from "@/core/subscription/constants/subscriptionStatus";
 import { supabase } from "@/integrations/supabase";
 import { trackError } from "@/shared/utils/errorTracking";
 import { logger } from "@/shared/utils/logger";
-import { USER_SUBSCRIPTION_STATUS } from "@/core/subscription/constants/subscriptionStatus";
 
 export type PlanType = "free" | "basic" | "premium" | "enterprise";
 export type SubscriptionStatus =
@@ -62,8 +62,43 @@ export interface UpdateSubscriptionParams {
   metadata?: Record<string, unknown>;
 }
 
+type QueryResult<T> = Promise<{ data: T; error: { code?: string; message?: string } | null }>;
+
+interface QueryBuilder<TRow> {
+  select(columns?: string): QueryBuilder<TRow>;
+  insert(values: Partial<TRow> | Array<Partial<TRow>>): QueryBuilder<TRow>;
+  update(values: Partial<TRow>): QueryBuilder<TRow>;
+  eq(column: string, value: unknown): QueryBuilder<TRow>;
+  not(column: string, operator: string, value: unknown): QueryBuilder<TRow>;
+  lt(column: string, value: unknown): QueryBuilder<TRow>;
+  order(column: string, options?: { ascending?: boolean }): QueryBuilder<TRow>;
+  maybeSingle(): QueryResult<TRow | null>;
+  single(): QueryResult<TRow>;
+  then<TResult1 = { data: TRow[]; error: { code?: string; message?: string } | null }, TResult2 = never>(
+    onfulfilled?:
+      | ((value: { data: TRow[]; error: { code?: string; message?: string } | null }) => TResult1 | PromiseLike<TResult1>)
+      | null,
+    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
+  ): Promise<TResult1 | TResult2>;
+}
+
+interface SubscriptionDbClient {
+  from<TRow>(table: string): QueryBuilder<TRow>;
+}
+
+type SubscriptionRow = Subscription;
+type SubscriptionInsert = Omit<Subscription, "id" | "created_at" | "updated_at" | "started_at"> & {
+  id?: string;
+  created_at?: string;
+  updated_at?: string;
+  started_at?: string;
+};
+type SubscriptionUpdate = Partial<SubscriptionInsert>;
+
+const subscriptionDb = supabase as unknown as SubscriptionDbClient;
+
 /**
- * Features padrão por plano
+ * Features padrao por plano
  */
 const PLAN_FEATURES: Record<PlanType, Record<string, unknown>> = {
   free: {
@@ -86,7 +121,7 @@ const PLAN_FEATURES: Record<PlanType, Record<string, unknown>> = {
   },
   premium: {
     max_businesses: 10,
-    max_posts: -1, // ilimitado
+    max_posts: -1,
     max_photos: 100,
     analytics: true,
     priority_support: true,
@@ -94,7 +129,7 @@ const PLAN_FEATURES: Record<PlanType, Record<string, unknown>> = {
     ads_free: true,
   },
   enterprise: {
-    max_businesses: -1, // ilimitado
+    max_businesses: -1,
     max_posts: -1,
     max_photos: -1,
     analytics: true,
@@ -121,12 +156,16 @@ function getPlanFeatureSet(planType: PlanType): Record<string, unknown> {
   }
 }
 
-function getFeatureValue(features: Record<string, unknown>, featureName: string): unknown {
+function getFeatureValue(
+  features: Record<string, unknown>,
+  featureName: string,
+): unknown {
   for (const [key, value] of Object.entries(features)) {
     if (key === featureName) {
       return value;
     }
   }
+
   return undefined;
 }
 
@@ -142,18 +181,18 @@ interface SubscriptionStatsRow {
 }
 
 /**
- * Serviço de Assinaturas - SSOT
+ * Servico de Assinaturas - SSOT
  */
 export class SubscriptionService {
   /**
-   * Busca assinatura ativa de um usuário
+   * Busca assinatura ativa de um usuario
    */
   static async getActiveSubscription(
     userId: string,
   ): Promise<Subscription | null> {
     try {
-      const { data, error } = await (supabase as any)
-        .from("user_subscriptions")
+      const { data, error } = await subscriptionDb
+        .from<SubscriptionRow>("user_subscriptions")
         .select("*")
         .eq("user_id", userId)
         .eq("active", true)
@@ -175,19 +214,21 @@ export class SubscriptionService {
   }
 
   /**
-   * Busca histórico de assinaturas de um usuário
+   * Busca historico de assinaturas de um usuario
    */
   static async getSubscriptionHistory(userId: string): Promise<Subscription[]> {
     try {
-      const { data, error } = await (supabase as any)
-        .from("user_subscriptions")
+      const { data, error } = await subscriptionDb
+        .from<SubscriptionRow>("user_subscriptions")
         .select("*")
         .eq("user_id", userId)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
-      return data || [];
+      return data ?? [];
     } catch (error) {
       trackError(error as Error, {
         component: "SubscriptionService",
@@ -207,33 +248,38 @@ export class SubscriptionService {
     error?: string;
   }> {
     try {
-      // Desativar assinaturas antigas
-      await (supabase as any)
-        .from("user_subscriptions")
+      await subscriptionDb
+        .from<SubscriptionRow>("user_subscriptions")
         .update({ active: false })
         .eq("user_id", params.user_id)
         .eq("active", true);
 
-      // Criar nova assinatura
-      const features = params.features || PLAN_FEATURES[params.plan_type];
+      const features = params.features ?? PLAN_FEATURES[params.plan_type];
+      const insertPayload: Partial<SubscriptionInsert> = {
+        user_id: params.user_id,
+        plan_type: params.plan_type,
+        status: USER_SUBSCRIPTION_STATUS.ACTIVE as SubscriptionStatus,
+        active: true,
+        expires_at: params.expires_at ?? null,
+        cancelled_at: null,
+        payment_method: params.payment_method ?? null,
+        last_payment_at: null,
+        next_payment_at: null,
+        amount_cents: params.amount_cents ?? null,
+        currency: "BRL",
+        features,
+        metadata: params.metadata ?? {},
+      };
 
-      const { data, error } = await (supabase as any)
-        .from("user_subscriptions")
-        .insert({
-          user_id: params.user_id,
-          plan_type: params.plan_type,
-          status: USER_SUBSCRIPTION_STATUS.ACTIVE,
-          active: true,
-          expires_at: params.expires_at || null,
-          payment_method: params.payment_method || null,
-          amount_cents: params.amount_cents || null,
-          features,
-          metadata: params.metadata || {},
-        })
+      const { data, error } = await subscriptionDb
+        .from<SubscriptionRow>("user_subscriptions")
+        .insert(insertPayload)
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       logger.info("Subscription created", {
         userId: params.user_id,
@@ -260,13 +306,15 @@ export class SubscriptionService {
     updates: UpdateSubscriptionParams,
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      const { error } = await (supabase as any)
-        .from("user_subscriptions")
-        .update(updates)
+      const { error } = await subscriptionDb
+        .from<SubscriptionRow>("user_subscriptions")
+        .update(updates as Partial<SubscriptionUpdate>)
         .eq("user_id", userId)
         .eq("active", true);
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       logger.info("Subscription updated", { userId, updates });
       return { success: true };
@@ -286,16 +334,11 @@ export class SubscriptionService {
    */
   static async cancelSubscription(
     userId: string,
-    immediate: boolean = false,
+    immediate = false,
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      const updates: {
-        status: SubscriptionStatus;
-        cancelled_at: string;
-        active?: boolean;
-        expires_at?: string;
-      } = {
-        status: USER_SUBSCRIPTION_STATUS.CANCELLED,
+      const updates: Partial<SubscriptionUpdate> = {
+        status: USER_SUBSCRIPTION_STATUS.CANCELLED as SubscriptionStatus,
         cancelled_at: new Date().toISOString(),
       };
 
@@ -304,13 +347,15 @@ export class SubscriptionService {
         updates.expires_at = new Date().toISOString();
       }
 
-      const { error } = await (supabase as any)
-        .from("user_subscriptions")
+      const { error } = await subscriptionDb
+        .from<SubscriptionRow>("user_subscriptions")
         .update(updates)
         .eq("user_id", userId)
         .eq("active", true);
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       logger.info("Subscription cancelled", { userId, immediate });
       return { success: true };
@@ -334,19 +379,21 @@ export class SubscriptionService {
     amountCents?: number,
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      const { error } = await (supabase as any)
-        .from("user_subscriptions")
+      const { error } = await subscriptionDb
+        .from<SubscriptionRow>("user_subscriptions")
         .update({
-          status: USER_SUBSCRIPTION_STATUS.ACTIVE,
+          status: USER_SUBSCRIPTION_STATUS.ACTIVE as SubscriptionStatus,
           expires_at: expiresAt,
           last_payment_at: new Date().toISOString(),
           next_payment_at: expiresAt,
-          amount_cents: amountCents,
+          amount_cents: amountCents ?? null,
         })
         .eq("user_id", userId)
         .eq("active", true);
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       logger.info("Subscription renewed", { userId, expiresAt });
       return { success: true };
@@ -362,21 +409,21 @@ export class SubscriptionService {
   }
 
   /**
-   * Verifica se usuário tem acesso a uma feature
+   * Verifica se usuario tem acesso a uma feature
    */
-  static async hasFeature(
-    userId: string,
-    featureName: string,
-  ): Promise<boolean> {
+  static async hasFeature(userId: string, featureName: string): Promise<boolean> {
     try {
       const subscription = await this.getActiveSubscription(userId);
 
       if (!subscription) {
-        // Sem assinatura = plano free
-        return featureToBoolean(getFeatureValue(PLAN_FEATURES.free, featureName));
+        return featureToBoolean(
+          getFeatureValue(PLAN_FEATURES.free, featureName),
+        );
       }
 
-      return featureToBoolean(getFeatureValue(subscription.features, featureName));
+      return featureToBoolean(
+        getFeatureValue(subscription.features, featureName),
+      );
     } catch (error) {
       trackError(error as Error, {
         component: "SubscriptionService",
@@ -388,9 +435,11 @@ export class SubscriptionService {
   }
 
   /**
-   * Busca features do plano do usuário
+   * Busca features do plano do usuario
    */
-  static async getUserFeatures(userId: string): Promise<Record<string, unknown>> {
+  static async getUserFeatures(
+    userId: string,
+  ): Promise<Record<string, unknown>> {
     try {
       const subscription = await this.getActiveSubscription(userId);
 
@@ -410,7 +459,7 @@ export class SubscriptionService {
   }
 
   /**
-   * Busca estatísticas de assinaturas (admin)
+   * Busca estatisticas de assinaturas (admin)
    */
   static async getSubscriptionStats(): Promise<{
     total: number;
@@ -420,33 +469,32 @@ export class SubscriptionService {
     revenue_monthly: number;
   }> {
     try {
-      const { data, error } = await (supabase as any)
-        .from("user_subscriptions")
+      const { data, error } = await subscriptionDb
+        .from<SubscriptionStatsRow>("user_subscriptions")
         .select("plan_type, status, active, amount_cents");
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
-      const rows = (data || []) as SubscriptionStatsRow[];
+      const rows = data ?? [];
       const stats = {
         total: rows.length,
-        active: rows.filter((s) => s.active).length,
+        active: rows.filter((subscription) => subscription.active).length,
         by_plan: {} as Record<PlanType, number>,
         by_status: {} as Record<SubscriptionStatus, number>,
         revenue_monthly: 0,
       };
 
-      rows.forEach((s) => {
-        // Contar por plano
-        stats.by_plan[s.plan_type as PlanType] =
-          (stats.by_plan[s.plan_type as PlanType] || 0) + 1;
+      rows.forEach((subscription) => {
+        stats.by_plan[subscription.plan_type] =
+          (stats.by_plan[subscription.plan_type] ?? 0) + 1;
 
-        // Contar por status
-        stats.by_status[s.status as SubscriptionStatus] =
-          (stats.by_status[s.status as SubscriptionStatus] || 0) + 1;
+        stats.by_status[subscription.status] =
+          (stats.by_status[subscription.status] ?? 0) + 1;
 
-        // Calcular receita (apenas assinaturas ativas)
-        if (s.active && s.amount_cents) {
-          stats.revenue_monthly += s.amount_cents;
+        if (subscription.active && subscription.amount_cents) {
+          stats.revenue_monthly += subscription.amount_cents;
         }
       });
 
@@ -467,17 +515,17 @@ export class SubscriptionService {
   }
 
   /**
-   * Expira assinaturas vencidas (manutenção)
+   * Expira assinaturas vencidas (manutencao)
    */
   static async expireSubscriptions(): Promise<{
     success: boolean;
     expired: number;
   }> {
     try {
-      const { data, error } = await (supabase as any)
-        .from("user_subscriptions")
+      const { data, error } = await subscriptionDb
+        .from<SubscriptionRow>("user_subscriptions")
         .update({
-          status: USER_SUBSCRIPTION_STATUS.EXPIRED,
+          status: USER_SUBSCRIPTION_STATUS.EXPIRED as SubscriptionStatus,
           active: false,
         })
         .eq("active", true)
@@ -485,9 +533,11 @@ export class SubscriptionService {
         .lt("expires_at", new Date().toISOString())
         .select();
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
-      const expired = data?.length || 0;
+      const expired = data?.length ?? 0;
       logger.info("Subscriptions expired", { expired });
 
       return { success: true, expired };
@@ -501,13 +551,11 @@ export class SubscriptionService {
   }
 
   /**
-   * Busca features padrão de um plano
+   * Busca features padrao de um plano
    */
   static getPlanFeatures(planType: PlanType): Record<string, unknown> {
     return getPlanFeatureSet(planType);
   }
 }
 
-// Export singleton
 export const subscriptionService = SubscriptionService;
-

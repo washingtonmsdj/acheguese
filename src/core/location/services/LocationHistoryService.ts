@@ -12,6 +12,63 @@ import { logger } from "@/shared/utils/logger";
 import { residenceService } from "@/core/residence/services/ResidenceService";
 import { serviceAreasService } from "@/core/service-areas/services/ServiceAreasService";
 
+type ErrorLike = {
+  code?: string | null;
+  message?: string | null;
+};
+
+type QueryPayload<TRow> = {
+  data: TRow[] | null;
+  error: ErrorLike | null;
+};
+
+type SingleQueryPayload<TRow> = {
+  data: TRow | null;
+  error: ErrorLike | null;
+};
+
+type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
+  delete(): TableClient<TRow>;
+  eq(column: string, value: unknown): TableClient<TRow>;
+  insert(values: Record<string, unknown> | ReadonlyArray<Record<string, unknown>>): TableClient<TRow>;
+  limit(value: number): TableClient<TRow>;
+  lt(column: string, value: string): TableClient<TRow>;
+  order(column: string, options?: { ascending?: boolean }): TableClient<TRow>;
+  select(columns?: string): TableClient<TRow>;
+  single(): Promise<SingleQueryPayload<TRow>>;
+};
+
+type LocationHistoryDbClient = {
+  from<TRow>(table: string): TableClient<TRow>;
+};
+
+type LocationHistoryRow = {
+  accuracy: number | null;
+  created_at: string;
+  id: string;
+  latitude: number;
+  longitude: number;
+  profile_id: string;
+  timestamp: string;
+};
+
+type LocationHistoryInsert = {
+  accuracy?: number;
+  latitude: number;
+  longitude: number;
+  profile_id: string;
+  timestamp: string;
+};
+
+const locationHistoryDb = supabase as unknown as LocationHistoryDbClient;
+
+function mapLocationHistoryRow(row: LocationHistoryRow): LocationHistory {
+  return {
+    ...row,
+    accuracy: row.accuracy ?? undefined,
+  };
+}
+
 export interface LocationHistory {
   id: string;
   profile_id: string;
@@ -49,7 +106,7 @@ export interface ProfileLocation {
 }
 
 class LocationServiceClass {
-  private readonly db = supabase as any;
+  private readonly db = locationHistoryDb;
   /**
    * Salva localização no histórico
    */
@@ -57,14 +114,15 @@ class LocationServiceClass {
     locationData: Omit<LocationHistory, "id" | "created_at">,
   ): Promise<LocationHistory | null> {
     try {
+      const payload: LocationHistoryInsert = { ...locationData };
       const { data, error } = await this.db
-        .from("location_history")
-        .insert([locationData])
+        .from<LocationHistoryRow>("location_history")
+        .insert([payload])
         .select()
         .single();
 
       if (error) throw error;
-      return data as LocationHistory;
+      return data ? mapLocationHistoryRow(data) : null;
     } catch (error) {
       logger.error("Error saving location:", error);
       return null;
@@ -80,14 +138,14 @@ class LocationServiceClass {
   ): Promise<LocationHistory[]> {
     try {
       const { data, error } = await this.db
-        .from("location_history")
+        .from<LocationHistoryRow>("location_history")
         .select("*")
         .eq("profile_id", profileId)
         .order("created_at", { ascending: false })
         .limit(limit);
 
       if (error) throw error;
-      return (data as LocationHistory[]) || [];
+      return (data || []).map(mapLocationHistoryRow);
     } catch (error) {
       logger.error("Error fetching location history:", error);
       return [];
@@ -100,7 +158,7 @@ class LocationServiceClass {
   async getLastLocation(profileId: string): Promise<LocationHistory | null> {
     try {
       const { data, error } = await this.db
-        .from("location_history")
+        .from<LocationHistoryRow>("location_history")
         .select("*")
         .eq("profile_id", profileId)
         .order("created_at", { ascending: false })
@@ -108,7 +166,7 @@ class LocationServiceClass {
         .single();
 
       if (error) throw error;
-      return data as LocationHistory;
+      return data ? mapLocationHistoryRow(data) : null;
     } catch (error) {
       logger.error("Error fetching last location:", error);
       return null;
@@ -124,7 +182,7 @@ class LocationServiceClass {
       cutoffDate.setDate(cutoffDate.getDate() - daysOld);
 
       const { error } = await this.db
-        .from("location_history")
+        .from<LocationHistoryRow>("location_history")
         .delete()
         .lt("created_at", cutoffDate.toISOString());
 

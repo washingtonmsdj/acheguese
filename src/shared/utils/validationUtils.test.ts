@@ -34,7 +34,7 @@ describe('validationUtils', () => {
       expect(isValidEmail('test@')).toBe(false);
       expect(isValidEmail('test@.com')).toBe(false);
       expect(isValidEmail('')).toBe(false);
-      expect(isValidEmail(null as any)).toBe(false);
+      expect(isValidEmail(null as unknown as string)).toBe(false);
     });
   });
 

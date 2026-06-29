@@ -13,12 +13,14 @@ import { useCommunityLocation } from "./useCommunityLocation";
 import type { EffectiveRollout } from "@/core/rollout/types";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 
-type CommunityRolloutConfig = Record<string, unknown>;
+type CommunityRolloutConfig = Awaited<
+  ReturnType<(typeof communityRolloutService)["getCommunityConfig"]>
+>;
 
 export function useCommunityRollout(resolved?: ResolvedTerritory) {
   const [isActive, setIsActive] = useState<boolean>(false);
   const [rollout, setRollout] = useState<EffectiveRollout | null>(null);
-  const [config, setConfig] = useState<CommunityRolloutConfig | null>(null);
+  const [config, setConfig] = useState<CommunityRolloutConfig>(null);
   const [accessCheck, setAccessCheck] = useState<{ blocked: boolean; reason?: string }>({ blocked: false });
   const [isLoading, setIsLoading] = useState(true);
 

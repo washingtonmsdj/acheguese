@@ -70,6 +70,8 @@ export function useGroupChat(groupId: string | undefined) {
     const subscription = realtimeService.subscribeToGroupMessages(
       groupId,
       async (newMessage) => {
+        if (typeof newMessage.id !== "string") return;
+
         // SSOT: GroupService busca mensagem completa
         const data = await GroupService.getGroupMessageById(newMessage.id);
         if (data) {
@@ -141,4 +143,3 @@ export function useGroupChat(groupId: string | undefined) {
     refetch: loadMessages,
   };
 }
-

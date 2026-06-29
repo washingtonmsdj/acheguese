@@ -12,6 +12,11 @@ import { logger } from '@/shared/utils/logger';
 import { useState, useEffect, useCallback } from 'react';
 import { MultiProfileService } from '../services/multi-profile';
 import type { Profile } from '../services/multi-profile/types';
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
+}
+
 const ACTIVE_PROFILE_KEY = 'active_profile_id';
 
 export function useActiveProfile() {
@@ -47,9 +52,9 @@ export function useActiveProfile() {
       }
 
       setActiveProfile(active || null);
-    } catch (err: any) {
-      logger.error('Error loading active profile:', err);
-      setError(err.message || 'Failed to load active profile');
+    } catch (error: unknown) {
+      logger.error('Error loading active profile:', error);
+      setError(getErrorMessage(error, 'Failed to load active profile'));
     } finally {
       setLoading(false);
     }

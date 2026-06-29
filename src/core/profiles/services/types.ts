@@ -67,6 +67,7 @@ export interface ProfileRow {
   name: string;
   display_name: string;
   username: string;
+  handle?: string | null;
   type?: ProfileTypeAlias;
   bio?: string;
   short_bio?: string;

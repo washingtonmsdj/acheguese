@@ -28,6 +28,36 @@ interface TestUser {
   role: "user" | "admin";
 }
 
+interface SeedStateRow {
+  id: string;
+  name: string;
+}
+
+interface SeedCityRow {
+  id: string;
+  name: string;
+  state_id: string | null;
+  states?: SeedStateRow | SeedStateRow[] | null;
+}
+
+interface SeedNeighborhoodRow {
+  id: string;
+  name: string;
+  city_id: string | null;
+  cities?: SeedCityRow | SeedCityRow[] | null;
+}
+
+function resolveSeedCity(row: SeedNeighborhoodRow | null): SeedCityRow | null {
+  if (!row?.cities) return null;
+  return Array.isArray(row.cities) ? (row.cities[0] ?? null) : row.cities;
+}
+
+function resolveSeedStateName(city: SeedCityRow | null): string | null {
+  if (!city?.states) return null;
+  const state = Array.isArray(city.states) ? city.states[0] : city.states;
+  return state?.name ?? null;
+}
+
 const TEST_USERS: TestUser[] = [
   {
     email: process.env.E2E_USER_EMAIL || "e2e-user@example.com",
@@ -87,17 +117,20 @@ async function seedE2EUsers(options: SeedOptions = {}) {
   let neighborhoodId = null;
   let cityId = null;
   let stateId = null;
+  const seedNeighborhood = (neighborhoods as SeedNeighborhoodRow | null) ?? null;
+  const seedCity = resolveSeedCity(seedNeighborhood);
+  const seedStateName = resolveSeedStateName(seedCity);
 
-  if (neighborhoods) {
-    neighborhoodId = neighborhoods.id;
-    cityId = neighborhoods.city_id;
-    stateId = (neighborhoods.cities as any).state_id;
+  if (seedNeighborhood) {
+    neighborhoodId = seedNeighborhood.id;
+    cityId = seedNeighborhood.city_id;
+    stateId = seedCity?.state_id ?? null;
 
     if (verbose) {
       console.log(`📍 Usando localização de teste:`);
-      console.log(`   Bairro: ${neighborhoods.name}`);
-      console.log(`   Cidade: ${(neighborhoods.cities as any).name}`);
-      console.log(`   Estado: ${(neighborhoods.cities as any).states.name}\n`);
+      console.log(`   Bairro: ${seedNeighborhood.name}`);
+      console.log(`   Cidade: ${seedCity?.name ?? "N/A"}`);
+      console.log(`   Estado: ${seedStateName ?? "N/A"}\n`);
     }
   } else {
     console.log(`⚠️  Aviso: Nenhum bairro encontrado no banco`);
@@ -180,8 +213,8 @@ async function seedE2EUsers(options: SeedOptions = {}) {
       name: testUser.fullName,
       display_name: testUser.fullName,
       profile_type: "personal",
-      neighborhood: neighborhoodId ? neighborhoods?.name : null,
-      city: neighborhoodId ? (neighborhoods?.cities as any)?.name : null,
+      neighborhood: neighborhoodId ? seedNeighborhood?.name ?? null : null,
+      city: neighborhoodId ? seedCity?.name ?? null : null,
       location_id: neighborhoodId,
     }).eq("user_id", newUser.user.id).eq("profile_type", "personal").select("id").maybeSingle();
 

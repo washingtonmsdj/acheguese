@@ -12,7 +12,7 @@ import { RolloutService } from '@/core/rollout/services/RolloutService';
 import { createRolloutRepository } from '@/core/rollout/repositories/createRolloutRepository';
 import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
 import { businessLocationService } from './BusinessLocationService';
-import type { EffectiveRollout } from '@/core/rollout/types';
+import type { EffectiveRollout, ModuleConfig } from '@/core/rollout/types';
 import { ModuleKey } from '@/core/rollout/types';
 
 export class BusinessRolloutService {
@@ -100,9 +100,9 @@ export class BusinessRolloutService {
 
   /**
    * Obtém configuração do business para a localização atual
-   * @returns Promise<Record<string, any> | null> configuração ou null
+   * @returns Promise<ModuleConfig | null> configuracao ou null
    */
-  async getBusinessConfig(): Promise<Record<string, any> | null> {
+  async getBusinessConfig(): Promise<ModuleConfig | null> {
     const locationId = businessLocationService.getActiveLocationId();
     
     if (!locationId) {
@@ -128,12 +128,13 @@ export class BusinessRolloutService {
    */
   async isFeatureEnabled(feature: string): Promise<boolean> {
     const config = await this.getBusinessConfig();
-    
-    if (!config || !config.features) {
+
+    const features = config?.features;
+    if (!Array.isArray(features)) {
       return false;
     }
 
-    return Array.isArray(config.features) && config.features.includes(feature);
+    return features.includes(feature);
   }
 
   /**
@@ -142,12 +143,17 @@ export class BusinessRolloutService {
    */
   async getUsageLimits(): Promise<Record<string, number> | null> {
     const config = await this.getBusinessConfig();
-    
-    if (!config || !config.limits) {
+
+    const limits = config?.limits;
+    if (!limits || typeof limits !== 'object') {
       return null;
     }
 
-    return config.limits as Record<string, number>;
+    const numericLimits = Object.entries(limits).filter(
+      (entry): entry is [string, number] => typeof entry[1] === 'number',
+    );
+
+    return Object.fromEntries(numericLimits);
   }
 }
 

@@ -11,9 +11,24 @@ import { SessionService } from "@/core/session/services/SessionService";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { mediaService } from "@/core/media/services/MediaService";
-import { isPublicImageUploadBucket } from "@/core/media/config/storageBuckets";
+import {
+  isPublicImageUploadBucket,
+  type PublicMediaBucket,
+} from "@/core/media/config/storageBuckets";
 import { RoleService } from "@/core/authorization/services/RoleService";
-import type { User, Session, AuthChangeEvent, Subscription } from "@supabase/supabase-js";
+
+type AuthRpcClient = {
+  rpc<T>(fn: string, params?: Record<string, unknown>): Promise<{
+    data: T | null;
+    error: { message?: string | null } | null;
+  }>;
+};
+
+const authRpc = supabase as unknown as AuthRpcClient;
+
+function isPublicMediaBucket(bucket: string): bucket is PublicMediaBucket {
+  return bucket === "avatars" || bucket === "post-images";
+}
 
 function parseAuthIdentifier(input: string): { kind: "email" | "username"; value: string } | null {
   const value = input.trim();
@@ -74,22 +89,20 @@ export class AuthService {
   }
 
   static onPasswordRecovery(callback: () => void): () => void {
-    const { data: { subscription } } = (supabase as any).auth.onAuthStateChange(
-      (event: AuthChangeEvent) => {
-        if (event === "PASSWORD_RECOVERY") {
-          callback();
-        }
-      },
-    ) as { data: { subscription: Subscription } };
-
-    return () => subscription.unsubscribe();
+    return SessionService.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        callback();
+      }
+    });
   }
 
   private static async resolveEmailByUsername(username: string): Promise<string> {
     const normalizedUsername = username.replace(/^@/, "").toLowerCase().trim();
 
-    const { data: email, error: rpcError } = await (supabase as any)
-      .rpc("get_email_by_username", { p_username: normalizedUsername });
+    const { data: email, error: rpcError } = await authRpc.rpc<string>(
+      "get_email_by_username",
+      { p_username: normalizedUsername },
+    );
 
     if (rpcError || !email) {
       throw new Error("Usuario nao encontrado. Verifique o nome de usuario.");
@@ -228,7 +241,7 @@ export class AuthService {
   }
 
   static async signUp(data: import("./types").SignUpData): Promise<void> {
-    const { error } = await (supabase as any).auth.signUp({
+    const { error } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
       options: {
@@ -250,7 +263,7 @@ export class AuthService {
   }
 
   static async signIn(data: import("./types").SignInData): Promise<void> {
-    const { error } = await (supabase as any).auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
       email: data.email,
       password: data.password,
     });
@@ -281,7 +294,7 @@ export class AuthService {
     if (!AuthService.isGoogleAuthEnabled()) {
       throw new Error("Login com Google nao esta disponivel neste ambiente.");
     }
-    const { error } = await (supabase as any).auth.signInWithOAuth({
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: AuthService.getOrigin(),
@@ -290,12 +303,12 @@ export class AuthService {
     if (error) throw error;
   }
   static async signOut(): Promise<void> {
-    const { error } = await (supabase as any).auth.signOut();
+    const { error } = await supabase.auth.signOut();
     if (error) throw error;
   }
 
   static async resetPassword(email: string): Promise<void> {
-    const { error } = await (supabase as any).auth.resetPasswordForEmail(
+    const { error } = await supabase.auth.resetPasswordForEmail(
       email,
       {
         redirectTo: AuthService.getPasswordResetRedirectUrl(),
@@ -319,7 +332,7 @@ export class AuthService {
     await AuthService.resetPassword(email);
   }
   static async resendConfirmationEmail(email: string): Promise<void> {
-    const { error } = await (supabase as any).auth.resend({
+    const { error } = await supabase.auth.resend({
       type: "signup",
       email,
       options: {
@@ -329,7 +342,7 @@ export class AuthService {
     if (error) throw error;
   }
   static async updatePassword(newPassword: string): Promise<void> {
-    const { error } = await (supabase as any).auth.updateUser({
+    const { error } = await supabase.auth.updateUser({
       password: newPassword,
     });
     if (error) throw error;
@@ -362,14 +375,19 @@ export class AuthService {
       const urlParts = imageUrl.split(`/${bucket}/`);
       if (urlParts.length < 2) return false;
 
-      const filePath = urlParts[1];
+      const filePath = urlParts[1]?.split("?")[0] ?? "";
+      if (!filePath) return false;
 
-      const { error } = await (supabase as any).storage
-        .from(bucket)
-        .remove([filePath]);
+      if (isPublicImageUploadBucket(bucket)) {
+        await mediaService.deleteFromBucket(bucket, [filePath]);
+        return true;
+      }
 
-      if (error) throw error;
-      return true;
+      if (isPublicMediaBucket(bucket)) {
+        return await mediaService.deleteFile(bucket, filePath);
+      }
+
+      return false;
     } catch (error) {
       logger.error("Error deleting image:", error);
       return false;

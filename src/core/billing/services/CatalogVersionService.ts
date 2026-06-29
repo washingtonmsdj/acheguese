@@ -18,7 +18,56 @@ import type {
 } from '../types/admin.types';
 type CatalogVersionStatus = 'draft' | 'published' | 'deprecated' | 'archived';
 import { CatalogAdminService } from './CatalogAdminService';
-const catalogVersionDb = supabase as any;
+
+type QueryError = { message?: string | null };
+
+type QueryArrayResult<T> = {
+  data: T[] | null;
+  error: QueryError | null;
+  count?: number | null;
+};
+
+type QuerySingleResult<T> = {
+  data: T | null;
+  error: QueryError | null;
+};
+
+type QueryBuilder<T extends object> = PromiseLike<QueryArrayResult<T>> & {
+  select(columns?: string, options?: { count?: 'exact'; head?: boolean }): QueryBuilder<T>;
+  eq(column: string, value: unknown): QueryBuilder<T>;
+  in(column: string, values: readonly unknown[]): QueryBuilder<T>;
+  order(column: string, options?: { ascending?: boolean }): QueryBuilder<T>;
+  limit(value: number): QueryBuilder<T>;
+  insert(values: Record<string, unknown> | Array<Record<string, unknown>>): QueryBuilder<T>;
+  update(values: Record<string, unknown>): QueryBuilder<T>;
+  delete(): QueryBuilder<T>;
+  single(): Promise<QuerySingleResult<T>>;
+  maybeSingle(): Promise<QuerySingleResult<T>>;
+};
+
+type CatalogVersionDbClient = {
+  from<T extends object>(table: string): QueryBuilder<T>;
+};
+
+type CatalogVersionRow = {
+  id: string;
+  version_number: string;
+  description: string;
+  status: CatalogVersionStatus;
+  effective_date: string | null;
+  published_at: string | null;
+  deprecated_at: string | null;
+  archived_at: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+};
+
+type VersionStatusRow = { status: CatalogVersionStatus };
+type CatalogItemListRow = { id: string; item_type: string; item_code: string };
+type SubscriptionCountRow = { id?: string };
+
+const catalogVersionDb = supabase as unknown as CatalogVersionDbClient;
 
 export class CatalogVersionService {
   // ============================================================================
@@ -37,7 +86,7 @@ export class CatalogVersionService {
 
     // Check if version already exists
     const { data: existing, error: existingError } = await catalogVersionDb
-      .from('commercial_catalog_version')
+      .from<{ id: string }>('commercial_catalog_version')
       .select('id')
       .eq('version_number', input.version_number)
       .maybeSingle();
@@ -52,7 +101,7 @@ export class CatalogVersionService {
 
     // Create version
     const { data: version, error: versionError } = await catalogVersionDb
-      .from('commercial_catalog_version')
+      .from<CatalogVersionRow>('commercial_catalog_version')
       .insert({
         version_number: input.version_number,
         description: input.description,
@@ -65,6 +114,9 @@ export class CatalogVersionService {
 
     if (versionError) {
       throw new Error(`Failed to create version: ${versionError.message}`);
+    }
+    if (!version) {
+      throw new Error('Failed to create version: no row returned');
     }
 
     return this.getVersionWithStats(version.id);
@@ -79,13 +131,16 @@ export class CatalogVersionService {
   ): Promise<CatalogVersionWithStats> {
     // Fetch current version
     const { data: version, error: versionError } = await catalogVersionDb
-      .from('commercial_catalog_version')
+      .from<VersionStatusRow>('commercial_catalog_version')
       .select('status')
       .eq('id', versionId)
       .single();
 
     if (versionError) {
       throw new Error(`Failed to fetch version: ${versionError.message}`);
+    }
+    if (!version) {
+      throw new Error('Failed to fetch version');
     }
 
     if (version.status !== 'draft' && updates.status === undefined) {
@@ -116,13 +171,16 @@ export class CatalogVersionService {
   static async deleteVersion(versionId: string): Promise<void> {
     // Fetch version
     const { data: version, error: versionError } = await catalogVersionDb
-      .from('commercial_catalog_version')
+      .from<VersionStatusRow>('commercial_catalog_version')
       .select('status')
       .eq('id', versionId)
       .single();
 
     if (versionError) {
       throw new Error(`Failed to fetch version: ${versionError.message}`);
+    }
+    if (!version) {
+      throw new Error('Failed to fetch version');
     }
 
     if (version.status !== 'draft') {
@@ -131,7 +189,7 @@ export class CatalogVersionService {
 
     // Check if version has items
     const { data: items, error: itemsError } = await catalogVersionDb
-      .from('catalog_item')
+      .from<{ id: string }>('catalog_item')
       .select('id')
       .eq('catalog_version_id', versionId)
       .limit(1);
@@ -160,7 +218,7 @@ export class CatalogVersionService {
    */
   static async getVersionWithStats(versionId: string): Promise<CatalogVersionWithStats> {
     const { data: version, error: versionError } = await catalogVersionDb
-      .from('commercial_catalog_version')
+      .from<CatalogVersionRow>('commercial_catalog_version')
       .select('*')
       .eq('id', versionId)
       .single();
@@ -168,10 +226,13 @@ export class CatalogVersionService {
     if (versionError) {
       throw new Error(`Failed to fetch version: ${versionError.message}`);
     }
+    if (!version) {
+      throw new Error('Failed to fetch version');
+    }
 
     // Get item counts
     const { data: items, error: itemsError } = await catalogVersionDb
-      .from('catalog_item')
+      .from<CatalogItemListRow>('catalog_item')
       .select('item_type')
       .eq('catalog_version_id', versionId);
 
@@ -190,7 +251,7 @@ export class CatalogVersionService {
     let activeContractsCount = 0;
     if (version.status === 'published' || version.status === 'deprecated') {
       const { count, error: contractsError } = await catalogVersionDb
-        .from('user_subscriptions')
+        .from<SubscriptionCountRow>('user_subscriptions')
         .select('*', { count: 'exact', head: true })
         .eq('catalog_version_id', versionId)
         .in('status_v2', ['active', 'trialing']);
@@ -216,8 +277,8 @@ export class CatalogVersionService {
   static async listVersions(filters?: {
     status?: CatalogVersionStatus;
   }): Promise<CatalogVersionWithStats[]> {
-    let query = supabase
-      .from('commercial_catalog_version')
+    let query = catalogVersionDb
+      .from<CatalogVersionRow>('commercial_catalog_version')
       .select('*')
       .order('created_at', { ascending: false });
 
@@ -283,13 +344,16 @@ export class CatalogVersionService {
    */
   static async deprecateVersion(versionId: string): Promise<CatalogVersionWithStats> {
     const { data: version, error: versionError } = await catalogVersionDb
-      .from('commercial_catalog_version')
+      .from<VersionStatusRow>('commercial_catalog_version')
       .select('status')
       .eq('id', versionId)
       .single();
 
     if (versionError) {
       throw new Error(`Failed to fetch version: ${versionError.message}`);
+    }
+    if (!version) {
+      throw new Error('Failed to fetch version');
     }
 
     if (version.status !== 'published') {
@@ -320,13 +384,16 @@ export class CatalogVersionService {
    */
   static async archiveVersion(versionId: string): Promise<CatalogVersionWithStats> {
     const { data: version, error: versionError } = await catalogVersionDb
-      .from('commercial_catalog_version')
+      .from<VersionStatusRow>('commercial_catalog_version')
       .select('status')
       .eq('id', versionId)
       .single();
 
     if (versionError) {
       throw new Error(`Failed to fetch version: ${versionError.message}`);
+    }
+    if (!version) {
+      throw new Error('Failed to fetch version');
     }
 
     if (version.status !== 'deprecated') {
@@ -335,7 +402,7 @@ export class CatalogVersionService {
 
     // Check for active contracts
     const { count, error: contractsError } = await catalogVersionDb
-      .from('user_subscriptions')
+      .from<SubscriptionCountRow>('user_subscriptions')
       .select('*', { count: 'exact', head: true })
       .eq('catalog_version_id', versionId)
       .in('status_v2', ['active', 'trialing']);
@@ -374,11 +441,11 @@ export class CatalogVersionService {
   static async validateVersion(versionId: string): Promise<CatalogVersionValidationResult> {
     const errors: ValidationError[] = [];
     const warnings: ValidationError[] = [];
-    const itemsValidation: Record<string, any> = {};
+    const itemsValidation: Record<string, ReturnType<typeof CatalogAdminService.validateCatalogItem> extends Promise<infer T> ? T : never> = {};
 
     // Fetch version
     const { data: version, error: versionError } = await catalogVersionDb
-      .from('commercial_catalog_version')
+      .from<VersionStatusRow>('commercial_catalog_version')
       .select('status')
       .eq('id', versionId)
       .single();
@@ -403,7 +470,7 @@ export class CatalogVersionService {
 
     // Fetch all items
     const { data: items, error: itemsError } = await catalogVersionDb
-      .from('catalog_item')
+      .from<CatalogItemListRow>('catalog_item')
       .select('*')
       .eq('catalog_version_id', versionId);
 

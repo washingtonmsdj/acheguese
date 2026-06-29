@@ -1,5 +1,6 @@
 declare module 'stripe' {
-  const Stripe: any;
+  const Stripe: {
+    new (...args: unknown[]): unknown;
+  };
   export default Stripe;
 }
-

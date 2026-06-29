@@ -4,6 +4,27 @@ import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import type { BoundingBox } from "../types/core";
 
+type ErrorLike = { message?: string | null; code?: string | null } | null;
+
+type QueryPayload<TRow> = {
+  data: TRow[] | null;
+  error: ErrorLike;
+  count?: number | null;
+};
+
+type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
+  select(columns?: string, options?: { count?: "exact"; head?: boolean }): TableClient<TRow>;
+  eq(column: string, value: unknown): TableClient<TRow>;
+  in(column: string, values: readonly unknown[]): TableClient<TRow>;
+  limit(count: number): TableClient<TRow>;
+};
+
+type MapGastronomyDbClient = {
+  from<TRow = Record<string, unknown>>(table: string): TableClient<TRow>;
+};
+
+const mapGastronomyDb = supabase as unknown as MapGastronomyDbClient;
+
 export interface GastronomyMapEntity {
   id: string;
   profile_id: string;
@@ -19,6 +40,11 @@ export interface GastronomyMapEntity {
   delivery_enabled: boolean;
 }
 
+interface GastronomyProfileRow {
+  cuisine_type: string | null;
+  delivery_enabled: boolean | null;
+}
+
 interface GastronomyMapRow {
   id: string;
   profile_id: string | null;
@@ -29,10 +55,7 @@ interface GastronomyMapRow {
   is_verified: boolean | null;
   category: string | null;
   address: { latitude: number | null; longitude: number | null } | null;
-  gastronomy_profiles:
-    | { cuisine_type: string | null; delivery_enabled: boolean | null }
-    | { cuisine_type: string | null; delivery_enabled: boolean | null }[]
-    | null;
+  gastronomy_profiles: GastronomyProfileRow | GastronomyProfileRow[] | null;
 }
 
 function isInsideBounds(
@@ -55,8 +78,8 @@ class MapGastronomyLayerRuntimeService {
     try {
       if (territoryFilter?.scope === "none") return [];
 
-      let query = (supabase as any)
-        .from("business_data")
+      let query = mapGastronomyDb
+        .from<GastronomyMapRow>("business_data")
         .select(
           `
             id,
@@ -77,32 +100,42 @@ class MapGastronomyLayerRuntimeService {
         .limit(limit * 3);
 
       if (territoryFilter) {
-        query = applyTerritoryFilter(query as any, territoryFilter) as any;
+        query = applyTerritoryFilter(query, territoryFilter);
       }
 
       const { data, error } = await query;
       if (error) throw error;
 
-      return ((data ?? []) as GastronomyMapRow[])
-        .filter((row) => isInsideBounds(row.address?.latitude, row.address?.longitude, bounds))
-        .map((row) => {
+      return (data ?? [])
+        .flatMap((row) => {
+          if (!isInsideBounds(row.address?.latitude, row.address?.longitude, bounds)) {
+            return [];
+          }
+
+          const latitude = row.address?.latitude;
+          const longitude = row.address?.longitude;
+          if (latitude == null || longitude == null) return [];
+
           const rawProfile = row.gastronomy_profiles;
           const profile = Array.isArray(rawProfile) ? rawProfile[0] : rawProfile;
           const profileId = row.profile_id ?? row.id;
-          return {
-            id: `gastronomy-${profileId}`,
-            profile_id: profileId,
-            name: row.business_name ?? "Estabelecimento",
-            slug: row.slug,
-            latitude: row.address?.latitude as number,
-            longitude: row.address?.longitude as number,
-            rating: row.rating ?? 0,
-            is_premium: Boolean(row.is_premium),
-            is_verified: Boolean(row.is_verified),
-            category: row.category,
-            cuisine_type: profile?.cuisine_type ?? null,
-            delivery_enabled: Boolean(profile?.delivery_enabled),
-          };
+
+          return [
+            {
+              id: `gastronomy-${profileId}`,
+              profile_id: profileId,
+              name: row.business_name ?? "Estabelecimento",
+              slug: row.slug,
+              latitude,
+              longitude,
+              rating: row.rating ?? 0,
+              is_premium: Boolean(row.is_premium),
+              is_verified: Boolean(row.is_verified),
+              category: row.category,
+              cuisine_type: profile?.cuisine_type ?? null,
+              delivery_enabled: Boolean(profile?.delivery_enabled),
+            },
+          ];
         })
         .slice(0, limit);
     } catch (error) {

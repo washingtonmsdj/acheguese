@@ -17,8 +17,59 @@ import { mobilityRolloutService } from "./MobilityRolloutService";
 import { MobilityService, mobilityService } from "./MobilityService.impl";
 import { DriverAvailabilityService } from "./DriverAvailabilityService";
 
-const supabaseAny = supabase as any;
 const MODERATOR_ROLES = ["owner", "admin"] as const;
+
+type ErrorLike = { message?: string | null } | null;
+
+type BusinessDataLookupRow = {
+  id: string;
+  profile_id: string | null;
+};
+
+type GastronomyProfileRow = {
+  business_id: string | null;
+};
+
+type ProfileMemberRow = {
+  profile_id: string;
+};
+
+type UserSubscriptionLookupRow = {
+  id?: string;
+  status_v2?: string | null;
+  plan_code?: string | null;
+};
+
+type QueryResult<T> = Promise<{
+  data: T[] | null;
+  error: ErrorLike;
+}>;
+
+type SingleQueryResult<T> = Promise<{
+  data: T | null;
+  error: ErrorLike;
+}>;
+
+type MobilityAuthSelectBuilder<T> = PromiseLike<{
+  data: T[] | null;
+  error: ErrorLike;
+}> & {
+  select(columns: string): MobilityAuthSelectBuilder<T>;
+  eq(column: string, value: string): MobilityAuthSelectBuilder<T>;
+  in(column: string, values: readonly string[]): MobilityAuthSelectBuilder<T>;
+  order(column: string, options: { ascending: boolean }): MobilityAuthSelectBuilder<T>;
+  limit(count: number): MobilityAuthSelectBuilder<T>;
+  maybeSingle(): SingleQueryResult<T>;
+};
+
+type MobilityAuthDbClient = {
+  from(table: "business_data"): MobilityAuthSelectBuilder<BusinessDataLookupRow>;
+  from(table: "gastronomy_profiles"): MobilityAuthSelectBuilder<GastronomyProfileRow>;
+  from(table: "profile_members"): MobilityAuthSelectBuilder<ProfileMemberRow>;
+  from(table: "user_subscriptions"): MobilityAuthSelectBuilder<UserSubscriptionLookupRow>;
+};
+
+const mobilityAuthDb = supabase as unknown as MobilityAuthDbClient;
 
 export type MotoboySourceType =
   | "passenger"
@@ -328,7 +379,7 @@ export class MotoboyAuthorizationService {
     }
 
     // Resolver entitlement via SSOT ao invés de planTier string
-    const { data: subscription } = await supabaseAny
+    const { data: subscription } = await mobilityAuthDb
       .from("user_subscriptions")
       .select("id, status_v2")
       .eq("user_id", userId)
@@ -399,7 +450,7 @@ export class MotoboyAuthorizationService {
     }
 
     // Resolver entitlement via SSOT ao invés de planTier string
-    const { data: subscription } = await supabaseAny
+    const { data: subscription } = await mobilityAuthDb
       .from("user_subscriptions")
       .select("id, status_v2")
       .eq("user_id", userId)
@@ -467,7 +518,7 @@ export class MotoboyAuthorizationService {
     const profileIds = new Set<string>([sourceId]);
     const businessDataIds = new Set<string>();
 
-    const { data: businessById, error: businessByIdError } = await supabaseAny
+    const { data: businessById, error: businessByIdError } = await mobilityAuthDb
       .from("business_data")
       .select("id, profile_id")
       .eq("id", sourceId)
@@ -483,7 +534,7 @@ export class MotoboyAuthorizationService {
       if (businessById.profile_id) profileIds.add(businessById.profile_id);
     }
 
-    const { data: businessByProfileId, error: businessByProfileError } = await supabaseAny
+    const { data: businessByProfileId, error: businessByProfileError } = await mobilityAuthDb
       .from("business_data")
       .select("id, profile_id")
       .eq("profile_id", sourceId)
@@ -499,7 +550,7 @@ export class MotoboyAuthorizationService {
       if (businessByProfileId.profile_id) profileIds.add(businessByProfileId.profile_id);
     }
 
-    const { data: gastronomyById, error: gastronomyByIdError } = await supabaseAny
+    const { data: gastronomyById, error: gastronomyByIdError } = await mobilityAuthDb
       .from("gastronomy_profiles")
       .select("business_id")
       .eq("id", sourceId)
@@ -516,7 +567,7 @@ export class MotoboyAuthorizationService {
 
     if (businessDataIds.size > 0) {
       const { data: canonicalBusinessRows, error: canonicalBusinessRowsError } =
-        await supabaseAny
+        await mobilityAuthDb
           .from("business_data")
           .select("id, profile_id")
           .in("id", Array.from(businessDataIds));
@@ -543,7 +594,7 @@ export class MotoboyAuthorizationService {
     const businessContext = await this.resolveBusinessContext(sourceId);
     const businessDataIds = new Set<string>(businessContext.businessDataIds);
 
-    const { data: gastronomyByBusiness, error: gastronomyByBusinessError } = await supabaseAny
+    const { data: gastronomyByBusiness, error: gastronomyByBusinessError } = await mobilityAuthDb
       .from("gastronomy_profiles")
       .select("business_id")
       .eq("business_id", sourceId)
@@ -566,7 +617,7 @@ export class MotoboyAuthorizationService {
     }
 
     const candidateBusinessIds = Array.from(businessDataIds);
-    const { data: gastronomyRows, error: gastronomyRowsError } = await supabaseAny
+    const { data: gastronomyRows, error: gastronomyRowsError } = await mobilityAuthDb
       .from("gastronomy_profiles")
       .select("business_id")
       .in("business_id", candidateBusinessIds);
@@ -594,7 +645,7 @@ export class MotoboyAuthorizationService {
       };
     }
 
-    const { data: businessRows, error: businessRowsError } = await supabaseAny
+    const { data: businessRows, error: businessRowsError } = await mobilityAuthDb
       .from("business_data")
       .select("id, profile_id")
       .in("id", gastronomicBusinessIds);
@@ -635,7 +686,7 @@ export class MotoboyAuthorizationService {
         return true;
       }
 
-      const { data: membership, error: membershipError } = await supabaseAny
+      const { data: membership, error: membershipError } = await mobilityAuthDb
         .from("profile_members")
         .select("profile_id")
         .eq("user_id", userId)
@@ -686,7 +737,7 @@ export class MotoboyAuthorizationService {
       return undefined;
     }
 
-    const { data: currentSubscription, error: currentSubscriptionError } = await supabaseAny
+    const { data: currentSubscription, error: currentSubscriptionError } = await mobilityAuthDb
       .from("user_subscriptions")
       .select("plan_code")
       .in("business_id", businessIds)

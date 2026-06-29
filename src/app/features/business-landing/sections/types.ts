@@ -7,6 +7,7 @@
 
 import type { NavigateFunction } from "react-router-dom";
 import type { LucideIcon } from "lucide-react";
+import type { TerritoryPolygon as MapTerritoryPolygon } from "@/core/maps/hooks/useTerritoryPolygon";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 
 // ============================================
@@ -111,11 +112,7 @@ export interface Benefit {
 // Territory Polygon
 // ============================================
 
-export interface TerritoryPolygon {
-  readonly name: string;
-  readonly color: string;
-  readonly coordinates: readonly any[];
-}
+export type TerritoryPolygon = MapTerritoryPolygon;
 
 // ============================================
 // Base Props
@@ -205,9 +202,7 @@ export interface EmpresasBeneficiosSectionProps {
   readonly benefits: readonly Benefit[];
 }
 
-export interface EmpresasCTASectionProps extends BaseSectionProps {
-  readonly user: any;
-}
+export type EmpresasCTASectionProps = BaseSectionProps;
 
 // ============================================
 // Component Props

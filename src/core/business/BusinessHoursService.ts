@@ -13,7 +13,50 @@
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
-const businessHoursDb = supabase as any;
+
+type QueryError = { message?: string | null };
+
+type QueryArrayResult<T> = {
+  data: T[] | null;
+  error: QueryError | null;
+};
+
+type QuerySingleResult<T> = {
+  data: T | null;
+  error: QueryError | null;
+};
+
+type QueryBuilder<T extends object> = PromiseLike<QueryArrayResult<T>> & {
+  select(columns?: string): QueryBuilder<T>;
+  eq(column: string, value: unknown): QueryBuilder<T>;
+  in(column: string, values: readonly unknown[]): QueryBuilder<T>;
+  order(column: string, options?: { ascending?: boolean }): QueryBuilder<T>;
+  delete(): QueryBuilder<T>;
+  upsert(
+    values: Record<string, unknown> | Array<Record<string, unknown>>,
+    options?: { onConflict?: string },
+  ): QueryBuilder<T>;
+  single(): Promise<QuerySingleResult<T>>;
+  maybeSingle(): Promise<QuerySingleResult<T>>;
+};
+
+type RpcResult<T> = {
+  data: T | null;
+  error: QueryError | null;
+};
+
+type BusinessHoursDbClient = {
+  from<T extends object>(table: string): QueryBuilder<T>;
+  rpc<T>(fn: string, params?: Record<string, unknown>): Promise<RpcResult<T>>;
+};
+
+type BusinessTemporarilyClosedRow = {
+  business_id: string | null;
+  is_temporarily_closed: boolean | null;
+  temporarily_closed_until: string | null;
+};
+
+const businessHoursDb = supabase as unknown as BusinessHoursDbClient;
 
 // ── Tipos ─────────────────────────────────────────────────────────────────
 
@@ -96,7 +139,7 @@ export const BusinessHoursService = {
   async listHours(businessId: string): Promise<ServiceResult<BusinessHours[]>> {
     try {
       const { data, error } = await businessHoursDb
-        .from('business_hours')
+        .from<BusinessHours>('business_hours')
         .select('*')
         .eq('business_id', businessId)
         .order('day_of_week', { ascending: true });
@@ -106,7 +149,7 @@ export const BusinessHoursService = {
         return { data: null, error: error.message };
       }
 
-      return { data: data as BusinessHours[], error: null };
+      return { data: data ?? [], error: null };
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       return { data: null, error: msg };
@@ -125,7 +168,7 @@ export const BusinessHoursService = {
   }): Promise<ServiceResult<BusinessHours>> {
     try {
       const { data, error } = await businessHoursDb
-        .from('business_hours')
+        .from<BusinessHours>('business_hours')
         .upsert({
           business_id: input.business_id,
           day_of_week: input.day_of_week,
@@ -143,7 +186,7 @@ export const BusinessHoursService = {
         return { data: null, error: error.message };
       }
 
-      return { data: data as BusinessHours, error: null };
+      return { data, error: null };
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       return { data: null, error: msg };
@@ -169,7 +212,7 @@ export const BusinessHoursService = {
       }));
 
       const { error } = await businessHoursDb
-        .from('business_hours')
+        .from<BusinessHours>('business_hours')
         .upsert(records, {
           onConflict: 'business_id,day_of_week',
         });
@@ -196,7 +239,7 @@ export const BusinessHoursService = {
   async listExceptions(businessId: string): Promise<ServiceResult<BusinessHoursException[]>> {
     try {
       const { data, error } = await businessHoursDb
-        .from('business_hours_exceptions')
+        .from<BusinessHoursException>('business_hours_exceptions')
         .select('*')
         .eq('business_id', businessId)
         .order('date', { ascending: true });
@@ -206,7 +249,7 @@ export const BusinessHoursService = {
         return { data: null, error: error.message };
       }
 
-      return { data: data as BusinessHoursException[], error: null };
+      return { data: data ?? [], error: null };
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       return { data: null, error: msg };
@@ -226,7 +269,7 @@ export const BusinessHoursService = {
   }): Promise<ServiceResult<BusinessHoursException>> {
     try {
       const { data, error } = await businessHoursDb
-        .from('business_hours_exceptions')
+        .from<BusinessHoursException>('business_hours_exceptions')
         .upsert({
           business_id: input.business_id,
           date: input.date,
@@ -245,7 +288,7 @@ export const BusinessHoursService = {
         return { data: null, error: error.message };
       }
 
-      return { data: data as BusinessHoursException, error: null };
+      return { data, error: null };
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       return { data: null, error: msg };
@@ -258,7 +301,7 @@ export const BusinessHoursService = {
   async deleteException(exceptionId: string): Promise<ServiceResult<boolean>> {
     try {
       const { error } = await businessHoursDb
-        .from('business_hours_exceptions')
+        .from<BusinessHoursException>('business_hours_exceptions')
         .delete()
         .eq('id', exceptionId);
 
@@ -284,7 +327,7 @@ export const BusinessHoursService = {
   async getOperationConfig(businessId: string): Promise<ServiceResult<BusinessOperationConfig>> {
     try {
       const { data, error } = await businessHoursDb
-        .from('business_operation_config')
+        .from<BusinessOperationConfig>('business_operation_config')
         .select('*')
         .eq('business_id', businessId)
         .maybeSingle();
@@ -294,7 +337,7 @@ export const BusinessHoursService = {
         return { data: null, error: error.message };
       }
 
-      return { data: data as BusinessOperationConfig | null, error: null };
+      return { data, error: null };
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       return { data: null, error: msg };
@@ -313,7 +356,7 @@ export const BusinessHoursService = {
       }
 
       const { data, error } = await businessHoursDb
-        .from("business_operation_config")
+        .from<BusinessTemporarilyClosedRow>("business_operation_config")
         .select("business_id, is_temporarily_closed, temporarily_closed_until")
         .in("business_id", businessIds)
         .eq("is_temporarily_closed", true);
@@ -358,7 +401,7 @@ export const BusinessHoursService = {
   }): Promise<ServiceResult<BusinessOperationConfig>> {
     try {
       const { data, error } = await businessHoursDb
-        .from('business_operation_config')
+        .from<BusinessOperationConfig>('business_operation_config')
         .upsert({
           business_id: input.business_id,
           accepts_pickup: input.accepts_pickup ?? true,
@@ -382,7 +425,7 @@ export const BusinessHoursService = {
         return { data: null, error: error.message };
       }
 
-      return { data: data as BusinessOperationConfig, error: null };
+      return { data, error: null };
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       return { data: null, error: msg };
@@ -398,7 +441,7 @@ export const BusinessHoursService = {
    */
   async isOpenNow(businessId: string): Promise<ServiceResult<boolean>> {
     try {
-      const { data, error } = await businessHoursDb.rpc('is_business_open_now', {
+      const { data, error } = await businessHoursDb.rpc<boolean>('is_business_open_now', {
         p_business_id: businessId,
       });
 
@@ -407,7 +450,7 @@ export const BusinessHoursService = {
         return { data: null, error: error.message };
       }
 
-      return { data: data as boolean, error: null };
+      return { data, error: null };
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       return { data: null, error: msg };
@@ -419,7 +462,7 @@ export const BusinessHoursService = {
    */
   async getNextOpening(businessId: string): Promise<ServiceResult<BusinessStatus['nextOpening']>> {
     try {
-      const { data, error } = await businessHoursDb.rpc('get_next_opening_time', {
+      const { data, error } = await businessHoursDb.rpc<BusinessStatus['nextOpening']>('get_next_opening_time', {
         p_business_id: businessId,
       });
 
@@ -428,7 +471,7 @@ export const BusinessHoursService = {
         return { data: null, error: error.message };
       }
 
-      return { data: data as BusinessStatus['nextOpening'], error: null };
+      return { data, error: null };
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       return { data: null, error: msg };

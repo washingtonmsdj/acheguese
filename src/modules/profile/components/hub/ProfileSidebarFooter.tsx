@@ -1,10 +1,10 @@
 /**
- * ProfileSidebarFooter - Footer da sidebar do perfil
+ * ProfileSidebarFooter - footer da sidebar do perfil
  *
- * Exibe ações rápidas no rodapé da sidebar:
- * - Link para perfil público
+ * Exibe acoes rapidas no rodape da sidebar:
+ * - Link para perfil publico
  * - Link para editar perfil
- * - Link para configurações
+ * - Link para configuracoes
  */
 
 import { Globe, Pencil, Settings } from "lucide-react";
@@ -67,7 +67,7 @@ export function ProfileSidebarFooter({
             onClick={handleOpenPublicProfile}
           >
             <Globe className="h-3.5 w-3.5" />
-            Ver perfil público
+            Ver perfil publico
           </Button>
         ) : null}
 
@@ -78,7 +78,7 @@ export function ProfileSidebarFooter({
           onClick={handleOpenSettings}
         >
           <Settings className="h-3.5 w-3.5" />
-          Configurações
+          Configuracoes
         </Button>
       </div>
     </div>

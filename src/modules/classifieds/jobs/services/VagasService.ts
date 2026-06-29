@@ -33,6 +33,54 @@ import type {
   VagasPaginatedResult,
 } from '../types/vagas.types';
 
+type QueryError = { code?: string; message?: string } | null;
+type QueryResult<T> = Promise<{ data: T; error: QueryError; count?: number | null }>;
+
+interface QueryBuilder<TRow> {
+  select(
+    columns?: string,
+    options?: { count?: "exact" | "planned" | "estimated"; head?: boolean },
+  ): QueryBuilder<TRow>;
+  insert(values: unknown): QueryBuilder<TRow>;
+  update(values: unknown): QueryBuilder<TRow>;
+  eq(column: string, value: unknown): QueryBuilder<TRow>;
+  neq(column: string, value: unknown): QueryBuilder<TRow>;
+  in(column: string, values: readonly unknown[]): QueryBuilder<TRow>;
+  or(filters: string): QueryBuilder<TRow>;
+  order(
+    column: string,
+    options?: { ascending?: boolean; nullsFirst?: boolean },
+  ): QueryBuilder<TRow>;
+  range(from: number, to: number): QueryBuilder<TRow>;
+  limit(count: number): QueryBuilder<TRow>;
+  textSearch(
+    column: string,
+    query: string,
+    options?: { type?: string; config?: string },
+  ): QueryBuilder<TRow>;
+  gte(column: string, value: unknown): QueryBuilder<TRow>;
+  lte(column: string, value: unknown): QueryBuilder<TRow>;
+  contains(column: string, values: readonly unknown[]): QueryBuilder<TRow>;
+  single(): QueryResult<TRow>;
+  then<
+    TResult1 = { data: TRow[]; error: QueryError; count?: number | null },
+    TResult2 = never,
+  >(
+    onfulfilled?:
+      | ((
+          value: { data: TRow[]; error: QueryError; count?: number | null },
+        ) => TResult1 | PromiseLike<TResult1>)
+      | null,
+    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
+  ): Promise<TResult1 | TResult2>;
+}
+
+interface VagasDbClient {
+  from<TRow>(table: string): QueryBuilder<TRow>;
+}
+
+const vagasDb = supabase as unknown as VagasDbClient;
+
 const VAGA_SAVED_CONFIG = {
   tableName: 'vaga_saved_items',
   entityIdColumn: 'vaga_id',
@@ -154,8 +202,8 @@ export class VagasService {
    * visibilidade/status. Isso evita drift entre o frontend e o enum real
    * do banco quando as migrations locais ainda não foram aplicadas no ambiente.
    */
-  private static getPublicQuery(): any {
-    return (supabase as any).from('vagas');
+  private static getPublicQuery(): QueryBuilder<VagaRowLike> {
+    return vagasDb.from<VagaRowLike>('vagas');
   }
 
   private static isMissingColumnError(error: unknown): boolean {
@@ -180,10 +228,10 @@ export class VagasService {
     return ((data ?? []) as VagaRowLike[]).map(mapRowToVaga);
   }
 
-  private static applyLocationIds(
-    query: any,
+  private static applyLocationIds<TRow>(
+    query: QueryBuilder<TRow>,
     locationIds: string[],
-  ): any {
+  ): QueryBuilder<TRow> {
     const uniqueLocationIds = Array.from(new Set(locationIds.filter(Boolean)));
     if (uniqueLocationIds.length <= 1) {
       return query.eq('location_id', uniqueLocationIds[0] ?? '');
@@ -200,7 +248,7 @@ export class VagasService {
     const resolvedLocationIds = locationIds?.length ? locationIds : [locationId];
     
     try {
-      let query: any = this.applyLocationIds(
+      let query = this.applyLocationIds(
         this.getPublicQuery().select('*', { count: 'exact' }),
         resolvedLocationIds,
       );
@@ -513,8 +561,8 @@ export class VagasService {
    */
   static async getVagasByEmpresa(empresaId: string, limit = 10): Promise<Vaga[]> {
     try {
-      const { data, error } = await (supabase as any)
-        .from('vagas')
+      const { data, error } = await vagasDb
+        .from<VagaRowLike>('vagas')
         .select('*')
         .eq('empresa_id', empresaId)
         .order('published_at', { ascending: false })
@@ -562,8 +610,8 @@ export class VagasService {
     curriculoUrl?: string;
   }): Promise<Candidatura> {
     try {
-      const { data, error } = await (supabase as any)
-        .from('vaga_applications')
+      const { data, error } = await vagasDb
+        .from<CandidaturaRowLike>('vaga_applications')
         .insert({
           vaga_id: input.vagaId,
           candidato_profile_id: input.candidatoProfileId,
@@ -614,7 +662,7 @@ export class VagasService {
     try {
       const resolvedLocationIds = locationIds?.length ? locationIds : [locationId];
       const { data, error } = await this.applyLocationIds(
-        (supabase as any).from('vagas').select('location_id'),
+        vagasDb.from<{ location_id: string | null }>('vagas').select('location_id'),
         resolvedLocationIds,
       );
 

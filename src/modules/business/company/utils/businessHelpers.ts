@@ -14,6 +14,17 @@ type DaySchedule = {
   close?: unknown;
 };
 
+type AddressLike = {
+  street?: unknown;
+  number?: unknown;
+  complement?: unknown;
+};
+
+type LocationLike = {
+  full_name?: unknown;
+  name?: unknown;
+};
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
@@ -65,11 +76,12 @@ export function isCurrentlyOpen(
 /**
  * Extrai texto de endereço
  */
-export function getAddressText(address: any, businessAddress?: string | null): string | null {
+export function getAddressText(address: unknown, businessAddress?: string | null): string | null {
   if (!address) return businessAddress || null;
   
-  if (typeof address === "object" && address) {
-    return [address.street, address.number, address.complement]
+  if (isRecord(address)) {
+    const addressRecord = address as AddressLike;
+    return [addressRecord.street, addressRecord.number, addressRecord.complement]
       .filter(Boolean)
       .join(", ");
   }
@@ -81,7 +93,7 @@ export function getAddressText(address: any, businessAddress?: string | null): s
  * Extrai texto de localização
  */
 export function getLocationText(
-  location: any,
+  location: unknown,
   businessCity?: string | null,
   businessState?: string | null,
 ): string | null {
@@ -93,5 +105,14 @@ export function getLocationText(
     return businessCity || businessState || null;
   }
 
-  return location.full_name || location.name || null;
+  if (!isRecord(location)) {
+    return null;
+  }
+
+  const locationRecord = location as LocationLike;
+  return (
+    (typeof locationRecord.full_name === "string" ? locationRecord.full_name : null)
+    || (typeof locationRecord.name === "string" ? locationRecord.name : null)
+    || null
+  );
 }

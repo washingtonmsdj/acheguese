@@ -29,8 +29,22 @@ type ClassifiedSummary = {
 
 type ConversationRow = Conversation;
 
+interface QueryResult<T> {
+  data: T | null;
+  error: { message: string; code?: string } | null;
+}
+
+interface QueryBuilder<TRow> extends PromiseLike<QueryResult<TRow[]>> {
+  insert: (values: unknown | unknown[]) => QueryBuilder<TRow>;
+}
+
+interface MessagingDbClient {
+  from: <TRow = never>(table: string) => QueryBuilder<TRow>;
+}
+
+const messagingDb = supabase as unknown as MessagingDbClient;
+
 class MessagingService {
-  private readonly db = supabase as any;
   /**
    * Busca conversas de um usuário com detalhes
    */
@@ -498,7 +512,7 @@ class MessagingService {
     reason: string,
   ): Promise<void> {
     try {
-      const { error } = await this.db.from("message_reports").insert({
+      const { error } = await messagingDb.from("message_reports").insert({
         message_id: messageId,
         reporter_id: reporterId,
         reason: reason,

@@ -14,11 +14,46 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import { buildSafeILikePattern, buildSafeOrILikeFilter } from '@/shared/utils/sqlSanitization';
-import type { AdminSupabaseClient } from '../types/adminDatabase.types';
+import type { Tables } from '@/integrations/supabase';
 import { MobilityService } from '@/core/mobility/services/runtime';
 
-const supabaseTyped = supabase as unknown as AdminSupabaseClient;
-const db = supabase as any;
+type ErrorLike = { message?: string | null; code?: string | null } | null;
+
+type QueryPayload<TRow> = {
+  data: TRow[] | null;
+  error: ErrorLike;
+  count?: number | null;
+};
+
+type SingleQueryPayload<TRow> = {
+  data: TRow | null;
+  error: ErrorLike;
+  count?: number | null;
+};
+
+type RpcPayload<TRow> = {
+  data: TRow[] | null;
+  error: ErrorLike;
+};
+
+type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
+  select(columns?: string, options?: { count?: 'exact'; head?: boolean }): TableClient<TRow>;
+  update(values: Record<string, unknown>): TableClient<TRow>;
+  eq(column: string, value: unknown): TableClient<TRow>;
+  ilike(column: string, value: string): TableClient<TRow>;
+  in(column: string, values: readonly unknown[]): TableClient<TRow>;
+  or(filters: string): TableClient<TRow>;
+  order(column: string, options?: { ascending: boolean }): TableClient<TRow>;
+  limit(value: number): TableClient<TRow>;
+  maybeSingle(): Promise<SingleQueryPayload<TRow>>;
+};
+
+type AdminServiceDbClient = {
+  from<TRow = Record<string, unknown>>(table: string): TableClient<TRow>;
+  rpc<TRow = Record<string, unknown>>(fn: string, args?: Record<string, unknown>): Promise<RpcPayload<TRow>>;
+};
+
+const db = supabase as unknown as AdminServiceDbClient;
 
 export interface ServiceResult<T> {
   data: T | null;
@@ -74,11 +109,47 @@ type ProfileListRow = {
   created_at: string;
 };
 
+type BusinessNameRow = {
+  business_name?: string | null;
+};
+
 type PlanUsageSubscriptionRow = {
   business_id: string;
   plan_code: string;
-  business_data?: { business_name?: string | null } | null;
+  business_data?: BusinessNameRow | readonly BusinessNameRow[] | null;
 };
+
+type BusinessDataListRow = Pick<Tables<'business_data'>, 'id' | 'business_name' | 'slug' | 'status' | 'created_at'>;
+type UserSubscriptionPlanRow = { plan_code: string | null };
+type OrderTotalRow = { total: number | null; status?: string | null };
+type ProfileLinkIdRow = { id: string };
+type AnalyticsMetricRow = { qr_scans?: number | null; total_views?: number | null };
+
+function isBusinessNameRowArray(
+  relation: PlanUsageSubscriptionRow['business_data'],
+): relation is readonly BusinessNameRow[] {
+  return Array.isArray(relation);
+}
+
+function isBusinessNameRow(
+  relation: PlanUsageSubscriptionRow['business_data'],
+): relation is BusinessNameRow {
+  return Boolean(relation) && typeof relation === 'object' && !Array.isArray(relation);
+}
+
+function normalizeBusinessNameRelation(
+  relation: PlanUsageSubscriptionRow['business_data'],
+): BusinessNameRow | null {
+  if (isBusinessNameRowArray(relation)) {
+    return relation[0] ?? null;
+  }
+
+  if (isBusinessNameRow(relation)) {
+    return relation;
+  }
+
+  return null;
+}
 
 export const AdminService = {
   /**
@@ -92,7 +163,7 @@ export const AdminService = {
   }): Promise<ServiceResult<BusinessSummary[]>> {
     try {
       let query = db
-        .from('business_data')
+        .from<BusinessDataListRow>('business_data')
         .select(`
           id,
           business_name,
@@ -127,7 +198,7 @@ export const AdminService = {
       const businessesWithStats = await Promise.all(
         (businesses || []).map(async (business) => {
           const { data: subscription } = await db
-            .from('user_subscriptions')
+            .from<UserSubscriptionPlanRow>('user_subscriptions')
             .select('plan_code')
             .eq('business_id', business.id)
             .eq('subscription_scope', 'business')
@@ -137,18 +208,14 @@ export const AdminService = {
             .maybeSingle();
 
           const { data: orderStats } = await db
-            .from('orders')
+            .from<OrderTotalRow>('orders')
             .select('total')
             .eq('business_id', business.id)
             .eq('status', 'completed');
 
           const totalDeliveries = await MobilityService.countDeliveredBySource('business', business.id);
           const totalOrders = orderStats?.length || 0;
-          const totalRevenue =
-            (orderStats as Array<{ total?: number | null }> | null)?.reduce(
-              (sum, o) => sum + (o.total || 0),
-              0,
-            ) || 0;
+          const totalRevenue = (orderStats ?? []).reduce((sum, order) => sum + (order.total || 0), 0);
 
           return {
             id: business.id,
@@ -205,7 +272,7 @@ export const AdminService = {
   }): Promise<ServiceResult<ProfileSummary[]>> {
     try {
       let query = db
-        .from('profile_complete')
+        .from<ProfileListRow>('profile_complete')
         .select(`
           id,
           username,
@@ -234,9 +301,9 @@ export const AdminService = {
       }
 
       const profilesWithStats = await Promise.all(
-        ((profiles as ProfileListRow[] | null) || []).map(async (profile) => {
+        (profiles ?? []).map(async (profile) => {
           const { data: businesses } = await db
-            .from('profile_links')
+            .from<ProfileLinkIdRow>('profile_links')
             .select('id')
             .eq('profile_id', profile.id)
             .eq('entity_type', 'business');
@@ -262,7 +329,7 @@ export const AdminService = {
   async listPlanUsage(): Promise<ServiceResult<PlanUsage[]>> {
     try {
       const { data: subscriptions, error } = await db
-        .from('user_subscriptions')
+        .from<PlanUsageSubscriptionRow>('user_subscriptions')
         .select(`
           business_id,
           plan_code,
@@ -278,25 +345,26 @@ export const AdminService = {
       }
 
       const usageData = await Promise.all(
-        ((subscriptions as PlanUsageSubscriptionRow[] | null) || []).map(async (sub) => {
+        (subscriptions ?? []).map(async (sub) => {
           const { data: orders } = await db
-            .from('orders')
+            .from<OrderTotalRow>('orders')
             .select('total')
             .eq('business_id', sub.business_id)
             .eq('status', 'completed');
 
-          const { data: analytics } = await db.rpc('get_analytics_metrics', {
+          const { data: analytics } = await db.rpc<AnalyticsMetricRow>('get_analytics_metrics', {
             p_entity_type: 'business',
             p_entity_id: sub.business_id,
           });
 
           const totalOrders = orders?.length || 0;
-          const totalRevenue = orders?.reduce((sum, o) => sum + o.total, 0) || 0;
+          const totalRevenue = (orders ?? []).reduce((sum, order) => sum + (order.total || 0), 0);
           const metrics = analytics?.at(0) || {};
+          const business = normalizeBusinessNameRelation(sub.business_data);
 
           return {
             business_id: sub.business_id,
-            business_name: sub.business_data?.business_name || '',
+            business_name: business?.business_name || '',
             plan_tier: sub.plan_code,
             total_orders: totalOrders,
             total_revenue: totalRevenue,
@@ -357,39 +425,36 @@ export const AdminService = {
   }>> {
     try {
       const { count: totalBusinesses } = await db
-        .from('business_data')
+        .from<BusinessDataListRow>('business_data')
         .select('*', { count: 'exact', head: true });
 
       const { count: activeBusinesses } = await db
-        .from('business_data')
+        .from<BusinessDataListRow>('business_data')
         .select('*', { count: 'exact', head: true })
         .eq('status', 'active');
 
       const { count: totalUsers } = await db
-        .from('profile_complete')
+        .from<ProfileListRow>('profile_complete')
         .select('*', { count: 'exact', head: true });
 
       const { data: orders } = await db
-        .from('orders')
+        .from<OrderTotalRow>('orders')
         .select('total, status');
 
-      const completedOrders =
-        ((orders as Array<{ status?: string; total?: number | null }> | null) || []).filter(
-          (o) => o.status === 'completed',
-        );
+      const completedOrders = (orders ?? []).filter((order) => order.status === 'completed');
       const totalOrders = completedOrders.length;
-      const totalRevenue = completedOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+      const totalRevenue = completedOrders.reduce((sum, order) => sum + (order.total || 0), 0);
 
       const totalDeliveries = await MobilityService.countDeliveredMotoboyRides();
 
       const { data: subscriptions } = await db
-        .from('user_subscriptions')
+        .from<UserSubscriptionPlanRow>('user_subscriptions')
         .select('plan_code')
         .eq('subscription_scope', 'business')
         .in('status_v2', ['active', 'trialing']);
 
       const planDistributionMap = new Map<string, number>();
-      for (const sub of (subscriptions as Array<{ plan_code?: string }> | null) || []) {
+      for (const sub of subscriptions ?? []) {
         const tier = sub.plan_code || 'free';
         planDistributionMap.set(tier, (planDistributionMap.get(tier) ?? 0) + 1);
       }

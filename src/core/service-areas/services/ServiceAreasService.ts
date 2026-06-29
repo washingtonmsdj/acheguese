@@ -1,13 +1,10 @@
 /**
- * Service Areas Service
- *
- * Handles service area management for professional profiles
- * Moved from UI component to follow architecture rules
+ * Service area management service.
  */
 
 import { supabase } from "@/integrations/supabase";
-import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
+import { logger } from "@/shared/utils/logger";
 
 export interface ServiceArea {
   id: string;
@@ -44,11 +41,38 @@ export interface UpdateServiceAreaData {
   is_active?: boolean;
 }
 
+interface QueryResult<T> {
+  data: T | null;
+  error: { message: string; code?: string } | null;
+}
+
+interface QueryBuilder<TRow> extends PromiseLike<QueryResult<TRow[]>> {
+  select: (columns?: string) => QueryBuilder<TRow>;
+  insert: (values: unknown | unknown[]) => QueryBuilder<TRow>;
+  update: (values: unknown) => QueryBuilder<TRow>;
+  delete: () => QueryBuilder<TRow>;
+  eq: (column: string, value: unknown) => QueryBuilder<TRow>;
+  order: (column: string, options?: { ascending?: boolean }) => QueryBuilder<TRow>;
+  limit: (value: number) => QueryBuilder<TRow>;
+  single: () => Promise<QueryResult<TRow>>;
+  maybeSingle: () => Promise<QueryResult<TRow>>;
+}
+
+interface ServiceAreasDbClient {
+  from: <TRow = never>(table: string) => QueryBuilder<TRow>;
+}
+
+type ServiceAreaRow = ServiceArea;
+type ServiceAreaInsert = CreateServiceAreaData;
+type ServiceAreaUpdate = UpdateServiceAreaData;
+
+const serviceAreasDb = supabase as unknown as ServiceAreasDbClient;
+
 class ServiceAreasService {
   async getServiceAreas(profileId: string): Promise<ServiceArea[]> {
     try {
-      const { data, error } = await (supabase as any)
-        .from("service_areas")
+      const { data, error } = await serviceAreasDb
+        .from<ServiceAreaRow>("service_areas")
         .select("*")
         .eq("profile_id", profileId)
         .order("is_primary", { ascending: false });
@@ -58,7 +82,7 @@ class ServiceAreasService {
         throw new Error("Failed to fetch service areas");
       }
 
-      return (data as ServiceArea[] | null) || [];
+      return data || [];
     } catch (error) {
       trackError(error, {
         component: "ServiceAreasService",
@@ -71,18 +95,19 @@ class ServiceAreasService {
 
   async createServiceArea(data: CreateServiceAreaData): Promise<ServiceArea> {
     try {
-      const { data: serviceArea, error } = await (supabase as any)
-        .from("service_areas")
-        .insert([data])
+      const createPayload: ServiceAreaInsert = data;
+      const { data: serviceArea, error } = await serviceAreasDb
+        .from<ServiceAreaRow>("service_areas")
+        .insert([createPayload])
         .select()
         .single();
 
-      if (error) {
+      if (error || !serviceArea) {
         logger.error("Error creating service area:", error);
         throw new Error("Failed to create service area");
       }
 
-      return serviceArea as ServiceArea;
+      return serviceArea;
     } catch (error) {
       trackError(error, {
         component: "ServiceAreasService",
@@ -97,19 +122,20 @@ class ServiceAreasService {
     data: UpdateServiceAreaData,
   ): Promise<ServiceArea> {
     try {
-      const { data: serviceArea, error } = await (supabase as any)
-        .from("service_areas")
-        .update(data)
+      const updatePayload: ServiceAreaUpdate = data;
+      const { data: serviceArea, error } = await serviceAreasDb
+        .from<ServiceAreaRow>("service_areas")
+        .update(updatePayload)
         .eq("id", id)
         .select()
         .single();
 
-      if (error) {
+      if (error || !serviceArea) {
         logger.error("Error updating service area:", error);
         throw new Error("Failed to update service area");
       }
 
-      return serviceArea as ServiceArea;
+      return serviceArea;
     } catch (error) {
       trackError(error, {
         component: "ServiceAreasService",
@@ -122,8 +148,8 @@ class ServiceAreasService {
 
   async deleteServiceArea(id: string): Promise<void> {
     try {
-      const { error } = await (supabase as any)
-        .from("service_areas")
+      const { error } = await serviceAreasDb
+        .from<ServiceAreaRow>("service_areas")
         .delete()
         .eq("id", id);
 
@@ -146,15 +172,13 @@ class ServiceAreasService {
     serviceAreaId: string,
   ): Promise<void> {
     try {
-      // First, unset all primary areas for this profile
-      await (supabase as any)
-        .from("service_areas")
+      await serviceAreasDb
+        .from<ServiceAreaRow>("service_areas")
         .update({ is_primary: false })
         .eq("profile_id", profileId);
 
-      // Then set the new primary area
-      const { error } = await (supabase as any)
-        .from("service_areas")
+      const { error } = await serviceAreasDb
+        .from<ServiceAreaRow>("service_areas")
         .update({ is_primary: true })
         .eq("id", serviceAreaId);
 
@@ -172,12 +196,10 @@ class ServiceAreasService {
     }
   }
 
-  async getPrimaryServiceArea(
-    profileId: string,
-  ): Promise<ServiceArea | null> {
+  async getPrimaryServiceArea(profileId: string): Promise<ServiceArea | null> {
     try {
-      const { data, error } = await (supabase as any)
-        .from("service_areas")
+      const { data, error } = await serviceAreasDb
+        .from<ServiceAreaRow>("service_areas")
         .select("*")
         .eq("profile_id", profileId)
         .eq("is_active", true)
@@ -190,7 +212,7 @@ class ServiceAreasService {
         throw new Error("Failed to fetch primary service area");
       }
 
-      return (data as ServiceArea | null) ?? null;
+      return data ?? null;
     } catch (error) {
       trackError(error, {
         component: "ServiceAreasService",

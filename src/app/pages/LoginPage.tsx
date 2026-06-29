@@ -71,13 +71,18 @@ export default function LoginPage() {
   const identifierValue = watch("identifier") ?? "";
   const parsedIdentifier = parseAuthIdentifier(identifierValue);
   const isUsername = parsedIdentifier?.kind === "username";
+  const loginHighlights = [
+    "Perfil, conta e modulos no mesmo acesso.",
+    "Entrada por email ou @usuario.",
+    "Recuperacao simples sem sair do fluxo.",
+  ] as const;
 
   const statusMessage = useMemo(() => {
     if (isEmailConfirmed) {
       return {
         icon: CheckCircle2,
         title: "Email confirmado",
-        description: "Sua conta está pronta para login.",
+        description: "Sua conta esta pronta para login.",
       };
     }
 
@@ -132,8 +137,8 @@ export default function LoginPage() {
   const handleForgotPassword = async () => {
     if (!parsedIdentifier) {
       toast({
-        title: "Informe email ou usuário",
-        description: "Usamos esse identificador para enviar a recuperação de senha.",
+        title: "Informe email ou usuario",
+        description: "Usamos esse identificador para enviar a recuperacao de senha.",
         variant: "destructive",
       });
       return;
@@ -149,9 +154,9 @@ export default function LoginPage() {
       });
     } catch {
       toast({
-        title: "Solicitação recebida",
+        title: "Solicitacao recebida",
         description:
-          "Se o identificador estiver cadastrado, você receberá as instruções de recuperação em instantes.",
+          "Se o identificador estiver cadastrado, voce recebera as instrucoes de recuperacao em instantes.",
       });
     } finally {
       setPendingAction(null);
@@ -165,7 +170,7 @@ export default function LoginPage() {
       await signInWithGoogle();
     } catch (error) {
       toast({
-        title: "Google indisponível",
+        title: "Google indisponivel",
         description: getAuthErrorMessage(error),
         variant: "destructive",
       });
@@ -181,7 +186,7 @@ export default function LoginPage() {
         <title>Entrar | Achegue-se</title>
         <meta
           name="description"
-          content="Entre na sua conta Achegue-se para acessar seu perfil, seus negócios e a sua comunidade."
+          content="Entre na sua conta Achegue-se para acessar seu perfil, seus negocios e a sua comunidade."
         />
       </Helmet>
 
@@ -191,9 +196,37 @@ export default function LoginPage() {
         <main
           id="main-content"
           tabIndex={-1}
-          className="mx-auto flex min-h-[calc(100vh-3.5rem)] w-full max-w-5xl items-start justify-center px-4 pb-28 pt-6 focus:outline-none sm:min-h-[calc(100vh-4rem)] sm:px-6 sm:pb-10 sm:pt-10 lg:items-center"
+          className="mx-auto flex min-h-[calc(100vh-3.5rem)] w-full max-w-6xl items-start justify-center px-4 pb-28 pt-5 focus:outline-none sm:min-h-[calc(100vh-4rem)] sm:px-6 sm:pb-10 sm:pt-8 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(22rem,28rem)] lg:items-center lg:gap-10"
         >
-          <div className="w-full max-w-md rounded-[28px] border border-border/70 bg-card/78 p-6 shadow-[0_32px_120px_-64px_rgba(0,0,0,0.9)] backdrop-blur-sm sm:p-8">
+          <section className="hidden lg:block">
+            <div className="max-w-xl space-y-5">
+              <div className="space-y-3">
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/90">
+                  Acesso unificado
+                </p>
+                <h1 className="font-heading text-4xl font-bold tracking-tight text-foreground">
+                  Entre e continue do ponto certo.
+                </h1>
+                <p className="max-w-lg text-base leading-7 text-muted-foreground">
+                  O login precisa ser direto no mobile e claro no desktop. Esta tela concentra
+                  conta, identidade e entrada na comunidade sem ruido visual.
+                </p>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+                {loginHighlights.map((item) => (
+                  <div
+                    key={item}
+                    className="rounded-2xl border border-border/70 bg-card/60 px-4 py-3 text-sm text-muted-foreground"
+                  >
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <div className="w-full max-w-md rounded-[28px] border border-border/70 bg-card/78 p-5 shadow-[0_32px_120px_-64px_rgba(0,0,0,0.9)] backdrop-blur-sm sm:p-8">
             <div className="space-y-6">
               <div className="space-y-3 text-center sm:space-y-4">
                 <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/12 text-primary">
@@ -207,7 +240,7 @@ export default function LoginPage() {
                     Bem-vindo de volta
                   </h1>
                   <p className="mx-auto max-w-sm text-sm leading-6 text-muted-foreground">
-                    Entre para acessar seu perfil, seus negócios e a sua comunidade.
+                    Entre para acessar seu perfil, seus negocios e a sua comunidade.
                   </p>
                 </div>
               </div>
@@ -258,7 +291,10 @@ export default function LoginPage() {
 
               <form onSubmit={handleSubmit(onValid)} className="space-y-4" noValidate>
                 <div className="space-y-1.5">
-                  <Label htmlFor="login-identifier">Email ou nome de usuário</Label>
+                  <Label htmlFor="login-identifier">Email ou nome de usuario</Label>
+                  <p className="-mt-0.5 text-xs text-muted-foreground">
+                    Use o mesmo identificador que voce usa no perfil publico.
+                  </p>
                   <div className="relative">
                     <Input
                       id="login-identifier"
@@ -307,10 +343,10 @@ export default function LoginPage() {
                     className="ml-auto block text-xs font-medium text-primary hover:underline"
                     disabled={pendingAction === "recovery"}
                   >
-                    {pendingAction === "recovery" ? "Enviando recuperação..." : "Esqueci minha senha"}
+                    {pendingAction === "recovery" ? "Enviando recuperacao..." : "Esqueci minha senha"}
                   </button>
                   <p className="text-xs text-muted-foreground">
-                    A recuperação funciona com email ou @usuário.
+                    A recuperacao funciona com email ou @usuario.
                   </p>
                 </div>
 
@@ -329,14 +365,14 @@ export default function LoginPage() {
               </form>
 
               <div className="space-y-2 text-center">
-                <p className="text-sm text-muted-foreground">Não tem conta?</p>
+                <p className="text-sm text-muted-foreground">Nao tem conta?</p>
                 <Button
                   type="button"
                   variant="outline"
                   className="h-11 w-full gap-1.5 border-primary/30 font-semibold text-primary hover:bg-primary/10"
                   onClick={() => navigate("/cadastro")}
                 >
-                  Criar conta grátis
+                  Criar conta gratis
                 </Button>
               </div>
             </div>

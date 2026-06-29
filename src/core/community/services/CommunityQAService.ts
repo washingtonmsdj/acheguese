@@ -91,7 +91,7 @@ export class CommunityQAService {
 
       const profiles = await profileService.getProfilesSummary([data.author_profile_id]);
       const autor = profiles[0]
-        ? { id: profiles[0].id, name: profiles[0].name, avatar_url: profiles[0].avatarUrl }
+        ? { id: profiles[0].id, name: profiles[0].displayName, avatar_url: profiles[0].avatarUrl }
         : null;
 
       return {
@@ -198,7 +198,7 @@ export class CommunityQAService {
         ? await profileService.getProfilesSummary(autorIds as string[])
         : [];
       const profileMap = new Map(
-        profiles.map((p) => [p.id, { id: p.id, name: p.name, avatar_url: p.avatarUrl }]),
+        profiles.map((p) => [p.id, { id: p.id, name: p.displayName, avatar_url: p.avatarUrl }]),
       );
 
       return questions.map((question) => ({
@@ -268,12 +268,12 @@ export class CommunityQAService {
         string,
         { id: string; name: string; avatar_url: string }
       >();
-      profiles.forEach((p) => profileMap.set(p.id, { id: p.id, name: p.name, avatar_url: p.avatarUrl }));
+      profiles.forEach((p) => profileMap.set(p.id, { id: p.id, name: p.displayName, avatar_url: p.avatarUrl }));
       const proMap = new Map<string, MentionProfessional>();
       professionals.forEach((p) => {
         proMap.set(p.id, {
           id: p.id,
-          name: p.name,
+          name: p.displayName,
           category: p.category,
           service: "service" in p ? p.service : undefined,
           rating: p.rating,

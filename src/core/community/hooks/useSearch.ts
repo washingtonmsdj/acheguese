@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect, useCallback } from "react";
-import type { CommunityPost } from "@/core/posts/types/Post";
+import type { CommunityPost, Post } from "@/core/posts/types.ts";
 import { logger } from "@/shared/utils/logger";
 import { postService } from "@/core/posts/services";
 
@@ -21,7 +21,29 @@ interface SearchResult {
   suggestions: string[];
 }
 
-type SearchPostLike = CommunityPost & { created_at?: string | null };
+type SearchPostRecord = Post & { created_at?: string | null };
+
+function toSearchResultPost(post: SearchPostRecord): CommunityPost {
+  return {
+    id: post.id,
+    author_profile_id: post.author_profile_id,
+    type: post.type,
+    content: post.content,
+    images: post.image_url ? [post.image_url] : [],
+    tags: [],
+    location_id: post.location_id ?? "",
+    location: post.location,
+    reach: post.reach ?? "neighborhood",
+    likes_count: post.likes_count,
+    comments_count: post.comments_count,
+    created_at: post.created_at,
+    updated_at: post.updated_at,
+    author_name: post.profile?.displayName ?? "Morador",
+    author_avatar: post.profile?.avatarUrl ?? undefined,
+    city: "",
+    neighborhood: post.location?.name ?? "",
+  };
+}
 
 export function useSearch() {
   const [query, setQuery] = useState("");
@@ -59,14 +81,15 @@ export function useSearch() {
       const batches = await Promise.all(
         postTypes.map((type) => postService.getPostsByType(type, { search: q })),
       );
-      const posts = (batches as any)
+      const posts = batches
         .flat()
-        .sort((a: SearchPostLike, b: SearchPostLike) => {
+        .sort((a: SearchPostRecord, b: SearchPostRecord) => {
           const aDate = new Date(a.created_at || 0).getTime();
           const bDate = new Date(b.created_at || 0).getTime();
           return bDate - aDate;
         })
-        .slice(0, 20) as unknown as CommunityPost[];
+        .slice(0, 20)
+        .map(toSearchResultPost);
       const hashtagCounts = new Map<string, number>();
       for (const post of posts as Array<{ content?: string | null }>) {
         const content = post.content || "";

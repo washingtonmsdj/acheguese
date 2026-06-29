@@ -36,6 +36,25 @@ interface InvalidBusiness {
   geographic_path: string;
 }
 
+interface BusinessLocationRow {
+  name?: string | null;
+  type?: string | null;
+  geographic_path?: string | null;
+}
+
+interface ActiveBusinessRow {
+  profile_id: string;
+  business_name: string;
+  slug: string;
+  location_id: string;
+  location?: BusinessLocationRow | BusinessLocationRow[] | null;
+}
+
+function resolveBusinessLocation(row: ActiveBusinessRow): BusinessLocationRow | null {
+  if (!row.location) return null;
+  return Array.isArray(row.location) ? (row.location[0] ?? null) : row.location;
+}
+
 async function validateBusinessDistrict() {
   console.log('🔍 Validando empresas com bairro obrigatório...\n');
 
@@ -54,7 +73,7 @@ async function validateBusinessDistrict() {
         geographic_path
       )
     `)
-    .eq('status', 'active') as any;
+    .eq('status', 'active');
 
   if (error) {
     console.error('❌ Erro ao buscar empresas:', error);
@@ -67,9 +86,11 @@ async function validateBusinessDistrict() {
   }
 
   // Filtrar empresas inválidas (sem location ou location não é district)
-  const invalidBusinesses = businesses.filter((b: any) => 
-    !b.location || b.location.type !== 'district'
-  );
+  const businessRows = (businesses ?? []) as ActiveBusinessRow[];
+  const invalidBusinesses = businessRows.filter((business) => {
+    const location = resolveBusinessLocation(business);
+    return !location || location.type !== 'district';
+  });
 
   if (invalidBusinesses.length === 0) {
     console.log('✅ Todas as empresas ativas têm location_id apontando para bairro/district.\n');
@@ -78,15 +99,18 @@ async function validateBusinessDistrict() {
   }
 
   // Formatar dados
-  const invalid: InvalidBusiness[] = invalidBusinesses.map((b: any) => ({
-    profile_id: b.profile_id,
-    name: b.business_name,
-    slug: b.slug,
-    location_id: b.location_id,
-    location_name: b.location?.name || 'N/A',
-    location_level: b.location?.type || 'N/A',
-    geographic_path: b.location?.geographic_path || 'N/A',
-  }));
+  const invalid: InvalidBusiness[] = invalidBusinesses.map((business) => {
+    const location = resolveBusinessLocation(business);
+    return {
+      profile_id: business.profile_id,
+      name: business.business_name,
+      slug: business.slug,
+      location_id: business.location_id,
+      location_name: location?.name || 'N/A',
+      location_level: location?.type || 'N/A',
+      geographic_path: location?.geographic_path || 'N/A',
+    };
+  });
 
   console.log(`❌ ATENÇÃO: ${invalid.length} empresas ativas com location_id inválido\n`);
   console.log('Empresas devem ter location_id apontando para bairro/district (type=district), não cidade (type=city)\n');

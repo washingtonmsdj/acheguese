@@ -279,7 +279,7 @@ export class RideRepository extends BaseRepository<Ride> {
   async updateStatus(
     id: string,
     status: RideStatus,
-    metadata?: Record<string, any>
+    metadata?: Partial<Ride>
   ): Promise<Ride> {
     const updates: Partial<Ride> = {
       status,

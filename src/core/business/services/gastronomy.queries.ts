@@ -29,7 +29,38 @@ import type {
   TerritorySlugParams,
   PaginatedGastronomyBusinesses,
 } from '../types';
+
 type BusinessRow = BusinessDataWithProfiles & { business_name?: string; profile_id: string };
+type HydratedProfile = Awaited<ReturnType<typeof profileService.getProfilesByIds>>[number];
+type LocationIdRow = { id: string };
+
+type QueryError = { message?: string | null };
+
+type QueryArrayResult<T> = {
+  data: T[] | null;
+  error: QueryError | null;
+};
+
+type QuerySingleResult<T> = {
+  data: T | null;
+  error: QueryError | null;
+};
+
+type QueryBuilder<T extends object> = PromiseLike<QueryArrayResult<T>> & {
+  select(columns?: string): QueryBuilder<T>;
+  eq(column: string, value: unknown): QueryBuilder<T>;
+  in(column: string, values: readonly unknown[]): QueryBuilder<T>;
+  or(filter: string): QueryBuilder<T>;
+  order(column: string, options?: { ascending?: boolean }): QueryBuilder<T>;
+  range(from: number, to: number): QueryBuilder<T>;
+  maybeSingle(): Promise<QuerySingleResult<T>>;
+};
+
+type GastronomyQueriesDbClient = {
+  from<T extends object>(table: string): QueryBuilder<T>;
+};
+
+const gastronomyQueriesDb = supabase as unknown as GastronomyQueriesDbClient;
 
 // ============================================================
 // HELPERS INTERNOS
@@ -58,11 +89,11 @@ async function resolveHierarchicalTerritoryFilter(
  */
 async function loadProfilesMap(profileIds: string[]) {
   if (!profileIds.length) {
-    return new Map();
+    return new Map<string, HydratedProfile>();
   }
 
   const profiles = await profileService.getProfilesByIds(profileIds);
-  return new Map(profiles.map((profile) => [profile.id, profile]));
+  return new Map<string, HydratedProfile>(profiles.map((profile) => [profile.id, profile]));
 }
 
 /**
@@ -72,8 +103,8 @@ function buildProfilesQuery(
   filters: GastronomyBusinessFilters = {},
   columns: string = '*',
 ) {
-  let query = supabase
-    .from('gastronomy_profiles')
+  let query = gastronomyQueriesDb
+    .from<GastronomyProfile>('gastronomy_profiles')
     .select(columns)
     .eq('status', 'active');
 
@@ -122,7 +153,7 @@ function buildProfilesQuery(
 async function mapRecordToGastronomyBusiness(
   record: BusinessRow,
   params: {
-    profilesMap?: Map<string, any>;
+    profilesMap?: Map<string, HydratedProfile>;
     gastronomyProfilesMap?: Map<string, GastronomyProfile>;
   } = {},
 ): Promise<GastronomyBusiness | null> {
@@ -176,16 +207,15 @@ async function fetchBusinessDataRecords(params: {
       return [];
     }
 
-    effectiveBusinessIds = ((gastronomyProfiles || []) as unknown as Array<{ business_id: string }>).map((profile) => profile.business_id);
+    effectiveBusinessIds = (gastronomyProfiles || []).map((profile) => profile.business_id);
   }
 
   if (!effectiveBusinessIds?.length) {
     return [];
   }
 
-  let query = supabase as any;
-  query = query
-    .from('business_data')
+  let query = gastronomyQueriesDb
+    .from<BusinessRow>('business_data')
     .select(`
       *,
       address:addresses!address_id(*),
@@ -239,8 +269,8 @@ export async function getGastronomyProfile(businessId: string): Promise<Gastrono
       return null;
     }
 
-    const { data, error } = await supabase
-      .from('gastronomy_profiles')
+    const { data, error } = await gastronomyQueriesDb
+      .from<GastronomyProfile>('gastronomy_profiles')
       .select('*')
       .eq('business_id', businessId)
       .eq('status', 'active')
@@ -251,7 +281,7 @@ export async function getGastronomyProfile(businessId: string): Promise<Gastrono
       return null;
     }
 
-    return data as GastronomyProfile | null;
+    return data;
   } catch (error) {
     logger.error('[GastronomyQueries] Unexpected error fetching profile:', error);
     return null;
@@ -271,8 +301,8 @@ export async function getGastronomyBusiness(identifier: string): Promise<Gastron
     }
 
     // Primeiro tentar por slug
-    const { data: bySlug, error: slugError } = await supabase
-      .from('business_data')
+    const { data: bySlug, error: slugError } = await gastronomyQueriesDb
+      .from<BusinessRow>('business_data')
       .select(`
         *,
         address:addresses!address_id(*),
@@ -288,7 +318,7 @@ export async function getGastronomyBusiness(identifier: string): Promise<Gastron
     }
 
     if (bySlug) {
-      return mapRecordToGastronomyBusiness(bySlug as BusinessRow);
+      return mapRecordToGastronomyBusiness(bySlug);
     }
 
     // Se não for ID válido, retornar null
@@ -297,8 +327,8 @@ export async function getGastronomyBusiness(identifier: string): Promise<Gastron
     }
 
     // Tentar por ID
-    const { data: byId, error: idError } = await supabase
-      .from('business_data')
+    const { data: byId, error: idError } = await gastronomyQueriesDb
+      .from<BusinessRow>('business_data')
       .select(`
         *,
         address:addresses!address_id(*),
@@ -313,7 +343,7 @@ export async function getGastronomyBusiness(identifier: string): Promise<Gastron
       return null;
     }
 
-    return mapRecordToGastronomyBusiness(byId as BusinessRow);
+    return mapRecordToGastronomyBusiness(byId);
   } catch (error) {
     logger.error('[GastronomyQueries] Unexpected error:', error);
     return null;
@@ -337,8 +367,8 @@ export async function getGastronomyBusinessByTerritorySlug(
 
     // geographic_path está em locations, não em business_data.
     // Resolver o location_id primeiro, depois buscar o negócio.
-    const { data: locationData, error: locationError } = await supabase
-      .from('locations')
+    const { data: locationData, error: locationError } = await gastronomyQueriesDb
+      .from<LocationIdRow>('locations')
       .select('id')
       .eq('geographic_path', geoPath)
       .maybeSingle();
@@ -348,8 +378,8 @@ export async function getGastronomyBusinessByTerritorySlug(
       return null;
     }
 
-    const { data, error } = await supabase
-      .from('business_data')
+    const { data, error } = await gastronomyQueriesDb
+      .from<BusinessRow>('business_data')
       .select(`
         *,
         address:addresses!address_id(*),
@@ -365,7 +395,7 @@ export async function getGastronomyBusinessByTerritorySlug(
       return null;
     }
 
-    return mapRecordToGastronomyBusiness(data as BusinessRow);
+    return mapRecordToGastronomyBusiness(data);
   } catch (error) {
     logger.error('[GastronomyQueries] Error:', error);
     return null;
@@ -395,14 +425,14 @@ export async function getGastronomyBusinessesList(params: {
 
     // Carregar todos os perfis gastronômicos de uma vez
     const businessIds = records.map((r) => r.id);
-    const { data: profiles } = await supabase
-      .from('gastronomy_profiles')
+    const { data: profiles } = await gastronomyQueriesDb
+      .from<GastronomyProfile>('gastronomy_profiles')
       .select('*')
       .in('business_id', businessIds)
       .eq('status', 'active');
 
     const profilesMap = new Map(
-      (profiles || []).map((p) => [p.business_id, p as GastronomyProfile]),
+      (profiles || []).map((profile) => [profile.business_id, profile]),
     );
 
     // Carregar todos os perfis de negócio
@@ -446,14 +476,14 @@ export async function getGastronomyBusinesses(
     }
 
     const businessIds = records.map((r) => r.id);
-    const { data: profiles } = await supabase
-      .from('gastronomy_profiles')
+    const { data: profiles } = await gastronomyQueriesDb
+      .from<GastronomyProfile>('gastronomy_profiles')
       .select('*')
       .in('business_id', businessIds)
       .eq('status', 'active');
 
     const profilesMap = new Map(
-      (profiles || []).map((p) => [p.business_id, p as GastronomyProfile]),
+      (profiles || []).map((profile) => [profile.business_id, profile]),
     );
 
     const profileIds = records.map((r) => r.profile_id).filter(Boolean) as string[];
@@ -496,14 +526,14 @@ export async function getGastronomyBusinessesByIds(businessIds: string[]): Promi
     }
 
     const resultBusinessIds = records.map((r) => r.id);
-    const { data: profiles } = await supabase
-      .from('gastronomy_profiles')
+    const { data: profiles } = await gastronomyQueriesDb
+      .from<GastronomyProfile>('gastronomy_profiles')
       .select('*')
       .in('business_id', resultBusinessIds)
       .eq('status', 'active');
 
     const profilesMap = new Map(
-      (profiles || []).map((p) => [p.business_id, p as GastronomyProfile]),
+      (profiles || []).map((profile) => [profile.business_id, profile]),
     );
 
     const profileIds = records.map((r) => r.profile_id).filter(Boolean) as string[];

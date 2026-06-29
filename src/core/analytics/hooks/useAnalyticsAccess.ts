@@ -5,6 +5,11 @@ import { POWERBI_DASHBOARDS } from "@/core/analytics/config/dashboards.config";
 export function useAnalyticsAccess() {
   const { activeProfile } = useSessionContext();
   const hasAccess = Boolean(activeProfile);
+  const activeProfileExtras = activeProfile as unknown as Record<string, unknown> | null;
+  const activeRole =
+    activeProfileExtras && typeof activeProfileExtras.role === "string"
+      ? activeProfileExtras.role
+      : "";
 
   const canViewDashboard = (dashboardId: DashboardId): boolean => {
     if (!activeProfile) return false;
@@ -18,7 +23,7 @@ export function useAnalyticsAccess() {
       return hasAccess;
     }
 
-    return dashboard.requiredRole.includes((activeProfile as any).role || "");
+    return dashboard.requiredRole.includes(activeRole);
   };
 
   const getAvailableDashboards = (): DashboardConfig[] => {

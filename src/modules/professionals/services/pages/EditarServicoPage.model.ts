@@ -44,6 +44,13 @@ export const createInitialProfessionalEditForm = (): ProfessionalEditForm => ({
   isAcceptingClients: true,
 });
 
+function getAvailableHoursSchedule(
+  availableHours: Record<string, unknown> | null | undefined,
+): string {
+  const schedule = availableHours?.schedule;
+  return typeof schedule === "string" ? schedule : "";
+}
+
 export const mapProfessionalToEditForm = (
   professional: Professional,
 ): ProfessionalEditForm => ({
@@ -55,7 +62,7 @@ export const mapProfessionalToEditForm = (
   phone: professional.phone || "",
   whatsapp: professional.whatsapp || "",
   email: professional.email || "",
-  availableHours: ((professional.available_hours as any)?.schedule as string) || "",
+  availableHours: getAvailableHoursSchedule(professional.available_hours),
   priceRange: professional.price_range || "",
   experienceYears: professional.experience_years?.toString() || "",
   education: professional.education || "",

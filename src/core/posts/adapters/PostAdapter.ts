@@ -76,6 +76,37 @@ interface FeedPostData {
   content_payload?: Record<string, unknown>;
 }
 
+interface ServicePostProfile {
+  name?: string | null;
+  username?: string | null;
+  avatar_url?: string | null;
+  verified?: boolean | null;
+}
+
+interface ServicePostData {
+  id: string;
+  type?: string | null;
+  profile_id?: string | null;
+  author_profile_id?: string | null;
+  author_profile?: ServicePostProfile | null;
+  profile?: ServicePostProfile | null;
+  content: string;
+  image_url?: string | null;
+  location?: UnifiedPost["location"];
+  location_id?: string | null;
+  reach?: UnifiedPost["reach"];
+  likes_count?: number | null;
+  comments_count?: number | null;
+  is_liked?: boolean;
+  is_saved?: boolean;
+  created_at: string;
+  tags?: string[];
+  content_intent?: string;
+  display_format?: string;
+  distribution_channels?: string[];
+  content_payload?: Record<string, unknown>;
+}
+
 // ─── PostAdapter ──────────────────────────────────────────────────────────────
 
 export class PostAdapter {
@@ -153,7 +184,7 @@ export class PostAdapter {
    * Converte Post do PostService (Supabase) em UnifiedPost
    * ✅ SSOT: usa location e location_id do JOIN — sem campos legados
    */
-  static fromServicePost(post: any): UnifiedPost {
+  static fromServicePost(post: ServicePostData): UnifiedPost {
     const profile = post.author_profile || post.profile;
 
     return {
@@ -182,7 +213,7 @@ export class PostAdapter {
   }
 
   static convertArray(
-    items: Array<CivicReportData | CommunityPostData | FeedPostData>,
+    items: Array<CivicReportData | CommunityPostData | FeedPostData | ServicePostData>,
   ): UnifiedPost[] {
     return items.map((item) => {
       if ("profile_id" in item && "urgency" in item)

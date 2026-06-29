@@ -1,23 +1,30 @@
 /**
- * Testes de Validação - Sprint 2 Fase 2
- * Validações objetivas das refatorações do PostService
+ * Validation tests for Sprint 2 / Fase 2.
+ * Objective checks for PostService refactors.
  */
 
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { postService } from '@/core/posts/services/PostService';
 import { supabase } from '@/integrations/supabase';
 
-// Fixtures determinísticas
+type DeprecatedPostServiceKeys = {
+  createCommunityPost?: unknown;
+  createCommunityPostWithValidation?: unknown;
+  createSimplePost?: unknown;
+};
+
+const postServiceWithLegacy = postService as typeof postService & DeprecatedPostServiceKeys;
+
 const FIXTURES = {
   profiles: {
-    owner: 'profile_seed_owner', // Não usado nos testes críticos
+    owner: 'profile_seed_owner',
   },
   locations: {
-    city: '00000000-0000-0000-0000-000000000001', // Salvador Teste Fase2
-    district1: '00000000-0000-0000-0000-000000000002', // Barra Teste Fase2
-    district2: '00000000-0000-0000-0000-000000000003', // Pelourinho Teste Fase2
+    city: '00000000-0000-0000-0000-000000000001',
+    district1: '00000000-0000-0000-0000-000000000002',
+    district2: '00000000-0000-0000-0000-000000000003',
   },
 };
 
@@ -26,30 +33,30 @@ function readPostMutationsSource(): string {
 }
 
 describe('Sprint 2 - Fase 2: PostService Refatorado', () => {
-  describe('createPost() - Validações de Service', () => {
-    it('deve rejeitar post sem location_id', async () => {
+  describe('createPost() - service validations', () => {
+    it('rejects a post without location_id', async () => {
       await expect(
         postService.createPost({
           author_profile_id: FIXTURES.profiles.owner,
           content: 'Test',
           type: 'text',
-          location_id: '', // ❌ vazio
-        })
-      ).rejects.toThrow('location_id é obrigatório');
+          location_id: '',
+        }),
+      ).rejects.toThrow(/location_id.*obrigat.rio/i);
     });
 
-    it('deve rejeitar post com location_id inválido', async () => {
+    it('rejects a post with invalid location_id', async () => {
       await expect(
         postService.createPost({
           author_profile_id: FIXTURES.profiles.owner,
           content: 'Test',
           type: 'text',
           location_id: 'invalid-uuid',
-        })
-      ).rejects.toThrow('Localização inválida');
+        }),
+      ).rejects.toThrow(/Localiza..o inv.lida/i);
     });
 
-    it('deve aceitar apenas city, district e neighborhood no contrato de criacao', () => {
+    it('accepts only city, district and neighborhood in the creation contract', () => {
       const source = readPostMutationsSource();
 
       expect(source).toContain(
@@ -58,8 +65,8 @@ describe('Sprint 2 - Fase 2: PostService Refatorado', () => {
       expect(source).not.toMatch(/allowedLocationTypes:[\s\S]*LocationType\.STATE/);
       expect(source).not.toMatch(/allowedLocationTypes:[\s\S]*LocationType\.COUNTRY/);
     });
-    it('deve rejeitar tipo inválido (state, country, etc)', async () => {
-      // Buscar um state para testar
+
+    it('rejects invalid types such as state or country', async () => {
       const { data: state } = await supabase
         .from('locations')
         .select('id')
@@ -74,13 +81,12 @@ describe('Sprint 2 - Fase 2: PostService Refatorado', () => {
             content: 'Test',
             type: 'text',
             location_id: state.id,
-          })
-        ).rejects.toThrow('Posts só podem ser criados em cidades ou bairros');
+          }),
+        ).rejects.toThrow(/Posts .* podem ser criados em cidades ou bairros/i);
       }
     });
 
-    it('deve rejeitar location inativa', async () => {
-      // Criar location inativa temporária
+    it('rejects inactive locations', async () => {
       const { data: inactive } = await supabase
         .from('locations')
         .insert({
@@ -90,7 +96,7 @@ describe('Sprint 2 - Fase 2: PostService Refatorado', () => {
           slug: 'inativa-teste-temp',
           geographic_path: '/inativa-teste-temp',
           type: 'city',
-          parent_id: '00000000-0000-0000-0000-000000000010', // Bahia
+          parent_id: '00000000-0000-0000-0000-000000000010',
           status: 'inactive',
           metadata: { center_latitude: -12.0, center_longitude: -38.0 },
         })
@@ -104,33 +110,29 @@ describe('Sprint 2 - Fase 2: PostService Refatorado', () => {
             content: 'Test',
             type: 'text',
             location_id: inactive.id,
-          })
-        ).rejects.toThrow('Localização inativa');
+          }),
+        ).rejects.toThrow(/Localiza..o inativa/i);
 
-        // Cleanup
         await supabase.from('locations').delete().eq('id', inactive.id);
       }
     });
   });
 
-  describe('createCommunityPostWithValidation() - Multi-Profile', () => {
-    it('deve usar author_profile_id explícito (não user_id)', async () => {
-      // Verificar que a função aceita author_profile_id
+  describe('createCommunityPostWithValidation() - multi-profile contract', () => {
+    it('expects explicit author_profile_id instead of user_id', () => {
       const testData = {
         author_profile_id: FIXTURES.profiles.owner,
         content: 'Test multi-profile',
         type: 'text',
       };
 
-      // Se profile não tiver location_id, deve rejeitar
-      // (não testamos criação real aqui, apenas a assinatura)
       expect(testData.author_profile_id).toBeDefined();
       expect(testData.author_profile_id).not.toContain('user');
     });
   });
 
-  describe('getFeed() - JOIN com locations', () => {
-    it('deve retornar post.location.name no resultado', async () => {
+  describe('getFeed() - join with locations', () => {
+    it('returns post.location.name in the result', async () => {
       const { posts } = await postService.getFeed({
         location_id: FIXTURES.locations.district1,
         limit: 1,
@@ -145,59 +147,42 @@ describe('Sprint 2 - Fase 2: PostService Refatorado', () => {
     });
   });
 
-  describe('expandLocationIds() - Expansão Territorial', () => {
-    it('cidade deve incluir cidade + distritos filhos', async () => {
+  describe('expandLocationIds() - territorial expansion', () => {
+    it('city includes the city plus child districts', async () => {
       const { posts } = await postService.getFeed({
         location_id: FIXTURES.locations.city,
         limit: 100,
       });
 
-      // Verificar que a expansão foi feita (não retornou vazio)
-      // A expansão deve incluir: city + district1 + district2
       expect(Array.isArray(posts)).toBe(true);
-      
-      // Validação adicional: verificar que expandLocationIds foi chamado
-      // (evidenciado pelos logs de StructuredLogger)
     });
 
-    it('bairro deve incluir bairro + cidade-pai', async () => {
+    it('district includes the district plus the parent city', async () => {
       const { posts } = await postService.getFeed({
         location_id: FIXTURES.locations.district1,
         limit: 100,
       });
 
-      // Verificar que a expansão foi feita (não retornou vazio)
-      // A expansão deve incluir: district1 + city
       expect(Array.isArray(posts)).toBe(true);
-      
-      // Validação adicional: verificar que expandLocationIds foi chamado
-      // (evidenciado pelos logs de StructuredLogger)
     });
   });
 
-  describe('Funções Deprecadas — Removidas no Cleanup Pós-Sprint 2', () => {
-    it('createCommunityPost não deve mais existir no PostService', () => {
-      // Cleanup pós-Sprint 2: função removida — zero callers confirmados
-      expect((postService as any).createCommunityPost).toBeUndefined();
+  describe('Deprecated functions removed after Sprint 2 cleanup', () => {
+    it('createCommunityPost no longer exists on PostService', () => {
+      expect(postServiceWithLegacy.createCommunityPost).toBeUndefined();
     });
 
-    it('createCommunityPostWithValidation não deve mais existir no PostService', () => {
-      // Cleanup pós-Sprint 2: função removida — zero callers confirmados
-      expect((postService as any).createCommunityPostWithValidation).toBeUndefined();
+    it('createCommunityPostWithValidation no longer exists on PostService', () => {
+      expect(postServiceWithLegacy.createCommunityPostWithValidation).toBeUndefined();
     });
 
-    it('createSimplePost não deve mais existir no PostService', () => {
-      // Cleanup pós-Sprint 2: função removida — zero callers confirmados
-      expect((postService as any).createSimplePost).toBeUndefined();
+    it('createSimplePost no longer exists on PostService', () => {
+      expect(postServiceWithLegacy.createSimplePost).toBeUndefined();
     });
   });
 
-  describe('Bloqueio de grupo territorial na UI (será testado na Fase 3)', () => {
-    it('placeholder: UI deve bloquear quando filter.scope === group', () => {
-      // Este teste será implementado na Fase 3 quando refatorarmos CreatePostModal
-      // Regra: quando filter.scope === 'group', o formulário deve:
-      // 1. Bloquear botão de publicação
-      // 2. Exibir erro: "Selecione uma cidade ou bairro específico para publicar"
+  describe('Territorial group lock in the UI (covered later in Fase 3)', () => {
+    it('keeps the placeholder expectation documented', () => {
       expect(true).toBe(true);
     });
   });

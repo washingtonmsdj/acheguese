@@ -1,8 +1,8 @@
 /**
- * EmpresasSection - Seção de empresas do perfil
+ * EmpresasSection - secao de empresas do perfil
  *
  * SSOT: Componente isolado com props tipadas
- * Sem gambiarras: Lógica clara e organizada
+ * Sem gambiarras: Logica clara e organizada
  */
 
 import {
@@ -37,7 +37,7 @@ export function EmpresasSection({
 
   return (
     <div className="space-y-6">
-      {/* Widget de acesso rápido para donos - destaque na seção empresas */}
+      {/* Widget de acesso rapido para donos - destaque na secao empresas */}
       {businessModules.length > 0 && (
         <BusinessOwnerQuickAccess
           businesses={businessModules}
@@ -54,34 +54,34 @@ export function EmpresasSection({
       />
 
       <SectionFrame
-        title="Ações empresariais"
-        description="Atalhos para gerir empresa, classificados e operação gastronômica."
+        title="Acoes empresariais"
+        description="Atalhos para gerir empresa, classificados e operacao gastronomica."
       >
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           <HubLinkCard
             icon={Building2}
             title="Nova empresa"
-            description="Inicie o fluxo de criação de empresa."
+            description="Inicie o fluxo de criacao de empresa."
             onClick={() => navigate(appUrls.business.create)}
           />
           <HubLinkCard
             icon={ArrowRight}
-            title="Explorar empresas do território"
-            description="Ver ecossistema de empresas e referências locais."
+            title="Explorar empresas do territorio"
+            description="Ver ecossistema de empresas e referencias locais."
             onClick={() => navigate(appUrls.business.list)}
           />
           {showJobs ? (
             <HubLinkCard
               icon={Briefcase}
               title="Publicar vaga"
-              description="Abra uma vaga e publique no módulo de empregos."
+              description="Abra uma vaga e publique no modulo de empregos."
               onClick={() => navigate(`${appUrls.jobs}/publicar`)}
             />
           ) : null}
           <HubLinkCard
             icon={LayoutGrid}
             title="Novo classificado"
-            description="Publique produto/serviço nos classificados."
+            description="Publique produto ou servico nos classificados."
             onClick={() => navigate(appUrls.classifieds.new)}
           />
           {showPublicAnalytics ? (
@@ -104,15 +104,15 @@ export function EmpresasSection({
             <HubLinkCard
               icon={BarChart3}
               title="Analytics gastronomia"
-              description="Visitas, engajamento e performance da operação gastronômica."
+              description="Visitas, engajamento e performance da operacao gastronomica."
               onClick={() => navigate(primaryGastronomyModule.gastronomy.analyticsUrl!)}
             />
           ) : null}
           {primaryGastronomyModule?.gastronomy.menuUrl ? (
             <HubLinkCard
               icon={LayoutGrid}
-              title="Produtos e cardápio"
-              description="Gerencie itens, categorias e preços da gastronomia."
+              title="Produtos e cardapio"
+              description="Gerencie itens, categorias e precos da gastronomia."
               onClick={() => navigate(primaryGastronomyModule.gastronomy.menuUrl!)}
             />
           ) : null}

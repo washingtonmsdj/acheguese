@@ -23,17 +23,69 @@ export interface RideDispatchAttemptUpdateInput {
   respondedAt?: string;
 }
 
+type ErrorLike = { message?: string | null } | null;
+
+type RideDispatchAuditUpdateRow = {
+  status?: string;
+  responded_at?: string;
+};
+
+type MobilityAuditRpcClient = {
+  rpc<T>(fn: string, params?: Record<string, unknown>): Promise<{
+    data: T | null;
+    error: ErrorLike;
+  }>;
+};
+
+type MobilityAuditDbClient = {
+  from(table: "ride_state_audit"): {
+    insert(values: {
+      ride_id: string;
+      from_state: string;
+      to_state: string;
+      changed_by: string;
+      reason: string;
+      created_at: string;
+    }): Promise<{ error: ErrorLike }>;
+  };
+  from(table: "ride_dispatch_audit"): {
+    insert(values: {
+      ride_id: string;
+      driver_profile_id: string;
+      attempt_number: number;
+      offered_at: string;
+      timeout_at: string;
+      status: string;
+      created_at: string;
+    }): Promise<{ error: ErrorLike }>;
+    update(values: RideDispatchAuditUpdateRow): {
+      eq(column: "ride_id", value: string): {
+        eq(column: "driver_profile_id", value: string): {
+          order(column: "created_at", options: { ascending: boolean }): {
+            limit(count: number): Promise<{ error: ErrorLike }>;
+          };
+        };
+      };
+    };
+  };
+};
+
+const mobilityAuditRpc = supabase as unknown as MobilityAuditRpcClient;
+const mobilityAuditDb = supabase as unknown as MobilityAuditDbClient;
+
 export class MobilityAuditService {
   async logRideStateChange(input: RideStateAuditInput): Promise<void> {
     try {
-      await supabase.from("ride_state_audit").insert({
+      const { error } = await mobilityAuditDb.from("ride_state_audit").insert({
         ride_id: input.rideId,
         from_state: input.fromState ?? "none",
         to_state: input.toState,
         changed_by: input.changedBy,
-        reason: input.reason || "",
+        reason: input.reason ?? "",
         created_at: new Date().toISOString(),
       });
+
+      if (error) throw error;
     } catch (error) {
       logger.error("MobilityAuditService.logRideStateChange", error as Error, input);
     }
@@ -41,7 +93,7 @@ export class MobilityAuditService {
 
   async logDispatchAttempt(input: RideDispatchAttemptInput): Promise<void> {
     try {
-      await supabase.from("ride_dispatch_audit").insert({
+      const { error } = await mobilityAuditDb.from("ride_dispatch_audit").insert({
         ride_id: input.rideId,
         driver_profile_id: input.driverProfileId,
         attempt_number: input.attemptNumber,
@@ -50,6 +102,8 @@ export class MobilityAuditService {
         status: input.status,
         created_at: new Date().toISOString(),
       });
+
+      if (error) throw error;
     } catch (error) {
       logger.error("MobilityAuditService.logDispatchAttempt", error as Error, input);
     }
@@ -61,19 +115,21 @@ export class MobilityAuditService {
     updates: RideDispatchAttemptUpdateInput,
   ): Promise<void> {
     try {
-      const payload: Record<string, unknown> = {};
+      const payload: RideDispatchAuditUpdateRow = {};
       if (updates.status !== undefined) payload.status = updates.status;
       if (updates.respondedAt !== undefined) payload.responded_at = updates.respondedAt;
 
       if (Object.keys(payload).length === 0) return;
 
-      await supabase
+      const { error } = await mobilityAuditDb
         .from("ride_dispatch_audit")
         .update(payload)
         .eq("ride_id", rideId)
         .eq("driver_profile_id", driverProfileId)
         .order("created_at", { ascending: false })
         .limit(1);
+
+      if (error) throw error;
     } catch (error) {
       logger.error("MobilityAuditService.updateLatestDispatchAttempt", error as Error, {
         rideId,
@@ -85,7 +141,7 @@ export class MobilityAuditService {
 
   async cancelPendingOffers(rideId: string): Promise<void> {
     try {
-      const { error } = await (supabase as any).rpc("cancel_pending_ride_offers", {
+      const { error } = await mobilityAuditRpc.rpc("cancel_pending_ride_offers", {
         p_ride_id: rideId,
       });
 

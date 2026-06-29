@@ -7,6 +7,11 @@ import { logger } from '@/shared/utils/logger';
 import { useState, useEffect } from 'react';
 import { MultiProfileService } from '../services/multi-profile';
 import type { Profile } from '../services/multi-profile/types';
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
+}
+
 export function useProfiles() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -19,9 +24,9 @@ export function useProfiles() {
     try {
       const data = await MultiProfileService.getMyProfiles();
       setProfiles(data);
-    } catch (err: any) {
-      logger.error('Error loading profiles:', err);
-      setError(err.message || 'Failed to load profiles');
+    } catch (error: unknown) {
+      logger.error('Error loading profiles:', error);
+      setError(getErrorMessage(error, 'Failed to load profiles'));
     } finally {
       setLoading(false);
     }

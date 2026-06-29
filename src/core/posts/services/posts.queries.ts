@@ -21,6 +21,61 @@ import type {
 } from "../types";
 import { PostError } from "../types";
 
+interface QueryResult<T> {
+  data: T | null;
+  error: { message: string; code?: string } | null;
+  count?: number | null;
+}
+
+interface QueryBuilder<TRow> extends PromiseLike<QueryResult<TRow[]>> {
+  select: (columns: string, options?: { count?: "exact"; head?: boolean }) => QueryBuilder<TRow>;
+  eq: (column: string, value: unknown) => QueryBuilder<TRow>;
+  in: (column: string, values: unknown[]) => QueryBuilder<TRow>;
+  or: (filters: string) => QueryBuilder<TRow>;
+  not: (column: string, operator: string, value: unknown) => QueryBuilder<TRow>;
+  ilike: (column: string, value: string) => QueryBuilder<TRow>;
+  gte: (column: string, value: string | number) => QueryBuilder<TRow>;
+  lte: (column: string, value: string | number) => QueryBuilder<TRow>;
+  lt: (column: string, value: string | number) => QueryBuilder<TRow>;
+  order: (column: string, options?: { ascending?: boolean }) => QueryBuilder<TRow>;
+  limit: (value: number) => QueryBuilder<TRow>;
+  range: (from: number, to: number) => QueryBuilder<TRow>;
+  single: () => Promise<QueryResult<TRow>>;
+}
+
+interface PostsQueryDbClient {
+  from: <TRow = never>(table: string) => QueryBuilder<TRow>;
+}
+
+interface LocationIdRow {
+  id: string;
+}
+
+interface PostStatRow {
+  likes_count: number | null;
+  comments_count: number | null;
+}
+
+interface PostBasicInfoRow {
+  author_profile_id: string;
+  title?: string | null;
+  content?: string | null;
+}
+
+interface TopPostRow {
+  id: string;
+  content: string | null;
+  likes_count: number | null;
+  comments_count: number | null;
+  author?: { name?: string | null } | null;
+}
+
+interface PostTagsRow {
+  tags?: string[] | null;
+}
+
+const postsQueryDb = supabase as unknown as PostsQueryDbClient;
+
 // ============================================================================
 // 🔍 POST QUERIES - Busca de posts
 // ============================================================================
@@ -30,8 +85,8 @@ import { PostError } from "../types";
  */
 export async function getPostById(postId: string): Promise<Post | null> {
   try {
-    const { data: post, error } = await (supabase as any)
-      .from("posts")
+    const { data: post, error } = await postsQueryDb
+      .from<Post>("posts")
       .select(
         `
           *,
@@ -77,8 +132,8 @@ export async function getFeed(params: FeedParams): Promise<FeedResult> {
   } = params;
 
   try {
-    let query = (supabase as any)
-      .from("posts")
+    let query = postsQueryDb
+      .from<Post>("posts")
       .select(
         `
         *,
@@ -101,12 +156,12 @@ export async function getFeed(params: FeedParams): Promise<FeedResult> {
     } else if (location_id) {
       if (district_filter) {
         // Feed de distrito: inclui bairros (filho do parent)
-        const { data: neighborhoods } = await (supabase as any)
-          .from("locations")
+        const { data: neighborhoods } = await postsQueryDb
+          .from<LocationIdRow>("locations")
           .select("id")
           .eq("parent_id", location_id);
 
-        const neighborhoodIds = neighborhoods?.map((n: any) => n.id) || [];
+        const neighborhoodIds = ((neighborhoods as LocationIdRow[] | null) ?? []).map((n) => n.id);
         if (neighborhoodIds.length > 0) {
           query = query.in("location_id", [location_id, ...neighborhoodIds]);
         } else {
@@ -114,12 +169,12 @@ export async function getFeed(params: FeedParams): Promise<FeedResult> {
         }
       } else if (city_filter) {
         // Feed de cidade: busca posts da cidade + distritos + bairros
-        const { data: cityLocations } = await (supabase as any)
-          .from("locations")
+        const { data: cityLocations } = await postsQueryDb
+          .from<LocationIdRow>("locations")
           .select("id")
           .or(`id.eq.${location_id},parent_id.eq.${location_id}`);
 
-        const locationIds = cityLocations?.map((l: any) => l.id) || [
+        const locationIds = ((cityLocations as LocationIdRow[] | null) ?? []).map((l) => l.id) || [
           location_id,
         ];
         query = query.in("location_id", locationIds);
@@ -147,7 +202,7 @@ export async function getFeed(params: FeedParams): Promise<FeedResult> {
         : undefined;
 
     return {
-      posts: (posts || []) as Post[],
+      posts: (posts as Post[] | null) ?? [],
       nextCursor,
       hasMore: !!nextCursor,
     };
@@ -174,8 +229,8 @@ export async function getPostsByProfile(
   const { limit = PAGINATION.DEFAULT_LIMIT, offset = 0 } = params;
 
   try {
-    const { data: posts, error } = await (supabase as any)
-      .from("posts")
+    const { data: posts, error } = await postsQueryDb
+      .from<Post>("posts")
       .select(
         `
         *,
@@ -192,7 +247,7 @@ export async function getPostsByProfile(
       throw new PostError(error.message, error.code);
     }
 
-    return (posts || []) as Post[];
+    return (posts as Post[] | null) ?? [];
   } catch (error) {
     if (error instanceof PostError) throw error;
 
@@ -214,8 +269,8 @@ export async function getPostsByType(
   filters?: { search?: string; location_id?: string },
 ): Promise<Post[]> {
   try {
-    let query = (supabase as any)
-      .from("posts")
+    let query = postsQueryDb
+      .from<Post>("posts")
       .select(
         `
         *,
@@ -245,7 +300,7 @@ export async function getPostsByType(
       throw new PostError(error.message, error.code);
     }
 
-    return (posts || []) as Post[];
+    return (posts as Post[] | null) ?? [];
   } catch (error) {
     if (error instanceof PostError) throw error;
 
@@ -268,8 +323,8 @@ export async function getPostsByType(
  */
 export async function getPostStats(postId: string): Promise<PostStats> {
   try {
-    const { data: post, error } = await (supabase as any)
-      .from("posts")
+    const { data: post, error } = await postsQueryDb
+      .from<PostStatRow>("posts")
       .select("likes_count, comments_count")
       .eq("id", postId)
       .single();
@@ -279,8 +334,8 @@ export async function getPostStats(postId: string): Promise<PostStats> {
     }
 
     return {
-      likes_count: post?.likes_count || 0,
-      comments_count: post?.comments_count || 0,
+      likes_count: (post as PostStatRow | null)?.likes_count || 0,
+      comments_count: (post as PostStatRow | null)?.comments_count || 0,
     };
   } catch (error) {
     if (error instanceof PostError) throw error;
@@ -302,8 +357,8 @@ export async function getPostsCountByAuthor(
   authorProfileId: string,
 ): Promise<number> {
   try {
-    const { count, error } = await (supabase as any)
-      .from("posts")
+    const { count, error } = await postsQueryDb
+      .from<Post>("posts")
       .select("*", { count: "exact", head: true })
       .eq("author_profile_id", authorProfileId)
       .eq("is_published", true);
@@ -336,8 +391,8 @@ export async function getPostsCountByAuthorToday(
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const { count, error } = await (supabase as any)
-      .from("posts")
+    const { count, error } = await postsQueryDb
+      .from<Post>("posts")
       .select("*", { count: "exact", head: true })
       .eq("author_profile_id", authorProfileId)
       .gte("created_at", today.toISOString());
@@ -367,8 +422,8 @@ export async function getPostsLikesReceivedByAuthor(
   authorProfileId: string,
 ): Promise<number> {
   try {
-    const { data, error } = await (supabase as any)
-      .from("posts")
+    const { data, error } = await postsQueryDb
+      .from<PostStatRow>("posts")
       .select("likes_count")
       .eq("author_profile_id", authorProfileId)
       .eq("is_published", true);
@@ -377,8 +432,8 @@ export async function getPostsLikesReceivedByAuthor(
       throw new PostError(error.message, error.code);
     }
 
-    return (data || []).reduce(
-      (sum: number, post: any) => sum + (post.likes_count || 0),
+    return ((data as PostStatRow[] | null) ?? []).reduce(
+      (sum, post) => sum + (post.likes_count || 0),
       0,
     );
   } catch (error) {
@@ -399,8 +454,8 @@ export async function getPostsLikesReceivedByAuthor(
  */
 export async function getTotalPostsCount(): Promise<number> {
   try {
-    const { count, error } = await (supabase as any)
-      .from("posts")
+    const { count, error } = await postsQueryDb
+      .from<Post>("posts")
       .select("*", { count: "exact", head: true });
 
     if (error) {
@@ -427,8 +482,8 @@ export async function getRecentPosts(
   limit = PAGINATION.SMALL_LIMIT,
 ): Promise<Post[]> {
   try {
-    const { data, error } = await (supabase as any)
-      .from("posts")
+    const { data, error } = await postsQueryDb
+      .from<Post>("posts")
       .select(
         `
         *,
@@ -444,7 +499,7 @@ export async function getRecentPosts(
       throw new PostError(error.message, error.code);
     }
 
-    return (data || []) as Post[];
+    return (data as Post[] | null) ?? [];
   } catch (error) {
     if (error instanceof PostError) throw error;
 
@@ -469,8 +524,8 @@ export async function getPostsByCategory(params: {
   try {
     const { categories, tipoPost, limit = 1000 } = params;
 
-    let query = (supabase as any)
-      .from("posts")
+    let query = postsQueryDb
+      .from<Post>("posts")
       .select(
         `
         *,
@@ -497,7 +552,7 @@ export async function getPostsByCategory(params: {
       throw new PostError(error.message, error.code);
     }
 
-    return (data || []) as Post[];
+    return (data as Post[] | null) ?? [];
   } catch (error) {
     if (error instanceof PostError) throw error;
 
@@ -521,8 +576,8 @@ export async function getPostBasicInfo(
   postId: string,
 ): Promise<{ author_profile_id: string; title?: string; content?: string } | null> {
   try {
-    const { data: post, error } = await (supabase as any)
-      .from("posts")
+    const { data: post, error } = await postsQueryDb
+      .from<PostBasicInfoRow>("posts")
       .select("author_profile_id, title, content")
       .eq("id", postId)
       .single();
@@ -532,7 +587,7 @@ export async function getPostBasicInfo(
       throw new PostError(error.message, error.code);
     }
 
-    return post;
+    return (post as PostBasicInfoRow | null) ?? null;
   } catch (error) {
     if (error instanceof PostError) throw error;
 
@@ -548,8 +603,8 @@ export async function getPostAuthorId(
   postId: string,
 ): Promise<string | null> {
   try {
-    const { data: post, error } = await (supabase as any)
-      .from("posts")
+    const { data: post, error } = await postsQueryDb
+      .from<Pick<PostBasicInfoRow, "author_profile_id">>("posts")
       .select("author_profile_id")
       .eq("id", postId)
       .single();
@@ -559,7 +614,7 @@ export async function getPostAuthorId(
       throw new PostError(error.message, error.code);
     }
 
-    return post?.author_profile_id || null;
+    return (post as Pick<PostBasicInfoRow, "author_profile_id"> | null)?.author_profile_id || null;
   } catch (error) {
     if (error instanceof PostError) throw error;
 
@@ -590,8 +645,8 @@ export async function getTopPosts(
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    const { data: posts, error } = await (supabase as any)
-      .from("posts")
+    const { data: posts, error } = await postsQueryDb
+      .from<TopPostRow>("posts")
       .select(
         `
         id,
@@ -611,7 +666,7 @@ export async function getTopPosts(
       throw new PostError(error.message, error.code);
     }
 
-    return (posts || []).map((post: any) => ({
+    return ((posts as TopPostRow[] | null) ?? []).map((post) => ({
       id: post.id,
       content:
         (post.content || "").substring(0, 100) +
@@ -643,8 +698,8 @@ export async function getPopularTags(
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    const { data: posts, error } = await (supabase as any)
-      .from("posts")
+    const { data: posts, error } = await postsQueryDb
+      .from<PostTagsRow>("posts")
       .select("tags")
       .eq("location_id", locationId)
       .eq("is_published", true)
@@ -657,8 +712,8 @@ export async function getPopularTags(
 
     // Contar ocorrências de tags
     const tagCounts = new Map<string, number>();
-    (posts || []).forEach((post: any) => {
-      (post.tags || []).forEach((tag: string) => {
+    ((posts as PostTagsRow[] | null) ?? []).forEach((post) => {
+      (post.tags || []).forEach((tag) => {
         const currentCount = tagCounts.get(tag) ?? 0;
         tagCounts.set(tag, currentCount + 1);
       });

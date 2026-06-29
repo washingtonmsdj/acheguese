@@ -1,54 +1,66 @@
 /**
  * SPRINT 2 - POSTS (SSOT TERRITORIAL) - FASE 6
- * Testes Runtime — PostService contra banco linked
- *
- * Fixtures determinísticas (criadas em 20260405000022_seed_fase2_fixtures.sql):
- *   CITY_ID    = '00000000-0000-0000-0000-000000000001'  (Salvador Teste Fase2)
- *   BARRA_ID   = '00000000-0000-0000-0000-000000000002'  (Barra Teste Fase2, district)
- *   PELO_ID    = '00000000-0000-0000-0000-000000000003'  (Pelourinho Teste Fase2, district)
- *
- * Padrão: AAA (Arrange-Act-Assert)
- * Timeout: 15s por teste (I/O de rede)
+ * Runtime tests for PostService against the linked database.
  */
 
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { describe, it, expect, afterAll } from 'vitest';
+import { afterAll, describe, expect, it } from 'vitest';
 import { postService } from '../src/core/posts/services';
 
-// ─── Fixtures ────────────────────────────────────────────────────────────────
+type JoinedLocation = {
+  id: string;
+  name: string;
+  type: string;
+  parent_id?: string | null;
+};
 
-const CITY_ID  = '00000000-0000-0000-0000-000000000001'; // Salvador Teste Fase2
-const BARRA_ID = '00000000-0000-0000-0000-000000000002'; // Barra Teste Fase2
-const PELO_ID  = '00000000-0000-0000-0000-000000000003'; // Pelourinho Teste Fase2
+type CreatedPostRow = {
+  id: string;
+  author_profile_id: string;
+  content: string;
+  type: string;
+  location_id: string;
+  reach: 'street' | 'neighborhood' | 'city';
+  is_published: boolean;
+  created_at: string;
+  location: JoinedLocation | null;
+};
 
-// IDs de posts criados durante os testes (para cleanup)
+const CITY_ID = '00000000-0000-0000-0000-000000000001';
+const BARRA_ID = '00000000-0000-0000-0000-000000000002';
+const PELO_ID = '00000000-0000-0000-0000-000000000003';
+
 const createdPostIds: string[] = [];
 
 function readPostMutationsSource(): string {
   return readFileSync(resolve(process.cwd(), 'src/core/posts/services/posts.mutations.ts'), 'utf8');
 }
 
-// ─── Cleanup ─────────────────────────────────────────────────────────────────
+function getLocationName(location: { name?: string } | null | undefined): string | null {
+  return location?.name ?? null;
+}
 
 afterAll(async () => {
   if (createdPostIds.length === 0) return;
+
   const { supabaseAdmin } = await import('../src/integrations/supabase');
   if (!supabaseAdmin) return;
+
   await supabaseAdmin.from('posts').delete().in('id', createdPostIds);
 });
-
-// ─── Helper: buscar profile_id válido (via admin para bypassar RLS) ──────────
 
 async function getValidProfileId(): Promise<string | null> {
   const { supabaseAdmin } = await import('../src/integrations/supabase');
   if (!supabaseAdmin) return null;
+
   const { data } = await supabaseAdmin
     .from('profiles')
     .select('id')
     .not('location_id', 'is', null)
     .limit(1)
     .single();
+
   return data?.id ?? null;
 }
 
@@ -57,9 +69,9 @@ async function createTestPost(params: {
   content: string;
   location_id: string;
   reach?: 'street' | 'neighborhood' | 'city';
-}) {
+}): Promise<CreatedPostRow> {
   const { supabaseAdmin } = await import('../src/integrations/supabase');
-  if (!supabaseAdmin) throw new Error('supabaseAdmin não disponível');
+  if (!supabaseAdmin) throw new Error('supabaseAdmin nao disponivel');
 
   const { data, error } = await supabaseAdmin
     .from('posts')
@@ -92,79 +104,72 @@ async function createTestPost(params: {
     .single();
 
   if (error) throw new Error(error.message);
-  return data;
+
+  return data as CreatedPostRow;
 }
 
-// ─── Testes ───────────────────────────────────────────────────────────────────
-
 describe('FASE 6 - SSOT Posts Runtime', () => {
-
-  // ── 1. createPost — validações de entrada ──────────────────────────────────
-  describe('createPost() — validações', () => {
-    it('rejeita post sem location_id', async () => {
+  describe('createPost() - input validation', () => {
+    it('rejects a post without location_id', async () => {
       await expect(
         postService.createPost({
           author_profile_id: 'any-profile',
           content: 'Test sem location_id',
           type: 'text',
-          location_id: null as any,
+          location_id: null as unknown as string,
         }),
-      ).rejects.toThrow('location_id é obrigatório');
+      ).rejects.toThrow(/location_id.*obrigat.rio/i);
     }, 15000);
 
-    it('rejeita post com location_id inexistente', async () => {
+    it('rejects a post with a nonexistent location_id', async () => {
       await expect(
         postService.createPost({
           author_profile_id: 'any-profile',
-          content: 'Test location inválida',
+          content: 'Test location invalida',
           type: 'text',
           location_id: '00000000-0000-0000-0000-999999999999',
         }),
-      ).rejects.toThrow('Localização inválida');
+      ).rejects.toThrow(/Localiza..o inv.lida/i);
     }, 15000);
 
-    it('mantem country fora dos tipos permitidos para criacao de post', () => {
+    it('keeps country outside the allowed types for post creation', () => {
       const source = readPostMutationsSource();
 
       expect(source).toContain(
         'allowedLocationTypes: [LocationType.CITY, LocationType.DISTRICT, LocationType.NEIGHBORHOOD]',
       );
-      expect(source).toContain('Posts só podem ser criados em cidades ou bairros');
+      expect(source).toMatch(/Posts .* podem ser criados em cidades ou bairros/i);
       expect(source).not.toMatch(/allowedLocationTypes:[\s\S]*LocationType\.COUNTRY/);
     });
 
-    it('mantem state fora dos tipos permitidos para criacao de post', () => {
+    it('keeps state outside the allowed types for post creation', () => {
       const source = readPostMutationsSource();
 
       expect(source).toContain(
         'allowedLocationTypes: [LocationType.CITY, LocationType.DISTRICT, LocationType.NEIGHBORHOOD]',
       );
-      expect(source).toContain('Posts só podem ser criados em cidades ou bairros');
+      expect(source).toMatch(/Posts .* podem ser criados em cidades ou bairros/i);
       expect(source).not.toMatch(/allowedLocationTypes:[\s\S]*LocationType\.STATE/);
     });
   });
 
-  // ── 2. expandLocationIds — expansão territorial ────────────────────────────
-  describe('expandLocationIds() — expansão territorial', () => {
-    it('cidade expande para cidade + seus distritos', async () => {
-      // Acesso via getFeed que chama expandLocationIds internamente
+  describe('expandLocationIds() - territorial expansion', () => {
+    it('expands city to city plus child districts', async () => {
       const result = await postService.getFeed({ location_id: CITY_ID, limit: 1 });
 
-      // Se expandiu corretamente, a query inclui CITY_ID, BARRA_ID e PELO_ID
-      // Não há erro e retorna estrutura válida
       expect(result).toHaveProperty('posts');
       expect(result).toHaveProperty('hasMore');
       expect(Array.isArray(result.posts)).toBe(true);
     }, 15000);
 
-    it('bairro expande para bairro + cidade pai', async () => {
+    it('expands district to district plus parent city', async () => {
       const result = await postService.getFeed({ location_id: BARRA_ID, limit: 1 });
 
       expect(result).toHaveProperty('posts');
       expect(Array.isArray(result.posts)).toBe(true);
     }, 15000);
 
-    it('location_id inexistente retorna feed vazio sem erro', async () => {
+    it('returns an empty feed without error for an unknown location_id', async () => {
       const result = await postService.getFeed({
         location_id: '00000000-0000-0000-0000-999999999999',
       });
@@ -174,54 +179,51 @@ describe('FASE 6 - SSOT Posts Runtime', () => {
     }, 15000);
   });
 
-  // ── 3. getFeed — JOIN com locations ───────────────────────────────────────
-  describe('getFeed() — JOIN com locations', () => {
-    it('posts retornados incluem location.name do JOIN', async () => {
+  describe('getFeed() - location join', () => {
+    it('returns posts with location.name from the join', async () => {
       const profileId = await getValidProfileId();
       if (!profileId) {
-        console.warn('Sem profile disponível — pulando teste de getFeed com post real');
+        console.warn('Sem profile disponivel - pulando teste de getFeed com post real');
         return;
       }
 
-      // Criar post de teste via admin (bypassar RLS)
       const created = await createTestPost({
         author_profile_id: profileId,
-        content: 'Post de teste Fase 6 — getFeed JOIN',
+        content: 'Post de teste Fase 6 - getFeed JOIN',
         location_id: BARRA_ID,
         reach: 'neighborhood',
       });
       createdPostIds.push(created.id);
 
-      // Buscar feed
       const result = await postService.getFeed({ location_id: BARRA_ID, limit: 20 });
+      const post = result.posts.find((candidate) => candidate.id === created.id);
 
-      const post = result.posts.find(p => p.id === created.id);
       expect(post).toBeDefined();
-      expect(post!.location).toBeDefined();
-      expect((post!.location as any).name).toBe('Barra Teste Fase2');
-      expect(post!.location_id).toBe(BARRA_ID);
+      expect(post?.location).toBeDefined();
+      expect(getLocationName(post?.location)).toBe('Barra Teste Fase2');
+      expect(post?.location_id).toBe(BARRA_ID);
     }, 15000);
 
-    it('posts retornados incluem reach', async () => {
+    it('returns posts with reach', async () => {
       const profileId = await getValidProfileId();
       if (!profileId) return;
 
       const created = await createTestPost({
         author_profile_id: profileId,
-        content: 'Post de teste Fase 6 — reach',
+        content: 'Post de teste Fase 6 - reach',
         location_id: CITY_ID,
         reach: 'city',
       });
       createdPostIds.push(created.id);
 
       const result = await postService.getFeed({ location_id: CITY_ID, limit: 20 });
-      const post = result.posts.find(p => p.id === created.id);
+      const post = result.posts.find((candidate) => candidate.id === created.id);
 
       expect(post).toBeDefined();
-      expect(post!.reach).toBe('city');
+      expect(post?.reach).toBe('city');
     }, 15000);
 
-    it('feed sem location_id retorna vazio sem erro', async () => {
+    it('returns an empty feed without error when location_id is missing', async () => {
       const result = await postService.getFeed({});
 
       expect(result.posts).toHaveLength(0);
@@ -229,18 +231,17 @@ describe('FASE 6 - SSOT Posts Runtime', () => {
     }, 15000);
   });
 
-  // ── 4. createPost — fluxo positivo ────────────────────────────────────────
-  describe('createPost() — fluxo positivo (via admin)', () => {
-    it('cria post em city com location.name no retorno', async () => {
+  describe('createPost() - positive flow via admin', () => {
+    it('creates a city post with location.name in the response', async () => {
       const profileId = await getValidProfileId();
       if (!profileId) {
-        console.warn('Sem profile disponível — pulando teste de criação');
+        console.warn('Sem profile disponivel - pulando teste de criacao');
         return;
       }
 
       const post = await createTestPost({
         author_profile_id: profileId,
-        content: 'Post válido em cidade — Fase 6',
+        content: 'Post valido em cidade - Fase 6',
         location_id: CITY_ID,
         reach: 'city',
       });
@@ -249,16 +250,16 @@ describe('FASE 6 - SSOT Posts Runtime', () => {
       expect(post.id).toBeDefined();
       expect(post.location_id).toBe(CITY_ID);
       expect(post.reach).toBe('city');
-      expect((post.location as any)?.name).toBe('Salvador Teste Fase2');
+      expect(getLocationName(post.location)).toBe('Salvador Teste Fase2');
     }, 15000);
 
-    it('cria post em district com location.name no retorno', async () => {
+    it('creates a district post with location.name in the response', async () => {
       const profileId = await getValidProfileId();
       if (!profileId) return;
 
       const post = await createTestPost({
         author_profile_id: profileId,
-        content: 'Post válido em bairro — Fase 6',
+        content: 'Post valido em bairro - Fase 6',
         location_id: BARRA_ID,
         reach: 'neighborhood',
       });
@@ -266,13 +267,12 @@ describe('FASE 6 - SSOT Posts Runtime', () => {
 
       expect(post.location_id).toBe(BARRA_ID);
       expect(post.reach).toBe('neighborhood');
-      expect((post.location as any)?.name).toBe('Barra Teste Fase2');
+      expect(getLocationName(post.location)).toBe('Barra Teste Fase2');
     }, 15000);
   });
 
-  // ── 5. Regressão: embed sem hint após remoção da FK duplicada ──────────────
-  describe('embed location:locations sem hint — regressão FK cleanup', () => {
-    it('embed simples resolve sem ambiguidade após remoção de posts_location_id_fkey', async () => {
+  describe('location embed without hint - duplicated FK regression', () => {
+    it('resolves the simple embed without ambiguity after FK cleanup', async () => {
       const { supabaseAdmin } = await import('../src/integrations/supabase');
       if (!supabaseAdmin) return;
 
@@ -291,12 +291,11 @@ describe('FASE 6 - SSOT Posts Runtime', () => {
         .eq('is_published', true)
         .limit(1);
 
-      // FK duplicada removida → sem erro de ambiguidade
       expect(error).toBeNull();
       expect(data).toBeDefined();
 
       if (data && data.length > 0) {
-        expect((data[0].location as any)?.name).toBe('Barra Teste Fase2');
+        expect(getLocationName(data[0].location as JoinedLocation | null)).toBe('Barra Teste Fase2');
       }
     }, 15000);
   });

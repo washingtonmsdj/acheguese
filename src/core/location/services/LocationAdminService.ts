@@ -6,8 +6,38 @@
  */
 
 import { supabase } from '@/integrations/supabase';
+import type { Json, Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase';
 import { createLocationRepository } from '../repositories/createLocationRepository';
 import type { Location, LocationMetadata, LocationType } from '../types';
+
+type ErrorLike = {
+  message?: string | null;
+};
+
+type QueryPayload<TRow> = {
+  data: TRow[] | null;
+  error: ErrorLike | null;
+};
+
+type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
+  eq(column: string, value: unknown): TableClient<TRow>;
+  insert(values: Record<string, unknown> | ReadonlyArray<Record<string, unknown>>): TableClient<TRow>;
+  update(values: Record<string, unknown>): TableClient<TRow>;
+};
+
+type LocationAdminDbClient = {
+  from<TRow>(table: string): TableClient<TRow>;
+};
+
+type LocationRow = Tables<'locations'>;
+type LocationInsert = TablesInsert<'locations'>;
+type LocationUpdate = TablesUpdate<'locations'>;
+
+const locationAdminDb = supabase as unknown as LocationAdminDbClient;
+
+function toJsonMetadata(metadata: LocationMetadata): Json {
+  return metadata as Json;
+}
 
 export type AdminLocationRecord = Location;
 
@@ -22,7 +52,7 @@ export interface CreateAdminLocationInput {
 }
 
 export class LocationAdminService {
-  private static readonly db = supabase as any;
+  private static readonly db = locationAdminDb;
   static async listLocations(): Promise<AdminLocationRecord[]> {
     const repository = createLocationRepository();
     const locations = await repository.findAll();
@@ -53,7 +83,12 @@ export class LocationAdminService {
   }
 
   static async createLocation(input: CreateAdminLocationInput): Promise<void> {
-    const { error } = await this.db.from('locations').insert(input);
+    const payload: LocationInsert = {
+      ...input,
+      metadata: toJsonMetadata(input.metadata),
+    };
+
+    const { error } = await this.db.from<LocationRow>('locations').insert(payload);
     if (error) throw error;
   }
 
@@ -61,9 +96,15 @@ export class LocationAdminService {
     locationId: string,
     updates: Partial<Pick<AdminLocationRecord, 'name' | 'slug' | 'metadata'>>,
   ): Promise<void> {
+    const payload: LocationUpdate = {
+      ...(updates.name !== undefined ? { name: updates.name } : {}),
+      ...(updates.slug !== undefined ? { slug: updates.slug } : {}),
+      ...(updates.metadata !== undefined ? { metadata: toJsonMetadata(updates.metadata) } : {}),
+    };
+
     const { error } = await this.db
-      .from('locations')
-      .update(updates)
+      .from<LocationRow>('locations')
+      .update(payload)
       .eq('id', locationId);
 
     if (error) throw error;

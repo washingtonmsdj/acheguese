@@ -7,13 +7,34 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSessionContext } from "@/core/session";
-import { profileService } from "@/core/profiles/services";
 import { PostsFacade, postService } from "@/core/posts/services"; // ✅ SSOT v2.0
 import { toast } from "sonner";
 import { logger } from "@/shared/utils/logger";
 import { SocialInteractionsService } from "@/core/social/services/SocialInteractionsService"; // ✅ GATE 3 FASE 3C
 import { ModerationService } from "@/core/moderation";
 import { LAUNCH_URLS } from "@/config/territory";
+interface FeedLikeablePost {
+  id?: string;
+  is_liked?: boolean;
+  likes_count?: number;
+}
+
+interface FeedItemWithEmbeddedPost {
+  type?: string;
+  data?: FeedLikeablePost;
+  id?: string;
+}
+
+type FeedItem = FeedItemWithEmbeddedPost | FeedLikeablePost;
+
+interface CommunityFeedPage {
+  feed?: FeedItem[];
+  posts?: FeedItem[];
+}
+
+interface CommunityFeedCache {
+  pages?: CommunityFeedPage[];
+}
 
 // Helper para criar notificação de like (✅ SSOT MIGRATION)
 async function createLikeNotification(postId: string, userId: string) {
@@ -108,26 +129,27 @@ export function usePostActions() {
 
       queryClient.setQueriesData(
         { queryKey: ["community-feed"] },
-        (old: any) => {
+        (old: CommunityFeedCache | undefined) => {
           if (!old?.pages) return old;
 
           return {
             ...old,
-            pages: old.pages.map((page: any) => ({
+            pages: old.pages.map((page) => ({
               ...page,
-              feed: (page.feed || page.posts || []).map((item: any) => {
-                const postData = item.type === "post" ? item.data : item;
+              feed: (page.feed || page.posts || []).map((item) => {
+                const postData =
+                  "type" in item && item.type === "post" ? item.data : item;
                 const postId2 = postData?.id || item?.id;
                 if (postId2 === postId) {
-                  const isCurrentlyLiked = postData.is_liked;
+                  const isCurrentlyLiked = (postData as FeedLikeablePost).is_liked;
                   const updated = {
                     ...postData,
                     is_liked: !isCurrentlyLiked,
                     likes_count: isCurrentlyLiked
-                      ? (postData.likes_count || 1) - 1
-                      : (postData.likes_count || 0) + 1,
+                      ? (((postData as FeedLikeablePost).likes_count) || 1) - 1
+                      : (((postData as FeedLikeablePost).likes_count) || 0) + 1,
                   };
-                  return item.type === "post"
+                  return "type" in item && item.type === "post"
                     ? { ...item, data: updated }
                     : updated;
                 }

@@ -130,12 +130,12 @@ function ProfessionalCard({ pro, index, onClick }: { pro: ProfessionalItem; inde
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className="group relative flex flex-row overflow-hidden rounded-xl border border-border/50 bg-card transition-all duration-300 hover:border-primary/30 hover:shadow-md cursor-pointer h-[88px]"
+      className="group relative flex min-h-[104px] flex-row overflow-hidden rounded-xl border border-border/50 bg-card transition-all duration-300 hover:border-primary/30 hover:shadow-md cursor-pointer sm:min-h-[96px]"
       role="article"
       aria-label={`${pro.name} - ${pro.category}`}
     >
       {/* Foto ou icone canonico a esquerda */}
-      <div className="relative h-full w-[88px] shrink-0 overflow-hidden">
+      <div className="relative h-auto w-[84px] shrink-0 overflow-hidden sm:w-[88px]">
         {pro.avatar_url ? (
           <img
             src={pro.avatar_url}
@@ -156,9 +156,9 @@ function ProfessionalCard({ pro, index, onClick }: { pro: ProfessionalItem; inde
       </div>
 
       {/* Conteúdo à direita */}
-      <div className="flex min-w-0 flex-1 flex-col justify-between px-2.5 py-2">
+      <div className="flex min-w-0 flex-1 flex-col justify-between px-2.5 py-2.5 sm:py-2">
         {/* Nome */}
-        <h3 className="line-clamp-1 text-sm font-bold leading-tight text-foreground transition-colors group-hover:text-primary">
+        <h3 className="line-clamp-2 text-[13px] font-bold leading-tight text-foreground transition-colors group-hover:text-primary sm:line-clamp-1 sm:text-sm">
           {pro.name}
         </h3>
 
@@ -250,9 +250,9 @@ function ServiceCategoryRail({
   onSelectCategory: (categoryId: string) => void;
 }) {
   return (
-    <section className="w-full border-b border-border bg-card/50 py-4">
+    <section className="w-full border-b border-border bg-card/50 py-3 sm:py-4">
       <div className="w-full overflow-x-auto scrollbar-hide">
-        <div className="mx-auto flex min-w-max justify-center gap-3 px-4 pb-1">
+        <div className="flex min-w-max justify-start gap-2 px-4 pb-1 sm:mx-auto sm:justify-center sm:gap-3">
           {SERVICE_CATEGORY_RAIL.map((cat, i) => {
             const Icon = cat.icon;
             const isActive = selectedCategory === cat.id;
@@ -265,12 +265,12 @@ function ServiceCategoryRail({
                 whileHover={{ scale: 1.08, y: -4 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => onSelectCategory(isActive ? "todos" : cat.id)}
-                className={`group flex min-w-[60px] shrink-0 flex-col items-center gap-1.5 rounded-xl border bg-card/80 p-2.5 backdrop-blur-sm transition-colors duration-200 ${cat.bg} ${isActive ? "ring-2 ring-primary/40" : ""}`}
+                className={`group flex min-w-[64px] shrink-0 flex-col items-center gap-1.5 rounded-xl border bg-card/80 px-2.5 py-2 backdrop-blur-sm transition-colors duration-200 sm:min-w-[72px] sm:p-2.5 ${cat.bg} ${isActive ? "ring-2 ring-primary/40" : ""}`}
               >
                 <motion.div whileHover={{ rotate: [0, -10, 10, 0] }} transition={{ duration: 0.4 }}>
                   <Icon className={`h-6 w-6 ${cat.color}`} />
                 </motion.div>
-                <span className="whitespace-nowrap text-center text-[10px] font-semibold leading-tight text-foreground">
+                <span className="text-center text-[10px] font-semibold leading-tight text-foreground">
                   {cat.name}
                 </span>
               </motion.button>
@@ -348,7 +348,7 @@ function NeighborhoodServicesHero({
             <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-teal-300">
               {territoryName}
             </p>
-            <h1 className="mt-2 text-2xl font-semibold leading-tight sm:text-[2rem]">
+            <h1 className="mt-2 max-w-[14ch] text-[1.75rem] font-semibold leading-[1.05] sm:max-w-none sm:text-[2rem]">
               Servicos e profissionais do bairro
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-white/62">
@@ -396,7 +396,7 @@ function NeighborhoodServicesHero({
             </div>
           </div>
 
-          <div className="hidden gap-2 rounded-[18px] border border-white/10 bg-black/20 p-3 sm:grid sm:gap-3 sm:rounded-[20px] sm:p-4">
+          <div className="grid gap-2 rounded-[18px] border border-white/10 bg-black/20 p-3 sm:gap-3 sm:rounded-[20px] sm:p-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
                 Panorama local
@@ -406,20 +406,20 @@ function NeighborhoodServicesHero({
               </p>
             </div>
             <div className="grid grid-cols-3 gap-2">
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-2.5 py-3 sm:px-3">
+              <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-2 py-3 sm:px-3">
                 <p className="text-base font-semibold text-white sm:text-lg">{professionalsCount}</p>
-                <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/45">Perfis</p>
+                <p className="text-[0.62rem] uppercase tracking-[0.14em] text-white/45 sm:text-[0.68rem] sm:tracking-[0.18em]">Perfis</p>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-2.5 py-3 sm:px-3">
+              <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-2 py-3 sm:px-3">
                 <p className="text-base font-semibold text-white sm:text-lg">{verifiedCount}</p>
-                <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/45">Verificados</p>
+                <p className="text-[0.62rem] uppercase tracking-[0.14em] text-white/45 sm:text-[0.68rem] sm:tracking-[0.18em]">Verificados</p>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-2.5 py-3 sm:px-3">
+              <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-2 py-3 sm:px-3">
                 <p className="text-base font-semibold text-white sm:text-lg">{averageRating}</p>
-                <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/45">Media</p>
+                <p className="text-[0.62rem] uppercase tracking-[0.14em] text-white/45 sm:text-[0.68rem] sm:tracking-[0.18em]">Media</p>
               </div>
             </div>
-            <div className="hidden rounded-2xl border border-teal-300/15 bg-teal-300/[0.05] px-3 py-3 text-sm text-white/68 sm:block">
+            <div className="rounded-2xl border border-teal-300/15 bg-teal-300/[0.05] px-3 py-3 text-sm text-white/68">
               Servicos do bairro usam o territorio como contexto principal. Isso evita paginas genéricas e mantém descoberta, reputacao e proximidade na mesma base.
             </div>
           </div>
@@ -664,13 +664,15 @@ export default function ServicosLandingPage({ resolved, activeMemberIds }: Servi
       {/* ── TOP RATED ─────────────────────────────────────────────── */}
       {topRated.length > 0 && (
         <section className="max-w-7xl mx-auto w-full px-4 pb-8 sm:px-6 md:pb-14">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
+          <div className="mb-4 flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
               <Trophy className="h-5 w-5 text-warning" />
               <h2 className="text-xl font-bold text-foreground font-heading">Mais Bem Avaliados</h2>
+              </div>
             </div>
             <button onClick={() => navigate(appUrls.services.list)}
-              className="flex items-center gap-1 text-sm text-primary font-semibold hover:underline">
+              className="hidden items-center gap-1 text-sm text-primary font-semibold hover:underline sm:flex">
               Ver todos <ChevronRight className="h-4 w-4" />
             </button>
           </div>
@@ -679,13 +681,22 @@ export default function ServicosLandingPage({ resolved, activeMemberIds }: Servi
               <TopRatedCard key={pro.id} pro={pro} rank={i} onClick={() => handleProfessionalClick(pro)} />
             ))}
           </div>
+          <div className="mt-4 sm:hidden">
+            <Button
+              variant="outline"
+              onClick={() => navigate(appUrls.services.list)}
+              className="w-full rounded-lg border-border text-muted-foreground"
+            >
+              Ver todos os profissionais
+            </Button>
+          </div>
         </section>
       )}
 
       {/* ── PROFISSIONAIS ─────────────────────────────────────────── */}
       <section className="max-w-7xl mx-auto w-full px-4 pb-8 sm:px-6 md:pb-14">
-        <div className="flex items-center justify-between mb-6">
-          <div>
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
             <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">
               {selectedCategory === "todos" 
                 ? "Profissionais Disponíveis" 

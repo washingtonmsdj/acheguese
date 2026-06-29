@@ -6,7 +6,7 @@
  */
 
 import type { NavigateFunction } from "react-router-dom";
-import type { User } from "@supabase/supabase-js";
+import type { AuthUser } from "@/core/auth/services/types";
 import type { Business } from "@/core/business/types";
 import type { VerticalKey } from "@/core/verticals";
 import type { GastronomyPreviewItem } from "@/modules/business/gastronomy/services";
@@ -153,7 +153,7 @@ export interface EmpresaGastronomiaPreviewSectionProps extends BaseSectionProps 
 export interface EmpresaAvaliacoesSectionProps extends BaseSectionProps {
   readonly business: BusinessExtended;
   readonly reviews: readonly Review[];
-  readonly user: User | null;
+  readonly user: (AuthUser & { user_metadata?: Record<string, unknown> }) | null;
   readonly reviewUrl?: string | null;
 }
 

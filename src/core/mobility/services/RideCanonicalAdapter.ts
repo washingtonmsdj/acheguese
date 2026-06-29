@@ -9,6 +9,7 @@
 
 import type { Address } from '@/core/address/types';
 import type { Location } from '@/core/location/types';
+import type { RideRequest } from "../types/types";
 import type { Tables } from "@/integrations/supabase";
 
 type RideRequestRecord = Tables<"ride_requests">;
@@ -36,6 +37,88 @@ type RideRequestSerializedRoute = {
   origin?: SerializedRideLocation;
   destination?: SerializedRideLocation;
 };
+
+const RIDE_REQUEST_STATUSES: readonly RideRequest["status"][] = [
+  "pending",
+  "requested",
+  "searching_driver",
+  "driver_assigned",
+  "driver_accepted",
+  "driver_arriving",
+  "driver_on_the_way",
+  "driver_arrived",
+  "passenger_boarded",
+  "passenger_on_board",
+  "pickup_confirmed",
+  "in_progress",
+  "in_delivery",
+  "delivered",
+  "completed",
+  "cancelled",
+  "failed",
+  "expired",
+  "cancelled_by_passenger",
+  "cancelled_by_driver",
+];
+
+function normalizeRideStatus(status: string | null | undefined): RideRequest["status"] {
+  if (status && RIDE_REQUEST_STATUSES.includes(status as RideRequest["status"])) {
+    return status as RideRequest["status"];
+  }
+
+  return "pending";
+}
+
+function normalizeRideMode(rideMode: string | null | undefined): RideRequest["ride_mode"] {
+  if (rideMode === "ride" || rideMode === "motoboy") return rideMode;
+  return null;
+}
+
+export function toRideRequestContract(ride: RideRequestRecord): RideRequest {
+  const rideMode = normalizeRideMode(ride.ride_mode);
+  const originAddress = ride.origin ?? "";
+  const destinationAddress = ride.destination ?? "";
+
+  return {
+    id: ride.id,
+    passenger_profile_id: ride.passenger_profile_id,
+    driver_profile_id: ride.driver_profile_id ?? undefined,
+    source_id: ride.source_id ?? null,
+    ride_mode: rideMode,
+    type: rideMode === "motoboy" ? "delivery" : rideMode === "ride" ? "ride" : null,
+    origin: ride.origin ?? null,
+    destination: ride.destination ?? null,
+    pickup_address: originAddress || null,
+    dropoff_address: destinationAddress || null,
+    origin_address: originAddress,
+    destination_address: destinationAddress,
+    origin_lat: ride.origin_lat ?? 0,
+    origin_lng: ride.origin_lng ?? 0,
+    destination_lat: ride.destination_lat ?? 0,
+    destination_lng: ride.destination_lng ?? 0,
+    status: normalizeRideStatus(ride.status),
+    estimated_price: ride.suggested_price ?? undefined,
+    suggested_price: ride.suggested_price ?? undefined,
+    final_price: ride.final_price ?? undefined,
+    share_token: ride.share_token ?? null,
+    share_expires_at: null,
+    share_is_active: ride.share_token ? true : null,
+    driver_assigned_at: ride.driver_assigned_at ?? null,
+    driver_on_the_way_at: null,
+    driver_arrived_at: null,
+    passenger_on_board_at: ride.passenger_boarded_at ?? null,
+    payment_method: ride.payment_method ?? "",
+    departure_time: ride.departure_time ?? null,
+    observation: ride.observation ?? null,
+    payment_status: "pending",
+    accepted_at: ride.driver_accepted_at ?? null,
+    started_at: ride.started_at ?? null,
+    completed_at: ride.completed_at ?? null,
+    cancelled_at: ride.cancelled_at ?? null,
+    created_at: ride.created_at,
+    updated_at: ride.updated_at,
+  };
+}
 
 /**
  * Verificar se corrida está migrada para modelo canônico

@@ -27,7 +27,7 @@ describe('EducationTrackingService', () => {
     vi.clearAllMocks();
     vi.mocked(supabase.from).mockReturnValue({
       insert: mockInsert,
-    } as any);
+    } as never);
     mockInsert.mockReturnValue(Promise.resolve({ error: null }));
     
     vi.mocked(logger.warn).mockClear();

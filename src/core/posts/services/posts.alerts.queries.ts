@@ -1,10 +1,18 @@
 /**
- * POSTS ALERT QUERIES - SSOT
+ * Post alert queries.
  */
 
 import { supabase } from "@/integrations/supabase";
 import { trackError } from "@/shared/utils/errorTracking";
 import { PostError } from "../types";
+
+interface ActiveAlertRow {
+  id: string;
+  content: string;
+  confirmations_count: number | null;
+  is_verified: boolean | null;
+}
+
 export async function getActiveAlerts(
   locationId: string,
   limit: number = 5,
@@ -17,7 +25,7 @@ export async function getActiveAlerts(
   }>
 > {
   try {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("posts")
       .select("id, content, confirmations_count, is_verified")
       .eq("type", "alerta")
@@ -30,9 +38,15 @@ export async function getActiveAlerts(
       throw new PostError(error.message, error.code || "FETCH_FAILED");
     }
 
-    return data || [];
+    return ((data as ActiveAlertRow[] | null) ?? []).map((row) => ({
+      id: row.id,
+      content: row.content,
+      confirmations_count: row.confirmations_count ?? 0,
+      is_verified: Boolean(row.is_verified),
+    }));
   } catch (error) {
     if (error instanceof PostError) throw error;
+
     trackError(error as Error, {
       component: "posts.queries",
       action: "getActiveAlerts",
@@ -41,4 +55,3 @@ export async function getActiveAlerts(
     throw new PostError("Unexpected error fetching active alerts", "UNKNOWN_ERROR");
   }
 }
-

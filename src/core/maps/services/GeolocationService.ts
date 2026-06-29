@@ -41,6 +41,18 @@ class GeolocationServiceClass {
   private requestInFlight = false;
   private abortController: AbortController | null = null;
 
+  private getErrorContext(error: unknown): { code?: unknown; message?: string } {
+    if (!error || typeof error !== 'object') {
+      return {};
+    }
+
+    const candidate = error as { code?: unknown; message?: unknown };
+    return {
+      code: candidate.code,
+      message: typeof candidate.message === 'string' ? candidate.message : undefined,
+    };
+  }
+
   private createGeolocationError(code: string, message: string): Error {
     const error = new Error(message) as Error & { code?: string };
     error.code = code;
@@ -211,10 +223,11 @@ class GeolocationServiceClass {
           accuracy: `${Math.round(coords.accuracy)}m`,
         });
         return coords;
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const errorContext = this.getErrorContext(error);
         const logContext = {
-          code: error?.code,
-          message: error?.message,
+          code: errorContext.code,
+          message: errorContext.message,
         };
 
         if (this.isPermissionDeniedError(error)) {
@@ -354,8 +367,10 @@ class GeolocationServiceClass {
         if (coords) {
           source = 'gps';
         }
-      } catch (error: any) {
-        if (error?.code === 'INSECURE_CONTEXT') {
+      } catch (error: unknown) {
+        const errorContext = this.getErrorContext(error);
+
+        if (errorContext.code === 'INSECURE_CONTEXT') {
           logger.warn('[GeolocationService] Blocked by insecure context');
           throw error;
         }
@@ -370,8 +385,8 @@ class GeolocationServiceClass {
         }
 
         logger.warn('[GeolocationService] GPS failed, will try fallback', {
-          code: error?.code,
-          message: error?.message,
+          code: errorContext.code,
+          message: errorContext.message,
         });
       }
 

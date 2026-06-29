@@ -3,7 +3,36 @@ import { profileService } from "@/core/profiles/services/ProfileService";
 import { logger } from "@/shared/utils/logger";
 import { RIDE_STATUS } from "../constants";
 
-const supabaseClient = supabase as any;
+type ErrorLike = { message?: string | null; code?: string | null } | null;
+
+type QueryPayload<TRow> = {
+  data: TRow[] | null;
+  error: ErrorLike;
+  count?: number | null;
+};
+
+type SingleQueryPayload<TRow> = {
+  data: TRow | null;
+  error: ErrorLike;
+  count?: number | null;
+};
+
+type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
+  select(columns?: string, options?: { count?: "exact"; head?: boolean }): TableClient<TRow>;
+  eq(column: string, value: unknown): TableClient<TRow>;
+  in(column: string, values: readonly unknown[]): TableClient<TRow>;
+  gte(column: string, value: unknown): TableClient<TRow>;
+  order(column: string, options?: { ascending: boolean }): TableClient<TRow>;
+  limit(count: number): TableClient<TRow>;
+  maybeSingle(): Promise<SingleQueryPayload<TRow>>;
+  single(): Promise<SingleQueryPayload<TRow>>;
+};
+
+type MobilityDriverQueriesDbClient = {
+  from<TRow = Record<string, unknown>>(table: string): TableClient<TRow>;
+};
+
+const mobilityDriverQueriesDb = supabase as unknown as MobilityDriverQueriesDbClient;
 
 function isProfileSuspended(profile: Record<string, unknown> | null): boolean {
   const suspended = Boolean(profile?.is_suspended ?? profile?.suspended ?? false);
@@ -24,55 +53,86 @@ export interface DriverOfferCapabilitiesRow {
   can_do_rides: boolean | null;
 }
 
+type DriverCompleteProfileRow = {
+  profile_id: string;
+  display_name: string;
+  avg_rating: number;
+  total_rides: number;
+  avatar_url?: string | null;
+  created_at?: string;
+  vehicle_model?: string;
+  vehicle_color?: string;
+  vehicle_plate?: string;
+};
+
+type DriverDataSummaryRow = {
+  profile_id: string;
+  rating: number | null;
+  can_do_delivery: boolean | null;
+  can_do_rides: boolean | null;
+  is_verified: boolean | null;
+  subscription_active: boolean | null;
+};
+
+type DriverEarningsRow = {
+  final_price?: number | null;
+  completed_at?: string | null;
+  updated_at?: string | null;
+};
+
+type CompletedRidePaymentRow = {
+  created_at: string;
+  actual_fare?: number | null;
+  final_price?: number | null;
+};
+
+type PassengerRatingRow = {
+  rating?: unknown;
+};
+
 export async function getDriverOfferCapabilities(
   driverProfileId: string,
 ): Promise<DriverOfferCapabilitiesRow | null> {
   const profilePromise = profileService.getProfileById(driverProfileId).catch(() => null);
 
-  const queryWithRideCapability = await supabaseClient
-    .from("driver_data")
+  const query = await mobilityDriverQueriesDb
+    .from<Omit<DriverOfferCapabilitiesRow, "is_suspended">>("driver_data")
     .select("is_verified, subscription_active, can_do_delivery, can_do_rides")
     .eq("profile_id", driverProfileId)
     .maybeSingle();
 
-  if (queryWithRideCapability.error) throw queryWithRideCapability.error;
-  if (!queryWithRideCapability.data) return null;
+  if (query.error) throw query.error;
+  if (!query.data) return null;
 
   const profile = await profilePromise;
   return {
-    ...(queryWithRideCapability.data as Omit<DriverOfferCapabilitiesRow, "is_suspended">),
+    ...query.data,
     is_suspended: isProfileSuspended(profile as Record<string, unknown> | null),
   };
 }
 
-/**
- *  Buscar perfis de motoristas
- */
 export async function getDriverProfiles(): Promise<{ data: unknown[]; error: unknown }> {
   try {
-    const { data, error } = await supabaseClient
-      .from("driver_complete_profile")
+    const { data, error } = await mobilityDriverQueriesDb
+      .from<DriverCompleteProfileRow>("driver_complete_profile")
       .select("*")
       .order("created_at", { ascending: false });
-    return { data: data || [], error };
+    return { data: data ?? [], error };
   } catch (error) {
     logger.error("MobilityQueries.getDriverProfiles", error as Error);
     return { data: [], error };
   }
 }
 
-/**
- *  Buscar dados de motorista por IDs de perfil
- */
 export async function getDriverDataByProfileIds(profileIds: string[]): Promise<unknown[]> {
   if (!profileIds.length) return [];
 
-  const queryWithRideCapability = await supabaseClient
-    .from("driver_data")
+  const query = await mobilityDriverQueriesDb
+    .from<DriverDataSummaryRow>("driver_data")
     .select("profile_id, rating, can_do_delivery, can_do_rides, is_verified, subscription_active")
     .in("profile_id", profileIds);
 
-  if (queryWithRideCapability.error) throw queryWithRideCapability.error;
+  if (query.error) throw query.error;
 
   const profiles = await Promise.all(
     profileIds.map((profileId) => profileService.getProfileById(profileId).catch(() => null)),
@@ -84,55 +144,48 @@ export async function getDriverDataByProfileIds(profileIds: string[]): Promise<u
     ]),
   );
 
-  return (queryWithRideCapability.data || []).map((row: { [key: string]: unknown }) => ({
+  return (query.data ?? []).map((row) => ({
     ...row,
-    is_suspended: suspensionMap.get(String(row.profile_id)) ?? false,
+    is_suspended: suspensionMap.get(row.profile_id) ?? false,
   }));
 }
 
-/**
- *  Buscar top motoristas
- */
-export async function getTopDrivers(opts: { minRides?: number; limit?: number } = {}): Promise<unknown[]> {
+export async function getTopDrivers(
+  opts: { minRides?: number; limit?: number } = {},
+): Promise<unknown[]> {
   try {
     const { minRides = 1, limit = 10 } = opts;
-    const { data, error } = await supabaseClient
-      .from("driver_complete_profile")
+    const { data, error } = await mobilityDriverQueriesDb
+      .from<DriverCompleteProfileRow>("driver_complete_profile")
       .select("profile_id, display_name, avg_rating, total_rides, avatar_url")
       .gte("total_rides", minRides)
       .order("avg_rating", { ascending: false })
       .limit(limit);
 
     if (error) throw error;
-    return (data || []).map((d: unknown) => {
-      const typed = d as { profile_id: string; display_name: string; avg_rating: number; total_rides: number; avatar_url?: string };
-      return {
-        id: typed.profile_id,
-        name: typed.display_name,
-        rating: typed.avg_rating,
-        total_rides: typed.total_rides,
-        profile: { avatar_url: typed.avatar_url },
-      };
-    });
+    return (data ?? []).map((row) => ({
+      id: row.profile_id,
+      name: row.display_name,
+      rating: row.avg_rating,
+      total_rides: row.total_rides,
+      profile: { avatar_url: row.avatar_url },
+    }));
   } catch (error) {
     logger.error("MobilityQueries.getTopDrivers", error as Error);
     return [];
   }
 }
 
-/**
- *  Estatisticas de mobilidade
- */
 export async function getMobilityStats(): Promise<{ total_drivers: number; total_rides: number }> {
   try {
     const [driversResult, ridesResult] = await Promise.all([
-      supabaseClient.from("driver_data").select("id", { count: "exact", head: true }),
-      supabaseClient.from("ride_requests" as any).select("id", { count: "exact", head: true }),
+      mobilityDriverQueriesDb.from<{ id: string }>("driver_data").select("id", { count: "exact", head: true }),
+      mobilityDriverQueriesDb.from<{ id: string }>("ride_requests").select("id", { count: "exact", head: true }),
     ]);
 
     return {
-      total_drivers: (driversResult as { count?: number }).count || 0,
-      total_rides: (ridesResult as { count?: number }).count || 0,
+      total_drivers: driversResult.count ?? 0,
+      total_rides: ridesResult.count ?? 0,
     };
   } catch (error) {
     logger.error("MobilityQueries.getMobilityStats", error as Error);
@@ -140,41 +193,32 @@ export async function getMobilityStats(): Promise<{ total_drivers: number; total
   }
 }
 
-/**
- *  Ganhos do motorista (corridas concludas)
- */
 export async function getDriverEarnings(driverProfileId: string): Promise<unknown[]> {
   try {
-    const { data, error } = await supabaseClient
-      .from("ride_requests" as any)
+    const { data, error } = await mobilityDriverQueriesDb
+      .from<DriverEarningsRow>("ride_requests")
       .select("final_price, completed_at, updated_at")
       .eq("driver_profile_id", driverProfileId)
       .eq("status", RIDE_STATUS.COMPLETED)
       .order("updated_at", { ascending: false });
 
     if (error) throw error;
-    return (data || []).map((r: unknown) => {
-      const typed = r as { final_price?: number; completed_at?: string; updated_at?: string; [key: string]: unknown };
-      return {
-        ...typed,
-        completed_at: typed.completed_at || typed.updated_at,
-      };
-    });
+    return (data ?? []).map((row) => ({
+      ...row,
+      completed_at: row.completed_at || row.updated_at,
+    }));
   } catch (error) {
     logger.error("MobilityQueries.getDriverEarnings", error as Error);
     return [];
   }
 }
 
-/**
- *  Pagamentos de corridas concludas por motorista
- */
 export async function getCompletedRidePaymentsByDriver(
   driverProfileId: string,
   sinceIso?: string,
 ): Promise<unknown[]> {
-  let query = supabaseClient
-    .from("ride_requests" as any)
+  let query = mobilityDriverQueriesDb
+    .from<CompletedRidePaymentRow>("ride_requests")
     .select("created_at, actual_fare, final_price")
     .eq("driver_profile_id", driverProfileId)
     .eq("status", RIDE_STATUS.COMPLETED);
@@ -185,12 +229,9 @@ export async function getCompletedRidePaymentsByDriver(
 
   const { data, error } = await query;
   if (error) throw error;
-  return data || [];
+  return data ?? [];
 }
 
-/**
- *  Perfil completo do motorista
- */
 export async function getDriverCompleteProfile(profileId: string): Promise<{
   display_name: string;
   vehicle_model: string;
@@ -199,27 +240,30 @@ export async function getDriverCompleteProfile(profileId: string): Promise<{
   avg_rating: number;
 } | null> {
   try {
-    const { data, error } = await supabaseClient
-      .from("driver_complete_profile")
+    const { data, error } = await mobilityDriverQueriesDb
+      .from<Pick<DriverCompleteProfileRow, "display_name" | "vehicle_model" | "vehicle_color" | "vehicle_plate" | "avg_rating">>("driver_complete_profile")
       .select("display_name, vehicle_model, vehicle_color, vehicle_plate, avg_rating")
       .eq("profile_id", profileId)
       .single();
 
     if (error) throw error;
-    return data as { display_name: string; vehicle_model: string; vehicle_color: string; vehicle_plate: string; avg_rating: number } | null;
+    return {
+      display_name: data.display_name,
+      vehicle_model: data.vehicle_model ?? "",
+      vehicle_color: data.vehicle_color ?? "",
+      vehicle_plate: data.vehicle_plate ?? "",
+      avg_rating: data.avg_rating,
+    };
   } catch (error) {
     logger.error("MobilityQueries.getDriverCompleteProfile", { profileId, error });
     return null;
   }
 }
 
-/**
- *  Rating medio do passageiro
- */
 export async function getPassengerRating(profileId: string): Promise<number> {
   try {
-    const { data, error } = await supabaseClient
-      .from("ride_ratings")
+    const { data, error } = await mobilityDriverQueriesDb
+      .from<PassengerRatingRow>("ride_ratings")
       .select("rating")
       .eq("rated_id", profileId);
 
@@ -228,17 +272,13 @@ export async function getPassengerRating(profileId: string): Promise<number> {
       return 5.0;
     }
 
-    if (!data || data.length === 0) {
-      return 5.0;
-    }
+    if (!data?.length) return 5.0;
 
     const ratings = data
-      .map((row) => Number((row as { rating?: unknown }).rating))
+      .map((row) => Number(row.rating))
       .filter((value) => Number.isFinite(value));
 
-    if (ratings.length === 0) {
-      return 5.0;
-    }
+    if (!ratings.length) return 5.0;
 
     const avg = ratings.reduce((sum, value) => sum + value, 0) / ratings.length;
     return Number(avg.toFixed(1));

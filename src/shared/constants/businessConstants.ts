@@ -1,8 +1,8 @@
-import { Store, Truck, Home, Globe } from "lucide-react";
+import { Store, Truck, Home, Globe, type LucideIcon } from "lucide-react";
 
 export const MODOS_ICONS: Record<
   string,
-  { icon: any; label: string; color: string }
+  { icon: LucideIcon; label: string; color: string }
 > = {
   presencial: {
     icon: Store,

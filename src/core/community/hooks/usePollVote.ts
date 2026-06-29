@@ -87,7 +87,12 @@ export function usePollVote({ pollId, initialPoll }: UsePollVoteProps) {
       const result = await PostsFacade.polls.updatePollVoteCounts(pollId, optionId);
 
       return {
-        options: result.options,
+        options: result.options.map((opt) => ({
+          id: opt.id,
+          text: opt.text,
+          votes: opt.votes || 0,
+          percentage: 0,
+        })),
         total_votes: result.total_votes,
         optionId,
       };

@@ -24,6 +24,10 @@ interface PostActionsProps {
   onShare: () => void;
 }
 
+type ReportReason = Parameters<
+  ReturnType<typeof useModeration>["reportPost"]
+>[0]["reason"];
+
 export function PostActions({
   postId,
   isLiked,
@@ -36,8 +40,8 @@ export function PostActions({
   const [showReportModal, setShowReportModal] = useState(false);
   const { reportPost, isReportingPost } = useModeration();
 
-  const handleReport = (reason: string, description?: string) => {
-    reportPost({ postId, reason: reason as any, description });
+  const handleReport = (reason: ReportReason, description?: string) => {
+    reportPost({ postId, reason, description });
     setShowReportModal(false);
   };
 

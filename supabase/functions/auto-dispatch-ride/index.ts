@@ -2,7 +2,7 @@
 // Deploy: supabase functions deploy auto-dispatch-ride
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient, type SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import {
   getAllSecurityHeaders,
   isOriginAllowed,
@@ -30,6 +30,45 @@ interface DriverEligibility {
   profileId: string;
   distance: number;
   rating: number;
+}
+
+interface DriverProfileRatingRow {
+  rating?: number | null;
+}
+
+interface DriverAvailabilityRow {
+  profile_id: string;
+  current_lat: number | null;
+  current_lng: number | null;
+  profiles?: DriverProfileRatingRow | DriverProfileRatingRow[] | null;
+}
+
+interface ActiveRideDriverRow {
+  driver_profile_id: string | null;
+}
+
+interface DispatchAttemptPayload {
+  rideId: string;
+  driverProfileId: string;
+  attemptNumber: number;
+  offeredAt: string;
+  timeoutAt: string;
+  status: 'pending' | 'accepted' | 'timeout';
+  respondedAt?: string;
+}
+
+interface DispatchAttemptUpdate {
+  status: 'accepted' | 'timeout';
+  respondedAt: string;
+}
+
+interface DispatchAttemptAuditRow {
+  id: string;
+}
+
+function getDriverRating(profileData: DriverAvailabilityRow['profiles']): number {
+  const profile = Array.isArray(profileData) ? profileData[0] : profileData;
+  return typeof profile?.rating === 'number' ? profile.rating : 0;
 }
 
 function dispatchJson(req: Request, body: unknown, status = 200): Response {
@@ -236,7 +275,7 @@ serve(async (req: Request) => {
 // ============================================
 
 async function findEligibleDrivers(
-  supabase: any,
+  supabase: SupabaseClient,
   rideId: string,
   originLat: number,
   originLng: number,
@@ -269,30 +308,36 @@ async function findEligibleDrivers(
   }
 
   // Verificar motoristas com corrida ativa
-  const profileIds = drivers.map((d: any) => d.profile_id);
+  const driverRows = drivers as DriverAvailabilityRow[];
+  const profileIds = driverRows.map((driver) => driver.profile_id);
   const { data: activeRides } = await supabase
     .from('ride_requests')
     .select('driver_profile_id')
     .in('driver_profile_id', profileIds)
     .in('status', ['driver_accepted', 'driver_arriving', 'passenger_boarded', 'in_progress']);
 
-  const busyDrivers = new Set(activeRides?.map((r: any) => r.driver_profile_id) || []);
+  const activeRideRows = (activeRides ?? []) as ActiveRideDriverRow[];
+  const busyDrivers = new Set(
+    activeRideRows
+      .map((ride) => ride.driver_profile_id)
+      .filter((profileId): profileId is string => typeof profileId === 'string' && profileId.length > 0),
+  );
 
   // Calcular distância e filtrar
-  const eligible: DriverEligibility[] = drivers
-    .filter((d: any) => !busyDrivers.has(d.profile_id))
-    .map((d: any) => {
+  const eligible: DriverEligibility[] = driverRows
+    .filter((driver) => !busyDrivers.has(driver.profile_id))
+    .map((driver) => {
       const distance = calculateDistance(
         originLat,
         originLng,
-        d.current_lat || 0,
-        d.current_lng || 0
+        driver.current_lat || 0,
+        driver.current_lng || 0
       );
 
       return {
-        profileId: d.profile_id,
+        profileId: driver.profile_id,
         distance,
-        rating: d.profiles?.rating || 0,
+        rating: getDriverRating(driver.profiles),
       };
     })
     .filter((d: DriverEligibility) => d.distance <= CONFIG.SEARCH_RADIUS_KM)
@@ -302,7 +347,7 @@ async function findEligibleDrivers(
 }
 
 async function assignDriver(
-  supabase: any,
+  supabase: SupabaseClient,
   rideId: string,
   driverProfileId: string
 ): Promise<boolean> {
@@ -335,7 +380,7 @@ async function assignDriver(
 }
 
 async function waitForAcceptance(
-  supabase: any,
+  supabase: SupabaseClient,
   rideId: string,
   driverProfileId: string,
   timeoutSeconds: number
@@ -365,7 +410,7 @@ async function waitForAcceptance(
   return false;
 }
 
-async function expireRide(supabase: any, rideId: string, reason: string): Promise<void> {
+async function expireRide(supabase: SupabaseClient, rideId: string, reason: string): Promise<void> {
   await supabase
     .from('ride_requests')
     .update({
@@ -387,7 +432,10 @@ async function expireRide(supabase: any, rideId: string, reason: string): Promis
   console.log(`[AutoDispatch] Ride expired: ${reason}`);
 }
 
-async function logDispatchAttempt(supabase: any, attempt: any): Promise<void> {
+async function logDispatchAttempt(
+  supabase: SupabaseClient,
+  attempt: DispatchAttemptPayload,
+): Promise<void> {
   await supabase.from('ride_dispatch_audit').insert({
     ride_id: attempt.rideId,
     driver_profile_id: attempt.driverProfileId,
@@ -400,10 +448,10 @@ async function logDispatchAttempt(supabase: any, attempt: any): Promise<void> {
 }
 
 async function updateDispatchAttempt(
-  supabase: any,
+  supabase: SupabaseClient,
   rideId: string,
   driverProfileId: string,
-  updates: any
+  updates: DispatchAttemptUpdate
 ): Promise<void> {
   const { data: attempts } = await supabase
     .from('ride_dispatch_audit')
@@ -413,11 +461,13 @@ async function updateDispatchAttempt(
     .order('created_at', { ascending: false })
     .limit(1);
 
-  if (attempts && attempts.length > 0) {
+  const attemptRows = (attempts ?? []) as DispatchAttemptAuditRow[];
+
+  if (attemptRows.length > 0) {
     await supabase
       .from('ride_dispatch_audit')
       .update(updates)
-      .eq('id', attempts[0].id);
+      .eq('id', attemptRows[0].id);
   }
 }
 

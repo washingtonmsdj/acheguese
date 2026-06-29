@@ -1,118 +1,202 @@
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Mail, MessageSquare, Phone } from "lucide-react";
-import { Button } from "@/shared/components/ui/button";
+import { Helmet } from "react-helmet-async";
+import { ArrowLeft, Building2, Mail, MapPin, MessageSquare, Phone } from "lucide-react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+
 import { TERRITORY_CONFIG } from "@/config/territory";
+import { Button } from "@/shared/components/ui/button";
 import { buildMailtoUrl } from "@/shared/utils/contactLinks";
 
 const contactEmail = import.meta.env.VITE_CONTACT_EMAIL ?? "";
 
+const CONTACT_REASONS = [
+  "Suporte sobre funcionamento da plataforma.",
+  "Parcerias comerciais ou institucionais.",
+  "Expansao para novos territorios.",
+  "Duvidas operacionais sobre modulos locais.",
+] as const;
+
 export default function ContactPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  const requestedCity = searchParams.get("cidade")?.trim();
   const launchPlace = `${TERRITORY_CONFIG.launch.name}, ${TERRITORY_CONFIG.launch.state.toUpperCase()}`;
+  const territoryContext = requestedCity ? `${requestedCity}, contexto territorial solicitado` : launchPlace;
 
   return (
-    <div className="min-h-screen w-full bg-[#0f1419] text-white">
-      <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#0f1419]/95 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-4 sm:px-6">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate("/")}
-            className="text-white/70 hover:text-white"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Voltar
-          </Button>
-          <span className="text-lg font-bold tracking-tight text-white">
-            Achegue<span className="text-teal-400">-se</span>
-          </span>
-        </div>
-      </header>
+    <>
+      <Helmet>
+        <title>Entre em contato</title>
+      </Helmet>
 
-      <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-4xl px-4 py-12 focus:outline-none sm:px-6">
-        <div className="space-y-8">
-          <div className="text-center">
-            <h1 className="mb-4 text-3xl font-bold sm:text-4xl">
-              Entre em <span className="text-teal-400">contato</span>
-            </h1>
-            <p className="text-lg text-white/60">Canais para suporte, parcerias e expansão territorial</p>
+      <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.08),transparent_26%),linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.26))]">
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="mx-auto w-full max-w-5xl px-4 pb-10 pt-4 focus:outline-none sm:px-6 sm:pt-6 lg:px-8"
+        >
+          <div className="sticky top-0 z-20 -mx-4 mb-5 border-b border-border/60 bg-background/90 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:mb-6 sm:rounded-3xl sm:border sm:bg-card/85 sm:px-5 sm:shadow-sm">
+            <div className="flex items-start gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="shrink-0 rounded-full"
+                onClick={() => navigate(-1)}
+                type="button"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  Suporte e parcerias
+                </p>
+                <h1 className="truncate text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+                  Entre em contato
+                </h1>
+                <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
+                  Canais oficiais para suporte, operacao territorial e assuntos institucionais.
+                </p>
+              </div>
+            </div>
           </div>
 
-          <section className="grid gap-4 sm:grid-cols-2">
-            {contactEmail ? (
-              <a
-                href={buildMailtoUrl(contactEmail) ?? undefined}
-                className="group rounded-xl border border-white/10 bg-white/5 p-6 transition-all hover:border-teal-400/30 hover:bg-white/10"
-              >
-                <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-teal-500/20 transition-colors group-hover:bg-teal-500/30">
-                    <Mail className="h-6 w-6 text-teal-400" />
-                  </div>
-                  <div>
-                    <h2 className="mb-1 text-lg font-semibold">E-mail</h2>
-                    <p className="mb-2 text-sm text-white/60">Envie sua mensagem para</p>
-                    <p className="break-all text-sm text-teal-400">{contactEmail}</p>
-                  </div>
-                </div>
-              </a>
-            ) : (
-              <div className="rounded-xl border border-white/10 bg-white/5 p-6">
-                <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-teal-500/20">
-                    <Mail className="h-6 w-6 text-teal-400" />
-                  </div>
-                  <div>
-                    <h2 className="mb-1 text-lg font-semibold">E-mail</h2>
-                    <p className="text-sm text-white/60">E-mail público ainda não configurado.</p>
-                  </div>
-                </div>
-              </div>
-            )}
+          <section className="rounded-3xl border border-border/70 bg-card/90 p-5 shadow-sm sm:p-6">
+            <div className="space-y-3">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/90">
+                Atendimento institucional
+              </p>
+              <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[2rem]">
+                Canais para suporte, operacao e crescimento do produto
+              </h2>
+              <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
+                Use esta pagina para tratar demandas gerais da plataforma. Para privacidade e LGPD,
+                existe um fluxo especifico do encarregado de dados.
+              </p>
+            </div>
 
-            <div className="rounded-xl border border-white/10 bg-white/5 p-6">
-              <div className="flex items-start gap-4">
-                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-teal-500/20">
-                  <MessageSquare className="h-6 w-6 text-teal-400" />
-                </div>
-                <div>
-                  <h2 className="mb-1 text-lg font-semibold">Atendimento</h2>
-                  <p className="mb-2 text-sm text-white/60">Central de suporte e solicitações</p>
-                  <p className="text-sm text-white/40">Em implantação</p>
-                </div>
-              </div>
+            <div className="mt-5 flex flex-wrap gap-2">
+              <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                Suporte
+              </span>
+              <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                Parcerias
+              </span>
+              <span className="rounded-full border border-border/60 bg-background/70 px-3 py-1 text-xs font-medium text-foreground">
+                Contexto: {territoryContext}
+              </span>
             </div>
           </section>
 
-          <section className="rounded-xl border border-white/10 bg-white/5 p-6">
-            <h2 className="mb-4 text-xl font-semibold">Como podemos ajudar?</h2>
-            <div className="space-y-3 text-white/70">
-              <p>• Dúvidas sobre funcionamento da plataforma</p>
-              <p>• Sugestões de melhorias</p>
-              <p>• Reportar problemas técnicos</p>
-              <p>• Parcerias comerciais e institucionais</p>
-              <p>• Expansão para novos territórios</p>
-            </div>
-          </section>
+          <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1.3fr)_minmax(280px,0.9fr)]">
+            <section className="space-y-4">
+              <article className="rounded-3xl border border-border/70 bg-card/90 p-5 shadow-sm sm:p-6">
+                <div className="flex items-start gap-3">
+                  <div className="rounded-2xl bg-primary/10 p-2.5 text-primary">
+                    <Mail className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="text-base font-semibold text-foreground sm:text-lg">Email principal</h3>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                      Canal recomendado para suporte geral, comercial e alinhamento institucional.
+                    </p>
+                    {contactEmail ? (
+                      <a
+                        href={buildMailtoUrl(contactEmail) ?? undefined}
+                        className="mt-3 inline-flex break-all text-sm font-medium text-primary underline-offset-4 hover:underline"
+                      >
+                        {contactEmail}
+                      </a>
+                    ) : (
+                      <p className="mt-3 text-sm text-muted-foreground">
+                        Email publico ainda nao configurado.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </article>
 
-          <section className="rounded-xl border border-white/10 bg-white/5 p-6">
-            <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-teal-500/20">
-                <Phone className="h-6 w-6 text-teal-400" />
-              </div>
-              <div>
-                <h2 className="mb-2 text-xl font-semibold">Território de referência</h2>
-                <p className="text-white/70">{launchPlace}</p>
-              </div>
-            </div>
-          </section>
+              <article className="rounded-3xl border border-border/70 bg-card/90 p-5 shadow-sm sm:p-6">
+                <div className="flex items-start gap-3">
+                  <div className="rounded-2xl bg-primary/10 p-2.5 text-primary">
+                    <MessageSquare className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="text-base font-semibold text-foreground sm:text-lg">Quando usar este canal</h3>
+                    <ul className="mt-3 space-y-3 text-sm leading-6 text-muted-foreground">
+                      {CONTACT_REASONS.map((reason) => (
+                        <li key={reason}>{reason}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </article>
+            </section>
 
-          <div className="text-center text-sm text-white/50">Respondemos em até 48 horas úteis.</div>
-        </div>
-      </main>
+            <aside className="space-y-4">
+              <section className="rounded-3xl border border-border/70 bg-card/90 p-5 shadow-sm">
+                <h3 className="text-base font-semibold text-foreground">Panorama operacional</h3>
+                <div className="mt-4 space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-2xl bg-primary/10 p-2.5 text-primary">
+                      <MapPin className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Territorio de referencia</p>
+                      <p className="text-sm text-muted-foreground">{territoryContext}</p>
+                    </div>
+                  </div>
 
-      <footer className="mt-12 w-full border-t border-white/10 px-4 py-6 text-center text-xs text-white/30 sm:px-6">
-        Achegue-se · {launchPlace}
-      </footer>
-    </div>
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-2xl bg-primary/10 p-2.5 text-primary">
+                      <Building2 className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Tipo de contato</p>
+                      <p className="text-sm text-muted-foreground">
+                        Produto, territorio, operacao e relacionamento institucional.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-2xl bg-primary/10 p-2.5 text-primary">
+                      <Phone className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Tempo de resposta</p>
+                      <p className="text-sm text-muted-foreground">Ate 48 horas uteis.</p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section className="rounded-3xl border border-border/70 bg-card/90 p-5 shadow-sm">
+                <h3 className="text-base font-semibold text-foreground">Canais relacionados</h3>
+                <div className="mt-4 flex flex-col gap-3">
+                  <Link
+                    to="/dpo"
+                    className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+                  >
+                    Falar com o encarregado de dados
+                  </Link>
+                  <Link
+                    to="/sobre"
+                    className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+                  >
+                    Sobre o Achegue-se
+                  </Link>
+                  <Link
+                    to="/privacidade"
+                    className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+                  >
+                    Politica de privacidade
+                  </Link>
+                </div>
+              </section>
+            </aside>
+          </div>
+        </main>
+      </div>
+    </>
   );
 }

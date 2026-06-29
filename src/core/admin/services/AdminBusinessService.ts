@@ -12,6 +12,7 @@ import { ReviewsService } from "@/core/reviews/services/ReviewsService";
 import { ADMIN_PLACEHOLDER_IDS } from "@/core/admin/config/identifiers";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { BUSINESS_STATUS } from "@/core/business/constants/statuses";
+import type { CreateBusinessInput } from "@/core/business/types";
 
 export interface AdminBusinessData {
   id: string;
@@ -304,7 +305,7 @@ class AdminBusinessServiceClass {
         ...businessData,
         status: BUSINESS_STATUS.PENDING,
         neighborhood: ADMIN_PLACEHOLDER_IDS.EMPTY_LOCATION_ID,
-      } as any, userId);
+      } as CreateBusinessInput, userId);
 
       return profile;
     } catch (error) {

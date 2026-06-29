@@ -42,7 +42,7 @@ interface AnswerCardProps {
   onMarkBest: () => void;
   onReport: () => void;
   onNavigateToProfessional: (professionalId: string) => void;
-  onNavigateToBusiness: (business: any) => void;
+  onNavigateToBusiness: (business: MentionedBusiness) => void;
 }
 
 export function AnswerCard({

@@ -21,8 +21,13 @@ import { buildPublicProfileUrl } from '@/core/profiles/utils/publicProfileUrl';
 import { ProfilePublicPage } from '@/core/profile/pages/ProfilePublicPage';
 import { logPageNotFound } from '@/core/public-identity/utils/identity-logger';
 
+type PublicRouteProfile = Exclude<
+  Awaited<ReturnType<typeof profileService.getByUsername>>,
+  null
+>;
+
 type RouteResult =
-  | { type: 'profile'; profile: any }
+  | { type: 'profile'; profile: PublicRouteProfile }
   | { type: 'not_found' };
 
 export default function ProfilePublicRoute() {

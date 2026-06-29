@@ -1,6 +1,6 @@
 /**
- * DeliverySection - Seção de delivery do perfil
- * SSOT: usa entitlements canônicos por empresa com cache React Query.
+ * DeliverySection - secao de delivery do perfil
+ * SSOT: usa entitlements canonicos por empresa com cache React Query.
  */
 
 import { Button } from "@/shared/components/ui/button";
@@ -21,13 +21,13 @@ function formatPlanLabel(value?: string | null): string {
     case "delivery":
       return "Delivery";
     case "basic":
-      return "Básico";
+      return "Basico";
     case "premium":
       return "Premium";
     case "enterprise":
       return "Enterprise";
     default:
-      return value ? value[0].toUpperCase() + value.slice(1) : "Básico";
+      return value ? value[0].toUpperCase() + value.slice(1) : "Basico";
   }
 }
 
@@ -73,17 +73,17 @@ function DeliveryBusinessCard({ item, navigate }: DeliveryBusinessCardProps) {
   const features = [
     item.gastronomy.deliveryEnabled ? "Delivery ativo" : null,
     showMobility && canUseMotoboyNetwork ? "Rede motoboy" : null,
-    canConfigureDeliveryArea ? "Área de entrega" : null,
-    canSetDeliveryFees ? "Taxas configuráveis" : null,
+    canConfigureDeliveryArea ? "Area de entrega" : null,
+    canSetDeliveryFees ? "Taxas configuraveis" : null,
     showMobility && canTrackDelivery ? "Rastreio" : null,
-    canUseOwnDelivery ? "Entrega própria" : null,
+    canUseOwnDelivery ? "Entrega propria" : null,
   ].filter(Boolean) as string[];
 
   const actions = [
     { label: "Dashboard", url: item.dashboardUrl },
     { label: "Pedidos", url: item.gastronomy.ordersUrl },
     showMobility ? { label: "Entregas", url: item.gastronomy.deliveriesUrl } : null,
-    { label: "Área de entrega", url: item.gastronomy.deliveryAreaUrl },
+    { label: "Area de entrega", url: item.gastronomy.deliveryAreaUrl },
   ].filter((action): action is { label: string; url: string } => Boolean(action?.url));
 
   const effectivePlanTier = entitlements?.planTier ?? item.subscription.planTier;
@@ -147,13 +147,13 @@ export function DeliverySection({
   return (
     <SectionFrame
       title="Delivery"
-      description="Mostra dados e atalhos de entrega da operação gastronômica."
+      description="Mostra dados e atalhos de entrega da operacao gastronomica."
     >
       {deliveryModules.length === 0 ? (
         <EmptyPanel
-          title="Sem operação de delivery ativa"
+          title="Sem operacao de delivery ativa"
           description="Nenhuma empresa com delivery ativo foi encontrada no perfil atual."
-          actionLabel="Ver área de empresas"
+          actionLabel="Ver area de empresas"
           onAction={() => setActiveSection("empresas")}
         />
       ) : (

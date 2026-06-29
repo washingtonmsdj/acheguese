@@ -4,10 +4,10 @@
  * Seção de CTA final (Call-to-Action)
  */
 
-import { Button } from "@/shared/components/ui/button";
 import type { EmpresasCTASectionProps } from "./types";
+import { Button } from "@/shared/components/ui/button";
 
-export function EmpresasCTASection({ user, navigate }: EmpresasCTASectionProps) {
+export function EmpresasCTASection({ navigate }: EmpresasCTASectionProps) {
   return (
     <section className="w-full bg-gradient-to-br from-primary/20 via-card to-accent/20 border-t border-border">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12 md:py-16 text-center">

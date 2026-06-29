@@ -15,21 +15,56 @@
  */
 
 import { supabase } from "@/integrations/supabase";
+import type { Database } from "@/integrations/supabase/types.generated";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { trackError } from "@/shared/utils/errorTracking";
-import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
 import type {
-  PostLike,
   SavedPost,
-  GroupMember,
-  GroupMessage,
   CreateGroupMessageData,
   SocialInteractionStats,
 } from "@/core/social/types";
 import { SocialGroupInteractionsService } from "./SocialGroupInteractionsService";
 
+type QueryResult<T> = Promise<{ data: T; error: { code?: string; message?: string } | null }>;
+
+interface QueryBuilder<TRow> {
+  select(
+    columns?: string,
+    options?: { count?: "exact" | "planned" | "estimated"; head?: boolean },
+  ): QueryBuilder<TRow>;
+  insert(values: Partial<TRow> | Array<Partial<TRow>>): QueryBuilder<TRow>;
+  delete(): QueryBuilder<TRow>;
+  eq(column: string, value: unknown): QueryBuilder<TRow>;
+  in(column: string, values: readonly unknown[]): QueryBuilder<TRow>;
+  order(column: string, options?: { ascending?: boolean }): QueryBuilder<TRow>;
+  range(from: number, to: number): QueryBuilder<TRow>;
+  single(): QueryResult<TRow>;
+  maybeSingle(): QueryResult<TRow | null>;
+  then<TResult1 = { data: TRow[]; error: { code?: string; message?: string } | null; count?: number | null }, TResult2 = never>(
+    onfulfilled?:
+      | ((
+          value: {
+            data: TRow[];
+            error: { code?: string; message?: string } | null;
+            count?: number | null;
+          },
+        ) => TResult1 | PromiseLike<TResult1>)
+      | null,
+    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
+  ): Promise<TResult1 | TResult2>;
+}
+
+interface SocialDbClient {
+  from<TRow>(table: string): QueryBuilder<TRow>;
+}
+
+type PostLikeRow = Database["public"]["Tables"]["post_likes_new"]["Row"];
+type SavedPostRow = Database["public"]["Tables"]["saved_posts_new"]["Row"];
+type GroupMemberRow = Database["public"]["Tables"]["group_members_new"]["Row"];
+type UserFollowRow = Database["public"]["Tables"]["user_follows"]["Row"];
+
 export class SocialInteractionsService {
-  private static readonly db = supabase as any;
+  private static readonly db = supabase as unknown as SocialDbClient;
   // ============================================================================
   // POST LIKES - Curtidas de Posts
   // ============================================================================
@@ -45,7 +80,7 @@ export class SocialInteractionsService {
       const activeProfile =
         await profileService.getRequiredActiveProfile(userId);
 
-      const { error } = await this.db.from("post_likes_new").insert({
+      const { error } = await this.db.from<PostLikeRow>("post_likes_new").insert({
         post_id: postId,
         liker_profile_id: activeProfile.id,
       });
@@ -82,7 +117,7 @@ export class SocialInteractionsService {
         await profileService.getRequiredActiveProfile(userId);
 
       const { error } = await this.db
-        .from("post_likes_new")
+        .from<PostLikeRow>("post_likes_new")
         .delete()
         .eq("post_id", postId)
         .eq("liker_profile_id", activeProfile.id);
@@ -110,7 +145,7 @@ export class SocialInteractionsService {
         await profileService.getRequiredActiveProfile(userId);
 
       const { data, error } = await this.db
-        .from("post_likes_new")
+        .from<Pick<PostLikeRow, "id">>("post_likes_new")
         .select("id")
         .eq("post_id", postId)
         .eq("liker_profile_id", activeProfile.id)
@@ -143,7 +178,7 @@ export class SocialInteractionsService {
         await profileService.getRequiredActiveProfile(userId);
 
       const { data, error } = await this.db
-        .from("post_likes_new")
+        .from<Pick<PostLikeRow, "post_id">>("post_likes_new")
         .select("post_id")
         .eq("liker_profile_id", activeProfile.id)
         .in("post_id", postIds);
@@ -176,7 +211,7 @@ export class SocialInteractionsService {
       const activeProfile =
         await profileService.getRequiredActiveProfile(userId);
 
-      const { error } = await this.db.from("saved_posts_new").insert({
+      const { error } = await this.db.from<SavedPostRow>("saved_posts_new").insert({
         post_id: postId,
         saver_profile_id: activeProfile.id,
       });
@@ -213,7 +248,7 @@ export class SocialInteractionsService {
         await profileService.getRequiredActiveProfile(userId);
 
       const { error } = await this.db
-        .from("saved_posts_new")
+        .from<SavedPostRow>("saved_posts_new")
         .delete()
         .eq("post_id", postId)
         .eq("saver_profile_id", activeProfile.id);
@@ -241,7 +276,7 @@ export class SocialInteractionsService {
         await profileService.getRequiredActiveProfile(userId);
 
       const { data, error } = await this.db
-        .from("saved_posts_new")
+        .from<Pick<SavedPostRow, "id">>("saved_posts_new")
         .select("id")
         .eq("post_id", postId)
         .eq("saver_profile_id", activeProfile.id)
@@ -274,7 +309,7 @@ export class SocialInteractionsService {
         await profileService.getRequiredActiveProfile(userId);
 
       const { data, error } = await this.db
-        .from("saved_posts_new")
+        .from<Pick<SavedPostRow, "post_id">>("saved_posts_new")
         .select("post_id")
         .eq("saver_profile_id", activeProfile.id)
         .in("post_id", postIds);
@@ -305,7 +340,7 @@ export class SocialInteractionsService {
         await profileService.getRequiredActiveProfile(userId);
 
       const { data, error } = await this.db
-        .from("saved_posts_new")
+        .from<SavedPost>("saved_posts_new")
         .select("*")
         .eq("saver_profile_id", activeProfile.id)
         .order("created_at", { ascending: false })
@@ -470,7 +505,7 @@ export class SocialInteractionsService {
   ): Promise<boolean> {
     try {
       const { data } = await this.db
-        .from("user_follows")
+        .from<Pick<UserFollowRow, "id">>("user_follows")
         .select("id")
         .eq("follower_id", followerId)
         .eq("following_id", followingId)
@@ -490,7 +525,7 @@ export class SocialInteractionsService {
   ): Promise<{ action: "follow" | "unfollow"; error?: string }> {
     try {
       const { data: existing } = await this.db
-        .from("user_follows")
+        .from<Pick<UserFollowRow, "id">>("user_follows")
         .select("id")
         .eq("follower_id", followerId)
         .eq("following_id", followingId)
@@ -498,14 +533,14 @@ export class SocialInteractionsService {
 
       if (existing) {
         const { error } = await this.db
-          .from("user_follows")
+          .from<UserFollowRow>("user_follows")
           .delete()
           .eq("id", existing.id);
         if (error) throw error;
         return { action: "unfollow" };
       } else {
         const { error } = await this.db
-          .from("user_follows")
+          .from<UserFollowRow>("user_follows")
           .insert({ follower_id: followerId, following_id: followingId });
         if (error) throw error;
         return { action: "follow" };
@@ -522,7 +557,7 @@ export class SocialInteractionsService {
   static async getFollowedUserIds(userId: string): Promise<string[]> {
     try {
       const { data } = await this.db
-        .from("user_follows")
+        .from<Pick<UserFollowRow, "following_id">>("user_follows")
         .select("following_id")
         .eq("follower_id", userId);
       return (data || []).map((f) => f.following_id);

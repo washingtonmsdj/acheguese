@@ -1,19 +1,7 @@
-/**
- * SiteSettingsService - Gerenciamento de Configurações do Site
- * 
- * SSOT: Todas as configurações vêm de siteSettings.config.ts
- * Sem hardcoded values, sem gambiarras
- * 
- * Responsabilidades:
- * - CRUD de configurações via RPC functions
- * - Upload de arquivos para Supabase Storage
- * - Validação de arquivos
- */
-
-import { supabase } from '@/integrations/supabase';
-import { logger } from '@/shared/utils/logger';
-import { mediaService } from '@/core/media/services/MediaService';
-import type { Json } from '@/integrations/supabase';
+import { supabase } from "@/integrations/supabase";
+import { logger } from "@/shared/utils/logger";
+import { mediaService } from "@/core/media/services/MediaService";
+import type { Json } from "@/integrations/supabase";
 import {
   SITE_SETTINGS_STORAGE,
   SITE_SETTING_KEYS,
@@ -23,7 +11,7 @@ import {
   validateFileType,
   getFileExtension,
   generateFileName,
-} from '../config/siteSettings.config';
+} from "../config/siteSettings.config";
 
 export interface SiteSetting {
   key: string;
@@ -42,84 +30,119 @@ export interface SiteSettings {
   site_tagline?: string;
 }
 
+type SiteSettingsRpcClient = {
+  rpc<T>(fn: string, params?: Record<string, unknown>): Promise<{
+    data: T | null;
+    error: { message?: string | null } | null;
+  }>;
+};
+
+const siteSettingsRpc = supabase as unknown as SiteSettingsRpcClient;
+
+function readOptionalString(value: unknown): string | undefined {
+  return typeof value === "string" ? value : undefined;
+}
+
+function assignSiteSetting(settings: SiteSettings, setting: SiteSetting): void {
+  switch (setting.key) {
+    case SITE_SETTING_KEYS.LOGO_URL:
+      settings.logo_url = readOptionalString(setting.value);
+      return;
+    case SITE_SETTING_KEYS.LOGO_MOBILE_URL:
+      settings.logo_mobile_url = readOptionalString(setting.value);
+      return;
+    case SITE_SETTING_KEYS.FAVICON_URL:
+      settings.favicon_url = readOptionalString(setting.value);
+      return;
+    case SITE_SETTING_KEYS.PRIMARY_COLOR:
+      settings.primary_color = readOptionalString(setting.value);
+      return;
+    case SITE_SETTING_KEYS.SECONDARY_COLOR:
+      settings.secondary_color = readOptionalString(setting.value);
+      return;
+    case SITE_SETTING_KEYS.SITE_NAME:
+      settings.site_name = readOptionalString(setting.value);
+      return;
+    case SITE_SETTING_KEYS.SITE_TAGLINE:
+      settings.site_tagline = readOptionalString(setting.value);
+      return;
+    default:
+      return;
+  }
+}
+
 class SiteSettingsServiceClass {
-  private readonly db = supabase as any;
-  /**
-   * Obtém todas as configurações do site
-   */
   async getAllSettings(): Promise<SiteSettings> {
     try {
-      const { data, error } = await this.db.rpc('get_all_site_settings');
+      const { data, error } = await siteSettingsRpc.rpc<SiteSetting[]>("get_all_site_settings");
 
       if (error) {
-        logger.error('Erro ao buscar configurações do site', error);
+        logger.error("Erro ao buscar configuracoes do site", error);
         throw error;
       }
 
-      // Converter array de settings para objeto
       const settings: SiteSettings = {};
-      if (data) {
-        (data as SiteSetting[]).forEach((setting: SiteSetting) => {
-          settings[setting.key as keyof SiteSettings] = setting.value as any;
-        });
+      for (const setting of data ?? []) {
+        assignSiteSetting(settings, setting);
       }
 
       return settings;
     } catch (error) {
-      logger.error('Erro ao obter configurações do site', error as Error);
+      logger.error("Erro ao obter configuracoes do site", error as Error);
       throw error;
     }
   }
 
-  /**
-   * Obtém uma configuração específica por chave
-   */
   async getSetting(key: string): Promise<unknown> {
     try {
-      const { data, error } = await this.db.rpc('get_site_setting', { p_key: key });
+      const { data, error } = await siteSettingsRpc.rpc<unknown>("get_site_setting", {
+        p_key: key,
+      });
 
       if (error) {
-        logger.error(`Erro ao buscar configuração ${key}`, error);
+        logger.error(`Erro ao buscar configuracao ${key}`, error);
         throw error;
       }
 
       return data;
     } catch (error) {
-      logger.error(`Erro ao obter configuração ${key}`, error as Error);
+      logger.error(`Erro ao obter configuracao ${key}`, error as Error);
       throw error;
     }
   }
 
-  /**
-   * Atualiza ou insere uma configuração
-   */
-  async upsertSetting(key: SiteSettingKey, value: unknown, description?: string): Promise<SiteSetting> {
+  async upsertSetting(
+    key: SiteSettingKey,
+    value: unknown,
+    description?: string,
+  ): Promise<SiteSetting> {
     try {
-      const { data, error } = await this.db.rpc('upsert_site_setting', {
+      const { data, error } = await siteSettingsRpc.rpc<SiteSetting>("upsert_site_setting", {
         p_key: key,
         p_value: value as Json,
         p_description: description,
       });
 
       if (error) {
-        logger.error(`Erro ao salvar configuração ${key}`, error);
+        logger.error(`Erro ao salvar configuracao ${key}`, error);
         throw error;
       }
 
-      return data as SiteSetting;
+      if (!data) {
+        throw new Error(`Configuracao ${key} nao retornou payload apos upsert`);
+      }
+
+      return data;
     } catch (error) {
-      logger.error(`Erro ao upsert configuração ${key}`, error as Error);
+      logger.error(`Erro ao upsert configuracao ${key}`, error as Error);
       throw error;
     }
   }
 
-  /**
-   * Upload de arquivo para o Supabase Storage
-   */
   async uploadFile(
     bucket: string,
     path: string,
-    file: File
+    file: File,
   ): Promise<{ url: string; path: string }> {
     try {
       const upload = await mediaService.uploadToBucket(file, {
@@ -130,106 +153,91 @@ class SiteSettingsServiceClass {
       });
       return upload;
     } catch (error) {
-      logger.error('Erro ao fazer upload de arquivo', error as Error);
+      logger.error("Erro ao fazer upload de arquivo", error as Error);
       throw error;
     }
   }
 
-  /**
-   * Upload de logo e atualização da configuração
-   */
   async uploadLogo(file: File): Promise<string> {
     try {
-      // Validar arquivo
       if (!validateFileSize(file, SITE_SETTINGS_STORAGE.MAX_FILE_SIZE.LOGO)) {
-        throw new Error(`Arquivo muito grande. Tamanho máximo: ${SITE_SETTINGS_STORAGE.MAX_FILE_SIZE.LOGO / 1024 / 1024}MB`);
+        throw new Error(
+          `Arquivo muito grande. Tamanho maximo: ${SITE_SETTINGS_STORAGE.MAX_FILE_SIZE.LOGO / 1024 / 1024}MB`,
+        );
       }
 
       if (!validateFileType(file, SITE_SETTINGS_STORAGE.ALLOWED_TYPES.LOGO)) {
-        throw new Error('Tipo de arquivo não permitido. Use PNG, JPG ou SVG');
+        throw new Error("Tipo de arquivo nao permitido. Use PNG, JPG ou SVG");
       }
 
       const extension = getFileExtension(file.name);
-      const fileName = generateFileName('logo', extension);
+      const fileName = generateFileName("logo", extension);
       const path = `${SITE_SETTINGS_STORAGE.PATHS.LOGOS}/${fileName}`;
-
       const { url } = await this.uploadFile(SITE_SETTINGS_STORAGE.BUCKET, path, file);
 
-      // Atualizar configuração usando SSOT key
       await this.upsertSetting(
         SITE_SETTING_KEYS.LOGO_URL,
         url,
-        'URL da logo principal do site'
+        "URL da logo principal do site",
       );
 
       return url;
     } catch (error) {
-      logger.error('Erro ao fazer upload da logo', error as Error);
+      logger.error("Erro ao fazer upload da logo", error as Error);
       throw error;
     }
   }
 
-  /**
-   * Upload de favicon e atualização da configuração
-   */
   async uploadFavicon(file: File): Promise<string> {
     try {
-      // Validar arquivo
       if (!validateFileSize(file, SITE_SETTINGS_STORAGE.MAX_FILE_SIZE.FAVICON)) {
-        throw new Error(`Arquivo muito grande. Tamanho máximo: ${SITE_SETTINGS_STORAGE.MAX_FILE_SIZE.FAVICON / 1024}KB`);
+        throw new Error(
+          `Arquivo muito grande. Tamanho maximo: ${SITE_SETTINGS_STORAGE.MAX_FILE_SIZE.FAVICON / 1024}KB`,
+        );
       }
 
       if (!validateFileType(file, SITE_SETTINGS_STORAGE.ALLOWED_TYPES.FAVICON)) {
-        throw new Error('Tipo de arquivo não permitido. Use PNG ou ICO');
+        throw new Error("Tipo de arquivo nao permitido. Use PNG ou ICO");
       }
 
       const extension = getFileExtension(file.name);
-      const fileName = generateFileName('favicon', extension);
+      const fileName = generateFileName("favicon", extension);
       const path = `${SITE_SETTINGS_STORAGE.PATHS.FAVICONS}/${fileName}`;
-
       const { url } = await this.uploadFile(SITE_SETTINGS_STORAGE.BUCKET, path, file);
 
-      // Atualizar configuração usando SSOT key
       await this.upsertSetting(
         SITE_SETTING_KEYS.FAVICON_URL,
         url,
-        'URL do favicon'
+        "URL do favicon",
       );
 
       return url;
     } catch (error) {
-      logger.error('Erro ao fazer upload do favicon', error as Error);
+      logger.error("Erro ao fazer upload do favicon", error as Error);
       throw error;
     }
   }
 
-  /**
-   * Atualiza a cor primária
-   */
   async updatePrimaryColor(color: string): Promise<void> {
     try {
       await this.upsertSetting(
         SITE_SETTING_KEYS.PRIMARY_COLOR,
         color,
-        'Cor primária da marca'
+        "Cor primaria da marca",
       );
     } catch (error) {
-      logger.error('Erro ao atualizar cor primária', error as Error);
+      logger.error("Erro ao atualizar cor primaria", error as Error);
       throw error;
     }
   }
 
-  /**
-   * Restaura configurações padrão
-   * SSOT: Valores vêm de SITE_SETTINGS_DEFAULTS
-   */
   async restoreDefaults(): Promise<void> {
     try {
       for (const [key, value] of Object.entries(SITE_SETTINGS_DEFAULTS)) {
         await this.upsertSetting(key as SiteSettingKey, value);
       }
     } catch (error) {
-      logger.error('Erro ao restaurar configurações padrão', error as Error);
+      logger.error("Erro ao restaurar configuracoes padrao", error as Error);
       throw error;
     }
   }

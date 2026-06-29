@@ -26,6 +26,30 @@ import type {
 } from './types';
 import type { Json } from '@/integrations/supabase';
 
+type ErrorLike = {
+  message?: string | null;
+};
+
+type LandingQueryPayload<TRow> = {
+  count?: number | null;
+  data: TRow[] | null;
+  error: ErrorLike | null;
+};
+
+type LandingQuery<TRow> = PromiseLike<LandingQueryPayload<TRow>> & {
+  eq(column: string, value: unknown): LandingQuery<TRow>;
+  limit(value: number): LandingQuery<TRow>;
+  not(column: string, operator: string, value: unknown): LandingQuery<TRow>;
+  order(column: string, options?: { ascending?: boolean }): LandingQuery<TRow>;
+  select(columns?: string, options?: { count?: 'exact'; head?: boolean }): LandingQuery<TRow>;
+};
+
+type LandingDbClient = {
+  from<TRow>(table: string): LandingQuery<TRow>;
+};
+
+const landingDb = supabase as unknown as LandingDbClient;
+
 interface LocationRow {
   id: string;
   name: string;
@@ -68,8 +92,8 @@ function getLogoUrlFromJson(value: Json | null | undefined): string | null {
 }
 
 async function countPublicServices(): Promise<number> {
-  const { count } = await (supabase as any)
-    .from('professional_data')
+  const { count } = await landingDb
+    .from<{ id: string }>('professional_data')
     .select('id', { count: 'exact', head: true })
     .eq('is_accepting_clients', true)
     .eq('visibility', 'public_listed');
@@ -475,8 +499,17 @@ export async function getNationalBusinesses(limit: number = 6): Promise<National
  */
 export async function getNationalServices(limit: number = 6): Promise<NationalService[]> {
   try {
-    const { data, error } = await (supabase as any)
-      .from('professional_data')
+    const { data, error } = await landingDb
+      .from<{
+        id: string;
+        professional_name: string | null;
+        service_category: string | null;
+        metadata?: Json | null;
+        rating: number | null;
+        is_verified: boolean | null;
+        price_range: string | null;
+        location?: { name?: string | null } | null;
+      }>('professional_data')
       .select('id, professional_name, service_category, metadata, rating, is_verified, price_range, location:locations!location_id(name)')
       .eq('is_accepting_clients', true)
       .eq('visibility', 'public_listed')
@@ -561,14 +594,13 @@ export async function getNationalClassifieds(limit: number = 6): Promise<Nationa
 export async function getNationalStats(): Promise<NationalStats> {
   try {
     const { getTotalClassifiedsCount } = await import('@/core/classifieds/services');
-    const supabaseAny = supabase as any;
 
     const [bizCount, clsCount, cities, districts, svc] = await Promise.allSettled([
       BusinessService.getTotalBusinessesCount(),
       getTotalClassifiedsCount(),
-      supabaseAny.from('locations').select('id', { count: 'exact', head: true }).eq('type', 'city').eq('status', 'active'),
-      supabaseAny.from('locations').select('id', { count: 'exact', head: true }).eq('type', 'district').eq('status', 'active'),
-      supabaseAny.from('professional_data').select('id', { count: 'exact', head: true }).eq('is_accepting_clients', true).eq('visibility', 'public_listed'),
+      landingDb.from<{ id: string }>('locations').select('id', { count: 'exact', head: true }).eq('type', 'city').eq('status', 'active'),
+      landingDb.from<{ id: string }>('locations').select('id', { count: 'exact', head: true }).eq('type', 'district').eq('status', 'active'),
+      landingDb.from<{ id: string }>('professional_data').select('id', { count: 'exact', head: true }).eq('is_accepting_clients', true).eq('visibility', 'public_listed'),
     ]);
 
     const stats = {

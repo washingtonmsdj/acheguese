@@ -1,4 +1,4 @@
-import type { Profile } from '@/core/profiles/types';
+import type { Profile } from '@/core/profiles';
 
 /**
  * Constroi URL publica para perfil pessoal.
@@ -19,7 +19,7 @@ export function buildPublicProfileUrl(username: string): string {
  * especificos para construir URLs completas.
  */
 export function buildCanonicalPublicUrl(profile: Profile): string | null {
-  switch (profile.profile_type) {
+  switch (profile.profileType) {
     case 'personal':
       return profile.username ? buildPublicProfileUrl(profile.username) : null;
 
@@ -34,7 +34,7 @@ export function buildCanonicalPublicUrl(profile: Profile): string | null {
 }
 
 export function canHavePublicUrl(profile: Profile): boolean {
-  return profile.profile_type === 'personal' && Boolean(profile.username);
+  return profile.profileType === 'personal' && Boolean(profile.username);
 }
 
 export function buildProfileEditUrl(profileId: string): string {
@@ -44,5 +44,5 @@ export function buildProfileEditUrl(profileId: string): string {
 export function buildProfileSettingsUrl(
   tab?: "privacy" | "links" | "members",
 ): string {
-  return tab ? `/conta/preferencias?tab=${tab}` : "/conta/preferencias";
+  return tab ? `/conta/perfil/configuracoes?tab=${tab}` : "/conta/perfil/configuracoes";
 }

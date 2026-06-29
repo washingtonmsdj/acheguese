@@ -10,6 +10,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 import { useEducationNicheBilling } from '../hooks/useEducationNicheBilling';
 
+type EducationUsageCounters = {
+  programCount: number;
+  leadsThisMonth: number;
+  eventCount: number;
+};
+
 // Mocks
 vi.mock('../../hooks/useEducationSubscription', () => ({
   useEducationSubscription: vi.fn(() => ({
@@ -25,7 +31,7 @@ vi.mock('../../hooks/useEducationSubscription', () => ({
     isLoading: false,
     isError: false,
     error: null,
-    calculateLimits: vi.fn((usage: any) => ({
+    calculateLimits: vi.fn((usage: EducationUsageCounters) => ({
       programs: { current: usage.programCount, max: 20, canCreate: usage.programCount < 20 },
       leads: { current: usage.leadsThisMonth, max: 500, canReceive: usage.leadsThisMonth < 500 },
       events: { current: usage.eventCount, max: 10, canCreate: usage.eventCount < 10 },

@@ -13,6 +13,29 @@ import type {
   SendMessageInput,
 } from "@/core/messaging/types";
 
+function normalizeRealtimeMessage(input: Record<string, unknown>): Message | null {
+  const id = typeof input.id === "string" ? input.id : null;
+  const conversationId =
+    typeof input.conversation_id === "string" ? input.conversation_id : null;
+  const senderProfileId =
+    typeof input.sender_profile_id === "string" ? input.sender_profile_id : null;
+  const text = typeof input.text === "string" ? input.text : null;
+  const createdAt = typeof input.created_at === "string" ? input.created_at : null;
+
+  if (!id || !conversationId || !senderProfileId || !text || !createdAt) {
+    return null;
+  }
+
+  return {
+    id,
+    conversation_id: conversationId,
+    sender_profile_id: senderProfileId,
+    text,
+    created_at: createdAt,
+    read_at: typeof input.read_at === "string" ? input.read_at : null,
+  };
+}
+
 interface PostContext {
   id: string;
   title: string;
@@ -177,9 +200,12 @@ export function useDirectMessages(_currentUserId?: string) {
     const messageSubscription = realtimeService.subscribeToDirectMessages(
       profileId,
       (newMessage) => {
+        const normalizedMessage = normalizeRealtimeMessage(newMessage);
+        if (!normalizedMessage) return;
+
         setMessages((prev) => {
-          if (prev.find((m) => m.id === newMessage.id)) return prev;
-          return [...prev, newMessage];
+          if (prev.find((m) => m.id === normalizedMessage.id)) return prev;
+          return [...prev, normalizedMessage];
         });
       },
     );

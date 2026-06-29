@@ -177,7 +177,7 @@ describeGate5('Gate 5 - Suite 1: Transições de Estado', () => {
     
     const result = await DriverAvailabilityService.setAvailable(
       TEST_DRIVER_ID,
-      null as any
+      null as unknown as typeof TEST_LOCATION
     );
     expect(result.success).toBe(false);
     expect(result.error).toContain('Location is required');

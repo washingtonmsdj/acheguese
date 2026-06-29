@@ -1,24 +1,27 @@
-/**
- * /conta/seguranca - Configurações da conta, separado da identidade pública.
- *
- * Conta = auth.users (email, senha, sessões, exclusão)
- * Perfil público = identidade pública/social visível para outros usuários
- */
-
 import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { AlertTriangle, ArrowLeft, Loader2, Mail } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  Loader2,
+  LockKeyhole,
+  Mail,
+  ShieldCheck,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { useAuth } from "@/core/auth/hooks/useAuth";
-import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { getAuthErrorMessage } from "@/core/auth/utils/authMessages";
+import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { ChangePasswordForm } from "@/modules/profile/components/ChangePasswordForm";
 import { Button } from "@/shared/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
-import { Separator } from "@/shared/components/ui/separator";
-
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/shared/components/ui/card";
 import type { UpdatePasswordInput } from "@/shared/validation/schemas/user.schema";
 
 export default function ContaSegurancaPage() {
@@ -48,7 +51,7 @@ export default function ContaSegurancaPage() {
     try {
       await resetPassword(user.email);
       setResetSent(true);
-      toast.success("Email de redefinição enviado");
+      toast.success("Email de redefinicao enviado");
     } catch (error) {
       toast.error(getAuthErrorMessage(error, "Erro ao enviar email"));
     } finally {
@@ -59,111 +62,179 @@ export default function ContaSegurancaPage() {
   return (
     <>
       <Helmet>
-        <title>Minha conta | Segurança</title>
+        <title>Minha conta | Seguranca</title>
       </Helmet>
 
-      <div className="mx-auto max-w-3xl space-y-6 px-4 py-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(appUrls.profile.home)}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="text-lg font-semibold">Minha conta</h1>
-            <p className="text-xs text-muted-foreground">
-              Configurações de acesso, recuperação e segurança
-            </p>
+      <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.10),transparent_28%),linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.32))]">
+        <main className="mx-auto w-full max-w-5xl px-4 pb-8 pt-4 sm:px-6 sm:pb-10 sm:pt-6 lg:px-8">
+          <div className="sticky top-0 z-20 -mx-4 mb-5 border-b border-border/60 bg-background/90 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:mb-6 sm:rounded-3xl sm:border sm:bg-card/85 sm:px-5 sm:shadow-sm">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-3">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="shrink-0 rounded-full"
+                  onClick={() => navigate(appUrls.profile.home)}
+                  type="button"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                    Conta e acesso
+                  </p>
+                  <h1 className="truncate text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+                    Seguranca da conta
+                  </h1>
+                  <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
+                    Senha, recuperacao e protecao do login.
+                  </p>
+                </div>
+              </div>
+              <div className="hidden shrink-0 items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary sm:flex">
+                <ShieldCheck className="h-3.5 w-3.5" />
+                Conta protegida
+              </div>
+            </div>
           </div>
-        </div>
 
-        <div className="rounded-3xl border border-border bg-gradient-to-br from-primary/10 via-background to-accent/10 p-5 shadow-sm">
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">Autenticação</p>
-          <h2 className="mt-2 text-xl font-semibold text-foreground">{user.email}</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Esta superfície cuida apenas de acesso e segurança. Privacidade da identidade,
-            membros e configurações operacionais ficam em áreas separadas.
-          </p>
-        </div>
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_280px]">
+            <div className="space-y-5">
+              <section className="rounded-3xl border border-border/70 bg-card/90 p-5 shadow-sm sm:p-6">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="space-y-2">
+                    <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/90">
+                      Autenticacao
+                    </p>
+                    <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+                      {user.email}
+                    </h2>
+                    <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
+                      Esta area cuida apenas do acesso da conta. Identidade publica,
+                      perfis vinculados e configuracoes operacionais seguem separados.
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 sm:w-auto sm:grid-cols-1">
+                    <div className="rounded-2xl border border-border/60 bg-muted/20 px-3 py-2 text-xs">
+                      <p className="font-medium text-foreground">Email principal</p>
+                      <p className="mt-1 text-muted-foreground">Login e recuperacao</p>
+                    </div>
+                    <div className="rounded-2xl border border-border/60 bg-muted/20 px-3 py-2 text-xs">
+                      <p className="font-medium text-foreground">Senha forte</p>
+                      <p className="mt-1 text-muted-foreground">Obrigatoria para acesso</p>
+                    </div>
+                  </div>
+                </div>
+              </section>
 
-        <Separator />
+              <Card className="rounded-3xl border-border/70 bg-card/90 shadow-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-sm">
+                    <Mail className="h-4 w-4" />
+                    Email de login
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <p className="text-sm font-medium text-foreground">{user.email}</p>
+                  <p className="text-sm leading-6 text-muted-foreground">
+                    Esse email e usado para entrar na conta e receber fluxos de
+                    recuperacao. Alteracoes devem passar pelo suporte.
+                  </p>
+                </CardContent>
+              </Card>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-sm">
-              <Mail className="h-4 w-4" />
-              Email de login
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm font-medium">{user.email}</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Este é o email usado para acessar sua conta. Para alterá-lo, entre em contato
-              com o suporte.
-            </p>
-          </CardContent>
-        </Card>
+              <section className="rounded-3xl border border-border/70 bg-card/90 p-5 shadow-sm sm:p-6">
+                <ChangePasswordForm
+                  onSave={handleChangePassword}
+                  onCancel={() => {
+                    return;
+                  }}
+                />
+              </section>
 
-        <ChangePasswordForm
-          onSave={handleChangePassword}
-          onCancel={() => {
-            return;
-          }}
-        />
+              <Card className="rounded-3xl border-border/70 bg-card/90 shadow-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-sm">
+                    <Mail className="h-4 w-4" />
+                    Recuperacao por email
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <p className="text-sm leading-6 text-muted-foreground">
+                    Envie um fluxo de redefinicao para o email principal da conta.
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full justify-center sm:w-auto"
+                    onClick={handleResetPassword}
+                    disabled={resetSent || sendingReset}
+                  >
+                    {sendingReset ? (
+                      <>
+                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                        Enviando...
+                      </>
+                    ) : resetSent ? (
+                      "Email enviado"
+                    ) : (
+                      "Redefinir por email"
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-sm">
-              <Mail className="h-4 w-4" />
-              Recuperação por email
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <p className="text-xs text-muted-foreground">
-              Envie um fluxo de redefinição para o email principal da conta.
-            </p>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handleResetPassword}
-              disabled={resetSent || sendingReset}
-            >
-              {sendingReset ? (
-                <>
-                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                  Enviando...
-                </>
-              ) : resetSent ? (
-                "Email enviado"
-              ) : (
-                "Redefinir por email"
-              )}
-            </Button>
-          </CardContent>
-        </Card>
+              <Card className="rounded-3xl border-destructive/30 bg-card/90 shadow-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-sm text-destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    Zona de risco
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <p className="text-sm leading-6 text-muted-foreground">
+                    Excluir a conta remove perfis, dados e conteudo associados. Essa
+                    acao e permanente.
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full justify-center border-destructive/30 text-destructive hover:bg-destructive/5 sm:w-auto"
+                    onClick={() => {
+                      toast.error(
+                        "Para excluir sua conta, entre em contato com o suporte.",
+                      );
+                    }}
+                  >
+                    Solicitar exclusao da conta
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
 
-        <Card className="border-destructive/30">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-sm text-destructive">
-              <AlertTriangle className="h-4 w-4" />
-              Zona de perigo
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <p className="text-xs text-muted-foreground">
-              A exclusão da conta é permanente e remove todos os seus perfis, dados e
-              conteúdo. Esta ação não pode ser desfeita.
-            </p>
-            <Button
-              variant="outline"
-              size="sm"
-              className="border-destructive/30 text-destructive hover:bg-destructive/5"
-              onClick={() => {
-                toast.error("Para excluir sua conta, entre em contato com o suporte.");
-              }}
-            >
-              Solicitar exclusão da conta
-            </Button>
-          </CardContent>
-        </Card>
+            <aside className="space-y-4">
+              <Card className="rounded-3xl border-border/70 bg-card/85 shadow-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-sm">
+                    <LockKeyhole className="h-4 w-4" />
+                    Boas praticas
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm text-muted-foreground">
+                  <div className="rounded-2xl border border-border/60 bg-muted/20 p-3">
+                    Use uma senha exclusiva para o Achegue-se.
+                  </div>
+                  <div className="rounded-2xl border border-border/60 bg-muted/20 p-3">
+                    Renove a senha se houver suspeita de acesso indevido.
+                  </div>
+                  <div className="rounded-2xl border border-border/60 bg-muted/20 p-3">
+                    Mantenha email e acesso sob sua propria gestao.
+                  </div>
+                </CardContent>
+              </Card>
+            </aside>
+          </div>
+        </main>
       </div>
     </>
   );

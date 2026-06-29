@@ -9,7 +9,30 @@ import { logger } from "@/shared/utils/logger";
 import { PAGINATION } from "@/shared/constants";
 import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
 import { ReviewsService } from "@/core/reviews/services/ReviewsService";
-const businessAdminDb = supabase as any;
+import type { ReviewStats } from "@/core/reviews/types";
+
+const businessAdminDb = supabase as unknown as AdminSupabaseClient;
+
+interface QueryError {
+  message?: string | null;
+}
+
+interface QueryArrayResult<TRow> {
+  data: TRow[] | null;
+  error: QueryError | null;
+  count?: number | null;
+}
+
+interface QueryBuilder<TRow> extends PromiseLike<QueryArrayResult<TRow>> {
+  update: (values: unknown) => QueryBuilder<TRow>;
+  eq: (column: string, value: unknown) => QueryBuilder<TRow>;
+}
+
+interface BusinessAdminLooseDbClient {
+  from: <TRow = never>(table: string) => QueryBuilder<TRow>;
+}
+
+const businessAdminLooseDb = supabase as unknown as BusinessAdminLooseDbClient;
 
 export interface CouponRecord {
   id: string;
@@ -180,7 +203,10 @@ export async function getBusinessMetrics(
     const monthAgo = new Date(now.getTime() - 30 * 86400000).toISOString();
 
     // Usar ReviewsService para estatísticas de reviews
-    const reviewStats = (await ReviewsService.getReviewStats(businessId, "business")) as any;
+    const reviewStats: ReviewStats = await ReviewsService.getReviewStats(
+      businessId,
+      "business",
+    );
 
     let totalViewsQuery = (supabase as unknown as AdminSupabaseClient)
       .from("business_views")
@@ -209,8 +235,8 @@ export async function getBusinessMetrics(
       totalViews: viewsRes.count || 0,
       weekViews: weekRes.count || 0,
       monthViews: monthRes.count || 0,
-      averageRating: reviewStats.average_rating ?? reviewStats.averageRating ?? 0,
-      totalReviews: reviewStats.total_reviews ?? reviewStats.totalReviews ?? 0,
+      averageRating: reviewStats.average_rating ?? reviewStats.average ?? 0,
+      totalReviews: reviewStats.total_reviews ?? reviewStats.total ?? 0,
     };
   } catch (error) {
     logger.error("Failed to fetch business metrics:", error);
@@ -232,9 +258,11 @@ export async function updateBusinessClaimStatus(
   status: "aprovada" | "rejeitada",
 ): Promise<boolean> {
   try {
-    const { error } = await businessAdminDb
-      .from("business_claims")
-      .update({ status, resolved_at: new Date().toISOString() })
+    const normalizedStatus = status === "aprovada" ? "approved" : "rejected";
+
+    const { error } = await businessAdminLooseDb
+      .from<{ id: string }>("business_claims")
+      .update({ status: normalizedStatus, resolved_at: new Date().toISOString() })
       .eq("id", claimId);
 
     if (error) {

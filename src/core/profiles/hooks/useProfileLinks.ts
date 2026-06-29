@@ -7,6 +7,11 @@ import { logger } from '@/shared/utils/logger';
 import { useState, useEffect, useCallback } from 'react';
 import { ProfileLinksService } from '../services/multi-profile';
 import type { ProfileLink, LinkType } from '../services/multi-profile/types';
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
+}
+
 export function useProfileLinks(profileId: string | null) {
   const [links, setLinks] = useState<ProfileLink[]>([]);
   const [loading, setLoading] = useState(false);
@@ -24,9 +29,9 @@ export function useProfileLinks(profileId: string | null) {
     try {
       const data = await ProfileLinksService.getProfileLinks(profileId);
       setLinks(data);
-    } catch (err: any) {
-      logger.error('Error loading profile links:', err);
-      setError(err.message || 'Failed to load links');
+    } catch (error: unknown) {
+      logger.error('Error loading profile links:', error);
+      setError(getErrorMessage(error, 'Failed to load links'));
     } finally {
       setLoading(false);
     }

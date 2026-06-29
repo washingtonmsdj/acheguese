@@ -8,9 +8,74 @@
  */
 
 import { supabase } from "@/integrations/supabase";
+import type { Tables } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { buildSafeILikePattern } from "@/shared/utils/sqlSanitization";
 import type { GastronomyProfile } from "../types/adminDatabase.types";
+
+type ErrorLike = { message?: string | null; code?: string | null } | null;
+
+type QueryPayload<TRow> = {
+  data: TRow[] | null;
+  error: ErrorLike;
+  count?: number | null;
+};
+
+type SingleQueryPayload<TRow> = {
+  data: TRow | null;
+  error: ErrorLike;
+  count?: number | null;
+};
+
+type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
+  select(columns?: string, options?: { count?: "exact"; head?: boolean }): TableClient<TRow>;
+  update(values: Record<string, unknown>): TableClient<TRow>;
+  delete(): TableClient<TRow>;
+  eq(column: string, value: unknown): TableClient<TRow>;
+  ilike(column: string, value: string): TableClient<TRow>;
+  in(column: string, values: readonly unknown[]): TableClient<TRow>;
+  order(column: string, options?: { ascending: boolean }): TableClient<TRow>;
+  range(from: number, to: number): TableClient<TRow>;
+  single(): Promise<SingleQueryPayload<TRow>>;
+};
+
+type AdminGastronomyDbClient = {
+  from<TRow = Record<string, unknown>>(table: string): TableClient<TRow>;
+};
+
+const db = supabase as unknown as AdminGastronomyDbClient;
+
+type GastronomyProfileRow = Tables<"gastronomy_profiles">;
+type MenuRow = Tables<"menus">;
+type MenuCategoryRow = Tables<"menu_categories">;
+type MenuItemRow = Tables<"menu_items">;
+type MenuPromotionRow = Tables<"menu_promotions">;
+type PizzaNicheConfigRow = Tables<"pizza_niche_configs">;
+type PizzaIdRow =
+  | Tables<"pizza_sizes">
+  | Tables<"pizza_flavors">
+  | Tables<"pizza_edges">
+  | Tables<"pizza_doughs">;
+type BusinessDataRow = Tables<"business_data">;
+type CouponSummaryRow = {
+  id: string;
+  business_id: string;
+  is_active: boolean;
+  validade: string | null;
+};
+type PromotionSummaryRow = {
+  id: string;
+  business_id: string;
+  is_active: boolean;
+  expires_at: string | null;
+};
+
+type BusinessSummaryRow = Pick<BusinessDataRow, "id" | "business_name" | "slug" | "category">;
+type BusinessNameRow = Pick<BusinessDataRow, "id" | "business_name">;
+
+type GastronomyProfileWithBusinessRow = GastronomyProfileRow & {
+  business?: BusinessSummaryRow | readonly BusinessSummaryRow[] | null;
+};
 
 export interface GastronomyStats {
   total: number;
@@ -102,23 +167,38 @@ type NicheBusinessRow = {
   status: string;
   created_at: string;
   business?: {
-    name?: string | null;
+    business_name?: string | null;
     slug?: string | null;
   } | null;
 };
 
+function normalizeBusinessSummary(
+  value: GastronomyProfileWithBusinessRow["business"],
+): { id: string; name: string; slug: string | null; logo_url: null; category: string | null } | null {
+  const resolved = Array.isArray(value) ? value[0] : value;
+  if (!resolved) return null;
+
+  return {
+    id: resolved.id,
+    name: resolved.business_name,
+    slug: resolved.slug,
+    logo_url: null,
+    category: resolved.category,
+  };
+}
+
 class AdminGastronomyServiceClass {
-  private readonly db = supabase as any;
+  private readonly db = db;
 
   async getStats(): Promise<GastronomyStats> {
     try {
       const { data: profiles, error } = await this.db
-        .from("gastronomy_profiles")
+        .from<GastronomyProfileRow>("gastronomy_profiles")
         .select("*");
 
       if (error) throw error;
 
-      const typedProfiles = (profiles || []) as GastronomyProfile[];
+      const typedProfiles = profiles || [];
       const businessIds = typedProfiles.map((profile) => profile.business_id);
       const categoryCounts = new Map<string, number>();
       const priceRangeCounts = new Map<string, number>();
@@ -146,7 +226,7 @@ class AdminGastronomyServiceClass {
 
       if (businessIds.length > 0) {
         const { count } = await this.db
-          .from("menus")
+          .from<MenuRow>("menus")
           .select("id", { count: "exact", head: true })
           .in("business_id", businessIds);
         stats.withMenu = count || 0;
@@ -162,9 +242,9 @@ class AdminGastronomyServiceClass {
   async getMenuStats(): Promise<MenuStats> {
     try {
       const [menusResult, categoriesResult, itemsResult] = await Promise.all([
-        this.db.from("menus").select("id", { count: "exact", head: true }),
-        this.db.from("menu_categories").select("id", { count: "exact", head: true }),
-        this.db.from("menu_items").select("base_price"),
+        this.db.from<MenuRow>("menus").select("id", { count: "exact", head: true }),
+        this.db.from<MenuCategoryRow>("menu_categories").select("id", { count: "exact", head: true }),
+        this.db.from<Pick<MenuItemRow, "base_price">>("menu_items").select("base_price"),
       ]);
 
       const totalMenus = menusResult.count || 0;
@@ -201,15 +281,14 @@ class AdminGastronomyServiceClass {
 
     try {
       let query = this.db
-        .from("gastronomy_profiles")
+        .from<GastronomyProfileWithBusinessRow>("gastronomy_profiles")
         .select(
           `
           *,
           business:business_data!inner(
             id,
-            name,
+            business_name,
             slug,
-            logo_url,
             category
           )
         `,
@@ -219,7 +298,19 @@ class AdminGastronomyServiceClass {
       if (search) {
         const searchPattern = buildSafeILikePattern(search);
         if (searchPattern) {
-          query = query.ilike("business.name", searchPattern);
+          const businessSearch = await this.db
+            .from<BusinessNameRow>("business_data")
+            .select("id, business_name")
+            .ilike("business_name", searchPattern);
+
+          if (businessSearch.error) throw businessSearch.error;
+
+          const businessIds = (businessSearch.data ?? []).map((business) => business.id);
+          if (businessIds.length === 0) {
+            return { data: [], count: 0, page, limit, totalPages: 0 };
+          }
+
+          query = query.in("business_id", businessIds);
         }
       }
       if (cuisineType) {
@@ -241,7 +332,10 @@ class AdminGastronomyServiceClass {
       if (error) throw error;
 
       return {
-        data: data || [],
+        data: (data ?? []).map((profile) => ({
+          ...profile,
+          business: normalizeBusinessSummary(profile.business),
+        })),
         count: count || 0,
         page,
         limit,
@@ -256,8 +350,8 @@ class AdminGastronomyServiceClass {
   async toggleActive(profileId: string, isActive: boolean): Promise<boolean> {
     try {
       const { error } = await this.db
-        .from("gastronomy_profiles")
-        .update({ status: isActive ? "active" : "inactive" } as any)
+        .from<GastronomyProfileRow>("gastronomy_profiles")
+        .update({ status: isActive ? "active" : "inactive" })
         .eq("id", profileId);
 
       if (error) throw error;
@@ -292,7 +386,7 @@ class AdminGastronomyServiceClass {
     const { page = 1, limit = 20, search, isActive } = params;
 
     try {
-      let query = this.db.from("menus").select("*", { count: "exact" });
+      let query = this.db.from<MenuRow>("menus").select("*", { count: "exact" });
 
       if (search) {
         const searchPattern = buildSafeILikePattern(search);
@@ -316,12 +410,12 @@ class AdminGastronomyServiceClass {
 
       const [categoriesRes, businessesRes] = await Promise.all([
         this.db
-          .from("menu_categories")
+          .from<Pick<MenuCategoryRow, "id" | "menu_id">>("menu_categories")
           .select("id, menu_id")
           .in("menu_id", menuIds),
         this.db
-          .from("business_data")
-          .select("id, name")
+          .from<BusinessNameRow>("business_data")
+          .select("id, business_name")
           .in("id", businessIds),
       ]);
 
@@ -336,7 +430,7 @@ class AdminGastronomyServiceClass {
       let itemRows: Array<{ id: string; category_id: string }> = [];
       if (categoryIds.length > 0) {
         const menuItemsRes = await this.db
-          .from("menu_items")
+          .from<Pick<MenuItemRow, "id" | "category_id">>("menu_items")
           .select("id, category_id")
           .in("category_id", categoryIds);
         itemRows = menuItemsRes.data || [];
@@ -353,7 +447,7 @@ class AdminGastronomyServiceClass {
       });
 
       const businessNameById = new Map(
-        ((businessesRes.data || []) as Array<{ id: string; name: string | null }>).map((business) => [business.id, business.name]),
+        (businessesRes.data || []).map((business) => [business.id, business.business_name]),
       );
 
       const enrichedMenus: AdminGastronomyMenuRecord[] = menus.map((menu) => ({
@@ -390,7 +484,7 @@ class AdminGastronomyServiceClass {
 
     try {
       let query = this.db
-        .from("menu_items")
+        .from<Pick<MenuItemRow, "id" | "name" | "category_id" | "base_price" | "is_available" | "image_url">>("menu_items")
         .select("id, name, category_id, base_price, is_available, image_url", { count: "exact" });
 
       if (search) {
@@ -413,31 +507,31 @@ class AdminGastronomyServiceClass {
 
       const categoryIds = [...new Set(items.map((item) => item.category_id))];
       const categoriesRes = await this.db
-        .from("menu_categories")
+        .from<Pick<MenuCategoryRow, "id" | "name" | "menu_id">>("menu_categories")
         .select("id, name, menu_id")
         .in("id", categoryIds);
-      const categories = (categoriesRes.data || []) as Array<{ id: string; name: string; menu_id: string }>;
+      const categories = categoriesRes.data || [];
       const categoryById = new Map<string, { name: string; menu_id: string }>(
         categories.map((category) => [category.id, { name: category.name, menu_id: category.menu_id }]),
       );
 
       const menuIds = [...new Set(categories.map((category) => category.menu_id))];
       const menusRes = await this.db
-        .from("menus")
+        .from<Pick<MenuRow, "id" | "name" | "business_id">>("menus")
         .select("id, name, business_id")
         .in("id", menuIds);
-      const menus = (menusRes.data || []) as Array<{ id: string; name: string; business_id: string }>;
+      const menus = menusRes.data || [];
       const menuById = new Map<string, { name: string; business_id: string }>(
         menus.map((menu) => [menu.id, { name: menu.name, business_id: menu.business_id }]),
       );
 
       const businessIds = [...new Set(menus.map((menu) => menu.business_id))];
       const businessesRes = await this.db
-        .from("business_data")
-        .select("id, name")
+        .from<BusinessNameRow>("business_data")
+        .select("id, business_name")
         .in("id", businessIds);
       const businessById = new Map<string, string | null>(
-        ((businessesRes.data || []) as Array<{ id: string; name: string | null }>).map((business) => [business.id, business.name]),
+        (businessesRes.data || []).map((business) => [business.id, business.business_name]),
       );
 
       const enrichedItems: AdminGastronomyItemRecord[] = items.map((item) => {
@@ -503,10 +597,18 @@ class AdminGastronomyServiceClass {
   async getIntegritySummary(): Promise<GastronomyIntegritySummary> {
     try {
       const [profilesRes, menusRes, categoriesRes, itemsRes] = await Promise.all([
-        this.db.from("gastronomy_profiles").select("id, business_id, status"),
-        this.db.from("menus").select("id, business_id, is_active"),
-        this.db.from("menu_categories").select("id, menu_id"),
-        this.db.from("menu_items").select("id, category_id, base_price, image_url"),
+        this.db
+          .from<Pick<GastronomyProfileRow, "id" | "business_id" | "status">>("gastronomy_profiles")
+          .select("id, business_id, status"),
+        this.db
+          .from<Pick<MenuRow, "id" | "business_id" | "is_active">>("menus")
+          .select("id, business_id, is_active"),
+        this.db
+          .from<Pick<MenuCategoryRow, "id" | "menu_id">>("menu_categories")
+          .select("id, menu_id"),
+        this.db
+          .from<Pick<MenuItemRow, "id" | "category_id" | "base_price" | "image_url">>("menu_items")
+          .select("id, category_id, base_price, image_url"),
       ]);
 
       const profiles = profilesRes.data || [];
@@ -571,7 +673,7 @@ class AdminGastronomyServiceClass {
   async getPromotionOwnershipSummary(): Promise<GastronomyPromotionOwnershipSummary> {
     try {
       const profilesRes = await this.db
-        .from("gastronomy_profiles")
+        .from<Pick<GastronomyProfileRow, "business_id">>("gastronomy_profiles")
         .select("business_id");
 
       const businessIds = [...new Set((profilesRes.data || []).map((row) => row.business_id))];
@@ -590,15 +692,15 @@ class AdminGastronomyServiceClass {
 
       const [promotionsRes, couponsRes, menuPromotionsRes] = await Promise.all([
         this.db
-          .from("promotions")
+          .from<PromotionSummaryRow>("promotions")
           .select("id, business_id, is_active, expires_at")
           .in("business_id", businessIds),
         this.db
-          .from("coupons")
+          .from<CouponSummaryRow>("coupons")
           .select("id, business_id, is_active, validade")
           .in("business_id", businessIds),
         this.db
-          .from("menu_promotions")
+          .from<Pick<MenuPromotionRow, "id" | "business_id" | "is_active">>("menu_promotions")
           .select("id, business_id, is_active")
           .in("business_id", businessIds),
       ]);
@@ -656,7 +758,7 @@ class AdminGastronomyServiceClass {
           created_at,
           business:business_data!inner(
             id,
-            name,
+            business_name,
             slug
           )
         `,
@@ -667,7 +769,19 @@ class AdminGastronomyServiceClass {
       if (search) {
         const searchPattern = buildSafeILikePattern(search);
         if (searchPattern) {
-          query = query.ilike("business.name", searchPattern);
+          const businessSearch = await this.db
+            .from<BusinessNameRow>("business_data")
+            .select("id, business_name")
+            .ilike("business_name", searchPattern);
+
+          if (businessSearch.error) throw businessSearch.error;
+
+          const businessIds = (businessSearch.data ?? []).map((business) => business.id);
+          if (businessIds.length === 0) {
+            return { data: [], count: 0, totalPages: 0 };
+          }
+
+          query = query.in("business_id", businessIds);
         }
       }
 
@@ -682,7 +796,7 @@ class AdminGastronomyServiceClass {
 
       const businesses: BusinessWithNiche[] = ((data as NicheBusinessRow[] | null) || []).map((row) => ({
         id: row.business_id,
-        name: row.business?.name || "",
+        name: row.business?.business_name || "",
         slug: row.business?.slug || "",
         nicheKey: row.niche_key,
         cuisineType: row.cuisine_type,
@@ -708,12 +822,12 @@ class AdminGastronomyServiceClass {
     try {
       // Buscar dados em paralelo
       const [configRes, sizesRes, flavorsRes, edgesRes, doughsRes, businessRes] = await Promise.all([
-        this.db.from("pizza_niche_configs").select("*").eq("business_id", businessId).single(),
-        this.db.from("pizza_sizes").select("id").eq("business_id", businessId),
-        this.db.from("pizza_flavors").select("id").eq("business_id", businessId),
-        this.db.from("pizza_edges").select("id").eq("business_id", businessId),
-        this.db.from("pizza_doughs").select("id").eq("business_id", businessId),
-        this.db.from("business_data").select("name").eq("id", businessId).single(),
+        this.db.from<PizzaNicheConfigRow>("pizza_niche_configs").select("*").eq("business_id", businessId).single(),
+        this.db.from<Pick<Tables<"pizza_sizes">, "id">>("pizza_sizes").select("id").eq("business_id", businessId),
+        this.db.from<Pick<Tables<"pizza_flavors">, "id">>("pizza_flavors").select("id").eq("business_id", businessId),
+        this.db.from<Pick<Tables<"pizza_edges">, "id">>("pizza_edges").select("id").eq("business_id", businessId),
+        this.db.from<Pick<Tables<"pizza_doughs">, "id">>("pizza_doughs").select("id").eq("business_id", businessId),
+        this.db.from<Pick<BusinessDataRow, "business_name">>("business_data").select("business_name").eq("id", businessId).single(),
       ]);
 
       if (configRes.error) {
@@ -725,7 +839,7 @@ class AdminGastronomyServiceClass {
 
       return {
         businessId,
-        businessName: businessRes.data?.name || "",
+        businessName: businessRes.data?.business_name || "",
         config: {
           defaultPriceRule: config.default_price_rule,
           allowHalfHalf: config.allow_half_half,

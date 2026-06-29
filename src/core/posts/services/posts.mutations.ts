@@ -1,21 +1,107 @@
 /**
- * ✏️ POSTS MUTATIONS - SSOT v2.0
- *
- * Operações de escrita para posts.
- * Todas as mutations são pure functions que recebem dados e retornam resultado.
- *
- * @version 2.0.0 - Refatoração SSOT
+ * Post write operations.
  */
 
-import { supabase } from "@/integrations/supabase";
 import { NotificationService } from "@/core/notifications/services/NotificationService";
-import { logger } from "@/shared/utils/logger";
+import { supabase } from "@/integrations/supabase";
+import type { Database, Json } from "@/integrations/supabase";
+import { EntityStatus, LocationType } from "@/shared/types/enums";
 import { trackError } from "@/shared/utils/errorTracking";
-import { LocationType, EntityStatus } from "@/shared/types/enums";
-import type { Post, CreatePostData, UpdatePostData } from "../types";
+import { logger } from "@/shared/utils/logger";
+import type { CreatePostData, Post, UpdatePostData } from "../types";
 import { PostError } from "../types";
 import * as queries from "./posts.queries";
-import type { Json } from "@/integrations/supabase";
+
+type DbPostRow = Database["public"]["Tables"]["posts"]["Row"];
+type DbPostInsert = Database["public"]["Tables"]["posts"]["Insert"];
+type DbPostUpdate = Database["public"]["Tables"]["posts"]["Update"];
+
+interface QueryResult<T> {
+  data: T | null;
+  error: { message: string; code?: string } | null;
+}
+
+interface QueryBuilder<TRow> extends PromiseLike<QueryResult<TRow[]>> {
+  select: (columns: string) => QueryBuilder<TRow>;
+  insert: (values: unknown | unknown[]) => QueryBuilder<TRow>;
+  update: (values: unknown) => QueryBuilder<TRow>;
+  delete: () => QueryBuilder<TRow>;
+  eq: (column: string, value: unknown) => QueryBuilder<TRow>;
+  single: () => Promise<QueryResult<TRow>>;
+  maybeSingle: () => Promise<QueryResult<TRow>>;
+}
+
+interface PostsMutationDbClient {
+  from: <TRow = never>(table: string) => QueryBuilder<TRow>;
+  rpc: <TResult = unknown>(
+    fn: string,
+    params?: Record<string, unknown>,
+  ) => Promise<QueryResult<TResult>>;
+}
+
+type CreatePostPayload = { author_profile_id: string } & CreatePostData;
+
+type PostUpdatePayload = Partial<
+  Pick<DbPostUpdate, "content" | "image_url" | "video_url" | "is_verified" | "updated_at">
+> & {
+  hidden?: boolean;
+};
+
+type PostModerationState = {
+  is_hidden?: boolean;
+  is_removed?: boolean;
+  is_published?: boolean;
+  removed_reason?: string | null;
+  removed_by?: string | null;
+  removed_at?: string | null;
+};
+
+interface LocationValidationRow {
+  id: string;
+  type: string;
+  status: string;
+}
+
+interface PostMutationSelectRow extends DbPostRow {
+  author_profile?: {
+    id: string;
+    name: string | null;
+    avatar_url: string | null;
+    verified?: boolean | null;
+  } | null;
+  location?: {
+    id: string;
+    name: string;
+    type: string;
+    parent_id: string | null;
+  } | null;
+  hidden?: boolean | null;
+  is_hidden?: boolean | null;
+  is_removed?: boolean | null;
+  removed_reason?: string | null;
+  removed_at?: string | null;
+  removed_by?: string | null;
+  shares_count?: number | null;
+}
+
+interface PostAuthorRow {
+  author_profile_id: string;
+}
+
+interface PostSharesRow {
+  shares_count: number | null;
+}
+
+interface FollowedPostRow {
+  id: string;
+}
+
+interface AlertConfirmationRow {
+  confirmations_count: number | null;
+  is_verified: boolean | null;
+}
+
+const postsMutationDb = supabase as unknown as PostsMutationDbClient;
 
 export type CreatePostTerritoryPolicy = {
   allowedLocationTypes?: readonly LocationType[];
@@ -29,35 +115,60 @@ const DEFAULT_CREATE_POST_TERRITORY_POLICY: Required<CreatePostTerritoryPolicy> 
   invalidLocationTypeCode: "INVALID_LOCATION_TYPE",
 };
 
-// ============================================================================
-// 📝 POST MUTATIONS - CRUD de posts
-// ============================================================================
+function buildCreatePostInsert(data: CreatePostPayload): DbPostInsert {
+  return {
+    author_profile_id: data.author_profile_id,
+    content: data.content,
+    type: data.type,
+    location_id: data.location_id,
+    reach: data.reach ?? "neighborhood",
+    image_url: data.image_url ?? null,
+    video_url: data.video_url ?? null,
+    images: ((data.images ?? []) as unknown) as Json,
+    tags: ((data.tags ?? []) as unknown) as Json,
+    content_intent: data.content_intent ?? null,
+    display_format: data.display_format ?? null,
+    distribution_channels: data.distribution_channels ?? [],
+    content_payload: ((data.content_payload ?? null) as unknown) as Json,
+    is_published: true,
+  };
+}
 
-/**
- * Cria um novo post com validação territorial SSOT
- */
-export async function createPost(data: {
-  author_profile_id: string;
-  content: string;
-  type: string;
-  location_id: string;
-  reach?: "street" | "neighborhood" | "city";
-  images?: string[];
-  tags?: string[];
-  content_intent?: string;
-  display_format?: string;
-  distribution_channels?: string[];
-  content_payload?: Record<string, unknown>;
-}, policy: CreatePostTerritoryPolicy = DEFAULT_CREATE_POST_TERRITORY_POLICY): Promise<Post> {
+function buildUpdatePostPayload(
+  validatedContent: string | undefined,
+  data: UpdatePostData,
+): PostUpdatePayload {
+  const updateData: PostUpdatePayload = {
+    updated_at: new Date().toISOString(),
+  };
+
+  if (validatedContent !== undefined) updateData.content = validatedContent;
+  if (data.image_url !== undefined) updateData.image_url = data.image_url;
+  if (data.video_url !== undefined) updateData.video_url = data.video_url;
+  if (data.is_verified !== undefined) updateData.is_verified = data.is_verified;
+  if (data.hidden !== undefined) updateData.hidden = data.hidden;
+
+  return updateData;
+}
+
+function isAllowedLocationType(
+  locationType: string,
+  policy: Required<CreatePostTerritoryPolicy>,
+): boolean {
+  return policy.allowedLocationTypes.includes(locationType as LocationType);
+}
+
+export async function createPost(
+  data: CreatePostPayload,
+  policy: CreatePostTerritoryPolicy = DEFAULT_CREATE_POST_TERRITORY_POLICY,
+): Promise<Post> {
   try {
-    // 1. Validar location_id obrigatório
     if (!data.location_id) {
-      throw new PostError("location_id é obrigatório", CREATE_POST_LOCATION_REQUIRED_CODE);
+      throw new PostError("location_id e obrigatorio", CREATE_POST_LOCATION_REQUIRED_CODE);
     }
 
-    // 2. Validar que location existe
-    const { data: location, error: locationError } = await supabase
-      .from("locations")
+    const { data: location, error: locationError } = await postsMutationDb
+      .from<LocationValidationRow>("locations")
       .select("id, type, status")
       .eq("id", data.location_id)
       .single();
@@ -67,48 +178,39 @@ export async function createPost(data: {
         location_id: data.location_id,
         error: locationError?.message,
       });
-      throw new PostError("Localização inválida", "INVALID_LOCATION");
+      throw new PostError("Localizacao invalida", "INVALID_LOCATION");
     }
 
-    // 3. Validar tipo (cidade, bairro municipal ou distrito IBGE)
-    const allowedLocationTypes = policy.allowedLocationTypes ?? DEFAULT_CREATE_POST_TERRITORY_POLICY.allowedLocationTypes;
-    if (!allowedLocationTypes.includes(location.type as LocationType)) {
+    const resolvedPolicy = {
+      allowedLocationTypes:
+        policy.allowedLocationTypes ?? DEFAULT_CREATE_POST_TERRITORY_POLICY.allowedLocationTypes,
+      invalidLocationTypeCode:
+        policy.invalidLocationTypeCode ??
+        DEFAULT_CREATE_POST_TERRITORY_POLICY.invalidLocationTypeCode,
+    };
+
+    if (!isAllowedLocationType(location.type, resolvedPolicy)) {
       logger.error("[posts.mutations] Invalid location type:", {
         location_id: data.location_id,
         type: location.type,
       });
       throw new PostError(
-        "Posts só podem ser criados em cidades ou bairros",
-        policy.invalidLocationTypeCode ?? DEFAULT_CREATE_POST_TERRITORY_POLICY.invalidLocationTypeCode,
+        "Posts so podem ser criados em cidades ou bairros",
+        resolvedPolicy.invalidLocationTypeCode,
       );
     }
 
-    // 4. Validar status (apenas active)
     if (location.status !== EntityStatus.ACTIVE) {
       logger.error("[posts.mutations] Inactive location:", {
         location_id: data.location_id,
         status: location.status,
       });
-      throw new PostError("Localização inativa", "INACTIVE_LOCATION");
+      throw new PostError("Localizacao inativa", "INACTIVE_LOCATION");
     }
 
-    // 5. Criar post
-    const { data: post, error } = await supabase
-      .from("posts")
-      .insert({
-        author_profile_id: data.author_profile_id,
-        content: data.content,
-        type: data.type,
-        location_id: data.location_id,
-        reach: data.reach || "neighborhood",
-        images: data.images || [],
-        tags: data.tags || [],
-        content_intent: data.content_intent ?? null,
-        display_format: data.display_format ?? null,
-        distribution_channels: data.distribution_channels || [],
-        content_payload: (data.content_payload ?? null) as Json,
-        is_published: true,
-      })
+    const { data: post, error } = await postsMutationDb
+      .from<PostMutationSelectRow>("posts")
+      .insert(buildCreatePostInsert(data))
       .select(
         `
           id,
@@ -172,55 +274,38 @@ export async function createPost(data: {
   }
 }
 
-/**
- * Atualiza um post existente
- */
-export async function updatePost(
-  postId: string,
-  data: UpdatePostData,
-): Promise<Post> {
+export async function updatePost(postId: string, data: UpdatePostData): Promise<Post> {
   try {
-    const { updatePostSchema: UpdatePostSchema } =
+    const { updatePostSchema: updatePostSchema } =
       await import("@/core/posts/schemas/postSchemas");
-    const validatedData = UpdatePostSchema.parse({
+    const validatedData = updatePostSchema.parse({
       content: data.content,
     });
 
-    const updateData: any = {
-      updated_at: new Date().toISOString(),
-    };
-
-    // Adiciona campos apenas se fornecidos
-    if (validatedData.content !== undefined) updateData.content = validatedData.content;
-    if (data.image_url !== undefined) updateData.image_url = data.image_url;
-    if (data.video_url !== undefined) updateData.video_url = data.video_url;
-    if (data.is_verified !== undefined) updateData.is_verified = data.is_verified;
-    if (data.hidden !== undefined) updateData.hidden = data.hidden;
-
-    const { data: post, error } = await (supabase as any)
-      .from("posts")
-      .update(updateData)
+    const { data: post, error } = await postsMutationDb
+      .from<PostMutationSelectRow>("posts")
+      .update(buildUpdatePostPayload(validatedData.content, data))
       .eq("id", postId)
       .select(
         `
-        *,
-        author_profile:profiles!author_profile_id(id, name, avatar_url),
-        location:locations(id, name, type, parent_id)
-      `,
+          *,
+          author_profile:profiles!author_profile_id(id, name, avatar_url),
+          location:locations(id, name, type, parent_id)
+        `,
       )
       .single();
 
     if (error) {
-      throw new PostError(error.message, error.code);
+      throw new PostError(error.message, error.code || "UPDATE_FAILED");
     }
 
-    return post as Post;
+    return post as unknown as Post;
   } catch (error) {
     if (error instanceof PostError) throw error;
 
     const { handleValidationError } = await import("@/shared/validation");
     const validationMessage = handleValidationError(error);
-    if (validationMessage !== "Erro de validação desconhecido") {
+    if (validationMessage !== "Erro de validacao desconhecido") {
       throw new PostError(validationMessage, "VALIDATION_ERROR", 400);
     }
 
@@ -234,18 +319,15 @@ export async function updatePost(
   }
 }
 
-/**
- * Deleta um post (soft delete)
- */
 export async function deletePost(postId: string): Promise<void> {
   try {
-    const { error } = await (supabase as any)
-      .from("posts")
+    const { error } = await postsMutationDb
+      .from<PostMutationSelectRow>("posts")
       .update({ is_published: false })
       .eq("id", postId);
 
     if (error) {
-      throw new PostError(error.message, error.code);
+      throw new PostError(error.message, error.code || "DELETE_FAILED");
     }
   } catch (error) {
     if (error instanceof PostError) throw error;
@@ -260,41 +342,30 @@ export async function deletePost(postId: string): Promise<void> {
   }
 }
 
-/**
- * Deleta um post com verificação de ownership
- */
-export async function deletePostByAuthor(
-  postId: string,
-  authorProfileId: string,
-): Promise<void> {
+export async function deletePostByAuthor(postId: string, authorProfileId: string): Promise<void> {
   try {
-    // Verificar ownership
-    const { data: post, error: fetchError } = await (supabase as any)
-      .from("posts")
+    const { data: post, error: fetchError } = await postsMutationDb
+      .from<PostAuthorRow>("posts")
       .select("author_profile_id")
       .eq("id", postId)
       .single();
 
-    if (fetchError) {
-      throw new PostError("Post não encontrado", "NOT_FOUND");
+    if (fetchError || !post) {
+      throw new PostError("Post nao encontrado", "NOT_FOUND");
     }
 
     if (post.author_profile_id !== authorProfileId) {
-      throw new PostError(
-        "Você não tem permissão para deletar este post",
-        "FORBIDDEN",
-      );
+      throw new PostError("Voce nao tem permissao para deletar este post", "FORBIDDEN");
     }
 
-    // Soft delete
-    const { error } = await (supabase as any)
-      .from("posts")
+    const { error } = await postsMutationDb
+      .from<PostMutationSelectRow>("posts")
       .update({ is_published: false })
       .eq("id", postId)
       .eq("author_profile_id", authorProfileId);
 
     if (error) {
-      throw new PostError(error.message, error.code);
+      throw new PostError(error.message, error.code || "DELETE_FAILED");
     }
   } catch (error) {
     if (error instanceof PostError) throw error;
@@ -309,34 +380,25 @@ export async function deletePostByAuthor(
   }
 }
 
-// ============================================================================
-// 📢 ENGAGEMENT MUTATIONS - Interações sociais
-// ============================================================================
-
-/**
- * Incrementa contador de compartilhamentos
- */
 export async function incrementSharesCount(postId: string): Promise<void> {
   try {
-    // Buscar contagem atual
-    const { data: post, error: fetchError } = await (supabase as any)
-      .from("posts")
+    const { data: post, error: fetchError } = await postsMutationDb
+      .from<PostSharesRow>("posts")
       .select("shares_count")
       .eq("id", postId)
       .single();
 
-    if (fetchError) {
-      throw new PostError("Post não encontrado", "NOT_FOUND");
+    if (fetchError || !post) {
+      throw new PostError("Post nao encontrado", "NOT_FOUND");
     }
 
-    // Incrementar
-    const { error } = await (supabase as any)
-      .from("posts")
-      .update({ shares_count: (post.shares_count || 0) + 1 })
+    const { error } = await postsMutationDb
+      .from<PostMutationSelectRow>("posts")
+      .update({ shares_count: (post.shares_count ?? 0) + 1 })
       .eq("id", postId);
 
     if (error) {
-      throw new PostError(error.message, error.code);
+      throw new PostError(error.message, error.code || "UPDATE_FAILED");
     }
   } catch (error) {
     if (error instanceof PostError) throw error;
@@ -351,29 +413,18 @@ export async function incrementSharesCount(postId: string): Promise<void> {
   }
 }
 
-/**
- * Incrementa reputação do usuário via RPC
- */
-export async function incrementUserReputation(
-  userId: string,
-  points: number,
-): Promise<void> {
+export async function incrementUserReputation(userId: string, points: number): Promise<void> {
   try {
-    const { error } = await (supabase as any).rpc(
-      "increment_user_reputation",
-      {
-        user_id: userId,
-        points,
-      },
-    );
+    const { error } = await postsMutationDb.rpc("increment_user_reputation", {
+      user_id: userId,
+      points,
+    });
 
     if (error) {
       logger.error("[posts.mutations] Error incrementing reputation:", error);
-      // Não lançar erro - reputação é não-crítico
     }
   } catch (error) {
     logger.error("[posts.mutations] Error in incrementUserReputation:", error);
-    // Silenciar erro - reputação é não-crítico
   }
 }
 
@@ -382,29 +433,38 @@ export async function toggleFollowPost(
   userId: string,
 ): Promise<{ action: "follow" | "unfollow" }> {
   try {
-    const { data: existing } = await (supabase as any)
-      .from("followed_posts")
+    const { data: existing } = await postsMutationDb
+      .from<FollowedPostRow>("followed_posts")
       .select("id")
       .eq("post_id", postId)
       .eq("user_id", userId)
       .maybeSingle();
 
     if (existing) {
-      const { error } = await (supabase as any)
-        .from("followed_posts")
+      const { error } = await postsMutationDb
+        .from<FollowedPostRow>("followed_posts")
         .delete()
         .eq("id", existing.id);
-      if (error) throw new PostError(error.message, error.code || "UNFOLLOW_FAILED");
+
+      if (error) {
+        throw new PostError(error.message, error.code || "UNFOLLOW_FAILED");
+      }
+
       return { action: "unfollow" };
     }
 
-    const { error } = await (supabase as any)
-      .from("followed_posts")
+    const { error } = await postsMutationDb
+      .from<FollowedPostRow>("followed_posts")
       .insert({ post_id: postId, user_id: userId });
-    if (error) throw new PostError(error.message, error.code || "FOLLOW_FAILED");
+
+    if (error) {
+      throw new PostError(error.message, error.code || "FOLLOW_FAILED");
+    }
+
     return { action: "follow" };
   } catch (error) {
     if (error instanceof PostError) throw error;
+
     trackError(error as Error, {
       component: "posts.mutations",
       action: "toggleFollowPost",
@@ -414,13 +474,12 @@ export async function toggleFollowPost(
   }
 }
 
-export async function createLikeNotification(
-  postId: string,
-  likerId: string,
-): Promise<void> {
+export async function createLikeNotification(postId: string, likerId: string): Promise<void> {
   try {
     const postInfo = await queries.getPostBasicInfo(postId);
-    if (!postInfo || postInfo.author_profile_id === likerId) return;
+    if (!postInfo || postInfo.author_profile_id === likerId) {
+      return;
+    }
 
     await NotificationService.createNotification({
       user_id: postInfo.author_profile_id,
@@ -445,8 +504,8 @@ export async function removePost(
   moderatorProfileId: string,
 ): Promise<void> {
   try {
-    const { error } = await (supabase as any)
-      .from("posts")
+    const { error } = await postsMutationDb
+      .from<PostMutationSelectRow>("posts")
       .update({
         is_published: false,
         is_removed: true,
@@ -461,6 +520,7 @@ export async function removePost(
     }
   } catch (error) {
     if (error instanceof PostError) throw error;
+
     trackError(error as Error, {
       component: "posts.mutations",
       action: "removePost",
@@ -472,8 +532,8 @@ export async function removePost(
 
 export async function hidePost(postId: string): Promise<void> {
   try {
-    const { error } = await (supabase as any)
-      .from("posts")
+    const { error } = await postsMutationDb
+      .from<PostMutationSelectRow>("posts")
       .update({
         is_hidden: true,
         is_published: false,
@@ -485,6 +545,7 @@ export async function hidePost(postId: string): Promise<void> {
     }
   } catch (error) {
     if (error instanceof PostError) throw error;
+
     trackError(error as Error, {
       component: "posts.mutations",
       action: "hidePost",
@@ -496,18 +557,11 @@ export async function hidePost(postId: string): Promise<void> {
 
 export async function updatePostModerationState(
   postId: string,
-  state: {
-    is_hidden?: boolean;
-    is_removed?: boolean;
-    is_published?: boolean;
-    removed_reason?: string | null;
-    removed_by?: string | null;
-    removed_at?: string | null;
-  },
+  state: PostModerationState,
 ): Promise<void> {
   try {
-    const { error } = await (supabase as any)
-      .from("posts")
+    const { error } = await postsMutationDb
+      .from<PostMutationSelectRow>("posts")
       .update(state)
       .eq("id", postId);
 
@@ -516,6 +570,7 @@ export async function updatePostModerationState(
     }
   } catch (error) {
     if (error instanceof PostError) throw error;
+
     trackError(error as Error, {
       component: "posts.mutations",
       action: "updatePostModerationState",
@@ -534,24 +589,25 @@ export async function confirmAlert(
   isVerified: boolean;
 }> {
   try {
-    const { data: post, error: updateError } = await (supabase as any)
-      .from("posts")
+    const { data: post, error: fetchError } = await postsMutationDb
+      .from<AlertConfirmationRow>("posts")
       .select("confirmations_count, is_verified")
       .eq("id", postId)
       .single();
 
-    if (updateError) {
-      throw new PostError(updateError.message, updateError.code || "FETCH_FAILED");
+    if (fetchError || !post) {
+      throw new PostError(fetchError?.message ?? "Post not found", fetchError?.code || "FETCH_FAILED");
     }
 
-    const newCount = (post.confirmations_count || 0) + 1;
+    const newCount = (post.confirmations_count ?? 0) + 1;
     const shouldVerify = newCount >= 5;
+    const resolvedIsVerified = shouldVerify || Boolean(post.is_verified);
 
-    const { error: confirmError } = await (supabase as any)
-      .from("posts")
+    const { error: confirmError } = await postsMutationDb
+      .from<PostMutationSelectRow>("posts")
       .update({
         confirmations_count: newCount,
-        is_verified: shouldVerify || post.is_verified,
+        is_verified: resolvedIsVerified,
       })
       .eq("id", postId);
 
@@ -563,9 +619,13 @@ export async function confirmAlert(
       await incrementUserReputation(authorProfileId, 5);
     }
 
-    return { confirmationsCount: newCount, isVerified: shouldVerify || post.is_verified };
+    return {
+      confirmationsCount: newCount,
+      isVerified: resolvedIsVerified,
+    };
   } catch (error) {
     if (error instanceof PostError) throw error;
+
     trackError(error as Error, {
       component: "posts.mutations",
       action: "confirmAlert",

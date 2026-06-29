@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
+
 import { profileService } from "@/core/profiles/services/ProfileService";
-import type { CommunityPost } from "@/core/posts/types/Post";
 import { postService } from "@/core/posts/services";
+import type { CommunityPost } from "@/core/posts/types/Post";
 
 interface CommunityPostRecord {
   id: string;
@@ -11,7 +12,7 @@ interface CommunityPostRecord {
   images?: string[];
   tags?: string[];
   location_id?: string;
-  location?: string;
+  location?: CommunityPost["location"];
   created_at: string;
   likes_count: number;
   comments_count: number;
@@ -32,18 +33,18 @@ export function usePostById(postId: string | null) {
     queryFn: async () => {
       if (!postId) return null;
 
-      // ✅ FASE 2: Usar ProfileService.getActiveProfile() para contexto social (opcional)
       const activeProfile = await profileService.getActiveProfile();
-
       const post = (await postService.getPostById(
         postId,
-      )) as unknown as CommunityPostRecord | null;
+      )) as CommunityPostRecord | null;
+
       if (!post) return null;
 
-      const authorProfile = await profileService.getProfilesSummary([post.author_profile_id]);
-      const profile = authorProfile[0];
+      const authorProfiles = await profileService.getProfilesSummary([
+        post.author_profile_id,
+      ]);
+      const authorProfile = authorProfiles[0];
 
-      // ✅ SSOT — interações via PostService
       const interactions: CommunityPostInteractions = activeProfile
         ? await postService.getPostUserInteractions(
             postId,
@@ -57,33 +58,24 @@ export function usePostById(postId: string | null) {
             pollVoteOptionId: null,
           };
 
-      // Buscar poll se existir
       const pollData = await postService.getPollByPostId(post.id);
-      let enrichedPoll = pollData;
-      if (pollData && interactions.pollVoteOptionId) {
-        enrichedPoll = {
-          ...pollData,
-          user_voted: true,
-          user_vote_option_id: interactions.pollVoteOptionId,
-        } as any;
-      } else if (pollData) {
-        enrichedPoll = {
-          ...pollData,
-          user_voted: false,
-          user_vote_option_id: undefined,
-        } as any;
-      }
+      const enrichedPoll: CommunityPost["poll"] = pollData
+        ? {
+            ...pollData,
+            user_voted: Boolean(interactions.pollVoteOptionId),
+            user_vote_option_id: interactions.pollVoteOptionId ?? undefined,
+          }
+        : undefined;
 
-      // ✅ SSOT — menções via PostService
       const mentionedProfiles = await postService.getPostMentions(post.id);
 
-      return {
+      const communityPost: CommunityPost = {
         id: post.id,
         author_profile_id: post.author_profile_id,
-        author_name: profile?.displayName || "Usuário",
-        author_avatar: profile?.avatarUrl,
+        author_name: authorProfile?.displayName || "Usuario",
+        author_avatar: authorProfile?.avatarUrl,
         author_reputation: 0,
-        is_verified_resident: profile?.verified || false,
+        is_verified_resident: authorProfile?.verified || false,
         type: post.type,
         content: post.content,
         images: post.images || [],
@@ -94,14 +86,16 @@ export function usePostById(postId: string | null) {
         likes_count: post.likes_count,
         comments_count: post.comments_count,
         confirmations_count: post.confirmations_count || 0,
-        is_verified: profile?.verified || false,
+        is_verified: authorProfile?.verified || false,
         is_liked: interactions.isLiked,
         is_saved: interactions.isSaved,
         has_user_confirmed: interactions.hasConfirmed,
         is_edited: post.is_edited || false,
         poll: enrichedPoll,
         mentioned_profiles: mentionedProfiles,
-      } as unknown as CommunityPost;
+      };
+
+      return communityPost;
     },
     enabled: !!postId,
   });

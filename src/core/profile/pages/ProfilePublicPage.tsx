@@ -27,7 +27,8 @@ import { cn } from '@/shared/utils/cn';
 import { getProfileTypeLabel } from '@/core/profile/utils/profileDomainRules';
 import { buildPublicProfileUrl } from '@/core/profiles/utils/publicProfileUrl';
 
-import type { Profile } from '@/core/profiles/types';
+import type { ProfileRow as Profile } from '@/core/profiles/services/types';
+import type { ProfileType as RuntimeProfileType } from '@/core/profiles/services/multi-profile/types';
 
 interface ProfilePublicPageProps {
   profile: Profile;
@@ -73,6 +74,18 @@ function getProfileTypeBadgeColor(profileType?: string | null): string {
   }
 }
 
+function toRuntimeProfileType(profileType?: string | null): RuntimeProfileType {
+  switch (profileType) {
+    case 'business':
+    case 'professional':
+    case 'driver':
+      return profileType;
+    case 'personal':
+    default:
+      return 'personal';
+  }
+}
+
 function buildLocationLabel(profile: ProfileWithPublicLocation): string | null {
   const visibility = profile.public_location_visibility ?? 'city_only';
 
@@ -93,7 +106,7 @@ export function ProfilePublicPage({ profile }: ProfilePublicPageProps) {
 
   const publicProfile = profile as ProfileWithPublicLocation;
   const locationLabel = useMemo(() => buildLocationLabel(publicProfile), [publicProfile]);
-  const profileTypeLabel = getProfileTypeLabel(profile as any);
+  const profileTypeLabel = getProfileTypeLabel(toRuntimeProfileType(profile.profile_type));
   const reputationScore = profile.reputation ?? 0;
   const reputationLevel = Math.max(1, Math.floor(reputationScore / 100) + 1);
   const hasReputation = reputationScore > 0;

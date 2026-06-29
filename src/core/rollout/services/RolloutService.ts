@@ -21,7 +21,7 @@ import type {
   GetModuleConfigOutput,
   EffectiveRollout,
 } from '../types';
-import { RolloutErrorCode, RolloutSource, RolloutStatus } from '../types';
+import { ModuleKey, RolloutErrorCode, RolloutSource, RolloutStatus } from '../types';
 import { ROLLOUT_PAGINATION } from '../types';
 import { RolloutError } from '../errors/RolloutError';
 
@@ -57,7 +57,14 @@ export class RolloutService implements IRolloutService {
     const localRollouts = await this.repository.findByLocation(input.location_id);
 
     // Para cada módulo possível, resolver rollout efetivo
-    const moduleKeys = ['community', 'business', 'services', 'mobility', 'classifieds', 'promotions'] as const;
+    const moduleKeys: ModuleKey[] = [
+      ModuleKey.COMMUNITY,
+      ModuleKey.BUSINESS,
+      ModuleKey.SERVICES,
+      ModuleKey.MOBILITY,
+      ModuleKey.CLASSIFIEDS,
+      ModuleKey.PROMOTIONS,
+    ];
     const modules: EffectiveRollout[] = [];
 
     for (const module_key of moduleKeys) {
@@ -155,7 +162,7 @@ export class RolloutService implements IRolloutService {
    * 3. DEFAULT: false (módulo desativado)
    */
   private async resolveEffectiveRollout(
-    module_key: string,
+    module_key: ModuleKey,
     location_id: string
   ): Promise<EffectiveRollout> {
     // Validar location existe
@@ -168,7 +175,7 @@ export class RolloutService implements IRolloutService {
     // Location inativa bloqueia rollout efetivo
     if (location.status !== 'active') {
       return {
-        module_key: module_key as any,
+        module_key,
         location_id,
         status: RolloutStatus.INACTIVE,
         config: null,
@@ -178,7 +185,7 @@ export class RolloutService implements IRolloutService {
     }
 
     // 1. Buscar rollout LOCAL
-    const localRollout = await this.repository.findByModuleAndLocation(module_key as any, location_id);
+    const localRollout = await this.repository.findByModuleAndLocation(module_key, location_id);
 
     if (localRollout) {
       return {
@@ -198,7 +205,7 @@ export class RolloutService implements IRolloutService {
       // Pular ancestors inativos
       if (ancestor.status !== 'active') continue;
 
-      const ancestorRollout = await this.repository.findByModuleAndLocation(module_key as any, ancestor.id);
+      const ancestorRollout = await this.repository.findByModuleAndLocation(module_key, ancestor.id);
 
       if (ancestorRollout) {
         return {
@@ -214,7 +221,7 @@ export class RolloutService implements IRolloutService {
 
     // 3. DEFAULT: false (módulo desativado)
     return {
-      module_key: module_key as any,
+      module_key,
       location_id,
       status: RolloutStatus.INACTIVE,
       config: null,

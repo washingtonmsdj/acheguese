@@ -10,14 +10,41 @@ import type { DriverData, ServiceResponse } from './types';
 const errorMessage = (error: unknown, fallback: string): string =>
   error instanceof Error ? error.message : fallback;
 
+interface QueryError {
+  message?: string | null;
+}
+
+interface QueryArrayResult<TRow> {
+  data: TRow[] | null;
+  error: QueryError | null;
+}
+
+interface QuerySingleResult<TRow> {
+  data: TRow | null;
+  error: QueryError | null;
+}
+
+interface QueryBuilder<TRow> extends PromiseLike<QueryArrayResult<TRow>> {
+  select: (columns?: string) => QueryBuilder<TRow>;
+  update: (values: unknown) => QueryBuilder<TRow>;
+  eq: (column: string, value: unknown) => QueryBuilder<TRow>;
+  single: () => Promise<QuerySingleResult<TRow>>;
+}
+
+interface DriverDbClient {
+  from: <TRow = never>(table: string) => QueryBuilder<TRow>;
+}
+
+const driverDb = supabase as unknown as DriverDbClient;
+
 export class DriverService {
   /**
    * Buscar driver data (via RLS)
    */
   static async getDriverData(profileId: string): Promise<DriverData | null> {
     try {
-      const { data, error } = await supabase
-        .from('driver_data')
+      const { data, error } = await driverDb
+        .from<DriverData>('driver_data')
         .select('*')
         .eq('profile_id', profileId)
         .single();
@@ -39,9 +66,9 @@ export class DriverService {
     updates: Partial<Omit<DriverData, 'profile_id' | 'created_at' | 'updated_at'>>
   ): Promise<ServiceResponse<DriverData>> {
     try {
-      const { data, error } = await supabase
-        .from('driver_data')
-        .update(updates as any)
+      const { data, error } = await driverDb
+        .from<DriverData>('driver_data')
+        .update(updates)
         .eq('profile_id', profileId)
         .select()
         .single();

@@ -90,6 +90,16 @@ export class SessionService {
     SessionService.resetInitPromise();
   }
 
+  static onAuthStateChange(
+    listener: (event: AuthChangeEvent, session: Session | null) => void,
+  ): () => void {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(listener);
+
+    return () => subscription.unsubscribe();
+  }
+
   // ── initialize ─────────────────────────────────────────────────────────────
   /**
    * Registra onAuthStateChange — única fonte de verdade para estado de auth.

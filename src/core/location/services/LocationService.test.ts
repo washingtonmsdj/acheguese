@@ -70,8 +70,8 @@ describe('LocationService', () => {
 
     it('deve lançar erro quando ID é inválido', async () => {
       await expect(service.getLocationById({ id: '' })).rejects.toThrow(LocationError);
-      await expect(service.getLocationById({ id: null as any })).rejects.toThrow(LocationError);
-      await expect(service.getLocationById({ id: 123 as any })).rejects.toThrow(LocationError);
+      await expect(service.getLocationById({ id: null as unknown as string })).rejects.toThrow(LocationError);
+      await expect(service.getLocationById({ id: 123 as unknown as string })).rejects.toThrow(LocationError);
     });
 
     it('deve lançar erro quando location não é encontrada', async () => {

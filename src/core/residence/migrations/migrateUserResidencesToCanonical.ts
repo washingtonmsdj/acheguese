@@ -35,6 +35,13 @@ interface ImportedResidence {
   location_id: string | null;
 }
 
+type LocationNameRow = {
+  id: string;
+  name: string;
+  slug: string;
+  parent_id?: string | null;
+};
+
 export interface MigrationResult {
   total: number;
   migrated: number;
@@ -202,7 +209,7 @@ async function resolveCityByName(cityName: string, stateName: string): Promise<s
   if (error || !cities) return null;
 
   // Filtrar por nome normalizado
-  const matches = cities.filter((city: any) =>
+  const matches = cities.filter((city: LocationNameRow) =>
     normalizeText(city.name) === normalized
   );
 
@@ -248,7 +255,7 @@ async function resolveDistrictByName(districtName: string, cityId: string): Prom
   if (error || !districts) return null;
 
   // Filtrar por nome normalizado
-  const matches = districts.filter((district: any) =>
+  const matches = districts.filter((district: LocationNameRow) =>
     normalizeText(district.name) === normalized ||
     normalizeText(district.slug) === normalized
   );

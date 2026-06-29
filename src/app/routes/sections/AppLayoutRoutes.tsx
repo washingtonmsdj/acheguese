@@ -198,6 +198,7 @@ export function AppLayoutRoutes() {
         <Route path="/conta/preferencias" element={<P.ContaPreferenciasPage />} />
         <Route path="/conta/notificacoes" element={<P.NotificationPreferencesPage />} />
         <Route path="/conta/privacidade" element={<P.PrivacySettingsPage />} />
+        <Route path="/conta/perfil/configuracoes" element={<P.ProfileSettingsPage />} />
         <Route path="/conta/seguranca" element={<P.ContaSegurancaPage />} />
         <Route path="/conta/enderecos" element={<P.ContaEnderecosPage />} />
         <Route path="/conta/profissional" element={<Navigate to="/central" replace />} />

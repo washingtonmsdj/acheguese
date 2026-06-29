@@ -2,6 +2,33 @@ import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import type { TerritoryFilter } from "@/core/location";
 
+type QueryResult<T> = Promise<{ data: T; error: { code?: string; message?: string } | null }>;
+
+interface QueryBuilder<TRow> {
+  select(columns?: string): QueryBuilder<TRow>;
+  insert(values: unknown): QueryBuilder<TRow>;
+  update(values: unknown): QueryBuilder<TRow>;
+  delete(): QueryBuilder<TRow>;
+  eq(column: string, value: unknown): QueryBuilder<TRow>;
+  in(column: string, values: readonly unknown[]): QueryBuilder<TRow>;
+  order(column: string, options?: { ascending?: boolean }): QueryBuilder<TRow>;
+  range(from: number, to: number): QueryBuilder<TRow>;
+  maybeSingle(): QueryResult<TRow | null>;
+  single(): QueryResult<TRow>;
+  then<TResult1 = { data: TRow[]; error: { code?: string; message?: string } | null }, TResult2 = never>(
+    onfulfilled?:
+      | ((value: { data: TRow[]; error: { code?: string; message?: string } | null }) => TResult1 | PromiseLike<TResult1>)
+      | null,
+    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
+  ): Promise<TResult1 | TResult2>;
+}
+
+interface LostFoundDbClient {
+  from<TRow>(table: string): QueryBuilder<TRow>;
+}
+
+const lostFoundDb = supabase as unknown as LostFoundDbClient;
+
 export interface LostFoundPost {
   id: string;
   autor_id: string;
@@ -39,15 +66,14 @@ class LostFoundServiceClass {
     } = {},
   ): Promise<LostFoundPost[]> {
     try {
-      let query = supabase as any;
-      query = query
-        .from("lost_found_posts")
+      let query = lostFoundDb
+        .from<LostFoundPost>("lost_found_posts")
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (filters.tipo) query = (query as any).eq("tipo", filters.tipo);
-      if (filters.categoria) query = (query as any).eq("categoria", filters.categoria);
-      if (filters.resolvido !== undefined) query = (query as any).eq("resolvido", filters.resolvido);
+      if (filters.tipo) query = query.eq("tipo", filters.tipo);
+      if (filters.categoria) query = query.eq("categoria", filters.categoria);
+      if (filters.resolvido !== undefined) query = query.eq("resolvido", filters.resolvido);
       if (filters.territoryFilter?.scope === "location") {
         query = query.eq("location_id", filters.territoryFilter.location_id);
       } else if (filters.territoryFilter?.scope === "group" && filters.territoryFilter.location_ids.length > 0) {
@@ -65,8 +91,8 @@ class LostFoundServiceClass {
 
   async getPostById(id: string): Promise<LostFoundPost | null> {
     try {
-      const { data, error } = await supabase
-        .from("lost_found_posts")
+      const { data, error } = await lostFoundDb
+        .from<LostFoundPost>("lost_found_posts")
         .select("*")
         .eq("id", id)
         .maybeSingle();
@@ -81,8 +107,8 @@ class LostFoundServiceClass {
 
   async createPost(postData: Omit<LostFoundPost, "id" | "created_at" | "updated_at">): Promise<LostFoundPost | null> {
     try {
-      const { data, error } = await supabase
-        .from("lost_found_posts")
+      const { data, error } = await lostFoundDb
+        .from<LostFoundPost>("lost_found_posts")
         .insert([postData])
         .select()
         .single();
@@ -97,8 +123,8 @@ class LostFoundServiceClass {
 
   async updatePost(id: string, updates: Partial<LostFoundPost>): Promise<boolean> {
     try {
-      const { error } = await supabase
-        .from("lost_found_posts")
+      const { error } = await lostFoundDb
+        .from<LostFoundPost>("lost_found_posts")
         .update({ ...updates, updated_at: new Date().toISOString() })
         .eq("id", id);
 
@@ -123,8 +149,8 @@ class LostFoundServiceClass {
 
   async getComments(postId: string): Promise<LostFoundComment[]> {
     try {
-      const { data, error } = await supabase
-        .from("lost_found_comments")
+      const { data, error } = await lostFoundDb
+        .from<LostFoundComment>("lost_found_comments")
         .select("*")
         .eq("post_id", postId)
         .order("created_at", { ascending: true });
@@ -139,8 +165,8 @@ class LostFoundServiceClass {
 
   async createComment(commentData: Omit<LostFoundComment, "id" | "created_at">): Promise<LostFoundComment | null> {
     try {
-      const { data, error } = await supabase
-        .from("lost_found_comments")
+      const { data, error } = await lostFoundDb
+        .from<LostFoundComment>("lost_found_comments")
         .insert([commentData])
         .select()
         .single();
@@ -159,14 +185,14 @@ class LostFoundServiceClass {
     to: number,
   ): Promise<LostFoundPost[]> {
     try {
-      let query = supabase
-        .from("lost_found_posts")
+      let query = lostFoundDb
+        .from<LostFoundPost>("lost_found_posts")
         .select("*")
         .order("created_at", { ascending: false })
         .range(from, to);
 
-      if (filters.tipo && filters.tipo !== "todos") query = (query as any).eq("tipo", filters.tipo as LostFoundPost["tipo"]);
-      if (filters.categoria && filters.categoria !== "todos") query = (query as any).eq("categoria", filters.categoria);
+      if (filters.tipo && filters.tipo !== "todos") query = query.eq("tipo", filters.tipo);
+      if (filters.categoria && filters.categoria !== "todos") query = query.eq("categoria", filters.categoria);
       if (filters.territoryFilter?.scope === "location") {
         query = query.eq("location_id", filters.territoryFilter.location_id);
       } else if (filters.territoryFilter?.scope === "group" && filters.territoryFilter.location_ids.length > 0) {

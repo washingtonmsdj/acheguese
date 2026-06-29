@@ -13,7 +13,12 @@ import { supabase } from "@/integrations/supabase";
 import { trackError } from "@/shared/utils/errorTracking";
 import { logger } from "@/shared/utils/logger";
 import { SocialInteractionsService } from "./SocialInteractionsService";
-import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
+
+type QueryResult<T> = Promise<{ data: T; error: { code?: string; message?: string } | null }>;
+
+interface GroupDbClient {
+  rpc<TResult>(fn: string, args?: Record<string, unknown>): QueryResult<TResult>;
+}
 
 export interface Group {
   id: string;
@@ -53,7 +58,7 @@ export interface GroupMemberDetail {
 type GroupRow = Group & { members_count?: Array<{ count?: number } | null> | number };
 
 export class GroupService {
-  private static readonly db = supabase as any;
+  private static readonly db = supabase as unknown as GroupDbClient;
   /**
    * Busca todos os grupos ordenados por membros
    */

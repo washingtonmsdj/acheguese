@@ -1,4 +1,4 @@
-﻿import { supabase } from "@/integrations/supabase";
+import { supabase } from "@/integrations/supabase";
 import type {
   ProfileLikeActivityRecord,
   ProfilePollVoteActivityRecord,
@@ -6,13 +6,39 @@ import type {
 } from "@/core/profiles/views/ProfileActivityRecords";
 import type { MentionRow } from "./profile.service.types";
 
+interface QueryError {
+  message?: string | null;
+}
+
+interface QueryArrayResult<TRow> {
+  data: TRow[] | null;
+  error: QueryError | null;
+}
+
+interface QueryBuilder<TRow> extends PromiseLike<QueryArrayResult<TRow>> {
+  select: (columns?: string) => QueryBuilder<TRow>;
+  eq: (column: string, value: unknown) => QueryBuilder<TRow>;
+  order: (column: string, options?: { ascending?: boolean }) => QueryBuilder<TRow>;
+  range: (from: number, to: number) => QueryBuilder<TRow>;
+}
+
+interface ProfileActivityDbClient {
+  from: <TRow = never>(table: string) => QueryBuilder<TRow>;
+}
+
+const profileActivityDb = supabase as unknown as ProfileActivityDbClient;
+
+type PollVoteActivityRow = ProfilePollVoteActivityRecord;
+type LikeActivityRow = ProfileLikeActivityRecord;
+type SaveActivityRow = ProfileSaveActivityRecord;
+
 export async function getUserMentionsQuery(
   userId: string,
   from: number,
   to: number,
 ): Promise<ProfileLikeActivityRecord[]> {
-  const { data, error } = await (supabase as any)
-    .from("community_post_mentions")
+  const { data, error } = await profileActivityDb
+    .from<MentionRow>("community_post_mentions")
     .select(
       `
       id, rank, created_at,
@@ -27,7 +53,7 @@ export async function getUserMentionsQuery(
     .range(from, to);
 
   if (error) return [];
-  return ((data as MentionRow[] | null) || []).map((mention) => ({
+  return (data ?? []).map((mention) => ({
     id: mention.id,
     rank: mention.rank,
     created_at: mention.created_at,
@@ -48,8 +74,8 @@ export async function getUserLikeActivityQuery(
   from: number,
   to: number,
 ): Promise<ProfileLikeActivityRecord[]> {
-  const { data, error } = await supabase
-    .from("post_likes_new")
+  const { data, error } = await profileActivityDb
+    .from<LikeActivityRow>("post_likes_new")
     .select(
       `id, created_at,
       post:posts!post_likes_new_post_id_fkey(
@@ -62,7 +88,7 @@ export async function getUserLikeActivityQuery(
     .range(from, to);
 
   if (error) return [];
-  return ((data ?? []) as unknown) as ProfileLikeActivityRecord[];
+  return data ?? [];
 }
 
 export async function getUserSaveActivityQuery(
@@ -70,8 +96,8 @@ export async function getUserSaveActivityQuery(
   from: number,
   to: number,
 ): Promise<ProfileSaveActivityRecord[]> {
-  const { data, error } = await supabase
-    .from("saved_posts_new")
+  const { data, error } = await profileActivityDb
+    .from<SaveActivityRow>("saved_posts_new")
     .select(
       `id, created_at,
       post:posts!saved_posts_new_post_id_fkey(
@@ -84,7 +110,7 @@ export async function getUserSaveActivityQuery(
     .range(from, to);
 
   if (error) return [];
-  return data || [];
+  return data ?? [];
 }
 
 export async function getUserPollVoteActivityQuery(
@@ -92,8 +118,8 @@ export async function getUserPollVoteActivityQuery(
   from: number,
   to: number,
 ): Promise<ProfilePollVoteActivityRecord[]> {
-  const { data, error } = await (supabase as any)
-    .from("community_poll_votes")
+  const { data, error } = await profileActivityDb
+    .from<PollVoteActivityRow>("community_poll_votes")
     .select(
       `
       id, option_id, created_at,
@@ -105,5 +131,5 @@ export async function getUserPollVoteActivityQuery(
     .range(from, to);
 
   if (error) return [];
-  return ((data ?? []) as unknown) as ProfilePollVoteActivityRecord[];
+  return data ?? [];
 }

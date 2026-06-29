@@ -11,12 +11,12 @@ import {
 } from "@/core/community/services/CommunityEventsRuntimeService";
 import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
 import type { TerritoryFilter } from "@/core/location/types";
-type RouteResolved = any;
+import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 
 export type Evento = CommunityEvent;
 
 interface UseEventosOptions {
-  routeResolved?: RouteResolved;
+  routeResolved?: ResolvedTerritory | null;
   enabled?: boolean;
   filters?: {
     category?: string;
@@ -28,16 +28,22 @@ interface UseEventosOptions {
 }
 
 const EVENTS_PAGE_SIZE = 12;
+
+function getRouteCacheKey(routeResolved?: ResolvedTerritory | null): string {
+  if (!routeResolved) return "none";
+
+  if (routeResolved.kind === "group") {
+    return `group:${routeResolved.group.slug}`;
+  }
+
+  return `location:${routeResolved.location.slug}`;
+}
+
 export function useEventos(options: UseEventosOptions = {}) {
   const { filters, routeResolved } = options;
   const moduleTerritory = useModuleTerritoryFilter({ routeResolved });
   const territoryFilter = options.territoryFilter ?? moduleTerritory.territoryFilter;
-  const routeCacheKey =
-    (routeResolved as { kind?: string })?.kind === "group"
-      ? `group:${(routeResolved as { group?: { slug?: string } }).group?.slug ?? ""}`
-      : (routeResolved as { kind?: string })?.kind === "location"
-        ? `location:${(routeResolved as { location?: { slug?: string } }).location?.slug ?? ""}`
-        : "none";
+  const routeCacheKey = getRouteCacheKey(routeResolved);
 
   const query = useInfiniteQuery({
     queryKey: ["eventos", filters, territoryFilter, routeCacheKey],

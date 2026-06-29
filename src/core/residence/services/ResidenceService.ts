@@ -18,6 +18,32 @@ import { trackError } from "@/shared/utils/errorTracking";
 import type { Address } from '@/core/address/types';
 import type { Location } from '@/core/location/types';
 
+type QueryResult<T> = Promise<{ data: T; error: { code?: string; message?: string } | null }>;
+
+interface QueryBuilder<TRow> {
+  select(columns?: string): QueryBuilder<TRow>;
+  insert(values: unknown): QueryBuilder<TRow>;
+  update(values: unknown): QueryBuilder<TRow>;
+  delete(): QueryBuilder<TRow>;
+  eq(column: string, value: unknown): QueryBuilder<TRow>;
+  in(column: string, values: readonly unknown[]): QueryBuilder<TRow>;
+  order(column: string, options?: { ascending?: boolean }): QueryBuilder<TRow>;
+  maybeSingle(): QueryResult<TRow | null>;
+  single(): QueryResult<TRow>;
+  then<TResult1 = { data: TRow[]; error: { code?: string; message?: string } | null }, TResult2 = never>(
+    onfulfilled?:
+      | ((value: { data: TRow[]; error: { code?: string; message?: string } | null }) => TResult1 | PromiseLike<TResult1>)
+      | null,
+    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
+  ): Promise<TResult1 | TResult2>;
+}
+
+interface ResidenceDbClient {
+  from<TRow>(table: string): QueryBuilder<TRow>;
+}
+
+const residenceDb = supabase as unknown as ResidenceDbClient;
+
 export interface UserResidence {
   id: string;
   user_id: string;
@@ -78,6 +104,29 @@ export interface EnqueueTerritoryResolutionReviewInput {
   canonicalDistrictId?: string | null;
   payload?: Record<string, unknown>;
 }
+
+type UserResidenceRow = UserResidence;
+type CreateResidenceInsert = Pick<
+  UserResidenceRow,
+  "user_id" | "address_id" | "location_id" | "country" | "is_primary"
+>;
+type TerritoryResolutionQueueInsert = {
+  user_id: string;
+  source: string;
+  review_status: "needs_review" | "unresolved";
+  review_reason: string | null;
+  raw_state: string | null;
+  raw_city: string | null;
+  raw_neighborhood: string | null;
+  postal_code: string | null;
+  ibge_code: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  canonical_state_id: string | null;
+  canonical_city_id: string | null;
+  canonical_district_id: string | null;
+  payload: Record<string, unknown>;
+};
 
 class ResidenceService {
   /**
@@ -207,7 +256,7 @@ class ResidenceService {
         throw new Error('address_id e location_id são obrigatórios após ETAPA 12');
       }
 
-      const payload: any = {
+      const payload: CreateResidenceInsert = {
         user_id: data.user_id,
         address_id: data.address_id,
         location_id: data.location_id,
@@ -246,7 +295,7 @@ class ResidenceService {
     data: UpdateResidenceData,
   ): Promise<UserResidence> {
     try {
-      const payload: any = {};
+      const payload: Partial<UserResidenceRow> = {};
 
       // Modelo canônico
       if (data.address_id !== undefined) payload.address_id = data.address_id;
@@ -416,8 +465,8 @@ class ResidenceService {
 
   async getUserResidence(userId: string): Promise<UserResidence | null> {
     try {
-      const { data, error } = await (supabase as any)
-        .from("user_residences")
+      const { data, error } = await residenceDb
+        .from<UserResidenceRow>("user_residences")
         .select("*")
         .eq("user_id", userId)
         .maybeSingle();
@@ -440,8 +489,8 @@ class ResidenceService {
 
   async requestVerification(residenceId: string): Promise<void> {
     try {
-      const { error } = await (supabase as any)
-        .from("user_residences")
+      const { error } = await residenceDb
+        .from<UserResidenceRow>("user_residences")
         .update({ verification_requested_at: new Date().toISOString() })
         .eq("id", residenceId);
 
@@ -463,7 +512,7 @@ class ResidenceService {
     input: EnqueueTerritoryResolutionReviewInput,
   ): Promise<void> {
     try {
-      const { error } = await (supabase as any).from("territory_resolution_queue").insert({
+      const payload: TerritoryResolutionQueueInsert = {
         user_id: input.userId,
         source: input.source,
         review_status: input.reviewStatus,
@@ -478,8 +527,12 @@ class ResidenceService {
         canonical_state_id: input.canonicalStateId ?? null,
         canonical_city_id: input.canonicalCityId ?? null,
         canonical_district_id: input.canonicalDistrictId ?? null,
-        payload: (input.payload ?? {}) as any,
-      });
+        payload: input.payload ?? {},
+      };
+
+      const { error } = await residenceDb
+        .from<TerritoryResolutionQueueInsert>("territory_resolution_queue")
+        .insert(payload);
 
       if (error) {
         throw error;

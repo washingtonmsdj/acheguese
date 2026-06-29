@@ -36,6 +36,32 @@ interface GenerateRequest {
   generationId: string;
 }
 
+interface ReplicatePrediction {
+  status?: string;
+  error?: string | null;
+  output?: unknown;
+  urls?: {
+    get?: string | null;
+  };
+}
+
+function toRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function toReplicatePrediction(value: unknown): ReplicatePrediction {
+  const record = toRecord(value);
+  const urls = toRecord(record?.urls);
+  return {
+    status: typeof record?.status === "string" ? record.status : undefined,
+    error: typeof record?.error === "string" ? record.error : null,
+    output: record?.output,
+    urls: urls ? { get: typeof urls.get === "string" ? urls.get : null } : undefined,
+  };
+}
+
 function categoryToReplicateCategory(category: Category): "upper_body" | "lower_body" | "dresses" {
   switch (category) {
     case "clothing_upper":
@@ -107,7 +133,7 @@ function outputUrl(output: unknown): string | null {
   return null;
 }
 
-async function replicateRequest(path: string, init?: RequestInit): Promise<any> {
+async function replicateRequest(path: string, init?: RequestInit): Promise<unknown> {
   const token = Deno.env.get("REPLICATE_API_TOKEN")?.trim();
   if (!token) throw new Error("REPLICATE_API_TOKEN nao esta configurado no backend.");
   if (!token.startsWith("r8_")) throw new Error("REPLICATE_API_TOKEN invalido no backend.");
@@ -122,7 +148,7 @@ async function replicateRequest(path: string, init?: RequestInit): Promise<any> 
   });
 
   const text = await resp.text();
-  let data: any = null;
+  let data: unknown = null;
   if (text) {
     try {
       data = JSON.parse(text);
@@ -172,7 +198,7 @@ async function makeImageAvailableToReplicate(imageUrl: string): Promise<string> 
   return `data:${contentType};base64,${btoa(binary)}`;
 }
 
-async function waitForPrediction(prediction: any): Promise<any> {
+async function waitForPrediction(prediction: ReplicatePrediction): Promise<ReplicatePrediction> {
   let current = prediction;
 
   for (let attempt = 0; attempt < 36; attempt++) {
@@ -184,7 +210,7 @@ async function waitForPrediction(prediction: any): Promise<any> {
 
     await new Promise((resolve) => setTimeout(resolve, 5000));
     const path = current.urls.get.replace("https://api.replicate.com/v1", "");
-    current = await replicateRequest(path);
+    current = toReplicatePrediction(await replicateRequest(path));
   }
 
   throw new Error("Replicate demorou mais que o limite para concluir a geracao.");
@@ -201,7 +227,7 @@ async function callReplicateTryOn(
     throw new Error("TRYON_REPLICATE_MODEL_VERSION nao esta configurado no backend.");
   }
 
-  const prediction = await replicateRequest("/predictions", {
+  const prediction = toReplicatePrediction(await replicateRequest("/predictions", {
     method: "POST",
     headers: { Prefer: "wait=60" },
     body: JSON.stringify({
@@ -216,7 +242,7 @@ async function callReplicateTryOn(
         garment_des: garmentDescription(category, style),
       },
     }),
-  });
+  }));
 
   const completed = await waitForPrediction(prediction);
   const url = outputUrl(completed.output);

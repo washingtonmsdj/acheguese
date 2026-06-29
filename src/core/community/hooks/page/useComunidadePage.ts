@@ -22,20 +22,34 @@ import { logger } from "@/shared/utils/logger";
 import type { PostType } from "@/core/posts/types/Post";
 import type { UnifiedPost } from "@/shared/types/posts";
 
-interface ModalState {
+export interface ModalCommentData {
+  postId: string;
+  authorProfileId: string;
+  authorName: string;
+}
+
+export type CreatePostModalData =
+  | { defaultType: PostType }
+  | {
+      editPostId: string;
+      initialContent: string;
+      initialType: PostType;
+      initialReach: "street" | "neighborhood" | "city";
+    };
+
+export interface UnifiedModalData {
+  type: "civic_report";
+  reportId: string;
+}
+
+export interface ModalState {
   type: "comment" | "post" | "unified" | "report" | "create" | null;
   data:
     | null
-    | { defaultType: string }
+    | CreatePostModalData
     | { post: string }
-    | { postId: string; authorProfileId: string; authorName: string }
-    | { type: "civic_report"; reportId: string }
-    | {
-        editPostId: string;
-        initialContent: string;
-        initialType: PostType;
-        initialReach: "street" | "neighborhood" | "city";
-      };
+    | ModalCommentData
+    | UnifiedModalData;
 }
 
 interface CommunityActorProfile {
@@ -52,9 +66,29 @@ interface CommunityActorProfile {
   profile_type: string | null;
 }
 
+interface CommunityActorProfileInput {
+  id?: string | null;
+  user_id?: string | null;
+  userId?: string | null;
+  display_name?: string | null;
+  displayName?: string | null;
+  name?: string | null;
+  city?: string | null;
+  neighborhood?: string | null;
+  location_id?: string | null;
+  locationId?: string | null;
+  verified?: boolean;
+  profile_type?: string | null;
+  profileType?: string | null;
+}
+
+interface CommunityOpportunityPayload {
+  vaga?: Record<string, unknown>;
+}
+
 function toCommunityActorProfile(input: unknown): CommunityActorProfile | null {
   if (!input || typeof input !== "object") return null;
-  const record = input as Record<string, unknown>;
+  const record = input as CommunityActorProfileInput;
 
   const id = typeof record.id === "string" ? record.id : null;
   const userId =
@@ -111,14 +145,14 @@ export function useComunidadePage() {
   const profile = toCommunityActorProfile(effectiveProfile ?? sessionProfile);
   
   // Integração com fundação geográfica
-  const communityLocation = useCommunityLocation() as any;
+  const communityLocation = useCommunityLocation();
 
   const postId = searchParams.get("post");
   const { data: postData, isLoading: isLoadingPost } = usePostById(postId);
 
-  const handleOpenCreatePost = useCallback((defaultType?: string) => {
+  const handleOpenCreatePost = useCallback((defaultType?: PostType) => {
     const hasProfileLocation = Boolean(profile?.locationId);
-    const canCreatePost = Boolean(communityLocation.canCreateContent) || hasProfileLocation;
+    const canCreatePost = communityLocation.hasActiveLocation || hasProfileLocation;
 
     // Verificar se pode criar conteúdo
     if (!canCreatePost) {
@@ -126,7 +160,10 @@ export function useComunidadePage() {
       return;
     }
 
-    setModalState({ type: "create", data: { defaultType: defaultType || "discussao" } });
+    setModalState({
+      type: "create",
+      data: { defaultType: defaultType ?? "discussao" },
+    });
   }, [communityLocation, profile?.locationId]);
 
   const handlePostClick = useCallback(
@@ -134,11 +171,11 @@ export function useComunidadePage() {
       try {
         const vagaPayloadRoot =
           post?.content_payload && typeof post.content_payload === "object"
-            ? (post.content_payload as Record<string, unknown>)
+            ? (post.content_payload as CommunityOpportunityPayload)
             : null;
         const vagaPayload =
           vagaPayloadRoot && typeof vagaPayloadRoot.vaga === "object"
-            ? (vagaPayloadRoot.vaga as Record<string, unknown>)
+            ? vagaPayloadRoot.vaga
             : null;
         if (post?.content_intent === "vaga" || vagaPayload) {
           setSearchParams({ post: postId });

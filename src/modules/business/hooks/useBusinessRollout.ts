@@ -10,12 +10,12 @@ import { logger } from '@/shared/utils/logger';
 import { useState, useEffect, useCallback } from 'react';
 import { businessRolloutService } from '../services';
 import { useBusinessLocation } from './useBusinessLocation';
-import type { EffectiveRollout } from '@/core/rollout/types';
+import type { EffectiveRollout, ModuleConfig } from '@/core/rollout/types';
 
 export function useBusinessRollout() {
   const [isActive, setIsActive] = useState<boolean>(false);
   const [rollout, setRollout] = useState<EffectiveRollout | null>(null);
-  const [config, setConfig] = useState<Record<string, any> | null>(null);
+  const [config, setConfig] = useState<ModuleConfig | null>(null);
   const [accessCheck, setAccessCheck] = useState<{ blocked: boolean; reason?: string }>({ blocked: true });
   const [isLoading, setIsLoading] = useState(true);
   

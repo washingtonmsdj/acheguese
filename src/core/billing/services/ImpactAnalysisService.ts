@@ -13,7 +13,81 @@ import type {
   ImpactAnalysisResult,
   BulkImpactAnalysisResult,
 } from '../types/admin.types';
-const impactDb = supabase as any;
+
+type QueryError = { message?: string | null };
+
+type QueryArrayResult<T> = {
+  data: T[] | null;
+  error: QueryError | null;
+};
+
+type QuerySingleResult<T> = {
+  data: T | null;
+  error: QueryError | null;
+};
+
+type QueryBuilder<T extends object> = PromiseLike<QueryArrayResult<T>> & {
+  select(columns?: string): QueryBuilder<T>;
+  eq(column: string, value: unknown): QueryBuilder<T>;
+  in(column: string, values: readonly unknown[]): QueryBuilder<T>;
+  single(): Promise<QuerySingleResult<T>>;
+};
+
+type ImpactDbClient = {
+  from<T extends object>(table: string): QueryBuilder<T>;
+};
+
+type CatalogPricingPolicySummary = {
+  price_cents?: number | null;
+};
+
+type CatalogItemImpactRow = {
+  id: string;
+  item_code: string;
+  display_name: string;
+  catalog_version_id: string;
+  catalog_pricing_policy?: CatalogPricingPolicySummary | CatalogPricingPolicySummary[] | null;
+};
+
+type ContractSnapshot = {
+  base_plan_code?: string | null;
+  vertical_packages?: string[] | null;
+  addons?: string[] | null;
+};
+
+type UserSubscriptionImpactRow = {
+  id: string;
+  user_id: string;
+  business_id?: string | null;
+  subscription_scope: string;
+  status_v2: string;
+  price_cents?: number | null;
+  contract_snapshot?: ContractSnapshot | null;
+};
+
+type CatalogVersionRow = {
+  version_number: string;
+};
+
+type CatalogItemIdRow = {
+  id: string;
+};
+
+type PricingRow = {
+  price_cents: number;
+};
+
+const impactDb = supabase as unknown as ImpactDbClient;
+
+function readPricingPolicyPrice(
+  pricingPolicy: CatalogItemImpactRow['catalog_pricing_policy'],
+): number {
+  if (Array.isArray(pricingPolicy)) {
+    return pricingPolicy[0]?.price_cents || 0;
+  }
+
+  return pricingPolicy?.price_cents || 0;
+}
 
 export class ImpactAnalysisService {
   /**
@@ -27,7 +101,7 @@ export class ImpactAnalysisService {
   static async analyzeItemImpact(itemId: string): Promise<ImpactAnalysisResult> {
     // Fetch item details
     const { data: item, error: itemError } = await impactDb
-      .from('catalog_item')
+      .from<CatalogItemImpactRow>('catalog_item')
       .select(`
         id,
         item_code,
@@ -42,11 +116,15 @@ export class ImpactAnalysisService {
       throw new Error(`Failed to fetch item: ${itemError.message}`);
     }
 
-    const currentPriceCents = (item as any).catalog_pricing_policy?.price_cents || 0;
+    if (!item) {
+      throw new Error('Failed to fetch item: no item returned');
+    }
+
+    const currentPriceCents = readPricingPolicyPrice(item.catalog_pricing_policy);
 
     // Find contracts using this catalog version
     const { data: contracts, error: contractsError } = await impactDb
-      .from('user_subscriptions')
+      .from<UserSubscriptionImpactRow>('user_subscriptions')
       .select(`
         id,
         user_id,
@@ -65,7 +143,7 @@ export class ImpactAnalysisService {
 
     // Filter contracts that use this specific item
     const affectedContracts = (contracts || []).filter(contract => {
-      const snapshot = contract.contract_snapshot as any;
+      const snapshot = contract.contract_snapshot;
       return snapshot?.base_plan_code === item.item_code ||
              snapshot?.vertical_packages?.includes(item.item_code) ||
              snapshot?.addons?.includes(item.item_code);
@@ -154,7 +232,7 @@ export class ImpactAnalysisService {
   static async analyzeVersionImpact(versionId: string): Promise<BulkImpactAnalysisResult> {
     // Fetch version details
     const { data: version, error: versionError } = await impactDb
-      .from('commercial_catalog_version')
+      .from<CatalogVersionRow>('commercial_catalog_version')
       .select('version_number')
       .eq('id', versionId)
       .single();
@@ -162,10 +240,13 @@ export class ImpactAnalysisService {
     if (versionError) {
       throw new Error(`Failed to fetch version: ${versionError.message}`);
     }
+    if (!version) {
+      throw new Error('Failed to fetch version: no version returned');
+    }
 
     // Fetch all items in version
     const { data: items, error: itemsError } = await impactDb
-      .from('catalog_item')
+      .from<CatalogItemIdRow>('catalog_item')
       .select('id')
       .eq('catalog_version_id', versionId);
 
@@ -278,13 +359,16 @@ export class ImpactAnalysisService {
 
     // Fetch current price
     const { data: pricing, error: pricingError } = await impactDb
-      .from('catalog_pricing_policy')
+      .from<PricingRow>('catalog_pricing_policy')
       .select('price_cents')
       .eq('catalog_item_id', itemId)
       .single();
 
     if (pricingError) {
       throw new Error(`Failed to fetch pricing: ${pricingError.message}`);
+    }
+    if (!pricing) {
+      throw new Error('Failed to fetch pricing: no pricing returned');
     }
 
     const currentPriceCents = pricing.price_cents;

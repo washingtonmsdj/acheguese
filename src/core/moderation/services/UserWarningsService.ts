@@ -1,19 +1,41 @@
 /**
- * 🔒 USER WARNINGS SERVICE - SSOT v2.0
+ * UserWarningsService - SSOT v2.0
  *
- * Serviço de domínio para gerenciar warnings de usuários.
- * Single Source of Truth para operações de warnings.
- *
- * @version 2.0.0 - SSOT AAA Compliance
+ * Domain service for user warnings.
  */
 
 import { supabase } from "@/integrations/supabase";
-import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
+import { logger } from "@/shared/utils/logger";
 
-// ============================================================================
-// 📦 TIPOS
-// ============================================================================
+type ErrorLike = { message?: string | null; code?: string | null } | null;
+
+type QueryPayload<TRow> = {
+  data: TRow[] | null;
+  error: ErrorLike;
+  count?: number | null;
+};
+
+type SingleQueryPayload<TRow> = {
+  data: TRow | null;
+  error: ErrorLike;
+  count?: number | null;
+};
+
+type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
+  select(columns?: string, options?: { count?: "exact"; head?: boolean }): TableClient<TRow>;
+  insert(values: Record<string, unknown> | Record<string, unknown>[]): TableClient<TRow>;
+  eq(column: string, value: unknown): TableClient<TRow>;
+  order(column: string, options?: { ascending: boolean }): TableClient<TRow>;
+  limit(count: number): TableClient<TRow>;
+  single(): Promise<SingleQueryPayload<TRow>>;
+};
+
+type UserWarningsDbClient = {
+  from<TRow = Record<string, unknown>>(table: string): TableClient<TRow>;
+};
+
+const userWarningsDb = supabase as unknown as UserWarningsDbClient;
 
 export interface UserWarning {
   id: string;
@@ -31,29 +53,19 @@ export interface CreateUserWarningData {
   motivo: string;
 }
 
-// ============================================================================
-// 🔒 USER WARNINGS SERVICE
-// ============================================================================
-
 class UserWarningsService {
-  private readonly TABLE = "user_warnings";
-  private db(): any {
-    return supabase as any;
-  }
+  private readonly table = "user_warnings";
 
-  /**
-   * Busca todos os warnings
-   */
   async getAllWarnings(limit = 1000): Promise<UserWarning[]> {
     try {
-      const { data, error } = await this.db()
-        .from(this.TABLE)
+      const { data, error } = await userWarningsDb
+        .from<UserWarning>(this.table)
         .select("*")
         .order("created_at", { ascending: false })
         .limit(limit);
 
       if (error) throw error;
-      return (data as UserWarning[]) || [];
+      return data ?? [];
     } catch (error) {
       trackError(error as Error, {
         component: "UserWarningsService",
@@ -64,44 +76,39 @@ class UserWarningsService {
     }
   }
 
-  /**
-   * Busca warnings de um usuário
-   */
   async getUserWarnings(userId: string): Promise<UserWarning[]> {
     try {
-      const { data, error } = await this.db()
-        .from(this.TABLE)
+      const { data, error } = await userWarningsDb
+        .from<UserWarning>(this.table)
         .select("*")
         .eq("user_id", userId)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return (data as UserWarning[]) || [];
+      return data ?? [];
     } catch (error) {
       trackError(error as Error, {
         component: "UserWarningsService",
         action: "getUserWarnings",
         metadata: { userId },
       });
-      logger.error("Erro ao buscar warnings do usuário", error);
+      logger.error("Erro ao buscar warnings do usuario", error);
       return [];
     }
   }
 
-  /**
-   * Cria um novo warning
-   */
   async createWarning(data: CreateUserWarningData): Promise<UserWarning> {
     try {
-      const { data: warning, error } = await this.db()
-        .from(this.TABLE)
-        .insert(data)
+      const { data: warning, error } = await userWarningsDb
+        .from<UserWarning>(this.table)
+        .insert({ ...data })
         .select()
         .single();
 
       if (error) throw error;
-      logger.info(`Warning criado para usuário ${data.user_id} por admin ${data.admin_id}`);
-      return warning as UserWarning;
+
+      logger.info(`Warning criado para usuario ${data.user_id} por admin ${data.admin_id}`);
+      return warning;
     } catch (error) {
       trackError(error as Error, {
         component: "UserWarningsService",
@@ -113,13 +120,10 @@ class UserWarningsService {
     }
   }
 
-  /**
-   * Conta warnings de um usuário
-   */
   async getUserWarningCount(userId: string): Promise<number> {
     try {
-      const { count, error } = await this.db()
-        .from(this.TABLE)
+      const { count, error } = await userWarningsDb
+        .from<UserWarning>(this.table)
         .select("*", { count: "exact", head: true })
         .eq("user_id", userId);
 
@@ -131,14 +135,10 @@ class UserWarningsService {
         action: "getUserWarningCount",
         metadata: { userId },
       });
-      logger.error("Erro ao contar warnings do usuário", error);
+      logger.error("Erro ao contar warnings do usuario", error);
       return 0;
     }
   }
 }
-
-// ============================================================================
-// 📤 EXPORTAÇÃO SINGLETON
-// ============================================================================
 
 export const userWarningsService = new UserWarningsService();

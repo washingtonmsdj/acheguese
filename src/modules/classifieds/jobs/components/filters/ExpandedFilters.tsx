@@ -6,7 +6,7 @@
  */
 
 import { motion } from "framer-motion";
-import type { VagasFilters, Bairro } from "../../sections/types";
+import type { Bairro, UpdateVagasFilter, VagasFilters } from "../../sections/types";
 import {
   VAGA_CATEGORIAS,
   CONTRATO_LABELS,
@@ -19,7 +19,7 @@ import {
 
 export interface ExpandedFiltersProps {
   readonly filters: VagasFilters;
-  readonly updateFilter: (key: keyof VagasFilters, value: any) => void;
+  readonly updateFilter: UpdateVagasFilter;
   readonly bairros: readonly Bairro[];
 }
 

@@ -99,7 +99,7 @@ export interface LocalBusinessData {
 }
 
 export function generateLocalBusinessSchema(data: LocalBusinessData) {
-  const schema: any = {
+  const schema: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
     name: data.name,
@@ -169,7 +169,7 @@ export interface RestaurantData extends LocalBusinessData {
 export function generateRestaurantSchema(data: RestaurantData) {
   const baseSchema = generateLocalBusinessSchema(data);
   
-  const restaurantSchema = {
+  const restaurantSchema: Record<string, unknown> = {
     ...baseSchema,
     '@type': 'Restaurant',
   };
@@ -211,7 +211,7 @@ export interface ProductData {
 }
 
 export function generateProductSchema(data: ProductData) {
-  const schema: any = {
+  const schema: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: data.name,
@@ -382,7 +382,7 @@ export interface EventData {
 }
 
 export function generateEventSchema(data: EventData) {
-  const schema: any = {
+  const schema: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'Event',
     name: data.name,

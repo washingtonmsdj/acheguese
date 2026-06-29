@@ -15,6 +15,24 @@ export interface OperationalTableResult extends OperationalTable {
 
 const TABLE_NOT_FOUND_CODES = new Set(["42P01", "PGRST116", "PGRST205"]);
 
+interface QueryResult {
+  error: { message?: string | null; code?: string | null; details?: string | null } | null;
+  count?: number | null;
+}
+
+interface QueryBuilder extends PromiseLike<QueryResult> {
+  select: (
+    columns: string,
+    options?: { head?: boolean; count?: "exact" },
+  ) => QueryBuilder;
+}
+
+interface DiagnosticsDbClient {
+  from: (table: string) => QueryBuilder;
+}
+
+const diagnosticsDb = supabase as unknown as DiagnosticsDbClient;
+
 function isMissingTable(error: unknown): boolean {
   if (!error || typeof error !== "object") {
     return false;
@@ -38,7 +56,7 @@ class OperationalDiagnosticsService {
   async checkTables(definitions: OperationalTable[]): Promise<OperationalTableResult[]> {
     const checks = await Promise.all(
       definitions.map(async (definition): Promise<OperationalTableResult> => {
-        const { error, count } = await (supabase as any)
+        const { error, count } = await diagnosticsDb
           .from(definition.table)
           .select("*", { head: true, count: "exact" });
 

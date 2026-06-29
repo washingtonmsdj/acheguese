@@ -20,7 +20,60 @@ import type {
   CatalogItemValidationResult,
   ValidationError,
 } from '../types/admin.types';
-const catalogAdminDb = supabase as any;
+
+type QueryError = { message?: string | null; code?: string | null };
+
+type QueryArrayResult<T> = {
+  data: T[] | null;
+  error: QueryError | null;
+  count?: number | null;
+};
+
+type QuerySingleResult<T> = {
+  data: T | null;
+  error: QueryError | null;
+};
+
+type QueryResult<T> = {
+  data: T | T[] | null;
+  error: QueryError | null;
+};
+
+type QueryBuilder<T extends object> = PromiseLike<QueryArrayResult<T>> & {
+  select(columns?: string, options?: { count?: 'exact'; head?: boolean }): QueryBuilder<T>;
+  eq(column: string, value: unknown): QueryBuilder<T>;
+  in(column: string, values: readonly unknown[]): QueryBuilder<T>;
+  contains(column: string, value: readonly unknown[]): QueryBuilder<T>;
+  order(column: string, options?: { ascending?: boolean }): QueryBuilder<T>;
+  or(filter: string): QueryBuilder<T>;
+  insert(values: Record<string, unknown> | Array<Record<string, unknown>>): QueryBuilder<T>;
+  update(values: Record<string, unknown>): QueryBuilder<T>;
+  upsert(values: Record<string, unknown> | Array<Record<string, unknown>>): QueryBuilder<T>;
+  delete(): QueryBuilder<T>;
+  single(): Promise<QuerySingleResult<T>>;
+  maybeSingle(): Promise<QuerySingleResult<T>>;
+};
+
+type CatalogAdminDbClient = {
+  from<T extends object>(table: string): QueryBuilder<T>;
+};
+
+type VersionStatusRow = { status: string };
+type CatalogVersionRelationRow = { commercial_catalog_version: VersionStatusRow | VersionStatusRow[] };
+type CatalogItemIdRow = { id: string };
+type CatalogItemCodeRow = { id?: string; item_code: string };
+type CatalogItemWithVersionStatusRow = CatalogItemWithPolicies & CatalogVersionRelationRow;
+type EligibilityPolicyRow = CatalogEligibilityRuleInput;
+type EntitlementPolicyRow = CatalogEntitlementPolicyInput;
+type PricingPolicyRow = CatalogPricingPolicyInput;
+
+const catalogAdminDb = supabase as unknown as CatalogAdminDbClient;
+
+function readVersionStatus(
+  relation: CatalogVersionRelationRow['commercial_catalog_version'],
+): string {
+  return Array.isArray(relation) ? relation[0]?.status ?? '' : relation?.status ?? '';
+}
 
 export class CatalogAdminService {
   // ============================================================================
@@ -41,7 +94,7 @@ export class CatalogAdminService {
   ): Promise<CatalogItemWithPolicies> {
     // 1. Validate version is in draft
     const { data: version, error: versionError } = await catalogAdminDb
-      .from('commercial_catalog_version')
+      .from<VersionStatusRow>('commercial_catalog_version')
       .select('status')
       .eq('id', input.catalog_version_id)
       .single();
@@ -56,7 +109,7 @@ export class CatalogAdminService {
 
     // 2. Validate item_code uniqueness within version
     const { data: existing, error: existingError } = await catalogAdminDb
-      .from('catalog_item')
+      .from<CatalogItemIdRow>('catalog_item')
       .select('id')
       .eq('catalog_version_id', input.catalog_version_id)
       .eq('item_code', input.item_code)
@@ -73,7 +126,7 @@ export class CatalogAdminService {
     // 3. Validate dependencies
     if (input.requires_item_codes && input.requires_item_codes.length > 0) {
       const { data: dependencies, error: depsError } = await catalogAdminDb
-        .from('catalog_item')
+        .from<CatalogItemCodeRow>('catalog_item')
         .select('item_code')
         .eq('catalog_version_id', input.catalog_version_id)
         .in('item_code', input.requires_item_codes);
@@ -92,7 +145,7 @@ export class CatalogAdminService {
 
     // 4. Create catalog item
     const { data: item, error: itemError } = await catalogAdminDb
-      .from('catalog_item')
+      .from<CatalogItemWithPolicies>('catalog_item')
       .insert({
         catalog_version_id: input.catalog_version_id,
         item_type: input.item_type,
@@ -112,6 +165,9 @@ export class CatalogAdminService {
 
     if (itemError) {
       throw new Error(`Failed to create catalog item: ${itemError.message}`);
+    }
+    if (!item) {
+      throw new Error('Failed to create catalog item: no item returned');
     }
 
     // 5. Create policies
@@ -137,7 +193,7 @@ export class CatalogAdminService {
   ): Promise<CatalogItemWithPolicies> {
     // 1. Fetch item with version status
     const { data: item, error: itemError } = await catalogAdminDb
-      .from('catalog_item')
+      .from<CatalogItemWithVersionStatusRow>('catalog_item')
       .select(`
         *,
         commercial_catalog_version!inner(status)
@@ -148,8 +204,11 @@ export class CatalogAdminService {
     if (itemError) {
       throw new Error(`Failed to fetch catalog item: ${itemError.message}`);
     }
+    if (!item) {
+      throw new Error('Failed to fetch catalog item');
+    }
 
-    const versionStatus = (item as any).commercial_catalog_version.status;
+    const versionStatus = readVersionStatus(item.commercial_catalog_version);
 
     if (versionStatus !== 'draft') {
       throw new Error(`Cannot update item in ${versionStatus} version. Only draft versions can be modified.`);
@@ -157,7 +216,7 @@ export class CatalogAdminService {
 
     // 2. Update item
     const { data: updated, error: updateError } = await catalogAdminDb
-      .from('catalog_item')
+      .from<CatalogItemWithPolicies>('catalog_item')
       .update({
         display_name: updates.display_name,
         description: updates.description,
@@ -171,6 +230,9 @@ export class CatalogAdminService {
 
     if (updateError) {
       throw new Error(`Failed to update catalog item: ${updateError.message}`);
+    }
+    if (!updated) {
+      throw new Error('Failed to update catalog item: no row returned');
     }
 
     // 3. Fetch policies
@@ -191,7 +253,7 @@ export class CatalogAdminService {
   static async deleteCatalogItem(itemId: string): Promise<void> {
     // 1. Fetch item with version status
     const { data: item, error: itemError } = await catalogAdminDb
-      .from('catalog_item')
+      .from<CatalogItemCodeRow & { catalog_version_id: string } & CatalogVersionRelationRow>('catalog_item')
       .select(`
         item_code,
         catalog_version_id,
@@ -203,8 +265,11 @@ export class CatalogAdminService {
     if (itemError) {
       throw new Error(`Failed to fetch catalog item: ${itemError.message}`);
     }
+    if (!item) {
+      throw new Error('Failed to fetch catalog item');
+    }
 
-    const versionStatus = (item as any).commercial_catalog_version.status;
+    const versionStatus = readVersionStatus(item.commercial_catalog_version);
 
     if (versionStatus !== 'draft') {
       throw new Error(`Cannot delete item in ${versionStatus} version. Only draft versions can be modified.`);
@@ -212,7 +277,7 @@ export class CatalogAdminService {
 
     // 2. Check if item is referenced by other items
     const { data: references, error: refsError } = await catalogAdminDb
-      .from('catalog_item')
+      .from<CatalogItemCodeRow>('catalog_item')
       .select('id, item_code')
       .eq('catalog_version_id', item.catalog_version_id)
       .contains('requires_item_codes', [item.item_code]);
@@ -249,7 +314,7 @@ export class CatalogAdminService {
    */
   static async getCatalogItem(itemId: string): Promise<CatalogItemWithPolicies | null> {
     const { data: item, error: itemError } = await catalogAdminDb
-      .from('catalog_item')
+      .from<CatalogItemWithPolicies>('catalog_item')
       .select('*')
       .eq('id', itemId)
       .single();
@@ -279,7 +344,7 @@ export class CatalogAdminService {
     }
   ): Promise<CatalogItemWithPolicies[]> {
     let query = catalogAdminDb
-      .from('catalog_item')
+      .from<CatalogItemWithPolicies>('catalog_item')
       .select('*')
       .eq('catalog_version_id', versionId)
       .order('item_type', { ascending: true })
@@ -451,7 +516,7 @@ export class CatalogAdminService {
     // Validate dependencies exist
     if (item.requires_item_codes && item.requires_item_codes.length > 0) {
       const { data: deps } = await catalogAdminDb
-        .from('catalog_item')
+        .from<CatalogItemCodeRow>('catalog_item')
         .select('item_code')
         .eq('catalog_version_id', item.catalog_version_id)
         .in('item_code', item.requires_item_codes);
@@ -500,7 +565,7 @@ export class CatalogAdminService {
     }
 
     if (entitlement) {
-      await catalogAdminDb.from('catalog_entitlement_policy').insert({
+      await catalogAdminDb.from<EntitlementPolicyRow>('catalog_entitlement_policy').insert({
         catalog_item_id: itemId,
         ...entitlement,
       });
@@ -508,7 +573,7 @@ export class CatalogAdminService {
     }
 
     if (pricing) {
-      await catalogAdminDb.from('catalog_pricing_policy').insert({
+      await catalogAdminDb.from<PricingPolicyRow>('catalog_pricing_policy').insert({
         catalog_item_id: itemId,
         ...pricing,
       });
@@ -520,9 +585,9 @@ export class CatalogAdminService {
 
   private static async fetchPolicies(itemId: string) {
     const [eligibilityRes, entitlementRes, pricingRes] = await Promise.all([
-      catalogAdminDb.from('catalog_eligibility_rule').select('*').eq('catalog_item_id', itemId).maybeSingle(),
-      catalogAdminDb.from('catalog_entitlement_policy').select('*').eq('catalog_item_id', itemId).maybeSingle(),
-      catalogAdminDb.from('catalog_pricing_policy').select('*').eq('catalog_item_id', itemId).maybeSingle(),
+      catalogAdminDb.from<EligibilityPolicyRow>('catalog_eligibility_rule').select('*').eq('catalog_item_id', itemId).maybeSingle(),
+      catalogAdminDb.from<EntitlementPolicyRow>('catalog_entitlement_policy').select('*').eq('catalog_item_id', itemId).maybeSingle(),
+      catalogAdminDb.from<PricingPolicyRow>('catalog_pricing_policy').select('*').eq('catalog_item_id', itemId).maybeSingle(),
     ]);
 
     return {
@@ -534,7 +599,7 @@ export class CatalogAdminService {
 
   private static async ensureDraftVersion(itemId: string): Promise<void> {
     const { data: item, error } = await catalogAdminDb
-      .from('catalog_item')
+      .from<CatalogVersionRelationRow>('catalog_item')
       .select(`
         commercial_catalog_version!inner(status)
       `)
@@ -544,8 +609,11 @@ export class CatalogAdminService {
     if (error) {
       throw new Error(`Failed to fetch item: ${error.message}`);
     }
+    if (!item) {
+      throw new Error('Failed to fetch item');
+    }
 
-    const versionStatus = (item as any).commercial_catalog_version.status;
+    const versionStatus = readVersionStatus(item.commercial_catalog_version);
 
     if (versionStatus !== 'draft') {
       throw new Error(`Cannot modify policies in ${versionStatus} version. Only draft versions can be modified.`);

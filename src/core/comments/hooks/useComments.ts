@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { CommentService } from "@/core/comments/services";
+import type { Comment as CommentModel } from "@/core/comments/types";
 
 interface CommentWithReplies {
   id: string;
@@ -13,6 +14,12 @@ interface CommentWithReplies {
   parent_id: string | null;
   replies?: CommentWithReplies[];
 }
+
+type CommentThreadItem = CommentModel & {
+  author_name?: string;
+  author_avatar?: string;
+  replies?: CommentThreadItem[];
+};
 
 export const useComments = (
   postId: string | null,
@@ -34,7 +41,7 @@ export const useComments = (
         return;
       }
       const p = profiles[0];
-      setProfile({ name: p.name, avatar_url: p.avatarUrl || "" });
+      setProfile({ name: p.displayName, avatar_url: p.avatarUrl || "" });
     });
   }, [userId]);
 
@@ -44,23 +51,23 @@ export const useComments = (
     try {
       const commentsData = await CommentService.getCommentsByPost(postId);
 
-      const formattedComments: CommentWithReplies[] = commentsData.map(
-        (comment: any) => ({
+      const formattedComments: CommentWithReplies[] = (commentsData as CommentThreadItem[]).map(
+        (comment) => ({
           id: comment.id,
           content: comment.content,
           created_at: comment.created_at,
           author_name:
-            comment.profile?.name || comment.author_name || "Usuário",
+            comment.profile?.displayName || comment.author_name || "Usuário",
           author_avatar:
-            comment.profile?.avatar_url || comment.author_avatar || "",
+            comment.profile?.avatarUrl || comment.author_avatar || "",
           parent_id: comment.parent_id || null,
-          replies: (comment.replies || []).map((reply: any) => ({
+          replies: (comment.replies || []).map((reply) => ({
             id: reply.id,
             content: reply.content,
             created_at: reply.created_at,
-            author_name: reply.profile?.name || reply.author_name || "Usuário",
+            author_name: reply.profile?.displayName || reply.author_name || "Usuário",
             author_avatar:
-              reply.profile?.avatar_url || reply.author_avatar || "",
+              reply.profile?.avatarUrl || reply.author_avatar || "",
             parent_id: reply.parent_id || null,
           })),
         }),

@@ -23,7 +23,29 @@ import type {
   UpdateAlertPayload,
 } from "../domain/types";
 
-type CommunityAlertsRow = any;
+type CommunityAlertsRow = Pick<
+  Database["public"]["Tables"]["community_alerts"]["Row"],
+  | "id"
+  | "profile_id"
+  | "type"
+  | "status"
+  | "location_id"
+  | "latitude"
+  | "longitude"
+  | "neighborhood_display"
+  | "city"
+  | "title"
+  | "description"
+  | "report_count"
+  | "edit_count"
+  | "created_at"
+  | "updated_at"
+  | "removed_at"
+>;
+type CreateCommunityAlertRpcArgs = Extract<
+  Database["public"]["Functions"]["create_community_alert"],
+  { Args: { payload: unknown } }
+>["Args"];
 
 class CommunityAlertServiceClass {
   private readonly TABLE = "community_alerts";
@@ -194,8 +216,8 @@ class CommunityAlertServiceClass {
   async createAlert(payload: CreateAlertPayload): Promise<AlertRpcResult> {
     try {
       const { data, error } = await callRPC<AlertRpcResult>("create_community_alert", {
-        payload: payload as any,
-      });
+        payload,
+      } as unknown as CreateCommunityAlertRpcArgs);
 
       if (error) {
         logger.error(
@@ -396,7 +418,7 @@ class CommunityAlertServiceClass {
   }
 
   private _toPublicList(rows: CommunityAlertsRow[] | null): CommunityAlertPublic[] {
-    return ((rows ?? []) as any[]).map((row) => this._toPublic(row as CommunityAlertsRow));
+    return (rows ?? []).map((row) => this._toPublic(row));
   }
 
   private _toPublic(row: CommunityAlertsRow): CommunityAlertPublic {

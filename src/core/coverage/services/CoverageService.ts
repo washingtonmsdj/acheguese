@@ -25,6 +25,7 @@ import type {
   ServiceArea,
   CoverageType,
   CoverageWithLocation,
+  CoverageDefinition,
 } from '../types';
 import { CoverageStatus, CoverageErrorCode, COVERAGE_VALIDATION, COVERAGE_PAGINATION } from '../types';
 import { CoverageError } from '../errors/CoverageError';
@@ -296,7 +297,7 @@ export class CoverageService implements ICoverageService {
     };
   }
 
-  private async validateCoverageDefinition(coverage: any): Promise<void> {
+  private async validateCoverageDefinition(coverage: CoverageDefinition): Promise<void> {
     // Validar location existe e está ativa
     const location = await this.locationRepository.findById(coverage.location_id);
     if (!location) {

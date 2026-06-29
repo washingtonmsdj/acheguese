@@ -5,6 +5,82 @@
 import { supabase } from "@/integrations/supabase";
 import { ALERT_STATUS } from "@/shared/types/constants";
 
+type ErrorLike = {
+  code?: string | null;
+  message?: string | null;
+};
+
+type QueryPayload<TRow> = {
+  data: TRow[] | null;
+  error: ErrorLike | null;
+};
+
+type SingleQueryPayload<TRow> = {
+  data: TRow | null;
+  error: ErrorLike | null;
+};
+
+type RpcPayload<TValue> = {
+  data: TValue | null;
+  error: ErrorLike | null;
+};
+
+type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
+  eq(column: string, value: unknown): TableClient<TRow>;
+  insert(values: Record<string, unknown> | ReadonlyArray<Record<string, unknown>>): TableClient<TRow>;
+  limit(value: number): TableClient<TRow>;
+  order(column: string, options?: { ascending?: boolean }): TableClient<TRow>;
+  select(columns?: string): TableClient<TRow>;
+  single(): Promise<SingleQueryPayload<TRow>>;
+  update(values: Record<string, unknown>): TableClient<TRow>;
+};
+
+type AlertDbClient = {
+  from<TRow>(table: string): TableClient<TRow>;
+  rpc<TValue>(fn: string, params?: Record<string, unknown>): Promise<RpcPayload<TValue>>;
+};
+
+type AlertRow = {
+  [key: string]: unknown;
+  city: string;
+  created_at: string;
+  description: string;
+  id: string;
+  neighborhood: string | null;
+  profile_id: string;
+  status: string;
+  street: string | null;
+  title: string;
+  type: string;
+};
+
+type AlertInsert = {
+  city: string;
+  description: string;
+  expires_at: string;
+  neighborhood?: string;
+  profile_id: string;
+  status: AlertStatus;
+  street?: string;
+  title: string;
+  type: string;
+};
+
+type AlertUpdate = {
+  status: AlertStatus;
+};
+
+const alertDb = supabase as unknown as AlertDbClient;
+
+function mapAlertRow(row: AlertRow): Alert {
+  return {
+    ...row,
+    neighborhood: row.neighborhood ?? undefined,
+    status: row.status as AlertStatus,
+    street: row.street ?? undefined,
+  };
+}
+
 type AlertStatus = "active" | "resolved" | "expired";
 
 interface Alert {
@@ -45,7 +121,7 @@ interface GetAlertsParams {
 }
 
 class AlertService {
-  private readonly db = supabase as any;
+  private readonly db = alertDb;
   /**
    * Cria um novo alerta (auto-define expires_at para 30 dias)
    */
@@ -54,19 +130,21 @@ class AlertService {
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + 30);
 
+      const payload: AlertInsert = {
+        city: date.city,
+        description: date.description,
+        expires_at: expiresAt.toISOString(),
+        neighborhood: date.neighborhood,
+        profile_id: profileId,
+        status: ALERT_STATUS.ACTIVE,
+        street: date.street,
+        title: date.title,
+        type: date.type,
+      };
+
       const { data: alert, error } = await this.db
-        .from("alerts")
-        .insert({
-          profile_id: profileId,
-          type: date.type,
-          title: date.title,
-          description: date.description,
-          city: date.city,
-          neighborhood: date.neighborhood,
-          street: date.street,
-          status: ALERT_STATUS.ACTIVE,
-          expires_at: expiresAt.toISOString(),
-        })
+        .from<AlertRow>("alerts")
+        .insert(payload)
         .select()
         .single();
 
@@ -74,7 +152,7 @@ class AlertService {
         throw new AlertError(error.message, error.code || "CREATE_FAILED");
       }
 
-      return alert as Alert;
+      return mapAlertRow(alert);
     } catch (error) {
       if (error instanceof AlertError) throw error;
       throw new AlertError("Unexpected error creating alert", "UNKNOWN_ERROR");
@@ -87,7 +165,7 @@ class AlertService {
   async getAlerts(params: GetAlertsParams): Promise<Alert[]> {
     try {
       let query = this.db
-        .from("alerts")
+        .from<AlertRow>("alerts")
         .select("*")
         .eq("city", params.city)
         .eq("status", params.status || ALERT_STATUS.ACTIVE)
@@ -111,7 +189,7 @@ class AlertService {
         throw new AlertError(error.message, error.code || "FETCH_FAILED");
       }
 
-      return data || [];
+      return (data || []).map(mapAlertRow);
     } catch (error) {
       if (error instanceof AlertError) throw error;
       throw new AlertError("Unexpected error fetching alerts", "UNKNOWN_ERROR");
@@ -125,7 +203,7 @@ class AlertService {
   async confirmAlert(alertId: string, profileId: string): Promise<void> {
     try {
       // Incrementa o contador de confirmações
-      const { error } = await this.db.rpc("increment_alert_confirmations", {
+      const { error } = await this.db.rpc<boolean>("increment_alert_confirmations", {
         alert_id: alertId,
       });
 
@@ -148,7 +226,7 @@ class AlertService {
   async unconfirmAlert(alertId: string, profileId: string): Promise<void> {
     try {
       // Decrementa o contador de confirmações
-      const { error } = await this.db.rpc("decrement_alert_confirmations", {
+      const { error } = await this.db.rpc<boolean>("decrement_alert_confirmations", {
         alert_id: alertId,
       });
 
@@ -169,9 +247,10 @@ class AlertService {
    */
   async resolveAlert(alertId: string): Promise<void> {
     try {
+      const payload: AlertUpdate = { status: ALERT_STATUS.RESOLVED };
       const { error } = await this.db
-        .from("alerts")
-        .update({ status: ALERT_STATUS.RESOLVED })
+        .from<AlertRow>("alerts")
+        .update(payload)
         .eq("id", alertId);
 
       if (error) {

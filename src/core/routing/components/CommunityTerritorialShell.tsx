@@ -12,6 +12,7 @@ import { ModuleKey } from "@/core/rollout/types";
 import { ErrorBoundary } from "@/shared/components/errors/ErrorBoundary";
 import { lastTerritoryStore } from "@/core/routing/stores/LastTerritoryStore";
 import { TerritorialSEO } from "@/core/routing/seo/TerritorialSEO";
+import { BottomNav } from "@/core/navigation/BottomNav";
 import type { TerritorialLayoutContext } from "./TerritorialLayout";
 import { TerritorialNotFound } from "./TerritorialNotFound";
 import {
@@ -301,7 +302,7 @@ export function CommunityTerritorialShell() {
         <meta name="robots" content={seoPolicy.robots} />
       </Helmet>
 
-      <div className="min-h-0 overflow-x-hidden">
+      <div className="min-h-screen overflow-x-hidden bg-background pb-20 md:pb-0">
         {effectiveResolved.kind === "group" && currentModuleKey ? (
           <>
             {effectiveAvailability === "partial" && availabilityResult ? (
@@ -317,6 +318,8 @@ export function CommunityTerritorialShell() {
         <ErrorBoundary>
           <Outlet context={outletContext} />
         </ErrorBoundary>
+
+        <BottomNav />
       </div>
     </>
   );

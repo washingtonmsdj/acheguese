@@ -38,7 +38,7 @@ describe('EducationNicheConfigService', () => {
   });
 
   it('shouldShowSection returns false for missing sections', () => {
-    expect(EducationNicheConfigService.shouldShowSection('regular_school', 'attendance' as any)).toBe(false);
+    expect(EducationNicheConfigService.shouldShowSection('regular_school', 'attendance')).toBe(false);
   });
 
   it('validateForNiche returns valid for valid payload', () => {

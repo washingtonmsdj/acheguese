@@ -1,20 +1,9 @@
-/**
- * AdminMessagingService - Serviço de administração de mensagens
- *
- * ✅ SSOT COMPLIANCE: Delega para MessagingService (core/messaging)
- * Este serviço encapsula operações administrativas de mensagens,
- * delegando para o MessagingService (SSOT) sempre que possível.
- */
-
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { buildSafeOrILikeFilter } from "@/shared/utils/sqlSanitization";
-import type { AdminSupabaseClient } from "../types/adminDatabase.types";
 import { messagingService } from "@/core/messaging/services/MessagingService";
-import type {
-  Conversation,
-  Message,
-} from "@/core/messaging/types";
+import type { Conversation, Message } from "@/core/messaging/types";
+import type { AdminSupabaseClient } from "../types/adminDatabase.types";
 
 export interface AdminConversationData extends Conversation {
   buyer_name?: string;
@@ -52,17 +41,19 @@ interface ConversationListRow extends AdminConversationData {
   classified?: { title?: string | null; price?: number | null } | null;
 }
 
-class AdminMessagingServiceClass {
-  private readonly db = supabase as any;
+type ProfileSummaryRow = {
+  name?: string | null;
+  avatar_url?: string | null;
+};
 
-  /**
-   * Busca estatísticas de mensagens
-   */
+class AdminMessagingServiceClass {
+  private readonly db = supabase as unknown as AdminSupabaseClient;
+
   async getStats(): Promise<MessagingStats> {
     try {
       const [convResult, msgResult] = await Promise.all([
-        (supabase as unknown as AdminSupabaseClient).from("conversations").select("status, is_active"),
-        (supabase as unknown as AdminSupabaseClient).from("messages").select("id", { count: "exact", head: true }),
+        this.db.from("conversations").select("status, is_active"),
+        this.db.from("messages").select("id", { count: "exact", head: true }),
       ]);
 
       if (convResult.error) {
@@ -76,23 +67,18 @@ class AdminMessagingServiceClass {
       }
 
       const rows: ConversationStatsRow[] = convResult.data || [];
-      const stats: MessagingStats = {
+      return {
         totalConversations: rows.length,
-        activeConversations: rows.filter((c) => c.is_active).length,
-        blockedConversations: rows.filter((c) => c.status === "blocked").length,
+        activeConversations: rows.filter((conversation) => conversation.is_active).length,
+        blockedConversations: rows.filter((conversation) => conversation.status === "blocked").length,
         totalMessages: msgResult.count || 0,
       };
-
-      return stats;
     } catch (error) {
       logger.error("Error in getStats:", error);
       throw error;
     }
   }
 
-  /**
-   * Busca todas as conversas com paginação
-   */
   async getAllConversations(options: {
     page?: number;
     limit?: number;
@@ -113,10 +99,9 @@ class AdminMessagingServiceClass {
           seller:profiles!seller_id (id, name, avatar_url),
           classified:classifieds (id, title, price)
           `,
-          { count: "exact" }
+          { count: "exact" },
         );
 
-      // Aplica filtro de status se fornecido
       if (options.status === "active") {
         query = query.eq("is_active", true);
       } else if (options.status === "inactive") {
@@ -125,7 +110,6 @@ class AdminMessagingServiceClass {
         query = query.eq("status", "blocked");
       }
 
-      // Aplica busca se fornecida
       if (options.search) {
         const searchFilter = buildSafeOrILikeFilter(["buyer.name", "seller.name"], options.search);
         if (searchFilter) {
@@ -133,41 +117,39 @@ class AdminMessagingServiceClass {
         }
       }
 
-      query = query
-        .order("last_message_at", { ascending: false })
-        .range(offset, offset + limit - 1);
+      query = query.order("last_message_at", { ascending: false }).range(offset, offset + limit - 1);
 
       const { data, error, count } = await query;
-
       if (error) {
         logger.error("Error fetching conversations:", error);
         throw error;
       }
 
-      // Buscar contagem de mensagens para cada conversa
       const rows = (data || []) as ConversationListRow[];
-      const conversationsWithCounts = await Promise.all(
-        rows.map(async (conv) => {
-          const { count: msgCount } = await this.db
+      const conversations = await Promise.all(
+        rows.map(async (conversation) => {
+          const { count: messageCount } = await this.db
             .from("messages")
             .select("id", { count: "exact", head: true })
-            .eq("conversation_id", conv.id);
+            .eq("conversation_id", conversation.id);
 
-          return {
-            ...conv,
-            buyer_name: conv.buyer?.name,
-            buyer_avatar: conv.buyer?.avatar_url,
-            seller_name: conv.seller?.name,
-            seller_avatar: conv.seller?.avatar_url,
-            classified_title: conv.classified?.title,
-            classified_price: conv.classified?.price,
-            message_count: msgCount || 0,
+          const result: AdminConversationData = {
+            ...conversation,
+            buyer_name: conversation.buyer?.name ?? undefined,
+            buyer_avatar: conversation.buyer?.avatar_url ?? undefined,
+            seller_name: conversation.seller?.name ?? undefined,
+            seller_avatar: conversation.seller?.avatar_url ?? undefined,
+            classified_title: conversation.classified?.title ?? undefined,
+            classified_price: conversation.classified?.price ?? undefined,
+            message_count: messageCount || 0,
           };
-        })
+
+          return result;
+        }),
       );
 
       return {
-        data: conversationsWithCounts as AdminConversationData[],
+        data: conversations,
         total: count || 0,
         page,
         totalPages: Math.ceil((count || 0) / limit),
@@ -178,59 +160,39 @@ class AdminMessagingServiceClass {
     }
   }
 
-  /**
-   * Busca uma conversa por ID
-   * ✅ SSOT: Delega para MessagingService.getConversationWithDetails
-   */
-  async getConversationById(
-    id: string,
-    userId: string,
-  ): Promise<AdminConversationData | null> {
+  async getConversationById(id: string, userId: string): Promise<AdminConversationData | null> {
     try {
       const conversation = await messagingService.getConversationWithDetails(id, userId);
-      
-      if (!conversation) {
-        return null;
-      }
+      if (!conversation) return null;
 
-      // Buscar contagem de mensagens
-      const { count: msgCount } = await this.db
+      const { count: messageCount } = await this.db
         .from("messages")
         .select("id", { count: "exact", head: true })
         .eq("conversation_id", id);
 
-      // Buscar informações de ambos os usuários
       const [buyerProfile, sellerProfile] = await Promise.all([
-        this.db
-          .from("profiles")
-          .select("name, avatar_url")
-          .eq("id", conversation.buyer_id)
-          .single(),
-        this.db
-          .from("profiles")
-          .select("name, avatar_url")
-          .eq("id", conversation.seller_id)
-          .single(),
+        this.db.from("profiles").select("name, avatar_url").eq("id", conversation.buyer_id).single(),
+        this.db.from("profiles").select("name, avatar_url").eq("id", conversation.seller_id).single(),
       ]);
+      const buyerData: ProfileSummaryRow | null = (buyerProfile.data as ProfileSummaryRow | null) ?? null;
+      const sellerData: ProfileSummaryRow | null = (sellerProfile.data as ProfileSummaryRow | null) ?? null;
 
-      return {
+      const result: AdminConversationData = {
         ...conversation,
-        buyer_name: buyerProfile.data?.name,
-        buyer_avatar: buyerProfile.data?.avatar_url,
-        seller_name: sellerProfile.data?.name,
-        seller_avatar: sellerProfile.data?.avatar_url,
-        message_count: msgCount || 0,
-      } as AdminConversationData;
+        buyer_name: buyerData?.name ?? undefined,
+        buyer_avatar: buyerData?.avatar_url ?? undefined,
+        seller_name: sellerData?.name ?? undefined,
+        seller_avatar: sellerData?.avatar_url ?? undefined,
+        message_count: messageCount || 0,
+      };
+
+      return result;
     } catch (error) {
       logger.error("Error in getConversationById:", error);
       throw error;
     }
   }
 
-  /**
-   * Busca mensagens de uma conversa
-   * ✅ SSOT: Delega para MessagingService.getMessages
-   */
   async getMessages(conversationId: string): Promise<Message[]> {
     try {
       return await messagingService.getMessages(conversationId);
@@ -240,10 +202,6 @@ class AdminMessagingServiceClass {
     }
   }
 
-  /**
-   * Bloqueia uma conversa
-   * ✅ SSOT: Delega para MessagingService.blockConversation
-   */
   async blockConversation(
     conversationId: string,
     blockedBy: string,
@@ -252,7 +210,7 @@ class AdminMessagingServiceClass {
     try {
       await messagingService.blockConversation({
         conversation_id: conversationId,
-        blocked_by: blockedBy as "buyer" | "seller", // Type assertion for compatibility
+        blocked_by: blockedBy as "buyer" | "seller",
         block_reason: reason,
       });
       return true;
@@ -262,10 +220,6 @@ class AdminMessagingServiceClass {
     }
   }
 
-  /**
-   * Desbloqueia uma conversa
-   * ✅ SSOT AAA - Delega para MessagingService
-   */
   async unblockConversation(conversationId: string): Promise<boolean> {
     try {
       await messagingService.unblockConversation(conversationId);
@@ -276,10 +230,6 @@ class AdminMessagingServiceClass {
     }
   }
 
-  /**
-   * Fecha uma conversa
-   * ✅ SSOT: Delega para MessagingService.closeConversation
-   */
   async closeConversation(conversationId: string): Promise<boolean> {
     try {
       await messagingService.closeConversation(conversationId);
@@ -290,10 +240,6 @@ class AdminMessagingServiceClass {
     }
   }
 
-  /**
-   * Reabre uma conversa
-   * ✅ SSOT AAA - Delega para MessagingService
-   */
   async reopenConversation(conversationId: string): Promise<boolean> {
     try {
       await messagingService.reopenConversation(conversationId);
@@ -304,10 +250,6 @@ class AdminMessagingServiceClass {
     }
   }
 
-  /**
-   * Deleta uma conversa (hard delete - admin only)
-   * ✅ SSOT AAA - Delega para MessagingService
-   */
   async deleteConversation(conversationId: string): Promise<boolean> {
     try {
       await messagingService.deleteConversation(conversationId);
@@ -320,4 +262,3 @@ class AdminMessagingServiceClass {
 }
 
 export const adminMessagingService = new AdminMessagingServiceClass();
-

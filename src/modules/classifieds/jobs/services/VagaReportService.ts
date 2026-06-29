@@ -4,6 +4,29 @@ import { trackError } from "@/shared/utils/errorTracking";
 import { logger } from "@/shared/utils/logger";
 import { JOB_FORM_LIMITS } from "../constants/form-limits";
 
+type QueryResult<T> = Promise<{ data: T; error: { code?: string; message?: string } | null }>;
+
+interface QueryBuilder<TRow> {
+  select(columns?: string): QueryBuilder<TRow>;
+  insert(values: unknown): QueryBuilder<TRow>;
+  update(values: unknown): QueryBuilder<TRow>;
+  eq(column: string, value: unknown): QueryBuilder<TRow>;
+  order(column: string, options?: { ascending?: boolean }): QueryBuilder<TRow>;
+  single(): QueryResult<TRow>;
+  then<TResult1 = { data: TRow[]; error: { code?: string; message?: string } | null }, TResult2 = never>(
+    onfulfilled?:
+      | ((value: { data: TRow[]; error: { code?: string; message?: string } | null }) => TResult1 | PromiseLike<TResult1>)
+      | null,
+    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
+  ): Promise<TResult1 | TResult2>;
+}
+
+interface VagaReportDbClient {
+  from<TRow>(table: string): QueryBuilder<TRow>;
+}
+
+const vagaReportDb = supabase as unknown as VagaReportDbClient;
+
 export type VagaReportReason =
   | "fraud"
   | "fake-company"
@@ -58,16 +81,23 @@ export interface CreateVagaReportInput {
   description?: string;
 }
 
+type VagaReportRow = VagaReport & {
+  reporter?:
+    | { id: string; name: string; avatar_url?: string | null }
+    | Array<{ id: string; name: string; avatar_url?: string | null }>
+    | null;
+};
+
 function normalizeDescription(description?: string): string | null {
   const value = description?.trim();
   if (!value) return null;
   return value.slice(0, JOB_FORM_LIMITS.MAX_REPORT_DESCRIPTION);
 }
 
-function mapReport(row: Record<string, unknown>): VagaReport {
+function mapReport(row: VagaReportRow): VagaReport {
   return {
-    ...(row as unknown as VagaReport),
-    reason: (row.reason as VagaReportReason) ?? "other",
+    ...row,
+    reason: row.reason ?? "other",
   };
 }
 
@@ -81,8 +111,8 @@ export class VagaReportService {
         throw new Error("Motivo de denuncia invalido.");
       }
 
-      const { data, error } = await (supabase as any)
-        .from("vaga_reports")
+      const { data, error } = await vagaReportDb
+        .from<VagaReportRow>("vaga_reports")
         .insert({
           vaga_id: input.vagaId,
           reporter_profile_id: reporterProfileId,
@@ -107,7 +137,7 @@ export class VagaReportService {
         reason: input.reason,
       });
 
-      return mapReport(data as Record<string, unknown>);
+      return mapReport(data);
     } catch (error) {
       logger.error("[VagaReportService] Erro inesperado ao criar denuncia:", error);
       trackError(error as Error, {
@@ -120,8 +150,8 @@ export class VagaReportService {
 
   static async getReportsByVaga(vagaId: string): Promise<VagaReport[]> {
     try {
-      const { data, error } = await (supabase as any)
-        .from("vaga_reports")
+      const { data, error } = await vagaReportDb
+        .from<VagaReportRow>("vaga_reports")
         .select(`
           *,
           reporter:profiles!reporter_profile_id(id, name, avatar_url)
@@ -134,7 +164,7 @@ export class VagaReportService {
         throw error;
       }
 
-      return ((data ?? []) as Record<string, unknown>[]).map(mapReport);
+      return (data ?? []).map(mapReport);
     } catch (error) {
       logger.error("[VagaReportService] Erro inesperado ao buscar denuncias:", error);
       trackError(error as Error, {
@@ -152,8 +182,8 @@ export class VagaReportService {
     adminNotes?: string,
   ): Promise<VagaReport> {
     try {
-      const { data, error } = await (supabase as any)
-        .from("vaga_reports")
+      const { data, error } = await vagaReportDb
+        .from<VagaReportRow>("vaga_reports")
         .update({
           status,
           reviewed_by_profile_id: adminProfileId,
@@ -169,7 +199,7 @@ export class VagaReportService {
         throw error;
       }
 
-      return mapReport(data as Record<string, unknown>);
+      return mapReport(data);
     } catch (error) {
       logger.error("[VagaReportService] Erro inesperado ao atualizar denuncia:", error);
       trackError(error as Error, {

@@ -59,11 +59,47 @@ type BrandHubRow = {
   status: string;
 };
 
+interface QueryError {
+  message?: string | null;
+}
+
+interface QueryArrayResult<TRow> {
+  data: TRow[] | null;
+  error: QueryError | null;
+  count?: number | null;
+}
+
+interface QuerySingleResult<TRow> {
+  data: TRow | null;
+  error: QueryError | null;
+  count?: number | null;
+}
+
+interface QueryBuilder<TRow> extends PromiseLike<QueryArrayResult<TRow>> {
+  select: (
+    columns?: string,
+    options?: { count?: 'exact'; head?: boolean },
+  ) => QueryBuilder<TRow>;
+  insert: (values: unknown | unknown[]) => QueryBuilder<TRow>;
+  update: (values: unknown) => QueryBuilder<TRow>;
+  delete: () => QueryBuilder<TRow>;
+  eq: (column: string, value: unknown) => QueryBuilder<TRow>;
+  order: (column: string, options?: { ascending?: boolean }) => QueryBuilder<TRow>;
+  maybeSingle: () => Promise<QuerySingleResult<TRow>>;
+  single: () => Promise<QuerySingleResult<TRow>>;
+}
+
+interface NetworkDbClient {
+  from: <TRow = never>(table: string) => QueryBuilder<TRow>;
+}
+
+const networkDb = supabase as unknown as NetworkDbClient;
+
 // ─── Service ──────────────────────────────────────────────────────────────────
 
 export class NetworkService {
-  private static adminDb(): any {
-    return supabase as any;
+  private static adminDb(): NetworkDbClient {
+    return networkDb;
   }
 
 
@@ -80,7 +116,7 @@ export class NetworkService {
         .maybeSingle();
 
       if (error) throw error;
-      return data;
+      return data as BusinessDataRecord | null;
     } catch (err) {
       logger.error('[NetworkService] getBrandHub error:', err);
       return null;
@@ -144,7 +180,7 @@ export class NetworkService {
   ): Promise<ConvertToNetworkResult> {
     // 1. Buscar standalone e o user_id do perfil
     const { data: standalone, error: fetchErr } = await this.adminDb()
-      .from('business_data')
+      .from<BusinessDataRecord>('business_data')
       .select('*')
       .eq('profile_id', standaloneProfileId)
       .eq('business_role', 'standalone')
@@ -181,7 +217,7 @@ export class NetworkService {
     // 3. Criar brand_hub com o NOVO profile_id
     const hubSlug = `${standalone.slug || standaloneProfileId}-rede`;
     const { data: hub, error: hubErr } = await this.adminDb()
-      .from('business_data')
+      .from<{ id: string; profile_id: string }>('business_data')
       .insert({
         profile_id: hubProfile.id, // NOVO profile_id
         business_name: brandName,
@@ -213,7 +249,7 @@ export class NetworkService {
 
     // 4. Adicionar o usuário como owner do brand_hub
     const { error: memberErr } = await this.adminDb()
-      .from('profile_members')
+      .from<{ id?: string }>('profile_members')
       .insert({
         profile_id: hubProfile.id,
         user_id: userId,
@@ -265,7 +301,7 @@ export class NetworkService {
   }): Promise<BusinessDataRecord> {
     // Validar que brand_hub existe
     const { data: hub, error: hubErr } = await this.adminDb()
-      .from('business_data')
+      .from<BusinessDataRecord>('business_data')
       .select('id, category, subcategory, payment_methods, specialties, facilities, email, metadata')
       .eq('id', params.brandHubId)
       .eq('business_role', 'brand_hub')
@@ -278,7 +314,7 @@ export class NetworkService {
     // Se isHeadquarters, garantir que não existe outra headquarters
     if (params.isHeadquarters) {
       const { data: existing } = await this.adminDb()
-        .from('business_data')
+        .from<{ id: string }>('business_data')
         .select('id')
         .eq('parent_business_id', params.brandHubId)
         .eq('is_headquarters', true)
@@ -290,7 +326,7 @@ export class NetworkService {
     }
 
     const { data: branch, error: branchErr } = await this.adminDb()
-      .from('business_data')
+      .from<BusinessDataRecord>('business_data')
       .insert({
         profile_id: params.profileId,
         business_name: params.businessName,
@@ -316,7 +352,7 @@ export class NetworkService {
       throw new Error(`Falha ao criar filial: ${branchErr?.message ?? 'dados não retornados'}`);
     }
 
-    return branch;
+    return branch as BusinessDataRecord;
   }
 
   /**
@@ -349,7 +385,7 @@ export class NetworkService {
   static async getParentBrandHub(parentBusinessId: string): Promise<BusinessDataRecord | null> {
     try {
       const { data, error } = await this.adminDb()
-        .from('business_data')
+        .from<BusinessDataRecord>('business_data')
         .select('*')
         .eq('id', parentBusinessId)
         .eq('business_role', 'brand_hub')
@@ -369,7 +405,7 @@ export class NetworkService {
   static async getProfileBrandHubs(profileId: string): Promise<BrandHubSummary[]> {
     try {
       const { data, error } = await this.adminDb()
-        .from('business_data')
+        .from<BrandHubRow>('business_data')
         .select('id, profile_id, business_name, slug, category, status')
         .eq('profile_id', profileId)
         .eq('business_role', 'brand_hub')
@@ -383,7 +419,7 @@ export class NetworkService {
       const withCounts = await Promise.all(
         ((hubs || []) as BrandHubRow[]).map(async (hub) => {
           const { count } = await this.adminDb()
-            .from('business_data')
+            .from<{ id: string }>('business_data')
             .select('id', { count: 'exact', head: true })
             .eq('parent_business_id', hub.id)
             .eq('business_role', 'branch');

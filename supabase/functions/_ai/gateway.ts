@@ -23,11 +23,46 @@ export interface AiCallOptions {
 export interface AiCallResult {
   ok: boolean;
   status: number;
-  data: any;
+  data: unknown;
   errorCode?: "unauthorized" | "payment_required" | "rate_limited" | "bad_request" | "server_error" | "network";
   errorMessage?: string;
   latencyMs: number;
   requestId?: string;
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function getGatewayErrorMessage(data: unknown, fallbackText: string, status: number): string {
+  const record = asRecord(data);
+  const nestedError = asRecord(record?.error);
+  const nestedMessage = nestedError?.message;
+  if (typeof nestedMessage === "string" && nestedMessage) {
+    return nestedMessage;
+  }
+
+  const directMessage = record?.message;
+  if (typeof directMessage === "string" && directMessage) {
+    return directMessage;
+  }
+
+  return fallbackText.slice(0, 240) || `HTTP ${status}`;
+}
+
+function getUsageMetrics(data: unknown): {
+  promptTokens?: number | null;
+  completionTokens?: number | null;
+} {
+  const record = asRecord(data);
+  const usage = asRecord(record?.usage);
+  return {
+    promptTokens: typeof usage?.prompt_tokens === "number" ? usage.prompt_tokens : null,
+    completionTokens:
+      typeof usage?.completion_tokens === "number" ? usage.completion_tokens : null,
+  };
 }
 
 function getApiKey(): string {
@@ -61,7 +96,7 @@ export async function callAiGateway(opts: AiCallOptions): Promise<AiCallResult> 
       });
 
       const text = await resp.text();
-      let data: any = null;
+      let data: unknown = null;
       if (text) {
         try {
           data = JSON.parse(text);
@@ -77,8 +112,7 @@ export async function callAiGateway(opts: AiCallOptions): Promise<AiCallResult> 
         return { ok: true, status: resp.status, data, latencyMs, requestId };
       }
 
-      const errorMessage =
-        (data && (data.error?.message || data.message)) || text.slice(0, 240) || `HTTP ${resp.status}`;
+      const errorMessage = getGatewayErrorMessage(data, text, resp.status);
 
       if (resp.status === 401) {
         return {
@@ -187,15 +221,15 @@ export async function logAiUsage(
           ? "payment_required"
           : "error";
 
-    const usage = params.result.data?.usage ?? {};
+    const usage = getUsageMetrics(params.result.data);
     await admin.from("ai_usage_log").insert({
       user_id: params.userId ?? null,
       feature: params.feature,
       capability: params.capability,
       model: params.model,
       status,
-      tokens_in: params.tokensIn ?? usage.prompt_tokens ?? null,
-      tokens_out: params.tokensOut ?? usage.completion_tokens ?? null,
+      tokens_in: params.tokensIn ?? usage.promptTokens ?? null,
+      tokens_out: params.tokensOut ?? usage.completionTokens ?? null,
       latency_ms: params.result.latencyMs,
       request_id: params.result.requestId ?? null,
       error_code: params.result.errorCode ?? null,

@@ -322,7 +322,7 @@ export async function loadPrimaryResidenceMap(
 
 export async function loadFamilySummary(userId: string): Promise<AdminProfileFamilySummary> {
   try {
-    const summary = await FamilyService.getCoverageSummaryByUserId(userId, supabase as any);
+    const summary = await FamilyService.getCoverageSummaryByUserId(userId);
     const hasAnyFamilyRecord =
       summary.activeChildrenCount > 0 ||
       summary.activeParentsCount > 0 ||

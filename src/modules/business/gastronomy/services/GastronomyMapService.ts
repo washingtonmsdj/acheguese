@@ -31,6 +31,33 @@ interface GastronomyMapRow {
     | null;
 }
 
+interface QueryError {
+  message?: string | null;
+  code?: string | null;
+}
+
+interface QueryResult<TRow> {
+  data: TRow[] | null;
+  error: QueryError | null;
+}
+
+interface QueryBuilder<TRow> extends PromiseLike<QueryResult<TRow>> {
+  select: (columns: string) => QueryBuilder<TRow>;
+  eq: (column: string, value: unknown) => QueryBuilder<TRow>;
+  limit: (value: number) => QueryBuilder<TRow>;
+}
+
+interface GastronomyMapDbClient {
+  from: <TRow = never>(table: string) => QueryBuilder<TRow>;
+}
+
+type TerritorialFilterQuery = {
+  eq: (column: string, value: unknown) => unknown;
+  in: (column: string, values: unknown[]) => unknown;
+};
+
+const gastronomyMapDb = supabase as unknown as GastronomyMapDbClient;
+
 export interface GastronomyMapEntity {
   id: string;
   profile_id: string;
@@ -66,8 +93,8 @@ class GastronomyMapService {
     try {
       if (territoryFilter?.scope === "none") return [];
 
-      let query = supabase
-        .from("business_data")
+      const query = gastronomyMapDb
+        .from<GastronomyMapRow>("business_data")
         .select(
           `
             id,
@@ -88,10 +115,13 @@ class GastronomyMapService {
         .limit(limit * 3);
 
       if (territoryFilter) {
-        query = applyTerritoryFilter(query as any, territoryFilter) as any;
+        applyTerritoryFilter(
+          query as unknown as TerritorialFilterQuery,
+          territoryFilter,
+        );
       }
 
-      const { data, error } = await (query as any);
+      const { data, error } = await query;
 
       if (error) {
         logger.error("GastronomyMapService.getByBounds", error as Error);

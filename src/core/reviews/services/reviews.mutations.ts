@@ -14,6 +14,25 @@ import { trackError } from "@/shared/utils/errorTracking";
 import type { Review, ReviewType, CreateReviewData } from "../types";
 import { getReviewById, getReviewByReviewer } from "./reviews.queries";
 
+type QueryResult<T> = Promise<{ data: T; error: { code?: string; message?: string } | null }>;
+
+interface QueryBuilder<TRow> {
+  delete(): QueryBuilder<TRow>;
+  eq(column: string, value: unknown): QueryBuilder<TRow>;
+  then<TResult1 = { data: TRow[]; error: { code?: string; message?: string } | null }, TResult2 = never>(
+    onfulfilled?:
+      | ((value: { data: TRow[]; error: { code?: string; message?: string } | null }) => TResult1 | PromiseLike<TResult1>)
+      | null,
+    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
+  ): Promise<TResult1 | TResult2>;
+}
+
+interface ReviewsDbClient {
+  from<TRow>(table: string): QueryBuilder<TRow>;
+}
+
+const reviewsDb = supabase as unknown as ReviewsDbClient;
+
 // ============================================================================
 // 🔧 HELPERS
 // ============================================================================
@@ -132,10 +151,10 @@ export async function updateReview(
 export async function removeReview(reviewId: string, type: ReviewType): Promise<boolean> {
   try {
     const table = getTableName(type);
-    const { error } = await ((supabase as any)
-      .from(table)
+    const { error } = await reviewsDb
+      .from<unknown>(table)
       .delete()
-      .eq("id", reviewId) as unknown as Promise<{ error: unknown }>);
+      .eq("id", reviewId);
 
     if (error) throw error;
 

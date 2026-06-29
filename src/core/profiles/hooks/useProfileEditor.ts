@@ -43,7 +43,7 @@ export function useProfileEditor(profileId?: string) {
       MultiProfileService.loadProfileEditor({
         profileId: profileId!,
         userId: user!.id,
-        availableProfiles: allProfiles as any,
+        availableProfiles: allProfiles,
       }),
     enabled: Boolean(profileId && user?.id),
     refetchOnWindowFocus: false,
@@ -117,9 +117,12 @@ export function useProfileEditor(profileId?: string) {
     return 'ready';
   }, [editorQuery.data, editorQuery.isError, editorQuery.isLoading, profileId, user?.id]);
 
-  const setBaseField = useCallback((field: keyof UpdateProfileInput, value: any) => {
-    setBaseForm((previous) => ({ ...previous, [field]: value }));
-  }, []);
+  const setBaseField = useCallback(
+    <K extends keyof UpdateProfileInput>(field: K, value: UpdateProfileInput[K]) => {
+      setBaseForm((previous) => ({ ...previous, [field]: value }));
+    },
+    [],
+  );
 
   const saveProfile = useCallback(async () => {
     const result = await saveMutation.mutateAsync();

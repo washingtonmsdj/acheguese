@@ -20,7 +20,7 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 // ─── Constantes ──────────────────────────────────────────────────────────────
 
@@ -87,7 +87,7 @@ afterAll(async () => {
 
 // ─── Helper ───────────────────────────────────────────────────────────────────
 
-async function insertPost(client: any, params: {
+async function insertPost(client: SupabaseClient, params: {
   profile_id: string;
   location_id: string;
   content?: string;

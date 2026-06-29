@@ -1,26 +1,51 @@
 /**
- * Chat Mutations - SSOT
+ * Chat mutations - SSOT.
  *
- * Funcoes de escrita para chat de corridas
+ * Write operations for ride chat.
  */
-import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase';
-import type { ChatMessage, SendMessageInput } from './chat.types';
 
-/**
- * Enviar mensagem em um chat
- *
- * @param input - Dados da mensagem
- * @returns Mensagem criada
- */
+import { supabase } from "@/integrations/supabase";
+import { logger } from "@/shared/utils/logger";
+import type { ChatMessage, RideChat, SendMessageInput } from "./chat.types";
+
+type ErrorLike = { message?: string | null; code?: string | null } | null;
+
+type QueryPayload<TRow> = {
+  data: TRow[] | null;
+  error: ErrorLike;
+  count?: number | null;
+};
+
+type SingleQueryPayload<TRow> = {
+  data: TRow | null;
+  error: ErrorLike;
+  count?: number | null;
+};
+
+type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
+  select(columns?: string, options?: { count?: "exact"; head?: boolean }): TableClient<TRow>;
+  insert(values: Record<string, unknown> | Record<string, unknown>[]): TableClient<TRow>;
+  update(values: Record<string, unknown>): TableClient<TRow>;
+  eq(column: string, value: unknown): TableClient<TRow>;
+  neq(column: string, value: unknown): TableClient<TRow>;
+  is(column: string, value: null): TableClient<TRow>;
+  single(): Promise<SingleQueryPayload<TRow>>;
+};
+
+type ChatMutationsDbClient = {
+  from<TRow = Record<string, unknown>>(table: string): TableClient<TRow>;
+};
+
+const chatMutationsDb = supabase as unknown as ChatMutationsDbClient;
+
 export async function sendMessage(input: SendMessageInput): Promise<ChatMessage> {
   try {
     if (!input.message.trim()) {
-      throw new Error('Mensagem nao pode estar vazia');
+      throw new Error("Mensagem nao pode estar vazia");
     }
 
-    const { data, error } = await (supabase as any)
-      .from('ride_chat_messages')
+    const { data, error } = await chatMutationsDb
+      .from<ChatMessage>("ride_chat_messages")
       .insert({
         chat_id: input.chat_id,
         sender_profile_id: input.sender_profile_id,
@@ -31,76 +56,62 @@ export async function sendMessage(input: SendMessageInput): Promise<ChatMessage>
       .single();
 
     if (error) {
-      logger.error('chat.mutations.sendMessage', error);
+      logger.error("chat.mutations.sendMessage", error);
       throw error;
     }
 
-    logger.info('chat.mutations.sendMessage', {
+    logger.info("chat.mutations.sendMessage", {
       chat_id: input.chat_id,
       sender_profile_id: input.sender_profile_id,
     });
 
-    return data as ChatMessage;
+    return data;
   } catch (error) {
-    logger.error('chat.mutations.sendMessage', error);
+    logger.error("chat.mutations.sendMessage", error);
     throw error;
   }
 }
 
-/**
- * Marcar mensagens como lidas
- *
- * @param chatId - ID do chat
- * @param userId - ID do usuario que esta lendo
- */
 export async function markMessagesAsRead(chatId: string, userId: string): Promise<void> {
   try {
-    const { error } = await (supabase as any)
-      .from('ride_chat_messages')
+    const { error } = await chatMutationsDb
+      .from<ChatMessage>("ride_chat_messages")
       .update({ read_at: new Date().toISOString() })
-      .eq('chat_id', chatId)
-      .neq('sender_profile_id', userId)
-      .is('read_at', null);
+      .eq("chat_id", chatId)
+      .neq("sender_profile_id", userId)
+      .is("read_at", null);
 
     if (error) {
-      logger.error('chat.mutations.markMessagesAsRead', error);
+      logger.error("chat.mutations.markMessagesAsRead", error);
       throw error;
     }
 
-    logger.info('chat.mutations.markMessagesAsRead', {
+    logger.info("chat.mutations.markMessagesAsRead", {
       chat_id: chatId,
       user_id: userId,
     });
   } catch (error) {
-    logger.error('chat.mutations.markMessagesAsRead', error);
-    // Nao lancar erro - marcar como lido e operacao nao critica
+    logger.error("chat.mutations.markMessagesAsRead", error);
   }
 }
 
-/**
- * Criar chat para uma corrida
- *
- * @param rideId - ID da corrida
- * @returns Chat criado
- */
-export async function createChat(rideId: string): Promise<import('./chat.types').RideChat> {
+export async function createChat(rideId: string): Promise<RideChat> {
   try {
-    const { data, error } = await (supabase as any)
-      .from('ride_chats')
+    const { data, error } = await chatMutationsDb
+      .from<RideChat>("ride_chats")
       .insert({ ride_id: rideId })
       .select()
       .single();
 
     if (error) {
-      logger.error('chat.mutations.createChat', error);
+      logger.error("chat.mutations.createChat", error);
       throw error;
     }
 
-    logger.info('chat.mutations.createChat', { ride_id: rideId });
-
-    return data as import('./chat.types').RideChat;
+    logger.info("chat.mutations.createChat", { ride_id: rideId });
+    return data;
   } catch (error) {
-    logger.error('chat.mutations.createChat', error);
+    logger.error("chat.mutations.createChat", error);
     throw error;
   }
 }

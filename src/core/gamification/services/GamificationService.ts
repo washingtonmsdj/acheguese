@@ -1,20 +1,11 @@
 /**
- * GamificationService - SSOT para sistema de gamificação
- *
- * Responsável por:
- * - Pontuação e níveis
- * - Badges e conquistas
- * - Leaderboards
- * - Recompensas
- *
- * Arquitetura: Component → Hook → GamificationService → Supabase
+ * GamificationService - SSOT for user points, levels, achievements, and leaderboards.
  */
 
-import { supabase } from "@/integrations/supabase";
-import { trackError } from "@/shared/utils/errorTracking";
 import { PAGINATION } from "@/shared/constants";
+import { trackError } from "@/shared/utils/errorTracking";
+import { supabase } from "@/integrations/supabase";
 
-// Helper para verificar erros do Postgres de forma type-safe
 interface PostgresError {
   code?: string;
   message: string;
@@ -74,11 +65,39 @@ export interface PointTransaction {
   created_at: string;
 }
 
+export interface TopUserByLocation {
+  id: string;
+  name: string;
+  avatar_url?: string | null;
+  reputation?: number | null;
+}
+
 interface LeaderboardRow {
   user_id: string;
   total_points: number;
   level: number;
   profiles?: { name?: string; avatar_url?: string } | null;
+}
+
+interface UserAchievementQueryRow {
+  id: string;
+  user_id: string;
+  achievement_id: string;
+  earned_at?: string | null;
+  progress: number;
+  achievement?: { code?: string } | null;
+}
+
+interface AchievementRewardRow {
+  id: string;
+  points_reward: number;
+}
+
+interface TopUsersByLocationRpcRow {
+  id?: string;
+  name?: string;
+  avatar_url?: string | null;
+  reputation?: number | null;
 }
 
 export interface UserGamificationStats {
@@ -94,22 +113,59 @@ export interface UserGamificationStats {
   longest_streak: number;
 }
 
-export class GamificationService {
-  private static readonly db = supabase as any;
+interface QueryResult<T> {
+  data: T | null;
+  error: PostgresError | null;
+}
 
-  /**
-   * Busca nível do usuário
-   */
+interface QueryBuilder<TRow> extends PromiseLike<QueryResult<TRow[]>> {
+  select: (columns: string) => QueryBuilder<TRow>;
+  eq: (column: string, value: unknown) => QueryBuilder<TRow>;
+  order: (column: string, options?: { ascending?: boolean }) => QueryBuilder<TRow>;
+  limit: (value: number) => QueryBuilder<TRow>;
+  single: () => Promise<QueryResult<TRow>>;
+}
+
+interface TableClient<TRow> {
+  select: (columns: string) => QueryBuilder<TRow>;
+  insert: (payload: Record<string, unknown>) => Promise<QueryResult<null>>;
+}
+
+interface GamificationDbClient {
+  from: <TRow = never>(table: string) => TableClient<TRow>;
+  rpc: <TResult = unknown>(
+    fn: string,
+    params?: Record<string, unknown>,
+  ) => Promise<QueryResult<TResult>>;
+}
+
+const db = supabase as unknown as GamificationDbClient;
+
+function normalizeTopUsersByLocation(rows: TopUsersByLocationRpcRow[] | null): TopUserByLocation[] {
+  return (rows ?? [])
+    .map((row): TopUserByLocation | null => {
+      if (!row.id || !row.name) return null;
+      return {
+        id: row.id,
+        name: row.name,
+        avatar_url: row.avatar_url ?? null,
+        reputation: row.reputation ?? 0,
+      };
+    })
+    .filter((row): row is TopUserByLocation => row !== null);
+}
+
+export class GamificationService {
   static async getUserLevel(userId: string): Promise<UserLevel | null> {
     try {
-      const { data, error } = await this.db
-        .from("user_levels")
+      const { data, error } = await db
+        .from<UserLevel>("user_levels")
         .select("*")
         .eq("user_id", userId)
         .single();
 
       if (error && error.code !== "PGRST116") throw error;
-      return (data as UserLevel | null) || null;
+      return data ?? null;
     } catch (error) {
       trackError(error as Error, {
         component: "GamificationService",
@@ -120,9 +176,6 @@ export class GamificationService {
     }
   }
 
-  /**
-   * Adiciona pontos ao usuário
-   */
   static async addPoints(
     userId: string,
     points: number,
@@ -131,31 +184,23 @@ export class GamificationService {
     metadata: Record<string, unknown> = {},
   ): Promise<boolean> {
     try {
-      // Registrar transação
-      const { error: transactionError } = await this.db
-        .from("point_transactions")
-        .insert({
-          user_id: userId,
-          points,
-          transaction_type: "earned",
-          source,
-          description,
-          metadata,
-        });
+      const { error: transactionError } = await db.from("point_transactions").insert({
+        user_id: userId,
+        points,
+        transaction_type: "earned",
+        source,
+        description,
+        metadata,
+      });
 
       if (transactionError) throw transactionError;
 
-      // Atualizar nível do usuário
-      const { error: levelError } = await this.db.rpc(
-        "update_user_level",
-        {
-          p_user_id: userId,
-          p_points: points,
-        },
-      );
+      const { error: levelError } = await db.rpc("update_user_level", {
+        p_user_id: userId,
+        p_points: points,
+      });
 
       if (levelError) throw levelError;
-
       return true;
     } catch (error) {
       trackError(error as Error, {
@@ -167,32 +212,21 @@ export class GamificationService {
     }
   }
 
-  /**
-   * Busca achievements disponíveis
-   */
   static async getAvailableAchievements(): Promise<Achievement[]> {
     try {
-      const { data, error } = await this.db
-        .from("achievements")
+      const { data, error } = await db
+        .from<Achievement>("achievements")
         .select("*")
         .eq("is_active", true)
         .order("category", { ascending: true });
 
       if (error) {
-        // Tabela não existe ainda - retornar vazio silenciosamente
-        // PGRST116 = relation does not exist (404)
-        if (
-          error.code === "PGRST204" ||
-          error.code === "PGRST116" ||
-          error.code === "42P01"
-        ) {
-          return [];
-        }
+        if (isTableNotFoundError(error)) return [];
         throw error;
       }
-      return (data as Achievement[]) || [];
+
+      return data ?? [];
     } catch (error) {
-      // Só logar se não for erro de tabela inexistente
       if (!isTableNotFoundError(error)) {
         trackError(error as Error, {
           component: "GamificationService",
@@ -203,42 +237,31 @@ export class GamificationService {
     }
   }
 
-  /**
-   * Busca achievements do usuário
-   */
   static async getUserAchievements(userId: string): Promise<UserAchievement[]> {
     try {
-      const { data, error } = await this.db
-        .from("user_achievements")
-        .select(
-          `
+      const { data, error } = await db
+        .from<UserAchievementQueryRow>("user_achievements")
+        .select(`
           *,
           achievement:achievements(code)
-        `,
-        )
+        `)
         .eq("user_id", userId)
         .order("earned_at", { ascending: false });
 
       if (error) {
-        // Tabela não existe ainda - retornar vazio silenciosamente
-        // PGRST116 = relation does not exist (404)
-        if (
-          error.code === "PGRST204" ||
-          error.code === "PGRST116" ||
-          error.code === "42P01"
-        ) {
-          return [];
-        }
+        if (isTableNotFoundError(error)) return [];
         throw error;
       }
 
-      // Mapear achievement_code para compatibilidade
-      return ((data as any[]) || []).map((ua) => ({
-        ...ua,
-        achievement_code: ua.achievement?.code || ua.achievement_id,
-      })) as UserAchievement[];
+      return (data ?? []).map((row) => ({
+        id: row.id,
+        user_id: row.user_id,
+        achievement_id: row.achievement_id,
+        achievement_code: row.achievement?.code ?? row.achievement_id,
+        earned_at: row.earned_at ?? undefined,
+        progress: row.progress,
+      }));
     } catch (error) {
-      // Só logar se não for erro de tabela inexistente
       if (!isTableNotFoundError(error)) {
         trackError(error as Error, {
           component: "GamificationService",
@@ -250,48 +273,37 @@ export class GamificationService {
     }
   }
 
-  /**
-   * Concede achievement ao usuário
-   */
-  static async grantAchievement(
-    userId: string,
-    achievementCode: string,
-  ): Promise<boolean> {
+  static async grantAchievement(userId: string, achievementCode: string): Promise<boolean> {
     try {
-      // Buscar achievement
-      const { data: achievement, error: achievementError } = await this.db
-        .from("achievements")
+      const { data: achievement, error: achievementError } = await db
+        .from<AchievementRewardRow>("achievements")
         .select("id, points_reward")
         .eq("code", achievementCode)
         .eq("is_active", true)
         .single();
 
-      if (achievementError || !achievement)
+      if (achievementError || !achievement) {
         throw new Error("Achievement not found");
+      }
 
-      // Verificar se já possui
-      const { data: existing } = await this.db
-        .from("user_achievements")
+      const { data: existing } = await db
+        .from<{ id: string }>("user_achievements")
         .select("id")
         .eq("user_id", userId)
         .eq("achievement_id", achievement.id)
         .single();
 
-      if (existing) return true; // Já possui
+      if (existing) return true;
 
-      // Conceder achievement
-      const { error: grantError } = await this.db
-        .from("user_achievements")
-        .insert({
-          user_id: userId,
-          achievement_id: achievement.id,
-          progress: 100,
-          earned_at: new Date().toISOString(),
-        });
+      const { error: grantError } = await db.from("user_achievements").insert({
+        user_id: userId,
+        achievement_id: achievement.id,
+        progress: 100,
+        earned_at: new Date().toISOString(),
+      });
 
       if (grantError) throw grantError;
 
-      // Adicionar pontos de recompensa
       if (achievement.points_reward > 0) {
         await this.addPoints(
           userId,
@@ -313,26 +325,21 @@ export class GamificationService {
     }
   }
 
-  /**
-   * Busca leaderboard de pontuação
-   */
   static async getLeaderboard(limit: number = PAGINATION.SMALL_LIMIT): Promise<LeaderboardRow[]> {
     try {
-      const { data, error } = await this.db
-        .from("user_levels")
-        .select(
-          `
+      const { data, error } = await db
+        .from<LeaderboardRow>("user_levels")
+        .select(`
           user_id,
           total_points,
           level,
           profiles:user_id(name, avatar_url)
-        `,
-        )
+        `)
         .order("total_points", { ascending: false })
         .limit(limit);
 
       if (error) throw error;
-      return (data as LeaderboardRow[]) || [];
+      return data ?? [];
     } catch (error) {
       trackError(error as Error, {
         component: "GamificationService",
@@ -343,26 +350,20 @@ export class GamificationService {
     }
   }
 
-  /**
-   * Busca top users por localização usando RPC
-   */
   static async getTopUsersByLocation(
     city: string,
     neighborhood: string | null = null,
     limit: number = PAGINATION.SMALL_LIMIT / 2,
-  ): Promise<Array<Record<string, unknown>>> {
+  ): Promise<TopUserByLocation[]> {
     try {
-      const { data, error } = await this.db.rpc(
-        "get_top_users_by_location",
-        {
-          p_city: city,
-          p_neighborhood: neighborhood,
-          p_limit: limit,
-        },
-      );
+      const { data, error } = await db.rpc<TopUsersByLocationRpcRow[]>("get_top_users_by_location", {
+        p_city: city,
+        p_neighborhood: neighborhood,
+        p_limit: limit,
+      });
 
       if (error) throw error;
-      return (data as Array<Record<string, unknown>>) || [];
+      return normalizeTopUsersByLocation(data);
     } catch (error) {
       trackError(error as Error, {
         component: "GamificationService",
@@ -373,23 +374,20 @@ export class GamificationService {
     }
   }
 
-  /**
-   * Busca transações de pontos do usuário
-   */
   static async getPointTransactions(
     userId: string,
     limit: number = PAGINATION.DEFAULT_LIMIT,
   ): Promise<PointTransaction[]> {
     try {
-      const { data, error } = await this.db
-        .from("point_transactions")
+      const { data, error } = await db
+        .from<PointTransaction>("point_transactions")
         .select("*")
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
         .limit(limit);
 
       if (error) throw error;
-      return (data as PointTransaction[]) || [];
+      return data ?? [];
     } catch (error) {
       trackError(error as Error, {
         component: "GamificationService",
@@ -400,23 +398,17 @@ export class GamificationService {
     }
   }
 
-  /**
-   * Calcula nível baseado em pontos
-   */
   static calculateLevel(totalPoints: number): {
     level: number;
     pointsToNext: number;
     progress: number;
   } {
-    // Fórmula: level = floor(sqrt(points / 100))
     const level = Math.floor(Math.sqrt(totalPoints / 100));
     const currentLevelPoints = level * level * 100;
     const nextLevelPoints = (level + 1) * (level + 1) * 100;
     const pointsToNext = nextLevelPoints - totalPoints;
     const progress =
-      ((totalPoints - currentLevelPoints) /
-        (nextLevelPoints - currentLevelPoints)) *
-      100;
+      ((totalPoints - currentLevelPoints) / (nextLevelPoints - currentLevelPoints)) * 100;
 
     return {
       level: Math.max(1, level),
@@ -425,22 +417,15 @@ export class GamificationService {
     };
   }
 
-  /**
-   * Busca estatísticas completas de gamificação do usuário
-   */
-  static async getUserGamificationStats(
-    userId: string,
-  ): Promise<UserGamificationStats> {
+  static async getUserGamificationStats(userId: string): Promise<UserGamificationStats> {
     try {
-      const [levelData, achievementsData, transactionsData] = await Promise.all(
-        [
-          this.getUserLevel(userId),
-          this.getUserAchievements(userId),
-          this.getPointTransactions(userId, PAGINATION.SMALL_LIMIT / 2),
-        ],
-      );
+      const [levelData, achievementsData, transactionsData] = await Promise.all([
+        this.getUserLevel(userId),
+        this.getUserAchievements(userId),
+        this.getPointTransactions(userId, PAGINATION.SMALL_LIMIT / 2),
+      ]);
 
-      const level = levelData || {
+      const level = levelData ?? {
         level: 1,
         total_points: 0,
         experience_points: 0,
@@ -453,7 +438,7 @@ export class GamificationService {
         level: levelInfo.level,
         total_points: level.total_points,
         experience_points: level.experience_points || 0,
-        achievements_count: achievementsData.filter((a) => a.earned_at).length,
+        achievements_count: achievementsData.filter((item) => item.earned_at).length,
         achievements_total: achievementsData.length,
         recent_transactions: transactionsData,
         level_progress: levelInfo.progress,
@@ -482,9 +467,6 @@ export class GamificationService {
     }
   }
 
-  /**
-   * Processa ação do usuário e atribui pontos/achievements automaticamente
-   */
   static async processUserAction(
     userId: string,
     action: string,
@@ -493,7 +475,6 @@ export class GamificationService {
     try {
       const result = { points: 0, achievements: [] as string[] };
 
-      // Mapeamento de ações para pontos
       const actionPoints: Record<string, number> = {
         post_created: 10,
         comment_added: 5,
@@ -505,18 +486,10 @@ export class GamificationService {
         share_content: 3,
         like_given: 1,
       };
-      const points =
-        Object.entries(actionPoints).find(([key]) => key === action)?.[1] ?? 0;
+      const points = Object.entries(actionPoints).find(([key]) => key === action)?.[1] ?? 0;
 
       if (points > 0) {
-        const success = await this.addPoints(
-          userId,
-          points,
-          action,
-          `Action: ${action}`,
-          metadata,
-        );
-
+        const success = await this.addPoints(userId, points, action, `Action: ${action}`, metadata);
         if (success) {
           result.points = points;
         }

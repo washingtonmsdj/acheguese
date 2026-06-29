@@ -95,10 +95,10 @@ const UnifiedFeedWithMessages = React.forwardRef<
     ref,
   ) => {
     const { sortedPosts } = useUnifiedFeed({
-      posts: posts as any,
-      civicReports: civicReports as any,
-      communityPosts: communityPosts as any,
-      feedPosts: feedPosts as any,
+      posts,
+      civicReports,
+      communityPosts,
+      feedPosts,
       sortCriteria,
       filterType,
       userLocation,
@@ -112,6 +112,7 @@ const UnifiedFeedWithMessages = React.forwardRef<
       handleClose,
       handleSend,
       handleReport,
+      messages,
     } = useMessageModal(currentUserId);
 
     const handleLike = (postId: string) => {
@@ -172,6 +173,7 @@ const UnifiedFeedWithMessages = React.forwardRef<
             }}
             recipientProfile={recipientProfile}
             currentUserId={currentUserId || ""}
+            initialMessages={messages}
             onSendMessage={handleSend}
             onReportConversation={handleReport}
           />

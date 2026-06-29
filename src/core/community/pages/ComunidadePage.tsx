@@ -47,7 +47,10 @@ import {
   type CommunityDiscoveryTab,
 } from "@/core/community/utils/communityFeedTab";
 import { isLaunchCommunityPostEnabled } from "@/config/launchScope";
-import { useComunidadePage } from "../hooks/page/useComunidadePage";
+import {
+  useComunidadePage,
+  type CreatePostModalData,
+} from "../hooks/page/useComunidadePage";
 import { CommunityFeed } from "../components/feed/CommunityFeed";
 import { CommunityRightSidebar } from "../components/CommunityRightSidebar";
 import { LocationScopeCards } from "../components/page/LocationScopeCards";
@@ -84,14 +87,19 @@ const PUBLIC_FEED_MODULES = [
   { key: "map", label: "Mapa", icon: MapPin },
 ] as const;
 
+interface PublicPostAuthorRecord {
+  author_name?: string | null;
+  author?: {
+    display_name?: string | null;
+  } | null;
+}
+
 function getPublicPostAuthor(post: unknown): string {
   if (!post || typeof post !== "object") return "Morador";
-  const record = post as Record<string, unknown>;
-  const author = record.author && typeof record.author === "object"
-    ? record.author as Record<string, unknown>
-    : null;
+  const record = post as PublicPostAuthorRecord;
   const authorName = typeof record.author_name === "string" ? record.author_name.trim() : "";
-  const authorDisplayName = typeof author?.display_name === "string" ? author.display_name.trim() : "";
+  const authorDisplayName =
+    typeof record.author?.display_name === "string" ? record.author.display_name.trim() : "";
   return authorName || authorDisplayName || "Morador";
 }
 
@@ -532,6 +540,13 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
     deletePostDialogOpen,
     isDeletingPost,
   } = useComunidadePage();
+  const createPostModalData: CreatePostModalData | null =
+    modalState.type === "create" &&
+    modalState.data &&
+    typeof modalState.data === "object" &&
+    ("defaultType" in modalState.data || "editPostId" in modalState.data)
+      ? modalState.data
+      : null;
   const communityTerritoryFilter: TerritoryFilter = useMemo(
     () =>
       resolveCommunityFeedTerritoryFilter({
@@ -800,18 +815,18 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
         <CreatePostModal
           open={modalState.type === "create"}
           onClose={handleCloseModal}
-          defaultType={(modalState.data as any)?.defaultType}
-          editPostId={(modalState.data as any)?.editPostId}
-          initialContent={(modalState.data as any)?.initialContent}
-          initialType={(modalState.data as any)?.initialType}
-          initialReach={(modalState.data as any)?.initialReach}
+          defaultType={createPostModalData && "defaultType" in createPostModalData ? createPostModalData.defaultType : undefined}
+          editPostId={createPostModalData && "editPostId" in createPostModalData ? createPostModalData.editPostId : undefined}
+          initialContent={createPostModalData && "initialContent" in createPostModalData ? createPostModalData.initialContent : undefined}
+          initialType={createPostModalData && "initialType" in createPostModalData ? createPostModalData.initialType : undefined}
+          initialReach={createPostModalData && "initialReach" in createPostModalData ? createPostModalData.initialReach : undefined}
         />
 
         {/* Modais de Detalhes e Comentarios */}
         <CommunityModals
-          modalState={modalState as any}
+          modalState={modalState}
           postId={postId}
-          postData={postData as any}
+          postData={postData}
           isLoadingPost={isLoadingPost}
           profileId={profile?.id}
           onCloseModal={handleCloseModal}

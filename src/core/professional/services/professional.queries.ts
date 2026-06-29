@@ -1,10 +1,8 @@
 /**
- * 📦 PROFESSIONAL QUERIES - SSOT v2.0
+ * PROFESSIONAL QUERIES - SSOT v2.0
  *
- * Operações de leitura para profissionais.
- * Todas as queries são pure functions que recebem parâmetros e retornam dados.
- *
- * @version 2.0.0 - Refatoração SSOT
+ * Operacoes de leitura para profissionais.
+ * Todas as queries sao pure functions que recebem parametros e retornam dados.
  */
 
 import { supabase } from "@/integrations/supabase";
@@ -25,23 +23,201 @@ import type {
   ProfessionalJob,
 } from "../types";
 
-// ============================================================================
-// 🔍 PROFESSIONAL QUERIES - Busca de profissionais
-// ============================================================================
+interface QueryError {
+  message?: string | null;
+  code?: string | null;
+}
 
-/**
- * Buscar profissionais com filtros
- */
-/**
- * Buscar profissionais com filtros
- * FASE 1 IA: Usa public_professional_search (view pública segura)
- */
+interface QueryArrayResult<TRow> {
+  data: TRow[] | null;
+  error: QueryError | null;
+  count?: number | null;
+}
+
+interface QuerySingleResult<TRow> {
+  data: TRow | null;
+  error: QueryError | null;
+  count?: number | null;
+}
+
+interface QueryBuilder<TRow> extends PromiseLike<QueryArrayResult<TRow>> {
+  select: (
+    columns?: string,
+    options?: { count?: "exact"; head?: boolean },
+  ) => QueryBuilder<TRow>;
+  eq: (column: string, value: unknown) => QueryBuilder<TRow>;
+  in: (column: string, values: unknown[]) => QueryBuilder<TRow>;
+  ilike: (column: string, pattern: string) => QueryBuilder<TRow>;
+  or: (filters: string) => QueryBuilder<TRow>;
+  gte: (column: string, value: string | number) => QueryBuilder<TRow>;
+  lte: (column: string, value: string | number) => QueryBuilder<TRow>;
+  neq: (column: string, value: unknown) => QueryBuilder<TRow>;
+  order: (column: string, options?: { ascending?: boolean }) => QueryBuilder<TRow>;
+  range: (from: number, to: number) => QueryBuilder<TRow>;
+  limit: (value: number) => QueryBuilder<TRow>;
+  maybeSingle: () => Promise<QuerySingleResult<TRow>>;
+  single: () => Promise<QuerySingleResult<TRow>>;
+}
+
+interface ProfessionalQueriesDbClient {
+  from: <TRow = never>(table: string) => QueryBuilder<TRow>;
+}
+
+type TerritorialFilterQuery = {
+  eq: (column: string, value: string) => unknown;
+  in: (column: string, values: string[]) => unknown;
+};
+
+type ProfessionalQueryRow = Parameters<typeof mapProfessionalRow>[0];
+
+interface ProfessionalStatsRow {
+  profile_id: string | null;
+  views_count: number | null;
+  contacts_count: number | null;
+  favorites_count: number | null;
+  shares_count: number | null;
+  jobs_completed: number | null;
+  response_rate: number | null;
+  average_response_time: number | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+interface ProfessionalJobRow {
+  id: string;
+  professional_id: string;
+  title: string | null;
+  description: string | null;
+  category: string | null;
+  price: number | null;
+  duration_hours: number | null;
+  images?: string[] | null;
+  is_featured?: boolean | null;
+  is_active: boolean | null;
+  created_at: string;
+}
+
+interface ProfessionalPublicProfileRow {
+  id: string;
+  slug: string;
+  professional_name: string;
+  description: string | null;
+  service_category: string | null;
+  service_subcategory: string | null;
+  is_verified: boolean;
+  is_accepting_clients: boolean;
+  certifications: string[] | null;
+  experience_years: number | null;
+  price_range: string | null;
+  metadata: Record<string, unknown> | null;
+  profiles?:
+    | { avatar_url: string | null }
+    | Array<{ avatar_url: string | null }>
+    | null;
+  location?:
+    | {
+        name: string | null;
+        type: string | null;
+        slug: string | null;
+        parent?:
+          | {
+              name: string | null;
+              slug: string | null;
+            }
+          | Array<{
+              name: string | null;
+              slug: string | null;
+            }>
+          | null;
+      }
+    | Array<{
+        name: string | null;
+        type: string | null;
+        slug: string | null;
+        parent?:
+          | {
+              name: string | null;
+              slug: string | null;
+            }
+          | Array<{
+              name: string | null;
+              slug: string | null;
+            }>
+          | null;
+      }>
+    | null;
+}
+
+interface ProfessionalSlugRow {
+  slug: string | null;
+}
+
+interface ProfessionalIdRow {
+  id: string;
+}
+
+interface ProfessionalSlugHistoryRow {
+  id: string;
+  old_slug: string;
+  new_slug: string | null;
+  change_reason: string;
+  created_at: string;
+}
+
+const professionalQueriesDb = supabase as unknown as ProfessionalQueriesDbClient;
+
+function firstRelation<T>(value: T | T[] | null | undefined): T | null {
+  if (Array.isArray(value)) return value[0] ?? null;
+  return value ?? null;
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+function mapProfessionalJobRow(row: ProfessionalJobRow): ProfessionalJob {
+  return {
+    id: row.id,
+    profile_id: row.professional_id,
+    title: row.title ?? "Servico",
+    description: row.description ?? "",
+    category: row.category ?? "geral",
+    price: row.price ?? undefined,
+    duration: row.duration_hours != null ? String(row.duration_hours) : undefined,
+    images: Array.isArray(row.images)
+      ? row.images.filter((image): image is string => typeof image === "string")
+      : [],
+    is_featured: Boolean(row.is_featured),
+    is_active: row.is_active ?? true,
+    created_at: row.created_at,
+  };
+}
+
+function buildEmptyStats(professionalId: string): ProfessionalStats {
+  const zeroDate = new Date(0).toISOString();
+
+  return {
+    profile_id: professionalId,
+    views_count: 0,
+    contacts_count: 0,
+    favorites_count: 0,
+    shares_count: 0,
+    jobs_completed: 0,
+    response_rate: 0,
+    average_response_time: 0,
+    created_at: zeroDate,
+    updated_at: zeroDate,
+  };
+}
+
 export async function getProfessionals(
   filters: ProfessionalFilters = {},
 ): Promise<Professional[]> {
   try {
-    let query = (supabase as any)
-      .from("public_professional_search")
+    let query = professionalQueriesDb
+      .from<ProfessionalQueryRow>("public_professional_search")
       .select(
         `
         *,
@@ -51,23 +227,22 @@ export async function getProfessionals(
       `,
       );
 
-    // Aplicar filtro territorial
     if (filters.territoryFilter) {
-      query = applyTerritoryFilter(query, filters.territoryFilter);
+      query = applyTerritoryFilter(
+        query as unknown as TerritorialFilterQuery & QueryBuilder<ProfessionalQueryRow>,
+        filters.territoryFilter,
+      );
     }
 
-    // Filtro de categoria
     if (filters.category) {
       query = query.eq("service_category", filters.category);
     }
 
-    // Filtro de busca textual
     if (filters.search) {
       const sanitizedSearch = sanitizeForILike(filters.search);
       query = query.ilike("professional_name", `%${sanitizedSearch}%`);
     }
 
-    // Ordenação
     if (filters.sortBy === "rating") {
       query = query.order("rating", { ascending: false });
     } else if (filters.sortBy === "created_at") {
@@ -76,7 +251,6 @@ export async function getProfessionals(
       query = query.order("professional_name", { ascending: true });
     }
 
-    // Paginação
     const limit = PAGINATION.DEFAULT_LIMIT;
     const offset = 0;
     query = query.range(offset, offset + limit - 1);
@@ -99,9 +273,6 @@ export async function getProfessionals(
   }
 }
 
-/**
- * Buscar profissionais com paginação (para infinite scroll)
- */
 export async function getProfessionalsList(params: {
   pageParam?: number;
   category?: string;
@@ -113,8 +284,8 @@ export async function getProfessionalsList(params: {
   const offset = pageParam * limit;
 
   try {
-    let query = (supabase as any)
-      .from("professional_data")
+    let query = professionalQueriesDb
+      .from<ProfessionalQueryRow>("professional_data")
       .select(
         `
         *,
@@ -128,7 +299,10 @@ export async function getProfessionalsList(params: {
       .eq("visibility", "public_listed");
 
     if (territory) {
-      query = applyTerritoryFilter(query, territory);
+      query = applyTerritoryFilter(
+        query as unknown as TerritorialFilterQuery & QueryBuilder<ProfessionalQueryRow>,
+        territory,
+      );
     }
 
     if (category) {
@@ -167,13 +341,10 @@ export async function getProfessionalsList(params: {
   }
 }
 
-/**
- * Buscar profissional por ID
- */
 export async function getProfessionalById(id: string): Promise<Professional> {
   try {
-    const { data, error } = await (supabase as any)
-      .from("professional_data")
+    const { data, error } = await professionalQueriesDb
+      .from<ProfessionalQueryRow>("professional_data")
       .select(
         `
         *,
@@ -190,7 +361,7 @@ export async function getProfessionalById(id: string): Promise<Professional> {
     }
 
     if (!data) {
-      throw new Error("Profissional não encontrado");
+      throw new Error("Profissional nao encontrado");
     }
 
     return mapProfessionalRow(data);
@@ -205,13 +376,10 @@ export async function getProfessionalById(id: string): Promise<Professional> {
   }
 }
 
-/**
- * Buscar serviços por perfil
- */
 export async function getServicesByProfile(profileId: string): Promise<Professional[]> {
   try {
-    const { data, error } = await (supabase as any)
-      .from("professional_data")
+    const { data, error } = await professionalQueriesDb
+      .from<ProfessionalQueryRow>("professional_data")
       .select(
         `
         *,
@@ -235,21 +403,14 @@ export async function getServicesByProfile(profileId: string): Promise<Professio
       action: "getServicesByProfile",
       metadata: { profileId },
     });
-    throw new Error("Erro ao buscar serviços");
+    throw new Error("Erro ao buscar servicos");
   }
 }
 
-// ============================================================================
-// 📊 STATS QUERIES - Estatísticas
-// ============================================================================
-
-/**
- * Obter estatísticas de um profissional
- */
 export async function getStats(professionalId: string): Promise<ProfessionalStats> {
   try {
-    const { data, error } = await (supabase as any)
-      .from("professional_stats")
+    const { data, error } = await professionalQueriesDb
+      .from<ProfessionalStatsRow>("professional_stats")
       .select("*")
       .eq("profile_id", professionalId)
       .single();
@@ -277,28 +438,14 @@ export async function getStats(professionalId: string): Promise<ProfessionalStat
       action: "getStats",
       metadata: { professionalId },
     });
-    return {
-      profile_id: professionalId,
-      views_count: 0,
-      contacts_count: 0,
-      favorites_count: 0,
-      shares_count: 0,
-      jobs_completed: 0,
-      response_rate: 0,
-      average_response_time: 0,
-      created_at: new Date(0).toISOString(),
-      updated_at: new Date(0).toISOString(),
-    };
+    return buildEmptyStats(professionalId);
   }
 }
 
-/**
- * Contar total de profissionais
- */
 export async function getTotalProfessionalsCount(): Promise<number> {
   try {
-    const { count, error } = await (supabase as any)
-      .from("professional_data")
+    const { count, error } = await professionalQueriesDb
+      .from<ProfessionalIdRow>("professional_data")
       .select("*", { count: "exact", head: true })
       .eq("is_accepting_clients", true)
       .eq("visibility", "public_listed");
@@ -318,16 +465,13 @@ export async function getTotalProfessionalsCount(): Promise<number> {
   }
 }
 
-/**
- * Contar profissionais criados em um período
- */
 export async function getProfessionalsCreatedInPeriod(
   startDate: Date,
   endDate: Date,
 ): Promise<number> {
   try {
-    const { count, error } = await (supabase as any)
-      .from("professional_data")
+    const { count, error } = await professionalQueriesDb
+      .from<ProfessionalIdRow>("professional_data")
       .select("*", { count: "exact", head: true })
       .gte("created_at", startDate.toISOString())
       .lte("created_at", endDate.toISOString())
@@ -350,13 +494,6 @@ export async function getProfessionalsCreatedInPeriod(
   }
 }
 
-// ============================================================================
-// ⭐ REVIEWS QUERIES - Avaliações
-// ============================================================================
-
-/**
- * Obter avaliações de um profissional
- */
 export async function getReviews(professionalId: string): Promise<ProfessionalReview[]> {
   try {
     const reviews = await ReviewsService.getReviewsForProfile(
@@ -375,9 +512,6 @@ export async function getReviews(professionalId: string): Promise<ProfessionalRe
   }
 }
 
-/**
- * Obter avaliação do usuário atual
- */
 export async function getMyReview(
   professionalId: string,
   userId: string,
@@ -400,17 +534,10 @@ export async function getMyReview(
   }
 }
 
-// ============================================================================
-// 🛍️ JOBS QUERIES - Serviços/Trabalhos
-// ============================================================================
-
-/**
- * Obter serviços de um profissional
- */
 export async function getJobs(professionalId: string): Promise<ProfessionalJob[]> {
   try {
-    const { data, error } = await (supabase as any)
-      .from("professional_jobs")
+    const { data, error } = await professionalQueriesDb
+      .from<ProfessionalJobRow>("professional_jobs")
       .select("*")
       .eq("professional_id", professionalId)
       .eq("is_active", true)
@@ -420,7 +547,7 @@ export async function getJobs(professionalId: string): Promise<ProfessionalJob[]
       throw new Error(error.message);
     }
 
-    return (data || []) as ProfessionalJob[];
+    return (data ?? []).map(mapProfessionalJobRow);
   } catch (error) {
     logger.error("[professional.queries] Error fetching jobs:", error);
     trackError(error as Error, {
@@ -428,23 +555,16 @@ export async function getJobs(professionalId: string): Promise<ProfessionalJob[]
       action: "getJobs",
       metadata: { professionalId },
     });
-    throw new Error("Erro ao buscar serviços");
+    throw new Error("Erro ao buscar servicos");
   }
 }
 
-// ============================================================================
-// 🔍 SEARCH QUERIES - Busca avançada
-// ============================================================================
-
-/**
- * Buscar profissionais por IDs (para recomendações)
- */
 export async function getProfessionalsByIds(ids: string[]): Promise<Professional[]> {
   try {
     if (!ids || ids.length === 0) return [];
 
-    const { data, error } = await (supabase as any)
-      .from("professional_data")
+    const { data, error } = await professionalQueriesDb
+      .from<ProfessionalQueryRow>("professional_data")
       .select(
         `
         *,
@@ -472,9 +592,6 @@ export async function getProfessionalsByIds(ids: string[]): Promise<Professional
   }
 }
 
-/**
- * Buscar profissionais (busca global)
- */
 export async function searchProfessionals(
   query: string,
   filters: ProfessionalFilters = {},
@@ -482,8 +599,8 @@ export async function searchProfessionals(
   try {
     const sanitizedQuery = sanitizeForILike(query);
 
-    let dbQuery = (supabase as any)
-      .from("professional_data")
+    let dbQuery = professionalQueriesDb
+      .from<ProfessionalQueryRow>("professional_data")
       .select(
         `
         *,
@@ -495,7 +612,6 @@ export async function searchProfessionals(
       .eq("is_accepting_clients", true)
       .eq("visibility", "public_listed");
 
-    // Busca textual em múltiplos campos
     if (sanitizedQuery) {
       dbQuery = dbQuery.or(
         `professional_name.ilike.%${sanitizedQuery}%,description.ilike.%${sanitizedQuery}%,service_category.ilike.%${sanitizedQuery}%`,
@@ -503,14 +619,16 @@ export async function searchProfessionals(
     }
 
     if (filters.territoryFilter) {
-      dbQuery = applyTerritoryFilter(dbQuery, filters.territoryFilter);
+      dbQuery = applyTerritoryFilter(
+        dbQuery as unknown as TerritorialFilterQuery & QueryBuilder<ProfessionalQueryRow>,
+        filters.territoryFilter,
+      );
     }
 
     if (filters.category) {
       dbQuery = dbQuery.eq("service_category", filters.category);
     }
 
-    // Ordenação
     dbQuery = dbQuery
       .order("rating", { ascending: false })
       .order("created_at", { ascending: false });
@@ -533,21 +651,14 @@ export async function searchProfessionals(
   }
 }
 
-// ============================================================================
-// 🌐 PUBLIC PROFILE QUERIES - Perfil público
-// ============================================================================
-
-/**
- * Busca perfil público de profissional por slug + uf + cidade
- */
 export async function getPublicProfileBySlug(
   slug: string,
   uf: string,
   cidade: string,
 ): Promise<Professional | null> {
   try {
-    const { data, error } = await (supabase as any)
-      .from("professional_data")
+    const { data, error } = await professionalQueriesDb
+      .from<ProfessionalQueryRow>("professional_data")
       .select(
         `
         *,
@@ -558,6 +669,7 @@ export async function getPublicProfileBySlug(
       )
       .eq("slug", slug)
       .maybeSingle();
+
     if (error) throw error;
     return data ? mapProfessionalRow(data) : null;
   } catch (error) {
@@ -594,8 +706,8 @@ export async function getProfessionalPublicProfileBySlug(
   uf: string,
   cidade: string,
 ): Promise<ProfessionalPublicProfile | null> {
-  const { data, error } = await (supabase as any)
-    .from("professional_data")
+  const { data, error } = await professionalQueriesDb
+    .from<ProfessionalPublicProfileRow>("professional_data")
     .select(
       `
       id, slug, professional_name, description,
@@ -616,16 +728,17 @@ export async function getProfessionalPublicProfileBySlug(
   if (error) throw new Error(error.message);
   if (!data) return null;
 
-  const location = data.location as any;
+  const location = firstRelation(data.location);
+  const parent = firstRelation(location?.parent);
   let city: string | null = null;
   let state: string | null = null;
 
   if (location) {
     if (location.type === "city") {
       city = location.name;
-      state = location.parent?.slug?.toUpperCase() ?? null;
+      state = parent?.slug?.toUpperCase() ?? null;
     } else if (location.type === "district") {
-      city = location.parent?.name ?? null;
+      city = parent?.name ?? null;
       state = uf.toUpperCase();
     }
   }
@@ -638,8 +751,8 @@ export async function getProfessionalPublicProfileBySlug(
 
   if (!ufMatch || !cidadeMatch) return null;
 
-  const profiles = data.profiles as any;
-  const metadata = (data.metadata as any) ?? {};
+  const profile = firstRelation(data.profiles);
+  const metadata = asRecord(data.metadata);
 
   return {
     id: data.id,
@@ -652,8 +765,9 @@ export async function getProfessionalPublicProfileBySlug(
     is_accepting_clients: data.is_accepting_clients,
     city,
     state,
-    avatar_url: profiles?.avatar_url ?? null,
-    logo_url: metadata?.logo_url ?? null,
+    avatar_url: profile?.avatar_url ?? null,
+    logo_url:
+      typeof metadata.logo_url === "string" ? metadata.logo_url : null,
     certifications: data.certifications,
     experience_years: data.experience_years,
     price_range: data.price_range,
@@ -664,8 +778,8 @@ export async function checkProfessionalSlugExists(
   slug: string,
   excludeId?: string,
 ): Promise<boolean> {
-  let query = (supabase as any)
-    .from("professional_data")
+  let query = professionalQueriesDb
+    .from<ProfessionalIdRow>("professional_data")
     .select("id")
     .eq("slug", slug)
     .limit(1);
@@ -683,35 +797,29 @@ export async function getProfessionalSimilarSlugs(
   slug: string,
   limit = PAGINATION.DEFAULT_LIMIT,
 ): Promise<string[]> {
-  const { data, error } = await supabase
-    .from("professional_data")
+  const { data, error } = await professionalQueriesDb
+    .from<ProfessionalSlugRow>("professional_data")
     .select("slug")
     .ilike("slug", `${slug}%`)
     .limit(limit);
 
   if (error) throw error;
-  return (data || []).map((row: { slug: string }) => row.slug).filter(Boolean);
+  return (data ?? [])
+    .map((row) => row.slug)
+    .filter((value): value is string => typeof value === "string" && value.length > 0);
 }
 
 export async function getProfessionalSlugHistory(
   professionalId: string,
-): Promise<
-  Array<{
-    id: string;
-    old_slug: string;
-    new_slug: string | null;
-    change_reason: string;
-    created_at: string;
-  }>
-> {
-  const { data, error } = await (supabase as any)
-    .from("professional_slug_history")
+): Promise<ProfessionalSlugHistoryRow[]> {
+  const { data, error } = await professionalQueriesDb
+    .from<ProfessionalSlugHistoryRow>("professional_slug_history")
     .select("*")
     .eq("professional_id", professionalId)
     .order("created_at", { ascending: false });
 
   if (error) throw error;
-  return data || [];
+  return data ?? [];
 }
 
 export async function validateAvailableProfessionalSlug(slug: string): Promise<string> {

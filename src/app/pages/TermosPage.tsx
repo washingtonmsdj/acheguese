@@ -1,186 +1,215 @@
-import React from "react";
-import { ArrowLeft, FileText, Shield, AlertTriangle, Scale, Users, Lock } from "lucide-react";
-import { useNavigate, Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  FileText,
+  Lock,
+  Scale,
+  Shield,
+  Users,
+} from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 
-const legalForum = import.meta.env.VITE_LEGAL_FORUM ?? "foro competente definido pela legislação aplicável";
+import { Button } from "@/shared/components/ui/button";
 
-const sections = [
+const legalForum =
+  import.meta.env.VITE_LEGAL_FORUM ?? "o foro competente definido pela legislacao aplicavel";
+
+const TERMS_SECTIONS = [
   {
     icon: Users,
-    title: "1. Aceitação dos Termos",
-    content: `Ao acessar ou utilizar a plataforma Achegue-se ("Plataforma"), você ("Usuário") declara ter lido, compreendido e concordado integralmente com estes Termos de Uso ("Termos"), bem como com nossa Política de Privacidade e Regras da Comunidade, que integram este instrumento por referência.
-
-Se você não concordar com qualquer disposição destes Termos, não utilize a Plataforma. O uso continuado após alterações nos Termos constitui aceitação tácita das novas condições.
-
-A Plataforma é destinada exclusivamente a maiores de 18 anos ou a menores de 18 anos devidamente autorizados por seus responsáveis legais.`,
+    title: "1. Aceitacao dos termos",
+    paragraphs: [
+      "Ao acessar ou utilizar a plataforma Achegue-se, o usuario declara que leu, compreendeu e aceitou estes Termos de Uso, assim como a Politica de Privacidade e as Regras da Comunidade.",
+      "Se o usuario nao concordar com qualquer parte destes termos, nao deve utilizar a plataforma. O uso continuado apos atualizacoes relevantes representa aceitacao das novas condicoes.",
+      "A plataforma e destinada a maiores de 18 anos ou a menores representados e autorizados por seus responsaveis legais, conforme a legislacao aplicavel.",
+    ],
   },
   {
     icon: FileText,
-    title: "2. Descrição do Serviço",
-    content: `A Achegue-se é uma plataforma digital de comunicação comunitária que permite a usuários cadastrados publicar, compartilhar e interagir com conteúdos relacionados ao seu bairro e cidade.
-
-Os serviços incluem, mas não se limitam a: publicação de conteúdo comunitário, listagem de negócios e serviços locais, classificados, mapas, recomendações e recursos de interação entre usuários.
-
-A Plataforma atua como intermediária tecnológica (art. 19 do Marco Civil da Internet — Lei 12.965/2014), não sendo responsável pelo conteúdo gerado por terceiros, salvo nas hipóteses legais expressamente previstas.`,
+    title: "2. Escopo do servico",
+    paragraphs: [
+      "O Achegue-se opera como uma plataforma digital voltada a descoberta territorial, comunicacao comunitaria e visibilidade de negocios, servicos e classificados locais.",
+      "Os recursos podem incluir publicacoes, recomendacoes, mapas, paginas territoriais, perfis publicos, modulos de comunidade e fluxos de conta.",
+      "A plataforma atua como intermediaria tecnologica e nao substitui autoridades publicas, relacoes contratuais privadas ou diligencia propria do usuario.",
+    ],
   },
   {
     icon: Lock,
-    title: "3. Cadastro e Conta do Usuário",
-    content: `Para utilizar os recursos da Plataforma, o Usuário deve criar uma conta fornecendo informações verdadeiras, precisas e atualizadas. O Usuário é responsável por manter a confidencialidade de suas credenciais de acesso.
-
-O Usuário compromete-se a: (a) não compartilhar sua senha com terceiros; (b) notificar imediatamente a Plataforma sobre qualquer uso não autorizado de sua conta; (c) não criar contas falsas ou em nome de terceiros sem autorização.
-
-A Plataforma reserva-se o direito de recusar cadastros, cancelar contas ou remover conteúdos a seu exclusivo critério, especialmente em casos de violação destes Termos.
-
-O nome de usuário (handle) escolhido no cadastro é único e público. Não são permitidos handles que imitem marcas registradas, personalidades públicas ou que contenham termos ofensivos.`,
-  },
-  {
-    icon: Users,
-    title: "4. Responsabilidade pelo Conteúdo",
-    content: `O Usuário é o único e exclusivo responsável por todo conteúdo que publicar, compartilhar ou transmitir na Plataforma, incluindo textos, imagens, vídeos, links e demais materiais.
-
-É expressamente proibido publicar conteúdo que: (a) viole direitos autorais, marcas ou propriedade intelectual de terceiros; (b) contenha informações falsas, enganosas ou que possam causar dano a pessoas ou empresas; (c) seja difamatório, calunioso, injurioso, ameaçador, obsceno, pornográfico ou que incite violência ou discriminação; (d) viole a privacidade ou exponha dados pessoais de terceiros sem consentimento; (e) promova atividades ilegais ou contrarie a legislação brasileira vigente; (f) contenha vírus, malware ou qualquer código malicioso.
-
-Nos termos do art. 19 do Marco Civil da Internet, a Plataforma somente será responsabilizada por danos decorrentes de conteúdo gerado por terceiros se, após ordem judicial específica, não tomar as providências para tornar o conteúdo indisponível.`,
-  },
-  {
-    icon: AlertTriangle,
-    title: "5. Moderação e Penalidades",
-    content: `A Plataforma mantém equipe de moderação e sistemas automatizados para identificar violações destes Termos e das Regras da Comunidade.
-
-Ao constatar violações, a Plataforma poderá, a seu critério e de forma progressiva: (a) remover o conteúdo infrator sem aviso prévio; (b) emitir advertência formal ao Usuário; (c) suspender temporariamente o acesso à conta; (d) suspender permanentemente a conta; (e) reportar às autoridades competentes quando houver indício de prática criminosa.
-
-O Usuário poderá contestar decisões de moderação por meio dos canais de suporte disponíveis na Plataforma. A Plataforma analisará as contestações em prazo razoável, mas não se obriga a reverter decisões de moderação.`,
+    title: "3. Cadastro e seguranca da conta",
+    paragraphs: [
+      "Para acessar recursos autenticados, o usuario deve fornecer dados verdadeiros, atuais e completos, mantendo email, telefone e demais informacoes essenciais sempre corretos.",
+      "Cada conta e pessoal. O usuario deve proteger suas credenciais, evitar compartilhamento indevido e comunicar rapidamente qualquer suspeita de uso nao autorizado.",
+      "A plataforma pode recusar cadastros, limitar funcionalidades, solicitar verificacoes adicionais ou encerrar contas quando houver violacao destes termos, tentativa de fraude ou uso indevido.",
+    ],
   },
   {
     icon: Shield,
-    title: "6. Segurança e Uso Responsável",
-    content: `Os recursos comunitários da Plataforma devem ser usados de forma responsável, precisa e respeitosa, sempre com atenção à segurança dos usuários e da comunidade.
-
-É expressamente proibido: (a) publicar informações falsas ou sem fundamento; (b) utilizar a Plataforma para causar pânico desnecessário; (c) divulgar localização de operações policiais, blitz ou ações de fiscalização; (d) usar recursos comunitários para fraude, assédio ou fins incompatíveis com estes Termos.
-
-O uso indevido dos recursos comunitários poderá resultar em remoção de conteúdo, suspensão de funcionalidades, bloqueio de conta e responsabilização civil ou criminal nos termos da legislação aplicável.`,
+    title: "4. Conteudo e conduta do usuario",
+    paragraphs: [
+      "O usuario e responsavel por todo conteudo que publicar, comentar, recomendar, anunciar ou compartilhar na plataforma.",
+      "Nao e permitido divulgar conteudo ilegal, enganoso, ofensivo, discriminatorio, difamatorio, abusivo, malicioso, violador de privacidade ou de direitos de terceiros.",
+      "Tambem e proibido usar a plataforma para spam, manipulacao de reputacao, fraude, assedio, distribuicao de malware ou qualquer conduta incompativel com a seguranca da comunidade.",
+    ],
   },
   {
-    icon: Lock,
-    title: "7. Privacidade e Proteção de Dados",
-    content: `O tratamento de dados pessoais na Plataforma é regido pela Lei Geral de Proteção de Dados (LGPD — Lei 13.709/2018) e está detalhado em nossa Política de Privacidade, que integra estes Termos.
-
-Ao se cadastrar, o Usuário consente com a coleta e tratamento de seus dados pessoais para as finalidades descritas na Política de Privacidade. O Usuário pode exercer seus direitos de titular de dados (acesso, correção, exclusão, portabilidade, entre outros) por meio dos canais de suporte.
-
-A Plataforma adota medidas técnicas e organizacionais adequadas para proteger os dados pessoais dos Usuários contra acesso não autorizado, perda, destruição ou divulgação indevida.`,
-  },
-  {
-    icon: Scale,
-    title: "8. Propriedade Intelectual",
-    content: `Todos os direitos de propriedade intelectual relativos à Plataforma, incluindo marca, logotipo, design, código-fonte, textos e demais elementos, são de titularidade exclusiva da Plataforma ou de seus licenciantes.
-
-Ao publicar conteúdo na Plataforma, o Usuário concede à Plataforma licença não exclusiva, gratuita, mundial e por prazo indeterminado para usar, reproduzir, modificar, adaptar, publicar e distribuir tal conteúdo exclusivamente para fins de operação e promoção dos serviços.
-
-O Usuário declara que possui todos os direitos necessários sobre o conteúdo que publica e que tal publicação não viola direitos de terceiros.`,
-  },
-  {
-    icon: FileText,
-    title: "9. Limitação de Responsabilidade",
-    content: `A Plataforma é fornecida "no estado em que se encontra" e "conforme disponível", sem garantias de qualquer natureza, expressas ou implícitas.
-
-A Plataforma não se responsabiliza por: (a) interrupções, falhas técnicas ou indisponibilidade do serviço; (b) danos diretos, indiretos, incidentais, especiais ou consequentes decorrentes do uso ou impossibilidade de uso da Plataforma; (c) conteúdo publicado por terceiros; (d) atos praticados por usuários fora da Plataforma; (e) perda de dados decorrente de falhas técnicas.
-
-Em nenhuma hipótese a responsabilidade total da Plataforma perante o Usuário excederá o valor pago pelo Usuário pelos serviços nos últimos 12 meses, ou R$ 100,00 (cem reais), o que for maior.`,
+    icon: AlertTriangle,
+    title: "5. Moderacao e medidas aplicaveis",
+    paragraphs: [
+      "A plataforma pode revisar conteudos, sinais de abuso, denuncias e comportamentos de risco por meios humanos e automatizados.",
+      "Quando houver descumprimento de regras, a plataforma pode remover conteudo, limitar alcance, suspender funcionalidades, aplicar bloqueios temporarios ou encerrar contas.",
+      "Nos casos exigidos por lei ou por preservacao de direitos, a plataforma tambem pode colaborar com autoridades competentes.",
+    ],
   },
   {
     icon: Scale,
-    title: "10. Disposições Gerais",
-    content: `Estes Termos são regidos pelas leis da República Federativa do Brasil. Fica eleito ${legalForum} para dirimir quaisquer controvérsias decorrentes destes Termos, com renúncia expressa a qualquer outro, por mais privilegiado que seja.
-
-Se qualquer disposição destes Termos for considerada inválida ou inexequível, as demais disposições permanecerão em pleno vigor e efeito.
-
-A omissão da Plataforma em exercer qualquer direito ou disposição destes Termos não constituirá renúncia a tal direito ou disposição.
-
-Para dúvidas ou solicitações relacionadas a estes Termos, entre em contato pelo canal de suporte disponível na Plataforma.`,
+    title: "6. Responsabilidade, propriedade e foro",
+    paragraphs: [
+      "A plataforma e fornecida conforme disponibilidade operacional, sem garantia absoluta de continuidade, ausencia de falhas ou adequacao a qualquer finalidade especifica do usuario.",
+      "Os elementos proprietarios do produto, incluindo marca, identidade visual, software, layout e documentacao, permanecem sob titularidade da plataforma ou de seus licenciantes.",
+      `Estes termos sao regidos pelas leis brasileiras. Fica eleito ${legalForum} para solucao de controversias, salvo disposicao legal especifica em sentido diverso.`,
+    ],
   },
-];
+] as const;
 
 export default function TermosPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="bg-background min-h-screen">
-      <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-lg border-b">
-        <div className="flex items-center gap-3 px-4 py-3 max-w-2xl mx-auto">
-          <button
-            onClick={() => navigate(-1)}
-            className="text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="Voltar"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          <h1 className="text-sm font-semibold font-display">Termos de Uso</h1>
-        </div>
-      </header>
+    <>
+      <Helmet>
+        <title>Termos de uso</title>
+      </Helmet>
 
-      <main id="main-content" tabIndex={-1} className="px-4 py-6 max-w-2xl mx-auto focus:outline-none">
-        {/* Hero */}
-        <div className="flex items-center gap-4 mb-6">
-          <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
-            <FileText className="h-7 w-7 text-primary" />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold font-display">Termos de Uso</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Última atualização: Março de 2026 · Versão 2.0
-            </p>
-          </div>
-        </div>
-
-        {/* Aviso de destaque */}
-        <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mb-8">
-          <p className="text-sm text-foreground leading-relaxed">
-            Ao utilizar o Achegue-se, você concorda com estes Termos de Uso. Leia com atenção antes de criar sua conta ou continuar usando a plataforma.
-          </p>
-        </div>
-
-        {/* Seções */}
-        <div className="space-y-6">
-          {sections.map((section, i) => {
-            const Icon = section.icon;
-            return (
-              <div key={i} className="bg-card border border-border rounded-xl p-5">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <Icon className="h-4 w-4 text-primary" />
-                  </div>
-                  <h3 className="text-sm font-semibold text-foreground">{section.title}</h3>
-                </div>
-                <div className="space-y-3">
-                  {section.content.split("\n\n").map((paragraph, j) => (
-                    <p key={j} className="text-sm text-muted-foreground leading-relaxed">
-                      {paragraph}
-                    </p>
-                  ))}
-                </div>
+      <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.08),transparent_26%),linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.26))]">
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="mx-auto w-full max-w-5xl px-4 pb-10 pt-4 sm:px-6 sm:pt-6 lg:px-8"
+        >
+          <div className="sticky top-0 z-20 -mx-4 mb-5 border-b border-border/60 bg-background/90 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:mb-6 sm:rounded-3xl sm:border sm:bg-card/85 sm:px-5 sm:shadow-sm">
+            <div className="flex items-start gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="shrink-0 rounded-full"
+                onClick={() => navigate(-1)}
+                type="button"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  Base legal da plataforma
+                </p>
+                <h1 className="truncate text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+                  Termos de uso
+                </h1>
+                <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
+                  Ultima atualizacao: marco de 2026. Versao publica de leitura.
+                </p>
               </div>
-            );
-          })}
-        </div>
+            </div>
+          </div>
 
-        {/* Footer links */}
-        <div className="mt-8 pt-6 border-t border-border flex flex-col items-center gap-2">
-          <p className="text-xs text-muted-foreground text-center">
-            Veja também nossa{" "}
-            <Link to="/privacidade" className="text-primary hover:underline font-medium">
-              Política de Privacidade
-            </Link>
-            {" "}e as{" "}
-            <Link to="/regras" className="text-primary hover:underline font-medium">
-              Regras da Comunidade
-            </Link>
-          </p>
-          <p className="text-xs text-muted-foreground text-center">
-            Dúvidas? Entre em contato pelo suporte da plataforma.
-          </p>
-        </div>
-      </main>
-    </div>
+          <section className="rounded-3xl border border-border/70 bg-card/90 p-5 shadow-sm sm:p-6">
+            <div className="space-y-3">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/90">
+                Uso, conduta e operacao
+              </p>
+              <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[2rem]">
+                Regras contratuais para uso do Achegue-se
+              </h2>
+              <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
+                Este documento resume as condicoes principais de acesso, cadastro, publicacao,
+                moderacao e responsabilidade dentro da plataforma. O objetivo e deixar o uso claro,
+                previsivel e alinhado ao SSOT juridico do produto.
+              </p>
+            </div>
+
+            <div className="mt-5 flex flex-wrap gap-2">
+              <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                Contrato de uso
+              </span>
+              <span className="rounded-full border border-border/60 bg-background/70 px-3 py-1 text-xs font-medium text-foreground">
+                Conta e conteudo
+              </span>
+              <span className="rounded-full border border-border/60 bg-background/70 px-3 py-1 text-xs font-medium text-foreground">
+                Moderacao
+              </span>
+            </div>
+          </section>
+
+          <section className="mt-5 rounded-3xl border border-primary/20 bg-primary/5 p-4 shadow-sm sm:p-5">
+            <p className="text-sm leading-6 text-foreground">
+              Ao criar conta, publicar conteudo ou interagir com a comunidade, o usuario aceita estas
+              condicoes de uso e se compromete a respeitar as regras operacionais, legais e de
+              seguranca da plataforma.
+            </p>
+          </section>
+
+          <div className="mt-5 space-y-4">
+            {TERMS_SECTIONS.map((section) => {
+              const Icon = section.icon;
+
+              return (
+                <section
+                  key={section.title}
+                  className="rounded-3xl border border-border/70 bg-card/90 p-5 shadow-sm sm:p-6"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-2xl bg-primary/10 p-2.5 text-primary">
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-base font-semibold text-foreground sm:text-lg">
+                        {section.title}
+                      </h3>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 space-y-3">
+                    {section.paragraphs.map((paragraph) => (
+                      <p key={paragraph} className="text-sm leading-6 text-muted-foreground">
+                        {paragraph}
+                      </p>
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
+          </div>
+
+          <section className="mt-5 rounded-3xl border border-border/70 bg-card/90 p-4 shadow-sm sm:p-5">
+            <div className="flex flex-col gap-3">
+              <p className="text-sm leading-6 text-muted-foreground">
+                Leia tambem os documentos complementares e os canais oficiais para temas de comunidade
+                e privacidade.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <Link
+                  to="/privacidade"
+                  className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+                >
+                  Politica de privacidade
+                </Link>
+                <Link
+                  to="/regras"
+                  className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+                >
+                  Regras da comunidade
+                </Link>
+                <Link
+                  to="/dpo"
+                  className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+                >
+                  Falar com o DPO
+                </Link>
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
+    </>
   );
 }

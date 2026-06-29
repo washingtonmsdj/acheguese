@@ -72,9 +72,14 @@ function hasBlockedContent(text: string): boolean {
   return BLOCKED_PATTERNS.some((pattern) => pattern.test(text));
 }
 
+interface PanicAlertProfileLocation {
+  locationId?: string | null;
+  location_id?: string | null;
+}
+
 function resolveProfileLocationId(profile: unknown): string | null {
   if (!profile || typeof profile !== "object") return null;
-  const record = profile as Record<string, unknown>;
+  const record = profile as PanicAlertProfileLocation;
 
   if (typeof record.locationId === "string" && record.locationId) {
     return record.locationId;

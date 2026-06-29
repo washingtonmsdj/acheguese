@@ -1,17 +1,15 @@
 /**
- * TerritorialAIService - SSOT para conteúdo gerado por IA de territórios
- * 
- * Responsável por:
- * - Invocar edge function de geração de conteúdo
- * - Buscar conteúdo AI de territórios
- * - Atualizar conteúdo AI
- * 
- * @module territorial
+ * TerritorialAIService - SSOT para conteudo gerado por IA de territorios
+ *
+ * Responsavel por:
+ * - Invocar edge function de geracao de conteudo
+ * - Buscar conteudo AI de territorios
+ * - Atualizar conteudo AI
  */
 
 import { supabase } from "@/integrations/supabase";
-import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
+import { logger } from "@/shared/utils/logger";
 
 export interface TerritoryAIContent {
   id: string;
@@ -38,25 +36,45 @@ interface TerritoryAIGenerateResponse {
   [key: string]: unknown;
 }
 
+type QueryResult<T> = Promise<{ data: T; error: { code?: string; message?: string } | null }>;
+
+interface QueryBuilder<TRow> {
+  select(columns?: string): QueryBuilder<TRow>;
+  update(values: unknown): QueryBuilder<TRow>;
+  eq(column: string, value: unknown): QueryBuilder<TRow>;
+  maybeSingle(): QueryResult<TRow | null>;
+  single(): QueryResult<TRow>;
+}
+
+interface TerritorialDbClient {
+  from<TRow>(table: string): QueryBuilder<TRow>;
+  functions: {
+    invoke<TResponse>(
+      name: string,
+      options: { body?: unknown },
+    ): Promise<{ data: TResponse | null; error: { message?: string } | null }>;
+  };
+}
+
+const territorialDb = supabase as unknown as TerritorialDbClient;
+
 export class TerritorialAIService {
-  /**
-   * Busca conteúdo AI de um território
-   * ✅ SSOT para territory_ai_content
-   */
-  static async getAIContent(territorySlug: string): Promise<TerritoryAIContent | null> {
+  static async getAIContent(
+    territorySlug: string,
+  ): Promise<TerritoryAIContent | null> {
     try {
-      const { data, error } = await (supabase as any)
-        .from('territory_ai_content')
-        .select('*')
-        .eq('territory_slug', territorySlug)
+      const { data, error } = await territorialDb
+        .from<TerritoryAIContent>("territory_ai_content")
+        .select("*")
+        .eq("territory_slug", territorySlug)
         .maybeSingle();
 
       if (error) {
-        logger.error('Error fetching AI content:', error);
+        logger.error("Error fetching AI content:", error);
         throw error;
       }
 
-      return data as unknown as TerritoryAIContent;
+      return data;
     } catch (err) {
       trackError(err as Error, {
         component: "TerritorialAIService",
@@ -67,26 +85,26 @@ export class TerritorialAIService {
     }
   }
 
-  /**
-   * Gera conteúdo AI para um território via edge function
-   * ✅ SSOT para functions.invoke('territory-ai-content')
-   */
   static async generateAIContent(params: {
     territory_slug: string;
     territory_name: string;
     members?: string[];
   }): Promise<TerritoryAIGenerateResponse> {
     try {
-      const { data, error } = await (supabase as any).functions.invoke('territory-ai-content', {
-        body: params,
-      });
+      const { data, error } =
+        await territorialDb.functions.invoke<TerritoryAIGenerateResponse>(
+          "territory-ai-content",
+          {
+            body: params,
+          },
+        );
 
       if (error) {
-        logger.error('Error invoking AI generation:', error);
+        logger.error("Error invoking AI generation:", error);
         throw error;
       }
 
-      const response = (data ?? {}) as TerritoryAIGenerateResponse;
+      const response = data ?? {};
       if (response.error) {
         throw new Error(response.error);
       }
@@ -102,33 +120,29 @@ export class TerritorialAIService {
     }
   }
 
-  /**
-   * Atualiza conteúdo AI de um território
-   * ✅ SSOT para territory_ai_content updates
-   */
   static async updateAIContent(
     territorySlug: string,
-    updates: Partial<TerritoryAIContent>
+    updates: Partial<TerritoryAIContent>,
   ): Promise<TerritoryAIContent> {
     try {
-      const { data, error } = await (supabase as any)
-        .from('territory_ai_content')
+      const { data, error } = await territorialDb
+        .from<TerritoryAIContent>("territory_ai_content")
         .update({
-          ...(updates as unknown as Record<string, unknown>),
+          ...updates,
           is_manual_override: true,
           manually_edited_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })
-        .eq('territory_slug', territorySlug)
+        .eq("territory_slug", territorySlug)
         .select()
         .single();
 
       if (error) {
-        logger.error('Error updating AI content:', error);
+        logger.error("Error updating AI content:", error);
         throw error;
       }
 
-      return data as unknown as TerritoryAIContent;
+      return data;
     } catch (err) {
       trackError(err as Error, {
         component: "TerritorialAIService",
@@ -140,7 +154,4 @@ export class TerritorialAIService {
   }
 }
 
-// Export singleton
 export const territorialAIService = TerritorialAIService;
-
-

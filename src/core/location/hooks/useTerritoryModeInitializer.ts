@@ -61,8 +61,8 @@ export function useTerritoryModeInitializer() {
 
     const shouldForce = TerritoryModeManager.shouldForceModeToCityFromUrl(
       location.pathname,
-      homeDistrict as any,
-      homeCity as any,
+      homeDistrict,
+      homeCity,
     );
 
     if (shouldForce) {

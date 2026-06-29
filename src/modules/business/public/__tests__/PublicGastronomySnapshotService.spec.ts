@@ -8,6 +8,7 @@ vi.mock("../services/PublicSnapshotRpcService", () => ({
 
 import { PublicSnapshotRpcService } from "../services/PublicSnapshotRpcService";
 import { PublicGastronomySnapshotService } from "../services/PublicGastronomySnapshotService";
+import type { PublicGastronomySnapshot } from "../types/publicSnapshots";
 
 describe("PublicGastronomySnapshotService", () => {
   beforeEach(() => {
@@ -15,7 +16,7 @@ describe("PublicGastronomySnapshotService", () => {
   });
 
   it("consumes only PublicGastronomySnapshot RPC contract", async () => {
-    vi.mocked(PublicSnapshotRpcService.getGastronomySnapshotBySlug).mockResolvedValue({
+    const rpcSnapshot = {
       identity: {
         profileId: "profile-1",
         businessId: "business-data-1",
@@ -75,7 +76,9 @@ describe("PublicGastronomySnapshotService", () => {
         shouldNoIndex: false,
       },
       routing: {},
-    } as any);
+    } as unknown as PublicGastronomySnapshot;
+
+    vi.mocked(PublicSnapshotRpcService.getGastronomySnapshotBySlug).mockResolvedValue(rpcSnapshot);
 
     const snapshot = await PublicGastronomySnapshotService.getByTerritorySlug({
       state: "ba",

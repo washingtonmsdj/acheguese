@@ -175,7 +175,7 @@ export function isOpenNow(schedule: string): boolean {
       let startHour: number, startMin: number, endHour: number, endMin: number;
 
       if (match.length === 7) {
-        const [, startDay, endDay] = match;
+        const [, startDay = "", endDay = "", startHourText = "0", startMinText = "0", endHourText = "0", endMinText = "0"] = match;
         const startDayIndex = dayNames.findIndex((d) =>
           startDay.includes(d.substring(0, 3)),
         );
@@ -190,13 +190,16 @@ export function isOpenNow(schedule: string): boolean {
           (startDayIndex > endDayIndex &&
             (currentDay >= startDayIndex || currentDay <= endDayIndex));
         if (!isInDayRange) continue;
-        [, , , startHour, startMin, endHour, endMin] = match.map((m, i) =>
-          i > 2 ? parseInt(m) : m,
-        ) as any;
+        startHour = parseInt(startHourText, 10);
+        startMin = parseInt(startMinText, 10);
+        endHour = parseInt(endHourText, 10);
+        endMin = parseInt(endMinText, 10);
       } else if (match.length === 5) {
-        [, startHour, startMin, endHour, endMin] = match.map((m) =>
-          parseInt(m),
-        ) as any;
+        const [, startHourText = "0", startMinText = "0", endHourText = "0", endMinText = "0"] = match;
+        startHour = parseInt(startHourText, 10);
+        startMin = parseInt(startMinText, 10);
+        endHour = parseInt(endHourText, 10);
+        endMin = parseInt(endMinText, 10);
         if (
           scheduleLower.includes("seg") &&
           scheduleLower.includes("sáb") &&

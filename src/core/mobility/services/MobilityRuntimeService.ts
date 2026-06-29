@@ -6,14 +6,107 @@
 
 import { supabase } from "@/integrations/supabase";
 import type { Tables, TablesUpdate } from "@/integrations/supabase";
-import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services/ProfileService";
+import { logger } from "@/shared/utils/logger";
+import type { RideRequest } from "../types/types";
 import { RIDE_STATUS } from "../constants";
+import { toRideRequestContract } from "./RideCanonicalAdapter";
 
-const db = supabase as any;
+type ErrorLike = { message?: string | null; code?: string | null } | null;
+
+type QueryPayload<TRow> = {
+  data: TRow[] | null;
+  error: ErrorLike;
+  count?: number | null;
+};
+
+type SingleQueryPayload<TRow> = {
+  data: TRow | null;
+  error: ErrorLike;
+  count?: number | null;
+};
+
+type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
+  select(columns?: string, options?: { count?: "exact"; head?: boolean }): TableClient<TRow>;
+  insert(values: Record<string, unknown> | Record<string, unknown>[]): TableClient<TRow>;
+  update(values: Record<string, unknown>): TableClient<TRow>;
+  eq(column: string, value: unknown): TableClient<TRow>;
+  in(column: string, values: readonly unknown[]): TableClient<TRow>;
+  is(column: string, value: null): TableClient<TRow>;
+  or(filter: string): TableClient<TRow>;
+  gte(column: string, value: unknown): TableClient<TRow>;
+  order(column: string, options?: { ascending: boolean }): TableClient<TRow>;
+  limit(count: number): TableClient<TRow>;
+  maybeSingle(): Promise<SingleQueryPayload<TRow>>;
+  single(): Promise<SingleQueryPayload<TRow>>;
+};
+
+type MobilityRuntimeDbClient = {
+  from<TRow = Record<string, unknown>>(table: string): TableClient<TRow>;
+  rpc<T>(fn: string, params?: Record<string, unknown>): Promise<{
+    data: T | null;
+    error: ErrorLike;
+  }>;
+};
+
+const db = supabase as unknown as MobilityRuntimeDbClient;
 
 type DriverDataRecord = Tables<"driver_data">;
 type RideRequestRecord = Tables<"ride_requests">;
+type DriverCompleteProfileRecord = {
+  profile_id: string;
+  display_name: string;
+  avg_rating: number;
+  total_rides: number;
+  avatar_url?: string | null;
+  created_at?: string;
+  vehicle_model?: string | null;
+  vehicle_color?: string | null;
+  vehicle_plate?: string | null;
+};
+type DriverVerificationStatusRow = {
+  is_verified: boolean | null;
+  is_online: boolean | null;
+  subscription_active: boolean | null;
+};
+type DriverStatsDetailedRow = Pick<
+  DriverDataRecord,
+  | "rating"
+  | "total_rides"
+  | "total_rides_completed"
+  | "total_rides_cancelled"
+  | "acceptance_rate"
+  | "cancellation_rate"
+  | "is_online"
+  | "is_verified"
+  | "subscription_active"
+>;
+type AddressSummaryRow = {
+  street: string | null;
+  latitude: number | null;
+  longitude: number | null;
+};
+type LocationNameRow = { name: string | null };
+type RideWithAddressRow = RideRequestRecord & {
+  pickup_address?: AddressSummaryRow | null;
+  dropoff_address?: AddressSummaryRow | null;
+};
+type RideWithAddressesRow = RideRequestRecord & {
+  pickup_address?: AddressSummaryRow | null;
+  dropoff_address?: AddressSummaryRow | null;
+  pickup_location?: LocationNameRow | null;
+  dropoff_location?: LocationNameRow | null;
+};
+type RideAvailableSeatsRow = { available_seats: number | null };
+type RideBasicInfoRow = {
+  id: string;
+  origin: string | null;
+  destination: string | null;
+  status: string | null;
+  final_price: number | null;
+  suggested_price: number | null;
+};
+
 class MobilityServiceInstance {
   private async resolveDriverProfileId(identifier: string): Promise<string | null> {
     try {
@@ -46,7 +139,7 @@ class MobilityServiceInstance {
   async getAvailableRides(): Promise<unknown[]> {
     try {
       const { data, error } = await db
-        .from("ride_requests")
+        .from<RideWithAddressRow>("ride_requests")
         .select(`
           *,
           pickup_address:addresses!pickup_address_id(street, latitude, longitude),
@@ -58,20 +151,15 @@ class MobilityServiceInstance {
 
       if (error) throw error;
 
-      // Expose denormalized address fields consumed by ride list components.
-      type RideWithAddress = RideRequestRecord & {
-        pickup_address?: { street: string | null; latitude: number | null; longitude: number | null } | null;
-        dropoff_address?: { street: string | null; latitude: number | null; longitude: number | null } | null;
-      };
-      const rows: RideWithAddress[] = data || [];
-      return rows.map((r) => ({
-        ...r,
-        origin: r.origin || r.pickup_address?.street || "Origem nao informada",
-        destination: r.destination || r.dropoff_address?.street || "Destino não informado",
-        origin_lat: r.origin_lat || r.pickup_address?.latitude,
-        origin_lng: r.origin_lng || r.pickup_address?.longitude,
-        destination_lat: r.destination_lat || r.dropoff_address?.latitude,
-        destination_lng: r.destination_lng || r.dropoff_address?.longitude,
+      const rows = data || [];
+      return rows.map((ride) => ({
+        ...ride,
+        origin: ride.origin || ride.pickup_address?.street || "Origem nao informada",
+        destination: ride.destination || ride.dropoff_address?.street || "Destino nao informado",
+        origin_lat: ride.origin_lat || ride.pickup_address?.latitude,
+        origin_lng: ride.origin_lng || ride.pickup_address?.longitude,
+        destination_lat: ride.destination_lat || ride.dropoff_address?.latitude,
+        destination_lng: ride.destination_lng || ride.dropoff_address?.longitude,
       }));
     } catch (error) {
       logger.error("mobilityService.getAvailableRides", error as Error);
@@ -79,23 +167,21 @@ class MobilityServiceInstance {
     }
   }
 
-  async createAdminDriverProfile(userId: string): Promise<unknown | null> {
+  async createAdminDriverProfile(userId: string): Promise<DriverDataRecord | null> {
     try {
-      // Buscar ou criar profile de motorista via serviço canônico de perfis
       const driverProfile = await profileService.ensureDriverProfileForUser(userId);
       if (!driverProfile?.id) return null;
 
-      // Criar driver_data se não existir
       const { data: existing } = await db
-        .from('driver_data')
-        .select('*')
-        .eq('profile_id', driverProfile.id)
+        .from<DriverDataRecord>("driver_data")
+        .select("*")
+        .eq("profile_id", driverProfile.id)
         .maybeSingle();
 
       if (existing) return existing;
 
       const { data: driverData, error: driverError } = await db
-        .from('driver_data')
+        .from<DriverDataRecord>("driver_data")
         .insert({
           profile_id: driverProfile.id,
           is_online: false,
@@ -108,15 +194,18 @@ class MobilityServiceInstance {
           acceptance_rate: 100.0,
           cancellation_rate: 0.0,
         })
-        .select('*')
+        .select("*")
         .single();
 
       if (driverError) throw driverError;
 
-      logger.info('mobilityService.createAdminDriverProfile - created', { userId, profileId: driverProfile.id });
+      logger.info("mobilityService.createAdminDriverProfile - created", {
+        userId,
+        profileId: driverProfile.id,
+      });
       return driverData;
     } catch (error) {
-      logger.error('mobilityService.createAdminDriverProfile', error as Error);
+      logger.error("mobilityService.createAdminDriverProfile", error as Error);
       return null;
     }
   }
@@ -127,13 +216,13 @@ class MobilityServiceInstance {
       if (!driverProfileId) return null;
 
       const { data, error } = await db
-        .from("driver_data")
+        .from<DriverDataRecord>("driver_data")
         .select("*")
         .eq("profile_id", driverProfileId)
         .maybeSingle();
 
       if (error) throw error;
-      return (data || null) as DriverDataRecord | null;
+      return data || null;
     } catch (error) {
       logger.error("mobilityService.getDriverData", error as Error);
       return null;
@@ -151,14 +240,14 @@ class MobilityServiceInstance {
       }
 
       const { data, error } = await db
-        .from("driver_data")
+        .from<DriverDataRecord>("driver_data")
         .update(updates)
         .eq("profile_id", driverProfileId)
         .select("*")
         .single();
 
       if (error) throw error;
-      return data as DriverDataRecord;
+      return data;
     } catch (error) {
       logger.error("mobilityService.updateDriverData", error as Error, {
         identifier,
@@ -168,13 +257,13 @@ class MobilityServiceInstance {
     }
   }
 
-  async getRidesByDriver(identifier: string): Promise<unknown[]> {
+  async getRidesByDriver(identifier: string): Promise<RideRequestRecord[]> {
     try {
       const driverProfileId = await this.resolveDriverProfileId(identifier);
       if (!driverProfileId) return [];
 
       const { data, error } = await db
-        .from("ride_requests")
+        .from<RideRequestRecord>("ride_requests")
         .select("*")
         .eq("driver_profile_id", driverProfileId)
         .order("created_at", { ascending: false });
@@ -187,12 +276,16 @@ class MobilityServiceInstance {
     }
   }
 
-  async getDriverProfiles(): Promise<{ data: unknown[]; error: unknown }> {
+  async getDriverProfiles(): Promise<{
+    data: DriverCompleteProfileRecord[];
+    error: unknown;
+  }> {
     try {
       const { data, error } = await db
-        .from("driver_complete_profile")
+        .from<DriverCompleteProfileRecord>("driver_complete_profile")
         .select("*")
         .order("created_at", { ascending: false });
+
       return { data: data || [], error };
     } catch (error) {
       logger.error("mobilityService.getDriverProfiles", error as Error);
@@ -200,31 +293,30 @@ class MobilityServiceInstance {
     }
   }
 
-  // -- Ride actions (delegam para RideService) ------------------------------
+  // -- Ride actions (delegam para RideService) ----------------------------
 
   async acceptRide(rideId: string, driverProfileId: string): Promise<void> {
-    const { rideService } = await import('./RideService');
+    const { rideService } = await import("./RideService");
     await rideService.acceptRide(rideId, driverProfileId);
   }
 
   async startRide(rideId: string): Promise<void> {
-    const { rideService } = await import('./RideService');
+    const { rideService } = await import("./RideService");
     await rideService.startRide(rideId);
   }
 
   async completeRide(rideId: string): Promise<void> {
-    const { rideService } = await import('./RideService');
+    const { rideService } = await import("./RideService");
     await rideService.completeRide(rideId, 0, 0, 0);
   }
 
   async cancelRide(rideId: string): Promise<void> {
-    const { rideService } = await import('./RideService');
+    const { rideService } = await import("./RideService");
     await rideService.cancelRide(rideId);
   }
 
   async checkSuspensionExpiry(profileId: string): Promise<void> {
     try {
-      // Verificar se suspensão expirou e reativar se necessário
       const profile = await profileService.getProfileById(profileId);
 
       if (!profile?.is_suspended || !profile?.suspended_until) return;
@@ -237,10 +329,10 @@ class MobilityServiceInstance {
           suspended_until: null,
         });
 
-        logger.info('mobilityService.checkSuspensionExpiry - suspension lifted', { profileId });
+        logger.info("mobilityService.checkSuspensionExpiry - suspension lifted", { profileId });
       }
     } catch (error) {
-      logger.error('mobilityService.checkSuspensionExpiry', error as Error);
+      logger.error("mobilityService.checkSuspensionExpiry", error as Error);
     }
   }
 
@@ -252,11 +344,13 @@ class MobilityServiceInstance {
     });
   }
 
-  async getDriverStatsDetailed(driverProfileId: string): Promise<unknown | null> {
+  async getDriverStatsDetailed(driverProfileId: string): Promise<DriverStatsDetailedRow | null> {
     try {
       const { data, error } = await db
-        .from("driver_data")
-        .select("rating, total_rides, total_rides_completed, total_rides_cancelled, acceptance_rate, cancellation_rate, is_online, is_verified, subscription_active")
+        .from<DriverStatsDetailedRow>("driver_data")
+        .select(
+          "rating, total_rides, total_rides_completed, total_rides_cancelled, acceptance_rate, cancellation_rate, is_online, is_verified, subscription_active",
+        )
         .eq("profile_id", driverProfileId)
         .maybeSingle();
 
@@ -275,7 +369,7 @@ class MobilityServiceInstance {
   }> {
     try {
       const { data, error } = await db
-        .from("driver_data")
+        .from<DriverVerificationStatusRow>("driver_data")
         .select("is_verified, is_online, subscription_active")
         .eq("profile_id", driverProfileId)
         .maybeSingle();
@@ -298,43 +392,46 @@ class MobilityServiceInstance {
       since.setDate(since.getDate() - days);
 
       const { data, error } = await db
-        .from("ride_requests")
+        .from<Pick<RideRequestRecord, "final_price">>("ride_requests")
         .select("final_price")
         .eq("driver_profile_id", driverProfileId)
         .eq("status", RIDE_STATUS.COMPLETED)
         .gte("updated_at", since.toISOString());
 
       if (error) throw error;
-      const rows: Pick<RideRequestRecord, "final_price">[] = data || [];
-      return rows.reduce((sum: number, r) => sum + (r.final_price || 0), 0);
+      const rows = data || [];
+      return rows.reduce((sum, ride) => sum + (ride.final_price || 0), 0);
     } catch (error) {
       logger.error("mobilityService.getDriverEarnings", error as Error);
       return 0;
     }
   }
 
-  // -- Ride ----------------------------------------------------------------
+  // -- Ride ---------------------------------------------------------------
 
-  async getRideById(rideId: string): Promise<unknown | null> {
+  async getRideById(rideId: string): Promise<RideRequest | null> {
     try {
       const { data, error } = await db
-        .from("ride_requests")
+        .from<RideRequestRecord>("ride_requests")
         .select("*")
         .eq("id", rideId)
         .maybeSingle();
 
       if (error) throw error;
-      return data;
+      return data ? toRideRequestContract(data) : null;
     } catch (error) {
       logger.error("mobilityService.getRideById", error as Error);
       return null;
     }
   }
 
-  async confirmRideCompletionByPassenger(rideId: string, passengerProfileId: string): Promise<void> {
+  async confirmRideCompletionByPassenger(
+    rideId: string,
+    passengerProfileId: string,
+  ): Promise<void> {
     const now = new Date().toISOString();
     const { data, error } = await db
-      .from("ride_requests")
+      .from<{ id: string }>("ride_requests")
       .update({
         passenger_confirmed_at: now,
         updated_at: now,
@@ -348,10 +445,10 @@ class MobilityServiceInstance {
     if (!data) throw new Error("Ride not found or passenger not authorized");
   }
 
-  async getRideWithAddresses(rideId: string): Promise<unknown | null> {
+  async getRideWithAddresses(rideId: string): Promise<RideWithAddressesRow | null> {
     try {
       const { data, error } = await db
-        .from("ride_requests")
+        .from<RideWithAddressesRow>("ride_requests")
         .select(`
           *,
           pickup_address:addresses!pickup_address_id(street, latitude, longitude),
@@ -370,29 +467,29 @@ class MobilityServiceInstance {
     }
   }
 
-  async getUserRides(userId: string): Promise<unknown[]> {
+  async getUserRides(userId: string): Promise<RideRequest[]> {
     try {
       const activeProfile = await profileService.getActiveProfile(userId);
       if (!activeProfile?.id) return [];
 
       const { data, error } = await db
-        .from("ride_requests")
+        .from<RideRequestRecord>("ride_requests")
         .select("*")
         .or(`passenger_profile_id.eq.${activeProfile.id},driver_profile_id.eq.${activeProfile.id}`)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      return (data || []).map(toRideRequestContract);
     } catch (error) {
       logger.error("mobilityService.getUserRides", error as Error);
       return [];
     }
   }
 
-  async getRideBasicInfo(rideId: string): Promise<unknown | null> {
+  async getRideBasicInfo(rideId: string): Promise<RideBasicInfoRow | null> {
     try {
       const { data, error } = await db
-        .from("ride_requests")
+        .from<RideBasicInfoRow>("ride_requests")
         .select("id, origin, destination, status, final_price, suggested_price")
         .eq("id", rideId)
         .maybeSingle();
@@ -405,10 +502,10 @@ class MobilityServiceInstance {
     }
   }
 
-  async getRideByShareToken(token: string): Promise<unknown | null> {
+  async getRideByShareToken(token: string): Promise<RideRequestRecord | null> {
     try {
       const { data, error } = await db
-        .from("ride_requests")
+        .from<RideRequestRecord>("ride_requests")
         .select("*")
         .eq("share_token", token)
         .maybeSingle();
@@ -421,8 +518,6 @@ class MobilityServiceInstance {
     }
   }
 
-
-
   async incrementRideViewCount(rideId: string): Promise<void> {
     try {
       await db.rpc("increment_ride_view_count", { ride_id: rideId });
@@ -431,12 +526,12 @@ class MobilityServiceInstance {
     }
   }
 
-  // -- Seats ----------------------------------------------------------------
+  // -- Seats --------------------------------------------------------------
 
   async getRideAvailableSeats(rideId: string): Promise<number> {
     try {
       const { data, error } = await db
-        .from("ride_requests")
+        .from<RideAvailableSeatsRow>("ride_requests")
         .select("available_seats")
         .eq("id", rideId)
         .maybeSingle();

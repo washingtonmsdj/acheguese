@@ -24,6 +24,20 @@ import {
   type QrEntityType,
   type RecordScanParams,
 } from './types';
+
+type QueryResult<T> = Promise<{ data: T; error: { code?: string; message?: string } | null }>;
+
+interface QueryBuilder<TRow> {
+  insert(values: unknown): QueryBuilder<TRow>;
+  select(columns?: string): QueryBuilder<TRow>;
+  single(): QueryResult<TRow>;
+}
+
+interface QrDbClient {
+  from<TRow>(table: string): QueryBuilder<TRow>;
+}
+
+const qrDb = supabase as unknown as QrDbClient;
 // ══════════════════════════════════════════════════════════════════════════
 // TYPES
 // ══════════════════════════════════════════════════════════════════════════
@@ -82,7 +96,7 @@ export class QrCodeService {
         metadata: params.metadata || null,
       };
       
-      const { data, error } = await (supabase as any)
+      const { data, error } = await qrDb
         .from('qr_codes')
         .insert(qrCode)
         .select()
@@ -295,7 +309,7 @@ export class QrCodeService {
         scanned_at: new Date().toISOString(),
       };
       
-      const { data, error } = await (supabase as any)
+      const { data, error } = await qrDb
         .from('qr_code_scans')
         .insert(scan)
         .select()

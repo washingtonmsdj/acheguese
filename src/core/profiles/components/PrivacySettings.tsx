@@ -1,6 +1,6 @@
 /**
  * PRIVACY SETTINGS - FASE 6
- * Componente para configurar privacidade granular do perfil
+ * Componente para configurar privacidade granular do perfil.
  * Fonte: ARQUITETURA_MULTI_PERFIL_DEFINITIVA.md v3.0
  */
 
@@ -17,17 +17,34 @@ interface PrivacySettingsProps {
   onUpdate?: (profile: Profile) => void;
 }
 
-export function PrivacySettings({ profile, onUpdate }: PrivacySettingsProps) {
-  const { toast } = useToast();
-  const [saving, setSaving] = useState(false);
-  const [settings, setSettings] = useState({
+interface PrivacySettingsState {
+  is_public: boolean;
+  show_contact_email: boolean;
+  show_phone: boolean;
+  show_linked_profiles: boolean;
+  show_business_links: boolean;
+  show_professional_links: boolean;
+}
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
+}
+
+function getInitialSettings(profile: Profile): PrivacySettingsState {
+  return {
     is_public: profile.is_public,
     show_contact_email: profile.show_contact_email,
     show_phone: profile.show_phone,
     show_linked_profiles: profile.show_linked_profiles,
     show_business_links: profile.show_business_links,
     show_professional_links: profile.show_professional_links,
-  });
+  };
+}
+
+export function PrivacySettings({ profile, onUpdate }: PrivacySettingsProps) {
+  const { toast } = useToast();
+  const [saving, setSaving] = useState(false);
+  const [settings, setSettings] = useState<PrivacySettingsState>(() => getInitialSettings(profile));
 
   const handleSave = async () => {
     setSaving(true);
@@ -44,10 +61,10 @@ export function PrivacySettings({ profile, onUpdate }: PrivacySettingsProps) {
       } else {
         throw new Error(result.error || 'Failed to update settings');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: 'Erro ao salvar',
-        description: error.message || 'Não foi possível salvar as configurações.',
+        description: getErrorMessage(error, 'Não foi possível salvar as configurações.'),
         variant: 'destructive',
       });
     } finally {
@@ -55,31 +72,24 @@ export function PrivacySettings({ profile, onUpdate }: PrivacySettingsProps) {
     }
   };
 
-  const hasChanges = JSON.stringify(settings) !== JSON.stringify({
-    is_public: profile.is_public,
-    show_contact_email: profile.show_contact_email,
-    show_phone: profile.show_phone,
-    show_linked_profiles: profile.show_linked_profiles,
-    show_business_links: profile.show_business_links,
-    show_professional_links: profile.show_professional_links,
-  });
+  const initialSettings = getInitialSettings(profile);
+  const hasChanges = JSON.stringify(settings) !== JSON.stringify(initialSettings);
 
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold mb-4">Configurações de Privacidade</h3>
-        <p className="text-sm text-muted-foreground mb-6">
+        <h3 className="mb-4 text-lg font-semibold">Configurações de Privacidade</h3>
+        <p className="mb-6 text-sm text-muted-foreground">
           Controle quais informações são visíveis publicamente no seu perfil.
         </p>
       </div>
 
       <div className="space-y-4">
-        {/* Perfil Público */}
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
             <Label htmlFor="is_public">Perfil Público</Label>
             <p className="text-sm text-muted-foreground">
-              Seu perfil pode ser encontrado e visualizado por qualquer pessoa
+              Seu perfil pode ser encontrado e visualizado por qualquer pessoa.
             </p>
           </div>
           <Switch
@@ -89,12 +99,11 @@ export function PrivacySettings({ profile, onUpdate }: PrivacySettingsProps) {
           />
         </div>
 
-        {/* Email de Contato */}
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
             <Label htmlFor="show_contact_email">Mostrar Email</Label>
             <p className="text-sm text-muted-foreground">
-              Exibir seu email de contato no perfil público
+              Exibir seu email de contato no perfil público.
             </p>
           </div>
           <Switch
@@ -105,12 +114,11 @@ export function PrivacySettings({ profile, onUpdate }: PrivacySettingsProps) {
           />
         </div>
 
-        {/* Telefone */}
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
             <Label htmlFor="show_phone">Mostrar Telefone</Label>
             <p className="text-sm text-muted-foreground">
-              Exibir seu telefone no perfil público
+              Exibir seu telefone no perfil público.
             </p>
           </div>
           <Switch
@@ -121,12 +129,11 @@ export function PrivacySettings({ profile, onUpdate }: PrivacySettingsProps) {
           />
         </div>
 
-        {/* Vínculos */}
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
             <Label htmlFor="show_linked_profiles">Mostrar Vínculos</Label>
             <p className="text-sm text-muted-foreground">
-              Exibir seus vínculos com outros perfis
+              Exibir seus vínculos com outros perfis.
             </p>
           </div>
           <Switch
@@ -137,13 +144,12 @@ export function PrivacySettings({ profile, onUpdate }: PrivacySettingsProps) {
           />
         </div>
 
-        {/* Business Links (apenas para business/professional) */}
         {(profile.profile_type === 'business' || profile.profile_type === 'professional') && (
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label htmlFor="show_business_links">Mostrar Vínculos Comerciais</Label>
               <p className="text-sm text-muted-foreground">
-                Exibir vínculos do tipo "proprietário" e "parceiro"
+                Exibir vínculos do tipo &quot;proprietário&quot; e &quot;parceiro&quot;.
               </p>
             </div>
             <Switch
@@ -155,31 +161,28 @@ export function PrivacySettings({ profile, onUpdate }: PrivacySettingsProps) {
           </div>
         )}
 
-        {/* Professional Links (apenas para professional) */}
         {profile.profile_type === 'professional' && (
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label htmlFor="show_professional_links">Mostrar Vínculos Profissionais</Label>
               <p className="text-sm text-muted-foreground">
-                Exibir vínculos do tipo "trabalha em" e "motorista de"
+                Exibir vínculos do tipo &quot;trabalha em&quot; e &quot;motorista de&quot;.
               </p>
             </div>
             <Switch
               id="show_professional_links"
               checked={settings.show_professional_links}
-              onCheckedChange={(checked) => setSettings({ ...settings, show_professional_links: checked })}
+              onCheckedChange={(checked) =>
+                setSettings({ ...settings, show_professional_links: checked })
+              }
               disabled={!settings.is_public || !settings.show_linked_profiles}
             />
           </div>
         )}
       </div>
 
-      {/* Botão Salvar */}
-      <div className="flex justify-end pt-4 border-t">
-        <Button
-          onClick={handleSave}
-          disabled={!hasChanges || saving}
-        >
+      <div className="flex justify-end border-t pt-4">
+        <Button onClick={handleSave} disabled={!hasChanges || saving}>
           {saving ? 'Salvando...' : 'Salvar Alterações'}
         </Button>
       </div>

@@ -1,168 +1,218 @@
-/* eslint-disable */
-import React, { useState, useEffect } from "react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/shared/components/ui/card";
-import { Button } from "@/shared/components/ui/button";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/shared/components/ui/avatar";
-import { Badge } from "@/shared/components/ui/badge";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/shared/components/ui/tabs";
-import { MessageCircle, Search, Filter, Clock, Shield } from "lucide-react";
-import { Input } from "@/shared/components/ui/input";
+import React, { useEffect, useMemo, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
+import {
+  Clock,
+  Filter,
+  MessageCircle,
+  Search,
+  Shield,
+} from "lucide-react";
+
 import { ptBR } from "@/shared/utils/dateLocale";
+import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { Badge } from "@/shared/components/ui/badge";
+import { Button } from "@/shared/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import { Input } from "@/shared/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
+import type { Message as DirectThreadMessage, ConversationPreview } from "@/core/messaging/types";
+import type { DirectMessageRecipientView } from "@/core/profiles/views/DirectMessageRecipientView";
+
 import { useDirectMessages } from "../hooks/useDirectMessages";
 import { DirectMessageModal } from "./DirectMessageModal";
 
-interface Conversation {
-  id: string;
-  post_id: string;
-  post_type: string;
-  post_title: string;
-  post_image_url?: string;
-  creator_profile_id: string;
-  participant_id: string;
-  last_message_at: string;
-  is_active: boolean;
-  creator_profile?: {
-    id: string;
-    name: string;
-    avatar_url?: string;
-    is_verified?: boolean;
-  };
-  participant_profile?: {
-    id: string;
-    name: string;
-    avatar_url?: string;
-    is_verified?: boolean;
-  };
-  unread_count?: number;
-}
-
-type DirectMessagePostType =
-  | "civic_report"
-  | "discussao"
-  | "alerta"
-  | "recomendacao"
-  | "enquete"
-  | "pergunta"
-  | "achados"
-  | "favor"
-  | "evento"
-  | "desapego";
-
-function toDirectMessagePostType(postType?: string): DirectMessagePostType {
-  const allowed: DirectMessagePostType[] = [
-    "civic_report",
-    "discussao",
-    "alerta",
-    "recomendacao",
-    "enquete",
-    "pergunta",
-    "achados",
-    "favor",
-    "evento",
-    "desapego",
-  ];
-  return postType && allowed.includes(postType as DirectMessagePostType)
-    ? (postType as DirectMessagePostType)
-    : "civic_report";
-}
+type ConversationTab = "all" | "unread" | "blocked";
 
 interface MessagesInboxProps {
   currentUserId: string;
 }
 
-export function MessagesInbox({ currentUserId }: MessagesInboxProps) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedConversation, setSelectedConversation] = useState<
-    string | null
-  >(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+function getInitials(name: string): string {
+  return name
+    .split(" ")
+    .map((part) => part[0] ?? "")
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+}
 
-  const dm = useDirectMessages(currentUserId) as any;
-  const conversations = (dm.conversations ?? []) as Conversation[];
-  const messages = dm.messages;
-  const isLoading = dm.isLoading as boolean;
-  const error = dm.error as string | null;
-  const fetchConversations = dm.fetchConversations as () => Promise<void>;
-  const fetchMessages = dm.fetchMessages as (conversationId: string) => Promise<void>;
-  const sendMessage = dm.sendMessage as (
-    conversationId: string,
-    messageText: string,
-    messageType?: "text" | "location",
-  ) => Promise<void>;
-  const reportConversation = dm.reportConversation as (
-    conversationId: string,
-    profileId: string,
-    reason: string,
-    description?: string,
-  ) => Promise<void>;
+function formatTime(dateString: string): string {
+  return formatDistanceToNow(new Date(dateString), {
+    addSuffix: true,
+    locale: ptBR,
+  });
+}
 
-  useEffect(() => {
-    fetchConversations();
-  }, [currentUserId]);
-
-  const getOtherParticipant = (conversation: Conversation) => {
-    return conversation.creator_profile_id === currentUserId
-      ? conversation.participant_profile
-      : conversation.creator_profile;
+function buildRecipientProfile(conversation: ConversationPreview): DirectMessageRecipientView {
+  return {
+    id: conversation.seller_id,
+    displayName: conversation.other_user_name || "Usuario",
+    avatarUrl: conversation.other_user_avatar || null,
+    verified: false,
   };
+}
 
-  const getInitials = (name?: string) => {
-    if (!name) return "U";
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
+function getConversationBadge(conversation: ConversationPreview): string {
+  if (conversation.status === "blocked") return "Bloqueada";
+  if (conversation.unread_count > 0) return "Nao lida";
+  return "Classificado";
+}
 
-  const formatTime = (dateString: string) => {
-    return formatDistanceToNow(new Date(dateString), {
-      addSuffix: true,
-      locale: ptBR,
-    });
-  };
+function filterConversations(
+  conversations: ConversationPreview[],
+  searchTerm: string,
+): ConversationPreview[] {
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+  if (!normalizedSearch) return conversations;
 
-  const filteredConversations = conversations.filter((conversation) => {
-    const otherParticipant = getOtherParticipant(conversation);
-    const searchLower = searchTerm.toLowerCase();
+  return conversations.filter((conversation) => {
+    const title = conversation.classified_title?.toLowerCase() ?? "";
+    const userName = conversation.other_user_name?.toLowerCase() ?? "";
+    const lastMessage = conversation.last_message_text?.toLowerCase() ?? "";
 
     return (
-      conversation.post_title.toLowerCase().includes(searchLower) ||
-      otherParticipant?.name.toLowerCase().includes(searchLower)
+      title.includes(normalizedSearch) ||
+      userName.includes(normalizedSearch) ||
+      lastMessage.includes(normalizedSearch)
     );
   });
+}
 
-  const categorizeConversations = () => {
-    return {
-      pedidos: filteredConversations.filter(
-        (c) => c.post_type === "civic_report",
-      ),
-      achados: filteredConversations.filter((c) => c.post_type === "achado"),
-      geral: filteredConversations.filter(
-        (c) => !["civic_report", "achado"].includes(c.post_type),
-      ),
-    };
+function categorizeConversations(conversations: ConversationPreview[]) {
+  return {
+    all: conversations,
+    unread: conversations.filter((conversation) => conversation.unread_count > 0),
+    blocked: conversations.filter((conversation) => conversation.status === "blocked"),
   };
+}
 
-  const { pedidos, achados, geral } = categorizeConversations();
-  const handleConversationClick = async (conversation: Conversation) => {
-    setSelectedConversation(conversation.id);
+function ConversationList({
+  conversations,
+  onOpenConversation,
+}: {
+  conversations: ConversationPreview[];
+  onOpenConversation: (conversation: ConversationPreview) => void;
+}) {
+  if (conversations.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-10 text-center text-gray-400">
+        <MessageCircle className="mb-3 h-12 w-12 opacity-50" />
+        <p className="text-sm">Nenhuma conversa encontrada</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      {conversations.map((conversation) => {
+        const badgeLabel = getConversationBadge(conversation);
+
+        return (
+          <Card
+            key={conversation.id}
+            className="cursor-pointer border-gray-800 bg-gray-900 transition-colors hover:bg-gray-800/50"
+            onClick={() => onOpenConversation(conversation)}
+          >
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <div className="relative">
+                  <Avatar className="h-12 w-12 border border-gray-700">
+                    <AvatarImage src={conversation.other_user_avatar || undefined} />
+                    <AvatarFallback className="bg-orange-500 text-white">
+                      {getInitials(conversation.other_user_name || "Usuario")}
+                    </AvatarFallback>
+                  </Avatar>
+                  {conversation.unread_count > 0 ? (
+                    <Badge className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 p-0 text-xs text-white">
+                      {conversation.unread_count}
+                    </Badge>
+                  ) : null}
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <div className="mb-1 flex items-center gap-2">
+                    <span className="truncate text-sm font-semibold text-white">
+                      {conversation.other_user_name || "Usuario"}
+                    </span>
+                    {conversation.status !== "blocked" ? (
+                      <Shield className="h-4 w-4 text-blue-400" />
+                    ) : null}
+                  </div>
+
+                  <p className="mb-2 truncate text-sm text-gray-300">
+                    {conversation.classified_title || "Conversa de classificado"}
+                  </p>
+
+                  <div className="flex items-center justify-between gap-3">
+                    <Badge
+                      variant="secondary"
+                      className="border-0 bg-orange-500/20 text-xs text-orange-300"
+                    >
+                      {badgeLabel}
+                    </Badge>
+
+                    <div className="flex items-center gap-1 text-xs text-gray-400">
+                      <Clock className="h-3 w-3" />
+                      <span>{formatTime(conversation.last_message_at)}</span>
+                    </div>
+                  </div>
+
+                  {conversation.last_message_text ? (
+                    <p className="mt-2 truncate text-xs text-gray-400">
+                      {conversation.last_message_text}
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
+    </div>
+  );
+}
+
+export function MessagesInbox({ currentUserId }: MessagesInboxProps) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState<ConversationTab>("all");
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const {
+    conversations,
+    messages,
+    isLoading,
+    error,
+    fetchConversations,
+    fetchMessages,
+    sendMessage,
+    reportConversation,
+  } = useDirectMessages(currentUserId);
+
+  useEffect(() => {
+    void fetchConversations();
+  }, [fetchConversations]);
+
+  const filteredConversations = useMemo(
+    () => filterConversations(conversations, searchTerm),
+    [conversations, searchTerm],
+  );
+  const conversationBuckets = useMemo(
+    () => categorizeConversations(filteredConversations),
+    [filteredConversations],
+  );
+  const selectedConversation = useMemo(
+    () =>
+      conversations.find((conversation) => conversation.id === selectedConversationId) ??
+      null,
+    [conversations, selectedConversationId],
+  );
+  const recipientProfile = selectedConversation
+    ? buildRecipientProfile(selectedConversation)
+    : null;
+
+  const handleConversationClick = async (conversation: ConversationPreview) => {
+    setSelectedConversationId(conversation.id);
     await fetchMessages(conversation.id);
     setIsModalOpen(true);
   };
@@ -171,138 +221,53 @@ export function MessagesInbox({ currentUserId }: MessagesInboxProps) {
     messageText: string,
     messageType?: "text" | "location",
   ) => {
-    if (!selectedConversation) return;
-
-    await sendMessage(selectedConversation, messageText, messageType);
+    if (!selectedConversationId) return;
+    await sendMessage(selectedConversationId, messageText, messageType);
   };
 
   const handleReportConversation = async () => {
-    if (!selectedConversation) return;
-
-    const conversation = conversations.find(
-      (c) => c.id === selectedConversation,
-    );
-    if (!conversation) return;
-
-    const otherParticipant = getOtherParticipant(conversation);
-    if (!otherParticipant) return;
+    if (!selectedConversationId || !recipientProfile) return;
 
     await reportConversation(
-      selectedConversation,
-      otherParticipant.id,
+      selectedConversationId,
+      recipientProfile.id,
       "inappropriate_content",
-      "Conteúdo inapropriado reportado pelo usuário",
+      "Conteudo inapropriado reportado pelo usuario.",
     );
-
     setIsModalOpen(false);
   };
 
-  const ConversationList = ({
-    conversations,
-  }: {
-    conversations: Conversation[];
-  }) => (
-    <div className="space-y-2">
-      {conversations.length === 0 ? (
-        <div className="text-center py-8 text-gray-400">
-          <MessageCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
-          <p className="text-sm">Nenhuma conversa encontrada</p>
-        </div>
-      ) : (
-        conversations.map((conversation) => {
-          const otherParticipant = getOtherParticipant(conversation);
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedConversationId(null);
+  };
 
-          return (
-            <Card
-              key={conversation.id}
-              className="cursor-pointer hover:bg-gray-800/50 transition-colors bg-gray-900 border-gray-800"
-              onClick={() => handleConversationClick(conversation)}
-            >
-              <CardContent className="p-4">
-                <div className="flex items-start gap-3">
-                  <div className="relative">
-                    <Avatar className="h-12 w-12 border border-gray-700">
-                      <AvatarImage src={otherParticipant?.avatar_url} />
-                      <AvatarFallback className="bg-orange-500 text-white">
-                        {getInitials(otherParticipant?.name)}
-                      </AvatarFallback>
-                    </Avatar>
-                    {conversation.unread_count &&
-                      conversation.unread_count > 0 && (
-                        <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 bg-red-500 text-white text-xs flex items-center justify-center">
-                          {conversation.unread_count}
-                        </Badge>
-                      )}
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-semibold text-white text-sm">
-                        {otherParticipant?.name || "Usuário"}
-                      </span>
-                      {otherParticipant?.is_verified && (
-                        <Shield className="w-4 h-4 text-blue-400" />
-                      )}
-                    </div>
-
-                    <p className="text-sm text-gray-300 truncate mb-2">
-                      {conversation.post_title}
-                    </p>
-
-                    <div className="flex items-center justify-between">
-                      <Badge
-                        variant="secondary"
-                        className="text-xs bg-orange-500/20 text-orange-400 border-0"
-                      >
-                        {conversation.post_type === "civic_report"
-                          ? "Zeladoria"
-                          : conversation.post_type === "achado"
-                            ? "Achado"
-                            : conversation.post_type === "recomendacao"
-                              ? "Recomendação"
-                              : "Alerta"}
-                      </Badge>
-
-                      <div className="flex items-center gap-1 text-xs text-gray-400">
-                        <Clock className="w-3 h-3" />
-                        <span>{formatTime(conversation.last_message_at)}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })
-      )}
-    </div>
-  );
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
-      <Card className="bg-gray-900 border-gray-800">
+    <div className="mx-auto max-w-4xl space-y-6 p-4 sm:p-6">
+      <Card className="border-gray-800 bg-gray-900">
         <CardHeader>
-          <CardTitle className="text-xl font-bold text-white flex items-center gap-2">
-            <MessageCircle className="w-6 h-6 text-orange-500" />
+          <CardTitle className="flex items-center gap-2 text-xl font-bold text-white">
+            <MessageCircle className="h-6 w-6 text-orange-500" />
             Mensagens
           </CardTitle>
 
-          {/* Barra de Pesquisa */}
-          <div className="flex items-center gap-3 mt-4">
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <Input
                 placeholder="Buscar conversas..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 bg-gray-800 border-gray-700 text-white placeholder-gray-400"
+                onChange={(event) => setSearchTerm(event.target.value)}
+                className="border-gray-700 bg-gray-800 pl-10 text-white placeholder-gray-400"
               />
             </div>
             <Button
               variant="outline"
               size="sm"
               className="border-gray-700 text-gray-300"
+              type="button"
             >
-              <Filter className="w-4 h-4 mr-2" />
+              <Filter className="mr-2 h-4 w-4" />
               Filtros
             </Button>
           </div>
@@ -310,112 +275,92 @@ export function MessagesInbox({ currentUserId }: MessagesInboxProps) {
 
         <CardContent>
           {isLoading ? (
-            <div className="text-center py-8 text-gray-400">
-              <div className="animate-spin w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full mx-auto mb-3"></div>
-              <p>Loading conversas...</p>
+            <div className="py-8 text-center text-gray-400">
+              <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-2 border-orange-500 border-t-transparent" />
+              <p>Carregando conversas...</p>
             </div>
           ) : error ? (
-            <div className="text-center py-8 text-red-400">
-              <p>Error load conversas: {error}</p>
+            <div className="py-8 text-center text-red-400">
+              <p>Erro ao carregar conversas: {error}</p>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={fetchConversations}
+                onClick={() => void fetchConversations()}
                 className="mt-3 border-red-400 text-red-400"
+                type="button"
               >
-                Tentar Novamente
+                Tentar novamente
               </Button>
             </div>
           ) : (
-            <Tabs defaultValue="todos" className="w-full">
-              <TabsList className="grid w-full grid-cols-4 bg-gray-800">
+            <Tabs
+              value={activeTab}
+              onValueChange={(value) => setActiveTab(value as ConversationTab)}
+              className="w-full"
+            >
+              <TabsList className="grid w-full grid-cols-3 bg-gray-800">
                 <TabsTrigger
-                  value="todos"
-                  className="text-gray-300 date-[state=active]:text-white"
+                  value="all"
+                  className="text-gray-300 data-[state=active]:text-white"
                 >
-                  Todos ({conversations.length})
+                  Todas ({conversationBuckets.all.length})
                 </TabsTrigger>
                 <TabsTrigger
-                  value="pedidos"
-                  className="text-gray-300 date-[state=active]:text-white"
+                  value="unread"
+                  className="text-gray-300 data-[state=active]:text-white"
                 >
-                  Pedidos ({pedidos.length})
+                  Nao lidas ({conversationBuckets.unread.length})
                 </TabsTrigger>
                 <TabsTrigger
-                  value="achados"
-                  className="text-gray-300 date-[state=active]:text-white"
+                  value="blocked"
+                  className="text-gray-300 data-[state=active]:text-white"
                 >
-                  Achados ({achados.length})
-                </TabsTrigger>
-                <TabsTrigger
-                  value="geral"
-                  className="text-gray-300 date-[state=active]:text-white"
-                >
-                  Geral ({geral.length})
+                  Bloqueadas ({conversationBuckets.blocked.length})
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="todos" className="mt-6">
-                <ConversationList conversations={filteredConversations} />
+              <TabsContent value="all" className="mt-6">
+                <ConversationList
+                  conversations={conversationBuckets.all}
+                  onOpenConversation={handleConversationClick}
+                />
               </TabsContent>
 
-              <TabsContent value="pedidos" className="mt-6">
-                <ConversationList conversations={pedidos} />
+              <TabsContent value="unread" className="mt-6">
+                <ConversationList
+                  conversations={conversationBuckets.unread}
+                  onOpenConversation={handleConversationClick}
+                />
               </TabsContent>
 
-              <TabsContent value="achados" className="mt-6">
-                <ConversationList conversations={achados} />
-              </TabsContent>
-
-              <TabsContent value="geral" className="mt-6">
-                <ConversationList conversations={geral} />
+              <TabsContent value="blocked" className="mt-6">
+                <ConversationList
+                  conversations={conversationBuckets.blocked}
+                  onOpenConversation={handleConversationClick}
+                />
               </TabsContent>
             </Tabs>
           )}
         </CardContent>
       </Card>
 
-      {/* Modal de Mensagem Direta */}
-      {selectedConversation && (
+      {selectedConversation && recipientProfile ? (
         <DirectMessageModal
           isOpen={isModalOpen}
-          onClose={() => {
-            setIsModalOpen(false);
-            setSelectedConversation(null);
-          }}
+          onClose={handleCloseModal}
           postContext={{
-            id:
-              conversations.find((c) => c.id === selectedConversation)
-                ?.post_id || "",
-            title:
-              conversations.find((c) => c.id === selectedConversation)
-                ?.post_title || "",
-            imageUrl: conversations.find((c) => c.id === selectedConversation)
-              ?.post_image_url,
-            type: toDirectMessagePostType(
-              conversations.find((c) => c.id === selectedConversation)?.post_type,
-            ),
+            id: selectedConversation.classified_id,
+            title: selectedConversation.classified_title || "Conversa de classificado",
+            imageUrl: selectedConversation.classified_photo || undefined,
+            type: "desapego",
           }}
-          recipientProfile={(() => {
-            const recipient =
-              getOtherParticipant(
-                conversations.find((c) => c.id === selectedConversation)!,
-              ) || {
-                id: "",
-                name: "Usuario",
-              };
-            return {
-              id: recipient.id,
-              displayName: recipient.name ?? "Usuario",
-              avatarUrl: recipient.avatar_url ?? null,
-              verified: Boolean(recipient.is_verified),
-            };
-          })()}
+          recipientProfile={recipientProfile}
           currentUserId={currentUserId}
+          initialMessages={messages}
           onSendMessage={handleSendMessage}
           onReportConversation={handleReportConversation}
         />
-      )}
+      ) : null}
     </div>
   );
 }

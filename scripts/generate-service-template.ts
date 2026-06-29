@@ -174,7 +174,11 @@ export class ${serviceName} {
     }>
   ): Promise<${baseName}> {
     try {
-      const updateData: any = {};
+      const updateData: Partial<{
+        name: string;
+        description: string | null;
+        is_active: boolean;
+      }> = {};
       
       if (data.name !== undefined) updateData.name = data.name;
       if (data.description !== undefined) updateData.description = data.description;

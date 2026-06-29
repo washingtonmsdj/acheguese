@@ -16,12 +16,12 @@
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
+import type { Json, Tables, TablesInsert } from '@/integrations/supabase';
 import { trackError } from '@/shared/utils/errorTracking';
 import { calculateDistance } from '@/shared/utils/geolocation';
 import { PricingError } from '../types';
 import type {
   PricingMode,
-  PricingContext,
   PriceEstimateRequest,
   PriceEstimateResponse,
   PricingBreakdown,
@@ -29,12 +29,76 @@ import type {
   AdditionalFee,
   PricingRule,
   PricingServiceConfig,
-  PRICING_CONSTANTS,
 } from '../types';
+
+type ErrorLike = {
+  code?: string | null;
+  hint?: string | null;
+  message?: string | null;
+};
+
+type QueryPayload<TRow> = {
+  data: TRow[] | null;
+  error: ErrorLike | null;
+};
+
+type SingleQueryPayload<TRow> = {
+  data: TRow | null;
+  error: ErrorLike | null;
+};
+
+type RpcPayload<TValue> = {
+  data: TValue | null;
+  error: ErrorLike | null;
+};
+
+type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
+  eq(column: string, value: unknown): TableClient<TRow>;
+  insert(values: Record<string, unknown> | ReadonlyArray<Record<string, unknown>>): TableClient<TRow>;
+  limit(value: number): TableClient<TRow>;
+  maybeSingle(): Promise<SingleQueryPayload<TRow>>;
+  or(filters: string): TableClient<TRow>;
+  order(column: string, options?: { ascending?: boolean }): TableClient<TRow>;
+  select(columns?: string): TableClient<TRow>;
+  single(): Promise<SingleQueryPayload<TRow>>;
+  update(values: Record<string, unknown>): TableClient<TRow>;
+};
+
+type PricingDbClient = {
+  from<TRow>(table: string): TableClient<TRow>;
+  rpc<TValue>(fn: string, params?: Record<string, unknown>): Promise<RpcPayload<TValue>>;
+};
+
+type PricingRuleRow = Tables<'pricing_rules'>;
+type PricingRuleInsert = TablesInsert<'pricing_rules'>;
+type PricingPeakHourMultiplierRow = Tables<'pricing_peak_hour_multipliers'>;
+type PricingPeakHourMultiplierInsert = TablesInsert<'pricing_peak_hour_multipliers'>;
+type PricingAdditionalFeeRow = Tables<'pricing_additional_fees'>;
+type PricingAdditionalFeeInsert = TablesInsert<'pricing_additional_fees'>;
+type PricingAuditLogRow = Tables<'pricing_audit_log'>;
+
+type PricingRuleWithRelationsRow = PricingRuleRow & {
+  additional_fees?: PricingAdditionalFeeRow[] | null;
+  peak_hour_multipliers?: PricingPeakHourMultiplierRow[] | null;
+};
+
+const pricingDb = supabase as unknown as PricingDbClient;
+
+function toJsonMetadata(value: Record<string, unknown> | undefined): Json {
+  return (value ?? {}) as Json;
+}
+
+function toMetadataRecord(value: Json | null | undefined): Record<string, unknown> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return {};
+  }
+
+  return value as Record<string, unknown>;
+}
 
 export class PricingService {
   private static instance: PricingService;
-  private readonly db = supabase as any;
+  private readonly db = pricingDb;
   private config: PricingServiceConfig;
   private rulesCache: Map<PricingMode, { rule: PricingRule; cachedAt: number }>;
   private readonly CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutos
@@ -189,7 +253,7 @@ export class PricingService {
       const now = new Date().toISOString();
       
       const { data: ruleData, error: ruleError } = await this.db
-        .from('pricing_rules')
+        .from<PricingRuleRow>('pricing_rules')
         .select('*')
         .eq('mode', mode)
         .eq('is_active', true)
@@ -208,14 +272,14 @@ export class PricingService {
 
       // Buscar multiplicadores de horário de pico
       const { data: multipliersData } = await this.db
-        .from('pricing_peak_hour_multipliers')
+        .from<PricingPeakHourMultiplierRow>('pricing_peak_hour_multipliers')
         .select('*')
         .eq('rule_id', ruleData.id)
         .eq('is_active', true);
 
       // Buscar taxas adicionais
       const { data: feesData } = await this.db
-        .from('pricing_additional_fees')
+        .from<PricingAdditionalFeeRow>('pricing_additional_fees')
         .select('*')
         .eq('rule_id', ruleData.id)
         .eq('is_active', true);
@@ -248,7 +312,7 @@ export class PricingService {
     try {
       // Se está ativando uma regra, usar RPC para evitar conflito com trigger
       if (updates.isActive === true) {
-        const { error: rpcError } = await this.db.rpc('activate_pricing_rule', {
+        const { error: rpcError } = await this.db.rpc<boolean>('activate_pricing_rule', {
           p_rule_id: ruleId,
           p_performed_by: performedBy,
         });
@@ -282,7 +346,7 @@ export class PricingService {
         updateData.updated_by = performedBy;
 
         const { error } = await this.db
-          .from('pricing_rules')
+          .from<PricingRuleRow>('pricing_rules')
           .update(updateData)
           .eq('id', ruleId);
 
@@ -337,7 +401,7 @@ export class PricingService {
   async listRules(includeInactive: boolean = false): Promise<PricingRule[]> {
     try {
       let query = this.db
-        .from('pricing_rules')
+        .from<PricingRuleWithRelationsRow>('pricing_rules')
         .select(`
           *,
           peak_hour_multipliers:pricing_peak_hour_multipliers(*),
@@ -376,7 +440,7 @@ export class PricingService {
     try {
       // Usar RPC para criar regra ativa (desativa outras automaticamente)
       if (rule.isActive) {
-        const { data: ruleId, error: rpcError } = await this.db.rpc('create_active_pricing_rule', {
+        const { data: ruleId, error: rpcError } = await this.db.rpc<string>('create_active_pricing_rule', {
           p_mode: rule.mode,
           p_name: rule.name,
           p_base_fare: rule.baseFare,
@@ -387,7 +451,7 @@ export class PricingService {
           p_is_active: rule.isActive,
           p_valid_from: rule.validFrom?.toISOString() || null,
           p_valid_until: rule.validUntil?.toISOString() || null,
-          p_metadata: (rule.metadata || {}) as Record<string, unknown>,
+          p_metadata: rule.metadata ?? {},
           p_performed_by: performedBy,
         });
 
@@ -399,7 +463,7 @@ export class PricingService {
 
         // Inserir multiplicadores se houver
         if (rule.peakHourMultipliers) {
-          const multipliers = [];
+          const multipliers: PricingPeakHourMultiplierInsert[] = [];
           if (rule.peakHourMultipliers.morning) {
             multipliers.push({
               rule_id: newRuleId,
@@ -432,13 +496,15 @@ export class PricingService {
           }
 
           if (multipliers.length > 0) {
-            await this.db.from('pricing_peak_hour_multipliers').insert(multipliers);
+            await this.db
+              .from<PricingPeakHourMultiplierRow>('pricing_peak_hour_multipliers')
+              .insert(multipliers);
           }
         }
 
         // Inserir taxas adicionais se houver
         if (rule.additionalFees && rule.additionalFees.length > 0) {
-          const fees = rule.additionalFees.map((fee) => ({
+          const fees: PricingAdditionalFeeInsert[] = rule.additionalFees.map((fee) => ({
             rule_id: newRuleId,
             label: fee.label,
             amount: fee.amount,
@@ -446,7 +512,9 @@ export class PricingService {
             reason: fee.reason,
           }));
 
-          await this.db.from('pricing_additional_fees').insert(fees);
+          await this.db
+            .from<PricingAdditionalFeeRow>('pricing_additional_fees')
+            .insert(fees);
         }
 
         // Limpar cache
@@ -456,7 +524,7 @@ export class PricingService {
       }
 
       // Criar regra inativa (não precisa de RPC)
-      const ruleData = {
+      const ruleData: PricingRuleInsert = {
         mode: rule.mode,
         name: rule.name,
         base_fare: rule.baseFare,
@@ -467,13 +535,13 @@ export class PricingService {
         is_active: false,
         valid_from: rule.validFrom?.toISOString(),
         valid_until: rule.validUntil?.toISOString(),
-        metadata: (rule.metadata || {}) as Record<string, unknown>,
+        metadata: toJsonMetadata(rule.metadata),
         created_by: performedBy,
         updated_by: performedBy,
       };
 
       const { data, error } = await this.db
-        .from('pricing_rules')
+        .from<PricingRuleRow>('pricing_rules')
         .insert(ruleData)
         .select('id')
         .single();
@@ -482,7 +550,7 @@ export class PricingService {
 
       // Inserir multiplicadores se houver
       if (rule.peakHourMultipliers) {
-        const multipliers = [];
+        const multipliers: PricingPeakHourMultiplierInsert[] = [];
         if (rule.peakHourMultipliers.morning) {
           multipliers.push({
             rule_id: data.id,
@@ -515,13 +583,15 @@ export class PricingService {
         }
 
         if (multipliers.length > 0) {
-          await this.db.from('pricing_peak_hour_multipliers').insert(multipliers);
+          await this.db
+            .from<PricingPeakHourMultiplierRow>('pricing_peak_hour_multipliers')
+            .insert(multipliers);
         }
       }
 
       // Inserir taxas adicionais se houver
       if (rule.additionalFees && rule.additionalFees.length > 0) {
-        const fees = rule.additionalFees.map((fee) => ({
+        const fees: PricingAdditionalFeeInsert[] = rule.additionalFees.map((fee) => ({
           rule_id: data.id,
           label: fee.label,
           amount: fee.amount,
@@ -529,7 +599,9 @@ export class PricingService {
           reason: fee.reason,
         }));
 
-        await this.db.from('pricing_additional_fees').insert(fees);
+        await this.db
+          .from<PricingAdditionalFeeRow>('pricing_additional_fees')
+          .insert(fees);
       }
 
       // Limpar cache
@@ -655,9 +727,9 @@ export class PricingService {
    * Mapeia dados do banco para PricingRule
    */
   private mapToRule(
-    data: Record<string, unknown>,
-    multipliers: Record<string, unknown>[],
-    fees: Record<string, unknown>[]
+    data: PricingRuleRow | PricingRuleWithRelationsRow,
+    multipliers: PricingPeakHourMultiplierRow[],
+    fees: PricingAdditionalFeeRow[]
   ): PricingRule {
     const peakHourMultipliers: Record<string, number> = {};
     
@@ -689,7 +761,7 @@ export class PricingService {
       isActive: Boolean(data.is_active),
       validFrom: data.valid_from ? new Date(String(data.valid_from)) : undefined,
       validUntil: data.valid_until ? new Date(String(data.valid_until)) : undefined,
-      metadata: (data.metadata || {}) as Record<string, unknown>,
+      metadata: toMetadataRecord(data.metadata),
     };
   }
 
@@ -849,7 +921,7 @@ export class PricingService {
   async getAuditLog(limit: number = 20): Promise<Record<string, unknown>[]> {
     try {
       const { data, error } = await this.db
-        .from('pricing_audit_log')
+        .from<PricingAuditLogRow>('pricing_audit_log')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(limit);

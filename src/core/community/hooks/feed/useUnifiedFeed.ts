@@ -1,15 +1,19 @@
 import { useMemo } from "react";
+
 import { PostAdapter } from "@/core/posts/adapters/PostAdapter";
 import type { UnifiedPost } from "@/shared/types/posts";
-import { filterByTerritorialChannel, rebalanceTerritorialMix, type TerritorialFeedChannel } from "./territorialFeedEngine";
 
-type AdapterItem = Parameters<typeof PostAdapter.convertArray>[0][number];
+import {
+  filterByTerritorialChannel,
+  rebalanceTerritorialMix,
+  type TerritorialFeedChannel,
+} from "./territorialFeedEngine";
 
 interface UseUnifiedFeedProps {
-  posts?: AdapterItem[];
-  civicReports?: AdapterItem[];
-  communityPosts?: AdapterItem[];
-  feedPosts?: AdapterItem[];
+  posts?: UnifiedPost[];
+  civicReports?: UnifiedPost[];
+  communityPosts?: UnifiedPost[];
+  feedPosts?: UnifiedPost[];
   sortCriteria?: "recent" | "popular" | "nearby" | "most_commented";
   filterType?:
     | "all"
@@ -31,17 +35,10 @@ export function useUnifiedFeed({
   filterType = "all",
   userLocation,
 }: UseUnifiedFeedProps) {
-  const unifiedPosts: UnifiedPost[] = useMemo(() => {
-    // Convert all data sources, using convertArray which auto-detects the format
-    const allItems = [
-      ...PostAdapter.convertArray(posts),
-      ...civicReports.map((report) => PostAdapter.fromCivicReport(report as any)),
-      ...PostAdapter.convertArray(communityPosts),
-      ...feedPosts.map((post) => PostAdapter.fromFeedPost(post as any)),
-    ];
-
-    // Deduplicate by id
+  const unifiedPosts = useMemo(() => {
+    const allItems = [...posts, ...civicReports, ...communityPosts, ...feedPosts];
     const seen = new Set<string>();
+
     return allItems.filter((post) => {
       if (seen.has(post.id)) return false;
       seen.add(post.id);
@@ -73,7 +70,7 @@ export function useUnifiedFeed({
     }
 
     return PostAdapter.filterByType(unifiedPosts, filterType);
-  }, [unifiedPosts, filterType, userLocation?.location_id]);
+  }, [filterType, unifiedPosts, userLocation?.location_id]);
 
   const sortedPosts = useMemo(() => {
     if (sortCriteria === "most_commented") {
@@ -82,7 +79,10 @@ export function useUnifiedFeed({
       );
       return rebalanceTerritorialMix(sorted);
     }
-    return rebalanceTerritorialMix(PostAdapter.sortPosts(filteredPosts, sortCriteria, userLocation));
+
+    return rebalanceTerritorialMix(
+      PostAdapter.sortPosts(filteredPosts, sortCriteria, userLocation),
+    );
   }, [filteredPosts, sortCriteria, userLocation]);
 
   return { sortedPosts };

@@ -1,32 +1,68 @@
 /**
- * CommunityIssueService — SSOT de toda lógica de problemas urbanos
+ * CommunityIssueService - SSOT for civic issue reads and writes.
  *
- * REGRAS:
- * - ZERO acesso direto ao banco fora deste service
- * - Criação SEMPRE via RPC (create_community_issue)
- * - Hooks apenas fazem fetch/loading/error
- * - Este service não conhece alertas nem posts
+ * Rules:
+ * - No direct database access outside this service.
+ * - Creation always goes through the create_community_issue RPC.
+ * - Hooks only manage fetch/loading/error state.
+ * - This service does not depend on alerts or posts.
  */
 
-import { supabase } from "@/integrations/supabase";
-import { callRPC } from "@/integrations/supabase";
-import { logger } from "@/shared/utils/logger";
+import { callRPC, supabase } from "@/integrations/supabase";
+import type { Database, Json } from "@/integrations/supabase";
 import type { TerritoryFilter } from "@/core/location/types";
-import { SessionService } from "@/core/session/services/SessionService";
 import { profileService } from "@/core/profiles/services/ProfileService";
-import type { Json } from "@/integrations/supabase";
+import { SessionService } from "@/core/session/services/SessionService";
+import { logger } from "@/shared/utils/logger";
 import type {
   CommunityIssuePublic,
   CreateIssuePayload,
-  UpdateIssuePayload,
+  CreateIssueReportPayload,
   IssueFeedFilters,
   IssueRpcResult,
-  CreateIssueReportPayload,
+  UpdateIssuePayload,
 } from "../domain/types";
 
+type CommunityIssueRow = Pick<
+  Database["public"]["Tables"]["community_issues"]["Row"],
+  | "id"
+  | "author_profile_id"
+  | "location_id"
+  | "category"
+  | "status"
+  | "priority"
+  | "title"
+  | "description"
+  | "images"
+  | "neighborhood"
+  | "neighborhood_display"
+  | "city"
+  | "address_reference"
+  | "support_count"
+  | "comments_count"
+  | "report_count"
+  | "resolved_at"
+  | "created_at"
+  | "updated_at"
+>;
+
+type CommunityIssueUpdateRow = Pick<
+  Database["public"]["Tables"]["community_issues"]["Update"],
+  "title" | "description" | "images" | "address_reference" | "updated_at"
+>;
+
+type CommunityIssueSupportInsert = Database["public"]["Tables"]["community_issue_supports"]["Insert"];
+type CommunityIssueReportInsert = Database["public"]["Tables"]["community_issue_reports"]["Insert"];
+type CommunityIssueAuditInsert = Database["public"]["Tables"]["community_issue_audit"]["Insert"];
+
+type CreateCommunityIssueRpcArgs = Extract<
+  Database["public"]["Functions"]["create_community_issue"],
+  { Args: { payload: Json } }
+>["Args"];
+
 class CommunityIssueServiceClass {
-  private readonly VIEW = "community_issues_public";
-  private readonly TABLE = "community_issues";
+  private readonly TABLE = "community_issues" as const;
+
   private readonly DB_SELECT = `
     id,
     author_profile_id,
@@ -64,13 +100,6 @@ class CommunityIssueServiceClass {
     }
   }
 
-  // --------------------------------------------------------------------------
-  // LEITURA
-  // --------------------------------------------------------------------------
-
-  /**
-   * Busca problemas ativos para o feed, filtrados por território.
-   */
   async getIssues(filters: IssueFeedFilters): Promise<CommunityIssuePublic[]> {
     try {
       let query = supabase
@@ -99,7 +128,7 @@ class CommunityIssueServiceClass {
       const { data, error } = await query;
       if (error) throw error;
 
-      return (data as unknown as CommunityIssuePublic[]) ?? [];
+      return (data ?? []).map((row) => this.normalizeIssue(row));
     } catch (error) {
       logger.error("CommunityIssueService.getIssues", error);
       return [];
@@ -108,7 +137,11 @@ class CommunityIssueServiceClass {
 
   async getByTerritory(
     territoryFilter: TerritoryFilter,
-    options: { category?: IssueFeedFilters["category"]; status?: IssueFeedFilters["status"]; limit?: number } = {}
+    options: {
+      category?: IssueFeedFilters["category"];
+      status?: IssueFeedFilters["status"];
+      limit?: number;
+    } = {},
   ): Promise<CommunityIssuePublic[]> {
     const { category, status, limit } = options;
     const filters: IssueFeedFilters = { category, status, limit };
@@ -124,28 +157,22 @@ class CommunityIssueServiceClass {
     return this.getIssues(filters);
   }
 
-  /**
-   * Busca um problema específico pelo ID (projeção pública).
-   */
   async getIssueById(issueId: string): Promise<CommunityIssuePublic | null> {
     try {
       const { data, error } = await supabase
-        .from(this.VIEW)
-        .select("*")
+        .from(this.TABLE)
+        .select(this.DB_SELECT)
         .eq("id", issueId)
         .maybeSingle();
 
       if (error) throw error;
-      return data as unknown as CommunityIssuePublic | null;
+      return data ? this.normalizeIssue(data) : null;
     } catch (error) {
       logger.error("CommunityIssueService.getIssueById", error);
       return null;
     }
   }
 
-  /**
-   * Busca problemas por profile (para página de perfil).
-   */
   async getIssuesByProfile(profileId: string, limit = 20): Promise<CommunityIssuePublic[]> {
     try {
       const { data, error } = await supabase
@@ -156,26 +183,21 @@ class CommunityIssueServiceClass {
         .limit(limit);
 
       if (error) throw error;
-      return (data as unknown as CommunityIssuePublic[]) ?? [];
+      return (data ?? []).map((row) => this.normalizeIssue(row));
     } catch (error) {
       logger.error("CommunityIssueService.getIssuesByProfile", error);
       return [];
     }
   }
 
-  // --------------------------------------------------------------------------
-  // CRIAÇÃO (via RPC — INSERT direto bloqueado por RLS)
-  // --------------------------------------------------------------------------
-
-  /**
-   * Cria um problema urbano via RPC server-side.
-   * A RPC valida elegibilidade, rate limit e deduplicação.
-   */
   async createIssue(payload: CreateIssuePayload): Promise<IssueRpcResult> {
     try {
-      const { data, error } = await callRPC<IssueRpcResult>("create_community_issue", {
-        payload: payload as unknown as Json,
-      });
+      const { data, error } = await callRPC<IssueRpcResult>(
+        "create_community_issue",
+        {
+          payload,
+        } as unknown as CreateCommunityIssueRpcArgs,
+      );
 
       if (error) {
         logger.error("CommunityIssueService.createIssue RPC error", error);
@@ -189,28 +211,25 @@ class CommunityIssueServiceClass {
     }
   }
 
-  // --------------------------------------------------------------------------
-  // ATUALIZAÇÃO (apenas autor, apenas campos permitidos)
-  // --------------------------------------------------------------------------
-
-  /**
-   * Atualiza campos editáveis de um problema.
-   * RLS garante que apenas o autor pode atualizar.
-   */
   async updateIssue(issueId: string, payload: UpdateIssuePayload): Promise<boolean> {
     try {
+      const updateData: CommunityIssueUpdateRow = {
+        title: payload.title,
+        description: payload.description,
+        images: payload.images,
+        address_reference: payload.address_reference,
+        updated_at: new Date().toISOString(),
+      };
+
       const { error } = await supabase
         .from(this.TABLE)
-        .update({
-          ...payload,
-          updated_at: new Date().toISOString(),
-        })
+        .update(updateData)
         .eq("id", issueId)
         .in("status", ["aberto", "em_analise"]);
 
       if (error) throw error;
 
-      await this._auditLog(issueId, "updated", payload as Record<string, unknown>);
+      await this.auditLog(issueId, "updated", { ...payload });
       return true;
     } catch (error) {
       logger.error("CommunityIssueService.updateIssue", error);
@@ -218,23 +237,17 @@ class CommunityIssueServiceClass {
     }
   }
 
-  // --------------------------------------------------------------------------
-  // SUPORTE (upvote)
-  // --------------------------------------------------------------------------
-
-  /**
-   * Registra apoio de um perfil a um problema.
-   * Incremento do contador via trigger no banco.
-   */
   async supportIssue(issueId: string, profileId: string): Promise<boolean> {
     try {
-      const { error } = await supabase
-        .from("community_issue_supports")
-        .insert({ issue_id: issueId, profile_id: profileId });
+      const insertData: CommunityIssueSupportInsert = {
+        issue_id: issueId,
+        profile_id: profileId,
+      };
 
+      const { error } = await supabase.from("community_issue_supports").insert(insertData);
       if (error) throw error;
 
-      await this._auditLog(issueId, "supported", { profile_id: profileId });
+      await this.auditLog(issueId, "supported", { profile_id: profileId });
       return true;
     } catch (error) {
       logger.error("CommunityIssueService.supportIssue", error);
@@ -242,9 +255,6 @@ class CommunityIssueServiceClass {
     }
   }
 
-  /**
-   * Remove apoio de um perfil a um problema.
-   */
   async unsupportIssue(issueId: string, profileId: string): Promise<boolean> {
     try {
       const { error } = await supabase
@@ -261,9 +271,6 @@ class CommunityIssueServiceClass {
     }
   }
 
-  /**
-   * Verifica se um perfil já apoia um problema.
-   */
   async isSupporting(issueId: string, profileId: string): Promise<boolean> {
     try {
       const { data, error } = await supabase
@@ -274,39 +281,31 @@ class CommunityIssueServiceClass {
         .maybeSingle();
 
       if (error && error.code !== "PGRST116") throw error;
-      return !!data;
+      return Boolean(data);
     } catch (error) {
       logger.error("CommunityIssueService.isSupporting", error);
       return false;
     }
   }
 
-  // --------------------------------------------------------------------------
-  // REPORT (denúncia de abuso)
-  // --------------------------------------------------------------------------
-
-  /**
-   * Registra denúncia de abuso em um problema.
-   * Moderação é tratada por core/moderation.
-   */
   async reportIssue(payload: CreateIssueReportPayload): Promise<boolean> {
     try {
       const user = await SessionService.getCurrentUser();
       if (!user) return false;
-      const profileId = await this._getActiveProfileIdByUserId(user.id);
+
+      const profileId = await this.getActiveProfileIdByUserId(user.id);
       if (!profileId) return false;
 
-      const { error } = await supabase
-        .from("community_issue_reports")
-        .insert({
-          issue_id: payload.issue_id,
-          profile_id: profileId,
-          reason: payload.reason,
-        });
+      const insertData: CommunityIssueReportInsert = {
+        issue_id: payload.issue_id,
+        profile_id: profileId,
+        reason: payload.reason,
+      };
 
+      const { error } = await supabase.from("community_issue_reports").insert(insertData);
       if (error) throw error;
 
-      await this._auditLog(payload.issue_id, "reported", { reason: payload.reason });
+      await this.auditLog(payload.issue_id, "reported", { reason: payload.reason });
       return true;
     } catch (error) {
       logger.error("CommunityIssueService.reportIssue", error);
@@ -314,37 +313,58 @@ class CommunityIssueServiceClass {
     }
   }
 
-  // --------------------------------------------------------------------------
-  // AUDIT LOG (interno)
-  // --------------------------------------------------------------------------
+  private normalizeIssue(row: CommunityIssueRow): CommunityIssuePublic {
+    return {
+      id: row.id,
+      author_profile_id: row.author_profile_id,
+      location_id: row.location_id ?? "",
+      category: (row.category ?? "outro") as CommunityIssuePublic["category"],
+      status: row.status as CommunityIssuePublic["status"],
+      priority: row.priority as CommunityIssuePublic["priority"],
+      title: row.title,
+      description: row.description ?? "",
+      images: row.images ?? [],
+      neighborhood: row.neighborhood ?? "",
+      neighborhood_display: row.neighborhood_display ?? row.neighborhood ?? "",
+      city: row.city ?? "",
+      address_reference: row.address_reference ?? undefined,
+      support_count: row.support_count ?? 0,
+      comments_count: row.comments_count ?? 0,
+      report_count: row.report_count ?? 0,
+      resolved_at: row.resolved_at ?? undefined,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+    };
+  }
 
-  private async _auditLog(
+  private async auditLog(
     issueId: string,
     action: string,
-    metadata: Record<string, unknown>
+    metadata: Record<string, unknown>,
   ): Promise<void> {
     try {
       const user = await SessionService.getCurrentUser();
       if (!user) return;
 
-      await supabase.from("community_issue_audit").insert({
+      const insertData: CommunityIssueAuditInsert = {
         issue_id: issueId,
         actor_id: user.id,
         action,
         metadata: metadata as Json,
-      });
+      };
+
+      await supabase.from("community_issue_audit").insert(insertData);
     } catch (error) {
-      // Audit log nunca deve quebrar o fluxo principal
-      logger.error("CommunityIssueService._auditLog", error);
+      logger.error("CommunityIssueService.auditLog", error);
     }
   }
 
-  private async _getActiveProfileIdByUserId(userId: string): Promise<string | null> {
+  private async getActiveProfileIdByUserId(userId: string): Promise<string | null> {
     try {
       const profile = await profileService.getActiveProfile(userId);
       return profile?.id ?? null;
     } catch (error) {
-      logger.error("CommunityIssueService._getActiveProfileIdByUserId", error);
+      logger.error("CommunityIssueService.getActiveProfileIdByUserId", error);
       return null;
     }
   }

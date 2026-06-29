@@ -27,7 +27,7 @@ interface CheckResult {
   status: 'healthy' | 'unhealthy';
   duration_ms: number;
   error?: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 const startTime = Date.now();

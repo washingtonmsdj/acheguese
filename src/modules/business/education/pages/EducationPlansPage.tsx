@@ -1,30 +1,29 @@
 /**
  * EducationPlansPage
  *
- * Página de planos e billing da instituição.
+ * Pagina de planos e billing da instituicao.
  * Rota: /central/empresas/:businessId/educacao/planos
  */
 
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  CreditCard,
   ArrowLeft,
-  Check,
-  X,
-  Users,
   BookOpen,
   Calendar,
-  HardDrive,
+  Check,
+  CreditCard,
+  Download,
   Globe,
+  HardDrive,
   Lock,
   TrendingUp,
-  Download,
+  Users,
+  X,
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Badge } from '@/shared/components/ui/badge';
-import { Progress } from '@/shared/components/ui/progress';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { useToast } from '@/shared/hooks/use-toast';
 import { logger } from '@/shared/utils/logger';
@@ -34,7 +33,24 @@ import { useBillingPlans } from '@/core/billing/hooks/useBillingPlans';
 import { useEducationSubscription } from '../hooks/useEducationSubscription';
 import { EducationUrlService } from '../services/EducationUrlService';
 
-const EDUCATION_PLAN_TEMPLATES = [
+type EducationPlanTemplate = {
+  billingCode: string;
+  name: string;
+  description: string;
+  popular?: boolean;
+  features: {
+    maxPrograms: number;
+    maxLeadsPerMonth: number;
+    maxEvents: number;
+    storageMB: number;
+    canUsePremiumPublicPage: boolean;
+    canUseShortPremiumLink: boolean;
+    canUseAnalytics: boolean;
+    canExportData: boolean;
+  };
+};
+
+const EDUCATION_PLAN_TEMPLATES: EducationPlanTemplate[] = [
   {
     billingCode: 'free',
     name: 'Gratuito',
@@ -109,11 +125,27 @@ const FEATURE_LABELS: Record<string, { label: string; icon: typeof Check }> = {
   canExportData: { label: 'Exportar Dados', icon: Download },
 };
 
+function formatFeatureValue(key: string, value: boolean | number) {
+  if (typeof value === 'boolean') {
+    return value ? <Check className="h-5 w-5 text-green-500" /> : <X className="h-5 w-5 text-gray-300" />;
+  }
+
+  if (key === 'storageMB') {
+    return value >= 1000 ? `${(value / 1000).toFixed(0)}GB` : `${value}MB`;
+  }
+
+  if (value === 999 || value === 9999) {
+    return 'Ilimitado';
+  }
+
+  return value.toLocaleString('pt-BR');
+}
+
 export function EducationPlansPage() {
   const { businessId } = useParams<{ businessId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { status, entitlements, planType, isLoading, permissions } = useEducationSubscription({
+  const { status, entitlements, planType, isLoading } = useEducationSubscription({
     businessId: businessId!,
     enabled: Boolean(businessId),
   });
@@ -138,8 +170,8 @@ export function EducationPlansPage() {
   const handleUpgrade = async (planId: string) => {
     if (!plansUrl) {
       toast({
-        title: 'InstituiÃ§Ã£o indisponÃ­vel',
-        description: 'NÃ£o foi possÃ­vel identificar a instituiÃ§Ã£o para iniciar o checkout.',
+        title: 'Instituição indisponível',
+        description: 'Não foi possível identificar a instituição para iniciar o checkout.',
         variant: 'destructive',
       });
       return;
@@ -166,41 +198,23 @@ export function EducationPlansPage() {
     }
   };
 
-  const formatFeatureValue = (key: string, value: boolean | number) => {
-    if (typeof value === 'boolean') {
-      return value ? (
-        <Check className="w-5 h-5 text-green-500" />
-      ) : (
-        <X className="w-5 h-5 text-gray-300" />
-      );
-    }
-    if (key === 'storageMB') {
-      return value >= 1000 ? `${(value / 1000).toFixed(0)}GB` : `${value}MB`;
-    }
-    if (value === 999 || value === 9999) {
-      return 'Ilimitado';
-    }
-    return value.toLocaleString('pt-BR');
-  };
-
   if (isLoading || billingPlansLoading) {
     return (
       <div className="container mx-auto p-6">
-        <Skeleton className="h-8 w-1/3 mb-6" />
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-96 rounded-xl" />
+        <Skeleton className="mb-6 h-8 w-1/3" />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+          {[1, 2, 3, 4].map((index) => (
+            <Skeleton key={index} className="h-96 rounded-xl" />
           ))}
         </div>
       </div>
     );
   }
 
-  const currentPlan = planCards.find((p) => p.billingCode === currentPlanCode) || planCards[0];
+  const currentPlan = planCards.find((plan) => plan.billingCode === currentPlanCode) || planCards[0];
 
   return (
     <div className="container mx-auto p-6">
-      {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -212,13 +226,13 @@ export function EducationPlansPage() {
           className="mb-4"
           onClick={() => (dashboardUrl ? navigate(dashboardUrl) : navigate(-1))}
         >
-          <ArrowLeft className="w-4 h-4 mr-1" />
+          <ArrowLeft className="mr-1 h-4 w-4" />
           Voltar
         </Button>
 
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-            <CreditCard className="w-5 h-5 text-white" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600">
+            <CreditCard className="h-5 w-5 text-white" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Planos e Assinatura</h1>
@@ -229,26 +243,24 @@ export function EducationPlansPage() {
         </div>
       </motion.div>
 
-      {/* Current Plan Card */}
       <Card className="mb-8 border-blue-200 bg-blue-50/50">
         <CardContent className="p-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <div className="flex items-center gap-2 mb-1">
+              <div className="mb-1 flex items-center gap-2">
                 <h2 className="text-lg font-semibold">Plano Atual</h2>
                 <Badge variant={status?.isActive ? 'default' : 'secondary'}>
                   {status?.isActive ? 'Ativo' : 'Inativo'}
                 </Badge>
               </div>
-              <p className="text-2xl font-bold text-blue-600">
-                {currentPlan.name}
-              </p>
+              <p className="text-2xl font-bold text-blue-600">{currentPlan.name}</p>
               <p className="text-sm text-gray-500">
                 {status?.expiresAt
                   ? `Renova em: ${new Date(status.expiresAt).toLocaleDateString('pt-BR')}`
                   : 'Sem data de expiração'}
               </p>
             </div>
+
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => navigate('/settings/subscription')}>
                 Gerenciar Assinatura
@@ -256,9 +268,8 @@ export function EducationPlansPage() {
             </div>
           </div>
 
-          {/* Usage Stats */}
           {entitlements && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t border-blue-100">
+            <div className="mt-6 grid grid-cols-2 gap-4 border-t border-blue-100 pt-6 md:grid-cols-4">
               <div>
                 <p className="text-sm text-gray-500">Programas</p>
                 <p className="text-lg font-semibold">
@@ -268,7 +279,9 @@ export function EducationPlansPage() {
               <div>
                 <p className="text-sm text-gray-500">Leads/mês</p>
                 <p className="text-lg font-semibold">
-                  {entitlements.maxLeadsPerMonth === 9999 ? 'Ilimitado' : entitlements.maxLeadsPerMonth}
+                  {entitlements.maxLeadsPerMonth === 9999
+                    ? 'Ilimitado'
+                    : entitlements.maxLeadsPerMonth}
                 </p>
               </div>
               <div>
@@ -290,9 +303,8 @@ export function EducationPlansPage() {
         </CardContent>
       </Card>
 
-      {/* Plans Grid */}
-      <h2 className="text-lg font-semibold mb-4">Escolha seu Plano</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <h2 className="mb-4 text-lg font-semibold">Escolha seu Plano</h2>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {planCards.map((plan, index) => (
           <motion.div
             key={plan.billingCode}
@@ -301,14 +313,12 @@ export function EducationPlansPage() {
             transition={{ delay: index * 0.1 }}
           >
             <Card
-              className={`h-full flex flex-col ${
-                currentPlanCode === plan.billingCode
-                  ? 'border-blue-500 ring-2 ring-blue-500/20'
-                  : ''
+              className={`flex h-full flex-col ${
+                currentPlanCode === plan.billingCode ? 'border-blue-500 ring-2 ring-blue-500/20' : ''
               } ${plan.popular ? 'border-blue-300' : ''}`}
             >
               {plan.popular && (
-                <div className="bg-blue-500 text-white text-xs font-medium py-1 px-2 text-center">
+                <div className="bg-blue-500 px-2 py-1 text-center text-xs font-medium text-white">
                   Mais Popular
                 </div>
               )}
@@ -317,22 +327,24 @@ export function EducationPlansPage() {
                 <p className="text-sm text-gray-500">{plan.description}</p>
                 <div className="mt-2">
                   <span className="text-3xl font-bold">{plan.priceDisplay}</span>
-                  {plan.priceDisplay !== 'Grátis' && <span className="text-gray-500">/mês</span>}
+                  {plan.priceDisplay !== 'Grátis' && (
+                    <span className="text-gray-500">/mês</span>
+                  )}
                 </div>
               </CardHeader>
-              <CardContent className="flex-1 flex flex-col">
-                <ul className="space-y-2 mb-6 flex-1">
+              <CardContent className="flex flex-1 flex-col">
+                <ul className="mb-6 flex-1 space-y-2">
                   {Object.entries(plan.features).map(([key, value]) => {
                     const feature = getRecordValue(FEATURE_LABELS, key);
                     if (!feature) return null;
+
                     const Icon = feature.icon;
+
                     return (
                       <li key={key} className="flex items-center gap-2 text-sm">
-                        <Icon className="w-4 h-4 text-gray-400" />
+                        <Icon className="h-4 w-4 text-gray-400" />
                         <span className="flex-1">{feature.label}</span>
-                        <span className="font-medium">
-                          {formatFeatureValue(key, value)}
-                        </span>
+                        <span className="font-medium">{formatFeatureValue(key, value)}</span>
                       </li>
                     );
                   })}
@@ -351,13 +363,12 @@ export function EducationPlansPage() {
         ))}
       </div>
 
-      {/* FAQ */}
       <div className="mt-12">
-        <h2 className="text-lg font-semibold mb-4">Dúvidas frequentes</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <h2 className="mb-4 text-lg font-semibold">Dúvidas frequentes</h2>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Card>
             <CardContent className="p-4">
-              <h3 className="font-medium mb-2">Posso mudar de plano a qualquer momento?</h3>
+              <h3 className="mb-2 font-medium">Posso mudar de plano a qualquer momento?</h3>
               <p className="text-sm text-gray-600">
                 Sim, você pode fazer upgrade ou downgrade do seu plano a qualquer momento.
                 As alterações serão aplicadas no próximo ciclo de faturamento.
@@ -366,7 +377,7 @@ export function EducationPlansPage() {
           </Card>
           <Card>
             <CardContent className="p-4">
-              <h3 className="font-medium mb-2">O que acontece se eu exceder os limites?</h3>
+              <h3 className="mb-2 font-medium">O que acontece se eu exceder os limites?</h3>
               <p className="text-sm text-gray-600">
                 Você será notificado quando estiver próximo dos limites. Para continuar
                 usando sem restrições, faça upgrade para um plano superior.

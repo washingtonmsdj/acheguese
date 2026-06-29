@@ -14,9 +14,25 @@ import type {
   PostStats,
   PaginationParams,
   Poll,
+  PollOption,
   CreatePollData,
+  PostType,
 } from "../types";
 import { PostError } from "../types";
+
+interface RpcResult<T> {
+  data: T | null;
+  error: { message: string; code?: string } | null;
+}
+
+interface PostServiceRpcClient {
+  rpc: <TResult = unknown>(
+    fn: string,
+    params?: Record<string, unknown>,
+  ) => Promise<RpcResult<TResult>>;
+}
+
+const postServiceRpc = supabase as unknown as PostServiceRpcClient;
 
 export class PostService {
   // ============================================================================
@@ -33,7 +49,7 @@ export class PostService {
   async createPost(data: {
     author_profile_id: string;
     content: string;
-    type: string;
+    type: PostType;
     location_id: string;
     reach?: 'street' | 'neighborhood' | 'city';
     images?: string[];
@@ -286,7 +302,7 @@ export class PostService {
     points: number,
   ): Promise<void> {
     try {
-      const { error } = await (supabase as any).rpc("add_pontos", {
+      const { error } = await postServiceRpc.rpc("add_pontos", {
         _user_id: userId,
         _acao: action,
         _pontos: points,
@@ -391,7 +407,7 @@ export class PostService {
   async updatePollVoteCounts(
     pollId: string,
     optionId: string,
-  ): Promise<{ options: any[]; total_votes: number }> {
+  ): Promise<{ options: PollOption[]; total_votes: number }> {
     return pollMutations.updatePollVoteCounts(pollId, optionId);
   }
 

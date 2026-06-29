@@ -114,16 +114,15 @@ export default function TrackRidePage() {
       let driverData = null;
       if (rideData.driver_profile_id) {
         // MIGRADO - Buscar profile do motorista usando ProfileService
-        const driverProfiles = await profileService.getProfilesSummary([
+        const driverProfile = await profileService.getProfileById(
           rideData.driver_profile_id,
-        ]);
-        const driverProfile = driverProfiles[0];
+        );
 
         if (driverProfile) {
           // ✅ SSOT COMPLETO - Buscar dados usando MobilityService + ProfileService
           const [driverComplete, profileContext] = await Promise.all([
             getDriverCompleteProfile(driverProfile.id),
-            profileService.getProfileContext(driverProfile.userId),
+            profileService.getProfileContext(driverProfile.user_id),
           ]);
 
           if (driverComplete) {
@@ -166,7 +165,7 @@ export default function TrackRidePage() {
             }
           : null,
         passenger_info: {
-          name: passengerData?.name || "Passageiro",
+          name: passengerData?.displayName || "Passageiro",
         },
       };
 

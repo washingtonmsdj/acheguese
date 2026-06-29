@@ -1,51 +1,45 @@
-/**
- * ══════════════════════════════════════════════════════════════════════════
- * PRIVACY SETTINGS PAGE
- * ══════════════════════════════════════════════════════════════════════════
- *
- * Página de configurações de privacidade e LGPD.
- * Permite exportar dados, solicitar exclusão de conta e gerenciar consentimentos.
- *
- * LGPD: Art. 18 - Direitos do titular de dados
- * ══════════════════════════════════════════════════════════════════════════
- */
-
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState } from "react";
+import { Navigate, useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  Download,
-  Trash2,
-  Shield,
-  FileText,
   AlertTriangle,
-  Clock,
-  ChevronRight,
-  Loader2,
-  CheckCircle,
-  XCircle,
-  Cookie,
-  MapPin,
+  ArrowLeft,
   Bell,
+  CheckCircle,
+  ChevronRight,
+  Clock,
+  Cookie,
+  Download,
+  FileText,
+  Loader2,
   Mail,
-} from 'lucide-react';
-import { Button } from '@/shared/components/ui/button';
+  MapPin,
+  Shield,
+  Trash2,
+  XCircle,
+} from "lucide-react";
+
+import { useAuth } from "@/core/auth/hooks/useAuth";
+import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
+import {
+  PrivacySettingsService,
+  type DeletionStatusRecord,
+  type UserConsentRecord,
+} from "@/core/privacy/services/PrivacySettingsService";
+import { Button } from "@/shared/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
-  CardFooter,
-} from '@/shared/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/shared/components/ui/dialog';
+} from "@/shared/components/ui/card";
+import { Label } from "@/shared/components/ui/label";
+import { Switch } from "@/shared/components/ui/switch";
+import { Textarea } from "@/shared/components/ui/textarea";
+import { useToast } from "@/shared/hooks/use-toast";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -56,69 +50,105 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/shared/components/ui/alert-dialog';
-import { Label } from '@/shared/components/ui/label';
-import { Switch } from '@/shared/components/ui/switch';
-import { Separator } from '@/shared/components/ui/separator';
-import { useToast } from '@/shared/hooks/use-toast';
-import { useAuth } from '@/core/auth/hooks/useAuth';
-import {
-  PrivacySettingsService,
-  type UserConsentRecord,
-  type DeletionStatusRecord,
-} from '@/core/privacy/services/PrivacySettingsService';
+} from "@/shared/components/ui/alert-dialog";
 
 type UserConsent = UserConsentRecord;
 type DeletionStatus = DeletionStatusRecord;
 
 function getConsentIcon(type: string): React.ReactNode {
   switch (type) {
-    case 'cookies':
+    case "cookies":
       return <Cookie className="h-5 w-5" />;
-    case 'analytics':
+    case "analytics":
       return <FileText className="h-5 w-5" />;
-    case 'marketing':
+    case "marketing":
       return <Mail className="h-5 w-5" />;
-    case 'geolocation':
+    case "geolocation":
       return <MapPin className="h-5 w-5" />;
-    case 'notifications':
+    case "notifications":
       return <Bell className="h-5 w-5" />;
-    case 'data_processing':
+    case "data_processing":
       return <Shield className="h-5 w-5" />;
-    case 'third_party':
+    case "third_party":
       return <FileText className="h-5 w-5" />;
-    case 'terms_of_service':
+    case "terms_of_service":
       return <FileText className="h-5 w-5" />;
-    case 'privacy_policy':
+    case "privacy_policy":
       return <Shield className="h-5 w-5" />;
     default:
       return <FileText className="h-5 w-5" />;
   }
 }
 
+function ConsentRow({
+  type,
+  label,
+  consent,
+  disabled,
+  onChange,
+}: {
+  type: string;
+  label: string;
+  consent?: UserConsent;
+  disabled: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  const isGranted = consent?.granted ?? false;
+
+  return (
+    <div className="flex flex-col gap-3 rounded-2xl border border-border/60 bg-muted/20 p-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-start gap-3">
+        <div className="pt-0.5 text-muted-foreground">{getConsentIcon(type)}</div>
+        <div>
+          <Label htmlFor={`consent-${type}`} className="font-medium text-foreground">
+            {label}
+          </Label>
+          {consent?.granted_at ? (
+            <p className="mt-1 text-xs text-muted-foreground">
+              {isGranted
+                ? `Concedido em ${new Date(consent.granted_at).toLocaleDateString("pt-BR")}`
+                : "Revogado"}
+            </p>
+          ) : (
+            <p className="mt-1 text-xs text-muted-foreground">
+              Ainda nao configurado
+            </p>
+          )}
+        </div>
+      </div>
+      <Switch
+        id={`consent-${type}`}
+        checked={isGranted}
+        onCheckedChange={onChange}
+        disabled={disabled}
+        className="shrink-0"
+      />
+    </div>
+  );
+}
+
 export default function PrivacySettingsPage() {
+  const navigate = useNavigate();
+  const appUrls = useAppUrls();
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isExporting, setIsExporting] = useState(false);
-  const [deleteReason, setDeleteReason] = useState('');
+  const [deleteReason, setDeleteReason] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  // Buscar consentimentos do usuário
   const { data: consents, isLoading: consentsLoading } = useQuery({
-    queryKey: ['user-consents', user?.id],
+    queryKey: ["user-consents", user?.id],
     queryFn: async () => PrivacySettingsService.getUserConsents(user!.id),
     enabled: !!user?.id,
   });
 
-  // Buscar status de deleção
-  const { data: deletionStatus, isLoading: deletionLoading } = useQuery({
-    queryKey: ['deletion-status', user?.id],
+  const { data: deletionStatus } = useQuery({
+    queryKey: ["deletion-status", user?.id],
     queryFn: async () => PrivacySettingsService.getDeletionStatus(user!.id),
     enabled: !!user?.id,
   });
 
-  // Mutação para atualizar consentimento
   const updateConsentMutation = useMutation({
     mutationFn: async ({
       consentType,
@@ -135,52 +165,54 @@ export default function PrivacySettingsPage() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['user-consents', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["user-consents", user?.id] });
       toast({
-        title: 'Preferência atualizada',
-        description: 'Sua preferência de privacidade foi salva.',
+        title: "Preferencia atualizada",
+        description: "Sua preferencia de privacidade foi salva.",
       });
     },
-    onError: (error) => {
+    onError: () => {
       toast({
-        title: 'Erro',
-        description: 'Não foi possível atualizar a preferência.',
-        variant: 'destructive',
+        title: "Erro",
+        description: "Nao foi possivel atualizar a preferencia.",
+        variant: "destructive",
       });
     },
   });
 
-  // Exportar dados (LGPD Art. 18, I)
+  if (!user) {
+    return <Navigate to={appUrls.auth.login} replace />;
+  }
+
   const handleExportData = async () => {
     setIsExporting(true);
     try {
       const accessToken = await PrivacySettingsService.getAccessToken();
       const blob = await PrivacySettingsService.exportUserData(accessToken);
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
-      a.download = `meus-dados-${user?.id?.slice(0, 8)}-${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `meus-dados-${user.id.slice(0, 8)}-${new Date().toISOString().split("T")[0]}.json`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
       toast({
-        title: 'Dados exportados!',
-        description: 'Seus dados foram exportados com sucesso (LGPD Art. 18).',
+        title: "Dados exportados",
+        description: "Seus dados foram exportados com sucesso.",
       });
-    } catch (error) {
+    } catch {
       toast({
-        title: 'Erro na exportação',
-        description: 'Não foi possível exportar seus dados. Tente novamente.',
-        variant: 'destructive',
+        title: "Erro na exportacao",
+        description: "Nao foi possivel exportar seus dados.",
+        variant: "destructive",
       });
     } finally {
       setIsExporting(false);
     }
   };
 
-  // Solicitar exclusão de conta (LGPD Art. 18, VI)
   const handleDeleteAccount = async () => {
     try {
       const accessToken = await PrivacySettingsService.getAccessToken();
@@ -189,340 +221,336 @@ export default function PrivacySettingsPage() {
         reason: deleteReason,
       });
 
-      queryClient.invalidateQueries({
-        queryKey: ['deletion-status', user?.id],
-      });
-
+      queryClient.invalidateQueries({ queryKey: ["deletion-status", user.id] });
       toast({
-        title: 'Conta agendada para exclusão',
-        description: `Sua conta será excluída em ${result.days_until_purge} dias. Você pode cancelar até lá.`,
+        title: "Conta agendada para exclusao",
+        description: `Sua conta sera excluida em ${result.days_until_purge} dias.`,
       });
-
       setShowDeleteConfirm(false);
     } catch (error: unknown) {
       toast({
-        title: 'Erro',
+        title: "Erro",
         description:
-          (error instanceof Error ? error.message : null) || 'Não foi possível solicitar a exclusão da conta.',
-        variant: 'destructive',
+          (error instanceof Error ? error.message : null) ||
+          "Nao foi possivel solicitar a exclusao da conta.",
+        variant: "destructive",
       });
     }
   };
 
-  // Cancelar exclusão
   const handleCancelDeletion = async () => {
     try {
-      await PrivacySettingsService.cancelAccountDeletion(user!.id);
-
-      queryClient.invalidateQueries({
-        queryKey: ['deletion-status', user?.id],
-      });
-
+      await PrivacySettingsService.cancelAccountDeletion(user.id);
+      queryClient.invalidateQueries({ queryKey: ["deletion-status", user.id] });
       toast({
-        title: 'Exclusão cancelada',
-        description: 'Sua conta não será mais excluída.',
+        title: "Exclusao cancelada",
+        description: "Sua conta nao sera mais excluida.",
       });
-    } catch (error) {
+    } catch {
       toast({
-        title: 'Erro',
-        description: 'Não foi possível cancelar a exclusão.',
-        variant: 'destructive',
+        title: "Erro",
+        description: "Nao foi possivel cancelar a exclusao.",
+        variant: "destructive",
       });
     }
   };
 
   const consentLabels: Record<string, string> = {
-    cookies: 'Cookies não essenciais',
-    analytics: 'Analytics e métricas',
-    marketing: 'Marketing e promoções',
-    geolocation: 'Geolocalização precisa',
-    notifications: 'Notificações push',
-    data_processing: 'Processamento de dados',
-    third_party: 'Compartilhamento com terceiros',
-    terms_of_service: 'Termos de uso',
-    privacy_policy: 'Política de privacidade',
+    cookies: "Cookies nao essenciais",
+    analytics: "Analytics e metricas",
+    marketing: "Marketing e promocoes",
+    geolocation: "Geolocalizacao precisa",
+    notifications: "Notificacoes push",
+    data_processing: "Processamento de dados",
+    third_party: "Compartilhamento com terceiros",
+    terms_of_service: "Termos de uso",
+    privacy_policy: "Politica de privacidade",
   };
 
   return (
-    <div className="container max-w-4xl mx-auto py-8 px-4">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Privacidade e Dados</h1>
-        <p className="text-muted-foreground">
-          Gerencie seus dados pessoais e exercite seus direitos conforme a LGPD.
-        </p>
-      </div>
+    <>
+      <Helmet>
+        <title>Privacidade e dados</title>
+      </Helmet>
 
-      {/* Alerta de exclusão agendada */}
-      {deletionStatus?.status === 'scheduled' && (
-        <Card className="mb-6 border-destructive/50 bg-destructive/5">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-destructive">
-              <Clock className="h-5 w-5" />
-              Conta agendada para exclusão
-            </CardTitle>
-            <CardDescription>
-              Sua conta será permanentemente excluída em{' '}
-              {deletionStatus.days_remaining} dias (
-              {new Date(deletionStatus.scheduled_purge_at!).toLocaleDateString('pt-BR')}
-              ).
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground mb-4">
-              Durante este período você pode cancelar a exclusão. Após a data de
-              purge, seus dados serão permanentemente removidos e não poderão
-              ser recuperados.
-            </p>
-            <Button
-              variant="outline"
-              onClick={handleCancelDeletion}
-              className="border-destructive text-destructive hover:bg-destructive/10"
-            >
-              <XCircle className="h-4 w-4 mr-2" />
-              Cancelar exclusão da conta
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Seção: Meus Dados (LGPD Art. 18) */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Download className="h-5 w-5" />
-            Meus Dados
-          </CardTitle>
-          <CardDescription>
-            LGPD Art. 18, I - Direito de acesso aos dados pessoais.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground mb-4">
-            Exporte uma cópia completa de todos os seus dados pessoais
-            armazenados em nossa plataforma. O arquivo será baixado em formato
-            JSON e conterá dados de perfil, endereços, negócios, mensagens,
-            notificações e histórico de atividades.
-          </p>
-        </CardContent>
-        <CardFooter>
-          <Button
-            onClick={handleExportData}
-            disabled={isExporting}
-            className="w-full sm:w-auto"
-          >
-            {isExporting ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Exportando...
-              </>
-            ) : (
-              <>
-                <Download className="h-4 w-4 mr-2" />
-                Exportar meus dados
-              </>
-            )}
-          </Button>
-        </CardFooter>
-      </Card>
-
-      {/* Seção: Consentimentos */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CheckCircle className="h-5 w-5" />
-            Consentimentos
-          </CardTitle>
-          <CardDescription>
-            Gerencie seus consentimentos de uso de dados.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {consentsLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin" />
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {Object.entries(consentLabels).map(([type, label]) => {
-                const consent = consents?.find((c) => c.consent_type === type);
-                const isGranted = consent?.granted ?? false;
-
-                return (
-                  <div
-                    key={type}
-                    className="flex items-center justify-between py-3"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="text-muted-foreground">
-                        {getConsentIcon(type)}
-                      </div>
-                      <div>
-                        <Label
-                          htmlFor={`consent-${type}`}
-                          className="font-medium"
-                        >
-                          {label}
-                        </Label>
-                        {consent?.granted_at && (
-                          <p className="text-xs text-muted-foreground">
-                            {isGranted
-                              ? `Concedido em ${new Date(consent.granted_at).toLocaleDateString('pt-BR')}`
-                              : 'Revogado'}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    <Switch
-                      id={`consent-${type}`}
-                      checked={isGranted}
-                      onCheckedChange={(checked) =>
-                        updateConsentMutation.mutate({
-                          consentType: type,
-                          granted: checked,
-                        })
-                      }
-                      disabled={updateConsentMutation.isPending}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Seção: Excluir Conta (LGPD Art. 18, VI) */}
-      <Card className="border-destructive/50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-destructive">
-            <Trash2 className="h-5 w-5" />
-            Excluir Conta
-          </CardTitle>
-          <CardDescription>
-            LGPD Art. 18, VI - Direito à eliminação dos dados pessoais.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-start gap-3 p-4 bg-destructive/10 rounded-lg">
-              <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
-              <div className="text-sm">
-                <p className="font-medium text-destructive mb-1">
-                  Atenção: Esta ação não pode ser desfeita após 30 dias
+      <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.10),transparent_28%),linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.32))]">
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="mx-auto w-full max-w-5xl px-4 pb-8 pt-4 focus:outline-none sm:px-6 sm:pb-10 sm:pt-6 lg:px-8"
+        >
+          <div className="sticky top-0 z-20 -mx-4 mb-5 border-b border-border/60 bg-background/90 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:mb-6 sm:rounded-3xl sm:border sm:bg-card/85 sm:px-5 sm:shadow-sm">
+            <div className="flex items-start gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="shrink-0 rounded-full"
+                onClick={() => navigate("/conta/preferencias")}
+                type="button"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  LGPD e conta
                 </p>
-                <p className="text-muted-foreground">
-                  Ao solicitar a exclusão, sua conta será imediatamente
-                  desativada e todos os seus dados serão programados para
-                  exclusão permanente em 30 dias. Durante este período você
-                  pode cancelar a exclusão. Após esse prazo, seus dados serão
-                  permanentemente removidos e não poderão ser recuperados.
+                <h1 className="truncate text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+                  Privacidade e dados
+                </h1>
+                <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
+                  Consentimentos, exportacao e exclusao da conta.
                 </p>
               </div>
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="delete-reason">
-                Motivo da exclusão (opcional)
-              </Label>
-              <textarea
-                id="delete-reason"
-                className="w-full min-h-[100px] p-3 rounded-md border bg-background text-sm"
-                placeholder="Nos conte por que você está deixando a plataforma (isso nos ajuda a melhorar)..."
-                value={deleteReason}
-                onChange={(e) => setDeleteReason(e.target.value)}
-              />
-            </div>
           </div>
-        </CardContent>
-        <CardFooter>
-          <AlertDialog
-            open={showDeleteConfirm}
-            onOpenChange={setShowDeleteConfirm}
-          >
-            <AlertDialogTrigger asChild>
-              <Button
-                variant="destructive"
-                className="w-full sm:w-auto"
-                disabled={deletionStatus?.status === 'scheduled'}
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                {deletionStatus?.status === 'scheduled'
-                  ? 'Exclusão já agendada'
-                  : 'Solicitar exclusão da conta'}
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle className="flex items-center gap-2">
-                  <AlertTriangle className="h-5 w-5 text-destructive" />
-                  Confirmar exclusão da conta
-                </AlertDialogTitle>
-                <AlertDialogDescription className="space-y-2">
-                  <p>
-                    Tem certeza que deseja excluir sua conta? Esta ação irá:
-                  </p>
-                  <ul className="list-disc list-inside text-sm space-y-1">
-                    <li>Desativar seu acesso imediatamente</li>
-                    <li>Remover seus dados pessoais em 30 dias</li>
-                    <li>Cancelar todas as assinaturas ativas</li>
-                    <li>Anonimizar suas mensagens e posts</li>
-                    <li>
-                      <strong>Esta ação não pode ser desfeita após 30 dias</strong>
-                    </li>
-                  </ul>
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={handleDeleteAccount}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+
+          {deletionStatus?.status === "scheduled" ? (
+            <Card className="mb-5 rounded-3xl border-destructive/50 bg-destructive/5 shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-destructive">
+                  <Clock className="h-5 w-5" />
+                  Conta agendada para exclusao
+                </CardTitle>
+                <CardDescription>
+                  Sua conta sera permanentemente excluida em{" "}
+                  {deletionStatus.days_remaining} dias (
+                  {new Date(deletionStatus.scheduled_purge_at!).toLocaleDateString("pt-BR")}
+                  ).
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm leading-6 text-muted-foreground">
+                  Durante esse periodo voce ainda pode cancelar a exclusao. Depois
+                  da data final, os dados nao poderao ser recuperados.
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={handleCancelDeletion}
+                  className="w-full border-destructive text-destructive hover:bg-destructive/10 sm:w-auto"
                 >
-                  Confirmar exclusão
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </CardFooter>
-      </Card>
+                  <XCircle className="mr-2 h-4 w-4" />
+                  Cancelar exclusao da conta
+                </Button>
+              </CardContent>
+            </Card>
+          ) : null}
 
-      {/* Links úteis */}
-      <div className="mt-8 space-y-2">
-        <h3 className="font-medium mb-3">Documentos relacionados</h3>
-        <a
-          href="/privacidade"
-          className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted transition-colors"
-        >
-          <div className="flex items-center gap-3">
-            <FileText className="h-5 w-5 text-muted-foreground" />
-            <span className="text-sm font-medium">Política de Privacidade</span>
+          <section className="rounded-3xl border border-border/70 bg-card/90 p-5 shadow-sm sm:p-6">
+            <div className="space-y-2">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/90">
+                Direitos do titular
+              </p>
+              <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+                Controle dos seus dados
+              </h2>
+              <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
+                Esta area concentra exportacao, consentimentos e fluxos de exclusao
+                conforme a politica de privacidade e a LGPD.
+              </p>
+            </div>
+          </section>
+
+          <div className="mt-5 space-y-5">
+            <Card className="rounded-3xl border-border/70 bg-card/90 shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Download className="h-5 w-5" />
+                  Meus dados
+                </CardTitle>
+                <CardDescription>
+                  Acesse uma copia estruturada dos seus dados pessoais.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm leading-6 text-muted-foreground">
+                  O arquivo inclui perfil, territorios, mensagens, operacoes e
+                  historico disponivel para sua conta.
+                </p>
+              </CardContent>
+              <CardFooter>
+                <Button
+                  onClick={handleExportData}
+                  disabled={isExporting}
+                  className="w-full sm:w-auto"
+                >
+                  {isExporting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Exportando...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="mr-2 h-4 w-4" />
+                      Exportar meus dados
+                    </>
+                  )}
+                </Button>
+              </CardFooter>
+            </Card>
+
+            <Card className="rounded-3xl border-border/70 bg-card/90 shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5" />
+                  Consentimentos
+                </CardTitle>
+                <CardDescription>
+                  Gerencie permissoes de uso e tratamento de dados.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {consentsLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {Object.entries(consentLabels).map(([type, label]) => {
+                      const consent = consents?.find((item) => item.consent_type === type);
+                      return (
+                        <ConsentRow
+                          key={type}
+                          type={type}
+                          label={label}
+                          consent={consent}
+                          disabled={updateConsentMutation.isPending}
+                          onChange={(checked) =>
+                            updateConsentMutation.mutate({
+                              consentType: type,
+                              granted: checked,
+                            })
+                          }
+                        />
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="rounded-3xl border-destructive/50 bg-card/90 shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-destructive">
+                  <Trash2 className="h-5 w-5" />
+                  Excluir conta
+                </CardTitle>
+                <CardDescription>
+                  Solicite a remocao definitiva da conta e dos dados associados.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-start gap-3 rounded-2xl bg-destructive/10 p-4">
+                  <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
+                  <div className="text-sm">
+                    <p className="mb-1 font-medium text-destructive">
+                      Esta acao nao pode ser desfeita apos 30 dias
+                    </p>
+                    <p className="leading-6 text-muted-foreground">
+                      Sua conta e desativada imediatamente e os dados entram em fila
+                      de remocao permanente. Antes do prazo final, voce ainda pode
+                      cancelar.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="delete-reason">Motivo da exclusao (opcional)</Label>
+                  <Textarea
+                    id="delete-reason"
+                    className="min-h-[120px]"
+                    placeholder="Nos conte por que voce esta deixando a plataforma."
+                    value={deleteReason}
+                    onChange={(event) => setDeleteReason(event.target.value)}
+                  />
+                </div>
+              </CardContent>
+              <CardFooter>
+                <AlertDialog
+                  open={showDeleteConfirm}
+                  onOpenChange={setShowDeleteConfirm}
+                >
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="destructive"
+                      className="w-full sm:w-auto"
+                      disabled={deletionStatus?.status === "scheduled"}
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      {deletionStatus?.status === "scheduled"
+                        ? "Exclusao ja agendada"
+                        : "Solicitar exclusao da conta"}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="flex items-center gap-2">
+                        <AlertTriangle className="h-5 w-5 text-destructive" />
+                        Confirmar exclusao da conta
+                      </AlertDialogTitle>
+                      <AlertDialogDescription className="space-y-2">
+                        <p>Essa acao vai:</p>
+                        <ul className="list-disc space-y-1 pl-5 text-sm">
+                          <li>Desativar o acesso imediatamente</li>
+                          <li>Remover dados pessoais em 30 dias</li>
+                          <li>Cancelar assinaturas ativas</li>
+                          <li>Anonimizar conteudo quando aplicavel</li>
+                        </ul>
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleDeleteAccount}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        Confirmar exclusao
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </CardFooter>
+            </Card>
+
+            <section className="space-y-2">
+              <h3 className="mb-3 font-medium text-foreground">
+                Documentos relacionados
+              </h3>
+              <a
+                href="/privacidade"
+                className="flex items-center justify-between rounded-2xl border border-border/70 bg-card/90 p-3 transition-colors hover:bg-muted"
+              >
+                <div className="flex items-center gap-3">
+                  <FileText className="h-5 w-5 text-muted-foreground" />
+                  <span className="text-sm font-medium">Politica de Privacidade</span>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </a>
+              <a
+                href="/termos"
+                className="flex items-center justify-between rounded-2xl border border-border/70 bg-card/90 p-3 transition-colors hover:bg-muted"
+              >
+                <div className="flex items-center gap-3">
+                  <FileText className="h-5 w-5 text-muted-foreground" />
+                  <span className="text-sm font-medium">Termos de Uso</span>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </a>
+              <a
+                href="/dpo"
+                className="flex items-center justify-between rounded-2xl border border-border/70 bg-card/90 p-3 transition-colors hover:bg-muted"
+              >
+                <div className="flex items-center gap-3">
+                  <Shield className="h-5 w-5 text-muted-foreground" />
+                  <span className="text-sm font-medium">
+                    Falar com o Encarregado de Dados
+                  </span>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </a>
+            </section>
           </div>
-          <ChevronRight className="h-4 w-4 text-muted-foreground" />
-        </a>
-        <a
-          href="/termos"
-          className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted transition-colors"
-        >
-          <div className="flex items-center gap-3">
-            <FileText className="h-5 w-5 text-muted-foreground" />
-            <span className="text-sm font-medium">Termos de Uso</span>
-          </div>
-          <ChevronRight className="h-4 w-4 text-muted-foreground" />
-        </a>
-        <a
-          href="/dpo"
-          className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted transition-colors"
-        >
-          <div className="flex items-center gap-3">
-            <Shield className="h-5 w-5 text-muted-foreground" />
-            <span className="text-sm font-medium">
-              Falar com o Encarregado de Dados (DPO)
-            </span>
-          </div>
-          <ChevronRight className="h-4 w-4 text-muted-foreground" />
-        </a>
+        </main>
       </div>
-    </div>
+    </>
   );
 }

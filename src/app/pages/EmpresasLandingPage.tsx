@@ -98,6 +98,71 @@ type BusinessLocationLike = {
   canonical_lng?: number;
 };
 
+type CoreBusiness = import("@/core/business/types/Business").Business;
+
+function normalizeNearbyBusiness(result: NearbyBusinessResult): Business {
+  return {
+    id: result.entity_id || result.id || "",
+    name: result.entity_data?.name || "Empresa",
+    category: result.entity_data?.category || "Outros",
+    rating: result.entity_data?.rating || 0,
+    reviews: result.entity_data?.total_reviews || 0,
+    distance: `${((result.distance_meters ?? 0) / 1000).toFixed(1)} km`,
+    walkTime: `${Math.round((result.distance_meters ?? 0) / 80)} min`,
+    description: result.entity_data?.description || "",
+    tags: [],
+    premium: result.entity_data?.is_premium || false,
+    isOpen: true,
+    neighborRecs: 0,
+    lastVisit: "",
+    coords: {
+      lat: result.entity_data?.address?.latitude || result.latitude || 0,
+      lng: result.entity_data?.address?.longitude || result.longitude || 0,
+    },
+    phone: result.entity_data?.phone || "",
+    slug: result.entity_data?.slug || result.slug,
+    is_premium: result.entity_data?.is_premium,
+    geographic_path: result.entity_data?.geographic_path,
+    distanceMeters: result.distance_meters,
+    is_verified: false,
+  };
+}
+
+function normalizeRealBusinessEntry(business: CoreBusiness): Business {
+  const address = business.address as BusinessAddressLike | undefined;
+  const location = business.location as BusinessLocationLike | undefined;
+  const lat =
+    normalizeCoordinate(address?.latitude) ??
+    normalizeCoordinate(location?.canonical_lat) ??
+    0;
+  const lng =
+    normalizeCoordinate(address?.longitude) ??
+    normalizeCoordinate(location?.canonical_lng) ??
+    0;
+
+  return {
+    id: business.id,
+    name: business.name,
+    category: business.category || "Outros",
+    rating: business.rating || 0,
+    reviews: business.total_reviews || 0,
+    distance: "N/A",
+    walkTime: "N/A",
+    description: business.description || "",
+    tags: [],
+    premium: business.is_premium || false,
+    isOpen: true,
+    neighborRecs: 0,
+    lastVisit: "",
+    coords: { lat, lng },
+    phone: business.phone || "",
+    slug: business.slug,
+    is_premium: business.is_premium,
+    geographic_path: business.geographic_path ?? business.location?.geographic_path,
+    is_verified: business.is_verified,
+  };
+}
+
 const COMMUNITY_MODULE_TABS = [
   { key: "feed", label: "Feed", icon: LayoutList },
   { key: "business", label: "Empresas", icon: Building2 },
@@ -356,60 +421,9 @@ export default function EmpresasLandingPage({
   // Usa apenas empresas reais do SSOT.
   const businessesToShow = useMemo(() => {
     if (nearbyMode && nearbyBusinesses && nearbyBusinesses.length > 0) {
-      return (nearbyBusinesses as NearbyBusinessResult[]).map((result) => ({
-        id: result.entity_id || result.id,
-        name: result.entity_data?.name || 'Empresa',
-        category: result.entity_data?.category || "Outros",
-        rating: result.entity_data?.rating || 0,
-        reviews: result.entity_data?.total_reviews || 0,
-        distance: `${((result.distance_meters ?? 0) / 1000).toFixed(1)} km`,
-        walkTime: `${Math.round((result.distance_meters ?? 0) / 80)} min`,
-        description: result.entity_data?.description || "",
-        tags: [],
-        premium: result.entity_data?.is_premium || false,
-        isOpen: true,
-        neighborRecs: 0,
-        lastVisit: "",
-        coords: {
-          lat: result.entity_data?.address?.latitude || result.latitude || 0,
-          lng: result.entity_data?.address?.longitude || result.longitude || 0
-        },
-        phone: result.entity_data?.phone || "",
-        slug: result.entity_data?.slug || result.slug,
-        is_premium: result.entity_data?.is_premium,
-        geographic_path: result.entity_data?.geographic_path,
-        distanceMeters: result.distance_meters,
-        is_verified: false,
-      })) as Business[];
+      return nearbyBusinesses.map((result) => normalizeNearbyBusiness(result));
     }
-    return realBusinesses.map(b => {
-          const address = b.address as BusinessAddressLike | undefined;
-          const location = b.location as BusinessLocationLike | undefined;
-          const lat = normalizeCoordinate(address?.latitude) ?? normalizeCoordinate(location?.canonical_lat) ?? 0;
-          const lng = normalizeCoordinate(address?.longitude) ?? normalizeCoordinate(location?.canonical_lng) ?? 0;
-
-          return {
-          id: b.id,
-          name: b.name,
-          category: b.category || "Outros",
-          rating: b.rating || 0,
-          reviews: b.total_reviews || 0,
-          distance: "N/A",
-          walkTime: "N/A",
-          description: b.description || "",
-          tags: [],
-          premium: b.is_premium || false,
-          isOpen: true,
-          neighborRecs: 0,
-          lastVisit: "",
-          coords: { lat, lng },
-          phone: b.phone || "",
-          slug: b.slug,
-          is_premium: b.is_premium,
-          geographic_path: (b as { geographic_path?: string }).geographic_path,
-          is_verified: (b as { is_verified?: boolean }).is_verified,
-        };
-      }) as Business[];
+    return realBusinesses.map((business) => normalizeRealBusinessEntry(business));
   }, [nearbyMode, nearbyBusinesses, realBusinesses]);
 
   const categoryCards = useMemo(() => {
@@ -464,7 +478,7 @@ export default function EmpresasLandingPage({
   const topBusinesses = useMemo(() => {
     return [...businessesToShow]
       .sort((a, b) => b.neighborRecs - a.neighborRecs)
-      .slice(0, 3) as Business[];
+      .slice(0, 3);
   }, [businessesToShow]);
   const communityPrimaryHref = useMemo(
     () => (user ? businessUrls.create : withQueryParams(appUrls.auth.login, { redirect: businessUrls.create })),
@@ -664,7 +678,7 @@ export default function EmpresasLandingPage({
 
       {!isCommunityScopedSurface ? <EmpresasBeneficiosSection benefits={BENEFITS} /> : null}
 
-      {!isCommunityScopedSurface ? <EmpresasCTASection user={user} navigate={navigate} /> : null}
+      {!isCommunityScopedSurface ? <EmpresasCTASection navigate={navigate} /> : null}
     </EmpresasLandingLayout>
   );
 }

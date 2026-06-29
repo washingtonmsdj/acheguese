@@ -7,12 +7,11 @@ import {
 } from "@/core/business/services/BusinessManagementService";
 import type { BusinessStatus } from "@/core/business/types/Business";
 import { toast } from "sonner";
-const businessManagementApi = businessManagementService as any;
 
 export function useBusinessSections(businessId: string) {
   return useQuery({
     queryKey: ["business-sections", businessId],
-    queryFn: () => businessManagementApi.getBusinessSections(businessId),
+    queryFn: () => businessManagementService.getBusinessSections(businessId),
     enabled: !!businessId,
   });
 }
@@ -27,7 +26,7 @@ export function useUpdateBusinessSections() {
     }: {
       businessId: string;
       config: BusinessSectionConfig;
-    }) => businessManagementApi.updateBusinessSections(businessId, config),
+    }) => businessManagementService.updateBusinessSections(businessId, config),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: ["business-sections", variables.businessId],
@@ -43,7 +42,7 @@ export function useUpdateBusinessSections() {
 export function useBusinessInfo(businessId: string) {
   return useQuery({
     queryKey: ["business-info", businessId],
-    queryFn: () => businessManagementApi.getBusinessInfo(businessId),
+    queryFn: () => businessManagementService.getBusinessInfo(businessId),
     enabled: !!businessId,
   });
 }
@@ -58,7 +57,7 @@ export function useUpdateBusinessInfo() {
     }: {
       businessId: string;
       data: BusinessEditData;
-    }) => businessManagementApi.updateBusinessInfo(businessId, data),
+    }) => businessManagementService.updateBusinessInfo(businessId, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: ["business-info", variables.businessId],
@@ -74,7 +73,7 @@ export function useUpdateBusinessInfo() {
 export function useBusinessStats(businessId: string) {
   return useQuery({
     queryKey: ["business-stats", businessId],
-    queryFn: () => businessManagementApi.getBusinessStats(businessId),
+    queryFn: () => businessManagementService.getBusinessStats(businessId),
     enabled: !!businessId,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -90,7 +89,7 @@ export function useUpdateBusinessStatus() {
     }: {
       businessId: string;
       status: BusinessStatus;
-    }) => businessManagementApi.updateBusinessStatus(businessId, status),
+    }) => businessManagementService.updateBusinessStatus(businessId, status),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: ["business-info", variables.businessId],
@@ -116,7 +115,7 @@ export function useUploadBusinessImage() {
       file: File;
       imageType: "logo" | "banner" | "gallery";
     }) =>
-      businessManagementApi.uploadBusinessImage(
+      businessManagementService.uploadBusinessImage(
         businessId,
         file,
         imageType,

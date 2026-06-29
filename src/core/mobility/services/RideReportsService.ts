@@ -1,14 +1,3 @@
-/**
- * RideReportsService - Servico para gestao de reports de corridas
- * 
- * SSOT: ride_reports como fonte unica de reports
- * Funcionalidades:
- * - Criar report (passenger/driver)
- * - Listar reports (admin/proprios)
- * - Atualizar status (admin)
- * - Adicionar notas de resolucao (admin)
- */
-
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 
@@ -24,9 +13,7 @@ export type ReportType =
   | "other";
 
 export type ReportSeverity = "low" | "medium" | "high" | "critical";
-
 export type ReportStatus = "pending" | "under_review" | "resolved" | "dismissed";
-
 export type ReporterType = "passenger" | "driver" | "admin";
 
 export interface RideReport {
@@ -71,34 +58,174 @@ export interface UpdateReportInput {
   adminNotes?: string;
 }
 
-export class RideReportsService {
-  /**
-   * Criar novo report
-   */
-  static async createReport(input: CreateReportInput): Promise<{ success: boolean; reportId?: string; error?: string }> {
-    try {
-      logger.info("RideReportsService.createReport", { rideId: input.rideId, reportType: input.reportType });
+type ErrorLike = { message?: string | null } | null;
 
-      const { data, error } = await (supabase as any)
+type RideReportRow = {
+  id: string;
+  ride_id: string;
+  reporter_profile_id: string;
+  reporter_type: ReporterType;
+  report_type: ReportType;
+  severity: ReportSeverity;
+  status: ReportStatus;
+  title: string;
+  description: string;
+  evidence_urls: string[] | null;
+  location_lat: number | null;
+  location_lng: number | null;
+  reported_at: string;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  resolution_notes: string | null;
+  admin_notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type RideReportInsertRow = {
+  ride_id: string;
+  reporter_profile_id: string;
+  reporter_type: ReporterType;
+  report_type: ReportType;
+  severity: ReportSeverity;
+  title: string;
+  description: string;
+  evidence_urls?: string[];
+  location_lat?: number;
+  location_lng?: number;
+};
+
+type RideReportUpdateRow = {
+  status?: ReportStatus;
+  reviewed_at?: string;
+  reviewed_by?: string;
+  resolution_notes?: string;
+  admin_notes?: string;
+};
+
+type RideReportStatsRow = {
+  status: ReportStatus;
+  severity: ReportSeverity;
+  report_type: ReportType;
+};
+
+type QueryResult<T> = Promise<{
+  data: T[] | null;
+  error: ErrorLike;
+}>;
+
+type SingleQueryResult<T> = Promise<{
+  data: T | null;
+  error: ErrorLike;
+}>;
+
+type RideReportsSelectBuilder<T> = PromiseLike<{
+  data: T[] | null;
+  error: ErrorLike;
+}> & {
+  select(columns: string): RideReportsSelectBuilder<T>;
+  eq(column: string, value: string): RideReportsSelectBuilder<T>;
+  order(column: string, options: { ascending: boolean }): RideReportsSelectBuilder<T>;
+  limit(count: number): RideReportsSelectBuilder<T>;
+  range(from: number, to: number): RideReportsSelectBuilder<T>;
+  single(): SingleQueryResult<T>;
+};
+
+type RideReportsDbClient = {
+  from(table: "ride_reports"): {
+    insert(values: RideReportInsertRow): {
+      select(columns: string): {
+        single(): SingleQueryResult<{ id: string }>;
+      };
+    };
+    select(columns: string): RideReportsSelectBuilder<RideReportRow>;
+    select(columns: "status, severity, report_type"): RideReportsSelectBuilder<RideReportStatsRow>;
+    update(values: RideReportUpdateRow): {
+      eq(column: "id", value: string): Promise<{ error: ErrorLike }>;
+    };
+  };
+};
+
+const rideReportsDb = supabase as unknown as RideReportsDbClient;
+
+function getEmptyReportStats() {
+  return {
+    total: 0,
+    pending: 0,
+    underReview: 0,
+    resolved: 0,
+    dismissed: 0,
+    bySeverity: { low: 0, medium: 0, high: 0, critical: 0 },
+    byType: {
+      safety_concern: 0,
+      driver_behavior: 0,
+      passenger_behavior: 0,
+      route_issue: 0,
+      payment_issue: 0,
+      vehicle_condition: 0,
+      cancellation_abuse: 0,
+      fraud_suspicion: 0,
+      other: 0,
+    },
+  };
+}
+
+function normalizeRideReport(row: RideReportRow): RideReport {
+  return {
+    id: row.id,
+    ride_id: row.ride_id,
+    reporter_profile_id: row.reporter_profile_id,
+    reporter_type: row.reporter_type,
+    report_type: row.report_type,
+    severity: row.severity,
+    status: row.status,
+    title: row.title,
+    description: row.description,
+    evidence_urls: row.evidence_urls ?? undefined,
+    location_lat: row.location_lat ?? undefined,
+    location_lng: row.location_lng ?? undefined,
+    reported_at: row.reported_at,
+    reviewed_by: row.reviewed_by ?? undefined,
+    reviewed_at: row.reviewed_at ?? undefined,
+    resolution_notes: row.resolution_notes ?? undefined,
+    admin_notes: row.admin_notes ?? undefined,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  };
+}
+
+export class RideReportsService {
+  static async createReport(
+    input: CreateReportInput,
+  ): Promise<{ success: boolean; reportId?: string; error?: string }> {
+    try {
+      logger.info("RideReportsService.createReport", {
+        rideId: input.rideId,
+        reportType: input.reportType,
+      });
+
+      const payload: RideReportInsertRow = {
+        ride_id: input.rideId,
+        reporter_profile_id: input.reporterProfileId,
+        reporter_type: input.reporterType,
+        report_type: input.reportType,
+        severity: input.severity,
+        title: input.title,
+        description: input.description,
+        evidence_urls: input.evidenceUrls,
+        location_lat: input.locationLat,
+        location_lng: input.locationLng,
+      };
+
+      const { data, error } = await rideReportsDb
         .from("ride_reports")
-        .insert({
-          ride_id: input.rideId,
-          reporter_profile_id: input.reporterProfileId,
-          reporter_type: input.reporterType,
-          report_type: input.reportType,
-          severity: input.severity,
-          title: input.title,
-          description: input.description,
-          evidence_urls: input.evidenceUrls,
-          location_lat: input.locationLat,
-          location_lng: input.locationLng,
-        })
+        .insert(payload)
         .select("id")
         .single();
 
-      if (error) {
+      if (error || !data?.id) {
         logger.error("RideReportsService.createReport - error", error);
-        return { success: false, error: error.message };
+        return { success: false, error: error?.message ?? "Erro ao criar report" };
       }
 
       logger.info("RideReportsService.createReport - success", { reportId: data.id });
@@ -109,9 +236,6 @@ export class RideReportsService {
     }
   }
 
-  /**
-   * Listar reports (admin ou proprios)
-   */
   static async listReports(filters?: {
     status?: ReportStatus;
     severity?: ReportSeverity;
@@ -122,37 +246,20 @@ export class RideReportsService {
     offset?: number;
   }): Promise<RideReport[]> {
     try {
-      let query = supabase
+      let query = rideReportsDb
         .from("ride_reports")
         .select("*")
         .order("reported_at", { ascending: false });
 
-      if (filters?.status) {
-        query = query.eq("status", filters.status);
-      }
-
-      if (filters?.severity) {
-        query = query.eq("severity", filters.severity);
-      }
-
-      if (filters?.reportType) {
-        query = query.eq("report_type", filters.reportType);
-      }
-
-      if (filters?.reporterProfileId) {
-        query = query.eq("reporter_profile_id", filters.reporterProfileId);
-      }
-
-      if (filters?.rideId) {
-        query = query.eq("ride_id", filters.rideId);
-      }
-
-      if (filters?.limit) {
-        query = query.limit(filters.limit);
-      }
-
+      if (filters?.status) query = query.eq("status", filters.status);
+      if (filters?.severity) query = query.eq("severity", filters.severity);
+      if (filters?.reportType) query = query.eq("report_type", filters.reportType);
+      if (filters?.reporterProfileId) query = query.eq("reporter_profile_id", filters.reporterProfileId);
+      if (filters?.rideId) query = query.eq("ride_id", filters.rideId);
+      if (filters?.limit) query = query.limit(filters.limit);
       if (filters?.offset) {
-        query = query.range(filters.offset, filters.offset + (filters.limit || 10) - 1);
+        const limit = filters.limit ?? 10;
+        query = query.range(filters.offset, filters.offset + limit - 1);
       }
 
       const { data, error } = await query;
@@ -162,39 +269,33 @@ export class RideReportsService {
         return [];
       }
 
-      return (data || []) as RideReport[];
+      return (data ?? []).map(normalizeRideReport);
     } catch (error) {
       logger.error("RideReportsService.listReports - exception", error as Error);
       return [];
     }
   }
 
-  /**
-   * Obter report por ID
-   */
   static async getReportById(reportId: string): Promise<RideReport | null> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await rideReportsDb
         .from("ride_reports")
         .select("*")
         .eq("id", reportId)
         .single();
 
-      if (error) {
+      if (error || !data) {
         logger.error("RideReportsService.getReportById - error", error);
         return null;
       }
 
-      return data;
+      return normalizeRideReport(data);
     } catch (error) {
       logger.error("RideReportsService.getReportById - exception", error as Error);
       return null;
     }
   }
 
-  /**
-   * Atualizar report (admin)
-   */
   static async updateReport(
     reportId: string,
     updates: UpdateReportInput,
@@ -202,35 +303,31 @@ export class RideReportsService {
     try {
       logger.info("RideReportsService.updateReport", { reportId, updates });
 
-      const updateData: Record<string, unknown> = {};
+      const updateData: RideReportUpdateRow = {};
 
       if (updates.status) {
         updateData.status = updates.status;
-        if (updates.status === "under_review" || updates.status === "resolved" || updates.status === "dismissed") {
+        if (
+          updates.status === "under_review" ||
+          updates.status === "resolved" ||
+          updates.status === "dismissed"
+        ) {
           updateData.reviewed_at = new Date().toISOString();
         }
       }
 
-      if (updates.reviewedBy) {
-        updateData.reviewed_by = updates.reviewedBy;
-      }
+      if (updates.reviewedBy) updateData.reviewed_by = updates.reviewedBy;
+      if (updates.resolutionNotes) updateData.resolution_notes = updates.resolutionNotes;
+      if (updates.adminNotes) updateData.admin_notes = updates.adminNotes;
 
-      if (updates.resolutionNotes) {
-        updateData.resolution_notes = updates.resolutionNotes;
-      }
-
-      if (updates.adminNotes) {
-        updateData.admin_notes = updates.adminNotes;
-      }
-
-      const { error } = await (supabase as any)
+      const { error } = await rideReportsDb
         .from("ride_reports")
         .update(updateData)
         .eq("id", reportId);
 
       if (error) {
         logger.error("RideReportsService.updateReport - error", error);
-        return { success: false, error: error.message };
+        return { success: false, error: error.message ?? "Erro ao atualizar report" };
       }
 
       logger.info("RideReportsService.updateReport - success", { reportId });
@@ -241,9 +338,6 @@ export class RideReportsService {
     }
   }
 
-  /**
-   * Obter estatisticas de reports
-   */
   static async getReportStats(): Promise<{
     total: number;
     pending: number;
@@ -254,81 +348,42 @@ export class RideReportsService {
     byType: Record<ReportType, number>;
   }> {
     try {
-      const { data, error } = await (supabase as any).from("ride_reports").select("status, severity, report_type");
+      const { data, error } = await rideReportsDb
+        .from("ride_reports")
+        .select("status, severity, report_type");
 
-      if (error) {
+      if (error || !data) {
         logger.error("RideReportsService.getReportStats - error", error);
-        return {
-          total: 0,
-          pending: 0,
-          underReview: 0,
-          resolved: 0,
-          dismissed: 0,
-          bySeverity: { low: 0, medium: 0, high: 0, critical: 0 },
-          byType: {
-            safety_concern: 0,
-            driver_behavior: 0,
-            passenger_behavior: 0,
-            route_issue: 0,
-            payment_issue: 0,
-            vehicle_condition: 0,
-            cancellation_abuse: 0,
-            fraud_suspicion: 0,
-            other: 0,
-          },
-        };
+        return getEmptyReportStats();
       }
 
-      const stats = {
+      return {
         total: data.length,
-        pending: data.filter((r) => r.status === "pending").length,
-        underReview: data.filter((r) => r.status === "under_review").length,
-        resolved: data.filter((r) => r.status === "resolved").length,
-        dismissed: data.filter((r) => r.status === "dismissed").length,
+        pending: data.filter((report) => report.status === "pending").length,
+        underReview: data.filter((report) => report.status === "under_review").length,
+        resolved: data.filter((report) => report.status === "resolved").length,
+        dismissed: data.filter((report) => report.status === "dismissed").length,
         bySeverity: {
-          low: data.filter((r) => r.severity === "low").length,
-          medium: data.filter((r) => r.severity === "medium").length,
-          high: data.filter((r) => r.severity === "high").length,
-          critical: data.filter((r) => r.severity === "critical").length,
+          low: data.filter((report) => report.severity === "low").length,
+          medium: data.filter((report) => report.severity === "medium").length,
+          high: data.filter((report) => report.severity === "high").length,
+          critical: data.filter((report) => report.severity === "critical").length,
         },
         byType: {
-          safety_concern: data.filter((r) => r.report_type === "safety_concern").length,
-          driver_behavior: data.filter((r) => r.report_type === "driver_behavior").length,
-          passenger_behavior: data.filter((r) => r.report_type === "passenger_behavior").length,
-          route_issue: data.filter((r) => r.report_type === "route_issue").length,
-          payment_issue: data.filter((r) => r.report_type === "payment_issue").length,
-          vehicle_condition: data.filter((r) => r.report_type === "vehicle_condition").length,
-          cancellation_abuse: data.filter((r) => r.report_type === "cancellation_abuse").length,
-          fraud_suspicion: data.filter((r) => r.report_type === "fraud_suspicion").length,
-          other: data.filter((r) => r.report_type === "other").length,
+          safety_concern: data.filter((report) => report.report_type === "safety_concern").length,
+          driver_behavior: data.filter((report) => report.report_type === "driver_behavior").length,
+          passenger_behavior: data.filter((report) => report.report_type === "passenger_behavior").length,
+          route_issue: data.filter((report) => report.report_type === "route_issue").length,
+          payment_issue: data.filter((report) => report.report_type === "payment_issue").length,
+          vehicle_condition: data.filter((report) => report.report_type === "vehicle_condition").length,
+          cancellation_abuse: data.filter((report) => report.report_type === "cancellation_abuse").length,
+          fraud_suspicion: data.filter((report) => report.report_type === "fraud_suspicion").length,
+          other: data.filter((report) => report.report_type === "other").length,
         },
       };
-
-      return stats;
     } catch (error) {
       logger.error("RideReportsService.getReportStats - exception", error as Error);
-      return {
-        total: 0,
-        pending: 0,
-        underReview: 0,
-        resolved: 0,
-        dismissed: 0,
-        bySeverity: { low: 0, medium: 0, high: 0, critical: 0 },
-        byType: {
-          safety_concern: 0,
-          driver_behavior: 0,
-          passenger_behavior: 0,
-          route_issue: 0,
-          payment_issue: 0,
-          vehicle_condition: 0,
-          cancellation_abuse: 0,
-          fraud_suspicion: 0,
-          other: 0,
-        },
-      };
+      return getEmptyReportStats();
     }
   }
 }
-
-
-

@@ -1,12 +1,20 @@
 import { motion } from "framer-motion";
+import type { LucideIcon } from "lucide-react";
 import { MapPin, MessageCircle, Package, Phone, Shield } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { CLASSIFIED_STATUS, type ClassifiedStatusValue } from "@/core/classifieds/constants/statuses";
+import type { ClassificadoWithVendedor } from "@/core/classifieds/hooks/useClassificados";
 import { cn } from "@/shared/utils/cn";
 import { formatBrlNoCents } from "@/shared/utils/currency";
 import { getClassifiedStatusLabel } from "./ClassificadoDetailStatus";
 
-export function MetaChip({ icon: Icon, text }: { icon: any; text: string }) {
+type Seller = NonNullable<ClassificadoWithVendedor["vendedor"]>;
+type MiniAd = Pick<
+  ClassificadoWithVendedor,
+  "titulo" | "bairro" | "condition" | "created_at" | "fotos" | "preco"
+>;
+
+export function MetaChip({ icon: Icon, text }: { icon: LucideIcon; text: string }) {
   return (
     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-secondary text-muted-foreground text-[11px] font-medium border border-border">
       <Icon className="h-3 w-3 shrink-0" />
@@ -82,7 +90,7 @@ export function SellerCard({
   isChatLoading = false,
   activeAdsCount,
 }: {
-  vendedor: any;
+  vendedor: Seller;
   onWhatsApp: () => void;
   onChat?: () => void;
   isChatLoading?: boolean;
@@ -149,7 +157,7 @@ export function SafetyTips() {
   );
 }
 
-export function MiniAdCard({ ad, index, onClick }: { ad: any; index: number; onClick: () => void }) {
+export function MiniAdCard({ ad, index, onClick }: { ad: MiniAd; index: number; onClick: () => void }) {
   const timeAgo = getRelativeTime(ad.created_at);
 
   return (

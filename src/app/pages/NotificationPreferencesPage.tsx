@@ -1,32 +1,83 @@
-/**
- * ══════════════════════════════════════════════════════════════════════════
- * NOTIFICATION PREFERENCES PAGE
- * ══════════════════════════════════════════════════════════════════════════
- * 
- * Página de configuração de preferências de notificações.
- * 
- * ══════════════════════════════════════════════════════════════════════════
- */
+import { useEffect, useState } from "react";
+import { Navigate, useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  ArrowLeft,
+  Bell,
+  Clock,
+  Loader2,
+  Mail,
+  ShieldCheck,
+  Smartphone,
+} from "lucide-react";
 
-import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Bell, Mail, Smartphone, Clock, Loader2 } from 'lucide-react';
-import { Button } from '@/shared/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
-import { Label } from '@/shared/components/ui/label';
-import { Switch } from '@/shared/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select';
-import { useToast } from '@/shared/hooks/use-toast';
-import { useAuth } from '@/core/auth/hooks/useAuth';
-import { PushNotificationSettings } from '@/app/components/notifications/PushNotificationSettings';
+import { PushNotificationSettings } from "@/app/components/notifications/PushNotificationSettings";
+import { useAuth } from "@/core/auth/hooks/useAuth";
 import {
   UserNotificationPreferencesService,
   type NotificationPreferencesRecord,
-} from '@/core/notifications/services/UserNotificationPreferencesService';
+} from "@/core/notifications/services/UserNotificationPreferencesService";
+import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
+import { useToast } from "@/shared/hooks/use-toast";
+import { Button } from "@/shared/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/shared/components/ui/card";
+import { Label } from "@/shared/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
+import { Switch } from "@/shared/components/ui/switch";
 
 type NotificationPreferences = NotificationPreferencesRecord;
 
+function PreferenceRow({
+  id,
+  icon,
+  label,
+  description,
+  checked,
+  onCheckedChange,
+  disabled = false,
+}: {
+  id: string;
+  icon?: React.ReactNode;
+  label: string;
+  description: string;
+  checked: boolean;
+  onCheckedChange?: (checked: boolean) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <div className="flex flex-col gap-3 rounded-2xl border border-border/60 bg-muted/20 p-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-start gap-3">
+        {icon ? <div className="pt-0.5 text-muted-foreground">{icon}</div> : null}
+        <div>
+          <Label htmlFor={id} className="font-medium text-foreground">
+            {label}
+          </Label>
+          <p className="mt-1 text-sm leading-6 text-muted-foreground">
+            {description}
+          </p>
+        </div>
+      </div>
+      <Switch
+        id={id}
+        checked={checked}
+        onCheckedChange={onCheckedChange}
+        disabled={disabled}
+        className="shrink-0"
+      />
+    </div>
+  );
+}
+
 export default function NotificationPreferencesPage() {
+  const navigate = useNavigate();
+  const appUrls = useAppUrls();
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -39,19 +90,17 @@ export default function NotificationPreferencesPage() {
     social_enabled: true,
     system_enabled: true,
     marketing_enabled: false,
-    frequency: 'immediate',
+    frequency: "immediate",
     quiet_hours_start: null,
     quiet_hours_end: null,
   });
 
-  // Query: Buscar preferências
   const { data, isLoading } = useQuery({
-    queryKey: ['notification-preferences', user?.id],
+    queryKey: ["notification-preferences", user?.id],
     queryFn: async () => UserNotificationPreferencesService.getByUserId(user!.id),
     enabled: !!user,
   });
 
-  // Atualizar state quando dados carregarem
   useEffect(() => {
     if (data) {
       setPreferences({
@@ -69,288 +118,283 @@ export default function NotificationPreferencesPage() {
     }
   }, [data]);
 
-  // Mutation: Salvar preferências
   const saveMutation = useMutation({
     mutationFn: async (prefs: NotificationPreferences) =>
       UserNotificationPreferencesService.updateByUserId(user!.id, prefs),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notification-preferences'] });
+      queryClient.invalidateQueries({ queryKey: ["notification-preferences"] });
       toast({
-        title: 'Preferências salvas',
-        description: 'Suas preferências de notificação foram atualizadas',
+        title: "Preferencias salvas",
+        description: "Suas preferencias de notificacao foram atualizadas.",
       });
     },
     onError: (error: Error) => {
       toast({
-        title: 'Erro ao salvar',
+        title: "Erro ao salvar",
         description: error.message,
-        variant: 'destructive',
+        variant: "destructive",
       });
     },
   });
 
-  const handleSave = () => {
-    saveMutation.mutate(preferences);
-  };
+  if (!user) {
+    return <Navigate to={appUrls.auth.login} replace />;
+  }
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8 flex items-center justify-center min-h-screen">
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">Preferências de Notificações</h1>
-        <p className="text-muted-foreground mt-1">
-          Configure como e quando você quer receber notificações
-        </p>
-      </div>
+    <>
+      <Helmet>
+        <title>Preferencias de notificacoes</title>
+      </Helmet>
 
-      <div className="space-y-6">
-        {/* Canais */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Canais de Notificação</CardTitle>
-            <CardDescription>
-              Escolha como você quer receber notificações
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Mail className="h-5 w-5 text-muted-foreground" />
-                <div>
-                  <Label htmlFor="email">Email</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Receber notificações por email
-                  </p>
-                </div>
-              </div>
-              <Switch
-                id="email"
-                checked={preferences.email_enabled}
-                onCheckedChange={(checked) =>
-                  setPreferences({ ...preferences, email_enabled: checked })
-                }
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Smartphone className="h-5 w-5 text-muted-foreground" />
-                <div>
-                  <Label htmlFor="push">Push Notifications</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Receber notificações push no dispositivo
-                  </p>
-                </div>
-              </div>
-              <Switch
-                id="push"
-                checked={preferences.push_enabled}
-                onCheckedChange={(checked) =>
-                  setPreferences({ ...preferences, push_enabled: checked })
-                }
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Bell className="h-5 w-5 text-muted-foreground" />
-                <div>
-                  <Label htmlFor="inapp">In-App</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Mostrar notificações dentro do app
-                  </p>
-                </div>
-              </div>
-              <Switch
-                id="inapp"
-                checked={preferences.inapp_enabled}
-                onCheckedChange={(checked) =>
-                  setPreferences({ ...preferences, inapp_enabled: checked })
-                }
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Categorias */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Tipos de Notificação</CardTitle>
-            <CardDescription>
-              Escolha quais tipos de notificação você quer receber
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label htmlFor="transactional">Transacionais</Label>
-                <p className="text-sm text-muted-foreground">
-                  Pedidos, pagamentos, confirmações (sempre ativo)
+      <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.10),transparent_28%),linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.32))]">
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="mx-auto w-full max-w-5xl px-4 pb-8 pt-4 focus:outline-none sm:px-6 sm:pb-10 sm:pt-6 lg:px-8"
+        >
+          <div className="sticky top-0 z-20 -mx-4 mb-5 border-b border-border/60 bg-background/90 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:mb-6 sm:rounded-3xl sm:border sm:bg-card/85 sm:px-5 sm:shadow-sm">
+            <div className="flex items-start gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="shrink-0 rounded-full"
+                onClick={() => navigate("/conta/preferencias")}
+                type="button"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  Comunicacao
+                </p>
+                <h1 className="truncate text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+                  Preferencias de notificacoes
+                </h1>
+                <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
+                  Configure canais, tipos e horarios de entrega.
                 </p>
               </div>
-              <Switch
-                id="transactional"
-                checked={preferences.transactional_enabled}
-                disabled
-              />
             </div>
+          </div>
 
-            <div className="flex items-center justify-between">
-              <div>
-                <Label htmlFor="social">Sociais</Label>
-                <p className="text-sm text-muted-foreground">
-                  Comentarios, mencoes e interacoes
+          <section className="rounded-3xl border border-border/70 bg-card/90 p-5 shadow-sm sm:p-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="space-y-2">
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/90">
+                  Entrega de alertas
+                </p>
+                <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+                  Controle o que chega ate voce
+                </h2>
+                <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
+                  Ajuste notificacoes por email, push e app interno sem misturar
+                  com as configuracoes de privacidade da conta.
                 </p>
               </div>
-              <Switch
-                id="social"
-                checked={preferences.social_enabled}
-                onCheckedChange={(checked) =>
-                  setPreferences({ ...preferences, social_enabled: checked })
-                }
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <Label htmlFor="system">Sistema</Label>
-                <p className="text-sm text-muted-foreground">
-                  Atualizações, manutenção, novos recursos
-                </p>
+              <div className="hidden items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary sm:flex">
+                <ShieldCheck className="h-3.5 w-3.5" />
+                Preferencias pessoais
               </div>
-              <Switch
-                id="system"
-                checked={preferences.system_enabled}
-                onCheckedChange={(checked) =>
-                  setPreferences({ ...preferences, system_enabled: checked })
-                }
-              />
             </div>
+          </section>
 
-            <div className="flex items-center justify-between">
-              <div>
-                <Label htmlFor="marketing">Marketing</Label>
-                <p className="text-sm text-muted-foreground">
-                  Promocoes e novidades da plataforma
-                </p>
-              </div>
-              <Switch
-                id="marketing"
-                checked={preferences.marketing_enabled}
-                onCheckedChange={(checked) =>
-                  setPreferences({ ...preferences, marketing_enabled: checked })
-                }
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Frequência */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Frequência</CardTitle>
-            <CardDescription>
-              Com que frequência você quer receber notificações
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Select
-              value={preferences.frequency}
-              onValueChange={(value: NotificationPreferences['frequency']) =>
-                setPreferences({ ...preferences, frequency: value })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="immediate">Imediato</SelectItem>
-                <SelectItem value="daily">Resumo diário</SelectItem>
-                <SelectItem value="weekly">Resumo semanal</SelectItem>
-                <SelectItem value="never">Nunca</SelectItem>
-              </SelectContent>
-            </Select>
-          </CardContent>
-        </Card>
-
-        {/* Quiet Hours */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
-              Horário Silencioso
-            </CardTitle>
-            <CardDescription>
-              Não receber notificações durante este período
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="quiet-start">Início</Label>
-                <input
-                  id="quiet-start"
-                  type="time"
-                  className="w-full mt-1 px-3 py-2 border rounded-md"
-                  value={preferences.quiet_hours_start || ''}
-                  onChange={(e) =>
-                    setPreferences({
-                      ...preferences,
-                      quiet_hours_start: e.target.value || null,
-                    })
+          <div className="mt-5 space-y-5">
+            <Card className="rounded-3xl border-border/70 bg-card/90 shadow-sm">
+              <CardHeader>
+                <CardTitle>Canais de notificacao</CardTitle>
+                <CardDescription>
+                  Escolha como voce quer receber notificacoes.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <PreferenceRow
+                  id="email"
+                  icon={<Mail className="h-5 w-5" />}
+                  label="Email"
+                  description="Receber notificacoes por email."
+                  checked={preferences.email_enabled}
+                  onCheckedChange={(checked) =>
+                    setPreferences({ ...preferences, email_enabled: checked })
                   }
                 />
-              </div>
-              <div>
-                <Label htmlFor="quiet-end">Fim</Label>
-                <input
-                  id="quiet-end"
-                  type="time"
-                  className="w-full mt-1 px-3 py-2 border rounded-md"
-                  value={preferences.quiet_hours_end || ''}
-                  onChange={(e) =>
-                    setPreferences({
-                      ...preferences,
-                      quiet_hours_end: e.target.value || null,
-                    })
+                <PreferenceRow
+                  id="push"
+                  icon={<Smartphone className="h-5 w-5" />}
+                  label="Push"
+                  description="Receber notificacoes push no dispositivo."
+                  checked={preferences.push_enabled}
+                  onCheckedChange={(checked) =>
+                    setPreferences({ ...preferences, push_enabled: checked })
                   }
                 />
-              </div>
+                <PreferenceRow
+                  id="inapp"
+                  icon={<Bell className="h-5 w-5" />}
+                  label="No app"
+                  description="Mostrar notificacoes dentro da plataforma."
+                  checked={preferences.inapp_enabled}
+                  onCheckedChange={(checked) =>
+                    setPreferences({ ...preferences, inapp_enabled: checked })
+                  }
+                />
+              </CardContent>
+            </Card>
+
+            <Card className="rounded-3xl border-border/70 bg-card/90 shadow-sm">
+              <CardHeader>
+                <CardTitle>Tipos de notificacao</CardTitle>
+                <CardDescription>
+                  Escolha quais categorias voce quer manter ativas.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <PreferenceRow
+                  id="transactional"
+                  label="Transacionais"
+                  description="Pedidos, pagamentos e confirmacoes. Sempre ativo."
+                  checked={preferences.transactional_enabled}
+                  disabled
+                />
+                <PreferenceRow
+                  id="social"
+                  label="Sociais"
+                  description="Comentarios, mencoes e interacoes."
+                  checked={preferences.social_enabled}
+                  onCheckedChange={(checked) =>
+                    setPreferences({ ...preferences, social_enabled: checked })
+                  }
+                />
+                <PreferenceRow
+                  id="system"
+                  label="Sistema"
+                  description="Atualizacoes, manutencao e novos recursos."
+                  checked={preferences.system_enabled}
+                  onCheckedChange={(checked) =>
+                    setPreferences({ ...preferences, system_enabled: checked })
+                  }
+                />
+                <PreferenceRow
+                  id="marketing"
+                  label="Marketing"
+                  description="Promocoes e novidades da plataforma."
+                  checked={preferences.marketing_enabled}
+                  onCheckedChange={(checked) =>
+                    setPreferences({ ...preferences, marketing_enabled: checked })
+                  }
+                />
+              </CardContent>
+            </Card>
+
+            <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+              <Card className="rounded-3xl border-border/70 bg-card/90 shadow-sm">
+                <CardHeader>
+                  <CardTitle>Frequencia</CardTitle>
+                  <CardDescription>
+                    Defina com que ritmo as notificacoes chegam.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Select
+                    value={preferences.frequency}
+                    onValueChange={(
+                      value: NotificationPreferences["frequency"],
+                    ) => setPreferences({ ...preferences, frequency: value })}
+                  >
+                    <SelectTrigger className="h-11">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="immediate">Imediato</SelectItem>
+                      <SelectItem value="daily">Resumo diario</SelectItem>
+                      <SelectItem value="weekly">Resumo semanal</SelectItem>
+                      <SelectItem value="never">Nunca</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </CardContent>
+              </Card>
+
+              <Card className="rounded-3xl border-border/70 bg-card/90 shadow-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Clock className="h-5 w-5" />
+                    Horario silencioso
+                  </CardTitle>
+                  <CardDescription>
+                    Defina um intervalo sem notificacoes.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                      <Label htmlFor="quiet-start">Inicio</Label>
+                      <input
+                        id="quiet-start"
+                        type="time"
+                        className="mt-1 h-11 w-full rounded-md border bg-background px-3 py-2"
+                        value={preferences.quiet_hours_start || ""}
+                        onChange={(event) =>
+                          setPreferences({
+                            ...preferences,
+                            quiet_hours_start: event.target.value || null,
+                          })
+                        }
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="quiet-end">Fim</Label>
+                      <input
+                        id="quiet-end"
+                        type="time"
+                        className="mt-1 h-11 w-full rounded-md border bg-background px-3 py-2"
+                        value={preferences.quiet_hours_end || ""}
+                        onChange={(event) =>
+                          setPreferences({
+                            ...preferences,
+                            quiet_hours_end: event.target.value || null,
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+                  <p className="text-sm leading-6 text-muted-foreground">
+                    Exemplo: 22:00 - 08:00 para evitar alertas durante a noite.
+                  </p>
+                </CardContent>
+              </Card>
             </div>
-            <p className="text-sm text-muted-foreground">
-              Exemplo: 22:00 - 08:00 (não receber notificações à noite)
-            </p>
-          </CardContent>
-        </Card>
 
-        {/* Push Notification Settings */}
-        <PushNotificationSettings />
+            <section className="rounded-3xl border border-border/70 bg-card/90 p-4 shadow-sm sm:p-6">
+              <PushNotificationSettings />
+            </section>
 
-        {/* Salvar */}
-        <div className="flex justify-end">
-          <Button
-            onClick={handleSave}
-            disabled={saveMutation.isPending}
-          >
-            {saveMutation.isPending ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Salvando...
-              </>
-            ) : (
-              'Salvar Preferências'
-            )}
-          </Button>
-        </div>
+            <div className="sticky bottom-0 -mx-4 flex border-t border-border/70 bg-background/95 px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 backdrop-blur sm:static sm:mx-0 sm:justify-end sm:border-0 sm:bg-transparent sm:px-0 sm:pb-0">
+              <Button
+                onClick={() => saveMutation.mutate(preferences)}
+                disabled={saveMutation.isPending}
+                className="w-full sm:w-auto"
+              >
+                {saveMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Salvando...
+                  </>
+                ) : (
+                  "Salvar preferencias"
+                )}
+              </Button>
+            </div>
+          </div>
+        </main>
       </div>
-    </div>
+    </>
   );
 }

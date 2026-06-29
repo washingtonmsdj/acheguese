@@ -1,21 +1,52 @@
 /**
- * AnalyticsService — SSOT canônico de analytics
+ * AnalyticsService - canonical analytics SSOT
  *
- * Centraliza toda a lógica de negócio de analytics e métricas.
- * Hooks e componentes NÃO acessam Supabase diretamente — consomem este service.
- *
- * Responsabilidades:
- * - Registro de eventos
- * - Consulta de métricas
- * - Agregação de dados
- * - Relatórios
+ * Centralizes analytics event tracking and metric reads.
+ * Hooks and components should consume this service instead of querying Supabase directly.
  */
-import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase';
-import type { AdminSupabaseClient } from '@/core/admin/types/adminDatabase.types';
-import { secureRandomString } from '@/shared/utils/secureRandom';
+import { supabase } from "@/integrations/supabase";
+import { logger } from "@/shared/utils/logger";
+import { secureRandomString } from "@/shared/utils/secureRandom";
 
-// ── Tipos ─────────────────────────────────────────────────────────────────
+type ErrorLike = {
+  message?: string | null;
+};
+
+type QueryPayload<TRow> = {
+  data: TRow[] | null;
+  error: ErrorLike | null;
+};
+
+type RpcPayload<TValue> = {
+  data: TValue | null;
+  error: ErrorLike | null;
+};
+
+type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
+  eq(column: string, value: unknown): TableClient<TRow>;
+  gte(column: string, value: string): TableClient<TRow>;
+  lte(column: string, value: string): TableClient<TRow>;
+  order(column: string, options?: { ascending?: boolean }): TableClient<TRow>;
+  select(columns?: string): TableClient<TRow>;
+};
+
+type AnalyticsDbClient = {
+  from<TRow>(table: string): TableClient<TRow>;
+  rpc<TValue>(fn: string, params?: Record<string, unknown>): Promise<RpcPayload<TValue>>;
+};
+
+type AnalyticsMetadata = Record<string, unknown>;
+
+type AnalyticsDailyMetricsRow = {
+  date: string;
+  orders_completed: number;
+  qr_scans: number;
+  total_order_value: number;
+  total_views: number;
+  unique_views: number;
+};
+
+const analyticsDb = supabase as unknown as AnalyticsDbClient;
 
 export interface ServiceResult<T> {
   data: T | null;
@@ -23,33 +54,33 @@ export interface ServiceResult<T> {
 }
 
 export type AnalyticsEventType =
-  | 'qr_scan'
-  | 'page_view'
-  | 'business_interaction'
-  | 'menu_view'
-  | 'item_view'
-  | 'order_started'
-  | 'order_completed'
-  | 'order_cancelled'
-  | 'delivery_requested'
-  | 'delivery_completed'
-  | 'click_phone'
-  | 'click_whatsapp'
-  | 'click_directions'
-  | 'share'
-  | 'favorite_added'
-  | 'favorite_removed'
-  | 'structured_vaga_click_search'
-  | 'structured_vaga_open_search';
+  | "qr_scan"
+  | "page_view"
+  | "business_interaction"
+  | "menu_view"
+  | "item_view"
+  | "order_started"
+  | "order_completed"
+  | "order_cancelled"
+  | "delivery_requested"
+  | "delivery_completed"
+  | "click_phone"
+  | "click_whatsapp"
+  | "click_directions"
+  | "share"
+  | "favorite_added"
+  | "favorite_removed"
+  | "structured_vaga_click_search"
+  | "structured_vaga_open_search";
 
 export type AnalyticsEventSource =
-  | 'web'
-  | 'mobile'
-  | 'qr_code'
-  | 'direct_link'
-  | 'search'
-  | 'social_media'
-  | 'other';
+  | "web"
+  | "mobile"
+  | "qr_code"
+  | "direct_link"
+  | "search"
+  | "social_media"
+  | "other";
 
 export interface AnalyticsEvent {
   id: string;
@@ -67,7 +98,7 @@ export interface AnalyticsEvent {
   city: string | null;
   state: string | null;
   country: string | null;
-  metadata: Record<string, any>;
+  metadata: AnalyticsMetadata;
   created_at: string;
 }
 
@@ -101,17 +132,7 @@ export interface DailyMetrics {
   total_order_value: number;
 }
 
-// ── Service ───────────────────────────────────────────────────────────────
-
 export const AnalyticsService = {
-  
-  // ══════════════════════════════════════════════════════════════════════════
-  // REGISTRO DE EVENTOS
-  // ══════════════════════════════════════════════════════════════════════════
-  
-  /**
-   * Registra um evento de analytics
-   */
   async trackEvent(input: {
     entity_type: string;
     entity_id: string;
@@ -119,192 +140,156 @@ export const AnalyticsService = {
     event_source?: AnalyticsEventSource;
     user_id?: string;
     session_id?: string;
-    metadata?: Record<string, any>;
+    metadata?: AnalyticsMetadata;
   }): Promise<ServiceResult<string>> {
     try {
-      const analyticsDb = supabase as any;
-      const { data, error } = await analyticsDb.rpc('track_analytics_event', {
+      const { data, error } = await analyticsDb.rpc<string>("track_analytics_event", {
         p_entity_type: input.entity_type,
         p_entity_id: input.entity_id,
         p_event_type: input.event_type,
-        p_event_source: input.event_source || 'web',
+        p_event_source: input.event_source || "web",
         p_user_id: input.user_id || null,
         p_session_id: input.session_id || null,
         p_metadata: input.metadata || {},
       });
 
       if (error) {
-        logger.error('[AnalyticsService] trackEvent error', error);
-        return { data: null, error: error.message };
+        logger.error("[AnalyticsService] trackEvent error", error);
+        return { data: null, error: error.message ?? "Unknown analytics error" };
       }
 
-      return { data: data as string, error: null };
+      return { data, error: null };
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      return { data: null, error: msg };
+      const message = err instanceof Error ? err.message : String(err);
+      return { data: null, error: message };
     }
   },
 
-  /**
-   * Registra visualização de página
-   */
   async trackPageView(
     entityType: string,
     entityId: string,
-    source?: AnalyticsEventSource
+    source?: AnalyticsEventSource,
   ): Promise<ServiceResult<string>> {
     return this.trackEvent({
       entity_type: entityType,
       entity_id: entityId,
-      event_type: 'page_view',
+      event_type: "page_view",
       event_source: source,
       session_id: this.getSessionId(),
     });
   },
 
-  /**
-   * Registra scan de QR Code
-   */
   async trackQRScan(
     entityType: string,
     entityId: string,
-    qrCodeId?: string
+    qrCodeId?: string,
   ): Promise<ServiceResult<string>> {
     return this.trackEvent({
       entity_type: entityType,
       entity_id: entityId,
-      event_type: 'qr_scan',
-      event_source: 'qr_code',
+      event_type: "qr_scan",
+      event_source: "qr_code",
       session_id: this.getSessionId(),
       metadata: qrCodeId ? { qr_code_id: qrCodeId } : {},
     });
   },
 
-  /**
-   * Registra visualização de cardápio
-   */
-  async trackMenuView(
-    businessId: string
-  ): Promise<ServiceResult<string>> {
+  async trackMenuView(businessId: string): Promise<ServiceResult<string>> {
     return this.trackEvent({
-      entity_type: 'business',
+      entity_type: "business",
       entity_id: businessId,
-      event_type: 'menu_view',
+      event_type: "menu_view",
       session_id: this.getSessionId(),
     });
   },
 
-  /**
-   * Registra pedido iniciado
-   */
   async trackOrderStarted(
     businessId: string,
-    orderId: string
+    orderId: string,
   ): Promise<ServiceResult<string>> {
     return this.trackEvent({
-      entity_type: 'business',
+      entity_type: "business",
       entity_id: businessId,
-      event_type: 'order_started',
+      event_type: "order_started",
       session_id: this.getSessionId(),
       metadata: { order_id: orderId },
     });
   },
 
-  /**
-   * Registra pedido concluído
-   */
   async trackOrderCompleted(
     businessId: string,
     orderId: string,
-    orderValue: number
+    orderValue: number,
   ): Promise<ServiceResult<string>> {
     return this.trackEvent({
-      entity_type: 'business',
+      entity_type: "business",
       entity_id: businessId,
-      event_type: 'order_completed',
+      event_type: "order_completed",
       session_id: this.getSessionId(),
       metadata: { order_id: orderId, order_value: orderValue },
     });
   },
 
-  /**
-   * Registra entrega solicitada
-   */
   async trackDeliveryRequested(
     businessId: string,
-    deliveryId: string
+    deliveryId: string,
   ): Promise<ServiceResult<string>> {
     return this.trackEvent({
-      entity_type: 'business',
+      entity_type: "business",
       entity_id: businessId,
-      event_type: 'delivery_requested',
+      event_type: "delivery_requested",
       session_id: this.getSessionId(),
       metadata: { delivery_id: deliveryId },
     });
   },
 
-  /**
-   * Registra entrega concluída
-   */
   async trackDeliveryCompleted(
     businessId: string,
     deliveryId: string,
-    deliveryFee: number
+    deliveryFee: number,
   ): Promise<ServiceResult<string>> {
     return this.trackEvent({
-      entity_type: 'business',
+      entity_type: "business",
       entity_id: businessId,
-      event_type: 'delivery_completed',
+      event_type: "delivery_completed",
       session_id: this.getSessionId(),
-      metadata: { delivery_id: deliveryId, delivery_fee: deliveryFee },
+      metadata: { delivery_fee: deliveryFee, delivery_id: deliveryId },
     });
   },
 
-  /**
-   * Registra clique em ação
-   */
   async trackClick(
     businessId: string,
-    clickType: 'phone' | 'whatsapp' | 'directions'
+    clickType: "phone" | "whatsapp" | "directions",
   ): Promise<ServiceResult<string>> {
-    let eventType: 'click_phone' | 'click_whatsapp' | 'click_directions' = 'click_phone';
+    let eventType: "click_phone" | "click_whatsapp" | "click_directions" = "click_phone";
+
     switch (clickType) {
-      case 'phone':
-        eventType = 'click_phone';
+      case "whatsapp":
+        eventType = "click_whatsapp";
         break;
-      case 'whatsapp':
-        eventType = 'click_whatsapp';
-        break;
-      case 'directions':
-        eventType = 'click_directions';
+      case "directions":
+        eventType = "click_directions";
         break;
       default:
         break;
     }
 
     return this.trackEvent({
-      entity_type: 'business',
+      entity_type: "business",
       entity_id: businessId,
       event_type: eventType,
       session_id: this.getSessionId(),
     });
   },
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // CONSULTA DE MÉTRICAS
-  // ══════════════════════════════════════════════════════════════════════════
-
-  /**
-   * Busca métricas agregadas de uma entidade
-   */
   async getMetrics(
     entityType: string,
     entityId: string,
     dateFrom?: string,
-    dateTo?: string
+    dateTo?: string,
   ): Promise<ServiceResult<AnalyticsMetrics>> {
     try {
-      const { data, error } = await supabase.rpc('get_analytics_metrics', {
+      const { data, error } = await analyticsDb.rpc<AnalyticsMetrics[]>("get_analytics_metrics", {
         p_entity_type: entityType,
         p_entity_id: entityId,
         p_date_from: dateFrom || null,
@@ -312,94 +297,81 @@ export const AnalyticsService = {
       });
 
       if (error) {
-        logger.error('[AnalyticsService] getMetrics error', error);
-        return { data: null, error: error.message };
+        logger.error("[AnalyticsService] getMetrics error", error);
+        return { data: null, error: error.message ?? "Unknown analytics error" };
       }
 
-      return { data: data[0] as AnalyticsMetrics, error: null };
+      return { data: data?.[0] ?? null, error: null };
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      return { data: null, error: msg };
+      const message = err instanceof Error ? err.message : String(err);
+      return { data: null, error: message };
     }
   },
 
-  /**
-   * Busca métricas diárias
-   */
   async getDailyMetrics(
     entityType: string,
     entityId: string,
     dateFrom?: string,
-    dateTo?: string
+    dateTo?: string,
   ): Promise<ServiceResult<DailyMetrics[]>> {
     try {
-      let query = supabase
-        .from('analytics_daily_metrics')
-        .select('date, total_views, unique_views, qr_scans, orders_completed, total_order_value')
-        .eq('entity_type', entityType)
-        .eq('entity_id', entityId)
-        .order('date', { ascending: true });
+      let query = analyticsDb
+        .from<AnalyticsDailyMetricsRow>("analytics_daily_metrics")
+        .select("date, total_views, unique_views, qr_scans, orders_completed, total_order_value")
+        .eq("entity_type", entityType)
+        .eq("entity_id", entityId)
+        .order("date", { ascending: true });
 
       if (dateFrom) {
-        query = query.gte('date', dateFrom);
+        query = query.gte("date", dateFrom);
       }
 
       if (dateTo) {
-        query = query.lte('date', dateTo);
+        query = query.lte("date", dateTo);
       }
 
       const { data, error } = await query;
 
       if (error) {
-        logger.error('[AnalyticsService] getDailyMetrics error', error);
-        return { data: null, error: error.message };
+        logger.error("[AnalyticsService] getDailyMetrics error", error);
+        return { data: null, error: error.message ?? "Unknown analytics error" };
       }
 
-      return { data: data as DailyMetrics[], error: null };
+      return { data: data || [], error: null };
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      return { data: null, error: msg };
+      const message = err instanceof Error ? err.message : String(err);
+      return { data: null, error: message };
     }
   },
 
-  /**
-   * Busca eventos recentes
-   */
   async getRecentEvents(
     entityType: string,
     entityId: string,
-    limit: number = 100
+    limit: number = 100,
   ): Promise<ServiceResult<AnalyticsEvent[]>> {
     try {
-      const { data, error } = await supabase.rpc('get_recent_analytics_events', {
+      const { data, error } = await analyticsDb.rpc<AnalyticsEvent[]>("get_recent_analytics_events", {
         p_entity_type: entityType,
         p_entity_id: entityId,
         p_limit: limit,
       });
 
       if (error) {
-        logger.error('[AnalyticsService] getRecentEvents error', error);
-        return { data: null, error: error.message };
+        logger.error("[AnalyticsService] getRecentEvents error", error);
+        return { data: null, error: error.message ?? "Unknown analytics error" };
       }
 
-      return { data: data as AnalyticsEvent[], error: null };
+      return { data: data || [], error: null };
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      return { data: null, error: msg };
+      const message = err instanceof Error ? err.message : String(err);
+      return { data: null, error: message };
     }
   },
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // UTILITÁRIOS
-  // ══════════════════════════════════════════════════════════════════════════
-
-  /**
-   * Gera ou recupera session ID do localStorage
-   */
   getSessionId(): string {
-    if (typeof window === 'undefined') return '';
+    if (typeof window === "undefined") return "";
 
-    const key = 'analytics_session_id';
+    const key = "analytics_session_id";
     let sessionId = localStorage.getItem(key);
 
     if (!sessionId) {
@@ -410,11 +382,8 @@ export const AnalyticsService = {
     return sessionId;
   },
 
-  /**
-   * Limpa session ID (útil para testes)
-   */
   clearSessionId(): void {
-    if (typeof window === 'undefined') return;
-    localStorage.removeItem('analytics_session_id');
+    if (typeof window === "undefined") return;
+    localStorage.removeItem("analytics_session_id");
   },
 };

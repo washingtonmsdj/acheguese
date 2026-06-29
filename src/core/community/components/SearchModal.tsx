@@ -1,38 +1,55 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
+import {
+  AlertCircle,
+  Clock,
+  Loader2,
+  Search,
+  TrendingUp,
+  X,
+} from "lucide-react";
+
+import { Button } from "@/shared/components/ui/button";
 import { Dialog, DialogContent } from "@/shared/components/ui/dialog";
 import { Input } from "@/shared/components/ui/input";
 import { ScrollArea } from "@/shared/components/ui/scroll-area";
-import { Button } from "@/shared/components/ui/button";
+
 import { useSearch } from "../hooks/useSearch";
 import PostCard from "./PostCard";
 import { INLINE_STYLES } from "./styles/communityDesignSystem";
-import {
-  Search,
-  X,
-  Clock,
-  TrendingUp,
-  Loader2,
-  AlertCircle,
-} from "lucide-react";
-import { useEffect, useRef } from "react";
-/**
- * Modal profissional de busca
- *
- * Features:
- * - Input com foco automático
- * - Busca em tempo real (debounced)
- * - Histórico de buscas
- * - Sugestões inteligentes
- * - Resultados com scroll
- * - Atalho de teclado (Ctrl+K)
- * - Loading states
- * - Empty states
- */
+import type { CommunityPost as SearchFeedPost } from "@/core/posts/types.ts";
 
 interface SearchModalProps {
   isOpen: boolean;
   onClose: () => void;
   onPostClick?: (postId: string) => void;
+}
+
+function normalizeSearchPost(post: SearchFeedPost): SearchFeedPost {
+  return {
+    id: post.id,
+    author_profile_id: post.author_profile_id,
+    type: post.type as SearchFeedPost["type"],
+    content: post.content,
+    images: post.images,
+    tags: post.tags ?? [],
+    location_id: post.location_id ?? "",
+    location: post.location,
+    reach: post.reach ?? "neighborhood",
+    likes_count: post.likes_count,
+    comments_count: post.comments_count,
+    created_at: post.created_at,
+    updated_at: post.created_at,
+    is_liked: post.is_liked,
+    is_saved: post.is_saved,
+    author_name: post.author_name,
+    author_avatar: post.author_avatar,
+    city: post.city,
+    neighborhood: post.neighborhood,
+    is_verified_resident: post.is_verified_resident,
+    is_verified: post.is_verified,
+    is_edited: post.is_edited,
+    confirmations_count: post.confirmations_count,
+  };
 }
 
 export function SearchModal({
@@ -51,35 +68,26 @@ export function SearchModal({
     removeFromHistory,
   } = useSearch();
 
-  // Foco automático ao abrir
   useEffect(() => {
-    if (isOpen && inputRef.current) {
-      setTimeout(() => inputRef.current?.focus(), 100);
-    }
+    if (!isOpen || !inputRef.current) return;
+    const timeoutId = window.setTimeout(() => inputRef.current?.focus(), 100);
+    return () => window.clearTimeout(timeoutId);
   }, [isOpen]);
 
-  // Atalho de teclado Ctrl+K
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
-        e.preventDefault();
-        if (!isOpen) {
-          // Abrir modal (precisa ser implementado no componente pai)
-        }
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === "k") {
+        event.preventDefault();
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen]);
+  }, []);
 
   const handleClose = () => {
     clearSearch();
     onClose();
-  };
-
-  const handleHistoryClick = (historyQuery: string) => {
-    search(historyQuery);
   };
 
   const showHistory = !query && searchHistory.length > 0;
@@ -90,75 +98,75 @@ export function SearchModal({
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent
-        className="max-w-3xl max-h-[80vh] p-0 gap-0 border-0"
+        className="max-h-[80vh] max-w-3xl gap-0 border-0 p-0"
         style={{ backgroundColor: "#1E2529" }}
         aria-describedby="search-dialog-description"
       >
         <span id="search-dialog-description" className="sr-only">
-          Busque por conteúdo, usuários ou empresas
+          Busque por conteudo, usuarios ou empresas.
         </span>
-        {/* Header com Input */}
+
         <div
-          className="flex items-center gap-3 p-4 border-b"
+          className="flex items-center gap-3 border-b p-4"
           style={{ borderColor: "rgba(255, 255, 255, 0.1)" }}
         >
           <Search
-            className="w-5 h-5 flex-shrink-0"
+            className="h-5 w-5 shrink-0"
             style={{ color: "#4FD1C5" }}
           />
 
           <Input
             ref={inputRef}
             value={query}
-            onChange={(e) => search(e.target.value)}
+            onChange={(event) => search(event.target.value)}
             placeholder="Buscar posts, tags, autores..."
             className="flex-1 border-0 bg-transparent text-base focus-visible:ring-0 focus-visible:ring-offset-0"
             style={{ color: "#FFFFFF" }}
           />
 
-          {query && (
+          {query ? (
             <Button
               variant="ghost"
               size="icon"
               onClick={clearSearch}
-              className="w-8 h-8 flex-shrink-0"
+              className="h-8 w-8 shrink-0"
+              type="button"
             >
-              <X className="w-4 h-4" style={{ color: "#9CA3AF" }} />
+              <X className="h-4 w-4" style={{ color: "#9CA3AF" }} />
             </Button>
-          )}
+          ) : null}
 
-          {isSearching && (
+          {isSearching ? (
             <Loader2
-              className="w-5 h-5 animate-spin flex-shrink-0"
+              className="h-5 w-5 shrink-0 animate-spin"
               style={{ color: "#4FD1C5" }}
             />
-          )}
+          ) : null}
         </div>
 
-        {/* Conteúdo */}
-        <ScrollArea className="flex-1 max-h-[calc(80vh-80px)]">
+        <ScrollArea className="max-h-[calc(80vh-80px)] flex-1">
           <div className="p-4">
-            {/* Histórico de Buscas */}
-            {showHistory && (
+            {showHistory ? (
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4" style={{ color: "#9CA3AF" }} />
+                  <Clock className="h-4 w-4" style={{ color: "#9CA3AF" }} />
                   <span
                     className="text-sm font-medium"
                     style={INLINE_STYLES.textSecondary}
                   >
-                    Buscas Recentes
+                    Buscas recentes
                   </span>
                 </div>
 
                 <div className="space-y-1">
-                  {searchHistory.map((item, index) => (
+                  {searchHistory.map((item) => (
                     <div
-                      key={index}
-                      className="flex items-center justify-between group p-2 rounded-lg hover:bg-white/5 transition-colors"
+                      key={item}
+                      className="group flex items-center justify-between rounded-lg p-2 transition-colors hover:bg-white/5"
                     >
                       <button
-                        onClick={() => handleHistoryClick(item)}
+                        type="button"
+                        onClick={() => search(item)}
                         className="flex-1 text-left text-sm"
                         style={INLINE_STYLES.textPrimary}
                       >
@@ -168,54 +176,54 @@ export function SearchModal({
                         variant="ghost"
                         size="icon"
                         onClick={() => removeFromHistory(item)}
-                        className="w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100"
+                        type="button"
                       >
-                        <X className="w-3 h-3" style={{ color: "#9CA3AF" }} />
+                        <X className="h-3 w-3" style={{ color: "#9CA3AF" }} />
                       </Button>
                     </div>
                   ))}
                 </div>
               </div>
-            )}
+            ) : null}
 
-            {/* Sugestões */}
-            {showSuggestions && (
-              <div className="space-y-3 mb-6">
+            {showSuggestions ? (
+              <div className="mb-6 space-y-3">
                 <div className="flex items-center gap-2">
                   <TrendingUp
-                    className="w-4 h-4"
+                    className="h-4 w-4"
                     style={{ color: "#9CA3AF" }}
                   />
                   <span
                     className="text-sm font-medium"
                     style={INLINE_STYLES.textSecondary}
                   >
-                    Sugestões
+                    Sugestoes
                   </span>
                 </div>
 
                 <div className="flex flex-wrap gap-2">
-                  {results.suggestions.map((suggestion, index) => (
+                  {results.suggestions.map((suggestion) => (
                     <Button
-                      key={index}
+                      key={suggestion}
                       variant="outline"
                       size="sm"
                       onClick={() => search(suggestion)}
-                      className="h-8 px-3 text-xs border-white/10 hover:border-white/20"
+                      className="h-8 border-white/10 px-3 text-xs hover:border-white/20"
                       style={{
                         backgroundColor: "transparent",
                         color: "#A0AEC0",
                       }}
+                      type="button"
                     >
                       {suggestion}
                     </Button>
                   ))}
                 </div>
               </div>
-            )}
+            ) : null}
 
-            {/* Resultados */}
-            {showResults && (
+            {showResults ? (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span
@@ -231,7 +239,7 @@ export function SearchModal({
                   {results.posts.map((post) => (
                     <PostCard
                       key={post.id}
-                      post={post as any}
+                      post={normalizeSearchPost(post)}
                       onLike={() => {}}
                       onComment={() => {}}
                       onSave={() => {}}
@@ -245,13 +253,12 @@ export function SearchModal({
                   ))}
                 </div>
               </div>
-            )}
+            ) : null}
 
-            {/* Empty State */}
-            {showEmpty && (
+            {showEmpty ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <AlertCircle
-                  className="w-12 h-12 mb-3"
+                  className="mb-3 h-12 w-12"
                   style={{ color: "#4B5563" }}
                 />
                 <p
@@ -260,25 +267,24 @@ export function SearchModal({
                 >
                   Nenhum resultado encontrado
                 </p>
-                <p className="text-xs mt-1" style={INLINE_STYLES.textMuted}>
-                  Tente search por outras palavras-chave
+                <p className="mt-1 text-xs" style={INLINE_STYLES.textMuted}>
+                  Tente buscar por outras palavras-chave.
                 </p>
               </div>
-            )}
+            ) : null}
           </div>
         </ScrollArea>
 
-        {/* Footer com dica */}
         <div
-          className="p-3 border-t text-center"
+          className="border-t p-3 text-center"
           style={{ borderColor: "rgba(255, 255, 255, 0.1)" }}
         >
           <p className="text-xs" style={INLINE_STYLES.textMuted}>
-            Dica: Use{" "}
-            <kbd className="px-1.5 py-0.5 rounded bg-white/10 font-mono">
+            Dica: use{" "}
+            <kbd className="rounded bg-white/10 px-1.5 py-0.5 font-mono">
               Ctrl+K
             </kbd>{" "}
-            para abrir a busca rapidamente
+            para abrir a busca rapidamente.
           </p>
         </div>
       </DialogContent>

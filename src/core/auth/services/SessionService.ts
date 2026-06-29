@@ -44,7 +44,7 @@ export interface SessionAnomaly {
   anomalyType: string;
   severity: 'low' | 'medium' | 'high' | 'critical';
   description: string;
-  details: Record<string, any>;
+  details: Record<string, unknown>;
   actionTaken: string | null;
   autoResolved: boolean;
   resolvedAt: string | null;
@@ -58,6 +58,71 @@ export interface SessionStats {
   suspiciousSessions: number;
   trustedSessions: number;
   recentAnomalies: number;
+}
+
+const SESSION_ANOMALY_SEVERITIES = new Set<SessionAnomaly["severity"]>([
+  "low",
+  "medium",
+  "high",
+  "critical",
+]);
+
+type UserSessionRow = {
+  id: string;
+  user_id: string;
+  session_token: string;
+  device_type: string | null;
+  device_name: string | null;
+  browser: string | null;
+  browser_version: string | null;
+  os: string | null;
+  os_version: string | null;
+  user_agent: string | null;
+  ip_address: unknown;
+  country: string | null;
+  region: string | null;
+  city: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  is_active: boolean;
+  is_trusted: boolean;
+  is_suspicious: boolean;
+  suspicion_reason: string | null;
+  created_at: string;
+  last_activity_at: string;
+  expires_at: string;
+  revoked_at: string | null;
+  revoked_by: string | null;
+  revoked_reason: string | null;
+};
+
+type SessionAnomalyRow = {
+  id: string;
+  session_id: string;
+  user_id: string;
+  anomaly_type: string;
+  severity: string;
+  description: string;
+  details: unknown;
+  action_taken: string | null;
+  auto_resolved: boolean;
+  resolved_at: string | null;
+  resolved_by: string | null;
+  detected_at: string;
+};
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function normalizeOptionalString(value: unknown): string | null {
+  return typeof value === "string" ? value : null;
+}
+
+function normalizeAnomalySeverity(value: string): SessionAnomaly["severity"] {
+  return SESSION_ANOMALY_SEVERITIES.has(value as SessionAnomaly["severity"])
+    ? (value as SessionAnomaly["severity"])
+    : "low";
 }
 
 class SessionService {
@@ -159,7 +224,7 @@ class SessionService {
         return 0;
       }
 
-      return data as number;
+      return typeof data === 'number' ? data : 0;
     } catch (error) {
       logger.error('SessionService.revokeAllSessions', error);
       return 0;
@@ -328,7 +393,7 @@ class SessionService {
   /**
    * Mapear sessão do banco para o tipo UserSession
    */
-  private mapSession(data: any): UserSession {
+  private mapSession(data: UserSessionRow): UserSession {
     return {
       id: data.id,
       userId: data.user_id,
@@ -340,7 +405,7 @@ class SessionService {
       os: data.os,
       osVersion: data.os_version,
       userAgent: data.user_agent,
-      ipAddress: data.ip_address,
+      ipAddress: normalizeOptionalString(data.ip_address),
       country: data.country,
       region: data.region,
       city: data.city,
@@ -362,15 +427,15 @@ class SessionService {
   /**
    * Mapear anomalia do banco para o tipo SessionAnomaly
    */
-  private mapAnomaly(data: any): SessionAnomaly {
+  private mapAnomaly(data: SessionAnomalyRow): SessionAnomaly {
     return {
       id: data.id,
       sessionId: data.session_id,
       userId: data.user_id,
       anomalyType: data.anomaly_type,
-      severity: data.severity,
+      severity: normalizeAnomalySeverity(data.severity),
       description: data.description,
-      details: data.details || {},
+      details: isRecord(data.details) ? data.details : {},
       actionTaken: data.action_taken,
       autoResolved: data.auto_resolved,
       resolvedAt: data.resolved_at,

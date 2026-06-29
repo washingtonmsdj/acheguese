@@ -1,8 +1,37 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
-import type { AdminSupabaseClient, CommunityIssue, ProfessionalReport, ProfessionalData } from "../types/adminDatabase.types";
 import { MobilityAdminQueryService } from "@/core/admin/services/MobilityAdminQueryService";
 import { profileService } from "@/core/profiles/services/ProfileService";
+import type {
+  CommunityIssue,
+  ProfessionalData,
+  ProfessionalReport,
+} from "../types/adminDatabase.types";
+
+type ErrorLike = { message?: string | null; code?: string | null } | null;
+
+type QueryPayload<TRow> = {
+  data: TRow[] | null;
+  error: ErrorLike;
+  count?: number | null;
+};
+
+type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
+  select(columns?: string, options?: { count?: "exact"; head?: boolean }): TableClient<TRow>;
+  update(values: Record<string, unknown>): TableClient<TRow>;
+  eq(column: string, value: unknown): TableClient<TRow>;
+  order(column: string, options?: { ascending: boolean }): TableClient<TRow>;
+};
+
+type AdminCommunityDbClient = {
+  from<TRow = Record<string, unknown>>(table: string): TableClient<TRow>;
+  rpc<T>(fn: string, params?: Record<string, unknown>): Promise<{
+    data: T | null;
+    error: ErrorLike;
+  }>;
+};
+
+const adminCommunityDb = supabase as unknown as AdminCommunityDbClient;
 
 export interface ModerationStats {
   total_posts: number;
@@ -38,16 +67,28 @@ export interface PostFlag {
   created_at: string;
 }
 
+type CivicReportRow = CommunityIssue & {
+  profiles?: {
+    name?: string | null;
+  } | null;
+};
+
+type CivicReportView = CommunityIssue & {
+  reporter_name: string;
+  is_critical: boolean;
+  supporters_count: number;
+};
+
 class AdminCommunityService {
-  private readonly db = supabase as any;
+  private readonly db = adminCommunityDb;
 
   async getModerationStats(): Promise<ModerationStats | null> {
     try {
-      const { data, error } = await this.db.rpc("get_moderation_stats");
+      const { data, error } = await this.db.rpc<ModerationStats[]>("get_moderation_stats");
       if (error) throw error;
-      const rows = data as ModerationStats[] | null;
-      if (!rows || rows.length === 0) return null;
-      return rows[0] || null;
+
+      const rows = (data as ModerationStats[] | null) ?? [];
+      return rows[0] ?? null;
     } catch (error) {
       logger.error("Error fetching moderation stats", error as Error);
       throw error;
@@ -58,30 +99,29 @@ class AdminCommunityService {
     filter?: "pending" | "approved" | "rejected" | "flagged",
   ): Promise<CommunityPost[]> {
     try {
-
-      // ✅ Delegado para MobilityAdminQueryService
       const data = await MobilityAdminQueryService.getCommunityPosts(filter);
 
-      const authorIds = [...new Set(data.map((p) => p.author_profile_id))] as string[];
+      const authorIds = [...new Set(data.map((post) => post.author_profile_id))];
       const profiles = await profileService.getProfilesSummaryExtended(authorIds);
-      const profilesMap = new Map(profiles.map((p) => [p.id, p]));
+      const profilesMap = new Map(profiles.map((profile) => [profile.id, profile]));
 
-      return data.map((p) => {
-        const profile = profilesMap.get(p.author_profile_id);
+      return data.map((post) => {
+        const profile = profilesMap.get(post.author_profile_id);
+
         return {
-          id: p.id,
-          author_profile_id: p.author_profile_id,
-          author_name: profile?.displayName || "Usuário",
+          id: post.id,
+          author_profile_id: post.author_profile_id,
+          author_name: profile?.displayName || "Usuario",
           author_neighborhood: profile?.neighborhood || "",
-          content: p.content,
-          intent: p.intent as "offering" | "requesting",
-          destination: p.destination,
-          moderation_status: p.moderation_status as CommunityPost["moderation_status"],
-          flag_count: p.flag_count,
-          interested_count: p.interested_count,
-          created_at: p.created_at,
-          moderated_at: p.moderated_at,
-          moderation_reason: p.moderation_reason,
+          content: post.content,
+          intent: post.intent as CommunityPost["intent"],
+          destination: post.destination,
+          moderation_status: post.moderation_status as CommunityPost["moderation_status"],
+          flag_count: post.flag_count,
+          interested_count: post.interested_count,
+          created_at: post.created_at,
+          moderated_at: post.moderated_at,
+          moderation_reason: post.moderation_reason,
         };
       });
     } catch (error) {
@@ -92,20 +132,18 @@ class AdminCommunityService {
 
   async getPostFlags(postId: string): Promise<PostFlag[]> {
     try {
-
-      // ✅ Delegado para MobilityAdminQueryService
       const data = await MobilityAdminQueryService.getPostFlags(postId);
 
-      const flaggedByIds = [...new Set(data.map((f) => f.flagged_by))] as string[];
+      const flaggedByIds = [...new Set(data.map((flag) => flag.flagged_by))];
       const profiles = await profileService.getProfilesSummary(flaggedByIds);
-      const profilesMap = new Map(profiles.map((p) => [p.id, p]));
+      const profilesMap = new Map(profiles.map((profile) => [profile.id, profile]));
 
-      return data.map((f) => ({
-        id: f.id,
-        reason: f.reason,
-        description: f.description,
-        flagged_by_name: profilesMap.get(f.flagged_by)?.displayName || "Usuário",
-        created_at: f.created_at,
+      return data.map((flag) => ({
+        id: flag.id,
+        reason: flag.reason,
+        description: flag.description,
+        flagged_by_name: profilesMap.get(flag.flagged_by)?.displayName || "Usuario",
+        created_at: flag.created_at,
       }));
     } catch (error) {
       logger.error("Error fetching post flags", error as Error);
@@ -113,19 +151,20 @@ class AdminCommunityService {
     }
   }
 
-  async getCivicReports(status: string): Promise<(CommunityIssue & { reporter_name: string; is_critical: boolean; supporters_count: number })[]> {
+  async getCivicReports(status: string): Promise<CivicReportView[]> {
     try {
-      const { data, error } = await (this.db as unknown as AdminSupabaseClient)
-        .from("community_issues")
-        .select(`*, profiles!community_issues_profile_id_fkey(name)`)
+      const { data, error } = await this.db
+        .from<CivicReportRow>("community_issues")
+        .select("*, profiles!community_issues_profile_id_fkey(name)")
         .eq("status", status)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
 
-      return (data || []).map((r: any) => ({
-        ...(r as unknown as CommunityIssue),
-        reporter_name: r.profiles?.name || "Anônimo",
+      const rows = (data || []) as CivicReportRow[];
+      return rows.map((row) => ({
+        ...(row as CommunityIssue),
+        reporter_name: row.profiles?.name || "Anonimo",
         is_critical: false,
         supporters_count: 0,
       }));
@@ -137,20 +176,17 @@ class AdminCommunityService {
 
   async getCivicReportStats(): Promise<Record<string, number>> {
     try {
-      const { data, error } = await (this.db as unknown as AdminSupabaseClient)
-        .from("community_issues")
-        .select("status");
-
+      const { data, error } = await this.db.from<CommunityIssue>("community_issues").select("status");
       if (error) throw error;
 
-      const issues = (data || []) as unknown as CommunityIssue[];
+      const issues = (data || []) as CommunityIssue[];
 
       return {
         total: issues.length || 0,
-        pendente: issues.filter((r) => r.status === "open").length || 0,
-        em_analise: issues.filter((r) => r.status === "in_progress").length || 0,
-        resolvido: issues.filter((r) => r.status === "resolved").length || 0,
-        rejeitado: issues.filter((r) => r.status === "closed").length || 0,
+        pendente: issues.filter((issue) => issue.status === "open").length || 0,
+        em_analise: issues.filter((issue) => issue.status === "in_progress").length || 0,
+        resolvido: issues.filter((issue) => issue.status === "resolved").length || 0,
+        rejeitado: issues.filter((issue) => issue.status === "closed").length || 0,
         critical: 0,
       };
     } catch (error) {
@@ -159,13 +195,12 @@ class AdminCommunityService {
     }
   }
 
-  async updateCivicReportStatus(reportId: string, status: CommunityIssue['status']): Promise<void> {
+  async updateCivicReportStatus(reportId: string, status: CommunityIssue["status"]): Promise<void> {
     try {
       const { error } = await this.db
-        .from("community_issues")
+        .from<CommunityIssue>("community_issues")
         .update({ status })
         .eq("id", reportId);
-
       if (error) throw error;
     } catch (error) {
       logger.error("Error updating civic report status", error as Error);
@@ -175,13 +210,13 @@ class AdminCommunityService {
 
   async getProfessionalReports(): Promise<ProfessionalReport[]> {
     try {
-      const { data, error } = await (this.db as unknown as AdminSupabaseClient)
-        .from("professional_reports")
+      const { data, error } = await this.db
+        .from<ProfessionalReport>("professional_reports")
         .select("*")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return (data || []) as unknown as ProfessionalReport[];
+      return (data || []) as ProfessionalReport[];
     } catch (error) {
       logger.error("Error fetching professional reports", error as Error);
       return [];
@@ -190,13 +225,13 @@ class AdminCommunityService {
 
   async getAllProfessionals(): Promise<ProfessionalData[]> {
     try {
-      const { data, error } = await (this.db as unknown as AdminSupabaseClient)
-        .from("professional_data")
+      const { data, error } = await this.db
+        .from<ProfessionalData>("professional_data")
         .select("*")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return (data || []) as unknown as ProfessionalData[];
+      return (data || []) as ProfessionalData[];
     } catch (error) {
       logger.error("Error fetching professionals", error as Error);
       return [];

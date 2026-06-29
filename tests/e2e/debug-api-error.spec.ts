@@ -1,51 +1,50 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 
 const BASE_URL = 'http://localhost:8081';
 
-test.describe('Debug API Error', () => {
-  
-  test('Capturar erro 400 da API', async ({ page }) => {
-    const apiErrors: any[] = [];
+type ApiErrorLog = {
+  url: string;
+  status: number;
+  body?: unknown;
+  error?: string;
+};
 
-    // Interceptar requisições da API
+test.describe('Debug API Error', () => {
+  test('captura erros 400 da API', async ({ page }) => {
+    const apiErrors: ApiErrorLog[] = [];
+
     page.on('response', async (response) => {
       const url = response.url();
-      
-      // Capturar apenas requisições do Supabase
+
       if (url.includes('supabase') && response.status() === 400) {
         try {
           const body = await response.json();
           apiErrors.push({
             url,
             status: response.status(),
-            body
+            body,
           });
-        } catch (e) {
+        } catch {
           apiErrors.push({
             url,
             status: response.status(),
-            error: 'Could not parse response'
+            error: 'Could not parse response',
           });
         }
       }
     });
 
-    // Navegar para listagem
     await page.goto(`${BASE_URL}/pontos-turisticos/ba/salvador`);
     await page.waitForLoadState('networkidle');
-
-    // Aguardar um pouco para garantir que todas as requisições foram feitas
     await page.waitForTimeout(2000);
 
-    // Exibir erros capturados
     console.log('\n=== ERROS DA API ===');
     console.log(JSON.stringify(apiErrors, null, 2));
     console.log('===================\n');
 
-    // Verificar se há erros
     if (apiErrors.length > 0) {
-      console.log(`\n❌ ${apiErrors.length} erro(s) 400 capturado(s)\n`);
-      
+      console.log(`\nForam capturados ${apiErrors.length} erro(s) 400\n`);
+
       apiErrors.forEach((error, index) => {
         console.log(`\nErro ${index + 1}:`);
         console.log('URL:', error.url);

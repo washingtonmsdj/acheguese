@@ -92,7 +92,7 @@ export function RideHistoryUnified({
     queryKey: MOBILITY_QUERY_KEYS.rideHistory(user?.id || ""),
     queryFn: async () => {
       if (!user) return [];
-      const allRides = (await mobilityService.getUserRides(user.id)) as RideRequest[];
+      const allRides = await mobilityService.getUserRides(user.id);
       return (allRides || []).filter(
         (r) =>
           r.status === RIDE_STATUS.COMPLETED || r.status === RIDE_STATUS.CANCELLED,

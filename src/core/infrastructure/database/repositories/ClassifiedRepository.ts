@@ -9,6 +9,7 @@
  */
 
 import { supabase } from '@/integrations/supabase';
+import type { Json } from '@/integrations/supabase';
 import { BaseRepository } from './BaseRepository';
 import { DatabaseError, DatabaseErrorCode } from '../errors/DatabaseError';
 import type { Filter } from '../interfaces/IRepository';
@@ -57,7 +58,7 @@ export interface Classified {
   reach: ClassifiedReach | null;
   
   // Mídia
-  photos: any | null;
+  photos: Json | null;
   
   // SEO
   slug: string | null;

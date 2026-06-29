@@ -1,14 +1,12 @@
 /**
- * BlockService - SSOT para Bloqueios de Usuários
+ * BlockService - SSOT para bloqueios de usuarios
  *
- * ✅ Fonte única de verdade para gerenciamento de bloqueios
- * ✅ Todas as operações de bloqueio passam por aqui
- * ✅ Sem queries diretas ao Supabase fora deste service
+ * Fonte unica de verdade para gerenciamento de bloqueios.
+ * Todas as operacoes de bloqueio passam por aqui.
  */
 
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
-import { trackError } from "@/shared/utils/errorTracking";
 
 export interface BlockedUser {
   id: string;
@@ -30,17 +28,74 @@ export interface BlockStats {
   blocked_me: number;
 }
 
-class BlockService {
-  private readonly TABLE = "user_blocks";
-  private readonly db = supabase as any;
+type QueryResult<T> = Promise<{
+  data: T;
+  error: { code?: string; message?: string } | null;
+  count?: number | null;
+}>;
 
-  /**
-   * ✅ SSOT: Obter lista de usuários bloqueados
-   */
+interface QueryBuilder<TRow> {
+  select(
+    columns?: string,
+    options?: { count?: "exact" | "planned" | "estimated"; head?: boolean },
+  ): QueryBuilder<TRow>;
+  insert(values: unknown): QueryBuilder<TRow>;
+  delete(): QueryBuilder<TRow>;
+  eq(column: string, value: unknown): QueryBuilder<TRow>;
+  or(filters: string): QueryBuilder<TRow>;
+  order(column: string, options?: { ascending?: boolean }): QueryBuilder<TRow>;
+  limit(count: number): QueryBuilder<TRow>;
+  single(): QueryResult<TRow>;
+  then<
+    TResult1 = {
+      data: TRow[];
+      error: { code?: string; message?: string } | null;
+      count?: number | null;
+    },
+    TResult2 = never,
+  >(
+    onfulfilled?:
+      | ((
+          value: {
+            data: TRow[];
+            error: { code?: string; message?: string } | null;
+            count?: number | null;
+          },
+        ) => TResult1 | PromiseLike<TResult1>)
+      | null,
+    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
+  ): Promise<TResult1 | TResult2>;
+}
+
+interface BlockDbClient {
+  from<TRow>(table: string): QueryBuilder<TRow>;
+}
+
+type UserBlockRow = Omit<BlockedUser, "blocked_profile"> & {
+  blocked_profile?:
+    | {
+        id: string;
+        name: string;
+        username: string;
+        avatar_url: string;
+      }
+    | Array<{
+        id: string;
+        name: string;
+        username: string;
+        avatar_url: string;
+      }>
+    | null;
+};
+
+class BlockService {
+  private readonly table = "user_blocks";
+  private readonly db = supabase as unknown as BlockDbClient;
+
   async getBlockedUsers(userId: string): Promise<BlockedUser[]> {
     try {
       const { data, error } = await this.db
-        .from(this.TABLE)
+        .from<UserBlockRow>(this.table)
         .select(
           `
           *,
@@ -55,9 +110,16 @@ class BlockService {
         .eq("blocker_user_id", userId)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
-      return (data as BlockedUser[]) || [];
+      return (data || []).map((row) => ({
+        ...row,
+        blocked_profile: Array.isArray(row.blocked_profile)
+          ? row.blocked_profile[0]
+          : row.blocked_profile || undefined,
+      }));
     } catch (error) {
       logger.error("Error fetching blocked users", error as Error, {
         service: "BlockService",
@@ -68,36 +130,33 @@ class BlockService {
     }
   }
 
-  /**
-   * ✅ SSOT: Bloquear usuário
-   */
   async blockUser(
     blockerUserId: string,
     blockedUserId: string,
     reason?: string,
   ): Promise<boolean> {
     try {
-      // Verificar se já está bloqueado
       const { data: existing } = await this.db
-        .from(this.TABLE)
+        .from<Pick<UserBlockRow, "id">>(this.table)
         .select("id")
         .eq("blocker_user_id", blockerUserId)
         .eq("blocked_user_id", blockedUserId)
         .single();
 
       if (existing) {
-        return true; // Já bloqueado
+        return true;
       }
 
-      // Criar bloqueio
-      const { error } = await this.db.from(this.TABLE).insert({
+      const { error } = await this.db.from<UserBlockRow>(this.table).insert({
         blocker_user_id: blockerUserId,
         blocked_user_id: blockedUserId,
         reason,
         created_at: new Date().toISOString(),
       });
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       return true;
     } catch (error) {
@@ -111,21 +170,20 @@ class BlockService {
     }
   }
 
-  /**
-   * ✅ SSOT: Desbloquear usuário
-   */
   async unblockUser(
     blockerUserId: string,
     blockedUserId: string,
   ): Promise<boolean> {
     try {
       const { error } = await this.db
-        .from(this.TABLE)
+        .from<UserBlockRow>(this.table)
         .delete()
         .eq("blocker_user_id", blockerUserId)
         .eq("blocked_user_id", blockedUserId);
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       return true;
     } catch (error) {
@@ -139,22 +197,18 @@ class BlockService {
     }
   }
 
-  /**
-   * ✅ SSOT: Verificar se usuário está bloqueado
-   */
-  async isBlocked(
-    blockerUserId: string,
-    blockedUserId: string,
-  ): Promise<boolean> {
+  async isBlocked(blockerUserId: string, blockedUserId: string): Promise<boolean> {
     try {
       const { data, error } = await this.db
-        .from(this.TABLE)
+        .from<Pick<UserBlockRow, "id">>(this.table)
         .select("id")
         .eq("blocker_user_id", blockerUserId)
         .eq("blocked_user_id", blockedUserId)
         .single();
 
-      if (error && error.code !== "PGRST116") throw error;
+      if (error && error.code !== "PGRST116") {
+        throw error;
+      }
 
       return !!data;
     } catch (error) {
@@ -168,25 +222,21 @@ class BlockService {
     }
   }
 
-  /**
-   * ✅ SSOT: Verificar bloqueio mútuo (A bloqueou B ou B bloqueou A)
-   */
-  async isMutuallyBlocked(
-    userId1: string,
-    userId2: string,
-  ): Promise<boolean> {
+  async isMutuallyBlocked(userId1: string, userId2: string): Promise<boolean> {
     try {
       const { data, error } = await this.db
-        .from(this.TABLE)
+        .from<Pick<UserBlockRow, "id">>(this.table)
         .select("id")
         .or(
           `and(blocker_user_id.eq.${userId1},blocked_user_id.eq.${userId2}),and(blocker_user_id.eq.${userId2},blocked_user_id.eq.${userId1})`,
         )
         .limit(1);
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
-      return data && data.length > 0;
+      return !!(data && data.length > 0);
     } catch (error) {
       logger.error("Error checking mutual block", error as Error, {
         service: "BlockService",
@@ -198,18 +248,15 @@ class BlockService {
     }
   }
 
-  /**
-   * ✅ SSOT: Obter estatísticas de bloqueios
-   */
   async getBlockStats(userId: string): Promise<BlockStats> {
     try {
       const [blockedByMe, blockedMe] = await Promise.all([
         this.db
-          .from(this.TABLE)
+          .from<Pick<UserBlockRow, "id">>(this.table)
           .select("id", { count: "exact", head: true })
           .eq("blocker_user_id", userId),
         this.db
-          .from(this.TABLE)
+          .from<Pick<UserBlockRow, "id">>(this.table)
           .select("id", { count: "exact", head: true })
           .eq("blocked_user_id", userId),
       ]);
@@ -233,19 +280,18 @@ class BlockService {
     }
   }
 
-  /**
-   * ✅ SSOT: Obter IDs de usuários bloqueados (para filtros)
-   */
   async getBlockedUserIds(userId: string): Promise<string[]> {
     try {
       const { data, error } = await this.db
-        .from(this.TABLE)
+        .from<Pick<UserBlockRow, "blocked_user_id">>(this.table)
         .select("blocked_user_id")
         .eq("blocker_user_id", userId);
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
-      return ((data || []) as Array<{ blocked_user_id: string }>).map((row) => row.blocked_user_id);
+      return (data || []).map((row) => row.blocked_user_id);
     } catch (error) {
       logger.error("Error fetching blocked user IDs", error as Error, {
         service: "BlockService",
@@ -258,4 +304,3 @@ class BlockService {
 }
 
 export const blockService = new BlockService();
-

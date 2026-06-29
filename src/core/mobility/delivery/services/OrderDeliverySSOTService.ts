@@ -38,6 +38,15 @@ import type {
 } from "../order/types";
 import { OrderDraftService } from "../order/OrderDraftService";
 import { PaymentContextService } from "../payment-context/PaymentContextService";
+
+type OrderDeliveryRpcClient = {
+  rpc<T>(fn: string, params?: Record<string, unknown>): Promise<{
+    data: T | null;
+    error: { message?: string | null } | null;
+  }>;
+};
+
+const orderDeliveryRpc = supabase as unknown as OrderDeliveryRpcClient;
 import {
   FINANCIAL_STATUS,
   PAYMENT_MODE,
@@ -322,7 +331,7 @@ export class OrderDeliverySSOTService {
     rpcName: string,
     args: Record<string, unknown>,
   ): Promise<OrderRecord> {
-    const { data, error } = await (supabase as any).rpc(rpcName, args);
+    const { data, error } = await orderDeliveryRpc.rpc<unknown>(rpcName, args);
 
     if (error) throw error;
 
@@ -333,7 +342,7 @@ export class OrderDeliverySSOTService {
     rpcName: string,
     args: Record<string, unknown>,
   ): Promise<DeliveryOccurrence> {
-    const { data, error } = await (supabase as any).rpc(rpcName, args);
+    const { data, error } = await orderDeliveryRpc.rpc<unknown>(rpcName, args);
 
     if (error) throw error;
 

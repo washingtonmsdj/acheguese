@@ -30,6 +30,14 @@ interface AuditTransition {
   created_at: string;
 }
 
+interface DriverAvailabilityState {
+  is_online: boolean;
+  is_available: boolean;
+  active_ride_id: string | null;
+  current_lat: number | null;
+  current_lng: number | null;
+}
+
 /**
  * Aguarda corrida atingir um dos estados esperados
  * Polling com intervalo de 500ms
@@ -145,12 +153,14 @@ export async function waitForAuditTransition(
  */
 export async function validateDriverAvailable(
   driverProfileId: string
-): Promise<{ valid: boolean; error?: string; state?: any }> {
+): Promise<{ valid: boolean; error?: string; state?: DriverAvailabilityState }> {
   const { data: driver, error } = await getSupabaseAdmin()
     .from('driver_availability')
     .select('is_online, is_available, active_ride_id, current_lat, current_lng')
     .eq('profile_id', driverProfileId)
     .single();
+
+  const driverState = driver as DriverAvailabilityState | null;
   
   if (error) {
     return {
@@ -159,48 +169,48 @@ export async function validateDriverAvailable(
     };
   }
   
-  if (!driver) {
+  if (!driverState) {
     return {
       valid: false,
       error: `Motorista ${driverProfileId} não encontrado em driver_availability`,
     };
   }
   
-  if (!driver.is_online) {
+  if (!driverState.is_online) {
     return {
       valid: false,
       error: `Motorista ${driverProfileId} não está online (is_online = false)`,
-      state: driver,
+      state: driverState,
     };
   }
   
-  if (!driver.is_available) {
+  if (!driverState.is_available) {
     return {
       valid: false,
       error: `Motorista ${driverProfileId} não está disponível (is_available = false)`,
-      state: driver,
+      state: driverState,
     };
   }
   
-  if (driver.active_ride_id) {
+  if (driverState.active_ride_id) {
     return {
       valid: false,
-      error: `Motorista ${driverProfileId} tem corrida ativa (active_ride_id = ${driver.active_ride_id})`,
-      state: driver,
+      error: `Motorista ${driverProfileId} tem corrida ativa (active_ride_id = ${driverState.active_ride_id})`,
+      state: driverState,
     };
   }
   
-  if (!driver.current_lat || !driver.current_lng) {
+  if (!driverState.current_lat || !driverState.current_lng) {
     return {
       valid: false,
       error: `Motorista ${driverProfileId} não tem coordenadas (current_lat/lng = null)`,
-      state: driver,
+      state: driverState,
     };
   }
   
   return {
     valid: true,
-    state: driver,
+    state: driverState,
   };
 }
 

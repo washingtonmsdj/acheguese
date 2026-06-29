@@ -18,6 +18,52 @@ import {
 } from "@/core/admin/services/AdminMobilityRuntimeService";
 import { AdminDriverModerationService, type DriverModerationRow } from "@/core/admin/services/AdminDriverModerationService";
 
+type AdminDriverRow = {
+  profile_id: string;
+  user_id?: string | null;
+  name?: string | null;
+  avatar_url?: string | null;
+  vehicle_plate?: string | null;
+  vehicle_model?: string | null;
+  vehicle_year?: string | number | null;
+  cnh_image_url?: string | null;
+  is_online?: boolean | null;
+  subscription_plan?: string | null;
+  avg_rating?: number | null;
+  total_rides?: number | null;
+  total_earnings?: number | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  neighborhood?: string | null;
+  city?: string | null;
+};
+
+function isAdminDriverRow(value: unknown): value is AdminDriverRow {
+  return (
+    Boolean(value) &&
+    typeof value === "object" &&
+    "profile_id" in value &&
+    typeof (value as { profile_id?: unknown }).profile_id === "string"
+  );
+}
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  if (
+    error &&
+    typeof error === "object" &&
+    "message" in error &&
+    typeof (error as { message?: unknown }).message === "string"
+  ) {
+    return (error as { message: string }).message;
+  }
+
+  return fallback;
+}
+
 export function useDriverManagement(filter: FilterStatus, canModerate: boolean, isChecking: boolean) {
   const { toast } = useToast();
   const [drivers, setDrivers] = useState<DriverRequest[]>([]);
@@ -66,8 +112,10 @@ export function useDriverManagement(filter: FilterStatus, canModerate: boolean, 
         return;
       }
 
-      const profileIds = (driversData || [])
-        .map((d: any) => d.profile_id)
+      const driverRows = (driversData || []).filter(isAdminDriverRow);
+
+      const profileIds = driverRows
+        .map((driver) => driver.profile_id)
         .filter((id: unknown): id is string => typeof id === "string" && id.length > 0);
 
       let moderationMap = new Map<string, DriverModerationRow>();
@@ -76,32 +124,32 @@ export function useDriverManagement(filter: FilterStatus, canModerate: boolean, 
       }
 
       const driversWithContext = await Promise.all(
-        (driversData || []).map(async (d: any) => {
-          const profileContext = d.user_id
-            ? await profileService.getProfileContext(d.user_id)
+        driverRows.map(async (driverRow) => {
+          const profileContext = driverRow.user_id
+            ? await profileService.getProfileContext(driverRow.user_id)
             : null;
 
-          const moderation = moderationMap.get(d.profile_id);
+          const moderation = moderationMap.get(driverRow.profile_id);
 
           return {
-            id: d.profile_id,
-            profile_id: d.profile_id,
-            name: d.name,
-            avatar_url: d.avatar_url,
-            vehicle_plate: d.vehicle_plate,
-            vehicle_model: d.vehicle_model,
-            vehicle_year: d.vehicle_year,
-            cnh_image_url: d.cnh_image_url,
+            id: driverRow.profile_id,
+            profile_id: driverRow.profile_id,
+            name: driverRow.name,
+            avatar_url: driverRow.avatar_url,
+            vehicle_plate: driverRow.vehicle_plate,
+            vehicle_model: driverRow.vehicle_model,
+            vehicle_year: driverRow.vehicle_year,
+            cnh_image_url: driverRow.cnh_image_url,
             profileContext,
-            is_online: d.is_online || false,
-            subscription_plan: d.subscription_plan || "padrao",
-            rating: d.avg_rating || 0,
-            total_rides: d.total_rides || 0,
-            total_earnings: d.total_earnings || 0,
-            created_at: d.created_at,
-            updated_at: d.updated_at,
-            neighborhood: d.neighborhood,
-            city: d.city,
+            is_online: driverRow.is_online || false,
+            subscription_plan: driverRow.subscription_plan || "padrao",
+            rating: driverRow.avg_rating || 0,
+            total_rides: driverRow.total_rides || 0,
+            total_earnings: driverRow.total_earnings || 0,
+            created_at: driverRow.created_at,
+            updated_at: driverRow.updated_at,
+            neighborhood: driverRow.neighborhood,
+            city: driverRow.city,
             verification_status: moderation?.verification_status ?? null,
             verification_rejection_reason: moderation?.verification_rejection_reason ?? null,
             is_suspended: moderation?.is_suspended ?? false,
@@ -167,10 +215,10 @@ export function useDriverManagement(filter: FilterStatus, canModerate: boolean, 
         description: `${driver.name ?? "Motorista"} agora pode aceitar corridas.`,
       });
       await loadDrivers();
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "Erro",
-        description: error?.message || "Nao foi possivel aprovar o motorista.",
+        description: getErrorMessage(error, "Nao foi possivel aprovar o motorista."),
         variant: "destructive",
       });
     } finally {
@@ -206,10 +254,10 @@ export function useDriverManagement(filter: FilterStatus, canModerate: boolean, 
         description: `${driver.name ?? "Motorista"} foi marcado como rejeitado.`,
       });
       await loadDrivers();
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "Erro",
-        description: error?.message || "Nao foi possivel rejeitar o cadastro.",
+        description: getErrorMessage(error, "Nao foi possivel rejeitar o cadastro."),
         variant: "destructive",
       });
     } finally {

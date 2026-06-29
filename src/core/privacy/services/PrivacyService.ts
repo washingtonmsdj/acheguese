@@ -1,36 +1,29 @@
 /**
- * ══════════════════════════════════════════════════════════════════════════
- * PRIVACY SERVICE
- * ══════════════════════════════════════════════════════════════════════════
+ * Privacy service SSOT for privacy and LGPD operations.
  *
- * SSOT para todas as operações de privacidade e LGPD.
- * Centraliza: solicitações DPO, exportação de dados, exclusão de conta.
- *
- * IMPORTANTE: Operações sensíveis (export, delete) usam edge functions.
- * Operações de registro (DPO requests) usam supabase client diretamente
- * pois são dados do próprio usuário autenticado, cobertos por RLS.
- *
- * LGPD: Arts. 18, 19 e 41
- * ══════════════════════════════════════════════════════════════════════════
+ * Centralizes DPO requests, user data export and account deletion flows.
+ * Sensitive operations such as export and delete run through edge functions.
+ * DPO request registration uses the Supabase client directly because it stores
+ * authenticated user data protected by RLS.
  */
 
-import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase';
-import { DPO_REQUEST_STATUS } from '@/core/privacy/constants/dpoRequestStatus';
+import { DPO_REQUEST_STATUS } from "@/core/privacy/constants/dpoRequestStatus";
+import { supabase } from "@/integrations/supabase";
+import { logger } from "@/shared/utils/logger";
 
-// ── Types ──────────────────────────────────────────────────────────────────
+// Types
 
 export type DPORequestType =
-  | 'access'
-  | 'correction'
-  | 'anonymization'
-  | 'portability'
-  | 'deletion'
-  | 'information'
-  | 'consent_revocation'
-  | 'automated_decision'
-  | 'violation_report'
-  | 'other';
+  | "access"
+  | "correction"
+  | "anonymization"
+  | "portability"
+  | "deletion"
+  | "information"
+  | "consent_revocation"
+  | "automated_decision"
+  | "violation_report"
+  | "other";
 
 export interface CreateDPORequestParams {
   userId: string | undefined;
@@ -42,7 +35,7 @@ export interface CreateDPORequestParams {
 }
 
 export interface ExportDataResponse {
-  /** JSON blob com todos os dados pessoais do usuário */
+  /** JSON blob with all personal data for the authenticated user. */
   data: Record<string, unknown>;
   sizeBytes: number;
   tablesExported: number;
@@ -50,9 +43,9 @@ export interface ExportDataResponse {
 
 export interface DeleteAccountParams {
   reason?: string;
-  /** Deve ser true — confirmação explícita do usuário */
+  /** Must be true as an explicit user confirmation. */
   confirmation: true;
-  /** Se true, exporta os dados antes de deletar */
+  /** When true, exports the data before deletion. */
   exportFirst?: boolean;
 }
 
@@ -62,16 +55,26 @@ export interface DeleteAccountResponse {
   recoveryPossibleUntil: string;
 }
 
-// ── Service ────────────────────────────────────────────────────────────────
+interface InsertResult {
+  error: { message: string } | null;
+}
+
+interface PrivacyDbClient {
+  from: (table: string) => {
+    insert: (payload: Record<string, unknown>) => Promise<InsertResult>;
+  };
+}
+
+// Service
 
 export class PrivacyService {
-  private static readonly db = supabase as any;
+  private static readonly db = supabase as unknown as PrivacyDbClient;
+
   /**
-   * Registra uma solicitação ao DPO (Art. 41 LGPD).
-   * Persiste na tabela `dpo_requests` e dispara email de notificação.
+   * Registers a DPO request and persists it in `dpo_requests`.
    */
   static async createDPORequest(params: CreateDPORequestParams): Promise<void> {
-    const { error: dbError } = await this.db.from('dpo_requests').insert({
+    const { error: dbError } = await this.db.from("dpo_requests").insert({
       user_id: params.userId ?? null,
       requester_name: params.requesterName,
       requester_email: params.requesterEmail,
@@ -82,26 +85,25 @@ export class PrivacyService {
     });
 
     if (dbError) {
-      logger.error('[PrivacyService] Erro ao registrar solicitação DPO', dbError);
+      logger.error("[PrivacyService] Error registering DPO request", dbError);
       throw new Error(dbError.message);
     }
 
-    logger.info('[PrivacyService] Solicitacao DPO registrada', {
+    logger.info("[PrivacyService] Solicitacao DPO registrada", {
       requestType: params.requestType,
       hasUserId: Boolean(params.userId),
     });
   }
 
   /**
-   * Exporta todos os dados pessoais do usuário autenticado (Art. 18, I LGPD).
-   * Delega para a edge function `user-export-data`.
+   * Exports all personal data for the authenticated user.
    */
   static async exportUserData(): Promise<ExportDataResponse> {
-    const { data, error } = await supabase.functions.invoke('user-export-data');
+    const { data, error } = await supabase.functions.invoke("user-export-data");
 
     if (error) {
-      logger.error('[PrivacyService] Erro ao exportar dados do usuário', error);
-      throw new Error(error.message || 'Falha ao exportar dados');
+      logger.error("[PrivacyService] Error exporting user data", error);
+      throw new Error(error.message || "Failed to export user data");
     }
 
     return {
@@ -112,12 +114,11 @@ export class PrivacyService {
   }
 
   /**
-   * Agenda a exclusão da conta do usuário autenticado (Art. 18, VI LGPD).
-   * Soft-delete imediato + purge em 30 dias.
-   * Delega para a edge function `user-delete-account`.
+   * Schedules account deletion for the authenticated user.
+   * Performs immediate soft-delete plus purge after 30 days.
    */
   static async deleteAccount(params: DeleteAccountParams): Promise<DeleteAccountResponse> {
-    const { data, error } = await supabase.functions.invoke('user-delete-account', {
+    const { data, error } = await supabase.functions.invoke("user-delete-account", {
       body: {
         confirmation: params.confirmation,
         reason: params.reason,
@@ -126,8 +127,8 @@ export class PrivacyService {
     });
 
     if (error) {
-      logger.error('[PrivacyService] Erro ao solicitar exclusão de conta', error);
-      throw new Error(error.message || 'Falha ao solicitar exclusão de conta');
+      logger.error("[PrivacyService] Error scheduling account deletion", error);
+      throw new Error(error.message || "Failed to schedule account deletion");
     }
 
     return {
@@ -137,4 +138,3 @@ export class PrivacyService {
     };
   }
 }
-

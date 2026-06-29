@@ -13,7 +13,74 @@ import type {
   ProfileStatus,
   ProfileType,
 } from "../types";
-const authzDb = supabase as any;
+
+interface QueryError {
+  message?: string | null;
+}
+
+interface QueryArrayResult<TRow> {
+  data: TRow[] | null;
+  error: QueryError | null;
+}
+
+interface QuerySingleResult<TRow> {
+  data: TRow | null;
+  error: QueryError | null;
+}
+
+interface QueryBuilder<TRow> extends PromiseLike<QueryArrayResult<TRow>> {
+  select: (columns?: string) => QueryBuilder<TRow>;
+  eq: (column: string, value: unknown) => QueryBuilder<TRow>;
+  in: (column: string, values: unknown[]) => QueryBuilder<TRow>;
+  limit: (value: number) => QueryBuilder<TRow>;
+  single: () => Promise<QuerySingleResult<TRow>>;
+}
+
+interface AuthorizationDbClient {
+  from: <TRow = never>(table: string) => QueryBuilder<TRow>;
+}
+
+interface AuthorizationProfileRow {
+  id: string;
+  profile_type: ProfileType;
+  is_active: boolean;
+  is_suspended: boolean | null;
+  verified: boolean | null;
+}
+
+interface CommunitySettingsRow {
+  settings: Record<string, unknown> | null;
+}
+
+interface UserRoleRow {
+  role: string;
+}
+
+interface ProfileUserRow {
+  user_id: string;
+}
+
+interface IdRow {
+  id: string;
+}
+
+interface PostOwnershipRow {
+  author_profile_id: string | null;
+}
+
+interface CommentOwnershipRow {
+  author_profile_id: string | null;
+}
+
+interface BusinessOwnershipRow {
+  owner_profile_id: string | null;
+}
+
+interface MessageOwnershipRow {
+  sender_profile_id: string | null;
+}
+
+const authzDb = supabase as unknown as AuthorizationDbClient;
 
 export class AuthorizationEngine {
   private static permissionCache = new Map<string, boolean>();
@@ -187,7 +254,7 @@ export class AuthorizationEngine {
     verified: boolean;
   } | null> {
     const { data, error } = await authzDb
-      .from("profiles")
+      .from<AuthorizationProfileRow>("profiles")
       .select("id, profile_type, is_active, is_suspended, verified")
       .eq("id", profileId)
       .single();
@@ -292,7 +359,7 @@ export class AuthorizationEngine {
     action: string,
   ): Promise<boolean> {
     const { data } = await authzDb
-      .from("communities")
+      .from<CommunitySettingsRow>("communities")
       .select("settings")
       .eq("id", communityId)
       .single();
@@ -306,13 +373,13 @@ export class AuthorizationEngine {
 
   private static async isModerator(profileId: string): Promise<boolean> {
     const { data: profile } = await authzDb
-      .from("profiles")
+      .from<ProfileUserRow>("profiles")
       .select("user_id")
       .eq("id", profileId)
       .single();
     if (!profile) return false;
     const { data } = await authzDb
-      .from("user_roles")
+      .from<UserRoleRow>("user_roles")
       .select("role")
       .eq("user_id", profile.user_id)
       .in("role", ["admin", "moderator"])
@@ -328,7 +395,7 @@ export class AuthorizationEngine {
     communityId: string,
   ): Promise<boolean> {
     const { data } = await authzDb
-      .from("community_moderators")
+      .from<IdRow>("community_moderators")
       .select("id")
       .eq("profile_id", profileId)
       .eq("community_id", communityId)
@@ -344,7 +411,7 @@ export class AuthorizationEngine {
     postId: string,
   ): Promise<boolean> {
     const { data } = await authzDb
-      .from("posts")
+      .from<PostOwnershipRow>("posts")
       .select("author_profile_id")
       .eq("id", postId)
       .single();
@@ -356,7 +423,7 @@ export class AuthorizationEngine {
     commentId: string,
   ): Promise<boolean> {
     const { data } = await authzDb
-      .from("comments")
+      .from<CommentOwnershipRow>("comments")
       .select("author_profile_id")
       .eq("id", commentId)
       .single();
@@ -368,7 +435,7 @@ export class AuthorizationEngine {
     businessId: string,
   ): Promise<boolean> {
     const { data } = await authzDb
-      .from("businesses")
+      .from<BusinessOwnershipRow>("businesses")
       .select("owner_profile_id")
       .eq("id", businessId)
       .single();
@@ -380,7 +447,7 @@ export class AuthorizationEngine {
     messageId: string,
   ): Promise<boolean> {
     const { data } = await authzDb
-      .from("messages")
+      .from<MessageOwnershipRow>("messages")
       .select("sender_profile_id")
       .eq("id", messageId)
       .single();

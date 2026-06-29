@@ -185,7 +185,7 @@ export interface BusinessDataWithProfiles extends BusinessDataRecord {
   } | null;
 }
 
-export interface BusinessMetadata {
+export interface BusinessMetadata extends Record<string, unknown> {
   logo_url?: string;
   banner_url?: string;
   fotos?: string[];

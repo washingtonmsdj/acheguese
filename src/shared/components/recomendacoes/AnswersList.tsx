@@ -1,7 +1,7 @@
  
 import React from "react";
 import { motion } from "framer-motion";
-import { AnswerCard, type Answer } from "./AnswerCard";
+import { AnswerCard, type Answer, type MentionedBusiness } from "./AnswerCard";
 
 interface AnswersListProps {
   answers: Answer[];
@@ -10,7 +10,7 @@ interface AnswersListProps {
   onMarkBest: (answerId: string) => void;
   onReport: (answerId: string) => void;
   onNavigateToProfessional: (professionalId: string) => void;
-  onNavigateToBusiness: (business: any) => void;
+  onNavigateToBusiness: (business: MentionedBusiness) => void;
 }
 
 export function AnswersList({

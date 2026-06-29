@@ -32,7 +32,7 @@ describe('NicheVersioningService', () => {
       vi.mocked(supabase.rpc).mockResolvedValueOnce({
         data: true,
         error: null,
-      } as any);
+      } as never);
 
       const result = await NicheVersioningService.hasCapability(
         'business-123',
@@ -49,7 +49,7 @@ describe('NicheVersioningService', () => {
       vi.mocked(supabase.rpc).mockResolvedValueOnce({
         data: null,
         error: new Error('Database error'),
-      } as any);
+      } as never);
 
       const result = await NicheVersioningService.hasCapability(
         'business-123',
@@ -79,7 +79,7 @@ describe('NicheVersioningService', () => {
           })),
         })),
       }));
-      vi.mocked(supabase.from).mockImplementation(mockFrom as any);
+      vi.mocked(supabase.from).mockImplementation(mockFrom as never);
 
       const result = await NicheVersioningService.hasCapabilities(
         'business-123',
@@ -102,7 +102,7 @@ describe('NicheVersioningService', () => {
       vi.mocked(supabase.rpc).mockResolvedValueOnce({
         data: true,
         error: null,
-      } as any);
+      } as never);
 
       const result = await NicheVersioningService.addCapability({
         business_id: 'business-123',
@@ -119,7 +119,7 @@ describe('NicheVersioningService', () => {
       vi.mocked(supabase.rpc).mockResolvedValueOnce({
         data: false,
         error: null,
-      } as any);
+      } as never);
 
       const result = await NicheVersioningService.addCapability({
         business_id: 'business-123',
@@ -135,7 +135,7 @@ describe('NicheVersioningService', () => {
       vi.mocked(supabase.rpc).mockResolvedValueOnce({
         data: null,
         error: { message: 'Database error' },
-      } as any);
+      } as never);
 
       const result = await NicheVersioningService.addCapability({
         business_id: 'business-123',
@@ -153,7 +153,7 @@ describe('NicheVersioningService', () => {
       vi.mocked(supabase.rpc).mockResolvedValueOnce({
         data: 5,
         error: null,
-      } as any);
+      } as never);
 
       const result = await NicheVersioningService.markNeedsUpgrade({
         niche_key: 'pizza',
@@ -187,7 +187,7 @@ describe('NicheVersioningService', () => {
         })),
         insert: vi.fn().mockResolvedValue({ error: null }),
       }));
-      vi.mocked(supabase.from).mockImplementation(mockFrom as any);
+      vi.mocked(supabase.from).mockImplementation(mockFrom as never);
 
       const result = await NicheVersioningService.upgradeNiche({
         business_id: 'business-123',
@@ -218,7 +218,7 @@ describe('NicheVersioningService', () => {
           })),
         })),
       }));
-      vi.mocked(supabase.from).mockImplementation(mockFrom as any);
+      vi.mocked(supabase.from).mockImplementation(mockFrom as never);
 
       const result = await NicheVersioningService.upgradeNiche({
         business_id: 'business-123',
@@ -256,7 +256,7 @@ describe('NicheVersioningService', () => {
           })),
         })),
       }));
-      vi.mocked(supabase.from).mockImplementation(mockFrom as any);
+      vi.mocked(supabase.from).mockImplementation(mockFrom as never);
 
       const config = await NicheVersioningService.getProfileNicheConfig(
         'business-123',
@@ -283,7 +283,7 @@ describe('NicheVersioningService', () => {
           })),
         })),
       }));
-      vi.mocked(supabase.from).mockImplementation(mockFrom as any);
+      vi.mocked(supabase.from).mockImplementation(mockFrom as never);
 
       const config = await NicheVersioningService.getProfileNicheConfig(
         'business-123',

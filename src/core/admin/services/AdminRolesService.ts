@@ -1,10 +1,57 @@
-/**
- * AdminRolesService - SSOT para gestão de roles administrativossões
- */
-
 import { supabase } from "@/integrations/supabase";
+import type { Database, Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { buildSafeOrILikeFilter } from "@/shared/utils/sqlSanitization";
+
+type ErrorLike = { message?: string | null; code?: string | null } | null;
+
+type QueryPayload<TRow> = {
+  data: TRow[] | null;
+  error: ErrorLike;
+  count?: number | null;
+};
+
+type SingleQueryPayload<TRow> = {
+  data: TRow | null;
+  error: ErrorLike;
+  count?: number | null;
+};
+
+type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
+  select(columns?: string, options?: { count?: "exact"; head?: boolean }): TableClient<TRow>;
+  insert(values: Record<string, unknown> | readonly Record<string, unknown>[]): TableClient<TRow>;
+  update(values: Record<string, unknown>): TableClient<TRow>;
+  eq(column: string, value: unknown): TableClient<TRow>;
+  or(filters: string): TableClient<TRow>;
+  not(column: string, operator: string, value: unknown): TableClient<TRow>;
+  lte(column: string, value: unknown): TableClient<TRow>;
+  order(column: string, options?: { ascending: boolean }): TableClient<TRow>;
+  range(from: number, to: number): TableClient<TRow>;
+  maybeSingle(): Promise<SingleQueryPayload<TRow>>;
+};
+
+type AdminRolesDbClient = {
+  from<TRow = Record<string, unknown>>(table: string): TableClient<TRow>;
+};
+
+const db = supabase as unknown as AdminRolesDbClient;
+
+type AppRole = Database["public"]["Enums"]["app_role"];
+type UserRoleRow = Tables<"user_roles">;
+type UserRoleInsert = TablesInsert<"user_roles">;
+type UserRoleUpdate = TablesUpdate<"user_roles">;
+type RoleHistoryRow = Tables<"role_history">;
+type RoleHistoryInsert = TablesInsert<"role_history">;
+
+type UserSummary = {
+  id: string;
+  email: string | null;
+};
+
+type UserRoleWithRelationsRow = UserRoleRow & {
+  user?: UserSummary | readonly UserSummary[] | null;
+  granter?: UserSummary | readonly UserSummary[] | null;
+};
 
 export interface UserRole {
   id: string;
@@ -36,52 +83,106 @@ export interface RoleHistory {
   reason?: string;
 }
 
+function isUserSummaryArray(
+  value: UserRoleWithRelationsRow["user"] | UserRoleWithRelationsRow["granter"],
+): value is readonly UserSummary[] {
+  return Array.isArray(value);
+}
+
+function normalizeUserRelation(
+  value: UserRoleWithRelationsRow["user"] | UserRoleWithRelationsRow["granter"],
+): UserSummary | null {
+  if (isUserSummaryArray(value)) {
+    return value[0] ?? null;
+  }
+  return value ?? null;
+}
+
+function normalizeRoleEnum(role: string): AppRole {
+  return role as AppRole;
+}
+
+function mapUserRole(row: UserRoleRow): UserRole {
+  return {
+    id: row.id,
+    user_id: row.user_id,
+    role: row.role,
+    granted_by: row.granted_by ?? undefined,
+    granted_at: row.granted_at,
+    expires_at: row.expires_at ?? undefined,
+    is_active: row.is_active,
+  };
+}
+
+function mapRoleHistory(row: RoleHistoryRow): RoleHistory {
+  return {
+    id: row.id,
+    user_id: row.user_id,
+    role: row.role,
+    action: row.action as RoleHistory["action"],
+    granted_by: row.performed_by ?? undefined,
+    granted_at: row.performed_at,
+    revoked_at: undefined,
+    expires_at: undefined,
+    reason: row.reason ?? undefined,
+  };
+}
+
+function toUserRoleInsert(params: {
+  userId: string;
+  role: string;
+  grantedBy: string;
+  expiresAt?: string;
+  reason?: string;
+}): UserRoleInsert {
+  return {
+    user_id: params.userId,
+    role: params.role,
+    role_enum: normalizeRoleEnum(params.role),
+    granted_by: params.grantedBy,
+    granted_at: new Date().toISOString(),
+    expires_at: params.expiresAt ?? null,
+    is_active: true,
+    reason: params.reason ?? null,
+  };
+}
+
 class AdminRolesServiceClass {
-  private readonly db = supabase as any;
-  /**
-   * Lista roles ativos de um usuário.
-   */
   async getUserRoles(userId: string): Promise<UserRole[]> {
     try {
-      const { data, error } = await this.db
-        .from("user_roles")
+      const { data, error } = await db
+        .from<UserRoleRow>("user_roles")
         .select("*")
         .eq("user_id", userId)
         .eq("is_active", true);
 
       if (error) throw error;
-      return (data || []) as UserRole[];
+      return (data ?? []).map(mapUserRole);
     } catch (error) {
-      logger.error("Error fetching user roles:", error);
+      logger.error("AdminRolesService.getUserRoles", error as Error, { userId });
       return [];
     }
   }
 
-  /**
-   * Lista todos os roles.
-   */
   async getRolesList(): Promise<UserRole[]> {
     try {
-      const { data, error } = await this.db
-        .from("user_roles")
+      const { data, error } = await db
+        .from<UserRoleRow>("user_roles")
         .select("*")
         .order("granted_at", { ascending: false });
 
       if (error) throw error;
-      return (data || []) as UserRole[];
+      return (data ?? []).map(mapUserRole);
     } catch (error) {
-      logger.error("Error fetching all roles:", error);
+      logger.error("AdminRolesService.getRolesList", error as Error);
       return [];
     }
   }
 
-  /**
-   * Verifica se um usuário possui role ativo.
-   */
   async hasRole(userId: string, role: string): Promise<boolean> {
     try {
-      const { data, error } = await this.db
-        .from("user_roles")
+      const { data, error } = await db
+        .from<Pick<UserRoleRow, "id">>("user_roles")
         .select("id")
         .eq("user_id", userId)
         .eq("role", role)
@@ -89,51 +190,46 @@ class AdminRolesServiceClass {
         .maybeSingle();
 
       if (error) throw error;
-      return !!data;
+      return Boolean(data);
     } catch (error) {
-      logger.error("Error checking user role:", error);
+      logger.error("AdminRolesService.hasRole", error as Error, { userId, role });
       return false;
     }
   }
 
-  /**
-   * Busca estatísticas de roles
-   */
   async getStats(): Promise<RoleStats> {
     try {
-      const { data: roles, error } = await this.db
-        .from("user_roles")
+      const { data, error } = await db
+        .from<UserRoleRow>("user_roles")
         .select("*");
 
       if (error) throw error;
 
+      const roles = data ?? [];
       const now = new Date();
       const last7Days = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
       const stats: RoleStats = {
-        totalRoles: roles?.length || 0,
-        activeRoles: roles?.filter(r => r.is_active).length || 0,
-        expiredRoles: roles?.filter(r => r.expires_at && new Date(r.expires_at) < now).length || 0,
+        totalRoles: roles.length,
+        activeRoles: roles.filter((role) => role.is_active).length,
+        expiredRoles: roles.filter(
+          (role) => Boolean(role.expires_at && new Date(role.expires_at) < now),
+        ).length,
         byRole: {},
-        recentGrants: roles?.filter(r => new Date(r.granted_at) > last7Days).length || 0,
+        recentGrants: roles.filter((role) => new Date(role.granted_at) > last7Days).length,
       };
 
-      roles?.forEach(r => {
-        if (r.role) {
-          stats.byRole[r.role] = (stats.byRole[r.role] || 0) + 1;
-        }
-      });
+      for (const role of roles) {
+        stats.byRole[role.role] = (stats.byRole[role.role] ?? 0) + 1;
+      }
 
       return stats;
     } catch (error) {
-      logger.error("Error fetching role stats:", error);
+      logger.error("AdminRolesService.getStats", error as Error);
       throw error;
     }
   }
 
-  /**
-   * Busca todos os roles com paginação e filtros
-   */
   async getAllRoles(params: {
     page?: number;
     limit?: number;
@@ -144,9 +240,8 @@ class AdminRolesServiceClass {
     try {
       const { page = 1, limit = 20, search, role, isActive } = params;
 
-      let query = this.db
-        .from("user_roles")
-        .select(`
+      let query = db.from<UserRoleWithRelationsRow>("user_roles").select(
+        `
           *,
           user:auth.users!user_id(
             id,
@@ -156,7 +251,9 @@ class AdminRolesServiceClass {
             id,
             email
           )
-        `, { count: "exact" });
+        `,
+        { count: "exact" },
+      );
 
       if (search) {
         const searchFilter = buildSafeOrILikeFilter(["user.email"], search);
@@ -164,37 +261,40 @@ class AdminRolesServiceClass {
           query = query.or(searchFilter);
         }
       }
+
       if (role) {
         query = query.eq("role", role);
       }
+
       if (isActive !== undefined) {
         query = query.eq("is_active", isActive);
       }
 
       const from = (page - 1) * limit;
       const to = from + limit - 1;
-      query = query.range(from, to).order("granted_at", { ascending: false });
-
-      const { data, error, count } = await query;
+      const { data, error, count } = await query
+        .range(from, to)
+        .order("granted_at", { ascending: false });
 
       if (error) throw error;
 
       return {
-        data: data || [],
-        count: count || 0,
+        data: (data ?? []).map((row) => ({
+          ...mapUserRole(row),
+          user: normalizeUserRelation(row.user),
+          granter: normalizeUserRelation(row.granter),
+        })),
+        count: count ?? 0,
         page,
         limit,
-        totalPages: Math.ceil((count || 0) / limit),
+        totalPages: Math.ceil((count ?? 0) / limit),
       };
     } catch (error) {
-      logger.error("Error fetching roles:", error);
+      logger.error("AdminRolesService.getAllRoles", error as Error, params);
       throw error;
     }
   }
 
-  /**
-   * Concede role com expiração opcional
-   */
   async grantRole(params: {
     userId: string;
     role: string;
@@ -203,41 +303,28 @@ class AdminRolesServiceClass {
     reason?: string;
   }): Promise<boolean> {
     try {
-      const { userId, role, grantedBy, expiresAt, reason } = params;
-
-      const { error } = await this.db.from("user_roles").insert([
-        {
-          user_id: userId,
-          role,
-          role_enum: role,
-          granted_by: grantedBy,
-          granted_at: new Date().toISOString(),
-          expires_at: expiresAt,
-          is_active: true,
-        },
-      ] as any);
+      const payload = toUserRoleInsert(params);
+      const { error } = await db
+        .from<UserRoleRow>("user_roles")
+        .insert(payload);
 
       if (error) throw error;
 
-      // Registrar no histórico
       await this.logRoleHistory({
-        userId,
-        role,
+        userId: params.userId,
+        role: params.role,
         action: "granted",
-        grantedBy,
-        reason,
+        grantedBy: params.grantedBy,
+        reason: params.reason,
       });
 
       return true;
     } catch (error) {
-      logger.error("Error granting role:", error);
+      logger.error("AdminRolesService.grantRole", error as Error, params);
       return false;
     }
   }
 
-  /**
-   * Revoga role
-   */
   async revokeRole(params: {
     userId: string;
     role: string;
@@ -245,87 +332,83 @@ class AdminRolesServiceClass {
     reason?: string;
   }): Promise<boolean> {
     try {
-      const { userId, role, revokedBy, reason } = params;
+      const patch: Partial<UserRoleUpdate> = {
+        is_active: false,
+        revoked_at: new Date().toISOString(),
+        revoked_by: params.revokedBy,
+        updated_at: new Date().toISOString(),
+      };
 
-      const { error } = await this.db
-        .from("user_roles")
-        .update({ 
-          is_active: false,
-          revoked_at: new Date().toISOString(),
-        })
-        .eq("user_id", userId)
-        .eq("role", role);
+      const { error } = await db
+        .from<UserRoleRow>("user_roles")
+        .update(patch)
+        .eq("user_id", params.userId)
+        .eq("role", params.role);
 
       if (error) throw error;
 
-      // Registrar no histórico
       await this.logRoleHistory({
-        userId,
-        role,
+        userId: params.userId,
+        role: params.role,
         action: "revoked",
-        grantedBy: revokedBy,
-        reason,
+        grantedBy: params.revokedBy,
+        reason: params.reason,
       });
 
       return true;
     } catch (error) {
-      logger.error("Error revoking role:", error);
+      logger.error("AdminRolesService.revokeRole", error as Error, params);
       return false;
     }
   }
 
-  /**
-   * Busca histórico de roles de um usuário
-   */
   async getUserRoleHistory(userId: string): Promise<RoleHistory[]> {
     try {
-      const { data, error } = await this.db
-        .from("role_history")
+      const { data, error } = await db
+        .from<RoleHistoryRow>("role_history")
         .select("*")
         .eq("user_id", userId)
-        .order("granted_at", { ascending: false });
+        .order("performed_at", { ascending: false });
 
       if (error) throw error;
-      return (data as RoleHistory[]) || [];
+      return (data ?? []).map(mapRoleHistory);
     } catch (error) {
-      logger.error("Error fetching role history:", error);
+      logger.error("AdminRolesService.getUserRoleHistory", error as Error, { userId });
       return [];
     }
   }
 
-  /**
-   * Busca roles que estão prestes a expirar
-   */
-  async getExpiringRoles(daysAhead: number = 7) {
+  async getExpiringRoles(daysAhead = 7) {
     try {
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + daysAhead);
 
-      const { data, error } = await this.db
-        .from("user_roles")
-        .select(`
+      const { data, error } = await db.from<UserRoleWithRelationsRow>("user_roles").select(
+        `
           *,
           user:auth.users!user_id(
             id,
             email
           )
-        `)
+        `,
+      )
         .eq("is_active", true)
         .not("expires_at", "is", null)
         .lte("expires_at", futureDate.toISOString())
         .order("expires_at", { ascending: true });
 
       if (error) throw error;
-      return data || [];
+
+      return (data ?? []).map((row) => ({
+        ...mapUserRole(row),
+        user: normalizeUserRelation(row.user),
+      }));
     } catch (error) {
-      logger.error("Error fetching expiring roles:", error);
+      logger.error("AdminRolesService.getExpiringRoles", error as Error, { daysAhead });
       return [];
     }
   }
 
-  /**
-   * Renova role (estende expiração)
-   */
   async renewRole(params: {
     userId: string;
     role: string;
@@ -333,36 +416,35 @@ class AdminRolesServiceClass {
     renewedBy: string;
   }): Promise<boolean> {
     try {
-      const { userId, role, newExpiresAt, renewedBy } = params;
+      const patch: Partial<UserRoleUpdate> = {
+        expires_at: params.newExpiresAt,
+        updated_at: new Date().toISOString(),
+      };
 
-      const { error } = await this.db
-        .from("user_roles")
-        .update({ expires_at: newExpiresAt })
-        .eq("user_id", userId)
-        .eq("role", role)
+      const { error } = await db
+        .from<UserRoleRow>("user_roles")
+        .update(patch)
+        .eq("user_id", params.userId)
+        .eq("role", params.role)
         .eq("is_active", true);
 
       if (error) throw error;
 
-      // Registrar no histórico
       await this.logRoleHistory({
-        userId,
-        role,
+        userId: params.userId,
+        role: params.role,
         action: "granted",
-        grantedBy: renewedBy,
+        grantedBy: params.renewedBy,
         reason: "Role renewed",
       });
 
       return true;
     } catch (error) {
-      logger.error("Error renewing role:", error);
+      logger.error("AdminRolesService.renewRole", error as Error, params);
       return false;
     }
   }
 
-  /**
-   * Registra ação no histórico de roles
-   */
   private async logRoleHistory(params: {
     userId: string;
     role: string;
@@ -371,44 +453,47 @@ class AdminRolesServiceClass {
     reason?: string;
   }): Promise<void> {
     try {
-      const { userId, role, action, grantedBy, reason } = params;
+      const payload: RoleHistoryInsert = {
+        user_id: params.userId,
+        role: normalizeRoleEnum(params.role),
+        action: params.action,
+        performed_by: params.grantedBy ?? null,
+        performed_at: new Date().toISOString(),
+        reason: params.reason ?? null,
+      };
 
-      await this.db.from("role_history").insert([
-        {
-          user_id: userId,
-          role,
-          action,
-          granted_by: grantedBy,
-          granted_at: new Date().toISOString(),
-          reason,
-        },
-      ] as any);
+      const { error } = await db
+        .from<RoleHistoryRow>("role_history")
+        .insert(payload);
+
+      if (error) throw error;
     } catch (error) {
-      logger.error("Error logging role history:", error);
+      logger.error("AdminRolesService.logRoleHistory", error as Error, params);
     }
   }
 
-  /**
-   * Busca usuários por role
-   */
   async getUsersByRole(role: string) {
     try {
-      const { data, error } = await this.db
-        .from("user_roles")
-        .select(`
+      const { data, error } = await db.from<UserRoleWithRelationsRow>("user_roles").select(
+        `
           *,
           user:auth.users!user_id(
             id,
             email
           )
-        `)
+        `,
+      )
         .eq("role", role)
         .eq("is_active", true);
 
       if (error) throw error;
-      return data || [];
+
+      return (data ?? []).map((row) => ({
+        ...mapUserRole(row),
+        user: normalizeUserRelation(row.user),
+      }));
     } catch (error) {
-      logger.error("Error fetching users by role:", error);
+      logger.error("AdminRolesService.getUsersByRole", error as Error, { role });
       return [];
     }
   }

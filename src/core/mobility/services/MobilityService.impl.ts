@@ -9,11 +9,49 @@
  */
 
 import { supabase } from "@/integrations/supabase";
-const db = supabase as any;
 import type { Tables, TablesUpdate } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { RIDE_STATUS } from "../constants";
+
+type ErrorLike = { message?: string | null; code?: string | null } | null;
+
+type QueryPayload<TRow> = {
+  data: TRow[] | null;
+  error: ErrorLike;
+  count?: number | null;
+};
+
+type SingleQueryPayload<TRow> = {
+  data: TRow | null;
+  error: ErrorLike;
+  count?: number | null;
+};
+
+type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
+  select(columns?: string, options?: { count?: "exact"; head?: boolean }): TableClient<TRow>;
+  insert(values: Record<string, unknown> | Record<string, unknown>[]): TableClient<TRow>;
+  update(values: Record<string, unknown>): TableClient<TRow>;
+  delete(): TableClient<TRow>;
+  eq(column: string, value: unknown): TableClient<TRow>;
+  neq(column: string, value: unknown): TableClient<TRow>;
+  in(column: string, values: readonly unknown[]): TableClient<TRow>;
+  not(column: string, operator: string, value: unknown): TableClient<TRow>;
+  is(column: string, value: null): TableClient<TRow>;
+  or(filter: string): TableClient<TRow>;
+  gte(column: string, value: unknown): TableClient<TRow>;
+  order(column: string, options?: { ascending: boolean }): TableClient<TRow>;
+  limit(count: number): TableClient<TRow>;
+  maybeSingle(): Promise<SingleQueryPayload<TRow>>;
+  single(): Promise<SingleQueryPayload<TRow>>;
+  throwOnError(): Promise<void>;
+};
+
+type MobilityImplDbClient = {
+  from<TRow = Record<string, unknown>>(table: string): TableClient<TRow>;
+};
+
+const db = supabase as unknown as MobilityImplDbClient;
 
 type DriverDataRecord = Tables<"driver_data">;
 type RideRequestRecord = Tables<"ride_requests">;
@@ -40,7 +78,7 @@ export class MobilityService {
 
   static async getRideSourceIdById(rideId: string, sourceType?: string): Promise<string | null> {
     let query = db
-      .from("ride_requests")
+      .from<{ source_id: string | null }>("ride_requests")
       .select("source_id")
       .eq("id", rideId);
 
@@ -81,7 +119,7 @@ export class MobilityService {
 
   static async listMotoboyStatsRows(): Promise<Array<{ status: string; created_at: string; driver_profile_id: string | null }>> {
     const { data, error } = await db
-      .from("ride_requests")
+      .from<{ status: string; created_at: string; driver_profile_id: string | null }>("ride_requests")
       .select("id, status, created_at, driver_profile_id")
       .eq("ride_mode", "motoboy");
 
@@ -129,13 +167,13 @@ export class MobilityService {
     if (defaults?.canDoDelivery !== undefined) payload.can_do_delivery = defaults.canDoDelivery;
     if (defaults?.canDoRides !== undefined) payload.can_do_rides = defaults.canDoRides;
 
-    const { error } = await db.from("driver_data").insert(payload as any);
+    const { error } = await db.from("driver_data").insert(payload);
     if (error && error.code !== "23505") throw error;
   }
 
   static async getDriverRideSessions(driverProfileId: string, limit = 300): Promise<Array<{ started_at: string | null; completed_at: string | null }>> {
     const { data, error } = await db
-      .from("ride_requests")
+      .from<{ started_at: string | null; completed_at: string | null }>("ride_requests")
       .select("started_at, completed_at")
       .eq("driver_profile_id", driverProfileId)
       .not("started_at", "is", null)
@@ -376,7 +414,7 @@ export class MobilityService {
   static async getDriverProfiles(): Promise<{ data: unknown[]; error: unknown }> {
     try {
       const { data, error } = await db
-        .from("driver_complete_profile")
+        .from<DriverCompleteProfileRecord>("driver_complete_profile")
         .select("*")
         .order("created_at", { ascending: false });
       return { data: data || [], error };
@@ -390,7 +428,7 @@ export class MobilityService {
     if (!profileIds.length) return [];
 
     const { data, error } = await db
-      .from("driver_data")
+      .from<{ profile_id: string; rating: number | null; can_do_delivery: boolean | null }>("driver_data")
       .select("profile_id, rating, can_do_delivery")
       .in("profile_id", profileIds);
 
@@ -402,7 +440,7 @@ export class MobilityService {
     try {
       const { minRides = 1, limit = 10 } = opts;
       const { data, error } = await db
-        .from("driver_complete_profile")
+        .from<DriverCompleteProfileRecord>("driver_complete_profile")
         .select("profile_id, display_name, avg_rating, total_rides, avatar_url")
         .gte("total_rides", minRides)
         .order("avg_rating", { ascending: false })
@@ -444,7 +482,7 @@ export class MobilityService {
   static async getDriverEarnings(driverProfileId: string): Promise<unknown[]> {
     try {
       const { data, error } = await db
-        .from("ride_requests")
+        .from<Pick<RideRequestRecord, "final_price" | "completed_at" | "updated_at">>("ride_requests")
         .select("final_price, completed_at, updated_at")
         .eq("driver_profile_id", driverProfileId)
         .eq("status", RIDE_STATUS.COMPLETED)
@@ -494,7 +532,13 @@ export class MobilityService {
   } | null> {
     try {
       const { data, error } = await db
-        .from("driver_complete_profile")
+        .from<{
+          display_name: string;
+          vehicle_model: string;
+          vehicle_color: string;
+          vehicle_plate: string;
+          avg_rating: number;
+        }>("driver_complete_profile")
         .select("display_name, vehicle_model, vehicle_color, vehicle_plate, avg_rating")
         .eq("profile_id", profileId)
         .single();
@@ -514,7 +558,7 @@ export class MobilityService {
   static async getPassengerRating(profileId: string): Promise<number> {
     try {
       const { data, error } = await db
-        .from("ride_ratings")
+        .from<{ rating?: unknown }>("ride_ratings")
         .select("rating")
         .eq("rated_id", profileId);
 
@@ -621,7 +665,7 @@ export class MobilityService {
   static async getLastMessage(conversationId: string): Promise<Pick<MobilityMessageRecord, "message"> | null> {
     try {
       const { data, error } = await db
-        .from("mobility_messages")
+        .from<Pick<MobilityMessageRecord, "message">>("mobility_messages")
         .select("message")
         .eq("conversation_id", conversationId)
         .order("created_at", { ascending: false })

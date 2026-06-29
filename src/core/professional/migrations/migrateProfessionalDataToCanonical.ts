@@ -39,6 +39,13 @@ interface ImportedProfessional {
   };
 }
 
+type LocationNameRow = {
+  id: string;
+  name: string;
+  slug: string;
+  parent_id?: string | null;
+};
+
 export interface MigrationResult {
   total: number;
   location_id_already_valid: number;
@@ -231,7 +238,10 @@ async function migrateProfessional(
   }
 
   // 3. Atualizar professional_data
-  const updateData: any = {
+  const updateData: {
+    location_id: string;
+    address_id?: string;
+  } = {
     location_id: resolvedLocationId,
   };
 
@@ -260,7 +270,7 @@ async function resolveCityByName(cityName: string): Promise<string | null> {
 
   if (error || !cities) return null;
 
-  const matches = cities.filter((city: any) =>
+  const matches = cities.filter((city: LocationNameRow) =>
     normalizeText(city.name) === normalized ||
     normalizeText(city.slug) === normalized
   );
@@ -294,7 +304,7 @@ async function resolveDistrictByName(districtName: string, cityId: string): Prom
 
   if (error || !districts) return null;
 
-  const matches = districts.filter((district: any) =>
+  const matches = districts.filter((district: LocationNameRow) =>
     normalizeText(district.name) === normalized ||
     normalizeText(district.slug) === normalized
   );

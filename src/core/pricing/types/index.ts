@@ -246,21 +246,21 @@ export class PricingError extends Error {
   constructor(
     public type: PricingErrorType,
     message: string,
-    public details?: any
+    public details?: unknown
   ) {
     super(message);
     this.name = 'PricingError';
   }
 
-  static conflict(message: string, details?: any): PricingError {
+  static conflict(message: string, details?: unknown): PricingError {
     return new PricingError(PricingErrorType.CONFLICT, message, details);
   }
 
-  static notFound(message: string, details?: any): PricingError {
+  static notFound(message: string, details?: unknown): PricingError {
     return new PricingError(PricingErrorType.NOT_FOUND, message, details);
   }
 
-  static validation(message: string, details?: any): PricingError {
+  static validation(message: string, details?: unknown): PricingError {
     return new PricingError(PricingErrorType.VALIDATION, message, details);
   }
 

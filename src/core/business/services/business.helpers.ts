@@ -9,6 +9,16 @@
 
 import type { BusinessDataRecord, BusinessDataWithProfiles } from "../types";
 
+type BusinessCoordinatesSource = BusinessDataRecord & {
+  address?: { latitude?: number | null; longitude?: number | null } | null;
+  location?: { canonical_lat?: number | null; canonical_lng?: number | null } | null;
+  metadata?: Record<string, unknown> | null;
+};
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
 /**
  * Verificar se empresa está migrada para modelo canônico
  * Canônico = tem location_id (não null e não undefined)
@@ -64,17 +74,12 @@ export function getFormattedAddress(
  * Retorna null se não houver coordenadas canônicas
  */
 export function getCoordinates(
-  business: BusinessDataRecord | {
-    address?: { latitude?: number | null; longitude?: number | null } | null;
-    location?: { canonical_lat?: number | null; canonical_lng?: number | null } | null;
-    metadata?: Record<string, unknown> | null;
-  },
+  business: BusinessCoordinatesSource,
 ): { latitude: number; longitude: number } | null {
-  const businessRecord = business as any;
   const isFiniteNumber = (value: unknown): value is number =>
     typeof value === "number" && Number.isFinite(value);
 
-  const addressCoords = businessRecord.address;
+  const addressCoords = business.address;
   if (
     addressCoords &&
     isFiniteNumber(addressCoords.latitude) &&
@@ -86,7 +91,7 @@ export function getCoordinates(
     };
   }
 
-  const canonicalCoords = businessRecord.location;
+  const canonicalCoords = business.location;
   if (
     canonicalCoords &&
     isFiniteNumber(canonicalCoords.canonical_lat) &&
@@ -98,17 +103,11 @@ export function getCoordinates(
     };
   }
 
-  const metadata = businessRecord.metadata;
-  if (metadata && typeof metadata === "object") {
-    const latitude =
-      metadata.latitude ??
-      metadata.lat ??
-      metadata.canonical_lat;
+  const metadata = business.metadata;
+  if (isRecord(metadata)) {
+    const latitude = metadata.latitude ?? metadata.lat ?? metadata.canonical_lat;
     const longitude =
-      metadata.longitude ??
-      metadata.lng ??
-      metadata.lon ??
-      metadata.canonical_lng;
+      metadata.longitude ?? metadata.lng ?? metadata.lon ?? metadata.canonical_lng;
 
     if (isFiniteNumber(latitude) && isFiniteNumber(longitude)) {
       return {

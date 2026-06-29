@@ -12,13 +12,52 @@ import { profileService } from "@/core/profiles/services/ProfileService";
 import { RIDE_STATUS } from "../constants";
 import { DriverAvailabilityService } from "@/core/mobility/services/DriverAvailabilityService";
 
+type ErrorLike = { message?: string | null; code?: string | null } | null;
+
+type QueryPayload<TRow> = {
+  data: TRow[] | null;
+  error: ErrorLike;
+  count?: number | null;
+};
+
+type SingleQueryPayload<TRow> = {
+  data: TRow | null;
+  error: ErrorLike;
+  count?: number | null;
+};
+
+type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
+  select(columns?: string, options?: { count?: "exact"; head?: boolean }): TableClient<TRow>;
+  insert(values: Record<string, unknown> | Record<string, unknown>[]): TableClient<TRow>;
+  update(values: Record<string, unknown>): TableClient<TRow>;
+  delete(): TableClient<TRow>;
+  eq(column: string, value: unknown): TableClient<TRow>;
+  in(column: string, values: readonly unknown[]): TableClient<TRow>;
+  order(column: string, options?: { ascending: boolean }): TableClient<TRow>;
+  limit(count: number): TableClient<TRow>;
+  range(from: number, to: number): TableClient<TRow>;
+  maybeSingle(): Promise<SingleQueryPayload<TRow>>;
+  single(): Promise<SingleQueryPayload<TRow>>;
+  throwOnError(): Promise<void>;
+};
+
+type MobilityMutationsDbClient = {
+  from<TRow = Record<string, unknown>>(table: string): TableClient<TRow>;
+  rpc<T>(fn: string, params?: Record<string, unknown>): Promise<{
+    data: T | null;
+    error: ErrorLike;
+  }>;
+};
+
+const mobilityDb = supabase as unknown as MobilityMutationsDbClient;
+
 
 /**
  * Criar nova corrida
  */
 export async function createRide(data: Record<string, unknown>): Promise<unknown> {
-  const { data: ride, error } = await (supabase as any)
-    .from("ride_requests" as any)
+  const { data: ride, error } = await mobilityDb
+    .from("ride_requests")
     .insert(data)
     .select()
     .single();
@@ -31,8 +70,8 @@ export async function createRide(data: Record<string, unknown>): Promise<unknown
  * Atualizar corrida
  */
 export async function updateRide(rideId: string, updates: Record<string, unknown>): Promise<unknown> {
-  const { data, error } = await (supabase as any)
-    .from("ride_requests" as any)
+  const { data, error } = await mobilityDb
+    .from("ride_requests")
     .update(updates)
     .eq("id", rideId)
     .select()
@@ -53,8 +92,8 @@ export async function updateRideWithGuards(
     driverProfileIdEq?: string;
   } = {},
 ): Promise<boolean> {
-  let query = supabase
-    .from("ride_requests" as any)
+  let query = mobilityDb
+    .from("ride_requests")
     .update(updates)
     .eq("id", rideId);
 
@@ -79,8 +118,8 @@ export async function updateRideIfStatusIn(
   updates: Record<string, unknown>,
   allowedStatuses: string[],
 ): Promise<boolean> {
-  const { data, error } = await (supabase as any)
-    .from("ride_requests" as any)
+  const { data, error } = await mobilityDb
+    .from("ride_requests")
     .update(updates)
     .eq("id", rideId)
     .in("status", allowedStatuses)
@@ -154,7 +193,7 @@ export async function createEmergencyAlert(
   userId: string,
   location: { lat: number; lng: number },
 ): Promise<void> {
-  await (supabase as any)
+  await mobilityDb
     .from("emergency_alerts")
     .insert({ ride_id: rideId, user_id: userId, location })
     .throwOnError();
@@ -165,7 +204,7 @@ export async function createEmergencyAlert(
  */
 export async function incrementRideViewCount(rideId: string): Promise<void> {
   try {
-    await (supabase as any).rpc("increment_ride_view_count" as any, { ride_id: rideId });
+    await mobilityDb.rpc("increment_ride_view_count", { ride_id: rideId });
   } catch (error) {
     logger.warn("MobilityMutations.incrementRideViewCount", error);
   }
@@ -175,7 +214,7 @@ export async function incrementRideViewCount(rideId: string): Promise<void> {
  * Decrementar assentos disponíveis
  */
 export async function decrementRideSeats(rideId: string): Promise<void> {
-  const { error } = await (supabase as any).rpc("decrement_ride_seats" as any, { ride_id: rideId });
+  const { error } = await mobilityDb.rpc("decrement_ride_seats", { ride_id: rideId });
   if (error) {
     logger.error("MobilityMutations.decrementRideSeats", error);
     throw error;
@@ -187,8 +226,8 @@ export async function decrementRideSeats(rideId: string): Promise<void> {
  */
 export async function deleteDriverNeighborhood(id: string): Promise<{ success: boolean; error?: unknown }> {
   try {
-    const { error } = await (supabase as any)
-      .from("driver_accepted_neighborhoods" as any)
+    const { error } = await mobilityDb
+      .from("driver_accepted_neighborhoods")
       .delete()
       .eq("id", id);
 
@@ -212,7 +251,7 @@ export async function deleteDriverServiceArea(
   id: string,
 ): Promise<{ success: boolean; error?: unknown }> {
   try {
-    const { error } = await (supabase as any).from(table).delete().eq("id", id);
+    const { error } = await mobilityDb.from(table).delete().eq("id", id);
 
     if (error) {
       logger.error("MobilityMutations.deleteDriverServiceArea", { table, id, error });
@@ -234,7 +273,7 @@ export async function createAdminDriverProfile(userId: string): Promise<unknown 
     const driverProfile = await profileService.ensureDriverProfileForUser(userId);
     if (!driverProfile?.id) return null;
 
-    const { data: existing } = await (supabase as any)
+    const { data: existing } = await mobilityDb
       .from("driver_data")
       .select("*")
       .eq("profile_id", driverProfile.id)
@@ -242,7 +281,7 @@ export async function createAdminDriverProfile(userId: string): Promise<unknown 
 
     if (existing) return existing;
 
-    const { data: driverData, error: driverError } = await (supabase as any)
+    const { data: driverData, error: driverError } = await mobilityDb
       .from("driver_data")
       .insert({
         profile_id: driverProfile.id,
@@ -301,7 +340,7 @@ export async function updateDriverData(
       driverProfileId = driverProfile.id;
     }
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await mobilityDb
       .from("driver_data")
       .update(updates)
       .eq("profile_id", driverProfileId)

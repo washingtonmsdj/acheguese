@@ -14,7 +14,7 @@ interface ValidationResult {
   check: string;
   status: 'pass' | 'fail' | 'warning';
   message: string;
-  details?: any;
+  details?: unknown;
 }
 
 async function validateDispatchSystem(): Promise<ValidationResult[]> {

@@ -1,59 +1,57 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { formatDistanceToNow } from "date-fns";
+import {
+  Clock,
+  Flag,
+  MapPin,
+  MessageCircle,
+  MoreVertical,
+  Send,
+  Shield,
+  X,
+} from "lucide-react";
 
-import { useState, useEffect, useRef } from "react";
+import { ptBR } from "@/shared/utils/dateLocale";
+import { logger } from "@/shared/utils/logger";
+import { useSessionContext } from "@/core/session";
+import { GeolocationService } from "@/core/maps/services/GeolocationService";
+import type { Message as DirectThreadMessage } from "@/core/messaging/types";
+import type { DirectMessageRecipientView } from "@/core/profiles/views/DirectMessageRecipientView";
+import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { Badge } from "@/shared/components/ui/badge";
+import { Button } from "@/shared/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/shared/components/ui/dialog";
-import { Button } from "@/shared/components/ui/button";
-import { Input } from "@/shared/components/ui/input";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/shared/components/ui/avatar";
-import { Badge } from "@/shared/components/ui/badge";
-import {
-  Send,
-  MapPin,
-  MoreVertical,
-  Flag,
-  X,
-  Shield,
-  Clock,
-  MessageCircle,
-} from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "@/shared/utils/dateLocale";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/shared/components/ui/dropdown-menu";
-import { logger } from "@/shared/utils/logger";
-import { useSessionContext } from "@/core/session";
-import { GeolocationService } from "@/core/maps/services/GeolocationService";
-import type { DirectMessageRecipientView } from "@/core/profiles/views/DirectMessageRecipientView";
+import { Input } from "@/shared/components/ui/input";
+
+type PostContextType =
+  | "civic_report"
+  | "discussao"
+  | "alerta"
+  | "recomendacao"
+  | "enquete"
+  | "pergunta"
+  | "achados"
+  | "favor"
+  | "evento"
+  | "desapego";
 
 interface PostContext {
   id: string;
   title: string;
   imageUrl?: string;
-  type:
-    | "civic_report"
-    | "discussao"
-    | "alerta"
-    | "recomendacao"
-    | "enquete"
-    | "pergunta"
-    | "achados"
-    | "favor"
-    | "evento"
-    | "desapego";
+  type: PostContextType;
 }
 
 interface DirectMessage {
@@ -61,7 +59,7 @@ interface DirectMessage {
   sender_profile_id: string;
   message_text: string;
   message_type: "text" | "location";
-  location_date?: {
+  location_data?: {
     latitude: number;
     longitude: number;
     address?: string;
@@ -76,63 +74,122 @@ interface DirectMessageModalProps {
   postContext: PostContext;
   recipientProfile: DirectMessageRecipientView;
   currentUserId: string;
+  initialMessages?: DirectThreadMessage[];
   onSendMessage?: (
     message: string,
     type?: "text" | "location",
   ) => Promise<void> | void;
   onReportConversation?: () => void;
 }
+
+function getInitials(name: string): string {
+  return name
+    .split(" ")
+    .map((part) => part[0] ?? "")
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+}
+
+function formatMessageTime(dateString: string): string {
+  return formatDistanceToNow(new Date(dateString), {
+    addSuffix: true,
+    locale: ptBR,
+  });
+}
+
+function getPostBadgeLabel(type: PostContextType): string {
+  switch (type) {
+    case "civic_report":
+      return "Zeladoria";
+    case "desapego":
+      return "Classificado";
+    case "recomendacao":
+      return "Recomendacao";
+    case "alerta":
+      return "Alerta";
+    default:
+      return "Comunidade";
+  }
+}
+
 export function DirectMessageModal({
   isOpen,
   onClose,
   postContext,
   recipientProfile,
-  currentUserId: _currentUserId,
+  currentUserId: fallbackCurrentUserId,
+  initialMessages = [],
   onSendMessage,
   onReportConversation,
 }: DirectMessageModalProps) {
   const { activeProfile } = useSessionContext();
-  const currentProfileId = activeProfile?.id || _currentUserId || "";
+  const currentProfileId = activeProfile?.id || fallbackCurrentUserId || "";
   const [messages, setMessages] = useState<DirectMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  useEffect(() => {
+    const mappedMessages: DirectMessage[] = initialMessages.map((message) => {
+      const isMine = message.sender_profile_id === currentProfileId;
+      return {
+        id: message.id,
+        sender_profile_id: message.sender_profile_id,
+        message_text: message.text,
+        message_type: "text",
+        created_at: message.created_at,
+        sender_profile: isMine
+          ? {
+              id: currentProfileId,
+              displayName:
+                activeProfile?.displayName ?? activeProfile?.name ?? "Voce",
+              avatarUrl: activeProfile?.avatarUrl ?? null,
+              verified: false,
+            }
+          : recipientProfile,
+      };
+    });
+    setMessages(mappedMessages);
+  }, [
+    activeProfile?.avatarUrl,
+    activeProfile?.displayName,
+    activeProfile?.name,
+    currentProfileId,
+    initialMessages,
+    recipientProfile,
+  ]);
 
   useEffect(() => {
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || isLoading) return;
 
+    const messageText = newMessage.trim();
     setIsLoading(true);
     try {
-      // Adicionar mensagem localmente para feedback imediato
       const tempMessage: DirectMessage = {
         id: `temp-${Date.now()}`,
         sender_profile_id: currentProfileId,
-        message_text: newMessage,
+        message_text: messageText,
         message_type: "text",
         created_at: new Date().toISOString(),
         sender_profile: {
           id: currentProfileId,
-          displayName: "Você",
-          avatarUrl: null,
+          displayName:
+            activeProfile?.displayName ?? activeProfile?.name ?? "Voce",
+          avatarUrl: activeProfile?.avatarUrl ?? null,
           verified: false,
         },
       };
 
       setMessages((prev) => [...prev, tempMessage]);
       setNewMessage("");
-
-      // Chamar callback para send mensagem real
-      await onSendMessage?.(newMessage, "text");
+      await onSendMessage?.(messageText, "text");
     } catch (error) {
-      logger.error("Error send mensagem:", error);
+      logger.error("Erro ao enviar mensagem:", error);
     } finally {
       setIsLoading(false);
     }
@@ -141,61 +198,53 @@ export function DirectMessageModal({
   const handleShareLocation = async () => {
     setIsLoading(true);
     try {
-      const result = await GeolocationService.getCurrentLocation({ useCache: true });
+      const result = await GeolocationService.getCurrentLocation({
+        useCache: true,
+      });
       const locationData = {
         latitude: result.coords.latitude,
         longitude: result.coords.longitude,
-        address: "Localização compartilhada",
+        address: "Localizacao compartilhada",
       };
 
       const tempMessage: DirectMessage = {
         id: `temp-location-${Date.now()}`,
         sender_profile_id: currentProfileId,
-        message_text: "Compartilhou localização",
+        message_text: "Compartilhou localizacao",
         message_type: "location",
-        location_date: locationData,
+        location_data: locationData,
         created_at: new Date().toISOString(),
-        sender_profile: { id: currentProfileId, displayName: "Você", avatarUrl: null, verified: false },
+        sender_profile: {
+          id: currentProfileId,
+          displayName:
+            activeProfile?.displayName ?? activeProfile?.name ?? "Voce",
+          avatarUrl: activeProfile?.avatarUrl ?? null,
+          verified: false,
+        },
       };
 
       setMessages((prev) => [...prev, tempMessage]);
-      await onSendMessage?.("Localização compartilhada", "location");
+      await onSendMessage?.("Localizacao compartilhada", "location");
     } catch (error) {
-      logger.error("Erro ao compartilhar localização:", error);
+      logger.error("Erro ao compartilhar localizacao:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
-  const formatMessageTime = (dateString: string) => {
-    return formatDistanceToNow(new Date(dateString), {
-      addSuffix: true,
-      locale: ptBR,
-    });
-  };
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
-        className="max-w-md max-h-[90vh] p-0 bg-gray-900 border-gray-800 flex flex-col"
+        className="flex max-h-[90vh] max-w-md flex-col border-gray-800 bg-gray-900 p-0"
         aria-describedby="dialog-description"
       >
-        {/* Header Fixo com Contexto do Post */}
-        <DialogHeader className="flex-shrink-0 bg-gray-900 border-b border-gray-800 p-4">
+        <DialogHeader className="shrink-0 border-b border-gray-800 bg-gray-900 p-4">
           <div className="flex items-center justify-between">
             <DialogTitle className="text-lg font-semibold text-white">
-              Mensagem Direta
+              Mensagem direta
             </DialogTitle>
             <span id="dialog-description" className="sr-only">
-              Conteúdo do diálogo
+              Conteudo do dialogo
             </span>
 
             <div className="flex items-center gap-2">
@@ -205,20 +254,21 @@ export function DirectMessageModal({
                     variant="ghost"
                     size="sm"
                     className="h-8 w-8 p-0 text-gray-400"
+                    type="button"
                   >
-                    <MoreVertical className="w-4 h-4" />
+                    <MoreVertical className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
                   align="end"
-                  className="bg-gray-800 border-gray-700"
+                  className="border-gray-700 bg-gray-800"
                 >
                   <DropdownMenuItem
                     onClick={onReportConversation}
-                    className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                    className="text-red-400 hover:bg-red-500/10 hover:text-red-300"
                   >
-                    <Flag className="w-4 h-4 mr-2" />
-                    Denunciar Conversa
+                    <Flag className="mr-2 h-4 w-4" />
+                    Denunciar conversa
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -228,41 +278,40 @@ export function DirectMessageModal({
                 size="sm"
                 onClick={onClose}
                 className="h-8 w-8 p-0 text-gray-400"
+                type="button"
               >
-                <X className="w-4 h-4" />
+                <X className="h-4 w-4" />
               </Button>
             </div>
           </div>
 
-          {/* Contexto do Post - Compacto */}
-          <div className="flex items-center gap-3 mt-3 p-2 bg-gray-800/50 rounded-lg">
-            {postContext.imageUrl && (
-              <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-700 flex-shrink-0">
+          <div className="mt-3 flex items-center gap-3 rounded-lg bg-gray-800/50 p-2">
+            {postContext.imageUrl ? (
+              <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-gray-700">
                 <img
                   src={postContext.imageUrl}
-                  alt="Post"
-                  className="w-full h-full object-cover"
+                  alt="Contexto da conversa"
+                  className="h-full w-full object-cover"
                 />
               </div>
-            )}
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-white truncate">
+            ) : null}
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs font-medium text-white">
                 {postContext.title}
               </p>
               <Badge
                 variant="secondary"
-                className="text-[6px] mt-0.5 bg-red-500/30 text-red-300 border-0 px-0.5 py-0"
+                className="mt-1 border-0 bg-red-500/30 px-1.5 py-0 text-[10px] text-red-300"
               >
-                Teste
+                {getPostBadgeLabel(postContext.type)}
               </Badge>
             </div>
           </div>
 
-          {/* Info do Destinatário - Compacto */}
-          <div className="flex items-center gap-2 mt-2">
+          <div className="mt-2 flex items-center gap-2">
             <Avatar className="h-7 w-7 border border-gray-700">
               <AvatarImage src={recipientProfile.avatarUrl ?? undefined} />
-              <AvatarFallback className="bg-orange-500 text-white text-xs">
+              <AvatarFallback className="bg-orange-500 text-xs text-white">
                 {getInitials(recipientProfile.displayName)}
               </AvatarFallback>
             </Avatar>
@@ -270,115 +319,119 @@ export function DirectMessageModal({
               <span className="text-sm font-medium text-white">
                 {recipientProfile.displayName}
               </span>
-              {recipientProfile.verified && (
-                <Shield className="w-3 h-3 text-blue-400" />
-              )}
+              {recipientProfile.verified ? (
+                <Shield className="h-3 w-3 text-blue-400" />
+              ) : null}
             </div>
           </div>
         </DialogHeader>
+
         <DialogDescription className="sr-only">
-          Envie uma mensagem direta para este usuário
+          Envie uma mensagem direta para este usuario
         </DialogDescription>
 
-        {/* Área de Mensagens - Flexível */}
-        <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-3">
+        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
           {messages.length === 0 ? (
-            <div className="text-center text-gray-400 py-8">
-              <MessageCircle className="w-10 h-10 mx-auto mb-2 opacity-50" />
-              <p className="text-xs">Inicie uma conversa sobre este post</p>
+            <div className="py-8 text-center text-gray-400">
+              <MessageCircle className="mx-auto mb-2 h-10 w-10 opacity-50" />
+              <p className="text-xs">Inicie uma conversa sobre este anuncio</p>
             </div>
           ) : (
-            messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${message.sender_profile_id === currentProfileId ? "justify-end" : "justify-start"}`}
-              >
-                <div
-                  className={`flex items-start gap-2 max-w-[85%] ${
-                    message.sender_profile_id === currentProfileId
-                      ? "flex-row-reverse"
-                      : "flex-row"
-                  }`}
-                >
-                  <Avatar className="h-5 w-5 border border-gray-700 flex-shrink-0">
-                    <AvatarImage src={message.sender_profile?.avatarUrl ?? undefined} />
-                    <AvatarFallback className="bg-gray-600 text-white text-[10px]">
-                      {getInitials(message.sender_profile?.displayName || "U")}
-                    </AvatarFallback>
-                  </Avatar>
+            messages.map((message) => {
+              const isMine = message.sender_profile_id === currentProfileId;
 
+              return (
+                <div
+                  key={message.id}
+                  className={`flex ${isMine ? "justify-end" : "justify-start"}`}
+                >
                   <div
-                    className={`rounded-2xl px-3 py-2 ${
-                      message.sender_profile_id === currentProfileId
-                        ? "bg-orange-500 text-white"
-                        : "bg-gray-800 text-gray-100"
+                    className={`flex max-w-[85%] items-start gap-2 ${
+                      isMine ? "flex-row-reverse" : "flex-row"
                     }`}
                   >
-                    {message.message_type === "location" ? (
-                      <div className="flex items-center gap-2">
-                        <MapPin className="w-3 h-3" />
-                        <span className="text-xs">
-                          Localização compartilhada
-                        </span>
-                      </div>
-                    ) : (
-                      <p className="text-sm leading-relaxed">
-                        {message.message_text}
-                      </p>
-                    )}
+                    <Avatar className="h-5 w-5 shrink-0 border border-gray-700">
+                      <AvatarImage
+                        src={message.sender_profile?.avatarUrl ?? undefined}
+                      />
+                      <AvatarFallback className="bg-gray-600 text-[10px] text-white">
+                        {getInitials(message.sender_profile?.displayName || "U")}
+                      </AvatarFallback>
+                    </Avatar>
 
                     <div
-                      className={`flex items-center gap-1 mt-1 text-[10px] ${
-                        message.sender_profile_id === currentProfileId
-                          ? "text-orange-100"
-                          : "text-gray-400"
+                      className={`rounded-2xl px-3 py-2 ${
+                        isMine
+                          ? "bg-orange-500 text-white"
+                          : "bg-gray-800 text-gray-100"
                       }`}
                     >
-                      <Clock className="w-2.5 h-2.5" />
-                      <span>{formatMessageTime(message.created_at)}</span>
+                      {message.message_type === "location" ? (
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-3 w-3" />
+                          <span className="text-xs">
+                            {message.location_data?.address ||
+                              "Localizacao compartilhada"}
+                          </span>
+                        </div>
+                      ) : (
+                        <p className="text-sm leading-relaxed">
+                          {message.message_text}
+                        </p>
+                      )}
+
+                      <div
+                        className={`mt-1 flex items-center gap-1 text-[10px] ${
+                          isMine ? "text-orange-100" : "text-gray-400"
+                        }`}
+                      >
+                        <Clock className="h-2.5 w-2.5" />
+                        <span>{formatMessageTime(message.created_at)}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input de Mensagem - Fixo */}
-        <div className="flex-shrink-0 border-t border-gray-800 p-3">
+        <div className="shrink-0 border-t border-gray-800 p-3">
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="sm"
               onClick={handleShareLocation}
               disabled={isLoading}
-              className="h-9 w-9 p-0 text-gray-400 hover:text-blue-400 hover:bg-blue-500/10 flex-shrink-0"
+              className="h-9 w-9 shrink-0 p-0 text-gray-400 hover:bg-blue-500/10 hover:text-blue-400"
+              type="button"
             >
-              <MapPin className="w-4 h-4" />
+              <MapPin className="h-4 w-4" />
             </Button>
 
-            <div className="flex-1 flex items-center gap-2">
+            <div className="flex flex-1 items-center gap-2">
               <Input
                 value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
+                onChange={(event) => setNewMessage(event.target.value)}
                 placeholder="Digite sua mensagem..."
-                className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 h-9"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendMessage();
+                className="h-9 border-gray-700 bg-gray-800 text-white placeholder-gray-400"
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && !event.shiftKey) {
+                    event.preventDefault();
+                    void handleSendMessage();
                   }
                 }}
                 disabled={isLoading}
               />
 
               <Button
-                onClick={handleSendMessage}
+                onClick={() => void handleSendMessage()}
                 disabled={!newMessage.trim() || isLoading}
-                className="h-9 w-9 p-0 bg-orange-500 hover:bg-orange-600 text-white flex-shrink-0"
+                className="h-9 w-9 shrink-0 bg-orange-500 p-0 text-white hover:bg-orange-600"
+                type="button"
               >
-                <Send className="w-4 h-4" />
+                <Send className="h-4 w-4" />
               </Button>
             </div>
           </div>

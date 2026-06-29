@@ -1,15 +1,24 @@
 import { Bookmark } from "lucide-react";
 import { PostCard, PostCardSkeleton } from "@/core/posts/components";
+import type { CommunityPost } from "@/core/posts/types";
 import { usePostActions } from "@/core/posts/hooks";
 import { InfiniteScrollTrigger } from "@/shared/components/ui";
 import { EmptyStateProfile } from "./EmptyStateProfile";
 import { useSavedPosts } from "../hooks/useSavedPosts";
+import type { ProfileFeedPost } from "../types/profileFeed";
 
 interface SavedPostsGridProps {
   userId: string;
   currentProfileId?: string;
   onPostClick?: (postId: string) => void;
   onCommentClick?: (postId: string) => void;
+}
+
+function toCommunityPost(post: ProfileFeedPost): CommunityPost {
+  return {
+    ...post,
+    type: post.type === "achados_e_perdidos" ? "achado_perdido" : post.type,
+  };
 }
 
 export function SavedPostsGrid({
@@ -40,7 +49,7 @@ export function SavedPostsGrid({
 
   if (isError) {
     return (
-      <div className="text-center py-12">
+      <div className="py-12 text-center">
         <p className="text-red-500">Erro ao carregar posts salvos.</p>
       </div>
     );
@@ -51,7 +60,7 @@ export function SavedPostsGrid({
       <EmptyStateProfile
         icon={Bookmark}
         title="Nenhum post salvo"
-        description="Você ainda não salvou posts para consultar depois."
+        description="Voce ainda nao salvou posts para consultar depois."
       />
     );
   }
@@ -61,7 +70,7 @@ export function SavedPostsGrid({
       {posts.map((post) => (
         <PostCard
           key={post.id}
-          post={post as any}
+          post={toCommunityPost(post)}
           currentUserId={currentProfileId}
           onLike={likePost}
           onComment={onCommentClick ?? (() => undefined)}

@@ -7,7 +7,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
-import { LocationStatus, type Location } from '@/core/location/types';
+import { LocationStatus, LocationType, type Location } from '@/core/location/types';
 
 const repo = createLocationRepository();
 
@@ -30,7 +30,7 @@ export function useDistricts(cityId: string | undefined) {
     queryFn: async () => {
       if (!cityId) return [];
       const result = await repo.findChildren(cityId, {
-        type: 'district' as any,
+        type: LocationType.DISTRICT,
         status: LocationStatus.ACTIVE,
         page: 1,
         page_size: 500,

@@ -13,6 +13,7 @@
 import { logger } from '@/shared/utils/logger';
 import { createRoutingService } from './services/RoutingService';
 import { osrmProvider } from '@/integrations/maps/providers/OSRMProvider';
+import type { RoutingProvider } from './types';
 
 /**
  * Instância singleton do RoutingService
@@ -54,7 +55,7 @@ osrmProvider.validate().then((isValid) => {
  * reconfigureRoutingProvider(osrmProvider);
  * ```
  */
-export function reconfigureRoutingProvider(provider: any): void {
+export function reconfigureRoutingProvider(provider: RoutingProvider): void {
   // @ts-expect-error - Reconfiguração interna
   routingService.provider = provider;
 }

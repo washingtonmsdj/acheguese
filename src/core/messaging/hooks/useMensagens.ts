@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { messagingService } from "@/core/messaging/services/MessagingService";
 import { useAuth } from "@/core/auth";
+import type { ConversationPreview } from "@/core/messaging/types";
 
 export function useMensagens() {
   const { user, loading: authLoading } = useAuth();
@@ -17,8 +18,8 @@ export function useMensagens() {
     enabled: !!user,
   });
 
-  const totalUnreadCount = conversations.reduce(
-    (acc: number, c: any) => acc + (c.unread_count || 0),
+  const totalUnreadCount = (conversations as ConversationPreview[]).reduce(
+    (acc, conversation) => acc + (conversation.unread_count || 0),
     0,
   );
   const hasUnreadMessages = totalUnreadCount > 0;

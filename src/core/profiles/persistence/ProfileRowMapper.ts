@@ -48,6 +48,24 @@
 import type { Profile } from '../domain/Profile';
 import type { ProfileRow, ProfileInsert } from './ProfileRow';
 import type { ProfileType } from '../domain/ProfileType';
+import type { Json } from '@/integrations/supabase';
+
+type ProfileRowExtras = ProfileRow & {
+  cover_url?: string | null;
+  metadata?: Json | null;
+};
+
+function toMetadataRecord(value: Json | null | undefined): Record<string, unknown> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return {};
+  }
+
+  return value as Record<string, unknown>;
+}
+
+function toJsonMetadata(value: Record<string, unknown>): Json {
+  return value as Json;
+}
 
 /**
  * Converte ProfileRow (banco) para Profile (domínio)
@@ -55,7 +73,7 @@ import type { ProfileType } from '../domain/ProfileType';
  * Normaliza invariantes: display_name ?? name, slug ?? username ?? id, etc.
  */
 export function rowToDomain(row: ProfileRow): Profile {
-  const rowExtras = row as any;
+  const rowExtras = row as ProfileRowExtras;
   return {
     id: row.id,
     userId: row.user_id,
@@ -114,7 +132,7 @@ export function rowToDomain(row: ProfileRow): Profile {
     updatedAt: row.updated_at,
 
     // Metadata
-    metadata: (rowExtras.metadata as Record<string, unknown>) ?? {},
+    metadata: toMetadataRecord(rowExtras.metadata),
   };
 }
 
@@ -156,7 +174,7 @@ export function domainToInsert(profile: Omit<Profile, 'id' | 'createdAt' | 'upda
     verified: profile.verified,
     verified_at: profile.verifiedAt,
     reputation: profile.reputation,
-    metadata: profile.metadata as any,
+    metadata: toJsonMetadata(profile.metadata),
   } as ProfileInsert;
 }
 
@@ -223,7 +241,7 @@ export function domainToUpdate(profile: Partial<Profile>): Partial<ProfileRow> {
   if (profile.verified !== undefined) update.verified = profile.verified;
   if (profile.verifiedAt !== undefined) update.verified_at = profile.verifiedAt;
   if (profile.reputation !== undefined) update.reputation = profile.reputation;
-  if (profile.metadata !== undefined) update.metadata = profile.metadata as any;
+  if (profile.metadata !== undefined) update.metadata = toJsonMetadata(profile.metadata);
 
   return update;
 }

@@ -29,6 +29,64 @@ import {
   validateAvailableProfessionalSlug,
 } from "./professional.queries";
 
+interface QueryError {
+  message?: string | null;
+}
+
+interface QueryArrayResult<TRow> {
+  data: TRow[] | null;
+  error: QueryError | null;
+}
+
+interface QuerySingleResult<TRow> {
+  data: TRow | null;
+  error: QueryError | null;
+}
+
+interface QueryBuilder<TRow> extends PromiseLike<QueryArrayResult<TRow>> {
+  select: (columns?: string) => QueryBuilder<TRow>;
+  insert: (values: unknown | unknown[]) => QueryBuilder<TRow>;
+  update: (values: unknown) => QueryBuilder<TRow>;
+  eq: (column: string, value: unknown) => QueryBuilder<TRow>;
+  or: (filters: string) => QueryBuilder<TRow>;
+  maybeSingle: () => Promise<QuerySingleResult<TRow>>;
+  single: () => Promise<QuerySingleResult<TRow>>;
+}
+
+interface ProfessionalProfileLifecycleDbClient {
+  from: <TRow = never>(table: string) => QueryBuilder<TRow>;
+}
+
+interface ProfileMemberRow {
+  id?: string;
+}
+
+interface ProfessionalDataIdentityRow {
+  id: string;
+  profile_id: string;
+}
+
+interface ProfessionalDataLifecycleRow extends ProfessionalDataIdentityRow {
+  slug?: string | null;
+  metadata?: ProfessionalMetadata | null;
+  professional_name?: string | null;
+  is_verified?: boolean | null;
+}
+
+interface ProfessionalStatsInsertRow {
+  profile_id: string;
+  views_count: number;
+  contacts_count: number;
+  favorites_count: number;
+  shares_count: number;
+  jobs_completed: number;
+  response_rate: number;
+  average_response_time: number;
+}
+
+const professionalProfileLifecycleDb =
+  supabase as unknown as ProfessionalProfileLifecycleDbClient;
+
 function sanitizeAndValidateInput(
   input: CreateProfessionalInput | UpdateProfessionalInput,
   isUpdate = false,
@@ -247,16 +305,18 @@ export async function createProfessionalWithProfile(
   });
   if (!profile) throw new Error("Erro ao criar perfil do profissional");
 
-  const { error: memberError } = await (supabase as any).from("profile_members").insert({
-    profile_id: profile.id,
-    user_id: userId,
-    role: "owner",
-  });
+  const { error: memberError } = await professionalProfileLifecycleDb
+    .from<ProfileMemberRow>("profile_members")
+    .insert({
+      profile_id: profile.id,
+      user_id: userId,
+      role: "owner",
+    });
   if (memberError) throw memberError;
 
   const professionalData = toProfessionalData({ ...validatedInput, slug }, { mode: "create" });
-  const { data: professionalRow, error } = await (supabase as any)
-    .from("professional_data")
+  const { data: professionalRow, error } = await professionalProfileLifecycleDb
+    .from<ProfessionalDataIdentityRow>("professional_data")
     .insert({
       profile_id: profile.id,
       ...professionalData,
@@ -267,16 +327,18 @@ export async function createProfessionalWithProfile(
 
   if (error) throw error;
 
-  await (supabase as any).from("professional_stats").insert({
-    profile_id: profile.id,
-    views_count: 0,
-    contacts_count: 0,
-    favorites_count: 0,
-    shares_count: 0,
-    jobs_completed: 0,
-    response_rate: 0,
-    average_response_time: 0,
-  });
+  await professionalProfileLifecycleDb
+    .from<ProfessionalStatsInsertRow>("professional_stats")
+    .insert({
+      profile_id: profile.id,
+      views_count: 0,
+      contacts_count: 0,
+      favorites_count: 0,
+      shares_count: 0,
+      jobs_completed: 0,
+      response_rate: 0,
+      average_response_time: 0,
+    });
 
   return getProfessionalById(professionalRow.id);
 }
@@ -286,8 +348,9 @@ export async function updateProfessionalWithProfile(
   input: UpdateProfessionalInput,
 ): Promise<Professional> {
   const validatedInput = sanitizeAndValidateInput(input, true) as UpdateProfessionalInput;
-  const { data: currentProfessional, error: currentError } = await (supabase as any)
-    .from("professional_data")
+  const { data: currentProfessional, error: currentError } =
+    await professionalProfileLifecycleDb
+      .from<ProfessionalDataLifecycleRow>("professional_data")
     .select("id, profile_id, slug, metadata, professional_name, is_verified")
     .or(`profile_id.eq.${id},id.eq.${id}`)
     .maybeSingle();
@@ -356,8 +419,8 @@ export async function updateProfessionalWithProfile(
     updatePayload.slug = validatedInput.slug;
   }
 
-  const { error } = await (supabase as any)
-    .from("professional_data")
+  const { error } = await professionalProfileLifecycleDb
+    .from<ProfessionalDataRecord>("professional_data")
     .update(updatePayload)
     .eq("profile_id", currentProfessional.profile_id);
   if (error) throw error;
@@ -366,8 +429,9 @@ export async function updateProfessionalWithProfile(
 }
 
 export async function deleteProfessionalWithProfile(id: string): Promise<void> {
-  const { data: professional, error: resolveError } = await (supabase as any)
-    .from("professional_data")
+  const { data: professional, error: resolveError } =
+    await professionalProfileLifecycleDb
+      .from<ProfessionalDataIdentityRow>("professional_data")
     .select("id, profile_id")
     .or(`profile_id.eq.${id},id.eq.${id}`)
     .maybeSingle();
@@ -375,8 +439,8 @@ export async function deleteProfessionalWithProfile(id: string): Promise<void> {
   if (resolveError) throw resolveError;
   if (!professional) throw new Error("Profissional nao encontrado");
 
-  const { error } = await (supabase as any)
-    .from("professional_data")
+  const { error } = await professionalProfileLifecycleDb
+    .from<ProfessionalDataRecord>("professional_data")
     .update({
       is_accepting_clients: false,
       updated_at: new Date().toISOString(),

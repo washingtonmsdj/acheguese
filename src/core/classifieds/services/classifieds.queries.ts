@@ -48,6 +48,24 @@ type NeighborhoodClassifiedRow = {
   locations: NeighborhoodLocationRow | null;
 };
 
+type ErrorLike = {
+  code?: string | null;
+  message?: string | null;
+};
+
+type ClassifiedQueryPayload = {
+  data: ClassifiedWithRelationsRow[] | null;
+  error: ErrorLike | null;
+};
+
+type ClassifiedQuery = PromiseLike<ClassifiedQueryPayload> & {
+  eq(column: string, value: unknown): ClassifiedQuery;
+  in(column: string, values: string[]): ClassifiedQuery;
+  or(filters: string): ClassifiedQuery;
+  order(column: string, options?: { ascending?: boolean }): ClassifiedQuery;
+  select(columns?: string): ClassifiedQuery;
+};
+
 function ensureStringArray(value: unknown): string[] {
   if (Array.isArray(value)) return value.filter((item): item is string => typeof item === "string");
   return [];
@@ -153,7 +171,7 @@ export async function getAllClassifieds(
   filter?: TerritoryFilter,
 ): Promise<ClassifiedData[]> {
   try {
-    let query: any = supabase
+    let query = supabase
       .from("classifieds")
       .select(
         `
@@ -171,7 +189,7 @@ export async function getAllClassifieds(
       `,
       )
       .eq("is_active", true)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false }) as unknown as ClassifiedQuery;
 
     //  HIERRQUICO - Resolve descendentes antes de aplicar filtro
     let resolvedFilter = filter;

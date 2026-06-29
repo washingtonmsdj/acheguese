@@ -156,12 +156,9 @@ describe('GATE 2: Pipeline de Publicação de Localização', () => {
 
         // Arrange - Subscrever antes de publicar
         const startTime = Date.now();
-        let receivedPosition: any = null;
-
         const subscription = trackingService.subscribeToPosition(
           testDriverId,
           (position) => {
-            receivedPosition = position;
             const latency = Date.now() - startTime;
             
             clearTimeout(timeout);

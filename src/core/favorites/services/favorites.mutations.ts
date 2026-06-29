@@ -8,14 +8,34 @@ import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 import type { ProfileFavorite, CreateFavoriteData } from "../types";
-import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
 import { isBusinessFavorited, isFavorited as checkIsFavorited } from "./favorites.queries";
 
 const TABLE = "profile_favorites_new";
 const BUSINESS_FAVORITES_TABLE = "business_favorites";
 
-const supabaseTyped = supabase as unknown as AdminSupabaseClient;
-const favoritesDb = supabaseTyped as any;
+interface QueryError {
+  message?: string | null;
+  code?: string | null;
+}
+
+interface QueryResult<T> {
+  data: T | null;
+  error: QueryError | null;
+}
+
+interface QueryBuilder<TRow> extends PromiseLike<QueryResult<TRow[]>> {
+  select: (columns?: string) => QueryBuilder<TRow>;
+  insert: (values: unknown | unknown[]) => QueryBuilder<TRow>;
+  delete: () => QueryBuilder<TRow>;
+  eq: (column: string, value: unknown) => QueryBuilder<TRow>;
+  single: () => Promise<QueryResult<TRow>>;
+}
+
+interface FavoritesDbClient {
+  from: <TRow = never>(table: string) => QueryBuilder<TRow>;
+}
+
+const favoritesDb = supabase as unknown as FavoritesDbClient;
 
 /**
  * Adicionar favorito

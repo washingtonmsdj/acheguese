@@ -5,6 +5,27 @@ import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import type { BoundingBox } from "../types/core";
 
+type ErrorLike = { message?: string | null; code?: string | null } | null;
+
+type QueryPayload<TRow> = {
+  data: TRow[] | null;
+  error: ErrorLike;
+  count?: number | null;
+};
+
+type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
+  select(columns?: string, options?: { count?: "exact"; head?: boolean }): TableClient<TRow>;
+  eq(column: string, value: unknown): TableClient<TRow>;
+  in(column: string, values: readonly unknown[]): TableClient<TRow>;
+  limit(count: number): TableClient<TRow>;
+};
+
+type MapServicesDbClient = {
+  from<TRow = Record<string, unknown>>(table: string): TableClient<TRow>;
+};
+
+const mapServicesDb = supabase as unknown as MapServicesDbClient;
+
 export interface ServiceMapEntity {
   id: string;
   profile_id: string;
@@ -21,6 +42,10 @@ export interface ServiceMapEntity {
   url: string | null;
 }
 
+interface ServiceLocationRow {
+  geographic_path: string | null;
+}
+
 interface ServiceMapRow {
   id: string;
   profile_id: string | null;
@@ -32,10 +57,7 @@ interface ServiceMapRow {
   rating: number | null;
   is_verified: boolean | null;
   address: { latitude: number | null; longitude: number | null } | null;
-  location:
-    | { geographic_path: string | null }
-    | { geographic_path: string | null }[]
-    | null;
+  location: ServiceLocationRow | ServiceLocationRow[] | null;
 }
 
 function firstRelation<T>(relation: T | T[] | null | undefined): T | null {
@@ -63,8 +85,8 @@ class MapServicesLayerRuntimeService {
     try {
       if (territoryFilter?.scope === "none") return [];
 
-      let query = (supabase as any)
-        .from("professional_data")
+      let query = mapServicesDb
+        .from<ServiceMapRow>("professional_data")
         .select(
           `
             id,
@@ -86,15 +108,22 @@ class MapServicesLayerRuntimeService {
         .limit(limit * 3);
 
       if (territoryFilter) {
-        query = applyTerritoryFilter(query as any, territoryFilter) as any;
+        query = applyTerritoryFilter(query, territoryFilter);
       }
 
       const { data, error } = await query;
       if (error) throw error;
 
-      return ((data ?? []) as ServiceMapRow[])
-        .filter((row) => isInsideBounds(row.address?.latitude, row.address?.longitude, bounds))
-        .map((row) => {
+      return (data ?? [])
+        .flatMap((row) => {
+          if (!isInsideBounds(row.address?.latitude, row.address?.longitude, bounds)) {
+            return [];
+          }
+
+          const latitude = row.address?.latitude;
+          const longitude = row.address?.longitude;
+          if (latitude == null || longitude == null) return [];
+
           const location = firstRelation(row.location);
           const profileId = row.profile_id ?? row.id;
           const url = ProfessionalUrlService.getCanonicalUrlFromTarget({
@@ -104,21 +133,23 @@ class MapServicesLayerRuntimeService {
             geographic_path: location?.geographic_path ?? null,
           });
 
-          return {
-            id: `service-${row.id}`,
-            profile_id: profileId,
-            name: row.professional_name ?? "Profissional",
-            slug: row.slug,
-            latitude: row.address?.latitude as number,
-            longitude: row.address?.longitude as number,
-            rating: row.rating ?? 0,
-            is_verified: Boolean(row.is_verified),
-            category: row.service_category,
-            subcategory: row.service_subcategory,
-            description: row.description,
-            geographic_path: location?.geographic_path ?? null,
-            url,
-          };
+          return [
+            {
+              id: `service-${row.id}`,
+              profile_id: profileId,
+              name: row.professional_name ?? "Profissional",
+              slug: row.slug,
+              latitude,
+              longitude,
+              rating: row.rating ?? 0,
+              is_verified: Boolean(row.is_verified),
+              category: row.service_category,
+              subcategory: row.service_subcategory,
+              description: row.description,
+              geographic_path: location?.geographic_path ?? null,
+              url,
+            },
+          ];
         })
         .slice(0, limit);
     } catch (error) {

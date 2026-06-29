@@ -8,7 +8,7 @@ interface AnalyticsTrackingInput {
   event_type: AnalyticsEventType;
   business_id?: string;
   user_id?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 function isNonEmptyString(value: unknown): value is string {
@@ -68,7 +68,7 @@ class AnalyticsTrackingService {
     businessId: string,
     action: string,
     userId?: string,
-    metadata?: Record<string, any>,
+    metadata?: Record<string, unknown>,
   ): Promise<void> {
     await canonicalAnalyticsService.trackEvent({
       entity_type: "business",

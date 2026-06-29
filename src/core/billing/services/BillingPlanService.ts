@@ -15,7 +15,36 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import type { GenericBillingEntitlementAliases } from '../types';
-const billingDb = supabase as any;
+
+type QueryError = { message?: string | null };
+
+type QueryArrayResult<T> = {
+  data: T[] | null;
+  error: QueryError | null;
+};
+
+type QuerySingleResult<T> = {
+  data: T | null;
+  error: QueryError | null;
+};
+
+type QueryBuilder<T extends object> = PromiseLike<QueryArrayResult<T>> & {
+  select(columns?: string): QueryBuilder<T>;
+  eq(column: string, value: unknown): QueryBuilder<T>;
+  order(column: string, options?: { ascending?: boolean }): QueryBuilder<T>;
+  limit(value: number): QueryBuilder<T>;
+  insert(values: Record<string, unknown> | Array<Record<string, unknown>>): QueryBuilder<T>;
+  update(values: Record<string, unknown>): QueryBuilder<T>;
+  delete(): QueryBuilder<T>;
+  single(): Promise<QuerySingleResult<T>>;
+  maybeSingle(): Promise<QuerySingleResult<T>>;
+};
+
+type BillingDbClient = {
+  from<T extends object>(table: string): QueryBuilder<T>;
+};
+
+const billingDb = supabase as unknown as BillingDbClient;
 
 // ══════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -190,7 +219,7 @@ export class BillingPlanService {
 
     try {
       const { data, error } = await billingDb
-        .from('billing_plans')
+        .from<BillingPlanRow>('billing_plans')
         .select('*')
         .eq('is_active', true)
         .order('display_order', { ascending: true });
@@ -200,7 +229,7 @@ export class BillingPlanService {
         throw new Error(`Falha ao buscar planos: ${error.message}`);
       }
 
-      const plans = (data as BillingPlanRow[]).map((row) => this.mapRowToPlan(row));
+      const plans = (data || []).map((row) => this.mapRowToPlan(row));
 
       // Atualizar cache
       this.allPlansCache = plans;
@@ -225,7 +254,7 @@ export class BillingPlanService {
 
     try {
       const { data, error } = await billingDb
-        .from('billing_plans')
+        .from<BillingPlanRow>('billing_plans')
         .select('*')
         .eq('code', code)
         .eq('is_active', true)
@@ -240,7 +269,7 @@ export class BillingPlanService {
         return null;
       }
 
-      const plan = this.mapRowToPlan(data as BillingPlanRow);
+      const plan = this.mapRowToPlan(data);
 
       // Atualizar cache
       this.cache.set(code, plan);
@@ -275,7 +304,7 @@ export class BillingPlanService {
   static async getFeaturedPlan(): Promise<BillingPlan | null> {
     try {
       const { data, error } = await billingDb
-        .from('billing_plans')
+        .from<BillingPlanRow>('billing_plans')
         .select('*')
         .eq('is_active', true)
         .eq('is_featured', true)
@@ -288,7 +317,7 @@ export class BillingPlanService {
         return null;
       }
 
-      return data ? this.mapRowToPlan(data as BillingPlanRow) : null;
+      return data ? this.mapRowToPlan(data) : null;
     } catch (error) {
       logger.error('Erro inesperado ao buscar plano em destaque:', error);
       return null;
@@ -314,7 +343,7 @@ export class BillingPlanService {
   static async getAllPlans(): Promise<BillingPlan[]> {
     try {
       const { data, error } = await billingDb
-        .from('billing_plans')
+        .from<BillingPlanRow>('billing_plans')
         .select('*')
         .order('display_order', { ascending: true });
 
@@ -323,7 +352,7 @@ export class BillingPlanService {
         throw new Error(`Falha ao buscar planos: ${error.message}`);
       }
 
-      return (data as BillingPlanRow[]).map((row) => this.mapRowToPlan(row));
+      return (data || []).map((row) => this.mapRowToPlan(row));
     } catch (error) {
       logger.error('Erro inesperado ao buscar todos os planos:', error);
       throw error;
@@ -351,8 +380,8 @@ export class BillingPlanService {
       };
 
       const { data, error } = await billingDb
-        .from('billing_plans')
-        .insert([row as any])
+        .from<BillingPlanRow>('billing_plans')
+        .insert([row])
         .select()
         .single();
 
@@ -362,7 +391,10 @@ export class BillingPlanService {
       }
 
       this.clearCache();
-      return this.mapRowToPlan(data as BillingPlanRow);
+      if (!data) {
+        throw new Error('Falha ao criar plano: nenhuma linha retornada');
+      }
+      return this.mapRowToPlan(data);
     } catch (error) {
       logger.error('Erro inesperado ao criar plano:', error);
       throw error;
@@ -384,14 +416,14 @@ export class BillingPlanService {
       if (updates.currency !== undefined) row.currency = updates.currency;
       if (updates.billingPeriod !== undefined) row.billing_period = updates.billingPeriod;
       if (updates.features !== undefined) row.features = updates.features;
-      if (updates.entitlements !== undefined) row.entitlements = updates.entitlements as any;
+      if (updates.entitlements !== undefined) row.entitlements = updates.entitlements;
       if (updates.isActive !== undefined) row.is_active = updates.isActive;
       if (updates.isFeatured !== undefined) row.is_featured = updates.isFeatured;
       if (updates.displayOrder !== undefined) row.display_order = updates.displayOrder;
 
       const { data, error } = await billingDb
-        .from('billing_plans')
-        .update(row as any)
+        .from<BillingPlanRow>('billing_plans')
+        .update(row)
         .eq('id', id)
         .select()
         .single();
@@ -402,7 +434,10 @@ export class BillingPlanService {
       }
 
       this.clearCache();
-      return this.mapRowToPlan(data as BillingPlanRow);
+      if (!data) {
+        throw new Error(`Falha ao atualizar plano: nenhuma linha retornada`);
+      }
+      return this.mapRowToPlan(data);
     } catch (error) {
       logger.error(`Erro inesperado ao atualizar plano ${id}:`, error);
       throw error;
@@ -416,7 +451,7 @@ export class BillingPlanService {
   static async deletePlan(id: string): Promise<void> {
     try {
       const { error } = await billingDb
-        .from('billing_plans')
+        .from<BillingPlanRow>('billing_plans')
         .delete()
         .eq('id', id);
 
@@ -458,7 +493,7 @@ export class BillingPlanService {
 
       for (const update of updates) {
         await billingDb
-          .from('billing_plans')
+          .from<BillingPlanRow>('billing_plans')
           .update({ display_order: update.display_order })
           .eq('id', update.id);
       }

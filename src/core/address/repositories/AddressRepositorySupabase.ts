@@ -7,6 +7,7 @@
  */
 
 import { supabase } from '@/integrations/supabase';
+import type { TablesInsert, TablesUpdate } from '@/integrations/supabase';
 import type { IAddressRepository } from './IAddressRepository';
 import type { Address, CreateAddressInput, UpdateAddressInput } from '../types';
 
@@ -14,9 +15,10 @@ export class AddressRepositorySupabase implements IAddressRepository {
   private readonly tableName = 'addresses' as const;
 
   async create(input: CreateAddressInput): Promise<Address> {
+    const payload = input as TablesInsert<"addresses">;
     const { data, error } = await supabase
       .from(this.tableName)
-      .insert(input as any)
+      .insert(payload)
       .select()
       .single();
 
@@ -45,9 +47,10 @@ export class AddressRepositorySupabase implements IAddressRepository {
   }
 
   async update(id: string, input: UpdateAddressInput): Promise<Address> {
+    const payload = input as TablesUpdate<"addresses">;
     const { data, error } = await supabase
       .from(this.tableName)
-      .update(input as any)
+      .update(payload)
       .eq('id', id)
       .select()
       .single();

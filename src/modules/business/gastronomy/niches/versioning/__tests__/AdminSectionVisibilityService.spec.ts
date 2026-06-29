@@ -4,7 +4,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { AdminSectionVisibilityService } from '../AdminSectionVisibilityService';
-import type { NicheCapability } from '../../types';
+import type { AdminSection, NicheCapability } from '../../types';
 import type { ProfileNicheConfig } from '../types';
 
 describe('AdminSectionVisibilityService', () => {
@@ -205,7 +205,7 @@ describe('AdminSectionVisibilityService', () => {
         'pizza_flavors',
         'sushi_builder',
         'acai_builder',
-      ] as any[];
+      ] as AdminSection[];
 
       const grouped =
         AdminSectionVisibilityService.groupSectionsByCategory(sections);
@@ -219,7 +219,7 @@ describe('AdminSectionVisibilityService', () => {
     });
 
     it('deve remover grupos vazios', () => {
-      const sections = ['basic_menu', 'variants'] as any[];
+      const sections = ['basic_menu', 'variants'] as AdminSection[];
 
       const grouped =
         AdminSectionVisibilityService.groupSectionsByCategory(sections);

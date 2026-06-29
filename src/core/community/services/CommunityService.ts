@@ -25,7 +25,29 @@ import type {
   UserLevel,
 } from "./community.types";
 
-const db = supabase as any;
+interface QueryResult<T> {
+  data: T | null;
+  error: { message: string } | null;
+}
+
+interface CommunityProfileQueryBuilder {
+  select: (_columns?: string) => CommunityProfileQueryBuilder;
+  eq: (column: string, value: string) => CommunityProfileQueryBuilder;
+  update: (payload: Record<string, unknown>) => {
+    eq: (column: string, value: string) => {
+      select: (_columns?: string) => {
+        single: () => Promise<QueryResult<CommunityProfile>>;
+      };
+    };
+  };
+  single: () => Promise<QueryResult<CommunityProfile>>;
+}
+
+interface CommunityServiceDbClient {
+  from: (table: "community_profiles") => CommunityProfileQueryBuilder;
+}
+
+const db = supabase as unknown as CommunityServiceDbClient;
 
 class CommunityServiceClass {
   async getGroupsPage(params: {

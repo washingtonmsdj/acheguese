@@ -6,6 +6,7 @@
  */
 
 import type { NavigateFunction } from "react-router-dom";
+import type { AuthUser } from "@/core/auth/services/types";
 import type {
   Vaga as VagaModel,
   VagaSortOption as VagaSortOptionModel,
@@ -50,6 +51,15 @@ export interface VagasFilters {
   readonly bairroId: string | null;
   readonly hasSalary: boolean | null;
 }
+
+export type UpdateVagasFilter = <K extends keyof VagasFilters>(
+  key: K,
+  value: VagasFilters[K],
+) => void;
+
+export type VagasUser =
+  | (AuthUser & { user_metadata?: Record<string, unknown> })
+  | null;
 
 // ============================================
 // Bairro (para filtro)
@@ -98,7 +108,7 @@ export interface PublishPermission {
 
 export interface VagasHeroSectionProps extends BaseSectionProps {
   readonly total: number;
-  readonly user: any;
+  readonly user: VagasUser;
   readonly permission: PublishPermission;
   readonly isLoadingPermission: boolean;
   readonly onOpenPublish: () => void;
@@ -108,7 +118,7 @@ export interface VagasFiltrosSectionProps extends BaseSectionProps {
   readonly total: number;
   readonly isLoading: boolean;
   readonly filters: VagasFilters;
-  readonly updateFilter: (key: keyof VagasFilters, value: any) => void;
+  readonly updateFilter: UpdateVagasFilter;
   readonly clearFilters: () => void;
   readonly hasActiveFilters: boolean;
   readonly sort: VagaSortOptionModel;
@@ -133,7 +143,7 @@ export interface VagasListagemSectionProps extends BaseSectionProps {
 }
 
 export interface VagasFooterSectionProps extends BaseSectionProps {
-  readonly user: any;
+  readonly user: VagasUser;
   readonly permission: PublishPermission;
   readonly isLoadingPermission: boolean;
   readonly onOpenPublish: () => void;

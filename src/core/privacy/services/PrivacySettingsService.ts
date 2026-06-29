@@ -16,8 +16,45 @@ export interface DeletionStatusRecord {
   days_remaining: number | null;
 }
 
+interface QueryResult<T> {
+  data: T | null;
+  error: { message: string } | null;
+}
+
+interface ConsentRow {
+  id: string;
+  consent_type: string;
+  granted: boolean;
+  granted_at: string;
+  terms_version: string;
+  privacy_policy_version: string;
+}
+
+interface DeletionStatusRow {
+  status: DeletionStatusRecord["status"];
+  scheduled_purge_at: string | null;
+}
+
+interface PrivacySettingsDbClient {
+  from: (table: string) => {
+    select: (_columns: string) => {
+      eq: (column: string, value: string) => {
+        order: (
+          column: string,
+          options: { ascending: boolean },
+        ) => Promise<QueryResult<ConsentRow[]>>;
+        single: () => Promise<QueryResult<DeletionStatusRow>>;
+      };
+    };
+  };
+  rpc: (
+    fn: string,
+    params: Record<string, unknown>,
+  ) => Promise<{ error: { message: string } | null }>;
+}
+
 export class PrivacySettingsService {
-  private static readonly db = supabase as any;
+  private static readonly db = supabase as unknown as PrivacySettingsDbClient;
 
   static async getUserConsents(userId: string): Promise<UserConsentRecord[]> {
     const { data, error } = await this.db
@@ -27,7 +64,7 @@ export class PrivacySettingsService {
       .order("consent_type", { ascending: true });
 
     if (error) throw error;
-    return (data || []) as UserConsentRecord[];
+    return data ?? [];
   }
 
   static async getDeletionStatus(userId: string): Promise<DeletionStatusRecord | null> {

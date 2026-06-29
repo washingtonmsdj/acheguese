@@ -79,7 +79,7 @@ export function getBusinessTerritory(business: BusinessDataRecord): string | nul
  * brand_hub não é territorial — não tem location_id.
  */
 export function isTerritorialBusiness(business: BusinessDataRecord): boolean {
-  const role = (business as any).business_role;
+  const role = business.business_role;
   if (role === 'brand_hub') return false;
   return business.location_id !== null && business.location_id !== undefined;
 }

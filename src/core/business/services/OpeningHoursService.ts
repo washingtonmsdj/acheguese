@@ -110,7 +110,7 @@ export class OpeningHoursService {
         is_open: false,
         status_text: 'Fechado',
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('[OpeningHoursService] Error calculating status:', error);
       return {
         is_open: false,

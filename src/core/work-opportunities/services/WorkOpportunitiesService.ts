@@ -3,6 +3,7 @@ import { NotificationService } from "@/core/notifications/services/NotificationS
 import { postService } from "@/core/posts/services";
 import { ProfessionalUrlService } from "@/core/professional/services/ProfessionalUrlService";
 import { supabase } from "@/integrations/supabase";
+import type { Database, Json } from "@/integrations/supabase";
 import { trackError } from "@/shared/utils/errorTracking";
 import { logger } from "@/shared/utils/logger";
 import { sanitizeForILike } from "@/shared/utils/sqlSanitization";
@@ -20,6 +21,102 @@ import type {
 import { WORK_OPPORTUNITY_STATUS } from "../constants/statuses";
 
 const DEFAULT_DISTRIBUTION_CHANNELS = ["oportunidades", "moradores", "para_voce", "todos"];
+
+type LocationRow = Database["public"]["Tables"]["locations"]["Row"];
+type ProfessionalDataRow = Database["public"]["Tables"]["professional_data"]["Row"];
+type WorkOpportunityRow = Database["public"]["Tables"]["work_opportunities"]["Row"];
+type WorkOpportunityInsert = Database["public"]["Tables"]["work_opportunities"]["Insert"];
+type WorkOpportunityUpdate = Database["public"]["Tables"]["work_opportunities"]["Update"];
+type PublicWorkOpportunitySearchRow =
+  Database["public"]["Views"]["public_work_opportunity_search"]["Row"];
+
+interface QueryResult<T> {
+  data: T | null;
+  error: { message: string; code?: string } | null;
+}
+
+interface QueryBuilder<TRow> extends PromiseLike<QueryResult<TRow[]>> {
+  select: (
+    columns: string,
+    options?: { count?: "exact"; head?: boolean },
+  ) => QueryBuilder<TRow>;
+  insert: (values: unknown | unknown[]) => QueryBuilder<TRow>;
+  update: (values: unknown) => QueryBuilder<TRow>;
+  eq: (column: string, value: unknown) => QueryBuilder<TRow>;
+  neq: (column: string, value: unknown) => QueryBuilder<TRow>;
+  in: (column: string, values: unknown[]) => QueryBuilder<TRow>;
+  gte: (column: string, value: string | number) => QueryBuilder<TRow>;
+  ilike: (column: string, value: string) => QueryBuilder<TRow>;
+  or: (filters: string) => QueryBuilder<TRow>;
+  order: (
+    column: string,
+    options?: { ascending?: boolean; nullsFirst?: boolean },
+  ) => QueryBuilder<TRow>;
+  limit: (value: number) => QueryBuilder<TRow>;
+  single: () => Promise<QueryResult<TRow>>;
+  maybeSingle: () => Promise<QueryResult<TRow>>;
+}
+
+interface WorkOpportunitiesRpcClient {
+  rpc: <TResult = unknown>(
+    fn: string,
+    params?: Record<string, unknown>,
+  ) => Promise<QueryResult<TResult>>;
+}
+
+interface WorkOpportunitiesDbClient extends WorkOpportunitiesRpcClient {
+  from: <TRow = never>(table: string) => QueryBuilder<TRow>;
+}
+
+type OwnedProfessionalProfileRow = Pick<
+  ProfessionalDataRow,
+  | "id"
+  | "professional_name"
+  | "service_category"
+  | "location_id"
+  | "is_accepting_clients"
+  | "visibility"
+  | "slug"
+>;
+
+type LinkedProfessionalOwnershipRow = Pick<ProfessionalDataRow, "id" | "owner_user_id">;
+
+type RecentOpportunityRow = Pick<
+  WorkOpportunityRow,
+  | "id"
+  | "professional_id"
+  | "professional_category"
+  | "headline"
+  | "opportunity_type"
+  | "urgency"
+  | "status"
+  | "visibility"
+  | "availability_notes"
+  | "territory_location_id"
+  | "created_at"
+  | "published_at"
+>;
+
+type ProfessionalListItemRow = Pick<
+  ProfessionalDataRow,
+  "id" | "professional_name" | "service_category"
+>;
+
+type ProfessionalNotificationCandidateRow = Pick<
+  ProfessionalDataRow,
+  "id" | "owner_user_id" | "professional_name" | "service_category"
+>;
+
+type OpportunityResolutionUpdate = Pick<WorkOpportunityUpdate, "status" | "closed_at">;
+
+interface ExpireStaleOpportunitiesRow {
+  expired_count?: number | null;
+  expired_ids?: string[] | null;
+}
+
+type PublicOpportunityCardRow = PublicWorkOpportunitySearchRow;
+
+const workOpportunitiesDb = supabase as unknown as WorkOpportunitiesDbClient;
 
 interface ProfessionalMatchCandidate {
   professional_id: string;
@@ -55,6 +152,119 @@ interface ProfessionalDataDetailRow {
   }> | null;
   metadata: Record<string, unknown> | null;
   location: { geographic_path: string | null } | null;
+}
+
+function toOwnedProfessionalProfileSummary(
+  row: OwnedProfessionalProfileRow,
+): OwnedProfessionalProfileSummary {
+  return {
+    id: row.id,
+    professional_name: row.professional_name,
+    service_category: row.service_category,
+    location_id: row.location_id,
+    is_accepting_clients: row.is_accepting_clients,
+    visibility: row.visibility,
+    slug: row.slug,
+  };
+}
+
+function asObjectRecord(value: unknown): Record<string, unknown> | null {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
+  }
+  return null;
+}
+
+function toProfessionalDataDetailRow(
+  row: Pick<
+    ProfessionalDataRow,
+    | "id"
+    | "slug"
+    | "professional_name"
+    | "service_category"
+    | "description"
+    | "availability_notes"
+    | "is_accepting_clients"
+    | "visibility"
+    | "rating"
+    | "portfolio_items"
+    | "metadata"
+  > & {
+    location?: { geographic_path: string | null } | null;
+  },
+): ProfessionalDataDetailRow {
+  const portfolioItems = Array.isArray(row.portfolio_items)
+    ? (row.portfolio_items as ProfessionalDataDetailRow["portfolio_items"])
+    : null;
+
+  return {
+    id: row.id,
+    slug: row.slug,
+    professional_name: row.professional_name,
+    service_category: row.service_category,
+    description: row.description,
+    availability_notes: row.availability_notes,
+    is_accepting_clients: row.is_accepting_clients,
+    visibility: row.visibility,
+    rating: row.rating,
+    portfolio_items: portfolioItems,
+    metadata: asObjectRecord(row.metadata),
+    location: row.location ?? null,
+  };
+}
+
+function toWorkOpportunity(row: WorkOpportunityRow): WorkOpportunity {
+  return {
+    id: row.id,
+    author_profile_id: row.author_profile_id,
+    author_user_id: row.author_user_id,
+    professional_id: row.professional_id,
+    opportunity_type: row.opportunity_type,
+    headline: row.headline,
+    description: row.description,
+    professional_category: row.professional_category,
+    territory_location_id: row.territory_location_id,
+    reach: row.reach as WorkOpportunity["reach"],
+    urgency: row.urgency as WorkOpportunity["urgency"],
+    availability_notes: row.availability_notes,
+    compensation_notes: row.compensation_notes,
+    contact_notes: row.contact_notes,
+    visibility: row.visibility as WorkOpportunity["visibility"],
+    status: row.status as WorkOpportunity["status"],
+    post_id: row.post_id,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+    published_at: row.published_at,
+    closed_at: row.closed_at,
+  };
+}
+
+function toWorkOpportunityCard(row: PublicOpportunityCardRow): WorkOpportunityCard {
+  return {
+    id: row.id ?? "",
+    author_profile_id: row.author_profile_id ?? "",
+    author_name: row.author_name,
+    author_avatar_url: row.author_avatar_url,
+    professional_id: row.professional_id,
+    opportunity_type: (row.opportunity_type ?? "looking_for_work") as WorkOpportunityType,
+    headline: row.headline ?? "",
+    description: row.description ?? "",
+    professional_category: row.professional_category ?? "",
+    territory_location_id: row.territory_location_id ?? "",
+    territory_name: row.territory_name,
+    urgency: (row.urgency ?? "flexivel") as WorkOpportunity["urgency"],
+    availability_notes: row.availability_notes,
+    compensation_notes: row.compensation_notes,
+    contact_notes: row.contact_notes,
+    visibility: (row.visibility ?? "public_listed") as WorkOpportunity["visibility"],
+    status: (row.status ?? "active") as WorkOpportunity["status"],
+    post_id: row.post_id,
+    created_at: row.created_at ?? new Date(0).toISOString(),
+    published_at: row.published_at,
+    professional_slug: row.professional_slug,
+    professional_name: row.professional_name,
+    service_category: row.service_category,
+  };
 }
 
 class WorkOpportunitiesServiceClass {
@@ -184,14 +394,14 @@ class WorkOpportunitiesServiceClass {
   }
 
   private async resolveLocationName(locationId: string): Promise<string | null> {
-    const { data, error } = await (supabase as any)
-      .from("locations")
+    const { data, error } = await workOpportunitiesDb
+      .from<Pick<LocationRow, "name">>("locations")
       .select("name")
       .eq("id", locationId)
       .maybeSingle();
 
     if (error || !data) return null;
-    return (data as { name: string | null }).name ?? null;
+    return data.name ?? null;
   }
 
   private extractPortfolioImages(raw: ProfessionalDataDetailRow | null): string[] {
@@ -228,8 +438,8 @@ class WorkOpportunitiesServiceClass {
       const user = await SessionService.getCurrentUser();
       if (!user) return [];
 
-      const { data, error } = await (supabase as any)
-        .from("professional_data")
+      const { data, error } = await workOpportunitiesDb
+        .from<OwnedProfessionalProfileRow>("professional_data")
         .select("id, professional_name, service_category, location_id, is_accepting_clients, visibility, slug")
         .eq("owner_user_id", user.id)
         .order("created_at", { ascending: false });
@@ -239,7 +449,7 @@ class WorkOpportunitiesServiceClass {
         return [];
       }
 
-      return (data ?? []) as OwnedProfessionalProfileSummary[];
+      return (data ?? []).map(toOwnedProfessionalProfileSummary);
     } catch (error) {
       trackError(error as Error, {
         component: "WorkOpportunitiesService",
@@ -263,8 +473,8 @@ class WorkOpportunitiesServiceClass {
       if (!user) throw new Error("Usuário não autenticado.");
 
       if (input.professionalId) {
-        const { data: linkedProfessional, error: linkedProfessionalError } = await (supabase as any)
-          .from("professional_data")
+        const { data: linkedProfessional, error: linkedProfessionalError } = await workOpportunitiesDb
+          .from<LinkedProfessionalOwnershipRow>("professional_data")
           .select("id, owner_user_id")
           .eq("id", input.professionalId)
           .eq("owner_user_id", user.id)
@@ -279,34 +489,36 @@ class WorkOpportunitiesServiceClass {
         }
       }
 
-      const { data: createdOpportunity, error: createError } = await (supabase as any)
-        .from("work_opportunities")
-        .insert({
-          author_profile_id: input.authorProfileId,
-          professional_id: input.professionalId ?? null,
-          opportunity_type: input.opportunityType,
-          headline: trimmedTitle,
-          description: trimmedDescription,
-          professional_category: trimmedCategory,
-          territory_location_id: input.territoryLocationId,
-          reach: input.reach ?? "neighborhood",
-          urgency: input.urgency,
-          availability_notes: input.availabilityNotes?.trim() || null,
-          compensation_notes: input.compensationNotes?.trim() || null,
-          contact_notes: input.contactNotes?.trim() || null,
-          visibility: input.visibility ?? "public_listed",
-          status: WORK_OPPORTUNITY_STATUS.ACTIVE,
-          is_feed_distributed: true,
-          matching_metadata: {
-            schema_version: "work-opportunity.v1",
-            matching_keys: {
-              category: trimmedCategory,
-              territory_location_id: input.territoryLocationId,
-              urgency: input.urgency,
-            },
+      const createPayload: WorkOpportunityInsert = {
+        author_profile_id: input.authorProfileId,
+        professional_id: input.professionalId ?? null,
+        opportunity_type: input.opportunityType,
+        headline: trimmedTitle,
+        description: trimmedDescription,
+        professional_category: trimmedCategory,
+        territory_location_id: input.territoryLocationId,
+        reach: input.reach ?? "neighborhood",
+        urgency: input.urgency,
+        availability_notes: input.availabilityNotes?.trim() || null,
+        compensation_notes: input.compensationNotes?.trim() || null,
+        contact_notes: input.contactNotes?.trim() || null,
+        visibility: input.visibility ?? "public_listed",
+        status: WORK_OPPORTUNITY_STATUS.ACTIVE,
+        is_feed_distributed: true,
+        matching_metadata: {
+          schema_version: "work-opportunity.v1",
+          matching_keys: {
+            category: trimmedCategory,
+            territory_location_id: input.territoryLocationId,
+            urgency: input.urgency,
           },
-          source_context: input.sourceContext ?? "community_feed",
-        })
+        } as unknown as Json,
+        source_context: input.sourceContext ?? "community_feed",
+      };
+
+      const { data: createdOpportunity, error: createError } = await workOpportunitiesDb
+        .from<WorkOpportunityRow>("work_opportunities")
+        .insert(createPayload)
         .select("*")
         .single();
 
@@ -314,7 +526,7 @@ class WorkOpportunitiesServiceClass {
         throw new Error(createError.message);
       }
 
-      const opportunity = createdOpportunity as WorkOpportunity;
+      const opportunity = toWorkOpportunity(createdOpportunity);
 
       const distributionChannels =
         input.distributionChannels && input.distributionChannels.length > 0
@@ -373,12 +585,14 @@ class WorkOpportunitiesServiceClass {
         content_payload: postPayload as unknown as Record<string, unknown>,
       });
 
-      const { data: updatedOpportunity, error: updateError } = await (supabase as any)
-        .from("work_opportunities")
-        .update({
-          post_id: createdPost.id,
-          published_at: new Date().toISOString(),
-        })
+      const updatePayload: Pick<WorkOpportunityUpdate, "post_id" | "published_at"> = {
+        post_id: createdPost.id,
+        published_at: new Date().toISOString(),
+      };
+
+      const { data: updatedOpportunity, error: updateError } = await workOpportunitiesDb
+        .from<WorkOpportunityRow>("work_opportunities")
+        .update(updatePayload)
         .eq("id", opportunity.id)
         .select("*")
         .single();
@@ -387,7 +601,7 @@ class WorkOpportunitiesServiceClass {
         throw new Error(updateError.message);
       }
 
-      const completedOpportunity = updatedOpportunity as WorkOpportunity;
+      const completedOpportunity = toWorkOpportunity(updatedOpportunity);
 
       this.notifyMatchingProfessionals(completedOpportunity).catch((notificationError) => {
         logger.error("WorkOpportunitiesService.notifyMatchingProfessionals", notificationError);
@@ -409,8 +623,8 @@ class WorkOpportunitiesServiceClass {
 
   async listPublicOpportunities(filters: WorkOpportunityFilters = {}): Promise<WorkOpportunity[]> {
     try {
-      let query = (supabase as any)
-        .from("work_opportunities")
+      let query = workOpportunitiesDb
+        .from<WorkOpportunityRow>("work_opportunities")
         .select("*")
         .eq("status", "active")
         .eq("visibility", filters.visibility ?? "public_listed")
@@ -438,7 +652,7 @@ class WorkOpportunitiesServiceClass {
         throw new Error(error.message);
       }
 
-      return (data ?? []) as WorkOpportunity[];
+      return (data ?? []).map(toWorkOpportunity);
     } catch (error) {
       trackError(error as Error, {
         component: "WorkOpportunitiesService",
@@ -451,8 +665,8 @@ class WorkOpportunitiesServiceClass {
   async listPublicOpportunityCards(filters: WorkOpportunityFilters = {}): Promise<WorkOpportunityCard[]> {
     const startedAt = this.nowMs();
     try {
-      let query = (supabase as any)
-        .from("public_work_opportunity_search")
+      let query = workOpportunitiesDb
+        .from<PublicOpportunityCardRow>("public_work_opportunity_search")
         .select("*")
         .order("published_at", { ascending: false, nullsFirst: false })
         .order("created_at", { ascending: false })
@@ -512,7 +726,7 @@ class WorkOpportunitiesServiceClass {
       }
 
       return this.enrichAndRankOpportunityCards(
-        (data ?? []) as WorkOpportunityCard[],
+        (data ?? []).map(toWorkOpportunityCard),
         filters.territoryLocationId,
       );
     } catch (error) {
@@ -533,12 +747,14 @@ class WorkOpportunitiesServiceClass {
 
   async markOpportunityAsResolved(opportunityId: string): Promise<boolean> {
     try {
-      const { error } = await (supabase as any)
-        .from("work_opportunities")
-        .update({
-          status: "filled",
-          closed_at: new Date().toISOString(),
-        })
+      const resolutionPayload: OpportunityResolutionUpdate = {
+        status: "filled",
+        closed_at: new Date().toISOString(),
+      };
+
+      const { error } = await workOpportunitiesDb
+        .from<WorkOpportunityRow>("work_opportunities")
+        .update(resolutionPayload)
         .eq("id", opportunityId);
 
       return !error;
@@ -554,7 +770,9 @@ class WorkOpportunitiesServiceClass {
 
   async expireStaleOpportunities(): Promise<{ expiredCount: number; expiredIds: string[] }> {
     try {
-      const { data, error } = await (supabase as any).rpc("expire_stale_work_opportunities");
+      const { data, error } = await workOpportunitiesDb.rpc<
+        ExpireStaleOpportunitiesRow | ExpireStaleOpportunitiesRow[]
+      >("expire_stale_work_opportunities");
       if (error) {
         throw new Error(error.message);
       }
@@ -576,8 +794,8 @@ class WorkOpportunitiesServiceClass {
   async getPublicOpportunityDetail(opportunityId: string): Promise<WorkOpportunityDetail | null> {
     const startedAt = this.nowMs();
     try {
-      const { data: baseData, error: baseError } = await (supabase as any)
-        .from("public_work_opportunity_search")
+      const { data: baseData, error: baseError } = await workOpportunitiesDb
+        .from<PublicOpportunityCardRow>("public_work_opportunity_search")
         .select("*")
         .eq("id", opportunityId)
         .maybeSingle();
@@ -590,12 +808,28 @@ class WorkOpportunitiesServiceClass {
         return null;
       }
 
-      const base = this.enrichAndRankOpportunityCards([baseData as WorkOpportunityCard])[0] ?? (baseData as WorkOpportunityCard);
+      const normalizedBase = toWorkOpportunityCard(baseData);
+      const base = this.enrichAndRankOpportunityCards([normalizedBase])[0] ?? normalizedBase;
 
       let professional: WorkOpportunityProfessionalDetail | null = null;
       if (base.professional_id) {
-        const { data: professionalData, error: professionalError } = await (supabase as any)
-          .from("professional_data")
+        const { data: professionalData, error: professionalError } = await workOpportunitiesDb
+          .from<
+            Pick<
+              ProfessionalDataRow,
+              | "id"
+              | "slug"
+              | "professional_name"
+              | "service_category"
+              | "description"
+              | "availability_notes"
+              | "is_accepting_clients"
+              | "visibility"
+              | "rating"
+              | "portfolio_items"
+              | "metadata"
+            > & { location?: { geographic_path: string | null } | null }
+          >("professional_data")
           .select(
             `
             id,
@@ -620,7 +854,7 @@ class WorkOpportunitiesServiceClass {
         if (professionalError) {
           logger.warn("WorkOpportunitiesService.getPublicOpportunityDetail.professional", professionalError);
         } else if (professionalData) {
-          const rawProfessional = professionalData as ProfessionalDataDetailRow;
+          const rawProfessional = toProfessionalDataDetailRow(professionalData);
           professional = {
             id: rawProfessional.id,
             slug: rawProfessional.slug,
@@ -673,8 +907,8 @@ class WorkOpportunitiesServiceClass {
   ): Promise<WorkOpportunityRecentItem[]> {
     const startedAt = this.nowMs();
     try {
-      const { data, error } = await (supabase as any)
-        .from("work_opportunities")
+      const { data, error } = await workOpportunitiesDb
+        .from<RecentOpportunityRow>("work_opportunities")
         .select(
           "id, professional_id, professional_category, headline, opportunity_type, urgency, status, visibility, availability_notes, territory_location_id, created_at, published_at",
         )
@@ -686,20 +920,7 @@ class WorkOpportunitiesServiceClass {
         throw new Error(error.message);
       }
 
-      const rows = (data ?? []) as Array<{
-        id: string;
-        professional_id: string | null;
-        professional_category: string;
-        headline: string;
-        opportunity_type: WorkOpportunityType;
-        urgency: WorkOpportunity["urgency"];
-        status: WorkOpportunity["status"];
-        visibility: WorkOpportunity["visibility"];
-        availability_notes: string | null;
-        territory_location_id: string;
-        created_at: string;
-        published_at: string | null;
-      }>;
+      const rows = data ?? [];
 
       if (rows.length === 0) return [];
 
@@ -708,11 +929,14 @@ class WorkOpportunitiesServiceClass {
 
       const [locationsResult, professionalsResult] = await Promise.all([
         locationIds.length > 0
-          ? (supabase as any).from("locations").select("id, name").in("id", locationIds)
+          ? workOpportunitiesDb
+              .from<Pick<LocationRow, "id" | "name">>("locations")
+              .select("id, name")
+              .in("id", locationIds)
           : Promise.resolve({ data: [], error: null }),
         professionalIds.length > 0
-          ? (supabase as any)
-              .from("professional_data")
+          ? workOpportunitiesDb
+              .from<ProfessionalListItemRow>("professional_data")
               .select("id, professional_name, service_category")
               .in("id", professionalIds)
           : Promise.resolve({ data: [], error: null }),
@@ -727,18 +951,14 @@ class WorkOpportunitiesServiceClass {
       }
 
       const locationMap = new Map<string, string | null>(
-        ((locationsResult.data ?? []) as Array<{ id: string; name: string | null }>).map((item) => [
+        (locationsResult.data ?? []).map((item) => [
           item.id,
           item.name,
         ]),
       );
 
       const professionalMap = new Map<string, { professional_name: string | null; service_category: string | null }>(
-        ((professionalsResult.data ?? []) as Array<{
-          id: string;
-          professional_name: string | null;
-          service_category: string | null;
-        }>).map((item) => [
+        (professionalsResult.data ?? []).map((item) => [
           item.id,
           {
             professional_name: item.professional_name,
@@ -755,10 +975,10 @@ class WorkOpportunitiesServiceClass {
           professional_name: linkedProfessional?.professional_name ?? null,
           professional_category: linkedProfessional?.service_category ?? row.professional_category,
           headline: row.headline,
-          opportunity_type: row.opportunity_type,
-          urgency: row.urgency,
-          status: row.status,
-          visibility: row.visibility,
+          opportunity_type: row.opportunity_type as WorkOpportunityType,
+          urgency: row.urgency as WorkOpportunity["urgency"],
+          status: row.status as WorkOpportunity["status"],
+          visibility: row.visibility as WorkOpportunity["visibility"],
           availability_notes: row.availability_notes,
           territory_location_id: row.territory_location_id,
           territory_name: locationMap.get(row.territory_location_id) ?? null,
@@ -783,8 +1003,8 @@ class WorkOpportunitiesServiceClass {
 
   async getOpportunityByPostId(postId: string): Promise<WorkOpportunity | null> {
     try {
-      const { data, error } = await (supabase as any)
-        .from("work_opportunities")
+      const { data, error } = await workOpportunitiesDb
+        .from<WorkOpportunityRow>("work_opportunities")
         .select("*")
         .eq("post_id", postId)
         .maybeSingle();
@@ -793,7 +1013,7 @@ class WorkOpportunitiesServiceClass {
         throw new Error(error.message);
       }
 
-      return (data as WorkOpportunity | null) ?? null;
+      return data ? toWorkOpportunity(data) : null;
     } catch (error) {
       trackError(error as Error, {
         component: "WorkOpportunitiesService",
@@ -807,8 +1027,8 @@ class WorkOpportunitiesServiceClass {
     const shouldNotify = ["offering_work", "freelance", "quick_job"].includes(opportunity.opportunity_type);
     if (!shouldNotify) return;
 
-    const { data: candidates, error } = await (supabase as any)
-      .from("professional_data")
+    const { data: candidates, error } = await workOpportunitiesDb
+      .from<ProfessionalNotificationCandidateRow>("professional_data")
       .select("id, owner_user_id, professional_name, service_category")
       .eq("service_category", opportunity.professional_category)
       .eq("location_id", opportunity.territory_location_id)
@@ -824,25 +1044,25 @@ class WorkOpportunitiesServiceClass {
       return;
     }
 
-    const list = candidates as ProfessionalMatchCandidate[];
+    const list = candidates;
     const notifications = list
       .filter((candidate) => !!candidate.owner_user_id)
       .map((candidate) =>
         NotificationService.createNotification({
-          user_id: candidate.owner_user_id as string,
+            user_id: candidate.owner_user_id as string,
           type: "info",
           category: "transactional",
           title: `Nova oportunidade para ${opportunity.professional_category}`,
           message: `${opportunity.headline} na sua regiao.`,
           action_url: `/oportunidades/${opportunity.id}`,
           action_label: "Ver oportunidade",
-          metadata: {
-            domain: "work_opportunities",
-            opportunity_id: opportunity.id,
-            professional_id: candidate.professional_id,
-            opportunity_type: opportunity.opportunity_type,
-          },
-        }),
+            metadata: {
+              domain: "work_opportunities",
+              opportunity_id: opportunity.id,
+              professional_id: candidate.id,
+              opportunity_type: opportunity.opportunity_type,
+            },
+          }),
       );
 
     if (notifications.length === 0) return;
@@ -853,8 +1073,8 @@ class WorkOpportunitiesServiceClass {
     const normalizedCategory = input.professionalCategory.trim().toLowerCase();
     if (!normalizedCategory) return;
 
-    const { data: candidates, error } = await (supabase as any)
-      .from("professional_data")
+    const { data: candidates, error } = await workOpportunitiesDb
+      .from<ProfessionalNotificationCandidateRow>("professional_data")
       .select("id, owner_user_id, professional_name, service_category")
       .eq("service_category", normalizedCategory)
       .eq("location_id", input.territoryLocationId)
@@ -870,7 +1090,7 @@ class WorkOpportunitiesServiceClass {
       return;
     }
 
-    const list = candidates as ProfessionalMatchCandidate[];
+    const list = candidates;
     const notifications = list
       .filter((candidate) => !!candidate.owner_user_id)
       .map((candidate) =>

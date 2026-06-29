@@ -18,6 +18,7 @@ import {
   isValidId,
   isValidTerritoryParams,
 } from '@/shared/validation';
+import type { BusinessDataWithProfiles } from '@/core/business/types';
 import type {
   GastronomyBusiness,
   GastronomyBusinessFilters,
@@ -40,6 +41,11 @@ interface PaginatedGastronomyBusinesses {
   nextPage: number | null;
   totalCount: number;
 }
+
+type TerritorialFilterQuery = {
+  eq: (column: string, value: string) => unknown;
+  in: (column: string, values: string[]) => unknown;
+};
 
 async function fetchActiveGastronomyProfileByBusinessDataId(
   businessDataId: string,
@@ -148,7 +154,12 @@ function buildProfilesQuery(
  *  Mapeia registro business_data para GastronomyBusiness
  */
 async function mapRecordToGastronomyBusiness(
-  record: any,
+  record: Record<string, unknown> & {
+    id: string;
+    profile_id: string;
+    business_name?: string | null;
+    business_role?: string | null;
+  },
   params: {
     profilesMap?: Map<string, { id: string; name?: string }>;
     gastronomyProfilesMap?: Map<string, GastronomyProfile>;
@@ -166,13 +177,13 @@ async function mapRecordToGastronomyBusiness(
     params.profilesMap ??
     (await loadProfilesMap(record.profile_id ? [record.profile_id] : []));
 
-  const business = BusinessService.toBusinessReadModel({
+  const business = BusinessService.toBusinessReadModel(({
     ...record,
     profiles: hydratedProfilesMap.get(record.profile_id) || {
       id: record.profile_id,
       name: record.business_name || 'Empresa',
     },
-  } as any);
+  } as unknown) as BusinessDataWithProfiles);
 
   return {
     ...business,
@@ -204,7 +215,9 @@ async function fetchBusinessDataRecords(params: {
       return [];
     }
 
-    effectiveBusinessIds = (gastronomyProfiles || []).map((profile: any) => profile.business_id);
+    effectiveBusinessIds = ((gastronomyProfiles || []) as unknown as Array<{ business_id: string }>).map(
+      (profile) => profile.business_id,
+    );
   }
 
   if (!effectiveBusinessIds?.length) {
@@ -224,7 +237,10 @@ async function fetchBusinessDataRecords(params: {
 
   const territoryFilter = await resolveHierarchicalTerritoryFilter(filters.territoryFilter);
   if (territoryFilter && territoryFilter.scope !== 'none') {
-    query = applyTerritoryFilter(query as any, territoryFilter) as any;
+    applyTerritoryFilter(
+      query as unknown as TerritorialFilterQuery,
+      territoryFilter,
+    );
   }
 
   if (filters.search) {

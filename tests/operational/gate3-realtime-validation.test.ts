@@ -23,6 +23,13 @@ import {
 } from './gate3-test-fixtures';
 import { describeOperational } from '../helpers/operational-env';
 
+interface RideStatusEventPayload {
+  new?: {
+    status?: string;
+    driver_profile_id?: string | null;
+  };
+}
+
 async function subscribeAndWait(channel: ReturnType<SupabaseClient['channel']>): Promise<void> {
   await new Promise<void>((resolve, reject) => {
     const timeout = setTimeout(() => {
@@ -49,10 +56,10 @@ async function subscribeAndWait(channel: ReturnType<SupabaseClient['channel']>):
 }
 
 async function waitForRideStatusEvent(
-  events: any[],
+  events: RideStatusEventPayload[],
   expectedStatus: string,
   timeoutMs = 12000,
-): Promise<any> {
+): Promise<RideStatusEventPayload> {
   const startedAt = Date.now();
 
   while (Date.now() - startedAt < timeoutMs) {
@@ -114,7 +121,7 @@ describeOperational('GATE 3 - Realtime validation', {
     expect(ride?.id).toBeTruthy();
 
     const rideId = ride!.id;
-    const driverEvents: any[] = [];
+    const driverEvents: RideStatusEventPayload[] = [];
     const driverChannel = driverClient
       .channel(`ride_realtime:driver:${rideId}`)
       .on(
@@ -167,7 +174,7 @@ describeOperational('GATE 3 - Realtime validation', {
     expect(ride?.id).toBeTruthy();
 
     const rideId = ride!.id;
-    const passengerEvents: any[] = [];
+    const passengerEvents: RideStatusEventPayload[] = [];
     const passengerChannel = passengerClient
       .channel(`ride_realtime:passenger:${rideId}`)
       .on(
@@ -220,8 +227,8 @@ describeOperational('GATE 3 - Realtime validation', {
     expect(ride?.id).toBeTruthy();
 
     const rideId = ride!.id;
-    const passengerEvents: any[] = [];
-    const driverEvents: any[] = [];
+    const passengerEvents: RideStatusEventPayload[] = [];
+    const driverEvents: RideStatusEventPayload[] = [];
 
     const passengerChannel = passengerClient
       .channel(`ride_realtime:passenger:${rideId}`)

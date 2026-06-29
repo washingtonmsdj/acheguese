@@ -1,32 +1,65 @@
 /**
- * QueryBuilder - Construtor de queries genérico
- * 
- * SSOT: Centraliza lógica de construção de queries
- * Elimina duplicação de 150+ queries no projeto
- * 
- * @version 1.0.0
- * @since Sprint 1 - Repository Pattern
+ * QueryBuilder - generic Supabase query builder.
+ *
+ * SSOT: centralizes shared query construction logic.
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { DatabaseError, DatabaseErrorCode } from '../errors/DatabaseError';
 import type { Filter, OrderBy, PaginationOptions, PaginatedResult } from '../interfaces/IRepository';
 
-/**
- * Construtor genérico de queries para Supabase
- * Centraliza toda lógica de query em um único lugar
- */
-export class QueryBuilder<T> {
-  constructor(private client: SupabaseClient) {}
+type QueryErrorLike = {
+  message?: string | null;
+  code?: string | null;
+} | null;
 
-  /**
-   * Busca um registro por ID
-   * SSOT: Substitui 40+ ocorrências de .select().eq('id', id).maybeSingle()
-   */
+type QueryPayload<TRow> = {
+  data: TRow[] | null;
+  error: QueryErrorLike;
+  count?: number | null;
+};
+
+type SingleQueryPayload<TRow> = {
+  data: TRow | null;
+  error: QueryErrorLike;
+  count?: number | null;
+};
+
+type FilterableQuery<TRow> = PromiseLike<QueryPayload<TRow>> & {
+  select(columns?: string, options?: { count?: 'exact'; head?: boolean }): FilterableQuery<TRow>;
+  eq(column: string, value: unknown): FilterableQuery<TRow>;
+  neq(column: string, value: unknown): FilterableQuery<TRow>;
+  gt(column: string, value: unknown): FilterableQuery<TRow>;
+  gte(column: string, value: unknown): FilterableQuery<TRow>;
+  lt(column: string, value: unknown): FilterableQuery<TRow>;
+  lte(column: string, value: unknown): FilterableQuery<TRow>;
+  in(column: string, values: readonly unknown[]): FilterableQuery<TRow>;
+  like(column: string, value: unknown): FilterableQuery<TRow>;
+  ilike(column: string, value: unknown): FilterableQuery<TRow>;
+  order(column: string, options?: { ascending: boolean }): FilterableQuery<TRow>;
+  range(from: number, to: number): FilterableQuery<TRow>;
+  insert(values: unknown): FilterableQuery<TRow>;
+  update(values: unknown): FilterableQuery<TRow>;
+  delete(): FilterableQuery<TRow>;
+  maybeSingle(): Promise<SingleQueryPayload<TRow>>;
+  single(): Promise<SingleQueryPayload<TRow>>;
+};
+
+type QueryBuilderClient = {
+  from<TRow = Record<string, unknown>>(table: string): FilterableQuery<TRow>;
+};
+
+export class QueryBuilder<T> {
+  private readonly clientRef: QueryBuilderClient;
+
+  constructor(client: SupabaseClient) {
+    this.clientRef = client as unknown as QueryBuilderClient;
+  }
+
   async findById(table: string, id: string): Promise<T | null> {
     try {
-      const { data, error } = await this.client
-        .from(table)
+      const { data, error } = await this.clientRef
+        .from<T>(table)
         .select('*')
         .eq('id', id)
         .maybeSingle();
@@ -35,7 +68,7 @@ export class QueryBuilder<T> {
         throw DatabaseError.fromSupabaseError(error, 'findById', table);
       }
 
-      return data as T | null;
+      return data;
     } catch (error) {
       if (error instanceof DatabaseError) throw error;
       throw new DatabaseError({
@@ -48,16 +81,12 @@ export class QueryBuilder<T> {
     }
   }
 
-  /**
-   * Busca múltiplos registros por IDs
-   * SSOT: Substitui 50+ ocorrências de .select().in('id', ids)
-   */
   async findByIds(table: string, ids: string[]): Promise<T[]> {
     if (ids.length === 0) return [];
 
     try {
-      const { data, error } = await this.client
-        .from(table)
+      const { data, error } = await this.clientRef
+        .from<T>(table)
         .select('*')
         .in('id', ids);
 
@@ -65,7 +94,7 @@ export class QueryBuilder<T> {
         throw DatabaseError.fromSupabaseError(error, 'findByIds', table);
       }
 
-      return (data as T[]) || [];
+      return data || [];
     } catch (error) {
       if (error instanceof DatabaseError) throw error;
       throw new DatabaseError({
@@ -78,14 +107,10 @@ export class QueryBuilder<T> {
     }
   }
 
-  /**
-   * Conta registros com filtros
-   * SSOT: Substitui 30+ ocorrências de .select('id', { count: 'exact', head: true })
-   */
   async count(table: string, filters?: Filter[]): Promise<number> {
     try {
-      let query = this.client
-        .from(table)
+      let query = this.clientRef
+        .from<T>(table)
         .select('id', { count: 'exact', head: true });
 
       if (filters) {
@@ -111,16 +136,9 @@ export class QueryBuilder<T> {
     }
   }
 
-  /**
-   * Busca todos os registros com filtros e ordenação
-   */
-  async findAll(
-    table: string,
-    filters?: Filter[],
-    orderBy?: OrderBy[]
-  ): Promise<T[]> {
+  async findAll(table: string, filters?: Filter[], orderBy?: OrderBy[]): Promise<T[]> {
     try {
-      let query = this.client.from(table).select('*');
+      let query = this.clientRef.from<T>(table).select('*');
 
       if (filters) {
         query = this.applyFilters(query, filters);
@@ -136,7 +154,7 @@ export class QueryBuilder<T> {
         throw DatabaseError.fromSupabaseError(error, 'findAll', table);
       }
 
-      return (data as T[]) || [];
+      return data || [];
     } catch (error) {
       if (error instanceof DatabaseError) throw error;
       throw new DatabaseError({
@@ -149,22 +167,18 @@ export class QueryBuilder<T> {
     }
   }
 
-  /**
-   * Busca registros com paginação
-   */
   async findPaginated(
     table: string,
     pagination: PaginationOptions,
     filters?: Filter[],
-    orderBy?: OrderBy[]
+    orderBy?: OrderBy[],
   ): Promise<PaginatedResult<T>> {
     const { page, pageSize } = pagination;
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
 
     try {
-      // Query para dados
-      let dataQuery = this.client.from(table).select('*').range(from, to);
+      let dataQuery = this.clientRef.from<T>(table).select('*').range(from, to);
 
       if (filters) {
         dataQuery = this.applyFilters(dataQuery, filters);
@@ -174,7 +188,6 @@ export class QueryBuilder<T> {
         dataQuery = this.applyOrderBy(dataQuery, orderBy);
       }
 
-      // Query para contagem total
       const [dataResult, total] = await Promise.all([
         dataQuery,
         this.count(table, filters),
@@ -184,7 +197,7 @@ export class QueryBuilder<T> {
         throw DatabaseError.fromSupabaseError(dataResult.error, 'findPaginated', table);
       }
 
-      const data = (dataResult.data as T[]) || [];
+      const data = dataResult.data || [];
       const totalPages = Math.ceil(total / pageSize);
 
       return {
@@ -206,13 +219,10 @@ export class QueryBuilder<T> {
     }
   }
 
-  /**
-   * Cria um registro
-   */
   async create(table: string, data: Partial<T>): Promise<T> {
     try {
-      const { data: result, error } = await this.client
-        .from(table)
+      const { data: result, error } = await this.clientRef
+        .from<T>(table)
         .insert(data)
         .select()
         .single();
@@ -221,7 +231,16 @@ export class QueryBuilder<T> {
         throw DatabaseError.fromSupabaseError(error, 'create', table);
       }
 
-      return result as T;
+      if (!result) {
+        throw new DatabaseError({
+          code: DatabaseErrorCode.QUERY_ERROR,
+          message: `Create returned no data for ${table}`,
+          table,
+          operation: 'create',
+        });
+      }
+
+      return result;
     } catch (error) {
       if (error instanceof DatabaseError) throw error;
       throw new DatabaseError({
@@ -234,15 +253,12 @@ export class QueryBuilder<T> {
     }
   }
 
-  /**
-   * Cria múltiplos registros
-   */
   async createMany(table: string, data: Partial<T>[]): Promise<T[]> {
     if (data.length === 0) return [];
 
     try {
-      const { data: result, error } = await this.client
-        .from(table)
+      const { data: result, error } = await this.clientRef
+        .from<T>(table)
         .insert(data)
         .select();
 
@@ -250,7 +266,7 @@ export class QueryBuilder<T> {
         throw DatabaseError.fromSupabaseError(error, 'createMany', table);
       }
 
-      return (result as T[]) || [];
+      return result || [];
     } catch (error) {
       if (error instanceof DatabaseError) throw error;
       throw new DatabaseError({
@@ -263,13 +279,10 @@ export class QueryBuilder<T> {
     }
   }
 
-  /**
-   * Atualiza um registro
-   */
   async update(table: string, id: string, data: Partial<T>): Promise<T> {
     try {
-      const { data: result, error } = await this.client
-        .from(table)
+      const { data: result, error } = await this.clientRef
+        .from<T>(table)
         .update(data)
         .eq('id', id)
         .select()
@@ -289,7 +302,7 @@ export class QueryBuilder<T> {
         });
       }
 
-      return result as T;
+      return result;
     } catch (error) {
       if (error instanceof DatabaseError) throw error;
       throw new DatabaseError({
@@ -302,13 +315,10 @@ export class QueryBuilder<T> {
     }
   }
 
-  /**
-   * Deleta um registro
-   */
   async delete(table: string, id: string): Promise<void> {
     try {
-      const { error } = await this.client
-        .from(table)
+      const { error } = await this.clientRef
+        .from<T>(table)
         .delete()
         .eq('id', id);
 
@@ -327,13 +337,10 @@ export class QueryBuilder<T> {
     }
   }
 
-  /**
-   * Verifica se registro existe
-   */
   async exists(table: string, id: string): Promise<boolean> {
     try {
-      const { data, error } = await this.client
-        .from(table)
+      const { data, error } = await this.clientRef
+        .from<T>(table)
         .select('id')
         .eq('id', id)
         .maybeSingle();
@@ -355,11 +362,7 @@ export class QueryBuilder<T> {
     }
   }
 
-  /**
-   * Aplica filtros à query
-   * SSOT: Lógica centralizada de filtros
-   */
-  private applyFilters(query: any, filters: Filter[]): any {
+  private applyFilters(query: FilterableQuery<T>, filters: Filter[]): FilterableQuery<T> {
     let result = query;
 
     for (const filter of filters) {
@@ -383,7 +386,10 @@ export class QueryBuilder<T> {
           result = result.lte(filter.field, filter.value);
           break;
         case 'in':
-          result = result.in(filter.field, filter.value);
+          result = result.in(
+            filter.field,
+            Array.isArray(filter.value) ? filter.value : [filter.value],
+          );
           break;
         case 'like':
           result = result.like(filter.field, filter.value);
@@ -397,11 +403,7 @@ export class QueryBuilder<T> {
     return result;
   }
 
-  /**
-   * Aplica ordenação à query
-   * SSOT: Lógica centralizada de ordenação
-   */
-  private applyOrderBy(query: any, orderBy: OrderBy[]): any {
+  private applyOrderBy(query: FilterableQuery<T>, orderBy: OrderBy[]): FilterableQuery<T> {
     let result = query;
 
     for (const order of orderBy) {

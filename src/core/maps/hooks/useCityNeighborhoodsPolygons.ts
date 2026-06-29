@@ -45,6 +45,12 @@ interface CachedData {
   polygons: TerritoryPolygon[];
 }
 
+declare global {
+  interface Window {
+    clearNeighborhoodsCache?: (cityId?: string) => void;
+  }
+}
+
 function getCacheKey(cityId: string): string {
   return `${CACHE_KEY_PREFIX}${CACHE_VERSION}-${cityId}`;
 }
@@ -232,6 +238,6 @@ export function useCityNeighborhoodsPolygons({
 }
 
 if (typeof window !== 'undefined') {
-  (window as any).clearNeighborhoodsCache = clearNeighborhoodsCache;
+  window.clearNeighborhoodsCache = clearNeighborhoodsCache;
 }
 

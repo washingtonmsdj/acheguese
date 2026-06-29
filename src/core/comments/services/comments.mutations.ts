@@ -7,13 +7,38 @@
 import { supabase } from "@/integrations/supabase";
 import { trackError } from "@/shared/utils/errorTracking";
 import type { Comment, CreateCommentData, UpdateCommentData } from "../types";
-import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
 
 const TABLE = "comments";
 const LIKES_TABLE = "comment_likes";
 
-const supabaseTyped = supabase as unknown as AdminSupabaseClient;
-const commentsDb = supabase as any;
+interface QueryError {
+  message?: string | null;
+  code?: string | null;
+}
+
+interface QueryResult<T> {
+  data: T | null;
+  error: QueryError | null;
+}
+
+interface QueryBuilder<TRow> extends PromiseLike<QueryResult<TRow[]>> {
+  select: (columns?: string) => QueryBuilder<TRow>;
+  insert: (values: unknown | unknown[]) => QueryBuilder<TRow>;
+  update: (values: unknown) => QueryBuilder<TRow>;
+  delete: () => QueryBuilder<TRow>;
+  eq: (column: string, value: unknown) => QueryBuilder<TRow>;
+  single: () => Promise<QueryResult<TRow>>;
+}
+
+interface CommentsDbClient {
+  from: <TRow = never>(table: string) => QueryBuilder<TRow>;
+}
+
+const commentsDb = supabase as unknown as CommentsDbClient;
+
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : "Erro desconhecido";
+}
 
 export class CommentError extends Error {
   constructor(
@@ -191,13 +216,13 @@ export async function likeComment(
       throw error;
     }
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     trackError(error as Error, {
       component: "comments.mutations",
       action: "likeComment",
       metadata: { commentId, userId },
     });
-    return { success: false, error: error.message };
+    return { success: false, error: getErrorMessage(error) };
   }
 }
 
@@ -218,12 +243,12 @@ export async function unlikeComment(
 
     if (error) throw error;
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     trackError(error as Error, {
       component: "comments.mutations",
       action: "unlikeComment",
       metadata: { commentId, userId },
     });
-    return { success: false, error: error.message };
+    return { success: false, error: getErrorMessage(error) };
   }
 }

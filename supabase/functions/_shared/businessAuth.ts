@@ -1,3 +1,4 @@
+import { type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getAllSecurityHeaders } from "./security.ts";
 
 export function jsonSecurityResponse(
@@ -26,7 +27,7 @@ function extractBearerToken(req: Request): string | null {
 
 export async function requireAuthenticatedUser(
   req: Request,
-  supabase: any,
+  supabase: SupabaseClient,
 ): Promise<{ user: { id: string } } | Response> {
   const token = extractBearerToken(req);
   if (!token) {
@@ -57,7 +58,7 @@ export async function requireAuthenticatedUser(
 
 export async function requireBusinessManagementAccess(
   req: Request,
-  supabase: any,
+  supabase: SupabaseClient,
   businessId: string,
 ): Promise<{ user: { id: string }; businessProfileId: string } | Response> {
   const authResult = await requireAuthenticatedUser(req, supabase);

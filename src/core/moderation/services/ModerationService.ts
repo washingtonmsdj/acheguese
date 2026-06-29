@@ -32,11 +32,36 @@ type SupabaseErrorLike = {
   code?: string;
 };
 
-class ModerationServiceClass {
-  private db(): any {
-    return supabase as any;
-  }
+type ErrorLike = { message?: string | null; code?: string | null } | null;
 
+type QueryPayload<TRow> = {
+  data: TRow[] | null;
+  error: ErrorLike;
+  count?: number | null;
+};
+
+type SingleQueryPayload<TRow> = {
+  data: TRow | null;
+  error: ErrorLike;
+  count?: number | null;
+};
+
+type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
+  select(columns?: string, options?: { count?: "exact"; head?: boolean }): TableClient<TRow>;
+  insert(values: Record<string, unknown> | Record<string, unknown>[]): TableClient<TRow>;
+  update(values: Record<string, unknown>): TableClient<TRow>;
+  eq(column: string, value: unknown): TableClient<TRow>;
+  order(column: string, options?: { ascending: boolean }): TableClient<TRow>;
+  maybeSingle(): Promise<SingleQueryPayload<TRow>>;
+};
+
+type ModerationDbClient = {
+  from<TRow = Record<string, unknown>>(table: string): TableClient<TRow>;
+};
+
+const moderationDb = supabase as unknown as ModerationDbClient;
+
+class ModerationServiceClass {
   private getErrorMessage(error: unknown, fallback: string): string {
     if (typeof error === "object" && error !== null) {
       return (error as SupabaseErrorLike).message || fallback;
@@ -70,7 +95,7 @@ class ModerationServiceClass {
         input.targetId,
       );
 
-      const { error } = await this.db().from("community_reports").insert({
+      const { error } = await moderationDb.from("community_reports").insert({
         target_type: input.targetType,
         target_id: input.targetId,
         target_author_profile_id: targetAuthorProfileId,
@@ -96,7 +121,7 @@ class ModerationServiceClass {
   ): Promise<CombinedModerationReport[] | ModerationReportRow[]> {
     try {
       if (targetType) {
-        const { data, error } = await this.db()
+        const { data, error } = await moderationDb
           .from("community_reports")
           .select("*")
           .eq("target_type", targetType)
@@ -129,7 +154,7 @@ class ModerationServiceClass {
 
   async approveReport(reportId: string, targetType: ModerationTarget): Promise<void> {
     try {
-      const { error } = await this.db()
+      const { error } = await moderationDb
         .from("community_reports")
         .update({
           status: MODERATION_REPORT_STATUS.APPROVED,
@@ -146,7 +171,7 @@ class ModerationServiceClass {
 
   async rejectReport(reportId: string, targetType: ModerationTarget): Promise<void> {
     try {
-      const { error } = await this.db()
+      const { error } = await moderationDb
         .from("community_reports")
         .update({
           status: MODERATION_REPORT_STATUS.REJECTED,
@@ -163,7 +188,7 @@ class ModerationServiceClass {
 
   async banUser(userId: string, bannedBy: string, reason: string, isPermanent = true): Promise<void> {
     try {
-      const { error } = await this.db().from("banned_users").insert({
+      const { error } = await moderationDb.from("banned_users").insert({
         user_id: userId,
         banned_by: bannedBy,
         reason,
@@ -181,7 +206,7 @@ class ModerationServiceClass {
 
   async getBannedStatus(userId: string): Promise<Record<string, unknown> | null> {
     try {
-      const { data, error } = await this.db()
+      const { data, error } = await moderationDb
         .from("banned_users")
         .select("*")
         .eq("user_id", userId)
@@ -210,7 +235,7 @@ class ModerationServiceClass {
     try {
       const reviewerProfileId = await this.resolveProfileId(reviewedBy);
 
-      const { error } = await this.db()
+      const { error } = await moderationDb
         .from("community_reports")
         .update({
           status,
@@ -293,7 +318,7 @@ class ModerationServiceClass {
     severity: "low" | "medium" | "high" = "medium",
   ): Promise<void> {
     try {
-      const { error } = await this.db().from("user_warnings").insert({
+      const { error } = await moderationDb.from("user_warnings").insert({
         user_id: userId,
         warned_by: warnedBy,
         reason,

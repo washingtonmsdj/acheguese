@@ -11,7 +11,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { supabase } from '@/integrations/supabase';
 import { DriverRepository, type Driver } from '../DriverRepository';
-import { DatabaseError, DatabaseErrorCode } from '../../errors/DatabaseError';
+import { DatabaseError } from '../../errors/DatabaseError';
 
 // Mock do Supabase
 vi.mock('@/integrations/supabase', () => ({
@@ -22,7 +22,20 @@ vi.mock('@/integrations/supabase', () => ({
 
 describe('DriverRepository', () => {
   let repository: DriverRepository;
-  let mockSupabase: any;
+  let mockSupabase: {
+    select: ReturnType<typeof vi.fn>;
+    eq: ReturnType<typeof vi.fn>;
+    in: ReturnType<typeof vi.fn>;
+    gte: ReturnType<typeof vi.fn>;
+    lte: ReturnType<typeof vi.fn>;
+    not: ReturnType<typeof vi.fn>;
+    order: ReturnType<typeof vi.fn>;
+    limit: ReturnType<typeof vi.fn>;
+    maybeSingle: ReturnType<typeof vi.fn>;
+    single: ReturnType<typeof vi.fn>;
+    update: ReturnType<typeof vi.fn>;
+    then: ReturnType<typeof vi.fn>;
+  };
 
   const mockDriver: Driver = {
     id: 'driver-123',
@@ -63,7 +76,7 @@ describe('DriverRepository', () => {
       update: vi.fn().mockReturnThis(),
       then: vi.fn((resolve) => resolve({ data: [mockDriver], error: null })),
     };
-    (supabase.from as any).mockReturnValue(mockSupabase);
+    vi.mocked(supabase.from).mockReturnValue(mockSupabase as never);
   });
 
   describe('findByProfileId', () => {
@@ -166,7 +179,7 @@ describe('DriverRepository', () => {
     });
 
     it('deve lançar DatabaseError em caso de erro', async () => {
-      mockSupabase.then.mockImplementationOnce((resolve: any) => resolve({
+      mockSupabase.then.mockImplementationOnce((resolve: (value: { data: Driver[] | null; error: { message: string } | null }) => unknown) => resolve({
         data: null,
         error: { message: 'Database error' },
       }));
@@ -234,7 +247,7 @@ describe('DriverRepository', () => {
     });
 
     it('deve lançar DatabaseError em caso de erro', async () => {
-      mockSupabase.then.mockImplementationOnce((resolve: any) => resolve({
+      mockSupabase.then.mockImplementationOnce((resolve: (value: { data: Driver[] | null; error: { message: string } | null }) => unknown) => resolve({
         data: null,
         error: { message: 'Database error' },
       }));
@@ -386,7 +399,7 @@ describe('DriverRepository', () => {
     });
 
     it('deve lançar DatabaseError em caso de erro', async () => {
-      mockSupabase.then.mockImplementationOnce((resolve: any) => resolve({
+      mockSupabase.then.mockImplementationOnce((resolve: (value: { data: Driver[] | null; error: { message: string } | null }) => unknown) => resolve({
         data: null,
         error: { message: 'Database error' },
       }));

@@ -38,6 +38,37 @@ import type {
 import { RIDE_STATUS } from '../constants';
 import { DISPATCH_ATTEMPT_STATUS } from '../constants/dispatchStatus';
 
+type MobilityOfferRpcClient = {
+  rpc<T>(fn: string, params?: Record<string, unknown>): Promise<{
+    data: T | null;
+    error: { message?: string | null } | null;
+  }>;
+};
+
+type AcceptRideAtomicResult = {
+  success?: boolean;
+  reason?: string;
+  error?: string;
+};
+
+const mobilityOfferRpc = supabase as unknown as MobilityOfferRpcClient;
+
+function normalizeAcceptOfferReason(
+  value: string | undefined,
+): AcceptOfferResult["reason"] | undefined {
+  switch (value) {
+    case "accepted":
+    case "already_accepted":
+    case "expired":
+    case "invalid_state":
+    case "driver_busy":
+    case "not_eligible":
+      return value;
+    default:
+      return undefined;
+  }
+}
+
 // ============================================
 // MOBILITY OFFER SERVICE
 // ============================================
@@ -502,7 +533,7 @@ export class MobilityOfferService {
       }
 
       // Tentar aceitar com lock atomico
-      const { data, error } = await (supabase as any).rpc('accept_ride_atomic', {
+      const { data, error } = await mobilityOfferRpc.rpc<AcceptRideAtomicResult>('accept_ride_atomic', {
         p_ride_id: rideId,
         p_driver_profile_id: driverProfileId,
         p_strategy: strategy,
@@ -524,7 +555,7 @@ export class MobilityOfferService {
           success: false,
           rideId,
           driverProfileId,
-          reason: data?.reason || 'unknown',
+          reason: normalizeAcceptOfferReason(data?.reason),
           error: data?.error,
         };
       }

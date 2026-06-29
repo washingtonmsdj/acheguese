@@ -36,6 +36,25 @@ import {
   EditarServicoTabNavigation,
 } from "./EditarServicoPageSections";
 
+function getErrorDetails(error: unknown): { message: string; code?: string } {
+  if (error instanceof Error) {
+    return { message: error.message };
+  }
+
+  if (typeof error === "object" && error !== null) {
+    const candidate = error as { message?: unknown; code?: unknown };
+    return {
+      message:
+        typeof candidate.message === "string"
+          ? candidate.message
+          : "Erro ao salvar",
+      code: typeof candidate.code === "string" ? candidate.code : undefined,
+    };
+  }
+
+  return { message: "Erro ao salvar" };
+}
+
 export default function EditarServicoPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -276,9 +295,10 @@ export default function EditarServicoPage() {
 
       setPhotoFile(null);
       setPortfolioFiles([]);
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (hasSlugChange) {
-        logError(originalSlug, slug, err.message || "Erro ao salvar", err.code);
+        const details = getErrorDetails(err);
+        logError(originalSlug, slug, details.message, details.code);
       }
     } finally {
       setSaving(false);
@@ -306,11 +326,11 @@ export default function EditarServicoPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-background pb-24">
+    <div className="min-h-screen bg-background pb-28">
       <EditarServicoHeader hasChanges={hasChanges} onBack={() => navigate(-1)} />
       <EditarServicoTabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
 
-      <div className="flex-1 space-y-6 p-4">
+      <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-4 sm:px-6 sm:py-6">
         {activeTab === "info" && (
           <EditarServicoInfoTab
             form={form}

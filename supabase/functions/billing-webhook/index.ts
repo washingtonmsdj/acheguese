@@ -27,7 +27,7 @@
 // ══════════════════════════════════════════════════════════════════════════
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient, type SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import Stripe from 'https://esm.sh/stripe@14.21.0'
 import {
   errorResponse,
@@ -198,7 +198,7 @@ function toCatalogItemCode(planCode: string, metadataCode?: string): string {
  * - Support business_id (scope = 'business')
  * - Fetch catalog item by plan_code
  */
-async function handleSubscriptionChange(event: Stripe.Event, supabase: any) {
+async function handleSubscriptionChange(event: Stripe.Event, supabase: SupabaseClient) {
   const subscription = event.data.object as Stripe.Subscription
   const userId = subscription.metadata.supabase_user_id
   const businessId = subscription.metadata.business_id
@@ -360,7 +360,7 @@ async function handleSubscriptionChange(event: Stripe.Event, supabase: any) {
  * - Keep snapshot immutable (don't delete)
  * - Don't downgrade to free (keep history)
  */
-async function handleSubscriptionDeleted(event: Stripe.Event, supabase: any) {
+async function handleSubscriptionDeleted(event: Stripe.Event, supabase: SupabaseClient) {
   const subscription = event.data.object as Stripe.Subscription
   const userId = subscription.metadata.supabase_user_id
 
@@ -413,7 +413,7 @@ async function handleSubscriptionDeleted(event: Stripe.Event, supabase: any) {
  * - Update status_v2 to 'active'
  * - Register transaction in ledger
  */
-async function handleInvoicePaid(event: Stripe.Event, supabase: any) {
+async function handleInvoicePaid(event: Stripe.Event, supabase: SupabaseClient) {
   const invoice = event.data.object as Stripe.Invoice
   const subscriptionId = typeof invoice.subscription === 'string'
     ? invoice.subscription
@@ -480,7 +480,7 @@ async function handleInvoicePaid(event: Stripe.Event, supabase: any) {
  * - Update status_v2 to 'past_due'
  * - Register failed attempt in ledger
  */
-async function handleInvoicePaymentFailed(event: Stripe.Event, supabase: any) {
+async function handleInvoicePaymentFailed(event: Stripe.Event, supabase: SupabaseClient) {
   const invoice = event.data.object as Stripe.Invoice
   const subscriptionId = typeof invoice.subscription === 'string'
     ? invoice.subscription

@@ -1,23 +1,57 @@
 /**
- * MetricsService - SSOT para métricas e estatísticas
- * 
- * Encapsula acesso ao Supabase para operações de métricas em tempo real.
- * Modules devem usar este service ao invés de acessar integrations diretamente.
- * 
- * @version 1.0.0
+ * Metrics service.
+ *
+ * Centralizes metric reads and realtime subscriptions.
  */
 
+import { BusinessService } from "@/core/business/services/BusinessService";
+import { postService } from "@/core/posts/services/PostService";
+import { profileService } from "@/core/profiles/services/ProfileService";
+import { ReviewsService } from "@/core/reviews/services/ReviewsService";
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import type { RealtimeChannel } from "@supabase/supabase-js";
-import { profileService } from "@/core/profiles/services/ProfileService";
-import { postService } from "@/core/posts/services/PostService";
-import { BusinessService } from "@/core/business/services/BusinessService";
-import { ReviewsService } from "@/core/reviews/services/ReviewsService";
 
 function toError(error: unknown): Error {
   return error instanceof Error ? error : new Error(String(error));
 }
+
+interface QueryResult<T> {
+  data: T | null;
+  error: { message: string; code?: string } | null;
+  count?: number | null;
+}
+
+interface QueryBuilder<TRow> extends PromiseLike<QueryResult<TRow[]>> {
+  select: (
+    columns: string,
+    options?: { count?: "exact"; head?: boolean },
+  ) => QueryBuilder<TRow>;
+  eq: (column: string, value: unknown) => QueryBuilder<TRow>;
+  gte: (column: string, value: string | number) => QueryBuilder<TRow>;
+  lte: (column: string, value: string | number) => QueryBuilder<TRow>;
+  order: (column: string, options?: { ascending?: boolean }) => QueryBuilder<TRow>;
+}
+
+interface MetricsRpcClient {
+  rpc: <TResult = unknown>(
+    fn: string,
+    params?: Record<string, unknown>,
+  ) => Promise<QueryResult<TResult>>;
+}
+
+interface MetricsDbClient extends MetricsRpcClient {
+  from: <TRow = never>(table: string) => QueryBuilder<TRow>;
+}
+
+interface MetricsHistoryRow {
+  id: string;
+  metric_name: string;
+  value: number | null;
+  created_at: string;
+}
+
+const metricsDb = supabase as unknown as MetricsDbClient;
 
 export interface RealtimeMetrics {
   activeUsers: number;
@@ -36,22 +70,20 @@ export interface ReputationStats {
 }
 
 export class MetricsService {
-  private static readonly db = supabase as any;
-  /**
-   * Buscar métricas em tempo real
-   * ✅ SSOT: Delega para os serviços apropriados
-   */
   static async getRealtimeMetrics(): Promise<RealtimeMetrics> {
     try {
       const [users, sessions, rides, posts, businesses] = await Promise.all([
-        // ✅ Delega para ProfileService
         profileService.getTotalProfilesCount(),
-        this.db.from('user_sessions').select('id', { count: 'exact', head: true }).eq('active', true),
-        this.db.from('rides').select('id', { count: 'exact', head: true }).eq('status', 'active'),
-        // ✅ Delega para PostService
+        metricsDb
+          .from("user_sessions")
+          .select("id", { count: "exact", head: true })
+          .eq("active", true),
+        metricsDb
+          .from("rides")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "active"),
         postService.getTotalPostsCount(),
-        // ✅ Delega para BusinessService
-        BusinessService.getTotalBusinessesCount()
+        BusinessService.getTotalBusinessesCount(),
       ]);
 
       return {
@@ -59,125 +91,109 @@ export class MetricsService {
         activeSessions: sessions.count || 0,
         activeRides: rides.count || 0,
         totalPosts: posts || 0,
-        totalBusinesses: businesses || 0
+        totalBusinesses: businesses || 0,
       };
     } catch (error: unknown) {
-      logger.error('Error fetching realtime metrics:', toError(error));
+      logger.error("Error fetching realtime metrics:", toError(error));
       return {
         activeUsers: 0,
         activeSessions: 0,
         activeRides: 0,
         totalPosts: 0,
-        totalBusinesses: 0
+        totalBusinesses: 0,
       };
     }
   }
 
-  /**
-   * Subscrever a métricas em tempo real
-   */
   static subscribeToMetrics(
-    callback: (metrics: Partial<RealtimeMetrics>) => void
+    callback: (metrics: Partial<RealtimeMetrics>) => void,
   ): RealtimeChannel {
     const channel = supabase
-      .channel('realtime-metrics')
-      .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'profiles' },
-        () => callback({ activeUsers: undefined })
+      .channel("realtime-metrics")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "profiles" },
+        () => callback({ activeUsers: undefined }),
       )
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'rides' },
-        () => callback({ activeRides: undefined })
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "rides" },
+        () => callback({ activeRides: undefined }),
       )
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'posts' },
-        () => callback({ totalPosts: undefined })
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "posts" },
+        () => callback({ totalPosts: undefined }),
       )
       .subscribe();
 
     return channel;
   }
 
-  /**
-   * Cancelar subscrição de métricas
-   */
-  static unsubscribeFromMetrics(channel: RealtimeChannel) {
+  static unsubscribeFromMetrics(channel: RealtimeChannel): void {
     supabase.removeChannel(channel);
   }
 
-  /**
-   * Buscar estatísticas de reputação de um usuário
-   * ✅ SSOT: Delega para ProfileService e ReviewsService
-   */
   static async getReputationStats(userId: string): Promise<ReputationStats | null> {
     try {
-      // ✅ Delega para ProfileService
       const profiles = await profileService.getProfilesByUserId(userId);
       const profile = profiles?.[0];
       if (!profile) return null;
 
-      // ✅ Delega para ReviewsService
-      const reviews = await ReviewsService.getReviewsForProfile(profile.id, 'business');
-
+      const reviews = await ReviewsService.getReviewsForProfile(profile.id, "business");
       const totalReviews = reviews?.length || 0;
-      const averageRating = totalReviews > 0
-        ? reviews!.reduce((sum, r) => sum + r.rating, 0) / totalReviews
-        : 0;
+      const averageRating =
+        totalReviews > 0
+          ? reviews!.reduce((sum, review) => sum + review.rating, 0) / totalReviews
+          : 0;
 
-      // Buscar badges (simplificado)
       const badges: string[] = [];
-      if (profile.reputation >= 100) badges.push('bronze');
-      if (profile.reputation >= 500) badges.push('silver');
-      if (profile.reputation >= 1000) badges.push('gold');
+      if (profile.reputation >= 100) badges.push("bronze");
+      if (profile.reputation >= 500) badges.push("silver");
+      if (profile.reputation >= 1000) badges.push("gold");
 
       return {
         userId,
         reputation: profile.reputation || 0,
         totalReviews,
         averageRating,
-        badges
+        badges,
       };
     } catch (error: unknown) {
-      logger.error('Error fetching reputation stats:', toError(error));
+      logger.error("Error fetching reputation stats:", toError(error));
       return null;
     }
   }
 
-  /**
-   * Incrementar métrica específica
-   */
-  static async incrementMetric(metric: string, value = 1) {
+  static async incrementMetric(metric: string, value = 1): Promise<void> {
     try {
-      await this.db.rpc('increment_metric', { 
-        metric_name: metric, 
-        increment_value: value 
+      await metricsDb.rpc("increment_metric", {
+        metric_name: metric,
+        increment_value: value,
       });
     } catch (error: unknown) {
       logger.error(`Error incrementing metric ${metric}:`, toError(error));
     }
   }
 
-  /**
-   * Buscar histórico de métricas
-   */
   static async getMetricsHistory(
     metricName: string,
     startDate: string,
-    endDate: string
-  ) {
+    endDate: string,
+  ): Promise<MetricsHistoryRow[]> {
     try {
-      const { data, error } = await this.db
-        .from('metrics_history')
-        .select('*')
-        .eq('metric_name', metricName)
-        .gte('created_at', startDate)
-        .lte('created_at', endDate)
-        .order('created_at', { ascending: true });
+      const { data, error } = await metricsDb
+        .from<MetricsHistoryRow>("metrics_history")
+        .select("*")
+        .eq("metric_name", metricName)
+        .gte("created_at", startDate)
+        .lte("created_at", endDate)
+        .order("created_at", { ascending: true });
 
       if (error) throw error;
       return data || [];
     } catch (error: unknown) {
-      logger.error('Error fetching metrics history:', toError(error));
+      logger.error("Error fetching metrics history:", toError(error));
       return [];
     }
   }

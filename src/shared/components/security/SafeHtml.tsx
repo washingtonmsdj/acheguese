@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import DOMPurify from 'dompurify';
+import DOMPurify, { type Config as DomPurifyConfig } from 'dompurify';
 import { createElement, useMemo, type ReactNode } from 'react';
 import { HTML_SANITIZATION_CONFIG } from '@/config/security.config';
 
@@ -36,7 +36,7 @@ function sanitizeHtml(
     SAFE_FOR_TEMPLATES: true,
     FORBID_TAGS: Array.from(HTML_SANITIZATION_CONFIG.FORBID_TAGS),
     FORBID_ATTR: Array.from(HTML_SANITIZATION_CONFIG.FORBID_ATTR),
-  } as any);
+  } satisfies DomPurifyConfig);
   return String(sanitized);
 }
 

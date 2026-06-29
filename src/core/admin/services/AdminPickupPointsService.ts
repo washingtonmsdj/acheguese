@@ -1,6 +1,29 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 
+type ErrorLike = { message?: string | null; code?: string | null } | null;
+
+type QueryPayload<TRow> = {
+  data: TRow[] | null;
+  error: ErrorLike;
+  count?: number | null;
+};
+
+type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
+  select(columns?: string, options?: { count?: "exact"; head?: boolean }): TableClient<TRow>;
+  insert(values: Record<string, unknown> | readonly Record<string, unknown>[]): TableClient<TRow>;
+  update(values: Record<string, unknown>): TableClient<TRow>;
+  delete(): TableClient<TRow>;
+  eq(column: string, value: unknown): TableClient<TRow>;
+  order(column: string, options?: { ascending: boolean }): TableClient<TRow>;
+};
+
+type AdminPickupPointsDbClient = {
+  from<TRow = Record<string, unknown>>(table: string): TableClient<TRow>;
+};
+
+const db = supabase as unknown as AdminPickupPointsDbClient;
+
 export interface PickupPoint {
   id: string;
   location_id: string;
@@ -40,7 +63,31 @@ export interface CreatePickupPointInput {
   notes?: string;
 }
 
-const PICKUP_POINT_SELECT = `
+type PickupPointRow = {
+  id: string;
+  location_id: string;
+  name: string;
+  description: string | null;
+  address: string;
+  latitude: number | string;
+  longitude: number | string;
+  type: string;
+  capacity: number | string;
+  has_shelter: boolean | null;
+  has_bench: boolean | null;
+  has_lighting: boolean | null;
+  accessibility: boolean | null;
+  active: boolean | null;
+  photo_url: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at?: string | null;
+  location?: {
+    name?: string | null;
+  } | null;
+};
+
+const pickupPointSelect = `
   id,
   location_id,
   name,
@@ -67,7 +114,7 @@ function normalizeText(value?: string): string | null {
   return trimmed.length > 0 ? trimmed : null;
 }
 
-function mapPickupPoint(row: any): PickupPoint {
+function mapPickupPoint(row: PickupPointRow): PickupPoint {
   return {
     id: row.id,
     location_id: row.location_id,
@@ -87,18 +134,16 @@ function mapPickupPoint(row: any): PickupPoint {
     photo_url: row.photo_url,
     notes: row.notes,
     created_at: row.created_at,
-    updated_at: row.updated_at,
+    updated_at: row.updated_at ?? undefined,
   };
 }
 
 class AdminPickupPointsService {
-  private readonly db = supabase as any;
-
   async getAllPickupPoints(locationId?: string | null): Promise<PickupPoint[]> {
     try {
-      let query = this.db
-        .from("pickup_points")
-        .select(PICKUP_POINT_SELECT)
+      let query = db
+        .from<PickupPointRow>("pickup_points")
+        .select(pickupPointSelect)
         .order("created_at", { ascending: false });
 
       if (locationId) {
@@ -117,7 +162,7 @@ class AdminPickupPointsService {
 
   async createPickupPoint(input: CreatePickupPointInput): Promise<void> {
     try {
-      const { error } = await this.db.from("pickup_points").insert({
+      const payload: Record<string, unknown> = {
         location_id: input.location_id,
         name: input.name.trim(),
         description: normalizeText(input.description),
@@ -132,8 +177,9 @@ class AdminPickupPointsService {
         accessibility: input.accessibility,
         active: input.active,
         notes: normalizeText(input.notes),
-      });
+      };
 
+      const { error } = await db.from<PickupPointRow>("pickup_points").insert(payload);
       if (error) throw error;
     } catch (error) {
       logger.error("AdminPickupPointsService.createPickupPoint", error as Error, input);
@@ -141,10 +187,7 @@ class AdminPickupPointsService {
     }
   }
 
-  async updatePickupPoint(
-    id: string,
-    input: Partial<CreatePickupPointInput>,
-  ): Promise<void> {
+  async updatePickupPoint(id: string, input: Partial<CreatePickupPointInput>): Promise<void> {
     try {
       const patch: Record<string, unknown> = {};
 
@@ -165,7 +208,7 @@ class AdminPickupPointsService {
 
       if (Object.keys(patch).length === 0) return;
 
-      const { error } = await this.db.from("pickup_points").update(patch).eq("id", id);
+      const { error } = await db.from<PickupPointRow>("pickup_points").update(patch).eq("id", id);
       if (error) throw error;
     } catch (error) {
       logger.error("AdminPickupPointsService.updatePickupPoint", error as Error, { id, input });
@@ -175,7 +218,7 @@ class AdminPickupPointsService {
 
   async deletePickupPoint(id: string): Promise<void> {
     try {
-      const { error } = await this.db.from("pickup_points").delete().eq("id", id);
+      const { error } = await db.from<PickupPointRow>("pickup_points").delete().eq("id", id);
       if (error) throw error;
     } catch (error) {
       logger.error("AdminPickupPointsService.deletePickupPoint", error as Error, { id });

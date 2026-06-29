@@ -11,12 +11,17 @@
  */
 
 import { supabase } from "@/integrations/supabase";
+import type { RealtimeChannel } from "@/integrations/supabase";
+import type { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 
+type RealtimeRow = Record<string, unknown>;
+type RealtimeChangePayload = RealtimePostgresChangesPayload<RealtimeRow>;
+
 export interface RealtimeSubscription {
   id: string;
-  channel: any;
+  channel: RealtimeChannel;
   unsubscribe: () => void;
 }
 
@@ -24,7 +29,7 @@ export interface PostgresChangeSubscriptionOptions {
   subscriptionId: string;
   channelName: string;
   table: string;
-  onChange: (payload: unknown) => void;
+  onChange: (payload: RealtimeChangePayload) => void;
   event?: "INSERT" | "UPDATE" | "DELETE" | "*";
   schema?: string;
   filter?: string;
@@ -126,7 +131,7 @@ export class RealtimeService {
    */
   subscribeToGroupMessages(
     groupId: string,
-    onMessage: (message: any) => void,
+    onMessage: (message: RealtimeRow) => void,
   ): RealtimeSubscription {
     const subscriptionId = `group-messages-${groupId}`;
 
@@ -176,7 +181,7 @@ export class RealtimeService {
    */
   subscribeToNotifications(
     userId: string,
-    onNotification: (notification: any) => void,
+    onNotification: (notification: RealtimeRow) => void,
   ): RealtimeSubscription {
     const subscriptionId = `notifications-${userId}`;
 
@@ -226,7 +231,7 @@ export class RealtimeService {
    */
   subscribeToDirectMessages(
     conversationId: string,
-    onMessage: (message: any) => void,
+    onMessage: (message: RealtimeRow) => void,
   ): RealtimeSubscription {
     const subscriptionId = `direct-messages-${conversationId}`;
 

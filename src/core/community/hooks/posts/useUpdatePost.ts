@@ -1,26 +1,30 @@
 /**
  * useUpdatePost Hook
  *
- * Mutation para update post com optimistic update
+ * Mutation para atualizar post com optimistic update.
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+
 import { postService } from "@/core/posts/services/PostService";
-type UpdatePostData = Record<string, unknown>;
-type Post = Record<string, unknown>;
+import type { Post, UpdatePostData } from "@/core/posts/types";
+
 interface UpdatePostVariables {
   postId: string;
-  date: UpdatePostData;
+  data: UpdatePostData;
+}
+
+interface UpdatePostContext {
+  previousPost?: Post;
 }
 
 export function useUpdatePost() {
   const queryClient = useQueryClient();
 
-  return useMutation<Post, Error, UpdatePostVariables>({
-    mutationFn: ({ postId, date }) =>
-      postService.updatePost(postId, date as any) as unknown as Promise<Post>,
+  return useMutation<Post, Error, UpdatePostVariables, UpdatePostContext>({
+    mutationFn: ({ postId, data }) => postService.updatePost(postId, data),
 
-    onMutate: async ({ postId, date }) => {
+    onMutate: async ({ postId, data }) => {
       await queryClient.cancelQueries({ queryKey: ["post", postId] });
 
       const previousPost = queryClient.getQueryData<Post>(["post", postId]);
@@ -28,20 +32,20 @@ export function useUpdatePost() {
       if (previousPost) {
         queryClient.setQueryData<Post>(["post", postId], {
           ...previousPost,
-          ...date,
+          ...data,
         });
       }
 
       return { previousPost };
     },
 
-    onError: (err, { postId }, context: { previousPost?: Post } | undefined) => {
+    onError: (_error, { postId }, context) => {
       if (context?.previousPost) {
         queryClient.setQueryData(["post", postId], context.previousPost);
       }
     },
 
-    onSettled: (date, error, { postId }) => {
+    onSettled: (_result, _error, { postId }) => {
       queryClient.invalidateQueries({ queryKey: ["post", postId] });
       queryClient.invalidateQueries({ queryKey: ["feed"] });
     },

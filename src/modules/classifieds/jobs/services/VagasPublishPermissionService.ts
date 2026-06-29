@@ -109,13 +109,13 @@ export class VagasPublishPermissionService {
         return this.denied("UNKNOWN", isAdmin);
       }
 
-      const profileType = (profileData as any)?.profile_type ?? null;
+      const profileType = profileData.profile_type ?? null;
 
       if (!isAdmin && profileType !== "business") {
         return this.denied("PROFILE_NOT_BUSINESS", isAdmin);
       }
 
-      const isStructuralOwner = (profileData as any)?.user_id === userId;
+      const isStructuralOwner = profileData.user_id === userId;
       let isManager = isStructuralOwner;
 
       if (!isManager) {

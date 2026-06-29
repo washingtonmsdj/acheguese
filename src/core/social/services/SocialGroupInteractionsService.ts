@@ -5,6 +5,7 @@
  */
 
 import { supabase } from "@/integrations/supabase";
+import type { Database, Json } from "@/integrations/supabase/types.generated";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { trackError } from "@/shared/utils/errorTracking";
 import type {
@@ -13,10 +14,115 @@ import type {
   GroupMessage,
 } from "@/core/social/types";
 
+type QueryResult<T> = Promise<{ data: T; error: { code?: string; message?: string } | null }>;
+
+interface QueryBuilder<TRow> {
+  select(columns?: string): QueryBuilder<TRow>;
+  insert(values: unknown): QueryBuilder<TRow>;
+  update(values: unknown): QueryBuilder<TRow>;
+  delete(): QueryBuilder<TRow>;
+  eq(column: string, value: unknown): QueryBuilder<TRow>;
+  order(column: string, options?: { ascending?: boolean }): QueryBuilder<TRow>;
+  range(from: number, to: number): QueryBuilder<TRow>;
+  limit(count: number): QueryBuilder<TRow>;
+  single(): QueryResult<TRow>;
+  maybeSingle(): QueryResult<TRow | null>;
+  then<TResult1 = { data: TRow[]; error: { code?: string; message?: string } | null }, TResult2 = never>(
+    onfulfilled?:
+      | ((value: { data: TRow[]; error: { code?: string; message?: string } | null }) => TResult1 | PromiseLike<TResult1>)
+      | null,
+    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
+  ): Promise<TResult1 | TResult2>;
+}
+
+interface SocialGroupDbClient {
+  from<TRow>(table: string): QueryBuilder<TRow>;
+  rpc<TResult>(fn: string, args?: Record<string, unknown>): QueryResult<TResult>;
+}
+
+type GroupMemberRow = Database["public"]["Tables"]["group_members_new"]["Row"];
+type GroupMessageRow = Database["public"]["Tables"]["group_messages_new"]["Row"];
+type GroupMessageReportRow =
+  Database["public"]["Tables"]["group_message_reports"]["Row"];
+
+interface GroupContextRow {
+  id: string;
+  posting_policy?: string | null;
+  join_policy?: string | null;
+}
+
+interface MembershipRoleRow {
+  role: "admin" | "moderator" | "member";
+}
+
+interface GroupMessageWithProfileRow extends GroupMessageRow {
+  profile?:
+    | { id: string; name: string; avatar_url?: string | null }
+    | Array<{ id: string; name: string; avatar_url?: string | null }>
+    | null;
+}
+
+interface GroupMessageReportListRow {
+  id: string;
+  message_id: string;
+  reason: string;
+  details?: string | null;
+  status: string;
+  moderation_history?: Json;
+  created_at: string;
+  message?: {
+    id: string;
+    content: string;
+    message_type?: string;
+    created_at: string;
+    sender_profile_id: string;
+    profile?:
+      | { id: string; name: string; avatar_url?: string | null }
+      | Array<{ id: string; name: string; avatar_url?: string | null }>
+      | null;
+  } | null;
+}
+
+interface ModerationHistoryItem {
+  at: string;
+  status: string;
+  moderator_profile_id?: string;
+}
+
+function asModerationHistory(value: Json | undefined): ModerationHistoryItem[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const history: ModerationHistoryItem[] = [];
+
+  for (const item of value) {
+    if (!item || typeof item !== "object" || Array.isArray(item)) {
+      continue;
+    }
+
+    const candidate = item as Record<string, unknown>;
+    if (typeof candidate.at !== "string" || typeof candidate.status !== "string") {
+      continue;
+    }
+
+    history.push({
+      at: candidate.at,
+      status: candidate.status,
+      moderator_profile_id:
+        typeof candidate.moderator_profile_id === "string"
+          ? candidate.moderator_profile_id
+          : undefined,
+    });
+  }
+
+  return history;
+}
+
 export class SocialGroupInteractionsService {
-  private static readonly db = supabase as any;
+  private static readonly db = supabase as unknown as SocialGroupDbClient;
   private static async resolveGroupContext(groupId: string, userId?: string) {
-    const { data: groupRow } = await this.db.rpc("get_community_group_by_id", {
+    const { data: groupRow } = await this.db.rpc<GroupContextRow | null>("get_community_group_by_id", {
       p_group_id: groupId,
     });
 
@@ -32,15 +138,15 @@ export class SocialGroupInteractionsService {
       : await profileService.getRequiredActiveProfile();
 
     const { data: membership } = await this.db
-      .from("group_members_new")
+      .from<MembershipRoleRow>("group_members_new")
       .select("role")
       .eq("group_id", groupId)
       .eq("member_profile_id", activeProfile.id)
       .maybeSingle();
 
     return {
-      group: groupRow as { id: string; posting_policy?: string; join_policy?: string },
-      role: (membership?.role as "admin" | "moderator" | "member" | undefined) || null,
+      group: groupRow,
+      role: membership?.role || null,
       activeProfileId: activeProfile.id,
     };
   }
@@ -58,7 +164,7 @@ export class SocialGroupInteractionsService {
         await profileService.getRequiredActiveProfile(userId);
 
       const { error } = await this.db
-        .from("group_members_new")
+        .from<GroupMemberRow>("group_members_new")
         .insert({
           group_id: groupId,
           member_profile_id: activeProfile.id,
@@ -97,7 +203,7 @@ export class SocialGroupInteractionsService {
         await profileService.getRequiredActiveProfile(userId);
 
       const { error } = await this.db
-        .from("group_members_new")
+        .from<GroupMemberRow>("group_members_new")
         .delete()
         .eq("group_id", groupId)
         .eq("member_profile_id", activeProfile.id);
@@ -125,7 +231,7 @@ export class SocialGroupInteractionsService {
       const activeProfile = await profileService.getRequiredActiveProfile();
 
       const { data: requesterMembership, error: requesterError } = await this.db
-        .from("group_members_new")
+        .from<MembershipRoleRow>("group_members_new")
         .select("role")
         .eq("group_id", groupId)
         .eq("member_profile_id", activeProfile.id)
@@ -137,7 +243,7 @@ export class SocialGroupInteractionsService {
       }
 
       const { error } = await this.db
-        .from("group_members_new")
+        .from<GroupMemberRow>("group_members_new")
         .update({ role })
         .eq("group_id", groupId)
         .eq("member_profile_id", memberProfileId);
@@ -167,7 +273,7 @@ export class SocialGroupInteractionsService {
         await profileService.getRequiredActiveProfile(userId);
 
       const { data, error } = await this.db
-        .from("group_members_new")
+        .from<Pick<GroupMemberRow, "id">>("group_members_new")
         .select("id")
         .eq("group_id", groupId)
         .eq("member_profile_id", activeProfile.id)
@@ -192,7 +298,7 @@ export class SocialGroupInteractionsService {
   static async getGroupMembers(groupId: string): Promise<GroupMember[]> {
     try {
       const { data, error } = await this.db
-        .from("group_members_new")
+        .from<GroupMember>("group_members_new")
         .select(
           `
           *,
@@ -226,11 +332,14 @@ export class SocialGroupInteractionsService {
       const activeProfile =
         await profileService.getRequiredActiveProfile(userId);
 
-      const { data: groupPolicy } = await this.db.rpc("get_community_group_by_id", {
-        p_group_id: data.groupId,
-      });
+      const { data: groupPolicy } = await this.db.rpc<GroupContextRow | null>(
+        "get_community_group_by_id",
+        {
+          p_group_id: data.groupId,
+        },
+      );
       const { data: membership } = await this.db
-        .from("group_members_new")
+        .from<MembershipRoleRow>("group_members_new")
         .select("role")
         .eq("group_id", data.groupId)
         .eq("member_profile_id", activeProfile.id)
@@ -240,7 +349,7 @@ export class SocialGroupInteractionsService {
         return { success: false, error: "Voce precisa entrar no grupo para postar" };
       }
 
-      const role = membership.role as "admin" | "moderator" | "member";
+      const role = membership.role;
       const postingPolicy = groupPolicy?.posting_policy || "members";
       const canPost =
         postingPolicy === "members" ||
@@ -254,7 +363,7 @@ export class SocialGroupInteractionsService {
         };
       }
 
-      const payload: Record<string, unknown> = {
+      const payload: Partial<Database["public"]["Tables"]["group_messages_new"]["Insert"]> = {
         group_id: data.groupId,
         sender_profile_id: activeProfile.id,
         content: data.content,
@@ -266,10 +375,10 @@ export class SocialGroupInteractionsService {
       if (typeof data.audioDurationSeconds === "number") {
         payload.audio_duration_seconds = data.audioDurationSeconds;
       }
-      if (data.metadata) payload.metadata = data.metadata;
+      if (data.metadata) payload.metadata = data.metadata as Json;
 
       const { data: message, error } = await this.db
-        .from("group_messages_new")
+        .from<GroupMessage>("group_messages_new")
         .insert(payload)
         .select(
           `
@@ -303,7 +412,7 @@ export class SocialGroupInteractionsService {
   ): Promise<GroupMessage[]> {
     try {
       const { data, error } = await this.db
-        .from("group_messages_new")
+        .from<GroupMessage>("group_messages_new")
         .select(
           `
           *,
@@ -338,7 +447,9 @@ export class SocialGroupInteractionsService {
         await profileService.getRequiredActiveProfile(userId);
 
       const { data: messageRow, error: messageFetchError } = await this.db
-        .from("group_messages_new")
+        .from<Pick<GroupMessageRow, "id" | "group_id" | "sender_profile_id">>(
+          "group_messages_new",
+        )
         .select("id, group_id, sender_profile_id")
         .eq("id", messageId)
         .maybeSingle();
@@ -347,7 +458,7 @@ export class SocialGroupInteractionsService {
       if (!messageRow) return { success: false, error: "Mensagem nao encontrada" };
 
       const { data: membership } = await this.db
-        .from("group_members_new")
+        .from<MembershipRoleRow>("group_members_new")
         .select("role")
         .eq("group_id", messageRow.group_id)
         .eq("member_profile_id", activeProfile.id)
@@ -360,7 +471,7 @@ export class SocialGroupInteractionsService {
       }
 
       const { error } = await this.db
-        .from("group_messages_new")
+        .from<GroupMessageRow>("group_messages_new")
         .delete()
         .eq("id", messageId)
         .eq("id", messageId);
@@ -391,7 +502,7 @@ export class SocialGroupInteractionsService {
       const activeProfile =
         await profileService.getRequiredActiveProfile(userId);
       const { data: messageRow, error: messageError } = await this.db
-        .from("group_messages_new")
+        .from<Pick<GroupMessageRow, "id" | "sender_profile_id">>("group_messages_new")
         .select("id, sender_profile_id")
         .eq("id", messageId)
         .maybeSingle();
@@ -402,7 +513,7 @@ export class SocialGroupInteractionsService {
       }
 
       const { error } = await this.db
-        .from("group_messages_new")
+        .from<GroupMessageRow>("group_messages_new")
         .update({
           content: content.trim(),
           metadata: {
@@ -437,7 +548,9 @@ export class SocialGroupInteractionsService {
       const activeProfile =
         await profileService.getRequiredActiveProfile(userId);
       const { data: messageRow, error: messageError } = await this.db
-        .from("group_messages_new")
+        .from<Pick<GroupMessageRow, "id" | "group_id" | "sender_profile_id">>(
+          "group_messages_new",
+        )
         .select("id, group_id, sender_profile_id")
         .eq("id", messageId)
         .maybeSingle();
@@ -457,7 +570,9 @@ export class SocialGroupInteractionsService {
         details: details?.trim() || null,
       };
 
-      const { error } = await this.db.from("group_message_reports").insert(payload);
+      const { error } = await this.db
+        .from<GroupMessageReportRow>("group_message_reports")
+        .insert(payload);
       if (error) {
         if (error.code === "23505") {
           return { success: false, error: "Voce ja denunciou esta mensagem" };
@@ -506,7 +621,7 @@ export class SocialGroupInteractionsService {
       const activeProfile =
         await profileService.getRequiredActiveProfile(userId);
       const { data: membership } = await this.db
-        .from("group_members_new")
+        .from<MembershipRoleRow>("group_members_new")
         .select("role")
         .eq("group_id", groupId)
         .eq("member_profile_id", activeProfile.id)
@@ -517,7 +632,7 @@ export class SocialGroupInteractionsService {
       }
 
       const { data, error } = await this.db
-        .from("group_message_reports")
+        .from<GroupMessageReportListRow>("group_message_reports")
         .select(`
           id,
           message_id,
@@ -539,7 +654,18 @@ export class SocialGroupInteractionsService {
         .order("created_at", { ascending: false })
         .limit(50);
       if (error) throw error;
-      return data || [];
+      return (data || []).map((report) => ({
+        ...report,
+        moderation_history: asModerationHistory(report.moderation_history),
+        message: report.message
+          ? {
+              ...report.message,
+              profile: Array.isArray(report.message.profile)
+                ? report.message.profile[0] || null
+                : report.message.profile,
+            }
+          : null,
+      }));
     } catch (error) {
       trackError(error as Error, {
         component: "SocialInteractionsService",
@@ -560,7 +686,7 @@ export class SocialGroupInteractionsService {
         await profileService.getRequiredActiveProfile(userId);
 
       const { data: reportRow, error: reportError } = await this.db
-        .from("group_message_reports")
+        .from<Pick<GroupMessageReportRow, "id" | "group_id">>("group_message_reports")
         .select("id, group_id")
         .eq("id", reportId)
         .maybeSingle();
@@ -568,7 +694,7 @@ export class SocialGroupInteractionsService {
       if (!reportRow) return { success: false, error: "Denuncia nao encontrada" };
 
       const { data: membership } = await this.db
-        .from("group_members_new")
+        .from<MembershipRoleRow>("group_members_new")
         .select("role")
         .eq("group_id", reportRow.group_id)
         .eq("member_profile_id", activeProfile.id)
@@ -578,7 +704,7 @@ export class SocialGroupInteractionsService {
       }
 
       const { data: currentReport, error: currentReportError } = await this.db
-        .from("group_message_reports")
+        .from<Pick<GroupMessageReportRow, "moderation_history">>("group_message_reports")
         .select("moderation_history")
         .eq("id", reportId)
         .maybeSingle();
@@ -597,7 +723,7 @@ export class SocialGroupInteractionsService {
       ];
 
       const { error } = await this.db
-        .from("group_message_reports")
+        .from<GroupMessageReportRow>("group_message_reports")
         .update({
           status,
           reviewed_by: activeProfile.id,
@@ -626,7 +752,7 @@ export class SocialGroupInteractionsService {
         await profileService.getRequiredActiveProfile(userId);
 
       const { data, error } = await this.db
-        .from("group_members_new")
+        .from<Pick<GroupMemberRow, "group_id">>("group_members_new")
         .select("group_id")
         .eq("member_profile_id", activeProfile.id);
 
@@ -649,7 +775,7 @@ export class SocialGroupInteractionsService {
   static async getGroupMessageById(messageId: string): Promise<Record<string, unknown> | null> {
     try {
       const { data, error } = await this.db
-        .from("group_messages_new")
+        .from<GroupMessageWithProfileRow>("group_messages_new")
         .select("*, profile:sender_profile_id(id, name, avatar_url)")
         .eq("id", messageId)
         .single();
@@ -673,5 +799,4 @@ export class SocialGroupInteractionsService {
       return null;
     }
   }
-
 }

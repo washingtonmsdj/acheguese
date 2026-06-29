@@ -31,6 +31,45 @@ import type {
 
 const TABLE = "profiles";
 
+interface QueryError {
+  message?: string | null;
+  code?: string | null;
+}
+
+interface QueryArrayResult<T> {
+  data: T[] | null;
+  error: QueryError | null;
+  count?: number | null;
+}
+
+interface QuerySingleResult<T> {
+  data: T | null;
+  error: QueryError | null;
+  count?: number | null;
+}
+
+interface QueryBuilder<TRow> extends PromiseLike<QueryArrayResult<TRow>> {
+  select: (
+    columns?: string,
+    options?: { count?: "exact"; head?: boolean },
+  ) => QueryBuilder<TRow>;
+  eq: (column: string, value: unknown) => QueryBuilder<TRow>;
+  in: (column: string, values: unknown[]) => QueryBuilder<TRow>;
+  or: (filters: string) => QueryBuilder<TRow>;
+  gte: (column: string, value: string | number) => QueryBuilder<TRow>;
+  lte: (column: string, value: string | number) => QueryBuilder<TRow>;
+  order: (column: string, options?: { ascending?: boolean }) => QueryBuilder<TRow>;
+  limit: (value: number) => QueryBuilder<TRow>;
+  range: (from: number, to: number) => QueryBuilder<TRow>;
+  single: () => Promise<QuerySingleResult<TRow>>;
+}
+
+interface ProfileQueriesDbClient {
+  from: <TRow = never>(table: string) => QueryBuilder<TRow>;
+}
+
+const profileQueriesDb = supabase as unknown as ProfileQueriesDbClient;
+
 type RecentProfileRow = {
   id: string;
   name: string | null;
@@ -43,8 +82,8 @@ type RecentProfileRow = {
  * Busca profile por ID
  */
 export async function getProfileById(profileId: string): Promise<Profile | null> {
-  const { data, error } = await (supabase as any)
-    .from(TABLE)
+  const { data, error } = await profileQueriesDb
+    .from<Profile>(TABLE)
     .select("*")
     .eq("id", profileId)
     .single();
@@ -74,8 +113,8 @@ export async function getActiveProfile(userId?: string): Promise<Profile | null>
 
   if (!targetUserId) return null;
 
-  const { data, error } = await (supabase as any)
-    .from(TABLE)
+  const { data, error } = await profileQueriesDb
+    .from<Profile>(TABLE)
     .select("*")
     .eq("user_id", targetUserId)
     .eq("is_active", true)
@@ -131,8 +170,8 @@ export async function getProfilesByUserId(userId?: string): Promise<Profile[]> {
 
   if (!targetUserId) return [];
 
-  const { data, error } = await (supabase as any)
-    .from(TABLE)
+  const { data, error } = await profileQueriesDb
+    .from<Profile>(TABLE)
     .select("*")
     .eq("user_id", targetUserId)
     .order("is_active", { ascending: false })
@@ -157,8 +196,8 @@ export async function getProfileByType(
   userId: string,
   profileType: "personal" | "driver" | "business" | "professional",
 ): Promise<Profile | null> {
-  const { data, error } = await (supabase as any)
-    .from(TABLE)
+  const { data, error } = await profileQueriesDb
+    .from<Profile>(TABLE)
     .select("*")
     .eq("user_id", userId)
     .eq("profile_type", profileType)
@@ -179,8 +218,8 @@ export async function getProfileByType(
  * Busca profile por username
  */
 export async function getByUsername(username: string): Promise<Profile | null> {
-  const { data, error } = await (supabase as any)
-    .from("public_profiles")
+  const { data, error } = await profileQueriesDb
+    .from<Profile>("public_profiles")
     .select()
     .eq("username", username)
     .single();
@@ -201,8 +240,8 @@ export async function getByUsername(username: string): Promise<Profile | null> {
  * Busca perfil público por ID (view canônica public_profiles)
  */
 export async function getPublicProfileById(profileId: string): Promise<Profile | null> {
-  const { data, error } = await (supabase as any)
-    .from("public_profiles")
+  const { data, error } = await profileQueriesDb
+    .from<Profile>("public_profiles")
     .select()
     .eq("id", profileId)
     .single();
@@ -227,8 +266,8 @@ export async function getProfilesByIds(ids: string[]): Promise<Profile[]> {
 
   const uniqueIds = [...new Set(ids)];
 
-  const { data, error } = await (supabase as any)
-    .from(TABLE)
+  const { data, error } = await profileQueriesDb
+    .from<Profile>(TABLE)
     .select()
     .in("id", uniqueIds);
 
@@ -384,12 +423,12 @@ export async function getStats(userId: string): Promise<ProfileActivityStats | n
     postsResult,
     likesResult,
   ] = await Promise.all([
-    (supabase as any)
-      .from("community_posts")
+    profileQueriesDb
+      .from<{ id: string }>("community_posts")
       .select("id", { count: "exact", head: true })
       .eq("profile_id", activeProfile.id),
-    (supabase as any)
-      .from("post_likes_new")
+    profileQueriesDb
+      .from<{ id: string }>("post_likes_new")
       .select("id", { count: "exact", head: true })
       .eq("liker_profile_id", activeProfile.id),
   ]);
@@ -509,8 +548,8 @@ export async function getProfilesWithAlertBan(profileIds: string[]): Promise<
   if (profileIds.length === 0) return [];
 
   try {
-    const { data, error } = await (supabase as any)
-      .from(TABLE)
+    const { data, error } = await profileQueriesDb
+      .from<ProfileWithAlertBanRow>(TABLE)
       .select("id, alert_banned, neighborhood, created_at")
       .in("id", profileIds);
 
@@ -671,8 +710,8 @@ export async function getProfilesByVerificationStatus(
   },
 ): Promise<Profile[]> {
   try {
-    let query = (supabase as any)
-      .from(TABLE)
+    let query = profileQueriesDb
+      .from<Profile>(TABLE)
       .select("*")
       .eq("verification_status", status)
       .order(options?.orderBy ?? "updated_at", { ascending: false });

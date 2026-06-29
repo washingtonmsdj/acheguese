@@ -125,6 +125,7 @@ export default function CadastroPage() {
 
   const activeStep = STEPS.at(currentStep) ?? STEPS[0];
   const stepId = activeStep.id;
+  const nextStepLabel = currentStep < STEPS.length - 1 ? STEPS[currentStep + 1]?.label : null;
 
   return (
     <>
@@ -132,19 +133,36 @@ export default function CadastroPage() {
         <title>Criar conta | Achegue-se</title>
         <meta
           name="description"
-          content="Crie sua conta Achegue-se para participar da comunidade, conectar-se ao seu bairro e acessar serviços e negócios locais."
+          content="Crie sua conta Achegue-se para participar da comunidade, conectar-se ao seu bairro e acessar servicos e negocios locais."
         />
       </Helmet>
 
       <div className="min-h-screen bg-background">
-        <AuthBrandHeader secondaryHref="/login" secondaryLabel="Já tenho conta" />
+        <AuthBrandHeader secondaryHref="/login" secondaryLabel="Ja tenho conta" />
 
         <main
           id="main-content"
           tabIndex={-1}
-          className="mx-auto flex min-h-[calc(100vh-3.5rem)] w-full max-w-5xl items-start justify-center px-4 pb-40 pt-4 focus:outline-none sm:min-h-[calc(100vh-4rem)] sm:px-6 sm:pb-10 sm:pt-8 lg:items-center"
+          className="mx-auto flex min-h-[calc(100vh-3.5rem)] w-full max-w-5xl items-start justify-center px-4 pb-36 pt-4 focus:outline-none sm:min-h-[calc(100vh-4rem)] sm:px-6 sm:pb-10 sm:pt-8 lg:items-center"
         >
           <div className="w-full max-w-md space-y-4 sm:max-w-lg sm:space-y-6">
+            <div className="rounded-[24px] border border-border/60 bg-card/55 px-4 py-3 sm:px-5">
+              <div className="flex items-start justify-between gap-3">
+                <div className="space-y-1">
+                  <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-primary/90">
+                    Cadastro local
+                  </p>
+                  <p className="text-sm font-medium text-foreground">
+                    Conta, territorio e comunidade no mesmo fluxo.
+                  </p>
+                </div>
+                {nextStepLabel ? (
+                  <span className="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-[0.68rem] font-medium text-primary">
+                    Proximo: {nextStepLabel}
+                  </span>
+                ) : null}
+              </div>
+            </div>
             <StepIndicator currentStep={currentStep} onBack={handleBack} />
 
             <AnimatePresence mode="wait">
@@ -160,7 +178,7 @@ export default function CadastroPage() {
                   <div className="space-y-4 sm:space-y-5">
                     <div className="space-y-1.5 text-center">
                       <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-primary/90">
-                        Criação de conta
+                        Criacao de conta
                       </p>
                       <h1 className="font-heading text-2xl font-bold text-foreground sm:text-[2rem]">
                         Crie sua conta
@@ -184,7 +202,7 @@ export default function CadastroPage() {
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label htmlFor="username">Nome de usuário *</Label>
+                      <Label htmlFor="username">Nome de usuario *</Label>
                       <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
                           @
@@ -207,7 +225,7 @@ export default function CadastroPage() {
                       </div>
                       {capsLock ? (
                         <p className="text-xs text-amber-500">
-                          Caps Lock ativo. Apenas letras minúsculas são aceitas.
+                          Caps Lock ativo. Apenas letras minusculas sao aceitas.
                         </p>
                       ) : null}
                       {errors.username ? (
@@ -472,7 +490,7 @@ export default function CadastroPage() {
                         <div className="flex items-start gap-3 border-b border-border/60 p-4">
                           <span className="mt-0.5 shrink-0 text-sm text-muted-foreground">@</span>
                           <div className="min-w-0">
-                          <p className="text-xs text-muted-foreground">Usuário</p>
+                          <p className="text-xs text-muted-foreground">Usuario</p>
                             <p className="truncate text-sm font-medium text-foreground">@{formData.username}</p>
                           </div>
                         </div>
@@ -489,7 +507,7 @@ export default function CadastroPage() {
                       <div className="flex items-start gap-3 p-4">
                         <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                         <div className="min-w-0">
-                          <p className="text-xs text-muted-foreground">Localização</p>
+                          <p className="text-xs text-muted-foreground">Localizacao</p>
                           <p className="text-sm font-medium text-foreground">
                             {formData.neighborhoodName}, {formData.cityName} - {formData.stateName}
                           </p>
@@ -501,13 +519,13 @@ export default function CadastroPage() {
                     </div>
 
                     <p className="text-center text-xs leading-5 text-muted-foreground">
-                      Ao criar sua conta, você concorda com nossos{" "}
+                      Ao criar sua conta, voce concorda com nossos{" "}
                       <a href="/termos" className="font-medium text-primary hover:underline">
                         Termos de Uso
                       </a>{" "}
                       e{" "}
                       <a href="/privacidade" className="font-medium text-primary hover:underline">
-                        Política de Privacidade
+                        Politica de Privacidade
                       </a>
                       .
                     </p>

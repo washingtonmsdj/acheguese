@@ -7,6 +7,11 @@ import { logger } from '@/shared/utils/logger';
 import { useState, useEffect, useCallback } from 'react';
 import { ProfileMembersService } from '../services/multi-profile';
 import type { ProfileMember, ProfileRole } from '../services/multi-profile/types';
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
+}
+
 export function useProfileMembers(profileId: string | null) {
   const [members, setMembers] = useState<ProfileMember[]>([]);
   const [loading, setLoading] = useState(false);
@@ -24,9 +29,9 @@ export function useProfileMembers(profileId: string | null) {
     try {
       const data = await ProfileMembersService.getProfileMembers(profileId);
       setMembers(data);
-    } catch (err: any) {
-      logger.error('Error loading profile members:', err);
-      setError(err.message || 'Failed to load members');
+    } catch (error: unknown) {
+      logger.error('Error loading profile members:', error);
+      setError(getErrorMessage(error, 'Failed to load members'));
     } finally {
       setLoading(false);
     }

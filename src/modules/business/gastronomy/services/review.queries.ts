@@ -12,7 +12,15 @@ import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import { REPORT_STATUS } from '@/shared/types/constants';
 import { EntityStatus } from '@/shared/types/enums';
-const rpcDb = supabase as any;
+
+type QueryError = { code?: string; message?: string } | null;
+type QueryResult<T> = Promise<{ data: T; error: QueryError }>;
+
+interface RpcClient {
+  rpc<TResult>(fn: string, args?: Record<string, unknown>): QueryResult<TResult>;
+}
+
+const rpcDb = supabase as unknown as RpcClient;
 
 //  Tipos estendidos da tabela cannica `reviews`
 //  Estende o tipo base de @/shared/types/reviews com os campos adicionados

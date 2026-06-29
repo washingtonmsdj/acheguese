@@ -31,6 +31,46 @@ import {
 
 const TABLE = "profiles";
 
+interface QueryError {
+  message?: string | null;
+}
+
+interface QueryArrayResult<TRow> {
+  data: TRow[] | null;
+  error: QueryError | null;
+}
+
+interface QuerySingleResult<TRow> {
+  data: TRow | null;
+  error: QueryError | null;
+}
+
+interface QueryBuilder<TRow> extends PromiseLike<QueryArrayResult<TRow>> {
+  select: (columns?: string) => QueryBuilder<TRow>;
+  insert: (values: unknown | unknown[]) => QueryBuilder<TRow>;
+  update: (values: unknown) => QueryBuilder<TRow>;
+  delete: () => QueryBuilder<TRow>;
+  eq: (column: string, value: unknown) => QueryBuilder<TRow>;
+  single: () => Promise<QuerySingleResult<TRow>>;
+}
+
+interface ProfileMutationsDbClient {
+  from: <TRow = never>(table: string) => QueryBuilder<TRow>;
+}
+
+const profileMutationsDb = supabase as unknown as ProfileMutationsDbClient;
+
+type CreateProfilePayloadWithWhatsapp = CreateProfilePayload & {
+  whatsapp?: string;
+};
+
+function getCreateProfileWhatsapp(profile: CreateProfilePayload): string | undefined {
+  const profileWithWhatsapp = profile as CreateProfilePayloadWithWhatsapp;
+  return typeof profileWithWhatsapp.whatsapp === "string"
+    ? profileWithWhatsapp.whatsapp
+    : undefined;
+}
+
 // ============================================================================
 // 📝 CREATE
 // ============================================================================
@@ -62,7 +102,7 @@ export async function createProfile(profile: CreateProfilePayload): Promise<Prof
       avatar_url: profile.avatar_url,
       bio: profile.bio,
       profile_type: profile.profile_type || "personal",
-      whatsapp: (profile as any).whatsapp,
+      whatsapp: getCreateProfileWhatsapp(profile),
       is_active: true,
     })
     .select()
@@ -101,9 +141,9 @@ export async function createProfileWithIdentityValidation(
     throw new Error("Username already in use");
   }
 
-  const { data, error } = await supabase
-    .from(TABLE)
-    .insert(buildCreateProfileInsert(user.id, profile) as any)
+  const { data, error } = await profileMutationsDb
+    .from<Profile>(TABLE)
+    .insert(buildCreateProfileInsert(user.id, profile))
     .select()
     .single();
 
@@ -214,9 +254,9 @@ export async function updateAlertBanStatus(
   profileId: string,
   alertBanned: boolean,
 ): Promise<Profile> {
-  const { data, error } = await supabase
-    .from(TABLE)
-    .update(({ alert_banned: alertBanned } as unknown) as any)
+  const { data, error } = await profileMutationsDb
+    .from<Profile>(TABLE)
+    .update({ alert_banned: alertBanned })
     .eq("id", profileId)
     .select()
     .single();

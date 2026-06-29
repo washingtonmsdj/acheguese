@@ -369,7 +369,7 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
 
     resolve();
     return () => { cancelled = true; };
-  }, [country, state, city, groupSlug, districtSlug, isCommunityRoute, isGuideRoute]);
+  }, [city, country, districtSlug, groupSlug, isCommunityRoute, isGuideRoute, pathname, state]);
 
   return result;
 }

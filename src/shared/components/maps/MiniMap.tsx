@@ -24,6 +24,13 @@ export interface MiniMapProps {
   interactive?: boolean;
 }
 
+type MiniMapErrorEvent = {
+  error?: {
+    message?: string | null;
+  } | null;
+  preventDefault?: () => void;
+};
+
 export function MiniMap({
   latitude,
   longitude,
@@ -68,7 +75,7 @@ export function MiniMap({
     });
 
     // Ignora warning conhecido de tile/style que nao afeta render do MiniMap.
-    map.on('error', (event: any) => {
+    map.on('error', (event: MiniMapErrorEvent) => {
       const message = String(event?.error?.message || '');
       if (message.includes('Expected value to be of type number, but found null instead.')) {
         event?.preventDefault?.();

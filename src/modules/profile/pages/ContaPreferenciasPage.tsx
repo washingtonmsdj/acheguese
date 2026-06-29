@@ -1,100 +1,158 @@
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { ArrowLeft, Bell, Link2, Shield, SlidersHorizontal } from "lucide-react";
+import {
+  ArrowLeft,
+  Bell,
+  Link2,
+  Shield,
+  SlidersHorizontal,
+} from "lucide-react";
 
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { Button } from "@/shared/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/shared/components/ui/card";
+
+const PREFERENCE_CARDS = [
+  {
+    title: "Notificacoes",
+    description: "Defina canais, frequencia e silencioso.",
+    cta: "Abrir notificacoes",
+    icon: Bell,
+    hrefKey: "notifications",
+  },
+  {
+    title: "Privacidade",
+    description: "Controle dados, consentimentos e fluxo LGPD.",
+    cta: "Abrir privacidade",
+    icon: Shield,
+    hrefKey: "privacy",
+  },
+  {
+    title: "Vinculos e membros",
+    description: "Gerencie ligacoes de identidade ativa e times.",
+    cta: "Abrir vinculos",
+    icon: Link2,
+    hrefKey: "links",
+  },
+  {
+    title: "Identidade ativa",
+    description: "Ajuste configuracoes do perfil em contexto.",
+    cta: "Ajustar identidade",
+    icon: SlidersHorizontal,
+    hrefKey: "identity",
+  },
+] as const;
 
 export default function ContaPreferenciasPage() {
   const navigate = useNavigate();
   const appUrls = useAppUrls();
+  const [searchParams] = useSearchParams();
+  const legacyTab = searchParams.get("tab");
+
+  if (legacyTab === "privacy" || legacyTab === "links" || legacyTab === "members") {
+    return <Navigate to={appUrls.profile.settings(legacyTab)} replace />;
+  }
+
+  const resolveHref = (hrefKey: (typeof PREFERENCE_CARDS)[number]["hrefKey"]) => {
+    switch (hrefKey) {
+      case "notifications":
+        return "/conta/notificacoes";
+      case "privacy":
+        return "/conta/privacidade";
+      case "links":
+        return appUrls.profile.settings("links");
+      case "identity":
+        return appUrls.profile.settings("privacy");
+      default:
+        return appUrls.profile.home;
+    }
+  };
 
   return (
     <>
       <Helmet>
-        <title>Preferências da conta</title>
+        <title>Preferencias da conta</title>
       </Helmet>
 
-      <div className="mx-auto max-w-4xl space-y-6 px-4 py-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(appUrls.profile.home)}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="text-lg font-semibold">Preferências da conta</h1>
-            <p className="text-xs text-muted-foreground">
-              Ajustes pessoais de notificações, privacidade e permissões da identidade.
-            </p>
+      <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.10),transparent_28%),linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.32))]">
+        <main className="mx-auto w-full max-w-5xl px-4 pb-8 pt-4 sm:px-6 sm:pb-10 sm:pt-6 lg:px-8">
+          <div className="sticky top-0 z-20 -mx-4 mb-5 border-b border-border/60 bg-background/90 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:mb-6 sm:rounded-3xl sm:border sm:bg-card/85 sm:px-5 sm:shadow-sm">
+            <div className="flex items-start gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="shrink-0 rounded-full"
+                onClick={() => navigate(appUrls.profile.home)}
+                type="button"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  Conta e preferencia
+                </p>
+                <h1 className="truncate text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+                  Preferencias da conta
+                </h1>
+                <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
+                  Notificacoes, privacidade e ajustes da identidade ativa.
+                </p>
+              </div>
+            </div>
           </div>
-        </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <Card className="rounded-2xl">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Bell className="h-4 w-4" />
-                Notificações
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Button variant="outline" onClick={() => navigate(appUrls.notifications)}>
-                Abrir preferências de notificação
-              </Button>
-            </CardContent>
-          </Card>
+          <section className="rounded-3xl border border-border/70 bg-card/90 p-5 shadow-sm sm:p-6">
+            <div className="space-y-2">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/90">
+                Atalhos principais
+              </p>
+              <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+                Ajustes pessoais em um so lugar
+              </h2>
+              <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
+                Use essas entradas para controlar comunicacao, privacidade e
+                relacoes da sua identidade atual sem misturar com operacao.
+              </p>
+            </div>
+          </section>
 
-          <Card className="rounded-2xl">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Shield className="h-4 w-4" />
-                Privacidade
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Button
-                variant="outline"
-                onClick={() => navigate(appUrls.profile.settings("privacy"))}
-              >
-                Abrir privacidade e LGPD
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-2xl">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Link2 className="h-4 w-4" />
-                Vínculos e membros
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Button
-                variant="outline"
-                onClick={() => navigate(appUrls.profile.settings("links"))}
-              >
-                Gerenciar vínculos
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-2xl">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <SlidersHorizontal className="h-4 w-4" />
-                Identidade ativa
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Button
-                variant="outline"
-                onClick={() => navigate(appUrls.profile.settings("privacy"))}
-              >
-                Ajustar identidade ativa
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            {PREFERENCE_CARDS.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Card
+                  key={item.title}
+                  className="rounded-3xl border-border/70 bg-card/90 shadow-sm"
+                >
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <Icon className="h-4 w-4" />
+                      {item.title}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <p className="text-sm leading-6 text-muted-foreground">
+                      {item.description}
+                    </p>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-center sm:w-auto"
+                      onClick={() => navigate(resolveHref(item.hrefKey))}
+                      type="button"
+                    >
+                      {item.cta}
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </main>
       </div>
     </>
   );

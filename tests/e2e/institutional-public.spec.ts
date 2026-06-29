@@ -5,8 +5,6 @@ async function openPublicRoute(page: Page, path: string) {
     timeout: 15_000,
     waitUntil: "commit",
   });
-
-  await page.waitForTimeout(12_000);
 }
 
 async function readBodyText(page: Page) {
@@ -20,23 +18,13 @@ async function hasMainContent(page: Page) {
 test.describe("institutional public routes", () => {
   test.setTimeout(120_000);
 
-  test.beforeAll(async ({ browser, baseURL }) => {
-    const page = await browser.newPage();
-    await page
-      .goto(`${baseURL ?? ""}/sobre`, {
-        timeout: 15_000,
-        waitUntil: "commit",
-      })
-      .catch(() => undefined);
-    await page.waitForTimeout(20_000);
-    await page.close();
-  });
-
   for (const route of [
     { path: "/sobre", expected: /Sobre o Achegue-se/i },
     { path: "/contato", expected: /Entre em Contato|Achegue-se/i },
-    { path: "/termos", expected: /Termos de Uso|Ao utilizar o Achegue-se/i },
-    { path: "/privacidade", expected: /Política de Privacidade|como o Achegue-se/i },
+    { path: "/termos", expected: /Termos de uso|Regras contratuais para uso do Achegue-se/i },
+    { path: "/regras", expected: /Regras da comunidade|Regras para manter a comunidade util e segura/i },
+    { path: "/privacidade", expected: /Politica de privacidade|Como o Achegue-se trata dados pessoais/i },
+    { path: "/dpo", expected: /Contato com o encarregado de dados|Solicite acesso, correcao, exclusao ou reporte uma violacao/i },
   ]) {
     test(`${route.path} exposes canonical brand and accessible main content`, async ({ page }) => {
       await openPublicRoute(page, route.path);

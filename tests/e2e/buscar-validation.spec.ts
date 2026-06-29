@@ -1,5 +1,14 @@
 import { test, expect } from '@playwright/test';
 
+type SearchValidationRow = {
+  query: string;
+  intent: string;
+  resultCount: number;
+  titles: string[];
+  urls: string[];
+  openCheck: 'n/a' | 'ok' | 'failed';
+};
+
 test('buscar validation capture', async ({ page }) => {
   const queries = [
     'pizzaria barata com delivery',
@@ -12,7 +21,7 @@ test('buscar validation capture', async ({ page }) => {
 
   await page.goto('/buscar');
 
-  const rows: any[] = [];
+  const rows: SearchValidationRow[] = [];
   for (const query of queries) {
     await page.getByLabel('Busca inteligente').fill(query);
     await page.getByRole('button', { name: 'Buscar' }).click();

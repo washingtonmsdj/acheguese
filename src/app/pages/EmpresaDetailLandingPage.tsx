@@ -475,7 +475,7 @@ export default function EmpresaDetailLandingPage(
         <EmpresaAvaliacoesSection
           business={business}
           reviews={reviews}
-          user={user as any}
+          user={user}
           navigate={navigate}
           reviewUrl={gastronomyUrl}
         />

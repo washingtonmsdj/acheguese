@@ -1,69 +1,122 @@
-/**
- * ══════════════════════════════════════════════════════════════════════════
- * DPO CONTACT PAGE (Data Protection Officer)
- * ══════════════════════════════════════════════════════════════════════════
- *
- * Página de contato do Encarregado de Dados (DPO) conforme LGPD.
- * Canal oficial para exercício de direitos e denúncias.
- *
- * LGPD: Art. 41 - Encarregado dos dados pessoais
- * ══════════════════════════════════════════════════════════════════════════
- */
-
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation } from '@tanstack/react-query';
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import { Helmet } from "react-helmet-async";
 import {
-  Shield,
-  Mail,
-  Phone,
-  MapPin,
-  FileText,
-  Send,
-  Loader2,
-  CheckCircle,
   AlertTriangle,
-  Clock,
+  ArrowLeft,
+  CheckCircle,
   ChevronRight,
-} from 'lucide-react';
-import { Button } from '@/shared/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/shared/components/ui/card';
-import { Input } from '@/shared/components/ui/input';
-import { Label } from '@/shared/components/ui/label';
+  Clock,
+  FileText,
+  Loader2,
+  Mail,
+  Send,
+  Shield,
+} from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+
+import { useAuth } from "@/core/auth/hooks/useAuth";
+import { PrivacyService } from "@/core/privacy";
+import { useToast } from "@/shared/hooks/use-toast";
+import { getDpoEmail } from "@/shared/config/privacyContacts";
+import { DPOContactSchema, type DPOContactInput } from "@/shared/validation/schemas/dpo.schema";
+import { InlineFieldError } from "@/shared/components/ui/InlineFieldError";
+import { Button } from "@/shared/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import { Input } from "@/shared/components/ui/input";
+import { Label } from "@/shared/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/shared/components/ui/select';
-import { buildMailtoUrl } from '@/shared/utils/contactLinks';
-import { useToast } from '@/shared/hooks/use-toast';
-import { useAuth } from '@/core/auth/hooks/useAuth';
-import { PrivacyService } from '@/core/privacy';
-import { InlineFieldError } from '@/shared/components/ui/InlineFieldError';
-import { getDpoEmail } from '@/shared/config/privacyContacts';
-import {
-  DPOContactSchema,
-  type DPOContactInput,
-} from '@/shared/validation/schemas/dpo.schema';
+} from "@/shared/components/ui/select";
+import { Textarea } from "@/shared/components/ui/textarea";
+import { buildMailtoUrl } from "@/shared/utils/contactLinks";
+
+const REQUEST_TYPE_OPTIONS = [
+  {
+    value: "access",
+    label: "Solicitacao de acesso",
+    description: "Obter copia dos dados pessoais tratados pela plataforma.",
+  },
+  {
+    value: "correction",
+    label: "Correcao de dados",
+    description: "Ajustar dados incompletos, inexatos ou desatualizados.",
+  },
+  {
+    value: "anonymization",
+    label: "Anonimizacao ou bloqueio",
+    description: "Solicitar restricao de uso ou tratamento inadequado.",
+  },
+  {
+    value: "portability",
+    label: "Portabilidade",
+    description: "Receber dados em formato adequado para migracao.",
+  },
+  {
+    value: "deletion",
+    label: "Eliminacao",
+    description: "Solicitar exclusao dos dados quando a base legal permitir.",
+  },
+  {
+    value: "information",
+    label: "Informacoes sobre compartilhamento",
+    description: "Entender com quem os dados podem ter sido compartilhados.",
+  },
+  {
+    value: "consent_revocation",
+    label: "Revogacao de consentimento",
+    description: "Retirar um consentimento dado anteriormente.",
+  },
+  {
+    value: "automated_decision",
+    label: "Revisao de decisao automatizada",
+    description: "Questionar uma decisao tomada com apoio automatizado.",
+  },
+  {
+    value: "violation_report",
+    label: "Denuncia de violacao",
+    description: "Reportar problema ou incidente envolvendo dados pessoais.",
+  },
+  {
+    value: "other",
+    label: "Outro assunto",
+    description: "Usar quando o pedido nao se encaixa nas categorias acima.",
+  },
+] as const;
+
+const RIGHTS = [
+  "Acesso aos seus dados",
+  "Correcao de dados",
+  "Anonimizacao, bloqueio ou eliminacao",
+  "Portabilidade",
+  "Informacoes sobre compartilhamento",
+  "Revogacao de consentimento",
+] as const;
+
+const RELATED_LINKS = [
+  { label: "Privacidade da conta", to: "/conta/privacidade" },
+  { label: "Politica de privacidade", to: "/privacidade" },
+  { label: "Termos de uso", to: "/termos" },
+] as const;
 
 export default function DPOContactPage() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
   const dpoEmail = getDpoEmail();
+
   const userMetadata = user?.user_metadata;
   const fullName =
-    userMetadata && typeof userMetadata === 'object'
+    userMetadata && typeof userMetadata === "object"
       ? (userMetadata as { full_name?: unknown }).full_name
       : undefined;
-  const defaultName = typeof fullName === 'string' ? fullName : '';
+  const defaultName = typeof fullName === "string" ? fullName : "";
+  const defaultEmail = user?.email || "";
 
   const {
     register,
@@ -73,13 +126,13 @@ export default function DPOContactPage() {
     formState: { errors },
   } = useForm<DPOContactInput>({
     resolver: zodResolver(DPOContactSchema),
-    mode: 'onBlur',
+    mode: "onBlur",
     defaultValues: {
       name: defaultName,
-      email: user?.email || '',
-      subject: '',
+      email: defaultEmail,
+      subject: "",
       requestType: undefined,
-      message: '',
+      message: "",
     },
   });
 
@@ -96,28 +149,27 @@ export default function DPOContactPage() {
     },
     onSuccess: () => {
       toast({
-        title: 'Solicitação enviada!',
-        description:
-          'Recebemos sua solicitação. O DPO responderá em até 15 dias úteis conforme LGPD.',
+        title: "Solicitacao enviada",
+        description: "Recebemos sua mensagem. O time de privacidade respondera em ate 15 dias uteis.",
       });
+
       reset({
         name: defaultName,
-        email: user?.email || '',
-        subject: '',
+        email: defaultEmail,
+        subject: "",
         requestType: undefined,
-        message: '',
+        message: "",
       });
     },
     onError: () => {
       const fallbackMessage = dpoEmail
-        ? ' Tente novamente ou envie diretamente para ' + dpoEmail
-        : ' Tente novamente pelo formulario.';
+        ? `Tente novamente ou envie diretamente para ${dpoEmail}.`
+        : "Tente novamente pelo formulario mais tarde.";
 
       toast({
-        title: 'Erro ao enviar',
-        description:
-          'Nao foi possivel enviar sua solicitacao.' + fallbackMessage,
-        variant: 'destructive',
+        title: "Erro ao enviar",
+        description: `Nao foi possivel registrar sua solicitacao. ${fallbackMessage}`,
+        variant: "destructive",
       });
     },
   });
@@ -126,321 +178,269 @@ export default function DPOContactPage() {
     contactMutation.mutate(data);
   };
 
-  const requestTypes = [
-    {
-      value: 'access',
-      label: 'Solicitação de Acesso (Art. 18, I)',
-      description: 'Obter cópia dos seus dados pessoais',
-    },
-    {
-      value: 'correction',
-      label: 'Retificação (Art. 18, II)',
-      description: 'Corrigir dados incompletos ou desatualizados',
-    },
-    {
-      value: 'anonymization',
-      label: 'Anonimização (Art. 18, III)',
-      description: 'Tornar seus dados irreversivelmente anônimos',
-    },
-    {
-      value: 'portability',
-      label: 'Portabilidade (Art. 18, V)',
-      description: 'Transferir seus dados para outro serviço',
-    },
-    {
-      value: 'deletion',
-      label: 'Eliminação/Exclusão (Art. 18, VI)',
-      description: 'Solicitar a exclusão dos seus dados',
-    },
-    {
-      value: 'information',
-      label: 'Informação sobre Compartilhamento (Art. 18, VII)',
-      description: 'Saber com quem seus dados foram compartilhados',
-    },
-    {
-      value: 'consent_revocation',
-      label: 'Revogação de Consentimento (Art. 8º, §4º)',
-      description: 'Revogar consentimentos anteriormente dados',
-    },
-    {
-      value: 'automated_decision',
-      label: 'Revisão de Decisão Automatizada (Art. 20)',
-      description: 'Contest decisões tomadas por algoritmos',
-    },
-    {
-      value: 'violation_report',
-      label: 'Denúncia de Violação',
-      description: 'Reportar violação de dados pessoais',
-    },
-    {
-      value: 'other',
-      label: 'Outro Assunto',
-      description: 'Outras solicitações relacionadas à privacidade',
-    },
-  ];
-
   return (
-    <div className="container max-w-4xl mx-auto py-8 px-4">
-      {/* Header */}
-      <div className="mb-8 text-center">
-        <div className="inline-flex items-center justify-center p-3 rounded-full bg-primary/10 mb-4">
-          <Shield className="h-8 w-8 text-primary" />
-        </div>
-        <h1 className="text-3xl font-bold mb-2">
-          Encarregado de Dados (DPO)
-        </h1>
-        <p className="text-muted-foreground max-w-2xl mx-auto">
-          Canal oficial para exercício de direitos, denúncias e solicitações
-          relacionadas à proteção de dados pessoais conforme a LGPD.
-        </p>
-      </div>
+    <>
+      <Helmet>
+        <title>Contato com o DPO</title>
+      </Helmet>
 
-      <div className="grid gap-8 lg:grid-cols-3">
-        {/* Formulário */}
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Enviar Solicitação</CardTitle>
-              <CardDescription>
-                Preencha o formulário abaixo para entrar em contato com o DPO.
-                Responderemos em até 15 dias úteis.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit(onValid)} className="space-y-6">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Nome completo *</Label>
-                    <Input id="name" {...register('name')} />
-                    <InlineFieldError message={errors.name?.message} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email">E-mail *</Label>
-                    <Input id="email" type="email" {...register('email')} />
-                    <InlineFieldError message={errors.email?.message} />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="requestType">Tipo de solicitação *</Label>
-                  <Controller
-                    name="requestType"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        value={field.value}
-                        onValueChange={field.onChange}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o tipo de solicitação" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {requestTypes.map((type) => (
-                            <SelectItem key={type.value} value={type.value}>
-                              <div className="flex flex-col items-start">
-                                <span>{type.label}</span>
-                                <span className="text-xs text-muted-foreground">
-                                  {type.description}
-                                </span>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                  <InlineFieldError message={errors.requestType?.message} />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="subject">Assunto *</Label>
-                  <Input
-                    id="subject"
-                    {...register('subject')}
-                    placeholder="Resumo breve da sua solicitação"
-                  />
-                  <InlineFieldError message={errors.subject?.message} />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="message">Mensagem detalhada *</Label>
-                  <textarea
-                    id="message"
-                    rows={6}
-                    className="w-full min-h-[150px] p-3 rounded-md border bg-background text-sm"
-                    placeholder="Descreva sua solicitação com o máximo de detalhes possível..."
-                    {...register('message')}
-                  />
-                  <InlineFieldError message={errors.message?.message} />
-                </div>
-
-                <div className="flex items-start gap-2 p-4 bg-muted rounded-lg">
-                  <Clock className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
-                  <p className="text-sm text-muted-foreground">
-                    Conforme o Art. 19 da LGPD, você receberá uma resposta em
-                    até 15 dias úteis. Em casos complexos, este prazo pode ser
-                    prorrogado por mais 15 dias mediante notificação.
-                  </p>
-                </div>
-
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={contactMutation.isPending}
-                >
-                  {contactMutation.isPending ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Enviando...
-                    </>
-                  ) : (
-                    <>
-                      <Send className="h-4 w-4 mr-2" />
-                      Enviar solicitação
-                    </>
-                  )}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Informações de contato */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Informações de Contato</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-start gap-3">
-                <Mail className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-medium text-sm">E-mail</p>
-                  {dpoEmail ? (
-                    <a
-                      href={buildMailtoUrl(dpoEmail) ?? undefined}
-                      className="text-sm text-primary hover:underline"
-                    >
-                      {dpoEmail}
-                    </a>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">E-mail publico nao configurado</p>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <Clock className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-medium text-sm">Prazo de resposta</p>
-                  <p className="text-sm text-muted-foreground">
-                    Até 15 dias úteis (LGPD Art. 19)
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <Shield className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-medium text-sm">Autoridade reguladora</p>
-                  <a
-                    href="https://www.gov.br/anpd/pt-br"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-primary hover:underline"
-                  >
-                    ANPD - Autoridade Nacional de Proteção de Dados
-                  </a>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Seus direitos LGPD */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Seus Direitos (LGPD)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2 text-sm">
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
-                  <span>Acesso aos seus dados</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
-                  <span>Correção de dados incompletos</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
-                  <span>Anonimização ou bloqueio</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
-                  <span>Portabilidade dos dados</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
-                  <span>Eliminação dos dados</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
-                  <span>Informação sobre compartilhamento</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
-                  <span>Revogação de consentimento</span>
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
-
-          {/* Links rápidos */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Links Rápidos</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <a
-                href="/conta/privacidade"
-                className="flex items-center justify-between p-2 rounded-lg hover:bg-muted transition-colors"
+      <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.08),transparent_26%),linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.3))]">
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="mx-auto w-full max-w-6xl px-4 pb-10 pt-4 sm:px-6 sm:pt-6 lg:px-8"
+        >
+          <div className="sticky top-0 z-20 -mx-4 mb-5 border-b border-border/60 bg-background/90 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:mb-6 sm:rounded-3xl sm:border sm:bg-card/85 sm:px-5 sm:shadow-sm">
+            <div className="flex items-start gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="shrink-0 rounded-full"
+                onClick={() => navigate(-1)}
+                type="button"
               >
-                <span className="text-sm">Configurações de privacidade</span>
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </a>
-              <a
-                href="/privacidade"
-                className="flex items-center justify-between p-2 rounded-lg hover:bg-muted transition-colors"
-              >
-                <span className="text-sm">Política de Privacidade</span>
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </a>
-              <a
-                href="/termos"
-                className="flex items-center justify-between p-2 rounded-lg hover:bg-muted transition-colors"
-              >
-                <span className="text-sm">Termos de Uso</span>
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </a>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      {/* Aviso legal */}
-      <div className="mt-8 p-4 bg-muted rounded-lg">
-        <div className="flex items-start gap-3">
-          <FileText className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
-          <div className="text-sm text-muted-foreground">
-            <p className="font-medium mb-1">Base legal</p>
-            <p>
-              Este canal está em conformidade com a Lei nº 13.709/2018 (Lei Geral
-              de Proteção de Dados - LGPD), em especial os arts. 18, 19 e 41, que
-              estabelecem os direitos dos titulares de dados e a figura do
-              Encarregado (DPO).
-            </p>
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  Privacidade e LGPD
+                </p>
+                <h1 className="truncate text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+                  Contato com o encarregado de dados
+                </h1>
+                <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
+                  Canal oficial para pedidos de titular, denuncias e temas de tratamento de dados.
+                </p>
+              </div>
+            </div>
           </div>
-        </div>
+
+          <section className="rounded-3xl border border-border/70 bg-card/90 p-5 shadow-sm sm:p-6">
+            <div className="space-y-3">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/90">
+                Atendimento regulatorio
+              </p>
+              <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[2rem]">
+                Solicite acesso, correcao, exclusao ou reporte uma violacao
+              </h2>
+              <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
+                Use este formulario quando o assunto envolver direitos do titular, incidentes de dados,
+                consentimentos, compartilhamento ou qualquer demanda formal ligada a privacidade.
+              </p>
+            </div>
+
+            <div className="mt-5 grid gap-3 sm:grid-cols-3">
+              <div className="rounded-2xl border border-border/60 bg-background/60 p-4">
+                <p className="text-sm font-semibold text-foreground">Prazo inicial</p>
+                <p className="mt-1 text-sm text-muted-foreground">Ate 15 dias uteis para resposta conforme LGPD.</p>
+              </div>
+              <div className="rounded-2xl border border-border/60 bg-background/60 p-4">
+                <p className="text-sm font-semibold text-foreground">Canal formal</p>
+                <p className="mt-1 text-sm text-muted-foreground">Registro interno com rastreabilidade e status.</p>
+              </div>
+              <div className="rounded-2xl border border-border/60 bg-background/60 p-4">
+                <p className="text-sm font-semibold text-foreground">Escopo</p>
+                <p className="mt-1 text-sm text-muted-foreground">Conta, consentimentos, exportacao, exclusao e incidentes.</p>
+              </div>
+            </div>
+          </section>
+
+          <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(320px,1fr)]">
+            <Card className="rounded-3xl border-border/70 bg-card/90 shadow-sm">
+              <CardHeader>
+                <CardTitle>Enviar solicitacao</CardTitle>
+                <CardDescription>
+                  Preencha o formulario com contexto suficiente para analise do pedido.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSubmit(onValid)} className="space-y-6">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Nome completo</Label>
+                      <Input id="name" {...register("name")} />
+                      <InlineFieldError message={errors.name?.message} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input id="email" type="email" {...register("email")} />
+                      <InlineFieldError message={errors.email?.message} />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="requestType">Tipo de solicitacao</Label>
+                    <Controller
+                      name="requestType"
+                      control={control}
+                      render={({ field }) => (
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <SelectTrigger id="requestType">
+                            <SelectValue placeholder="Selecione o tipo de solicitacao" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {REQUEST_TYPE_OPTIONS.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                <div className="flex flex-col items-start">
+                                  <span>{option.label}</span>
+                                  <span className="text-xs text-muted-foreground">{option.description}</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    <InlineFieldError message={errors.requestType?.message} />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="subject">Assunto</Label>
+                    <Input
+                      id="subject"
+                      {...register("subject")}
+                      placeholder="Resumo curto do pedido"
+                    />
+                    <InlineFieldError message={errors.subject?.message} />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="message">Mensagem detalhada</Label>
+                    <Textarea
+                      id="message"
+                      rows={7}
+                      placeholder="Explique o pedido, contexto, dados envolvidos e resultado esperado."
+                      {...register("message")}
+                    />
+                    <InlineFieldError message={errors.message?.message} />
+                  </div>
+
+                  <div className="rounded-2xl border border-border/60 bg-background/60 p-4">
+                    <div className="flex items-start gap-3">
+                      <Clock className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                      <p className="text-sm leading-6 text-muted-foreground">
+                        Pedidos de titular seguem o fluxo regulatorio da plataforma. Em casos complexos,
+                        o prazo pode exigir complementacao ou tratamento adicional com aviso ao solicitante.
+                      </p>
+                    </div>
+                  </div>
+
+                  <Button type="submit" className="w-full justify-center" disabled={contactMutation.isPending}>
+                    {contactMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Enviando solicitacao
+                      </>
+                    ) : (
+                      <>
+                        <Send className="mr-2 h-4 w-4" />
+                        Enviar solicitacao
+                      </>
+                    )}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            <div className="space-y-4">
+              <Card className="rounded-3xl border-border/70 bg-card/90 shadow-sm">
+                <CardHeader>
+                  <CardTitle className="text-base">Informacoes do canal</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4 text-sm">
+                  <div className="flex items-start gap-3">
+                    <Mail className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                    <div>
+                      <p className="font-semibold text-foreground">Email do DPO</p>
+                      {dpoEmail ? (
+                        <a
+                          href={buildMailtoUrl(dpoEmail) ?? undefined}
+                          className="text-primary underline-offset-4 hover:underline"
+                        >
+                          {dpoEmail}
+                        </a>
+                      ) : (
+                        <p className="text-muted-foreground">Email publico ainda nao configurado.</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Clock className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                    <div>
+                      <p className="font-semibold text-foreground">Prazo de resposta</p>
+                      <p className="text-muted-foreground">Ate 15 dias uteis, conforme LGPD.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Shield className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                    <div>
+                      <p className="font-semibold text-foreground">Autoridade reguladora</p>
+                      <a
+                        href="https://www.gov.br/anpd/pt-br"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary underline-offset-4 hover:underline"
+                      >
+                        ANPD - Autoridade Nacional de Protecao de Dados
+                      </a>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="rounded-3xl border-border/70 bg-card/90 shadow-sm">
+                <CardHeader>
+                  <CardTitle className="text-base">Direitos mais comuns</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {RIGHTS.map((right) => (
+                    <div key={right} className="flex items-start gap-3">
+                      <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                      <p className="text-sm text-foreground">{right}</p>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+
+              <Card className="rounded-3xl border-border/70 bg-card/90 shadow-sm">
+                <CardHeader>
+                  <CardTitle className="text-base">Links relacionados</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {RELATED_LINKS.map((item) => (
+                    <Link
+                      key={item.to}
+                      to={item.to}
+                      className="flex items-center justify-between rounded-2xl border border-border/60 bg-background/60 px-3 py-3 text-sm transition-colors hover:bg-muted/80"
+                    >
+                      <span>{item.label}</span>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </Link>
+                  ))}
+                </CardContent>
+              </Card>
+
+              <Card className="rounded-3xl border-amber-500/20 bg-amber-500/5 shadow-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <AlertTriangle className="h-4 w-4 text-amber-500" />
+                    Base legal
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-start gap-3">
+                    <FileText className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                    <p className="text-sm leading-6 text-muted-foreground">
+                      Este canal apoia pedidos ligados aos arts. 18, 19 e 41 da LGPD, incluindo acesso,
+                      correcao, exclusao, compartilhamento, consentimento e contato com o encarregado.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </main>
       </div>
-    </div>
+    </>
   );
 }

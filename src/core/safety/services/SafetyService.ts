@@ -17,6 +17,7 @@
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
+import type { Database, Json } from '@/integrations/supabase';
 import { trackError } from '@/shared/utils/errorTracking';
 import { NotificationService } from '@/core/notifications';
 import { mediaService } from '@/core/media/services/MediaService';
@@ -92,6 +93,33 @@ type SafetyEvidenceRow = {
   created_at: string;
 };
 
+type SafetyEvidenceInsert = Database['public']['Tables']['safety_evidence']['Insert'];
+type SafetyAuditInsert = Database['public']['Tables']['safety_audit_log']['Insert'];
+
+interface QueryResult<T> {
+  data: T | null;
+  error: { message: string; code?: string } | null;
+}
+
+interface QueryBuilder<TRow> extends PromiseLike<QueryResult<TRow[]>> {
+  select: (columns?: string) => QueryBuilder<TRow>;
+  insert: (values: unknown | unknown[]) => QueryBuilder<TRow>;
+  update: (values: unknown) => QueryBuilder<TRow>;
+  eq: (column: string, value: unknown) => QueryBuilder<TRow>;
+  order: (
+    column: string,
+    options?: { ascending?: boolean },
+  ) => QueryBuilder<TRow>;
+  maybeSingle: () => Promise<QueryResult<TRow>>;
+  single: () => Promise<QueryResult<TRow>>;
+}
+
+interface SafetyDbClient {
+  from: <TRow = never>(table: string) => QueryBuilder<TRow>;
+}
+
+const safetyDb = supabase as unknown as SafetyDbClient;
+
 export class SafetyService {
   private static instance: SafetyService;
   private config: SafetyServiceConfig;
@@ -156,8 +184,8 @@ export class SafetyService {
         created_at: new Date().toISOString(),
       };
 
-      const { data, error } = await (supabase as any)
-        .from('emergency_alerts')
+      const { data, error } = await safetyDb
+        .from<EmergencyAlertRow>('emergency_alerts')
         .insert(alertData)
         .select()
         .single();
@@ -209,8 +237,8 @@ export class SafetyService {
    */
   async getEmergencyAlert(alertId: string): Promise<EmergencyAlert | null> {
     try {
-      const { data, error } = await (supabase as any)
-        .from('emergency_alerts')
+      const { data, error } = await safetyDb
+        .from<EmergencyAlertRow>('emergency_alerts')
         .select('*')
         .eq('id', alertId)
         .maybeSingle();
@@ -230,8 +258,8 @@ export class SafetyService {
    */
   async listEmergencyAlerts(filter: SafetyFilter = {}): Promise<EmergencyAlert[]> {
     try {
-      let query = (supabase as any)
-        .from('emergency_alerts')
+      let query = safetyDb
+        .from<EmergencyAlertRow>('emergency_alerts')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -277,8 +305,8 @@ export class SafetyService {
         updateData.resolved_at = new Date().toISOString();
       }
 
-      const { data, error } = await (supabase as any)
-        .from('emergency_alerts')
+      const { data, error } = await safetyDb
+        .from<EmergencyAlertRow>('emergency_alerts')
         .update(updateData)
         .eq('id', alertId)
         .select()
@@ -361,8 +389,8 @@ export class SafetyService {
         created_at: new Date().toISOString(),
       };
 
-      const { data, error } = await (supabase as any)
-        .from('safety_incidents')
+      const { data, error } = await safetyDb
+        .from<SafetyIncidentRow>('safety_incidents')
         .insert(incidentData)
         .select()
         .single();
@@ -407,8 +435,8 @@ export class SafetyService {
    */
   async getSafetyIncident(incidentId: string): Promise<SafetyIncident | null> {
     try {
-      const { data, error } = await (supabase as any)
-        .from('safety_incidents')
+      const { data, error } = await safetyDb
+        .from<SafetyIncidentRow>('safety_incidents')
         .select('*')
         .eq('id', incidentId)
         .maybeSingle();
@@ -475,8 +503,8 @@ export class SafetyService {
         updateData.resolved_at = new Date().toISOString();
       }
 
-      const { data, error } = await (supabase as any)
-        .from('safety_incidents')
+      const { data, error } = await safetyDb
+        .from<SafetyIncidentRow>('safety_incidents')
         .update(updateData)
         .eq('id', incidentId)
         .select()
@@ -524,8 +552,7 @@ export class SafetyService {
         upsert: false,
       });
 
-      // Salvar metadados no banco
-      const evidenceData = {
+      const evidenceInsert: SafetyEvidenceInsert = {
         incident_id: input.incidentId,
         evidence_type: input.evidenceType,
         file_url: upload.url,
@@ -533,13 +560,13 @@ export class SafetyService {
         file_size: input.file.size,
         mime_type: input.file.type,
         uploaded_by: uploadedBy,
-        metadata: input.metadata || {},
+        metadata: (input.metadata || {}) as Json,
         created_at: new Date().toISOString(),
       };
 
-      const { data, error } = await (supabase as any)
-        .from('safety_evidence')
-        .insert(evidenceData)
+      const { data, error } = await safetyDb
+        .from<SafetyEvidenceRow>('safety_evidence')
+        .insert(evidenceInsert)
         .select()
         .single();
 
@@ -572,8 +599,8 @@ export class SafetyService {
    */
   async listIncidentEvidence(incidentId: string): Promise<SafetyEvidence[]> {
     try {
-      const { data, error } = await (supabase as any)
-        .from('safety_evidence')
+      const { data, error } = await safetyDb
+        .from<SafetyEvidenceRow>('safety_evidence')
         .select('*')
         .eq('incident_id', incidentId)
         .order('created_at', { ascending: false });
@@ -598,14 +625,16 @@ export class SafetyService {
     entry: Omit<SafetyAuditEntry, 'id' | 'createdAt' | 'ipAddress' | 'userAgent'>
   ): Promise<void> {
     try {
-      await (supabase as any).from('safety_audit_log').insert({
+      const payload: SafetyAuditInsert = {
         action: entry.action,
         entity_type: entry.entityType,
         entity_id: entry.entityId,
         performed_by: entry.performedBy,
-        metadata: entry.metadata ? JSON.stringify(entry.metadata) : null,
+        metadata: entry.metadata ? ((entry.metadata as unknown) as Json) : null,
         created_at: new Date().toISOString(),
-      });
+      };
+
+      await safetyDb.from('safety_audit_log').insert(payload);
     } catch (error) {
       logger.error('[SafetyService] Error creating audit entry:', error);
       // Não falhar operação principal por erro de auditoria

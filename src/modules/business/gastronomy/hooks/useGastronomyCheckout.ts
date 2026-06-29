@@ -195,7 +195,7 @@ export function useGastronomyCheckout() {
         customer_snapshot: {
           full_name: activeProfile.displayName || activeProfile.name,
           phone: activeProfile.phone,
-          email: typeof activeProfile.email === "string" ? activeProfile.email : undefined,
+          email: undefined,
         },
         delivery_snapshot: input.deliveryAddress
           ? {

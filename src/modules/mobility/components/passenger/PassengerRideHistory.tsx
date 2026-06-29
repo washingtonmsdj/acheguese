@@ -32,6 +32,24 @@ interface PassengerRideHistoryProps {
   onRate: (ride: PassengerRide) => void;
 }
 
+function getPassengerRideRatingMeta(rating: unknown) {
+  if (typeof rating === "number") {
+    return { numericRating: rating, commentRating: undefined };
+  }
+
+  if (rating && typeof rating === "object") {
+    const typedRating = rating as { rating?: unknown; comment?: unknown };
+    return {
+      numericRating:
+        typeof typedRating.rating === "number" ? typedRating.rating : 0,
+      commentRating:
+        typeof typedRating.comment === "string" ? typedRating.comment : undefined,
+    };
+  }
+
+  return { numericRating: 0, commentRating: undefined };
+}
+
 export function PassengerRideHistory({
   completedRides,
   cancelledRides,
@@ -472,15 +490,8 @@ export function PassengerRideHistory({
                 {ride.rating && (
                   <div className="mt-2 flex items-center gap-1">
                     {(() => {
-                      const ratingValue = ride.rating as any;
-                      const numericRating =
-                        typeof ratingValue === "number"
-                          ? ratingValue
-                          : (ratingValue?.rating ?? 0);
-                      const commentRating =
-                        typeof ratingValue === "object" && ratingValue
-                          ? ratingValue.comment
-                          : undefined;
+                      const { numericRating, commentRating } =
+                        getPassengerRideRatingMeta(ride.rating);
                       return (
                         <>
                     {Array.from({ length: 5 }).map((_, i) => (

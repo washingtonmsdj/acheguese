@@ -14,7 +14,6 @@ import { profileService } from "@/core/profiles/services/ProfileService";
 import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
 
 const supabaseTyped = supabase as unknown as AdminSupabaseClient;
-const supabaseAny = supabase as any;
 import { sanitizeForILike } from "@/shared/utils/sqlSanitization";
 import {
   isValidBusinessId,
@@ -35,6 +34,45 @@ import type {
   ProductRecord,
 } from "../types";
 import type { TerritoryFilter } from "@/core/location/types";
+
+interface QueryError {
+  message?: string | null;
+}
+
+interface QueryArrayResult<TRow> {
+  data: TRow[] | null;
+  error: QueryError | null;
+  count?: number | null;
+}
+
+interface QuerySingleResult<TRow> {
+  data: TRow | null;
+  error: QueryError | null;
+  count?: number | null;
+}
+
+interface QueryBuilder<TRow> extends PromiseLike<QueryArrayResult<TRow>> {
+  select: (
+    columns?: string,
+    options?: { count?: "exact"; head?: boolean },
+  ) => QueryBuilder<TRow>;
+  eq: (column: string, value: unknown) => QueryBuilder<TRow>;
+  in: (column: string, values: unknown[]) => QueryBuilder<TRow>;
+  ilike: (column: string, pattern: string) => QueryBuilder<TRow>;
+  order: (column: string, options?: { ascending?: boolean }) => QueryBuilder<TRow>;
+  range: (from: number, to: number) => QueryBuilder<TRow>;
+  maybeSingle: () => Promise<QuerySingleResult<TRow>>;
+  limit: (value: number) => QueryBuilder<TRow>;
+  neq: (column: string, value: unknown) => QueryBuilder<TRow>;
+}
+
+interface BusinessQueriesDbClient {
+  from: <TRow = never>(table: string) => QueryBuilder<TRow>;
+}
+
+type BusinessServiceRow = Record<string, unknown>;
+
+const businessQueriesDb = supabase as unknown as BusinessQueriesDbClient;
 
 /**
  * Buscar empresas (com filtros)
@@ -668,14 +706,15 @@ export async function getProducts(businessId: string): Promise<Product[]> {
   }
 
   try {
-    const { data, error } = await supabaseAny.from("business_products")
+    const { data, error } = await businessQueriesDb
+      .from<ProductRecord>("business_products")
       .select("*")
       .eq("profile_id", businessId)
       .order("created_at", { ascending: false });
 
     if (error) throw error;
 
-    return ((data as ProductRecord[]) || []).map(mapProductRecordToProduct);
+    return (data || []).map(mapProductRecordToProduct);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`Erro ao buscar produtos: ${message}`);
@@ -704,7 +743,8 @@ export async function getProductsPage(
   const from = page * pageSize;
   const to = from + pageSize - 1;
 
-  const { data, error } = await supabaseAny.from("business_products")
+  const { data, error } = await businessQueriesDb
+    .from<ProductRecord>("business_products")
     .select("*")
     .eq("profile_id", businessId)
     .eq("ativo", true)
@@ -717,7 +757,7 @@ export async function getProductsPage(
     throw new Error(`Erro ao buscar página de produtos: ${(error as { message?: string }).message}`);
   }
 
-  return ((data as ProductRecord[]) || []).map(mapProductRecordToProduct);
+  return (data || []).map(mapProductRecordToProduct);
 }
 
 /**
@@ -725,13 +765,14 @@ export async function getProductsPage(
  */
 export async function getServices(businessId: string): Promise<unknown[]> {
   try {
-    const { data, error } = await supabaseAny.from("business_services")
+    const { data, error } = await businessQueriesDb
+      .from<BusinessServiceRow>("business_services")
       .select("*")
       .eq("business_id", businessId)
       .order("name");
 
     if (error) throw error;
-    return (data as unknown[]) || [];
+    return data || [];
   } catch (error) {
     logger.error("Error fetching business services:", error);
     return [];

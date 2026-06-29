@@ -6,15 +6,28 @@
  */
 
 import type { NavigateFunction } from "react-router-dom";
-import type { MultiProfileRecord } from "@/core/profiles/services/multi-profile/types";
+import type { MultiProfileRecord, Profile as RuntimeProfile } from "@/core/profiles/services/multi-profile/types";
+import type { AppUrls } from "@/core/routing/hooks/useAppUrls";
 import type {
   ProfileAssociatedBusiness,
   ProfileBusinessModuleSnapshot,
 } from "@/core/profiles/services/ProfileBusinessTypes";
+import type { ProfileActivityStats } from "@/core/profiles/services/ProfileOperationTypes";
+import type { ProfileAccountSnapshot } from "@/core/profiles/views/ProfileAccountSnapshot";
+import type { ProfileRow } from "@/core/profiles/services/types";
 import type { VerificationStatus } from "@/modules/profile/components/ResidentVerificationCard";
 import type { DriverDataRecord } from "@/core/mobility/types/DriverDataRecord";
 export type ProfileSectionId =
   import("@/modules/profile/config/profile-sections.config").ProfileSectionId;
+
+export interface ProfileModuleUrls {
+  readonly business: string;
+  readonly services: string;
+  readonly gastronomy: string;
+  readonly gastronomyFavorites: string;
+  readonly community: string;
+  readonly touristPoints: string;
+}
 
 // ============================================
 // Base Props (compartilhadas por todas)
@@ -25,11 +38,11 @@ export interface BaseSectionProps {
     readonly id: string;
     readonly email?: string;
   };
-  readonly personalProfile: MultiProfileRecord | null;
+  readonly personalProfile: MultiProfileRecord | RuntimeProfile | null;
   readonly personalProfileId: string | null;
   readonly navigate: NavigateFunction;
-  readonly appUrls: any;
-  readonly moduleUrls: any;
+  readonly appUrls: AppUrls;
+  readonly moduleUrls: ProfileModuleUrls;
 }
 
 // ============================================
@@ -188,7 +201,7 @@ export interface ResumoSectionProps extends BaseSectionProps {
 }
 
 export interface DadosPessoaisSectionProps extends BaseSectionProps {
-  readonly profile: MultiProfileRecord | null;
+  readonly profile: ProfileRow | null;
   readonly identity: Identity | null;
   readonly context: Context | null;
   readonly stats: Stats;
@@ -238,13 +251,13 @@ export interface PreferenciasSectionProps extends BaseSectionProps {
 }
 
 export interface SegurancaSectionProps extends BaseSectionProps {
-  readonly profile: MultiProfileRecord | null;
+  readonly profile: ProfileRow | null;
   readonly identity: Identity | null;
   readonly context: Context | null;
-  readonly account: AccountSnapshot | null;
-  readonly roles: any;
+  readonly account: ProfileAccountSnapshot | null;
+  readonly roles: readonly string[];
   readonly activeProfile: MultiProfileRecord | null;
-  readonly stats: Stats;
+  readonly stats: ProfileActivityStats;
   readonly verificationStatus: VerificationStatus;
   readonly verificationRejectionReason?: string;
   readonly downloadDataOpen: boolean;

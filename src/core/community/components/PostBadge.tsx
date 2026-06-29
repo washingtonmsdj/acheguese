@@ -3,22 +3,22 @@ import { Badge } from "@/shared/components/ui/badge";
 import {
   HelpCircle,
   MessageCircle,
-  ThumbsUp,
   Search,
+  ThumbsUp,
 } from "lucide-react";
 import { INLINE_STYLES } from "./styles/communityDesignSystem";
+
 /**
- * Badge visual para tipo de post
+ * Badge visual para tipo de post.
  *
  * Requirements:
- * - Requirement 3: Tipos de Post
- * - Requirement 5: Estrutura do Card de Post
- * - Requirement 7: Sistema de Alertas (badge "Verificado")
+ * - Requirement 3: Tipos de post
+ * - Requirement 5: Estrutura do card de post
+ * - Requirement 7: Sistema de alertas
  *
- * Design System:
+ * Design system:
  * - Usa cores globais do communityDesignSystem.ts
- * - Badge de emergência: Fundo vermelho escuro, texto branco
- * - Outros badges: Texto ciano, sem fundo
+ * - Outros badges usam texto ciano sem fundo pesado
  */
 
 export type PostType =
@@ -36,17 +36,17 @@ export type PostType =
 
 interface PostBadgeProps {
   type: PostType;
-  isVerified?: boolean; // Para alertas com 5+ confirmações
+  isVerified?: boolean;
 }
 
 const postTypeConfig = {
   pergunta: {
-    label: "ENQUETE",
+    label: "PERGUNTA",
     icon: HelpCircle,
     variant: "default" as const,
     style: INLINE_STYLES.badgeCyan,
     className:
-      "border-0 font-bold uppercase tracking-wide text-sm px-0 hover:bg-transparent",
+      "border-0 px-0 text-sm font-bold uppercase tracking-wide hover:bg-transparent",
   },
   enquete: {
     label: "ENQUETE",
@@ -54,23 +54,23 @@ const postTypeConfig = {
     variant: "default" as const,
     style: INLINE_STYLES.badgeCyan,
     className:
-      "border-0 font-bold uppercase tracking-wide text-sm px-0 hover:bg-transparent",
+      "border-0 px-0 text-sm font-bold uppercase tracking-wide hover:bg-transparent",
   },
   discussao: {
-    label: "DISCUSSÃO",
+    label: "DISCUSSAO",
     icon: MessageCircle,
     variant: "default" as const,
     style: INLINE_STYLES.badgeCyan,
     className:
-      "border-0 font-bold uppercase tracking-wide text-sm px-0 hover:bg-transparent",
+      "border-0 px-0 text-sm font-bold uppercase tracking-wide hover:bg-transparent",
   },
   recomendacao: {
-    label: "SUGESTÃO",
+    label: "RECOMENDACAO",
     icon: ThumbsUp,
     variant: "default" as const,
     style: INLINE_STYLES.badgeCyan,
     className:
-      "border-0 font-bold uppercase tracking-wide text-sm px-0 hover:bg-transparent",
+      "border-0 px-0 text-sm font-bold uppercase tracking-wide hover:bg-transparent",
   },
   achados_e_perdidos: {
     label: "ACHADOS E PERDIDOS",
@@ -78,7 +78,7 @@ const postTypeConfig = {
     variant: "default" as const,
     style: INLINE_STYLES.badgeCyan,
     className:
-      "border-0 font-bold uppercase tracking-wide text-sm px-0 hover:bg-transparent",
+      "border-0 px-0 text-sm font-bold uppercase tracking-wide hover:bg-transparent",
   },
 };
 
@@ -93,7 +93,6 @@ function getPostTypeConfig(type: PostType) {
     case "recomendacao":
       return postTypeConfig.recomendacao;
     case "achados_e_perdidos":
-      return postTypeConfig.achados_e_perdidos;
     case "achados":
       return postTypeConfig.achados_e_perdidos;
     default:
@@ -101,9 +100,8 @@ function getPostTypeConfig(type: PostType) {
   }
 }
 
-export function PostBadge({ type, isVerified = false }: PostBadgeProps) {
+export function PostBadge({ type }: PostBadgeProps) {
   const config = getPostTypeConfig(type);
-  const Icon = config.icon;
 
   return (
     <div className="flex items-center gap-2">

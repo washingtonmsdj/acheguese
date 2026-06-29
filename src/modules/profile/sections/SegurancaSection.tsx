@@ -1,8 +1,8 @@
 /**
- * SegurancaSection - Seção de segurança e dados
+ * SegurancaSection - Secao de seguranca e dados
  *
  * SSOT: Componente isolado com props tipadas
- * Sem gambiarras: Lógica clara e organizada
+ * Sem gambiarras: Logica clara e organizada
  */
 
 import { Database, Download, Lock, Pause, Trash2 } from "lucide-react";
@@ -44,28 +44,30 @@ export function SegurancaSection({
     <>
       <div className="space-y-6">
         <AccountHealthPanel
-          accountSnapshot={(account || {
+          accountSnapshot={
+            account || {
               accountState: "inactive",
               isBlocked: false,
               isSuspended: false,
               verificationStatus,
               verificationRejectionReason,
-            }) as any}
+            }
+          }
           identity={identity}
           context={context}
-          activeProfile={activeProfile as any}
-          roles={roles as any}
+          activeProfile={activeProfile}
+          roles={[...roles]}
         />
 
         <SectionFrame
-          title="Segurança e dados"
-          description="Ações sensíveis da conta centralizadas em um único lugar."
+          title="Seguranca e dados"
+          description="Acoes sensiveis da conta centralizadas em um unico lugar."
         >
           <div className="grid gap-3 md:grid-cols-2">
             <SecurityActionCard
               icon={Lock}
               title="Minha conta"
-              description="Senha, email de acesso e validações de segurança."
+              description="Senha, email de acesso e validacoes de seguranca."
               actionLabel="Abrir conta"
               onAction={() => navigate(appUrls.profile.account)}
             />
@@ -86,7 +88,7 @@ export function SegurancaSection({
             <SecurityActionCard
               icon={Pause}
               title="Pausar conta"
-              description="Abrir fluxo oficial de pausa temporária."
+              description="Abrir fluxo oficial de pausa temporaria."
               actionLabel="Pausar conta"
               onAction={() => setDeactivateOpen(true)}
             />
@@ -103,8 +105,18 @@ export function SegurancaSection({
       </div>
 
       <DataManagementDialogs
-        profile={profile as any}
-        stats={stats as any}
+        profile={
+          profile
+            ? {
+                displayName: profile.display_name,
+                name: profile.name,
+                phone: profile.phone ?? profile.telefone ?? null,
+                whatsapp: profile.whatsapp ?? null,
+                createdAt: profile.created_at,
+              }
+            : null
+        }
+        stats={stats}
         userEmail={user?.email}
         downloadOpen={downloadDataOpen}
         viewOpen={viewDataOpen}

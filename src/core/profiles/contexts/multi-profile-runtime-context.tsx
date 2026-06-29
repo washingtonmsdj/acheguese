@@ -16,6 +16,10 @@ import {
   type MultiProfileContextValue,
 } from './multiProfileContext.shared';
 
+function getErrorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
+}
+
 const MODULE_ROUTES: Record<string, ProfileType> = {
   '/central/empresas/nova': 'business',
   '/edit-business': 'business',
@@ -70,8 +74,8 @@ export function MultiProfileProvider({ children }: { children: ReactNode }) {
         if (active) localStorage.setItem(ACTIVE_PROFILE_KEY, active.id);
       }
       setActiveProfile(active || null);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load profiles');
+    } catch (error: unknown) {
+      setError(getErrorMessage(error, 'Failed to load profiles'));
     } finally {
       setLoading(false);
     }

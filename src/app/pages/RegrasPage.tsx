@@ -1,146 +1,227 @@
-import React from "react";
+import { Helmet } from "react-helmet-async";
 import {
-  ArrowLeft,
-  Shield,
   AlertTriangle,
+  ArrowLeft,
   Ban,
   Eye,
   MapPin,
   Megaphone,
   Scale,
+  Shield,
 } from "lucide-react";
-import { useNavigate, Link } from "react-router-dom";
-const regras = [
+import { Link, useNavigate } from "react-router-dom";
+
+import { Button } from "@/shared/components/ui/button";
+
+const COMMUNITY_RULES = [
   {
     icon: Ban,
-    title: "Não acusar pessoas ou empresas",
-    desc: "É proibido acusar qualquer pessoa ou business de crimes ou atividades ilegais. Denúncias devem ser feitas às autoridades competentes.",
+    title: "Nao acuse pessoas ou empresas",
+    description:
+      "Nao use a plataforma para acusar terceiros de crime, fraude ou conduta ilegal sem canal oficial e base apropriada. Denuncias formais devem seguir os meios competentes.",
   },
   {
     icon: Eye,
-    title: "Não divulgar dados pessoais",
-    desc: "Não publique endereços, phones, photos ou qualquer dado pessoal de terceiros sem consentimento.",
+    title: "Nao exponha dados pessoais",
+    description:
+      "Nao publique endereco, telefone, fotos privadas, documentos ou qualquer dado sensivel de terceiros sem permissao valida e finalidade legitima.",
   },
   {
     icon: AlertTriangle,
-    title: "Sem conteúdo ofensivo",
-    desc: "Conteúdo discriminatório, ameaçador, de ódio ou assédio não será tolerado.",
+    title: "Sem conteudo ofensivo ou abusivo",
+    description:
+      "A comunidade nao admite ameaca, discurso de odio, discriminacao, humilhacao publica, assedio, intimidacao ou ataques pessoais.",
   },
   {
     icon: MapPin,
-    title: "Não divulgar operações policiais",
-    desc: "É proibido informar localização de blitz, operações policiais ou ações de fiscalização.",
+    title: "Nao divulgue operacoes sensiveis",
+    description:
+      "Nao informe localizacao de blitz, operacoes policiais, fiscalizacao em andamento ou qualquer acao que possa comprometer seguranca publica.",
   },
   {
     icon: Megaphone,
-    title: "Sem informações falsas",
-    desc: "Não publique notícias falsas, boatos ou informações que possam causar pânico na comunidade.",
+    title: "Nao espalhe desinformacao",
+    description:
+      "Nao publique boatos, alertas falsos ou informacoes sem contexto que possam gerar panico, dano reputacional ou comportamento de risco na comunidade.",
   },
   {
     icon: Scale,
-    title: "Respeite as leis",
-    desc: "Todo conteúdo publicado deve respeitar a legislação brasileira vigente. Violações podem resultar em remoção e suspensão.",
+    title: "Respeite a lei e o contexto local",
+    description:
+      "Todo conteudo precisa respeitar a legislacao brasileira, as regras da plataforma e o uso responsavel dos modulos de bairro, cidade e comunidade.",
   },
-];
+] as const;
+
+const ENFORCEMENT_STEPS = [
+  "Conteudo removido e orientacao inicial quando houver infracao de menor gravidade.",
+  "Restricao temporaria de interacao ou suspensao parcial em caso de reincidencia ou risco moderado.",
+  "Bloqueio prolongado ou encerramento da conta quando houver abuso grave, fraude, ameaca ou recorrencia.",
+] as const;
 
 export default function RegrasPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="bg-background">
-      <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-lg border-b">
-        <div className="flex items-center gap-3 px-4 py-3">
-          <button
-            onClick={() => navigate(-1)}
-            className="text-muted-foreground"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          <h1 className="text-sm font-semibold font-display">
-            Regras da Comunidade
-          </h1>
-        </div>
-      </header>
+    <>
+      <Helmet>
+        <title>Regras da comunidade</title>
+      </Helmet>
 
-      <div className="px-4 py-6 max-w-lg mx-auto">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-            <Shield className="h-6 w-6 text-primary" />
-          </div>
-          <div>
-            <h2 className="text-lg font-bold font-display">
-              Regras da Comunidade
-            </h2>
-            <p className="text-xs text-muted-foreground">
-              Para uma comunidade mais segura e respeitosa
-            </p>
-          </div>
-        </div>
-
-        <div className="bg-warning/10 border border-warning/20 rounded-xl p-4 mb-6">
-          <p className="text-sm text-foreground leading-relaxed">
-            Estas regras existem para proteger todos os moradores. O
-            descumprimento pode resultar em
-            <strong> remoção de conteúdo</strong>, <strong>advertência</strong>{" "}
-            ou <strong>suspensão da conta</strong>.
-          </p>
-        </div>
-
-        <div className="space-y-4">
-          {regras.map((r, i) => (
-            <div key={i} className="bg-card rounded-xl border p-4 flex gap-3">
-              <div className="h-9 w-9 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
-                <r.icon className="h-4 w-4 text-destructive" />
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold mb-1">{r.title}</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  {r.desc}
+      <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.08),transparent_26%),linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.26))]">
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="mx-auto w-full max-w-5xl px-4 pb-10 pt-4 sm:px-6 sm:pt-6 lg:px-8"
+        >
+          <div className="sticky top-0 z-20 -mx-4 mb-5 border-b border-border/60 bg-background/90 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:mb-6 sm:rounded-3xl sm:border sm:bg-card/85 sm:px-5 sm:shadow-sm">
+            <div className="flex items-start gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="shrink-0 rounded-full"
+                onClick={() => navigate(-1)}
+                type="button"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  Seguranca comunitaria
+                </p>
+                <h1 className="truncate text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+                  Regras da comunidade
+                </h1>
+                <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
+                  Leitura publica para descoberta. Interacao depende do contexto da conta.
                 </p>
               </div>
             </div>
-          ))}
-        </div>
+          </div>
 
-        <div className="mt-6 bg-muted/50 rounded-xl p-4">
-          <h3 className="text-sm font-semibold mb-2">
-            O que acontece se eu violar as regras?
-          </h3>
-          <ul className="space-y-2 text-xs text-muted-foreground">
-            <li className="flex items-center gap-2">
-              <span className="h-5 w-5 rounded-full bg-warning/20 text-warning flex items-center justify-center text-[10px] font-bold">
-                1
-              </span>
-              <span>
-                <strong>1ª violação:</strong> Conteúdo removido + advertência
-              </span>
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="h-5 w-5 rounded-full bg-destructive/20 text-destructive flex items-center justify-center text-[10px] font-bold">
-                2
-              </span>
-              <span>
-                <strong>2ª violação:</strong> Suspensão temporária (7 dias)
-              </span>
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="h-5 w-5 rounded-full bg-destructive/30 text-destructive flex items-center justify-center text-[10px] font-bold">
-                3
-              </span>
-              <span>
-                <strong>3ª violação:</strong> Suspensão permanente da conta
-              </span>
-            </li>
-          </ul>
-        </div>
+          <section className="rounded-3xl border border-border/70 bg-card/90 p-5 shadow-sm sm:p-6">
+            <div className="space-y-3">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/90">
+                Convivencia, moderacao e protecao
+              </p>
+              <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[2rem]">
+                Regras para manter a comunidade util e segura
+              </h2>
+              <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
+                Estas diretrizes organizam como posts, comentarios, alertas, recomendacoes e
+                interacoes podem acontecer dentro do Achegue-se. O objetivo e reduzir abuso,
+                desinformacao e risco territorial.
+              </p>
+            </div>
 
-        <p className="text-xs text-muted-foreground text-center mt-6">
-          Veja também nossos{" "}
-          <Link to="/termos" className="text-primary underline">
-            Termos de Uso
-          </Link>
-        </p>
+            <div className="mt-5 flex flex-wrap gap-2">
+              <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                Leitura publica
+              </span>
+              <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-700 dark:text-amber-300">
+                Moderacao ativa
+              </span>
+              <span className="rounded-full border border-border/60 bg-background/70 px-3 py-1 text-xs font-medium text-foreground">
+                Bairro, cidade e comunidade
+              </span>
+            </div>
+          </section>
+
+          <section className="mt-5 rounded-3xl border border-amber-500/20 bg-amber-500/10 p-4 shadow-sm sm:p-5">
+            <div className="flex items-start gap-3">
+              <div className="rounded-2xl bg-amber-500/15 p-2.5 text-amber-700 dark:text-amber-300">
+                <Shield className="h-5 w-5" />
+              </div>
+              <p className="text-sm leading-6 text-foreground">
+                Violacoes podem levar a remocao de conteudo, restricao de alcance, suspensao de
+                funcionalidades ou encerramento da conta, conforme gravidade, contexto e historico.
+              </p>
+            </div>
+          </section>
+
+          <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(280px,0.9fr)]">
+            <section className="space-y-4">
+              {COMMUNITY_RULES.map((rule) => {
+                const Icon = rule.icon;
+
+                return (
+                  <article
+                    key={rule.title}
+                    className="rounded-3xl border border-border/70 bg-card/90 p-5 shadow-sm sm:p-6"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="rounded-2xl bg-destructive/10 p-2.5 text-destructive">
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="text-base font-semibold text-foreground sm:text-lg">
+                          {rule.title}
+                        </h3>
+                        <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                          {rule.description}
+                        </p>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </section>
+
+            <aside className="space-y-4">
+              <section className="rounded-3xl border border-border/70 bg-card/90 p-5 shadow-sm">
+                <h3 className="text-base font-semibold text-foreground">Como a moderacao escala</h3>
+                <div className="mt-4 space-y-3">
+                  {ENFORCEMENT_STEPS.map((step, index) => (
+                    <div key={step} className="flex items-start gap-3">
+                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                        {index + 1}
+                      </div>
+                      <p className="text-sm leading-6 text-muted-foreground">{step}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section className="rounded-3xl border border-border/70 bg-card/90 p-5 shadow-sm">
+                <h3 className="text-base font-semibold text-foreground">Antes de publicar</h3>
+                <ul className="mt-4 space-y-3 text-sm leading-6 text-muted-foreground">
+                  <li>Cheque o contexto territorial e a fonte da informacao.</li>
+                  <li>Evite expor terceiros sem necessidade legitima.</li>
+                  <li>Prefira fatos verificaveis e linguagem objetiva.</li>
+                </ul>
+              </section>
+            </aside>
+          </div>
+
+          <section className="mt-5 rounded-3xl border border-border/70 bg-card/90 p-4 shadow-sm sm:p-5">
+            <div className="flex flex-col gap-3">
+              <p className="text-sm leading-6 text-muted-foreground">
+                Consulte tambem os documentos complementares para entender o contrato de uso e o
+                tratamento de dados pessoais na plataforma.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <Link
+                  to="/termos"
+                  className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+                >
+                  Termos de uso
+                </Link>
+                <Link
+                  to="/privacidade"
+                  className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+                >
+                  Politica de privacidade
+                </Link>
+                <Link
+                  to="/dpo"
+                  className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+                >
+                  Canal do DPO
+                </Link>
+              </div>
+            </div>
+          </section>
+        </main>
       </div>
-    </div>
+    </>
   );
 }

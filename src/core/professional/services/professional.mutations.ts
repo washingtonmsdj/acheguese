@@ -21,6 +21,7 @@ import type {
   UpdateProfessionalInput,
   ProfessionalJob,
   CreateProfessionalJobInput,
+  ProfessionalStatus,
 } from "../types";
 import type { z } from "zod";
 import { sanitizeString, sanitizeArray, sanitizeUrl, sanitizeEmail, sanitizePhone } from "@/shared/utils/sanitization";
@@ -33,6 +34,110 @@ export type { Professional, CreateProfessionalInput, UpdateProfessionalInput };
 // ============================================================================
 
 const getSanitizers = () => ({ sanitizeString, sanitizeArray, sanitizeUrl, sanitizeEmail, sanitizePhone });
+
+interface QueryError {
+  message?: string | null;
+}
+
+interface QueryArrayResult<TRow> {
+  data: TRow[] | null;
+  error: QueryError | null;
+}
+
+interface QuerySingleResult<TRow> {
+  data: TRow | null;
+  error: QueryError | null;
+}
+
+interface QueryBuilder<TRow> extends PromiseLike<QueryArrayResult<TRow>> {
+  select: (columns?: string) => QueryBuilder<TRow>;
+  insert: (values: unknown | unknown[]) => QueryBuilder<TRow>;
+  update: (values: unknown) => QueryBuilder<TRow>;
+  eq: (column: string, value: unknown) => QueryBuilder<TRow>;
+  single: () => Promise<QuerySingleResult<TRow>>;
+}
+
+interface ProfessionalMutationsDbClient {
+  from: <TRow = never>(table: string) => QueryBuilder<TRow>;
+}
+
+interface ProfessionalDataIdentityRow {
+  id: string;
+  profile_id: string;
+}
+
+interface ProfessionalJobRow {
+  id: string;
+  professional_id: string;
+  title: string | null;
+  description: string | null;
+  category: string | null;
+  price: number | null;
+  duration_hours: number | null;
+  is_active: boolean | null;
+  created_at: string;
+}
+
+interface ProfessionalReportRow {
+  id: string;
+}
+
+type UpdateProfessionalInputWithStatus = UpdateProfessionalInput & {
+  status?: ProfessionalStatus;
+};
+
+type CreateProfessionalJobInputLike = CreateProfessionalJobInput & {
+  title?: string;
+  nome?: string;
+  description?: string;
+  descricao?: string;
+  price?: number | null;
+  preco?: number | null;
+  price_type?: string;
+  tipo_preco?: string;
+  category?: string;
+  categoria?: string;
+  duration_hours?: number | null;
+  duracao_horas?: number | null;
+};
+
+const professionalMutationsDb = supabase as unknown as ProfessionalMutationsDbClient;
+
+function mapProfessionalJobRow(row: ProfessionalJobRow): ProfessionalJob {
+  return {
+    id: row.id,
+    profile_id: row.professional_id,
+    title: row.title ?? "Servico",
+    description: row.description ?? "",
+    category: row.category ?? "geral",
+    price: row.price ?? undefined,
+    duration: row.duration_hours != null ? String(row.duration_hours) : undefined,
+    images: [],
+    is_featured: false,
+    is_active: row.is_active ?? true,
+    created_at: row.created_at,
+  };
+}
+
+function normalizeCreateJobInput(jobData: CreateProfessionalJobInput): {
+  title: string;
+  description: string;
+  price: number | null;
+  price_type: string;
+  category: string;
+  duration_hours: number | null;
+} {
+  const legacyJobData = jobData as CreateProfessionalJobInputLike;
+
+  return {
+    title: legacyJobData.title ?? legacyJobData.nome ?? "Servico",
+    description: legacyJobData.description ?? legacyJobData.descricao ?? "",
+    price: legacyJobData.price ?? legacyJobData.preco ?? null,
+    price_type: legacyJobData.price_type ?? legacyJobData.tipo_preco ?? "fixed",
+    category: legacyJobData.category ?? legacyJobData.categoria ?? "geral",
+    duration_hours: legacyJobData.duration_hours ?? legacyJobData.duracao_horas ?? null,
+  };
+}
 
 // ============================================================================
 // 🎯 CREATE MUTATIONS
@@ -92,8 +197,8 @@ export async function createProfessional(
     const validatedData = validationResult.data;
 
     // 3. Criar no banco
-    const { data, error } = await (supabase as any)
-      .from("professional_data")
+    const { data, error } = await professionalMutationsDb
+      .from<Professional>("professional_data")
       .insert({
         profile_id: userId,
         professional_name: validatedData.name,
@@ -160,7 +265,7 @@ export async function updateProfessional(
   try {
     // 1. Sanitização
     const sanitizers = getSanitizers();
-    const sanitized: Record<string, any> = {};
+    const sanitized: Record<string, unknown> = {};
 
     if (input.name !== undefined) {
       sanitized.professional_name = sanitizers.sanitizeString(input.name);
@@ -247,8 +352,11 @@ export async function updateProfessional(
     if (input.visibility !== undefined) {
       sanitized.visibility = input.visibility;
     }
-    if ((input as any).status !== undefined) {
-      sanitized.is_active = (input as any).status === "active";
+    if ("status" in input) {
+      const status = (input as UpdateProfessionalInputWithStatus).status;
+      if (status !== undefined) {
+        sanitized.is_active = status === "active";
+      }
     }
 
     // 2. Validação (se houver dados para validar)
@@ -265,8 +373,8 @@ export async function updateProfessional(
     }
 
     // 3. Atualizar no banco
-    const { data, error } = await (supabase as any)
-      .from("professional_data")
+    const { data, error } = await professionalMutationsDb
+      .from<Professional>("professional_data")
       .update({
         ...sanitized,
         updated_at: new Date().toISOString(),
@@ -297,8 +405,8 @@ export async function updateProfessional(
  */
 export async function deleteProfessional(id: string): Promise<void> {
   try {
-    const { data: professional, error: resolveError } = await (supabase as any)
-      .from("professional_data")
+    const { data: professional, error: resolveError } = await professionalMutationsDb
+      .from<ProfessionalDataIdentityRow>("professional_data")
       .select("id, profile_id")
       .eq("id", id)
       .single();
@@ -307,8 +415,8 @@ export async function deleteProfessional(id: string): Promise<void> {
       throw new Error("Profissional não encontrado");
     }
 
-    const { error } = await (supabase as any)
-      .from("professional_data")
+    const { error } = await professionalMutationsDb
+      .from<Professional>("professional_data")
       .update({
         is_active: false,
         updated_at: new Date().toISOString(),
@@ -343,16 +451,13 @@ export async function createJob(
   jobData: CreateProfessionalJobInput,
 ): Promise<ProfessionalJob> {
   try {
-    const { data, error } = await (supabase as any)
-      .from("professional_jobs")
+    const normalizedJobData = normalizeCreateJobInput(jobData);
+
+    const { data, error } = await professionalMutationsDb
+      .from<ProfessionalJobRow>("professional_jobs")
       .insert({
         professional_id: professionalId,
-        title: (jobData as any).title ?? (jobData as any).nome ?? "Servico",
-        description: (jobData as any).description ?? (jobData as any).descricao ?? "",
-        price: (jobData as any).price ?? (jobData as any).preco ?? null,
-        price_type: (jobData as any).price_type ?? (jobData as any).tipo_preco ?? "fixed",
-        category: (jobData as any).category ?? (jobData as any).categoria ?? "geral",
-        duration_hours: (jobData as any).duration_hours ?? (jobData as any).duracao_horas ?? null,
+        ...normalizedJobData,
         is_active: true,
       })
       .select()
@@ -363,7 +468,7 @@ export async function createJob(
     }
 
     logger.info("[professional.mutations] Job created:", data.id);
-    return data as ProfessionalJob;
+    return mapProfessionalJobRow(data);
   } catch (error) {
     logger.error("[professional.mutations] Error creating job:", error);
     trackError(error as Error, {
@@ -389,8 +494,8 @@ export async function updateProfessionalStatus(
   try {
     const isActive = status === "active";
 
-    const { error } = await (supabase as any)
-      .from("professional_data")
+    const { error } = await professionalMutationsDb
+      .from<Professional>("professional_data")
       .update({
         is_active: isActive,
         updated_at: new Date().toISOString(),
@@ -439,9 +544,18 @@ export async function updateProfessionalReport(
   status: string,
 ): Promise<void> {
   try {
-    // ✅ SSOT - Usar ModerationService para atualizar reports
-    const { ModerationService } = await import("@/core/moderation/services/ModerationService");
-    await (ModerationService as any).updateReportStatus(reportId, status);
+    const { error } = await professionalMutationsDb
+      .from<ProfessionalReportRow>("professional_reports")
+      .update({
+        status,
+        updated_at: new Date().toISOString(),
+        resolved_at: status === "resolved" ? new Date().toISOString() : null,
+      })
+      .eq("id", reportId);
+
+    if (error) {
+      throw new Error(error.message);
+    }
 
     logger.info("[professional.mutations] Report status updated:", { reportId, status });
   } catch (error) {

@@ -432,7 +432,7 @@ export class MultiProfileService {
       return {
         success: true,
         data: {
-          profile: profile as any,
+          profile,
           baseForm: this.buildBaseForm(profile),
           editableUsername,
           username: editableUsername ?? '',

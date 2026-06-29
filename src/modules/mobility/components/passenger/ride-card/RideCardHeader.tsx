@@ -3,21 +3,32 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Car, Package } from "lucide-react";
 import { StatusBadge } from "../../StatusBadge";
 import { cn } from "@/shared/utils/cn";
-import { RIDE_STATUS, type RideStatus } from "@/shared/types/constants";
+import type { RideStatus } from "@/core/mobility/types";
+
+const rideCardStatuses = new Set<RideStatus>([
+  "pending",
+  "driver_assigned",
+  "driver_on_the_way",
+  "driver_arrived",
+  "passenger_on_board",
+  "in_progress",
+  "completed",
+  "cancelled",
+]);
+
 interface RideCardHeaderProps {
   status: string;
   isEntrega: boolean;
 }
 
 function toRideStatus(status: string): RideStatus {
-  const allowed = new Set<string>(Object.values(RIDE_STATUS));
-  return (allowed.has(status) ? status : RIDE_STATUS.PENDING) as RideStatus;
+  return rideCardStatuses.has(status as RideStatus) ? (status as RideStatus) : "pending";
 }
 
 export const RideCardHeader = ({ status, isEntrega }: RideCardHeaderProps) => {
   return (
     <div className="flex items-center justify-between mb-4">
-      <StatusBadge status={toRideStatus(status) as any} size="md" />
+      <StatusBadge status={toRideStatus(status)} size="md" />
       <Badge
         className={cn(
           "text-[0.6rem] px-2 rounded-full",

@@ -17,7 +17,36 @@
 import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
 import { CatalogService } from './CatalogService';
-const subscriptionContractDb = supabase as any;
+
+type QueryError = { message?: string | null };
+
+type QueryResult<T> = {
+  data: T | T[] | null;
+  error: QueryError | null;
+};
+
+type QuerySingleResult<T> = {
+  data: T | null;
+  error: QueryError | null;
+};
+
+type QueryBuilder<T extends object> = PromiseLike<QueryResult<T>> & {
+  insert(values: Record<string, unknown> | Array<Record<string, unknown>>): QueryBuilder<T>;
+  update(values: Record<string, unknown>): QueryBuilder<T>;
+  select(columns?: string): QueryBuilder<T>;
+  eq(column: string, value: unknown): QueryBuilder<T>;
+  in(column: string, values: readonly unknown[]): QueryBuilder<T>;
+  single(): Promise<QuerySingleResult<T>>;
+  maybeSingle(): Promise<QuerySingleResult<T>>;
+};
+
+type SubscriptionContractDbClient = {
+  from<T extends object>(table: string): QueryBuilder<T>;
+};
+
+type SubscriptionInsertIdRow = { id: string };
+
+const subscriptionContractDb = supabase as unknown as SubscriptionContractDbClient;
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -63,6 +92,8 @@ export interface SubscriptionContract {
   canceled_at?: string;
   trial_end?: string;
 }
+
+type SubscriptionContractRow = SubscriptionContract;
 
 // ─── Service ──────────────────────────────────────────────────────────────────
 
@@ -111,7 +142,7 @@ export class SubscriptionContractService {
       
       // 4. Criar contrato
       const { data: subscription, error } = await subscriptionContractDb
-        .from('user_subscriptions')
+        .from<SubscriptionInsertIdRow>('user_subscriptions')
         .insert({
           user_id: params.user_id,
           business_id: params.business_id,
@@ -129,6 +160,9 @@ export class SubscriptionContractService {
       if (error) {
         logger.error('[SubscriptionContractService] Erro ao criar contrato:', error);
         return { success: false, error: 'Erro ao criar contrato' };
+      }
+      if (!subscription) {
+        return { success: false, error: 'Contrato criado sem identificador retornado' };
       }
       
       // 5. Registrar timeline (opcional - se tabela existir)
@@ -181,7 +215,7 @@ export class SubscriptionContractService {
       }
       
       const { error } = await subscriptionContractDb
-        .from('user_subscriptions')
+        .from<SubscriptionContractRow>('user_subscriptions')
         .update(updates)
         .eq('id', params.subscription_id);
       
@@ -220,7 +254,7 @@ export class SubscriptionContractService {
       }
       
       const { error } = await subscriptionContractDb
-        .from('user_subscriptions')
+        .from<SubscriptionContractRow>('user_subscriptions')
         .update(updates)
         .eq('id', params.subscription_id);
       
@@ -251,7 +285,7 @@ export class SubscriptionContractService {
       nextPeriodEnd.setMonth(nextPeriodEnd.getMonth() + 1);
       
       const { error } = await subscriptionContractDb
-        .from('user_subscriptions')
+        .from<SubscriptionContractRow>('user_subscriptions')
         .update({
           status_v2: 'active',
           current_period_start: now.toISOString(),
@@ -285,7 +319,7 @@ export class SubscriptionContractService {
   ): Promise<SubscriptionContract | null> {
     try {
       let query = subscriptionContractDb
-        .from('user_subscriptions')
+        .from<SubscriptionContractRow>('user_subscriptions')
         .select('*')
         .eq('user_id', user_id)
         .eq('subscription_scope', scope)
@@ -302,7 +336,7 @@ export class SubscriptionContractService {
         return null;
       }
       
-      return data as SubscriptionContract | null;
+      return data;
       
     } catch (error) {
       logger.error('[SubscriptionContractService] Erro ao buscar contrato:', error);

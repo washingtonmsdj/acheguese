@@ -1,5 +1,6 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
+import type { TablesInsert, TablesUpdate } from '@/integrations/supabase';
 import { resolveCityToLocationIds, resolveNeighborhoodInCity } from '@/core/location/helpers/territorialResolver';
 import { LocationType } from '@/shared/types/enums';
 import { PAGINATION } from '@/shared/constants';
@@ -53,6 +54,9 @@ type TouristPointDbRow = Partial<TouristPoint> &
     media?: TouristPointDbMedia[] | null;
   };
 
+type TouristPointInsertRow = TablesInsert<'tourist_points'>;
+type TouristPointUpdateRow = TablesUpdate<'tourist_points'>;
+
 function has(obj: Record<string, unknown>, key: string): boolean {
   return Object.prototype.hasOwnProperty.call(obj, key);
 }
@@ -61,6 +65,15 @@ function toText(value: unknown): string | null {
   if (typeof value !== 'string') return null;
   const trimmed = value.trim();
   return trimmed ? trimmed : null;
+}
+
+function toNumberOrNull(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
 }
 
 function slugify(text: string): string {
@@ -375,7 +388,7 @@ export class TouristPointService {
     const officialUrl = toText(payload.official_url) ?? toText(payload.website);
     const accessibilityNotes = toText(payload.accessibility_notes) ?? toText(payload.accessibility_description);
 
-    const insertPayload: Record<string, unknown> = {
+    const insertPayload: TouristPointInsertRow = {
       location_id: locationId,
       address_id: toText(payload.address_id),
       slug,
@@ -391,8 +404,8 @@ export class TouristPointService {
       neighborhood: toText(payload.neighborhood),
       address_text: addressText,
       address: addressText,
-      latitude: payload.latitude ?? null,
-      longitude: payload.longitude ?? null,
+      latitude: toNumberOrNull(payload.latitude),
+      longitude: toNumberOrNull(payload.longitude),
       photo_url: toText(payload.photo_url),
       gallery_urls: Array.isArray(payload.gallery_urls) ? payload.gallery_urls : [],
       opening_hours: openingHours,
@@ -424,7 +437,7 @@ export class TouristPointService {
 
     const { data, error } = await supabase
       .from('tourist_points')
-      .insert(insertPayload as any)
+      .insert(insertPayload)
       .select(TOURIST_POINT_SELECT)
       .single();
     if (error || !data) throw error ?? new Error('Falha ao criar ponto turistico');
@@ -444,7 +457,7 @@ export class TouristPointService {
       .single();
     if (existingError || !existing) throw existingError ?? new Error('Ponto turistico nao encontrado');
 
-    const patch: Record<string, unknown> = { updated_by: userId ?? null };
+    const patch: TouristPointUpdateRow = { updated_by: userId ?? null };
     let locationId = existing.location_id;
 
     if (has(payload, 'location_id')) {
@@ -484,8 +497,8 @@ export class TouristPointService {
       patch.address = addressText;
     }
 
-    if (has(payload, 'latitude')) patch.latitude = payload.latitude ?? null;
-    if (has(payload, 'longitude')) patch.longitude = payload.longitude ?? null;
+    if (has(payload, 'latitude')) patch.latitude = toNumberOrNull(payload.latitude);
+    if (has(payload, 'longitude')) patch.longitude = toNumberOrNull(payload.longitude);
     if (has(payload, 'photo_url')) patch.photo_url = toText(payload.photo_url);
     if (has(payload, 'gallery_urls')) patch.gallery_urls = Array.isArray(payload.gallery_urls) ? payload.gallery_urls : [];
 
@@ -531,7 +544,12 @@ export class TouristPointService {
     if (!nextSlug && name) nextSlug = slugify(name);
     if (nextSlug) patch.slug = await this.ensureUniqueSlug(locationId, nextSlug, id);
 
-    const { data, error } = await (supabase as any).from('tourist_points').update(patch).eq('id', id).select(TOURIST_POINT_SELECT).single();
+    const { data, error } = await supabase
+      .from('tourist_points')
+      .update(patch)
+      .eq('id', id)
+      .select(TOURIST_POINT_SELECT)
+      .single();
     if (error || !data) throw error ?? new Error('Falha ao atualizar ponto turistico');
     return mapDbToTouristPoint(data);
   }

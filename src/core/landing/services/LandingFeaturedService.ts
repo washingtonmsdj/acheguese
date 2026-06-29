@@ -9,6 +9,31 @@ import { supabase } from "@/integrations/supabase";
 import { applyTerritoryFilter } from "@/core/location/utils";
 import type { TerritoryFilter } from "@/core/location/types";
 
+type ErrorLike = {
+  message?: string | null;
+};
+
+type LandingQueryPayload<TRow> = {
+  count?: number | null;
+  data: TRow[] | null;
+  error: ErrorLike | null;
+};
+
+type LandingQuery<TRow> = PromiseLike<LandingQueryPayload<TRow>> & {
+  eq(column: string, value: unknown): LandingQuery<TRow>;
+  in(column: string, values: string[]): LandingQuery<TRow>;
+  limit(value: number): LandingQuery<TRow>;
+  not(column: string, operator: string, value: unknown): LandingQuery<TRow>;
+  order(column: string, options?: { ascending?: boolean }): LandingQuery<TRow>;
+  select(columns?: string, options?: { count?: "exact"; head?: boolean }): LandingQuery<TRow>;
+};
+
+type LandingDbClient = {
+  from<TRow>(table: string): LandingQuery<TRow>;
+};
+
+const landingDb = supabase as unknown as LandingDbClient;
+
 export interface FeaturedBusiness {
   id: string;
   name: string;
@@ -113,8 +138,8 @@ export class LandingFeaturedService {
   ): Promise<FeaturedBusiness[]> {
     if (filter.scope === "none") return [];
     try {
-      let query = (supabase as any)
-        .from("business_data")
+      let query = landingDb
+        .from<FeaturedBusinessRow>("business_data")
         .select("profile_id, business_name, category, metadata, rating, is_premium, is_verified, slug, location:locations!location_id(geographic_path)")
         .eq("status", "active")
         .not("location_id", "is", null)
@@ -123,7 +148,7 @@ export class LandingFeaturedService {
         .order("created_at", { ascending: false })
         .limit(limit);
 
-      query = applyTerritoryFilter(query as any, filter) as any;
+      query = applyTerritoryFilter(query, filter);
 
       const { data, error } = await query;
       if (error) {
@@ -156,8 +181,8 @@ export class LandingFeaturedService {
     if (filter.scope === "none") return [];
 
     try {
-      let query = (supabase as any)
-        .from("professional_data")
+      let query = landingDb
+        .from<FeaturedServiceRow>("professional_data")
         .select("id, professional_name, service_category, metadata, rating, is_verified, price_range, price_type, hourly_rate")
         .eq("is_accepting_clients", true)
         .eq("visibility", "public_listed")
@@ -167,7 +192,7 @@ export class LandingFeaturedService {
         .order("created_at", { ascending: false })
         .limit(limit);
 
-      query = applyTerritoryFilter(query as any, filter) as any;
+      query = applyTerritoryFilter(query, filter);
 
       const { data, error } = await query;
       if (error) {
@@ -217,8 +242,8 @@ export class LandingFeaturedService {
 
     try {
       // eslint-disable-next-line ssot/no-direct-classified-access
-      let query = (supabase as any)
-        .from("classifieds")
+      let query = landingDb
+        .from<FeaturedClassifiedRow>("classifieds")
         .select(`
           id,
           title,
@@ -237,7 +262,7 @@ export class LandingFeaturedService {
         .order("created_at", { ascending: false })
         .limit(limit);
 
-      query = applyTerritoryFilter(query as any, filter) as any;
+      query = applyTerritoryFilter(query, filter);
 
       const { data, error } = await query;
       if (error) {
@@ -270,34 +295,33 @@ export class LandingFeaturedService {
       return { businesses: 0, services: 0, classifieds: 0 };
     }
 
-    const supabaseAny = supabase as any;
     const [businessRes, serviceRes, classifiedRes] = await Promise.allSettled([
       (() => {
-        let query = supabaseAny
-          .from("business_data")
+        let query = landingDb
+          .from<{ id: string }>("business_data")
           .select("id", { count: "exact", head: true })
           .eq("status", "active")
           .not("location_id", "is", null);
-        query = applyTerritoryFilter(query as any, filter) as any;
+        query = applyTerritoryFilter(query, filter);
         return query;
       })(),
       (() => {
-        let query = supabaseAny
-          .from("professional_data")
+        let query = landingDb
+          .from<{ id: string }>("professional_data")
           .select("id", { count: "exact", head: true })
           .eq("is_accepting_clients", true)
           .eq("visibility", "public_listed")
           .not("location_id", "is", null);
-        query = applyTerritoryFilter(query as any, filter) as any;
+        query = applyTerritoryFilter(query, filter);
         return query;
       })(),
       (() => {
         // eslint-disable-next-line ssot/no-direct-classified-access
-        let query = supabaseAny
-          .from("classifieds")
+        let query = landingDb
+          .from<{ id: string }>("classifieds")
           .select("id", { count: "exact", head: true })
           .eq("status", "active");
-        query = applyTerritoryFilter(query as any, filter) as any;
+        query = applyTerritoryFilter(query, filter);
         return query;
       })(),
     ]);

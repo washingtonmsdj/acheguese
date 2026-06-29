@@ -1,35 +1,38 @@
-import dotenv from 'dotenv';
-import { defineConfig, devices } from '@playwright/test';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import { dirname, join } from "path";
+import dotenv from "dotenv";
+import { defineConfig, devices } from "@playwright/test";
+import { fileURLToPath } from "url";
 
-dotenv.config({ path: '.env.test' });
-dotenv.config({ path: '.env.local', override: true });
+dotenv.config({ path: ".env.test" });
+dotenv.config({ path: ".env.local", override: true });
 
-const baseURL = process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:8099';
+const baseURL = process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:8099";
 const parsedBaseURL = new URL(baseURL);
 const webServerHost = parsedBaseURL.hostname;
-const webServerPort = parsedBaseURL.port || (parsedBaseURL.protocol === 'https:' ? '443' : '80');
+const webServerPort = parsedBaseURL.port || (parsedBaseURL.protocol === "https:" ? "443" : "80");
 
-// Compatível com ESM e CJS
-const __filename = typeof __dirname !== 'undefined' ? '' : fileURLToPath(import.meta.url);
-const __dirnameCompat = typeof __dirname !== 'undefined' ? __dirname : dirname(__filename);
+// Compatible with ESM and CJS.
+const __filename = typeof __dirname !== "undefined" ? "" : fileURLToPath(import.meta.url);
+const __dirnameCompat = typeof __dirname !== "undefined" ? __dirname : dirname(__filename);
 
-const EDUCATION_AUTH_FILE = join(__dirnameCompat, 'tests/e2e/education/.auth/education-owner.json');
+const EDUCATION_AUTH_FILE = join(
+  __dirnameCompat,
+  "tests/e2e/education/.auth/education-owner.json",
+);
 
 export default defineConfig({
-  testDir: './tests/e2e',
+  testDir: "./tests/e2e",
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: 1,
-  reporter: 'html',
+  reporter: "html",
 
   use: {
     baseURL,
     ignoreHTTPSErrors: true,
-    trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
+    trace: "on-first-retry",
+    screenshot: "only-on-failure",
   },
 
   webServer: {
@@ -41,25 +44,26 @@ export default defineConfig({
 
   projects: [
     {
-      name: 'setup-education',
+      name: "setup-education",
       testMatch: /education\/global-setup\.ts/,
     },
     {
-      name: 'chromium',
+      name: "chromium",
       use: {
-        ...devices['Desktop Chrome'],
-        launchOptions: { args: ['--ignore-certificate-errors'] },
+        ...devices["Desktop Chrome"],
+        launchOptions: { args: ["--ignore-certificate-errors"] },
       },
       dependencies: [],
     },
     {
-      name: 'education-authenticated',
+      name: "education-authenticated",
       use: {
-        ...devices['Desktop Chrome'],
-        launchOptions: { args: ['--ignore-certificate-errors'] },
+        ...devices["Desktop Chrome"],
+        launchOptions: { args: ["--ignore-certificate-errors"] },
         storageState: EDUCATION_AUTH_FILE,
       },
-      testMatch: /education\/(education-setup|education-programs|education-leads|education-cookie-debug|education-network-debug|education-dashboard-debug)\.spec\.ts/,
+      testMatch:
+        /education\/(education-setup|education-programs|education-leads|education-cookie-debug|education-network-debug|education-dashboard-debug)\.spec\.ts/,
     },
   ],
 });

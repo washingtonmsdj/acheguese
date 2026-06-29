@@ -46,6 +46,39 @@ type BusinessDataRecord = {
   updated_at?: string | null;
 };
 
+interface QueryError {
+  message?: string | null;
+}
+
+interface QueryArrayResult<TRow> {
+  data: TRow[] | null;
+  error: QueryError | null;
+  count?: number | null;
+}
+
+interface QuerySingleResult<TRow> {
+  data: TRow | null;
+  error: QueryError | null;
+  count?: number | null;
+}
+
+interface QueryBuilder<TRow> extends PromiseLike<QueryArrayResult<TRow>> {
+  select: (
+    columns?: string,
+    options?: { count?: "exact"; head?: boolean },
+  ) => QueryBuilder<TRow>;
+  eq: (column: string, value: unknown) => QueryBuilder<TRow>;
+  or: (filters: string) => QueryBuilder<TRow>;
+  limit: (value: number) => QueryBuilder<TRow>;
+  maybeSingle: () => Promise<QuerySingleResult<TRow>>;
+}
+
+interface BusinessManagementDbClient {
+  from: <TRow = never>(table: string) => QueryBuilder<TRow>;
+}
+
+const businessManagementDb = supabase as unknown as BusinessManagementDbClient;
+
 const SECTION_DEFINITIONS: Array<Omit<BusinessSection, "enabled"> & { id: SectionKey }> = [
   { id: "services", title: "Servicos", type: "services" },
   { id: "products", title: "Produtos", type: "products" },
@@ -120,8 +153,8 @@ class BusinessManagementServiceClass {
   private async getBusinessRecord(businessId: string): Promise<BusinessDataRecord> {
     assertValidBusinessId(businessId);
 
-    const { data, error } = await (supabase as any)
-      .from("business_data")
+    const { data, error } = await businessManagementDb
+      .from<BusinessDataRecord>("business_data")
       .select(
         "id, profile_id, business_name, description, category, status, rating, total_reviews, favorites_count, total_products, secoes_ativas, metadata, created_at, updated_at",
       )
@@ -138,7 +171,7 @@ class BusinessManagementServiceClass {
       throw new Error("Empresa nao encontrada");
     }
 
-    return data as BusinessDataRecord;
+    return data;
   }
 
   async getBusinessSections(businessId: string): Promise<BusinessSection[]> {

@@ -21,6 +21,10 @@ interface ProfileMembersManagerProps {
   profileType: 'business' | 'professional';
 }
 
+function getErrorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
+}
+
 export function ProfileMembersManagerImproved({ profileId, profileType }: ProfileMembersManagerProps) {
   const { toast } = useToast();
   const { confirm, ConfirmDialog } = useConfirmActionDialog();
@@ -63,10 +67,10 @@ export function ProfileMembersManagerImproved({ profileId, profileType }: Profil
       
       setShowAdd(false);
       setNewMember({ email: '', role: 'member' });
-    } catch (err: any) {
+    } catch (error: unknown) {
       toast({
         title: 'Erro ao adicionar membro',
-        description: err.message || 'Tente novamente.',
+        description: getErrorMessage(error, 'Tente novamente.'),
         variant: 'destructive',
       });
     } finally {

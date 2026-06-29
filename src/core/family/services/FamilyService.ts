@@ -11,7 +11,43 @@ import type {
 } from "@/core/family/types";
 import { FAMILY_CONNECTION_STATUS, FAMILY_TABLES } from "@/core/family/types";
 
-const db = supabase as any;
+interface QueryResult<T> {
+  data: T | null;
+  error: { message: string; code?: string } | null;
+}
+
+interface QueryBuilder<TRow> extends PromiseLike<QueryResult<TRow[]>> {
+  select: (columns?: string) => QueryBuilder<TRow>;
+  insert: (values: unknown | unknown[]) => QueryBuilder<TRow>;
+  update: (values: unknown) => QueryBuilder<TRow>;
+  upsert: (values: unknown | unknown[], options?: { onConflict?: string }) => QueryBuilder<TRow>;
+  delete: () => QueryBuilder<TRow>;
+  eq: (column: string, value: unknown) => QueryBuilder<TRow>;
+  in: (column: string, values: unknown[]) => QueryBuilder<TRow>;
+  or: (filters: string) => QueryBuilder<TRow>;
+  order: (column: string, options?: { ascending?: boolean }) => QueryBuilder<TRow>;
+  single: () => Promise<QueryResult<TRow>>;
+  maybeSingle: () => Promise<QueryResult<TRow>>;
+}
+
+interface FamilyRealtimeChannel {
+  on: (
+    event: "postgres_changes",
+    filter: { event: string; schema: string; table: string },
+    callback: (payload: { new: unknown }) => void,
+  ) => FamilyRealtimeChannel;
+  subscribe: () => FamilyRealtimeChannel;
+}
+
+interface FamilyDbClient {
+  from: <TRow = never>(table: string) => QueryBuilder<TRow>;
+  channel: (name: string) => FamilyRealtimeChannel;
+  removeChannel: (channel: FamilyRealtimeChannel) => void;
+}
+
+type FamilyCoverageClient = Pick<FamilyDbClient, "from">;
+
+const db = supabase as unknown as FamilyDbClient;
 const CONNECTION_SELECT = `
   id,
   parent_id,
@@ -403,7 +439,7 @@ export class FamilyService {
 
   static async getCoverageSummaryByUserId(
     userId: string,
-    client: any = db,
+    client: FamilyCoverageClient = db,
   ): Promise<FamilyCoverageSummary> {
     const { data, error } = await client
       .from(FAMILY_TABLES.connections)

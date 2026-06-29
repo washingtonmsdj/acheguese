@@ -37,7 +37,7 @@ describe('GastronomyDashboardPage', () => {
         currentPromotions: 2,
       },
       isLoading: false,
-    } as any);
+    } as never);
   });
 
   it('usa aliases genéricos de entitlement e mantém a linguagem da vertical', () => {

@@ -82,7 +82,7 @@ describe('Education Niches Registry', () => {
   });
 
   it('shouldShowAdminSection returns false for non-existing section', () => {
-    expect(shouldShowAdminSection('regular_school', 'attendance' as any)).toBe(false);
+    expect(shouldShowAdminSection('regular_school', 'attendance')).toBe(false);
   });
 
   it('getNicheOrDefault returns niche for existing key', () => {

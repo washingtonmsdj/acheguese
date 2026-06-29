@@ -26,6 +26,31 @@ const TRUST_ADMIN_ACTIONS_TABLE = "trust_admin_actions";
 
 type TrustEventRow = Record<string, unknown>;
 
+type QueryResult<T> = Promise<{ data: T; error: { code?: string; message?: string } | null }>;
+
+interface QueryBuilder<TRow> {
+  select(columns?: string): QueryBuilder<TRow>;
+  insert(values: unknown): QueryBuilder<TRow>;
+  update(values: unknown): QueryBuilder<TRow>;
+  eq(column: string, value: unknown): QueryBuilder<TRow>;
+  order(column: string, options?: { ascending?: boolean }): QueryBuilder<TRow>;
+  limit(count: number): QueryBuilder<TRow>;
+  maybeSingle(): QueryResult<TRow | null>;
+  single(): QueryResult<TRow>;
+  then<TResult1 = { data: TRow[]; error: { code?: string; message?: string } | null }, TResult2 = never>(
+    onfulfilled?:
+      | ((value: { data: TRow[]; error: { code?: string; message?: string } | null }) => TResult1 | PromiseLike<TResult1>)
+      | null,
+    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
+  ): Promise<TResult1 | TResult2>;
+}
+
+interface TrustDbClient {
+  from<TRow>(table: string): QueryBuilder<TRow>;
+}
+
+const trustDb = supabase as unknown as TrustDbClient;
+
 function toErrorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
   if (typeof error === "string") return error;
@@ -115,8 +140,8 @@ async function trustContextActionUrl(event: Pick<TrustEvent, "context_type" | "c
 export class TrustEventService {
   private static async getTrustEventById(eventId: string): Promise<TrustEvent | null> {
     try {
-      const { data, error } = await (supabase as any)
-        .from(TRUST_EVENTS_TABLE)
+      const { data, error } = await trustDb
+        .from<TrustEventRow>(TRUST_EVENTS_TABLE)
         .select("*")
         .eq("id", eventId)
          .maybeSingle();
@@ -279,13 +304,13 @@ export class TrustEventService {
         severity: input.severity ?? "low",
         visibility: input.visibility ?? TRUST_VISIBILITIES.PRIVATE,
         description: input.description ?? null,
-        evidence: (input.evidence ?? {}) as any,
+        evidence: (input.evidence ?? {}) as unknown,
         status: input.status ?? TRUST_EVENT_STATUSES.ACTIVE,
       };
 
-      const { data, error } = await (supabase as any)
-        .from(TRUST_EVENTS_TABLE)
-        .insert(payload as any)
+      const { data, error } = await trustDb
+        .from<TrustEventRow>(TRUST_EVENTS_TABLE)
+        .insert(payload)
         .select("*")
          .single();
 
@@ -326,12 +351,12 @@ export class TrustEventService {
         severity: input.severity ?? "low",
         visibility: input.visibility ?? TRUST_VISIBILITIES.PRIVATE,
         description: input.description ?? null,
-        evidence: (input.evidence ?? {}) as any,
+        evidence: (input.evidence ?? {}) as unknown,
         status: input.status ?? TRUST_EVENT_STATUSES.ACTIVE,
       };
 
-      const { data: existing, error: existingError } = await (supabase as any)
-        .from(TRUST_EVENTS_TABLE)
+      const { data: existing, error: existingError } = await trustDb
+        .from<Pick<TrustEvent, "id">>(TRUST_EVENTS_TABLE)
         .select("id")
         .eq("actor_profile_id", payload.actor_profile_id)
         .eq("subject_profile_id", payload.subject_profile_id)
@@ -347,15 +372,15 @@ export class TrustEventService {
       }
 
       const mutation = existing?.id
-        ? supabase
-            .from(TRUST_EVENTS_TABLE)
-            .update(payload as any)
+        ? trustDb
+            .from<TrustEventRow>(TRUST_EVENTS_TABLE)
+            .update(payload)
             .eq("id", existing.id)
             .select("*")
              .single()
-        : supabase
-            .from(TRUST_EVENTS_TABLE)
-            .insert(payload as any)
+        : trustDb
+            .from<TrustEventRow>(TRUST_EVENTS_TABLE)
+            .insert(payload)
             .select("*")
              .single();
 
@@ -383,8 +408,8 @@ export class TrustEventService {
     error: string | null;
   }> {
     try {
-      let query = supabase
-        .from(TRUST_EVENTS_TABLE)
+      let query = trustDb
+        .from<TrustEventRow>(TRUST_EVENTS_TABLE)
         .select("*")
         .order("created_at", { ascending: false })
         .limit(filters.limit ?? 50);
@@ -495,8 +520,8 @@ export class TrustEventService {
     },
   ): Promise<{ data: TrustEvent | null; error: string | null }> {
     try {
-      const { data, error } = await (supabase as any)
-        .from(TRUST_EVENTS_TABLE)
+      const { data, error } = await trustDb
+        .from<TrustEventRow>(TRUST_EVENTS_TABLE)
         .update({
           status: input.status,
           reviewed_by_profile_id: input.reviewed_by_profile_id,
@@ -546,12 +571,12 @@ export class TrustEventService {
         notes: input.notes?.trim() || null,
         starts_at: now.toISOString(),
         ends_at: endsAt,
-        metadata: (input.metadata ?? {}) as any,
+        metadata: (input.metadata ?? {}) as unknown,
       };
 
-      const { data, error } = await (supabase as any)
-        .from(TRUST_ADMIN_ACTIONS_TABLE)
-        .insert(payload as any)
+      const { data, error } = await trustDb
+        .from<TrustEventRow>(TRUST_ADMIN_ACTIONS_TABLE)
+        .insert(payload)
         .select("*")
          .single();
 
@@ -612,8 +637,8 @@ export class TrustEventService {
     error: string | null;
   }> {
     try {
-      const { data, error } = await (supabase as any)
-        .from(TRUST_ADMIN_ACTIONS_TABLE)
+      const { data, error } = await trustDb
+        .from<TrustEventRow>(TRUST_ADMIN_ACTIONS_TABLE)
         .select("*")
         .order("created_at", { ascending: false })
         .limit(limit);

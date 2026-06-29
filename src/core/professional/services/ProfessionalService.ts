@@ -40,6 +40,29 @@ import type {
 import * as professionalQueries from "./professional.queries";
 import * as professionalMutations from "./professional.mutations";
 
+type QueryResult<T> = Promise<{ data: T; error: { code?: string; message?: string } | null }>;
+
+interface QueryBuilder<TRow> {
+  select(columns?: string): QueryBuilder<TRow>;
+  insert(values: unknown): QueryBuilder<TRow>;
+  delete(): QueryBuilder<TRow>;
+  eq(column: string, value: unknown): QueryBuilder<TRow>;
+  or(filters: string): QueryBuilder<TRow>;
+  single(): QueryResult<TRow>;
+  then<TResult1 = { data: TRow[]; error: { code?: string; message?: string } | null }, TResult2 = never>(
+    onfulfilled?:
+      | ((value: { data: TRow[]; error: { code?: string; message?: string } | null }) => TResult1 | PromiseLike<TResult1>)
+      | null,
+    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
+  ): Promise<TResult1 | TResult2>;
+}
+
+interface ProfessionalDbClient {
+  from<TRow>(table: string): QueryBuilder<TRow>;
+}
+
+const professionalDb = supabase as unknown as ProfessionalDbClient;
+
 /**
  * ProfessionalFacade - Interface SSOT unificada v2.0
  *
@@ -148,8 +171,8 @@ export class ProfessionalService {
   ): Promise<boolean> {
     try {
       // Verificar se ja e favorito.
-      const { data: existing } = await (supabase as any)
-        .from("professional_favorites")
+      const { data: existing } = await professionalDb
+        .from<{ id: string }>("professional_favorites")
         .select("id")
         .eq("professional_id", professionalId)
         .eq("profile_id", userId)
@@ -157,22 +180,23 @@ export class ProfessionalService {
 
       if (existing) {
         // Remover favorito
-        await (supabase as any)
-          .from("professional_favorites")
+        await professionalDb
+          .from<{ id: string }>("professional_favorites")
           .delete()
           .eq("id", existing.id);
 
         return false;
       } else {
         // Adicionar favorito
-        await (supabase as any)
-          .from("professional_favorites")
+        await professionalDb
+          .from<{ professional_id: string; profile_id: string }>("professional_favorites")
           .insert({ professional_id: professionalId, profile_id: userId });
 
         return true;
       }
-    } catch (error: any) {
-      throw new Error(`Erro ao favoritar: ${error.message}`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Erro desconhecido";
+      throw new Error(`Erro ao favoritar: ${message}`);
     }
   }
 
@@ -262,8 +286,9 @@ export class ProfessionalService {
         },
         "professional",
       );
-    } catch (error: any) {
-      throw new Error(`Erro ao enviar avaliacao: ${error.message}`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Erro desconhecido";
+      throw new Error(`Erro ao enviar avaliacao: ${message}`);
     }
   }
 
@@ -365,8 +390,12 @@ export class ProfessionalService {
       if (ids.length === 0) return [];
       const idList = ids.join(",");
 
-      const { data, error } = await (supabase as any)
-        .from("professional_data")
+      const { data, error } = await professionalDb
+        .from<{
+          id: string;
+          profile_id: string;
+          professional_name: string | null;
+        }>("professional_data")
         .select("id, profile_id, professional_name")
         .or(`id.in.(${idList}),profile_id.in.(${idList})`);
 

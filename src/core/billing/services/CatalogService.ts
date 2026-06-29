@@ -15,7 +15,31 @@
 
 import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
-const catalogDb = supabase as any;
+
+type QueryError = { message?: string | null };
+
+type QueryArrayResult<T> = {
+  data: T[] | null;
+  error: QueryError | null;
+};
+
+type QuerySingleResult<T> = {
+  data: T | null;
+  error: QueryError | null;
+};
+
+type QueryBuilder<T extends object> = PromiseLike<QueryArrayResult<T>> & {
+  select(columns?: string): QueryBuilder<T>;
+  eq(column: string, value: unknown): QueryBuilder<T>;
+  order(column: string, options?: { ascending?: boolean }): QueryBuilder<T>;
+  maybeSingle(): Promise<QuerySingleResult<T>>;
+};
+
+type CatalogDbClient = {
+  from<T extends object>(table: string): QueryBuilder<T>;
+};
+
+const catalogDb = supabase as unknown as CatalogDbClient;
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -78,6 +102,11 @@ type CatalogRow = {
   catalog_pricing_policy?: CatalogItem['pricing_policy'][];
 };
 
+type CatalogEligibilityRow = Pick<
+  CatalogRow,
+  'entity_family' | 'vertical' | 'commercial_catalog_version'
+>;
+
 export interface EligibleCatalog {
   version: string;
   items: CatalogItem[];
@@ -88,7 +117,9 @@ export interface EligibleCatalog {
 
 const EMPTY_CATALOG_VERSION = '0.0.0';
 
-function getCatalogVersion(row?: CatalogRow | null): { version_code: string; status: string } {
+function getCatalogVersion(
+  row?: Pick<CatalogRow, 'commercial_catalog_version'> | null,
+): { version_code: string; status: string } {
   const version = Array.isArray(row?.commercial_catalog_version)
     ? row?.commercial_catalog_version[0]
     : row?.commercial_catalog_version;
@@ -125,7 +156,7 @@ export class CatalogService {
   ): Promise<EligibleCatalog> {
     try {
       const { data: items, error } = await catalogDb
-        .from('catalog_item')
+        .from<CatalogRow>('catalog_item')
         .select(`
           id,
           item_code,
@@ -172,7 +203,7 @@ export class CatalogService {
       }
       
       // Separar por tipo
-      const typedItems = (items || []) as CatalogRow[];
+      const typedItems = items || [];
       const mappedItems = typedItems.map(this.mapCatalogItem);
       const base_plans = typedItems.filter(i => i.item_type === 'base_plan');
       const vertical_packages = typedItems.filter(i => i.item_type === 'vertical_package');
@@ -198,7 +229,7 @@ export class CatalogService {
   static async getPlanByCode(planCode: string): Promise<CatalogItem | null> {
     try {
       const { data, error } = await catalogDb
-        .from('catalog_item')
+        .from<CatalogRow>('catalog_item')
         .select(`
           id,
           item_code,
@@ -257,7 +288,7 @@ export class CatalogService {
   static async getAddonsByVertical(vertical: string): Promise<CatalogItem[]> {
     try {
       const { data, error } = await catalogDb
-        .from('catalog_item')
+        .from<CatalogRow>('catalog_item')
         .select(`
           id,
           item_code,
@@ -319,7 +350,7 @@ export class CatalogService {
   ): Promise<{ eligible: boolean; reason?: string }> {
     try {
       const { data: item, error } = await catalogDb
-        .from('catalog_item')
+        .from<CatalogEligibilityRow>('catalog_item')
         .select('entity_family, vertical, commercial_catalog_version!inner (version_code, status)')
         .eq('id', itemId)
         .eq('commercial_catalog_version.status', 'published')
@@ -329,7 +360,7 @@ export class CatalogService {
         return { eligible: false, reason: 'Item não encontrado' };
       }
       
-      if (getCatalogVersion(item as CatalogRow).status !== 'published') {
+      if (getCatalogVersion(item).status !== 'published') {
         return { eligible: false, reason: 'Item não está disponível' };
       }
       

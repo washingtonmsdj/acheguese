@@ -1,12 +1,12 @@
 /**
- * ProfileSidebarHeader - Header da sidebar do perfil
+ * ProfileSidebarHeader - header da sidebar do perfil
  *
- * Exibe informações resumidas do perfil ativo no topo da sidebar:
+ * Exibe informacoes resumidas do perfil ativo no topo da sidebar:
  * - Avatar
  * - Nome
  * - Badge de tipo de perfil
  * - Indicadores de status
- * - Link para perfil público
+ * - Link para perfil publico
  */
 
 import { CheckCircle2 } from "lucide-react";
@@ -16,10 +16,13 @@ import { Badge } from "@/shared/components/ui/badge";
 import { cn } from "@/shared/utils/cn";
 import { getProfileTypeLabel } from "@/core/profile/utils/profileDomainRules";
 import { buildPublicProfileUrl } from "@/core/profiles/utils/publicProfileUrl";
-import type { MultiProfileRecord } from "@/core/profiles/services/multi-profile/types";
+import type {
+  MultiProfileRecord,
+  Profile as RuntimeProfile,
+} from "@/core/profiles/services/multi-profile/types";
 
 interface ProfileSidebarHeaderProps {
-  profile: MultiProfileRecord | null;
+  profile: MultiProfileRecord | RuntimeProfile | null;
   isVerified?: boolean;
   handle?: string;
   canOpenPublicProfile?: boolean;
@@ -47,7 +50,7 @@ export function ProfileSidebarHeader({
 
   if (!profile) return null;
 
-  const displayName = profile.display_name || "Usuário";
+  const displayName = profile.display_name || "Usuario";
   const avatarUrl = profile.avatar_url;
   const profileType = getProfileTypeLabel(profile);
 
@@ -62,9 +65,7 @@ export function ProfileSidebarHeader({
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
-          <p className="truncate text-sm font-semibold text-foreground">
-            {displayName}
-          </p>
+          <p className="truncate text-sm font-semibold text-foreground">{displayName}</p>
           {isVerified ? (
             <CheckCircle2
               className="h-3.5 w-3.5 shrink-0 text-primary"

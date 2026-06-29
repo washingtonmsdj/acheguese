@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Clock, FileText, TrendingUp } from "lucide-react";
 import { PostCard, PostCardSkeleton } from "@/core/posts/components";
+import type { CommunityPost } from "@/core/posts/types";
 import { usePostActions } from "@/core/posts/hooks";
 import { InfiniteScrollTrigger } from "@/shared/components/ui";
 import {
@@ -12,7 +13,7 @@ import {
 } from "@/shared/components/ui/select";
 import { EmptyStateProfile } from "./EmptyStateProfile";
 import { useUserPosts } from "../hooks/useUserPosts";
-import type { ProfileFeedPostType } from "../types/profileFeed";
+import type { ProfileFeedPost, ProfileFeedPostType } from "../types/profileFeed";
 
 interface UserPostsGridProps {
   profileId: string;
@@ -26,9 +27,9 @@ type SortValue = "recent" | "popular";
 
 const TYPE_OPTIONS: Array<{ value: TypeFilterValue; label: string }> = [
   { value: "all", label: "Todos os tipos" },
-  { value: "discussao", label: "Discussão" },
+  { value: "discussao", label: "Discussao" },
   { value: "pergunta", label: "Pergunta" },
-  { value: "recomendacao", label: "Recomendação" },
+  { value: "recomendacao", label: "Recomendacao" },
   { value: "enquete", label: "Enquete" },
   { value: "achados_e_perdidos", label: "Achados e perdidos" },
 ];
@@ -39,6 +40,13 @@ function isTypeFilterValue(value: string): value is TypeFilterValue {
 
 function isSortValue(value: string): value is SortValue {
   return value === "recent" || value === "popular";
+}
+
+function toCommunityPost(post: ProfileFeedPost): CommunityPost {
+  return {
+    ...post,
+    type: post.type === "achados_e_perdidos" ? "achado_perdido" : post.type,
+  };
 }
 
 export function UserPostsGrid({
@@ -77,15 +85,15 @@ export function UserPostsGrid({
 
   if (isError) {
     return (
-      <div className="text-center py-12">
-        <p className="text-red-500">Erro ao carregar posts públicados.</p>
+      <div className="py-12 text-center">
+        <p className="text-red-500">Erro ao carregar posts publicados.</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row">
         <Select
           value={typeFilter}
           onValueChange={(value) => {
@@ -95,7 +103,7 @@ export function UserPostsGrid({
           }}
         >
           <SelectTrigger className="w-full sm:w-[200px]">
-            <FileText className="w-4 h-4 mr-2" />
+            <FileText className="mr-2 h-4 w-4" />
             <SelectValue placeholder="Tipo de post" />
           </SelectTrigger>
           <SelectContent>
@@ -117,9 +125,9 @@ export function UserPostsGrid({
         >
           <SelectTrigger className="w-full sm:w-[200px]">
             {sortBy === "recent" ? (
-              <Clock className="w-4 h-4 mr-2" />
+              <Clock className="mr-2 h-4 w-4" />
             ) : (
-              <TrendingUp className="w-4 h-4 mr-2" />
+              <TrendingUp className="mr-2 h-4 w-4" />
             )}
             <SelectValue />
           </SelectTrigger>
@@ -134,7 +142,7 @@ export function UserPostsGrid({
         <EmptyStateProfile
           icon={FileText}
           title="Nenhum post encontrado"
-          description="Este perfil ainda não publicou posts neste formato."
+          description="Este perfil ainda nao publicou posts neste formato."
         />
       ) : (
         <>
@@ -142,7 +150,7 @@ export function UserPostsGrid({
             {posts.map((post) => (
               <PostCard
                 key={post.id}
-                post={post as any}
+                post={toCommunityPost(post)}
                 currentUserId={currentProfileId}
                 onLike={likePost}
                 onComment={onCommentClick ?? (() => undefined)}

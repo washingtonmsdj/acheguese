@@ -36,7 +36,11 @@ import { buildWhatsAppUrl } from "@/shared/utils/contactLinks";
 import { getLostFoundCategoryLabel } from "@/shared/validation/schemas/lostfound.schema";
 import type { ProfileRow } from "@/core/profiles/persistence/ProfileRow";
 import type { LostFoundComment } from "@/core/community-lost-found/services";
-type CommentProfileSummary = { id: string; name: string; avatarUrl?: string | null };
+type CommentProfileSummary = {
+  id: string;
+  displayName: string;
+  avatarUrl?: string | null;
+};
 
 const LazyLostFoundMiniMap = lazy(() =>
   import("@/core/community-lost-found/components/LostFoundMiniMap").then((module) => ({
@@ -121,7 +125,7 @@ export default function AchadoPerdidoDetailPage() {
       autor_id: data.autor_id,
       autor: profile
         ? {
-            name: profile.name,
+            name: profile.display_name ?? profile.name,
             avatar_url: profile.avatar_url || "",
             whatsapp: profile.whatsapp || "",
           }
@@ -143,13 +147,13 @@ export default function AchadoPerdidoDetailPage() {
       autorIds.length > 0
         ? ((await profileServiceInstance.getProfilesSummary(
             autorIds,
-          )) as CommentProfileSummary[])
+          )) as unknown as CommentProfileSummary[])
         : [];
 
     const profileMap = new Map(
       profiles.map((p) => [
         p.id,
-        { name: p.name, avatar_url: p.avatarUrl || "" },
+        { name: p.displayName, avatar_url: p.avatarUrl || "" },
       ]),
     );
     setComments(

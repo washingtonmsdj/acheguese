@@ -10,8 +10,8 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { supabase } from '@/integrations/supabase';
-import { RideRepository, type Ride, type RideStatus } from '../RideRepository';
-import { DatabaseError, DatabaseErrorCode } from '../../errors/DatabaseError';
+import { RideRepository, type Ride } from '../RideRepository';
+import { DatabaseError } from '../../errors/DatabaseError';
 
 // Mock do Supabase
 vi.mock('@/integrations/supabase', () => ({
@@ -22,7 +22,20 @@ vi.mock('@/integrations/supabase', () => ({
 
 describe('RideRepository', () => {
   let repository: RideRepository;
-  let mockSupabase: any;
+  let mockSupabase: {
+    select: ReturnType<typeof vi.fn>;
+    eq: ReturnType<typeof vi.fn>;
+    in: ReturnType<typeof vi.fn>;
+    gte: ReturnType<typeof vi.fn>;
+    lte: ReturnType<typeof vi.fn>;
+    not: ReturnType<typeof vi.fn>;
+    order: ReturnType<typeof vi.fn>;
+    limit: ReturnType<typeof vi.fn>;
+    maybeSingle: ReturnType<typeof vi.fn>;
+    single: ReturnType<typeof vi.fn>;
+    update: ReturnType<typeof vi.fn>;
+    then: ReturnType<typeof vi.fn>;
+  };
 
   const mockRide: Ride = {
     id: 'ride-123',
@@ -70,7 +83,7 @@ describe('RideRepository', () => {
       update: vi.fn().mockReturnThis(),
       then: vi.fn((resolve) => resolve({ data: [mockRide], error: null })),
     };
-    (supabase.from as any).mockReturnValue(mockSupabase);
+    vi.mocked(supabase.from).mockReturnValue(mockSupabase as never);
   });
 
   describe('findByPassengerId', () => {
@@ -276,7 +289,7 @@ describe('RideRepository', () => {
     });
 
     it('deve lançar DatabaseError em caso de erro', async () => {
-      mockSupabase.then.mockImplementationOnce((resolve: any) => resolve({
+      mockSupabase.then.mockImplementationOnce((resolve: (value: { data: Ride[] | null; error: { message: string } | null }) => unknown) => resolve({
         data: null,
         error: { message: 'Database error' },
       }));
@@ -438,7 +451,7 @@ describe('RideRepository', () => {
     });
 
     it('deve lançar DatabaseError em caso de erro', async () => {
-      mockSupabase.then.mockImplementationOnce((resolve: any) => resolve({
+      mockSupabase.then.mockImplementationOnce((resolve: (value: { data: Ride[] | null; error: { message: string } | null }) => unknown) => resolve({
         data: null,
         error: { message: 'Database error' },
       }));
@@ -479,7 +492,7 @@ describe('RideRepository', () => {
     });
 
     it('deve lançar DatabaseError em caso de erro', async () => {
-      mockSupabase.then.mockImplementationOnce((resolve: any) => resolve({
+      mockSupabase.then.mockImplementationOnce((resolve: (value: { data: Ride[] | null; error: { message: string } | null }) => unknown) => resolve({
         data: null,
         error: { message: 'Database error' },
       }));

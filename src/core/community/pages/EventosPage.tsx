@@ -47,13 +47,14 @@ import { useCommunityUrls } from "@/core/community/hooks/useCommunityUrls";
 import { ModuleLocationDialog } from "@/core/location/components/ModuleLocationDialog";
 import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
 import { useTerritoryFilter } from "@/core/location/hooks/useTerritoryFilter";
+import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
+import { centralRoutes } from "@/modules/central/routes/centralRoutes";
 import { EVENT_LIST_CATEGORY_OPTIONS } from "@/shared/taxonomy/events";
 import { EventGrid } from "@/shared/components/eventos/EventGrid";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Badge } from "@/shared/components/ui/badge";
 import { cn } from "@/shared/utils/cn";
-type RouteResolved = any;
 
 type ViewMode = "list" | "grid" | "map";
 
@@ -62,7 +63,7 @@ type ViewMode = "list" | "grid" | "map";
 // ============================================================================
 
 interface EventosPageProps {
-  resolved?: RouteResolved;
+  resolved?: ResolvedTerritory | null;
   activeMemberIds?: string[];
 }
 
@@ -75,10 +76,7 @@ export default function EventosPage({ resolved, activeMemberIds }: EventosPagePr
   const location = useLocation();
   const communityUrls = useCommunityUrls(resolved);
   const moduleTerritory = useModuleTerritoryFilter({ routeResolved: resolved });
-  const territoryFilter = useTerritoryFilter(
-    (resolved as Parameters<typeof useTerritoryFilter>[0]) ?? undefined,
-    activeMemberIds,
-  );
+  const territoryFilter = useTerritoryFilter(resolved, activeMemberIds);
   const isEmbeddedCommunityRoute = location.pathname.startsWith("/comunidade/");
 
   // ========================================================================
@@ -506,7 +504,7 @@ export default function EventosPage({ resolved, activeMemberIds }: EventosPagePr
         <Button
           size="lg"
           className="h-14 w-14 rounded-full bg-gradient-to-br from-primary to-purple-600 shadow-2xl shadow-primary/25 transition-all hover:scale-110 hover:shadow-primary/40"
-          onClick={() => navigate((communityUrls as any).createEvent ?? "/eventos/novo")}
+          onClick={() => navigate(centralRoutes.eventos.create)}
         >
           <Plus className="h-6 w-6" />
         </Button>

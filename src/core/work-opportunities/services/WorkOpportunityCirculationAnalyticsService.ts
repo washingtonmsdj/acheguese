@@ -1,6 +1,11 @@
 import { supabase } from "@/integrations/supabase";
+import type { Database } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import type { WorkOpportunityType } from "../types";
+
+type AnalyticsEventRow = Database["public"]["Tables"]["analytics_events"]["Row"];
+type WorkOpportunityRow = Database["public"]["Tables"]["work_opportunities"]["Row"];
+type LocationRow = Database["public"]["Tables"]["locations"]["Row"];
 
 type DiscoverySource = "feed" | "search" | "profile_professions" | "list" | "direct";
 
@@ -96,7 +101,7 @@ class WorkOpportunityCirculationAnalyticsServiceClass {
     const sinceISO = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
 
     try {
-      let eventsQuery = (supabase as any)
+      let eventsQuery = supabase
         .from("analytics_events")
         .select("entity_id, event_type, created_at, metadata")
         .eq("entity_type", "work_opportunity")
@@ -108,32 +113,31 @@ class WorkOpportunityCirculationAnalyticsServiceClass {
 
       const [eventsResult, opportunitiesResult, locationsResult] = await Promise.all([
         eventsQuery,
-        (supabase as any)
+        supabase
           .from("work_opportunities")
           .select("id, territory_location_id, professional_category, opportunity_type, created_at, published_at, status")
           .gte("created_at", sinceISO),
-        (supabase as any).from("locations").select("id, name"),
+        supabase.from("locations").select("id, name"),
       ]);
 
       if (eventsResult.error) throw eventsResult.error;
       if (opportunitiesResult.error) throw opportunitiesResult.error;
 
-      const events = (eventsResult.data ?? []) as Array<{
-        entity_id: string | null;
-        event_type: string;
-        created_at: string;
-        metadata: unknown;
-      }>;
-      const opportunities = (opportunitiesResult.data ?? []) as Array<{
-        id: string;
-        territory_location_id: string;
-        professional_category: string;
-        opportunity_type: WorkOpportunityType;
-        created_at: string;
-        published_at: string | null;
-        status: string;
-      }>;
-      const locations = (locationsResult.data ?? []) as Array<{ id: string; name: string | null }>;
+      const events = (eventsResult.data ?? []) as Pick<
+        AnalyticsEventRow,
+        "entity_id" | "event_type" | "created_at" | "metadata"
+      >[];
+      const opportunities = (opportunitiesResult.data ?? []) as Pick<
+        WorkOpportunityRow,
+        | "id"
+        | "territory_location_id"
+        | "professional_category"
+        | "opportunity_type"
+        | "created_at"
+        | "published_at"
+        | "status"
+      >[];
+      const locations = (locationsResult.data ?? []) as Pick<LocationRow, "id" | "name">[];
 
       const locationMap = new Map<string, string>(
         locations.filter((item) => Boolean(item.name)).map((item) => [item.id, item.name as string]),

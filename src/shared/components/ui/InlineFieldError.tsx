@@ -13,7 +13,7 @@
 import type { FieldError, Merge, FieldErrorsImpl } from "react-hook-form";
 
 interface InlineFieldErrorProps {
-  message?: string | FieldError | Merge<FieldError, FieldErrorsImpl<any>>;
+  message?: string | FieldError | Merge<FieldError, FieldErrorsImpl<unknown>>;
   id?: string;
 }
 

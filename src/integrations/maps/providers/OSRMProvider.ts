@@ -20,6 +20,7 @@ import type {
   ETAResponse,
   DistanceMatrixRequest,
   DistanceMatrixResponse,
+  DistanceMatrixElement,
   Route,
   RouteLeg,
   RouteStep,
@@ -38,6 +39,47 @@ interface OSRMConfig {
   timeout?: number;
   /** Retry automático */
   retries?: number;
+}
+
+interface OSRMStep {
+  distance: number;
+  duration: number;
+  name?: string | null;
+  maneuver?: {
+    type?: string | null;
+  } | null;
+  geometry: {
+    coordinates: [number, number][];
+  };
+}
+
+interface OSRMLeg {
+  distance: number;
+  duration: number;
+  steps: OSRMStep[];
+}
+
+interface OSRMRouteData {
+  distance: number;
+  duration: number;
+  confidence?: number | null;
+  weight?: number | null;
+  geometry: {
+    coordinates: [number, number][];
+  };
+  legs: OSRMLeg[];
+}
+
+interface OSRMRouteResponse {
+  code: string;
+  message?: string;
+  routes: OSRMRouteData[];
+}
+
+interface OSRMTableResponse {
+  code: string;
+  durations: Array<Array<number | null>>;
+  distances?: Array<Array<number | null>>;
 }
 
 const DEFAULT_CONFIG: OSRMConfig = {
@@ -100,14 +142,14 @@ export class OSRMProvider implements RoutingProvider {
       const url = `${this.config.baseUrl}/route/v1/${profile}/${coordinates}?${params}`;
 
       const response = await this.fetchWithTimeout(url);
-      const data = await response.json();
+      const data = (await response.json()) as OSRMRouteResponse;
 
       if (data.code !== 'Ok') {
         throw new Error(`OSRM error: ${data.code} - ${data.message || 'Unknown error'}`);
       }
 
       // Converter resposta OSRM para formato interno
-      const routes = data.routes.map((osrmRoute: any, index: number) =>
+      const routes = data.routes.map((osrmRoute, index) =>
         this.convertOSRMRoute(osrmRoute, index, request)
       );
 
@@ -151,7 +193,7 @@ export class OSRMProvider implements RoutingProvider {
       const url = `${this.config.baseUrl}/route/v1/${profile}/${coordinates}?${params}`;
 
       const response = await this.fetchWithTimeout(url);
-      const data = await response.json();
+      const data = (await response.json()) as OSRMRouteResponse;
 
       if (data.code !== 'Ok') {
         throw new Error(`OSRM error: ${data.code}`);
@@ -197,19 +239,22 @@ export class OSRMProvider implements RoutingProvider {
       const url = `${this.config.baseUrl}/table/v1/${profile}/${coordinates}?${params}`;
 
       const response = await this.fetchWithTimeout(url);
-      const data = await response.json();
+      const data = (await response.json()) as OSRMTableResponse;
 
       if (data.code !== 'Ok') {
         throw new Error(`OSRM error: ${data.code}`);
       }
 
       // Converter matriz OSRM para formato interno
-      const matrix = data.durations.map((row: number[], i: number) =>
-        row.map((duration: number, j: number) => ({
+      const matrix = data.durations.map((row, i) =>
+        row.map((duration, j) => {
+          const status: DistanceMatrixElement["status"] = duration === null ? 'not_found' : 'ok';
+          return {
           distanceMeters: Math.round(data.distances?.at(i)?.at(j) ?? 0),
-          durationSeconds: Math.round(duration),
-          status: duration === null ? 'not_found' : 'ok',
-        }))
+          durationSeconds: Math.round(duration ?? 0),
+          status,
+        };
+        })
       );
 
       return {
@@ -233,7 +278,7 @@ export class OSRMProvider implements RoutingProvider {
       const url = `${this.config.baseUrl}/route/v1/car/${testCoords}?overview=false`;
       
       const response = await this.fetchWithTimeout(url, 3000);
-      const data = await response.json();
+      const data = (await response.json()) as OSRMRouteResponse;
       
       return data.code === 'Ok';
     } catch {
@@ -249,7 +294,7 @@ export class OSRMProvider implements RoutingProvider {
    * Converter rota OSRM para formato interno
    */
   private convertOSRMRoute(
-    osrmRoute: any,
+    osrmRoute: OSRMRouteData,
     index: number,
     request: RouteRequest
   ): Route {
@@ -262,19 +307,19 @@ export class OSRMProvider implements RoutingProvider {
     );
 
     // Converter legs
-    const legs: RouteLeg[] = osrmRoute.legs.map((osrmLeg: any, legIndex: number) => {
+    const legs: RouteLeg[] = osrmRoute.legs.map((osrmLeg, legIndex) => {
       const legCoords: Coordinates[] = [];
       let coordIndex = 0;
 
       // Extrair coordenadas da leg
-      osrmLeg.steps.forEach((step: any) => {
+      osrmLeg.steps.forEach((step) => {
         const stepCoords = geometry.slice(coordIndex, coordIndex + step.geometry.coordinates.length);
         legCoords.push(...stepCoords);
         coordIndex += step.geometry.coordinates.length - 1;
       });
 
       // Converter steps
-      const steps: RouteStep[] = osrmLeg.steps.map((osrmStep: any) => ({
+      const steps: RouteStep[] = osrmLeg.steps.map((osrmStep) => ({
         distanceMeters: Math.round(osrmStep.distance),
         durationSeconds: Math.round(osrmStep.duration),
         instruction: osrmStep.name || 'Continue',

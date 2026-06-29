@@ -31,6 +31,43 @@ import type {
   GastronomyBusiness,
 } from '../types';
 
+type QueryError = { code?: string; message?: string } | null;
+type QueryResult<T> = Promise<{ data: T; error: QueryError; count?: number | null }>;
+
+interface QueryBuilder<TRow> {
+  select(
+    columns?: string,
+    options?: { count?: "exact" | "planned" | "estimated"; head?: boolean },
+  ): QueryBuilder<TRow>;
+  eq(column: string, value: unknown): QueryBuilder<TRow>;
+  in(column: string, values: readonly unknown[]): QueryBuilder<TRow>;
+  order(column: string, options?: { ascending?: boolean }): QueryBuilder<TRow>;
+  limit(count: number): QueryBuilder<TRow>;
+  not(column: string, operator: string, value: unknown): QueryBuilder<TRow>;
+  lte(column: string, value: unknown): QueryBuilder<TRow>;
+  gte(column: string, value: unknown): QueryBuilder<TRow>;
+  maybeSingle(): QueryResult<TRow | null>;
+  then<
+    TResult1 = { data: TRow[]; error: QueryError; count?: number | null },
+    TResult2 = never,
+  >(
+    onfulfilled?:
+      | ((
+          value: { data: TRow[]; error: QueryError; count?: number | null },
+        ) => TResult1 | PromiseLike<TResult1>)
+      | null,
+    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
+  ): Promise<TResult1 | TResult2>;
+}
+
+interface MenuQueriesDbClient {
+  from<TRow>(table: string): QueryBuilder<TRow>;
+}
+
+const menuQueriesDb = supabase as unknown as MenuQueriesDbClient;
+
+type MenuItemRow = MenuItem & { menu_id?: string };
+
 //  ============================================================
 //  HELPERS INTERNOS
 //  ============================================================
@@ -355,8 +392,8 @@ export async function getMenuItem(itemId: string): Promise<MenuItemWithRelations
       return null;
     }
 
-    const { data, error } = await (supabase as any)
-      .from('menu_items')
+    const { data, error } = await menuQueriesDb
+      .from<MenuItem>('menu_items')
       .select('*')
       .eq('id', itemId)
       .eq('is_available', true)
@@ -399,8 +436,8 @@ export async function getFeaturedMenuItems(businessId: string): Promise<MenuItem
     const menuIds = menus.map((m) => m.id);
 
     //  Buscar itens em destaque
-    const { data, error } = await (supabase as any)
-      .from('menu_items')
+    const { data, error } = await menuQueriesDb
+      .from<MenuItemRow>('menu_items')
       .select('*')
       .in('menu_id', menuIds)
       .eq('is_available', true)
@@ -747,8 +784,8 @@ export async function getPublicFoodItems(params: {
       
       if (!menuIds.length) return [];
 
-      const { data } = await (supabase as any)
-        .from('menu_items')
+      const { data } = await menuQueriesDb
+        .from<MenuItemRow>('menu_items')
         .select('*')
         .in('menu_id', menuIds)
         .eq('is_available', true)
@@ -844,19 +881,19 @@ export async function getMenuUsageStats(businessId: string): Promise<{
       imagesCountResult,
       promotionsCountResult,
     ] = await Promise.all([
-      (supabase as any)
-        .from('menu_items')
+      menuQueriesDb
+        .from<{ id: string }>('menu_items')
         .select('*', { count: 'exact', head: true })
         .in('menu_id', menuIds)
         .eq('is_available', true),
-      (supabase as any)
-        .from('menu_items')
+      menuQueriesDb
+        .from<{ id: string }>('menu_items')
         .select('*', { count: 'exact', head: true })
         .in('menu_id', menuIds)
         .eq('is_available', true)
         .not('image_url', 'is', null),
-      (supabase as any)
-        .from('menu_promotions')
+      menuQueriesDb
+        .from<{ id: string }>('menu_promotions')
         .select('*', { count: 'exact', head: true })
         .eq('business_id', businessId)
         .eq('is_active', true)

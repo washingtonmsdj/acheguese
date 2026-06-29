@@ -32,6 +32,10 @@ import {
 import { useServiceAreaOptions } from "@/modules/professionals/services/hooks/useServiceAreaOptions";
 import type { ProfessionalCategory } from "@/core/professional/types";
 
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : "Tente novamente";
+}
+
 export default function CadastrarServicoPage() {
   const navigate = useNavigate();
   const appUrls = useAppUrls(); // ✅ SSOT URLs
@@ -245,56 +249,59 @@ export default function CadastrarServicoPage() {
         city: servicesLocationService.getActiveLocationName() ?? "",
         neighborhood: form.serviceAreas[0] || "",
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       logger.error("Error creating professional:", err);
       toast({
         title: "Erro ao cadastrar",
-        description: err.message || "Tente novamente",
+        description: getErrorMessage(err),
         variant: "destructive",
       });
     }
   };
 
   return (
-    <div className="flex flex-col pb-24">
+    <div className="min-h-screen bg-background pb-28">
       <CadastrarServicoHeader step={step} onBack={handleBack} />
-      <CadastrarServicoStepIndicator
-        step={step}
-        effectiveProfile={effectiveProfile}
-        onStepChange={goToStep}
-      />
 
-      <div className="px-4 py-4 space-y-4">
-        {step === "info" && (
-          <CadastrarServicoInfoStep
-            form={form}
-            photoPreview={photoPreview}
-            slug={slug}
-            onPhotoChange={handlePhotoChange}
-            onSlugChange={handleSlugChange}
-            onUpdateField={updateField}
-          />
-        )}
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-4 sm:px-6 sm:py-6">
+        <CadastrarServicoStepIndicator
+          step={step}
+          effectiveProfile={effectiveProfile}
+          onStepChange={goToStep}
+        />
 
-        {step === "details" && (
-          <CadastrarServicoDetailsStep
-            form={form}
-            serviceAreaOptions={serviceAreaOptions}
-            serviceAreaCityName={serviceAreaCity?.name ?? null}
-            isLoadingServiceAreaOptions={loadingServiceAreaOptions}
-            serviceAreaOptionsUnavailable={serviceAreaOptionsUnavailable}
-            onToggleArea={toggleBairro}
-            onUpdateField={updateField}
-          />
-        )}
+        <div className="rounded-[24px] border border-border/70 bg-card/78 p-4 shadow-[0_26px_100px_-70px_rgba(0,0,0,0.9)] backdrop-blur-sm sm:p-6">
+          {step === "info" && (
+            <CadastrarServicoInfoStep
+              form={form}
+              photoPreview={photoPreview}
+              slug={slug}
+              onPhotoChange={handlePhotoChange}
+              onSlugChange={handleSlugChange}
+              onUpdateField={updateField}
+            />
+          )}
 
-        {step === "contact" && (
-          <CadastrarServicoContactStep form={form} onUpdateField={updateField} />
-        )}
+          {step === "details" && (
+            <CadastrarServicoDetailsStep
+              form={form}
+              serviceAreaOptions={serviceAreaOptions}
+              serviceAreaCityName={serviceAreaCity?.name ?? null}
+              isLoadingServiceAreaOptions={loadingServiceAreaOptions}
+              serviceAreaOptionsUnavailable={serviceAreaOptionsUnavailable}
+              onToggleArea={toggleBairro}
+              onUpdateField={updateField}
+            />
+          )}
 
-        {step === "review" && (
-          <CadastrarServicoReview form={form} photoPreview={photoPreview} />
-        )}
+          {step === "contact" && (
+            <CadastrarServicoContactStep form={form} onUpdateField={updateField} />
+          )}
+
+          {step === "review" && (
+            <CadastrarServicoReview form={form} photoPreview={photoPreview} />
+          )}
+        </div>
 
         <CadastrarServicoNavigation
           step={step}

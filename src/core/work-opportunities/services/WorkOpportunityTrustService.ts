@@ -7,6 +7,37 @@ import {
   type TrustEvent,
 } from "@/core/trust/domain";
 import { supabase } from "@/integrations/supabase";
+import type { Database } from "@/integrations/supabase";
+
+type TrustEventRow = Database["public"]["Tables"]["trust_events"]["Row"];
+
+function toTrustEvent(row: TrustEventRow): TrustEvent {
+  return {
+    id: row.id,
+    actor_profile_id: row.actor_profile_id,
+    actor_role: row.actor_role,
+    subject_profile_id: row.subject_profile_id,
+    subject_role: row.subject_role,
+    context_type: row.context_type,
+    context_id: row.context_id,
+    event_type: row.event_type,
+    rating: row.rating,
+    reason_code: row.reason_code,
+    severity: row.severity,
+    visibility: row.visibility,
+    description: row.description,
+    evidence:
+      row.evidence && typeof row.evidence === "object" && !Array.isArray(row.evidence)
+        ? (row.evidence as Record<string, unknown>)
+        : {},
+    status: row.status,
+    reviewed_by_profile_id: row.reviewed_by_profile_id,
+    reviewed_at: row.reviewed_at,
+    resolution_notes: row.resolution_notes,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  };
+}
 
 export type OpportunityFeedbackAnswer = "helped" | "found_someone" | "service_done" | "no_help";
 
@@ -74,7 +105,7 @@ class WorkOpportunityTrustServiceClass {
   }
 
   async getProfessionalReputation(professionalId: string): Promise<ProfessionalReputationSnapshot> {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("trust_events")
       .select("*")
       .eq("context_type", TRUST_CONTEXT_TYPES.SERVICE)
@@ -95,7 +126,7 @@ class WorkOpportunityTrustServiceClass {
       };
     }
 
-    const rows = data as TrustEvent[];
+    const rows = data.map(toTrustEvent);
     const ratings = rows.map((row) => row.rating ?? 0).filter((rating) => rating > 0);
     const total = ratings.length;
     const avg = total > 0 ? ratings.reduce((sum, value) => sum + value, 0) / total : 0;

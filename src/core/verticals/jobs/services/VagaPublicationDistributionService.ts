@@ -5,6 +5,25 @@ import { jobPublicRoutes } from "@/core/verticals/jobs/routes/jobPublicRoutes";
 import { workOpportunitiesService } from "@/core/work-opportunities/services/WorkOpportunitiesService";
 import { logger } from "@/shared/utils/logger";
 
+type QueryResult<T> = Promise<{ data: T; error: { code?: string; message?: string } | null }>;
+
+interface QueryBuilder<TRow> {
+  select(columns?: string): QueryBuilder<TRow>;
+  update(values: Partial<TRow>): QueryBuilder<TRow>;
+  eq(column: string, value: unknown): QueryBuilder<TRow>;
+  maybeSingle(): QueryResult<TRow | null>;
+  then<TResult1 = { data: TRow[]; error: { code?: string; message?: string } | null }, TResult2 = never>(
+    onfulfilled?:
+      | ((value: { data: TRow[]; error: { code?: string; message?: string } | null }) => TResult1 | PromiseLike<TResult1>)
+      | null,
+    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
+  ): Promise<TResult1 | TResult2>;
+}
+
+interface JobsDistributionDbClient {
+  from<TRow>(table: string): QueryBuilder<TRow>;
+}
+
 interface VagaDistributionRow {
   id: string;
   slug: string | null;
@@ -24,7 +43,7 @@ interface VagaDistributionRow {
 }
 
 export class VagaPublicationDistributionService {
-  private static readonly db = supabase as any;
+  private static readonly db = supabase as unknown as JobsDistributionDbClient;
 
   private static resolvePublicUrl(vaga: VagaDistributionRow): string | null {
     if (!vaga.slug || !vaga.location?.geographic_path) return null;

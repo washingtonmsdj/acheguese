@@ -8,6 +8,44 @@ import type { PassengerRatingRow, UserListRow } from "./profile.service.types";
 
 const TABLE = "profiles";
 
+interface QueryError {
+  message?: string | null;
+  code?: string | null;
+}
+
+interface QueryArrayResult<T> {
+  data: T[] | null;
+  error: QueryError | null;
+  count?: number | null;
+}
+
+interface QuerySingleResult<T> {
+  data: T | null;
+  error: QueryError | null;
+  count?: number | null;
+}
+
+interface QueryBuilder<TRow> extends PromiseLike<QueryArrayResult<TRow>> {
+  select: (
+    columns?: string,
+    options?: { count?: "exact"; head?: boolean },
+  ) => QueryBuilder<TRow>;
+  eq: (column: string, value: unknown) => QueryBuilder<TRow>;
+  neq: (column: string, value: unknown) => QueryBuilder<TRow>;
+  ilike: (column: string, value: string) => QueryBuilder<TRow>;
+  gte: (column: string, value: string | number) => QueryBuilder<TRow>;
+  lte: (column: string, value: string | number) => QueryBuilder<TRow>;
+  order: (column: string, options?: { ascending?: boolean }) => QueryBuilder<TRow>;
+  limit: (value: number) => QueryBuilder<TRow>;
+  maybeSingle: () => Promise<QuerySingleResult<TRow>>;
+}
+
+interface ProfileAdminQueriesDbClient {
+  from: <TRow = never>(table: string) => QueryBuilder<TRow>;
+}
+
+const profileAdminQueriesDb = supabase as unknown as ProfileAdminQueriesDbClient;
+
 export async function getUserIdsByCity(city: string, limit = 500): Promise<string[]> {
   try {
     const normalizedCity = city.trim();
@@ -48,9 +86,18 @@ export async function getVerificationStats(): Promise<{
 }> {
   try {
     const [pending, verified, rejected] = await Promise.all([
-      (supabase as any).from(TABLE).select("*", { count: "exact", head: true }).eq("verification_status", "pending"),
-      (supabase as any).from(TABLE).select("*", { count: "exact", head: true }).eq("verification_status", "verified"),
-      (supabase as any).from(TABLE).select("*", { count: "exact", head: true }).eq("verification_status", "rejected"),
+      profileAdminQueriesDb
+        .from<{ id: string }>(TABLE)
+        .select("*", { count: "exact", head: true })
+        .eq("verification_status", "pending"),
+      profileAdminQueriesDb
+        .from<{ id: string }>(TABLE)
+        .select("*", { count: "exact", head: true })
+        .eq("verification_status", "verified"),
+      profileAdminQueriesDb
+        .from<{ id: string }>(TABLE)
+        .select("*", { count: "exact", head: true })
+        .eq("verification_status", "rejected"),
     ]);
 
     return {
@@ -135,8 +182,8 @@ export async function getPassengerRatings(params: {
   errorLabel: string;
 }): Promise<PassengerRatingRow[]> {
   try {
-    let query = (supabase as any)
-      .from(TABLE)
+    let query = profileAdminQueriesDb
+      .from<PassengerRatingRow>(TABLE)
       .select(
         "id, name, avatar_url, passenger_rating, passenger_trust_level, passenger_completed_rides",
       )

@@ -12,7 +12,10 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
-import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
+import type {
+  AdminSupabaseClient,
+  CityMetadata as AdminCityMetadataRow,
+} from "@/core/admin/types/adminDatabase.types";
 import { TERRITORY_CONFIG } from "@/config/territory";
 
 export interface EmergencyContact {
@@ -110,6 +113,63 @@ export function resolveFallbackCityStatus(state?: string, city?: string): CitySt
   return isLaunchCity ? 'active' : 'coming_soon';
 }
 
+function readString(value: unknown): string | undefined {
+  return typeof value === "string" ? value : undefined;
+}
+
+function readNumber(value: unknown, fallback = 0): number {
+  return typeof value === "number" ? value : fallback;
+}
+
+function readArray<T>(value: unknown, fallback: T[]): T[] {
+  return Array.isArray(value) ? (value as T[]) : fallback;
+}
+
+function normalizeCityMetadata(
+  row: AdminCityMetadataRow & Record<string, unknown>,
+  fallback: CityMetadata,
+): CityMetadata {
+  return {
+    id: readString(row.id) ?? fallback.id,
+    city: readString(row.city) ?? fallback.city,
+    state: readString(row.state) ?? fallback.state,
+    population: readNumber(row.population),
+    districts_count: readNumber(row.districts_count),
+    active_businesses: readNumber(row.active_businesses),
+    schools_count: readNumber(row.schools_count),
+    professionals_count: readNumber(row.professionals_count),
+    bus_lines_count: readNumber(row.bus_lines_count),
+    description: readString(row.description),
+    founded_year: typeof row.founded_year === "number" ? row.founded_year : undefined,
+    area_km2: typeof row.area_km2 === "number" ? row.area_km2 : undefined,
+    updated_at: readString(row.updated_at),
+    emergency_contacts: readArray<EmergencyContact>(row.emergency_contacts, []),
+    utility_contacts: readArray<UtilityContact>(row.utility_contacts, []),
+    tourist_attractions: readArray<TouristAttraction>(row.tourist_attractions, []),
+    city_hall_info: (row.city_hall_info as CityHallInfo | undefined) ?? undefined,
+    elected_officials:
+      (row.elected_officials as ElectedOfficials | undefined) ??
+      {
+        executive: [],
+        legislative: { president: null as never, featured: [], total_councilors: 0 },
+      },
+    featured_districts: readArray<FeaturedDistrict>(row.featured_districts, []),
+    city_status: (row.city_status as CityStatus | null) ?? fallback.city_status,
+  };
+}
+
+type CityMetadataWriteClient = {
+  from(table: "city_metadata"): {
+    update(values: Partial<CityMetadata>): {
+      eq(column: "id", value: string): Promise<{
+        error: { message?: string | null } | null;
+      }>;
+    };
+  };
+};
+
+const cityMetadataWriteDb = supabase as unknown as CityMetadataWriteClient;
+
 function buildDefaultCityMetadata(state: string, city: string): CityMetadata {
   const normalizedState = state.trim().toUpperCase();
   const normalizedCity = city.trim().toLowerCase();
@@ -156,33 +216,7 @@ export class CityService {
         return fallback;
       }
 
-      const dataAny = data as any;
-      return {
-        id: dataAny.id,
-        city: dataAny.city,
-        state: dataAny.state,
-        population: dataAny.population ?? 0,
-        districts_count: dataAny.districts_count ?? 0,
-        active_businesses: dataAny.active_businesses ?? 0,
-        schools_count: dataAny.schools_count ?? 0,
-        professionals_count: dataAny.professionals_count ?? 0,
-        bus_lines_count: dataAny.bus_lines_count ?? 0,
-        description: dataAny.description,
-        founded_year: dataAny.founded_year,
-        area_km2: dataAny.area_km2,
-        updated_at: dataAny.updated_at,
-        // JSONB fields
-        emergency_contacts: dataAny.emergency_contacts ?? [],
-        utility_contacts: dataAny.utility_contacts ?? [],
-        tourist_attractions: dataAny.tourist_attractions ?? [],
-        city_hall_info: dataAny.city_hall_info ?? {},
-        elected_officials: dataAny.elected_officials ?? {
-          executive: [],
-          legislative: { president: null, featured: [], total_councilors: 0 }
-        },
-        featured_districts: dataAny.featured_districts ?? [],
-        city_status: (dataAny.city_status as CityStatus | null) ?? fallback.city_status,
-      };
+      return normalizeCityMetadata(data as AdminCityMetadataRow & Record<string, unknown>, fallback);
     } catch (err) {
       trackError(err as Error, {
         component: "CityService",
@@ -231,8 +265,7 @@ export class CityService {
     updates: Partial<CityMetadata>
   ): Promise<void> {
     try {
-      const cityDb = supabase as any;
-      const { error } = await cityDb
+      const { error } = await cityMetadataWriteDb
         .from('city_metadata')
         .update(updates)
         .eq('id', cityId);

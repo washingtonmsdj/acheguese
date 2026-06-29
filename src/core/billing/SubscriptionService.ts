@@ -30,7 +30,34 @@ interface CanonicalBusinessSubscriptionRow {
   updated_at: string;
 }
 
-const billingDb = supabase as any;
+type QueryError = { message?: string | null };
+
+type QueryArrayResult<T> = {
+  data: T[] | null;
+  error: QueryError | null;
+};
+
+type QuerySingleResult<T> = {
+  data: T | null;
+  error: QueryError | null;
+};
+
+type QueryBuilder<T extends object> = PromiseLike<QueryArrayResult<T>> & {
+  select(columns?: string): QueryBuilder<T>;
+  eq(column: string, value: unknown): QueryBuilder<T>;
+  order(column: string, options?: { ascending?: boolean }): QueryBuilder<T>;
+  limit(value: number): QueryBuilder<T>;
+  insert(values: Record<string, unknown> | Array<Record<string, unknown>>): QueryBuilder<T>;
+  update(values: Record<string, unknown>): QueryBuilder<T>;
+  single(): Promise<QuerySingleResult<T>>;
+  maybeSingle(): Promise<QuerySingleResult<T>>;
+};
+
+type BillingDbClient = {
+  from<T extends object>(table: string): QueryBuilder<T>;
+};
+
+const billingDb = supabase as unknown as BillingDbClient;
 const businessRepository = new BusinessRepository();
 const profileRepository = new ProfileRepository();
 
@@ -118,7 +145,7 @@ async function fetchCanonicalByBusinessId(
   businessId: string,
 ): Promise<CanonicalBusinessSubscriptionRow | null> {
   const { data, error } = await billingDb
-    .from("user_subscriptions")
+    .from<CanonicalBusinessSubscriptionRow>("user_subscriptions")
     .select(`
       id,
       user_id,
@@ -141,7 +168,7 @@ async function fetchCanonicalByBusinessId(
     .maybeSingle();
 
   if (error) throw error;
-  return (data as CanonicalBusinessSubscriptionRow | null) ?? null;
+  return data ?? null;
 }
 
 export class SubscriptionService {
@@ -194,14 +221,15 @@ export class SubscriptionService {
       };
 
       const query = existing
-        ? billingDb.from("user_subscriptions").update(payload).eq("id", existing.id)
-        : billingDb.from("user_subscriptions").insert(payload);
+        ? billingDb.from<CanonicalBusinessSubscriptionRow>("user_subscriptions").update(payload).eq("id", existing.id)
+        : billingDb.from<CanonicalBusinessSubscriptionRow>("user_subscriptions").insert(payload);
 
       const { data, error } = await query.select().single();
       if (error) throw error;
+      if (!data) throw new Error("Erro ao salvar assinatura: nenhuma linha retornada");
 
       return {
-        data: mapCanonicalRow(data as CanonicalBusinessSubscriptionRow, subscription.business_id),
+        data: mapCanonicalRow(data, subscription.business_id),
         error: null,
       };
     } catch (error) {
@@ -217,7 +245,7 @@ export class SubscriptionService {
   ): Promise<ServiceResult<BusinessSubscription>> {
     try {
       const { data, error } = await billingDb
-        .from("user_subscriptions")
+        .from<CanonicalBusinessSubscriptionRow>("user_subscriptions")
         .update({
           plan_code: newPlanTier,
           plan_type: newPlanTier,
@@ -229,8 +257,9 @@ export class SubscriptionService {
         .single();
 
       if (error) throw error;
+      if (!data) throw new Error("Erro ao atualizar plano: nenhuma linha retornada");
 
-      return { data: mapCanonicalRow(data as CanonicalBusinessSubscriptionRow, businessId), error: null };
+      return { data: mapCanonicalRow(data, businessId), error: null };
     } catch (error) {
       const message = error instanceof Error ? error.message : "Erro ao atualizar plano";
       logger.error("[SubscriptionService] Erro ao atualizar plano:", error);
@@ -258,7 +287,7 @@ export class SubscriptionService {
       }
 
       const { data, error } = await billingDb
-        .from("user_subscriptions")
+        .from<CanonicalBusinessSubscriptionRow>("user_subscriptions")
         .update(updates)
         .eq("business_id", businessId)
         .eq("subscription_scope", "business")
@@ -266,8 +295,9 @@ export class SubscriptionService {
         .single();
 
       if (error) throw error;
+      if (!data) throw new Error("Erro ao cancelar assinatura: nenhuma linha retornada");
 
-      return { data: mapCanonicalRow(data as CanonicalBusinessSubscriptionRow, businessId), error: null };
+      return { data: mapCanonicalRow(data, businessId), error: null };
     } catch (error) {
       const message = error instanceof Error ? error.message : "Erro ao cancelar assinatura";
       logger.error("[SubscriptionService] Erro ao cancelar assinatura:", error);
@@ -280,7 +310,7 @@ export class SubscriptionService {
   ): Promise<ServiceResult<BusinessSubscription>> {
     try {
       const { data, error } = await billingDb
-        .from("user_subscriptions")
+        .from<CanonicalBusinessSubscriptionRow>("user_subscriptions")
         .update({
           cancel_at_period_end: false,
           status: BILLING_SUBSCRIPTION_STATUS.ACTIVE,
@@ -294,8 +324,9 @@ export class SubscriptionService {
         .single();
 
       if (error) throw error;
+      if (!data) throw new Error("Erro ao reativar assinatura: nenhuma linha retornada");
 
-      return { data: mapCanonicalRow(data as CanonicalBusinessSubscriptionRow, businessId), error: null };
+      return { data: mapCanonicalRow(data, businessId), error: null };
     } catch (error) {
       const message = error instanceof Error ? error.message : "Erro ao reativar assinatura";
       logger.error("[SubscriptionService] Erro ao reativar assinatura:", error);

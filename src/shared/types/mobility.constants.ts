@@ -175,7 +175,7 @@ export const MOBILITY_QUERY_KEYS = {
   rides: (userId?: string) => ['rides', userId],
   rideById: (rideId: string) => ['ride', rideId],
   rideBuscando: (rideId: string) => ['ride-buscando', rideId],
-  rideHistory: (userId: string, filters?: any, page?: number) => ['ride-history', userId, filters, page],
+  rideHistory: (userId: string, filters?: Record<string, unknown>, page?: number) => ['ride-history', userId, filters, page],
   activeRide: (userId: string) => ['active-ride', userId],
   pendingRides: () => ['pending-rides'],
   
@@ -206,7 +206,7 @@ export const MOBILITY_QUERY_KEYS = {
   driverServiceAreas: () => ['driver-service-areas'],
   
   // Community
-  communityRidePosts: (filters?: any) => ['community-ride-posts', filters],
+  communityRidePosts: (filters?: Record<string, unknown>) => ['community-ride-posts', filters],
   
   // Motoboy / Delivery
   deliveries: (sourceType: string, sourceId: string) => ['deliveries', sourceType, sourceId],

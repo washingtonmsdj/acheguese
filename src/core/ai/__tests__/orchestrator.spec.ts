@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { AIOrchestratorService } from "../orchestrator/AIOrchestratorService";
 import type { AIIntent } from "../domain/types";
 import type { IActionHandler } from "../actions/IActionHandler";
+import { IntentParser } from "../intent/IntentParser";
 
 const unknownIntent: AIIntent = {
   type: "unknown",
@@ -19,8 +20,11 @@ describe("AIOrchestratorService", () => {
       type: "business_search",
       execute,
     };
-    const parser = { parse: vi.fn().mockResolvedValue(unknownIntent) };
-    const orchestrator = new AIOrchestratorService(parser as any, [handler]);
+    class MockIntentParser extends IntentParser {
+      override parse = vi.fn().mockResolvedValue(unknownIntent);
+    }
+    const parser = new MockIntentParser();
+    const orchestrator = new AIOrchestratorService(parser, [handler]);
 
     const result = await orchestrator.search({
       query: "me conte uma piada",

@@ -1,8 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SearchBusinessesActionHandler } from '../SearchBusinessesActionHandler';
-import type { AIIntent, AIActionContext } from '../../domain/types';
+import type { AIActionContext, AIIntent } from '../../domain/types';
+import { BusinessService } from '@/core/business';
+import { spatialSearchService } from '@/core/geospatial';
 
-// Mock dos serviços
 vi.mock('@/core/business', () => ({
   BusinessService: {
     getBusinessesList: vi.fn(),
@@ -48,9 +49,7 @@ describe('SearchBusinessesActionHandler', () => {
   });
 
   it('deve buscar empresas sem coordenadas', async () => {
-    const { BusinessService } = await import('@/core/business');
-    
-    (BusinessService.getBusinessesList as any).mockResolvedValue({
+    vi.mocked(BusinessService.getBusinessesList).mockResolvedValue({
       businesses: [
         {
           id: '1',
@@ -78,12 +77,9 @@ describe('SearchBusinessesActionHandler', () => {
   });
 
   it('deve usar busca geoespacial quando houver coordenadas', async () => {
-    const { spatialSearchService } = await import('@/core/geospatial');
-    const { BusinessService } = await import('@/core/business');
-
     mockContext.coordinates = { latitude: -12.9977, longitude: -38.4502 };
 
-    (spatialSearchService.searchHybrid as any).mockResolvedValue([
+    vi.mocked(spatialSearchService.searchHybrid).mockResolvedValue([
       {
         id: '1',
         name: 'Pizzaria Central',
@@ -91,7 +87,7 @@ describe('SearchBusinessesActionHandler', () => {
       },
     ]);
 
-    (BusinessService.getBusinessesByIds as any).mockResolvedValue([
+    vi.mocked(BusinessService.getBusinessesByIds).mockResolvedValue([
       {
         id: '1',
         name: 'Pizzaria Central',
@@ -117,9 +113,7 @@ describe('SearchBusinessesActionHandler', () => {
   });
 
   it('deve usar URL publica preferencial para negocio gastronomico', async () => {
-    const { BusinessService } = await import('@/core/business');
-
-    (BusinessService.getBusinessesList as any).mockResolvedValue({
+    vi.mocked(BusinessService.getBusinessesList).mockResolvedValue({
       businesses: [
         {
           id: '1',
@@ -138,10 +132,8 @@ describe('SearchBusinessesActionHandler', () => {
     expect(results[0].url).toBe('/santa-cruz/restaurante-gourmet');
   });
 
-  it('deve manter URL publica preferencial mesmo quando negócio é premium', async () => {
-    const { BusinessService } = await import('@/core/business');
-
-    (BusinessService.getBusinessesList as any).mockResolvedValue({
+  it('deve manter URL publica preferencial mesmo quando negocio e premium', async () => {
+    vi.mocked(BusinessService.getBusinessesList).mockResolvedValue({
       businesses: [
         {
           id: '1',
@@ -150,7 +142,7 @@ describe('SearchBusinessesActionHandler', () => {
           slug: 'empresa-premium',
           geographic_path: 'ba/salvador/pituba',
           is_premium: true,
-          rating: 5.0,
+          rating: 5,
         },
       ],
     });
@@ -161,16 +153,13 @@ describe('SearchBusinessesActionHandler', () => {
   });
 
   it('deve fazer fallback quando busca geoespacial falhar', async () => {
-    const { spatialSearchService } = await import('@/core/geospatial');
-    const { BusinessService } = await import('@/core/business');
-
     mockContext.coordinates = { latitude: -12.9977, longitude: -38.4502 };
 
-    (spatialSearchService.searchHybrid as any).mockRejectedValue(
-      new Error('RPC error: type mismatch')
+    vi.mocked(spatialSearchService.searchHybrid).mockRejectedValue(
+      new Error('RPC error: type mismatch'),
     );
 
-    (BusinessService.getBusinessesList as any).mockResolvedValue({
+    vi.mocked(BusinessService.getBusinessesList).mockResolvedValue({
       businesses: [
         {
           id: '1',

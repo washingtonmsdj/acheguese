@@ -31,6 +31,38 @@ export interface ServiceResult<T> {
   error?: string;
 }
 
+interface QueryError {
+  message?: string | null;
+}
+
+interface QueryArrayResult<TRow> {
+  data: TRow[] | null;
+  error: QueryError | null;
+}
+
+interface QuerySingleResult<TRow> {
+  data: TRow | null;
+  error: QueryError | null;
+}
+
+interface QueryBuilder<TRow> extends PromiseLike<QueryArrayResult<TRow>> {
+  select: (columns?: string) => QueryBuilder<TRow>;
+  insert: (values: unknown | unknown[]) => QueryBuilder<TRow>;
+  update: (values: unknown) => QueryBuilder<TRow>;
+  upsert: (
+    values: unknown | unknown[],
+    options?: { onConflict?: string },
+  ) => QueryBuilder<TRow>;
+  eq: (column: string, value: unknown) => QueryBuilder<TRow>;
+  order: (column: string, options?: { ascending?: boolean }) => QueryBuilder<TRow>;
+  maybeSingle: () => Promise<QuerySingleResult<TRow>>;
+  single: () => Promise<QuerySingleResult<TRow>>;
+}
+
+interface ProfessionalLeadDbClient {
+  from: <TRow = never>(table: string) => QueryBuilder<TRow>;
+}
+
 interface ProfessionalOwnerRecord {
   id: string;
   profile_id: string;
@@ -46,6 +78,32 @@ interface ProfessionalLeadWithOwner extends ProfessionalLeadRecord {
 interface ProfessionalServiceEngagementWithProfessional
   extends ProfessionalServiceEngagementRecord {
   professional_data?: { profile_id: string } | { profile_id: string }[] | null;
+}
+
+type ProfessionalLeadDetailsRelation = NonNullable<ProfessionalLeadDetails["professional"]>;
+
+interface ProfessionalLeadDetailsRow extends ProfessionalLeadRecord {
+  professional?: ProfessionalLeadDetailsRelation | ProfessionalLeadDetailsRelation[] | null;
+}
+
+interface ProfessionalLeadEventInsert {
+  lead_id: string;
+  event_type: string;
+  actor_user_id: string | null;
+  payload: Record<string, unknown>;
+}
+
+interface ProfessionalStatsContactsRow {
+  contacts_count: number | null;
+}
+
+const professionalLeadDb = supabase as unknown as ProfessionalLeadDbClient;
+
+function firstRelation<T>(value: T | T[] | null | undefined): T | null {
+  if (Array.isArray(value)) {
+    return value[0] ?? null;
+  }
+  return value ?? null;
 }
 
 function firstProfileUserId(profiles: ProfessionalOwnerRecord["profiles"]): string | null {
@@ -103,9 +161,7 @@ function normalizeLeadInput(input: CreateProfessionalLeadInput) {
 function getJoinedProfessional(
   lead: ProfessionalLeadWithOwner,
 ): ProfessionalOwnerRecord | null {
-  const professional = lead.professional_data;
-  if (!professional) return null;
-  return Array.isArray(professional) ? professional[0] ?? null : professional;
+  return firstRelation(lead.professional_data);
 }
 
 export class ProfessionalLeadService {
@@ -119,8 +175,8 @@ export class ProfessionalLeadService {
         ? await SessionService.getActiveProfile(user.id)
         : null;
 
-      const { data, error } = await (supabase as any)
-        .from("professional_leads")
+      const { data, error } = await professionalLeadDb
+        .from<ProfessionalLeadRecord>("professional_leads")
         .insert({
           ...normalized,
           requester_user_id: user?.id ?? null,
@@ -131,12 +187,10 @@ export class ProfessionalLeadService {
 
       if (error) throw error;
 
-      const lead = data as ProfessionalLeadRecord;
+      await this.incrementContactsCount(data.professional_id);
+      await this.notifyProfessionalOwner(data);
 
-      await this.incrementContactsCount(lead.professional_id);
-      await this.notifyProfessionalOwner(lead);
-
-      return { success: true, data: lead };
+      return { success: true, data };
     } catch (error) {
       logger.error("[ProfessionalLeadService] createLead failed:", error);
       return {
@@ -151,8 +205,8 @@ export class ProfessionalLeadService {
     status?: ProfessionalLeadStatus,
   ): Promise<ServiceResult<ProfessionalLeadRecord[]>> {
     try {
-      let query = (supabase as any)
-        .from("professional_leads")
+      let query = professionalLeadDb
+        .from<ProfessionalLeadRecord>("professional_leads")
         .select("*")
         .eq("professional_id", professionalId)
         .order("created_at", { ascending: false });
@@ -164,7 +218,7 @@ export class ProfessionalLeadService {
       const { data, error } = await query;
       if (error) throw error;
 
-      return { success: true, data: (data || []) as ProfessionalLeadRecord[] };
+      return { success: true, data: data ?? [] };
     } catch (error) {
       logger.error("[ProfessionalLeadService] listLeadsForProfessional failed:", error);
       return {
@@ -178,8 +232,8 @@ export class ProfessionalLeadService {
     leadId: string,
   ): Promise<ServiceResult<ProfessionalLeadDetails>> {
     try {
-      const { data, error } = await (supabase as any)
-        .from("professional_leads")
+      const { data, error } = await professionalLeadDb
+        .from<ProfessionalLeadDetailsRow>("professional_leads")
         .select(
           `
           *,
@@ -197,7 +251,13 @@ export class ProfessionalLeadService {
 
       if (error) throw error;
 
-      return { success: true, data: data as ProfessionalLeadDetails };
+      return {
+        success: true,
+        data: {
+          ...data,
+          professional: firstRelation(data.professional),
+        },
+      };
     } catch (error) {
       logger.error("[ProfessionalLeadService] getLeadDetails failed:", error);
       return {
@@ -211,15 +271,15 @@ export class ProfessionalLeadService {
     leadId: string,
   ): Promise<ServiceResult<ProfessionalLeadMessageRecord[]>> {
     try {
-      const { data, error } = await (supabase as any)
-        .from("professional_lead_messages")
+      const { data, error } = await professionalLeadDb
+        .from<ProfessionalLeadMessageRecord>("professional_lead_messages")
         .select("*")
         .eq("lead_id", leadId)
         .order("created_at", { ascending: true });
 
       if (error) throw error;
 
-      return { success: true, data: (data || []) as ProfessionalLeadMessageRecord[] };
+      return { success: true, data: data ?? [] };
     } catch (error) {
       logger.error("[ProfessionalLeadService] listMessages failed:", error);
       return {
@@ -233,15 +293,15 @@ export class ProfessionalLeadService {
     leadId: string,
   ): Promise<ServiceResult<ProfessionalLeadQuoteRecord[]>> {
     try {
-      const { data, error } = await (supabase as any)
-        .from("professional_lead_quotes")
+      const { data, error } = await professionalLeadDb
+        .from<ProfessionalLeadQuoteRecord>("professional_lead_quotes")
         .select("*")
         .eq("lead_id", leadId)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
 
-      return { success: true, data: (data || []) as ProfessionalLeadQuoteRecord[] };
+      return { success: true, data: data ?? [] };
     } catch (error) {
       logger.error("[ProfessionalLeadService] listQuotes failed:", error);
       return {
@@ -255,8 +315,8 @@ export class ProfessionalLeadService {
     leadId: string,
   ): Promise<ServiceResult<ProfessionalServiceEngagementRecord | null>> {
     try {
-      const { data, error } = await (supabase as any)
-        .from("professional_service_engagements")
+      const { data, error } = await professionalLeadDb
+        .from<ProfessionalServiceEngagementRecord>("professional_service_engagements")
         .select("*")
         .eq("lead_id", leadId)
         .maybeSingle();
@@ -265,7 +325,7 @@ export class ProfessionalLeadService {
 
       return {
         success: true,
-        data: (data as ProfessionalServiceEngagementRecord | null) ?? null,
+        data: data ?? null,
       };
     } catch (error) {
       logger.error("[ProfessionalLeadService] getEngagementByLead failed:", error);
@@ -280,15 +340,15 @@ export class ProfessionalLeadService {
     professionalId: string,
   ): Promise<ServiceResult<ProfessionalServiceEngagementRecord[]>> {
     try {
-      const { data, error } = await (supabase as any)
-        .from("professional_service_engagements")
+      const { data, error } = await professionalLeadDb
+        .from<ProfessionalServiceEngagementRecord>("professional_service_engagements")
         .select("*")
         .eq("professional_id", professionalId)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
 
-      return { success: true, data: (data || []) as ProfessionalServiceEngagementRecord[] };
+      return { success: true, data: data ?? [] };
     } catch (error) {
       logger.error("[ProfessionalLeadService] listEngagementsForProfessional failed:", error);
       return {
@@ -326,8 +386,8 @@ export class ProfessionalLeadService {
         throw new Error("Voce nao participa deste orcamento");
       }
 
-      const { data, error } = await (supabase as any)
-        .from("professional_lead_messages")
+      const { data, error } = await professionalLeadDb
+        .from<ProfessionalLeadMessageRecord>("professional_lead_messages")
         .insert({
           lead_id: input.leadId,
           sender_user_id: user.id,
@@ -348,7 +408,7 @@ export class ProfessionalLeadService {
 
       await this.notifyLeadMessageRecipient(lead, senderRole, message);
 
-      return { success: true, data: data as ProfessionalLeadMessageRecord };
+      return { success: true, data };
     } catch (error) {
       logger.error("[ProfessionalLeadService] sendMessage failed:", error);
       return {
@@ -376,8 +436,8 @@ export class ProfessionalLeadService {
         throw new Error("Valor da proposta invalido");
       }
 
-      const { data, error } = await (supabase as any)
-        .from("professional_lead_quotes")
+      const { data, error } = await professionalLeadDb
+        .from<ProfessionalLeadQuoteRecord>("professional_lead_quotes")
         .insert({
           lead_id: input.leadId,
           professional_user_id: user.id,
@@ -404,7 +464,7 @@ export class ProfessionalLeadService {
         await this.notifyQuoteRecipient(leadResult.data, description);
       }
 
-      return { success: true, data: data as ProfessionalLeadQuoteRecord };
+      return { success: true, data };
     } catch (error) {
       logger.error("[ProfessionalLeadService] createQuote failed:", error);
       return {
@@ -423,15 +483,14 @@ export class ProfessionalLeadService {
         throw new Error("Faca login para atualizar a proposta");
       }
 
-      const { data: existingQuote, error: quoteError } = await (supabase as any)
-        .from("professional_lead_quotes")
+      const { data: currentQuote, error: quoteError } = await professionalLeadDb
+        .from<ProfessionalLeadQuoteRecord>("professional_lead_quotes")
         .select("*")
         .eq("id", input.quoteId)
         .single();
 
       if (quoteError) throw quoteError;
 
-      const currentQuote = existingQuote as ProfessionalLeadQuoteRecord;
       const leadResult = await this.getLeadWithOwner(currentQuote.lead_id);
       if (!leadResult.success || !leadResult.data) {
         throw new Error(leadResult.error || "Orcamento nao encontrado");
@@ -450,8 +509,8 @@ export class ProfessionalLeadService {
         throw new Error("Apenas o cliente pode aceitar ou recusar a proposta");
       }
 
-      const { data, error } = await (supabase as any)
-        .from("professional_lead_quotes")
+      const { data, error } = await professionalLeadDb
+        .from<ProfessionalLeadQuoteRecord>("professional_lead_quotes")
         .update({ status: input.status })
         .eq("id", input.quoteId)
         .select("*")
@@ -459,19 +518,18 @@ export class ProfessionalLeadService {
 
       if (error) throw error;
 
-      const quote = data as ProfessionalLeadQuoteRecord;
       await this.recordEvent({
-        leadId: quote.lead_id,
+        leadId: data.lead_id,
         eventType: "quote_status_updated",
         actorUserId: user.id,
-        payload: { quote_id: quote.id, status: quote.status },
+        payload: { quote_id: data.id, status: data.status },
       });
 
-      if (quote.status === "accepted") {
-        await this.updateLeadStatus({ leadId: quote.lead_id, status: "scheduled" });
+      if (data.status === "accepted") {
+        await this.updateLeadStatus({ leadId: data.lead_id, status: "scheduled" });
       }
 
-      return { success: true, data: quote };
+      return { success: true, data };
     } catch (error) {
       logger.error("[ProfessionalLeadService] updateQuoteStatus failed:", error);
       return {
@@ -486,8 +544,8 @@ export class ProfessionalLeadService {
   ): Promise<ServiceResult<ProfessionalLeadRecord>> {
     try {
       const user = await SessionService.getCurrentUser();
-      const { data, error } = await (supabase as any)
-        .from("professional_leads")
+      const { data, error } = await professionalLeadDb
+        .from<ProfessionalLeadRecord>("professional_leads")
         .update({ status: input.status })
         .eq("id", input.leadId)
         .select("*")
@@ -495,9 +553,8 @@ export class ProfessionalLeadService {
 
       if (error) throw error;
 
-      const lead = data as ProfessionalLeadRecord;
       await this.recordEvent({
-        leadId: lead.id,
+        leadId: data.id,
         eventType: "status_updated",
         actorUserId: user?.id ?? null,
         payload: {
@@ -506,7 +563,7 @@ export class ProfessionalLeadService {
         },
       });
 
-      return { success: true, data: lead };
+      return { success: true, data };
     } catch (error) {
       logger.error("[ProfessionalLeadService] updateLeadStatus failed:", error);
       return {
@@ -531,8 +588,8 @@ export class ProfessionalLeadService {
         patch.cancelled_at = new Date().toISOString();
       }
 
-      const { data, error } = await (supabase as any)
-        .from("professional_service_engagements")
+      const { data, error } = await professionalLeadDb
+        .from<ProfessionalServiceEngagementRecord>("professional_service_engagements")
         .update(patch)
         .eq("id", input.engagementId)
         .select("*")
@@ -540,7 +597,6 @@ export class ProfessionalLeadService {
 
       if (error) throw error;
 
-      const engagement = data as ProfessionalServiceEngagementRecord;
       const leadStatus =
         input.status === "completed"
           ? "completed"
@@ -549,22 +605,22 @@ export class ProfessionalLeadService {
             : "scheduled";
 
       await this.updateLeadStatus({
-        leadId: engagement.lead_id,
+        leadId: data.lead_id,
         status: leadStatus,
         note: input.note,
       });
       await this.recordEvent({
-        leadId: engagement.lead_id,
+        leadId: data.lead_id,
         eventType: "engagement_status_updated",
         actorUserId: user?.id ?? null,
         payload: {
-          engagement_id: engagement.id,
-          status: engagement.status,
+          engagement_id: data.id,
+          status: data.status,
           note: sanitizeString(input.note),
         },
       });
 
-      return { success: true, data: engagement };
+      return { success: true, data };
     } catch (error) {
       logger.error("[ProfessionalLeadService] updateEngagementStatus failed:", error);
       return {
@@ -593,8 +649,8 @@ export class ProfessionalLeadService {
         throw new Error("Nota invalida");
       }
 
-      const { data, error } = await (supabase as any)
-        .from("professional_service_engagements")
+      const { data, error } = await professionalLeadDb
+        .from<ProfessionalServiceEngagementWithProfessional>("professional_service_engagements")
         .select(
           `
           *,
@@ -608,18 +664,15 @@ export class ProfessionalLeadService {
 
       if (error) throw error;
 
-      const engagement = data as ProfessionalServiceEngagementWithProfessional;
-      if (engagement.requester_user_id !== user.id) {
+      if (data.requester_user_id !== user.id) {
         throw new Error("Apenas o cliente do atendimento pode avaliar");
       }
 
-      if (engagement.status !== "completed") {
+      if (data.status !== "completed") {
         throw new Error("Avaliacao liberada apenas apos conclusao do atendimento");
       }
 
-      const professional = Array.isArray(engagement.professional_data)
-        ? engagement.professional_data[0]
-        : engagement.professional_data;
+      const professional = firstRelation(data.professional_data);
 
       if (!professional?.profile_id) {
         throw new Error("Perfil profissional nao encontrado");
@@ -637,11 +690,11 @@ export class ProfessionalLeadService {
       );
 
       await this.recordEvent({
-        leadId: engagement.lead_id,
+        leadId: data.lead_id,
         eventType: "engagement_review_submitted",
         actorUserId: user.id,
         payload: {
-          engagement_id: engagement.id,
+          engagement_id: data.id,
           review_id: review.id,
           rating,
         },
@@ -663,8 +716,8 @@ export class ProfessionalLeadService {
     actorUserId: string | null;
     payload: Record<string, unknown>;
   }): Promise<void> {
-    const { error } = await (supabase as any)
-      .from("professional_lead_events")
+    const { error } = await professionalLeadDb
+      .from<ProfessionalLeadEventInsert>("professional_lead_events")
       .insert({
         lead_id: input.leadId,
         event_type: input.eventType,
@@ -680,8 +733,8 @@ export class ProfessionalLeadService {
   private static async getProfessionalOwner(
     professionalId: string,
   ): Promise<ProfessionalOwnerRecord | null> {
-    const { data, error } = await (supabase as any)
-      .from("professional_data")
+    const { data, error } = await professionalLeadDb
+      .from<ProfessionalOwnerRecord>("professional_data")
       .select("id, profile_id, professional_name, service_category, profiles!inner(user_id)")
       .eq("id", professionalId)
       .maybeSingle();
@@ -691,15 +744,15 @@ export class ProfessionalLeadService {
       return null;
     }
 
-    return (data as ProfessionalOwnerRecord | null) ?? null;
+    return data ?? null;
   }
 
   private static async getLeadWithOwner(
     leadId: string,
   ): Promise<ServiceResult<ProfessionalLeadWithOwner>> {
     try {
-      const { data, error } = await (supabase as any)
-        .from("professional_leads")
+      const { data, error } = await professionalLeadDb
+        .from<ProfessionalLeadWithOwner>("professional_leads")
         .select(
           `
           *,
@@ -717,7 +770,7 @@ export class ProfessionalLeadService {
 
       if (error) throw error;
 
-      return { success: true, data: data as ProfessionalLeadWithOwner };
+      return { success: true, data };
     } catch (error) {
       logger.error("[ProfessionalLeadService] getLeadWithOwner failed:", error);
       return {
@@ -731,8 +784,8 @@ export class ProfessionalLeadService {
     const owner = await this.getProfessionalOwner(professionalId);
     if (!owner?.profile_id) return;
 
-    const { data: current, error: currentError } = await (supabase as any)
-      .from("professional_stats")
+    const { data: current, error: currentError } = await professionalLeadDb
+      .from<ProfessionalStatsContactsRow>("professional_stats")
       .select("contacts_count")
       .eq("profile_id", owner.profile_id)
       .maybeSingle();
@@ -743,8 +796,8 @@ export class ProfessionalLeadService {
     }
 
     const contactsCount = Number(current?.contacts_count ?? 0) + 1;
-    const { error } = await (supabase as any)
-      .from("professional_stats")
+    const { error } = await professionalLeadDb
+      .from<ProfessionalStatsContactsRow>("professional_stats")
       .upsert(
         {
           profile_id: owner.profile_id,

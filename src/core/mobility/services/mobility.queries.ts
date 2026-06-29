@@ -34,7 +34,41 @@ export {
   type DriverOfferCapabilitiesRow,
 } from "./MobilityServiceDriverQueries";
 
-const supabaseClient = supabase as any;
+type ErrorLike = { message?: string | null; code?: string | null } | null;
+
+type QueryPayload<TRow> = {
+  data: TRow[] | null;
+  error: ErrorLike;
+  count?: number | null;
+};
+
+type SingleQueryPayload<TRow> = {
+  data: TRow | null;
+  error: ErrorLike;
+  count?: number | null;
+};
+
+type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
+  select(columns?: string, options?: { count?: "exact"; head?: boolean }): TableClient<TRow>;
+  eq(column: string, value: unknown): TableClient<TRow>;
+  neq(column: string, value: unknown): TableClient<TRow>;
+  in(column: string, values: readonly unknown[]): TableClient<TRow>;
+  is(column: string, value: null): TableClient<TRow>;
+  not(column: string, operator: string, value: unknown): TableClient<TRow>;
+  or(filter: string): TableClient<TRow>;
+  gte(column: string, value: unknown): TableClient<TRow>;
+  lte(column: string, value: unknown): TableClient<TRow>;
+  order(column: string, options?: { ascending: boolean }): TableClient<TRow>;
+  limit(count: number): TableClient<TRow>;
+  range(from: number, to: number): TableClient<TRow>;
+  maybeSingle(): Promise<SingleQueryPayload<TRow>>;
+};
+
+type MobilityQueriesDbClient = {
+  from<TRow = Record<string, unknown>>(table: string): TableClient<TRow>;
+};
+
+const supabaseClient = supabase as unknown as MobilityQueriesDbClient;
 
 export interface RideDispatchContextRow {
   ride_mode: string | null;
@@ -121,7 +155,7 @@ export async function getActiveRides(): Promise<unknown[]> {
     ].filter(Boolean) as string[];
 
     const { data, error } = await supabaseClient
-      .from("ride_requests" as any)
+      .from("ride_requests")
       .select("*")
       .in("status", activeStatuses)
       .order("created_at", { ascending: false });
@@ -140,7 +174,7 @@ export async function getActiveRides(): Promise<unknown[]> {
 export async function getRideById(id: string): Promise<unknown | null> {
   try {
     const { data, error } = await supabaseClient
-      .from("ride_requests" as any)
+      .from("ride_requests")
       .select("*")
       .eq("id", id)
       .maybeSingle();
@@ -158,7 +192,7 @@ export async function getRideById(id: string): Promise<unknown | null> {
  */
 export async function getAllRideRequests(): Promise<unknown[]> {
   const { data, error } = await supabaseClient
-    .from("ride_requests" as any)
+    .from("ride_requests")
     .select("*")
     .order("created_at");
 
@@ -171,7 +205,7 @@ export async function getAllRideRequests(): Promise<unknown[]> {
  */
 export async function getRidesByPassenger(passengerProfileId: string): Promise<unknown[]> {
   const { data, error } = await supabaseClient
-    .from("ride_requests" as any)
+    .from("ride_requests")
     .select("*")
     .eq("passenger_profile_id", passengerProfileId)
     .order("created_at", { ascending: false });
@@ -185,7 +219,7 @@ export async function getRidesByPassenger(passengerProfileId: string): Promise<u
  */
 export async function getRidesByDriverProfile(driverProfileId: string): Promise<unknown[]> {
   const { data, error } = await supabaseClient
-    .from("ride_requests" as any)
+    .from("ride_requests")
     .select("*")
     .eq("driver_profile_id", driverProfileId)
     .order("created_at", { ascending: false });
@@ -203,7 +237,7 @@ export async function getActiveRideByDriverProfile(
   excludeRideId?: string,
 ): Promise<unknown | null> {
   let query = supabaseClient
-    .from("ride_requests" as any)
+    .from("ride_requests")
     .select("id")
     .eq("driver_profile_id", driverProfileId)
     .in("status", statuses);
@@ -222,7 +256,7 @@ export async function getActiveRideByDriverProfile(
  */
 export async function getActiveRide(userProfileId: string): Promise<unknown | null> {
   const { data, error } = await supabaseClient
-    .from("ride_requests" as any)
+    .from("ride_requests")
     .select("*")
     .or(`passenger_profile_id.eq.${userProfileId},driver_profile_id.eq.${userProfileId}`)
     .in("status", ["pending", "accepted", "in_progress"])
@@ -239,7 +273,7 @@ export async function getActiveRide(userProfileId: string): Promise<unknown | nu
  */
 export async function getRideDispatchData(rideId: string): Promise<unknown | null> {
   const { data, error } = await supabaseClient
-    .from("ride_requests" as any)
+    .from("ride_requests")
     .select(`
       id,
       status,
@@ -261,20 +295,20 @@ export async function getRideDispatchContextById(
   rideId: string,
 ): Promise<RideDispatchContextRow | null> {
   const { data, error } = await supabaseClient
-    .from("ride_requests" as any)
+    .from<RideDispatchContextRow>("ride_requests")
     .select("ride_mode, source_type, is_scheduled, scheduled_for, status")
     .eq("id", rideId)
     .maybeSingle();
 
   if (error) throw error;
-  return (data as RideDispatchContextRow | null) ?? null;
+  return data ?? null;
 }
 
 export async function getExclusiveOfferRideForDriver(
   driverProfileId: string,
 ): Promise<ExclusiveOfferRideRow | null> {
   const { data, error } = await supabaseClient
-    .from("ride_requests" as any)
+    .from<ExclusiveOfferRideRow>("ride_requests")
     .select(
       [
         "id",
@@ -298,7 +332,7 @@ export async function getExclusiveOfferRideForDriver(
     .maybeSingle();
 
   if (error) throw error;
-  return (data as ExclusiveOfferRideRow | null) ?? null;
+  return data ?? null;
 }
 
 export async function getOpenBoardOfferRides(params: {
@@ -319,7 +353,7 @@ export async function getOpenBoardOfferRides(params: {
   } = params;
 
   let query = supabaseClient
-    .from("ride_requests" as any)
+    .from<OpenBoardRideRow>("ride_requests")
     .select(
       [
         "id",
@@ -358,14 +392,14 @@ export async function getOpenBoardOfferRides(params: {
     .limit(limit);
 
   if (error) throw error;
-  return (data as OpenBoardRideRow[] | null) ?? [];
+  return data ?? [];
 }
 
 export async function getReservationOfferRides(
   limit: number = 10,
 ): Promise<ReservationOfferRideRow[]> {
   const { data, error } = await supabaseClient
-    .from("ride_requests" as any)
+    .from<ReservationOfferRideRow>("ride_requests")
     .select(
       [
         "id",
@@ -391,7 +425,7 @@ export async function getReservationOfferRides(
     .limit(limit);
 
   if (error) throw error;
-  return (data as ReservationOfferRideRow[] | null) ?? [];
+  return data ?? [];
 }
 
 /**
@@ -403,7 +437,7 @@ export async function getReservationOfferRides(
 export async function getAvailableRides(limit: number = 10): Promise<unknown[]> {
   try {
     const { data, error } = await supabaseClient
-      .from("ride_requests" as any)
+      .from("ride_requests")
       .select(`
         * ,
         pickup_address:addresses!pickup_address_id(street, latitude, longitude),
@@ -451,7 +485,7 @@ export async function getUserRides(userId: string): Promise<unknown[]> {
     if (!activeProfile?.id) return [];
 
     const { data, error } = await supabaseClient
-      .from("ride_requests" as any)
+      .from("ride_requests")
       .select("*")
       .or(`passenger_profile_id.eq.${activeProfile.id},driver_profile_id.eq.${activeProfile.id}`)
       .order("created_at", { ascending: false });
@@ -515,7 +549,7 @@ export async function getMotoboyRuntimeDatabaseChecks(): Promise<MotoboyRuntimeD
   const details: string[] = [];
 
   const rideColumnsResult = await supabaseClient
-    .from("ride_requests" as any)
+    .from("ride_requests")
     .select(
       [
         "id",

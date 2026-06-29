@@ -51,6 +51,10 @@ export interface ResolvedBusinessUrl {
   dashboard: string;
 }
 
+type BusinessSlugRow = {
+  slug?: string | null;
+};
+
 // ─── Helpers internos ─────────────────────────────────────────────────────────
 
 /**
@@ -456,7 +460,9 @@ export class BusinessUrlService {
       .select('slug')
       .ilike('slug', `${slug}%`);
 
-    const existingSlugs: string[] = (data || []).map((d: any) => d.slug);
+    const existingSlugs = ((data || []) as BusinessSlugRow[])
+      .map((row) => row.slug)
+      .filter((candidate): candidate is string => typeof candidate === 'string' && candidate.length > 0);
     let counter = 1;
     while (existingSlugs.includes(`${slug}-${counter}`)) {
       counter++;

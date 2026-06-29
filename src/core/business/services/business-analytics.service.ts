@@ -1,7 +1,42 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 
-const analyticsDb = supabase as any;
+interface QueryError {
+  message?: string | null;
+}
+
+interface QueryArrayResult<TRow> {
+  data: TRow[] | null;
+  error: QueryError | null;
+  count?: number | null;
+}
+
+interface QueryBuilder<TRow> extends PromiseLike<QueryArrayResult<TRow>> {
+  select: (
+    columns?: string,
+    options?: { count?: "exact"; head?: boolean },
+  ) => QueryBuilder<TRow>;
+  eq: (column: string, value: unknown) => QueryBuilder<TRow>;
+  in: (column: string, values: unknown[]) => QueryBuilder<TRow>;
+  gte: (column: string, value: string | number) => QueryBuilder<TRow>;
+  lt: (column: string, value: string | number) => QueryBuilder<TRow>;
+  or: (filters: string) => QueryBuilder<TRow>;
+}
+
+interface BusinessAnalyticsDbClient {
+  from: <TRow = never>(table: string) => QueryBuilder<TRow>;
+}
+
+interface BusinessViewRow {
+  id: string;
+  viewed_at?: string | null;
+}
+
+interface AnalyticsEventRow {
+  id: string;
+}
+
+const analyticsDb = supabase as unknown as BusinessAnalyticsDbClient;
 
 export type BusinessAnalyticsPeriod = "today" | "week" | "month" | "year";
 
@@ -74,7 +109,7 @@ async function countBusinessViews(
   end: Date,
 ): Promise<number> {
   const { count, error } = await analyticsDb
-    .from("business_views")
+    .from<BusinessViewRow>("business_views")
     .select("id", { count: "exact", head: true })
     .eq("business_id", businessId)
     .gte("viewed_at", start.toISOString())
@@ -91,7 +126,7 @@ async function countAnalyticsEvents(
   end: Date,
 ): Promise<number> {
   const { count, error } = await analyticsDb
-    .from("analytics_events")
+    .from<AnalyticsEventRow>("analytics_events")
     .select("id", { count: "exact", head: true })
     .in("event_name", eventNames)
     .gte("created_at", start.toISOString())
@@ -108,7 +143,7 @@ async function getHourlyViews(
   end: Date,
 ): Promise<Array<{ hour: string; visits: number }>> {
   const { data, error } = await analyticsDb
-    .from("business_views")
+    .from<BusinessViewRow>("business_views")
     .select("viewed_at")
     .eq("business_id", businessId)
     .gte("viewed_at", start.toISOString())

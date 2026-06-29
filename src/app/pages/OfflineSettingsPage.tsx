@@ -1,34 +1,76 @@
-import React from "react";
-
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { Helmet } from "react-helmet-async";
+import { useNavigate } from "react-router-dom";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/shared/components/ui/card";
-import { Button } from "@/shared/components/ui/button";
-import { Switch } from "@/shared/components/ui/switch";
-import { Label } from "@/shared/components/ui/label";
-import { Input } from "@/shared/components/ui/input";
-import {
-  Download,
-  Trash2,
-  Phone,
   AlertTriangle,
+  ArrowLeft,
   Building2,
-  WifiOff,
   CheckCircle,
-  XCircle,
+  Download,
   Lightbulb,
+  Phone,
+  Trash2,
+  WifiOff,
+  XCircle,
 } from "lucide-react";
-import { useOfflineMode } from "@/shared/hooks/useOfflineMode";
-import { OfflineDataStatus } from "@/shared/components/offline/OfflineIndicator";
-import { ConfirmActionDialog } from "@/shared/components/ConfirmActionDialog";
 import { toast } from "sonner";
 
+import { ConfirmActionDialog } from "@/shared/components/ConfirmActionDialog";
+import { OfflineDataStatus } from "@/shared/components/offline/OfflineIndicator";
+import { Button } from "@/shared/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import { Input } from "@/shared/components/ui/input";
+import { Label } from "@/shared/components/ui/label";
+import { useOfflineMode } from "@/shared/hooks/useOfflineMode";
+
+interface StatusTileProps {
+  active: boolean;
+  inactiveLabel: string;
+  title: string;
+  activeLabel: string;
+  tone?: "success" | "danger" | "neutral";
+}
+
+function StatusTile({
+  active,
+  inactiveLabel,
+  title,
+  activeLabel,
+  tone = "success",
+}: StatusTileProps) {
+  const palette =
+    tone === "danger"
+      ? {
+          active: "border-amber-500/30 bg-amber-500/10 text-amber-200",
+          inactive: "border-red-500/30 bg-red-500/10 text-red-200",
+        }
+      : tone === "neutral"
+        ? {
+            active: "border-emerald-500/30 bg-emerald-500/10 text-emerald-200",
+            inactive: "border-slate-500/30 bg-slate-500/10 text-slate-200",
+          }
+        : {
+            active: "border-emerald-500/30 bg-emerald-500/10 text-emerald-200",
+            inactive: "border-slate-500/30 bg-slate-500/10 text-slate-200",
+          };
+
+  const Icon = active ? CheckCircle : XCircle;
+
+  return (
+    <div
+      className={`rounded-2xl border p-4 ${active ? palette.active : palette.inactive}`}
+    >
+      <div className="flex items-center gap-2">
+        <Icon className="h-4 w-4 shrink-0" />
+        <p className="text-sm font-semibold">{title}</p>
+      </div>
+      <p className="mt-2 text-sm text-muted-foreground">{active ? activeLabel : inactiveLabel}</p>
+    </div>
+  );
+}
+
 export default function OfflineSettingsPage() {
+  const navigate = useNavigate();
   const {
     isOnline,
     isServiceWorkerReady,
@@ -43,25 +85,25 @@ export default function OfflineSettingsPage() {
     emergencia: "190 / 193",
   });
 
-  const [importantAlerts, setImportantAlerts] = useState([
+  const [importantAlerts] = useState([
     {
       id: "1",
-      title: "Falta de água programada",
-      content: "Manutenção na caixa d'água dia 15/03 das 8h às 12h",
+      title: "Falta de agua programada",
+      content: "Manutencao na caixa d'agua dia 15/03 das 8h as 12h.",
       date: "15/03/2024",
       type: "maintenance",
     },
     {
       id: "2",
-      title: "Reunião de condomínio",
-      content: "Assembleia geral dia 20/03 às 19h no salão de festas",
+      title: "Reuniao de condominio",
+      content: "Assembleia geral dia 20/03 as 19h no salao de festas.",
       date: "20/03/2024",
       type: "event",
     },
   ]);
 
   const [buildingInfo, setBuildingInfo] = useState({
-    name: "Edifício Vitória",
+    name: "Edificio Vitoria",
     address: "Rua das Flores, 123 - Praia do Canto",
     cep: "29055-000",
   });
@@ -76,281 +118,294 @@ export default function OfflineSettingsPage() {
     });
 
     if (success) {
-      toast.success("Dados salvos para modo offline!");
+      toast.success("Dados salvos para modo offline.");
+      return;
     }
+
+    toast.error("Nao foi possivel salvar os dados offline.");
   };
 
   const handleClearCache = async () => {
     const success = await clearCache();
+
     if (success) {
-      toast.success("Cache limpo com sucesso");
+      toast.success("Cache offline limpo com sucesso.");
       setClearCacheDialogOpen(false);
+      return;
     }
+
+    toast.error("Nao foi possivel limpar o cache offline.");
   };
 
   return (
-    <div className="bg-background">
-      <div className="max-w-4xl mx-auto p-6 space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Modo Offline</h1>
-          <p className="text-muted-foreground">
-            Configure quais informações estarão disponíveis sem internet
-          </p>
-        </div>
+    <>
+      <Helmet>
+        <title>Modo offline</title>
+      </Helmet>
 
-        {/* Status Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <WifiOff className="w-5 h-5" />
-              Status do Modo Offline
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div
-                className={`p-4 rounded-lg border ${isOnline ? "bg-green-500/10 border-green-500/30" : "bg-red-500/10 border-red-500/30"}`}
+      <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.08),transparent_26%),linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.3))]">
+        <main className="mx-auto w-full max-w-5xl px-4 pb-10 pt-4 sm:px-6 sm:pt-6 lg:px-8">
+          <div className="sticky top-0 z-20 -mx-4 mb-5 border-b border-border/60 bg-background/90 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:mb-6 sm:rounded-3xl sm:border sm:bg-card/85 sm:px-5 sm:shadow-sm">
+            <div className="flex items-start gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="shrink-0 rounded-full"
+                onClick={() => navigate(-1)}
+                type="button"
               >
-                <div className="flex items-center gap-2 mb-2">
-                  {isOnline ? (
-                    <CheckCircle className="w-5 h-5 text-green-500" />
-                  ) : (
-                    <XCircle className="w-5 h-5 text-red-500" />
-                  )}
-                  <span className="font-semibold">Conexão</span>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {isOnline ? "Online" : "Offline"}
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  Disponibilidade local
                 </p>
-              </div>
-
-              <div
-                className={`p-4 rounded-lg border ${isServiceWorkerReady ? "bg-green-500/10 border-green-500/30" : "bg-gray-500/10 border-gray-500/30"}`}
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  {isServiceWorkerReady ? (
-                    <CheckCircle className="w-5 h-5 text-green-500" />
-                  ) : (
-                    <XCircle className="w-5 h-5 text-gray-500" />
-                  )}
-                  <span className="font-semibold">Service Worker</span>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {isServiceWorkerReady ? "Ativo" : "Inactive"}
-                </p>
-              </div>
-
-              <div
-                className={`p-4 rounded-lg border ${hasCriticalData ? "bg-green-500/10 border-green-500/30" : "bg-gray-500/10 border-gray-500/30"}`}
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  {hasCriticalData ? (
-                    <CheckCircle className="w-5 h-5 text-green-500" />
-                  ) : (
-                    <XCircle className="w-5 h-5 text-gray-500" />
-                  )}
-                  <span className="font-semibold">Dados Salvos</span>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {hasCriticalData ? "Disponível" : "Não configurado"}
+                <h1 className="truncate text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+                  Modo offline
+                </h1>
+                <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
+                  Defina o que precisa continuar acessivel quando o sinal cair.
                 </p>
               </div>
             </div>
+          </div>
 
-            <div className="pt-4 border-t">
-              <OfflineDataStatus />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Contatos de Emergência */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Phone className="w-5 h-5" />
-              Contatos de Emergência
-            </CardTitle>
-            <CardDescription>
-              Números importantes que estarão disponíveis offline
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+          <section className="rounded-3xl border border-border/70 bg-card/90 p-5 shadow-sm sm:p-6">
             <div className="space-y-2">
-              <Label htmlFor="portaria">Portaria</Label>
-              <Input
-                id="portaria"
-                type="tel"
-                value={emergencyContacts.portaria}
-                onChange={(e) =>
-                  setEmergencyContacts({
-                    ...emergencyContacts,
-                    portaria: e.target.value,
-                  })
-                }
-                placeholder="(27) 3333-4444"
-              />
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/90">
+                Leitura local
+              </p>
+              <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[2rem]">
+                Contatos, avisos e dados essenciais no aparelho
+              </h2>
+              <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
+                O modo offline guarda informacoes criticas do territorio e da operacao para consultas rapidas
+                sem depender da rede.
+              </p>
+            </div>
+          </section>
+
+          <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(320px,1fr)]">
+            <div className="space-y-4">
+              <Card className="rounded-3xl border-border/70 bg-card/90 shadow-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <WifiOff className="h-4 w-4" />
+                    Status do modo offline
+                  </CardTitle>
+                  <CardDescription>
+                    Valide conectividade, service worker e disponibilidade de dados locais.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <StatusTile
+                      active={isOnline}
+                      title="Conexao"
+                      activeLabel="Rede ativa e sincronizacao disponivel."
+                      inactiveLabel="Sem internet no momento."
+                      tone="danger"
+                    />
+                    <StatusTile
+                      active={isServiceWorkerReady}
+                      title="Service worker"
+                      activeLabel="Cache local pronto para uso."
+                      inactiveLabel="Ainda nao inicializado."
+                      tone="neutral"
+                    />
+                    <StatusTile
+                      active={hasCriticalData}
+                      title="Dados salvos"
+                      activeLabel="Conteudo critico ja esta no dispositivo."
+                      inactiveLabel="Nenhum pacote offline salvo."
+                      tone="neutral"
+                    />
+                  </div>
+
+                  <div className="rounded-2xl border border-border/60 bg-background/60 p-4">
+                    <OfflineDataStatus />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="rounded-3xl border-border/70 bg-card/90 shadow-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Phone className="h-4 w-4" />
+                    Contatos de emergencia
+                  </CardTitle>
+                  <CardDescription>
+                    Numeros que precisam continuar acessiveis sem internet.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="portaria">Portaria</Label>
+                    <Input
+                      id="portaria"
+                      type="tel"
+                      value={emergencyContacts.portaria}
+                      onChange={(event) =>
+                        setEmergencyContacts((current) => ({ ...current, portaria: event.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="sindico">Sindico</Label>
+                    <Input
+                      id="sindico"
+                      type="tel"
+                      value={emergencyContacts.sindico}
+                      onChange={(event) =>
+                        setEmergencyContacts((current) => ({ ...current, sindico: event.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label htmlFor="emergencia">Emergencia publica</Label>
+                    <Input
+                      id="emergencia"
+                      type="text"
+                      value={emergencyContacts.emergencia}
+                      disabled
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="rounded-3xl border-border/70 bg-card/90 shadow-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Building2 className="h-4 w-4" />
+                    Informacoes do edificio
+                  </CardTitle>
+                  <CardDescription>
+                    Base local para localizacao, portaria e identificacao do condominio.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label htmlFor="building-name">Nome do edificio</Label>
+                    <Input
+                      id="building-name"
+                      value={buildingInfo.name}
+                      onChange={(event) =>
+                        setBuildingInfo((current) => ({ ...current, name: event.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label htmlFor="building-address">Endereco</Label>
+                    <Input
+                      id="building-address"
+                      value={buildingInfo.address}
+                      onChange={(event) =>
+                        setBuildingInfo((current) => ({ ...current, address: event.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="building-cep">CEP</Label>
+                    <Input
+                      id="building-cep"
+                      value={buildingInfo.cep}
+                      onChange={(event) =>
+                        setBuildingInfo((current) => ({ ...current, cep: event.target.value }))
+                      }
+                    />
+                  </div>
+                </CardContent>
+              </Card>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="sindico">Síndico</Label>
-              <Input
-                id="sindico"
-                type="tel"
-                value={emergencyContacts.sindico}
-                onChange={(e) =>
-                  setEmergencyContacts({
-                    ...emergencyContacts,
-                    sindico: e.target.value,
-                  })
-                }
-                placeholder="(27) 9999-8888"
-              />
-            </div>
+            <div className="space-y-4">
+              <Card className="rounded-3xl border-border/70 bg-card/90 shadow-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <AlertTriangle className="h-4 w-4" />
+                    Avisos importantes
+                  </CardTitle>
+                  <CardDescription>
+                    Conteudo critico que vale manter no aparelho para consulta imediata.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {importantAlerts.map((alert) => (
+                    <div key={alert.id} className="rounded-2xl border border-border/60 bg-background/60 p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">{alert.title}</p>
+                          <p className="mt-1 text-sm leading-6 text-muted-foreground">{alert.content}</p>
+                        </div>
+                        <span className="shrink-0 text-xs text-muted-foreground">{alert.date}</span>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
 
-            <div className="space-y-2">
-              <Label htmlFor="emergencia">Emergência</Label>
-              <Input
-                id="emergencia"
-                type="text"
-                value={emergencyContacts.emergencia}
-                onChange={(e) =>
-                  setEmergencyContacts({
-                    ...emergencyContacts,
-                    emergencia: e.target.value,
-                  })
-                }
-                placeholder="190 / 193"
-                disabled
-              />
+              <Card className="rounded-3xl border-primary/20 bg-primary/5 shadow-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Lightbulb className="h-4 w-4 text-primary" />
+                    Como usar bem
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm leading-6 text-muted-foreground">
+                  <p>
+                    Salve os dados offline quando estiver com internet boa, antes de deslocamentos ou dias com risco de instabilidade.
+                  </p>
+                  <p>
+                    Priorize numeros de emergencia, avisos de agua, energia, seguranca e contatos do predio.
+                  </p>
+                </CardContent>
+              </Card>
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        {/* Avisos Importantes */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5" />
-              Avisos Importantes
-            </CardTitle>
-            <CardDescription>
-              Avisos que ficarão disponíveis offline
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {importantAlerts.map((alert) => (
-              <div key={alert.id} className="p-3 bg-muted rounded-lg">
-                <div className="flex justify-between items-start mb-1">
-                  <h4 className="font-semibold text-sm">{alert.title}</h4>
-                  <span className="text-xs text-muted-foreground">
-                    {alert.date}
-                  </span>
-                </div>
-                <p className="text-sm text-muted-foreground">{alert.content}</p>
+          <section className="mt-5 rounded-3xl border border-border/70 bg-card/90 p-4 shadow-sm sm:p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-foreground">Pacote local do dispositivo</p>
+                <p className="text-sm leading-6 text-muted-foreground">
+                  Salve o conjunto atual ou limpe o cache quando precisar renovar os dados.
+                </p>
               </div>
-            ))}
-          </CardContent>
-        </Card>
-        <ConfirmActionDialog
-          open={clearCacheDialogOpen}
-          onOpenChange={setClearCacheDialogOpen}
-          title="Limpar dados offline?"
-          description="Esta ação remove os dados salvos para uso sem internet neste dispositivo. Você poderá salvar novamente depois."
-          confirmLabel="Limpar dados"
-          cancelLabel="Manter dados"
-          onConfirm={handleClearCache}
-        />
-
-        {/* Informações do Prédio */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Building2 className="w-5 h-5" />
-              Informações do Prédio
-            </CardTitle>
-            <CardDescription>Dados básicos do condomínio</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nome do Edifício</Label>
-              <Input
-                id="name"
-                value={buildingInfo.name}
-                onChange={(e) =>
-                  setBuildingInfo({ ...buildingInfo, name: e.target.value })
-                }
-              />
+              <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+                <Button
+                  variant="outline"
+                  className="w-full justify-center sm:w-auto"
+                  onClick={() => setClearCacheDialogOpen(true)}
+                  disabled={!hasCriticalData}
+                  type="button"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Limpar cache
+                </Button>
+                <Button
+                  className="w-full justify-center sm:w-auto"
+                  onClick={handleSaveCriticalData}
+                  disabled={!isServiceWorkerReady}
+                  type="button"
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Salvar offline
+                </Button>
+              </div>
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="address">Endereço</Label>
-              <Input
-                id="address"
-                value={buildingInfo.address}
-                onChange={(e) =>
-                  setBuildingInfo({ ...buildingInfo, address: e.target.value })
-                }
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="cep">CEP</Label>
-              <Input
-                id="cep"
-                value={buildingInfo.cep}
-                onChange={(e) =>
-                  setBuildingInfo({ ...buildingInfo, cep: e.target.value })
-                }
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Ações */}
-        <div className="flex gap-3">
-          <Button
-            onClick={handleSaveCriticalData}
-            disabled={!isServiceWorkerReady}
-            className="flex-1"
-            size="lg"
-          >
-            <Download className="w-4 h-4 mr-2" />
-            Salvar para Modo Offline
-          </Button>
-
-          <Button
-            onClick={() => setClearCacheDialogOpen(true)}
-            disabled={!hasCriticalData}
-            variant="outline"
-            size="lg"
-          >
-            <Trash2 className="w-4 h-4 mr-2" />
-            Limpar Cache
-          </Button>
-        </div>
-        <ConfirmActionDialog
-          open={clearCacheDialogOpen}
-          onOpenChange={setClearCacheDialogOpen}
-          title="Limpar dados offline?"
-          description="Esta ação remove os dados salvos para uso sem internet neste dispositivo. Você poderá salvar novamente depois."
-          confirmLabel="Limpar dados"
-          cancelLabel="Manter dados"
-          onConfirm={handleClearCache}
-        />
-
-        {/* Informações */}
-        <div className="p-4 bg-blue-500/10 rounded-lg border border-blue-500/30">
-          <p className="flex items-start gap-2 text-sm text-blue-400">
-            <Lightbulb className="h-4 w-4 mt-0.5 shrink-0" aria-hidden="true" />
-            <span>
-              <strong>Dica:</strong> Salve os dados importantes para acessá-los
-              mesmo sem internet. Ideal para consultar números de emergência ou
-              avisos importantes quando estiver sem sinal.
-            </span>
-          </p>
-        </div>
+          </section>
+        </main>
       </div>
-    </div>
+
+      <ConfirmActionDialog
+        open={clearCacheDialogOpen}
+        onOpenChange={setClearCacheDialogOpen}
+        title="Limpar dados offline?"
+        description="Esta acao remove os dados salvos para uso sem internet neste dispositivo."
+        confirmLabel="Limpar dados"
+        cancelLabel="Manter dados"
+        onConfirm={handleClearCache}
+      />
+    </>
   );
 }

@@ -20,6 +20,7 @@ import type {
   EducationLead,
   EducationEvent,
   EducationLeadStatus,
+  EducationNicheKey,
   EducationProfileStatus,
 } from '../types';
 
@@ -47,12 +48,15 @@ function validateCustomStageText(value: string): boolean {
   return value.length >= 3 && value.length <= 120 && value !== SCHOOL_STAGE_OTHER_VALUE;
 }
 
-function isOfficialStageLabel(value: string, nicheKey: string): boolean {
-  const options = getSchoolStageOptions(nicheKey as any);
+function isOfficialStageLabel(
+  value: string,
+  nicheKey: EducationNicheKey | null | undefined,
+): boolean {
+  const options = getSchoolStageOptions(nicheKey);
   return options.some((option) => option.label.toLowerCase() === value.toLowerCase());
 }
 
-async function getProfileNicheKey(profileId: string): Promise<string | null> {
+async function getProfileNicheKey(profileId: string): Promise<EducationNicheKey | null> {
   const { data, error } = await supabase
     .from('education_profiles')
     .select('niche_key')
@@ -62,7 +66,7 @@ async function getProfileNicheKey(profileId: string): Promise<string | null> {
     logger.error('[EducationMutations] Error loading profile niche:', error);
     return null;
   }
-  return (data?.niche_key as string | undefined) ?? null;
+  return (data?.niche_key as EducationNicheKey | undefined) ?? null;
 }
 
 // ============================================================
@@ -208,7 +212,7 @@ export async function createEducationProgram(
     return { data: null, error: new Error('Perfil de educacao nao encontrado') };
   }
 
-  if (isSchoolNiche(nicheKey as any)) {
+  if (isSchoolNiche(nicheKey)) {
     const stageName = normalizeStageText(payload.name);
     const stageGrade = normalizeStageText(payload.grade ?? null);
 
@@ -262,9 +266,9 @@ export async function updateEducationProgram(
     return { data: null, error: new Error('Perfil de educacao nao encontrado') };
   }
 
-  if (isSchoolNiche(nicheKey as any)) {
-    const updatedName = normalizeStageText((payload as any).name ?? null);
-    const updatedGrade = normalizeStageText((payload as any).grade ?? null);
+  if (isSchoolNiche(nicheKey)) {
+    const updatedName = normalizeStageText(payload.name ?? null);
+    const updatedGrade = normalizeStageText(payload.grade ?? null);
     const candidate = updatedName ?? updatedGrade;
 
     if (candidate) {
@@ -273,8 +277,8 @@ export async function updateEducationProgram(
       if (!official && !custom) {
         return { data: null, error: new Error('Etapa/serie invalida para o padrao oficial') };
       }
-      (payload as any).name = updatedName ?? candidate;
-      (payload as any).grade = updatedGrade ?? candidate;
+      payload.name = updatedName ?? candidate;
+      payload.grade = updatedGrade ?? candidate;
     }
   }
 
@@ -327,7 +331,7 @@ export async function createEducationLead(
     return { data: null, error: new Error('Perfil de educacao nao encontrado') };
   }
 
-  if (isSchoolNiche(nicheKey as any)) {
+  if (isSchoolNiche(nicheKey)) {
     const desired = normalizeStageText(payload.desired_grade ?? null);
     if (desired) {
       const official = isOfficialStageLabel(desired, nicheKey);

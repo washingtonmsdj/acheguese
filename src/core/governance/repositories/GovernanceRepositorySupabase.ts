@@ -5,6 +5,7 @@
  */
 
 import { supabase } from '@/integrations/supabase';
+import type { Json, Tables, TablesInsert } from '@/integrations/supabase';
 import type { IGovernanceRepository } from './IGovernanceRepository';
 import type {
   LocationVersion,
@@ -17,8 +18,52 @@ import type {
   CreatePostalCodeHistoryInput,
 } from '../types';
 
+type ErrorLike = {
+  message?: string | null;
+};
+
+type QueryPayload<TRow> = {
+  data: TRow[] | null;
+  error: ErrorLike | null;
+};
+
+type SingleQueryPayload<TRow> = {
+  data: TRow | null;
+  error: ErrorLike | null;
+};
+
+type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
+  eq(column: string, value: unknown): TableClient<TRow>;
+  insert(values: Record<string, unknown> | ReadonlyArray<Record<string, unknown>>): TableClient<TRow>;
+  limit(value: number): TableClient<TRow>;
+  maybeSingle(): Promise<SingleQueryPayload<TRow>>;
+  or(filters: string): TableClient<TRow>;
+  order(column: string, options?: { ascending?: boolean }): TableClient<TRow>;
+  select(columns?: string): TableClient<TRow>;
+  single(): Promise<SingleQueryPayload<TRow>>;
+};
+
+type GovernanceDbClient = {
+  from<TRow>(table: string): TableClient<TRow>;
+};
+
+type LocationVersionRow = Tables<'location_versions'>;
+type LocationVersionInsert = TablesInsert<'location_versions'>;
+type LocationAliasRow = Tables<'location_aliases'>;
+type LocationAliasInsert = TablesInsert<'location_aliases'>;
+type TerritoryChangeEventRow = Tables<'territory_change_events'>;
+type TerritoryChangeEventInsert = TablesInsert<'territory_change_events'>;
+type PostalCodeHistoryRow = Tables<'postal_code_history'>;
+type PostalCodeHistoryInsert = TablesInsert<'postal_code_history'>;
+
+const governanceDb = supabase as unknown as GovernanceDbClient;
+
+function toJsonMetadata(value: Record<string, unknown>): Json {
+  return value as Json;
+}
+
 export class GovernanceRepositorySupabase implements IGovernanceRepository {
-  private readonly db = supabase as any;
+  private readonly db = governanceDb;
   // ============================================
   // LOCATION VERSIONS
   // ============================================
@@ -26,7 +71,7 @@ export class GovernanceRepositorySupabase implements IGovernanceRepository {
   async createLocationVersion(data: CreateLocationVersionInput): Promise<LocationVersion> {
     // Buscar próximo version_number
     const { data: versions, error: countError } = await this.db
-      .from('location_versions')
+      .from<LocationVersionRow>('location_versions')
       .select('version_number')
       .eq('location_id', data.location_id)
       .order('version_number', { ascending: false })
@@ -36,21 +81,23 @@ export class GovernanceRepositorySupabase implements IGovernanceRepository {
 
     const nextVersion = versions && versions.length > 0 ? versions[0].version_number + 1 : 1;
 
+    const payload: LocationVersionInsert = {
+      change_reason: data.change_reason,
+      change_type: data.change_type,
+      full_name: data.full_name,
+      geographic_path: data.geographic_path,
+      location_id: data.location_id,
+      name: data.name,
+      official_document_url: data.official_document_url,
+      official_source: data.official_source,
+      slug: data.slug,
+      valid_from: data.valid_from,
+      version_number: nextVersion,
+    };
+
     const { data: version, error } = await this.db
-      .from('location_versions')
-      .insert({
-        location_id: data.location_id,
-        version_number: nextVersion,
-        name: data.name,
-        full_name: data.full_name,
-        slug: data.slug,
-        geographic_path: data.geographic_path,
-        change_type: data.change_type,
-        change_reason: data.change_reason,
-        official_source: data.official_source,
-        official_document_url: data.official_document_url,
-        valid_from: data.valid_from,
-      })
+      .from<LocationVersionRow>('location_versions')
+      .insert(payload)
       .select()
       .single();
 
@@ -60,7 +107,7 @@ export class GovernanceRepositorySupabase implements IGovernanceRepository {
 
   async getActiveVersionForLocation(locationId: string): Promise<LocationVersion | null> {
     const { data, error } = await this.db
-      .from('location_versions')
+      .from<LocationVersionRow>('location_versions')
       .select('*')
       .eq('location_id', locationId)
       .or('valid_until.is.null,valid_until.gt.' + new Date().toISOString())
@@ -74,7 +121,7 @@ export class GovernanceRepositorySupabase implements IGovernanceRepository {
 
   async listVersionsForLocation(locationId: string): Promise<LocationVersion[]> {
     const { data, error } = await this.db
-      .from('location_versions')
+      .from<LocationVersionRow>('location_versions')
       .select('*')
       .eq('location_id', locationId)
       .order('version_number', { ascending: false });
@@ -89,14 +136,14 @@ export class GovernanceRepositorySupabase implements IGovernanceRepository {
 
   async createLocationAlias(data: CreateLocationAliasInput): Promise<LocationAlias> {
     const { data: alias, error } = await this.db
-      .from('location_aliases')
+      .from<LocationAliasRow>('location_aliases')
       .insert({
-        location_id: data.location_id,
         alias_type: data.alias_type,
         alias_value: data.alias_value,
+        location_id: data.location_id,
         valid_from: data.valid_from ?? new Date().toISOString(),
         valid_until: data.valid_until,
-      })
+      } satisfies LocationAliasInsert)
       .select()
       .single();
 
@@ -106,7 +153,7 @@ export class GovernanceRepositorySupabase implements IGovernanceRepository {
 
   async findLocationByAlias(aliasValue: string, aliasType?: string): Promise<string | null> {
     let query = this.db
-      .from('location_aliases')
+      .from<LocationAliasRow>('location_aliases')
       .select('location_id')
       .eq('alias_value', aliasValue)
       .or('valid_until.is.null,valid_until.gt.' + new Date().toISOString());
@@ -123,7 +170,7 @@ export class GovernanceRepositorySupabase implements IGovernanceRepository {
 
   async listAliasesForLocation(locationId: string): Promise<LocationAlias[]> {
     const { data, error } = await this.db
-      .from('location_aliases')
+      .from<LocationAliasRow>('location_aliases')
       .select('*')
       .eq('location_id', locationId)
       .order('created_at', { ascending: false });
@@ -138,17 +185,17 @@ export class GovernanceRepositorySupabase implements IGovernanceRepository {
 
   async createTerritoryChangeEvent(data: CreateTerritoryChangeEventInput): Promise<TerritoryChangeEvent> {
     const { data: event, error } = await this.db
-      .from('territory_change_events')
+      .from<TerritoryChangeEventRow>('territory_change_events')
       .insert({
-        location_id: data.location_id,
-        event_type: data.event_type,
-        old_value: data.old_value,
-        new_value: data.new_value,
-        official_source: data.official_source,
-        official_document_url: data.official_document_url,
         effective_date: data.effective_date,
-        metadata: (data.metadata ?? {}) as Record<string, unknown>,
-      })
+        event_type: data.event_type,
+        location_id: data.location_id,
+        metadata: toJsonMetadata(data.metadata ?? {}),
+        new_value: data.new_value,
+        official_document_url: data.official_document_url,
+        official_source: data.official_source,
+        old_value: data.old_value,
+      } satisfies TerritoryChangeEventInsert)
       .select()
       .single();
 
@@ -158,7 +205,7 @@ export class GovernanceRepositorySupabase implements IGovernanceRepository {
 
   async listEventsForLocation(locationId: string): Promise<TerritoryChangeEvent[]> {
     const { data, error } = await this.db
-      .from('territory_change_events')
+      .from<TerritoryChangeEventRow>('territory_change_events')
       .select('*')
       .eq('location_id', locationId)
       .order('effective_date', { ascending: false });
@@ -173,15 +220,15 @@ export class GovernanceRepositorySupabase implements IGovernanceRepository {
 
   async createPostalCodeHistory(data: CreatePostalCodeHistoryInput): Promise<PostalCodeHistory> {
     const { data: history, error } = await this.db
-      .from('postal_code_history')
+      .from<PostalCodeHistoryRow>('postal_code_history')
       .insert({
         location_id: data.location_id,
         postal_code: data.postal_code,
+        source: data.source ?? 'manual',
         street: data.street,
         valid_from: data.valid_from,
         valid_until: data.valid_until,
-        source: data.source ?? 'manual',
-      })
+      } satisfies PostalCodeHistoryInsert)
       .select()
       .single();
 
@@ -191,7 +238,7 @@ export class GovernanceRepositorySupabase implements IGovernanceRepository {
 
   async listPostalCodeHistoryForLocation(locationId: string): Promise<PostalCodeHistory[]> {
     const { data, error } = await this.db
-      .from('postal_code_history')
+      .from<PostalCodeHistoryRow>('postal_code_history')
       .select('*')
       .eq('location_id', locationId)
       .order('valid_from', { ascending: false });

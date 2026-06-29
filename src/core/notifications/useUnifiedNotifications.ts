@@ -24,6 +24,17 @@ interface UseUnifiedNotificationsOptions {
 }
 
 type RealtimeChannelLike = (() => void) | { unsubscribe?: () => void };
+type NotificationPriorityKey = NonNullable<Notification["priority"]>;
+type NotificationStatsState = {
+  total: number;
+  unread: number;
+  by_type: Record<string, number>;
+  by_priority: Record<NotificationPriorityKey, number>;
+};
+
+function getNotificationPriority(notification: Notification): NotificationPriorityKey {
+  return notification.priority ?? "medium";
+}
 
 export function useUnifiedNotifications(
   options: UseUnifiedNotificationsOptions = {},
@@ -38,7 +49,7 @@ export function useUnifiedNotifications(
 
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState<NotificationStatsState>({
     total: 0,
     unread: 0,
     by_type: {} as Record<string, number>,
@@ -72,7 +83,7 @@ export function useUnifiedNotifications(
 
       try {
         const data = await notificationService.fetchNotifications(filtersRef.current);
-        setNotifications(data as Notification[]);
+        setNotifications(data);
 
         const statsData = await notificationService.getStats(user.id);
         setStats((prev) => ({ ...prev, ...statsData }));
@@ -191,14 +202,13 @@ export function useUnifiedNotifications(
               [newNotification.type]:
                 (prev.by_type[newNotification.type] || 0) + 1,
             },
-            by_priority: {
-              ...prev.by_priority,
-              [((newNotification as any).priority as string) || "medium"]:
-                prev.by_priority[
-                  ((((newNotification as any).priority as string) || "medium") as
-                    "low" | "medium" | "high" | "urgent")
-                ] + 1,
-            },
+            by_priority: (() => {
+              const priority = getNotificationPriority(newNotification);
+              return {
+                ...prev.by_priority,
+                [priority]: prev.by_priority[priority] + 1,
+              };
+            })(),
           }));
 
           if (enableToast) {
@@ -264,8 +274,8 @@ export function useUnifiedNotifications(
     getHighPriorityNotifications: () =>
       notifications.filter(
         (notification) =>
-          (notification as any).priority === "high" ||
-          (notification as any).priority === "urgent",
+          getNotificationPriority(notification) === "high" ||
+          getNotificationPriority(notification) === "urgent",
       ),
   };
 }

@@ -4,26 +4,63 @@
  * SSOT para disponibilidade operacional do motorista
  * 
  * Responsabilidades:
- * - Gerenciar transiÁıes de estado (offline/online/available/busy)
+ * - Gerenciar transi√ß√µes de estado (offline/online/available/busy)
  * - Validar disponibilidade para dispatch
  * - Detectar motoristas stale
- * - Integrar com corrida/tracking/reconex„o
+ * - Integrar com corrida/tracking/reconex√£o
  * 
  * Regras:
- * - TransaÁıes atÙmicas no banco (sem read-then-write)
- * - Bootstrap autom·tico (upsert se n„o existir)
- * - Stale busy N√O libera automaticamente
- * - active_ride_id amarrado ‡ corrida
+ * - Transa√ß√µes at√¥micas no banco (sem read-then-write)
+ * - Bootstrap autom√°tico (upsert se n√£o existir)
+ * - Stale busy N√ÉO libera automaticamente
+ * - active_ride_id amarrado √† corrida
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase as supabaseClient } from '@/integrations/supabase';
 import { getDriverDataByProfileIds, getDriverOfferCapabilities } from './mobility.queries';
 import { MobilityService } from './MobilityService.impl';
 
-// No browser, sempre usa o cliente p˙blico com RLS.
+// No browser, sempre usa o cliente p√∫blico com RLS.
 // Em testes Node, o arquivo de setup deve injetar um cliente com service role
-// via vari·vel de mÛdulo ó nunca via bundle de produÁ„o.
+// via vari√°vel de m√≥dulo ‚Äî nunca via bundle de produ√ß√£o.
 const supabase = supabaseClient;
+
+type ErrorLike = { message?: string | null; code?: string | null } | null;
+
+type QueryPayload<TRow> = {
+  data: TRow[] | null;
+  error: ErrorLike;
+  count?: number | null;
+};
+
+type SingleQueryPayload<TRow> = {
+  data: TRow | null;
+  error: ErrorLike;
+  count?: number | null;
+};
+
+type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
+  select(columns?: string, options?: { count?: "exact"; head?: boolean }): TableClient<TRow>;
+  insert(values: Record<string, unknown> | Record<string, unknown>[]): TableClient<TRow>;
+  eq(column: string, value: unknown): TableClient<TRow>;
+  maybeSingle(): Promise<SingleQueryPayload<TRow>>;
+};
+
+type DriverAvailabilityRpcClient = {
+  from<TRow = Record<string, unknown>>(table: string): TableClient<TRow>;
+  rpc<T>(fn: string, params?: Record<string, unknown>): Promise<{
+    data: T | null;
+    error: ErrorLike;
+  }>;
+};
+
+type ApplicationLogInsertRow = {
+  level: "warn" | "error" | "fatal";
+  message: string;
+  context: Record<string, unknown>;
+};
+
+const driverAvailabilityDb = supabase as unknown as DriverAvailabilityRpcClient;
 
 // ============================================
 // CONSTANTS
@@ -114,8 +151,8 @@ export class DriverAvailabilityService {
     context: Record<string, unknown>,
   ): Promise<void> {
     try {
-      const { error } = await (supabase as any)
-        .from('application_logs')
+      const { error } = await driverAvailabilityDb
+        .from<ApplicationLogInsertRow>('application_logs')
         .insert({
           level,
           message,
@@ -136,8 +173,8 @@ export class DriverAvailabilityService {
   }
 
   /**
-   * Garante bootstrap mÌnimo de driver_data para que o motorista possa
-   * participar de dispatch (ride/motoboy) sem depender de migraÁ„o manual.
+   * Garante bootstrap m√≠nimo de driver_data para que o motorista possa
+   * participar de dispatch (ride/motoboy) sem depender de migra√ß√£o manual.
    */
   private static async ensureDriverDataRow(
     driverProfileId: string
@@ -179,9 +216,9 @@ export class DriverAvailabilityService {
 
   /**
    * Motorista fica online (sem disponibilidade ainda)
-   * TransiÁ„o: offline ? online_warming_up
+   * Transi√ß√£o: offline ? online_warming_up
    * 
-   * Bootstrap: cria registro se n„o existir
+   * Bootstrap: cria registro se n√£o existir
    */
   static async goOnline(
     driverProfileId: string,
@@ -196,7 +233,7 @@ export class DriverAvailabilityService {
         return { success: false, error: blockReason };
       }
 
-      // GATE 5: Bootstrap - upsert para criar se n„o existir
+      // GATE 5: Bootstrap - upsert para criar se n√£o existir
       const { error } = await supabase
         .from('driver_availability')
         .upsert({
@@ -233,15 +270,15 @@ export class DriverAvailabilityService {
 
   /**
    * Motorista fica offline
-   * TransiÁ„o: qualquer ? offline
+   * Transi√ß√£o: qualquer ? offline
    * 
-   * Valida: n„o pode ter corrida ativa
+   * Valida: n√£o pode ter corrida ativa
    */
   static async goOffline(
     driverProfileId: string
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      // GATE 5: TransaÁ„o atÙmica - sÛ succeed se active_ride_id IS NULL
+      // GATE 5: Transa√ß√£o at√¥mica - s√≥ succeed se active_ride_id IS NULL
       const { data, error } = await supabase
         .from('driver_availability')
         .update({
@@ -254,7 +291,7 @@ export class DriverAvailabilityService {
           updated_at: new Date().toISOString(),
         })
         .eq('profile_id', driverProfileId)
-        .is('active_ride_id', null) // CondiÁ„o atÙmica
+        .is('active_ride_id', null) // Condi√ß√£o at√¥mica
         .select();
 
       if (error) throw error;
@@ -276,10 +313,10 @@ export class DriverAvailabilityService {
   }
 
   /**
-   * Motorista fica disponÌvel para corridas
-   * TransiÁ„o: online_warming_up ? online_available
+   * Motorista fica dispon√≠vel para corridas
+   * Transi√ß√£o: online_warming_up ? online_available
    * 
-   * Exige: is_online = true, coordenadas v·lidas
+   * Exige: is_online = true, coordenadas v√°lidas
    */
   static async setAvailable(
     driverProfileId: string,
@@ -299,7 +336,7 @@ export class DriverAvailabilityService {
         return { success: false, error: blockReason };
       }
 
-      // GATE 5: TransaÁ„o atÙmica - sÛ succeed se is_online = true AND is_available = false AND active_ride_id IS NULL
+      // GATE 5: Transa√ß√£o at√¥mica - s√≥ succeed se is_online = true AND is_available = false AND active_ride_id IS NULL
       const { data, error } = await supabase
         .from('driver_availability')
         .update({
@@ -311,9 +348,9 @@ export class DriverAvailabilityService {
           updated_at: new Date().toISOString(),
         })
         .eq('profile_id', driverProfileId)
-        .eq('is_online', true) // CondiÁ„o atÙmica
-        .eq('is_available', false) // CondiÁ„o atÙmica
-        .is('active_ride_id', null) // CondiÁ„o atÙmica
+        .eq('is_online', true) // Condi√ß√£o at√¥mica
+        .eq('is_available', false) // Condi√ß√£o at√¥mica
+        .is('active_ride_id', null) // Condi√ß√£o at√¥mica
         .select();
 
       if (error) throw error;
@@ -336,7 +373,7 @@ export class DriverAvailabilityService {
 
   /**
    * Motorista fica ocupado (corrida aceita)
-   * TransiÁ„o: online_available ? busy
+   * Transi√ß√£o: online_available ? busy
    * 
    * Exige: is_available = true
    * Registra: active_ride_id, busy_since, active_ride_mode
@@ -352,7 +389,7 @@ export class DriverAvailabilityService {
         return { success: false, error: blockReason };
       }
 
-      // GATE 5: TransaÁ„o atÙmica - sÛ succeed se is_online = true AND is_available = true AND active_ride_id IS NULL
+      // GATE 5: Transa√ß√£o at√¥mica - s√≥ succeed se is_online = true AND is_available = true AND active_ride_id IS NULL
       const { data, error } = await supabase
         .from('driver_availability')
         .update({
@@ -364,9 +401,9 @@ export class DriverAvailabilityService {
           updated_at: new Date().toISOString(),
         })
         .eq('profile_id', driverProfileId)
-        .eq('is_online', true) // CondiÁ„o atÙmica
-        .eq('is_available', true) // CondiÁ„o atÙmica
-        .is('active_ride_id', null) // CondiÁ„o atÙmica
+        .eq('is_online', true) // Condi√ß√£o at√¥mica
+        .eq('is_available', true) // Condi√ß√£o at√¥mica
+        .is('active_ride_id', null) // Condi√ß√£o at√¥mica
         .select();
 
       if (error) throw error;
@@ -398,10 +435,10 @@ export class DriverAvailabilityService {
   }
 
   /**
-   * Motorista fica disponÌvel (corrida encerrada)
-   * TransiÁ„o: busy ? online_available
+   * Motorista fica dispon√≠vel (corrida encerrada)
+   * Transi√ß√£o: busy ? online_available
    * 
-   * Exige: active_ride_id = rideId (validaÁ„o de corrida correta)
+   * Exige: active_ride_id = rideId (valida√ß√£o de corrida correta)
    * Limpa: active_ride_id, busy_since, active_ride_mode
    */
   static async releaseBusy(
@@ -409,7 +446,7 @@ export class DriverAvailabilityService {
     rideId: string
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      const { data, error } = await (supabase as any).rpc(
+      const { data, error } = await driverAvailabilityDb.rpc<boolean>(
         'release_driver_availability_for_ride',
         {
           p_driver_profile_id: driverProfileId,
@@ -503,8 +540,8 @@ export class DriverAvailabilityService {
   }
 
   /**
-   * Marca motoristas DISPONÕVEIS stale como offline
-   * Motoristas BUSY stale N√O s„o liberados automaticamente
+   * Marca motoristas DISPON√çVEIS stale como offline
+   * Motoristas BUSY stale N√ÉO s√£o liberados automaticamente
    * 
    * Retorna: { markedOffline: number, staleBusy: number }
    */
@@ -526,7 +563,7 @@ export class DriverAvailabilityService {
         .from('driver_availability')
         .select('profile_id, is_available, active_ride_id, last_seen_at, is_online')
         .eq('is_online', true)
-        .not('last_seen_at', 'is', null) // GATE 5: Garantir que last_seen_at n„o È NULL
+        .not('last_seen_at', 'is', null) // GATE 5: Garantir que last_seen_at n√£o √© NULL
         .lt('last_seen_at', threshold.toISOString());
 
       logger.debug('DriverAvailabilityService.markStaleDrivers query result', {
@@ -550,7 +587,7 @@ export class DriverAvailabilityService {
 
       for (const driver of staleDrivers) {
         if (driver.is_available) {
-          // DISPONÕVEL: marcar offline
+          // DISPON√çVEL: marcar offline
           const { data } = await supabase
             .from('driver_availability')
             .update({
@@ -559,7 +596,7 @@ export class DriverAvailabilityService {
               updated_at: new Date().toISOString(),
             })
             .eq('profile_id', driver.profile_id)
-            .eq('is_available', true) // CondiÁ„o atÙmica
+            .eq('is_available', true) // Condi√ß√£o at√¥mica
             .select();
 
           if (data && data.length > 0) {
@@ -618,14 +655,14 @@ export class DriverAvailabilityService {
   }
 
   /**
-   * Busca motoristas disponÌveis em raio
+   * Busca motoristas dispon√≠veis em raio
    * Usado por dispatch
    * 
    * Filtra:
    * - is_online = true
    * - is_available = true
    * - active_ride_id IS NULL
-   * - coordenadas v·lidas
+   * - coordenadas v√°lidas
    * - se motoboy, can_do_delivery = true
    */
   static async findAvailableDrivers(
@@ -636,8 +673,8 @@ export class DriverAvailabilityService {
     locationId?: string | null
   ): Promise<AvailableDriver[]> {
     try {
-      // GATE 5: SSOT - busca centralizada de motoristas disponÌveis
-      // Buscar driver_availability primeiro (n„o h· FK direto com driver_data)
+      // GATE 5: SSOT - busca centralizada de motoristas dispon√≠veis
+      // Buscar driver_availability primeiro (n√£o h√° FK direto com driver_data)
       const { data: drivers, error } = await supabase
         .from('driver_availability')
         .select('profile_id, current_lat, current_lng, last_seen_at')
@@ -716,7 +753,7 @@ export class DriverAvailabilityService {
       // Criar mapa de driver_data por profile_id
       const dataMap = new Map(driverData?.map(d => [d.profile_id, d]) || []);
 
-      // Calcular dist‚ncia e filtrar por raio e capacidade
+      // Calcular dist√¢ncia e filtrar por raio e capacidade
       const available: AvailableDriver[] = [];
 
       for (const d of drivers) {
@@ -726,7 +763,7 @@ export class DriverAvailabilityService {
         if (data.is_verified !== true) continue;
         if (data.subscription_active !== true) continue;
 
-        // Escopo territorial canÙnico: dispatch sÛ pode atribuir motorista do mesmo location_id da solicitaÁ„o
+        // Escopo territorial can√¥nico: dispatch s√≥ pode atribuir motorista do mesmo location_id da solicita√ß√£o
         if (locationId) {
           const driverLocationId = profileLocationMap.get(d.profile_id);
           if (!driverLocationId) continue;
@@ -770,7 +807,7 @@ export class DriverAvailabilityService {
         }
       }
 
-      // Ordenar por dist‚ncia
+      // Ordenar por dist√¢ncia
       available.sort((a, b) => a.distance - b.distance);
 
       return available;
@@ -786,7 +823,7 @@ export class DriverAvailabilityService {
   }
 
   /**
-   * Calcula dist‚ncia Haversine (fallback)
+   * Calcula dist√¢ncia Haversine (fallback)
    */
   private static calculateDistance(
     lat1: number,

@@ -1,19 +1,41 @@
 /**
- * 🔒 ADMIN AUDIT SERVICE - SSOT v2.0
+ * AdminAuditService - SSOT v2.0
  *
- * Serviço de domínio para gerenciar logs de auditoria de admin.
- * Single Source of Truth para operações de audit logs.
- *
- * @version 2.0.0 - SSOT AAA Compliance
+ * Domain service for admin audit logs.
  */
 
 import { supabase } from "@/integrations/supabase";
-import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
+import { logger } from "@/shared/utils/logger";
 
-// ============================================================================
-// 📦 TIPOS
-// ============================================================================
+type ErrorLike = { message?: string | null; code?: string | null } | null;
+
+type QueryPayload<TRow> = {
+  data: TRow[] | null;
+  error: ErrorLike;
+  count?: number | null;
+};
+
+type SingleQueryPayload<TRow> = {
+  data: TRow | null;
+  error: ErrorLike;
+  count?: number | null;
+};
+
+type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
+  select(columns?: string, options?: { count?: "exact"; head?: boolean }): TableClient<TRow>;
+  insert(values: Record<string, unknown> | Record<string, unknown>[]): TableClient<TRow>;
+  eq(column: string, value: unknown): TableClient<TRow>;
+  order(column: string, options?: { ascending: boolean }): TableClient<TRow>;
+  limit(count: number): TableClient<TRow>;
+  single(): Promise<SingleQueryPayload<TRow>>;
+};
+
+type AdminAuditDbClient = {
+  from<TRow = Record<string, unknown>>(table: string): TableClient<TRow>;
+};
+
+const adminAuditDb = supabase as unknown as AdminAuditDbClient;
 
 export interface AdminAuditLog {
   id: string;
@@ -33,27 +55,19 @@ export interface CreateAdminAuditLogData {
   details: string;
 }
 
-// ============================================================================
-// 🔒 ADMIN AUDIT SERVICE
-// ============================================================================
-
 class AdminAuditService {
-  private readonly TABLE = "admin_audit_logs";
-  private readonly db = supabase as any;
+  private readonly table = "admin_audit_logs";
 
-  /**
-   * Busca todos os audit logs
-   */
   async getAllAuditLogs(limit = 100): Promise<AdminAuditLog[]> {
     try {
-      const { data, error } = await this.db
-        .from(this.TABLE)
+      const { data, error } = await adminAuditDb
+        .from<AdminAuditLog>(this.table)
         .select("*")
         .order("created_at", { ascending: false })
         .limit(limit);
 
       if (error) throw error;
-      return (data as AdminAuditLog[]) || [];
+      return data ?? [];
     } catch (error) {
       trackError(error as Error, {
         component: "AdminAuditService",
@@ -64,20 +78,17 @@ class AdminAuditService {
     }
   }
 
-  /**
-   * Busca audit logs de um admin
-   */
   async getAdminAuditLogs(adminId: string, limit = 100): Promise<AdminAuditLog[]> {
     try {
-      const { data, error } = await this.db
-        .from(this.TABLE)
+      const { data, error } = await adminAuditDb
+        .from<AdminAuditLog>(this.table)
         .select("*")
         .eq("admin_id", adminId)
         .order("created_at", { ascending: false })
         .limit(limit);
 
       if (error) throw error;
-      return (data as AdminAuditLog[]) || [];
+      return data ?? [];
     } catch (error) {
       trackError(error as Error, {
         component: "AdminAuditService",
@@ -89,20 +100,18 @@ class AdminAuditService {
     }
   }
 
-  /**
-   * Cria um novo audit log
-   */
   async createAuditLog(data: CreateAdminAuditLogData): Promise<AdminAuditLog> {
     try {
-      const { data: auditLog, error } = await this.db
-        .from(this.TABLE)
-        .insert(data)
+      const { data: auditLog, error } = await adminAuditDb
+        .from<AdminAuditLog>(this.table)
+        .insert({ ...data })
         .select()
         .single();
 
       if (error) throw error;
+
       logger.info(`Audit log criado por admin ${data.admin_id}: ${data.action_type}`);
-      return auditLog as AdminAuditLog;
+      return auditLog;
     } catch (error) {
       trackError(error as Error, {
         component: "AdminAuditService",
@@ -114,9 +123,5 @@ class AdminAuditService {
     }
   }
 }
-
-// ============================================================================
-// 📤 EXPORTAÇÃO SINGLETON
-// ============================================================================
 
 export const adminAuditService = new AdminAuditService();

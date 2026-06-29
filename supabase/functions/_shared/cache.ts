@@ -36,6 +36,7 @@ export const CACHE_TTL = {
  * Cache types
  */
 export type CacheType = 'api' | 'geocoding' | 'external';
+type CacheKeyParams = Record<string, unknown>;
 
 function isCacheDebugEnabled(): boolean {
   return Deno.env.get('CACHE_DEBUG') === 'true';
@@ -61,7 +62,7 @@ function getCacheClient() {
  * @param key - Cache key
  * @returns Cached data or null if not found/expired
  */
-export async function getCache<T = any>(key: string): Promise<T | null> {
+export async function getCache<T = unknown>(key: string): Promise<T | null> {
   try {
     const supabase = getCacheClient();
     
@@ -91,7 +92,7 @@ export async function getCache<T = any>(key: string): Promise<T | null> {
  */
 export async function setCache(
   key: string,
-  value: any,
+  value: unknown,
   ttlSeconds: number = CACHE_TTL.MEDIUM,
   cacheType: CacheType = 'api'
 ): Promise<void> {
@@ -244,7 +245,7 @@ export async function withCache<T>(
  * const key = generateCacheKey('geocoding', { lat: 10, lon: 20 });
  * // Returns: 'geocoding:lat=10:lon=20'
  */
-export function generateCacheKey(prefix: string, params: Record<string, any>): string {
+export function generateCacheKey(prefix: string, params: CacheKeyParams): string {
   const sortedEntries = Object.entries(params).sort(([leftKey], [rightKey]) =>
     leftKey.localeCompare(rightKey),
   );

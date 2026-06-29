@@ -21,7 +21,15 @@ interface SetupDriverResult {
   success: boolean;
   driverProfileId: string;
   error?: string;
-  state?: any;
+  state?: DriverAvailabilityState;
+}
+
+interface DriverAvailabilityState {
+  is_online: boolean;
+  is_available: boolean;
+  active_ride_id: string | null;
+  current_lat: number | null;
+  current_lng: number | null;
 }
 
 /**
