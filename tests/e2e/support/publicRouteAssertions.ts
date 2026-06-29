@@ -1,8 +1,8 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type Page } from '@playwright/test';
 
 type OpenRouteOptions = {
   timeoutMs?: number;
-  waitUntil?: "commit" | "domcontentloaded" | "load" | "networkidle";
+  waitUntil?: 'commit' | 'domcontentloaded' | 'load' | 'networkidle';
   dismissConsent?: boolean;
 };
 
@@ -15,12 +15,13 @@ type ExpectRouteReadyOptions = {
 
 const DEFAULT_NAVIGATION_TIMEOUT_MS = 120_000;
 const DEFAULT_READY_TIMEOUT_MS = 120_000;
-const LOADER_PATTERNS = [/Preparando a casa/i, /Buscando as informa(?:ç|c)ões/i];
-const CONSENT_BUTTON_LABELS = ["Aceitar Todos", "Aceitar todos", "Fechar"];
+const LOADER_PATTERNS = [/Preparando a casa/i, /Buscando as informa/i];
+const PAUSED_SURFACE_PATTERNS = [/MVP p(?:ú|u)blico/i, /separado para ajustes/i];
+const CONSENT_BUTTON_LABELS = ['Aceitar Todos', 'Aceitar todos', 'Fechar'];
 
 export async function dismissConsentBanner(page: Page) {
   for (const label of CONSENT_BUTTON_LABELS) {
-    const button = page.getByRole("button", { name: label }).first();
+    const button = page.getByRole('button', { name: label }).first();
     const visible = await button.isVisible().catch(() => false);
     if (!visible) continue;
     await button.click({ timeout: 5_000 }).catch(() => undefined);
@@ -30,7 +31,7 @@ export async function dismissConsentBanner(page: Page) {
 export async function openPublicRoute(page: Page, path: string, options: OpenRouteOptions = {}) {
   const {
     timeoutMs = DEFAULT_NAVIGATION_TIMEOUT_MS,
-    waitUntil = "commit",
+    waitUntil = 'commit',
     dismissConsent = false,
   } = options;
 
@@ -44,8 +45,8 @@ export async function openPublicRoute(page: Page, path: string, options: OpenRou
     }
   }
 
-  if (waitUntil !== "domcontentloaded") {
-    await page.waitForLoadState("domcontentloaded", { timeout: 30_000 }).catch(() => undefined);
+  if (waitUntil !== 'domcontentloaded') {
+    await page.waitForLoadState('domcontentloaded', { timeout: 30_000 }).catch(() => undefined);
   }
 
   if (dismissConsent) {
@@ -54,18 +55,18 @@ export async function openPublicRoute(page: Page, path: string, options: OpenRou
 }
 
 export async function readBodyText(page: Page) {
-  return page.locator("body").innerText().catch(() => "");
+  return page.locator('body').innerText().catch(() => '');
 }
 
 export async function readTitle(page: Page) {
-  return page.title().catch(() => "");
+  return page.title().catch(() => '');
 }
 
 export async function readRobots(page: Page) {
-  return page.locator('meta[name="robots"]').first().getAttribute("content").catch(() => null);
+  return page.locator('meta[name="robots"]').first().getAttribute('content').catch(() => null);
 }
 
-export async function hasMainLandmark(page: Page, selector = "main") {
+export async function hasMainLandmark(page: Page, selector = 'main') {
   return page.evaluate((value) => Boolean(document.querySelector(value)), selector).catch(() => false);
 }
 
@@ -74,11 +75,16 @@ export async function hasBlockingLoader(page: Page) {
   return LOADER_PATTERNS.some((pattern) => pattern.test(text));
 }
 
+export async function hasPausedSurfaceCopy(page: Page) {
+  const text = await readBodyText(page);
+  return PAUSED_SURFACE_PATTERNS.every((pattern) => pattern.test(text));
+}
+
 export async function expectRouteReady(page: Page, options: ExpectRouteReadyOptions) {
   const {
     expectedUrlPart,
     readyPattern,
-    mainSelector = "main",
+    mainSelector = 'main',
     timeoutMs = DEFAULT_READY_TIMEOUT_MS,
   } = options;
 
@@ -92,6 +98,30 @@ export async function expectRouteReady(page: Page, options: ExpectRouteReadyOpti
       },
       { timeout: timeoutMs },
     )
+    .toBe(true);
+}
+
+export async function expectPausedLaunchSurface(
+  page: Page,
+  path: string,
+  options: OpenRouteOptions = {},
+) {
+  await openPublicRoute(page, path, {
+    waitUntil: 'domcontentloaded',
+    dismissConsent: true,
+    ...options,
+  });
+
+  await expect
+    .poll(async () => {
+      const text = await readBodyText(page);
+      const hasMain = await hasMainLandmark(page);
+      return (
+        hasMain &&
+        PAUSED_SURFACE_PATTERNS.every((pattern) => pattern.test(text)) &&
+        !LOADER_PATTERNS.some((pattern) => pattern.test(text))
+      );
+    }, { timeout: DEFAULT_READY_TIMEOUT_MS })
     .toBe(true);
 }
 

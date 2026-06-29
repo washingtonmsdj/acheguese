@@ -1,6 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
 import { createClient, type User } from '@supabase/supabase-js';
 import { login, loginAsUser } from '../../e2e/helpers/auth';
+import {
+  expectPausedLaunchSurface,
+  openPublicRoute,
+} from './support/publicRouteAssertions';
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -39,23 +43,28 @@ async function findUserByEmail(email: string): Promise<User | null> {
   while (true) {
     const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 200 });
     if (error) throw error;
+
     const found = data.users.find((user) => user.email === email);
     if (found) return found;
     if (data.users.length < 200) return null;
+
     page += 1;
   }
 }
 
 async function cleanupUserByEmail(email: string): Promise<void> {
   if (!admin) return;
+
   const user = await findUserByEmail(email);
   if (!user) return;
+
   const { error } = await admin.auth.admin.deleteUser(user.id);
   if (error) throw error;
 }
 
 async function waitForPersonalProfile(userId: string): Promise<string> {
   if (!admin) throw new Error('SUPABASE_SERVICE_ROLE_KEY nao configurada.');
+
   for (let attempt = 0; attempt < 20; attempt += 1) {
     const { data, error } = await admin
       .from('profiles')
@@ -63,15 +72,19 @@ async function waitForPersonalProfile(userId: string): Promise<string> {
       .eq('user_id', userId)
       .eq('profile_type', 'personal')
       .maybeSingle();
+
     if (error) throw error;
     if (data?.id) return data.id as string;
+
     await delay(500);
   }
+
   throw new Error(`Perfil pessoal nao encontrado para usuario ${userId}.`);
 }
 
 async function resolvePilotLocationId(): Promise<string | null> {
   if (!admin) return null;
+
   const slugs = ['nordeste-de-amaralina', 'vale-das-pedrinhas', 'santa-cruz', 'chapada-do-rio-vermelho'];
   const { data, error } = await admin
     .from('locations')
@@ -80,12 +93,14 @@ async function resolvePilotLocationId(): Promise<string | null> {
     .eq('status', 'active')
     .limit(1)
     .maybeSingle();
+
   if (error) throw error;
   return (data?.id as string | undefined) ?? null;
 }
 
 async function createCommunicationFixture(): Promise<CommunicationE2EFixture | null> {
   if (!admin) return null;
+
   try {
     const suffix = uniqueSuffix();
     const email = `e2e-communication-${suffix}@example.com`;
@@ -99,9 +114,7 @@ async function createCommunicationFixture(): Promise<CommunicationE2EFixture | n
       email_confirm: true,
       user_metadata: { name: 'E2E Communication Operator' },
     });
-    if (createUserResult.error || !createUserResult.data.user) {
-      return null;
-    }
+    if (createUserResult.error || !createUserResult.data.user) return null;
 
     const userId = createUserResult.data.user.id;
     const profileId = await waitForPersonalProfile(userId);
@@ -126,6 +139,7 @@ async function createCommunicationFixture(): Promise<CommunicationE2EFixture | n
       })
       .select('id')
       .single();
+
     if (createChannelResult.error || !createChannelResult.data?.id) {
       await cleanupUserByEmail(email);
       return null;
@@ -168,65 +182,6 @@ async function createCommunicationFixture(): Promise<CommunicationE2EFixture | n
   } catch {
     return null;
   }
-}
-
-async function dismissConsentBanner(page: Page) {
-  const labels = ['Aceitar Todos', 'Aceitar todos', 'Fechar'];
-  for (const label of labels) {
-    const button = page.getByRole('button', { name: label }).first();
-    const visible = await button.isVisible().catch(() => false);
-    if (!visible) continue;
-    await button.click({ timeout: 5_000 }).catch(() => {});
-  }
-}
-
-async function open(page: Page, path: string) {
-  await page.goto(path, {
-    timeout: 120_000,
-    waitUntil: 'domcontentloaded',
-  });
-  await dismissConsentBanner(page);
-}
-
-async function bodyText(page: Page) {
-  return page.evaluate(() => document.body.innerText).catch(() => '');
-}
-
-async function hasMain(page: Page) {
-  return page.evaluate(() => Boolean(document.querySelector('main'))).catch(() => false);
-}
-
-async function hasGlobalLoader(page: Page) {
-  return (await bodyText(page)).includes('Preparando a casa');
-}
-
-async function expectRouteResolved(page: Page) {
-  await page.waitForLoadState('domcontentloaded');
-  await expect
-    .poll(async () => {
-      const hasMainLandmark = await hasMain(page);
-      const text = await bodyText(page);
-      const currentUrl = page.url();
-      const hasCommunicationPath = currentUrl.includes('/comunicacao');
-      return hasCommunicationPath && (hasMainLandmark || text.trim().length > 120);
-    }, { timeout: 120_000 })
-    .toBe(true);
-
-  await expect.poll(() => hasGlobalLoader(page), { timeout: 60_000 }).toBe(false);
-}
-
-async function expectCommunityCommunicationRouteResolved(page: Page) {
-  await page.waitForLoadState('domcontentloaded');
-  await expect
-    .poll(async () => {
-      const text = (await bodyText(page)).toLowerCase();
-      return page.url().includes('/comunidade/ba/salvador/comunicacao')
-        && text.includes('comunicacao em')
-        && text.includes('camada editorial comunitaria');
-    }, { timeout: 120_000 })
-    .toBe(true);
-
-  await expect.poll(() => hasGlobalLoader(page), { timeout: 60_000 }).toBe(false);
 }
 
 async function mockCommunicationDistribution(page: Page) {
@@ -374,57 +329,38 @@ test.describe('communication territorial routes', () => {
     }
   });
 
-  test('public landing and request resolve', async ({ page }) => {
-    await open(page, '/comunicacao');
-    await expectRouteResolved(page);
-
-    await open(page, '/comunicacao/solicitar');
-    await expectRouteResolved(page);
+  test('public communication landing and request surfaces are paused', async ({ page }) => {
+    await expectPausedLaunchSurface(page, '/comunicacao');
+    await expectPausedLaunchSurface(page, '/comunicacao/solicitar');
   });
 
-  test('city and channel routes resolve', async ({ page }) => {
-    await open(page, '/comunicacao/ba/salvador');
-    await expectRouteResolved(page);
-
-    await open(page, '/comunicacao/ba/salvador/canal-demo');
-    await expectRouteResolved(page);
+  test('city and channel public communication surfaces are paused', async ({ page }) => {
+    await expectPausedLaunchSurface(page, '/comunicacao/ba/salvador');
+    await expectPausedLaunchSurface(page, '/comunicacao/ba/salvador/canal-demo');
   });
 
   test('admin and central communication routes are stable', async ({ page }) => {
-    await open(page, '/admin/comunicacao');
+    await openPublicRoute(page, '/admin/comunicacao', { waitUntil: 'domcontentloaded', dismissConsent: true });
     await expect(page).toHaveURL(/\/admin\/comunicacao|\/login|\/auth/i);
 
-    await open(page, '/central/comunicacao');
+    await openPublicRoute(page, '/central/comunicacao', { waitUntil: 'domcontentloaded', dismissConsent: true });
     await expect(page).toHaveURL(/\/central\/comunicacao|\/login|\/auth/i);
   });
 
-  test('community communication tab resolves inside territorial shell', async ({ page }) => {
-    await open(page, '/comunidade/ba/salvador/comunicacao');
-    await expectCommunityCommunicationRouteResolved(page);
-
-    await expect(page.getByRole('link', { name: /Ver canais da cidade/i })).toHaveAttribute(
-      'href',
-      '/comunicacao/ba/salvador',
-    );
+  test('community communication surface stays paused inside the territorial shell', async ({ page }) => {
+    await expectPausedLaunchSurface(page, '/comunidade/ba/salvador/comunicacao');
   });
 
-  test('community communication tab distributes article and inline update', async ({ page }) => {
+  test('community communication surface ignores distribution payloads while launch scope is paused', async ({ page }) => {
     await mockCommunicationDistribution(page);
-    await open(page, '/comunidade/ba/salvador/comunicacao');
-    await expectCommunityCommunicationRouteResolved(page);
+    await expectPausedLaunchSurface(page, '/comunidade/ba/salvador/comunicacao');
 
-    await expect(page.getByText('Materia transacional do bairro')).toBeVisible();
-    await expect(page.getByText('Postagem simples da radio')).toBeVisible();
-    await expect(page.getByText('Texto inline da postagem simples')).toBeVisible();
-
-    await expect(page.getByRole('link', { name: /Ler no canal/i })).toHaveCount(1);
-    await expect(page.getByRole('link', { name: /Ler no canal/i })).toHaveAttribute(
-      'href',
-      '/comunicacao/ba/salvador/radio-comunitaria-local',
-    );
+    await expect(page.getByText('Materia transacional do bairro')).toHaveCount(0);
+    await expect(page.getByText('Postagem simples da radio')).toHaveCount(0);
+    await expect(page.getByRole('link', { name: /Ler no canal/i })).toHaveCount(0);
   });
 
-  test('authenticated operator publishes real post and sees it in community communication tab', async ({ page }) => {
+  test('authenticated operator publishes a real post in central communication workspace', async ({ page }) => {
     const uniqueTitle = `E2E Comunicacao Real ${Date.now()}`;
 
     if (realFixture?.email && realFixture.password) {
@@ -432,7 +368,8 @@ test.describe('communication territorial routes', () => {
     } else {
       await loginAsUser(page);
     }
-    await open(page, '/central/comunicacao');
+
+    await openPublicRoute(page, '/central/comunicacao', { waitUntil: 'domcontentloaded', dismissConsent: true });
 
     const noManagedChannel = await page
       .getByText(/Voce ainda nao opera nenhum canal ativo aprovado/i)
@@ -469,10 +406,8 @@ test.describe('communication territorial routes', () => {
     await page.getByRole('option', { name: /Postagem simples/i }).first().click();
 
     await page.locator('#title').fill(uniqueTitle);
-    await page.locator('#summary').fill('Publicacao E2E real para validar distribuicao territorial sem mock.');
-    await page
-      .locator('#body')
-      .fill('Conteudo publicado via central para validacao da aparicao na aba comunitaria de comunicacao.');
+    await page.locator('#summary').fill('Publicacao E2E real para validar o workspace central sem mock.');
+    await page.locator('#body').fill('Conteudo publicado via central para validar criacao e publicacao operacionais.');
 
     const publishToggle = page.locator('label:has-text("Publicar agora") input[type="checkbox"]');
     const isChecked = await publishToggle.isChecked().catch(() => false);
@@ -480,10 +415,5 @@ test.describe('communication territorial routes', () => {
 
     await page.getByRole('button', { name: /Criar e publicar/i }).click();
     await expect(page.getByText(/Publicacao criada e publicada/i)).toBeVisible({ timeout: 30_000 });
-
-    await open(page, '/comunidade/ba/salvador/comunicacao');
-    await expectCommunityCommunicationRouteResolved(page);
-    await expect(page.getByText(uniqueTitle)).toBeVisible({ timeout: 45_000 });
   });
 });
-
