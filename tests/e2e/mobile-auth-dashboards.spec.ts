@@ -1,129 +1,86 @@
-import { expect, test, type Page } from '@playwright/test';
-import { loginAsUser } from '../../e2e/helpers/auth';
+import { test } from '@playwright/test';
+import { DEFAULT_MOBILE_VIEWPORT } from './support/publicRouteAssertions';
+import { expectMobilePrivateSurface, loginAsUserWithRetry } from './support/privateRouteAssertions';
 
-const MOBILE_VIEWPORT = { width: 360, height: 800 };
+const MOBILE_AUTH_ROUTES = [
+  {
+    name: 'central home',
+    path: '/central',
+    expectedUrlPattern: /\/central(\?|$)/i,
+  },
+  {
+    name: 'central empresas',
+    path: '/central/empresas',
+    expectedUrlPattern: /\/central\/empresas(\?|$)/i,
+  },
+  {
+    name: 'central motorista corridas',
+    path: '/central/motorista/corridas',
+    expectedUrlPattern: /\/central\/motorista\/corridas(\?|$)/i,
+  },
+  {
+    name: 'central motoboy entregas',
+    path: '/central/motoboy/entregas',
+    expectedUrlPattern: /\/central\/motoboy\/(entregas|cadastro)(\?|$)/i,
+  },
+  {
+    name: 'conta seguranca',
+    path: '/conta/seguranca',
+    expectedUrlPattern: /\/conta\/seguranca(\?|$)/i,
+  },
+  {
+    name: 'conta hub',
+    path: '/conta',
+    expectedUrlPattern: /\/conta(\?|$)/i,
+  },
+  {
+    name: 'conta editar perfil',
+    path: '/conta/editar',
+    expectedUrlPattern: /\/conta\/editar\/[^/?#]+(\?|$)/i,
+  },
+  {
+    name: 'conta enderecos',
+    path: '/conta/enderecos',
+    expectedUrlPattern: /\/conta\/enderecos(\?|$)/i,
+  },
+  {
+    name: 'conta preferencias',
+    path: '/conta/preferencias',
+    expectedUrlPattern: /\/conta\/preferencias(\?|$)/i,
+  },
+  {
+    name: 'conta notificacoes',
+    path: '/conta/notificacoes',
+    expectedUrlPattern: /\/conta\/notificacoes(\?|$)/i,
+  },
+  {
+    name: 'conta privacidade',
+    path: '/conta/privacidade',
+    expectedUrlPattern: /\/conta\/privacidade(\?|$)/i,
+  },
+  {
+    name: 'conta perfil configuracoes',
+    path: '/conta/perfil/configuracoes?tab=links',
+    expectedUrlPattern: /\/conta\/perfil\/configuracoes\?tab=links$/i,
+  },
+  {
+    name: 'legacy conta preferencias tab redireciona',
+    path: '/conta/preferencias?tab=privacy',
+    expectedUrlPattern: /\/conta\/perfil\/configuracoes(\?|$)/i,
+  },
+] as const;
+
 test.setTimeout(120_000);
-
-async function loginWithRetry(page: Page) {
-  for (let attempt = 1; attempt <= 2; attempt += 1) {
-    try {
-      await loginAsUser(page);
-      return;
-    } catch (error) {
-      if (attempt === 2) {
-        throw error;
-      }
-      await page.goto('/login', { waitUntil: 'domcontentloaded', timeout: 60_000 }).catch(() => undefined);
-    }
-  }
-}
-
-async function expectNoHorizontalOverflow(page: Page) {
-  const viewport = page.viewportSize();
-  const maxAllowed = (viewport?.width ?? MOBILE_VIEWPORT.width) + 2;
-
-  await expect
-    .poll(
-      async () =>
-        page.evaluate(() => {
-          const html = document.documentElement;
-          const body = document.body;
-          return Math.max(html?.scrollWidth ?? 0, body?.scrollWidth ?? 0);
-        }),
-      { timeout: 20_000 },
-    )
-    .toBeLessThanOrEqual(maxAllowed);
-}
-
-async function expectMainContent(page: Page) {
-  await expect
-    .poll(
-      async () => {
-        const mainVisible = await page.locator('main').first().isVisible().catch(() => false);
-        const hasText = await page
-          .evaluate(() => (document.body?.innerText ?? '').trim().length > 80)
-          .catch(() => false);
-        return mainVisible || hasText;
-      },
-      { timeout: 30_000 },
-    )
-    .toBe(true);
-}
-
-async function openAndAssertMobileDashboard(page: Page, path: string) {
-  await page.goto(path, { waitUntil: 'domcontentloaded', timeout: 60_000 });
-  await expectMainContent(page);
-  await expectNoHorizontalOverflow(page);
-}
 
 test.describe('Mobile authenticated dashboards', () => {
   test.beforeEach(async ({ page }) => {
-    await page.setViewportSize(MOBILE_VIEWPORT);
-    await loginWithRetry(page);
+    await page.setViewportSize(DEFAULT_MOBILE_VIEWPORT);
+    await loginAsUserWithRetry(page);
   });
 
-  test('central home em 360px', async ({ page }) => {
-    await openAndAssertMobileDashboard(page, '/central');
-    await expect(page).toHaveURL(/\/central(\?|$)/i);
-  });
-
-  test('central empresas em 360px', async ({ page }) => {
-    await openAndAssertMobileDashboard(page, '/central/empresas');
-    await expect(page).toHaveURL(/\/central\/empresas(\?|$)/i);
-  });
-
-  test('central motorista corridas em 360px', async ({ page }) => {
-    await openAndAssertMobileDashboard(page, '/central/motorista/corridas');
-    await expect(page).toHaveURL(/\/central\/motorista\/corridas(\?|$)/i);
-  });
-
-  test('central motoboy entregas em 360px', async ({ page }) => {
-    await openAndAssertMobileDashboard(page, '/central/motoboy/entregas');
-    await expect(page).toHaveURL(/\/central\/motoboy\/(entregas|cadastro)(\?|$)/i);
-  });
-
-  test('conta seguranca em 360px', async ({ page }) => {
-    await openAndAssertMobileDashboard(page, '/conta/seguranca');
-    await expect(page).toHaveURL(/\/conta\/seguranca(\?|$)/i);
-  });
-
-  test('conta hub em 360px', async ({ page }) => {
-    await openAndAssertMobileDashboard(page, '/conta');
-    await expect(page).toHaveURL(/\/conta(\?|$)/i);
-  });
-
-  test('conta editar perfil em 360px', async ({ page }) => {
-    await openAndAssertMobileDashboard(page, '/conta/editar');
-    await expect(page).toHaveURL(/\/conta\/editar\/[^/?#]+(\?|$)/i);
-  });
-
-  test('conta enderecos em 360px', async ({ page }) => {
-    await openAndAssertMobileDashboard(page, '/conta/enderecos');
-    await expect(page).toHaveURL(/\/conta\/enderecos(\?|$)/i);
-  });
-
-  test('conta preferencias em 360px', async ({ page }) => {
-    await openAndAssertMobileDashboard(page, '/conta/preferencias');
-    await expect(page).toHaveURL(/\/conta\/preferencias(\?|$)/i);
-  });
-
-  test('conta notificacoes em 360px', async ({ page }) => {
-    await openAndAssertMobileDashboard(page, '/conta/notificacoes');
-    await expect(page).toHaveURL(/\/conta\/notificacoes(\?|$)/i);
-  });
-
-  test('conta privacidade em 360px', async ({ page }) => {
-    await openAndAssertMobileDashboard(page, '/conta/privacidade');
-    await expect(page).toHaveURL(/\/conta\/privacidade(\?|$)/i);
-  });
-
-  test('conta perfil configuracoes em 360px', async ({ page }) => {
-    await openAndAssertMobileDashboard(page, '/conta/perfil/configuracoes?tab=links');
-    await expect(page).toHaveURL(/\/conta\/perfil\/configuracoes\?tab=links$/i);
-  });
-
-  test('legacy conta preferencias tab redireciona em 360px', async ({ page }) => {
-    await openAndAssertMobileDashboard(page, '/conta/preferencias?tab=privacy');
-    await expect(page).toHaveURL(/\/conta\/perfil\/configuracoes(\?|$)/i);
-  });
+  for (const route of MOBILE_AUTH_ROUTES) {
+    test(`${route.name} em 360px`, async ({ page }) => {
+      await expectMobilePrivateSurface(page, route);
+    });
+  }
 });
