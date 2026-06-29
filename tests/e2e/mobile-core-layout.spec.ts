@@ -43,6 +43,10 @@ test.describe("Mobile core public layout", () => {
     await assertCoreMobileLayout(page, "/");
   });
 
+  test("login em 360px", async ({ page }) => {
+    await assertCoreMobileLayout(page, "/login");
+  });
+
   test("cadastro em 360px", async ({ page }) => {
     await assertCoreMobileLayout(page, "/cadastro");
   });

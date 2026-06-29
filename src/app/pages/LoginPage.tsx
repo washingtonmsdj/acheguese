@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Helmet } from "react-helmet-async";
@@ -72,17 +72,17 @@ export default function LoginPage() {
   const parsedIdentifier = parseAuthIdentifier(identifierValue);
   const isUsername = parsedIdentifier?.kind === "username";
   const loginHighlights = [
-    "Perfil, conta e modulos no mesmo acesso.",
-    "Entrada por email ou @usuario.",
-    "Recuperacao simples sem sair do fluxo.",
+    "Perfil, conta e módulos no mesmo acesso.",
+    "Entrada por e-mail ou @usuário.",
+    "Recuperação simples sem sair do fluxo.",
   ] as const;
 
   const statusMessage = useMemo(() => {
     if (isEmailConfirmed) {
       return {
         icon: CheckCircle2,
-        title: "Email confirmado",
-        description: "Sua conta esta pronta para login.",
+        title: "E-mail confirmado",
+        description: "Sua conta está pronta para login.",
       };
     }
 
@@ -138,7 +138,7 @@ export default function LoginPage() {
     if (!parsedIdentifier) {
       toast({
         title: "Informe email ou usuario",
-        description: "Usamos esse identificador para enviar a recuperacao de senha.",
+        description: "Usamos esse identificador para enviar a recuperação de senha.",
         variant: "destructive",
       });
       return;
@@ -149,14 +149,14 @@ export default function LoginPage() {
     try {
       await resetPasswordByIdentifier(parsedIdentifier.raw);
       toast({
-        title: "Email enviado",
+        title: "E-mail enviado",
         description: "Verifique sua caixa de entrada para redefinir a senha.",
       });
     } catch {
       toast({
-        title: "Solicitacao recebida",
+        title: "Solicitação recebida",
         description:
-          "Se o identificador estiver cadastrado, voce recebera as instrucoes de recuperacao em instantes.",
+          "Se o identificador estiver cadastrado, você receberá as instruções de recuperação em instantes.",
       });
     } finally {
       setPendingAction(null);
@@ -186,7 +186,7 @@ export default function LoginPage() {
         <title>Entrar | Achegue-se</title>
         <meta
           name="description"
-          content="Entre na sua conta Achegue-se para acessar seu perfil, seus negocios e a sua comunidade."
+          content="Entre na sua conta Achegue-se para acessar seu perfil, seus negócios e a sua comunidade."
         />
       </Helmet>
 
@@ -239,8 +239,8 @@ export default function LoginPage() {
                   <h1 className="font-heading text-2xl font-bold text-foreground sm:text-[2rem]">
                     Bem-vindo de volta
                   </h1>
-                  <p className="mx-auto max-w-sm text-sm leading-6 text-muted-foreground">
-                    Entre para acessar seu perfil, seus negocios e a sua comunidade.
+                <p className="mx-auto max-w-sm text-sm leading-6 text-muted-foreground">
+                    Entre para acessar seu perfil, seus negócios e a sua comunidade.
                   </p>
                 </div>
               </div>
@@ -291,9 +291,9 @@ export default function LoginPage() {
 
               <form onSubmit={handleSubmit(onValid)} className="space-y-4" noValidate>
                 <div className="space-y-1.5">
-                  <Label htmlFor="login-identifier">Email ou nome de usuario</Label>
+                  <Label htmlFor="login-identifier">E-mail ou nome de usuário</Label>
                   <p className="-mt-0.5 text-xs text-muted-foreground">
-                    Use o mesmo identificador que voce usa no perfil publico.
+                    Use o mesmo identificador que você usa no perfil público.
                   </p>
                   <div className="relative">
                     <Input
@@ -343,10 +343,10 @@ export default function LoginPage() {
                     className="ml-auto block text-xs font-medium text-primary hover:underline"
                     disabled={pendingAction === "recovery"}
                   >
-                    {pendingAction === "recovery" ? "Enviando recuperacao..." : "Esqueci minha senha"}
+                    {pendingAction === "recovery" ? "Enviando recuperação..." : "Esqueci minha senha"}
                   </button>
                   <p className="text-xs text-muted-foreground">
-                    A recuperacao funciona com email ou @usuario.
+                    A recuperação funciona com e-mail ou @usuário.
                   </p>
                 </div>
 
@@ -365,14 +365,14 @@ export default function LoginPage() {
               </form>
 
               <div className="space-y-2 text-center">
-                <p className="text-sm text-muted-foreground">Nao tem conta?</p>
+                <p className="text-sm text-muted-foreground">Não tem conta?</p>
                 <Button
                   type="button"
                   variant="outline"
                   className="h-11 w-full gap-1.5 border-primary/30 font-semibold text-primary hover:bg-primary/10"
                   onClick={() => navigate("/cadastro")}
                 >
-                  Criar conta gratis
+                  Criar conta grátis
                 </Button>
               </div>
             </div>

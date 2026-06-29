@@ -7,88 +7,88 @@ import { Button } from "@/shared/components/ui/button";
 const POLICY_SECTIONS = [
   {
     icon: Shield,
-    title: "1. Introducao e controlador dos dados",
+    title: "1. Introdução e controlador dos dados",
     paragraphs: [
-      'Esta Politica de Privacidade descreve como o Achegue-se coleta, usa, armazena, compartilha e protege os dados pessoais dos usuarios, em conformidade com a LGPD e demais normas aplicaveis.',
+      "Esta Política de Privacidade descreve como o Achegue-se coleta, usa, armazena, compartilha e protege os dados pessoais dos usuários, em conformidade com a LGPD e demais normas aplicáveis.",
       "A plataforma atua como controladora dos dados pessoais coletados e decide sobre as finalidades e meios de tratamento.",
-      "Ao criar conta ou usar os servicos, o usuario declara ter lido esta politica em conjunto com os Termos de Uso.",
+      "Ao criar conta ou usar os serviços, o usuário declara ter lido esta política em conjunto com os Termos de Uso.",
     ],
   },
   {
     icon: Database,
     title: "2. Dados coletados",
     paragraphs: [
-      "Podemos tratar dados de cadastro, como nome, handle, email, senha, estado, cidade e bairro.",
-      "Tambem tratamos dados de uso e navegacao, como IP, navegador, sistema operacional, paginas acessadas, horario de acesso e interacoes.",
-      "Conteudos publicados, comentarios, imagens, classificados e informacoes de localizacao fornecidas pelo usuario entram no escopo do tratamento quando necessarios para a experiencia comunitaria.",
+      "Podemos tratar dados de cadastro, como nome, handle, e-mail, senha, estado, cidade e bairro.",
+      "Também tratamos dados de uso e navegação, como IP, navegador, sistema operacional, páginas acessadas, horário de acesso e interações.",
+      "Conteúdos publicados, comentários, imagens, classificados e informações de localização fornecidas pelo usuário entram no escopo do tratamento quando necessários para a experiência comunitária.",
     ],
   },
   {
     icon: Eye,
     title: "3. Finalidades do tratamento",
     paragraphs: [
-      "Os dados sao usados para criar e gerenciar a conta, autenticar o usuario, operar os servicos contratados e enviar comunicacoes necessarias ao funcionamento da plataforma.",
-      "Tambem tratamos dados para personalizacao, seguranca da comunidade, prevencao a fraude, moderacao de conteudo e melhoria continua do produto.",
-      "Quando exigido, o tratamento pode ocorrer por cumprimento de obrigacao legal, exercicio regular de direitos ou consentimento do titular.",
+      "Os dados são usados para criar e gerenciar a conta, autenticar o usuário, operar os serviços contratados e enviar comunicações necessárias ao funcionamento da plataforma.",
+      "Também tratamos dados para personalização, segurança da comunidade, prevenção a fraude, moderação de conteúdo e melhoria contínua do produto.",
+      "Quando exigido, o tratamento pode ocorrer por cumprimento de obrigação legal, exercício regular de direitos ou consentimento do titular.",
     ],
   },
   {
     icon: UserCheck,
     title: "4. Compartilhamento de dados",
     paragraphs: [
-      "Nao vendemos dados pessoais para terceiros com finalidade de marketing.",
-      "Podemos compartilhar dados com fornecedores que operam autenticacao, hospedagem, analytics, suporte e outras funcoes essenciais, sempre sob contrato e necessidade operacional.",
-      "Tambem pode haver compartilhamento por obrigacao legal, protecao de direitos, resposta a ordens de autoridade competente ou operacoes societarias.",
+      "Não vendemos dados pessoais para terceiros com finalidade de marketing.",
+      "Podemos compartilhar dados com fornecedores que operam autenticação, hospedagem, analytics, suporte e outras funções essenciais, sempre sob contrato e necessidade operacional.",
+      "Também pode haver compartilhamento por obrigação legal, proteção de direitos, resposta a ordens de autoridade competente ou operações societárias.",
     ],
   },
   {
     icon: Lock,
-    title: "5. Seguranca dos dados",
+    title: "5. Segurança dos dados",
     paragraphs: [
-      "Adotamos medidas tecnicas e organizacionais para proteger os dados contra acesso indevido, destruicao, perda, alteracao ou divulgacao nao autorizada.",
-      "Isso inclui criptografia em transito, armazenamento seguro de credenciais, verificacao de senhas comprometidas e controles internos de acesso.",
-      "Em caso de incidente relevante, seguimos o fluxo de resposta adequado e notificamos titulares e autoridades quando a legislacao exigir.",
+      "Adotamos medidas técnicas e organizacionais para proteger os dados contra acesso indevido, destruição, perda, alteração ou divulgação não autorizada.",
+      "Isso inclui criptografia em trânsito, armazenamento seguro de credenciais, verificação de senhas comprometidas e controles internos de acesso.",
+      "Em caso de incidente relevante, seguimos o fluxo de resposta adequado e notificamos titulares e autoridades quando a legislação exigir.",
     ],
   },
   {
     icon: UserCheck,
     title: "6. Direitos do titular",
     paragraphs: [
-      "Nos termos da LGPD, o titular pode solicitar confirmacao de tratamento, acesso, correcao, anonimizacao, bloqueio, exclusao, portabilidade e informacoes sobre compartilhamento.",
-      "Tambem pode revogar consentimentos e exercer oposicao quando a base legal permitir.",
-      "Solicitacoes relacionadas a privacidade devem ser encaminhadas pelos canais oficiais da plataforma ou pela pagina de contato com o DPO.",
+      "Nos termos da LGPD, o titular pode solicitar confirmação de tratamento, acesso, correção, anonimização, bloqueio, exclusão, portabilidade e informações sobre compartilhamento.",
+      "Também pode revogar consentimentos e exercer oposição quando a base legal permitir.",
+      "Solicitações relacionadas à privacidade devem ser encaminhadas pelos canais oficiais da plataforma ou pela página de contato com o DPO.",
     ],
   },
   {
     icon: Bell,
     title: "7. Cookies e tecnologias similares",
     paragraphs: [
-      "Utilizamos cookies e tecnologias equivalentes para autenticacao, continuidade de sessao, preferencias de exibicao e mediacao de desempenho.",
-      "Cookies essenciais sustentam o funcionamento basico da plataforma. Outros recursos podem ser gerenciados pelo usuario conforme as configuracoes do navegador e do produto.",
+      "Utilizamos cookies e tecnologias equivalentes para autenticação, continuidade de sessão, preferências de exibição e mediação de desempenho.",
+      "Cookies essenciais sustentam o funcionamento básico da plataforma. Outros recursos podem ser gerenciados pelo usuário conforme as configurações do navegador e do produto.",
     ],
   },
   {
     icon: Globe,
-    title: "8. Transferencia internacional de dados",
+    title: "8. Transferência internacional de dados",
     paragraphs: [
-      "Alguns dados podem ser processados fora do Brasil, inclusive em provedores internacionais de infraestrutura e servicos de nuvem.",
-      "Quando isso ocorrer, adotamos salvaguardas contratuais e tecnicas compativeis com o nivel de protecao exigido pela LGPD.",
+      "Alguns dados podem ser processados fora do Brasil, inclusive em provedores internacionais de infraestrutura e serviços de nuvem.",
+      "Quando isso ocorrer, adotamos salvaguardas contratuais e técnicas compatíveis com o nível de proteção exigido pela LGPD.",
     ],
   },
   {
     icon: Database,
-    title: "9. Retencao de dados",
+    title: "9. Retenção de dados",
     paragraphs: [
-      "Os dados sao mantidos pelo tempo necessario para cumprir as finalidades desta politica, respeitando obrigacoes legais, prazos de seguranca e necessidades legitimas da operacao.",
-      "Dados de conta, logs e conteudos publicados podem seguir prazos distintos conforme a natureza do tratamento e a legislacao aplicavel.",
+      "Os dados são mantidos pelo tempo necessário para cumprir as finalidades desta política, respeitando obrigações legais, prazos de segurança e necessidades legítimas da operação.",
+      "Dados de conta, logs e conteúdos publicados podem seguir prazos distintos conforme a natureza do tratamento e a legislação aplicável.",
     ],
   },
   {
     icon: Mail,
     title: "10. Contato e encarregado de dados",
     paragraphs: [
-      "Em caso de duvidas, exercicio de direitos ou reporte de incidente envolvendo dados pessoais, use os canais oficiais de suporte ou a pagina do encarregado de dados.",
-      "Esta politica pode ser atualizada periodicamente. Alteracoes relevantes serao comunicadas pelos canais da plataforma.",
+      "Em caso de dúvidas, exercício de direitos ou reporte de incidente envolvendo dados pessoais, use os canais oficiais de suporte ou a página do encarregado de dados.",
+      "Esta política pode ser atualizada periodicamente. Alterações relevantes serão comunicadas pelos canais da plataforma.",
     ],
   },
 ] as const;
@@ -99,7 +99,7 @@ export default function PrivacidadePage() {
   return (
     <>
       <Helmet>
-        <title>Politica de privacidade</title>
+        <title>Política de privacidade</title>
       </Helmet>
 
       <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.08),transparent_26%),linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.26))]">
@@ -121,13 +121,13 @@ export default function PrivacidadePage() {
               </Button>
               <div className="min-w-0">
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                  LGPD e governanca
+                  LGPD e governança
                 </p>
                 <h1 className="truncate text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-                  Politica de privacidade
+                  Política de privacidade
                 </h1>
                 <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
-                  Ultima atualizacao: marco de 2026. Versao publica de leitura.
+                  Última atualização: março de 2026. Versão pública de leitura.
                 </p>
               </div>
             </div>
@@ -136,14 +136,14 @@ export default function PrivacidadePage() {
           <section className="rounded-3xl border border-border/70 bg-card/90 p-5 shadow-sm sm:p-6">
             <div className="space-y-3">
               <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/90">
-                Transparencia de dados
+                Transparência de dados
               </p>
               <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[2rem]">
                 Como o Achegue-se trata dados pessoais
               </h2>
               <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-                Este resumo publico organiza as bases principais de coleta, uso, compartilhamento,
-                seguranca e direitos do titular. Para solicitacoes operacionais, use o fluxo de privacidade da conta
+                Este resumo público organiza as bases principais de coleta, uso, compartilhamento,
+                segurança e direitos do titular. Para solicitações operacionais, use o fluxo de privacidade da conta
                 ou o canal do encarregado de dados.
               </p>
             </div>
@@ -163,8 +163,8 @@ export default function PrivacidadePage() {
 
           <section className="mt-5 rounded-3xl border border-primary/20 bg-primary/5 p-4 shadow-sm sm:p-5">
             <p className="text-sm leading-6 text-foreground">
-              Esta politica se alinha a Lei Geral de Protecao de Dados Pessoais e ao Marco Civil da Internet.
-              O tratamento de dados deve seguir necessidade, finalidade, seguranca e transparencia.
+              Esta política se alinha à Lei Geral de Proteção de Dados Pessoais e ao Marco Civil da Internet.
+              O tratamento de dados deve seguir necessidade, finalidade, segurança e transparência.
             </p>
           </section>
 
@@ -203,7 +203,7 @@ export default function PrivacidadePage() {
           <section className="mt-5 rounded-3xl border border-border/70 bg-card/90 p-4 shadow-sm sm:p-5">
             <div className="flex flex-col gap-3">
               <p className="text-sm leading-6 text-muted-foreground">
-                Veja tambem os documentos complementares e o canal de contato para assuntos de dados pessoais.
+                Veja também os documentos complementares e o canal de contato para assuntos de dados pessoais.
               </p>
               <div className="flex flex-wrap gap-3">
                 <Link

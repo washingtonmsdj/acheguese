@@ -16,46 +16,46 @@ import { Button } from "@/shared/components/ui/button";
 const COMMUNITY_RULES = [
   {
     icon: Ban,
-    title: "Nao acuse pessoas ou empresas",
+    title: "Não acuse pessoas ou empresas",
     description:
-      "Nao use a plataforma para acusar terceiros de crime, fraude ou conduta ilegal sem canal oficial e base apropriada. Denuncias formais devem seguir os meios competentes.",
+      "Não use a plataforma para acusar terceiros de crime, fraude ou conduta ilegal sem canal oficial e base apropriada. Denúncias formais devem seguir os meios competentes.",
   },
   {
     icon: Eye,
-    title: "Nao exponha dados pessoais",
+    title: "Não exponha dados pessoais",
     description:
-      "Nao publique endereco, telefone, fotos privadas, documentos ou qualquer dado sensivel de terceiros sem permissao valida e finalidade legitima.",
+      "Não publique endereço, telefone, fotos privadas, documentos ou qualquer dado sensível de terceiros sem permissão válida e finalidade legítima.",
   },
   {
     icon: AlertTriangle,
-    title: "Sem conteudo ofensivo ou abusivo",
+    title: "Sem conteúdo ofensivo ou abusivo",
     description:
-      "A comunidade nao admite ameaca, discurso de odio, discriminacao, humilhacao publica, assedio, intimidacao ou ataques pessoais.",
+      "A comunidade não admite ameaça, discurso de ódio, discriminação, humilhação pública, assédio, intimidação ou ataques pessoais.",
   },
   {
     icon: MapPin,
-    title: "Nao divulgue operacoes sensiveis",
+    title: "Não divulgue operações sensíveis",
     description:
-      "Nao informe localizacao de blitz, operacoes policiais, fiscalizacao em andamento ou qualquer acao que possa comprometer seguranca publica.",
+      "Não informe localização de blitz, operações policiais, fiscalização em andamento ou qualquer ação que possa comprometer a segurança pública.",
   },
   {
     icon: Megaphone,
-    title: "Nao espalhe desinformacao",
+    title: "Não espalhe desinformação",
     description:
-      "Nao publique boatos, alertas falsos ou informacoes sem contexto que possam gerar panico, dano reputacional ou comportamento de risco na comunidade.",
+      "Não publique boatos, alertas falsos ou informações sem contexto que possam gerar pânico, dano reputacional ou comportamento de risco na comunidade.",
   },
   {
     icon: Scale,
     title: "Respeite a lei e o contexto local",
     description:
-      "Todo conteudo precisa respeitar a legislacao brasileira, as regras da plataforma e o uso responsavel dos modulos de bairro, cidade e comunidade.",
+      "Todo conteúdo precisa respeitar a legislação brasileira, as regras da plataforma e o uso responsável dos módulos de bairro, cidade e comunidade.",
   },
 ] as const;
 
 const ENFORCEMENT_STEPS = [
-  "Conteudo removido e orientacao inicial quando houver infracao de menor gravidade.",
-  "Restricao temporaria de interacao ou suspensao parcial em caso de reincidencia ou risco moderado.",
-  "Bloqueio prolongado ou encerramento da conta quando houver abuso grave, fraude, ameaca ou recorrencia.",
+  "Conteúdo removido e orientação inicial quando houver infração de menor gravidade.",
+  "Restrição temporária de interação ou suspensão parcial em caso de reincidência ou risco moderado.",
+  "Bloqueio prolongado ou encerramento da conta quando houver abuso grave, fraude, ameaça ou recorrência.",
 ] as const;
 
 export default function RegrasPage() {
@@ -86,13 +86,13 @@ export default function RegrasPage() {
               </Button>
               <div className="min-w-0">
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                  Seguranca comunitaria
+                  Segurança comunitária
                 </p>
                 <h1 className="truncate text-xl font-bold tracking-tight text-foreground sm:text-2xl">
                   Regras da comunidade
                 </h1>
                 <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
-                  Leitura publica para descoberta. Interacao depende do contexto da conta.
+                  Leitura pública para descoberta. Interação depende do contexto da conta.
                 </p>
               </div>
             </div>
@@ -101,24 +101,24 @@ export default function RegrasPage() {
           <section className="rounded-3xl border border-border/70 bg-card/90 p-5 shadow-sm sm:p-6">
             <div className="space-y-3">
               <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/90">
-                Convivencia, moderacao e protecao
+                Convivência, moderação e proteção
               </p>
               <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[2rem]">
-                Regras para manter a comunidade util e segura
+                Regras para manter a comunidade útil e segura
               </h2>
               <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-                Estas diretrizes organizam como posts, comentarios, alertas, recomendacoes e
-                interacoes podem acontecer dentro do Achegue-se. O objetivo e reduzir abuso,
-                desinformacao e risco territorial.
+                Estas diretrizes organizam como posts, comentários, alertas, recomendações e
+                interações podem acontecer dentro do Achegue-se. O objetivo é reduzir abuso,
+                desinformação e risco territorial.
               </p>
             </div>
 
             <div className="mt-5 flex flex-wrap gap-2">
               <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-                Leitura publica
+                Leitura pública
               </span>
               <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-700 dark:text-amber-300">
-                Moderacao ativa
+                Moderação ativa
               </span>
               <span className="rounded-full border border-border/60 bg-background/70 px-3 py-1 text-xs font-medium text-foreground">
                 Bairro, cidade e comunidade
@@ -132,8 +132,8 @@ export default function RegrasPage() {
                 <Shield className="h-5 w-5" />
               </div>
               <p className="text-sm leading-6 text-foreground">
-                Violacoes podem levar a remocao de conteudo, restricao de alcance, suspensao de
-                funcionalidades ou encerramento da conta, conforme gravidade, contexto e historico.
+                Violações podem levar à remoção de conteúdo, restrição de alcance, suspensão de
+                funcionalidades ou encerramento da conta, conforme gravidade, contexto e histórico.
               </p>
             </div>
           </section>
@@ -168,7 +168,7 @@ export default function RegrasPage() {
 
             <aside className="space-y-4">
               <section className="rounded-3xl border border-border/70 bg-card/90 p-5 shadow-sm">
-                <h3 className="text-base font-semibold text-foreground">Como a moderacao escala</h3>
+                <h3 className="text-base font-semibold text-foreground">Como a moderação escala</h3>
                 <div className="mt-4 space-y-3">
                   {ENFORCEMENT_STEPS.map((step, index) => (
                     <div key={step} className="flex items-start gap-3">
@@ -184,9 +184,9 @@ export default function RegrasPage() {
               <section className="rounded-3xl border border-border/70 bg-card/90 p-5 shadow-sm">
                 <h3 className="text-base font-semibold text-foreground">Antes de publicar</h3>
                 <ul className="mt-4 space-y-3 text-sm leading-6 text-muted-foreground">
-                  <li>Cheque o contexto territorial e a fonte da informacao.</li>
-                  <li>Evite expor terceiros sem necessidade legitima.</li>
-                  <li>Prefira fatos verificaveis e linguagem objetiva.</li>
+                  <li>Cheque o contexto territorial e a fonte da informação.</li>
+                  <li>Evite expor terceiros sem necessidade legítima.</li>
+                  <li>Prefira fatos verificáveis e linguagem objetiva.</li>
                 </ul>
               </section>
             </aside>
@@ -195,7 +195,7 @@ export default function RegrasPage() {
           <section className="mt-5 rounded-3xl border border-border/70 bg-card/90 p-4 shadow-sm sm:p-5">
             <div className="flex flex-col gap-3">
               <p className="text-sm leading-6 text-muted-foreground">
-                Consulte tambem os documentos complementares para entender o contrato de uso e o
+                Consulte também os documentos complementares para entender o contrato de uso e o
                 tratamento de dados pessoais na plataforma.
               </p>
               <div className="flex flex-wrap gap-3">
@@ -209,7 +209,7 @@ export default function RegrasPage() {
                   to="/privacidade"
                   className="text-sm font-medium text-primary underline-offset-4 hover:underline"
                 >
-                  Politica de privacidade
+                  Política de privacidade
                 </Link>
                 <Link
                   to="/dpo"

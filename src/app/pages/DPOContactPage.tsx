@@ -39,63 +39,63 @@ import { buildMailtoUrl } from "@/shared/utils/contactLinks";
 const REQUEST_TYPE_OPTIONS = [
   {
     value: "access",
-    label: "Solicitacao de acesso",
-    description: "Obter copia dos dados pessoais tratados pela plataforma.",
+    label: "Solicitação de acesso",
+    description: "Obter cópia dos dados pessoais tratados pela plataforma.",
   },
   {
     value: "correction",
-    label: "Correcao de dados",
+    label: "Correção de dados",
     description: "Ajustar dados incompletos, inexatos ou desatualizados.",
   },
   {
     value: "anonymization",
-    label: "Anonimizacao ou bloqueio",
-    description: "Solicitar restricao de uso ou tratamento inadequado.",
+    label: "Anonimização ou bloqueio",
+    description: "Solicitar restrição de uso ou tratamento inadequado.",
   },
   {
     value: "portability",
     label: "Portabilidade",
-    description: "Receber dados em formato adequado para migracao.",
+    description: "Receber dados em formato adequado para migração.",
   },
   {
     value: "deletion",
-    label: "Eliminacao",
-    description: "Solicitar exclusao dos dados quando a base legal permitir.",
+    label: "Eliminação",
+    description: "Solicitar exclusão dos dados quando a base legal permitir.",
   },
   {
     value: "information",
-    label: "Informacoes sobre compartilhamento",
+    label: "Informações sobre compartilhamento",
     description: "Entender com quem os dados podem ter sido compartilhados.",
   },
   {
     value: "consent_revocation",
-    label: "Revogacao de consentimento",
+    label: "Revogação de consentimento",
     description: "Retirar um consentimento dado anteriormente.",
   },
   {
     value: "automated_decision",
-    label: "Revisao de decisao automatizada",
-    description: "Questionar uma decisao tomada com apoio automatizado.",
+    label: "Revisão de decisão automatizada",
+    description: "Questionar uma decisão tomada com apoio automatizado.",
   },
   {
     value: "violation_report",
-    label: "Denuncia de violacao",
+    label: "Denúncia de violação",
     description: "Reportar problema ou incidente envolvendo dados pessoais.",
   },
   {
     value: "other",
     label: "Outro assunto",
-    description: "Usar quando o pedido nao se encaixa nas categorias acima.",
+    description: "Usar quando o pedido não se encaixa nas categorias acima.",
   },
 ] as const;
 
 const RIGHTS = [
   "Acesso aos seus dados",
-  "Correcao de dados",
-  "Anonimizacao, bloqueio ou eliminacao",
+  "Correção de dados",
+  "Anonimização, bloqueio ou eliminação",
   "Portabilidade",
-  "Informacoes sobre compartilhamento",
-  "Revogacao de consentimento",
+  "Informações sobre compartilhamento",
+  "Revogação de consentimento",
 ] as const;
 
 const RELATED_LINKS = [
@@ -149,8 +149,8 @@ export default function DPOContactPage() {
     },
     onSuccess: () => {
       toast({
-        title: "Solicitacao enviada",
-        description: "Recebemos sua mensagem. O time de privacidade respondera em ate 15 dias uteis.",
+        title: "Solicitação enviada",
+        description: "Recebemos sua mensagem. O time de privacidade responderá em até 15 dias úteis.",
       });
 
       reset({
@@ -168,7 +168,7 @@ export default function DPOContactPage() {
 
       toast({
         title: "Erro ao enviar",
-        description: `Nao foi possivel registrar sua solicitacao. ${fallbackMessage}`,
+        description: `Não foi possível registrar sua solicitação. ${fallbackMessage}`,
         variant: "destructive",
       });
     },
@@ -209,7 +209,7 @@ export default function DPOContactPage() {
                   Contato com o encarregado de dados
                 </h1>
                 <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
-                  Canal oficial para pedidos de titular, denuncias e temas de tratamento de dados.
+                  Canal oficial para pedidos de titular, denúncias e temas de tratamento de dados.
                 </p>
               </div>
             </div>
@@ -218,13 +218,13 @@ export default function DPOContactPage() {
           <section className="rounded-3xl border border-border/70 bg-card/90 p-5 shadow-sm sm:p-6">
             <div className="space-y-3">
               <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/90">
-                Atendimento regulatorio
+                Atendimento regulatório
               </p>
               <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[2rem]">
-                Solicite acesso, correcao, exclusao ou reporte uma violacao
+                Solicite acesso, correção, exclusão ou reporte uma violação
               </h2>
               <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-                Use este formulario quando o assunto envolver direitos do titular, incidentes de dados,
+                Use este formulário quando o assunto envolver direitos do titular, incidentes de dados,
                 consentimentos, compartilhamento ou qualquer demanda formal ligada a privacidade.
               </p>
             </div>
@@ -232,7 +232,7 @@ export default function DPOContactPage() {
             <div className="mt-5 grid gap-3 sm:grid-cols-3">
               <div className="rounded-2xl border border-border/60 bg-background/60 p-4">
                 <p className="text-sm font-semibold text-foreground">Prazo inicial</p>
-                <p className="mt-1 text-sm text-muted-foreground">Ate 15 dias uteis para resposta conforme LGPD.</p>
+                <p className="mt-1 text-sm text-muted-foreground">Até 15 dias úteis para resposta conforme LGPD.</p>
               </div>
               <div className="rounded-2xl border border-border/60 bg-background/60 p-4">
                 <p className="text-sm font-semibold text-foreground">Canal formal</p>
@@ -240,7 +240,7 @@ export default function DPOContactPage() {
               </div>
               <div className="rounded-2xl border border-border/60 bg-background/60 p-4">
                 <p className="text-sm font-semibold text-foreground">Escopo</p>
-                <p className="mt-1 text-sm text-muted-foreground">Conta, consentimentos, exportacao, exclusao e incidentes.</p>
+                <p className="mt-1 text-sm text-muted-foreground">Conta, consentimentos, exportação, exclusão e incidentes.</p>
               </div>
             </div>
           </section>
@@ -248,9 +248,9 @@ export default function DPOContactPage() {
           <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(320px,1fr)]">
             <Card className="rounded-3xl border-border/70 bg-card/90 shadow-sm">
               <CardHeader>
-                <CardTitle>Enviar solicitacao</CardTitle>
+                <CardTitle>Enviar solicitação</CardTitle>
                 <CardDescription>
-                  Preencha o formulario com contexto suficiente para analise do pedido.
+                  Preencha o formulário com contexto suficiente para análise do pedido.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -262,21 +262,21 @@ export default function DPOContactPage() {
                       <InlineFieldError message={errors.name?.message} />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
+                      <Label htmlFor="email">E-mail</Label>
                       <Input id="email" type="email" {...register("email")} />
                       <InlineFieldError message={errors.email?.message} />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="requestType">Tipo de solicitacao</Label>
+                    <Label htmlFor="requestType">Tipo de solicitação</Label>
                     <Controller
                       name="requestType"
                       control={control}
                       render={({ field }) => (
                         <Select value={field.value} onValueChange={field.onChange}>
                           <SelectTrigger id="requestType">
-                            <SelectValue placeholder="Selecione o tipo de solicitacao" />
+                            <SelectValue placeholder="Selecione o tipo de solicitação" />
                           </SelectTrigger>
                           <SelectContent>
                             {REQUEST_TYPE_OPTIONS.map((option) => (
@@ -319,8 +319,8 @@ export default function DPOContactPage() {
                     <div className="flex items-start gap-3">
                       <Clock className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                       <p className="text-sm leading-6 text-muted-foreground">
-                        Pedidos de titular seguem o fluxo regulatorio da plataforma. Em casos complexos,
-                        o prazo pode exigir complementacao ou tratamento adicional com aviso ao solicitante.
+                        Pedidos de titular seguem o fluxo regulatório da plataforma. Em casos complexos,
+                        o prazo pode exigir complementação ou tratamento adicional com aviso ao solicitante.
                       </p>
                     </div>
                   </div>
@@ -329,12 +329,12 @@ export default function DPOContactPage() {
                     {contactMutation.isPending ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Enviando solicitacao
+                        Enviando solicitação
                       </>
                     ) : (
                       <>
                         <Send className="mr-2 h-4 w-4" />
-                        Enviar solicitacao
+                        Enviar solicitação
                       </>
                     )}
                   </Button>
@@ -345,7 +345,7 @@ export default function DPOContactPage() {
             <div className="space-y-4">
               <Card className="rounded-3xl border-border/70 bg-card/90 shadow-sm">
                 <CardHeader>
-                  <CardTitle className="text-base">Informacoes do canal</CardTitle>
+                  <CardTitle className="text-base">Informações do canal</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4 text-sm">
                   <div className="flex items-start gap-3">
@@ -360,7 +360,7 @@ export default function DPOContactPage() {
                           {dpoEmail}
                         </a>
                       ) : (
-                        <p className="text-muted-foreground">Email publico ainda nao configurado.</p>
+                        <p className="text-muted-foreground">E-mail público ainda não configurado.</p>
                       )}
                     </div>
                   </div>
@@ -368,7 +368,7 @@ export default function DPOContactPage() {
                     <Clock className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                     <div>
                       <p className="font-semibold text-foreground">Prazo de resposta</p>
-                      <p className="text-muted-foreground">Ate 15 dias uteis, conforme LGPD.</p>
+                      <p className="text-muted-foreground">Até 15 dias úteis, conforme LGPD.</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
@@ -381,7 +381,7 @@ export default function DPOContactPage() {
                         rel="noopener noreferrer"
                         className="text-primary underline-offset-4 hover:underline"
                       >
-                        ANPD - Autoridade Nacional de Protecao de Dados
+                        ANPD - Autoridade Nacional de Proteção de Dados
                       </a>
                     </div>
                   </div>
@@ -430,9 +430,9 @@ export default function DPOContactPage() {
                 <CardContent>
                   <div className="flex items-start gap-3">
                     <FileText className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                    <p className="text-sm leading-6 text-muted-foreground">
+                      <p className="text-sm leading-6 text-muted-foreground">
                       Este canal apoia pedidos ligados aos arts. 18, 19 e 41 da LGPD, incluindo acesso,
-                      correcao, exclusao, compartilhamento, consentimento e contato com o encarregado.
+                      correção, exclusão, compartilhamento, consentimento e contato com o encarregado.
                     </p>
                   </div>
                 </CardContent>
