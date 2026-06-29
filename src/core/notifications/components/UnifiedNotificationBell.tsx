@@ -226,7 +226,7 @@ export function UnifiedNotificationBell() {
         className="w-[400px] border-white/10 bg-[#1E2529] p-0"
       >
         <div className="flex items-center justify-between border-b border-white/10 p-4">
-          <h3 className="font-semibold text-white">Notificacoes</h3>
+          <h3 className="font-semibold text-white">Notificações</h3>
           <div className="flex items-center gap-2">
             {unreadCount > 0 ? (
               <Button
@@ -256,7 +256,7 @@ export function UnifiedNotificationBell() {
               Todas
             </TabsTrigger>
             <TabsTrigger value="unread" className="text-xs">
-              Nao lidas {unreadCount > 0 ? `(${unreadCount})` : ""}
+              Não lidas {unreadCount > 0 ? `(${unreadCount})` : ""}
             </TabsTrigger>
             <TabsTrigger value="mobility" className="text-xs">
               Mobilidade
@@ -276,7 +276,7 @@ export function UnifiedNotificationBell() {
               ) : filteredNotifications.length === 0 ? (
                 <div className="p-8 text-center text-gray-400">
                   <Bell className="mx-auto mb-2 h-8 w-8" />
-                  <p className="text-sm">Nenhuma notificacao</p>
+                  <p className="text-sm">Nenhuma notificação</p>
                 </div>
               ) : (
                 <div className="divide-y divide-white/5">

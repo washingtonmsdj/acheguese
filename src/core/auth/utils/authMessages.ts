@@ -1,6 +1,6 @@
 export function getAuthErrorMessage(
   error: unknown,
-  fallback = "Nao foi possivel concluir a operacao. Tente novamente.",
+  fallback = "Não foi possível concluir a operação. Tente novamente.",
 ): string {
   if (!error || typeof error !== "object") {
     return fallback;
@@ -16,11 +16,11 @@ export function getAuthErrorMessage(
     /user not found/i.test(errorMessage) ||
     /invalid email/i.test(errorMessage)
   ) {
-    return "Email, usuario ou senha incorretos.";
+    return "E-mail, usuário ou senha incorretos.";
   }
 
   if (/email not confirmed/i.test(errorMessage)) {
-    return "Confirme seu email antes de entrar. Verifique sua caixa de entrada.";
+    return "Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.";
   }
 
   if (/over email rate limit/i.test(errorMessage)) {
@@ -28,11 +28,11 @@ export function getAuthErrorMessage(
   }
 
   if (/error sending confirmation email/i.test(errorMessage)) {
-    return "Nao foi possivel enviar o email de confirmacao agora. Tente novamente em instantes.";
+    return "Não foi possível enviar o e-mail de confirmação agora. Tente novamente em instantes.";
   }
 
   if (/user already registered/i.test(errorMessage)) {
-    return "Este e-mail ja esta cadastrado. Tente fazer login ou recuperar sua senha.";
+    return "Este e-mail já está cadastrado. Tente fazer login ou recuperar sua senha.";
   }
 
   if (/same password/i.test(errorMessage)) {

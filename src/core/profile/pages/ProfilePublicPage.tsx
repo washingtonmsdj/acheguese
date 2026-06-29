@@ -141,17 +141,17 @@ export function ProfilePublicPage({ profile }: ProfilePublicPageProps) {
       await navigator.clipboard.writeText(url);
       toast.success('Link do perfil copiado');
     } catch {
-      toast.error('Nao foi possivel copiar o link');
+      toast.error('Não foi possível copiar o link');
     }
   };
 
   return (
     <>
       <Helmet>
-        <title>{displayName} ({publicHandle}) | Perfil publico</title>
-        <meta name="description" content={profile.bio || `Perfil publico de ${displayName}`} />
+        <title>{displayName} ({publicHandle}) | Perfil público</title>
+        <meta name="description" content={profile.bio || `Perfil público de ${displayName}`} />
         <meta property="og:title" content={`${displayName} (${publicHandle})`} />
-        <meta property="og:description" content={profile.bio || `Perfil publico de ${displayName}`} />
+        <meta property="og:description" content={profile.bio || `Perfil público de ${displayName}`} />
         {profile.avatar_url ? <meta property="og:image" content={profile.avatar_url} /> : null}
       </Helmet>
 
@@ -203,7 +203,7 @@ export function ProfilePublicPage({ profile }: ProfilePublicPageProps) {
                     <div className="min-w-0 flex-1 pb-1">
                       <p className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-background/65 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur">
                         <Globe2 className="h-3.5 w-3.5" />
-                        Perfil publico
+                        Perfil público
                       </p>
                       <h1 className="text-3xl font-black leading-none tracking-tight text-foreground sm:text-5xl">
                         {displayName}
@@ -221,13 +221,13 @@ export function ProfilePublicPage({ profile }: ProfilePublicPageProps) {
                   </div>
                 ) : (
                   <div className="rounded-3xl border border-dashed border-border bg-background/60 p-5 text-sm text-muted-foreground">
-                    Este perfil ainda nao publicou uma bio.
+                    Este perfil ainda não publicou uma bio.
                   </div>
                 )}
 
                 <div className="grid gap-3 sm:grid-cols-2">
                   {locationLabel ? (
-                    <InfoTile icon={MapPin} label="Localizacao publica" value={locationLabel} />
+                    <InfoTile icon={MapPin} label="Localização pública" value={locationLabel} />
                   ) : null}
                   {profile.created_at ? (
                     <InfoTile icon={Calendar} label="Na comunidade desde" value={formatMemberSince(profile.created_at)} />
@@ -237,7 +237,7 @@ export function ProfilePublicPage({ profile }: ProfilePublicPageProps) {
                 <Separator />
 
                 <div className="flex flex-col gap-3 sm:flex-row">
-                  <Button className="flex-1 gap-2 rounded-2xl" onClick={() => toast.info('Contato publico ainda nao esta disponivel neste perfil')}>
+                  <Button className="flex-1 gap-2 rounded-2xl" onClick={() => toast.info('Contato público ainda não está disponível neste perfil')}>
                     <MessageCircle className="h-4 w-4" />
                     Enviar mensagem
                   </Button>
@@ -258,29 +258,29 @@ export function ProfilePublicPage({ profile }: ProfilePublicPageProps) {
               <div className="rounded-[1.75rem] border border-border/70 bg-card/90 p-5 shadow-lg shadow-black/5 backdrop-blur">
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="h-5 w-5 text-primary" />
-                  <h2 className="font-semibold text-foreground">Sinais publicos</h2>
+                  <h2 className="font-semibold text-foreground">Sinais públicos</h2>
                 </div>
                 <div className="mt-4 space-y-3">
-                  <SignalRow label="Identidade" value={profile.verified ? 'Verificada' : 'Nao verificada'} />
+                  <SignalRow label="Identidade" value={profile.verified ? 'Verificada' : 'Não verificada'} />
                   <SignalRow label="Tipo" value={profileTypeLabel} />
-                  <SignalRow label="Localizacao" value={locationLabel ? 'Visivel' : 'Oculta'} />
+                  <SignalRow label="Localização" value={locationLabel ? 'Visível' : 'Oculta'} />
                 </div>
               </div>
 
               <div className="rounded-[1.75rem] border border-border/70 bg-card/90 p-5 shadow-lg shadow-black/5 backdrop-blur">
                 <div className="flex items-center gap-2">
                   <Sparkles className="h-5 w-5 text-amber-600" />
-                  <h2 className="font-semibold text-foreground">Reputacao</h2>
+                  <h2 className="font-semibold text-foreground">Reputação</h2>
                 </div>
                 {hasReputation ? (
                   <div className="mt-4 grid gap-3">
                     <StatCard icon={Star} label="Score" value={reputationScore} color="text-amber-600" />
-                    <StatCard icon={TrendingUp} label="Nivel" value={reputationLevel} color="text-sky-600" />
+                    <StatCard icon={TrendingUp} label="Nível" value={reputationLevel} color="text-sky-600" />
                     <StatCard icon={Award} label="Status" value={reputationLevel >= 5 ? 'Destaque' : 'Em crescimento'} color="text-emerald-600" />
                   </div>
                 ) : (
                   <p className="mt-4 rounded-2xl bg-muted/50 p-4 text-sm text-muted-foreground">
-                    A reputacao publica ainda nao possui dados suficientes.
+                    A reputação pública ainda não possui dados suficientes.
                   </p>
                 )}
               </div>

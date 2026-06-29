@@ -94,10 +94,10 @@ export function BottomNav({ prefetchRoute = noopPrefetch }: BottomNavProps) {
   };
 
   const mainTabs = [
-    { path: '/', label: 'Inicio', icon: Home, badge: 0 },
+    { path: '/', label: 'Início', icon: Home, badge: 0 },
     { path: modulePath('business', 'empresas'), label: 'Empresas', icon: Building2, badge: 0 },
     { path: homeCommunityHref, label: 'Bairro', icon: Users, badge: 0 },
-    { path: modulePath('classifieds', 'classificados'), label: 'Anuncios', icon: Tag, badge: 0 },
+    { path: modulePath('classifieds', 'classificados'), label: 'Anúncios', icon: Tag, badge: 0 },
   ];
 
   const moreItems: Array<{
@@ -107,7 +107,7 @@ export function BottomNav({ prefetchRoute = noopPrefetch }: BottomNavProps) {
     badge: number;
     surface: LaunchSurfaceKey;
   }> = [
-    { path: modulePath('services', 'servicos'), label: 'Servicos', icon: Wrench, badge: 0, surface: 'services' as const },
+    { path: modulePath('services', 'servicos'), label: 'Serviços', icon: Wrench, badge: 0, surface: 'services' as const },
     { path: modulePath('map', 'mapa'), label: 'Mapa', icon: Map, badge: 0, surface: 'map' as const },
     { path: cityModule('buscar'), label: 'Busca', icon: Search, badge: 0, surface: 'search' as const },
   ].filter((item) => isLaunchSurfaceEnabled(item.surface));
@@ -137,7 +137,7 @@ export function BottomNav({ prefetchRoute = noopPrefetch }: BottomNavProps) {
                 'relative flex flex-col items-center justify-center gap-0.5 flex-1 py-1.5 transition-colors rounded-lg mx-0.5',
                 activeTab ? 'text-primary' : 'text-muted-foreground active:text-foreground'
               )}
-              aria-label={`${label}${badge > 0 ? ` (${badge} nao lidas)` : ''}`}
+              aria-label={`${label}${badge > 0 ? ` (${badge} não lidas)` : ''}`}
             >
               <span className="relative">
                 <Icon className={cn('h-5 w-5', activeTab && 'stroke-[2.5]')} />
@@ -154,7 +154,7 @@ export function BottomNav({ prefetchRoute = noopPrefetch }: BottomNavProps) {
           <SheetTrigger asChild>
             <button
               className="relative flex flex-col items-center justify-center gap-0.5 flex-1 py-1.5 text-muted-foreground active:text-foreground transition-colors rounded-lg mx-0.5"
-              aria-label="Mais opcoes"
+              aria-label="Mais opções"
             >
               <MoreHorizontal className="h-5 w-5" />
               <span className="text-[10px] leading-tight font-medium">Mais</span>
@@ -162,7 +162,7 @@ export function BottomNav({ prefetchRoute = noopPrefetch }: BottomNavProps) {
           </SheetTrigger>
           <SheetContent side="bottom" className="rounded-t-2xl pb-safe">
             <SheetHeader className="pb-2">
-              <SheetTitle className="text-base">Mais opcoes</SheetTitle>
+              <SheetTitle className="text-base">Mais opções</SheetTitle>
             </SheetHeader>
             <div className="grid grid-cols-4 gap-3 py-4">
               {moreItems.map(({ path, label, icon: Icon, badge }) => {

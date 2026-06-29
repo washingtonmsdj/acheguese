@@ -65,12 +65,12 @@ export default function DashboardEmpresaPage() {
   useEffect(() => {
     if (accessLoading || dataLoading) return;
     if (!permissions.hasAccess) {
-      toast.error("Voce nao tem permissao para acessar este dashboard");
+      toast.error("Você não tem permissão para acessar este dashboard");
       navigate(appUrls.profile.home);
       return;
     }
     if (!business) {
-      toast.error("Empresa nao encontrada");
+      toast.error("Empresa não encontrada");
       navigate(appUrls.profile.home);
     }
   }, [accessLoading, dataLoading, permissions.hasAccess, business, navigate, appUrls]);
@@ -138,7 +138,7 @@ export default function DashboardEmpresaPage() {
         onViewPublic={handleViewPublic}
       />
 
-      {/* CTA de vertical gastronomia - visivel na visao geral quando nao configurado */}
+      {/* CTA de vertical gastronomia - visível na visão geral quando não configurado */}
       {isGastronomyEligible && activeTab === 'visao-geral' && (
         <div className="mb-4">
           <GastronomyVerticalCTA businessId={business.id} status={gastronomyStatus} />
@@ -175,7 +175,7 @@ export default function DashboardEmpresaPage() {
                 canonicalUrl={businessCanonicalUrl}
                 ownerProfileId={business.profile_id || profileId || ''}
                 title="QR Code da Empresa"
-                description="Compartilhe este QR Code para clientes acessarem sua pagina"
+                description="Compartilhe este QR Code para clientes acessarem sua página"
               />
             ) : (
               <div className="rounded-lg border bg-card p-4 text-sm text-muted-foreground">

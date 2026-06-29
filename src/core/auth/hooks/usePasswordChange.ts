@@ -17,7 +17,7 @@ export function usePasswordChange(onSuccess?: () => void) {
     const passwordError = validateAuthPassword(newPassword);
     if (passwordError) {
       toast({
-        title: "Senha invalida",
+        title: "Senha inválida",
         description: passwordError,
         variant: "destructive",
       });
@@ -25,8 +25,8 @@ export function usePasswordChange(onSuccess?: () => void) {
     }
     if (newPassword !== confirmPassword) {
       toast({
-        title: "Senhas nao coincidem",
-        description: "As senhas digitadas nao sao iguais",
+        title: "Senhas não coincidem",
+        description: "As senhas digitadas não são iguais",
         variant: "destructive",
       });
       return false;
@@ -68,7 +68,7 @@ export function usePasswordChange(onSuccess?: () => void) {
       logger.error("Error changing password:", err);
       toast({
         title: "Erro ao alterar senha",
-        description: getAuthErrorMessage(err, "Nao foi possivel alterar a senha"),
+        description: getAuthErrorMessage(err, "Não foi possível alterar a senha"),
         variant: "destructive",
       });
       return false;
