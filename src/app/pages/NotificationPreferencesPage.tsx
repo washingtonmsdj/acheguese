@@ -124,8 +124,8 @@ export default function NotificationPreferencesPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notification-preferences"] });
       toast({
-        title: "Preferencias salvas",
-        description: "Suas preferencias de notificacao foram atualizadas.",
+        title: "Preferências salvas",
+        description: "Suas preferências de notificação foram atualizadas.",
       });
     },
     onError: (error: Error) => {
@@ -152,7 +152,7 @@ export default function NotificationPreferencesPage() {
   return (
     <>
       <Helmet>
-        <title>Preferencias de notificacoes</title>
+        <title>Preferências de notificações</title>
       </Helmet>
 
       <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.10),transparent_28%),linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.32))]">
@@ -163,24 +163,24 @@ export default function NotificationPreferencesPage() {
         >
           <div className="sticky top-0 z-20 -mx-4 mb-5 border-b border-border/60 bg-background/90 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:mb-6 sm:rounded-3xl sm:border sm:bg-card/85 sm:px-5 sm:shadow-sm">
             <div className="flex items-start gap-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="shrink-0 rounded-full"
-                onClick={() => navigate("/conta/preferencias")}
-                type="button"
-              >
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="shrink-0 rounded-full"
+                  onClick={() => navigate(appUrls.settings)}
+                  type="button"
+                >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <div className="min-w-0">
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                  Comunicacao
+                  Comunicação
                 </p>
                 <h1 className="truncate text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-                  Preferencias de notificacoes
+                  Preferências de notificações
                 </h1>
                 <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
-                  Configure canais, tipos e horarios de entrega.
+                  Configure canais, tipos e horários de entrega.
                 </p>
               </div>
             </div>
@@ -193,16 +193,16 @@ export default function NotificationPreferencesPage() {
                   Entrega de alertas
                 </p>
                 <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-                  Controle o que chega ate voce
+                  Controle o que chega até você
                 </h2>
                 <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-                  Ajuste notificacoes por email, push e app interno sem misturar
-                  com as configuracoes de privacidade da conta.
+                  Ajuste notificações por e-mail, push e app interno sem misturar
+                  com as configurações de privacidade da conta.
                 </p>
               </div>
               <div className="hidden items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary sm:flex">
                 <ShieldCheck className="h-3.5 w-3.5" />
-                Preferencias pessoais
+                Preferências pessoais
               </div>
             </div>
           </section>
@@ -210,9 +210,9 @@ export default function NotificationPreferencesPage() {
           <div className="mt-5 space-y-5">
             <Card className="rounded-3xl border-border/70 bg-card/90 shadow-sm">
               <CardHeader>
-                <CardTitle>Canais de notificacao</CardTitle>
+                <CardTitle>Canais de notificação</CardTitle>
                 <CardDescription>
-                  Escolha como voce quer receber notificacoes.
+                  Escolha como você quer receber notificações.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -220,7 +220,7 @@ export default function NotificationPreferencesPage() {
                   id="email"
                   icon={<Mail className="h-5 w-5" />}
                   label="Email"
-                  description="Receber notificacoes por email."
+                  description="Receber notificações por e-mail."
                   checked={preferences.email_enabled}
                   onCheckedChange={(checked) =>
                     setPreferences({ ...preferences, email_enabled: checked })
@@ -230,7 +230,7 @@ export default function NotificationPreferencesPage() {
                   id="push"
                   icon={<Smartphone className="h-5 w-5" />}
                   label="Push"
-                  description="Receber notificacoes push no dispositivo."
+                  description="Receber notificações push no dispositivo."
                   checked={preferences.push_enabled}
                   onCheckedChange={(checked) =>
                     setPreferences({ ...preferences, push_enabled: checked })
@@ -240,7 +240,7 @@ export default function NotificationPreferencesPage() {
                   id="inapp"
                   icon={<Bell className="h-5 w-5" />}
                   label="No app"
-                  description="Mostrar notificacoes dentro da plataforma."
+                  description="Mostrar notificações dentro da plataforma."
                   checked={preferences.inapp_enabled}
                   onCheckedChange={(checked) =>
                     setPreferences({ ...preferences, inapp_enabled: checked })
@@ -251,23 +251,23 @@ export default function NotificationPreferencesPage() {
 
             <Card className="rounded-3xl border-border/70 bg-card/90 shadow-sm">
               <CardHeader>
-                <CardTitle>Tipos de notificacao</CardTitle>
+                <CardTitle>Tipos de notificação</CardTitle>
                 <CardDescription>
-                  Escolha quais categorias voce quer manter ativas.
+                  Escolha quais categorias você quer manter ativas.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 <PreferenceRow
                   id="transactional"
                   label="Transacionais"
-                  description="Pedidos, pagamentos e confirmacoes. Sempre ativo."
+                  description="Pedidos, pagamentos e confirmações. Sempre ativo."
                   checked={preferences.transactional_enabled}
                   disabled
                 />
                 <PreferenceRow
                   id="social"
                   label="Sociais"
-                  description="Comentarios, mencoes e interacoes."
+                  description="Comentários, menções e interações."
                   checked={preferences.social_enabled}
                   onCheckedChange={(checked) =>
                     setPreferences({ ...preferences, social_enabled: checked })
@@ -276,7 +276,7 @@ export default function NotificationPreferencesPage() {
                 <PreferenceRow
                   id="system"
                   label="Sistema"
-                  description="Atualizacoes, manutencao e novos recursos."
+                  description="Atualizações, manutenção e novos recursos."
                   checked={preferences.system_enabled}
                   onCheckedChange={(checked) =>
                     setPreferences({ ...preferences, system_enabled: checked })
@@ -285,7 +285,7 @@ export default function NotificationPreferencesPage() {
                 <PreferenceRow
                   id="marketing"
                   label="Marketing"
-                  description="Promocoes e novidades da plataforma."
+                  description="Promoções e novidades da plataforma."
                   checked={preferences.marketing_enabled}
                   onCheckedChange={(checked) =>
                     setPreferences({ ...preferences, marketing_enabled: checked })
@@ -297,9 +297,9 @@ export default function NotificationPreferencesPage() {
             <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
               <Card className="rounded-3xl border-border/70 bg-card/90 shadow-sm">
                 <CardHeader>
-                  <CardTitle>Frequencia</CardTitle>
+                  <CardTitle>Frequência</CardTitle>
                   <CardDescription>
-                    Defina com que ritmo as notificacoes chegam.
+                    Defina com que ritmo as notificações chegam.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -314,7 +314,7 @@ export default function NotificationPreferencesPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="immediate">Imediato</SelectItem>
-                      <SelectItem value="daily">Resumo diario</SelectItem>
+                      <SelectItem value="daily">Resumo diário</SelectItem>
                       <SelectItem value="weekly">Resumo semanal</SelectItem>
                       <SelectItem value="never">Nunca</SelectItem>
                     </SelectContent>
@@ -326,16 +326,16 @@ export default function NotificationPreferencesPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Clock className="h-5 w-5" />
-                    Horario silencioso
+                    Horário silencioso
                   </CardTitle>
                   <CardDescription>
-                    Defina um intervalo sem notificacoes.
+                    Defina um intervalo sem notificações.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
-                      <Label htmlFor="quiet-start">Inicio</Label>
+                      <Label htmlFor="quiet-start">Início</Label>
                       <input
                         id="quiet-start"
                         type="time"
@@ -388,7 +388,7 @@ export default function NotificationPreferencesPage() {
                     Salvando...
                   </>
                 ) : (
-                  "Salvar preferencias"
+                  "Salvar preferências"
                 )}
               </Button>
             </div>

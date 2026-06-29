@@ -51,9 +51,9 @@ export default function ContaSegurancaPage() {
     try {
       await resetPassword(user.email);
       setResetSent(true);
-      toast.success("Email de redefinicao enviado");
+      toast.success("E-mail de redefinição enviado");
     } catch (error) {
-      toast.error(getAuthErrorMessage(error, "Erro ao enviar email"));
+      toast.error(getAuthErrorMessage(error, "Erro ao enviar e-mail"));
     } finally {
       setSendingReset(false);
     }
@@ -62,7 +62,7 @@ export default function ContaSegurancaPage() {
   return (
     <>
       <Helmet>
-        <title>Minha conta | Seguranca</title>
+        <title>Minha conta | Segurança</title>
       </Helmet>
 
       <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.10),transparent_28%),linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.32))]">
@@ -84,10 +84,10 @@ export default function ContaSegurancaPage() {
                     Conta e acesso
                   </p>
                   <h1 className="truncate text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-                    Seguranca da conta
+                    Segurança da conta
                   </h1>
                   <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
-                    Senha, recuperacao e protecao do login.
+                    Senha, recuperação e proteção do login.
                   </p>
                 </div>
               </div>
@@ -104,24 +104,24 @@ export default function ContaSegurancaPage() {
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div className="space-y-2">
                     <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/90">
-                      Autenticacao
+                      Autenticação
                     </p>
                     <h2 className="text-2xl font-semibold tracking-tight text-foreground">
                       {user.email}
                     </h2>
                     <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-                      Esta area cuida apenas do acesso da conta. Identidade publica,
-                      perfis vinculados e configuracoes operacionais seguem separados.
+                      Esta área cuida apenas do acesso da conta. Identidade pública,
+                      perfis vinculados e configurações operacionais seguem separados.
                     </p>
                   </div>
                   <div className="grid grid-cols-2 gap-2 sm:w-auto sm:grid-cols-1">
                     <div className="rounded-2xl border border-border/60 bg-muted/20 px-3 py-2 text-xs">
                       <p className="font-medium text-foreground">Email principal</p>
-                      <p className="mt-1 text-muted-foreground">Login e recuperacao</p>
+                      <p className="mt-1 text-muted-foreground">Login e recuperação</p>
                     </div>
                     <div className="rounded-2xl border border-border/60 bg-muted/20 px-3 py-2 text-xs">
                       <p className="font-medium text-foreground">Senha forte</p>
-                      <p className="mt-1 text-muted-foreground">Obrigatoria para acesso</p>
+                      <p className="mt-1 text-muted-foreground">Obrigatória para acesso</p>
                     </div>
                   </div>
                 </div>
@@ -137,8 +137,8 @@ export default function ContaSegurancaPage() {
                 <CardContent className="space-y-2">
                   <p className="text-sm font-medium text-foreground">{user.email}</p>
                   <p className="text-sm leading-6 text-muted-foreground">
-                    Esse email e usado para entrar na conta e receber fluxos de
-                    recuperacao. Alteracoes devem passar pelo suporte.
+                    Esse e-mail é usado para entrar na conta e receber fluxos de
+                    recuperação. Alterações devem passar pelo suporte.
                   </p>
                 </CardContent>
               </Card>
@@ -157,11 +157,12 @@ export default function ContaSegurancaPage() {
                   <CardTitle className="flex items-center gap-2 text-sm">
                     <Mail className="h-4 w-4" />
                     Recuperacao por email
+                    Recuperação por e-mail
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <p className="text-sm leading-6 text-muted-foreground">
-                    Envie um fluxo de redefinicao para o email principal da conta.
+                    Envie um fluxo de redefinição para o e-mail principal da conta.
                   </p>
                   <Button
                     type="button"
@@ -176,9 +177,9 @@ export default function ContaSegurancaPage() {
                         Enviando...
                       </>
                     ) : resetSent ? (
-                      "Email enviado"
+                      "E-mail enviado"
                     ) : (
-                      "Redefinir por email"
+                      "Redefinir por e-mail"
                     )}
                   </Button>
                 </CardContent>
@@ -194,7 +195,7 @@ export default function ContaSegurancaPage() {
                 <CardContent className="space-y-3">
                   <p className="text-sm leading-6 text-muted-foreground">
                     Excluir a conta remove perfis, dados e conteudo associados. Essa
-                    acao e permanente.
+                    ação é permanente.
                   </p>
                   <Button
                     type="button"
@@ -228,7 +229,7 @@ export default function ContaSegurancaPage() {
                     Renove a senha se houver suspeita de acesso indevido.
                   </div>
                   <div className="rounded-2xl border border-border/60 bg-muted/20 p-3">
-                    Mantenha email e acesso sob sua propria gestao.
+                    Mantenha e-mail e acesso sob sua própria gestão.
                   </div>
                 </CardContent>
               </Card>

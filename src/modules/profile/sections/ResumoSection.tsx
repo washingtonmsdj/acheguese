@@ -1,7 +1,7 @@
 /**
- * ResumoSection - visao pessoal do usuario.
+ * ResumoSection - visão pessoal do usuário.
  *
- * Mantem a conta como area pessoal e envia operacoes para a Central.
+ * Mantém a conta como área pessoal e envia operações para a Central.
  */
 
 import {
@@ -54,11 +54,11 @@ export function ResumoSection({
             </div>
             <div>
               <h2 className="max-w-3xl text-2xl font-black tracking-tight text-foreground sm:text-3xl lg:text-4xl">
-                Sua identidade, dados pessoais e atalhos seguros em um unico lugar.
+                Sua identidade, dados pessoais e atalhos seguros em um único lugar.
               </h2>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-                A conta mostra sua area pessoal. Empresas e rotinas administrativas ficam na
-                Central para manter a separacao de responsabilidades.
+                A conta mostra sua área pessoal. Empresas e rotinas administrativas ficam na
+                Central para manter a separação de responsabilidades.
               </p>
             </div>
           </div>
@@ -71,7 +71,7 @@ export function ResumoSection({
             >
               <UserRound className="h-5 w-5 text-primary" />
               <p className="mt-3 text-sm font-semibold text-foreground">Dados pessoais</p>
-              <p className="mt-1 text-xs text-muted-foreground">Nome, foto, bio e perfil publico.</p>
+              <p className="mt-1 text-xs text-muted-foreground">Nome, foto, bio e perfil público.</p>
             </button>
             <button
               type="button"
@@ -79,8 +79,8 @@ export function ResumoSection({
               className="rounded-2xl border border-border/70 bg-background/75 p-4 text-left transition hover:border-primary/40 hover:bg-background"
             >
               <MapPin className="h-5 w-5 text-primary" />
-              <p className="mt-3 text-sm font-semibold text-foreground">Endereco pessoal</p>
-              <p className="mt-1 text-xs text-muted-foreground">Residencia e verificacao territorial.</p>
+              <p className="mt-3 text-sm font-semibold text-foreground">Endereço pessoal</p>
+              <p className="mt-1 text-xs text-muted-foreground">Residência e verificação territorial.</p>
             </button>
             <button
               type="button"
@@ -90,6 +90,7 @@ export function ResumoSection({
               <LayoutDashboard className="h-5 w-5" />
               <p className="mt-3 text-sm font-semibold">Abrir Central</p>
               <p className="mt-1 text-xs text-primary-foreground/80">Operacao, empresas e dashboards.</p>
+              <p className="mt-1 text-xs text-primary-foreground/80">Operação, empresas e dashboards.</p>
             </button>
           </div>
         </div>
@@ -97,7 +98,7 @@ export function ResumoSection({
 
       <SectionFrame
         title="Resumo pessoal"
-        description="Indicadores reais da sua conta e das areas vinculadas, sem misturar gestao operacional na area pessoal."
+        description="Indicadores reais da sua conta e das áreas vinculadas, sem misturar gestão operacional na área pessoal."
       >
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <DashboardMetricCard
@@ -108,16 +109,16 @@ export function ResumoSection({
           />
           <DashboardMetricCard
             icon={Building2}
-            label="Areas vinculadas"
+            label="Áreas vinculadas"
             value={totalOperationalAssets}
-            description="Empresas, servicos e classificados"
+            description="Empresas, serviços e classificados"
           />
           <DashboardMetricCard
             icon={Bell}
-            label="Notificacoes"
+            label="Notificações"
             value={notifications.unread}
             highlight={notifications.unread > 0}
-            description="Nao lidas"
+            description="Não lidas"
           />
         </div>
       </SectionFrame>
@@ -126,7 +127,7 @@ export function ResumoSection({
 
       <SectionFrame
         title="Acoes pessoais"
-        description="Tudo que pertence ao usuario: identidade, privacidade, notificacoes, favoritos e endereco residencial."
+        description="Tudo que pertence ao usuário: identidade, privacidade, notificações, favoritos e endereço residencial."
       >
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <HubLinkCard
@@ -138,13 +139,13 @@ export function ResumoSection({
           <HubLinkCard
             icon={MapPin}
             title="Endereco e residencia"
-            description="Atualizar residencia, territorio e verificacao."
+            description="Atualizar residência, território e verificação."
             onClick={() => navigate(appUrls.profile.addresses)}
           />
           <HubLinkCard
             icon={Bell}
-            title="Notificacoes"
-            description="Avisos e pendencias recentes."
+            title="Notificações"
+            description="Avisos e pendências recentes."
             badge={notifications.unread > 0 ? `${notifications.unread}` : undefined}
             onClick={() => setActiveSection("notificacoes")}
           />
@@ -162,14 +163,14 @@ export function ResumoSection({
           />
           <HubLinkCard
             icon={Settings2}
-            title="Preferencias"
-            description="Privacidade, vinculos e ajustes gerais."
+            title="Preferências"
+            description="Privacidade, vínculos e ajustes gerais."
             onClick={() => setActiveSection("preferencias")}
           />
           <HubLinkCard
             icon={Shield}
-            title="Seguranca"
-            description="Conta, dados sensiveis e protecao."
+            title="Segurança"
+            description="Conta, dados sensíveis e proteção."
             onClick={() => setActiveSection("seguranca")}
           />
           {showFamilySafetyLinks ? (
@@ -184,8 +185,8 @@ export function ResumoSection({
       </SectionFrame>
 
       <SectionFrame
-        title="Atalhos para areas que voce possui"
-        description="Acesso rapido para modulos operacionais sem colocar administracao dentro da conta."
+        title="Atalhos para áreas que você possui"
+        description="Acesso rápido para módulos operacionais sem colocar administração dentro da conta."
       >
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <HubLinkCard
@@ -197,7 +198,7 @@ export function ResumoSection({
           <HubLinkCard
             icon={Building2}
             title="Empresas"
-            description="Gestao das empresas vinculadas ao usuario."
+            description="Gestão das empresas vinculadas ao usuário."
             badge={operations.businesses > 0 ? `${operations.businesses}` : undefined}
             onClick={() => navigate(appUrls.profile.businesses)}
           />
@@ -205,32 +206,32 @@ export function ResumoSection({
       </SectionFrame>
 
       <SectionFrame
-        title="Descoberta publica"
-        description="Modulos publicos ficam separados da administracao. Use estes atalhos para navegar como usuario."
+        title="Descoberta pública"
+        description="Módulos públicos ficam separados da administração. Use estes atalhos para navegar como usuário."
       >
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <HubLinkCard
             icon={Building2}
-            title="Empresas publicas"
-            description="Descobrir empresas e catalogos publicados."
+            title="Empresas públicas"
+            description="Descobrir empresas e catálogos publicados."
             onClick={() => navigate(appUrls.business.list)}
           />
           <HubLinkCard
             icon={Briefcase}
-            title="Servicos"
+            title="Serviços"
             description="Encontrar profissionais e prestadores."
             onClick={() => navigate(appUrls.services.list)}
           />
           <HubLinkCard
             icon={MessageSquare}
             title="Comunidade"
-            description="Posts, recomendacoes e alertas locais."
+            description="Posts, recomendações e alertas locais."
             onClick={() => navigate(appUrls.community.feed)}
           />
           <HubLinkCard
             icon={MapPin}
             title="Mapa"
-            description="Explorar territorio e pontos proximos."
+            description="Explorar território e pontos próximos."
             onClick={() => navigate(appUrls.map)}
           />
         </div>

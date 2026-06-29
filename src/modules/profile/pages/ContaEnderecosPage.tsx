@@ -25,7 +25,7 @@ export default function ContaEnderecosPage() {
   return (
     <>
       <Helmet>
-        <title>Meus enderecos</title>
+        <title>Meus endereços</title>
       </Helmet>
 
       <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.10),transparent_28%),linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.32))]">
@@ -44,13 +44,13 @@ export default function ContaEnderecosPage() {
                 </Button>
                 <div className="min-w-0">
                   <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                    Territorio e residencia
+                    Território e residência
                   </p>
                   <h1 className="truncate text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-                    Meus enderecos
+                    Meus endereços
                   </h1>
                   <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
-                    Endereco privado, territorio pessoal e contexto publico.
+                    Endereço privado, território pessoal e contexto público.
                   </p>
                 </div>
               </div>
@@ -70,21 +70,22 @@ export default function ContaEnderecosPage() {
                       Privacidade territorial
                     </p>
                     <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-                      Seu endereco fica protegido
+                      Seu endereço fica protegido
                     </h2>
                     <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-                      O perfil publico mostra apenas contexto territorial, como cidade,
-                      bairro ou comunidade. Rua, numero e complemento seguem privados.
+                      O perfil público mostra apenas contexto territorial, como cidade,
+                      bairro ou comunidade. Rua, número e complemento seguem privados.
                     </p>
                   </div>
                   <div className="grid grid-cols-2 gap-2 sm:w-auto sm:grid-cols-1">
                     <div className="rounded-2xl border border-border/60 bg-muted/20 px-3 py-2 text-xs">
                       <p className="font-medium text-foreground">Residencia</p>
+                      <p className="font-medium text-foreground">Residência</p>
                       <p className="mt-1 text-muted-foreground">Base canonicamente privada</p>
                     </div>
                     <div className="rounded-2xl border border-border/60 bg-muted/20 px-3 py-2 text-xs">
-                      <p className="font-medium text-foreground">Territorio</p>
-                      <p className="mt-1 text-muted-foreground">Derivado para uso publico</p>
+                      <p className="font-medium text-foreground">Território</p>
+                      <p className="mt-1 text-muted-foreground">Derivado para uso público</p>
                     </div>
                   </div>
                 </div>
@@ -94,17 +95,17 @@ export default function ContaEnderecosPage() {
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-sm">
                     <MapPin className="h-4 w-4" />
-                    Como seu endereco aparece
+                    Como seu endereço aparece
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3 text-sm leading-6 text-muted-foreground">
                   <p>
-                    O perfil publico exibe somente contexto territorial
-                    (bairro/comunidade), nunca rua, numero, complemento ou referencia
+                    O perfil público exibe somente contexto territorial
+                    (bairro/comunidade), nunca rua, número, complemento ou referência
                     detalhada.
                   </p>
                   <p>
-                    Se voce atua profissionalmente, gerencie cobertura operacional na{" "}
+                    Se você atua profissionalmente, gerencie a cobertura operacional na{" "}
                     <button
                       type="button"
                       className="font-medium text-primary underline underline-offset-2"
@@ -127,18 +128,18 @@ export default function ContaEnderecosPage() {
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-sm">
                     <Home className="h-4 w-4" />
-                    Regras de residencia
+                    Regras de residência
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3 text-sm text-muted-foreground">
                   <div className="rounded-2xl border border-border/60 bg-muted/20 p-3">
-                    A residencia confirma seu territorio principal de uso.
+                    A residência confirma seu território principal de uso.
                   </div>
                   <div className="rounded-2xl border border-border/60 bg-muted/20 p-3">
-                    Publicacao e grupos podem depender de verificacao territorial.
+                    Publicação e grupos podem depender de verificação territorial.
                   </div>
                   <div className="rounded-2xl border border-border/60 bg-muted/20 p-3">
-                    Alteracoes devem refletir sua base real de moradia.
+                    Alterações devem refletir sua base real de moradia.
                   </div>
                 </CardContent>
               </Card>
@@ -152,8 +153,8 @@ export default function ContaEnderecosPage() {
                 </CardHeader>
                 <CardContent className="space-y-3 text-sm leading-6 text-muted-foreground">
                   <p>
-                    Areas de atuacao de empresas e servicos ficam no modulo
-                    operacional, fora da residencia pessoal.
+                    Áreas de atuação de empresas e serviços ficam no módulo
+                    operacional, fora da residência pessoal.
                   </p>
                   <Button
                     type="button"

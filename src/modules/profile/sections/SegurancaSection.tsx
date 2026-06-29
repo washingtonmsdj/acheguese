@@ -1,5 +1,5 @@
 /**
- * SegurancaSection - Secao de seguranca e dados
+ * SegurancaSection - Seção de segurança e dados
  *
  * SSOT: Componente isolado com props tipadas
  * Sem gambiarras: Logica clara e organizada
@@ -60,14 +60,14 @@ export function SegurancaSection({
         />
 
         <SectionFrame
-          title="Seguranca e dados"
-          description="Acoes sensiveis da conta centralizadas em um unico lugar."
+          title="Segurança e dados"
+          description="Ações sensíveis da conta centralizadas em um único lugar."
         >
           <div className="grid gap-3 md:grid-cols-2">
             <SecurityActionCard
               icon={Lock}
               title="Minha conta"
-              description="Senha, email de acesso e validacoes de seguranca."
+              description="Senha, e-mail de acesso e validações de segurança."
               actionLabel="Abrir conta"
               onAction={() => navigate(appUrls.profile.account)}
             />
@@ -88,7 +88,7 @@ export function SegurancaSection({
             <SecurityActionCard
               icon={Pause}
               title="Pausar conta"
-              description="Abrir fluxo oficial de pausa temporaria."
+              description="Abrir fluxo oficial de pausa temporária."
               actionLabel="Pausar conta"
               onAction={() => setDeactivateOpen(true)}
             />

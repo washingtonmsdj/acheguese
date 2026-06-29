@@ -111,7 +111,7 @@ function ConsentRow({
             </p>
           ) : (
             <p className="mt-1 text-xs text-muted-foreground">
-              Ainda nao configurado
+              Ainda não configurado
             </p>
           )}
         </div>
@@ -168,13 +168,13 @@ export default function PrivacySettingsPage() {
       queryClient.invalidateQueries({ queryKey: ["user-consents", user?.id] });
       toast({
         title: "Preferencia atualizada",
-        description: "Sua preferencia de privacidade foi salva.",
+        description: "Sua preferência de privacidade foi salva.",
       });
     },
     onError: () => {
       toast({
         title: "Erro",
-        description: "Nao foi possivel atualizar a preferencia.",
+        description: "Não foi possível atualizar a preferência.",
         variant: "destructive",
       });
     },
@@ -205,7 +205,7 @@ export default function PrivacySettingsPage() {
     } catch {
       toast({
         title: "Erro na exportacao",
-        description: "Nao foi possivel exportar seus dados.",
+        description: "Não foi possível exportar seus dados.",
         variant: "destructive",
       });
     } finally {
@@ -224,7 +224,7 @@ export default function PrivacySettingsPage() {
       queryClient.invalidateQueries({ queryKey: ["deletion-status", user.id] });
       toast({
         title: "Conta agendada para exclusao",
-        description: `Sua conta sera excluida em ${result.days_until_purge} dias.`,
+        description: `Sua conta será excluída em ${result.days_until_purge} dias.`,
       });
       setShowDeleteConfirm(false);
     } catch (error: unknown) {
@@ -232,7 +232,7 @@ export default function PrivacySettingsPage() {
         title: "Erro",
         description:
           (error instanceof Error ? error.message : null) ||
-          "Nao foi possivel solicitar a exclusao da conta.",
+          "Não foi possível solicitar a exclusão da conta.",
         variant: "destructive",
       });
     }
@@ -244,27 +244,27 @@ export default function PrivacySettingsPage() {
       queryClient.invalidateQueries({ queryKey: ["deletion-status", user.id] });
       toast({
         title: "Exclusao cancelada",
-        description: "Sua conta nao sera mais excluida.",
+        description: "Sua conta não será mais excluída.",
       });
     } catch {
       toast({
         title: "Erro",
-        description: "Nao foi possivel cancelar a exclusao.",
+        description: "Não foi possível cancelar a exclusão.",
         variant: "destructive",
       });
     }
   };
 
   const consentLabels: Record<string, string> = {
-    cookies: "Cookies nao essenciais",
-    analytics: "Analytics e metricas",
-    marketing: "Marketing e promocoes",
-    geolocation: "Geolocalizacao precisa",
-    notifications: "Notificacoes push",
+    cookies: "Cookies não essenciais",
+    analytics: "Analytics e métricas",
+    marketing: "Marketing e promoções",
+    geolocation: "Geolocalização precisa",
+    notifications: "Notificações push",
     data_processing: "Processamento de dados",
     third_party: "Compartilhamento com terceiros",
     terms_of_service: "Termos de uso",
-    privacy_policy: "Politica de privacidade",
+    privacy_policy: "Política de privacidade",
   };
 
   return (
@@ -281,13 +281,13 @@ export default function PrivacySettingsPage() {
         >
           <div className="sticky top-0 z-20 -mx-4 mb-5 border-b border-border/60 bg-background/90 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:mb-6 sm:rounded-3xl sm:border sm:bg-card/85 sm:px-5 sm:shadow-sm">
             <div className="flex items-start gap-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="shrink-0 rounded-full"
-                onClick={() => navigate("/conta/preferencias")}
-                type="button"
-              >
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="shrink-0 rounded-full"
+                  onClick={() => navigate(appUrls.settings)}
+                  type="button"
+                >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <div className="min-w-0">
@@ -298,7 +298,7 @@ export default function PrivacySettingsPage() {
                   Privacidade e dados
                 </h1>
                 <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
-                  Consentimentos, exportacao e exclusao da conta.
+                  Consentimentos, exportação e exclusão da conta.
                 </p>
               </div>
             </div>
@@ -309,10 +309,10 @@ export default function PrivacySettingsPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-destructive">
                   <Clock className="h-5 w-5" />
-                  Conta agendada para exclusao
+                  Conta agendada para exclusão
                 </CardTitle>
                 <CardDescription>
-                  Sua conta sera permanentemente excluida em{" "}
+                  Sua conta será permanentemente excluída em{" "}
                   {deletionStatus.days_remaining} dias (
                   {new Date(deletionStatus.scheduled_purge_at!).toLocaleDateString("pt-BR")}
                   ).
@@ -320,8 +320,8 @@ export default function PrivacySettingsPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-sm leading-6 text-muted-foreground">
-                  Durante esse periodo voce ainda pode cancelar a exclusao. Depois
-                  da data final, os dados nao poderao ser recuperados.
+                  Durante esse período você ainda pode cancelar a exclusão. Depois
+                  da data final, os dados não poderão ser recuperados.
                 </p>
                 <Button
                   variant="outline"
@@ -329,7 +329,7 @@ export default function PrivacySettingsPage() {
                   className="w-full border-destructive text-destructive hover:bg-destructive/10 sm:w-auto"
                 >
                   <XCircle className="mr-2 h-4 w-4" />
-                  Cancelar exclusao da conta
+                  Cancelar exclusão da conta
                 </Button>
               </CardContent>
             </Card>
@@ -340,13 +340,13 @@ export default function PrivacySettingsPage() {
               <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/90">
                 Direitos do titular
               </p>
-              <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-                Controle dos seus dados
-              </h2>
-              <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-                Esta area concentra exportacao, consentimentos e fluxos de exclusao
-                conforme a politica de privacidade e a LGPD.
-              </p>
+                <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+                  Controle dos seus dados
+                </h2>
+                <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
+                Esta área concentra exportação, consentimentos e fluxos de exclusão
+                conforme a política de privacidade e a LGPD.
+                </p>
             </div>
           </section>
 
@@ -358,13 +358,13 @@ export default function PrivacySettingsPage() {
                   Meus dados
                 </CardTitle>
                 <CardDescription>
-                  Acesse uma copia estruturada dos seus dados pessoais.
+                  Acesse uma cópia estruturada dos seus dados pessoais.
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-sm leading-6 text-muted-foreground">
-                  O arquivo inclui perfil, territorios, mensagens, operacoes e
-                  historico disponivel para sua conta.
+                  O arquivo inclui perfil, territórios, mensagens, operações e
+                  histórico disponível para sua conta.
                 </p>
               </CardContent>
               <CardFooter>
@@ -395,7 +395,7 @@ export default function PrivacySettingsPage() {
                   Consentimentos
                 </CardTitle>
                 <CardDescription>
-                  Gerencie permissoes de uso e tratamento de dados.
+                  Gerencie permissões de uso e tratamento de dados.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -443,22 +443,22 @@ export default function PrivacySettingsPage() {
                   <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
                   <div className="text-sm">
                     <p className="mb-1 font-medium text-destructive">
-                      Esta acao nao pode ser desfeita apos 30 dias
+                    Esta ação não pode ser desfeita após 30 dias
                     </p>
                     <p className="leading-6 text-muted-foreground">
-                      Sua conta e desativada imediatamente e os dados entram em fila
-                      de remocao permanente. Antes do prazo final, voce ainda pode
+                      Sua conta é desativada imediatamente e os dados entram em fila
+                      de remoção permanente. Antes do prazo final, você ainda pode
                       cancelar.
                     </p>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="delete-reason">Motivo da exclusao (opcional)</Label>
+                  <Label htmlFor="delete-reason">Motivo da exclusão (opcional)</Label>
                   <Textarea
                     id="delete-reason"
                     className="min-h-[120px]"
-                    placeholder="Nos conte por que voce esta deixando a plataforma."
+                    placeholder="Nos conte por que você está deixando a plataforma."
                     value={deleteReason}
                     onChange={(event) => setDeleteReason(event.target.value)}
                   />
@@ -477,23 +477,23 @@ export default function PrivacySettingsPage() {
                     >
                       <Trash2 className="mr-2 h-4 w-4" />
                       {deletionStatus?.status === "scheduled"
-                        ? "Exclusao ja agendada"
-                        : "Solicitar exclusao da conta"}
+                        ? "Exclusão já agendada"
+                        : "Solicitar exclusão da conta"}
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
                       <AlertDialogTitle className="flex items-center gap-2">
                         <AlertTriangle className="h-5 w-5 text-destructive" />
-                        Confirmar exclusao da conta
+                        Confirmar exclusão da conta
                       </AlertDialogTitle>
                       <AlertDialogDescription className="space-y-2">
-                        <p>Essa acao vai:</p>
+                        <p>Essa ação vai:</p>
                         <ul className="list-disc space-y-1 pl-5 text-sm">
                           <li>Desativar o acesso imediatamente</li>
                           <li>Remover dados pessoais em 30 dias</li>
                           <li>Cancelar assinaturas ativas</li>
-                          <li>Anonimizar conteudo quando aplicavel</li>
+                          <li>Anonimizar conteúdo quando aplicável</li>
                         </ul>
                       </AlertDialogDescription>
                     </AlertDialogHeader>
@@ -503,7 +503,7 @@ export default function PrivacySettingsPage() {
                         onClick={handleDeleteAccount}
                         className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                       >
-                        Confirmar exclusao
+                        Confirmar exclusão
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
@@ -521,7 +521,7 @@ export default function PrivacySettingsPage() {
               >
                 <div className="flex items-center gap-3">
                   <FileText className="h-5 w-5 text-muted-foreground" />
-                  <span className="text-sm font-medium">Politica de Privacidade</span>
+                  <span className="text-sm font-medium">Política de Privacidade</span>
                 </div>
                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
               </a>

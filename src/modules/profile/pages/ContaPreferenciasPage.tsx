@@ -19,9 +19,9 @@ import {
 
 const PREFERENCE_CARDS = [
   {
-    title: "Notificacoes",
-    description: "Defina canais, frequencia e silencioso.",
-    cta: "Abrir notificacoes",
+    title: "Notificações",
+    description: "Defina canais, frequência e horário silencioso.",
+    cta: "Abrir notificações",
     icon: Bell,
     hrefKey: "notifications",
   },
@@ -33,15 +33,15 @@ const PREFERENCE_CARDS = [
     hrefKey: "privacy",
   },
   {
-    title: "Vinculos e membros",
-    description: "Gerencie ligacoes de identidade ativa e times.",
-    cta: "Abrir vinculos",
+    title: "Vínculos e membros",
+    description: "Gerencie ligações da identidade ativa e dos times.",
+    cta: "Abrir vínculos",
     icon: Link2,
     hrefKey: "links",
   },
   {
     title: "Identidade ativa",
-    description: "Ajuste configuracoes do perfil em contexto.",
+    description: "Ajuste configurações do perfil em contexto.",
     cta: "Ajustar identidade",
     icon: SlidersHorizontal,
     hrefKey: "identity",
@@ -76,7 +76,7 @@ export default function ContaPreferenciasPage() {
   return (
     <>
       <Helmet>
-        <title>Preferencias da conta</title>
+        <title>Preferências da conta</title>
       </Helmet>
 
       <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.10),transparent_28%),linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.32))]">
@@ -92,17 +92,17 @@ export default function ContaPreferenciasPage() {
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
-              <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                  Conta e preferencia
-                </p>
-                <h1 className="truncate text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-                  Preferencias da conta
-                </h1>
-                <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
-                  Notificacoes, privacidade e ajustes da identidade ativa.
-                </p>
-              </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                    Conta e preferências
+                  </p>
+                  <h1 className="truncate text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+                    Preferências da conta
+                  </h1>
+                  <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
+                    Notificações, privacidade e ajustes da identidade ativa.
+                  </p>
+                </div>
             </div>
           </div>
 
@@ -112,11 +112,11 @@ export default function ContaPreferenciasPage() {
                 Atalhos principais
               </p>
               <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-                Ajustes pessoais em um so lugar
+                Ajustes pessoais em um só lugar
               </h2>
               <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-                Use essas entradas para controlar comunicacao, privacidade e
-                relacoes da sua identidade atual sem misturar com operacao.
+                Use essas entradas para controlar comunicação, privacidade e
+                relações da sua identidade atual sem misturar com operação.
               </p>
             </div>
           </section>

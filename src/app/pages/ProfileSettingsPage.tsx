@@ -22,18 +22,18 @@ const TAB_META: Record<
   privacy: {
     eyebrow: "Privacidade do perfil",
     title: "Controle o que aparece na sua identidade",
-    description: "Visibilidade publica, dados sensiveis e apresentacao do perfil ativo.",
+    description: "Visibilidade pública, dados sensíveis e apresentação do perfil ativo.",
     icon: Shield,
   },
   links: {
-    eyebrow: "Vinculos da identidade",
-    title: "Gerencie conexoes e relacoes operacionais",
-    description: "Perfis relacionados, ligacoes da conta e contexto da identidade ativa.",
+    eyebrow: "Vínculos da identidade",
+    title: "Gerencie conexões e relações operacionais",
+    description: "Perfis relacionados, ligações da conta e contexto da identidade ativa.",
     icon: Link2,
   },
   members: {
-    eyebrow: "Membros e permissoes",
-    title: "Convites, papeis e acesso do time",
+    eyebrow: "Membros e permissões",
+    title: "Convites, papéis e acesso do time",
     description: "Organize quem participa do perfil profissional ou empresarial.",
     icon: Users,
   },
@@ -110,20 +110,20 @@ export default function ProfileSettingsPage() {
   return (
     <>
       <Helmet>
-        <title>Configuracoes da identidade</title>
+        <title>Configurações da identidade</title>
       </Helmet>
 
       <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.08),transparent_30%),linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.3))]">
         <main className="mx-auto w-full max-w-6xl px-4 pb-8 pt-4 sm:px-6 sm:pb-10 sm:pt-6 lg:px-8">
           <div className="sticky top-0 z-20 -mx-4 mb-5 border-b border-border/60 bg-background/90 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:mb-6 sm:rounded-3xl sm:border sm:bg-card/85 sm:px-5 sm:shadow-sm">
             <div className="flex items-start gap-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="shrink-0 rounded-full"
-                onClick={() => navigate("/conta/preferencias")}
-                type="button"
-              >
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="shrink-0 rounded-full"
+                  onClick={() => navigate(appUrls.settings)}
+                  type="button"
+                >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <div className="min-w-0">
@@ -131,10 +131,10 @@ export default function ProfileSettingsPage() {
                   Identidade ativa
                 </p>
                 <h1 className="truncate text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-                  Configuracoes da identidade
+                  Configurações da identidade
                 </h1>
                 <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
-                  Privacidade, vinculos e permissoes do perfil que esta em uso.
+                  Privacidade, vínculos e permissões do perfil que está em uso.
                 </p>
               </div>
             </div>
@@ -166,11 +166,11 @@ export default function ProfileSettingsPage() {
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-foreground">{activeProfile.display_name}</p>
                     <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                      Ajustes aplicados a identidade atual. Preferencias de conta ficam em{" "}
+                      Ajustes aplicados à identidade atual. Preferências de conta ficam em{" "}
                       <button
                         type="button"
                         className="font-medium text-primary underline-offset-4 hover:underline"
-                        onClick={() => navigate("/conta/preferencias")}
+                        onClick={() => navigate(appUrls.settings)}
                       >
                         /conta/preferencias
                       </button>
@@ -191,6 +191,7 @@ export default function ProfileSettingsPage() {
               <TabsTrigger value="links" className="min-w-fit gap-2 rounded-2xl px-4 py-2.5">
                 <Link2 className="h-4 w-4" />
                 Vinculos
+                Vínculos
               </TabsTrigger>
               {canHaveMembers ? (
                 <TabsTrigger value="members" className="min-w-fit gap-2 rounded-2xl px-4 py-2.5">
@@ -229,17 +230,17 @@ export default function ProfileSettingsPage() {
               <div>
                 <p className="text-sm font-semibold text-foreground">Voltar para ajustes da conta</p>
                 <p className="text-sm leading-6 text-muted-foreground">
-                  Notificacoes, privacidade LGPD e configuracoes gerais ficam separadas da identidade.
+                  Notificações, privacidade LGPD e configurações gerais ficam separadas da identidade.
                 </p>
               </div>
               <Button
                 variant="outline"
                 className="w-full justify-center sm:w-auto"
-                onClick={() => navigate("/conta/preferencias")}
+                onClick={() => navigate(appUrls.settings)}
                 type="button"
               >
                 <Settings2 className="mr-2 h-4 w-4" />
-                Abrir preferencias
+                Abrir preferências
               </Button>
             </div>
           </section>
