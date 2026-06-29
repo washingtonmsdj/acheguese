@@ -54,34 +54,34 @@ export function EmpresasSection({
       />
 
       <SectionFrame
-        title="Acoes empresariais"
-        description="Atalhos para gerir empresa, classificados e operacao gastronomica."
+        title="Ações empresariais"
+        description="Atalhos para gerir empresa, classificados e operação gastronômica."
       >
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           <HubLinkCard
             icon={Building2}
             title="Nova empresa"
-            description="Inicie o fluxo de criacao de empresa."
+            description="Inicie o fluxo de criação de empresa."
             onClick={() => navigate(appUrls.business.create)}
           />
           <HubLinkCard
             icon={ArrowRight}
-            title="Explorar empresas do territorio"
-            description="Ver ecossistema de empresas e referencias locais."
+            title="Explorar empresas do território"
+            description="Ver ecossistema de empresas e referências locais."
             onClick={() => navigate(appUrls.business.list)}
           />
           {showJobs ? (
             <HubLinkCard
               icon={Briefcase}
               title="Publicar vaga"
-              description="Abra uma vaga e publique no modulo de empregos."
+              description="Abra uma vaga e publique no módulo de empregos."
               onClick={() => navigate(`${appUrls.jobs}/publicar`)}
             />
           ) : null}
           <HubLinkCard
             icon={LayoutGrid}
             title="Novo classificado"
-            description="Publique produto ou servico nos classificados."
+            description="Publique produto ou serviço nos classificados."
             onClick={() => navigate(appUrls.classifieds.new)}
           />
           {showPublicAnalytics ? (
@@ -104,15 +104,15 @@ export function EmpresasSection({
             <HubLinkCard
               icon={BarChart3}
               title="Analytics gastronomia"
-              description="Visitas, engajamento e performance da operacao gastronomica."
+              description="Visitas, engajamento e performance da operação gastronômica."
               onClick={() => navigate(primaryGastronomyModule.gastronomy.analyticsUrl!)}
             />
           ) : null}
           {primaryGastronomyModule?.gastronomy.menuUrl ? (
             <HubLinkCard
               icon={LayoutGrid}
-              title="Produtos e cardapio"
-              description="Gerencie itens, categorias e precos da gastronomia."
+              title="Produtos e cardápio"
+              description="Gerencie itens, categorias e preços da gastronomia."
               onClick={() => navigate(primaryGastronomyModule.gastronomy.menuUrl!)}
             />
           ) : null}

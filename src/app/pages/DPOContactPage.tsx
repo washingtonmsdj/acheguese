@@ -100,7 +100,7 @@ const RIGHTS = [
 
 const RELATED_LINKS = [
   { label: "Privacidade da conta", to: "/conta/privacidade" },
-  { label: "Politica de privacidade", to: "/privacidade" },
+  { label: "Política de privacidade", to: "/privacidade" },
   { label: "Termos de uso", to: "/termos" },
 ] as const;
 
@@ -164,7 +164,7 @@ export default function DPOContactPage() {
     onError: () => {
       const fallbackMessage = dpoEmail
         ? `Tente novamente ou envie diretamente para ${dpoEmail}.`
-        : "Tente novamente pelo formulario mais tarde.";
+        : "Tente novamente pelo formulário mais tarde.";
 
       toast({
         title: "Erro ao enviar",

@@ -21,13 +21,13 @@ function formatPlanLabel(value?: string | null): string {
     case "delivery":
       return "Delivery";
     case "basic":
-      return "Basico";
+      return "Básico";
     case "premium":
       return "Premium";
     case "enterprise":
       return "Enterprise";
     default:
-      return value ? value[0].toUpperCase() + value.slice(1) : "Basico";
+      return value ? value[0].toUpperCase() + value.slice(1) : "Básico";
   }
 }
 
@@ -73,17 +73,17 @@ function DeliveryBusinessCard({ item, navigate }: DeliveryBusinessCardProps) {
   const features = [
     item.gastronomy.deliveryEnabled ? "Delivery ativo" : null,
     showMobility && canUseMotoboyNetwork ? "Rede motoboy" : null,
-    canConfigureDeliveryArea ? "Area de entrega" : null,
-    canSetDeliveryFees ? "Taxas configuraveis" : null,
+    canConfigureDeliveryArea ? "Área de entrega" : null,
+    canSetDeliveryFees ? "Taxas configuráveis" : null,
     showMobility && canTrackDelivery ? "Rastreio" : null,
-    canUseOwnDelivery ? "Entrega propria" : null,
+    canUseOwnDelivery ? "Entrega própria" : null,
   ].filter(Boolean) as string[];
 
   const actions = [
     { label: "Dashboard", url: item.dashboardUrl },
     { label: "Pedidos", url: item.gastronomy.ordersUrl },
     showMobility ? { label: "Entregas", url: item.gastronomy.deliveriesUrl } : null,
-    { label: "Area de entrega", url: item.gastronomy.deliveryAreaUrl },
+    { label: "Área de entrega", url: item.gastronomy.deliveryAreaUrl },
   ].filter((action): action is { label: string; url: string } => Boolean(action?.url));
 
   const effectivePlanTier = entitlements?.planTier ?? item.subscription.planTier;
@@ -147,13 +147,13 @@ export function DeliverySection({
   return (
     <SectionFrame
       title="Delivery"
-      description="Mostra dados e atalhos de entrega da operacao gastronomica."
+      description="Mostra dados e atalhos de entrega da operação gastronômica."
     >
       {deliveryModules.length === 0 ? (
         <EmptyPanel
-          title="Sem operacao de delivery ativa"
+          title="Sem operação de delivery ativa"
           description="Nenhuma empresa com delivery ativo foi encontrada no perfil atual."
-          actionLabel="Ver area de empresas"
+          actionLabel="Ver área de empresas"
           onAction={() => setActiveSection("empresas")}
         />
       ) : (

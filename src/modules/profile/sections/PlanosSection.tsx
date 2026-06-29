@@ -26,13 +26,13 @@ function formatPlanLabel(value?: string | null): string {
     case "delivery":
       return "Delivery";
     case "basic":
-      return "Basico";
+      return "Básico";
     case "premium":
       return "Premium";
     case "enterprise":
       return "Enterprise";
     default:
-      return value ? value[0].toUpperCase() + value.slice(1) : "Basico";
+      return value ? value[0].toUpperCase() + value.slice(1) : "Básico";
   }
 }
 
@@ -56,16 +56,16 @@ export function PlanosSection({
               {formatPlanLabel(identity?.plan?.type || context?.plan?.type)}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Premium: {identity?.plan?.isPremium || context?.plan?.isPremium ? "sim" : "nao"}
+              Premium: {identity?.plan?.isPremium || context?.plan?.isPremium ? "sim" : "não"}
             </p>
           </div>
           <div className="rounded-2xl border border-border bg-background p-4">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">Reputacao</p>
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">Reputação</p>
             <p className="mt-2 text-lg font-semibold text-foreground">
               {identity?.reputation?.score ?? context?.reputation?.score ?? 0}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Nivel {identity?.reputation?.level ?? context?.reputation?.level ?? 1}
+              Nível {identity?.reputation?.level ?? context?.reputation?.level ?? 1}
             </p>
           </div>
         </div>
@@ -73,7 +73,7 @@ export function PlanosSection({
 
       <SectionFrame
         title="Planos e assinaturas por empresa"
-        description="Visao consolidada de plano, status e recursos por empresa."
+        description="Visão consolidada de plano, status e recursos por empresa."
       >
         {businessModules.length === 0 ? (
           <p className="text-sm text-muted-foreground">
@@ -98,7 +98,7 @@ export function PlanosSection({
                 <div className="mt-3 flex flex-wrap gap-2">
                   {item.subscription.canUsePremiumPublicPage ? (
                     <Badge variant="outline" className="text-[10px]">
-                      Pagina premium
+                      Página premium
                     </Badge>
                   ) : null}
                   {item.subscription.canUseOrdersPanel ? (

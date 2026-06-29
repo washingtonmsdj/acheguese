@@ -88,15 +88,15 @@ export default function OfflineSettingsPage() {
   const [importantAlerts] = useState([
     {
       id: "1",
-      title: "Falta de agua programada",
-      content: "Manutencao na caixa d'agua dia 15/03 das 8h as 12h.",
+      title: "Falta de água programada",
+      content: "Manutenção na caixa d'água dia 15/03 das 8h às 12h.",
       date: "15/03/2024",
       type: "maintenance",
     },
     {
       id: "2",
-      title: "Reuniao de condominio",
-      content: "Assembleia geral dia 20/03 as 19h no salao de festas.",
+      title: "Reunião de condomínio",
+      content: "Assembleia geral dia 20/03 às 19h no salão de festas.",
       date: "20/03/2024",
       type: "event",
     },
@@ -122,7 +122,7 @@ export default function OfflineSettingsPage() {
       return;
     }
 
-    toast.error("Nao foi possivel salvar os dados offline.");
+    toast.error("Não foi possível salvar os dados offline.");
   };
 
   const handleClearCache = async () => {
@@ -134,7 +134,7 @@ export default function OfflineSettingsPage() {
       return;
     }
 
-    toast.error("Nao foi possivel limpar o cache offline.");
+    toast.error("Não foi possível limpar o cache offline.");
   };
 
   return (
@@ -164,7 +164,7 @@ export default function OfflineSettingsPage() {
                   Modo offline
                 </h1>
                 <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
-                  Defina o que precisa continuar acessivel quando o sinal cair.
+                  Defina o que precisa continuar acessível quando o sinal cair.
                 </p>
               </div>
             </div>
@@ -179,8 +179,8 @@ export default function OfflineSettingsPage() {
                 Contatos, avisos e dados essenciais no aparelho
               </h2>
               <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-                O modo offline guarda informacoes criticas do territorio e da operacao para consultas rapidas
-                sem depender da rede.
+                O modo offline guarda informações críticas do território e da operação para
+                consultas rápidas sem depender da rede.
               </p>
             </div>
           </section>
@@ -201,8 +201,8 @@ export default function OfflineSettingsPage() {
                   <div className="grid gap-3 sm:grid-cols-3">
                     <StatusTile
                       active={isOnline}
-                      title="Conexao"
-                      activeLabel="Rede ativa e sincronizacao disponivel."
+                      title="Conexão"
+                      activeLabel="Rede ativa e sincronização disponível."
                       inactiveLabel="Sem internet no momento."
                       tone="danger"
                     />
@@ -210,13 +210,13 @@ export default function OfflineSettingsPage() {
                       active={isServiceWorkerReady}
                       title="Service worker"
                       activeLabel="Cache local pronto para uso."
-                      inactiveLabel="Ainda nao inicializado."
+                      inactiveLabel="Ainda não inicializado."
                       tone="neutral"
                     />
                     <StatusTile
                       active={hasCriticalData}
                       title="Dados salvos"
-                      activeLabel="Conteudo critico ja esta no dispositivo."
+                      activeLabel="Conteúdo crítico já está no dispositivo."
                       inactiveLabel="Nenhum pacote offline salvo."
                       tone="neutral"
                     />
@@ -232,10 +232,10 @@ export default function OfflineSettingsPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
                     <Phone className="h-4 w-4" />
-                    Contatos de emergencia
+                    Contatos de emergência
                   </CardTitle>
                   <CardDescription>
-                    Numeros que precisam continuar acessiveis sem internet.
+                    Números que precisam continuar acessíveis sem internet.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="grid gap-4 sm:grid-cols-2">
@@ -251,7 +251,7 @@ export default function OfflineSettingsPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="sindico">Sindico</Label>
+                    <Label htmlFor="sindico">Síndico</Label>
                     <Input
                       id="sindico"
                       type="tel"
@@ -262,7 +262,7 @@ export default function OfflineSettingsPage() {
                     />
                   </div>
                   <div className="space-y-2 sm:col-span-2">
-                    <Label htmlFor="emergencia">Emergencia publica</Label>
+                    <Label htmlFor="emergencia">Emergência pública</Label>
                     <Input
                       id="emergencia"
                       type="text"
@@ -277,15 +277,15 @@ export default function OfflineSettingsPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
                     <Building2 className="h-4 w-4" />
-                    Informacoes do edificio
+                    Informações do edifício
                   </CardTitle>
                   <CardDescription>
-                    Base local para localizacao, portaria e identificacao do condominio.
+                    Base local para localização, portaria e identificação do condomínio.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2 sm:col-span-2">
-                    <Label htmlFor="building-name">Nome do edificio</Label>
+                    <Label htmlFor="building-name">Nome do edifício</Label>
                     <Input
                       id="building-name"
                       value={buildingInfo.name}
@@ -295,7 +295,7 @@ export default function OfflineSettingsPage() {
                     />
                   </div>
                   <div className="space-y-2 sm:col-span-2">
-                    <Label htmlFor="building-address">Endereco</Label>
+                    <Label htmlFor="building-address">Endereço</Label>
                     <Input
                       id="building-address"
                       value={buildingInfo.address}
@@ -326,7 +326,7 @@ export default function OfflineSettingsPage() {
                     Avisos importantes
                   </CardTitle>
                   <CardDescription>
-                    Conteudo critico que vale manter no aparelho para consulta imediata.
+                    Conteúdo crítico que vale manter no aparelho para consulta imediata.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -356,7 +356,7 @@ export default function OfflineSettingsPage() {
                     Salve os dados offline quando estiver com internet boa, antes de deslocamentos ou dias com risco de instabilidade.
                   </p>
                   <p>
-                    Priorize numeros de emergencia, avisos de agua, energia, seguranca e contatos do predio.
+                    Priorize números de emergência, avisos de água, energia, segurança e contatos do prédio.
                   </p>
                 </CardContent>
               </Card>
@@ -401,7 +401,7 @@ export default function OfflineSettingsPage() {
         open={clearCacheDialogOpen}
         onOpenChange={setClearCacheDialogOpen}
         title="Limpar dados offline?"
-        description="Esta acao remove os dados salvos para uso sem internet neste dispositivo."
+        description="Esta ação remove os dados salvos para uso sem internet neste dispositivo."
         confirmLabel="Limpar dados"
         cancelLabel="Manter dados"
         onConfirm={handleClearCache}

@@ -29,7 +29,13 @@ import {
   CardTitle,
 } from "@/shared/components/ui/card";
 import { Label } from "@/shared/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/components/ui/select";
 import { Switch } from "@/shared/components/ui/switch";
 
 type NotificationPreferences = NotificationPreferencesRecord;
@@ -163,13 +169,13 @@ export default function NotificationPreferencesPage() {
         >
           <div className="sticky top-0 z-20 -mx-4 mb-5 border-b border-border/60 bg-background/90 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:mb-6 sm:rounded-3xl sm:border sm:bg-card/85 sm:px-5 sm:shadow-sm">
             <div className="flex items-start gap-3">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="shrink-0 rounded-full"
-                  onClick={() => navigate(appUrls.settings)}
-                  type="button"
-                >
+              <Button
+                variant="ghost"
+                size="icon"
+                className="shrink-0 rounded-full"
+                onClick={() => navigate(appUrls.profile.preferences)}
+                type="button"
+              >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <div className="min-w-0">
@@ -219,7 +225,7 @@ export default function NotificationPreferencesPage() {
                 <PreferenceRow
                   id="email"
                   icon={<Mail className="h-5 w-5" />}
-                  label="Email"
+                  label="E-mail"
                   description="Receber notificações por e-mail."
                   checked={preferences.email_enabled}
                   onCheckedChange={(checked) =>

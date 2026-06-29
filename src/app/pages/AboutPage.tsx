@@ -8,27 +8,27 @@ import { Button } from "@/shared/components/ui/button";
 const PLATFORM_PILLARS = [
   {
     icon: MapPin,
-    title: "Navegacao territorial",
+    title: "Navegação territorial",
     description:
-      "Cidade, bairro e comunidade sao tratados como superficies canonicas, com rotas e contexto consistentes para descoberta local.",
+      "Cidade, bairro e comunidade são tratados como superfícies canônicas, com rotas e contexto consistentes para descoberta local.",
   },
   {
     icon: Users,
-    title: "Economia e servicos locais",
+    title: "Economia e serviços locais",
     description:
-      "Empresas, profissionais, classificados e instituicoes ganham visibilidade no contexto territorial correto, sem duplicacao estrutural.",
+      "Empresas, profissionais, classificados e instituições ganham visibilidade no contexto territorial correto, sem duplicação estrutural.",
   },
   {
     icon: Heart,
     title: "Comunidade operacional",
     description:
-      "O produto combina leitura publica, confianca, verificacao e interacao orientada ao bairro, com foco em utilidade real.",
+      "O produto combina leitura pública, confiança, verificação e interação orientada ao bairro, com foco em utilidade real.",
   },
   {
     icon: Target,
     title: "Escala com SSOT",
     description:
-      "Cada modulo usa contratos centrais de navegacao, perfil, territorio e dados para evitar superficies paralelas e legado manual.",
+      "Cada módulo usa contratos centrais de navegação, perfil, território e dados para evitar superfícies paralelas e legado manual.",
   },
 ] as const;
 
@@ -76,15 +76,15 @@ export default function AboutPage() {
           <section className="rounded-3xl border border-border/70 bg-card/90 p-5 shadow-sm sm:p-6">
             <div className="space-y-3">
               <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/90">
-                Territorio, comunidade e descoberta local
+                Território, comunidade e descoberta local
               </p>
               <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[2rem]">
                 Um produto pensado para uso territorial de verdade
               </h2>
               <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-                O Achegue-se organiza moradores, negocios, servicos, classificados, gastronomia,
-                mapa e comunidade em uma estrutura unica. A ideia nao e criar paginas soltas, e sim
-                um sistema operacional local com leitura publica e interacao contextual.
+                O Achegue-se organiza moradores, negócios, serviços, classificados, gastronomia,
+                mapa e comunidade em uma estrutura única. A ideia não é criar páginas soltas, e sim
+                um sistema operacional local com leitura pública e interação contextual.
               </p>
             </div>
 
@@ -103,8 +103,8 @@ export default function AboutPage() {
 
           <section className="mt-5 rounded-3xl border border-primary/20 bg-primary/5 p-4 shadow-sm sm:p-5">
             <p className="text-sm leading-6 text-foreground">
-              O produto nasceu para conectar contexto local, economia de bairro e vida comunitaria
-              em um fluxo coerente. A operacao de referencia atual parte de {launchPlace}.
+              O produto nasceu para conectar contexto local, economia de bairro e vida comunitária
+              em um fluxo coerente. A operação de referência atual parte de {launchPlace}.
             </p>
           </section>
 
@@ -136,11 +136,11 @@ export default function AboutPage() {
             <div className="mt-4 space-y-3">
               <p className="text-sm leading-6 text-muted-foreground">
                 A home geral explica o conceito. A cidade vira descoberta operacional. O bairro vira
-                contexto principal de comunidade, leitura publica e interacao verificada.
+                contexto principal de comunidade, leitura pública e interação verificada.
               </p>
               <p className="text-sm leading-6 text-muted-foreground">
-                Essa separacao permite crescer com menos ruido visual, menos duplicacao de dados e
-                mais previsibilidade de navegacao entre modulos.
+                Essa separação permite crescer com menos ruído visual, menos duplicação de dados e
+                mais previsibilidade de navegação entre módulos.
               </p>
             </div>
           </section>
@@ -148,7 +148,7 @@ export default function AboutPage() {
           <section className="mt-5 rounded-3xl border border-border/70 bg-card/90 p-4 shadow-sm sm:p-5">
             <div className="flex flex-col gap-3">
               <p className="text-sm leading-6 text-muted-foreground">
-                Para contato institucional, suporte ou temas regulatorios, use os canais oficiais da
+                Para contato institucional, suporte ou temas regulatórios, use os canais oficiais da
                 plataforma.
               </p>
               <div className="flex flex-wrap gap-3">
@@ -168,7 +168,7 @@ export default function AboutPage() {
                   to="/privacidade"
                   className="text-sm font-medium text-primary underline-offset-4 hover:underline"
                 >
-                  Politica de privacidade
+                  Política de privacidade
                 </Link>
               </div>
             </div>

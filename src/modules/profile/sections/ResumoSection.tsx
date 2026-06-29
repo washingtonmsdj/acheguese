@@ -89,7 +89,6 @@ export function ResumoSection({
             >
               <LayoutDashboard className="h-5 w-5" />
               <p className="mt-3 text-sm font-semibold">Abrir Central</p>
-              <p className="mt-1 text-xs text-primary-foreground/80">Operacao, empresas e dashboards.</p>
               <p className="mt-1 text-xs text-primary-foreground/80">Operação, empresas e dashboards.</p>
             </button>
           </div>
@@ -126,19 +125,19 @@ export function ResumoSection({
       <NextActionsPanel actions={nextActions} />
 
       <SectionFrame
-        title="Acoes pessoais"
+        title="Ações pessoais"
         description="Tudo que pertence ao usuário: identidade, privacidade, notificações, favoritos e endereço residencial."
       >
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <HubLinkCard
             icon={UserRound}
             title="Dados pessoais"
-            description="Editar nome, foto, bio e apresentacao publica."
+            description="Editar nome, foto, bio e apresentação pública."
             onClick={() => setActiveSection("dados-pessoais")}
           />
           <HubLinkCard
             icon={MapPin}
-            title="Endereco e residencia"
+            title="Endereço e residência"
             description="Atualizar residência, território e verificação."
             onClick={() => navigate(appUrls.profile.addresses)}
           />
@@ -152,13 +151,13 @@ export function ResumoSection({
           <HubLinkCard
             icon={Bookmark}
             title="Favoritos"
-            description="Itens salvos e referencias pessoais."
+            description="Itens salvos e referências pessoais."
             onClick={() => setActiveSection("dados-pessoais")}
           />
           <HubLinkCard
             icon={CreditCard}
             title="Planos pessoais"
-            description="Resumo de cobrancas e assinaturas vinculadas."
+            description="Resumo de cobranças e assinaturas vinculadas."
             onClick={() => navigate(appUrls.profile.billing)}
           />
           <HubLinkCard
@@ -176,8 +175,8 @@ export function ResumoSection({
           {showFamilySafetyLinks ? (
             <HubLinkCard
               icon={Users}
-              title="Familia"
-              description="Vinculos familiares e zonas seguras."
+              title="Família"
+              description="Vínculos familiares e zonas seguras."
               onClick={() => navigate(appUrls.family.home)}
             />
           ) : null}
