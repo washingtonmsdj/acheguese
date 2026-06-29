@@ -13,8 +13,20 @@ type ExpectRouteReadyOptions = {
   timeoutMs?: number;
 };
 
+type MobileViewport = {
+  width: number;
+  height: number;
+};
+
+type ExpectMobilePublicSurfaceOptions = OpenRouteOptions &
+  ExpectRouteReadyOptions & {
+    path: string;
+    viewport?: MobileViewport;
+  };
+
 const DEFAULT_NAVIGATION_TIMEOUT_MS = 120_000;
 const DEFAULT_READY_TIMEOUT_MS = 120_000;
+export const DEFAULT_MOBILE_VIEWPORT: Readonly<MobileViewport> = { width: 360, height: 800 };
 const LOADER_PATTERNS = [/Preparando a casa/i, /Buscando as informa/i];
 const PAUSED_SURFACE_PATTERNS = [/MVP p(?:ú|u)blico/i, /separado para ajustes/i];
 const CONSENT_BUTTON_LABELS = ['Aceitar Todos', 'Aceitar todos', 'Fechar'];
@@ -150,4 +162,22 @@ export async function expectNoHorizontalOverflow(page: Page, fallbackViewportWid
       { timeout: 20_000 },
     )
     .toBeLessThanOrEqual(maxAllowed);
+}
+
+export async function expectMobilePublicSurface(page: Page, options: ExpectMobilePublicSurfaceOptions) {
+  const {
+    path,
+    viewport = DEFAULT_MOBILE_VIEWPORT,
+    waitUntil = 'domcontentloaded',
+    dismissConsent = true,
+    timeoutMs = 90_000,
+    expectedUrlPart,
+    readyPattern,
+    mainSelector,
+  } = options;
+
+  await page.setViewportSize(viewport);
+  await openPublicRoute(page, path, { timeoutMs, waitUntil, dismissConsent });
+  await expectRouteReady(page, { expectedUrlPart, readyPattern, mainSelector, timeoutMs });
+  await expectNoHorizontalOverflow(page, viewport.width);
 }

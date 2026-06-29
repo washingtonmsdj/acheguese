@@ -1,81 +1,68 @@
-import { expect, test } from "@playwright/test";
+import { test } from '@playwright/test';
+import { expectMobilePublicSurface } from './support/publicRouteAssertions';
 
-const MOBILE_VIEWPORT = { width: 360, height: 800 };
-const NAVIGATION_TIMEOUT_MS = 90_000;
-const CONTENT_TIMEOUT_MS = 60_000;
+const MOBILE_PUBLIC_ROUTES = [
+  {
+    path: '/',
+    readyPattern: /Achegue-se|Entrar no Meu Bairro|O Achegue-se começa pelo Complexo/i,
+  },
+  {
+    path: '/login',
+    readyPattern: /Bem-vindo de volta|Entrar/i,
+    mainSelector: 'main#main-content',
+  },
+  {
+    path: '/cadastro',
+    readyPattern: /Achegue-se|Crie sua conta/i,
+    mainSelector: 'main#main-content',
+  },
+  {
+    path: '/sobre',
+    readyPattern: /Sobre o Achegue-se/i,
+    mainSelector: 'main#main-content',
+  },
+  {
+    path: '/contato',
+    readyPattern: /Entre em Contato|Achegue-se/i,
+    mainSelector: 'main#main-content',
+  },
+  {
+    path: '/servicos/ba/salvador/complexo-do-nordeste-de-amaralina',
+    readyPattern: /Serviços|Servicos|Complexo do Nordeste de Amaralina|Profissional/i,
+  },
+  {
+    path: '/termos',
+    readyPattern: /Termos de uso|Regras contratuais para uso do Achegue-se/i,
+    mainSelector: 'main#main-content',
+  },
+  {
+    path: '/regras',
+    readyPattern: /Regras da comunidade|Regras para manter a comunidade útil e segura/i,
+    mainSelector: 'main#main-content',
+  },
+  {
+    path: '/privacidade',
+    readyPattern: /Política de privacidade|Como o Achegue-se trata dados pessoais/i,
+    mainSelector: 'main#main-content',
+  },
+  {
+    path: '/dpo',
+    readyPattern: /Contato com o encarregado de dados|Solicite acesso, correção, exclusão ou reporte uma violação/i,
+    mainSelector: 'main#main-content',
+  },
+] as const;
 
 test.setTimeout(120_000);
 
-async function assertCoreMobileLayout(page: import("@playwright/test").Page, path: string) {
-  await page.setViewportSize(MOBILE_VIEWPORT);
-  for (let attempt = 1; attempt <= 2; attempt += 1) {
-    try {
-      await page.goto(path, { waitUntil: "commit", timeout: NAVIGATION_TIMEOUT_MS });
-      break;
-    } catch (error) {
-      if (attempt === 2) throw error;
-      await page.waitForTimeout(1_500);
-    }
+test.describe('Mobile core public layout', () => {
+  for (const route of MOBILE_PUBLIC_ROUTES) {
+    test(`${route.path} em 360px`, async ({ page }) => {
+      await expectMobilePublicSurface(page, {
+        path: route.path,
+        expectedUrlPart: route.path,
+        readyPattern: route.readyPattern,
+        mainSelector: route.mainSelector,
+      });
+    });
   }
-
-  await expect
-    .poll(
-      async () => {
-        const mainVisible = await page.locator("main").first().isVisible().catch(() => false);
-        const hasText = await page
-          .evaluate(() => (document.body?.innerText ?? "").trim().length > 80)
-          .catch(() => false);
-        return mainVisible || hasText;
-      },
-      { timeout: CONTENT_TIMEOUT_MS },
-    )
-    .toBe(true);
-
-  const hasHorizontalOverflow = await page.evaluate(() => {
-    const root = document.documentElement;
-    return root.scrollWidth > root.clientWidth + 2;
-  });
-  expect(hasHorizontalOverflow).toBe(false);
-}
-
-test.describe("Mobile core public layout", () => {
-  test("landing principal em 360px", async ({ page }) => {
-    await assertCoreMobileLayout(page, "/");
-  });
-
-  test("login em 360px", async ({ page }) => {
-    await assertCoreMobileLayout(page, "/login");
-  });
-
-  test("cadastro em 360px", async ({ page }) => {
-    await assertCoreMobileLayout(page, "/cadastro");
-  });
-
-  test("sobre em 360px", async ({ page }) => {
-    await assertCoreMobileLayout(page, "/sobre");
-  });
-
-  test("contato em 360px", async ({ page }) => {
-    await assertCoreMobileLayout(page, "/contato");
-  });
-
-  test("servicos territorial em 360px", async ({ page }) => {
-    await assertCoreMobileLayout(page, "/servicos/ba/salvador/complexo-do-nordeste-de-amaralina");
-  });
-
-  test("termos em 360px", async ({ page }) => {
-    await assertCoreMobileLayout(page, "/termos");
-  });
-
-  test("regras em 360px", async ({ page }) => {
-    await assertCoreMobileLayout(page, "/regras");
-  });
-
-  test("privacidade em 360px", async ({ page }) => {
-    await assertCoreMobileLayout(page, "/privacidade");
-  });
-
-  test("dpo em 360px", async ({ page }) => {
-    await assertCoreMobileLayout(page, "/dpo");
-  });
 });
