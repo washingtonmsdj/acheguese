@@ -99,7 +99,7 @@ const HIGHLIGHT_CATEGORIES: readonly HighlightCategory[] = [
 const COMMUNITY_MODULE_TABS = [
   { key: "feed", label: "Feed", icon: LayoutList },
   { key: "business", label: "Empresas", icon: Building2 },
-  { key: "services", label: "Servicos", icon: Wrench },
+  { key: "services", label: "Serviços", icon: Wrench },
   { key: "classifieds", label: "Classificados", icon: Tag },
   { key: "gastronomy", label: "Gastronomia", icon: UtensilsCrossed },
   { key: "map", label: "Mapa", icon: MapPin },
@@ -165,15 +165,15 @@ function NeighborhoodClassifiedsHero({
               Classificados do bairro
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-white/62">
-              Compre, venda e encontre oportunidades dentro do territorio, com anuncios ligados ao contexto da comunidade.
+              Compre, venda e encontre oportunidades dentro do território, com anúncios ligados ao contexto da comunidade.
             </p>
 
             <div className="mt-3 flex flex-wrap gap-2">
               <span className="inline-flex min-h-8 items-center rounded-full border border-pink-300/30 bg-pink-300/10 px-3 text-xs font-semibold text-pink-100">
-                Leitura publica
+                Leitura pública
               </span>
               <span className="inline-flex min-h-8 items-center rounded-full border border-amber-300/25 bg-amber-300/10 px-3 text-xs font-semibold text-amber-100">
-                Anuncios locais
+                Anúncios locais
               </span>
             </div>
 
@@ -184,7 +184,7 @@ function NeighborhoodClassifiedsHero({
                 className="inline-flex min-h-11 items-center justify-center rounded-xl bg-pink-400 px-4 text-sm font-semibold text-slate-950 transition-colors hover:bg-pink-300"
               >
                 <Plus className="mr-2 h-4 w-4" />
-                Publicar anuncio
+                Publicar anúncio
               </button>
               <Link
                 to={moduleUrls.map}
@@ -202,13 +202,13 @@ function NeighborhoodClassifiedsHero({
                 Mercado local
               </p>
               <p className="mt-1 text-sm leading-5 text-white/65">
-                {activeCount} anuncios ativos e {sellersCount} vendedores no territorio.
+                {activeCount} anúncios ativos e {sellersCount} vendedores no território.
               </p>
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-3">
                 <p className="text-lg font-semibold text-white">{activeCount}</p>
-                <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/45">Anuncios</p>
+                <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/45">Anúncios</p>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-3">
                 <p className="text-lg font-semibold text-white">{sellersCount}</p>
@@ -216,7 +216,7 @@ function NeighborhoodClassifiedsHero({
               </div>
             </div>
             <div className="rounded-2xl border border-pink-300/15 bg-pink-300/[0.05] px-3 py-3 text-sm text-white/68">
-              A listagem usa o SSOT territorial, mantendo busca, filtros e reputacao dentro do bairro.
+              A listagem usa o SSOT territorial, mantendo busca, filtros e reputação dentro do bairro.
             </div>
           </div>
         </div>

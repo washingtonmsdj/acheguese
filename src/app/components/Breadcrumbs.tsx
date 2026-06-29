@@ -22,7 +22,7 @@ const routeNames: Record<string, string> = {
   cadastro: "Cadastro",
   disponibilidade: "Disponibilidade",
   ganhos: "Ganhos",
-  configuracoes: "Configuracoes",
+  configuracoes: "Configurações",
   profile: "Conta",
   mensagens: "Mensagens",
   ranking: "Ranking",

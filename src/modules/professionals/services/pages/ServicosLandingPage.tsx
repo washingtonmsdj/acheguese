@@ -62,7 +62,7 @@ const BENEFITS = [
 const COMMUNITY_MODULE_TABS = [
   { key: "feed", label: "Feed", icon: LayoutList },
   { key: "business", label: "Empresas", icon: Building2 },
-  { key: "services", label: "Servicos", icon: Wrench },
+  { key: "services", label: "Serviços", icon: Wrench },
   { key: "classifieds", label: "Classificados", icon: Tag },
   { key: "gastronomy", label: "Gastronomia", icon: UtensilsCrossed },
   { key: "map", label: "Mapa", icon: MapPin },
@@ -349,18 +349,18 @@ function NeighborhoodServicesHero({
               {territoryName}
             </p>
             <h1 className="mt-2 max-w-[14ch] text-[1.75rem] font-semibold leading-[1.05] sm:max-w-none sm:text-[2rem]">
-              Servicos e profissionais do bairro
+              Serviços e profissionais do bairro
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-white/62">
-              Explore profissionais locais, compare reputacao e encontre quem atende dentro do territorio com contexto comunitario real.
+              Explore profissionais locais, compare reputação e encontre quem atende dentro do território com contexto comunitário real.
             </p>
 
             <div className="mt-3 flex flex-wrap gap-2">
               <span className="inline-flex min-h-8 items-center rounded-full border border-teal-300/30 bg-teal-300/10 px-3 text-xs font-semibold text-teal-100">
-                Descoberta publica
+                Descoberta pública
               </span>
               <span className="inline-flex min-h-8 items-center rounded-full border border-amber-300/25 bg-amber-300/10 px-3 text-xs font-semibold text-amber-100">
-                Recomendacoes locais
+                Recomendações locais
               </span>
             </div>
 
@@ -391,7 +391,7 @@ function NeighborhoodServicesHero({
                     : "border border-white/10 bg-white/[0.03] text-white/70 hover:bg-white/[0.08]"
                 }`}
               >
-                Todos os servicos
+                Todos os serviços
               </button>
             </div>
           </div>
@@ -402,7 +402,7 @@ function NeighborhoodServicesHero({
                 Panorama local
               </p>
               <p className="mt-1 text-[13px] leading-5 text-white/65 sm:text-sm">
-                {professionalsCount} profissionais e media de {averageRating} no territorio.
+                {professionalsCount} profissionais e média de {averageRating} no território.
               </p>
             </div>
             <div className="grid grid-cols-3 gap-2">
@@ -416,11 +416,11 @@ function NeighborhoodServicesHero({
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-2 py-3 sm:px-3">
                 <p className="text-base font-semibold text-white sm:text-lg">{averageRating}</p>
-                <p className="text-[0.62rem] uppercase tracking-[0.14em] text-white/45 sm:text-[0.68rem] sm:tracking-[0.18em]">Media</p>
+                <p className="text-[0.62rem] uppercase tracking-[0.14em] text-white/45 sm:text-[0.68rem] sm:tracking-[0.18em]">Média</p>
               </div>
             </div>
             <div className="rounded-2xl border border-teal-300/15 bg-teal-300/[0.05] px-3 py-3 text-sm text-white/68">
-              Servicos do bairro usam o territorio como contexto principal. Isso evita paginas genéricas e mantém descoberta, reputacao e proximidade na mesma base.
+              Serviços do bairro usam o território como contexto principal. Isso evita páginas genéricas e mantém descoberta, reputação e proximidade na mesma base.
             </div>
           </div>
         </div>
@@ -464,7 +464,7 @@ export default function ServicosLandingPage({ resolved, activeMemberIds }: Servi
     () => (user ? appUrls.services.register : withQueryParams(appUrls.auth.login, { redirect: appUrls.services.register })),
     [appUrls.auth.login, appUrls.services.register, user],
   );
-  const communityPrimaryLabel = user ? "Cadastrar servico" : "Entrar para interagir";
+  const communityPrimaryLabel = user ? "Cadastrar serviço" : "Entrar para interagir";
 
   // ✅ SSOT: useServicos com filtro territorial — respeita resolved + activeMemberIds
   const { professionals, initialLoading } = useServicos({
@@ -554,7 +554,7 @@ export default function ServicosLandingPage({ resolved, activeMemberIds }: Servi
     >
       {!resolved && (
         <Helmet>
-          <title>Servicos locais | Achegue-se</title>
+          <title>Serviços locais | Achegue-se</title>
           <meta
             name="description"
             content="Encontre profissionais e serviços locais no Achegue-se. Busque prestadores avaliados pela comunidade, acompanhe orçamentos e navegue por território."

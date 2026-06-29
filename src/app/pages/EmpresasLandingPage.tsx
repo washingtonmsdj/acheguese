@@ -166,7 +166,7 @@ function normalizeRealBusinessEntry(business: CoreBusiness): Business {
 const COMMUNITY_MODULE_TABS = [
   { key: "feed", label: "Feed", icon: LayoutList },
   { key: "business", label: "Empresas", icon: Building2 },
-  { key: "services", label: "Servicos", icon: Wrench },
+  { key: "services", label: "Serviços", icon: Wrench },
   { key: "classifieds", label: "Classificados", icon: Tag },
   { key: "gastronomy", label: "Gastronomia", icon: UtensilsCrossed },
   { key: "map", label: "Mapa", icon: MapPin },
@@ -245,18 +245,18 @@ function NeighborhoodBusinessesHero({
               {territoryName}
             </p>
             <h1 className="mt-2 text-2xl font-semibold leading-tight sm:text-[2rem]">
-              Empresas e negocios do bairro
+              Empresas e negócios do bairro
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-white/62">
-              Descubra comercios locais, veja reputacao, explore negocios perto de voce e encontre o que ja funciona dentro do territorio.
+              Descubra comércios locais, veja reputação, explore negócios perto de você e encontre o que já funciona dentro do território.
             </p>
 
             <div className="mt-4 flex flex-wrap gap-2">
               <span className="inline-flex min-h-8 items-center rounded-full border border-teal-300/30 bg-teal-300/10 px-3 text-xs font-semibold text-teal-100">
-                Descoberta publica
+                Descoberta pública
               </span>
               <span className="inline-flex min-h-8 items-center rounded-full border border-amber-300/25 bg-amber-300/10 px-3 text-xs font-semibold text-amber-100">
-                Recomendacoes da comunidade
+                Recomendações da comunidade
               </span>
             </div>
 
@@ -287,7 +287,7 @@ function NeighborhoodBusinessesHero({
                     : "border border-white/10 bg-white/[0.03] text-white/70 hover:bg-white/[0.08]"
                 }`}
               >
-                {nearbyMode ? "Remover perto de voce" : "Perto de voce"}
+                {nearbyMode ? "Remover perto de você" : "Perto de você"}
               </button>
               <button
                 type="button"
@@ -305,13 +305,13 @@ function NeighborhoodBusinessesHero({
                 Panorama local
               </p>
               <p className="mt-1 text-sm text-white/65">
-                {totalBusinesses} negocios ativos e media de {averageRating} no territorio.
+                {totalBusinesses} negócios ativos e média de {averageRating} no território.
               </p>
             </div>
             <div className="grid grid-cols-3 gap-2">
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-3">
                 <p className="text-lg font-semibold text-white">{totalBusinesses}</p>
-                <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/45">Negocios</p>
+                <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/45">Negócios</p>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-3">
                 <p className="text-lg font-semibold text-white">{openBusinesses}</p>
@@ -319,11 +319,11 @@ function NeighborhoodBusinessesHero({
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-3">
                 <p className="text-lg font-semibold text-white">{averageRating}</p>
-                <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/45">Media</p>
+                <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/45">Média</p>
               </div>
             </div>
             <div className="rounded-2xl border border-teal-300/15 bg-teal-300/[0.05] px-3 py-3 text-sm text-white/68">
-              Este modulo usa o territorio como contexto principal. Explore empresas, abra o mapa e navegue pelos negocios do bairro sem depender de imagem manual por local.
+              Este módulo usa o território como contexto principal. Explore empresas, abra o mapa e navegue pelos negócios do bairro sem depender de imagem manual por local.
             </div>
           </div>
         </div>
