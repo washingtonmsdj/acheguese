@@ -46,7 +46,7 @@ function formatTime(dateString: string): string {
 function buildRecipientProfile(conversation: ConversationPreview): DirectMessageRecipientView {
   return {
     id: conversation.seller_id,
-    displayName: conversation.other_user_name || "Usuario",
+    displayName: conversation.other_user_name || "Usuário",
     avatarUrl: conversation.other_user_avatar || null,
     verified: false,
   };
@@ -54,7 +54,7 @@ function buildRecipientProfile(conversation: ConversationPreview): DirectMessage
 
 function getConversationBadge(conversation: ConversationPreview): string {
   if (conversation.status === "blocked") return "Bloqueada";
-  if (conversation.unread_count > 0) return "Nao lida";
+  if (conversation.unread_count > 0) return "Não lida";
   return "Classificado";
 }
 
@@ -119,7 +119,7 @@ function ConversationList({
                   <Avatar className="h-12 w-12 border border-gray-700">
                     <AvatarImage src={conversation.other_user_avatar || undefined} />
                     <AvatarFallback className="bg-orange-500 text-white">
-                      {getInitials(conversation.other_user_name || "Usuario")}
+                      {getInitials(conversation.other_user_name || "Usuário")}
                     </AvatarFallback>
                   </Avatar>
                   {conversation.unread_count > 0 ? (
@@ -132,7 +132,7 @@ function ConversationList({
                 <div className="min-w-0 flex-1">
                   <div className="mb-1 flex items-center gap-2">
                     <span className="truncate text-sm font-semibold text-white">
-                      {conversation.other_user_name || "Usuario"}
+                      {conversation.other_user_name || "Usuário"}
                     </span>
                     {conversation.status !== "blocked" ? (
                       <Shield className="h-4 w-4 text-blue-400" />
@@ -232,7 +232,7 @@ export function MessagesInbox({ currentUserId }: MessagesInboxProps) {
       selectedConversationId,
       recipientProfile.id,
       "inappropriate_content",
-      "Conteudo inapropriado reportado pelo usuario.",
+      "Conteúdo inapropriado reportado pelo usuário.",
     );
     setIsModalOpen(false);
   };
@@ -309,7 +309,7 @@ export function MessagesInbox({ currentUserId }: MessagesInboxProps) {
                   value="unread"
                   className="text-gray-300 data-[state=active]:text-white"
                 >
-                  Nao lidas ({conversationBuckets.unread.length})
+                  Não lidas ({conversationBuckets.unread.length})
                 </TabsTrigger>
                 <TabsTrigger
                   value="blocked"

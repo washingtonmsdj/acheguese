@@ -105,7 +105,7 @@ function getPostBadgeLabel(type: PostContextType): string {
     case "desapego":
       return "Classificado";
     case "recomendacao":
-      return "Recomendacao";
+      return "Recomendação";
     case "alerta":
       return "Alerta";
     default:
@@ -143,7 +143,7 @@ export function DirectMessageModal({
           ? {
               id: currentProfileId,
               displayName:
-                activeProfile?.displayName ?? activeProfile?.name ?? "Voce",
+                activeProfile?.displayName ?? activeProfile?.name ?? "Você",
               avatarUrl: activeProfile?.avatarUrl ?? null,
               verified: false,
             }
@@ -179,7 +179,7 @@ export function DirectMessageModal({
         sender_profile: {
           id: currentProfileId,
           displayName:
-            activeProfile?.displayName ?? activeProfile?.name ?? "Voce",
+            activeProfile?.displayName ?? activeProfile?.name ?? "Você",
           avatarUrl: activeProfile?.avatarUrl ?? null,
           verified: false,
         },
@@ -204,27 +204,27 @@ export function DirectMessageModal({
       const locationData = {
         latitude: result.coords.latitude,
         longitude: result.coords.longitude,
-        address: "Localizacao compartilhada",
+        address: "Localização compartilhada",
       };
 
       const tempMessage: DirectMessage = {
         id: `temp-location-${Date.now()}`,
         sender_profile_id: currentProfileId,
-        message_text: "Compartilhou localizacao",
+        message_text: "Compartilhou localização",
         message_type: "location",
         location_data: locationData,
         created_at: new Date().toISOString(),
         sender_profile: {
           id: currentProfileId,
           displayName:
-            activeProfile?.displayName ?? activeProfile?.name ?? "Voce",
+            activeProfile?.displayName ?? activeProfile?.name ?? "Você",
           avatarUrl: activeProfile?.avatarUrl ?? null,
           verified: false,
         },
       };
 
       setMessages((prev) => [...prev, tempMessage]);
-      await onSendMessage?.("Localizacao compartilhada", "location");
+      await onSendMessage?.("Localização compartilhada", "location");
     } catch (error) {
       logger.error("Erro ao compartilhar localizacao:", error);
     } finally {
@@ -244,7 +244,7 @@ export function DirectMessageModal({
               Mensagem direta
             </DialogTitle>
             <span id="dialog-description" className="sr-only">
-              Conteudo do dialogo
+              Conteúdo do diálogo
             </span>
 
             <div className="flex items-center gap-2">
@@ -327,14 +327,14 @@ export function DirectMessageModal({
         </DialogHeader>
 
         <DialogDescription className="sr-only">
-          Envie uma mensagem direta para este usuario
+          Envie uma mensagem direta para este usuário
         </DialogDescription>
 
         <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
           {messages.length === 0 ? (
             <div className="py-8 text-center text-gray-400">
               <MessageCircle className="mx-auto mb-2 h-10 w-10 opacity-50" />
-              <p className="text-xs">Inicie uma conversa sobre este anuncio</p>
+              <p className="text-xs">Inicie uma conversa sobre este anúncio</p>
             </div>
           ) : (
             messages.map((message) => {
@@ -371,7 +371,7 @@ export function DirectMessageModal({
                           <MapPin className="h-3 w-3" />
                           <span className="text-xs">
                             {message.location_data?.address ||
-                              "Localizacao compartilhada"}
+                              "Localização compartilhada"}
                           </span>
                         </div>
                       ) : (

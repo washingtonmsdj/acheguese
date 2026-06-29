@@ -123,7 +123,7 @@ export const CommunityRightSidebar = memo(
       () => [
         { icon: Building2, label: "Empresas", href: moduleUrls.business },
         { icon: UtensilsCrossed, label: "Gastronomia", href: moduleUrls.gastronomy },
-        { icon: Wrench, label: "Servicos", href: moduleUrls.services },
+        { icon: Wrench, label: "Serviços", href: moduleUrls.services },
         { icon: Store, label: "Classificados", href: moduleUrls.classifieds },
       ],
       [
@@ -155,7 +155,7 @@ export const CommunityRightSidebar = memo(
             <Compass className="mt-0.5 h-8 w-8 text-primary" />
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Territorio
+                Território
               </p>
               <h3 className="mt-1 truncate text-base font-bold text-foreground">{territoryLabel}</h3>
               <p className="text-xs text-muted-foreground">
@@ -195,11 +195,11 @@ export const CommunityRightSidebar = memo(
           </div>
         </SidebarSection>
 
-        <SidebarSection title="Empresas do territorio" actionHref={moduleUrls.business} actionLabel="Ver todas">
+        <SidebarSection title="Empresas do território" actionHref={moduleUrls.business} actionLabel="Ver todas">
           {loadingBusinesses ? (
-            <EmptyState>Carregando empresas reais do territorio...</EmptyState>
+            <EmptyState>Carregando empresas reais do território...</EmptyState>
           ) : businesses.length === 0 ? (
-            <EmptyState>Nenhuma empresa ativa cadastrada neste territorio.</EmptyState>
+            <EmptyState>Nenhuma empresa ativa cadastrada neste território.</EmptyState>
           ) : (
             <div className="space-y-2">
               {businesses.map((business) => {
@@ -227,7 +227,7 @@ export const CommunityRightSidebar = memo(
                         {normalizeCategoryLabel(business.category)}
                       </p>
                       <p className="text-xs text-primary">
-                        {rating ? `${rating} (${business.total_reviews ?? 0})` : "Sem avaliacoes"}
+                        {rating ? `${rating} (${business.total_reviews ?? 0})` : "Sem avaliações"}
                       </p>
                     </div>
                   </>

@@ -76,7 +76,7 @@ function handleNotificationAvatarLabel(notification: AppNotification): string {
     typeof notification.data?.actor_name === "string"
       ? notification.data.actor_name
       : null;
-  return actorName ?? notification.title ?? "Notificacao";
+  return actorName ?? notification.title ?? "Notificação";
 }
 
 function handleNotificationAvatarUrl(notification: AppNotification): string | null {
@@ -141,7 +141,7 @@ export function NotificationDropdown() {
           style={{ borderColor: "rgba(255, 255, 255, 0.1)" }}
         >
           <h3 className="text-base font-bold" style={INLINE_STYLES.textPrimary}>
-            Notificacoes
+            Notificações
           </h3>
           {stats.total_unread > 0 ? (
             <Button
@@ -172,10 +172,10 @@ export function NotificationDropdown() {
               className="text-sm font-medium"
               style={INLINE_STYLES.textSecondary}
             >
-              Nenhuma notificacao
+              Nenhuma notificação
             </p>
             <p className="mt-1 text-xs" style={INLINE_STYLES.textMuted}>
-              Voce esta em dia.
+              Você está em dia.
             </p>
           </div>
         ) : (
@@ -247,7 +247,7 @@ export function NotificationDropdown() {
                         deleteNotification(notification.id);
                       }}
                       className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1.5 opacity-0 transition-opacity hover:bg-white/10 group-hover:opacity-100"
-                      title="Remover notificacao"
+                      title="Remover notificação"
                       type="button"
                     >
                       <Trash2
@@ -275,7 +275,7 @@ export function NotificationDropdown() {
               style={{ color: "#4FD1C5" }}
               type="button"
             >
-              Ver todas as notificacoes
+              Ver todas as notificações
             </Button>
           </div>
         ) : null}

@@ -81,7 +81,7 @@ const TABS: { id: CommunityTab; label: string; icon: React.ElementType }[] = [
 const PUBLIC_FEED_MODULES = [
   { key: "feed", label: "Feed", icon: LayoutList },
   { key: "business", label: "Empresas", icon: Building2 },
-  { key: "services", label: "Servicos", icon: Wrench },
+  { key: "services", label: "Serviços", icon: Wrench },
   { key: "classifieds", label: "Classificados", icon: Tag },
   { key: "gastronomy", label: "Gastronomia", icon: UtensilsCrossed },
   { key: "map", label: "Mapa", icon: MapPin },
@@ -120,7 +120,7 @@ function getPublicPostTypeLabel(type: string | null | undefined): string {
     case "alerta":
       return "Alerta";
     case "recomendacao":
-      return "Recomendacao";
+      return "Recomendação";
     case "enquete":
       return "Enquete";
     case "achados":
@@ -199,7 +199,7 @@ function PublicTerritorialFeed({
 
   return (
     <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-      <main className="min-w-0 max-w-full overflow-x-hidden" role="feed" aria-label="Feed publico da comunidade">
+      <main className="min-w-0 max-w-full overflow-x-hidden" role="feed" aria-label="Feed público da comunidade">
         <section className="mb-4 overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(10,24,32,0.98),rgba(7,17,24,0.98))] text-white shadow-xl shadow-black/10">
           <div className="border-b border-white/10 px-4 py-3 sm:px-5">
             <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -233,18 +233,18 @@ function PublicTerritorialFeed({
                 {territoryName}
               </p>
               <h1 className="mt-2 text-2xl font-semibold leading-tight sm:text-[2rem]">
-                Feed publico do bairro
+                Feed público do bairro
               </h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-white/62">
-                Veja publicacoes, avisos e recomendacoes locais. Para publicar, comentar e participar dos grupos, e preciso entrar e verificar a moradia.
+                Veja publicações, avisos e recomendações locais. Para publicar, comentar e participar dos grupos, é preciso entrar e verificar a moradia.
               </p>
 
               <div className="mt-4 flex flex-wrap gap-2">
                 <span className="inline-flex min-h-8 items-center rounded-full border border-teal-300/30 bg-teal-300/10 px-3 text-xs font-semibold text-teal-100">
-                  Leitura publica
+                  Leitura pública
                 </span>
                 <span className="inline-flex min-h-8 items-center rounded-full border border-amber-300/25 bg-amber-300/10 px-3 text-xs font-semibold text-amber-100">
-                  Interacao para moradores verificados
+                  Interação para moradores verificados
                 </span>
               </div>
 
@@ -269,10 +269,10 @@ function PublicTerritorialFeed({
             <div className="grid gap-3 rounded-[20px] border border-white/10 bg-black/20 p-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
-                  Agora no territorio
+                  Agora no território
                 </p>
                 <p className="mt-1 text-sm text-white/65">
-                  {visiblePosts.length} publicacoes publicas e {alertCount} alertas recentes em {territoryName}.
+                  {visiblePosts.length} publicações públicas e {alertCount} alertas recentes em {territoryName}.
                 </p>
               </div>
               <div className="grid grid-cols-3 gap-2">
@@ -305,7 +305,7 @@ function PublicTerritorialFeed({
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-wide text-teal-300">Explorar o feed</p>
               <p className="mt-1 text-sm text-white/55">
-                Filtre o que aparece no stream publico do bairro sem sair desta pagina.
+                Filtre o que aparece no stream público do bairro sem sair desta página.
               </p>
             </div>
             <Button onClick={onRequireLogin} className="shrink-0 bg-teal-500 text-slate-950 hover:bg-teal-400">
@@ -317,7 +317,7 @@ function PublicTerritorialFeed({
           <div
             className="mt-4 flex min-w-0 flex-wrap gap-2 border-t border-white/10 pt-4"
             role="tablist"
-            aria-label="Filtros publicos do feed"
+            aria-label="Filtros públicos do feed"
           >
             {COMMUNITY_FEED_HEADER_FILTERS.map(({ id, label }) => (
               <button
@@ -350,8 +350,8 @@ function PublicTerritorialFeed({
           </div>
         ) : visiblePosts.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.03] px-4 py-10 text-center text-gray-400">
-            <p className="text-sm font-semibold text-white/75">Nenhuma postagem publica encontrada</p>
-            <p className="mt-1 text-xs text-white/45">Quando houver publicacoes deste bairro, elas aparecem aqui.</p>
+            <p className="text-sm font-semibold text-white/75">Nenhuma postagem pública encontrada</p>
+            <p className="mt-1 text-xs text-white/45">Quando houver publicações deste bairro, elas aparecem aqui.</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -372,7 +372,7 @@ function PublicTerritorialFeed({
                       {getPublicPostPreview(post.content, 220)}
                     </p>
                     <p className="mt-3 text-xs text-white/45">
-                      {getPublicPostAuthor(post)} · {formatPublicPostDate(post.created_at)}
+                      {getPublicPostAuthor(post)} - {formatPublicPostDate(post.created_at)}
                     </p>
                   </div>
                 </div>
@@ -420,13 +420,13 @@ function PublicTerritorialFeed({
         <div className="sticky top-6 space-y-3">
           <section className="rounded-2xl border border-white/10 bg-[#0f171a] p-4 text-white shadow-xl shadow-black/10">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-teal-300">
-              Participacao local
+              Participação local
             </p>
             <h2 className="mt-2 text-lg font-semibold leading-tight">
-              Morar aqui libera publicacao e grupos
+              Morar aqui libera publicação e grupos
             </h2>
             <p className="mt-2 text-sm leading-6 text-white/60">
-              Entre com sua conta e confirme o endereco para comentar, publicar e participar da comunidade do bairro.
+              Entre com sua conta e confirme o endereço para comentar, publicar e participar da comunidade do bairro.
             </p>
             <div className="mt-4 grid gap-2">
               <Link

@@ -72,15 +72,15 @@ const INITIAL_ZOOM = MAP_DEFAULT_ZOOM;
 const COMMUNITY_MODULE_TABS = [
   { key: 'feed', label: 'Feed', shortLabel: 'Feed', icon: LayoutList },
   { key: 'business', label: 'Empresas', shortLabel: 'Emp.', icon: Building2 },
-  { key: 'services', label: 'Servicos', shortLabel: 'Serv.', icon: Wrench },
+  { key: 'services', label: 'Serviços', shortLabel: 'Serv.', icon: Wrench },
   { key: 'classifieds', label: 'Classificados', shortLabel: 'Class.', icon: Tag },
   { key: 'gastronomy', label: 'Gastronomia', shortLabel: 'Gast.', icon: UtensilsCrossed },
   { key: 'map', label: 'Mapa', shortLabel: 'Mapa', icon: MapPin },
 ] as const;
 
 const COMMUNITY_MAP_LAYER_BADGES = [
-  { key: 'businesses', label: 'Negocios' },
-  { key: 'services', label: 'Servicos' },
+  { key: 'businesses', label: 'Negócios' },
+  { key: 'services', label: 'Serviços' },
   { key: 'gastronomy', label: 'Gastronomia' },
   { key: 'classifieds', label: 'Classificados' },
 ] as const;
@@ -151,7 +151,7 @@ function NeighborhoodMapHero({
 
           <div className="mt-4 flex flex-wrap gap-2">
             <span className="inline-flex min-h-8 items-center rounded-full border border-cyan-300/30 bg-cyan-300/10 px-3 text-xs font-semibold text-cyan-100">
-              Territorio ativo
+              Território ativo
             </span>
             <span className="inline-flex min-h-8 items-center rounded-full border border-white/10 bg-white/[0.03] px-3 text-xs font-semibold text-white/75">
               Camadas ao vivo
@@ -182,7 +182,7 @@ function NeighborhoodMapHero({
               Leitura territorial
             </p>
             <p className="mt-1 text-sm text-white/65">
-              O contorno e os pins seguem o territorio ativo da comunidade.
+              O contorno e os pins seguem o território ativo da comunidade.
             </p>
           </div>
           <div className="overflow-hidden rounded-[18px] border border-white/10 bg-[#07131a]">
@@ -617,7 +617,7 @@ export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV
   const guideUrls = useTouristPointPublicUrls(effectiveResolved);
   const territoryLabels = useTerritoryLabels(effectiveResolved);
   const isCommunityScopedSurface = location.pathname.includes('/comunidade/');
-  const territoryName = territoryLabels.name || publicBrowsingCity.city || 'Seu territorio';
+  const territoryName = territoryLabels.name || publicBrowsingCity.city || 'Seu território';
 
   const touristLayerVisible = isMapRuntimeLayerEnabled('tourist_points') && visibleLayers.tourist_points !== false;
   const businessesLayerVisible = isMapRuntimeLayerEnabled('businesses') && visibleLayers.businesses !== false;
