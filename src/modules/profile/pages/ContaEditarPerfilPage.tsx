@@ -1,12 +1,12 @@
 /**
  * /conta/editar/:profileId - Editar perfil completo por tipo
  *
- * Seguranca:
- *   - Verifica que o profileId pertence ao usuario logado (profiles.user_id = auth.uid)
- *   - Bloqueia acesso a perfis alheios com estado de erro explicito
+ * Segurança:
+ *   - Verifica que o profileId pertence ao usuário logado (profiles.user_id = auth.uid)
+ *   - Bloqueia acesso a perfis alheios com estado de erro explícito
  *   - Usa apenas service layer - zero acesso direto ao Supabase
  *
- * Campos base (todos os tipos) + campos especificos por tipo:
+ * Campos base (todos os tipos) + campos específicos por tipo:
  *   business     -> legal_name, cnpj, company_type, industry, endereco, horarios
  *   professional -> profession, specialties, license, experience, services, rate
  *   driver       -> license, vehicle
@@ -80,7 +80,7 @@ function BusinessSection({ data, onChange }: {
     <div className="space-y-4">
       <SectionTitle>Dados da empresa</SectionTitle>
 
-      <Field id="legal_name" label="Razao social *">
+      <Field id="legal_name" label="Razão social *">
         <Input id="legal_name" value={data.legal_name ?? ''} onChange={e => set('legal_name', e.target.value)} placeholder="Nome legal da empresa" />
       </Field>
 
@@ -105,14 +105,14 @@ function BusinessSection({ data, onChange }: {
         </Field>
       </div>
 
-      <Field id="industry" label="Setor / Industria">
-        <Input id="industry" value={data.industry ?? ''} onChange={e => set('industry', e.target.value)} placeholder="Ex: Alimentacao, Tecnologia, Saude" />
+      <Field id="industry" label="Setor / Indústria">
+        <Input id="industry" value={data.industry ?? ''} onChange={e => set('industry', e.target.value)} placeholder="Ex: Alimentação, Tecnologia, Saúde" />
       </Field>
 
-      <SectionTitle>Endereco comercial</SectionTitle>
+      <SectionTitle>Endereço comercial</SectionTitle>
 
-      <Field id="business_address" label="Endereco">
-        <Input id="business_address" value={data.business_address ?? ''} onChange={e => set('business_address', e.target.value)} placeholder="Rua, numero, complemento" />
+      <Field id="business_address" label="Endereço">
+        <Input id="business_address" value={data.business_address ?? ''} onChange={e => set('business_address', e.target.value)} placeholder="Rua, número, complemento" />
       </Field>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -148,7 +148,7 @@ function ProfessionalSection({ data, onChange }: {
     <div className="space-y-4">
       <SectionTitle>Dados profissionais</SectionTitle>
 
-      <Field id="profession" label="Profissao *">
+      <Field id="profession" label="Profissão *">
         <Input id="profession" value={data.profession ?? ''} onChange={e => set('profession', e.target.value)} placeholder="Ex: Eletricista, Designer, Advogado" />
       </Field>
 
@@ -166,12 +166,12 @@ function ProfessionalSection({ data, onChange }: {
           id="service_category"
           value={data.service_category ?? ''}
           onChange={e => set('service_category', e.target.value)}
-          placeholder="Ex: Construcao, Alimentacao, Eletrica"
+          placeholder="Ex: Construção, Alimentação, Elétrica"
         />
       </Field>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <Field id="years_experience" label="Anos de experiencia">
+        <Field id="years_experience" label="Anos de experiência">
           <Input id="years_experience" type="number" min={0} max={60}
             value={data.years_experience ?? ''}
             onChange={e => set('years_experience', Number(e.target.value))} />
@@ -183,19 +183,19 @@ function ProfessionalSection({ data, onChange }: {
         </Field>
       </div>
 
-      <Field id="specialties" label="Especialidades" hint="Separe por virgula">
+      <Field id="specialties" label="Especialidades" hint="Separe por vírgula">
         <Input id="specialties" value={arrToStr(data.specialties)}
           onChange={e => set('specialties', strToArr(e.target.value))}
-          placeholder="Ex: Instalacao eletrica, Manutencao predial" />
+          placeholder="Ex: Instalação elétrica, Manutenção predial" />
       </Field>
 
-      <Field id="services_offered" label="Servicos oferecidos" hint="Separe por virgula">
+      <Field id="services_offered" label="Serviços oferecidos" hint="Separe por vírgula">
         <Input id="services_offered" value={arrToStr(data.services_offered)}
           onChange={e => set('services_offered', strToArr(e.target.value))}
-          placeholder="Ex: Visita tecnica, Orcamento gratuito" />
+          placeholder="Ex: Visita técnica, Orçamento gratuito" />
       </Field>
 
-      <Field id="service_area" label="Areas de atendimento" hint="Separe por virgula">
+      <Field id="service_area" label="Áreas de atendimento" hint="Separe por vírgula">
         <Input id="service_area" value={arrToStr(data.service_area)}
           onChange={e => set('service_area', strToArr(e.target.value))}
           placeholder="Ex: Centro, Zona Norte, bairros atendidos" />
@@ -207,15 +207,15 @@ function ProfessionalSection({ data, onChange }: {
           rows={2}
           value={data.availability_notes ?? ''}
           onChange={e => set('availability_notes', e.target.value)}
-          placeholder="Ex: Segunda a sexta, 08:00 as 18:00. Sabados sob agendamento."
+          placeholder="Ex: Segunda a sexta, 08:00 às 18:00. Sábados sob agendamento."
         />
       </Field>
 
-      <Field id="education" label="Formacao">
-        <Input id="education" value={data.education ?? ''} onChange={e => set('education', e.target.value)} placeholder="Ex: Tecnico em Eletrotecnica - SENAI" />
+      <Field id="education" label="Formação">
+        <Input id="education" value={data.education ?? ''} onChange={e => set('education', e.target.value)} placeholder="Ex: Técnico em Eletrotécnica - SENAI" />
       </Field>
 
-      <Field id="certifications" label="Certificacoes" hint="Separe por virgula">
+      <Field id="certifications" label="Certificações" hint="Separe por vírgula">
         <Input id="certifications" value={arrToStr(data.certifications)}
           onChange={e => set('certifications', strToArr(e.target.value))}
           placeholder="Ex: NR10, NR35" />
@@ -224,7 +224,7 @@ function ProfessionalSection({ data, onChange }: {
       <SectionTitle>Registro profissional</SectionTitle>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <Field id="license_number" label="Numero do registro">
+        <Field id="license_number" label="Número do registro">
           <Input id="license_number" value={data.license_number ?? ''} onChange={e => set('license_number', e.target.value)} placeholder="CRM, CREA, OAB..." />
         </Field>
         <Field id="license_state" label="Estado do registro">
@@ -242,7 +242,7 @@ function ProfessionalSection({ data, onChange }: {
       <Field
         id="professional_visibility"
         label="Visibilidade do perfil profissional"
-        hint="Controla se o perfil aparece no marketplace publico."
+        hint="Controla se o perfil aparece no marketplace público."
       >
         <Select
           value={data.visibility ?? 'public_listed'}
@@ -254,8 +254,8 @@ function ProfessionalSection({ data, onChange }: {
             <SelectValue placeholder="Selecione a visibilidade" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="public_listed">Publico listado</SelectItem>
-            <SelectItem value="public_unlisted">Publico nao listado</SelectItem>
+            <SelectItem value="public_listed">Público listado</SelectItem>
+            <SelectItem value="public_unlisted">Público não listado</SelectItem>
             <SelectItem value="private">Privado</SelectItem>
           </SelectContent>
         </Select>
@@ -274,10 +274,10 @@ function DriverSection({ data, onChange }: {
 
   return (
     <div className="space-y-4">
-      <SectionTitle>Habilitacao</SectionTitle>
+      <SectionTitle>Habilitação</SectionTitle>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <Field id="license_number" label="Numero da CNH *">
+        <Field id="license_number" label="Número da CNH *">
           <Input id="license_number" value={data.license_number ?? ''} onChange={e => set('license_number', e.target.value)} placeholder="00000000000" />
         </Field>
         <Field id="license_category" label="Categoria *">
@@ -301,7 +301,7 @@ function DriverSection({ data, onChange }: {
         </Field>
       </div>
 
-      <SectionTitle>Veiculo</SectionTitle>
+      <SectionTitle>Veículo</SectionTitle>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Field id="vehicle_type" label="Tipo">
@@ -314,7 +314,7 @@ function DriverSection({ data, onChange }: {
               <SelectItem value="car">Carro</SelectItem>
               <SelectItem value="motorcycle">Moto</SelectItem>
               <SelectItem value="van">Van</SelectItem>
-              <SelectItem value="truck">Caminhao</SelectItem>
+              <SelectItem value="truck">Caminhão</SelectItem>
             </SelectContent>
           </Select>
         </Field>
@@ -339,7 +339,7 @@ function DriverSection({ data, onChange }: {
       </Field>
 
       <ToggleRow
-        label="Disponivel para corridas"
+        label="Disponível para corridas"
         checked={data.is_available ?? false}
         onChange={v => set('is_available', v)}
       />
@@ -384,11 +384,11 @@ export default function ContaEditarPerfilPage() {
     page: 'ContaEditarPerfilPage',
   });
 
-  // Funcao doSave definida antes do hook que a usa
+  // Função doSave definida antes do hook que a usa
   const doSave = async () => {
     if (!profile) return;
     if (!baseForm.display_name?.trim()) {
-      toast.error('Nome de exibicao e obrigatorio');
+      toast.error('Nome de exibição é obrigatório');
       return;
     }
 
@@ -420,8 +420,8 @@ export default function ContaEditarPerfilPage() {
     }
   };
 
-  // Hook de confirmacao - sempre chamado, independente do tipo de perfil
-  // A condicao entra no render, nao na chamada do hook
+  // Hook de confirmação - sempre chamado, independente do tipo de perfil
+  // A condição entra no render, não na chamada do hook
   const { triggerSave: handleSave, confirmProps: usernameConfirmProps } = useProfileUsernameSaveGuard({
     username,
     originalUsername,
@@ -437,7 +437,7 @@ export default function ContaEditarPerfilPage() {
         <ShieldAlert className="h-12 w-12 mx-auto text-destructive" />
         <h2 className="text-lg font-semibold">Acesso negado</h2>
         <p className="text-sm text-muted-foreground">
-          Voce nao tem permissao para editar este perfil.
+          Você não tem permissão para editar este perfil.
         </p>
         <Button variant="outline" onClick={() => navigate('/conta')}>Voltar</Button>
       </div>
@@ -448,9 +448,9 @@ export default function ContaEditarPerfilPage() {
     return (
       <div className="max-w-xl mx-auto px-4 py-16 text-center space-y-4">
         <ShieldAlert className="h-12 w-12 mx-auto text-muted-foreground" />
-        <h2 className="text-lg font-semibold">Perfil nao encontrado</h2>
+        <h2 className="text-lg font-semibold">Perfil não encontrado</h2>
         <p className="text-sm text-muted-foreground">
-          O perfil solicitado nao esta disponivel para edicao neste contexto.
+          O perfil solicitado não está disponível para edição neste contexto.
         </p>
         <Button variant="outline" onClick={() => navigate('/conta')}>Voltar</Button>
       </div>
@@ -461,9 +461,9 @@ export default function ContaEditarPerfilPage() {
     return (
       <div className="max-w-xl mx-auto px-4 py-16 text-center space-y-4">
         <ShieldAlert className="h-12 w-12 mx-auto text-destructive" />
-        <h2 className="text-lg font-semibold">Falha ao carregar edicao</h2>
+        <h2 className="text-lg font-semibold">Falha ao carregar edição</h2>
         <p className="text-sm text-muted-foreground">
-          {error ?? 'Nao foi possivel carregar o agregado canonico de edicao.'}
+          {error ?? 'Não foi possível carregar o agregado canônico de edição.'}
         </p>
         <Button variant="outline" onClick={() => navigate('/conta')}>Voltar</Button>
       </div>
@@ -474,7 +474,7 @@ export default function ContaEditarPerfilPage() {
     return (
       <div className="max-w-xl mx-auto px-4 py-8 text-center space-y-3">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
-        <p className="text-sm text-muted-foreground">Verificando permissoes...</p>
+        <p className="text-sm text-muted-foreground">Verificando permissões...</p>
       </div>
     );
   }
@@ -482,237 +482,238 @@ export default function ContaEditarPerfilPage() {
   // HELPERS E RENDER - DEPOIS DOS EARLY RETURNS
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.12),transparent_32%),linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.35))]">
-      <div className="mx-auto max-w-5xl px-4 py-5 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-5xl px-3 py-3 sm:px-6 sm:py-5 lg:px-8">
+        {/* Header */}
+        <div className="sticky top-0 z-20 -mx-3 mb-4 border-b border-border/60 bg-background/92 px-3 py-3 backdrop-blur sm:static sm:mx-0 sm:mb-6 sm:rounded-3xl sm:border sm:bg-card/85 sm:px-5 sm:shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
+              <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0 rounded-full" onClick={() => navigate('/conta')}>
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div className="min-w-0">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground sm:text-xs">Editor de identidade</p>
+                <h1 className="truncate text-lg font-bold tracking-tight text-foreground sm:text-2xl">Editar perfil</h1>
+                <p className="truncate text-xs text-muted-foreground">
+                  {profile.display_name} | {getProfileTypeLabel(profile)}
+                </p>
+              </div>
+            </div>
 
-      {/* Header */}
-      <div className="sticky top-0 z-20 -mx-4 mb-5 border-b border-border/60 bg-background/85 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:mb-6 sm:rounded-3xl sm:border sm:bg-card/85 sm:px-5 sm:shadow-sm">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-3">
-            <Button variant="ghost" size="icon" className="shrink-0 rounded-full" onClick={() => navigate('/conta')}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Editor de identidade</p>
-              <h1 className="truncate text-xl font-bold tracking-tight text-foreground sm:text-2xl">Editar perfil</h1>
-              <p className="truncate text-xs text-muted-foreground">
-                {profile.display_name} | {getProfileTypeLabel(profile)}
-              </p>
+            <div className="hidden shrink-0 gap-2 sm:flex">
+              <Button variant="outline" onClick={() => navigate('/conta')}>Cancelar</Button>
+              <Button className="gap-2" onClick={handleSave} disabled={saving || extLoading}>
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                Salvar
+              </Button>
             </div>
           </div>
-
-          <div className="hidden shrink-0 gap-2 sm:flex">
-            <Button variant="outline" onClick={() => navigate('/conta')}>Cancelar</Button>
-            <Button className="gap-2" onClick={handleSave} disabled={saving || extLoading}>
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-              Salvar
-            </Button>
-          </div>
         </div>
-      </div>
 
-      <div className="grid gap-5 lg:grid-cols-[260px_minmax(0,1fr)]">
-        <aside className="hidden lg:block">
-          <div className="sticky top-6 space-y-3 rounded-3xl border border-border/70 bg-card/85 p-4 shadow-sm backdrop-blur">
-            <p className="text-sm font-semibold text-foreground">Nesta tela</p>
-            <div className="space-y-2 text-sm text-muted-foreground">
-              <p>Identidade publica</p>
-              <p>Contato exibido</p>
-              <p>Visibilidade</p>
-              {editableUsername !== null && <p>URL publica</p>}
-              {profileType !== 'personal' && <p>Dados operacionais</p>}
+        <div className="grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-5">
+          <aside className="hidden lg:block">
+            <div className="sticky top-6 space-y-3 rounded-3xl border border-border/70 bg-card/85 p-4 shadow-sm backdrop-blur">
+              <p className="text-sm font-semibold text-foreground">Nesta tela</p>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <p>Identidade pública</p>
+                <p>Contato exibido</p>
+                <p>Visibilidade</p>
+                {editableUsername !== null && <p>URL pública</p>}
+                {profileType !== 'personal' && <p>Dados operacionais</p>}
+              </div>
+              <Separator />
+              <div className="rounded-2xl bg-muted/50 p-3 text-xs leading-5 text-muted-foreground">
+                Endereço residencial e entrega ficam em Configurações operacionais, não neste formulário.
+              </div>
             </div>
-            <Separator />
-            <div className="rounded-2xl bg-muted/50 p-3 text-xs leading-5 text-muted-foreground">
-              Endereco residencial e entrega ficam em Configuracoes operacionais, nao neste formulario.
+          </aside>
+
+          <main className="space-y-4 sm:space-y-5">
+            {/* Campos base */}
+            <section className="rounded-3xl border border-border/70 bg-card/90 p-4 shadow-sm sm:p-6">
+              <div className="space-y-4">
+                <SectionTitle>Informações básicas</SectionTitle>
+
+                <Field id="display_name" label="Nome de exibição *">
+                  <Input id="display_name" value={baseForm.display_name ?? ''} onChange={e => setBaseField('display_name', e.target.value)} />
+                </Field>
+
+                <Field id="bio" label="Bio">
+                  <Textarea id="bio" value={baseForm.bio ?? ''} onChange={e => setBaseField('bio', e.target.value)} rows={3} placeholder="Conte um pouco sobre você ou seu negócio" />
+                </Field>
+
+                {profileType === 'personal' && (
+                  <Field id="short_bio" label="Bio curta social" hint="Resumo curto para identidade social (máx. 280)">
+                    <Textarea
+                      id="short_bio"
+                      value={baseForm.short_bio ?? ''}
+                      onChange={e => setBaseField('short_bio', e.target.value.slice(0, 280))}
+                      rows={2}
+                      placeholder="Quem é você na sua comunidade e território"
+                    />
+                  </Field>
+                )}
+
+                <Field id="website" label="Website">
+                  <Input id="website" type="url" value={baseForm.website ?? ''} onChange={e => setBaseField('website', e.target.value)} placeholder="https://" />
+                </Field>
+
+                {profileType !== 'personal' && (
+                  <Field id="location_id" label="Bairro (canônico)">
+                    <LocationFields
+                      locationId={baseForm.location_id ?? null}
+                      onChange={(locationId) => setBaseField('location_id', locationId ?? undefined)}
+                    />
+                  </Field>
+                )}
+
+                {profileType === 'personal' && (
+                  <Field id="main_territory_location_id" label="Território principal">
+                    <LocationFields
+                      locationId={baseForm.main_territory_location_id ?? null}
+                      onChange={(locationId) => setBaseField('main_territory_location_id', locationId ?? undefined)}
+                    />
+                  </Field>
+                )}
+
+                {profileType === 'personal' && (
+                  <Field
+                    id="community_reputation_score"
+                    label="Reputação comunitária"
+                    hint="Pontuação social na comunidade local."
+                  >
+                    <Input
+                      id="community_reputation_score"
+                      type="number"
+                      min={0}
+                      value={baseForm.community_reputation_score ?? 0}
+                      onChange={(e) => setBaseField('community_reputation_score', Number(e.target.value))}
+                    />
+                  </Field>
+                )}
+
+                {profileType === 'personal' && (
+                  <div className="rounded-2xl border border-border bg-muted/30 p-3">
+                    <p className="text-sm font-medium">Participação e grupos</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      A participação em grupos é vinculada automaticamente pela sua atuação em comunidades e organizações.
+                    </p>
+                  </div>
+                )}
+
+                <div className="rounded-2xl border border-border bg-muted/30 p-3">
+                  <p className="text-sm font-medium">Endereço de entrega não é salvo aqui</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Esta tela edita apenas identidade pública, como bio e visibilidade de localização.
+                    Endereço completo de entrega é restrito e fica somente em Configurações operacionais.
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-3 w-full sm:w-auto"
+                    onClick={() => navigate(appUrls.profile.addresses)}
+                  >
+                    Abrir configurações operacionais
+                  </Button>
+                </div>
+
+                <SectionTitle>Contato público</SectionTitle>
+
+                <Field id="contact_email" label="E-mail de contato" hint="Diferente do e-mail de login">
+                  <Input id="contact_email" type="email" value={baseForm.contact_email ?? ''} onChange={e => setBaseField('contact_email', e.target.value)} />
+                </Field>
+
+                <Field id="phone" label="Telefone">
+                  <Input id="phone" type="tel" value={baseForm.phone ?? ''} onChange={e => setBaseField('phone', e.target.value)} placeholder="(00) 00000-0000" />
+                </Field>
+
+                <SectionTitle>Visibilidade</SectionTitle>
+
+                <ToggleRow label="Perfil público" description="Aparece em buscas e na URL /u/:username"
+                  checked={baseForm.is_public ?? false} onChange={v => setBaseField('is_public', v)} />
+                {profileType === 'personal' && (
+                  <Field
+                    id="public_location_visibility"
+                    label="Localização pública"
+                    hint="Cidade/bairro público é derivado do endereço residencial canônico."
+                  >
+                    <Select
+                      value={baseForm.public_location_visibility ?? 'city_only'}
+                      onValueChange={(value) =>
+                        setBaseField(
+                          'public_location_visibility',
+                          value as 'hidden' | 'city_only' | 'district',
+                        )
+                      }
+                    >
+                      <SelectTrigger id="public_location_visibility">
+                        <SelectValue placeholder="Selecione a visibilidade" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="hidden">Ocultar localização</SelectItem>
+                        <SelectItem value="city_only">Mostrar somente cidade/UF</SelectItem>
+                        <SelectItem value="district">Mostrar bairro + cidade/UF</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                )}
+                <ToggleRow label="Mostrar e-mail de contato"
+                  checked={baseForm.show_contact_email ?? false} onChange={v => setBaseField('show_contact_email', v)} />
+                <ToggleRow label="Mostrar telefone"
+                  checked={baseForm.show_phone ?? false} onChange={v => setBaseField('show_phone', v)} />
+                <ToggleRow label="Mostrar vínculos"
+                  checked={baseForm.show_linked_profiles ?? false} onChange={v => setBaseField('show_linked_profiles', v)} />
+              </div>
+            </section>
+
+            {/* Username - apenas para perfil pessoal */}
+            {editableUsername !== null && (
+              <section className="rounded-3xl border border-border/70 bg-card/90 p-4 shadow-sm sm:p-6">
+                <ProfileUsernameSection
+                  username={username}
+                  onUsernameChange={setUsername}
+                  originalUsername={originalUsername}
+                  profileId={profile.id}
+                />
+                <IdentityChangeConfirmDialog {...usernameConfirmProps} />
+              </section>
+            )}
+
+            {/* Extensão por tipo */}
+            {extLoading ? (
+              <div className="flex items-center gap-2 rounded-3xl border border-border/70 bg-card/90 p-5 text-sm text-muted-foreground shadow-sm">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Carregando dados específicos...
+              </div>
+            ) : (
+              <>
+                {profileType === 'business' && (
+                  <section className="rounded-3xl border border-border/70 bg-card/90 p-4 shadow-sm sm:p-6">
+                    <BusinessSection data={bizForm} onChange={u => setBizForm(prev => ({ ...prev, ...u }))} />
+                  </section>
+                )}
+                {profileType === 'professional' && (
+                  <section className="rounded-3xl border border-border/70 bg-card/90 p-4 shadow-sm sm:p-6">
+                    <ProfessionalSection data={proForm} onChange={u => setProForm(prev => ({ ...prev, ...u }))} />
+                  </section>
+                )}
+                {profileType === 'driver' && (
+                  <section className="rounded-3xl border border-border/70 bg-card/90 p-4 shadow-sm sm:p-6">
+                    <DriverSection data={drvForm} onChange={u => setDrvForm(prev => ({ ...prev, ...u }))} />
+                  </section>
+                )}
+              </>
+            )}
+
+            <div className="sticky bottom-0 -mx-3 flex gap-3 border-t border-border/70 bg-background/95 px-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 backdrop-blur sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:px-0 sm:pb-8 sm:pt-0">
+              <Button variant="outline" className="h-11 flex-1 rounded-2xl" onClick={() => navigate('/conta')}>Cancelar</Button>
+              <Button className="h-11 flex-1 gap-2 rounded-2xl" onClick={handleSave} disabled={saving || extLoading}>
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                Salvar
+              </Button>
             </div>
-          </div>
-        </aside>
-
-        <main className="space-y-5">
-      {/* Campos base */}
-      <section className="rounded-3xl border border-border/70 bg-card/90 p-4 shadow-sm sm:p-6">
-      <div className="space-y-4">
-        <SectionTitle>Informacoes basicas</SectionTitle>
-
-        <Field id="display_name" label="Nome de exibicao *">
-          <Input id="display_name" value={baseForm.display_name ?? ''} onChange={e => setBaseField('display_name', e.target.value)} />
-        </Field>
-
-        <Field id="bio" label="Bio">
-          <Textarea id="bio" value={baseForm.bio ?? ''} onChange={e => setBaseField('bio', e.target.value)} rows={3} placeholder="Conte um pouco sobre voce ou seu negocio" />
-        </Field>
-
-        {profileType === 'personal' && (
-          <Field id="short_bio" label="Bio curta social" hint="Resumo curto para identidade social (max. 280)">
-            <Textarea
-              id="short_bio"
-              value={baseForm.short_bio ?? ''}
-              onChange={e => setBaseField('short_bio', e.target.value.slice(0, 280))}
-              rows={2}
-              placeholder="Quem e voce na sua comunidade e territorio"
-            />
-          </Field>
-        )}
-
-        <Field id="website" label="Website">
-          <Input id="website" type="url" value={baseForm.website ?? ''} onChange={e => setBaseField('website', e.target.value)} placeholder="https://" />
-        </Field>
-
-        {profileType !== 'personal' && (
-          <Field id="location_id" label="Bairro (canonico)">
-            <LocationFields
-              locationId={baseForm.location_id ?? null}
-              onChange={(locationId) => setBaseField('location_id', locationId ?? undefined)}
-            />
-          </Field>
-        )}
-
-        {profileType === 'personal' && (
-          <Field id="main_territory_location_id" label="Territorio principal">
-            <LocationFields
-              locationId={baseForm.main_territory_location_id ?? null}
-              onChange={(locationId) => setBaseField('main_territory_location_id', locationId ?? undefined)}
-            />
-          </Field>
-        )}
-
-        {profileType === 'personal' && (
-          <Field
-            id="community_reputation_score"
-            label="Reputacao comunitaria"
-            hint="Pontuacao social na comunidade local."
-          >
-            <Input
-              id="community_reputation_score"
-              type="number"
-              min={0}
-              value={baseForm.community_reputation_score ?? 0}
-              onChange={(e) => setBaseField('community_reputation_score', Number(e.target.value))}
-            />
-          </Field>
-        )}
-
-        {profileType === 'personal' && (
-          <div className="rounded-xl border border-border bg-muted/30 p-3">
-            <p className="text-sm font-medium">Participacao e grupos</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              A participacao em grupos e vinculada automaticamente pela sua atuacao em comunidades e organizacoes.
-            </p>
-          </div>
-        )}
-
-        <div className="rounded-xl border border-border bg-muted/30 p-3">
-          <p className="text-sm font-medium">Endereco de entrega nao e salvo aqui</p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Esta tela edita apenas identidade publica (ex.: bio e visibilidade de localizacao).
-            Endereco completo de entrega e restrito e fica somente em Configuracoes operacionais.
-          </p>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="mt-3"
-            onClick={() => navigate(appUrls.profile.addresses)}
-          >
-            Abrir configuracoes operacionais
-          </Button>
+          </main>
         </div>
-
-        <SectionTitle>Contato publico</SectionTitle>
-
-        <Field id="contact_email" label="E-mail de contato" hint="Diferente do e-mail de login">
-          <Input id="contact_email" type="email" value={baseForm.contact_email ?? ''} onChange={e => setBaseField('contact_email', e.target.value)} />
-        </Field>
-
-        <Field id="phone" label="Telefone">
-          <Input id="phone" type="tel" value={baseForm.phone ?? ''} onChange={e => setBaseField('phone', e.target.value)} placeholder="(00) 00000-0000" />
-        </Field>
-
-        <SectionTitle>Visibilidade</SectionTitle>
-
-        <ToggleRow label="Perfil publico" description="Aparece em buscas e na URL /u/:username"
-          checked={baseForm.is_public ?? false} onChange={v => setBaseField('is_public', v)} />
-        {profileType === 'personal' && (
-          <Field
-            id="public_location_visibility"
-            label="Localizacao publica"
-            hint="Cidade/bairro publico e derivado do endereco residencial canonico."
-          >
-            <Select
-              value={baseForm.public_location_visibility ?? 'city_only'}
-              onValueChange={(value) =>
-                setBaseField(
-                  'public_location_visibility',
-                  value as 'hidden' | 'city_only' | 'district',
-                )
-              }
-            >
-              <SelectTrigger id="public_location_visibility">
-                <SelectValue placeholder="Selecione a visibilidade" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="hidden">Ocultar localizacao</SelectItem>
-                <SelectItem value="city_only">Mostrar somente cidade/UF</SelectItem>
-                <SelectItem value="district">Mostrar bairro + cidade/UF</SelectItem>
-              </SelectContent>
-            </Select>
-          </Field>
-        )}
-        <ToggleRow label="Mostrar e-mail de contato"
-          checked={baseForm.show_contact_email ?? false} onChange={v => setBaseField('show_contact_email', v)} />
-        <ToggleRow label="Mostrar telefone"
-          checked={baseForm.show_phone ?? false} onChange={v => setBaseField('show_phone', v)} />
-        <ToggleRow label="Mostrar vinculos"
-          checked={baseForm.show_linked_profiles ?? false} onChange={v => setBaseField('show_linked_profiles', v)} />
-      </div>
-      </section>
-
-      {/* Username - apenas para perfil pessoal */}
-      {editableUsername !== null && (
-        <section className="rounded-3xl border border-border/70 bg-card/90 p-4 shadow-sm sm:p-6">
-          <ProfileUsernameSection
-            username={username}
-            onUsernameChange={setUsername}
-            originalUsername={originalUsername}
-            profileId={profile.id}
-          />
-          <IdentityChangeConfirmDialog {...usernameConfirmProps} />
-        </section>
-      )}
-
-      {/* Extensao por tipo */}      {extLoading ? (
-        <div className="flex items-center gap-2 rounded-3xl border border-border/70 bg-card/90 p-5 text-sm text-muted-foreground shadow-sm">
-          <Loader2 className="h-4 w-4 animate-spin" />Carregando dados especificos...
-        </div>
-      ) : (
-        <>
-          {profileType === 'business' && (
-            <section className="rounded-3xl border border-border/70 bg-card/90 p-4 shadow-sm sm:p-6">
-              <BusinessSection data={bizForm} onChange={u => setBizForm(prev => ({ ...prev, ...u }))} />
-            </section>
-          )}
-          {profileType === 'professional' && (
-            <section className="rounded-3xl border border-border/70 bg-card/90 p-4 shadow-sm sm:p-6">
-              <ProfessionalSection data={proForm} onChange={u => setProForm(prev => ({ ...prev, ...u }))} />
-            </section>
-          )}
-          {profileType === 'driver' && (
-            <section className="rounded-3xl border border-border/70 bg-card/90 p-4 shadow-sm sm:p-6">
-              <DriverSection data={drvForm} onChange={u => setDrvForm(prev => ({ ...prev, ...u }))} />
-            </section>
-          )}
-        </>
-      )}
-
-      <div className="sticky bottom-0 -mx-4 flex gap-3 border-t border-border/70 bg-background/95 px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 backdrop-blur sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:px-0 sm:pb-8 sm:pt-0">
-        <Button variant="outline" className="flex-1 rounded-2xl" onClick={() => navigate('/conta')}>Cancelar</Button>
-        <Button className="flex-1 gap-2 rounded-2xl" onClick={handleSave} disabled={saving || extLoading}>
-          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-          Salvar
-        </Button>
-      </div>
-        </main>
-      </div>
       </div>
     </div>
   );
