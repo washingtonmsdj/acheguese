@@ -71,25 +71,27 @@ export interface AppUrls {
     businesses: string;
     billing: string;
     addresses: string;
-      mobilidade: {
+    preferences: string;
+    notifications: string;
+    mobilidade: {
+      home: string;
+      motorista: {
         home: string;
-        motorista: {
-          home: string;
-          cadastro: string;
-          disponibilidade: string;
-          corridas: string;
-          ganhos: string;
-          configuracoes: string;
-        };
-        motoboy: {
-          home: string;
-          cadastro: string;
-          disponibilidade: string;
-          entregas: string;
-          ganhos: string;
-          configuracoes: string;
-        };
+        cadastro: string;
+        disponibilidade: string;
+        corridas: string;
+        ganhos: string;
+        configuracoes: string;
       };
+      motoboy: {
+        home: string;
+        cadastro: string;
+        disponibilidade: string;
+        entregas: string;
+        ganhos: string;
+        configuracoes: string;
+      };
+    };
     public: (username: string) => string;
     manage: string;
     edit: (profileId: string) => string;
@@ -124,6 +126,8 @@ export function useAppUrls(routeResolved?: ResolvedTerritory | null): AppUrls {
   const { active } = usePublicBrowsingCity();
   const { activeLocation } = useActiveTerritory();
   const cityBase = `/${active.state}/${active.city}`;
+  const profilePreferencesUrl = '/conta/preferencias';
+  const profileNotificationsUrl = '/conta/notificacoes';
   const business = useBusinessUrls(routeResolved);
   const services = useServiceUrls(routeResolved);
   const classifiedsList = routeResolved
@@ -188,6 +192,8 @@ export function useAppUrls(routeResolved?: ResolvedTerritory | null): AppUrls {
       businesses: businessManagementRoutes.list(),
       billing: '/conta',
       addresses: '/conta/enderecos',
+      preferences: profilePreferencesUrl,
+      notifications: profileNotificationsUrl,
       mobilidade: {
         home: '/central',
         motorista: mobility.motorista,
@@ -209,7 +215,7 @@ export function useAppUrls(routeResolved?: ResolvedTerritory | null): AppUrls {
     
     // Globais
     home: '/',
-    settings: '/conta/preferencias',
+    settings: profilePreferencesUrl,
     messages: '/mensagens',
     chat: (conversationId: string) => `/chat/${conversationId}`,
     map: `/mapa${cityBase}`,

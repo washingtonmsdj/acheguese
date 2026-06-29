@@ -11,8 +11,8 @@ const contactEmail = import.meta.env.VITE_CONTACT_EMAIL ?? "";
 const CONTACT_REASONS = [
   "Suporte sobre funcionamento da plataforma.",
   "Parcerias comerciais ou institucionais.",
-  "Expansao para novos territorios.",
-  "Duvidas operacionais sobre modulos locais.",
+  "Expansão para novos territórios.",
+  "Dúvidas operacionais sobre módulos locais.",
 ] as const;
 
 export default function ContactPage() {
@@ -54,7 +54,7 @@ export default function ContactPage() {
                   Entre em contato
                 </h1>
                 <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
-                  Canais oficiais para suporte, operacao territorial e assuntos institucionais.
+                  Canais oficiais para suporte, operação territorial e assuntos institucionais.
                 </p>
               </div>
             </div>
@@ -66,11 +66,11 @@ export default function ContactPage() {
                 Atendimento institucional
               </p>
               <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[2rem]">
-                Canais para suporte, operacao e crescimento do produto
+                Canais para suporte, operação e crescimento do produto
               </h2>
               <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-                Use esta pagina para tratar demandas gerais da plataforma. Para privacidade e LGPD,
-                existe um fluxo especifico do encarregado de dados.
+                Use esta página para tratar demandas gerais da plataforma. Para privacidade e LGPD,
+                existe um fluxo específico do encarregado de dados.
               </p>
             </div>
 
@@ -108,7 +108,7 @@ export default function ContactPage() {
                       </a>
                     ) : (
                       <p className="mt-3 text-sm text-muted-foreground">
-                        Email publico ainda nao configurado.
+                        E-mail público ainda não configurado.
                       </p>
                     )}
                   </div>
@@ -141,7 +141,7 @@ export default function ContactPage() {
                       <MapPin className="h-5 w-5" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-foreground">Territorio de referencia</p>
+                      <p className="text-sm font-medium text-foreground">Território de referência</p>
                       <p className="text-sm text-muted-foreground">{territoryContext}</p>
                     </div>
                   </div>
@@ -153,7 +153,7 @@ export default function ContactPage() {
                     <div>
                       <p className="text-sm font-medium text-foreground">Tipo de contato</p>
                       <p className="text-sm text-muted-foreground">
-                        Produto, territorio, operacao e relacionamento institucional.
+                        Produto, território, operação e relacionamento institucional.
                       </p>
                     </div>
                   </div>
@@ -164,7 +164,7 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <p className="text-sm font-medium text-foreground">Tempo de resposta</p>
-                      <p className="text-sm text-muted-foreground">Ate 48 horas uteis.</p>
+                      <p className="text-sm text-muted-foreground">Até 48 horas úteis.</p>
                     </div>
                   </div>
                 </div>
@@ -189,7 +189,7 @@ export default function ContactPage() {
                     to="/privacidade"
                     className="text-sm font-medium text-primary underline-offset-4 hover:underline"
                   >
-                    Politica de privacidade
+                    Política de privacidade
                   </Link>
                 </div>
               </section>

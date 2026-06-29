@@ -60,7 +60,7 @@ export function SavedPostsGrid({
       <EmptyStateProfile
         icon={Bookmark}
         title="Nenhum post salvo"
-        description="Voce ainda nao salvou posts para consultar depois."
+        description="Você ainda não salvou posts para consultar depois."
       />
     );
   }

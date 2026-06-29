@@ -77,12 +77,12 @@ function getInitials(name?: string | null): string {
 }
 
 function formatPlanLabel(value?: string | null): string {
-  if (!value) return "Basico";
+  if (!value) return "Básico";
   const map: Record<string, string> = {
     free: "Free",
     pro: "Pro",
     delivery: "Delivery",
-    basic: "Basico",
+    basic: "Básico",
     premium: "Premium",
     enterprise: "Enterprise",
   };
@@ -122,13 +122,13 @@ function getAccountStateLabel(state: AccountSnapshot["accountState"]): string {
 function getVerificationLabel(status: string): string {
   switch (status) {
     case "approved":
-      return "Residencia aprovada";
+      return "Residência aprovada";
     case "rejected":
-      return "Residencia rejeitada";
+      return "Residência rejeitada";
     case "pending":
-      return "Em analise";
+      return "Em análise";
     default:
-      return "Sem verificacao";
+      return "Sem verificação";
   }
 }
 
@@ -173,7 +173,7 @@ export function ProfileHeaderCompact({
   const planLabel = formatPlanLabel(identity?.plan?.type || context?.plan?.type);
   const totalAlerts = notifications.highPriority + notifications.urgentPriority;
   const fullReputation = identity?.reputation || context?.reputation;
-  const fullTerritoryLabel = territoryLabel || "Nao configurado";
+  const fullTerritoryLabel = territoryLabel || "Não configurado";
   const completenessProfile: ProfileCompletenessRecord | null = activeProfile
     ? {
         id: activeProfile.id,
@@ -308,7 +308,7 @@ export function ProfileHeaderCompact({
                     size="icon"
                     variant="outline"
                     className="h-8 w-8"
-                    aria-label="Mais opcoes"
+                    aria-label="Mais opções"
                   >
                     <MoreHorizontal className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </Button>
@@ -321,7 +321,7 @@ export function ProfileHeaderCompact({
                   {canOpenPublicProfile ? (
                     <DropdownMenuItem onClick={openPublicProfile}>
                       <Globe className="mr-2 h-4 w-4" />
-                      Abrir perfil publico
+                      Abrir perfil público
                     </DropdownMenuItem>
                   ) : null}
 
@@ -384,7 +384,7 @@ export function ProfileHeaderCompact({
 
           <div className="hidden items-center gap-1 xs:flex">
             <span className="hidden font-medium text-muted-foreground sm:inline">
-              Verificacao:
+              Verificação:
             </span>
             <Badge
               variant="outline"
@@ -406,7 +406,7 @@ export function ProfileHeaderCompact({
                   variant="outline"
                   className="h-5 gap-1 border-amber-500/30 bg-amber-500/10 text-[9px] font-semibold text-amber-700 dark:text-amber-400 sm:h-6 sm:text-[10px]"
                 >
-                  Nivel {reputation.level} | {reputation.score} pts
+                  Nível {reputation.level} | {reputation.score} pts
                 </Badge>
               </div>
             </>
@@ -439,7 +439,7 @@ export function ProfileHeaderCompact({
               <div className="space-y-3">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Territorio
+                    Território
                   </p>
                   <p className="mt-1 text-sm font-medium text-foreground">{fullTerritoryLabel}</p>
                 </div>
@@ -447,14 +447,14 @@ export function ProfileHeaderCompact({
                 {fullReputation ? (
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Reputacao completa
+                      Reputação completa
                     </p>
                     <div className="mt-1 space-y-1 text-sm">
                       <p>
                         <span className="font-medium">Score:</span> {fullReputation.score ?? 0}
                       </p>
                       <p>
-                        <span className="font-medium">Nivel:</span> {fullReputation.level ?? 1}
+                        <span className="font-medium">Nível:</span> {fullReputation.level ?? 1}
                       </p>
                       {fullReputation.rank ? (
                         <p>
@@ -467,13 +467,13 @@ export function ProfileHeaderCompact({
 
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Notificacoes
+                    Notificações
                   </p>
                   <div className="mt-1 space-y-1 text-sm">
                     <p>
                       {notifications.unread > 0 ? (
                         <span className="font-semibold text-warning">
-                          {notifications.unread} nao lidas
+                          {notifications.unread} não lidas
                         </span>
                       ) : (
                         <span className="text-muted-foreground">Em dia</span>
@@ -493,7 +493,7 @@ export function ProfileHeaderCompact({
                       Prioridade
                     </p>
                     <p className="mt-1 text-sm font-semibold text-destructive">
-                      {totalAlerts} pendencias urgentes
+                      {totalAlerts} pendências urgentes
                     </p>
                   </div>
                 ) : null}
@@ -541,7 +541,7 @@ export function ProfileHeaderCompact({
                 <Bell className="h-3.5 w-3.5 text-warning" />
                 <span className="font-semibold text-warning">
                   {notifications.unread}{" "}
-                  {notifications.unread === 1 ? "notificacao" : "notificacoes"}
+                  {notifications.unread === 1 ? "notificação" : "notificações"}
                 </span>
               </div>
               <span className="text-muted-foreground/30">|</span>
@@ -552,7 +552,7 @@ export function ProfileHeaderCompact({
             <div className="flex items-center gap-1.5">
               <span className="font-semibold text-destructive">
                 ! {totalAlerts}{" "}
-                {totalAlerts === 1 ? "pendencia prioritaria" : "pendencias prioritarias"}
+                {totalAlerts === 1 ? "pendência prioritária" : "pendências prioritárias"}
               </span>
             </div>
           ) : null}

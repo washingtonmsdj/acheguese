@@ -41,7 +41,7 @@ export function useProfileCompleteness(
   const items: CompletenessItem[] = [
     {
       id: "display_name",
-      label: "Nome de exibicao",
+      label: "Nome de exibição",
       done: !!profile.display_name?.trim(),
       path: editPath,
       weight: 15,
@@ -62,7 +62,7 @@ export function useProfileCompleteness(
     },
     {
       id: "location",
-      label: "Localizacao",
+      label: "Localização",
       done: !!(profile.location_id || profile.location?.trim()),
       path: editPath,
       weight: 15,
@@ -83,7 +83,7 @@ export function useProfileCompleteness(
     },
     {
       id: "public",
-      label: "Perfil publico",
+      label: "Perfil público",
       done: !!profile.is_public,
       path: buildProfileSettingsUrl("privacy"),
       weight: 10,

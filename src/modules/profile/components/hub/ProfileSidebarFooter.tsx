@@ -41,7 +41,7 @@ export function ProfileSidebarFooter({
   };
 
   const handleOpenSettings = () => {
-    navigate(appUrls.settings);
+    navigate(appUrls.profile.preferences);
   };
 
   return (
@@ -67,7 +67,7 @@ export function ProfileSidebarFooter({
             onClick={handleOpenPublicProfile}
           >
             <Globe className="h-3.5 w-3.5" />
-            Ver perfil publico
+            Ver perfil público
           </Button>
         ) : null}
 
@@ -78,7 +78,7 @@ export function ProfileSidebarFooter({
           onClick={handleOpenSettings}
         >
           <Settings className="h-3.5 w-3.5" />
-          Configuracoes
+          Configurações
         </Button>
       </div>
     </div>

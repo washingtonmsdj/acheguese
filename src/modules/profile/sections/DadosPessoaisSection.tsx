@@ -57,11 +57,11 @@ export function DadosPessoaisSection({
             icon: UserRound,
             label: "Posts",
             value: operations.posts,
-            hint: "Conteudo publicado na comunidade",
+            hint: "Conteúdo publicado na comunidade",
           },
           {
             icon: Users,
-            label: "Conexoes",
+            label: "Conexões",
             value: (stats.followers || 0) + (stats.following || 0),
             hint: "Seguidores e seguindo",
           },
@@ -75,7 +75,7 @@ export function DadosPessoaisSection({
             icon: BarChart3,
             label: "Engajamento",
             value: operations.posts > 0 ? "Ativo" : "Baixo",
-            hint: "Nivel de participacao",
+            hint: "Nível de participação",
           },
         ]}
       />
@@ -89,14 +89,14 @@ export function DadosPessoaisSection({
       ) : null}
 
       <SectionFrame
-        title="Acoes da conta"
-        description="Gerencie identidade, endereco pessoal, privacidade e preferencias sem misturar operacao da Central."
+        title="Ações da conta"
+        description="Gerencie identidade, endereço pessoal, privacidade e preferências sem misturar operação da Central."
       >
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           <HubLinkCard
             icon={UserRound}
             title="Editar perfil"
-            description="Avatar, bio, dados publicos"
+            description="Avatar, bio, dados públicos"
             onClick={() => {
               if (!personalProfileId) return;
               navigate(appUrls.profile.edit(personalProfileId));
@@ -104,21 +104,21 @@ export function DadosPessoaisSection({
           />
           <HubLinkCard
             icon={MapPin}
-            title="Meus enderecos"
-            description="Endereco usado para entregas e corridas."
+            title="Meus endereços"
+            description="Endereço usado para entregas e corridas."
             onClick={() => navigate(appUrls.profile.addresses)}
           />
           <HubLinkCard
             icon={Shield}
             title="Privacidade"
-            description="Visibilidade e exposicao"
+            description="Visibilidade e exposição"
             onClick={() => navigate(appUrls.profile.settings("privacy"))}
           />
           <HubLinkCard
             icon={Globe}
-            title="Perfil publico"
-            description="Ver versao publica"
-            badge={publicHandle ? "Ativo" : "Indisponivel"}
+            title="Perfil público"
+            description="Ver versão pública"
+            badge={publicHandle ? "Ativo" : "Indisponível"}
             onClick={() => {
               if (!publicHandle) return;
               navigate(appUrls.profile.public(publicHandle));
@@ -126,25 +126,25 @@ export function DadosPessoaisSection({
           />
           <HubLinkCard
             icon={Settings2}
-            title="Preferencias"
+            title="Preferências"
             description="Ajustes gerais da conta"
-            onClick={() => navigate("/conta/preferencias")}
+            onClick={() => navigate(appUrls.profile.preferences)}
           />
           <HubLinkCard
             icon={Bell}
-            title="Notificacoes"
-            description="Preferencias de avisos"
-            onClick={() => navigate(appUrls.notifications)}
+            title="Notificações"
+            description="Preferências de avisos"
+            onClick={() => navigate(appUrls.profile.notifications)}
           />
           <HubLinkCard
             icon={Users}
-            title="Vinculos"
-            description="Conexoes e relacoes"
+            title="Vínculos"
+            description="Conexões e relações"
             onClick={() => navigate(appUrls.profile.settings("links"))}
           />
           <HubLinkCard
             icon={Lock}
-            title="Seguranca"
+            title="Segurança"
             description="Senha e conta"
             onClick={() => navigate(appUrls.profile.account)}
           />
@@ -158,15 +158,15 @@ export function DadosPessoaisSection({
       </SectionFrame>
 
       <SectionFrame
-        title="Endereco e verificacao residencial"
-        description="Endereco pessoal fica no SSOT de residencia. Ele alimenta territorio, confianca e verificacao sem exposicao publica do endereco completo."
+        title="Endereço e verificação residencial"
+        description="O endereço pessoal fica no SSOT de residência. Ele alimenta território, confiança e verificação sem exposição pública do endereço completo."
       >
         <div className="grid gap-4 lg:grid-cols-[1fr_1.1fr]">
           <div className="rounded-2xl border border-border/70 bg-muted/35 p-4">
             <MapPin className="h-5 w-5 text-primary" />
-            <h3 className="mt-3 text-sm font-semibold text-foreground">Onde editar o endereco?</h3>
+            <h3 className="mt-3 text-sm font-semibold text-foreground">Onde editar o endereço?</h3>
             <p className="mt-1 text-sm leading-6 text-muted-foreground">
-              Use Meus enderecos para atualizar residencia, territorio e comprovacao. A conta
+              Use Meus endereços para atualizar residência, território e comprovação. A conta
               apenas resume e direciona para o local correto.
             </p>
             <button
@@ -174,7 +174,7 @@ export function DadosPessoaisSection({
               onClick={() => navigate(appUrls.profile.addresses)}
               className="mt-4 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
             >
-              Editar residencia
+              Editar residência
             </button>
           </div>
           {profile ? (
@@ -205,7 +205,7 @@ export function DadosPessoaisSection({
       {user && personalProfileId ? (
         <SectionFrame
           title="Atividade recente"
-          description="Linha do tempo das suas acoes pessoais."
+          description="Linha do tempo das suas ações pessoais."
         >
           <ActivityTimeline
             userId={user.id}

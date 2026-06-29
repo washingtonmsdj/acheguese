@@ -187,7 +187,7 @@ export function useProfileHub() {
         title: 'Notificações',
         description: 'Veja avisos recentes, não lidas e acessos do sistema.',
         badge: notifications.unread > 0 ? `${notifications.unread}` : undefined,
-        onClick: () => navigate(appUrls.notifications),
+        onClick: () => navigate(appUrls.profile.notifications),
       },
       {
         icon: Globe,
@@ -335,7 +335,7 @@ export function useProfileHub() {
               title: 'Triar notificações pendentes',
               description: `Existem ${notifications.unread} notificações não lidas aguardando ação.`,
               actionLabel: 'Ver avisos',
-              onClick: () => navigate(appUrls.notifications),
+              onClick: () => navigate(appUrls.profile.notifications),
             }
           : null,
       ].filter(Boolean) as Array<{
