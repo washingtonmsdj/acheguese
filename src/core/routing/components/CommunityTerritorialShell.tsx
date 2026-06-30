@@ -205,7 +205,7 @@ export function CommunityTerritorialShell() {
           <link rel="canonical" href={canonicalHref} />
           <meta name="robots" content="noindex, follow" />
         </Helmet>
-        <TerritorialNotFound message="A comunidade precisa de estado e cidade válidos na URL." />
+        <TerritorialNotFound message="A comunidade precisa de estado e cidade validos na URL." />
       </>
     );
   }
@@ -216,8 +216,8 @@ export function CommunityTerritorialShell() {
         fullScreen
         message="Carregando comunidade..."
         recoveryAfterMs={9000}
-        recoveryTitle="A comunidade está demorando para abrir"
-        recoveryDescription="A resolução territorial pode levar alguns segundos. Recarregue se a página não avançar."
+        recoveryTitle="A comunidade esta demorando para abrir"
+        recoveryDescription="A resolucao territorial pode levar alguns segundos. Recarregue se a pagina nao avancar."
       />
     );
   }
@@ -237,9 +237,9 @@ export function CommunityTerritorialShell() {
   if (communityStatus === "inactive") {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4 py-10 text-center text-foreground">
-        <h1 className="text-2xl font-bold sm:text-3xl">Comunidade indisponível neste momento</h1>
+        <h1 className="text-2xl font-bold sm:text-3xl">Comunidade indisponivel neste momento</h1>
         <p className="mt-3 max-w-xl text-sm text-muted-foreground sm:text-base">
-          Esta área ainda não está ativa para experiência comunitária. Você pode navegar pela cidade ou acessar a comunidade principal.
+          Esta area ainda nao esta ativa para experiencia comunitaria. Voce pode navegar pela cidade ou acessar a comunidade principal.
         </p>
         <div className="mt-6 flex w-full max-w-xl flex-col gap-3 sm:flex-row sm:justify-center">
           <Button className="w-full sm:w-auto" onClick={() => navigate(cityHref)}>Navegar por {cityName}</Button>
@@ -261,11 +261,11 @@ export function CommunityTerritorialShell() {
         </Helmet>
         <div className="min-h-screen bg-background px-4 py-10 text-foreground sm:py-14">
           <div className="mx-auto max-w-3xl rounded-2xl border border-border bg-card p-6 text-card-foreground sm:p-8">
-            <p className="text-xs uppercase tracking-wide text-primary">Próxima comunidade</p>
-            <h1 className="mt-2 text-2xl font-bold sm:text-3xl">{profile?.hero_title ?? `A comunidade de ${territoryName} está chegando`}</h1>
+            <p className="text-xs uppercase tracking-wide text-primary">Proxima comunidade</p>
+            <h1 className="mt-2 text-2xl font-bold sm:text-3xl">{profile?.hero_title ?? `A comunidade de ${territoryName} esta chegando`}</h1>
             <p className="mt-3 text-sm text-muted-foreground sm:text-base">{profile?.hero_subtitle ?? profile?.description}</p>
             <p className="mt-2 text-sm text-muted-foreground sm:text-base">
-              Enquanto esta comunidade estiver em preparação, você pode navegar pela cidade e registrar interesse para o lançamento.
+              Enquanto esta comunidade estiver em preparacao, voce pode navegar pela cidade e registrar interesse para o lancamento.
             </p>
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
               <Button className="w-full" onClick={() => navigate(interestPath)}>
@@ -275,9 +275,9 @@ export function CommunityTerritorialShell() {
                 {profile?.secondary_cta_label ?? "Quero minha empresa aqui"}
               </Button>
               <Button className="w-full" variant="outline" onClick={() => navigate(interestPath)}>
-                Indicar comércio ou serviço da região
+                Indicar comercio ou servico da regiao
               </Button>
-              <Button className="w-full" variant="outline" onClick={() => navigate(eventsModuleUrl)}>Cadastrar evento da região</Button>
+              <Button className="w-full" variant="outline" onClick={() => navigate(eventsModuleUrl)}>Cadastrar evento da regiao</Button>
             </div>
           </div>
         </div>
