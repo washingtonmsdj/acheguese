@@ -11,7 +11,7 @@ interface AISearchResultsProps {
 
 export function AISearchResults({ result, loading, error }: AISearchResultsProps) {
   if (loading) {
-    return <p className="text-center text-sm text-muted-foreground">Interpretando intencao e buscando resultados reais...</p>;
+    return <p className="text-center text-sm text-muted-foreground">Interpretando intenção e buscando resultados reais...</p>;
   }
 
   if (error) {
@@ -26,7 +26,7 @@ export function AISearchResults({ result, loading, error }: AISearchResultsProps
     <section className="mx-auto w-full max-w-4xl space-y-4" aria-live="polite">
       <div className="text-sm text-muted-foreground">
         <span className="font-medium text-foreground">Intent:</span> {result.intent.type} ·{" "}
-        <span className="font-medium text-foreground">JSON validado</span> · confidence{" "}
+        <span className="font-medium text-foreground">JSON validado</span> · confiança{" "}
         {(result.intent.confidence * 100).toFixed(0)}%
       </div>
 

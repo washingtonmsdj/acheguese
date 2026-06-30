@@ -1,59 +1,43 @@
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
+import { expectRouteReady, openPublicRoute, readBodyText } from './support/publicRouteAssertions';
 
-type SearchValidationRow = {
-  query: string;
-  intent: string;
-  resultCount: number;
-  titles: string[];
-  urls: string[];
-  openCheck: 'n/a' | 'ok' | 'failed';
-};
+test.setTimeout(120_000);
 
-test('buscar validation capture', async ({ page }) => {
-  const queries = [
-    'pizzaria barata com delivery',
-    'restaurante aberto agora',
-    'eletricista perto de mim',
-    'encanador urgente',
-    'empresa no meu bairro',
-    'me conte uma piada',
-  ];
+const EXPECTED_GUIDANCE_PATTERNS = [
+  /Não foi possível identificar seu bairro cadastrado/i,
+  /não consegui encontrar/i,
+  /tente buscar por/i,
+] as const;
 
-  await page.goto('/buscar');
+test.beforeAll(async ({ browser, baseURL }) => {
+  const page = await browser.newPage();
+  await page
+    .goto(`${baseURL ?? ''}/buscar`, {
+      timeout: 20_000,
+      waitUntil: 'commit',
+    })
+    .catch(() => undefined);
+  await page.waitForTimeout(1_000);
+  await page.close();
+});
 
-  const rows: SearchValidationRow[] = [];
-  for (const query of queries) {
-    await page.getByLabel('Busca inteligente').fill(query);
-    await page.getByRole('button', { name: 'Buscar' }).click();
-    await page.waitForTimeout(1200);
+test('buscar handles territorial guidance without hanging', async ({ page }) => {
+  await openPublicRoute(page, '/buscar', { waitUntil: 'domcontentloaded', dismissConsent: true });
+  await expectRouteReady(page, {
+    expectedUrlPart: '/buscar',
+    readyPattern: /Busca inteligente|Buscar|Achegue-se/i,
+  });
 
-    const intentLine = await page.locator('text=Intent:').first().textContent();
-    const intentMatch = intentLine?.match(/Intent:\s*([a-z_]+)/i);
-    const intent = (intentMatch?.[1] ?? 'unknown').toLowerCase();
+  await page.getByLabel('Busca inteligente').fill('empresa no meu bairro');
+  await page.getByRole('button', { name: 'Buscar' }).click();
 
-    const titles = await page.locator('h2').allTextContents();
-    const links = await page.locator('a[href]').all();
-    const urls = [] as string[];
-    for (const link of links) {
-      const href = await link.getAttribute('href');
-      if (href?.startsWith('/')) urls.push(href);
-    }
-    const dedupUrls = [...new Set(urls)];
-
-    let openCheck = 'n/a';
-    if (dedupUrls.length > 0) {
-      await page.goto(dedupUrls[0]);
-      const content = (await page.content()).toLowerCase();
-      openCheck = content.includes('404') ? 'failed' : 'ok';
-      await page.goto('/buscar');
-    }
-
-    rows.push({ query, intent, resultCount: titles.length, titles, urls: dedupUrls, openCheck });
-  }
-
-  console.log('BUSCAR_VALIDATION_RESULTS_START');
-  console.log(JSON.stringify(rows, null, 2));
-  console.log('BUSCAR_VALIDATION_RESULTS_END');
-
-  expect(rows.length).toBe(6);
+  await expect
+    .poll(
+      async () => {
+        const body = await readBodyText(page);
+        return EXPECTED_GUIDANCE_PATTERNS.some((pattern) => pattern.test(body));
+      },
+      { timeout: 20_000 },
+    )
+    .toBe(true);
 });
