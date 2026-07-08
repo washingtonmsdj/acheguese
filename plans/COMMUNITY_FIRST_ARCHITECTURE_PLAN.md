@@ -793,18 +793,24 @@ Decisao recomendada:
 
 ### 5. Taxonomia de verticais divergente
 
-Problema:
+Status:
 
-- `src/modules/README.md` declara apenas `gastronomy` como vertical oficial.
-- `src/core/verticals/config.ts` declara `gastronomy` e `education`.
+- resolvido na Fase 1 em 2026-07-08.
+
+Problema original:
+
+- `src/modules/README.md` declarava apenas `gastronomy` como vertical oficial.
+- `src/core/verticals/config.ts` ja declarava `gastronomy` e `education`.
 
 Risco:
 
 - futuras IAs/desenvolvedores podem criar modulo ou pasta no lugar errado.
 
-Decisao recomendada:
+Decisao aplicada:
 
-- alinhar docs, validator e registry antes de adicionar nova vertical.
+- `src/modules/README.md`, `docs/architecture/TAXONOMY_SSOT.md` e
+  `scripts/validate-project-taxonomy.ts` agora usam
+  `src/core/verticals/config.ts` como SSOT de verticais.
 
 ### 6. Inferencia comunitaria por territorio no lugar de vinculo explicito
 
@@ -889,7 +895,7 @@ Criterio de pronto:
 
 ### Fase 1 - Registrar Arquitetura Como Contrato Leve
 
-Status: pendente
+Status: concluida em 2026-07-08
 
 Objetivo:
 
@@ -897,17 +903,27 @@ Objetivo:
 
 Tarefas:
 
-- criar/atualizar doc canonico em `docs/architecture` ou `docs/governance`
+- [x] criar/atualizar doc canonico em `docs/architecture` ou `docs/governance`
   apontando para este plano;
-- atualizar `plans/README.md`;
-- alinhar `src/modules/README.md` com `src/core/verticals/config.ts`;
-- atualizar `scripts/lib/architecture-registry.ts` para refletir
+- [x] atualizar `plans/README.md`;
+- [x] alinhar `src/modules/README.md` com `src/core/verticals/config.ts`;
+- [x] atualizar `scripts/lib/architecture-registry.ts` para refletir
   `community-experience` como SSOT de Comunidade Local;
-- adicionar teste/validator pequeno apenas para impedir regressao de taxonomia.
+- [x] adicionar teste/validator pequeno apenas para impedir regressao de taxonomia.
 
 Criterio de pronto:
 
 - docs e validators concordam sobre core domain, territorio e verticais.
+
+Evidencia:
+
+- `docs/architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md` criado como
+  contrato arquitetural vivo;
+- `scripts/validate-project-taxonomy.ts` agora valida Community First,
+  `community-experience`, modulos canonicos e verticais declaradas no SSOT de
+  `src/core/verticals/config.ts`;
+- `scripts/lib/architecture-registry.ts` registra `community-experience` como
+  dominio arquitetural critico.
 
 ### Fase 2 - Consolidar Comunidade Local No Core
 
@@ -1124,4 +1140,3 @@ Search/Home sao experiencias derivadas desses contratos.
 - alterar rotas publicas;
 - mudar RLS;
 - implementar busca nova.
-

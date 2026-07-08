@@ -5,27 +5,42 @@
 ## Canonical top-level modules
 
 - `admin`
+- `ai`
 - `business`
+- `central`
 - `classifieds`
-- `community`
+- `communication-territorial`
+- `community-alerts`
+- `community-events`
+- `community-feed`
+- `community-groups`
+- `community-issues`
+- `community-lost-found`
+- `community-recommendations`
 - `guide`
 - `mobility`
 - `professionals`
 - `profile`
+- `work-opportunities`
 
 ## Taxonomy rules
 
 - `business` is the horizontal base domain for business entities.
 - `business` is **not** a vertical.
 - Official business verticals are declared only in `src/core/verticals/config.ts`.
-- Current official vertical state: only `gastronomy`.
+- Current official vertical state: `gastronomy` and `education`.
+- Community First core domain is `Comunidade Local`.
+- Local Community identity belongs to `src/core/community-experience`, not to a
+  top-level aggregate module.
 
 ## Domain nesting rules
 
 - Business-derived domains stay inside `business`.
 : `business/company`, `business/gastronomy`, `business/promotions`
-- Community derived domains stay inside `community`.
-: `community/alerts`, `community/issues`
+- Community product experiences use explicit top-level bounded contexts.
+: `community-feed`, `community-alerts`, `community-issues`,
+  `community-groups`, `community-events`, `community-lost-found`,
+  `community-recommendations`
 - Mobility derived domains stay inside `mobility`.
 : `mobility/delivery`
 - Classified jobs stay inside `classifieds`.

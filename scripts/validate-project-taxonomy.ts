@@ -4,6 +4,13 @@ import fs from "fs";
 import path from "path";
 
 const ROOT = process.cwd();
+const MODULES_README_PATH = "src/modules/README.md";
+const TAXONOMY_SSOT_PATH = "docs/architecture/TAXONOMY_SSOT.md";
+const COMMUNITY_FIRST_ARCHITECTURE_DOC_PATH =
+  "docs/architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md";
+const COMMUNITY_FIRST_PLAN_PATH = "plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md";
+const ARCHITECTURE_REGISTRY_PATH = "scripts/lib/architecture-registry.ts";
+const VERTICAL_CONFIG_PATH = "src/core/verticals/config.ts";
 
 const CANONICAL_MODULES = [
   "admin",
@@ -106,8 +113,47 @@ const LEGACY_SCAN_IGNORE_FILES = new Set([
   "scripts/fix-remaining-violations.ts",
 ]);
 
+const COMMUNITY_FIRST_DOC_MARKERS = [
+  "**Comunidade Local**",
+  "`locations`",
+  "`territorial_groups`",
+  "`territory_communities`",
+  "`community_public_aliases`",
+  "`src/core/community-experience`",
+  "`plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md`",
+] as const;
+
+const TAXONOMY_COMMUNITY_FIRST_MARKERS = [
+  "`Comunidade Local`",
+  "`territory_communities`",
+  "`community_public_aliases`",
+  "`src/core/community-experience`",
+] as const;
+
 function pathExists(relativePath: string): boolean {
   return fs.existsSync(path.join(ROOT, relativePath));
+}
+
+function readText(relativePath: string): string | null {
+  const fullPath = path.join(ROOT, relativePath);
+  if (!fs.existsSync(fullPath)) {
+    return null;
+  }
+  return fs.readFileSync(fullPath, "utf8");
+}
+
+function extractVerticalKeysFromConfig(): string[] {
+  const content = readText(VERTICAL_CONFIG_PATH);
+  if (!content) {
+    return [];
+  }
+
+  const match = content.match(/export\s+const\s+VERTICAL_KEYS[^=]*=\s*\[([^\]]*)\]/m);
+  if (!match) {
+    return [];
+  }
+
+  return Array.from(match[1].matchAll(/["']([^"']+)["']/g)).map((item) => item[1]);
 }
 
 function listDirectories(relativeDir: string): string[] {
@@ -198,6 +244,100 @@ function main() {
   for (const requiredPath of REQUIRED_NESTED_PATHS) {
     if (!pathExists(requiredPath)) {
       violations.push(`Path obrigatorio ausente para taxonomia oficial: ${requiredPath}`);
+    }
+  }
+
+  const modulesReadme = readText(MODULES_README_PATH);
+  if (!modulesReadme) {
+    violations.push(`Documento de taxonomia de modulos ausente: ${MODULES_README_PATH}`);
+  } else {
+    for (const moduleName of CANONICAL_MODULES) {
+      if (!modulesReadme.includes(`- \`${moduleName}\``)) {
+        violations.push(
+          `Modulo canonico ausente em ${MODULES_README_PATH}: "${moduleName}"`,
+        );
+      }
+    }
+
+    if (modulesReadme.includes("- `community`\n")) {
+      violations.push(
+        `${MODULES_README_PATH} nao pode listar "community" como modulo canonico; use community-* explicitos.`,
+      );
+    }
+
+    if (!modulesReadme.includes("`src/core/community-experience`")) {
+      violations.push(
+        `${MODULES_README_PATH} deve declarar src/core/community-experience como owner da Comunidade Local.`,
+      );
+    }
+  }
+
+  const communityFirstDoc = readText(COMMUNITY_FIRST_ARCHITECTURE_DOC_PATH);
+  if (!communityFirstDoc) {
+    violations.push(
+      `Contrato Community First ausente: ${COMMUNITY_FIRST_ARCHITECTURE_DOC_PATH}`,
+    );
+  } else {
+    for (const marker of COMMUNITY_FIRST_DOC_MARKERS) {
+      if (!communityFirstDoc.includes(marker)) {
+        violations.push(
+          `Contrato Community First sem marcador obrigatorio "${marker}" em ${COMMUNITY_FIRST_ARCHITECTURE_DOC_PATH}`,
+        );
+      }
+    }
+  }
+
+  if (!pathExists(COMMUNITY_FIRST_PLAN_PATH)) {
+    violations.push(`Plano Community First ausente: ${COMMUNITY_FIRST_PLAN_PATH}`);
+  }
+
+  const taxonomySsot = readText(TAXONOMY_SSOT_PATH);
+  if (!taxonomySsot) {
+    violations.push(`Documento TAXONOMY SSOT ausente: ${TAXONOMY_SSOT_PATH}`);
+  } else {
+    for (const marker of TAXONOMY_COMMUNITY_FIRST_MARKERS) {
+      if (!taxonomySsot.includes(marker)) {
+        violations.push(
+          `TAXONOMY SSOT sem marcador Community First "${marker}" em ${TAXONOMY_SSOT_PATH}`,
+        );
+      }
+    }
+  }
+
+  const architectureRegistry = readText(ARCHITECTURE_REGISTRY_PATH);
+  if (!architectureRegistry) {
+    violations.push(`Architecture registry ausente: ${ARCHITECTURE_REGISTRY_PATH}`);
+  } else {
+    if (!architectureRegistry.includes('id: "community-experience"')) {
+      violations.push(
+        `${ARCHITECTURE_REGISTRY_PATH} deve registrar community-experience como dominio arquitetural.`,
+      );
+    }
+    if (!architectureRegistry.includes(COMMUNITY_FIRST_ARCHITECTURE_DOC_PATH)) {
+      violations.push(
+        `${ARCHITECTURE_REGISTRY_PATH} deve apontar para ${COMMUNITY_FIRST_ARCHITECTURE_DOC_PATH}.`,
+      );
+    }
+  }
+
+  const verticalKeys = extractVerticalKeysFromConfig();
+  if (verticalKeys.length === 0) {
+    violations.push(`Nao foi possivel ler VERTICAL_KEYS em ${VERTICAL_CONFIG_PATH}`);
+  }
+
+  const verticalDocs = [
+    [MODULES_README_PATH, modulesReadme],
+    [TAXONOMY_SSOT_PATH, taxonomySsot],
+    [COMMUNITY_FIRST_ARCHITECTURE_DOC_PATH, communityFirstDoc],
+  ] as const;
+
+  for (const verticalKey of verticalKeys) {
+    for (const [docPath, content] of verticalDocs) {
+      if (content && !content.includes(`\`${verticalKey}\``)) {
+        violations.push(
+          `${docPath} esta fora de sincronia com ${VERTICAL_CONFIG_PATH}: falta vertical "${verticalKey}".`,
+        );
+      }
     }
   }
 

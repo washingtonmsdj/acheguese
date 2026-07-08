@@ -9,6 +9,7 @@ export interface DomainRegistryEntry {
     | "gastronomy"
     | "professionals-services"
     | "communication-territorial"
+    | "community-experience"
     | "community-feed"
     | "community-alerts"
     | "community-issues"
@@ -321,6 +322,43 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
       "Core/communication-territorial concentra servicos, tipos, URL canonica e acesso ao Supabase. UI publica, admin e central consomem apenas esses contratos.",
   },
   {
+    id: "community-experience",
+    label: "community-experience",
+    sourceRoots: [
+      "src/core/community-experience",
+      "src/core/community/access",
+    ],
+    docsPaths: [
+      "docs/architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md",
+      "plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md",
+    ],
+    ssotPaths: [
+      "src/core/community-experience/services/CommunityExperienceService.ts",
+      "src/core/community-experience/types.ts",
+      "src/core/community/access/CommunityAccessPolicy.ts",
+    ],
+    routePrefixes: [
+      "/comunidade/:communitySlug",
+      "/comunidade/:communitySlug/*",
+      "/comunidade/:state/:city",
+      "/comunidade/:state/:city/:groupSlugOrDistrict",
+      "/:communitySlug",
+    ],
+    adminRoutePrefixes: ["/admin/territory-communities", "/admin/territory-content"],
+    criticality: "critical",
+    canonicalServiceBasenames: [
+      "CommunityExperienceService.ts",
+      "CommunityAccessPolicy.ts",
+    ],
+    canonicalTypeBasenames: ["types.ts"],
+    adminSummary:
+      "Parcial. A Comunidade Local ja possui tabela e alias publico, mas a administracao ainda divide responsabilidades com territorio e conteudo.",
+    docsSummary:
+      "Boa para decisao arquitetural. `COMMUNITY_FIRST_ARCHITECTURE_SSOT.md` define Comunidade Local como core domain e aponta para o plano incremental.",
+    ssotSummary:
+      "CommunityExperienceService e o SSOT atual de leitura da Comunidade Local (`territory_communities`). Territorio continua em location/territorial; feed e demais experiencias comunitarias nao devem redefinir a identidade da comunidade.",
+  },
+  {
     id: "community-feed",
     label: "community-feed",
     sourceRoots: [
@@ -333,6 +371,7 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     ],
     docsPaths: [
       "src/modules/community-feed/README.md",
+      "docs/architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md",
       "docs/posts",
     ],
     ssotPaths: [
@@ -357,9 +396,9 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     adminSummary:
       "Parcial. Moderacao existe, mas a gestao administrativa do ciclo de posts, grupos, recomendacoes, eventos e achados/perdidos nao esta consolidada numa cobertura unica.",
     docsSummary:
-      "Parcial. Ha README do modulo e pastas em docs/posts e docs/qa, mas falta documento mestre do dominio comunidade com SSOT e ownership.",
+      "Parcial. Ha README do modulo, docs/posts e o contrato Community First; ainda falta consolidar posts vs community_posts.",
     ssotSummary:
-      "Feed transversal usa core/posts, core/comments, core/social e core/feed. A URL publica preferencial usa alias curto de comunidade; /comunidade/... permanece como fallback tecnico/legado.",
+      "Feed transversal usa core/posts, core/comments, core/social e core/feed. A identidade da Comunidade Local pertence a community-experience; feed nao deve recriar community profile, alias ou territorio.",
   },
   {
     id: "community-alerts",

@@ -1,17 +1,17 @@
 # FASE 1 - Hardening Arquitetural (Gate-First)
 
-Gerado em: 2026-05-19T15:45:28.644Z
+Gerado em: 2026-07-08T21:27:12.708Z
 
 ## Problemas encontrados
-- Dependencias ciclicas detectadas: 0
-- Imports relativos profundos (>= 3 niveis): 0
-- Arquivos com acesso DB fora de service/repository: 0
-- Services com implementacao duplicada: 0
-- Services com aliases/reexports publicos: 27
+- Dependencias ciclicas detectadas: 7
+- Imports relativos profundos (>= 3 niveis): 3
+- Arquivos com acesso DB fora de service/repository: 2
+- Services com implementacao duplicada: 1
+- Services com aliases/reexports publicos: 15
 - Services homonimos em contextos distintos: 2
-- Components com implementacao duplicada: 121
-- Components com aliases/reexports publicos: 97
-- Arquivos grandes (>= 900 linhas): 0
+- Components com implementacao duplicada: 26
+- Components com aliases/reexports publicos: 24
+- Arquivos grandes (>= 900 linhas): 13
 - Violacoes de layer (shared/core boundaries): 0
 
 ## Modulos mais criticos
@@ -22,8 +22,27 @@ Gerado em: 2026-05-19T15:45:28.644Z
 - landing/routing
 
 ## Arquivos mais problematicos
+- `src/app/pages/CidadeLandingPage.tsx` (1891 linhas)
+- `src/core/community/components/composer/CreatePostModal.tsx` (1332 linhas)
+- `src/modules/business/education/services/education.queries.ts` (1143 linhas)
+- `src/core/work-opportunities/services/WorkOpportunitiesService.ts` (1122 linhas)
+- `src/modules/business/gastronomy/services/MenuService.ts` (1025 linhas)
+- `src/core/mobility/delivery/services/OrderDeliverySSOTService.ts` (1022 linhas)
+- `src/core/maps/components/v3/MapLibreAdapter.tsx` (1020 linhas)
+- `src/config/security.config.ts` (1013 linhas)
+- `src/core/community/pages/ComunidadePage.tsx` (961 linhas)
+- `src/core/pricing/services/PricingService.ts` (956 linhas)
+- `src/modules/business/gastronomy/services/menu.queries.ts` (930 linhas)
+- `src/core/maps/pages/MapaPageV4.tsx` (912 linhas)
 
 ## Riscos arquiteturais
+- Ciclo: src/core/routing/hooks/useResolveTerritoryFromUrl.ts -> src/core/routing/utils/publicTerritoryFallbacks.ts -> src/core/routing/hooks/useResolveTerritoryFromUrl.ts
+- Ciclo: src/core/profiles/services/ProfileService.ts -> src/core/profiles/services/profile.context.aggregate.ts -> src/core/moderation/services/ModerationService.ts -> src/core/profiles/services/ProfileService.ts
+- Ciclo: src/core/session/services/SessionService.ts -> src/core/profiles/services/ProfileService.ts -> src/core/profiles/services/profile.mutations.ts -> src/core/session/services/SessionService.ts
+- Ciclo: src/core/session/services/SessionService.ts -> src/core/profiles/services/ProfileService.ts -> src/core/profiles/services/profile.mutations.ts -> src/core/profiles/services/profile.queries.ts -> src/core/session/services/SessionService.ts
+- Ciclo: src/modules/business/gastronomy/services/review.queries.ts -> src/modules/business/gastronomy/services/BusinessReviewsRpcService.ts -> src/modules/business/gastronomy/services/review.queries.ts
+- Ciclo: src/modules/business/gastronomy/checkout/checkoutRules.ts -> src/modules/business/gastronomy/types/menu.ts -> src/modules/business/gastronomy/checkout/checkoutRules.ts
+- Ciclo: src/core/mobility/services/MobilityRpcService.ts -> src/core/mobility/services/MobilityAuditService.ts -> src/core/mobility/services/MobilityRpcService.ts
 
 ## Melhorias aplicadas
 - Gates de arquitetura e SSOT alinhados com estabilizacao gate-first.
@@ -37,59 +56,66 @@ Gerado em: 2026-05-19T15:45:28.644Z
 - Consolidacao estrutural de roots compativeis em core/landing, core/classifieds e core/mobility.
 
 ## Score de estabilidade arquitetural
-- Score Gate-First (ciclos/boundaries/DB/layers): **100/100**
-- Score Debt Estrutural (inclui duplicacoes e arquivos gigantes): **100/100**
+- Score Gate-First (ciclos/boundaries/DB/layers): **49/100**
+- Score Debt Estrutural (inclui duplicacoes e arquivos gigantes): **58/100**
 - Baseline de referencia: 70/100
 - Meta desta fase: 85+/100
 
 ## Anexos tecnicos
 ### Duplicacao de services (top)
+- `AnalyticsService.ts`: src/core/analytics/AnalyticsService.ts, src/core/analytics/services/AnalyticsService.ts
 
 ### Services com aliases/reexports (top)
-- `AdminService.ts`: canonic `src/core/admin/services/AdminService.ts`, aliases `src/core/admin/AdminService.ts`, `src/modules/admin/services/AdminService.ts`
-- `CommunityIssueService.ts`: canonic `src/core/community/issues/services/CommunityIssueService.ts`, aliases `src/core/community-issues/services/CommunityIssueService.ts`, `src/modules/community/issues/services/CommunityIssueService.ts`
-- `LandingFeaturedService.ts`: canonic `src/core/landing/services/LandingFeaturedService.ts`, aliases `src/app/features/landing/services/LandingFeaturedService.ts`
 - `AdminVagasService.ts`: canonic `src/core/admin/services/AdminVagasService.ts`, aliases `src/modules/classifieds/jobs/services/AdminVagasService.ts`
-- `MobilityAdminQueryService.ts`: canonic `src/core/admin/services/MobilityAdminQueryService.ts`, aliases `src/modules/mobility/services/MobilityAdminQueryService.ts`
-- `AnalyticsService.ts`: canonic `src/core/analytics/AnalyticsService.ts`, aliases `src/core/analytics/services/AnalyticsService.ts`
-- `AlertModerationService.ts`: canonic `src/core/community/alerts/services/AlertModerationService.ts`, aliases `src/modules/community/alerts/services/AlertModerationService.ts`
-- `AlertNotificationService.ts`: canonic `src/core/community/alerts/services/AlertNotificationService.ts`, aliases `src/modules/community/alerts/services/AlertNotificationService.ts`
-- `CommunityAlertService.ts`: canonic `src/core/community/alerts/services/CommunityAlertService.ts`, aliases `src/modules/community/alerts/services/CommunityAlertService.ts`
-- `CommunityEventsRuntimeService.ts`: canonic `src/core/community/services/CommunityEventsRuntimeService.ts`, aliases `src/core/community-events/services/CommunityEventsRuntimeService.ts`
-- `CommunityLocationService.ts`: canonic `src/core/community/services/CommunityLocationService.ts`, aliases `src/modules/community/services/CommunityLocationService.ts`
-- `CommunityRolloutService.ts`: canonic `src/core/community/services/CommunityRolloutService.ts`, aliases `src/modules/community/services/CommunityRolloutService.ts`
+- `MobilityAdminQueryService.ts`: canonic `src/core/admin/services/MobilityAdminQueryService.ts`, aliases `src/core/mobility/services/MobilityAdminQueryService.ts`
+- `TouristPointQueryService.ts`: canonic `src/core/guide/tourist-points/services/TouristPointQueryService.ts`, aliases `src/modules/guide/services/TouristPointQueryService.ts`
+- `TouristPointService.ts`: canonic `src/core/guide/tourist-points/services/TouristPointService.ts`, aliases `src/modules/guide/services/TouristPointService.ts`
+- `LocationAdminService.ts`: canonic `src/core/location/services/LocationAdminService.ts`, aliases `src/modules/admin/services/LocationAdminService.ts`
+- `OrderDraftService.ts`: canonic `src/core/mobility/delivery/order/OrderDraftService.ts`, aliases `src/modules/mobility/delivery/order/OrderDraftService.ts`
+- `PaymentContextService.ts`: canonic `src/core/mobility/delivery/payment-context/PaymentContextService.ts`, aliases `src/modules/mobility/delivery/payment-context/PaymentContextService.ts`
+- `OrderDeliveryLinkService.ts`: canonic `src/core/mobility/delivery/services/OrderDeliveryLinkService.ts`, aliases `src/modules/mobility/delivery/services/OrderDeliveryLinkService.ts`
+- `OrderDeliveryNotificationService.ts`: canonic `src/core/mobility/delivery/services/OrderDeliveryNotificationService.ts`, aliases `src/modules/mobility/delivery/services/OrderDeliveryNotificationService.ts`
+- `OrderDeliverySSOTService.ts`: canonic `src/core/mobility/delivery/services/OrderDeliverySSOTService.ts`, aliases `src/modules/mobility/delivery/services/OrderDeliverySSOTService.ts`
+- `SettlementContextService.ts`: canonic `src/core/mobility/delivery/settlement-context/SettlementContextService.ts`, aliases `src/modules/mobility/delivery/settlement-context/SettlementContextService.ts`
+- `DriverService.ts`: canonic `src/core/mobility/services/DriverService.impl.ts`, aliases `src/core/mobility/services/DriverService.ts`
 
 ### Services homonimos por contexto (top)
 - `SubscriptionService.ts`: `src/core/billing/services/SubscriptionService.ts`, `src/core/billing/SubscriptionService.ts`, `src/core/subscription/services/SubscriptionService.ts`
 - `SessionService.ts`: `src/core/auth/services/SessionService.ts`, `src/core/session/services/SessionService.ts`
 
 ### Duplicacao de components (top)
-- `ErrorBoundary.tsx`: src/app/components/ErrorBoundary.tsx, src/modules/mobility/components/ErrorBoundary.tsx, src/shared/components/ErrorBoundary.tsx, src/shared/components/errors/ErrorBoundary.tsx, src/shared/components/ui/ErrorBoundary.tsx
-- `AlertCard.tsx`: src/core/alerts/components/AlertCard.tsx, src/core/community/alerts/components/AlertCard.tsx, src/modules/admin/components/alerts/AlertCard.tsx, src/modules/community/alerts/components/AlertCard.tsx
-- `PostActions.tsx`: src/core/community/components/post-card/PostActions.tsx, src/core/community/components/PostActions.tsx, src/core/community/components/UnifiedPostCard/PostActions.tsx, src/modules/community/components/UnifiedPostCard/PostActions.tsx
-- `PostContent.tsx`: src/core/community/components/post-card/PostContent.tsx, src/core/community/components/PostContent.tsx, src/core/community/components/UnifiedPostCard/PostContent.tsx, src/modules/community/components/UnifiedPostCard/PostContent.tsx
-- `StatCard.tsx`: src/core/admin/components/stats/StatCard.tsx, src/core/admin/drivers/components/cards/StatCard.tsx, src/modules/admin/components/stats/StatCard.tsx
+- `ErrorBoundary.tsx`: src/app/components/ErrorBoundary.tsx, src/modules/mobility/components/ErrorBoundary.tsx, src/shared/components/errors/ErrorBoundary.tsx
 - `CommentItem.tsx`: src/core/community/components/CommentItem.tsx, src/core/community/components/comments/CommentItem.tsx, src/shared/components/drawer/CommentItem.tsx
-- `StepIndicator.tsx`: src/core/community/components/composer/create-post/StepIndicator.tsx, src/modules/business/components/create/StepIndicator.tsx, src/modules/community/components/composer/create-post/StepIndicator.tsx
-- `CategoryFilters.tsx`: src/core/community/components/feed/CategoryFilters.tsx, src/modules/community/components/feed/CategoryFilters.tsx, src/shared/components/recomendacoes/CategoryFilters.tsx
-- `PostHeader.tsx`: src/core/community/components/post-card/PostHeader.tsx, src/core/community/components/PostHeader.tsx, src/core/community/components/UnifiedPostCard/PostHeader.tsx
 - `ContactStep.tsx`: src/modules/business/components/edit/ContactStep.tsx, src/modules/classifieds/components/create/ContactStep.tsx, src/modules/classifieds/jobs/pages/steps/ContactStep.tsx
-- `DashboardHeader.tsx`: src/modules/communication-territorial/v2/agent-dashboard/sections/DashboardHeader.tsx, src/shared/components/dashboard/DashboardHeader.tsx
+- `BottomNav.tsx`: src/app/components/BottomNav.tsx, src/core/navigation/BottomNav.tsx
+- `MobilitySettingsPanel.tsx`: src/core/admin/components/MobilitySettingsPanel.tsx, src/modules/admin/components/MobilitySettingsPanel.tsx
+- `StatCard.tsx`: src/core/admin/components/stats/StatCard.tsx, src/core/admin/drivers/components/cards/StatCard.tsx
+- `StatusBadge.tsx`: src/core/admin/identity/components/badges/StatusBadge.tsx, src/modules/mobility/components/StatusBadge.tsx
+- `AlertCard.tsx`: src/core/alerts/components/AlertCard.tsx, src/core/community/alerts/components/AlertCard.tsx
+- `AnalyticsDashboard.tsx`: src/core/business/components/AnalyticsDashboard.tsx, src/modules/business/components/AnalyticsDashboard.tsx
+- `CouponManager.tsx`: src/core/business/components/CouponManager.tsx, src/modules/business/components/CouponManager.tsx
+- `EmpresaDashboardTab.tsx`: src/core/business/components/EmpresaDashboardTab.tsx, src/modules/business/components/EmpresaDashboardTab.tsx
+- `SubscriptionPlans.tsx`: src/core/business/components/SubscriptionPlans.tsx, src/modules/business/components/SubscriptionPlans.tsx
 
 ### Components com aliases/reexports (top)
-- `DashboardEmpresaPageV2.tsx`: canonic `src/core/business/services/DashboardEmpresaPageV2.tsx`, aliases `src/app/features/dashboard/pages/DashboardEmpresaPageV2.tsx`, `src/modules/business/pages/DashboardEmpresaPageV2.tsx`
-- `BadgeDisplay.tsx`: canonic `src/core/community/components/BadgeDisplay.tsx`, aliases `src/core/gamification/components/BadgeDisplay.tsx`, `src/modules/community/components/BadgeDisplay.tsx`
-- `CommunityProfileCard.tsx`: canonic `src/core/community/components/CommunityProfileCard.tsx`, aliases `src/core/gamification/components/CommunityProfileCard.tsx`, `src/modules/community/components/CommunityProfileCard.tsx`
-- `Leaderboard.tsx`: canonic `src/core/community/components/Leaderboard.tsx`, aliases `src/core/gamification/components/Leaderboard.tsx`, `src/modules/community/components/Leaderboard.tsx`
-- `PostCardSkeleton.tsx`: canonic `src/core/community/components/PostCardSkeleton.tsx`, aliases `src/core/posts/components/PostCardSkeleton.tsx`, `src/modules/community/components/PostCardSkeleton.tsx`
-- `UserLevelBadge.tsx`: canonic `src/core/community/components/UserLevelBadge.tsx`, aliases `src/core/gamification/components/UserLevelBadge.tsx`, `src/modules/community/components/UserLevelBadge.tsx`
+- `PostCard.tsx`: canonic `src/core/community/components/cards/PostCard.tsx`, aliases `src/core/community/components/PostCard.tsx`, `src/core/posts/components/PostCard.tsx`
+- `CreatePostModal.tsx`: canonic `src/core/community/components/composer/CreatePostModal.tsx`, aliases `src/core/community-feed/components/composer/CreatePostModal.tsx`, `src/modules/community-feed/components/composer/CreatePostModal.tsx`
+- `UnifiedComposer.tsx`: canonic `src/core/community/components/composer/UnifiedComposer.tsx`, aliases `src/core/community-feed/components/composer/UnifiedComposer.tsx`, `src/modules/community-feed/components/composer/UnifiedComposer.tsx`
 - `AchadoPerdidoDetailPage.tsx`: canonic `src/core/community/pages/AchadoPerdidoDetailPage.tsx`, aliases `src/core/community-lost-found/pages/AchadoPerdidoDetailPage.tsx`, `src/modules/community-lost-found/pages/AchadoPerdidoDetailPage.tsx`
 - `AchadosPerdidosPage.tsx`: canonic `src/core/community/pages/AchadosPerdidosPage.tsx`, aliases `src/core/community-lost-found/pages/AchadosPerdidosPage.tsx`, `src/modules/community-lost-found/pages/AchadosPerdidosPage.tsx`
 - `ComunidadePage.tsx`: canonic `src/core/community/pages/ComunidadePage.tsx`, aliases `src/core/community-feed/pages/ComunidadePage.tsx`, `src/modules/community-feed/pages/ComunidadePage.tsx`
-- `ExamplePostPage.tsx`: canonic `src/core/community/pages/ExamplePostPage.tsx`, aliases `src/core/community-feed/pages/ExamplePostPage.tsx`, `src/modules/community-feed/pages/ExamplePostPage.tsx`
 - `GrupoDetailPage.tsx`: canonic `src/core/community/pages/GrupoDetailPage.tsx`, aliases `src/core/community-groups/pages/GrupoDetailPage.tsx`, `src/modules/community-groups/pages/GrupoDetailPage.tsx`
 - `GruposPage.tsx`: canonic `src/core/community/pages/GruposPage.tsx`, aliases `src/core/community-groups/pages/GruposPage.tsx`, `src/modules/community-groups/pages/GruposPage.tsx`
+- `NovaRecomendacaoPage.tsx`: canonic `src/core/community/pages/NovaRecomendacaoPage.tsx`, aliases `src/core/community-recommendations/pages/NovaRecomendacaoPage.tsx`, `src/modules/community-recommendations/pages/NovaRecomendacaoPage.tsx`
+- `NovoAchadoPerdidoPage.tsx`: canonic `src/core/community/pages/NovoAchadoPerdidoPage.tsx`, aliases `src/core/community-lost-found/pages/NovoAchadoPerdidoPage.tsx`, `src/modules/community-lost-found/pages/NovoAchadoPerdidoPage.tsx`
+- `NovoPostPage.tsx`: canonic `src/core/community/pages/NovoPostPage.tsx`, aliases `src/core/community-feed/pages/NovoPostPage.tsx`, `src/modules/community-feed/pages/NovoPostPage.tsx`
+- `RecomendacaoDetailPage.tsx`: canonic `src/core/community/pages/RecomendacaoDetailPage.tsx`, aliases `src/core/community-recommendations/pages/RecomendacaoDetailPage.tsx`, `src/modules/community-recommendations/pages/RecomendacaoDetailPage.tsx`
 
 ### Imports profundos (top)
+- `src/modules/business/gastronomy/niches/pizzaria/components/PizzaAdminPanel.tsx` -> `../../../utils/currency` (subidas: 3)
+- `src/modules/business/gastronomy/niches/pizzaria/components/PizzaBuilder.tsx` -> `../../../utils/currency` (subidas: 3)
+- `src/modules/business/gastronomy/niches/pizzaria/components/PizzaPredefinedBuilder.tsx` -> `../../../utils/currency` (subidas: 3)
 
 ### DB fora de service/repository (top)
+- `src/core/infrastructure/edge-functions/edgeFunctionBroker.ts`
+- `src/modules/ai/core/client/aiClient.ts`

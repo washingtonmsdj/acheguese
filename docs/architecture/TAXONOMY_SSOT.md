@@ -2,6 +2,8 @@
 
 Data de referencia: 2026-04-22
 
+Atualizacao Community First: 2026-07-08
+
 ## 1. Objetivo
 Definir uma taxonomia unica e oficial do projeto, separando com clareza:
 - dominio de produto,
@@ -24,13 +26,23 @@ Definir uma taxonomia unica e oficial do projeto, separando com clareza:
 - Classificacao: dominio principal e subdominio de produto.
 - Topo canonico:
   - `admin`
+  - `ai`
   - `business`
+  - `central`
   - `classifieds`
-  - `community`
+  - `communication-territorial`
+  - `community-alerts`
+  - `community-events`
+  - `community-feed`
+  - `community-groups`
+  - `community-issues`
+  - `community-lost-found`
+  - `community-recommendations`
   - `guide`
   - `mobility`
   - `professionals`
   - `profile`
+  - `work-opportunities`
 
 ### 2.3 `src/core`
 - Papel: capacidades transversais, contratos canonicos, servicos centrais.
@@ -58,7 +70,23 @@ Definir uma taxonomia unica e oficial do projeto, separando com clareza:
 - `business`/`empresas` e dominio horizontal base.
 - `business` nao e vertical.
 - Vertical oficial empresarial existe somente por declaracao em `src/core/verticals/config.ts`.
-- Estado atual oficial: apenas `gastronomy`.
+- Estado atual oficial: `gastronomy` e `education`.
+
+## 3.1 Regras oficiais Community First
+- O core domain do produto e `Comunidade Local`.
+- O SSOT territorial continua em `locations`, `territorial_groups`,
+  `src/core/location` e `src/core/territorial`.
+- Comunidade Local nao substitui Territorio; ela e a experiencia social
+  ancorada no territorio.
+- O SSOT atual de Comunidade Local fica em `territory_communities`,
+  `community_public_aliases` e `src/core/community-experience`.
+- Empresas, gastronomia, servicos, classificados, eventos, usuarios e posts sao
+  entidades independentes; comunidades guardam contexto, vinculo, destaque,
+  moderacao e descoberta, nao copias dos dados mestres.
+- O contrato vivo dessa decisao esta em
+  `docs/architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md`.
+- O plano incremental esta em
+  `plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md`.
 
 ## 4. Regras de fronteira
 - subdominio fica dentro do dominio base, nao no topo.
@@ -79,3 +107,6 @@ Alguns nomes em `src/core` ainda coexistem por historico (`profile/profiles`, `s
 - consolidacao detalhada da vertical oficial `gastronomy`:
   - `docs/architecture/GASTRONOMY_CONSOLIDATION_SSOT.md`
 - essa consolidacao e normativa para caminhos, ownership e blindagem anti-regressao.
+- `education` ja e vertical oficial em `src/core/verticals/config.ts`; qualquer
+  abertura publica ampla precisa respeitar o mesmo padrao de SSOT, ownership e
+  validacao antes de sair do modo controlado.
