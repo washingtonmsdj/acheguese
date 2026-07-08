@@ -1071,6 +1071,17 @@ mensagem/setup. Foram migrados os fluxos de gastronomia, recomendacoes,
 comunidade, comunicacao territorial, auth/business, admin-pricing e education
 para usar o helper operacional em vez de montar clientes admin diretamente.
 
+Resultado readiness em 2026-07-08: o scan Codex Security
+`43a63bb9-5fc0-4cd4-a0f3-3f1387b1daa2` foi concluido contra o commit
+`303ff478ac29a7c2bd7d0a354c81970fd0bdf8fc`, escopo `supabase`, com `309/309`
+linhas do worklist fechadas e `0` achados reportaveis. Em seguida,
+`npm run security:postgis:preflight` confirmou `status=blocked` para
+`EXC-2026-07-08-POSTGIS-EXTENSION-OWNER`, `npm run security:auth:hibp --
+--json` confirmou `status=blocked`/`missing_pat` para
+`EXC-2026-07-08-AUTH-HIBP-DASHBOARD`, `npm run security:advisor:residuals`
+validou os 12 residuais mapeados e `npm run verify:deploy` passou com
+`PROJETO PRONTO PARA DEPLOY`.
+
 Proxima etapa recomendada antes do lancamento:
 
 - resolver `EXC-2026-07-08-POSTGIS-EXTENSION-OWNER` por uma janela dedicada de

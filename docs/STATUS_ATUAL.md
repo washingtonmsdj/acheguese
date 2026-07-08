@@ -1,13 +1,30 @@
 # Status Atual do Projeto
 
 Data: 2026-07-08
-Branch: codex/ssot-cleanup
-Ultimo commit validado: b0bedaaa (`refactor: consolida SSOT de formatacao e admin`)
+Branch: main
+Ultimo commit validado: 303ff478 (`fix: harden try-on image fetch security`)
 
 Observacao: este documento e a fonte operacional atual. O historico abaixo fica preservado por contexto, mas qualquer registro antigo de bloqueio por falta de `git`/`node` nao representa o ambiente validado em 2026-06-06.
 
 ## Validacoes Recentes
 
+- Readiness de release em 2026-07-08: `npm run verify:deploy` passou e
+  declarou `PROJETO PRONTO PARA DEPLOY`. O gate executou e aprovou estrutura
+  obrigatoria, scripts de arquitetura/SSOT, `validate:migrations`,
+  `validate:migrations:remote`, `validate:security-authority`,
+  `security:validate`, `security:config:validate`, higiene de runtime,
+  TypeScript e checks de SEO/PWA. `npm run security:advisor:residuals` tambem
+  passou com 12 achados, todos dentro da allowlist canonica.
+- Codex Security em 2026-07-08: scan `43a63bb9-5fc0-4cd4-a0f3-3f1387b1daa2`
+  concluido contra o commit `303ff478ac29a7c2bd7d0a354c81970fd0bdf8fc` no
+  escopo `supabase`, com `309/309` linhas do worklist fechadas e `0` achados
+  reportaveis. O relatorio canonico foi gerado em
+  `C:\Users\Casa\AppData\Local\Temp\codex-security-scans-nAII25\acheguese\303ff478ac29a7c2bd7d0a354c81970fd0bdf8fc_20260708T175149Z_22zf_lvm\report.md`.
+- Excecoes remotas em 2026-07-08: `npm run security:postgis:preflight`
+  retornou `status=blocked` para extensoes PostGIS/auxiliares em `public`,
+  `public.spatial_ref_sys` e overloads `st_estimatedextent`, todos com owner
+  `supabase_admin`. `npm run security:auth:hibp -- --json` retornou
+  `status=blocked`, `blocker=missing_pat`; nenhuma alteracao remota foi feita.
 - Supabase remoto em 2026-07-08: Advisor reexecutado e permanece em 12 achados
   totais. Os achados de aplicacao/RPC corrigiveis por migrations e Edge
   Functions foram removidos; restam apenas `public.spatial_ref_sys`,

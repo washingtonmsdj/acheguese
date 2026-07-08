@@ -121,8 +121,15 @@ extensoes, grants, RLS ou migrations; se retornar `blocked`, o marcador
   com owner `supabase_admin` e `ready=false`.
 - Nova execucao em 2026-07-08 confirmou o mesmo `status=blocked`, sem alteracao
   remota e sem habilitar o marcador `extension-owner-preflight`.
+- Execucao em 2026-07-08T18:13Z de `npm run security:postgis:preflight`
+  confirmou novamente `status=blocked`: extensoes `citext`, `pg_trgm`,
+  `postgis`, `unaccent`, `public.spatial_ref_sys` e tres overloads
+  `public.st_estimatedextent` continuam com owner `supabase_admin` e
+  `ready=false`.
 - `npm run security:advisor:residuals` em 2026-07-08 validou 12 achados
   remotos, todos dentro dos residuais mapeados.
+- Execucao em 2026-07-08T18:13Z de `npm run security:advisor:residuals`
+  reconfirmou 12 achados remotos, todos dentro da allowlist canonica.
 - `supabase/migrations/20260707124929_revoke_public_postgis_estimatedextent_execute.sql`
   tentou revogar os overloads, mas os grants permaneceram por ownership/grantor
   da extensao.
@@ -197,6 +204,10 @@ env var usada, nunca o valor do token.
   estruturado com `status=blocked` e `blocker=missing_pat`, sem imprimir valor
   de token. A correcao remota continua dependente de PAT valido e plano
   Supabase compativel.
+- Execucao em 2026-07-08T18:13Z de `npm run security:auth:hibp -- --json`
+  retornou novamente `status=blocked`, `blocker=missing_pat`, project ref
+  `xhdowzacfujckjelqhtd` e nome das env vars esperadas, sem imprimir segredo e
+  sem aplicar alteracao remota.
 
 Achados residuais do Supabase Advisor tambem devem continuar registrados no
 relatorio canonico:
