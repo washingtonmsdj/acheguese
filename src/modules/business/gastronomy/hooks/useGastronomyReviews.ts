@@ -2,10 +2,10 @@
  * useGastronomyReviews — Hooks para gerenciar avaliações de gastronomia
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
-import { useSessionContext } from '@/core/session';
+import { useSessionContext } from "@/core/session";
 import {
   ReviewQueryService,
   type Review,
@@ -14,32 +14,32 @@ import {
   type BusinessResponseInput,
   type ReportReviewInput,
   type VoteReviewInput,
-} from '../services/review.queries';
+} from "../services/review.queries";
 
 const QUERY_KEYS = {
   businessReviews: (businessProfileId: string) => [
-    'gastronomy',
-    'reviews',
-    'business',
+    "gastronomy",
+    "reviews",
+    "business",
     businessProfileId,
   ],
   businessReviewStats: (businessProfileId: string) => [
-    'gastronomy',
-    'reviews',
-    'stats',
+    "gastronomy",
+    "reviews",
+    "stats",
     businessProfileId,
   ],
   canUserReview: (userId: string, businessProfileId: string) => [
-    'gastronomy',
-    'reviews',
-    'can-review',
+    "gastronomy",
+    "reviews",
+    "can-review",
     userId,
     businessProfileId,
   ],
   userReviewVote: (reviewId: string, voterProfileId: string) => [
-    'gastronomy',
-    'reviews',
-    'vote',
+    "gastronomy",
+    "reviews",
+    "vote",
     reviewId,
     voterProfileId,
   ],
@@ -79,10 +79,14 @@ export function useBusinessReviewStats(businessProfileId: string) {
 export function useCanUserReview(params: {
   userId: string;
   businessProfileId: string;
+  reviewerProfileId?: string | null;
   enabled?: boolean;
 }) {
   return useQuery({
-    queryKey: QUERY_KEYS.canUserReview(params.userId, params.businessProfileId),
+    queryKey: [
+      ...QUERY_KEYS.canUserReview(params.userId, params.businessProfileId),
+      params.reviewerProfileId ?? null,
+    ],
     queryFn: () => ReviewQueryService.canUserReviewBusiness(params),
     enabled: params.enabled !== false && !!params.userId,
     staleTime: 2 * 60 * 1000, // 2 minutos
@@ -107,16 +111,16 @@ export function useCreateReview() {
       });
       // Invalidar canUserReview para todos os usuários deste negócio
       queryClient.invalidateQueries({
-        queryKey: ['gastronomy', 'reviews', 'can-review'],
+        queryKey: ["gastronomy", "reviews", "can-review"],
       });
 
-      toast.success('Avaliação publicada com sucesso!');
+      toast.success("Avaliação publicada com sucesso!");
     },
     onError: (error) => {
       toast.error(
         error instanceof Error
           ? error.message
-          : 'Erro ao publicar avaliação. Tente novamente.',
+          : "Erro ao publicar avaliação. Tente novamente.",
       );
     },
   });
@@ -134,16 +138,16 @@ export function useUpdateReview() {
     onSuccess: () => {
       // Invalidar todas as reviews (não sabemos qual negócio)
       queryClient.invalidateQueries({
-        queryKey: ['gastronomy', 'reviews'],
+        queryKey: ["gastronomy", "reviews"],
       });
 
-      toast.success('Avaliação atualizada com sucesso!');
+      toast.success("Avaliação atualizada com sucesso!");
     },
     onError: (error) => {
       toast.error(
         error instanceof Error
           ? error.message
-          : 'Erro ao atualizar avaliação. Tente novamente.',
+          : "Erro ao atualizar avaliação. Tente novamente.",
       );
     },
   });
@@ -160,16 +164,16 @@ export function useDeleteReview() {
     onSuccess: () => {
       // Invalidar todas as reviews
       queryClient.invalidateQueries({
-        queryKey: ['gastronomy', 'reviews'],
+        queryKey: ["gastronomy", "reviews"],
       });
 
-      toast.success('Avaliação removida com sucesso!');
+      toast.success("Avaliação removida com sucesso!");
     },
     onError: (error) => {
       toast.error(
         error instanceof Error
           ? error.message
-          : 'Erro ao remover avaliação. Tente novamente.',
+          : "Erro ao remover avaliação. Tente novamente.",
       );
     },
   });
@@ -187,16 +191,16 @@ export function useAddBusinessResponse() {
     onSuccess: () => {
       // Invalidar todas as reviews
       queryClient.invalidateQueries({
-        queryKey: ['gastronomy', 'reviews'],
+        queryKey: ["gastronomy", "reviews"],
       });
 
-      toast.success('Resposta publicada com sucesso!');
+      toast.success("Resposta publicada com sucesso!");
     },
     onError: (error) => {
       toast.error(
         error instanceof Error
           ? error.message
-          : 'Erro ao publicar resposta. Tente novamente.',
+          : "Erro ao publicar resposta. Tente novamente.",
       );
     },
   });
@@ -210,13 +214,15 @@ export function useReportReview() {
     mutationFn: (input: ReportReviewInput) =>
       ReviewQueryService.reportReview(input),
     onSuccess: () => {
-      toast.success('Denúncia enviada. Obrigado por nos ajudar a manter a qualidade!');
+      toast.success(
+        "Denúncia enviada. Obrigado por nos ajudar a manter a qualidade!",
+      );
     },
     onError: (error) => {
       toast.error(
         error instanceof Error
           ? error.message
-          : 'Erro ao enviar denúncia. Tente novamente.',
+          : "Erro ao enviar denúncia. Tente novamente.",
       );
     },
   });
@@ -229,11 +235,12 @@ export function useVoteReview() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (input: VoteReviewInput) => ReviewQueryService.voteReview(input),
+    mutationFn: (input: VoteReviewInput) =>
+      ReviewQueryService.voteReview(input),
     onSuccess: (_, variables) => {
       // Invalidar reviews para atualizar contadores
       queryClient.invalidateQueries({
-        queryKey: ['gastronomy', 'reviews'],
+        queryKey: ["gastronomy", "reviews"],
       });
 
       // Invalidar voto do usuário
@@ -248,7 +255,7 @@ export function useVoteReview() {
       toast.error(
         error instanceof Error
           ? error.message
-          : 'Erro ao registrar voto. Tente novamente.',
+          : "Erro ao registrar voto. Tente novamente.",
       );
     },
   });
@@ -279,7 +286,7 @@ export function useReviewsManager(businessProfileId: string) {
   const reviews = useBusinessReviews({ businessProfileId });
   const stats = useBusinessReviewStats(businessProfileId);
   const canReview = useCanUserReview({
-    userId: user?.id || '',
+    userId: user?.id || "",
     businessProfileId,
     enabled: !!user?.id,
   });

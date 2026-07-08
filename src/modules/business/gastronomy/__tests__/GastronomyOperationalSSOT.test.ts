@@ -133,13 +133,24 @@ describe("gastronomy operational SSOT flow", () => {
 
     expect(panelSource).toContain("ReviewQueryService.createReview");
     expect(panelSource).toContain("ReviewQueryService.canUserReviewBusiness");
-    expect(panelSource).toContain("profiles.find((profile) => profile.id === order.customer_id)");
-    expect(panelSource).toContain("const reviewerProfileId = customerProfile?.id ?? null");
-    expect(panelSource).toContain("businessProfileId: order.merchant_profile_id");
-    expect(panelSource).toContain("reviewed_profile_id: order.merchant_profile_id");
+    expect(panelSource).toContain(
+      "profiles.find((profile) => profile.id === order.customer_id)",
+    );
+    expect(panelSource).toContain(
+      "const reviewerProfileId = customerProfile?.id ?? null",
+    );
+    expect(panelSource).toContain(
+      "businessProfileId: order.merchant_profile_id",
+    );
+    expect(panelSource).toContain("reviewerProfileId");
+    expect(panelSource).toContain(
+      "reviewed_profile_id: order.merchant_profile_id",
+    );
     expect(panelSource).toContain("reviewer_profile_id: reviewerProfileId");
     expect(panelSource).toContain("actor_profile_id: reviewerProfileId");
-    expect(panelSource).toContain("subject_profile_id: order.merchant_profile_id");
+    expect(panelSource).toContain(
+      "subject_profile_id: order.merchant_profile_id",
+    );
     expect(panelSource).not.toContain("businessProfileId: order.business_id");
     expect(panelSource).not.toContain("reviewed_profile_id: order.business_id");
     expect(panelSource).not.toContain("reviewer_profile_id: activeProfile.id");
@@ -161,9 +172,7 @@ describe("gastronomy operational SSOT flow", () => {
       "src/modules/business/gastronomy/hooks/useFavorites.ts",
     );
 
-    expect(favoritesHookSource).toContain(
-      "options?: { enabled?: boolean }",
-    );
+    expect(favoritesHookSource).toContain("options?: { enabled?: boolean }");
     expect(favoritesHookSource).toContain(
       "enabled: options?.enabled !== false && isValidUUID(businessId)",
     );
@@ -259,10 +268,14 @@ describe("gastronomy operational SSOT flow", () => {
     expect(checkoutServiceSource).toContain(
       "if (!eligibilityResult.data.is_eligible)",
     );
-    expect(checkoutServiceSource).toContain("eligibilityResult.data.message ||");
+    expect(checkoutServiceSource).toContain(
+      "eligibilityResult.data.message ||",
+    );
     expect(checkoutHookSource).toContain("if (isDeliveryOrder)");
     expect(checkoutHookSource).toContain("resolveDeliveryLocationInfo");
-    expect(checkoutHookSource).not.toContain("DeliveryAreaService.checkEligibility");
+    expect(checkoutHookSource).not.toContain(
+      "DeliveryAreaService.checkEligibility",
+    );
   });
 
   it("keeps the official gastronomy checkout restricted to own fleet", () => {
@@ -484,10 +497,14 @@ describe("gastronomy operational SSOT flow", () => {
     expect(hookSource).toContain("updateConfig: updateMutation.mutate");
     expect(hookSource).toContain("isUpdating: updateMutation.isPending");
     expect(formSource).toContain("updateConfig({");
-    expect(formSource).toContain("uses_own_delivery: formData.accepts_delivery");
+    expect(formSource).toContain(
+      "uses_own_delivery: formData.accepts_delivery",
+    );
     expect(formSource).toContain("uses_platform_delivery: false");
     expect(formSource).toContain("Rede da plataforma indisponivel");
-    expect(formSource).toContain("A rede de entregadores da plataforma permanece bloqueada no checkout v1.");
+    expect(formSource).toContain(
+      "A rede de entregadores da plataforma permanece bloqueada no checkout v1.",
+    );
     expect(formSource).not.toContain("Rede de Motoboys");
     expect(formSource).not.toContain("Usa rede da plataforma");
     expect(formSource).toContain("disabled={isUpdating}");
@@ -516,11 +533,17 @@ describe("gastronomy operational SSOT flow", () => {
     expect(dashboardSource).not.toContain("usageStats?.currentPromotions");
     expect(dashboardSource).not.toContain("showMobility");
     expect(dashboardSource).not.toContain("Rede de Motoboys");
-    expect(dashboardSource).not.toContain("businessManagementRoutes.gastronomyEntregas");
+    expect(dashboardSource).not.toContain(
+      "businessManagementRoutes.gastronomyEntregas",
+    );
     expect(dashboardSource).not.toContain("showCoupons");
     expect(dashboardSource).not.toContain("showAnalytics");
-    expect(dashboardSource).not.toContain("businessManagementRoutes.gastronomyPromocoes");
-    expect(dashboardSource).not.toContain("businessManagementRoutes.gastronomyAnalytics");
+    expect(dashboardSource).not.toContain(
+      "businessManagementRoutes.gastronomyPromocoes",
+    );
+    expect(dashboardSource).not.toContain(
+      "businessManagementRoutes.gastronomyAnalytics",
+    );
     expect(quickActionsSource).not.toContain("showMobility");
     expect(quickActionsSource).not.toContain("showAnalytics");
     expect(quickActionsSource).not.toContain("Bike");

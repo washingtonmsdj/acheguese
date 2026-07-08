@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { AlertCircle, MessageSquarePlus, ShieldCheck, Star } from "lucide-react";
+import {
+  AlertCircle,
+  MessageSquarePlus,
+  ShieldCheck,
+  Star,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { useSessionContext } from "@/core/session";
@@ -11,7 +16,13 @@ import {
   TrustEventService,
 } from "@/core/trust";
 import { Badge } from "@/shared/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/shared/components/ui/card";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { ReviewForm } from "../ReviewForm";
 import { ReviewQueryService } from "../../services/review.queries";
@@ -60,6 +71,7 @@ export function OrderPublicReviewPanel({ order }: OrderPublicReviewPanelProps) {
         const allowed = await ReviewQueryService.canUserReviewBusiness({
           userId: user.id,
           businessProfileId: order.merchant_profile_id,
+          reviewerProfileId,
         });
         if (!cancelled) setCanReview(allowed);
       } finally {
@@ -72,21 +84,33 @@ export function OrderPublicReviewPanel({ order }: OrderPublicReviewPanelProps) {
     return () => {
       cancelled = true;
     };
-  }, [user?.id, isCustomerOrder, isReviewableStatus, order.merchant_profile_id, submitted]);
+  }, [
+    user?.id,
+    isCustomerOrder,
+    isReviewableStatus,
+    order.merchant_profile_id,
+    submitted,
+  ]);
 
   const statusMessage = useMemo(() => {
     if (!isCustomerOrder) return null;
     if (!isReviewableStatus) {
       return "A avaliação pública da loja fica disponível quando o pedido for entregue.";
     }
-    if (submitted) return "Avaliação registrada. Obrigado por ajudar a comunidade local.";
-    if (!canReview && !isChecking) return "Você já avaliou esta loja ou ainda não está elegível para avaliar.";
+    if (submitted)
+      return "Avaliação registrada. Obrigado por ajudar a comunidade local.";
+    if (!canReview && !isChecking)
+      return "Você já avaliou esta loja ou ainda não está elegível para avaliar.";
     return null;
   }, [canReview, isChecking, isCustomerOrder, isReviewableStatus, submitted]);
 
   if (!isCustomerOrder) return null;
 
-  const handleSubmit = async (data: { rating: number; comment: string; photos: string[] }) => {
+  const handleSubmit = async (data: {
+    rating: number;
+    comment: string;
+    photos: string[];
+  }) => {
     if (!reviewerProfileId) {
       toast.error("Perfil do cliente obrigatório para avaliar este pedido.");
       return;
@@ -131,7 +155,9 @@ export function OrderPublicReviewPanel({ order }: OrderPublicReviewPanelProps) {
       setCanReview(false);
       toast.success("Avaliação publicada com sucesso.");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao publicar avaliação.");
+      toast.error(
+        error instanceof Error ? error.message : "Erro ao publicar avaliação.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -147,10 +173,15 @@ export function OrderPublicReviewPanel({ order }: OrderPublicReviewPanelProps) {
               Avaliar experiência
             </CardTitle>
             <CardDescription>
-              Sua avaliação pública ajuda outros moradores. Sinais críticos também entram no SSOT privado de confiança para revisão operacional.
+              Sua avaliação pública ajuda outros moradores. Sinais críticos
+              também entram no SSOT privado de confiança para revisão
+              operacional.
             </CardDescription>
           </div>
-          <Badge variant="outline" className="w-fit border-amber-300 bg-white text-amber-700">
+          <Badge
+            variant="outline"
+            className="w-fit border-amber-300 bg-white text-amber-700"
+          >
             <ShieldCheck className="mr-1 h-3.5 w-3.5" />
             Pós-entrega
           </Badge>
@@ -169,7 +200,11 @@ export function OrderPublicReviewPanel({ order }: OrderPublicReviewPanelProps) {
             isSubmitting={isSubmitting}
           />
         ) : (
-          <div className="flex items-start gap-3 rounded-lg border bg-white p-4 text-sm text-muted-foreground" role="status" aria-live="polite">
+          <div
+            className="flex items-start gap-3 rounded-lg border bg-white p-4 text-sm text-muted-foreground"
+            role="status"
+            aria-live="polite"
+          >
             {submitted ? (
               <Star className="mt-0.5 h-4 w-4 fill-amber-400 text-amber-400" />
             ) : (

@@ -47,10 +47,17 @@ export class BusinessReviewsRpcService {
     });
   }
 
-  static async canUserReviewBusiness(businessProfileId: string): Promise<boolean> {
-    const result = await this.invoke<CanReviewBrokerData>("canUserReviewBusiness", {
-      businessProfileId,
-    });
+  static async canUserReviewBusiness(
+    businessProfileId: string,
+    reviewerProfileId?: string | null,
+  ): Promise<boolean> {
+    const result = await this.invoke<CanReviewBrokerData>(
+      "canUserReviewBusiness",
+      {
+        businessProfileId,
+        reviewerProfileId: reviewerProfileId ?? undefined,
+      },
+    );
     return result.canReview === true;
   }
 
@@ -66,7 +73,10 @@ export class BusinessReviewsRpcService {
     return { id: result.id || result.review.id };
   }
 
-  static async updateReview(reviewId: string, input: UpdateReviewInput): Promise<void> {
+  static async updateReview(
+    reviewId: string,
+    input: UpdateReviewInput,
+  ): Promise<void> {
     await this.invoke<ReviewBrokerData>("updateReview", {
       reviewId,
       rating: input.rating,
@@ -76,7 +86,9 @@ export class BusinessReviewsRpcService {
   }
 
   static async deleteReview(reviewId: string): Promise<void> {
-    const result = await this.invoke<DeleteReviewBrokerData>("deleteReview", { reviewId });
+    const result = await this.invoke<DeleteReviewBrokerData>("deleteReview", {
+      reviewId,
+    });
     if (!result.deleted) {
       throw new Error("Review was not deleted");
     }

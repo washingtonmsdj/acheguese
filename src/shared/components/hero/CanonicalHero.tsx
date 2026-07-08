@@ -152,8 +152,8 @@ export function CanonicalHero({
     : "pl-11 h-12 bg-card/80 backdrop-blur-md border-border/40 text-base rounded-2xl focus:ring-2 focus:ring-primary/40 shadow-lg placeholder:text-muted-foreground/60";
 
   const primaryButtonClass = isBanner
-    ? "h-11 px-5 rounded-xl font-semibold shadow-md gap-2 whitespace-nowrap border-transparent !bg-[#0b5d56] !text-white hover:!bg-[#0a524c]"
-    : "h-12 px-6 rounded-2xl font-semibold shadow-lg gap-2 whitespace-nowrap border-transparent !bg-[#0b5d56] !text-white hover:!bg-[#0a524c]";
+    ? "h-11 px-5 rounded-xl font-semibold shadow-md gap-2 whitespace-nowrap border-transparent !bg-[#084f49] !text-white hover:!bg-[#073f3a]"
+    : "h-12 px-6 rounded-2xl font-semibold shadow-lg gap-2 whitespace-nowrap border-transparent !bg-[#084f49] !text-white hover:!bg-[#073f3a]";
 
   const secondaryButtonClass = isBanner
     ? "h-11 px-4 rounded-xl font-semibold gap-2 whitespace-nowrap border-border bg-background/90 text-foreground"
@@ -165,7 +165,9 @@ export function CanonicalHero({
   };
 
   return (
-    <section className={`relative w-full overflow-hidden ${isBanner ? "min-h-[240px] md:min-h-[280px]" : ""}`}>
+    <section
+      className={`relative w-full overflow-hidden ${isBanner ? "min-h-[240px] md:min-h-[280px]" : ""}`}
+    >
       {/* ── Background ─────────────────────────────────────────── */}
       {backgroundImage ? (
         <div className="absolute inset-0">
@@ -176,8 +178,12 @@ export function CanonicalHero({
             width={1920}
             height={isBanner ? 520 : 800}
           />
-          <div className={`absolute inset-0 ${centered ? "bg-gradient-to-r from-background/80 via-background/70 to-background/80" : "bg-gradient-to-r from-background/70 via-background/50 to-transparent"}`} />
-          <div className={`absolute inset-0 ${isBanner ? "bg-gradient-to-t from-background/80 via-background/40 to-background/60" : "bg-gradient-to-t from-background/60 via-transparent to-transparent"}`} />
+          <div
+            className={`absolute inset-0 ${centered ? "bg-gradient-to-r from-background/80 via-background/70 to-background/80" : "bg-gradient-to-r from-background/70 via-background/50 to-transparent"}`}
+          />
+          <div
+            className={`absolute inset-0 ${isBanner ? "bg-gradient-to-t from-background/80 via-background/40 to-background/60" : "bg-gradient-to-t from-background/60 via-transparent to-transparent"}`}
+          />
         </div>
       ) : (
         <>
@@ -188,7 +194,9 @@ export function CanonicalHero({
       )}
 
       {/* ── Content ────────────────────────────────────────────── */}
-      <div className={`${sectionContentClass} ${centered ? "flex items-center min-h-[inherit]" : ""}`}>
+      <div
+        className={`${sectionContentClass} ${centered ? "flex items-center min-h-[inherit]" : ""}`}
+      >
         <motion.div
           initial="hidden"
           animate="visible"
@@ -234,14 +242,19 @@ export function CanonicalHero({
 
           {/* Search + CTAs row */}
           {(search || primaryCTA || secondaryCTA) && (
-            <motion.div variants={itemVariants} className={centered ? "flex justify-center" : ""}>
+            <motion.div
+              variants={itemVariants}
+              className={centered ? "flex justify-center" : ""}
+            >
               {search ? (
                 <form
                   onSubmit={handleSearchSubmit}
                   className={`flex flex-col sm:flex-row gap-2.5 ${isBanner ? "max-w-2xl" : "max-w-xl"} ${centered ? "mx-auto" : ""}`}
                 >
                   <div className="relative flex-1">
-                    <Search className={`absolute top-1/2 -translate-y-1/2 text-muted-foreground ${isBanner ? "left-3.5 h-4 w-4" : "left-4 h-4.5 w-4.5"}`} />
+                    <Search
+                      className={`absolute top-1/2 -translate-y-1/2 text-muted-foreground ${isBanner ? "left-3.5 h-4 w-4" : "left-4 h-4.5 w-4.5"}`}
+                    />
                     <Input
                       placeholder={search.placeholder || "Buscar..."}
                       value={search.value}
@@ -256,9 +269,11 @@ export function CanonicalHero({
                         onClick={primaryCTA.onClick}
                         variant={primaryCTA.variant || "default"}
                         className={primaryButtonClass}
-                        style={{ backgroundColor: "#0b5d56", color: "#ffffff" }}
+                        style={{ backgroundColor: "#084f49", color: "#ffffff" }}
                       >
-                        {primaryCTA.icon && <primaryCTA.icon className="h-4 w-4" />}
+                        {primaryCTA.icon && (
+                          <primaryCTA.icon className="h-4 w-4" />
+                        )}
                         {primaryCTA.label}
                       </Button>
                     )}
@@ -269,14 +284,18 @@ export function CanonicalHero({
                         variant={secondaryCTA.variant || "outline"}
                         className={secondaryButtonClass}
                       >
-                        {secondaryCTA.icon && <secondaryCTA.icon className="h-4 w-4" />}
+                        {secondaryCTA.icon && (
+                          <secondaryCTA.icon className="h-4 w-4" />
+                        )}
                         {secondaryCTA.label}
                       </Button>
                     )}
                   </div>
                 </form>
               ) : (
-                <div className={`flex flex-wrap gap-3 ${centered ? "justify-center" : ""}`}>
+                <div
+                  className={`flex flex-wrap gap-3 ${centered ? "justify-center" : ""}`}
+                >
                   {primaryCTA && (
                     <Button
                       onClick={primaryCTA.onClick}
@@ -284,7 +303,9 @@ export function CanonicalHero({
                       size="lg"
                       className="h-12 px-7 rounded-2xl font-semibold shadow-lg shadow-primary/20 gap-2"
                     >
-                      {primaryCTA.icon && <primaryCTA.icon className="h-4 w-4" />}
+                      {primaryCTA.icon && (
+                        <primaryCTA.icon className="h-4 w-4" />
+                      )}
                       {primaryCTA.label}
                     </Button>
                   )}
@@ -295,7 +316,9 @@ export function CanonicalHero({
                       size="lg"
                       className="h-12 px-7 rounded-2xl font-semibold gap-2 border-border"
                     >
-                      {secondaryCTA.icon && <secondaryCTA.icon className="h-4 w-4" />}
+                      {secondaryCTA.icon && (
+                        <secondaryCTA.icon className="h-4 w-4" />
+                      )}
                       {secondaryCTA.label}
                     </Button>
                   )}

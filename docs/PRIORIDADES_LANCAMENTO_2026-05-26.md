@@ -36,7 +36,10 @@ ativas em `docs/governance/security/EXCEPTIONS.md`.
    `billing-entitlements-rpc` estao ativos para billing. Funcoes antigas de
    gastronomia/Stripe foram removidas do repositorio e nao estao presentes no
    remoto.
-4. Reexecutar E2E visual em browser para comunidade/feed, SEO territorial, central operacional, gastronomia, mobilidade e mobile.
+4. [Fechado em 2026-07-08] Reexecutar E2E visual em browser para
+   comunidade/feed, SEO territorial, central operacional, gastronomia,
+   mobilidade e mobile. Resultado: `49/49` testes passaram em Chromium; o
+   pacote focado de gastronomia/mobilidade tambem passou com `7/7`.
 
 ## P1 - Hardening Profissional
 

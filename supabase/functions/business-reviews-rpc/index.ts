@@ -21,7 +21,8 @@ import {
 } from "../_shared/security.ts";
 
 const ALLOWED_METHODS = "POST, OPTIONS";
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const MAX_COMMENT_LENGTH = 1000;
 const MAX_PHOTOS = 6;
 const MAX_PHOTO_URL_LENGTH = 2048;
@@ -153,9 +154,15 @@ function normalizePhotos(value: unknown): string[] {
   });
 }
 
-function hasOwnParam(params: Record<string, unknown>, camelKey: string, snakeKey: string): boolean {
-  return Object.prototype.hasOwnProperty.call(params, camelKey) ||
-    Object.prototype.hasOwnProperty.call(params, snakeKey);
+function hasOwnParam(
+  params: Record<string, unknown>,
+  camelKey: string,
+  snakeKey: string,
+): boolean {
+  return (
+    Object.prototype.hasOwnProperty.call(params, camelKey) ||
+    Object.prototype.hasOwnProperty.call(params, snakeKey)
+  );
 }
 
 async function requireUser(
@@ -164,12 +171,22 @@ async function requireUser(
 ): Promise<UserAuthResult | Response> {
   const token = extractBearerToken(req);
   if (!token) {
-    return jsonResponse({ error: "Missing or invalid authorization header" }, 401, ALLOWED_METHODS, req);
+    return jsonResponse(
+      { error: "Missing or invalid authorization header" },
+      401,
+      ALLOWED_METHODS,
+      req,
+    );
   }
 
   const { data, error } = await supabaseAdmin.auth.getUser(token);
   if (error || !data.user) {
-    return jsonResponse({ error: "Invalid or expired token" }, 401, ALLOWED_METHODS, req);
+    return jsonResponse(
+      { error: "Invalid or expired token" },
+      401,
+      ALLOWED_METHODS,
+      req,
+    );
   }
 
   return {
@@ -178,7 +195,10 @@ async function requireUser(
   };
 }
 
-async function isProjectAdmin(supabaseAdmin: SupabaseClient, userId: string): Promise<boolean> {
+async function isProjectAdmin(
+  supabaseAdmin: SupabaseClient,
+  userId: string,
+): Promise<boolean> {
   const { data, error } = await supabaseAdmin
     .from("user_roles")
     .select("id")
@@ -191,7 +211,10 @@ async function isProjectAdmin(supabaseAdmin: SupabaseClient, userId: string): Pr
   return Array.isArray(data) && data.length > 0;
 }
 
-async function profileExists(supabaseAdmin: SupabaseClient, profileId: string): Promise<boolean> {
+async function profileExists(
+  supabaseAdmin: SupabaseClient,
+  profileId: string,
+): Promise<boolean> {
   const { data, error } = await supabaseAdmin
     .from("profiles")
     .select("id")
@@ -256,7 +279,8 @@ async function listAccessibleProfileIds(
     if (typeof profile.id === "string") ids.add(profile.id);
   }
   for (const membership of memberships ?? []) {
-    if (typeof membership.profile_id === "string") ids.add(membership.profile_id);
+    if (typeof membership.profile_id === "string")
+      ids.add(membership.profile_id);
   }
 
   return [...ids];
@@ -291,9 +315,22 @@ async function handleCanUserReviewBusiness(
     params.businessProfileId ?? params.business_profile_id,
     "businessProfileId",
   );
-  const reviewerProfileIds = await listAccessibleProfileIds(supabaseAdmin, auth.userId);
+  const requestedReviewerProfileId = optionalUuid(
+    params.reviewerProfileId ?? params.reviewer_profile_id,
+    "reviewerProfileId",
+  );
+  const reviewerProfileIds = requestedReviewerProfileId
+    ? [requestedReviewerProfileId]
+    : await listAccessibleProfileIds(supabaseAdmin, auth.userId);
 
   if (reviewerProfileIds.length === 0) {
+    return { canReview: false };
+  }
+
+  if (
+    requestedReviewerProfileId &&
+    !(await canAccessProfile(supabaseAdmin, auth, requestedReviewerProfileId))
+  ) {
     return { canReview: false };
   }
 
@@ -332,8 +369,10 @@ async function handleCreateReview(
     throw new RequestValidationError("Reviewed profile is invalid");
   }
 
-  if (!await canAccessProfile(supabaseAdmin, auth, reviewerProfileId)) {
-    throw new RequestAuthorizationError("Reviewer profile is not available to this user");
+  if (!(await canAccessProfile(supabaseAdmin, auth, reviewerProfileId))) {
+    throw new RequestAuthorizationError(
+      "Reviewer profile is not available to this user",
+    );
   }
 
   if (orderId) {
@@ -354,7 +393,9 @@ async function handleCreateReview(
       candidateOrder.merchant_profile_id !== reviewedProfileId ||
       candidateOrder.logistics_status !== "delivered"
     ) {
-      throw new RequestAuthorizationError("Order is not eligible for public review");
+      throw new RequestAuthorizationError(
+        "Order is not eligible for public review",
+      );
     }
   }
 
@@ -394,19 +435,23 @@ async function handleUpdateReview(
   if (!existing) {
     throw new RequestValidationError("Review was not found");
   }
-  if (!await canAccessProfile(supabaseAdmin, auth, existing.reviewer_profile_id)) {
+  if (
+    !(await canAccessProfile(supabaseAdmin, auth, existing.reviewer_profile_id))
+  ) {
     throw new RequestAuthorizationError("User cannot update this review");
   }
 
   const rating = optionalRating(params.rating) ?? existing.rating;
   const hasPhotos = hasOwnParam(params, "photos", "photos");
-  const photos = hasPhotos && params.photos !== null && params.photos !== undefined
-    ? normalizePhotos(params.photos)
-    : existing.photos ?? [];
+  const photos =
+    hasPhotos && params.photos !== null && params.photos !== undefined
+      ? normalizePhotos(params.photos)
+      : (existing.photos ?? []);
   const hasComment = hasOwnParam(params, "comment", "comment");
-  const comment = hasComment && params.comment !== null && params.comment !== undefined
-    ? normalizeText(params.comment, "comment")
-    : existing.comment;
+  const comment =
+    hasComment && params.comment !== null && params.comment !== undefined
+      ? normalizeText(params.comment, "comment")
+      : existing.comment;
 
   const { data, error } = await supabaseAdmin
     .from("reviews")
@@ -437,7 +482,9 @@ async function handleDeleteReview(
   if (!existing) {
     throw new RequestValidationError("Review was not found");
   }
-  if (!await canAccessProfile(supabaseAdmin, auth, existing.reviewer_profile_id)) {
+  if (
+    !(await canAccessProfile(supabaseAdmin, auth, existing.reviewer_profile_id))
+  ) {
     throw new RequestAuthorizationError("User cannot delete this review");
   }
 
@@ -467,8 +514,12 @@ async function handleAddBusinessResponse(
   if (!existing) {
     throw new RequestValidationError("Review was not found");
   }
-  if (!await canAccessProfile(supabaseAdmin, auth, existing.reviewed_profile_id)) {
-    throw new RequestAuthorizationError("User cannot respond for this business");
+  if (
+    !(await canAccessProfile(supabaseAdmin, auth, existing.reviewed_profile_id))
+  ) {
+    throw new RequestAuthorizationError(
+      "User cannot respond for this business",
+    );
   }
 
   const now = new Date().toISOString();
@@ -580,6 +631,11 @@ serve(async (req: Request) => {
       details: { action: safeAction, reason: "business_reviews_rpc_failed" },
       ...getAuditInfo(req),
     });
-    return jsonResponse({ error: "Internal server error" }, 500, ALLOWED_METHODS, req);
+    return jsonResponse(
+      { error: "Internal server error" },
+      500,
+      ALLOWED_METHODS,
+      req,
+    );
   }
 });

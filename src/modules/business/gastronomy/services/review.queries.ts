@@ -4,11 +4,11 @@
  * Opera na tabela canonica e e o SSOT para reviews de Gastronomia.
  */
 
-import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase';
-import { REPORT_STATUS } from '@/shared/types/constants';
-import { EntityStatus } from '@/shared/types/enums';
-import { BusinessReviewsRpcService } from './BusinessReviewsRpcService';
+import { logger } from "@/shared/utils/logger";
+import { supabase } from "@/integrations/supabase";
+import { REPORT_STATUS } from "@/shared/types/constants";
+import { EntityStatus } from "@/shared/types/enums";
+import { BusinessReviewsRpcService } from "./BusinessReviewsRpcService";
 
 // Types estendidos da tabela canonica `reviews`
 //  Estende o tipo base de @/shared/types/reviews com os campos adicionados
@@ -54,7 +54,7 @@ export interface BusinessResponseInput {
 export interface ReportReviewInput {
   review_id: string;
   reporter_profile_id: string;
-  reason: 'spam' | 'offensive' | 'fake' | 'inappropriate' | 'other';
+  reason: "spam" | "offensive" | "fake" | "inappropriate" | "other";
   description?: string;
 }
 
@@ -74,14 +74,14 @@ export class ReviewQueryService {
     offset?: number;
   }): Promise<Review[]> {
     try {
-      const { data, error } = await supabase.rpc('get_business_reviews', {
+      const { data, error } = await supabase.rpc("get_business_reviews", {
         p_business_profile_id: params.businessProfileId,
         p_limit: params.limit ?? 20,
         p_offset: params.offset ?? 0,
       });
 
       if (error) {
-        logger.error('Failed to fetch business reviews', error, {
+        logger.error("Failed to fetch business reviews", error, {
           businessProfileId: params.businessProfileId,
         });
         throw error;
@@ -89,7 +89,7 @@ export class ReviewQueryService {
 
       return data || [];
     } catch (error) {
-      logger.error('Error in getBusinessReviews', error);
+      logger.error("Error in getBusinessReviews", error);
       throw error;
     }
   }
@@ -100,12 +100,16 @@ export class ReviewQueryService {
   static async canUserReviewBusiness(params: {
     userId: string;
     businessProfileId: string;
+    reviewerProfileId?: string | null;
   }): Promise<boolean> {
     try {
       void params.userId;
-      return await BusinessReviewsRpcService.canUserReviewBusiness(params.businessProfileId);
+      return await BusinessReviewsRpcService.canUserReviewBusiness(
+        params.businessProfileId,
+        params.reviewerProfileId,
+      );
     } catch (error) {
-      logger.error('Error in canUserReviewBusiness', error);
+      logger.error("Error in canUserReviewBusiness", error);
       return false;
     }
   }
@@ -116,10 +120,10 @@ export class ReviewQueryService {
   static async createReview(input: CreateReviewInput): Promise<{ id: string }> {
     try {
       const review = await BusinessReviewsRpcService.createReview(input);
-      logger.info('Review created successfully', { reviewId: review.id });
+      logger.info("Review created successfully", { reviewId: review.id });
       return review;
     } catch (error) {
-      logger.error('Error in createReview', error);
+      logger.error("Error in createReview", error);
       throw error;
     }
   }
@@ -133,9 +137,9 @@ export class ReviewQueryService {
   ): Promise<void> {
     try {
       await BusinessReviewsRpcService.updateReview(reviewId, input);
-      logger.info('Review updated successfully', { reviewId });
+      logger.info("Review updated successfully", { reviewId });
     } catch (error) {
-      logger.error('Error in updateReview', error);
+      logger.error("Error in updateReview", error);
       throw error;
     }
   }
@@ -146,9 +150,9 @@ export class ReviewQueryService {
   static async deleteReview(reviewId: string): Promise<void> {
     try {
       await BusinessReviewsRpcService.deleteReview(reviewId);
-      logger.info('Review deleted successfully', { reviewId });
+      logger.info("Review deleted successfully", { reviewId });
     } catch (error) {
-      logger.error('Error in deleteReview', error);
+      logger.error("Error in deleteReview", error);
       throw error;
     }
   }
@@ -162,9 +166,9 @@ export class ReviewQueryService {
   ): Promise<void> {
     try {
       await BusinessReviewsRpcService.addBusinessResponse(reviewId, input);
-      logger.info('Business response added successfully', { reviewId });
+      logger.info("Business response added successfully", { reviewId });
     } catch (error) {
-      logger.error('Error in addBusinessResponse', error);
+      logger.error("Error in addBusinessResponse", error);
       throw error;
     }
   }
@@ -175,7 +179,7 @@ export class ReviewQueryService {
   static async reportReview(input: ReportReviewInput): Promise<{ id: string }> {
     try {
       const { data, error } = await supabase
-        .from('review_reports')
+        .from("review_reports")
         .insert({
           review_id: input.review_id,
           reporter_profile_id: input.reporter_profile_id,
@@ -183,22 +187,22 @@ export class ReviewQueryService {
           description: input.description || null,
           status: REPORT_STATUS.PENDING,
         })
-        .select('id')
+        .select("id")
         .single();
 
       if (error) {
-        logger.error('Failed to report review', error, input);
+        logger.error("Failed to report review", error, input);
         throw error;
       }
 
       if (!data) {
-        throw new Error('No data returned from review report');
+        throw new Error("No data returned from review report");
       }
 
-      logger.info('Review reported successfully', { reportId: data.id });
+      logger.info("Review reported successfully", { reportId: data.id });
       return { id: data.id };
     } catch (error) {
-      logger.error('Error in reportReview', error);
+      logger.error("Error in reportReview", error);
       throw error;
     }
   }
@@ -208,27 +212,25 @@ export class ReviewQueryService {
    */
   static async voteReview(input: VoteReviewInput): Promise<void> {
     try {
-      const { error } = await supabase
-        .from('review_helpfulness')
-        .upsert(
-          {
-            review_id: input.review_id,
-            voter_profile_id: input.voter_profile_id,
-            is_helpful: input.is_helpful,
-          },
-          {
-            onConflict: 'review_id,voter_profile_id',
-          },
-        );
+      const { error } = await supabase.from("review_helpfulness").upsert(
+        {
+          review_id: input.review_id,
+          voter_profile_id: input.voter_profile_id,
+          is_helpful: input.is_helpful,
+        },
+        {
+          onConflict: "review_id,voter_profile_id",
+        },
+      );
 
       if (error) {
-        logger.error('Failed to vote on review', error, input);
+        logger.error("Failed to vote on review", error, input);
         throw error;
       }
 
-      logger.info('Review vote recorded successfully', input);
+      logger.info("Review vote recorded successfully", input);
     } catch (error) {
-      logger.error('Error in voteReview', error);
+      logger.error("Error in voteReview", error);
       throw error;
     }
   }
@@ -242,20 +244,20 @@ export class ReviewQueryService {
   }): Promise<boolean | null> {
     try {
       const { data, error } = await supabase
-        .from('review_helpfulness')
-        .select('is_helpful')
-        .eq('review_id', params.reviewId)
-        .eq('voter_profile_id', params.voterProfileId)
+        .from("review_helpfulness")
+        .select("is_helpful")
+        .eq("review_id", params.reviewId)
+        .eq("voter_profile_id", params.voterProfileId)
         .maybeSingle();
 
       if (error) {
-        logger.error('Failed to get user review vote', error, params);
+        logger.error("Failed to get user review vote", error, params);
         return null;
       }
 
       return data?.is_helpful ?? null;
     } catch (error) {
-      logger.error('Error in getUserReviewVote', error);
+      logger.error("Error in getUserReviewVote", error);
       return null;
     }
   }
@@ -269,14 +271,16 @@ export class ReviewQueryService {
     distribution: Record<number, number>;
   }> {
     try {
-      const { data, error } = await supabase.rpc('get_business_reviews', {
+      const { data, error } = await supabase.rpc("get_business_reviews", {
         p_business_profile_id: businessProfileId,
         p_limit: 500,
         p_offset: 0,
       });
 
       if (error) {
-        logger.error('Failed to get review stats', error, { businessProfileId });
+        logger.error("Failed to get review stats", error, {
+          businessProfileId,
+        });
         throw error;
       }
 
@@ -297,16 +301,13 @@ export class ReviewQueryService {
       }, 0);
       const average = sum / total;
 
-      const distribution = reviews.reduce(
-        (acc, r) => {
-          const rating = Number(r?.rating ?? 0);
-          const normalizedRating = Math.max(1, Math.min(5, Math.round(rating)));
-          const currentCount = acc.get(normalizedRating) ?? 0;
-          acc.set(normalizedRating, currentCount + 1);
-          return acc;
-        },
-        new Map<number, number>(),
-      );
+      const distribution = reviews.reduce((acc, r) => {
+        const rating = Number(r?.rating ?? 0);
+        const normalizedRating = Math.max(1, Math.min(5, Math.round(rating)));
+        const currentCount = acc.get(normalizedRating) ?? 0;
+        acc.set(normalizedRating, currentCount + 1);
+        return acc;
+      }, new Map<number, number>());
 
       //  Garantir que todas as estrelas estejam no objeto
       for (let i = 1; i <= 5; i++) {
@@ -318,10 +319,13 @@ export class ReviewQueryService {
       return {
         total,
         average,
-        distribution: Object.fromEntries(distribution.entries()) as Record<number, number>,
+        distribution: Object.fromEntries(distribution.entries()) as Record<
+          number,
+          number
+        >,
       };
     } catch (error) {
-      logger.error('Error in getBusinessReviewStats', error);
+      logger.error("Error in getBusinessReviewStats", error);
       throw error;
     }
   }

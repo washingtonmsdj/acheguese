@@ -8,6 +8,14 @@ Observacao: este documento e a fonte operacional atual. O historico abaixo fica 
 
 ## Validacoes Recentes
 
+- E2E de lancamento em 2026-07-08: o pacote de browser para
+  comunidade/feed, SEO territorial, central, gastronomia, mobilidade e mobile
+  passou com `49/49` testes em Chromium. Tambem passaram o pacote focado
+  `gastronomy-operational + mobility-operational` com `7/7`, `npm run
+typecheck:app`, `git diff --check` e os Vitest de SSOT/security para
+  `GastronomyOperationalSSOT` e `business-reviews-rpc-security` (`17/17`). O
+  broker remoto `business-reviews-rpc` foi publicado no Supabase como
+  `ACTIVE`, `verify_jwt=true`, versao `2`.
 - Readiness de release em 2026-07-08: `npm run verify:deploy` passou e
   declarou `PROJETO PRONTO PARA DEPLOY`. O gate executou e aprovou estrutura
   obrigatoria, scripts de arquitetura/SSOT, `validate:migrations`,
@@ -41,7 +49,7 @@ Observacao: este documento e a fonte operacional atual. O historico abaixo fica 
   PostGIS `st_estimatedextent` executaveis por `anon`/`authenticated` e
   `auth_leaked_password_protection`. Preflight para habilitar RLS em
   `public.spatial_ref_sys` falhou com `ERROR: 42501: must be owner of table
-  spatial_ref_sys`; portanto o item foi formalizado como
+spatial_ref_sys`; portanto o item foi formalizado como
   `EXC-2026-07-08-POSTGIS-EXTENSION-OWNER`. Leaked-password protection tambem
   foi formalizado como `EXC-2026-07-08-AUTH-HIBP-DASHBOARD`, pois depende de
   Auth Settings/Management API com PAT valido e plano compativel.
@@ -186,7 +194,7 @@ Observacao: este documento e a fonte operacional atual. O historico abaixo fica 
   locais pendentes foram aplicadas ao projeto linkado com
   `supabase db push --linked --include-all --yes`, e
   `npm run validate:migrations:remote` agora passa sem drift. `npm run
-  verify:deploy` passou apos integrar `validate:migrations` e
+verify:deploy` passou apos integrar `validate:migrations` e
   `validate:migrations:remote`. Advisor remoto apos os follow-ups de
   `public-assets`, `search_path`, RLS always-true, grants anonimos
   privilegiados e hardening das RPCs LGPD `has_consent`/`record_consent`: 158
@@ -209,7 +217,7 @@ Observacao: este documento e a fonte operacional atual. O historico abaixo fica 
   `anon_security_definer_function_executable` / 131
   `authenticated_security_definer_function_executable`.
 - Supabase/reviews publicas em 2026-07-07: `get_business_reviews(uuid,
-  integer, integer)` deixou de ser `SECURITY DEFINER` via migration
+integer, integer)` deixou de ser `SECURITY DEFINER` via migration
   `20260707112353_harden_get_business_reviews_invoker`, mantendo leitura
   publica como `SECURITY INVOKER` com grants explicitos para
   `anon`/`authenticated`. `reviews` ficou sem DML anonimo e o teste remoto como
@@ -348,7 +356,7 @@ Observacao: este documento e a fonte operacional atual. O historico abaixo fica 
   e `publish_communication_publication`. A migration `20260707145342` moveu
   esses RPCs para execucao exclusiva por `service_role`, preservando o usuario
   real via `actor_user_id`, e converteu `can_channel_publish_in_location(uuid,
-  uuid)` para `SECURITY INVOKER`. Verificacao remota confirmou
+uuid)` para `SECURITY INVOKER`. Verificacao remota confirmou
   `anon_execute=false`, `authenticated_execute=false` e
   `service_role_execute=true` nas mutacoes; smoke remoto sem JWT retornou
   `401`. Em seguida, a migration `20260707151447` moveu o helper RLS
@@ -845,29 +853,38 @@ Plano mestre de execucao por fases: `docs/PLANO_MESTRE_EXECUCAO_INTEGRAL_SSOT.md
 ## Atualizacao 2026-05-12 (Gate Core Revalidado)
 
 - Gate principal reexecutado de ponta a ponta sem regressao:
+
 1. `npm run typecheck`: passou.
 2. `npm run lint`: passou.
 3. `npm run test:e2e:phase-core`: passou com `55 passed`, `1 skipped`.
 4. `npm run build`: passou.
+
 - Cobertura validada no ciclo:
+
 1. SEO territorial (`territorial-seo.spec.ts`).
 2. Comunidade social e territorial (`community-social-seo.spec.ts`, `community-territorial-operational.spec.ts`).
 3. Gastronomia operacional autenticada.
 4. Central (incluindo subrotas motorista/motoboy e compatibilidade legada controlada).
 5. Profissionais (landing/tracking + funil autenticado de leads).
 6. Mobile público e mobile autenticado em dashboards centrais.
+
 - Fase ativa permanece `Fase 3: Gastronomia e delivery integrado`.
 
 ## Atualizacao 2026-05-12 (SEO Territorial - Hardening Comunidade)
 
 - `resolveSeoPolicy` foi corrigido para classificar duplicacao de modulo publico dentro da comunidade tambem no nivel cidade:
+
 1. cidade: `/comunidade/:state/:city/:modulo-publico`
 2. bairro: `/comunidade/:state/:city/:district/:modulo-publico`
 3. area: `/comunidade/:state/:city/area/:groupSlug/:modulo-publico`
+
 - Todas as tres variacoes agora aplicam `robots: noindex, follow` e `canonical` para a rota publica equivalente do modulo.
 - Blindagem adicionada em teste unitario de policy:
+
 1. `src/core/routing/seo/__tests__/TerritorialSEO.spec.ts` ganhou caso explicito de nivel cidade (`/comunidade/ba/salvador/empresas -> /empresas/ba/salvador`).
+
 - Validacoes desta entrega:
+
 1. `npm test -- src/core/routing/seo/__tests__/TerritorialSEO.spec.ts`: passou (4/4).
 2. `npx playwright test tests/e2e/territorial-seo.spec.ts --project=chromium --reporter=list`: passou (8/8).
 3. `npm run validate:phase:core`: passou com `55 passed`, `1 skipped` esperado.
@@ -879,14 +896,19 @@ Plano mestre de execucao por fases: `docs/PLANO_MESTRE_EXECUCAO_INTEGRAL_SSOT.md
 
 - Classificados proximos (core/modules) agora usam rota territorial canonica no CTA de listagem (`useModuleUrls().classifieds`) e fallback curto via `classifiedUrlService.buildShortUrl(...)`, removendo navegacao generica fixa.
 - Widgets de ranking da comunidade (core/modules) deixaram hardcodes de rota:
+
 1. `"/ranking"` foi migrado para `useAppUrls().ranking`.
 2. `"/profile/:id"` foi migrado para `useAppUrls().profile.public(...)`.
+
 - Cards de perfil mencionado (core/modules) deixaram rota legada `"/profile/:id"` e passaram para helper canonico de perfil publico (`buildPublicProfileUrl`).
 - Widget de sugestoes da sidebar foi consolidado em implementacao canônica nova (`SuggestionsWidgetSSOT`) para eliminar hardcode residual de perfil e CTA:
+
 1. perfil pessoa: helper `buildPublicProfileUrl(...)`.
 2. CTA `Explorar Mais`: `appUrls.search`.
 3. Sidebars de comunidade (core/modules) apontam para o widget SSOT.
+
 - Validacoes desta entrega:
+
 1. `npm run typecheck`: passou.
 2. `npm run lint`: passou.
 3. `npm run validate:phase:core`: passou com `56 passed`, `1 skipped` esperado.
@@ -894,25 +916,33 @@ Plano mestre de execucao por fases: `docs/PLANO_MESTRE_EXECUCAO_INTEGRAL_SSOT.md
 ## Atualizacao 2026-05-12 (Blindagem Anti-Regressao de Rotas)
 
 - Novos testes SSOT para impedir reintroducao de rotas hardcoded legadas em componentes ativos da comunidade:
+
 1. `src/core/community/__tests__/CommunityRouteSSOT.test.ts`:
    valida ausencia de `"/profile/"` em fontes ativas de `core/modules community` (com excecao controlada do arquivo legado travado).
 2. `src/core/community/__tests__/CommunityNavigationSSOT.test.ts`:
    valida ausencia de hardcodes `"/classificados"` e `"/ranking"` nos componentes ativos de nearby/ranking auditados.
+
 - Validacoes desta etapa:
+
 1. `npm test -- src/core/community/__tests__/CommunityRouteSSOT.test.ts src/core/community/__tests__/CommunityNavigationSSOT.test.ts`: passou (`2/2`).
 2. `npm run validate:phase:core`: passou com `56 passed`, `1 skipped` esperado.
 
 ## Atualizacao 2026-05-12 (Gate Oficial com SSOT de Comunidade)
 
 - O gate oficial da fase (`validate:phase:core`) foi fortalecido para incluir blindagens de rota da comunidade como etapa obrigatoria:
+
 1. novo script `test:ssot:community` em `package.json`.
 2. `validate:phase:core` agora executa: `typecheck` + `lint` + `test:ssot:community` + `test:e2e:phase-core`.
+
 - Suite `test:ssot:community` consolidada com 3 testes:
+
 1. `CommunityRouteSSOT.test.ts`.
 2. `CommunityNavigationSSOT.test.ts`.
 3. `CommunityLegacyIsolationSSOT.test.ts`.
+
 - Ajuste de robustez aplicado em `CommunityLegacyIsolationSSOT` para ignorar arquivo ponte (re-export), evitando falso positivo sem relaxar regra de runtime.
 - Validacoes desta etapa:
+
 1. `npm run validate:phase:core`: passou com `56 passed`, `1 skipped` esperado.
 2. `npm run build`: passou.
 
@@ -1083,8 +1113,6 @@ Avancar para fechamento total da Fase 3 (sem abrir Fase 4):
 - Limpeza residual concluida em comunidade: `modules/community/services/CommunityRolloutService`, `modules/community/nearby/hooks/useNearbyEntities`, `core/community/components/cards/PostCard` e `core/community/components/Leaderboard` sem `any`/`as any` nesses pontos.
 - `landing/services` hardening em 2026-05-10: `types.ts`, `landing.queries.ts` e `LandingFeaturedService.ts` tipados sem `any` residual no modulo; `npm run validate:phase:core` manteve `55 passed` e `1 skipped` esperado.
 
-
-
 - `npm run validate:phase:core`: revalidado em 2026-05-11 apos ajuste canonico dos scripts Playwright com `node --use-system-ca`; passou com `55 passed` e `1 skipped` esperado, sem erro TLS ao final da suite.
 - `npm run validate:operations:phase`: revalidado em 2026-05-11; passou com `37 passed` e `1 skipped` esperado.
 - `npm run validate:mobile:phase`: revalidado em 2026-05-11; passou com `7 passed`.
@@ -1093,147 +1121,96 @@ Avancar para fechamento total da Fase 3 (sem abrir Fase 4):
 
 - Limpeza estrita de tipagem em hooks de mobilidade (useRideChat, useMobility, useGeolocation, useDriverLocation, useCommunityPosts, useMobilidade) removendo ny/as any residual e mantendo contratos SSOT.
 - Limpeza estrita de tipagem em gastronomia (useMenuItems, useDeliveryRequests, useAnalytics, MenuService, NicheVersioningService, illing/types) com substituicao de ny por tipos explicitos/unknown e guards de union.
--
-npm run typecheck: passou em 2026-05-11 apos os ajustes.
--
-npm run lint: passou em 2026-05-11 apos os ajustes.
--
-npm run test:e2e:phase-core: passou em 2026-05-11 com 55 passed, 1 skipped (skip esperado por credencial/ambiente admin).
+- npm run typecheck: passou em 2026-05-11 apos os ajustes.
+- npm run lint: passou em 2026-05-11 apos os ajustes.
+- npm run test:e2e:phase-core: passou em 2026-05-11 com 55 passed, 1 skipped (skip esperado por credencial/ambiente admin).
 
-- 2026-05-11 (continuidade): corrigido SSOT de area de entrega em DeliveryAreaService para preservar valores  (uso de ?? em vez de ||), normalizacao de endereco na elegibilidade e hardening UX no GastronomyDeliveryDestinationPanel (submit bloqueado com endereco vazio).
--
-npm run typecheck: passou em 2026-05-11.
--
-npm run lint: passou em 2026-05-11.
--
-px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado), mantendo fluxo operacional cliente/loja/motoboy verde.
+- 2026-05-11 (continuidade): corrigido SSOT de area de entrega em DeliveryAreaService para preservar valores (uso de ?? em vez de ||), normalizacao de endereco na elegibilidade e hardening UX no GastronomyDeliveryDestinationPanel (submit bloqueado com endereco vazio).
+- npm run typecheck: passou em 2026-05-11.
+- npm run lint: passou em 2026-05-11.
+- px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado), mantendo fluxo operacional cliente/loja/motoboy verde.
 
 - 2026-05-11 (notificacoes/trust hardening): OrderDeliveryNotificationService agora usa entrega parcial resiliente (Promise.allSettled) e deduplicacao por usuario+evento+status para reduzir auto-notificacao duplicada. TrustEventService tambem foi endurecido com envio resiliente em
-otifyTrustEventCreated e
-otifyTrustAdminAction, sem bloquear notificacoes restantes em caso de falha isolada.
--
-npm run typecheck: passou em 2026-05-11.
--
-npm run lint: passou em 2026-05-11.
--
-px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado).
+  otifyTrustEventCreated e
+  otifyTrustAdminAction, sem bloquear notificacoes restantes em caso de falha isolada.
+- npm run typecheck: passou em 2026-05-11.
+- npm run lint: passou em 2026-05-11.
+- px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado).
 
 - 2026-05-11 (realtime fila da loja): useOrders endurecido para nao invalidar fila de uma loja com eventos globais de order_timeline_events; agora o hook invalida apenas quando o order_id do evento pertence aos pedidos carregados da loja (Set memoizado), mantendo SSOT e reduzindo ruido/reloads desnecessarios.
--
-npm run typecheck: passou em 2026-05-11.
--
-npm run lint: passou em 2026-05-11.
--
-px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado).
+- npm run typecheck: passou em 2026-05-11.
+- npm run lint: passou em 2026-05-11.
+- px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado).
 
 - 2026-05-11 (eligibilidade hardening): useDeliveryEligibility agora normaliza
-eighborhood/city/state com 	rim(), usa chave de cache normalizada e bloqueia fetch com campos apenas de espaco em branco, evitando inconsistencias de elegibilidade e cache duplicado.
--
-npm run typecheck: passou em 2026-05-11.
--
-npm run lint: passou em 2026-05-11.
--
-px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado).
+  eighborhood/city/state com rim(), usa chave de cache normalizada e bloqueia fetch com campos apenas de espaco em branco, evitando inconsistencias de elegibilidade e cache duplicado.
+- npm run typecheck: passou em 2026-05-11.
+- npm run lint: passou em 2026-05-11.
+- px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado).
 
--
-npm run validate:phase:core: passou em 2026-05-11 apos os hardenings recentes (realtime, elegibilidade e notificacoes), com 55 passed e 1 skipped (skip esperado por credencial admin/service-role).
+- npm run validate:phase:core: passou em 2026-05-11 apos os hardenings recentes (realtime, elegibilidade e notificacoes), com 55 passed e 1 skipped (skip esperado por credencial admin/service-role).
 
 - 2026-05-11 (consistencia de cache no detalhe): useOrderDetails passou a invalidar tambem ['orders', businessId] e ['order-stats', businessId] apos atualizar notas internas, evitando divergencia entre detalhe e fila/indicadores da loja.
--
-npm run typecheck: passou em 2026-05-11.
--
-npm run lint: passou em 2026-05-11.
--
-px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado).
+- npm run typecheck: passou em 2026-05-11.
+- npm run lint: passou em 2026-05-11.
+- px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado).
 
 - 2026-05-11 (ux operacional motoboy+tracking): MotoboyDeliveryActions agora impede fechamento de dialogs durante acao em andamento (isLoading) e desabilita cancelamento nesses estados para evitar interrupcao de operacoes criticas. OrderTrackingCard foi endurecido para nao renderizar mapa com coordenadas invalidas (0/0); quando coordenadas faltam, exibe estado explicito aguardando dados no SSOT.
--
-npm run typecheck: passou em 2026-05-11.
--
-npm run lint: passou em 2026-05-11.
--
-px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado).
+- npm run typecheck: passou em 2026-05-11.
+- npm run lint: passou em 2026-05-11.
+- px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado).
 
 - 2026-05-11 (tracking realtime SSOT): useOrderTracking migrou para subscription realtime de
-ide_requests (filtro source_type='gastronomy' + match por source_id=orderId) com polling apenas como fallback leve. Tambem foi corrigida a tipagem de
-efetch para retorno assíncrono e eliminada duplicacao de status ativos em constante unica.
--
-npm run typecheck: passou em 2026-05-11.
--
-npm run lint: passou em 2026-05-11.
--
-px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado).
+  ide_requests (filtro source_type='gastronomy' + match por source_id=orderId) com polling apenas como fallback leve. Tambem foi corrigida a tipagem de
+  efetch para retorno assíncrono e eliminada duplicacao de status ativos em constante unica.
+- npm run typecheck: passou em 2026-05-11.
+- npm run lint: passou em 2026-05-11.
+- px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado).
 
 - 2026-05-11 (contrato SSOT delivery link): corrigido OrderDeliveryLinkService.applyOrderTransition para nao enviar proof em cancelOrder/failOrder (contrato canônico aceita prova apenas em markDelivered), removendo inconsistência de payload e mantendo tipagem/semântica do SSOT.
--
-npm run typecheck: passou em 2026-05-11.
--
-npm run lint: passou em 2026-05-11.
--
-px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado).
+- npm run typecheck: passou em 2026-05-11.
+- npm run lint: passou em 2026-05-11.
+- px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado).
 
 - 2026-05-11 (realtime lista filtrada): useOrders corrigido para validar eventos de order_timeline_events por vinculo canonical (orders.id + source_id=businessId) antes de invalidar cache. Isso evita ruido global sem perder pedidos que entram no filtro atual por mudanca de status.
--
-npm run typecheck: passou em 2026-05-11.
--
-npm run lint: passou em 2026-05-11.
--
-px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado).
+- npm run typecheck: passou em 2026-05-11.
+- npm run lint: passou em 2026-05-11.
+- px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado).
 
 - 2026-05-11 (react-query v5 contract): corrigido useOrderTracking para assinatura canônica de
-efetchInterval no TanStack Query v5 (query => query.state.data), eliminando uso de assinatura antiga e garantindo fallback polling correto por status ativo.
--
-npm run typecheck: passou em 2026-05-11.
--
-npm run lint: passou em 2026-05-11.
--
-px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado).
+  efetchInterval no TanStack Query v5 (query => query.state.data), eliminando uso de assinatura antiga e garantindo fallback polling correto por status ativo.
+- npm run typecheck: passou em 2026-05-11.
+- npm run lint: passou em 2026-05-11.
+- px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado).
 
 - 2026-05-11 (otimizacao canal tracking): useOrderTracking passou a assinar
-ide_requests com filtro direto por source_id=orderId e validacao de source_type='gastronomy' no payload. Reduz processamento de eventos nao relacionados sem abrir excecao de contexto.
--
-npm run typecheck: passou em 2026-05-11.
--
-npm run lint: passou em 2026-05-11.
--
-px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado).
+  ide_requests com filtro direto por source_id=orderId e validacao de source_type='gastronomy' no payload. Reduz processamento de eventos nao relacionados sem abrir excecao de contexto.
+- npm run typecheck: passou em 2026-05-11.
+- npm run lint: passou em 2026-05-11.
+- px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado).
 
 - 2026-05-11 (debounce realtime pedidos): useOrders recebeu coalescencia de invalidacao (250ms) para eventos em rajada de orders/order_timeline_events, reduzindo refetch redundante sem perder consistencia do SSOT. Cleanup do timer incluido no unmount do canal realtime.
--
-npm run typecheck: passou em 2026-05-11.
--
-npm run lint: passou em 2026-05-11.
--
-px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado).
+- npm run typecheck: passou em 2026-05-11.
+- npm run lint: passou em 2026-05-11.
+- px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado).
 
 - 2026-05-11 (debounce realtime detalhe): useOrderDetails recebeu coalescencia de invalidacao (250ms) para eventos em rajada de orders/order_timeline_events, reduzindo refetch redundante na tela de detalhe e mantendo consistencia SSOT. Timer tambem limpo no unmount.
--
-npm run typecheck: passou em 2026-05-11.
--
-npm run lint: passou em 2026-05-11.
--
-px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado).
+- npm run typecheck: passou em 2026-05-11.
+- npm run lint: passou em 2026-05-11.
+- px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado).
 
 - 2026-05-11 (cache realtime timeline): useOrders passou a memorizar order_id ja verificados como pertencentes ao usinessId no canal de timeline, reduzindo consultas repetidas de validacao canônica (orders.id + source_id) sem abrir excecao de SSOT.
--
-npm run typecheck: passou em 2026-05-11.
--
-npm run lint: passou em 2026-05-11 (reexecucao com timeout maior).
--
-px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado).
+- npm run typecheck: passou em 2026-05-11.
+- npm run lint: passou em 2026-05-11 (reexecucao com timeout maior).
+- px playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=list: passou em 2026-05-11 com 2 passed, 2 skipped (skips condicionais de ambiente/certificado).
 
 - 2026-05-11 (blindagem SSOT realtime): testes de arquitetura operacional em GastronomyOperationalSSOT.test.ts foram ampliados para travar regressao de realtime/coalescencia em useOrders, useOrderDetails e useOrderTracking (filtro canonical por source_id, debounce de invalidacao, assinatura React Query v5 e fallback polling controlado).
--
-pm test -- src/modules/business/gastronomy/__tests__/GastronomyOperationalSSOT.test.ts: passou em 2026-05-11 com 10/10 testes.
--
-npm run typecheck: passou em 2026-05-11.
--
-npm run lint: passou em 2026-05-11.
+- pm test -- src/modules/business/gastronomy/**tests**/GastronomyOperationalSSOT.test.ts: passou em 2026-05-11 com 10/10 testes.
+- npm run typecheck: passou em 2026-05-11.
+- npm run lint: passou em 2026-05-11.
 
 - 2026-05-11 (estabilizacao E2E profissionais): corrigido professional-leads-operational.spec.ts para verificar persistencia de avaliacao com sessao unica de consulta (sem login repetido a cada poll), reduzindo flakiness do fluxo autenticado de leads/propostas/engagement.
--
-npm run validate:phase:core: passou em 2026-05-11 com 55 passed, 1 skipped apos a estabilizacao do E2E de profissionais.
-
+- npm run validate:phase:core: passou em 2026-05-11 com 55 passed, 1 skipped apos a estabilizacao do E2E de profissionais.
 
 ## Atualizacao 2026-05-11 (Gate Core + Build)
 
@@ -1428,8 +1405,6 @@ npm run validate:phase:core: passou em 2026-05-11 com 55 passed, 1 skipped apos 
   - `node --use-system-ca ./node_modules/playwright/cli.js test tests/e2e/territorial-seo.spec.ts --project=chromium --reporter=list`: passou com `8 passed`.
   - `npm run validate:phase:core`: passou com `55 passed`, `1 skipped` condicional de service role.
 
-
-
 ## Atualizacao 2026-05-11 (Gate Core Revalidado + Higiene de Docs)
 
 - Revalidacao tecnica concluida sem regressao:
@@ -1562,28 +1537,33 @@ npm run validate:phase:core: passou em 2026-05-11 com 55 passed, 1 skipped apos 
   - `npm run lint`: passou.
   - `npm run validate:phase:core`: passou em 2026-05-12 com `56 passed`, `1 skipped` (skip admin condicional por `SUPABASE_SERVICE_ROLE_KEY`).
 
-
-
 ## Atualizacao 2026-05-12 (Correcao Definitiva de Rotas Comunitarias Area + SEO)
 
 - Rotas comunitarias duplicadas de modulo deixaram de usar redirecionamento (`Navigate`) e passaram a renderizar no `CommunityTerritorialShell`, preservando URL comunitaria para SEO canonico:
+
 1. distrito: `/comunidade/:state/:city/:territorySlug/:modulo`
 2. area: `/comunidade/:state/:city/area/:groupSlug/:modulo`
+
 - Redirecionamento legado que colapsava `area/:groupSlug` para `:territorySlug` foi removido do runtime.
 - Rotas de area foram explicitamente expandidas para `feed`, `grupos`, `alertas`, `problemas`, `achados-e-perdidos` e modulos duplicados (`empresas`, `servicos`, `classificados`, `gastronomia`, `vagas`, `eventos`, `mapa`, `mobilidade`).
 - Validacoes executadas apos a correcao:
+
 1. `npx playwright test tests/e2e/territorial-seo.spec.ts --project=chromium --reporter=list`: passou (9/9).
 2. `npm run validate:phase:core`: passou com `56 passed`, `1 skipped` esperado.
 3. `npm run validate:docs-live-links`: passou.
+
 - Resultado: canonical/noindex voltou a ficar consistente em cidade, bairro e area sem rota hardcoded e sem paliativo.
 
 ## Atualizacao 2026-05-12 (Hardening SSOT de Notificacoes Operacionais)
 
 - Cobertura unitária adicionada para notificacoes transacionais do fluxo de pedidos:
+
 1. `src/modules/mobility/delivery/__tests__/OrderDeliveryNotificationService.spec.ts`.
 2. Valida audiencia (`customer|merchant|courier`) em metadata.
 3. Valida URLs de acao canonicas por persona (`/gastronomia/pedidos/:orderId`, `/central/empresas/:businessId/gastronomia/pedidos/:orderId`, `/central/motoboy/entregas`).
 4. Valida evento de cancelamento por cliente com tipo `warning` e contexto de evento preservado.
+
 - Validacoes executadas:
+
 1. `npm test -- src/modules/mobility/delivery/__tests__/OrderDeliveryNotificationService.spec.ts`: passou (2/2).
 2. `npm run validate:phase:core`: passou com `56 passed`, `1 skipped` esperado.
