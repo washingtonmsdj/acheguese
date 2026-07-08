@@ -109,6 +109,52 @@ describe("community supabase security audit", () => {
     expect(taxonomy).toContain("CommunityMembershipRepository.ts");
   });
 
+  it("keeps community entity links RLS-backed and owned by community-experience", () => {
+    const links = readProjectFile(
+      "supabase/migrations/20260708224334_create_community_entity_links_ssot.sql",
+    );
+    const repository = readProjectFile(
+      "src/core/community-experience/repositories/CommunityEntityLinkRepository.ts",
+    );
+    const service = readProjectFile(
+      "src/core/community-experience/services/CommunityEntityLinkService.ts",
+    );
+    const taxonomy = readProjectFile("scripts/validate-project-taxonomy.ts");
+    const architecture = readProjectFile(
+      "docs/architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md",
+    );
+
+    expect(links).toContain("CREATE TABLE IF NOT EXISTS public.community_entity_links");
+    expect(links).toContain("community_id UUID NOT NULL REFERENCES public.territory_communities");
+    expect(links).toContain("entity_type TEXT NOT NULL");
+    expect(links).toContain("entity_id UUID NOT NULL");
+    expect(links).toContain("CHECK (entity_type IN ('business', 'event', 'classified', 'professional', 'post', 'tourist_point'))");
+    expect(links).toContain("CHECK (link_type IN ('primary_territory', 'serves_area', 'featured', 'sponsored', 'member_submitted', 'official'))");
+    expect(links).toContain("CHECK (status IN ('pending', 'active', 'rejected', 'hidden', 'expired'))");
+    expect(links).toContain("ALTER TABLE public.community_entity_links ENABLE ROW LEVEL SECURITY;");
+    expect(links).toContain("GRANT SELECT ON TABLE public.community_entity_links TO anon;");
+    expect(links).toContain(
+      "GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.community_entity_links TO authenticated;",
+    );
+    expect(links).toContain("CREATE POLICY community_entity_links_public_active_select");
+    expect(links).toContain("CREATE POLICY community_entity_links_insert_member_pending");
+    expect(links).toContain("CREATE POLICY community_entity_links_update_by_manager");
+    expect(links).toContain("CREATE POLICY community_entity_links_delete_by_manager");
+    expect(links).toContain("CREATE OR REPLACE FUNCTION private.can_manage_community_entity_link");
+    expect(links).toContain("CREATE OR REPLACE FUNCTION private.community_entity_link_target_is_visible");
+    expect(links).toContain("CREATE OR REPLACE FUNCTION private.enforce_community_entity_link_contract");
+    expect(links).toContain("SECURITY DEFINER");
+    expect(links).toContain("SET search_path = public, private, pg_temp");
+    expect(links).toContain("Not exposed as public RPC");
+
+    expect(repository).toContain('.from("community_entity_links" as never)');
+    expect(service).toContain("CommunityEntityLinkRepository");
+    expect(taxonomy).toContain("community_entity_links");
+    expect(taxonomy).toContain("CommunityEntityLinkRepository.ts");
+    expect(architecture).toContain("community_entity_links");
+    expect(architecture).toContain("CommunityEntityLinkRepository.ts");
+  });
+
   it("requires verified residence for community alert and issue creation RPCs", () => {
     const hardening = readProjectFile(
       "supabase/migrations/20260706100000_harden_community_creation_residence_authorization.sql",

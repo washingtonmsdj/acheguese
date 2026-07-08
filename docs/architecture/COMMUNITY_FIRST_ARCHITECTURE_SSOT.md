@@ -44,9 +44,11 @@ SSOT atual:
 - `territory_communities`
 - `community_public_aliases`
 - `community_memberships`
+- `community_entity_links`
 - `src/core/community-experience`
 - `src/core/community-experience/repositories/CommunityExperienceRepository.ts`
 - `src/core/community-experience/repositories/CommunityMembershipRepository.ts`
+- `src/core/community-experience/repositories/CommunityEntityLinkRepository.ts`
 
 Responsabilidade:
 
@@ -64,6 +66,12 @@ canonica consumida por routing e modulos.
 e o unico owner de acesso direto a `community_memberships` no app. Membership
 representa participacao na Comunidade Local; nao substitui residencia,
 perfil ativo, grupo social ou roles globais.
+
+`src/core/community-experience/repositories/CommunityEntityLinkRepository.ts`
+e o unico owner de acesso direto a `community_entity_links` no app. Esse
+contrato vincula entidades canonicas a uma ou mais comunidades sem copiar dados
+mestres. Moderacao, destaque e ranking local pertencem ao link; identidade,
+status publico e conteudo principal continuam no dominio original.
 
 `src/core/community/access/useCommunityAccess.ts` e o gate central de
 permissoes da experiencia comunitaria. Ele pode consumir
@@ -119,6 +127,7 @@ Pode:
 
 - ler `territory_communities`;
 - ler `community_memberships`;
+- ler `community_entity_links`;
 - ler alias publico quando a fachada for consolidada;
 - compor dados territoriais canonicos para experiencia publica.
 

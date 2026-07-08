@@ -556,7 +556,13 @@ entity_id
 link_type: primary_territory | serves_area | featured | sponsored | member_submitted | official
 status: active | pending | rejected | hidden | expired
 created_by_profile_id
+approved_by_profile_id
+approved_at
+starts_at
+ends_at
+priority
 created_at
+updated_at
 metadata
 ```
 
@@ -566,7 +572,9 @@ Regras:
 - link apenas declara relacao com comunidade;
 - link nao copia dados mestres;
 - link pode ter ranking, destaque e moderacao local;
-- para escala, `entity_type + entity_id` precisa de validacao por service/RPC.
+- `entity_type + entity_id` e validado por trigger privado contra a tabela
+  canonica e seu estado publico atual;
+- acesso direto no app pertence somente a `CommunityEntityLinkRepository`.
 
 #### `community_activity_events`
 
@@ -1002,7 +1010,7 @@ Evidencia:
 
 ### Fase 4 - Criar Vinculos Comunitarios De Entidades
 
-Status: pendente
+Status: em andamento
 
 Objetivo:
 
@@ -1011,9 +1019,10 @@ Objetivo:
 
 Tarefas:
 
-- desenhar `community_entity_links`;
-- definir tipos de link e status;
-- criar services por dominio para expor elegibilidade;
+- [x] desenhar `community_entity_links`;
+- [x] definir tipos de link e status;
+- [x] criar contrato backend/RLS e fachada canonica em `community-experience`;
+- [ ] criar services por dominio para expor elegibilidade especifica;
 - adaptar Home/Comunidade a consumir links quando existirem;
 - manter fallback por territorio durante migracao.
 
@@ -1022,6 +1031,16 @@ Criterio de pronto:
 - empresa/evento/classificado/profissional pode aparecer em varias comunidades;
 - dados mestres continuam no dominio original;
 - moderacao local atua no link, nao na entidade canonica.
+
+Evidencia parcial:
+
+- `supabase/migrations/20260708224334_create_community_entity_links_ssot.sql`
+  cria `community_entity_links` com RLS, grants explicitos, policies, helper
+  privado de moderacao e trigger privado de validacao;
+- `CommunityEntityLinkRepository` e `CommunityEntityLinkService` sao a fronteira
+  canonica do app;
+- `validate-project-taxonomy` e `check:ssot` bloqueiam acesso paralelo a
+  `community_entity_links`.
 
 ### Fase 5 - Busca Global E Descoberta
 

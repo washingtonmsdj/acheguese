@@ -61,6 +61,39 @@ export const COMMUNITY_MEMBERSHIP_JOIN_METHODS = [
 export type CommunityMembershipJoinMethod =
   (typeof COMMUNITY_MEMBERSHIP_JOIN_METHODS)[number];
 
+export const COMMUNITY_ENTITY_TYPES = [
+  "business",
+  "event",
+  "classified",
+  "professional",
+  "post",
+  "tourist_point",
+] as const;
+
+export type CommunityEntityType = (typeof COMMUNITY_ENTITY_TYPES)[number];
+
+export const COMMUNITY_ENTITY_LINK_TYPES = [
+  "primary_territory",
+  "serves_area",
+  "featured",
+  "sponsored",
+  "member_submitted",
+  "official",
+] as const;
+
+export type CommunityEntityLinkType = (typeof COMMUNITY_ENTITY_LINK_TYPES)[number];
+
+export const COMMUNITY_ENTITY_LINK_STATUSES = [
+  "pending",
+  "active",
+  "rejected",
+  "hidden",
+  "expired",
+] as const;
+
+export type CommunityEntityLinkStatus =
+  (typeof COMMUNITY_ENTITY_LINK_STATUSES)[number];
+
 export type CommunityPublicAliasTerritoryReference =
   | { kind: "location"; territoryId: string | null | undefined }
   | { kind: "group"; territoryId: string | null | undefined };
@@ -130,6 +163,37 @@ export interface CommunityMembershipRequestInput {
   profileId: string;
   userId: string;
   joinMethod?: Extract<CommunityMembershipJoinMethod, "open" | "approval">;
+}
+
+export interface CommunityEntityLinkRecord {
+  id: string;
+  community_id: string;
+  entity_type: CommunityEntityType;
+  entity_id: string;
+  link_type: CommunityEntityLinkType;
+  status: CommunityEntityLinkStatus;
+  created_by_profile_id: string | null;
+  approved_by_profile_id: string | null;
+  approved_at: string | null;
+  starts_at: string | null;
+  ends_at: string | null;
+  priority: number;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CommunityEntityLinkRequestInput {
+  communityId: string;
+  entityType: CommunityEntityType;
+  entityId: string;
+  createdByProfileId: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface CommunityEntityLinkListOptions {
+  entityTypes?: readonly CommunityEntityType[];
+  limit?: number;
 }
 
 export function isCommunityRouteableTerritoryType(

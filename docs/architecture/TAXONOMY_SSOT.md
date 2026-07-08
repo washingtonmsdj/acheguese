@@ -79,8 +79,8 @@ Definir uma taxonomia unica e oficial do projeto, separando com clareza:
 - Comunidade Local nao substitui Territorio; ela e a experiencia social
   ancorada no territorio.
 - O SSOT atual de Comunidade Local fica em `territory_communities`,
-  `community_public_aliases`, `community_memberships` e
-  `src/core/community-experience`.
+  `community_public_aliases`, `community_memberships`,
+  `community_entity_links` e `src/core/community-experience`.
 - Empresas, gastronomia, servicos, classificados, eventos, usuarios e posts sao
   entidades independentes; comunidades guardam contexto, vinculo, destaque,
   moderacao e descoberta, nao copias dos dados mestres.

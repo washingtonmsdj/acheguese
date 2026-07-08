@@ -15,6 +15,8 @@ const COMMUNITY_EXPERIENCE_REPOSITORY_PATH =
   "src/core/community-experience/repositories/CommunityExperienceRepository.ts";
 const COMMUNITY_MEMBERSHIP_REPOSITORY_PATH =
   "src/core/community-experience/repositories/CommunityMembershipRepository.ts";
+const COMMUNITY_ENTITY_LINK_REPOSITORY_PATH =
+  "src/core/community-experience/repositories/CommunityEntityLinkRepository.ts";
 
 const CANONICAL_MODULES = [
   "admin",
@@ -124,6 +126,7 @@ const COMMUNITY_FIRST_DOC_MARKERS = [
   "`territory_communities`",
   "`community_public_aliases`",
   "`community_memberships`",
+  "`community_entity_links`",
   "`src/core/community-experience`",
   "`plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md`",
 ] as const;
@@ -133,14 +136,16 @@ const TAXONOMY_COMMUNITY_FIRST_MARKERS = [
   "`territory_communities`",
   "`community_public_aliases`",
   "`community_memberships`",
+  "`community_entity_links`",
   "`src/core/community-experience`",
 ] as const;
 
 const COMMUNITY_EXPERIENCE_TABLE_ACCESS_RE =
-  /\.from\(\s*["'](?:territory_communities|community_public_aliases|community_memberships)["']/;
+  /\.from\(\s*["'](?:territory_communities|community_public_aliases|community_memberships|community_entity_links)["']/;
 const COMMUNITY_EXPERIENCE_TABLE_SSOT_PATHS = new Set([
   COMMUNITY_EXPERIENCE_REPOSITORY_PATH,
   COMMUNITY_MEMBERSHIP_REPOSITORY_PATH,
+  COMMUNITY_ENTITY_LINK_REPOSITORY_PATH,
 ]);
 
 function pathExists(relativePath: string): boolean {

@@ -40,6 +40,7 @@ const PROTECTED_TABLES = [
   'menu_items',
   'tourist_points',
   'community_memberships',
+  'community_entity_links',
 ];
 
 // Table -> allowed SSOT owners (avoids false positives in canonical files)
@@ -61,6 +62,7 @@ const TABLE_SSOTS: Record<string, string[]> = {
   menu_items: ['MenuService.ts', 'MenuQueryService.ts'],
   tourist_points: ['TouristPointService.ts'],
   community_memberships: ['CommunityMembershipRepository.ts', 'CommunityMembershipService.ts'],
+  community_entity_links: ['CommunityEntityLinkRepository.ts', 'CommunityEntityLinkService.ts'],
   business_slug_history: ['BusinessService.ts', 'BusinessIdentityAdapter.ts'],
   professional_slug_history: ['ProfessionalService.ts', 'ProfessionalIdentityAdapter.ts'],
   profile_username_history: ['ProfileService.ts', 'ProfileIdentityAdapter.ts'],
