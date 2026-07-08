@@ -10,14 +10,14 @@
  */
 import { logger } from '@/shared/utils/logger';
 import { useState, useEffect, useCallback } from 'react';
+import { SessionService } from '@/core/session/services/SessionService';
 import { MultiProfileService } from '../services/multi-profile';
 import type { Profile } from '../services/multi-profile/types';
+import { ACTIVE_PROFILE_STORAGE_KEY } from '../constants/activeProfileStorage';
 
 function getErrorMessage(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
 }
-
-const ACTIVE_PROFILE_KEY = 'active_profile_id';
 
 export function useActiveProfile() {
   const [activeProfile, setActiveProfile] = useState<Profile | null>(null);
@@ -40,14 +40,14 @@ export function useActiveProfile() {
       }
 
       // Tentar recuperar perfil ativo do localStorage
-      const savedActiveProfileId = localStorage.getItem(ACTIVE_PROFILE_KEY);
+      const savedActiveProfileId = localStorage.getItem(ACTIVE_PROFILE_STORAGE_KEY);
       let active = profiles.find(p => p.id === savedActiveProfileId);
 
       // Se não encontrou, usar personal como padrão
       if (!active) {
         active = profiles.find(p => p.profile_type === 'personal') || profiles[0];
         if (active) {
-          localStorage.setItem(ACTIVE_PROFILE_KEY, active.id);
+          localStorage.setItem(ACTIVE_PROFILE_STORAGE_KEY, active.id);
         }
       }
 
@@ -68,9 +68,16 @@ export function useActiveProfile() {
       return false;
     }
 
-    setActiveProfile(profile);
-    localStorage.setItem(ACTIVE_PROFILE_KEY, profileId);
-    return true;
+    try {
+      await SessionService.switchProfile(profileId);
+      setActiveProfile(profile);
+      localStorage.setItem(ACTIVE_PROFILE_STORAGE_KEY, profileId);
+      return true;
+    } catch (error: unknown) {
+      logger.error('Error switching active profile:', error);
+      setError(getErrorMessage(error, 'Failed to switch active profile'));
+      return false;
+    }
   }, [allProfiles]);
 
   useEffect(() => {

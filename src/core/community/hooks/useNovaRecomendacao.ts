@@ -21,7 +21,17 @@ export interface NovaRecomendacaoData {
   category: string;
 }
 
-export function useNovaRecomendacao() {
+interface UseNovaRecomendacaoOptions {
+  readonly locationId?: string | null;
+  readonly canCreate?: boolean;
+  readonly blockedMessage?: string;
+}
+
+export function useNovaRecomendacao({
+  locationId: locationIdOverride,
+  canCreate = true,
+  blockedMessage = "Perguntar na comunidade exige residencia verificada neste territorio.",
+}: UseNovaRecomendacaoOptions = {}) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -40,9 +50,14 @@ export function useNovaRecomendacao() {
   };
 
   // location_id canônico: bairro do usuário, ou cidade como fallback
-  const locationId = homeDistrict?.id ?? homeCity?.id ?? null;
+  const locationId = locationIdOverride ?? homeDistrict?.id ?? homeCity?.id ?? null;
 
   const validateForm = (): boolean => {
+    if (!canCreate) {
+      toast({ title: blockedMessage, variant: "destructive" });
+      return false;
+    }
+
     if (!user) {
       toast({ title: "Faça login para perguntar", variant: "destructive" });
       navigate(appUrls.auth.login);

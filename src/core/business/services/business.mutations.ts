@@ -5,6 +5,7 @@
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from "@/integrations/supabase";
+import { PublicViewTrackingService } from "@/core/analytics/services/PublicViewTrackingService";
 import { PublicIdentityService } from "@/core/public-identity";
 import {
   evaluateBusinessSlugSafety,
@@ -12,7 +13,6 @@ import {
 } from "@/core/public-identity/domain/businessSlugSafety";
 import { AddressService } from "@/core/address/services/AddressService";
 import { BusinessHoursService } from "@/core/business/BusinessHoursService";
-import { callRPC } from "@/integrations/supabase";
 import {
   createBusinessSchema,
   updateBusinessSchema,
@@ -673,9 +673,7 @@ export async function createProduct(
  */
 export async function incrementViews(businessId: string): Promise<void> {
   try {
-    await callRPC("increment_business_views", {
-      business_id: businessId,
-    });
+    await PublicViewTrackingService.track("business", businessId);
   } catch (error) {
     logger.warn("Failed to increment views:", error);
   }

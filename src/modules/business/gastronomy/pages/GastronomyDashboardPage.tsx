@@ -22,15 +22,11 @@ import {
 } from '../components';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
-import { isLaunchSurfaceEnabled } from '@/config/launchScope';
 import { getMenuUsageStats } from '@/modules/business/gastronomy/services';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 import {
   UtensilsCrossed,
   QrCode,
-  TrendingUp,
-  Truck,
-  BarChart3,
   Settings,
   Clock,
   MapPin,
@@ -48,10 +44,6 @@ export default function GastronomyDashboardPage() {
     enabled: !!businessId,
     queryFn: async () => getMenuUsageStats(businessId!),
   });
-  const showCoupons = isLaunchSurfaceEnabled('coupons');
-  const showMobility = isLaunchSurfaceEnabled('mobility');
-  const showAnalytics = isLaunchSurfaceEnabled('publicAnalytics');
-
   if (isLoading) {
     return (
       <div className="container max-w-6xl py-8">
@@ -75,7 +67,6 @@ export default function GastronomyDashboardPage() {
         businessId={businessId!}
         currentMenuItems={usageStats?.currentMenuItems ?? 0}
         currentImages={usageStats?.currentImages ?? 0}
-        currentPromotions={usageStats?.currentPromotions ?? 0}
       />
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -150,120 +141,6 @@ export default function GastronomyDashboardPage() {
             )}
           </CardContent>
         </Card>
-
-        {/* Promoções */}
-        {showCoupons && (
-          <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5" />
-              Promoções
-            </CardTitle>
-            <CardDescription>
-              Crie ofertas e descontos
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {can('canUsePromotions') ? (
-              <>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Promoções ativas</span>
-                  <span className="font-medium">{usageStats?.currentPromotions ?? 0}</span>
-                </div>
-                <Link to={businessManagementRoutes.gastronomyPromocoes(businessId!)}>
-                  <Button className="w-full">
-                    Gerenciar Promoções
-                  </Button>
-                </Link>
-              </>
-            ) : (
-              <UpgradePromptInline
-                businessId={businessId!}
-                feature="Promoções"
-                offerKey="catalog"
-              />
-            )}
-          </CardContent>
-          </Card>
-        )}
-
-        {/* Rede de Motoboys */}
-        {showMobility && (
-          <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Truck className="w-5 h-5" />
-              Rede de Motoboys
-            </CardTitle>
-            <CardDescription>
-              Solicite entregas
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {can('canUseDeliveryNetwork') ? (
-              <>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Entregas hoje</span>
-                  <span className="font-medium">Resumo acima</span>
-                </div>
-                <Link to={businessManagementRoutes.gastronomyEntregas(businessId!)}>
-                  <Button className="w-full">
-                    Solicitar Entrega
-                  </Button>
-                </Link>
-              </>
-            ) : (
-              <UpgradePromptInline
-                businessId={businessId!}
-                feature="Rede de Motoboys"
-                offerKey="delivery"
-              />
-            )}
-          </CardContent>
-          </Card>
-        )}
-
-        {/* Analytics */}
-        {showAnalytics && (
-          <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="w-5 h-5" />
-              Analytics
-            </CardTitle>
-            <CardDescription>
-              Métricas e relatórios
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {can('canUseBasicAnalytics') ? (
-              <>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Visualizações</span>
-                  <span className="font-medium">Abrir relatorios</span>
-                </div>
-                <Link to={businessManagementRoutes.gastronomyAnalytics(businessId!)}>
-                  <Button className="w-full" variant="outline">
-                    Ver Analytics
-                  </Button>
-                </Link>
-                {can('canUseAdvancedAnalytics') && (
-                  <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-success" aria-hidden="true" />
-                    Analytics avançado disponível
-                  </p>
-                )}
-              </>
-            ) : (
-              <UpgradePromptInline
-                businessId={businessId!}
-                feature="Analytics"
-                offerKey="catalog"
-              />
-            )}
-          </CardContent>
-          </Card>
-        )}
 
         {/* Horário de Funcionamento */}
         <Card>

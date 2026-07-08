@@ -19,6 +19,6 @@ test.describe('community opportunities public surface', () => {
       .poll(() => readBodyText(page), { timeout: 60_000 })
       .not.toMatch(/Publicar vaga|Vagas proximas|Vagas próximas/i);
 
-    expect((await readRobots(page)) ?? 'index, follow').not.toMatch(/noindex/i);
+    expect((await readRobots(page)) ?? '').toMatch(/noindex/i);
   });
 });

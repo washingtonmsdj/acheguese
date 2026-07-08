@@ -1,34 +1,18 @@
-/**
- * Exports centralizados dos componentes de Gastronomia
- */
-
-export { GastronomyHero } from './GastronomyHero';
-export { GastronomyFilters } from './GastronomyFilters';
 export { GastronomyCard } from './GastronomyCard';
-export { GastronomyCategoryCards } from './GastronomyCategoryCards';
-export { GastronomyCTA } from './GastronomyCTA';
 export { FoodItemCard } from './FoodItemCard';
 export { FoodSectionCarousel } from './FoodSectionCarousel';
 export { BusinessSectionCarousel } from './BusinessSectionCarousel';
-export { MenuCategoryTabs } from './MenuCategoryTabs';
 export { MenuItemCard } from './MenuItemCard';
 export { MenuItemDetailDrawer } from './MenuItemDetailDrawer';
 export { GastronomyCheckoutSheet } from './GastronomyCheckoutSheet';
 export { GastronomyDeliveryDestinationPanel } from './GastronomyDeliveryDestinationPanel';
 export { StickyOrderBar } from './StickyOrderBar';
-export { DeliveryInfoCard } from './DeliveryInfoCard';
-export { OpeningStatusBadge } from './OpeningStatusBadge';
 export { ReviewCard } from './ReviewCard';
 export { ReviewForm } from './ReviewForm';
 export { ReviewsSection } from './ReviewsSection';
-export { GastronomyContactSidebar } from './GastronomyContactSidebar';
 export { GastronomyShareDialog } from './GastronomyShareDialog';
-export { GastronomyQuickActions } from './GastronomyQuickActions';
-export { GastronomyPhotoGallery } from './GastronomyPhotoGallery';
-export { GastronomyOwnerDashboard } from './GastronomyOwnerDashboard';
 export { FavoriteBusinessCard } from './FavoriteBusinessCard';
 
-export { GastronomyVerticalStatus } from './GastronomyVerticalStatus';
 export { UpgradePrompt, UpgradePromptInline } from './UpgradePrompt';
 export { PlanStatusWidget } from './PlanStatusWidget';
 
@@ -52,17 +36,8 @@ export { OrderTrackingCard } from './orders/OrderTrackingCard';
 
 // Dashboard components
 export { OperationalStatusCard } from './dashboard/OperationalStatusCard';
-export { TodayOrdersCard } from './dashboard/TodayOrdersCard';
 export { QuickActionsCard } from './dashboard/QuickActionsCard';
 export { MenuSummaryCard } from './dashboard/MenuSummaryCard';
-export { DeliverySummaryCard } from './dashboard/DeliverySummaryCard';
-
-// Delivery network components
-
-// Analytics components
-export { AnalyticsOverviewCard } from './analytics/AnalyticsOverviewCard';
-export { AnalyticsChartCard } from './analytics/AnalyticsChartCard';
-export { AnalyticsEngagementCard } from './analytics/AnalyticsEngagementCard';
 
 // Activity Feed
 export { GastronomyActivityFeed } from './GastronomyActivityFeed';

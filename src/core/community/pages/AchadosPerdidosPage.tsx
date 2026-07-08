@@ -1,7 +1,8 @@
 import React from "react";
 
-import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { useNavigate, useOutletContext } from "react-router-dom";
+import { toast } from "sonner";
 import {
   Search,
   Plus,
@@ -10,17 +11,18 @@ import {
   Loader2,
   Eye,
   EyeOff,
-  Users,
 } from "lucide-react";
 import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { TooltipProvider } from "@/shared/components/ui/tooltip";
 import { useAppUrls } from "@/core/routing/hooks"; // ✅ SSOT URLs
-import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
 import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
-import { useSessionContext } from "@/core/session";
+import { CommunityPortalGate, useCommunityAccess } from "@/core/community/access";
+import type { TerritorialLayoutContext } from "@/core/routing/components/TerritorialLayout";
+import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
+import { resolveCommunityRouteTerritoryFilter } from "@/core/community/utils/communityRouteTerritory";
+import type { TerritoryFilter } from "@/core/location";
 import {
   Select,
   SelectContent,
@@ -67,9 +69,34 @@ export default function AchadosPerdidosPage() {
   const [locationLabels, setLocationLabels] = useState<Record<string, string>>({});
 
   // ✅ Verificação de autenticação
-  const { activeProfile } = useSessionContext();
-  const { hasHome, homeDistrict, loading: territoryLoading } = useUserTerritory();
-  const territoryLocationId = homeDistrict?.id ?? null;
+  const territorialContext = useOutletContext<TerritorialLayoutContext | null>() ?? null;
+  const { homeDistrict, homeCity } = useUserTerritory();
+  const resolved = useMemo(
+    () =>
+      territorialContext?.resolved ??
+      (homeDistrict
+        ? ({ kind: "location", location: homeDistrict } as const)
+        : homeCity
+          ? ({ kind: "location", location: homeCity } as const)
+          : null),
+    [homeCity, homeDistrict, territorialContext?.resolved],
+  );
+  const activeMemberIds = useMemo(
+    () => territorialContext?.activeMemberIds ?? [],
+    [territorialContext?.activeMemberIds],
+  );
+  const communityAccess = useCommunityAccess({
+    resolved,
+    activeMemberIds,
+  });
+  const territoryFilter = useMemo<TerritoryFilter>(
+    () =>
+      resolveCommunityRouteTerritoryFilter(
+        resolved,
+        activeMemberIds,
+      ),
+    [activeMemberIds, resolved],
+  );
 
   const {
     items,
@@ -90,18 +117,14 @@ export default function AchadosPerdidosPage() {
       pageNum: number,
       tipo: "perdido" | "achado" | "todos",
       categoria: string,
-      locationId: string | null,
+      effectiveTerritoryFilter: TerritoryFilter,
     ) => {
       setLoading(true);
       const from = pageNum * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;
-      const territoryFilter = locationId
-        ? { scope: "location" as const, location_id: locationId }
-        : { scope: "none" as const };
-
       // ✅ LOTE 9A - Usar lostFoundService.getPostsPage (SSOT para lost_found_posts)
       const data = await lostFoundService.getPostsPage(
-        { tipo, categoria, territoryFilter },
+        { tipo, categoria, territoryFilter: effectiveTerritoryFilter },
         from,
         to,
       );
@@ -137,13 +160,13 @@ export default function AchadosPerdidosPage() {
 
   useEffect(() => {
     reset();
-    void fetchPage(0, filterTipo, filterCategoria, territoryLocationId);
-  }, [filterTipo, filterCategoria, territoryLocationId, reset, fetchPage]);
+    void fetchPage(0, filterTipo, filterCategoria, territoryFilter);
+  }, [filterTipo, filterCategoria, territoryFilter, reset, fetchPage]);
   useEffect(() => {
     if (page > 0) {
-      void fetchPage(page, filterTipo, filterCategoria, territoryLocationId);
+      void fetchPage(page, filterTipo, filterCategoria, territoryFilter);
     }
-  }, [page, filterTipo, filterCategoria, territoryLocationId, fetchPage]);
+  }, [page, filterTipo, filterCategoria, territoryFilter, fetchPage]);
 
   useEffect(() => {
     const missingLocationIds = Array.from(
@@ -199,57 +222,32 @@ export default function AchadosPerdidosPage() {
       p.descricao.toLowerCase().includes(searchLower) ||
       resolveItemTerritoryLabel(p).toLowerCase().includes(searchLower),
   );
+  const handleOpenCreateLostFound = () => {
+    if (!communityAccess.can.create_post) {
+      toast.info("Publicar achados e perdidos exige residencia verificada neste territorio.");
+      return;
+    }
 
-  // Bloquear se não estiver logado
-  if (!activeProfile) {
-    return (
-      <TooltipProvider>
-        <div className="min-h-screen bg-[#12181B] flex items-center justify-center" role="main">
-          <div className="text-center p-8 max-w-md">
-            <Users className="h-16 w-16 text-teal-400 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-white mb-4">
-              Faça login para acessar achados e perdidos
-            </h2>
-            <p className="text-gray-400 mb-6">
-              Os achados e perdidos são exclusivos para moradores cadastrados do bairro.
-            </p>
-            <Button onClick={() => navigate(appUrls.auth.login)} className="bg-teal-500 hover:bg-teal-400">
-              Fazer Login
-            </Button>
-          </div>
-        </div>
-      </TooltipProvider>
-    );
-  }
+    navigate(appUrls.community.newLostAndFound);
+  };
 
-  // Aguardar resolução do território
-  if (territoryLoading) {
+  if (communityAccess.isLoading) {
     return (
       <div className="min-h-screen bg-[#12181B] flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-teal-400 border-t-transparent rounded-full animate-spin" />
+        <Loader2 className="h-6 w-6 animate-spin text-teal-400" />
       </div>
     );
   }
 
-  // Bloquear se não tiver bairro cadastrado
-  if (!hasHome) {
+  if (!communityAccess.can.view_member_feed) {
     return (
-      <TooltipProvider>
-        <div className="min-h-screen bg-[#12181B] flex items-center justify-center" role="main">
-          <div className="text-center p-8 max-w-md">
-            <Users className="h-16 w-16 text-amber-400 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-white mb-4">
-              Escolha seu bairro
-            </h2>
-            <p className="text-gray-400 mb-6">
-              Para acessar achados e perdidos da comunidade, escolha seu bairro principal.
-            </p>
-            <Button onClick={() => navigate(appUrls.community.feed)} className="bg-teal-500 hover:bg-teal-400">
-              Escolher meu bairro
-            </Button>
-          </div>
-        </div>
-      </TooltipProvider>
+      <div className="min-h-screen bg-[#12181B] text-white">
+        <CommunityPortalGate
+          resolved={resolved}
+          activeMemberIds={activeMemberIds}
+          action="view_member_feed"
+        />
+      </div>
     );
   }
 
@@ -265,7 +263,7 @@ export default function AchadosPerdidosPage() {
               Ajude a comunidade a encontrar o que perdeu
             </p>
           </div>
-          <Button size="sm" onClick={() => navigate(appUrls.community.newLostAndFound)}> {/* ✅ SSOT */}
+          <Button size="sm" onClick={handleOpenCreateLostFound}> {/* ✅ SSOT */}
             <Plus className="h-4 w-4 mr-1" /> Publicar
           </Button>
         </div>
@@ -334,7 +332,7 @@ export default function AchadosPerdidosPage() {
             </p>
             <Button
               variant="outline"
-              onClick={() => navigate(appUrls.community.newLostAndFound)} // ✅ SSOT
+              onClick={handleOpenCreateLostFound} // ✅ SSOT
             >
               Publicar item
             </Button>

@@ -7,17 +7,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
 import { Link } from 'react-router-dom';
-import { isLaunchSurfaceEnabled } from '@/config/launchScope';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 import {
   UtensilsCrossed,
   Clock,
   MapPin,
   Package,
-  Settings,
-  Zap,
-  Bike,
-  BarChart3,
 } from 'lucide-react';
 
 interface QuickActionsCardProps {
@@ -25,8 +20,6 @@ interface QuickActionsCardProps {
 }
 
 export function QuickActionsCard({ businessId }: QuickActionsCardProps) {
-  const showMobility = isLaunchSurfaceEnabled('mobility');
-  const showAnalytics = isLaunchSurfaceEnabled('publicAnalytics');
   const actions = [
     {
       icon: UtensilsCrossed,
@@ -40,22 +33,6 @@ export function QuickActionsCard({ businessId }: QuickActionsCardProps) {
       href: businessManagementRoutes.gastronomyPedidos(businessId),
       color: 'text-blue-600',
     },
-    ...(showMobility
-      ? [{
-          icon: Bike,
-          label: 'Entregas',
-          href: businessManagementRoutes.gastronomyEntregas(businessId),
-          color: 'text-indigo-600',
-        }]
-      : []),
-    ...(showAnalytics
-      ? [{
-          icon: BarChart3,
-          label: 'Analytics',
-          href: businessManagementRoutes.gastronomyAnalytics(businessId),
-          color: 'text-cyan-600',
-        }]
-      : []),
     {
       icon: Clock,
       label: 'Horários',

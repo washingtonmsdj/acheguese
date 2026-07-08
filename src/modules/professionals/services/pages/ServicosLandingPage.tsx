@@ -24,9 +24,10 @@ import { CanonicalHero } from "@/shared/components/hero/CanonicalHero";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { useSessionContext } from "@/core/session";
-import { TerritoryIndicator, useTerritoryLabels } from "@/core/location";
+import { TerritoryIndicator, useModuleTerritoryFilter, useTerritoryLabels } from "@/core/location";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { useFriendlyModuleUrls } from "@/core/routing/hooks/useFriendlyModuleUrls";
+import { useTerritorialContextOptional } from "@/core/routing/components/TerritorialLayout";
 import { useServicos } from "@/modules/professionals/services/hooks/useServicos";
 import { useTopRatedProfessionals } from "@/modules/professionals/services/hooks/useTopRatedProfessionals";
 import { buildWhatsAppUrl } from "@/shared/utils/contactLinks";
@@ -40,7 +41,7 @@ import {
 } from "@/modules/professionals/services/domain/professionalCategories";
 import type { ProfessionalItem } from "@/modules/professionals/services/domain/professionalViewModels";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
-import { withQueryParams } from "@/app/pages/CidadeLanding.utils";
+import { withQueryParams } from "@/core/landing/utils/landingPresentation";
 
 import heroImg from "@/assets/servicos-hero.jpg";
 
@@ -439,10 +440,17 @@ interface ServicosLandingPageProps {
 // ── Página principal ──────────────────────────────────────────────────
 
 export default function ServicosLandingPage({ resolved, activeMemberIds }: ServicosLandingPageProps) {
+  const territorialContext = useTerritorialContextOptional();
+  const routeResolved = territorialContext?.resolved ?? resolved ?? null;
+  const routeActiveMemberIds = territorialContext?.activeMemberIds ?? activeMemberIds;
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useSessionContext();
-  const territoryLabels = useTerritoryLabels(resolved);
+  const territoryLabels = useTerritoryLabels(routeResolved);
+  const moduleTerritory = useModuleTerritoryFilter({
+    routeResolved,
+    activeMemberIds: routeActiveMemberIds,
+  });
   const moduleUrls = useFriendlyModuleUrls();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("todos");
@@ -450,16 +458,17 @@ export default function ServicosLandingPage({ resolved, activeMemberIds }: Servi
 
   // ✅ SSOT: Nome do território com preposição
   const territoryName = useMemo(() => {
-    return territoryLabels.inTerritory || "perto de você";
-  }, [territoryLabels]);
+    return territoryLabels.inTerritory || `em ${moduleTerritory.displayLabel}`;
+  }, [moduleTerritory.displayLabel, territoryLabels]);
 
   const { topRated } = useTopRatedProfessionals({
-    routeResolved: resolved,
-    activeMemberIds,
+    routeResolved,
+    activeMemberIds: routeActiveMemberIds,
+    territoryFilter: moduleTerritory.territoryFilter,
     limit: 6,
   });
   // ✅ SSOT global para todas as URLs — inclui services, business, classifieds, community
-  const appUrls = useAppUrls(resolved);
+  const appUrls = useAppUrls(routeResolved);
   const communityPrimaryHref = useMemo(
     () => (user ? appUrls.services.register : withQueryParams(appUrls.auth.login, { redirect: appUrls.services.register })),
     [appUrls.auth.login, appUrls.services.register, user],
@@ -471,8 +480,9 @@ export default function ServicosLandingPage({ resolved, activeMemberIds }: Servi
     sortBy: "rating",
     filter: selectedCategory,
     search: searchQuery,
-    routeResolved: resolved,
-    activeMemberIds,
+    routeResolved,
+    activeMemberIds: routeActiveMemberIds,
+    territoryFilter: moduleTerritory.territoryFilter,
   });
 
   const serviceAggregate = useMemo(() => {

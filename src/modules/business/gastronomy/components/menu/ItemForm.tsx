@@ -76,14 +76,17 @@ export function ItemForm({
     defaultValues: buildItemFormDefaults(item),
   });
 
-  const handleSubmit = (values: ItemFormValues) => {
+  const handleSubmit = async (values: ItemFormValues) => {
     const processedValues = buildMenuItemPayload(values, itemNutritionalInfo, {
       allowCategorySelection,
       allowImage,
     });
 
-    onSubmit(processedValues);
-    form.reset();
+    const shouldReset = await onSubmit(processedValues);
+    if (shouldReset !== false) {
+      form.reset();
+      onClose();
+    }
   };
 
   const handleUploadImage = async (file?: File) => {
@@ -118,7 +121,7 @@ export function ItemForm({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={(nextOpen) => { if (!nextOpen) onClose(); }}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{item ? 'Editar Item' : 'Novo Item'}</DialogTitle>

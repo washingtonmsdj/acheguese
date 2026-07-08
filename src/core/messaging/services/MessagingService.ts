@@ -4,7 +4,7 @@ import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services";
 import { classifiedUrlService, getClassifiedById } from "@/core/classifieds/services";
 import { ALERT_STATUS } from "@/shared/types/constants";
-import type { RealtimeChannel } from "@supabase/supabase-js";
+import type { RealtimeChannel } from "@/integrations/supabase";
 import type {
   Conversation,
   Message,

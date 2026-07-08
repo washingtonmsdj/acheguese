@@ -23,6 +23,9 @@ import type {
   UpgradeType,
 } from './types';
 
+const TRUSTED_SERVER_ONLY_ERROR =
+  'Niche capability mutations require a trusted admin/server path.';
+
 export class NicheVersioningService {
   private static toCapabilities(values: unknown): NicheCapability[] {
     if (!Array.isArray(values)) return [];
@@ -56,12 +59,13 @@ export class NicheVersioningService {
     business_id: string,
     capability: NicheCapability,
   ): Promise<CapabilityCheckResult> {
-    const { data, error } = await supabase.rpc('has_niche_capability', {
-      p_business_id: business_id,
-      p_capability: capability,
-    });
+    const { data: profile, error } = await supabase
+      .from('gastronomy_profiles')
+      .select('enabled_capabilities')
+      .eq('business_id', business_id)
+      .single();
 
-    if (error) {
+    if (error || !profile) {
       console.error('Erro ao verificar capability:', error);
       return {
         has_capability: false,
@@ -70,8 +74,10 @@ export class NicheVersioningService {
       };
     }
 
+    const enabledCaps = this.toCapabilities(profile.enabled_capabilities);
+
     return {
-      has_capability: data ?? false,
+      has_capability: enabledCaps.includes(capability),
       capability,
       business_id,
     };
@@ -130,24 +136,11 @@ export class NicheVersioningService {
  * Garante que upgrades n?o quebrem registros antigos.
  */
   static async addCapability(
-    params: AddCapabilityParams,
+    _params: AddCapabilityParams,
   ): Promise<AddCapabilityResult> {
-    const { data, error } = await supabase.rpc('add_niche_capability', {
-      p_business_id: params.business_id,
-      p_capability: params.capability,
-      p_upgraded_by: params.upgraded_by || null,
-    });
-
-    if (error) {
-      return {
-        success: false,
-        error: error.message,
-      };
-    }
-
     return {
-      success: true,
-      already_exists: data === false,
+      success: false,
+      error: TRUSTED_SERVER_ONLY_ERROR,
     };
   }
 
@@ -183,19 +176,9 @@ export class NicheVersioningService {
  * Garante que upgrades n?o quebrem registros antigos.
  */
   static async markNeedsUpgrade(
-    params: MarkNeedsUpgradeParams,
+    _params: MarkNeedsUpgradeParams,
   ): Promise<MarkNeedsUpgradeResult> {
-    const { data, error } = await supabase.rpc('mark_niche_needs_upgrade', {
-      p_niche_key: params.niche_key,
-      p_missing_capabilities: params.missing_capabilities,
-    });
-
-    if (error) {
-      console.error('Erro ao marcar necessidade de upgrade:', error);
-      return { updated_count: 0 };
-    }
-
-    return { updated_count: data ?? 0 };
+    return { updated_count: 0 };
   }
 
   /**
@@ -207,73 +190,12 @@ export class NicheVersioningService {
   static async upgradeNiche(
     params: UpgradeNicheParams,
   ): Promise<UpgradeNicheResult> {
-    // Buscar configuração atual
-    const { data: currentProfile, error: fetchError } = await supabase
-      .from('gastronomy_profiles')
-      .select('niche_config_version, operational_mode, enabled_capabilities')
-      .eq('business_id', params.business_id)
-      .single();
-
-    if (fetchError || !currentProfile) {
-      return {
-        success: false,
-        from_version: '0.0.0',
-        to_version: params.to_version,
-        added_capabilities: [],
-        error: 'Perfil gastronômico não encontrado',
-      };
-    }
-
-    const fromVersion = currentProfile.niche_config_version as string;
-    const fromMode = currentProfile.operational_mode as string;
-    const currentCaps = (currentProfile.enabled_capabilities as string[]) || [];
-
-    // Adicionar novas capabilities
-    const newCaps = params.add_capabilities.filter(
-      (cap) => !currentCaps.includes(cap),
-    );
-    const updatedCaps = [...currentCaps, ...newCaps];
-
-    // Atualizar perfil
-    const { error: updateError } = await supabase
-      .from('gastronomy_profiles')
-      .update({
-        niche_config_version: params.to_version,
-        operational_mode: params.to_operational_mode,
-        enabled_capabilities: updatedCaps,
-        needs_niche_upgrade: false,
-        last_niche_upgrade_at: new Date().toISOString(),
-      })
-      .eq('business_id', params.business_id);
-
-    if (updateError) {
-      return {
-        success: false,
-        from_version: fromVersion,
-        to_version: params.to_version,
-        added_capabilities: newCaps,
-        error: updateError.message,
-      };
-    }
-
-    // Registrar no histórico
-    await supabase.from('gastronomy_niche_upgrade_history').insert({
-      business_id: params.business_id,
-      from_version: fromVersion,
-      to_version: params.to_version,
-      added_capabilities: newCaps,
-      from_operational_mode: fromMode,
-      to_operational_mode: params.to_operational_mode,
-      upgrade_type: params.upgrade_type,
-      notes: params.notes,
-      upgraded_by: params.upgraded_by,
-    });
-
     return {
-      success: true,
-      from_version: fromVersion,
+      success: false,
+      from_version: '0.0.0',
       to_version: params.to_version,
-      added_capabilities: newCaps,
+      added_capabilities: [],
+      error: TRUSTED_SERVER_ONLY_ERROR,
     };
   }
 

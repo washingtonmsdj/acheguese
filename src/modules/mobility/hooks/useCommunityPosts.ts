@@ -15,12 +15,12 @@ export interface CommunityPost {
   author_avatar?: string;
   author_neighborhood?: string;
   author_verified?: boolean;
-  intent?: 'offering' | 'requesting';
+  intent?: "offering" | "requesting";
   origin?: string;
   destination?: string;
   departure_time?: string;
   seats_available?: number;
-  ride_type?: 'viagem' | 'carona_compartilhada' | 'entrega' | 'agendada';
+  ride_type?: "viagem" | "carona_compartilhada" | "entrega" | "agendada";
   price?: number;
   interested_count?: number;
   has_joined?: boolean;
@@ -30,7 +30,7 @@ interface CreateCommunityPostInput {
   author_profile_id: string;
   content: string;
   location_id: string;
-  reach?: 'city' | 'neighborhood' | 'street';
+  reach?: "city" | "neighborhood" | "street";
 }
 
 export function useCommunityPosts(filters?: {
@@ -52,9 +52,12 @@ export function useCommunityPosts(filters?: {
     await postService.createPost({
       author_profile_id: postData.author_profile_id,
       content: postData.content,
-      type: "ride_share",
+      type: "post",
       location_id: postData.location_id,
-      reach: postData.reach || 'neighborhood',
+      reach: postData.reach || "neighborhood",
+      content_intent: "ride_share",
+      display_format: "ride_share",
+      content_payload: { origin: "mobility", type: "ride_share" },
     });
     refetch();
   };
@@ -65,9 +68,15 @@ export function useCommunityPosts(filters?: {
     refetch();
   };
 
-  const commentOnPost = async (postId: string, content: string, authorProfileId: string) => {
+  const commentOnPost = async (
+    postId: string,
+    content: string,
+    authorProfileId: string,
+  ) => {
     if (!authorProfileId) {
-      throw new Error("authorProfileId is required to comment on a ride-share post");
+      throw new Error(
+        "authorProfileId is required to comment on a ride-share post",
+      );
     }
 
     // ✅ LOTE 7 - CommentService.createComment

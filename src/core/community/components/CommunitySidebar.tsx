@@ -11,6 +11,7 @@ import { PopularTagsWidget } from "./PopularTagsWidget";
 import { CommunityRulesWidget } from "./CommunityRulesWidget";
 import { EventsWidget } from "./EventsWidget";
 import { GamificationWidget } from "./GamificationWidget";
+import type { TerritoryFilter } from "@/core/location";
 /**
  * Sidebar da comunidade com widgets de conteúdo destacado
  *
@@ -26,16 +27,17 @@ import { GamificationWidget } from "./GamificationWidget";
 
 interface CommunitySidebarProps {
   onTagClick?: (tag: string) => void;
+  territoryFilter?: TerritoryFilter;
 }
 
-export function CommunitySidebar({ onTagClick }: CommunitySidebarProps) {
+export function CommunitySidebar({ onTagClick, territoryFilter }: CommunitySidebarProps) {
   return (
     <div className="sticky top-20 space-y-4">
       <GamificationWidget />
       <EventsWidget />
-      <TopPostsWidget />
+      <TopPostsWidget territoryFilter={territoryFilter} />
       <TopUsersWidget />
-      <PopularTagsWidget onTagClick={onTagClick} />
+      <PopularTagsWidget onTagClick={onTagClick} territoryFilter={territoryFilter} />
       <CommunityRulesWidget />
     </div>
   );

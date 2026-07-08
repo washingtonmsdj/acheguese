@@ -1,26 +1,16 @@
-/**
- * EmpresaInfoSection
- * 
- * Seção de informações práticas com endereço, horários, contato, pagamento e facilidades.
- * Layout em grid com coluna principal (esquerda) e sidebar (direita).
- * 
- * SSOT: Props tipadas vindas de types.ts
- * Sem gambiarras: Componente focado apenas em renderização
- */
-
-import { motion } from 'framer-motion';
-import { Truck, MapPinned } from 'lucide-react';
+import { Truck } from 'lucide-react';
+import { cn } from '@/shared/utils/cn';
 import {
+  getServiceModeColor,
   getServiceModeIcon,
   getServiceModeLabel,
-  getServiceModeColor,
 } from '@/core/business/constants';
 import {
   AddressCard,
-  HoursCard,
   ContactCard,
-  PaymentCard,
   FacilitiesCard,
+  HoursCard,
+  PaymentCard,
 } from '../components/info';
 import type { EmpresaInfoSectionProps } from './types';
 
@@ -29,9 +19,12 @@ export function EmpresaInfoSection({
   openStatus,
   addressText,
   locationText,
-  isDeliveryBusiness,
   showAllHours,
   copiedPhone,
+  embedded = false,
+  hideAddressCard = false,
+  showSidebar = true,
+  sidebarClassName,
   onToggleShowAllHours,
   onCopyPhone,
   onRoute,
@@ -40,109 +33,105 @@ export function EmpresaInfoSection({
   const serviceModes =
     business.modos_atendimento && business.modos_atendimento.length > 0
       ? business.modos_atendimento
-      : ["presencial"];
+      : ['presencial'];
+  const getServiceModeCaption = (mode: string) => {
+    switch (mode) {
+      case 'delivery':
+        return 'Taxa e prazo sob consulta';
+      case 'retirada':
+        return 'Retire no local';
+      case 'consumo_local':
+        return 'Ambiente climatizado';
+      case 'presencial':
+      default:
+        return 'Atendimento presencial';
+    }
+  };
 
-  const deliveryAreas = Array.from(
-    new Set(
-      [business.location?.name, business.business_city]
-        .filter((value): value is string => Boolean(value && value.trim()))
-        .map((value) => value.trim()),
-    ),
-  );
-
-  return (
-    <section className="max-w-5xl mx-auto px-4 sm:px-6 w-full mt-4">
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.25 }}
-        className="grid grid-cols-1 lg:grid-cols-3 gap-4"
-      >
-        {/* Left column: address, hours, contact */}
-        <div className="lg:col-span-2 space-y-4">
-          {/* Address + Map */}
+  const content = (
+    <div
+      className={
+        showSidebar
+          ? 'grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.65fr)_minmax(300px,0.8fr)]'
+          : 'grid grid-cols-1 gap-4'
+      }
+    >
+      <div className="space-y-4">
+        {!hideAddressCard ? (
           <AddressCard
             business={business}
             addressText={addressText}
             locationText={locationText}
             onRoute={onRoute}
           />
+        ) : null}
 
-          {/* Operating hours */}
-          {business.horario_funcionamento && (
+        <div className="grid grid-cols-1 gap-3.5 xl:grid-cols-3 [@media(max-height:1100px)]:gap-3">
+          {business.horario_funcionamento ? (
             <HoursCard
               hours={business.horario_funcionamento}
               openStatus={openStatus}
               showAllHours={showAllHours}
               onToggleShowAll={onToggleShowAllHours}
             />
-          )}
+          ) : null}
 
-          {/* Service modes & delivery areas */}
-          <div className="bg-card border border-border rounded-xl p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <Truck className="h-4 w-4 text-primary" />
-              <h2 className="text-base font-bold text-foreground">
-                Formas de atendimento
-              </h2>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-              {serviceModes.map((modo) => {
-                const ModoIcon = getServiceModeIcon(modo);
-                const label = getServiceModeLabel(modo);
-                const color = getServiceModeColor(modo);
-                if (!ModoIcon) return null;
-                return (
-                  <div
-                    key={modo}
-                    className={`flex items-center gap-3 p-3 rounded-lg border ${color}`}
-                  >
-                    <ModoIcon className="h-5 w-5 shrink-0" />
-                    <span className="text-sm font-medium">{label}</span>
-                  </div>
-                );
-              })}
-            </div>
-            {/* Delivery areas */}
-            {isDeliveryBusiness && deliveryAreas.length > 0 && (
-              <div className="pt-4 border-t border-border">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                  Área de atendimento / delivery
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {deliveryAreas.map((area) => (
-                    <span
-                      key={area}
-                      className="bg-secondary text-secondary-foreground text-xs font-medium px-3 py-1.5 rounded-lg"
-                    >
-                      <MapPinned className="h-3 w-3 inline-block mr-1 -mt-0.5" />
-                      {area}
-                    </span>
-                  ))}
-                </div>
+          <div className="hidden xl:block">
+            <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-3.5 sm:p-5 [@media(max-height:1100px)]:sm:p-4">
+              <div className="mb-3 flex items-center gap-2">
+                <Truck className="h-4 w-4 text-teal-300" />
+                <h2 className="text-base font-semibold text-white">Formas de atendimento</h2>
               </div>
-            )}
+              <div className="space-y-2">
+                {serviceModes.slice(0, 3).map((mode) => {
+                  const Icon = getServiceModeIcon(mode);
+                  if (!Icon) return null;
+                  return (
+                    <div
+                      key={mode}
+                      className={`flex items-center gap-3 rounded-2xl border px-3 py-2.5 ${getServiceModeColor(mode)}`}
+                    >
+                      <Icon className="h-[18px] w-[18px] shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-[0.92rem] font-medium">{getServiceModeLabel(mode)}</p>
+                        <p className="truncate text-[11px] text-white/52">{getServiceModeCaption(mode)}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
-          {/* Payment methods */}
-          <PaymentCard business={business} />
+          <div className="hidden xl:block">
+            <PaymentCard business={business} />
+          </div>
         </div>
+      </div>
 
-        {/* Right sidebar: contact, social, facilities */}
-        <div className="space-y-4">
+      {showSidebar ? (
+        <div className={cn('space-y-4', sidebarClassName)}>
           <ContactCard
             business={business}
             copiedPhone={copiedPhone}
             onCopyPhone={onCopyPhone}
-            navigate={navigate!}
           />
 
-          {/* Facilities */}
-          {business.facilidades && business.facilidades.length > 0 && (
+          {business.facilidades && business.facilidades.length > 0 ? (
             <FacilitiesCard facilidades={business.facilidades} />
-          )}
+          ) : null}
         </div>
-      </motion.div>
+      ) : null}
+    </div>
+  );
+
+  if (embedded) {
+    return content;
+  }
+
+  return (
+    <section className="mx-auto mt-3.5 w-full max-w-[1400px] px-4 sm:px-6 xl:px-8 2xl:max-w-[1480px] 2xl:px-10">
+      {content}
     </section>
   );
 }

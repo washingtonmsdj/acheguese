@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase";
 import { buildSupabaseFunctionUrl } from "@/shared/config/publicSupabase";
+import { PrivacyRpcService } from "./PrivacyRpcService";
 
 export interface UserConsentRecord {
   id: string;
@@ -39,6 +40,15 @@ interface PrivacySettingsDbClient {
   from: (table: string) => {
     select: (_columns: string) => {
       eq: (column: string, value: string) => {
+        is: (
+          column: string,
+          value: null,
+        ) => {
+          order: (
+            column: string,
+            options: { ascending: boolean },
+          ) => Promise<QueryResult<ConsentRow[]>>;
+        };
         order: (
           column: string,
           options: { ascending: boolean },
@@ -61,6 +71,7 @@ export class PrivacySettingsService {
       .from("user_consents")
       .select("*")
       .eq("user_id", userId)
+      .is("revoked_at", null)
       .order("consent_type", { ascending: true });
 
     if (error) throw error;
@@ -93,16 +104,14 @@ export class PrivacySettingsService {
     granted: boolean;
     userAgent: string;
   }): Promise<void> {
-    const { error } = await this.db.rpc("record_consent", {
-      p_user_id: input.userId,
-      p_consent_type: input.consentType,
-      p_granted: input.granted,
-      p_ip_address: null,
-      p_user_agent: input.userAgent,
-      p_terms_version: "1.0",
-      p_privacy_version: "1.0",
+    if (!input.userId) throw new Error("Sessao nao encontrada");
+    await PrivacyRpcService.recordConsent({
+      consentType: input.consentType,
+      granted: input.granted,
+      userAgent: input.userAgent,
+      termsVersion: "1.0",
+      privacyVersion: "1.0",
     });
-    if (error) throw error;
   }
 
   static async cancelAccountDeletion(userId: string): Promise<void> {

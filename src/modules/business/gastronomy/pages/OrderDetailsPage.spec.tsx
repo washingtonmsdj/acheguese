@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import { HelmetProvider } from 'react-helmet-async';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import OrderDetailsPage from './OrderDetailsPage';
@@ -32,6 +33,9 @@ const mockedUseOrderDetails = vi.mocked(useOrderDetails);
 
 describe('OrderDetailsPage', () => {
   beforeEach(() => {
+    const preparingAt = new Date('2026-07-03T12:30:00.000Z').toISOString();
+    const outForDeliveryAt = new Date('2026-07-03T13:00:00.000Z').toISOString();
+
     mockedUseOrderDetails.mockReturnValue({
       order: {
         id: 'order-1',
@@ -68,9 +72,9 @@ describe('OrderDetailsPage', () => {
         estimated_delivery_time: null,
         scheduled_for: null,
         confirmed_at: null,
-        preparing_at: null,
+        preparing_at: preparingAt,
         ready_at: null,
-        out_for_delivery_at: null,
+        out_for_delivery_at: outForDeliveryAt,
         delivered_at: null,
         completed_at: null,
         cancelled_at: null,
@@ -104,14 +108,16 @@ describe('OrderDetailsPage', () => {
 
   it('renderiza evento financeiro no timeline com de/para e ator', () => {
     render(
-      <MemoryRouter initialEntries={['/perfil/empresas/business-1/gastronomia/pedidos/order-1']}>
-        <Routes>
-          <Route
-            path="/perfil/empresas/:businessId/gastronomia/pedidos/:orderId"
-            element={<OrderDetailsPage />}
-          />
-        </Routes>
-      </MemoryRouter>,
+      <HelmetProvider>
+        <MemoryRouter initialEntries={['/perfil/empresas/business-1/gastronomia/pedidos/order-1']}>
+          <Routes>
+            <Route
+              path="/perfil/empresas/:businessId/gastronomia/pedidos/:orderId"
+              element={<OrderDetailsPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </HelmetProvider>,
     );
 
     expect(screen.getByText('Linha do tempo')).toBeInTheDocument();
@@ -120,5 +126,7 @@ describe('OrderDetailsPage', () => {
     expect(
       screen.getByText('Pagamento confirmado pela operacao da loja'),
     ).toBeInTheDocument();
+    expect(screen.getByText('Em preparo')).toBeInTheDocument();
+    expect(screen.getByText('Saiu para entrega')).toBeInTheDocument();
   });
 });

@@ -113,7 +113,9 @@ export function useMenuItems(menuId: string, categoryId?: string) {
     isLoading,
     error,
     createItem: createMutation.mutate,
+    createItemAsync: createMutation.mutateAsync,
     updateItem: updateMutation.mutate,
+    updateItemAsync: updateMutation.mutateAsync,
     deleteItem: deleteMutation.mutate,
     toggleAvailability: toggleAvailabilityMutation.mutate,
     isCreating: createMutation.isPending,
@@ -142,6 +144,5 @@ export function useMenuItem(itemId: string | undefined) {
     error,
   };
 }
-
 
 

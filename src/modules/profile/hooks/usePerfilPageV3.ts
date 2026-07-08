@@ -132,7 +132,7 @@ export function useContaWorkspace() {
       return;
     }
 
-    const url = await BusinessUrlService.getCanonicalUrlWithResolvedCommunityAlias({
+    const url = BusinessUrlService.getCanonicalUrl({
       id: business.id,
       slug: business.slug,
       is_premium: business.is_premium,

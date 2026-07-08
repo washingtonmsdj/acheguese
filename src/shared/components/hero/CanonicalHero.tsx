@@ -152,12 +152,12 @@ export function CanonicalHero({
     : "pl-11 h-12 bg-card/80 backdrop-blur-md border-border/40 text-base rounded-2xl focus:ring-2 focus:ring-primary/40 shadow-lg placeholder:text-muted-foreground/60";
 
   const primaryButtonClass = isBanner
-    ? "h-11 px-5 rounded-xl font-semibold shadow-md gap-2 whitespace-nowrap"
-    : "h-12 px-6 rounded-2xl font-semibold shadow-lg gap-2 whitespace-nowrap";
+    ? "h-11 px-5 rounded-xl font-semibold shadow-md gap-2 whitespace-nowrap border-transparent !bg-[#0b5d56] !text-white hover:!bg-[#0a524c]"
+    : "h-12 px-6 rounded-2xl font-semibold shadow-lg gap-2 whitespace-nowrap border-transparent !bg-[#0b5d56] !text-white hover:!bg-[#0a524c]";
 
   const secondaryButtonClass = isBanner
-    ? "h-11 px-4 rounded-xl font-semibold gap-2 whitespace-nowrap border-border"
-    : "h-12 px-5 rounded-2xl font-semibold gap-2 whitespace-nowrap border-border";
+    ? "h-11 px-4 rounded-xl font-semibold gap-2 whitespace-nowrap border-border bg-background/90 text-foreground"
+    : "h-12 px-5 rounded-2xl font-semibold gap-2 whitespace-nowrap border-border bg-background/90 text-foreground";
 
   const handleSearchSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -256,6 +256,7 @@ export function CanonicalHero({
                         onClick={primaryCTA.onClick}
                         variant={primaryCTA.variant || "default"}
                         className={primaryButtonClass}
+                        style={{ backgroundColor: "#0b5d56", color: "#ffffff" }}
                       >
                         {primaryCTA.icon && <primaryCTA.icon className="h-4 w-4" />}
                         {primaryCTA.label}

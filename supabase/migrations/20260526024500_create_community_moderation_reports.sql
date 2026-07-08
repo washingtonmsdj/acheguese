@@ -147,7 +147,7 @@ CREATE POLICY community_reports_admin_delete
 CREATE OR REPLACE VIEW public.admin_pending_post_reports AS
 SELECT
   p.id,
-  COALESCE(p.content, p.texto, '') AS content,
+  COALESCE(p.content, '') AS content,
   p.type::TEXT AS type,
   COALESCE(p.images, '[]'::jsonb) AS images,
   p.author_profile_id,
@@ -205,12 +205,9 @@ LEFT JOIN LATERAL (
 ) previous_reports ON true
 WHERE r.status IN ('pending', 'under_review')
   AND p.is_published = true
-  AND p.is_hidden = false
-  AND p.is_removed = false
 GROUP BY
   p.id,
   p.content,
-  p.texto,
   p.type,
   p.images,
   p.author_profile_id,
@@ -229,7 +226,7 @@ SELECT
   COALESCE(author_profile.avatar_url, '') AS author_avatar,
   COALESCE(author_profile.pontos, 0) AS author_reputation,
   c.post_id,
-  COALESCE(p.content, p.texto, '') AS post_content,
+  COALESCE(p.content, '') AS post_content,
   COUNT(r.id)::INTEGER AS reports_count,
   CASE
     WHEN BOOL_OR(r.status = 'under_review') THEN 'under_review'
@@ -272,8 +269,6 @@ LEFT JOIN public.profiles author_profile
 LEFT JOIN public.profiles reporter_profile
   ON reporter_profile.id = r.reporter_profile_id
 WHERE r.status IN ('pending', 'under_review')
-  AND c.is_hidden = false
-  AND c.is_removed = false
 GROUP BY
   c.id,
   c.content,
@@ -281,7 +276,6 @@ GROUP BY
   c.post_id,
   c.created_at,
   p.content,
-  p.texto,
   author_profile.name,
   author_profile.avatar_url,
   author_profile.pontos;

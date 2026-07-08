@@ -6,7 +6,7 @@
  */
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Link, Navigate, useLocation, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   Bell,
@@ -57,10 +57,12 @@ import { useCityFeatured } from "@/core/city/hooks/useCityFeatured";
 import { useCityMetadata } from "@/core/city/hooks/useCityMetadata";
 import {
   LandingFeaturedService,
+  buildNeighborhoodStreamItems,
+  getNeighborhoodStreamMoreConfig,
   type FeaturedBusiness,
   type FeaturedClassified,
   type FeaturedService,
-} from "@/core/landing/services/LandingFeaturedService";
+} from "@/core/landing/services";
 import { classifiedUrlService } from "@/core/classifieds/services/ClassifiedUrlService";
 import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
 import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
@@ -88,15 +90,18 @@ import { useTerritorialContextOptional } from "@/core/routing/components/Territo
 import { useCommunityUrls } from "@/core/routing/hooks/useCommunityUrls";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { parsePublicTerritoryPath } from "@/core/routing/utils/publicTerritoryPath";
-import { buildCommunityScopedUrl } from "@/core/routing/utils/territoryUrls";
 import { formatCategory, formatMetric, formatPrice } from "./CidadeLanding.constants";
-import { formatRelativeTime, getBusinessPublicUrl, getTextPreview, withQueryParams } from "./CidadeLanding.utils";
+import {
+  buildCityModuleUrls,
+  type CityModuleUrls,
+  getBusinessPublicUrl,
+  withQueryParams,
+} from "./CidadeLanding.utils";
 import {
   NeighborhoodStream,
   type NeighborhoodCommunityTab,
   type NeighborhoodCommunityTabId,
 } from "./CidadeLanding.neighborhood-stream";
-import { buildNeighborhoodStreamItems, getNeighborhoodStreamMoreConfig } from "./CidadeLanding.neighborhood-stream-model";
 import {
   NeighborhoodAlertsPanel,
   NeighborhoodGateCard,
@@ -119,20 +124,6 @@ type WeatherBadgeState = {
   label: string;
   ariaLabel: string;
   isLoading: boolean;
-};
-
-type CityModuleUrls = {
-  home: string;
-  community: string;
-  feed: string;
-  business: string;
-  gastronomy: string;
-  services: string;
-  classifieds: string;
-  map: string;
-  search: string;
-  publish: string;
-  touristPoints: string;
 };
 
 type NavItem = {
@@ -1246,6 +1237,7 @@ function NeighborhoodLandingContent({
   authHref,
   authLabel,
   isAuthenticated,
+  isCommunityMode,
   accessStatus,
   residenceLoading,
   isLoading,
@@ -1275,6 +1267,7 @@ function NeighborhoodLandingContent({
   authHref: string;
   authLabel: string;
   isAuthenticated: boolean;
+  isCommunityMode: boolean;
   accessStatus: NeighborhoodAccessStatus;
   residenceLoading: boolean;
   isLoading: boolean;
@@ -1304,7 +1297,13 @@ function NeighborhoodLandingContent({
   const residenceHref = "/conta/enderecos";
   const verifyHref = accessStatus === "visitor" ? withQueryParams("/login", { redirect: residenceHref }) : residenceHref;
   const interactionHref = canInteract ? urls.publish : accessStatus === "visitor" ? publishLoginHref : verifyHref;
-  const enterHref = accessStatus === "verified" ? urls.feed : accessStatus === "visitor" ? enterLoginHref : verifyHref;
+  const enterHref = isCommunityMode
+    ? accessStatus === "verified"
+      ? urls.feed
+      : accessStatus === "visitor"
+        ? enterLoginHref
+        : verifyHref
+    : urls.community;
   const gateActionHref = accessStatus === "verified" ? urls.publish : accessStatus === "visitor" ? enterLoginHref : verifyHref;
   const lockedActionHref = accessStatus === "visitor" ? enterLoginHref : verifyHref;
   const alertPosts = feedPosts.filter((post) => post.type === "alerta");
@@ -1360,6 +1359,7 @@ function NeighborhoodLandingContent({
         enterHref={enterHref}
         interactionHref={interactionHref}
         canInteract={canInteract}
+        isCommunityMode={isCommunityMode}
       />
 
       <section className="neighborhood-community-shell" aria-label={`Meu bairro em ${territoryName}`}>
@@ -1481,43 +1481,30 @@ export default function CidadeLandingPage() {
   const cityHomeHref = `/${state}/${city}`;
 
   const cityModuleUrls = useMemo<CityModuleUrls>(
-    () => ({
-      home: cityPath,
-      community: communityUrls.feed,
-      feed: buildCommunityScopedUrl(communityUrls.feed, "feed"),
-      business: buildAppModulePath(APP_MODULE_SLUGS.business, cityPath),
-      gastronomy: buildAppModulePath(APP_MODULE_SLUGS.gastronomy, cityPath),
-      services: buildAppModulePath(APP_MODULE_SLUGS.services, cityPath),
-      classifieds: buildAppModulePath(APP_MODULE_SLUGS.classifieds, cityPath),
-      map: buildAppModulePath(APP_MODULE_SLUGS.map, cityPath),
-      search: buildAppModulePath(APP_MODULE_SLUGS.search, cityPath),
-      publish: withQueryParams(buildCommunityScopedUrl(communityUrls.feed, "feed"), { action: "publicar" }),
-      touristPoints: buildAppModulePath(APP_MODULE_SLUGS.touristPoints, cityPath),
-    }),
+    () =>
+      buildCityModuleUrls({
+        cityPath,
+        communityBaseUrl: communityUrls.feed,
+        communityScoped: false,
+      }),
     [cityPath, communityUrls.feed],
   );
 
   const neighborhoodCommunityUrls = useMemo<CityModuleUrls>(
-    () => ({
-      home: communityUrls.feed,
-      community: communityUrls.feed,
-      feed: buildCommunityScopedUrl(communityUrls.feed, "feed"),
-      business: buildCommunityScopedUrl(communityUrls.feed, APP_MODULE_SLUGS.business),
-      gastronomy: buildCommunityScopedUrl(communityUrls.feed, APP_MODULE_SLUGS.gastronomy),
-      services: buildCommunityScopedUrl(communityUrls.feed, APP_MODULE_SLUGS.services),
-      classifieds: buildCommunityScopedUrl(communityUrls.feed, APP_MODULE_SLUGS.classifieds),
-      map: buildCommunityScopedUrl(communityUrls.feed, APP_MODULE_SLUGS.map),
-      search: buildAppModulePath(APP_MODULE_SLUGS.search, cityPath),
-      publish: withQueryParams(buildCommunityScopedUrl(communityUrls.feed, "feed"), { action: "publicar" }),
-      touristPoints: buildCommunityScopedUrl(communityUrls.feed, APP_MODULE_SLUGS.map),
-    }),
+    () =>
+      buildCityModuleUrls({
+        cityPath,
+        communityBaseUrl: communityUrls.feed,
+        communityScoped: true,
+      }),
     [cityPath, communityUrls.feed],
   );
 
   const isNeighborhoodLanding =
     routeResolved?.kind === "group" ||
     (routeResolved?.kind === "location" && routeResolved.location.type !== LocationType.CITY);
-  const activeModuleUrls = isNeighborhoodLanding ? neighborhoodCommunityUrls : cityModuleUrls;
+  const isCommunityRoute = location.pathname.startsWith(`/${APP_MODULE_SLUGS.community}/`);
+  const activeModuleUrls = isNeighborhoodLanding && isCommunityRoute ? neighborhoodCommunityUrls : cityModuleUrls;
 
   const navItems = useMemo<NavItem[]>(() => {
     const items: NavItem[] = [
@@ -1719,20 +1706,10 @@ export default function CidadeLandingPage() {
     );
   }
 
-  if (
-    isNeighborhoodLanding &&
-    routeResolved &&
-    territorialContext?.communityBaseUrl &&
-    territorialContext.communityBaseUrl !== territorialContext.baseUrl &&
-    !location.pathname.startsWith(territorialContext.communityBaseUrl)
-  ) {
-    return <Navigate to={`${territorialContext.communityBaseUrl}${location.search}${location.hash}`} replace />;
-  }
-
   if (isNeighborhoodLanding && routeResolved) {
     return (
       <NeighborhoodLandingContent
-        urls={neighborhoodCommunityUrls}
+        urls={activeModuleUrls}
         communityUrls={communityUrls}
         cityLabel={territoryLabel}
         cityHref={cityHomeHref}
@@ -1757,6 +1734,7 @@ export default function CidadeLandingPage() {
         authHref={user ? "/conta" : "/login"}
         authLabel={user ? "Conta" : "Entrar"}
         isAuthenticated={Boolean(user)}
+        isCommunityMode={isCommunityRoute}
         accessStatus={neighborhoodAccessStatus}
         residenceLoading={residenceLoading}
         isLoading={polygonLoading || featuredLoading || moduleTerritory.isLoading}

@@ -144,13 +144,14 @@ describe('toggleAnswerLike - usa question_answer_likes', () => {
   });
 });
 
-describe('markBestAnswer - usa RPC mark_best_answer', () => {
-  it('chama RPC mark_best_answer', () => {
+describe('markBestAnswer - usa broker community-rpc', () => {
+  it('chama CommunityRpcService.markBestAnswer', () => {
     const content = read(QA_SERVICE);
-    expect(content).toMatch(/rpc\("mark_best_answer"/);
+    expect(content).toMatch(/CommunityRpcService\.markBestAnswer/);
+    expect(content).not.toMatch(/rpc\("mark_best_answer"/);
   });
 
-  it('migration canonica recria RPC apontando para question_answers', () => {
+  it('migration canonica preserva helper interno apontando para question_answers', () => {
     const migration = findMigration([
       /create\s+or\s+replace\s+function\s+mark_best_answer/i,
       /update\s+question_answers\s+set\s+is_best_answer/i,

@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
+import { MobilityRpcService } from "./MobilityRpcService";
 
 export interface RideStateAuditInput {
   rideId: string;
@@ -25,18 +26,6 @@ export interface RideDispatchAttemptUpdateInput {
 
 type ErrorLike = { message?: string | null } | null;
 
-type RideDispatchAuditUpdateRow = {
-  status?: string;
-  responded_at?: string;
-};
-
-type MobilityAuditRpcClient = {
-  rpc<T>(fn: string, params?: Record<string, unknown>): Promise<{
-    data: T | null;
-    error: ErrorLike;
-  }>;
-};
-
 type MobilityAuditDbClient = {
   from(table: "ride_state_audit"): {
     insert(values: {
@@ -48,29 +37,8 @@ type MobilityAuditDbClient = {
       created_at: string;
     }): Promise<{ error: ErrorLike }>;
   };
-  from(table: "ride_dispatch_audit"): {
-    insert(values: {
-      ride_id: string;
-      driver_profile_id: string;
-      attempt_number: number;
-      offered_at: string;
-      timeout_at: string;
-      status: string;
-      created_at: string;
-    }): Promise<{ error: ErrorLike }>;
-    update(values: RideDispatchAuditUpdateRow): {
-      eq(column: "ride_id", value: string): {
-        eq(column: "driver_profile_id", value: string): {
-          order(column: "created_at", options: { ascending: boolean }): {
-            limit(count: number): Promise<{ error: ErrorLike }>;
-          };
-        };
-      };
-    };
-  };
 };
 
-const mobilityAuditRpc = supabase as unknown as MobilityAuditRpcClient;
 const mobilityAuditDb = supabase as unknown as MobilityAuditDbClient;
 
 export class MobilityAuditService {
@@ -93,17 +61,7 @@ export class MobilityAuditService {
 
   async logDispatchAttempt(input: RideDispatchAttemptInput): Promise<void> {
     try {
-      const { error } = await mobilityAuditDb.from("ride_dispatch_audit").insert({
-        ride_id: input.rideId,
-        driver_profile_id: input.driverProfileId,
-        attempt_number: input.attemptNumber,
-        offered_at: input.offeredAt,
-        timeout_at: input.timeoutAt,
-        status: input.status,
-        created_at: new Date().toISOString(),
-      });
-
-      if (error) throw error;
+      await MobilityRpcService.logDispatchAttempt(input);
     } catch (error) {
       logger.error("MobilityAuditService.logDispatchAttempt", error as Error, input);
     }
@@ -115,21 +73,8 @@ export class MobilityAuditService {
     updates: RideDispatchAttemptUpdateInput,
   ): Promise<void> {
     try {
-      const payload: RideDispatchAuditUpdateRow = {};
-      if (updates.status !== undefined) payload.status = updates.status;
-      if (updates.respondedAt !== undefined) payload.responded_at = updates.respondedAt;
-
-      if (Object.keys(payload).length === 0) return;
-
-      const { error } = await mobilityAuditDb
-        .from("ride_dispatch_audit")
-        .update(payload)
-        .eq("ride_id", rideId)
-        .eq("driver_profile_id", driverProfileId)
-        .order("created_at", { ascending: false })
-        .limit(1);
-
-      if (error) throw error;
+      if (updates.status === undefined && updates.respondedAt === undefined) return;
+      await MobilityRpcService.updateLatestDispatchAttempt(rideId, driverProfileId, updates);
     } catch (error) {
       logger.error("MobilityAuditService.updateLatestDispatchAttempt", error as Error, {
         rideId,
@@ -141,11 +86,7 @@ export class MobilityAuditService {
 
   async cancelPendingOffers(rideId: string): Promise<void> {
     try {
-      const { error } = await mobilityAuditRpc.rpc("cancel_pending_ride_offers", {
-        p_ride_id: rideId,
-      });
-
-      if (error) throw error;
+      await MobilityRpcService.cancelPendingOffers(rideId);
     } catch (error) {
       logger.error("MobilityAuditService.cancelPendingOffers", error as Error, { rideId });
       throw error;

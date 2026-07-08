@@ -3,20 +3,30 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { MapPin, Send, Loader2 } from "lucide-react";
-import type { MentionResult } from "@/core/community/qa-types";
+
+export interface AnswerMentionResult {
+  id: string;
+  name: string;
+  type: "professional" | "business";
+  category?: string;
+  service?: string;
+  rating?: number;
+  slug?: string;
+  neighborhood?: string;
+}
 
 interface AnswerFormProps {
   answerText: string;
   submitting: boolean;
   showMention: boolean;
   mentionSearch: string;
-  mentionResults: MentionResult[];
+  mentionResults: AnswerMentionResult[];
   selectedPro: string | null;
   selectedBiz: string | null;
   onAnswerTextChange: (text: string) => void;
   onToggleMention: () => void;
   onMentionSearchChange: (query: string) => void;
-  onSelectMention: (result: MentionResult) => void;
+  onSelectMention: (result: AnswerMentionResult) => void;
   onClearMention: () => void;
   onSubmit: () => void;
 }

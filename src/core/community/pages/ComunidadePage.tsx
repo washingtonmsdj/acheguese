@@ -32,14 +32,16 @@ import { toast } from "sonner";
 import { TooltipProvider } from "@/shared/components/ui/tooltip";
 import { Button } from "@/shared/components/ui/button";
 import { ConfirmActionDialog } from "@/shared/components/ConfirmActionDialog";
-import { useIsAdmin } from "@/core/auth/hooks/useIsAdmin";
 import { useAppUrls } from "@/core/routing/hooks";
 import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
-import { useTerritoryFilter } from "@/core/location/hooks/useTerritoryFilter";
-import { useCommunityRollout } from "@/core/community/hooks/useCommunityRollout";
+import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
 import { useCommunityFeedSimple } from "@/core/community/hooks/feed/useCommunityFeed";
-import { communityRolloutService } from "@/core/community/services";
 import { residenceService } from "@/core/residence/services/ResidenceService";
+import {
+  CommunityPortalGate,
+  useCommunityAccess,
+  type CommunityAction,
+} from "@/core/community/access";
 import {
   COMMUNITY_FEED_HEADER_FILTERS,
   resolveCommunityFeedChannelFromTab,
@@ -67,7 +69,7 @@ import { buildCommunityTabUrlFromPath } from "@/core/routing/utils/territoryUrls
 import type { TerritorialFeedChannel } from "@/core/community/hooks/feed/territorialFeedEngine";
 import { getPublicPostPreview } from "@/core/posts/utils/publicPostContent";
 import { useFriendlyModuleUrls } from "@/core/routing/hooks/useFriendlyModuleUrls";
-import { withQueryParams } from "@/app/pages/CidadeLanding.utils";
+import { withQueryParams } from "@/core/landing/utils/landingPresentation";
 
 const GruposPage = lazy(() => import("./GruposPage"));
 
@@ -453,9 +455,36 @@ function PublicTerritorialFeed({
 
 interface ComunidadePageProps {
   resolved?: ResolvedTerritory;
+  activeMemberIds?: string[];
 }
 
-export default function ComunidadePage({ resolved }: ComunidadePageProps) {
+function getBlockedCommunityActionMessage(action: CommunityAction): string {
+  switch (action) {
+    case "comment":
+      return "Comentar exige residencia verificada neste territorio.";
+    case "react":
+      return "Interagir no feed exige residencia cadastrada neste territorio.";
+    case "save":
+      return "Salvar publicacoes exige residencia cadastrada neste territorio.";
+    case "send_message":
+      return "Enviar mensagem exige residencia verificada neste territorio.";
+    case "create_issue":
+      return "Registrar problema local exige residencia verificada neste territorio.";
+    case "create_alert":
+      return "Criar alerta exige residencia verificada neste territorio.";
+    case "create_post":
+      return "Publicar na comunidade exige residencia verificada neste territorio.";
+    case "join_group":
+    case "create_group":
+      return "Participar de grupos exige residencia verificada neste territorio.";
+    case "report":
+      return "Denunciar exige login e perfil ativo.";
+    default:
+      return "Esta acao exige acesso comunitario valido.";
+  }
+}
+
+export default function ComunidadePage({ resolved, activeMemberIds }: ComunidadePageProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -471,24 +500,12 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
     resolveCommunityFeedChannelFromTab(requestedTab);
   const [showBanner, setShowBanner] = React.useState(true);
   const appUrls = useAppUrls(resolved); // SSOT URLs com contexto territorial
-  const territoryFilter = useTerritoryFilter(resolved);
+  const moduleTerritory = useModuleTerritoryFilter({ routeResolved: resolved, activeMemberIds });
+  const territoryFilter = moduleTerritory.territoryFilter;
 
   // SSOT: guarda de acesso por UUID canônico, não por string de perfil
   const { homeDistrict, homeCity, loading: territoryLoading } = useUserTerritory();
-  const { isAdmin, loading: adminLoading } = useIsAdmin();
-  const { isLoading: rolloutLoading } = useCommunityRollout(resolved);
-  const {
-    data: isHomeDistrictApproved = false,
-    isLoading: homeDistrictRolloutLoading,
-  } = useQuery({
-    queryKey: ["community-rollout", "district", homeDistrict?.id],
-    queryFn: async () => {
-      if (!homeDistrict?.id) return false;
-      return communityRolloutService.isCommunityActiveForLocation(homeDistrict.id);
-    },
-    enabled: !!homeDistrict?.id,
-    staleTime: 5 * 60 * 1000,
-  });
+  const communityAccess = useCommunityAccess({ resolved: resolved ?? null, activeMemberIds });
   const setTab = (tab: CommunityTab) => {
     const canonicalPath = buildCommunityTabUrlFromPath(location.pathname, tab);
     if (canonicalPath) {
@@ -618,19 +635,113 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
     navigate(loginHref);
   }, [loginHref, navigate]);
 
-  const hasApprovedCommunityAccess = isAdmin || Boolean(homeDistrict && isHomeDistrictApproved);
+  const resolveAccessActionHref = useCallback(() => {
+    if (communityAccess.primaryAction === "login") return loginHref;
+    if (
+      communityAccess.primaryAction === "add_address" ||
+      communityAccess.primaryAction === "verify_address"
+    ) {
+      return appUrls.profile.addresses;
+    }
+    if (communityAccess.primaryAction === "create_profile") return appUrls.profile.manage;
+    return appUrls.community.feed;
+  }, [
+    appUrls.community.feed,
+    appUrls.profile.addresses,
+    appUrls.profile.manage,
+    communityAccess.primaryAction,
+    loginHref,
+  ]);
+
+  const handleBlockedCommunityAction = useCallback(
+    (action: CommunityAction) => {
+      toast.info(getBlockedCommunityActionMessage(action));
+      navigate(resolveAccessActionHref());
+    },
+    [navigate, resolveAccessActionHref],
+  );
+
+  const handleOpenCreatePostWithAccess = useCallback(
+    (defaultType?: Parameters<typeof handleOpenCreatePost>[0]) => {
+      if (!communityAccess.can.create_post) {
+        handleBlockedCommunityAction("create_post");
+        return;
+      }
+
+      handleOpenCreatePost(defaultType);
+    },
+    [
+      communityAccess.can.create_post,
+      handleBlockedCommunityAction,
+      handleOpenCreatePost,
+    ],
+  );
+
+  const handleCommentClickWithAccess = useCallback(
+    (postId: string, authorProfileId?: string, authorName?: string) => {
+      if (!communityAccess.can.comment) {
+        handleBlockedCommunityAction("comment");
+        return;
+      }
+
+      handleCommentClick(postId, authorProfileId, authorName);
+    },
+    [communityAccess.can.comment, handleBlockedCommunityAction, handleCommentClick],
+  );
+
+  const handleLikePostWithAccess = useCallback(
+    (postId: string) => {
+      if (!communityAccess.can.react) {
+        handleBlockedCommunityAction("react");
+        return;
+      }
+
+      likePost(postId);
+    },
+    [communityAccess.can.react, handleBlockedCommunityAction, likePost],
+  );
+
+  const handleSavePostWithAccess = useCallback(
+    (postId: string) => {
+      if (!communityAccess.can.save) {
+        handleBlockedCommunityAction("save");
+        return;
+      }
+
+      savePost(postId);
+    },
+    [communityAccess.can.save, handleBlockedCommunityAction, savePost],
+  );
+
+  const handleReportPostWithAccess = useCallback(
+    (postId: string) => {
+      if (!communityAccess.can.report) {
+        handleBlockedCommunityAction("report");
+        return;
+      }
+
+      handleReportPost(postId);
+    },
+    [communityAccess.can.report, handleBlockedCommunityAction, handleReportPost],
+  );
 
   React.useEffect(() => {
     if (searchParams.get("action") !== "publicar") return;
-    if (!profile || !hasApprovedCommunityAccess) return;
+    if (!profile || !communityAccess.can.create_post) return;
 
-    handleOpenCreatePost();
+    handleOpenCreatePostWithAccess();
     setSearchParams((previous) => {
       const next = new URLSearchParams(previous);
       next.delete("action");
       return next;
     }, { replace: true });
-  }, [handleOpenCreatePost, hasApprovedCommunityAccess, profile, searchParams, setSearchParams]);
+  }, [
+    communityAccess.can.create_post,
+    handleOpenCreatePostWithAccess,
+    profile,
+    searchParams,
+    setSearchParams,
+  ]);
 
   if (!profile && resolved && activeTab === "feed") {
     return (
@@ -676,7 +787,7 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
   }
 
   // Aguardar resolução do território antes de bloquear
-  if (territoryLoading || adminLoading || rolloutLoading || homeDistrictRolloutLoading) {
+  if (territoryLoading || communityAccess.isLoading) {
     return (
       <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#12181B] flex items-center justify-center">
         <div className="w-6 h-6 border-2 border-teal-400 border-t-transparent rounded-full animate-spin" />
@@ -686,45 +797,18 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
 
   // SSOT: bloquear por ausência de user_residence (location_id), não por string de perfil
   // Admin e moderadores tem acesso mesmo sem bairro cadastrado
-  if (!homeDistrict && !isAdmin) {
+  if (!communityAccess.can.view_member_feed) {
     return (
       <TooltipProvider>
-        <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#12181B] flex items-center justify-center" role="main">
-          <div className="text-center p-8 max-w-md">
-            <Users className="h-16 w-16 text-amber-400 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-white mb-4">
-              {COMMUNITY_PAGE_COPY.setupDistrictTitle}
-            </h2>
-            <p className="text-gray-400 mb-6">
-              {COMMUNITY_PAGE_COPY.setupDistrictDescription}
-            </p>
-            <Button onClick={() => navigate(appUrls.profile.addresses)} className="bg-teal-500 hover:bg-teal-400">
-              {COMMUNITY_PAGE_COPY.setupDistrictAction}
-            </Button>
-          </div>
-        </div>
-      </TooltipProvider>
-    );
-  }
-
-  if (!hasApprovedCommunityAccess) {
-    return (
-      <TooltipProvider>
-        <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#12181B] flex items-center justify-center" role="main">
-          <div className="text-center p-8 max-w-md">
-            <Users className="h-16 w-16 text-amber-400 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-white mb-4">{COMMUNITY_PAGE_COPY.rolloutBlockedTitle}</h2>
-            <p className="text-gray-400 mb-6">
-              {COMMUNITY_PAGE_COPY.rolloutBlockedDescription}
-            </p>
-          </div>
+        <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#12181B] text-white" role="main">
+          <CommunityPortalGate resolved={resolved ?? null} action="view_member_feed" />
         </div>
       </TooltipProvider>
     );
   }
 
   // Aviso se não for verificado (mas permite acesso)
-  const showVerificationBanner = !profile?.verified;
+  const showVerificationBanner = !communityAccess.isResidenceVerified;
 
   return (
     <TooltipProvider>
@@ -758,7 +842,11 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
                 <div className="w-6 h-6 border-2 border-teal-400 border-t-transparent rounded-full animate-spin" />
               </div>
             }>
-              {activeTab === "grupos" && <GruposPage />}
+              {activeTab === "grupos" && (
+                <CommunityPortalGate resolved={resolved ?? null} action="join_group">
+                  <GruposPage />
+                </CommunityPortalGate>
+              )}
             </Suspense>
           )}
 
@@ -784,15 +872,21 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
               <CommunityFeed
                 currentUserId={profile?.id}
                 onPostClick={handlePostClick}
-                onCommentClick={handleCommentClick}
+                onCommentClick={handleCommentClickWithAccess}
                 onTagClick={handleTagClick}
-                onOpenCreatePost={handleOpenCreatePost}
+                onOpenCreatePost={handleOpenCreatePostWithAccess}
                 onDeletePost={handleDeletePost}
                 onEditPost={handleEditPost}
                 locationScope={immediateFilters.locationScope}
                 territoryFilter={communityTerritoryFilter}
                 initialHeaderFilter={feedHeaderFilter}
                 onHeaderFilterChange={handleFeedHeaderFilterChange}
+                canReact={communityAccess.can.react}
+                canComment={communityAccess.can.comment}
+                canSave={communityAccess.can.save}
+                canReport={communityAccess.can.report}
+                canSendMessage={communityAccess.can.send_message}
+                onBlockedAction={handleBlockedCommunityAction}
               />
 
             </main>
@@ -820,6 +914,12 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
           initialContent={createPostModalData && "initialContent" in createPostModalData ? createPostModalData.initialContent : undefined}
           initialType={createPostModalData && "initialType" in createPostModalData ? createPostModalData.initialType : undefined}
           initialReach={createPostModalData && "initialReach" in createPostModalData ? createPostModalData.initialReach : undefined}
+          canCreatePost={communityAccess.can.create_post}
+          canCreateAlert={communityAccess.can.create_alert}
+          canCreateIssue={communityAccess.can.create_issue}
+          blockedPostMessage={getBlockedCommunityActionMessage("create_post")}
+          blockedAlertMessage={getBlockedCommunityActionMessage("create_alert")}
+          blockedIssueMessage={getBlockedCommunityActionMessage("create_issue")}
         />
 
         {/* Modais de Detalhes e Comentarios */}
@@ -831,11 +931,13 @@ export default function ComunidadePage({ resolved }: ComunidadePageProps) {
           profileId={profile?.id}
           onCloseModal={handleCloseModal}
           onClosePostDetail={handleClosePostDetail}
-          onLike={likePost}
-          onSave={savePost}
+          onLike={handleLikePostWithAccess}
+          onSave={handleSavePostWithAccess}
           onShare={sharePost}
-          onReport={handleReportPost}
+          onReport={handleReportPostWithAccess}
           onTagClick={handleTagClick}
+          canComment={communityAccess.can.comment}
+          commentBlockedMessage={getBlockedCommunityActionMessage("comment")}
         />
 
         <ConfirmActionDialog

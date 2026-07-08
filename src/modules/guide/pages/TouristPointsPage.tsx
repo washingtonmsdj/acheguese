@@ -20,7 +20,7 @@ import { motion } from 'framer-motion';
 import touristHeroBg from '@/assets/tourist-points-hero-bg.jpg';
 import { CanonicalHero } from '@/shared/components/hero/CanonicalHero';
 import { useTerritorialContext } from '@/core/routing/components/TerritorialLayout';
-import { useTerritoryFilter } from '@/core/location/hooks/useTerritoryFilter';
+import { useModuleTerritoryFilter } from '@/core/location';
 import { useTouristPoints } from '../hooks/useTouristPoints';
 import { useGuideUrls, buildTouristPointDetailUrl } from '../hooks/useGuideUrls';
 import { TouristPointDiscoveryCard } from '../components/TouristPointDiscoveryCard';
@@ -112,8 +112,9 @@ const fadeIn = {
 // ============================================================================
 
 export default function TouristPointsPage() {
-  const { resolved, baseUrl, activeMemberIds } = useTerritorialContext();
-  const filter = useTerritoryFilter(resolved, activeMemberIds);
+  const { resolved, baseUrl } = useTerritorialContext();
+  const moduleTerritory = useModuleTerritoryFilter({ routeResolved: resolved });
+  const filter = moduleTerritory.territoryFilter;
   const { data: realPoints = [], isLoading: realLoading } = useTouristPoints(filter);
   const guideUrls = useGuideUrls(resolved);
 

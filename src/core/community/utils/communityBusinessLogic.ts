@@ -1,32 +1,19 @@
 /**
- * Lógica de negócio específica da comunidade
+ * Logica de negocio especifica da comunidade.
  *
- * Funções que dependem de services e tipos de domínio
+ * Funcoes que dependem de services e tipos de dominio.
  */
 
-import { logger } from "@/shared/utils/logger";
-import { NotificationService } from "@/core/notifications/services/NotificationService";
-import type {
-  CreateNotificationInput,
-} from "@/core/notifications/services/NotificationService";
-import { CommentService } from "@/core/comments/services";
-import { postService } from "@/core/posts/services";
 import { AuthorizationEngine } from "@/core/authorization/services/AuthorizationEngine";
-import { profileService } from "@/core/profiles/services/ProfileService";
-import type { Post } from "@/core/posts/types";
-
-type PostOwnershipShape = Pick<Post, "author_profile_id">;
-
-function getPostOwnerProfileId(post: PostOwnershipShape | null): string | null {
-  if (!post) return null;
-  return post.author_profile_id ?? null;
-}
+import { CommunityNotificationBrokerService } from "@/core/notifications/services";
+import { postService } from "@/core/posts/services";
+import { logger } from "@/shared/utils/logger";
 
 /**
- * Verificar se perfil pode criar post (rate limit + permissões)
+ * Verificar se perfil pode criar post (rate limit + permissoes).
  *
- * - Máximo 5 posts por dia por perfil
- * - Verificação de permissões via AuthorizationEngine
+ * - Maximo 5 posts por dia por perfil.
+ * - Verificacao de permissoes via AuthorizationEngine.
  */
 export async function checkPostRateLimit(
   profileId: string,
@@ -47,7 +34,7 @@ export async function checkPostRateLimit(
       canPost: false,
       postsToday: 0,
       limit: 5,
-      reason: "Sem permissão para postar",
+      reason: "Sem permissao para postar",
     };
   }
 
@@ -71,10 +58,10 @@ export async function checkPostRateLimit(
 }
 
 /**
- * Verificar se perfil pode comentar (rate limit + permissões)
+ * Verificar se perfil pode comentar (rate limit + permissoes).
  *
- * - Máximo 10 comentários por hora
- * - Verificação de permissões via AuthorizationEngine
+ * - Maximo 10 comentarios por hora.
+ * - Verificacao de permissoes via AuthorizationEngine.
  */
 export async function checkCommentRateLimit(
   profileId: string,
@@ -95,7 +82,7 @@ export async function checkCommentRateLimit(
       canComment: false,
       commentsThisHour: 0,
       limit: 10,
-      reason: "Sem permissão para comentar",
+      reason: "Sem permissao para comentar",
     };
   }
 
@@ -107,42 +94,27 @@ export async function checkCommentRateLimit(
 }
 
 /**
- * Criar notificação quando alguém comenta em um post
+ * Criar notificacao quando alguem comenta em um post.
+ *
+ * O broker server-side exige o commentId real para validar o evento no banco.
  */
 export async function createCommentNotification(
   postId: string,
   actorId: string,
-  commentContent: string,
+  _commentContent: string,
   _supabaseClient?: unknown,
+  commentId?: string,
 ): Promise<void> {
   try {
-    const post = await postService.getPostById(postId);
-    if (!post) {
-      logger.error("Post not found for notification", null, { postId });
+    if (!commentId) {
+      logger.warn("Skipped comment notification without validated commentId", {
+        postId,
+        actorId,
+      });
       return;
     }
 
-    const postOwnerProfileId = getPostOwnerProfileId(post);
-    if (!postOwnerProfileId || postOwnerProfileId === actorId) {
-      return;
-    }
-
-    const actor = await profileService.getProfileById(actorId);
-
-    await NotificationService.createNotification({
-      user_id: postOwnerProfileId,
-      type: "info" satisfies CreateNotificationInput["type"],
-      category: "social",
-      title: "Novo comentário",
-      message: `${actor?.name || "Alguém"} comentou no seu post`,
-      metadata: {
-        post_id: postId,
-        comment_id: "",
-        actor_id: actorId,
-        actor_name: actor?.name || "Usuário",
-        content_preview: commentContent.substring(0, 100),
-      },
-    });
+    await CommunityNotificationBrokerService.notifyPostComment(postId, commentId, actorId);
   } catch (error) {
     logger.error("Error in createCommentNotification", error as Error, {
       postId,
@@ -152,44 +124,34 @@ export async function createCommentNotification(
 }
 
 /**
- * Criar notificação quando alguém responde um comentário
+ * Criar notificacao quando alguem responde um comentario.
+ *
+ * O broker server-side exige o replyCommentId real para validar o evento.
  */
 export async function createReplyNotification(
   postId: string,
   parentCommentId: string,
   actorId: string,
-  replyContent: string,
+  _replyContent: string,
   _supabaseClient?: unknown,
+  replyCommentId?: string,
 ): Promise<void> {
   try {
-    const parentComment = await CommentService.getCommentById(parentCommentId);
-    if (!parentComment) {
-      logger.warn("Parent comment not found for reply notification", {
+    if (!replyCommentId) {
+      logger.warn("Skipped reply notification without validated replyCommentId", {
         parentCommentId,
         postId,
+        actorId,
       });
       return;
     }
 
-    if (parentComment.author_profile_id === actorId) {
-      return;
-    }
-
-    const actor = await profileService.getProfileById(actorId);
-    await NotificationService.createNotification({
-      user_id: parentComment.author_profile_id,
-      type: "info" satisfies CreateNotificationInput["type"],
-      category: "social",
-      title: "Nova resposta no comentário",
-      message: `${actor?.name || "Alguém"} respondeu seu comentário`,
-      metadata: {
-        post_id: postId,
-        parent_comment_id: parentCommentId,
-        actor_id: actorId,
-        actor_name: actor?.name || "Usuário",
-        content_preview: replyContent.substring(0, 100),
-      },
-    });
+    await CommunityNotificationBrokerService.notifyCommentReply(
+      postId,
+      parentCommentId,
+      replyCommentId,
+      actorId,
+    );
   } catch (error) {
     logger.error("Error in createReplyNotification", error as Error, {
       postId,
@@ -200,7 +162,7 @@ export async function createReplyNotification(
 }
 
 /**
- * Criar notificação quando alguém curte um post
+ * Criar notificacao quando alguem curte um post.
  */
 export async function createLikeNotification(
   postId: string,
@@ -208,32 +170,7 @@ export async function createLikeNotification(
   _supabaseClient?: unknown,
 ): Promise<void> {
   try {
-    const post = await postService.getPostById(postId);
-    if (!post) {
-      logger.error("Post not found for like notification", null, { postId });
-      return;
-    }
-
-    const postOwnerProfileId = getPostOwnerProfileId(post);
-    if (!postOwnerProfileId || postOwnerProfileId === actorId) {
-      return;
-    }
-
-    const actor = await profileService.getProfileById(actorId);
-
-    await NotificationService.createNotification({
-      user_id: postOwnerProfileId,
-      type: "info" satisfies CreateNotificationInput["type"],
-      category: "social",
-      title: "Nova curtida",
-      message: `${actor?.name || "Alguém"} curtiu seu post`,
-      metadata: {
-        post_id: postId,
-        actor_id: actorId,
-        actor_name: actor?.name || "Usuário",
-        actor_avatar: actor?.avatar_url,
-      },
-    });
+    await CommunityNotificationBrokerService.notifyPostLike(postId, actorId);
   } catch (error) {
     logger.error("Error in createLikeNotification", error as Error, {
       postId,
@@ -243,7 +180,10 @@ export async function createLikeNotification(
 }
 
 /**
- * Criar notificações para seguidores de um post quando há novo comentário
+ * Criar notificacoes para seguidores de um post quando ha novo comentario.
+ *
+ * O SSOT remoto atual nao possui `followed_posts`; manter envio server-side
+ * fechado ate resolver o modelo canonico de follow de posts.
  */
 export async function createFollowedPostNotifications(
   postId: string,
@@ -251,43 +191,18 @@ export async function createFollowedPostNotifications(
   commentContent: string,
   _supabaseClient?: unknown,
 ): Promise<void> {
-  try {
-    const followerIds = await postService.getFollowedPostUserIds(postId);
-    const actor = await profileService.getProfileById(actorId);
-
-    for (const followerId of followerIds) {
-      if (followerId === actorId) continue;
-      try {
-        await NotificationService.createNotification({
-          user_id: followerId,
-          type: "info" satisfies CreateNotificationInput["type"],
-          category: "social",
-          title: "Novo comentário em post seguido",
-          message: `${actor?.name || "Alguém"} comentou em um post que você segue`,
-          metadata: {
-            post_id: postId,
-            actor_id: actorId,
-            actor_name: actor?.name || "Usuário",
-            content_preview: commentContent.substring(0, 100),
-          },
-        });
-      } catch (err) {
-        logger.error("Error creating notification for follower", err, {
-          followerId,
-          postId,
-        });
-      }
-    }
-  } catch (error) {
-    logger.error("Error in createFollowedPostNotifications", error as Error, {
-      postId,
-      actorId,
-    });
-  }
+  logger.warn("Skipped followed-post notifications until followed post SSOT is resolved", {
+    postId,
+    actorId,
+    preview: commentContent.substring(0, 100),
+  });
 }
 
 /**
- * Detectar menções (@username) no conteúdo e criar notificações
+ * Detectar mencoes (@username) no conteudo e criar notificacoes.
+ *
+ * O broker valida que o post pertence ao perfil ator e extrai as mencoes do
+ * conteudo persistido no banco, nao do texto enviado pelo browser.
  */
 export async function createMentionNotifications(
   content: string,
@@ -295,50 +210,11 @@ export async function createMentionNotifications(
   actorId: string,
 ): Promise<void> {
   try {
-    const mentionRegex = /@(\w+)/g;
-    const mentions = content.match(mentionRegex);
-
-    if (!mentions || mentions.length === 0) {
+    if (!/@[a-zA-Z0-9_]{3,30}/.test(content)) {
       return;
     }
 
-    const usernames = mentions.map((m) => m.substring(1));
-
-    const usersOrNull = await Promise.all(
-      usernames.map((username) => profileService.getByUsername(username))
-    );
-    const users = usersOrNull.filter((u): u is NonNullable<typeof u> => u !== null);
-
-    if (!users || users.length === 0) {
-      return;
-    }
-
-    const actor = await profileService.getProfileById(actorId);
-
-    const mentionedUsers = users.filter((user) => user.id !== actorId);
-
-    for (const user of mentionedUsers) {
-      try {
-        await NotificationService.createNotification({
-          user_id: user.id,
-          type: "info" satisfies CreateNotificationInput["type"],
-          category: "social",
-          title: "Você foi mencionado",
-          message: `${actor?.name || "Alguém"} mencionou você em um post`,
-          metadata: {
-            post_id: postId,
-            actor_id: actorId,
-            actor_name: actor?.name || "Usuário",
-            content_preview: content.substring(0, 100),
-          },
-        });
-      } catch (err) {
-        logger.error("Error creating mention notification", err, {
-          userId: user.id,
-          postId,
-        });
-      }
-    }
+    await CommunityNotificationBrokerService.notifyPostMentions(postId, actorId);
   } catch (error) {
     logger.error("Error in createMentionNotifications", error as Error, {
       postId,

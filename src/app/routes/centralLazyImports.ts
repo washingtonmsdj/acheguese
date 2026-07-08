@@ -44,8 +44,12 @@ export const BusinessHoursPage = lazy(() =>
 export const DeliveryAreaPage = lazy(() =>
   import("@/modules/business/gastronomy/pages/DeliveryAreaPage"),
 );
-export const OrdersPage = createLaunchPausedRoute("Pedidos");
-export const OrderDetailsPage = createLaunchPausedRoute("Pedidos");
+export const OrdersPage = lazy(() =>
+  import("@/modules/business/gastronomy/pages/OrdersPage"),
+);
+export const OrderDetailsPage = lazy(() =>
+  import("@/modules/business/gastronomy/pages/OrderDetailsPage"),
+);
 export const DeliveryManagementPage = createLaunchPausedRoute("Entregas");
 export const AnalyticsPage = createLaunchPausedRoute("Analytics");
 export const GastronomyPromotionsPage = createLaunchPausedRoute("Promocoes");

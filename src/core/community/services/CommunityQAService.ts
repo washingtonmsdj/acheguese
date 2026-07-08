@@ -12,6 +12,7 @@ import { trackError } from "@/shared/utils/errorTracking";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { ProfessionalService } from "@/core/professional/services/ProfessionalService";
 import { BusinessService } from "@/core/business/services/BusinessService";
+import { CommunityRpcService } from "@/core/community/services/CommunityRpcService";
 import type {
   CommunityQuestion,
   CommunityAnswer,
@@ -365,11 +366,7 @@ export class CommunityQAService {
     answerId: string,
   ): Promise<boolean> {
     try {
-      const { error } = await supabase.rpc("mark_best_answer", {
-        _question_id: questionId,
-        _answer_id: answerId,
-      });
-      if (error) throw error;
+      await CommunityRpcService.markBestAnswer(questionId, answerId);
       return true;
     } catch (error) {
       trackError(new Error("Error marking best answer"), {

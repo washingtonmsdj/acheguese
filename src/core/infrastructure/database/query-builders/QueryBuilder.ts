@@ -4,7 +4,7 @@
  * SSOT: centralizes shared query construction logic.
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@/integrations/supabase';
 import { DatabaseError, DatabaseErrorCode } from '../errors/DatabaseError';
 import type { Filter, OrderBy, PaginationOptions, PaginatedResult } from '../interfaces/IRepository';
 

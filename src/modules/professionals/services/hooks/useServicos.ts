@@ -1,10 +1,16 @@
 import { useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
+
 import { ProfessionalFacade } from "@/core/professional/services";
-import { useTerritoryFilter, isTerritoryFilterReady, territoryFilterKey } from "@/core/location/hooks/useTerritoryFilter";
+import type { TerritoryFilter } from "@/core/location/types";
+import {
+  isTerritoryFilterReady,
+  territoryFilterKey,
+  useTerritoryFilter,
+} from "@/core/location/hooks/useTerritoryFilter";
+import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { mapProfessionalToItem } from "@/modules/professionals/services/domain/professionalViewModels";
 import type { ProfessionalItem } from "@/modules/professionals/services/domain/professionalViewModels";
-import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 
 export type { ProfessionalItem } from "@/modules/professionals/services/domain/professionalViewModels";
 
@@ -12,20 +18,26 @@ interface UseServicosOptions {
   sortBy?: "created_at" | "rating";
   filter?: string;
   search?: string;
-  /** Território resolvido pela rota — passar quando dentro de TerritorialLayout */
   routeResolved?: ResolvedTerritory | null;
-  /** IDs dos membros ativos do grupo (quando routeResolved.kind === 'group') */
   activeMemberIds?: string[];
+  territoryFilter?: TerritoryFilter;
 }
 
 export function useServicos(options: UseServicosOptions = {}) {
   const sentinelRef = useRef<HTMLDivElement>(null);
-  const { sortBy = "created_at", filter, search, routeResolved, activeMemberIds } = options;
+  const {
+    sortBy = "created_at",
+    filter,
+    search,
+    routeResolved,
+    activeMemberIds,
+    territoryFilter,
+  } = options;
 
-  // Filtro territorial canônico — suporta location e group
-  const territoryFilter = useTerritoryFilter(routeResolved, activeMemberIds);
-  const filterReady = isTerritoryFilterReady(territoryFilter);
-  const filterKey = territoryFilterKey(territoryFilter);
+  const routeFilter = useTerritoryFilter(routeResolved, activeMemberIds);
+  const effectiveTerritoryFilter = territoryFilter ?? routeFilter;
+  const filterReady = isTerritoryFilterReady(effectiveTerritoryFilter);
+  const filterKey = territoryFilterKey(effectiveTerritoryFilter);
 
   const { data, isLoading, isFetching } = useQuery({
     queryKey: ["servicos", sortBy, filter, search, filterKey],
@@ -34,12 +46,12 @@ export function useServicos(options: UseServicosOptions = {}) {
         sortBy: sortBy === "rating" ? "rating" : undefined,
         category: filter && filter !== "todos" ? filter : undefined,
         search: search || undefined,
-        territoryFilter,
+        territoryFilter: effectiveTerritoryFilter,
       });
 
       return professionals.map(mapProfessionalToItem);
     },
-    enabled: filterReady, // Só executa com território resolvido
+    enabled: filterReady,
   });
 
   return {
@@ -49,5 +61,3 @@ export function useServicos(options: UseServicosOptions = {}) {
     sentinelRef,
   };
 }
-
-

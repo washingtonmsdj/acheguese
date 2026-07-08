@@ -1,9 +1,16 @@
 ﻿# Quick Wins
 
-Atualizado em: 2026-04-10
+Atualizado em: 2026-07-06
+
+## Executados em 2026-07-06
+1. Rotas publicas de empresas e gastronomia ficaram explicitamente separadas do portal comunitario: canonicalizacao publica renderiza no site publico, sem redirect automatico para comunidade.
+2. Compatibilidade de redirect para aliases comunitarios legados foi isolada em `src/core/routing/redirects`, preservando fachada publica em `src/core/routing/policies`.
+3. Gate comunitario passou a resolver ausencia de residencia sem depender do carregamento de rollout, exibindo CTA de cadastro de endereco.
+4. Auditoria RLS comunitaria ganhou cobertura para residencia, aliases publicos, posts, comentarios, reacoes, grupos, reports, alerts e issues.
+5. Migrations de hardening adicionaram verificacao de residencia canonica para alerts/issues e `WITH CHECK` explicito para autoria social comunitaria.
 
 ## Executados em 2026-04-09 (fase anterior)
-1. Namespace publico consolidado por entidade: `/u/:username` para perfil pessoal, `/:communitySlug/:slug` para empresa/restaurante e `/p/:slug` para mini-site premium.
+1. Namespace publico consolidado por entidade: `/u/:username` para perfil pessoal, `/empresas/:state/:city/:territory/:slug` para empresa/restaurante, `/comunidade/:communitySlug/...` para contexto comunitario explicito e `/p/:slug` para mini-site premium.
 2. `/p/:handle` removido do roteamento ativo.
 3. `PublicProfilePage.tsx`, `PerfilPublicoPage.tsx` e `PerfilHubPageLegacy.tsx` retirados do fluxo ativo.
 4. Regras inline de tipo/verificacao removidas de hooks/pages prioritarios de `profile`.

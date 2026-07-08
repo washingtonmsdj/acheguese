@@ -56,6 +56,8 @@ export function OperationConfigForm({ businessId }: OperationConfigFormProps) {
   const handleSave = () => {
     updateConfig({
       ...formData,
+      uses_own_delivery: formData.accepts_delivery,
+      uses_platform_delivery: false,
       temporarily_closed_reason: formData.temporarily_closed_reason || null,
       temporarily_closed_until: formData.temporarily_closed_until || null,
     });
@@ -114,7 +116,12 @@ export function OperationConfigForm({ businessId }: OperationConfigFormProps) {
               id="accepts-delivery"
               checked={formData.accepts_delivery}
               onCheckedChange={(checked) =>
-                setFormData((prev) => ({ ...prev, accepts_delivery: checked }))
+                setFormData((prev) => ({
+                  ...prev,
+                  accepts_delivery: checked,
+                  uses_own_delivery: checked,
+                  uses_platform_delivery: false,
+                }))
               }
             />
           </div>
@@ -143,33 +150,29 @@ export function OperationConfigForm({ businessId }: OperationConfigFormProps) {
 
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label htmlFor="uses-own-delivery">Entrega Própria</Label>
+                <Label htmlFor="uses-own-delivery">Entrega propria/manual</Label>
                 <p className="text-sm text-muted-foreground">
-                  Usa entregadores próprios
+                  Pedidos online usam apenas a frota da loja ou operacao manual neste lancamento.
                 </p>
               </div>
               <Switch
                 id="uses-own-delivery"
-                checked={formData.uses_own_delivery}
-                onCheckedChange={(checked) =>
-                  setFormData((prev) => ({ ...prev, uses_own_delivery: checked }))
-                }
+                checked
+                disabled
               />
             </div>
 
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label htmlFor="uses-platform-delivery">Rede de Motoboys</Label>
+                <Label htmlFor="uses-platform-delivery">Rede da plataforma indisponivel</Label>
                 <p className="text-sm text-muted-foreground">
-                  Usa rede da plataforma
+                  A rede de entregadores da plataforma permanece bloqueada no checkout v1.
                 </p>
               </div>
               <Switch
                 id="uses-platform-delivery"
-                checked={formData.uses_platform_delivery}
-                onCheckedChange={(checked) =>
-                  setFormData((prev) => ({ ...prev, uses_platform_delivery: checked }))
-                }
+                checked={false}
+                disabled
               />
             </div>
           </div>

@@ -36,6 +36,10 @@ function normalizeSlug(value: string): string {
   return value.trim().toLowerCase();
 }
 
+function isStateSlug(value: string | undefined): value is string {
+  return Boolean(value && /^[a-z]{2}$/i.test(value.trim()));
+}
+
 function readStoredCity(): StoredBrowsingCity | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -55,18 +59,20 @@ function writeStoredCity(value: StoredBrowsingCity): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(value));
 }
 
-function parseCityFromPathname(pathname: string): StoredBrowsingCity | null {
+export function parsePublicBrowsingCityFromPathname(pathname: string): StoredBrowsingCity | null {
   const parts = pathname.split("/").filter(Boolean);
   if (parts.length < 2) return null;
 
   if (PUBLIC_MODULE_PREFIXES.has(parts[0])) {
     if (parts.length < 3) return null;
+    if (!isStateSlug(parts[1])) return null;
     const state = normalizeSlug(parts[1]);
     const city = normalizeSlug(parts[2]);
     if (!state || !city) return null;
     return { state, city };
   }
 
+  if (!isStateSlug(parts[0])) return null;
   const state = normalizeSlug(parts[0]);
   const city = normalizeSlug(parts[1]);
   if (!state || !city) return null;
@@ -87,7 +93,7 @@ export function usePublicBrowsingCity() {
   const { homeCity } = useUserTerritory();
   const [selectedCity, setSelectedCityState] = useState<StoredBrowsingCity | null>(null);
 
-  const urlCity = useMemo(() => parseCityFromPathname(pathname), [pathname]);
+  const urlCity = useMemo(() => parsePublicBrowsingCityFromPathname(pathname), [pathname]);
   const storedCity = readStoredCity();
   const accountCity = useMemo(
     () => (homeCity ? parseStateCityFromPublicPath(homeCity.path) : null),

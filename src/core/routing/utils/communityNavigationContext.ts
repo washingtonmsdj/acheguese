@@ -1,6 +1,5 @@
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import type { CommunityPublicAliasTerritoryResolution } from "@/core/routing/services/CommunityPublicAliasTerritoryResolver";
-import { normalizeCommunityPublicAliasCandidate } from "@/core/routing/services/CommunityPublicAliasService";
 import {
   buildCommunityAliasUrl,
   buildCommunityTerritoryUrl,
@@ -43,8 +42,10 @@ export interface CommunityNavigationModuleUrls {
 }
 
 export function getCommunityAliasCandidateFromPath(pathname: string): string | null {
-  const [firstSegment] = pathname.split("/").filter(Boolean);
-  return firstSegment ? normalizeCommunityPublicAliasCandidate(firstSegment) : null;
+  const parts = pathname.split("/").filter(Boolean);
+  if (parts[0] !== MODULE_SLUGS.community || !parts[1]) return null;
+  if (/^[a-z]{2}$/i.test(parts[1])) return null;
+  return parts[1];
 }
 
 function normalizeTerritoryBasePath(value: string | null | undefined): string | null {
@@ -55,6 +56,11 @@ function normalizeTerritoryBasePath(value: string | null | undefined): string | 
   if (parts.length < 2) return null;
 
   return `/${parts.slice(0, 3).join("/")}`;
+}
+
+function isCommunityAliasBasePath(value: string): boolean {
+  const parts = value.split("/").filter(Boolean);
+  return parts.length === 2 && !/^[a-z]{2}$/i.test(parts[1]);
 }
 
 function getTerritoryBasePathFromResolved(resolved: ResolvedCommunityTerritory): string | null {
@@ -125,7 +131,8 @@ export function resolveCommunityNavigationContext(input: {
       communityBasePath: input.territorialContext.communityBaseUrl,
       resolved: input.territorialContext.resolved,
       usesEmbeddedCommunityModules:
-        input.territorialContext.communityBaseUrl === input.territorialContext.baseUrl,
+        input.territorialContext.communityBaseUrl === input.territorialContext.baseUrl ||
+        isCommunityAliasBasePath(input.territorialContext.communityBaseUrl),
     });
   }
 

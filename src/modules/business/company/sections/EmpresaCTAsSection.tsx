@@ -1,48 +1,42 @@
-/**
- * EmpresaCTAsSection
- *
- * Secao de CTAs principais com botoes de acao e opcoes de rota.
- * Inclui WhatsApp, Ligar, Rota, Salvar, Recomendar e CTA de Gastronomia.
- */
-
-import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
-  MessageCircle,
-  Phone,
-  Navigation,
-  Bookmark,
-  ThumbsUp,
-  ShoppingBag,
-  ClipboardList,
   ArrowRight,
+  Bookmark,
   Building2,
+  ClipboardList,
+  Share2,
+  MessageCircle,
+  Navigation,
+  Phone,
+  ShoppingBag,
+  ThumbsUp,
   UtensilsCrossed,
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent } from '@/shared/components/ui/card';
-import { ActionButton, RouteOptions } from '../components/ctas';
-import type { VerticalKey } from '@/core/verticals';
-import { VERTICAL_CONFIGS } from '@/core/verticals';
+import { VERTICAL_CONFIGS, type VerticalKey } from '@/core/verticals';
 import { buildTelUrl, buildWhatsAppUrl } from '@/shared/utils/contactLinks';
 import { getRecordValue } from '@/shared/utils/recordLookup';
+import { ActionButton, RouteOptions } from '../components/ctas';
 import type { EmpresaCTAsSectionProps } from './types';
 
 export function EmpresaCTAsSection({
   business,
   gastronomyUrl,
   verticalPublicUrls,
+  embedded = false,
   isFavorite,
   hasRecommended,
+  recommendLoading = false,
   showRouteOptions,
   onToggleFavorite,
   onToggleRecommended,
   onToggleRouteOptions,
   onRoute,
+  onShare,
 }: EmpresaCTAsSectionProps) {
-  const availableVerticals = Object.entries(verticalPublicUrls ?? {}) as Array<
-    [VerticalKey, string]
-  >;
+  const availableVerticals = Object.entries(verticalPublicUrls ?? {}) as Array<[VerticalKey, string]>;
+  const hasPrimaryContactActions = Boolean(business.whatsapp || business.phone);
 
   const getVerticalIcon = (vertical: VerticalKey) => {
     switch (vertical) {
@@ -54,114 +48,183 @@ export function EmpresaCTAsSection({
   };
 
   return (
-    <section className="max-w-5xl mx-auto px-4 sm:px-6 w-full mt-4">
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.15 }}
-        className="space-y-3"
-      >
-        {gastronomyUrl && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <section
+      className={
+        embedded
+          ? 'w-full'
+          : 'mx-auto mt-4 w-full max-w-[1400px] px-4 sm:px-6 xl:px-8 2xl:max-w-[1480px] 2xl:px-10'
+      }
+    >
+      <div className="space-y-1.5 sm:space-y-3">
+        {gastronomyUrl ? (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Button
               asChild
-              className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-base rounded-xl shadow-lg gap-2"
+              className="h-12 w-full gap-2 rounded-2xl bg-teal-500 text-base font-bold text-slate-950 shadow-lg hover:bg-teal-400"
             >
               <Link to={gastronomyUrl}>
-                <ShoppingBag className="h-5 w-5" /> Ver cardápio e pedir
+                <ShoppingBag className="h-5 w-5" /> Ver cardapio e pedir
               </Link>
             </Button>
             <Button
               asChild
               variant="outline"
-              className="w-full h-12 border-primary/30 text-primary hover:bg-primary/5 font-semibold text-base rounded-xl gap-2"
+              className="h-12 w-full gap-2 rounded-2xl border-white/10 bg-white/[0.03] text-base font-semibold text-white hover:bg-white/[0.06]"
             >
               <Link to={gastronomyUrl}>
-                <ClipboardList className="h-5 w-5" /> Abrir cardápio
+                <ClipboardList className="h-5 w-5" /> Abrir cardapio
               </Link>
             </Button>
           </div>
-        )}
+        ) : null}
 
-        {(business.whatsapp || business.phone) && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-            {business.whatsapp && (
+        <div className="hidden xl:grid xl:grid-cols-5 xl:gap-3 [@media(max-height:1080px)]:gap-2.5">
+          {business.whatsapp ? (
+            <ActionButton
+              icon={MessageCircle}
+              label="WhatsApp"
+              href={buildWhatsAppUrl(business.whatsapp) ?? undefined}
+              color="emerald-400"
+              appearance="solid"
+              layout="inline"
+            />
+          ) : (
+            <div />
+          )}
+          {business.phone ? (
+            <ActionButton
+              icon={Phone}
+              label="Ligar"
+              href={buildTelUrl(business.phone) ?? undefined}
+              color="primary"
+              appearance="solid"
+              layout="inline"
+            />
+          ) : (
+            <div />
+          )}
+          <ActionButton
+            icon={Navigation}
+            label="Rota"
+            onClick={onToggleRouteOptions}
+            color="sky-400"
+            appearance="solid"
+            layout="inline"
+          />
+          <ActionButton
+            icon={Bookmark}
+            label={isFavorite ? 'Salvo' : 'Salvar'}
+            onClick={onToggleFavorite}
+            color="primary"
+            isActive={isFavorite}
+            ariaPressed={isFavorite}
+            layout="inline"
+          />
+          <ActionButton
+            icon={ThumbsUp}
+            label={hasRecommended ? 'Recomendado' : 'Recomendar'}
+            onClick={onToggleRecommended}
+            color="primary"
+            isActive={hasRecommended}
+            ariaPressed={hasRecommended}
+            disabled={recommendLoading}
+            layout="inline"
+          />
+        </div>
+
+        {hasPrimaryContactActions ? (
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 xl:hidden">
+            {business.whatsapp ? (
               <ActionButton
                 icon={MessageCircle}
                 label="WhatsApp"
                 href={buildWhatsAppUrl(business.whatsapp) ?? undefined}
                 color="emerald-400"
+                appearance="solid"
               />
-            )}
-            {business.phone && (
+            ) : <div />}
+            {business.phone ? (
               <ActionButton
                 icon={Phone}
                 label="Ligar"
                 href={buildTelUrl(business.phone) ?? undefined}
                 color="primary"
+                appearance="solid"
               />
-            )}
+            ) : <div />}
+            <ActionButton
+              icon={Navigation}
+              label="Rota"
+              onClick={onToggleRouteOptions}
+              color="sky-400"
+              appearance="solid"
+            />
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
+            <ActionButton
+              icon={Navigation}
+              label="Rota"
+              onClick={onToggleRouteOptions}
+              color="sky-400"
+              appearance="solid"
+            />
+            <div />
+            <div />
           </div>
         )}
 
-        <div className="grid grid-cols-3 gap-2 sm:gap-3">
-          <ActionButton
-            icon={Navigation}
-            label="Rota"
-            onClick={onToggleRouteOptions}
-            color="amber-400"
-          />
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 xl:hidden">
           <ActionButton
             icon={Bookmark}
-            label="Salvar"
+            label={isFavorite ? 'Salvo' : 'Salvar'}
             onClick={onToggleFavorite}
             color="primary"
             isActive={isFavorite}
+            ariaPressed={isFavorite}
           />
           <ActionButton
             icon={ThumbsUp}
-            label="Recomendar"
+            label={hasRecommended ? 'Recomendado' : 'Recomendar'}
             onClick={onToggleRecommended}
             color="primary"
             isActive={hasRecommended}
+            ariaPressed={hasRecommended}
+            disabled={recommendLoading}
+          />
+          <ActionButton
+            icon={Share2}
+            label="Compartilhar"
+            onClick={onShare}
+            color="primary"
           />
         </div>
 
         <RouteOptions show={showRouteOptions} onRoute={onRoute} />
-      </motion.div>
+      </div>
 
-      {availableVerticals.length > 0 && business && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25 }}
-          className="mt-6"
-        >
+      {availableVerticals.length > 0 && business ? (
+        <div className="mt-6">
           <div className="space-y-3">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Experiências especializadas
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/44">
+              Experiencias especializadas
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               {availableVerticals.map(([vertical, url]) => {
                 const config = getRecordValue(VERTICAL_CONFIGS, vertical);
                 if (!config) return null;
                 const Icon = getVerticalIcon(vertical);
 
                 return (
-                  <Card
-                    key={vertical}
-                    className="border border-primary/20 bg-gradient-to-r from-primary/5 to-transparent"
-                  >
+                  <Card key={vertical} className="border-white/10 bg-white/[0.03]">
                     <CardContent className="p-4">
                       <div className="flex items-start gap-3">
-                        <div className="rounded-full bg-primary/10 p-2.5 shrink-0">
-                          <Icon className="h-4 w-4 text-primary" />
+                        <div className="shrink-0 rounded-2xl bg-teal-400/10 p-2.5">
+                          <Icon className="h-4 w-4 text-teal-300" />
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-sm font-semibold text-foreground">
-                            {config.label}
-                          </h3>
-                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-sm font-semibold text-white">{config.label}</h3>
+                          <p className="mt-1 line-clamp-2 text-xs text-white/54">
                             {config.description}
                           </p>
                           <Button asChild size="sm" className="mt-3 gap-1.5">
@@ -178,8 +241,8 @@ export function EmpresaCTAsSection({
               })}
             </div>
           </div>
-        </motion.div>
-      )}
+        </div>
+      ) : null}
     </section>
   );
 }

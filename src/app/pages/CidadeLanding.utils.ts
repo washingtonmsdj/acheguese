@@ -1,21 +1,23 @@
+import { APP_MODULE_SLUGS, buildAppModulePath } from "@/config/moduleSlugs";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
+import {
+  formatRelativeTime as formatLandingRelativeTime,
+  withQueryParams as mergeQueryParams,
+} from "@/core/landing/utils/landingPresentation";
 import { getPublicPostPreview } from "@/core/posts/utils/publicPostContent";
+import { buildCommunityScopedUrl } from "@/core/routing/utils/territoryUrls";
 
 export function withQueryParams(path: string, params: Record<string, string>): string {
-  const [pathWithoutHash, hash = ""] = path.split("#", 2);
-  const [basePath, currentQuery = ""] = pathWithoutHash.split("?", 2);
-  const query = new URLSearchParams(currentQuery);
-
-  Object.entries(params).forEach(([key, value]) => {
-    query.set(key, value);
-  });
-
-  const queryString = query.toString();
-  return `${basePath}${queryString ? `?${queryString}` : ""}${hash ? `#${hash}` : ""}`;
+  return mergeQueryParams(path, params);
 }
 
 export function getBusinessPublicUrl(
-  business: { id: string; slug?: string | null; is_premium?: boolean | null; geographic_path?: string | null },
+  business: {
+    id: string;
+    slug?: string | null;
+    is_premium?: boolean | null;
+    geographic_path?: string | null;
+  },
   fallback: string,
 ): string {
   if (!business.slug || !business.geographic_path) return fallback;
@@ -33,24 +35,84 @@ export function getBusinessPublicUrl(
 }
 
 export function getTextPreview(value: string | null | undefined, maxLength: number): string {
-  return getPublicPostPreview(value, maxLength, "Publicação da comunidade local.");
+  return getPublicPostPreview(
+    value,
+    maxLength,
+    "Publicação da comunidade local.",
+  );
 }
 
 export function formatRelativeTime(value: string | null | undefined): string {
-  if (!value) return "agora";
-  const timestamp = new Date(value).getTime();
-  if (!Number.isFinite(timestamp)) return "agora";
+  return formatLandingRelativeTime(value);
+}
 
-  const diffMs = Math.max(0, Date.now() - timestamp);
-  const minutes = Math.floor(diffMs / 60000);
-  if (minutes < 1) return "agora";
-  if (minutes < 60) return `há ${minutes} min`;
+export type CityModuleUrls = {
+  home: string;
+  community: string;
+  feed: string;
+  business: string;
+  gastronomy: string;
+  services: string;
+  classifieds: string;
+  map: string;
+  search: string;
+  publish: string;
+  touristPoints: string;
+};
 
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `há ${hours} h`;
+export function buildCityModuleUrls({
+  cityPath,
+  communityBaseUrl,
+  communityScoped,
+}: {
+  cityPath: string;
+  communityBaseUrl: string;
+  communityScoped: boolean;
+}): CityModuleUrls {
+  const publicTouristPoints = buildAppModulePath(
+    APP_MODULE_SLUGS.touristPoints,
+    cityPath,
+  );
 
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `há ${days} d`;
+  if (communityScoped) {
+    return {
+      home: communityBaseUrl,
+      community: communityBaseUrl,
+      feed: communityBaseUrl,
+      business: buildCommunityScopedUrl(
+        communityBaseUrl,
+        APP_MODULE_SLUGS.business,
+      ),
+      gastronomy: buildCommunityScopedUrl(
+        communityBaseUrl,
+        APP_MODULE_SLUGS.gastronomy,
+      ),
+      services: buildCommunityScopedUrl(
+        communityBaseUrl,
+        APP_MODULE_SLUGS.services,
+      ),
+      classifieds: buildCommunityScopedUrl(
+        communityBaseUrl,
+        APP_MODULE_SLUGS.classifieds,
+      ),
+      map: buildCommunityScopedUrl(communityBaseUrl, APP_MODULE_SLUGS.map),
+      search: buildAppModulePath(APP_MODULE_SLUGS.search, cityPath),
+      publish: withQueryParams(communityBaseUrl, { action: "publicar" }),
+      touristPoints: publicTouristPoints,
+    };
+  }
 
-  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(new Date(timestamp));
+  return {
+    home: cityPath,
+    community: communityBaseUrl,
+    feed: communityBaseUrl,
+    business: buildAppModulePath(APP_MODULE_SLUGS.business, cityPath),
+    gastronomy: buildAppModulePath(APP_MODULE_SLUGS.gastronomy, cityPath),
+    services: buildAppModulePath(APP_MODULE_SLUGS.services, cityPath),
+    classifieds: buildAppModulePath(APP_MODULE_SLUGS.classifieds, cityPath),
+    map: buildAppModulePath(APP_MODULE_SLUGS.map, cityPath),
+    search: buildAppModulePath(APP_MODULE_SLUGS.search, cityPath),
+    publish: withQueryParams(communityBaseUrl, { action: "publicar" }),
+    touristPoints: publicTouristPoints,
+  };
 }

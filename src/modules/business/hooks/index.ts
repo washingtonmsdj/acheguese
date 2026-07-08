@@ -13,7 +13,10 @@ export { useBusiness } from "@/core/business/hooks/useBusiness";
 export * from "./useBusinessById";
 export * from "./useBusinessCreate";
 export { useBusinessEdit } from "./useBusinessEdit";
-export { useBusinessFavorite, useBusinessFavorites } from "./useBusinessFavorite";
+export {
+  useCanonicalBusinessFavorite,
+  useCanonicalBusinessFavorites,
+} from "./useCanonicalBusinessFavorite";
 export { useBusinessRecommendation } from "./useBusinessRecommendation";
 export * from "./useBusinessForm";
 export * from "./useBusinessFormSteps";

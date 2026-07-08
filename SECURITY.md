@@ -28,6 +28,9 @@ Run these before release or security-sensitive changes:
 npm run security:validate
 npm run security:config:validate
 npm audit
+npm run validate:migrations
+npm run validate:migrations:remote
+npm run validate:security-authority
 npm run validate:ssot
 npm run validate:hardcodes
 npm run validate:architecture:incremental

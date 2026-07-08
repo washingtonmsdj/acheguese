@@ -5,30 +5,23 @@ import { Button } from '@/shared/components/ui/button';
 import { Progress } from '@/shared/components/ui/progress';
 import { AlertTriangle, CheckCircle2, Crown, TrendingUp, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { isLaunchSurfaceEnabled } from '@/config/launchScope';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 
 interface PlanStatusWidgetProps {
   businessId: string;
   currentMenuItems?: number;
   currentImages?: number;
-  currentPromotions?: number;
 }
 
 export function PlanStatusWidget({
   businessId,
   currentMenuItems = 0,
   currentImages = 0,
-  currentPromotions = 0,
 }: PlanStatusWidgetProps) {
-  const { entitlements, isLoading, can } = useEntitlements({
+  const { entitlements, isLoading } = useEntitlements({
     business_id: businessId,
     subscription_scope: 'business',
   });
-  const showCoupons = isLaunchSurfaceEnabled('coupons');
-  const showAnalytics = isLaunchSurfaceEnabled('publicAnalytics');
-  const showMobility = isLaunchSurfaceEnabled('mobility');
-
   if (isLoading) {
     return (
       <Card>
@@ -49,10 +42,6 @@ export function PlanStatusWidget({
   const imagesProgress = entitlements.maxImages
     ? (currentImages / entitlements.maxImages) * 100
     : 0;
-  const promotionsProgress = entitlements.maxPromotions
-    ? (currentPromotions / entitlements.maxPromotions) * 100
-    : 0;
-
   const isDelivery = entitlements.planTier === 'delivery';
   const isPro = entitlements.planTier === 'pro';
   const isFree = entitlements.planTier === 'free';
@@ -130,24 +119,6 @@ export function PlanStatusWidget({
           </div>
         )}
 
-        {showCoupons && entitlements.maxPromotions !== null && can('canUsePromotions') && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Promocoes</span>
-              <span className="font-medium">
-                {currentPromotions} / {entitlements.maxPromotions}
-              </span>
-            </div>
-            <Progress value={promotionsProgress} className="h-2" />
-            {promotionsProgress >= 90 && (
-              <p className="flex items-start gap-1.5 text-xs text-amber-600">
-                <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" aria-hidden="true" />
-                <span>Voce esta proximo do limite de promocoes.</span>
-              </p>
-            )}
-          </div>
-        )}
-
         {(entitlements.maxMenuItems === null || entitlements.maxImages === null) && (
           <div className="pt-2 border-t">
             <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
@@ -165,8 +136,6 @@ export function PlanStatusWidget({
               <li>- Link curto (/p/seu-slug)</li>
               <li>- QR Code personalizado</li>
               <li>- Cardapio ilimitado</li>
-              {showCoupons && <li>- Promocoes</li>}
-              {showAnalytics && <li>- Analytics</li>}
             </ul>
           </div>
         )}
@@ -177,9 +146,8 @@ export function PlanStatusWidget({
             <ul className="text-xs text-muted-foreground space-y-1 ml-4">
               <li>- Pedidos internos</li>
               <li>- Painel de pedidos</li>
-              {showMobility && <li>- Rede de motoboys</li>}
-              {showMobility && <li>- Rastreamento de entrega</li>}
-              {showAnalytics && <li>- Analytics avancado</li>}
+              <li>- Configuracao de areas de entrega</li>
+              <li>- Operacao de frota propria/manual</li>
             </ul>
           </div>
         )}

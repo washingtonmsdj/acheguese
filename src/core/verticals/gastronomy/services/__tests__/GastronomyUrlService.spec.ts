@@ -3,13 +3,13 @@ import { describe, expect, it } from 'vitest';
 import { GastronomyUrlService } from '@/core/verticals/gastronomy/services/GastronomyUrlService';
 
 describe('GastronomyUrlService', () => {
-  it('centraliza home, listagem territorial e detalhe legado explicitamente nomeado', () => {
+  it('centraliza home, listagem territorial e detalhe publico transacional', () => {
     expect(GastronomyUrlService.getHomeUrl()).toBe('/gastronomia');
     expect(GastronomyUrlService.getTerritoryUrl('/br/ba/salvador/pituba')).toBe(
       '/gastronomia/ba/salvador/pituba',
     );
     expect(
-      GastronomyUrlService.getLegacyDetailUrlFromTerritory(
+      GastronomyUrlService.getPublicDetailUrlFromTerritory(
         '/br/ba/salvador/rio-vermelho',
         'cafe-central',
       ),
@@ -32,12 +32,12 @@ describe('GastronomyUrlService', () => {
         geographic_path: '/br/ba/salvador/rio-vermelho',
         community_alias: 'rio-vermelho',
       }),
-    ).toBe('/rio-vermelho/cafe-central');
+    ).toBe('/empresas/ba/salvador/rio-vermelho/cafe-central');
   });
 
   it('rejeita slugs com separadores para evitar path injection', () => {
     expect(() =>
-      GastronomyUrlService.getLegacyDetailUrlFromTerritory(
+      GastronomyUrlService.getPublicDetailUrlFromTerritory(
         '/br/ba/salvador/pituba',
         'cafe/extra',
       ),

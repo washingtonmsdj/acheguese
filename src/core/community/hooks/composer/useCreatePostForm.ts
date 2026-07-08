@@ -3,12 +3,14 @@
  */
 
 import { useState, useRef } from "react";
-import type { PostType } from "@/core/posts/types/Post";
+import type { PostType } from "@/core/posts/types.ts";
 
 export function useCreatePostForm() {
   const [content, setContent] = useState("");
   const [type, setType] = useState<PostType>("discussao");
-  const [reach, setReach] = useState<"street" | "neighborhood" | "city">("neighborhood");
+  const [reach, setReach] = useState<"street" | "neighborhood" | "city">(
+    "neighborhood",
+  );
   const [images, setImages] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -21,7 +23,9 @@ export function useCreatePostForm() {
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    const newImages = files.slice(0, 3 - images.length).map((file) => URL.createObjectURL(file));
+    const newImages = files
+      .slice(0, 3 - images.length)
+      .map((file) => URL.createObjectURL(file));
     setImages((prev) => [...prev, ...newImages].slice(0, 3));
   };
 

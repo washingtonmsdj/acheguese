@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { useResolvedBusinessPublicUrl } from "../useResolvedBusinessPublicUrl";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
@@ -6,7 +6,6 @@ import { BusinessUrlService } from "@/core/business/services/BusinessUrlService"
 vi.mock("@/core/business/services/BusinessUrlService", () => ({
   BusinessUrlService: {
     getCanonicalUrl: vi.fn(),
-    getCanonicalUrlWithResolvedCommunityAlias: vi.fn(),
   },
 }));
 
@@ -30,13 +29,10 @@ function Probe() {
 }
 
 describe("useResolvedBusinessPublicUrl", () => {
-  it("uses territorial fallback immediately and upgrades to resolved community alias", async () => {
+  it("uses the public canonical URL without upgrading to community alias", () => {
     vi.mocked(BusinessUrlService.getCanonicalUrl).mockReturnValue(
       "/empresas/ba/salvador/pituba/padaria-x",
     );
-    vi.mocked(
-      BusinessUrlService.getCanonicalUrlWithResolvedCommunityAlias,
-    ).mockResolvedValue("/santa-cruz/padaria-x");
 
     render(<Probe />);
 
@@ -46,10 +42,6 @@ describe("useResolvedBusinessPublicUrl", () => {
     expect(screen.getByTestId("url")).toHaveTextContent(
       "/empresas/ba/salvador/pituba/padaria-x",
     );
-
-    await waitFor(() => {
-      expect(screen.getByTestId("url")).toHaveTextContent("/santa-cruz/padaria-x");
-      expect(screen.getByTestId("resolving")).toHaveTextContent("false");
-    });
+    expect(screen.getByTestId("resolving")).toHaveTextContent("false");
   });
 });

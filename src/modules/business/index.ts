@@ -9,10 +9,6 @@
  */
 
 // Components
-export { BusinessCard } from "./components/BusinessCard";
-export { BusinessFilters } from "./components/BusinessFilters";
-export { BusinessGrid } from "./components/BusinessGrid";
-export { BusinessHeader } from "./components/BusinessHeader";
 export { BusinessAbout } from "./components/BusinessAbout";
 export { BusinessGallery } from "./components/BusinessGallery";
 export { BusinessHours } from "./components/BusinessHours";
@@ -35,7 +31,10 @@ export { useBusiness } from "@/core/business/hooks/useBusiness";
 export { useBusinessById } from "./hooks/useBusinessById";
 export { useBusinessCreate } from "./hooks/useBusinessCreate";
 export { useBusinessEdit } from "./hooks/useBusinessEdit";
-export { useBusinessFavorite, useBusinessFavorites } from "./hooks/useBusinessFavorite";
+export {
+  useCanonicalBusinessFavorite,
+  useCanonicalBusinessFavorites,
+} from "./hooks/useCanonicalBusinessFavorite";
 export { useBusinessRecommendation } from "./hooks/useBusinessRecommendation";
 export { useBusinessForm } from "./hooks/useBusinessForm";
 export { useBusinessFormSteps } from "./hooks/useBusinessFormSteps";
@@ -62,7 +61,6 @@ export { default as BusinessStandalonePage } from "./pages/BusinessStandalonePag
 export { default as CriarEmpresaPage } from "./pages/CriarEmpresaPage";
 export { default as EditarEmpresaPage } from "./pages/EditarEmpresaPage";
 export { default as EmpresaCatalogoPublicoPage } from "./pages/EmpresaCatalogoPublicoPage";
-export { default as EmpresasPage } from "./pages/EmpresasPage";
 
 // Types - canonical business contracts live in core/business.
 export type {

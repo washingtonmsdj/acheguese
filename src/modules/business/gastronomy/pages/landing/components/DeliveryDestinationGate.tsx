@@ -1,5 +1,5 @@
 /**
- * Componente que bloqueia o acesso ao catálogo até que um destino seja definido
+ * Painel de orientação para definir destino sem bloquear a descoberta pública
  */
 
 import { motion } from 'framer-motion';
@@ -45,7 +45,7 @@ export function DeliveryDestinationGate(props: DeliveryDestinationGateProps) {
           aria-live="polite"
         >
           <p className="text-sm font-semibold text-foreground">
-            Defina seu destino para liberar o catálogo
+            Defina seu destino para calcular entrega com mais precisão
           </p>
           <p className="mt-1 text-xs text-muted-foreground">{message}</p>
           {showLocationButton && (

@@ -50,7 +50,7 @@ export function FilterControls(props: FilterControlsProps) {
       {/* Mobile: select dropdown */}
       <div className="min-w-[160px] flex-1 sm:flex-none md:hidden">
         <Select value={sortBy} onValueChange={onSortChange}>
-          <SelectTrigger className="h-8 w-full rounded-lg text-[11px]">
+          <SelectTrigger className="h-8 w-full rounded-lg text-[11px]" aria-label="Ordenar restaurantes">
             <SelectValue placeholder="Ordenar" />
           </SelectTrigger>
           <SelectContent>
@@ -153,6 +153,7 @@ export function FilterControls(props: FilterControlsProps) {
           size="sm"
           onClick={onToggleFilters}
           className="h-8 rounded-lg px-2 sm:gap-1.5 sm:px-3"
+          aria-label="Abrir filtros avancados"
         >
           <Filter className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">Filtros</span>
@@ -165,6 +166,7 @@ export function FilterControls(props: FilterControlsProps) {
             size="sm"
             onClick={onClearFilters}
             className="h-8 px-2 text-[11px] text-muted-foreground sm:px-3 sm:text-sm gap-1"
+            aria-label="Limpar filtros ativos"
           >
             <X className="h-3 w-3" />
             <span className="hidden sm:inline">Limpar</span>

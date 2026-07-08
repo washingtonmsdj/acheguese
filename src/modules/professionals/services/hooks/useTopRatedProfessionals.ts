@@ -1,21 +1,29 @@
 import { useQuery } from "@tanstack/react-query";
+
 import { ProfessionalFacade } from "@/core/professional/services";
-import { mapProfessionalToItem } from "@/modules/professionals/services/domain/professionalViewModels";
-import { useTerritoryFilter, isTerritoryFilterReady, territoryFilterKey } from "@/core/location/hooks/useTerritoryFilter";
-import type { ProfessionalItem } from "@/modules/professionals/services/domain/professionalViewModels";
+import type { TerritoryFilter } from "@/core/location/types";
+import {
+  isTerritoryFilterReady,
+  territoryFilterKey,
+  useTerritoryFilter,
+} from "@/core/location/hooks/useTerritoryFilter";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
+import { mapProfessionalToItem } from "@/modules/professionals/services/domain/professionalViewModels";
+import type { ProfessionalItem } from "@/modules/professionals/services/domain/professionalViewModels";
 
 interface UseTopRatedProfessionalsOptions {
   routeResolved?: ResolvedTerritory | null;
   activeMemberIds?: string[];
   limit?: number;
+  territoryFilter?: TerritoryFilter;
 }
 
 export function useTopRatedProfessionals(options: UseTopRatedProfessionalsOptions = {}) {
-  const { routeResolved, activeMemberIds, limit = 5 } = options;
-  const territoryFilter = useTerritoryFilter(routeResolved, activeMemberIds);
-  const filterReady = isTerritoryFilterReady(territoryFilter);
-  const filterKey = territoryFilterKey(territoryFilter);
+  const { routeResolved, activeMemberIds, limit = 5, territoryFilter } = options;
+  const routeFilter = useTerritoryFilter(routeResolved, activeMemberIds);
+  const effectiveTerritoryFilter = territoryFilter ?? routeFilter;
+  const filterReady = isTerritoryFilterReady(effectiveTerritoryFilter);
+  const filterKey = territoryFilterKey(effectiveTerritoryFilter);
 
   const { data } = useQuery({
     queryKey: ["top-rated-professionals", filterKey, limit],
@@ -23,7 +31,7 @@ export function useTopRatedProfessionals(options: UseTopRatedProfessionalsOption
       const result = await ProfessionalFacade.queries.getProfessionalsList({
         pageParam: 0,
         category: undefined,
-        territory: territoryFilter,
+        territory: effectiveTerritoryFilter,
       });
       const professionals = result.professionals.slice(0, limit);
       return professionals.map(mapProfessionalToItem);
@@ -33,5 +41,3 @@ export function useTopRatedProfessionals(options: UseTopRatedProfessionalsOption
 
   return { topRated: data || [] };
 }
-
-

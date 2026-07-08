@@ -42,20 +42,20 @@ function NavigationProbe() {
 }
 
 describe("useBusinessNavigation", () => {
-  it("uses the community short alias for local business URLs", () => {
+  it("uses explicit community scoped URLs for local business URLs", () => {
     const context: TerritorialLayoutContext = {
       resolved: { kind: "location", location: district as never },
-      baseUrl: "/santa-cruz",
-      communityBaseUrl: "/santa-cruz",
+      baseUrl: "/ba/salvador/santa-cruz",
+      communityBaseUrl: "/comunidade/santa-cruz",
       groupAvailability: "full",
       activeMemberIds: [],
     };
 
     render(
-      <MemoryRouter initialEntries={["/santa-cruz/empresas"]}>
+      <MemoryRouter initialEntries={["/comunidade/santa-cruz/empresas"]}>
         <Routes>
           <Route element={<ContextProvider context={context} />}>
-            <Route path="/santa-cruz/empresas" element={<NavigationProbe />} />
+            <Route path="/comunidade/santa-cruz/empresas" element={<NavigationProbe />} />
           </Route>
         </Routes>
       </MemoryRouter>,
@@ -63,7 +63,33 @@ describe("useBusinessNavigation", () => {
 
     expect(
       screen.getByText(
-        "/santa-cruz/padaria-x|/empresas/ba/salvador/pituba/mercado-y",
+        "/comunidade/santa-cruz/empresas/padaria-x|/empresas/ba/salvador/pituba/mercado-y",
+      ),
+      ).toBeInTheDocument();
+  });
+
+  it("keeps public business URLs outside the community portal", () => {
+    const context: TerritorialLayoutContext = {
+      resolved: { kind: "location", location: district as never },
+      baseUrl: "/ba/salvador/santa-cruz",
+      communityBaseUrl: "/comunidade/santa-cruz",
+      groupAvailability: "full",
+      activeMemberIds: [],
+    };
+
+    render(
+      <MemoryRouter initialEntries={["/ba/salvador/santa-cruz"]}>
+        <Routes>
+          <Route element={<ContextProvider context={context} />}>
+            <Route path="/ba/salvador/santa-cruz" element={<NavigationProbe />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(
+      screen.getByText(
+        "/empresas/ba/salvador/santa-cruz/padaria-x|/empresas/ba/salvador/pituba/mercado-y",
       ),
     ).toBeInTheDocument();
   });

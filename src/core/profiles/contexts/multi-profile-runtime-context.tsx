@@ -7,9 +7,11 @@ import React, {
   ReactNode,
 } from 'react';
 import { useLocation } from 'react-router-dom';
+import { logger } from '@/shared/utils/logger';
 import { MultiProfileRuntimeService } from '../services/multi-profile/runtimeProfileService';
 import { SessionService } from '@/core/session/services/SessionService';
 import { SessionState } from '@/core/session/state/SessionState';
+import { ACTIVE_PROFILE_STORAGE_KEY } from '../constants/activeProfileStorage';
 import type { Profile, ProfileType } from '../services/multi-profile/types';
 import {
   MultiProfileContext,
@@ -33,8 +35,6 @@ const MODULE_ROUTES: Record<string, ProfileType> = {
   '/central/profissional': 'professional',
 };
 
-const ACTIVE_PROFILE_KEY = 'active_profile_id';
-
 export function MultiProfileProvider({ children }: { children: ReactNode }) {
   const [activeProfile, setActiveProfile] = useState<Profile | null>(null);
   const [contextualProfile, setContextualProfile] = useState<Profile | null>(null);
@@ -53,7 +53,7 @@ export function MultiProfileProvider({ children }: { children: ReactNode }) {
         setAllProfiles([]);
         allProfilesRef.current = [];
         setActiveProfile(null);
-        localStorage.removeItem(ACTIVE_PROFILE_KEY);
+        localStorage.removeItem(ACTIVE_PROFILE_STORAGE_KEY);
         return;
       }
 
@@ -63,15 +63,15 @@ export function MultiProfileProvider({ children }: { children: ReactNode }) {
 
       if (profiles.length === 0) {
         setActiveProfile(null);
-        localStorage.removeItem(ACTIVE_PROFILE_KEY);
+        localStorage.removeItem(ACTIVE_PROFILE_STORAGE_KEY);
         return;
       }
 
-      const savedId = localStorage.getItem(ACTIVE_PROFILE_KEY);
+      const savedId = localStorage.getItem(ACTIVE_PROFILE_STORAGE_KEY);
       let active = profiles.find(p => p.id === savedId);
       if (!active) {
         active = profiles.find(p => p.profile_type === 'personal') || profiles[0];
-        if (active) localStorage.setItem(ACTIVE_PROFILE_KEY, active.id);
+        if (active) localStorage.setItem(ACTIVE_PROFILE_STORAGE_KEY, active.id);
       }
       setActiveProfile(active || null);
     } catch (error: unknown) {
@@ -84,9 +84,16 @@ export function MultiProfileProvider({ children }: { children: ReactNode }) {
   const switchProfile = useCallback(async (profileId: string): Promise<boolean> => {
     const profile = allProfiles.find(p => p.id === profileId);
     if (!profile) { setError('Profile not found'); return false; }
-    setActiveProfile(profile);
-    localStorage.setItem(ACTIVE_PROFILE_KEY, profileId);
-    return true;
+    try {
+      await SessionService.switchProfile(profileId);
+      setActiveProfile(profile);
+      localStorage.setItem(ACTIVE_PROFILE_STORAGE_KEY, profileId);
+      return true;
+    } catch (error: unknown) {
+      logger.error('Error switching runtime profile:', error);
+      setError(getErrorMessage(error, 'Failed to switch profile'));
+      return false;
+    }
   }, [allProfiles]);
 
   const setModuleContext = useCallback((type: ProfileType | null) => {

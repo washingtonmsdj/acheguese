@@ -1,12 +1,10 @@
 /**
- * GastronomyActivityFeed - Feed de atividades sociais dos vizinhos
+ * GastronomyActivityFeed - Feed publico de reviews dos vizinhos
  *
- * Exibe atividades recentes de gastronomia (reviews, favoritos, pedidos)
- * filtradas por território.
+ * Exibe atividades recentes de gastronomia filtradas por territorio.
  *
- * Regras de Privacidade:
- * - Reviews e Favoritos: Sempre públicos
- * - Pedidos: Apenas se usuário optou por compartilhar (opt-in)
+ * Regra de privacidade:
+ * - Somente reviews publicas entram neste feed.
  */
 
 import { motion } from 'framer-motion';
@@ -45,20 +43,21 @@ function ActivityItem({
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.1 }}
-      className="flex items-center gap-3 bg-card border border-border rounded-xl px-4 py-3 min-w-[280px] shrink-0 hover:border-primary/30 transition-colors"
+      className="flex min-w-[280px] shrink-0 items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-950 shadow-sm transition-colors hover:border-teal-300"
+      role="listitem"
     >
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-50 text-teal-700">
         <ActivityIcon className="h-4 w-4" aria-hidden="true" />
       </span>
 
       {/* Conteúdo */}
       <div className="min-w-0 flex-1">
-        <p className="text-sm text-foreground truncate">
+        <p className="truncate text-sm text-slate-950">
           <span className="font-semibold">{activity.user_name}</span>{' '}
-          <span className="text-muted-foreground">{activity.action_label}</span>{' '}
-          <span className="font-semibold text-primary">{activity.business_name}</span>
+          <span className="text-slate-700">{activity.action_label}</span>{' '}
+          <span className="font-semibold text-teal-700">{activity.business_name}</span>
         </p>
-        <p className="text-xs text-muted-foreground">{activity.time_ago}</p>
+        <p className="text-xs text-slate-600">{activity.time_ago}</p>
       </div>
     </motion.div>
   );
@@ -69,7 +68,12 @@ function ActivityItem({
  */
 function ActivityFeedSkeleton() {
   return (
-    <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+    <div
+      className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide"
+      role="list"
+      aria-label="Atividades recentes de gastronomia"
+      tabIndex={0}
+    >
       {[1, 2, 3, 4, 5].map((i) => (
         <div
           key={i}
@@ -97,7 +101,7 @@ function ActivityFeedEmpty() {
         Nenhuma atividade recente nesta região ainda.
       </p>
       <p className="text-xs text-muted-foreground mt-1">
-        Seja o primeiro a avaliar ou favoritar um estabelecimento!
+        Seja o primeiro a avaliar um estabelecimento!
       </p>
     </div>
   );
@@ -197,7 +201,12 @@ export function GastronomyActivityFeed({
       </div>
 
       {/* Lista de atividades com scroll horizontal */}
-      <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+      <div
+        className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide"
+        role="list"
+        aria-label="Atividades recentes de gastronomia"
+        tabIndex={0}
+      >
         {activities.map((activity, index) => (
           <ActivityItem key={activity.id} activity={activity} index={index} />
         ))}

@@ -294,7 +294,7 @@ export function AppLayoutRoutes() {
         <Route path={buildTerritorialBareRoutePath([TERRITORIAL_PARAMS.district])} element={<P.TerritorialLayout />}>
           <Route index element={<P.TerritorialIndexPage CityLandingComponent={P.CidadeLandingPage} />} />
         </Route>
-        <Route path={buildTerritorialBareRoutePath()} element={<P.CommunityEntityOrTerritorialCityRoute />}>
+        <Route path={buildTerritorialBareRoutePath()} element={<P.TerritorialLayout />}>
           <Route index element={<P.TerritorialIndexPage CityLandingComponent={P.CidadeLandingPage} />} />
         </Route>
 
@@ -306,7 +306,7 @@ export function AppLayoutRoutes() {
         <Route path="/br" element={<P.CountryLandingPage />} />
 
         {/* Modulo empresas - estrutura hierarquica clara */}
-        {/* 5 segmentos = fallback legado de empresa; redireciona para /:comunidade/:slug quando houver alias */}
+        {/* 5 segmentos = detalhe publico canonico de empresa/restaurante */}
         <Route path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.business, [TERRITORIAL_PARAMS.district, TERRITORIAL_PARAMS.slug])} element={<P.BusinessRouteResolver BusinessDetailComponent={P.EmpresaDetailLandingPage} />} />
 
         {/* Categoria: /empresas/:state/:city/categoria/:category */}
@@ -391,6 +391,10 @@ export function AppLayoutRoutes() {
 
         {/* Rotas de gastronomia */}
         <Route path={gastronomyPublicRoutes.home()} element={<P.GastronomyLandingPage />} />
+        {/* Rotas publicas estaticas precisam vir antes das territoriais dinamicas. */}
+        <Route path={gastronomyPublicRoutes.favorites()} element={<P.MyFavoritesPage />} />
+        <Route path={gastronomyPublicRoutes.orderDetails(GASTRONOMY_PUBLIC_ROUTE_PARAMS.orderId)} element={<P.OrderDetailsPage />} />
+
         {/* Detalhe premium: /gastronomia-premium/:uf/:cidade/:bairro/:slug */}
         <Route path={buildTerritorialRoutePath(TERRITORIAL_STATIC.gastronomyPremium, [TERRITORIAL_PARAMS.district, TERRITORIAL_PARAMS.slug])} element={<P.TerritorialLayout />}>
           <Route index element={<P.GastronomyPremiumDetailPage />} />
@@ -412,10 +416,6 @@ export function AppLayoutRoutes() {
         <Route path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.gastronomy)} element={<P.TerritorialLayout />}>
           <Route index element={<P.GastronomyLandingPage />} />
         </Route>
-
-        {/* Favoritos de gastronomia */}
-        <Route path={gastronomyPublicRoutes.favorites()} element={<P.MyFavoritesPage />} />
-        <Route path={gastronomyPublicRoutes.orderDetails(GASTRONOMY_PUBLIC_ROUTE_PARAMS.orderId)} element={<P.OrderDetailsPage />} />
 
         {/* Rotas de Education - publicas territoriais (vitrine premium consolidada) */}
         {/* Detalhe: /educacao/:uf/:cidade/:bairro/:slug */}

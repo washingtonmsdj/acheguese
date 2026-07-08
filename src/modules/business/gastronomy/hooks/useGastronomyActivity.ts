@@ -1,7 +1,7 @@
 /**
- * useGastronomyActivity - Hook para feed de atividades sociais
+ * useGastronomyActivity - Hook para feed publico de reviews
  *
- * SSOT para consumir atividades de gastronomia (reviews, favoritos, pedidos).
+ * SSOT para consumir atividades publicas de gastronomia.
  *
  * @example
  * ```tsx

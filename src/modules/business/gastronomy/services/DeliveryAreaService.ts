@@ -1,20 +1,20 @@
 /**
- *  DeliveryAreaService SSOT cannico de reas de entrega
+ * DeliveryAreaService - canonical delivery-area service.
  *
- *  Centraliza toda a lgica de negcio de reas de entrega e taxas.
- *  Hooks e componentes NO acessam Supabase diretamente consomem este service.
+ * Centraliza a logica de negocio de areas de entrega e taxas.
+ * Hooks e componentes nao devem acessar Supabase diretamente.
  *
- *  Responsabilidades:
- *  - CRUD de reas de entrega
- *  - CRUD de bairros atendidos
- *  - Validao de elegibilidade
- *  - Clculo de taxa e tempo
+ * Responsabilidades:
+ * - CRUD de areas de entrega
+ * - CRUD de bairros atendidos
+ * - Validacao de elegibilidade
+ * - Calculo de taxa e tempo
  */
 
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 
-//  Tipos
+// Types
 
 export interface ServiceResult<T> {
   data: T | null;
@@ -74,16 +74,16 @@ export interface DeliveryAreaSummary {
   avg_estimated_time: number | null;
 }
 
-//  Service
+// Service
 
 export const DeliveryAreaService = {
 
   //
-  //  REAS DE ENTREGA
+  // Delivery areas
   //
 
   /**
-   *  Lista reas de entrega de uma empresa
+   *  Lista areas de entrega de uma empresa
    */
   async listAreas(businessId: string): Promise<ServiceResult<DeliveryArea[]>> {
     try {
@@ -106,7 +106,7 @@ export const DeliveryAreaService = {
   },
 
   /**
-   *  Busca uma rea especfica
+   *  Busca uma area especfica
    */
   async getArea(areaId: string): Promise<ServiceResult<DeliveryArea>> {
     try {
@@ -129,7 +129,7 @@ export const DeliveryAreaService = {
   },
 
   /**
-   *  Cria uma nova rea de entrega
+   *  Cria uma nova area de entrega
    */
   async createArea(input: {
     business_id: string;
@@ -178,7 +178,7 @@ export const DeliveryAreaService = {
   },
 
   /**
-   *  Atualiza uma rea de entrega
+   *  Atualiza uma area de entrega
    */
   async updateArea(
     areaId: string,
@@ -205,7 +205,7 @@ export const DeliveryAreaService = {
   },
 
   /**
-   *  Deleta uma rea de entrega
+   *  Deleta uma area de entrega
    */
   async deleteArea(areaId: string): Promise<ServiceResult<boolean>> {
     try {
@@ -227,14 +227,14 @@ export const DeliveryAreaService = {
   },
 
   /**
-   *  Reordena reas de entrega
+   *  Reordena areas de entrega
    */
   async reorderAreas(
     businessId: string,
     areaIds: string[]
   ): Promise<ServiceResult<boolean>> {
     try {
-      //  Atualiza display_order de cada rea
+      //  Atualiza display_order de cada area
       const updates = areaIds.map((id, index) =>
         supabase
           .from('delivery_areas')
@@ -259,11 +259,11 @@ export const DeliveryAreaService = {
   },
 
   //
-  //  BAIRROS
+  // Neighborhoods
   //
 
   /**
-   *  Lista bairros de uma rea
+   *  Lista bairros de uma area
    */
   async listNeighborhoods(areaId: string): Promise<ServiceResult<DeliveryNeighborhood[]>> {
     try {
@@ -286,7 +286,7 @@ export const DeliveryAreaService = {
   },
 
   /**
-   *  Adiciona um bairro a uma rea
+   *  Adiciona um bairro a uma area
    */
   async addNeighborhood(input: {
     delivery_area_id: string;
@@ -376,7 +376,7 @@ export const DeliveryAreaService = {
   },
 
   /**
-   *  Adiciona mltiplos bairros de uma vez
+   *  Adiciona multiplos bairros de uma vez
    */
   async addNeighborhoodsBulk(
     areaId: string,
@@ -411,7 +411,7 @@ export const DeliveryAreaService = {
   },
 
   //
-  //  VALIDAO E CLCULOS
+  // Validation and calculations
   //
 
   /**
@@ -453,7 +453,7 @@ export const DeliveryAreaService = {
   },
 
   /**
-   *  Retorna resumo das reas de entrega
+   *  Retorna resumo das areas de entrega
    */
   async getSummary(businessId: string): Promise<ServiceResult<DeliveryAreaSummary>> {
     try {

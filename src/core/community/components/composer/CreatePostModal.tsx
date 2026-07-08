@@ -1,23 +1,66 @@
 import React from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/components/ui/dialog";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/components/ui/tooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/shared/components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/shared/components/ui/tooltip";
 import { Button } from "@/shared/components/ui/button";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Input } from "@/shared/components/ui/input";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/shared/components/ui/avatar";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/components/ui/select";
 import { Alert, AlertDescription } from "@/shared/components/ui/alert";
-import { AlertCircle, Bell, BriefcaseBusiness, Calendar, ClipboardList, HelpCircle, Image, Megaphone, MessageSquare, OctagonAlert, PartyPopper, Search, Siren, Users, Wrench, X } from "lucide-react";
+import {
+  AlertCircle,
+  Bell,
+  BriefcaseBusiness,
+  Calendar,
+  ClipboardList,
+  HelpCircle,
+  Image,
+  Megaphone,
+  MessageSquare,
+  OctagonAlert,
+  PartyPopper,
+  Search,
+  Siren,
+  Users,
+  Wrench,
+  X,
+} from "lucide-react";
 import { useSessionContext } from "@/core/session";
 import { useCreatePostForm } from "../../hooks/composer/useCreatePostForm";
 import { postService } from "@/core/posts/services";
 import { toast } from "sonner";
 import { cn } from "@/shared/utils/cn";
-import type { PostType } from "@/core/posts/types/Post";
+import type { PostType } from "@/core/posts/types.ts";
 import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-runtime-context";
 import { ActiveProfileBadge } from "@/core/profiles/components/ActiveProfileBadge";
 import { useTerritoryFilter } from "@/core/location/hooks/useTerritoryFilter";
 import { isLaunchSurfaceEnabled } from "@/config/launchScope";
+import {
+  DEFAULT_BLOCKED_ALERT_MESSAGE,
+  DEFAULT_BLOCKED_ISSUE_MESSAGE,
+  DEFAULT_BLOCKED_POST_MESSAGE,
+  resolveCreatePostPublicationPermissionError,
+  type CreatePostIntentId,
+} from "./CreatePostModal.permissions";
 
 interface CreatePostModalProps {
   open: boolean;
@@ -27,25 +70,25 @@ interface CreatePostModalProps {
   initialContent?: string;
   initialType?: PostType;
   initialReach?: "street" | "neighborhood" | "city";
+  canCreatePost?: boolean;
+  canCreateAlert?: boolean;
+  canCreateIssue?: boolean;
+  blockedPostMessage?: string;
+  blockedAlertMessage?: string;
+  blockedIssueMessage?: string;
 }
 
-type IntentId =
-  | "discussao"
-  | "pergunta"
-  | "enquete"
-  | "recomendacao"
-  | "aviso_comunitario"
-  | "alerta_urgente"
-  | "reportar_problema"
-  | "oportunidade"
-  | "classificado"
-  | "promocao"
-  | "servico"
-  | "evento"
-  | "mutirao"
-  | "encontro";
+type IntentId = CreatePostIntentId;
 
-type DistributionChannel = "moradores" | "empresas" | "eventos" | "alertas" | "classificados" | "oportunidades" | "para_voce" | "todos";
+type DistributionChannel =
+  | "moradores"
+  | "empresas"
+  | "eventos"
+  | "alertas"
+  | "classificados"
+  | "oportunidades"
+  | "para_voce"
+  | "todos";
 type TerritorialLevel = "street" | "neighborhood" | "region" | "city";
 type WorkOpportunityType =
   | "looking_for_work"
@@ -88,35 +131,138 @@ const RAW_INTENT_GROUPS: Array<{ title: string; items: IntentDef[] }> = [
   {
     title: "Comunidade",
     items: [
-      { id: "discussao", label: "Discussão", icon: MessageSquare, structuralType: "discussao", distribution: ["moradores", "para_voce", "todos"], tooltip: "Conversas abertas entre moradores sobre o dia a dia do território." },
-      { id: "pergunta", label: "Pergunta", icon: HelpCircle, structuralType: "pergunta", distribution: ["moradores", "para_voce", "todos"], tooltip: "Pergunta objetiva para obter respostas da comunidade local." },
-      { id: "enquete", label: "Enquete", icon: ClipboardList, structuralType: "enquete", distribution: ["moradores", "para_voce", "todos"], tooltip: "Consulta rápida para tomada de decisão coletiva." },
-      { id: "recomendacao", label: "Recomendação", icon: Search, structuralType: "recomendacao", distribution: ["moradores", "para_voce", "todos"], tooltip: "Indicação de pessoas, lugares ou soluções úteis no bairro." },
-      { id: "aviso_comunitario", label: "Aviso comunitário", icon: Megaphone, structuralType: "discussao", distribution: ["moradores", "todos"], tooltip: "Comunicado local não urgente para orientar a vizinhança." },
+      {
+        id: "discussao",
+        label: "Discussão",
+        icon: MessageSquare,
+        structuralType: "discussao",
+        distribution: ["moradores", "para_voce", "todos"],
+        tooltip:
+          "Conversas abertas entre moradores sobre o dia a dia do território.",
+      },
+      {
+        id: "pergunta",
+        label: "Pergunta",
+        icon: HelpCircle,
+        structuralType: "pergunta",
+        distribution: ["moradores", "para_voce", "todos"],
+        tooltip: "Pergunta objetiva para obter respostas da comunidade local.",
+      },
+      {
+        id: "enquete",
+        label: "Enquete",
+        icon: ClipboardList,
+        structuralType: "enquete",
+        distribution: ["moradores", "para_voce", "todos"],
+        tooltip: "Consulta rápida para tomada de decisão coletiva.",
+      },
+      {
+        id: "recomendacao",
+        label: "Recomendação",
+        icon: Search,
+        structuralType: "recomendacao",
+        distribution: ["moradores", "para_voce", "todos"],
+        tooltip: "Indicação de pessoas, lugares ou soluções úteis no bairro.",
+      },
+      {
+        id: "aviso_comunitario",
+        label: "Aviso comunitário",
+        icon: Megaphone,
+        structuralType: "discussao",
+        distribution: ["moradores", "todos"],
+        tooltip: "Comunicado local não urgente para orientar a vizinhança.",
+      },
     ],
   },
   {
     title: "Alertas e Problemas",
     items: [
-      { id: "alerta_urgente", label: "Alerta urgente", icon: Siren, structuralType: "discussao", distribution: ["alertas", "para_voce", "todos"], tooltip: "Situações urgentes ou momentâneas. Exemplo: trânsito, acidente, falta de água agora." },
-      { id: "reportar_problema", label: "Reportar problema", icon: OctagonAlert, structuralType: "discussao", distribution: ["alertas", "para_voce", "todos"], tooltip: "Problemas persistentes do bairro que precisam de acompanhamento. Exemplo: buraco na rua, iluminação quebrada, lixo acumulado." },
+      {
+        id: "alerta_urgente",
+        label: "Alerta urgente",
+        icon: Siren,
+        structuralType: "discussao",
+        distribution: ["alertas", "para_voce", "todos"],
+        tooltip:
+          "Situações urgentes ou momentâneas. Exemplo: trânsito, acidente, falta de água agora.",
+      },
+      {
+        id: "reportar_problema",
+        label: "Reportar problema",
+        icon: OctagonAlert,
+        structuralType: "discussao",
+        distribution: ["alertas", "para_voce", "todos"],
+        tooltip:
+          "Problemas persistentes do bairro que precisam de acompanhamento. Exemplo: buraco na rua, iluminação quebrada, lixo acumulado.",
+      },
     ],
   },
   {
     title: "Economia local",
     items: [
-      { id: "oportunidade", label: "Oportunidade", icon: BriefcaseBusiness, structuralType: "favor", distribution: ["oportunidades", "moradores", "para_voce", "todos"], tooltip: "Trabalhos rápidos, freelas, diárias ou oportunidades locais imediatas." },
-      { id: "servico", label: "Serviço", icon: Wrench, structuralType: "favor", distribution: ["empresas", "classificados", "para_voce", "todos"], tooltip: "Oferta de serviço profissional de alcance local." },
-      { id: "classificado", label: "Classificado", icon: ClipboardList, structuralType: "desapego", distribution: ["classificados", "empresas", "para_voce", "todos"], tooltip: "Compra, venda e trocas com contexto territorial." },
-      { id: "promocao", label: "Promoção", icon: Bell, structuralType: "recomendacao", distribution: ["empresas", "para_voce", "todos"], tooltip: "Oferta comercial temporária para circulação local." },
+      {
+        id: "oportunidade",
+        label: "Oportunidade",
+        icon: BriefcaseBusiness,
+        structuralType: "favor",
+        distribution: ["oportunidades", "moradores", "para_voce", "todos"],
+        tooltip:
+          "Trabalhos rápidos, freelas, diárias ou oportunidades locais imediatas.",
+      },
+      {
+        id: "servico",
+        label: "Serviço",
+        icon: Wrench,
+        structuralType: "favor",
+        distribution: ["empresas", "classificados", "para_voce", "todos"],
+        tooltip: "Oferta de serviço profissional de alcance local.",
+      },
+      {
+        id: "classificado",
+        label: "Classificado",
+        icon: ClipboardList,
+        structuralType: "desapego",
+        distribution: ["classificados", "empresas", "para_voce", "todos"],
+        tooltip: "Compra, venda e trocas com contexto territorial.",
+      },
+      {
+        id: "promocao",
+        label: "Promoção",
+        icon: Bell,
+        structuralType: "recomendacao",
+        distribution: ["empresas", "para_voce", "todos"],
+        tooltip: "Oferta comercial temporária para circulação local.",
+      },
     ],
   },
   {
     title: "Eventos e atividades",
     items: [
-      { id: "evento", label: "Evento", icon: Calendar, structuralType: "evento", distribution: ["eventos", "para_voce", "todos"], tooltip: "Programação local com data, horário e participação." },
-      { id: "mutirao", label: "Mutirão", icon: Users, structuralType: "evento", distribution: ["eventos", "moradores", "para_voce", "todos"], tooltip: "Ação coletiva de melhoria territorial com coordenação comunitária." },
-      { id: "encontro", label: "Encontro", icon: PartyPopper, structuralType: "evento", distribution: ["eventos", "moradores", "para_voce", "todos"], tooltip: "Reuniao social ou tematica entre moradores." },
+      {
+        id: "evento",
+        label: "Evento",
+        icon: Calendar,
+        structuralType: "evento",
+        distribution: ["eventos", "para_voce", "todos"],
+        tooltip: "Programação local com data, horário e participação.",
+      },
+      {
+        id: "mutirao",
+        label: "Mutirão",
+        icon: Users,
+        structuralType: "evento",
+        distribution: ["eventos", "moradores", "para_voce", "todos"],
+        tooltip:
+          "Ação coletiva de melhoria territorial com coordenação comunitária.",
+      },
+      {
+        id: "encontro",
+        label: "Encontro",
+        icon: PartyPopper,
+        structuralType: "evento",
+        distribution: ["eventos", "moradores", "para_voce", "todos"],
+        tooltip: "Reuniao social ou tematica entre moradores.",
+      },
     ],
   },
 ];
@@ -140,14 +286,16 @@ function isLaunchIntentEnabled(id: IntentId): boolean {
   }
 }
 
-const INTENT_GROUPS: Array<{ title: string; items: IntentDef[] }> = RAW_INTENT_GROUPS
-  .map((group) => ({
+const INTENT_GROUPS: Array<{ title: string; items: IntentDef[] }> =
+  RAW_INTENT_GROUPS.map((group) => ({
     ...group,
     items: group.items.filter((item) => isLaunchIntentEnabled(item.id)),
-  }))
-  .filter((group) => group.items.length > 0);
+  })).filter((group) => group.items.length > 0);
 
-const DISTRIBUTION_LEVEL_OPTIONS: Array<{ value: TerritorialLevel; label: string }> = [
+const DISTRIBUTION_LEVEL_OPTIONS: Array<{
+  value: TerritorialLevel;
+  label: string;
+}> = [
   { value: "street", label: "Minha rua" },
   { value: "neighborhood", label: "Meu bairro" },
   { value: "region", label: "Região" },
@@ -161,7 +309,10 @@ const POLL_DURATION_OPTIONS = [
   { value: "14", label: "14 dias" },
 ] as const;
 
-const OPPORTUNITY_TYPE_OPTIONS: Array<{ value: WorkOpportunityType; label: string }> = [
+const OPPORTUNITY_TYPE_OPTIONS: Array<{
+  value: WorkOpportunityType;
+  label: string;
+}> = [
   { value: "looking_for_work", label: "Procura trabalho" },
   { value: "offering_work", label: "Oferece trabalho" },
   { value: "freelance", label: "Freela" },
@@ -193,18 +344,26 @@ function flattenIntents(): IntentDef[] {
 }
 
 function getLaunchIntent(id: IntentId): IntentId {
-  return isLaunchIntentEnabled(id) ? id : (flattenIntents()[0]?.id ?? "discussao");
+  return isLaunchIntentEnabled(id)
+    ? id
+    : (flattenIntents()[0]?.id ?? "discussao");
 }
 
-function reachFromTerritorialLevel(level: TerritorialLevel): "street" | "neighborhood" | "city" {
+function reachFromTerritorialLevel(
+  level: TerritorialLevel,
+): "street" | "neighborhood" | "city" {
   if (level === "street") return "street";
   if (level === "city") return "city";
   return "neighborhood";
 }
 
-function getLocationIdForPost(filter: TerritoryFilterSnapshot, profile: PostProfileLocation | null): string | null {
+function getLocationIdForPost(
+  filter: TerritoryFilterSnapshot,
+  profile: PostProfileLocation | null,
+): string | null {
   if (filter.scope === "group") return null;
-  if (filter.scope === "location") return filter.location_id ?? filter.locationId ?? null;
+  if (filter.scope === "location")
+    return filter.location_id ?? filter.locationId ?? null;
   return profile?.locationId ?? null;
 }
 
@@ -220,7 +379,21 @@ function normalizeRuntimeProfile(profile: RuntimePostProfile | null) {
   };
 }
 
-export function CreatePostModal({ open, onClose, defaultType, editPostId, initialContent, initialType, initialReach }: CreatePostModalProps) {
+export function CreatePostModal({
+  open,
+  onClose,
+  defaultType,
+  editPostId,
+  initialContent,
+  initialType,
+  initialReach,
+  canCreatePost = true,
+  canCreateAlert = false,
+  canCreateIssue = false,
+  blockedPostMessage = DEFAULT_BLOCKED_POST_MESSAGE,
+  blockedAlertMessage = DEFAULT_BLOCKED_ALERT_MESSAGE,
+  blockedIssueMessage = DEFAULT_BLOCKED_ISSUE_MESSAGE,
+}: CreatePostModalProps) {
   const { activeProfile: sessionProfile } = useSessionContext();
   const { effectiveProfile } = useMultiProfileContext();
   const profile = normalizeRuntimeProfile(
@@ -232,17 +405,23 @@ export function CreatePostModal({ open, onClose, defaultType, editPostId, initia
   const [intent, setIntent] = React.useState<IntentId>(
     getLaunchIntent(intentFromPostType(initialType ?? defaultType)),
   );
-  const [distributionLevel, setDistributionLevel] = React.useState<TerritorialLevel>("neighborhood");
+  const [distributionLevel, setDistributionLevel] =
+    React.useState<TerritorialLevel>("neighborhood");
   const [genericDescription, setGenericDescription] = React.useState("");
   const [pollQuestion, setPollQuestion] = React.useState("");
   const [pollOptions, setPollOptions] = React.useState(["", ""]);
   const [pollAllowMultiple, setPollAllowMultiple] = React.useState(false);
-  const [pollDurationDays, setPollDurationDays] = React.useState<(typeof POLL_DURATION_OPTIONS)[number]["value"]>("3");
+  const [pollDurationDays, setPollDurationDays] =
+    React.useState<(typeof POLL_DURATION_OPTIONS)[number]["value"]>("3");
   const [pollAllowComments, setPollAllowComments] = React.useState(true);
   const [problemLocation, setProblemLocation] = React.useState("");
   const [problemCategory, setProblemCategory] = React.useState("");
-  const [problemSeverity, setProblemSeverity] = React.useState<"baixa" | "media" | "alta" | "critica">("media");
-  const [problemRecurrence, setProblemRecurrence] = React.useState<"pontual" | "frequente" | "constante">("pontual");
+  const [problemSeverity, setProblemSeverity] = React.useState<
+    "baixa" | "media" | "alta" | "critica"
+  >("media");
+  const [problemRecurrence, setProblemRecurrence] = React.useState<
+    "pontual" | "frequente" | "constante"
+  >("pontual");
   const [problemDescription, setProblemDescription] = React.useState("");
   const [eventDate, setEventDate] = React.useState("");
   const [eventTime, setEventTime] = React.useState("");
@@ -250,68 +429,139 @@ export function CreatePostModal({ open, onClose, defaultType, editPostId, initia
   const [eventLimit, setEventLimit] = React.useState("");
   const [eventDescription, setEventDescription] = React.useState("");
   const [opportunityWorkType, setOpportunityWorkType] = React.useState("");
-  const [opportunityType, setOpportunityType] = React.useState<WorkOpportunityType>("offering_work");
-  const [opportunityLinkedProfessionalId, setOpportunityLinkedProfessionalId] = React.useState("none");
+  const [opportunityType, setOpportunityType] =
+    React.useState<WorkOpportunityType>("offering_work");
+  const [opportunityLinkedProfessionalId, setOpportunityLinkedProfessionalId] =
+    React.useState("none");
   const [opportunityCategory, setOpportunityCategory] = React.useState("");
   const [opportunityAmount, setOpportunityAmount] = React.useState("");
-  const [opportunityUrgency, setOpportunityUrgency] = React.useState<"hoje" | "24h" | "semana" | "flexivel">("24h");
+  const [opportunityUrgency, setOpportunityUrgency] = React.useState<
+    "hoje" | "24h" | "semana" | "flexivel"
+  >("24h");
   const [opportunityContact, setOpportunityContact] = React.useState("");
   const [opportunityDuration, setOpportunityDuration] = React.useState("");
-  const [opportunityDescription, setOpportunityDescription] = React.useState("");
-  const [ownedProfessionalProfiles, setOwnedProfessionalProfiles] = React.useState<Array<{
-    id: string;
-    professional_name: string | null;
-    service_category: string | null;
-  }>>([]);
-  const [loadingOwnedProfessionalProfiles, setLoadingOwnedProfessionalProfiles] = React.useState(false);
+  const [opportunityDescription, setOpportunityDescription] =
+    React.useState("");
+  const [ownedProfessionalProfiles, setOwnedProfessionalProfiles] =
+    React.useState<
+      Array<{
+        id: string;
+        professional_name: string | null;
+        service_category: string | null;
+      }>
+    >([]);
+  const [
+    loadingOwnedProfessionalProfiles,
+    setLoadingOwnedProfessionalProfiles,
+  ] = React.useState(false);
 
-  const selectedIntent = flattenIntents().find((item) => item.id === intent) ?? flattenIntents()[0];
+  const selectedIntent =
+    flattenIntents().find((item) => item.id === intent) ?? flattenIntents()[0];
   React.useEffect(() => {
     if (!open) return;
-    form.setType((initialType ?? defaultType ?? selectedIntent.structuralType) as PostType);
-    const initialDistributionLevel = initialReach === "street" ? "street" : initialReach === "city" ? "city" : "neighborhood";
+    form.setType(
+      (initialType ?? defaultType ?? selectedIntent.structuralType) as PostType,
+    );
+    const initialDistributionLevel =
+      initialReach === "street"
+        ? "street"
+        : initialReach === "city"
+          ? "city"
+          : "neighborhood";
     form.setReach(initialReach ?? "neighborhood");
     form.setContent("");
     setIntent(getLaunchIntent(intentFromPostType(initialType ?? defaultType)));
     setGenericDescription(initialContent ?? "");
     setDistributionLevel(initialDistributionLevel);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, defaultType, initialType, initialContent, initialReach]);
   React.useEffect(() => {
     form.setType(selectedIntent.structuralType);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedIntent.structuralType]);
 
   const displayName = profile?.displayName ?? "Usuário";
   const avatarUrl = profile?.avatarUrl;
-  const initials = displayName.split(" ").map((part) => part[0] ?? "").join("").toUpperCase().slice(0, 2);
+  const initials = displayName
+    .split(" ")
+    .map((part) => part[0] ?? "")
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
   const resolvedLocationId = React.useMemo(
     () => getLocationIdForPost(territoryFilter, profile),
     [territoryFilter, profile],
   );
   const locationError = React.useMemo(() => {
-    if (territoryFilter.scope === "group") return "Selecione uma cidade ou bairro específico para publicar.";
-    if (!resolvedLocationId) return "Configure sua localização no perfil antes de publicar.";
+    if (territoryFilter.scope === "group")
+      return "Selecione uma cidade ou bairro específico para publicar.";
+    if (!resolvedLocationId)
+      return "Configure sua localização no perfil antes de publicar.";
     return null;
   }, [territoryFilter.scope, resolvedLocationId]);
   const isProblemIntent = intent === "reportar_problema";
   const isPollIntent = intent === "enquete";
-  const isEventIntent = intent === "evento" || intent === "mutirao" || intent === "encontro";
+  const isEventIntent =
+    intent === "evento" || intent === "mutirao" || intent === "encontro";
   const isOpportunityIntent = intent === "oportunidade";
-  const selectedLinkedProfessional = ownedProfessionalProfiles.find((item) => item.id === opportunityLinkedProfessionalId);
-  const pollOptionCount = pollOptions.filter((opt) => opt.trim().length > 0).length;
-  const baseValid =
-    isPollIntent ? pollQuestion.trim().length >= 8 && pollOptionCount >= 2 :
-    isProblemIntent ? problemLocation.trim().length >= 3 && problemCategory.trim().length >= 3 && problemDescription.trim().length >= 20 :
-    isEventIntent ? !!eventDate && !!eventTime && eventPlace.trim().length >= 3 && eventDescription.trim().length >= 10 :
-    isOpportunityIntent ? opportunityWorkType.trim().length >= 3 && opportunityCategory.trim().length >= 2 && opportunityContact.trim().length >= 3 && opportunityDuration.trim().length >= 2 && opportunityDescription.trim().length >= 10 :
-    genericDescription.trim().length >= 10 && genericDescription.trim().length <= 2000;
-  const canPublish = !!profile?.id && !locationError && !publishing && baseValid;
+  const selectedLinkedProfessional = ownedProfessionalProfiles.find(
+    (item) => item.id === opportunityLinkedProfessionalId,
+  );
+  const pollOptionCount = pollOptions.filter(
+    (opt) => opt.trim().length > 0,
+  ).length;
+  const baseValid = isPollIntent
+    ? pollQuestion.trim().length >= 8 && pollOptionCount >= 2
+    : isProblemIntent
+      ? problemLocation.trim().length >= 3 &&
+        problemCategory.trim().length >= 3 &&
+        problemDescription.trim().length >= 20
+      : isEventIntent
+        ? !!eventDate &&
+          !!eventTime &&
+          eventPlace.trim().length >= 3 &&
+          eventDescription.trim().length >= 10
+        : isOpportunityIntent
+          ? opportunityWorkType.trim().length >= 3 &&
+            opportunityCategory.trim().length >= 2 &&
+            opportunityContact.trim().length >= 3 &&
+            opportunityDuration.trim().length >= 2 &&
+            opportunityDescription.trim().length >= 10
+          : genericDescription.trim().length >= 10 &&
+            genericDescription.trim().length <= 2000;
+  const publicationPermissionError = React.useMemo(() => {
+    return resolveCreatePostPublicationPermissionError({
+      intent,
+      canCreatePost,
+      canCreateAlert,
+      canCreateIssue,
+      blockedPostMessage,
+      blockedAlertMessage,
+      blockedIssueMessage,
+    });
+  }, [
+    blockedAlertMessage,
+    blockedIssueMessage,
+    blockedPostMessage,
+    canCreateAlert,
+    canCreateIssue,
+    canCreatePost,
+    intent,
+  ]);
+  const canPublish =
+    !!profile?.id &&
+    !locationError &&
+    !publishing &&
+    baseValid &&
+    !publicationPermissionError;
 
   React.useEffect(() => {
     if (!selectedLinkedProfessional?.service_category) return;
     setOpportunityCategory(selectedLinkedProfessional.service_category);
-    if (!opportunityWorkType.trim() && selectedLinkedProfessional.professional_name) {
+    if (
+      !opportunityWorkType.trim() &&
+      selectedLinkedProfessional.professional_name
+    ) {
       setOpportunityWorkType(selectedLinkedProfessional.professional_name);
     }
   }, [selectedLinkedProfessional, opportunityWorkType]);
@@ -321,22 +571,89 @@ export function CreatePostModal({ open, onClose, defaultType, editPostId, initia
       schema_version: "territorial-content.v2",
       intent,
       structural_type: selectedIntent.structuralType,
-      distribution_territorial: { level: distributionLevel, channels: selectedIntent.distribution },
+      distribution_territorial: {
+        level: distributionLevel,
+        channels: selectedIntent.distribution,
+      },
     };
     if (isPollIntent) {
-      const options = pollOptions.filter((opt) => opt.trim()).map((opt) => opt.trim());
-      return { content: pollQuestion.trim(), tags: ["format:poll", `intent:${intent}`, `dist-level:${distributionLevel}`], structural: { ...structuralBase, display_format: "poll_card", poll: { question: pollQuestion.trim(), options, allow_multiple_choice: pollAllowMultiple, duration_days: Number(pollDurationDays), allow_comments: pollAllowComments } } };
+      const options = pollOptions
+        .filter((opt) => opt.trim())
+        .map((opt) => opt.trim());
+      return {
+        content: pollQuestion.trim(),
+        tags: [
+          "format:poll",
+          `intent:${intent}`,
+          `dist-level:${distributionLevel}`,
+        ],
+        structural: {
+          ...structuralBase,
+          display_format: "poll_card",
+          poll: {
+            question: pollQuestion.trim(),
+            options,
+            allow_multiple_choice: pollAllowMultiple,
+            duration_days: Number(pollDurationDays),
+            allow_comments: pollAllowComments,
+          },
+        },
+      };
     }
     if (isProblemIntent) {
-      return { content: `Problema: ${problemCategory.trim()}\n\n${problemDescription.trim()}`, tags: ["format:issue", `intent:${intent}`, `dist-level:${distributionLevel}`, `problem:severity:${problemSeverity}`], structural: { ...structuralBase, display_format: "issue_card", problem: { location: problemLocation.trim(), category: problemCategory.trim(), severity: problemSeverity, recurrence: problemRecurrence, photos: form.images, description: problemDescription.trim() } } };
+      return {
+        content: `Problema: ${problemCategory.trim()}\n\n${problemDescription.trim()}`,
+        tags: [
+          "format:issue",
+          `intent:${intent}`,
+          `dist-level:${distributionLevel}`,
+          `problem:severity:${problemSeverity}`,
+        ],
+        structural: {
+          ...structuralBase,
+          display_format: "issue_card",
+          problem: {
+            location: problemLocation.trim(),
+            category: problemCategory.trim(),
+            severity: problemSeverity,
+            recurrence: problemRecurrence,
+            photos: form.images,
+            description: problemDescription.trim(),
+          },
+        },
+      };
     }
     if (isEventIntent) {
-      return { content: `${selectedIntent.label}: ${eventDescription.trim()}`, tags: ["format:event", `intent:${intent}`, `dist-level:${distributionLevel}`], structural: { ...structuralBase, display_format: "event_card", event: { date: eventDate, time: eventTime, place: eventPlace.trim(), participant_limit: eventLimit ? Number(eventLimit) : null, description: eventDescription.trim() } } };
+      return {
+        content: `${selectedIntent.label}: ${eventDescription.trim()}`,
+        tags: [
+          "format:event",
+          `intent:${intent}`,
+          `dist-level:${distributionLevel}`,
+        ],
+        structural: {
+          ...structuralBase,
+          display_format: "event_card",
+          event: {
+            date: eventDate,
+            time: eventTime,
+            place: eventPlace.trim(),
+            participant_limit: eventLimit ? Number(eventLimit) : null,
+            description: eventDescription.trim(),
+          },
+        },
+      };
     }
     if (isOpportunityIntent) {
       return {
         content: `Oportunidade: ${opportunityWorkType.trim()}\n\n${opportunityDescription.trim()}`,
-        tags: ["format:opportunity", `intent:${intent}`, `dist-level:${distributionLevel}`, `opportunity:urgency:${opportunityUrgency}`, `opportunity:type:${opportunityType}`],
+        tags: [
+          "format:opportunity",
+          `intent:${intent}`,
+          `dist-level:${distributionLevel}`,
+          `opportunity:urgency:${opportunityUrgency}`,
+          `opportunity:type:${opportunityType}`,
+        ],
         structural: {
           ...structuralBase,
           display_format: "opportunity_card",
@@ -344,7 +661,10 @@ export function CreatePostModal({ open, onClose, defaultType, editPostId, initia
             work_type: opportunityWorkType.trim(),
             category: opportunityCategory.trim(),
             opportunity_type: opportunityType,
-            professional_id: opportunityLinkedProfessionalId === "none" ? null : opportunityLinkedProfessionalId,
+            professional_id:
+              opportunityLinkedProfessionalId === "none"
+                ? null
+                : opportunityLinkedProfessionalId,
             amount: opportunityAmount.trim() || null,
             urgency: opportunityUrgency,
             contact: opportunityContact.trim(),
@@ -354,7 +674,19 @@ export function CreatePostModal({ open, onClose, defaultType, editPostId, initia
         },
       };
     }
-    return { content: genericDescription.trim(), tags: ["format:post", `intent:${intent}`, `dist-level:${distributionLevel}`], structural: { ...structuralBase, display_format: "post_card", body: { description: genericDescription.trim() } } };
+    return {
+      content: genericDescription.trim(),
+      tags: [
+        "format:post",
+        `intent:${intent}`,
+        `dist-level:${distributionLevel}`,
+      ],
+      structural: {
+        ...structuralBase,
+        display_format: "post_card",
+        body: { description: genericDescription.trim() },
+      },
+    };
   };
 
   const handleClose = () => {
@@ -392,8 +724,10 @@ export function CreatePostModal({ open, onClose, defaultType, editPostId, initia
 
   const handlePublish = async () => {
     if (!profile?.id) return toast.error("Faça login para publicar.");
-    if (locationError || !resolvedLocationId) return toast.error(locationError ?? "Localização inválida.");
+    if (locationError || !resolvedLocationId)
+      return toast.error(locationError ?? "Localização inválida.");
     if (!baseValid) return toast.error("Preencha os campos obrigatórios.");
+    if (publicationPermissionError) return toast.info(publicationPermissionError);
     setPublishing(true);
     try {
       const payload = buildStructuredPayload();
@@ -413,8 +747,12 @@ export function CreatePostModal({ open, onClose, defaultType, editPostId, initia
           tags: payload.tags,
           content_intent: intent,
           display_format: payload.structural.display_format,
-          distribution_channels: payload.structural.distribution_territorial.channels,
-          content_payload: payload.structural as unknown as Record<string, unknown>,
+          distribution_channels:
+            payload.structural.distribution_territorial.channels,
+          content_payload: payload.structural as unknown as Record<
+            string,
+            unknown
+          >,
         });
         toast.success("Conteúdo publicado.");
       }
@@ -431,99 +769,562 @@ export function CreatePostModal({ open, onClose, defaultType, editPostId, initia
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[760px] max-h-[88vh] overflow-hidden p-0">
         <DialogHeader className="border-b border-border px-5 py-4">
-          <DialogTitle className="text-base font-semibold">{editPostId ? "Editar conteúdo territorial" : "Criar conteúdo territorial"}</DialogTitle>
+          <DialogTitle className="text-base font-semibold">
+            {editPostId
+              ? "Editar conteúdo territorial"
+              : "Criar conteúdo territorial"}
+          </DialogTitle>
         </DialogHeader>
         <div className="max-h-[70vh] overflow-y-auto px-5 py-4 space-y-5">
-          {locationError && <Alert variant="destructive"><AlertCircle className="h-4 w-4" /><AlertDescription>{locationError}</AlertDescription></Alert>}
+          {locationError && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{locationError}</AlertDescription>
+            </Alert>
+          )}
           <div className="flex items-center gap-3">
-            <Avatar className="h-10 w-10"><AvatarImage src={avatarUrl} /><AvatarFallback>{initials}</AvatarFallback></Avatar>
-            <div className="min-w-0"><p className="text-sm font-medium">{displayName}</p><p className="text-xs text-muted-foreground">{selectedIntent.label}</p></div>
-            {effectiveProfile && effectiveProfile.profile_type !== "personal" && <div className="ml-auto"><ActiveProfileBadge profile={effectiveProfile} action="publicando como" /></div>}
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={avatarUrl} />
+              <AvatarFallback>{initials}</AvatarFallback>
+            </Avatar>
+            <div className="min-w-0">
+              <p className="text-sm font-medium">{displayName}</p>
+              <p className="text-xs text-muted-foreground">
+                {selectedIntent.label}
+              </p>
+            </div>
+            {effectiveProfile &&
+              effectiveProfile.profile_type !== "personal" && (
+                <div className="ml-auto">
+                  <ActiveProfileBadge
+                    profile={effectiveProfile}
+                    action="publicando como"
+                  />
+                </div>
+              )}
           </div>
           <section className="space-y-3">
             <h3 className="text-sm font-semibold">O que deseja publicar?</h3>
-            {INTENT_GROUPS.map((group) => <div key={group.title} className="space-y-2"><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{group.title}</p><div className="grid grid-cols-2 md:grid-cols-3 gap-2">{group.items.map((item) => { const Icon = item.icon; const active = item.id === intent; return <Tooltip key={item.id}><TooltipTrigger asChild><button type="button" onClick={() => setIntent(item.id)} className={cn("rounded-lg border p-2.5 text-left transition-colors", active ? "border-primary bg-primary/10 text-primary" : "border-border hover:border-primary/40")}><div className="flex items-center gap-2"><Icon className="h-4 w-4" /><span className="text-xs font-semibold">{item.label}</span></div></button></TooltipTrigger><TooltipContent side="bottom" className="max-w-[280px] text-xs">{item.tooltip}</TooltipContent></Tooltip>; })}</div></div>)}
+            {INTENT_GROUPS.map((group) => (
+              <div key={group.title} className="space-y-2">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  {group.title}
+                </p>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {group.items.map((item) => {
+                    const Icon = item.icon;
+                    const active = item.id === intent;
+                    return (
+                      <Tooltip key={item.id}>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            onClick={() => setIntent(item.id)}
+                            className={cn(
+                              "rounded-lg border p-2.5 text-left transition-colors",
+                              active
+                                ? "border-primary bg-primary/10 text-primary"
+                                : "border-border hover:border-primary/40",
+                            )}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Icon className="h-4 w-4" />
+                              <span className="text-xs font-semibold">
+                                {item.label}
+                              </span>
+                            </div>
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent
+                          side="bottom"
+                          className="max-w-[280px] text-xs"
+                        >
+                          {item.tooltip}
+                        </TooltipContent>
+                      </Tooltip>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </section>
           {isPollIntent ? (
             <section className="space-y-3 rounded-lg border border-border bg-card p-3">
               <p className="text-sm font-semibold">Enquete</p>
-              <div><label className="text-xs text-muted-foreground">Pergunta</label><Input value={pollQuestion} onChange={(e) => setPollQuestion(e.target.value)} placeholder="Qual pergunta você quer fazer?" /></div>
-              <div className="space-y-2"><label className="text-xs text-muted-foreground">Opções</label>{pollOptions.map((opt, idx) => <Input key={`poll-opt-${idx}`} value={opt} onChange={(e) => setPollOptions((prev) => prev.map((item, i) => (i === idx ? e.target.value : item)))} placeholder={`Opção ${idx + 1}`} />)}{pollOptions.length < 6 && <Button variant="outline" size="sm" type="button" onClick={() => setPollOptions((prev) => [...prev, ""])}>Adicionar opção</Button>}</div>
+              <div>
+                <label className="text-xs text-muted-foreground">
+                  Pergunta
+                </label>
+                <Input
+                  value={pollQuestion}
+                  onChange={(e) => setPollQuestion(e.target.value)}
+                  placeholder="Qual pergunta você quer fazer?"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs text-muted-foreground">Opções</label>
+                {pollOptions.map((opt, idx) => (
+                  <Input
+                    key={`poll-opt-${idx}`}
+                    value={opt}
+                    onChange={(e) =>
+                      setPollOptions((prev) =>
+                        prev.map((item, i) =>
+                          i === idx ? e.target.value : item,
+                        ),
+                      )
+                    }
+                    placeholder={`Opção ${idx + 1}`}
+                  />
+                ))}
+                {pollOptions.length < 6 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    type="button"
+                    onClick={() => setPollOptions((prev) => [...prev, ""])}
+                  >
+                    Adicionar opção
+                  </Button>
+                )}
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div><label className="text-xs text-muted-foreground">Duração</label><Select value={pollDurationDays} onValueChange={(v) => setPollDurationDays(v as typeof pollDurationDays)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{POLL_DURATION_OPTIONS.map((opt) => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent></Select></div>
-                <div className="space-y-2"><label className="text-xs text-muted-foreground">Configuração</label><button type="button" className={cn("w-full rounded-md border px-3 py-2 text-left text-sm", pollAllowMultiple ? "border-primary bg-primary/10" : "border-border")} onClick={() => setPollAllowMultiple((prev) => !prev)}>Múltipla escolha: {pollAllowMultiple ? "Sim" : "Não"}</button><button type="button" className={cn("w-full rounded-md border px-3 py-2 text-left text-sm", pollAllowComments ? "border-primary bg-primary/10" : "border-border")} onClick={() => setPollAllowComments((prev) => !prev)}>Permitir comentários: {pollAllowComments ? "Sim" : "Não"}</button></div>
+                <div>
+                  <label className="text-xs text-muted-foreground">
+                    Duração
+                  </label>
+                  <Select
+                    value={pollDurationDays}
+                    onValueChange={(v) =>
+                      setPollDurationDays(v as typeof pollDurationDays)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {POLL_DURATION_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-muted-foreground">
+                    Configuração
+                  </label>
+                  <button
+                    type="button"
+                    className={cn(
+                      "w-full rounded-md border px-3 py-2 text-left text-sm",
+                      pollAllowMultiple
+                        ? "border-primary bg-primary/10"
+                        : "border-border",
+                    )}
+                    onClick={() => setPollAllowMultiple((prev) => !prev)}
+                  >
+                    Múltipla escolha: {pollAllowMultiple ? "Sim" : "Não"}
+                  </button>
+                  <button
+                    type="button"
+                    className={cn(
+                      "w-full rounded-md border px-3 py-2 text-left text-sm",
+                      pollAllowComments
+                        ? "border-primary bg-primary/10"
+                        : "border-border",
+                    )}
+                    onClick={() => setPollAllowComments((prev) => !prev)}
+                  >
+                    Permitir comentários: {pollAllowComments ? "Sim" : "Não"}
+                  </button>
+                </div>
               </div>
             </section>
           ) : isProblemIntent ? (
             <section className="space-y-3 rounded-lg border border-border bg-card p-3">
               <p className="text-sm font-semibold">Problema</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3"><div><label className="text-xs text-muted-foreground">Localização</label><Input value={problemLocation} onChange={(e) => setProblemLocation(e.target.value)} placeholder="Rua, referência ou ponto crítico" /></div><div><label className="text-xs text-muted-foreground">Categoria</label><Input value={problemCategory} onChange={(e) => setProblemCategory(e.target.value)} placeholder="Ex.: buraco, iluminação, lixo" /></div></div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3"><div><label className="text-xs text-muted-foreground">Gravidade</label><Select value={problemSeverity} onValueChange={(v) => setProblemSeverity(v as typeof problemSeverity)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="baixa">Baixa</SelectItem><SelectItem value="media">Média</SelectItem><SelectItem value="alta">Alta</SelectItem><SelectItem value="critica">Crítica</SelectItem></SelectContent></Select></div><div><label className="text-xs text-muted-foreground">Recorrência</label><Select value={problemRecurrence} onValueChange={(v) => setProblemRecurrence(v as typeof problemRecurrence)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="pontual">Pontual</SelectItem><SelectItem value="frequente">Frequente</SelectItem><SelectItem value="constante">Constante</SelectItem></SelectContent></Select></div></div>
-              <div><label className="text-xs text-muted-foreground">Descrição estruturada</label><Textarea value={problemDescription} onChange={(e) => setProblemDescription(e.target.value)} placeholder="Descreva o problema, impacto e contexto." className="min-h-[120px]" /></div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-muted-foreground">
+                    Localização
+                  </label>
+                  <Input
+                    value={problemLocation}
+                    onChange={(e) => setProblemLocation(e.target.value)}
+                    placeholder="Rua, referência ou ponto crítico"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">
+                    Categoria
+                  </label>
+                  <Input
+                    value={problemCategory}
+                    onChange={(e) => setProblemCategory(e.target.value)}
+                    placeholder="Ex.: buraco, iluminação, lixo"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-muted-foreground">
+                    Gravidade
+                  </label>
+                  <Select
+                    value={problemSeverity}
+                    onValueChange={(v) =>
+                      setProblemSeverity(v as typeof problemSeverity)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="baixa">Baixa</SelectItem>
+                      <SelectItem value="media">Média</SelectItem>
+                      <SelectItem value="alta">Alta</SelectItem>
+                      <SelectItem value="critica">Crítica</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">
+                    Recorrência
+                  </label>
+                  <Select
+                    value={problemRecurrence}
+                    onValueChange={(v) =>
+                      setProblemRecurrence(v as typeof problemRecurrence)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pontual">Pontual</SelectItem>
+                      <SelectItem value="frequente">Frequente</SelectItem>
+                      <SelectItem value="constante">Constante</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground">
+                  Descrição estruturada
+                </label>
+                <Textarea
+                  value={problemDescription}
+                  onChange={(e) => setProblemDescription(e.target.value)}
+                  placeholder="Descreva o problema, impacto e contexto."
+                  className="min-h-[120px]"
+                />
+              </div>
             </section>
           ) : isEventIntent ? (
             <section className="space-y-3 rounded-lg border border-border bg-card p-3">
               <p className="text-sm font-semibold">Evento</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3"><div><label className="text-xs text-muted-foreground">Data</label><Input type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} /></div><div><label className="text-xs text-muted-foreground">Horário</label><Input type="time" value={eventTime} onChange={(e) => setEventTime(e.target.value)} /></div></div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3"><div><label className="text-xs text-muted-foreground">Local</label><Input value={eventPlace} onChange={(e) => setEventPlace(e.target.value)} placeholder="Endereço ou ponto de encontro" /></div><div><label className="text-xs text-muted-foreground">Limite de participantes (opcional)</label><Input type="number" min={1} value={eventLimit} onChange={(e) => setEventLimit(e.target.value)} placeholder="Ex.: 30" /></div></div>
-              <div><label className="text-xs text-muted-foreground">Descrição</label><Textarea value={eventDescription} onChange={(e) => setEventDescription(e.target.value)} placeholder="Explique objetivo, público e orientações." className="min-h-[120px]" /></div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-muted-foreground">Data</label>
+                  <Input
+                    type="date"
+                    value={eventDate}
+                    onChange={(e) => setEventDate(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">
+                    Horário
+                  </label>
+                  <Input
+                    type="time"
+                    value={eventTime}
+                    onChange={(e) => setEventTime(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-muted-foreground">Local</label>
+                  <Input
+                    value={eventPlace}
+                    onChange={(e) => setEventPlace(e.target.value)}
+                    placeholder="Endereço ou ponto de encontro"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">
+                    Limite de participantes (opcional)
+                  </label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={eventLimit}
+                    onChange={(e) => setEventLimit(e.target.value)}
+                    placeholder="Ex.: 30"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground">
+                  Descrição
+                </label>
+                <Textarea
+                  value={eventDescription}
+                  onChange={(e) => setEventDescription(e.target.value)}
+                  placeholder="Explique objetivo, público e orientações."
+                  className="min-h-[120px]"
+                />
+              </div>
             </section>
           ) : isOpportunityIntent ? (
             <section className="space-y-3 rounded-lg border border-border bg-card p-3">
               <p className="text-sm font-semibold">Oportunidade</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-muted-foreground">Tipo de oportunidade</label>
-                  <Select value={opportunityType} onValueChange={(v) => setOpportunityType(v as WorkOpportunityType)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                  <label className="text-xs text-muted-foreground">
+                    Tipo de oportunidade
+                  </label>
+                  <Select
+                    value={opportunityType}
+                    onValueChange={(v) =>
+                      setOpportunityType(v as WorkOpportunityType)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
                       {OPPORTUNITY_TYPE_OPTIONS.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground">Perfil profissional vinculado (opcional)</label>
-                  <Select value={opportunityLinkedProfessionalId} onValueChange={setOpportunityLinkedProfessionalId}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                  <label className="text-xs text-muted-foreground">
+                    Perfil profissional vinculado (opcional)
+                  </label>
+                  <Select
+                    value={opportunityLinkedProfessionalId}
+                    onValueChange={setOpportunityLinkedProfessionalId}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">Sem vincular perfil</SelectItem>
                       {ownedProfessionalProfiles.map((item) => (
                         <SelectItem key={item.id} value={item.id}>
-                          {item.professional_name ?? "Perfil profissional"} {item.service_category ? `• ${item.service_category}` : ""}
+                          {item.professional_name ?? "Perfil profissional"}{" "}
+                          {item.service_category
+                            ? `• ${item.service_category}`
+                            : ""}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                   {loadingOwnedProfessionalProfiles ? (
-                    <p className="mt-1 text-[11px] text-muted-foreground">Carregando seus perfis profissionais...</p>
+                    <p className="mt-1 text-[11px] text-muted-foreground">
+                      Carregando seus perfis profissionais...
+                    </p>
                   ) : null}
                 </div>
               </div>
               <div>
-                <label className="text-xs text-muted-foreground">Categoria profissional</label>
-                <Input value={opportunityCategory} onChange={(e) => setOpportunityCategory(e.target.value)} placeholder="Ex.: pizzaiolo, pedreiro, eletricista" />
+                <label className="text-xs text-muted-foreground">
+                  Categoria profissional
+                </label>
+                <Input
+                  value={opportunityCategory}
+                  onChange={(e) => setOpportunityCategory(e.target.value)}
+                  placeholder="Ex.: pizzaiolo, pedreiro, eletricista"
+                />
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3"><div><label className="text-xs text-muted-foreground">Tipo de trabalho</label><Input value={opportunityWorkType} onChange={(e) => setOpportunityWorkType(e.target.value)} placeholder="Ex.: freela de garcom, diaria, ajudante" /></div><div><label className="text-xs text-muted-foreground">Valor (opcional)</label><Input value={opportunityAmount} onChange={(e) => setOpportunityAmount(e.target.value)} placeholder="Ex.: R$ 150 diaria" /></div></div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3"><div><label className="text-xs text-muted-foreground">Urgencia</label><Select value={opportunityUrgency} onValueChange={(v) => setOpportunityUrgency(v as typeof opportunityUrgency)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="hoje">Hoje</SelectItem><SelectItem value="24h">Proximas 24h</SelectItem><SelectItem value="semana">Nesta semana</SelectItem><SelectItem value="flexivel">Flexivel</SelectItem></SelectContent></Select></div><div><label className="text-xs text-muted-foreground">Duração</label><Input value={opportunityDuration} onChange={(e) => setOpportunityDuration(e.target.value)} placeholder="Ex.: 1 dia, 3 dias, turno da noite" /></div></div>
-              <div><label className="text-xs text-muted-foreground">Contato</label><Input value={opportunityContact} onChange={(e) => setOpportunityContact(e.target.value)} placeholder="Telefone, WhatsApp ou @usuário" /></div>
-              <div><label className="text-xs text-muted-foreground">Descrição</label><Textarea value={opportunityDescription} onChange={(e) => setOpportunityDescription(e.target.value)} placeholder="Contexto da oportunidade e requisitos." className="min-h-[100px]" /></div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-muted-foreground">
+                    Tipo de trabalho
+                  </label>
+                  <Input
+                    value={opportunityWorkType}
+                    onChange={(e) => setOpportunityWorkType(e.target.value)}
+                    placeholder="Ex.: freela de garcom, diaria, ajudante"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">
+                    Valor (opcional)
+                  </label>
+                  <Input
+                    value={opportunityAmount}
+                    onChange={(e) => setOpportunityAmount(e.target.value)}
+                    placeholder="Ex.: R$ 150 diaria"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-muted-foreground">
+                    Urgencia
+                  </label>
+                  <Select
+                    value={opportunityUrgency}
+                    onValueChange={(v) =>
+                      setOpportunityUrgency(v as typeof opportunityUrgency)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="hoje">Hoje</SelectItem>
+                      <SelectItem value="24h">Proximas 24h</SelectItem>
+                      <SelectItem value="semana">Nesta semana</SelectItem>
+                      <SelectItem value="flexivel">Flexivel</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">
+                    Duração
+                  </label>
+                  <Input
+                    value={opportunityDuration}
+                    onChange={(e) => setOpportunityDuration(e.target.value)}
+                    placeholder="Ex.: 1 dia, 3 dias, turno da noite"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground">Contato</label>
+                <Input
+                  value={opportunityContact}
+                  onChange={(e) => setOpportunityContact(e.target.value)}
+                  placeholder="Telefone, WhatsApp ou @usuário"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground">
+                  Descrição
+                </label>
+                <Textarea
+                  value={opportunityDescription}
+                  onChange={(e) => setOpportunityDescription(e.target.value)}
+                  placeholder="Contexto da oportunidade e requisitos."
+                  className="min-h-[100px]"
+                />
+              </div>
             </section>
           ) : (
-            <section className="space-y-2"><p className="text-xs text-muted-foreground">Descrição</p><Textarea value={genericDescription} onChange={(e) => setGenericDescription(e.target.value)} placeholder="Descreva o que deseja publicar no território." className="min-h-[140px]" maxLength={2000} /><p className="text-[11px] text-muted-foreground">{genericDescription.length}/2000</p></section>
+            <section className="space-y-2">
+              <p className="text-xs text-muted-foreground">Descrição</p>
+              <Textarea
+                value={genericDescription}
+                onChange={(e) => setGenericDescription(e.target.value)}
+                placeholder="Descreva o que deseja publicar no território."
+                className="min-h-[140px]"
+                maxLength={2000}
+              />
+              <p className="text-[11px] text-muted-foreground">
+                {genericDescription.length}/2000
+              </p>
+            </section>
           )}
           <section className="space-y-2">
-            <div className="flex items-center justify-between"><p className="text-xs text-muted-foreground">Midia</p><Button variant="ghost" size="icon" type="button" onClick={form.handleAddImage}><Image className="h-4 w-4" /></Button></div>
-            {form.images.length > 0 && <div className="flex gap-2 flex-wrap">{form.images.map((img, i) => <div key={img} className="relative"><img src={img} alt="" className="h-16 w-16 rounded-lg border object-cover" /><button type="button" onClick={() => form.handleRemoveImage(i)} className="absolute -top-1 -right-1 rounded-full bg-destructive p-0.5 text-white"><X className="h-3 w-3" /></button></div>)}</div>}
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">Midia</p>
+              <Button
+                variant="ghost"
+                size="icon"
+                type="button"
+                onClick={form.handleAddImage}
+              >
+                <Image className="h-4 w-4" />
+              </Button>
+            </div>
+            {form.images.length > 0 && (
+              <div className="flex gap-2 flex-wrap">
+                {form.images.map((img, i) => (
+                  <div key={img} className="relative">
+                    <img
+                      src={img}
+                      alt=""
+                      className="h-16 w-16 rounded-lg border object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => form.handleRemoveImage(i)}
+                      className="absolute -top-1 -right-1 rounded-full bg-destructive p-0.5 text-white"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </section>
           <section className="space-y-2">
-            <p className="text-xs text-muted-foreground">Distribuicao territorial</p>
-            <div className="flex flex-wrap gap-2">{DISTRIBUTION_LEVEL_OPTIONS.map((option) => <button key={option.value} type="button" onClick={() => { setDistributionLevel(option.value); form.setReach(reachFromTerritorialLevel(option.value)); }} className={cn("rounded-full border px-3 py-1 text-xs", distributionLevel === option.value ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground")}>{option.label}</button>)}</div>
+            <p className="text-xs text-muted-foreground">
+              Distribuicao territorial
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {DISTRIBUTION_LEVEL_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => {
+                    setDistributionLevel(option.value);
+                    form.setReach(reachFromTerritorialLevel(option.value));
+                  }}
+                  className={cn(
+                    "rounded-full border px-3 py-1 text-xs",
+                    distributionLevel === option.value
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border text-muted-foreground",
+                  )}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
           </section>
         </div>
-        <div className="border-t border-border px-5 py-3 flex items-center justify-between"><p className="text-xs text-muted-foreground">{canPublish ? "Estrutura valida para publicação" : "Complete os campos obrigatórios"}</p><div className="flex gap-2"><Button variant="ghost" onClick={handleClose}>Cancelar</Button><Button onClick={handlePublish} disabled={!canPublish}>{publishing ? (editPostId ? "Salvando..." : "Publicando...") : (editPostId ? "Salvar" : "Publicar")}</Button></div></div>
-        <input ref={form.fileInputRef} type="file" accept="image/*,video/*" multiple className="hidden" onChange={form.handleFileSelect} />
+        <div className="border-t border-border px-5 py-3 flex items-center justify-between">
+          <p className="text-xs text-muted-foreground">
+            {publicationPermissionError
+              ? publicationPermissionError
+              : canPublish
+                ? "Estrutura valida para publicação"
+                : "Complete os campos obrigatórios"}
+          </p>
+          <div className="flex gap-2">
+            <Button variant="ghost" onClick={handleClose}>
+              Cancelar
+            </Button>
+            <Button onClick={handlePublish} disabled={!canPublish}>
+              {publishing
+                ? editPostId
+                  ? "Salvando..."
+                  : "Publicando..."
+                : editPostId
+                  ? "Salvar"
+                  : "Publicar"}
+            </Button>
+          </div>
+        </div>
+        <input
+          ref={form.fileInputRef}
+          type="file"
+          accept="image/*,video/*"
+          multiple
+          className="hidden"
+          onChange={form.handleFileSelect}
+        />
       </DialogContent>
     </Dialog>
   );

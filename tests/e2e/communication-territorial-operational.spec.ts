@@ -1,23 +1,13 @@
 import { expect, test, type Page } from '@playwright/test';
-import { createClient, type User } from '@supabase/supabase-js';
+import type { User } from '@supabase/supabase-js';
 import { login, loginAsUser } from '../../e2e/helpers/auth';
+import { createOptionalOperationalAdminClient } from '../helpers/operational-env';
 import {
   expectPausedLaunchSurface,
   openPublicRoute,
 } from './support/publicRouteAssertions';
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
-const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-const admin =
-  SUPABASE_URL && SERVICE_ROLE_KEY
-    ? createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      })
-    : null;
+const admin = createOptionalOperationalAdminClient();
 
 interface CommunicationE2EFixture {
   email: string;
@@ -44,7 +34,8 @@ async function findUserByEmail(email: string): Promise<User | null> {
     const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 200 });
     if (error) throw error;
 
-    const found = data.users.find((user) => user.email === email);
+    const users = data.users as User[];
+    const found = users.find((user) => user.email === email);
     if (found) return found;
     if (data.users.length < 200) return null;
 

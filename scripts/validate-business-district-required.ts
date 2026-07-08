@@ -1,30 +1,13 @@
 /**
- * Script de Validação: Empresas Devem Ter Bairro Obrigatório
- * 
- * Valida que todas as empresas ativas têm location_id apontando para
- * bairro/district (level=4), não para cidade (level=3).
- * 
- * Empresas sem bairro são inválidas e não podem gerar URL canônica.
+ * Validates that active businesses use a district location, not a city.
+ *
+ * Businesses without a district-level location cannot generate canonical
+ * public URLs safely.
  */
 
-import { createClient } from '@supabase/supabase-js';
-import { config } from 'dotenv';
-import { resolve } from 'path';
+import { createAnonClient } from './lib/supabase-client';
 
-// Carregar variáveis de ambiente do .env.local
-config({ path: resolve(process.cwd(), '.env.local') });
-
-const supabaseUrl = process.env.VITE_SUPABASE_URL!;
-const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY!;
-
-if (!supabaseUrl || !supabaseKey) {
-  console.error('❌ Variáveis de ambiente não configuradas');
-  console.error('VITE_SUPABASE_URL:', supabaseUrl ? '✓' : '✗');
-  console.error('VITE_SUPABASE_ANON_KEY:', supabaseKey ? '✓' : '✗');
-  process.exit(1);
-}
-
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = createAnonClient();
 
 interface InvalidBusiness {
   profile_id: string;
@@ -56,9 +39,8 @@ function resolveBusinessLocation(row: ActiveBusinessRow): BusinessLocationRow | 
 }
 
 async function validateBusinessDistrict() {
-  console.log('🔍 Validando empresas com bairro obrigatório...\n');
+  console.log('Validando empresas com bairro obrigatorio...\n');
 
-  // Buscar todas as empresas ativas com suas locations
   const { data: businesses, error } = await supabase
     .from('business_data')
     .select(`
@@ -76,16 +58,15 @@ async function validateBusinessDistrict() {
     .eq('status', 'active');
 
   if (error) {
-    console.error('❌ Erro ao buscar empresas:', error);
+    console.error('Erro ao buscar empresas:', error);
     process.exit(1);
   }
 
   if (!businesses || businesses.length === 0) {
-    console.log('✅ Nenhuma empresa encontrada.\n');
+    console.log('Nenhuma empresa encontrada.\n');
     return;
   }
 
-  // Filtrar empresas inválidas (sem location ou location não é district)
   const businessRows = (businesses ?? []) as ActiveBusinessRow[];
   const invalidBusinesses = businessRows.filter((business) => {
     const location = resolveBusinessLocation(business);
@@ -93,12 +74,11 @@ async function validateBusinessDistrict() {
   });
 
   if (invalidBusinesses.length === 0) {
-    console.log('✅ Todas as empresas ativas têm location_id apontando para bairro/district.\n');
-    console.log(`📊 Validação completa: ${businesses.length} empresas válidas, 0 inválidas`);
+    console.log('Todas as empresas ativas tem location_id apontando para bairro/district.\n');
+    console.log(`Validacao completa: ${businesses.length} empresas validas, 0 invalidas`);
     return;
   }
 
-  // Formatar dados
   const invalid: InvalidBusiness[] = invalidBusinesses.map((business) => {
     const location = resolveBusinessLocation(business);
     return {
@@ -112,36 +92,38 @@ async function validateBusinessDistrict() {
     };
   });
 
-  console.log(`❌ ATENÇÃO: ${invalid.length} empresas ativas com location_id inválido\n`);
-  console.log('Empresas devem ter location_id apontando para bairro/district (type=district), não cidade (type=city)\n');
+  console.log(`ATENCAO: ${invalid.length} empresas ativas com location_id invalido\n`);
+  console.log(
+    'Empresas devem ter location_id apontando para bairro/district (type=district), nao cidade (type=city)\n',
+  );
 
-  console.log('═══════════════════════════════════════════════════════════════════════════');
-  invalid.forEach((b, i) => {
-    console.log(`\n${i + 1}. ${b.name}`);
-    console.log(`   Profile ID: ${b.profile_id}`);
-    console.log(`   Slug: ${b.slug}`);
-    console.log(`   Location: ${b.location_name} (type: ${b.location_level})`);
-    console.log(`   Geographic Path: ${b.geographic_path}`);
-    console.log(`   ❌ Problema: Location é ${b.location_level}, deveria ser district`);
+  console.log('='.repeat(72));
+  invalid.forEach((business, index) => {
+    console.log(`\n${index + 1}. ${business.name}`);
+    console.log(`   Profile ID: ${business.profile_id}`);
+    console.log(`   Slug: ${business.slug}`);
+    console.log(`   Location: ${business.location_name} (type: ${business.location_level})`);
+    console.log(`   Geographic Path: ${business.geographic_path}`);
+    console.log(`   Problema: Location e ${business.location_level}, deveria ser district`);
   });
-  console.log('\n═══════════════════════════════════════════════════════════════════════════');
+  console.log(`\n${'='.repeat(72)}`);
 
-  console.log('\n📋 AÇÃO NECESSÁRIA:');
-  console.log('1. Atualizar location_id de cada empresa para apontar para um bairro específico');
+  console.log('\nACAO NECESSARIA:');
+  console.log('1. Atualizar location_id de cada empresa para apontar para um bairro especifico');
   console.log('2. Exemplo SQL:');
   console.log(`
 UPDATE business_data
    SET location_id = (
-         SELECT id 
-           FROM locations 
-          WHERE parent_id = business_data.location_id 
-            AND level = 4 
+         SELECT id
+           FROM locations
+          WHERE parent_id = business_data.location_id
+            AND level = 4
             AND status = 'active'
           LIMIT 1
        )
  WHERE profile_id = '<profile_id>';
   `);
-  console.log('\n3. Ou criar bairro padrão se não existir:');
+  console.log('\n3. Ou criar bairro padrao se nao existir:');
   console.log(`
 -- Criar bairro "Centro" para cidade sem bairros
 INSERT INTO locations (name, full_name, geographic_path, parent_id, level, status)
@@ -155,8 +137,8 @@ VALUES (
 );
   `);
 
-  console.log(`\n📊 Resumo: ${invalid.length} empresas precisam de correção`);
+  console.log(`\nResumo: ${invalid.length} empresas precisam de correcao`);
   process.exit(1);
 }
 
-validateBusinessDistrict();
+void validateBusinessDistrict();

@@ -1,9 +1,12 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase } from "@/integrations/supabase";
+import type { AuthChangeEvent, Session } from "@/integrations/supabase";
 import { SessionState } from "../state/SessionState";
 import { CacheManager } from "../cache/CacheManager";
+import { SessionRpcService } from "./SessionRpcService";
 import type { User, Profile, SessionData } from "../types";
-import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
+import type { SessionRpcProfileRow } from "./SessionRpcService";
+import { ACTIVE_PROFILE_STORAGE_KEY } from "@/core/profiles/constants/activeProfileStorage";
 /**
  * Tipo para dados de perfil vindos do banco de dados
  * Usado para mapear resultados de queries e RPCs
@@ -20,7 +23,7 @@ interface DbProfileRow {
   city: string | null;
   neighborhood: string | null;
   state: string | null;
-  street: string | null;
+  street?: string | null;
   telefone: string | null;
   whatsapp: string | null;
   location_id: string | null;
@@ -48,6 +51,59 @@ export class SessionService {
   private static authSubscription: { unsubscribe: () => void } | null = null;
   private static currentSession: Session | null = null;
   private static currentSessionPromise: Promise<Session | null> | null = null;
+
+  private static getStoredActiveProfileId(): string | null {
+    if (typeof window === "undefined") return null;
+    try {
+      return window.localStorage.getItem(ACTIVE_PROFILE_STORAGE_KEY);
+    } catch {
+      return null;
+    }
+  }
+
+  private static setStoredActiveProfileId(profileId: string): void {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(ACTIVE_PROFILE_STORAGE_KEY, profileId);
+    } catch {
+      // localStorage may be unavailable in restricted browser modes.
+    }
+  }
+
+  private static clearStoredActiveProfileId(): void {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.removeItem(ACTIVE_PROFILE_STORAGE_KEY);
+    } catch {
+      // localStorage may be unavailable in restricted browser modes.
+    }
+  }
+
+  private static resolveActiveProfile(
+    rpcActiveProfile: Profile | null,
+    profiles: Profile[],
+  ): Profile | null {
+    const storedProfileId = SessionService.getStoredActiveProfileId();
+    const storedProfile = storedProfileId
+      ? profiles.find((profile) => profile.id === storedProfileId)
+      : null;
+
+    if (storedProfile) return storedProfile;
+
+    const rpcProfile = rpcActiveProfile
+      ? profiles.find((profile) => profile.id === rpcActiveProfile.id) ?? rpcActiveProfile
+      : null;
+    const fallbackProfile =
+      rpcProfile ?? profiles.find((profile) => profile.profileType === "personal") ?? profiles[0] ?? null;
+
+    if (fallbackProfile) {
+      SessionService.setStoredActiveProfileId(fallbackProfile.id);
+    } else {
+      SessionService.clearStoredActiveProfileId();
+    }
+
+    return fallbackProfile;
+  }
 
   // initPromise resolve após o INITIAL_SESSION ser processado
   private static initResolve: (() => void) | null = null;
@@ -130,6 +186,7 @@ export class SessionService {
       if (event === "SIGNED_OUT") {
         SessionService.cancelPendingLoads();
         SessionService.currentSessionPromise = null;
+        SessionService.clearStoredActiveProfileId();
         SessionState.clear();
         CacheManager.clearAll();
         SessionService.resolveInit();
@@ -271,7 +328,8 @@ export class SessionService {
       return;
     }
 
-    const sessionData: SessionData = { user, activeProfile, profiles };
+    const resolvedActiveProfile = SessionService.resolveActiveProfile(activeProfile, profiles);
+    const sessionData: SessionData = { user, activeProfile: resolvedActiveProfile, profiles };
     SessionState.setState(sessionData);
     CacheManager.setSession(sessionData);
     SessionService.debug(
@@ -334,12 +392,10 @@ export class SessionService {
 
   // ── getActiveProfile ───────────────────────────────────────────────────────
   static async getActiveProfile(userId: string): Promise<Profile | null> {
-    const { data, error } = await supabase.rpc("get_active_profile", {
-      p_user_id: userId,
-    });
-    if (error || !data) return null;
-    // RPC retorna SETOF profiles (array)
-    const row = Array.isArray(data) ? data[0] : data;
+    const user = await SessionService.getCurrentUser();
+    if (!user || user.id !== userId) return null;
+
+    const row = await SessionRpcService.getActiveProfile();
     if (!row) return null;
     return SessionService.mapProfileFromDb(row);
   }
@@ -367,12 +423,10 @@ export class SessionService {
     const user = await SessionService.getCurrentUser();
     if (!user) throw new Error("Not authenticated");
 
-    const { error } = await supabase.rpc("switch_active_profile", {
-      p_user_id: user.id,
-      p_profile_id: profileId,
-    });
-    if (error) throw error;
+    const switched = await SessionRpcService.switchActiveProfile(profileId);
+    if (!switched) throw new Error("Nao foi possivel alternar o perfil ativo");
 
+    SessionService.setStoredActiveProfileId(profileId);
     CacheManager.invalidateSession();
     const session = await SessionService.getCurrentSession();
     if (session) await SessionService.loadFromSession(session, true);
@@ -407,7 +461,7 @@ export class SessionService {
    * @param dbProfile - Dados brutos do banco (RPC ou query)
    * @returns Profile tipado para uso no domínio
    */
-  private static mapProfileFromDb(dbProfile: DbProfileRow): Profile {
+  private static mapProfileFromDb(dbProfile: DbProfileRow | SessionRpcProfileRow): Profile {
     return {
       id: dbProfile.id,
       userId: dbProfile.user_id,

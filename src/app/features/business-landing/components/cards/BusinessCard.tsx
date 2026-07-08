@@ -1,132 +1,160 @@
-/**
- * BusinessCard - Estilo compacto horizontal
- * 
- * Padronizado com GastronomyCard:
- * - Layout horizontal (88px altura)
- * - Marcador visual à esquerda
- * - Informações compactas à direita
- * - Badges e status no mesmo padrão
- */
-
-import { motion } from "framer-motion";
 import {
-  Crown, BadgeCheck, MapPin, Star, Store, Clock,
+  BadgeCheck,
+  Bookmark,
+  MapPin,
+  MessageCircle,
+  Star,
 } from "lucide-react";
-import { Badge } from "@/shared/components/ui/badge";
+import { BusinessLogo } from "@/shared/components/ui/business-logo";
 import { cn } from "@/shared/utils/cn";
+import { formatDistanceLabel, getBusinessTerritoryLabel } from "../../utils/presentation";
 import type { BusinessCardProps } from "../../sections/types";
+
+function getTagTone(tag: string): string {
+  switch (tag.toLowerCase()) {
+    case "whatsapp":
+      return "border-emerald-400/18 bg-emerald-400/10 text-emerald-200";
+    case "entrega":
+      return "border-teal-400/20 bg-teal-400/10 text-teal-200";
+    default:
+      return "border-white/10 bg-white/[0.04] text-white/62";
+  }
+}
 
 export function BusinessCard({
   business,
   onClick,
   onToggleSave,
   isSaved,
-  nearbyMode,
-  index,
 }: BusinessCardProps) {
-  const hasDistance = business.distanceMeters !== undefined && nearbyMode;
-  const distanceKm = hasDistance ? (business.distanceMeters! / 1000).toFixed(1) : null;
+  const favoriteTargetId = business.business_data_id;
+  const distanceLabel = formatDistanceLabel(business);
+  const territoryLabel = getBusinessTerritoryLabel(business.geographic_path);
 
   return (
-    <motion.article
-      initial={{ opacity: 0, y: 16 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ delay: Math.min(index, 10) * 0.05 }}
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      onClick={onClick}
-      className={cn(
-        "group relative flex flex-row overflow-hidden rounded-xl border border-border/50 bg-card transition-all duration-300 hover:border-primary/30 hover:shadow-md cursor-pointer h-[88px]",
-        business.premium && "ring-2 ring-primary/20"
-      )}
-      role="article"
-      aria-label={`${business.name} - ${business.category}`}
+    <article
+      className="group relative overflow-hidden rounded-[22px] border border-white/10 bg-white/[0.03] p-3 transition-colors hover:border-teal-400/18 hover:bg-white/[0.04] focus-within:border-teal-400/30 sm:p-3.5"
+      aria-label={business.name}
     >
-      {/* Marcador visual à esquerda */}
-      <div className="relative h-full w-[88px] shrink-0 overflow-hidden">
-        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10">
-          <Store className="h-8 w-8 text-primary/80" />
+      <button
+        type="button"
+        className="absolute inset-0 z-10 rounded-[22px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-300/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+        onClick={onClick}
+        aria-label={`Abrir ${business.name}`}
+      />
+
+      {favoriteTargetId ? (
+        <button
+          type="button"
+          onClick={(event) => onToggleSave(favoriteTargetId, event)}
+          className={cn(
+            "absolute right-3 top-3 z-20 inline-flex h-10 w-10 items-center justify-center rounded-2xl border transition-colors",
+            isSaved
+              ? "border-teal-400/35 bg-teal-400/12 text-teal-200"
+              : "border-white/10 bg-black/20 text-white/55 hover:border-white/20 hover:text-white",
+          )}
+          aria-label={isSaved ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+          aria-pressed={isSaved}
+        >
+          <Bookmark
+            className={cn("h-4.5 w-4.5", isSaved && "fill-current")}
+            aria-hidden="true"
+          />
+        </button>
+      ) : null}
+
+      <div className="pointer-events-none relative z-0 flex w-full min-w-0 gap-3 pr-12 text-left">
+        <div className="h-24 w-24 shrink-0 overflow-hidden rounded-2xl border border-white/8 bg-black/20 sm:h-28 sm:w-28">
+          <BusinessLogo
+            name={business.name}
+            logoUrl={business.logoUrl}
+            className="h-full w-full object-cover"
+            initialsClassName="text-white"
+          />
         </div>
 
-        {/* Premium/Verified badge */}
-        {(business.premium || business.is_verified) && (
-          <div className="absolute top-1 left-1">
-            {business.premium ? (
-              <Crown className="h-3.5 w-3.5 text-warning fill-warning" />
-            ) : (
-              <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-            )}
+        <div className="min-w-0 flex-1">
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <h3 className="truncate text-base font-semibold text-white sm:text-lg">
+                {business.name}
+              </h3>
+              {business.is_verified ? (
+                <BadgeCheck
+                  className="h-4.5 w-4.5 shrink-0 text-teal-300"
+                  aria-label="Empresa verificada"
+                />
+              ) : null}
+            </div>
+            <p className="mt-0.5 truncate text-sm text-white/58">
+              {business.category}
+              {business.modos_atendimento?.length ? (
+                <>
+                  {" "}
+                  · {business.modos_atendimento[0]}
+                </>
+              ) : null}
+            </p>
           </div>
-        )}
-      </div>
 
-      {/* Conteúdo à direita */}
-      <div className="flex min-w-0 flex-1 flex-col justify-between px-2.5 py-2">
-        {/* Nome + verificado */}
-        <div className="flex items-start justify-between gap-1">
-          <h3 className="line-clamp-1 text-sm font-bold leading-tight text-foreground transition-colors group-hover:text-primary">
-            {business.name}
-          </h3>
-          {business.is_verified && (
-            <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-primary mt-0.5" />
-          )}
-        </div>
-
-        {/* Categoria */}
-        <p className="text-[11px] text-muted-foreground truncate">{business.category}</p>
-
-        {/* Rating + badges */}
-        <div className="flex items-center gap-2">
-          {business.rating > 0 && (
-            <span className="flex items-center gap-0.5 text-[11px] font-semibold">
-              <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-              {business.rating.toFixed(1)}
-              <span className="text-muted-foreground">({business.reviews})</span>
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+            {business.rating > 0 ? (
+              <span className="inline-flex items-center gap-1 text-amber-200">
+                <Star className="h-4 w-4 fill-current" />
+                <span className="font-medium">{business.rating.toFixed(1)}</span>
+                <span className="text-white/42">({business.reviews})</span>
+              </span>
+            ) : null}
+            <span
+              className={cn(
+                "font-medium",
+                business.isOpen ? "text-emerald-300" : "text-rose-300",
+              )}
+            >
+              {business.isOpen ? "Aberto" : "Fechado"}
             </span>
-          )}
-          {business.neighborRecs > 0 && (
-            <Badge variant="outline" className="h-4 px-1.5 py-0 text-[10px] font-medium">
-              {business.neighborRecs} recomendações
-            </Badge>
-          )}
-        </div>
+            {business.statusText ? (
+              <span className="text-white/40">{business.statusText}</span>
+            ) : null}
+          </div>
 
-        {/* Status + Distância/Localização */}
-        <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-          <span className={cn(
-            "flex items-center gap-0.5 font-medium shrink-0",
-            business.isOpen ? "text-emerald-600 dark:text-emerald-400" : "text-red-500"
-          )}>
-            <Clock className="h-2.5 w-2.5" />
-            {business.isOpen ? "Aberto" : "Fechado"}
-          </span>
-          
-          {hasDistance && distanceKm ? (
-            <span className="flex items-center gap-0.5">
-              <MapPin className="h-2.5 w-2.5 shrink-0" />
-              {distanceKm} km
-            </span>
-          ) : business.distance !== "N/A" ? (
-            <span className="flex items-center gap-0.5">
-              <MapPin className="h-2.5 w-2.5 shrink-0" />
-              {business.distance}
-            </span>
+          <p className="mt-2 line-clamp-2 text-sm leading-6 text-white/64">
+            {business.description || "Negocio local com atendimento ativo no territorio."}
+          </p>
+
+          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-white/52">
+            {distanceLabel ? (
+              <span className="inline-flex items-center gap-1">
+                <MapPin className="h-4 w-4" />
+                {distanceLabel}
+              </span>
+            ) : null}
+            {territoryLabel ? <span>{territoryLabel}</span> : null}
+            {business.whatsapp ? (
+              <span className="inline-flex items-center gap-1 text-emerald-200">
+                <MessageCircle className="h-4 w-4" />
+                WhatsApp
+              </span>
+            ) : null}
+          </div>
+
+          {business.tags.length > 0 ? (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {business.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className={cn(
+                    "inline-flex min-h-7 items-center rounded-full border px-2.5 text-xs font-medium",
+                    getTagTone(tag),
+                  )}
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
           ) : null}
-
-          {business.walkTime !== "N/A" && (
-            <span className="flex items-center gap-0.5 shrink-0">
-              <MapPin className="h-2.5 w-2.5" />
-              {business.walkTime}
-            </span>
-          )}
         </div>
       </div>
-
-      {/* Hover Glow */}
-      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity group-hover:opacity-100">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent" />
-      </div>
-    </motion.article>
+    </article>
   );
 }

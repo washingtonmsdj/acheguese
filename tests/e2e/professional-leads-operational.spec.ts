@@ -1,11 +1,14 @@
 import { expect, test, type Page } from "@playwright/test";
-import { createClient } from "@supabase/supabase-js";
 import { loginAsUser } from "../../e2e/helpers/auth";
+import {
+  createOperationalAnonClient,
+  getOperationalEnv,
+  hasOperationalAnonEnv,
+} from "../helpers/operational-env";
 
-const TEST_EMAIL = process.env.E2E_USER_EMAIL || "";
-const TEST_PASSWORD = process.env.E2E_USER_PASSWORD || "";
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || "";
-const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || "";
+const operationalEnv = getOperationalEnv();
+const TEST_EMAIL = operationalEnv.driverEmail || "";
+const TEST_PASSWORD = operationalEnv.driverPassword || "";
 
 let PROFESSIONAL_DATA_ID: string | null = null;
 
@@ -15,13 +18,11 @@ interface LeadFixture {
 }
 
 function testClient() {
-  return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
+  return createOperationalAnonClient();
 }
 
 async function signInTestUser() {
-  if (!TEST_EMAIL || !TEST_PASSWORD || !SUPABASE_URL || !SUPABASE_ANON_KEY) return null;
+  if (!TEST_EMAIL || !TEST_PASSWORD || !hasOperationalAnonEnv()) return null;
   const client = testClient();
   const signIn = await client.auth.signInWithPassword({
     email: TEST_EMAIL,
@@ -60,23 +61,35 @@ async function ensureProfessionalData(): Promise<string | null> {
   let professionalProfileId = existingProfile.data?.id ?? null;
   if (!professionalProfileId) {
     const suffix = Date.now().toString().slice(-6);
-    await client.rpc("create_profile_with_extension", {
-      p_profile_type: "professional",
-      p_handle: `e2e-prof-${suffix}`,
-      p_display_name: `Profissional E2E ${suffix}`,
-      p_avatar_url: null,
-      p_bio: "Perfil profissional bootstrap E2E.",
-      p_extension_data: {
-        professional_name: `Profissional E2E ${suffix}`,
-        profession: "Eletricista",
-        location_id: locationId,
-        service_category: "manutencao",
-        service_subcategory: "eletricista",
-        description: "Profissional para fluxo E2E.",
-        is_accepting_clients: true,
-        status: "active",
+    const rpc = await client.functions.invoke<{
+      data?: { success?: boolean; error?: string };
+      error?: string;
+    }>("profile-rpc", {
+      body: {
+        action: "createProfile",
+        params: {
+          profileType: "professional",
+          handle: `e2e-prof-${suffix}`,
+          displayName: `Profissional E2E ${suffix}`,
+          avatarUrl: null,
+          bio: "Perfil profissional bootstrap E2E.",
+          extensionData: {
+            professional_name: `Profissional E2E ${suffix}`,
+            profession: "Eletricista",
+            location_id: locationId,
+            service_category: "manutencao",
+            service_subcategory: "eletricista",
+            description: "Profissional para fluxo E2E.",
+            is_accepting_clients: true,
+            status: "active",
+          },
+        },
       },
     });
+
+    if (rpc.error || rpc.data?.error || rpc.data?.data?.success === false) {
+      throw rpc.error ?? new Error(rpc.data?.error ?? rpc.data?.data?.error ?? "Falha ao criar perfil profissional.");
+    }
 
     const refreshed = await client
       .from("profiles")

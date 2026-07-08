@@ -4,8 +4,10 @@ import { toast } from "sonner";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { useAppUrls } from "@/core/routing/hooks"; // SSOT URLs
 import { useSessionContext } from "@/core/session";
+import { CommunityPortalGate, useCommunityAccess } from "@/core/community/access";
 import { useGroupDetail } from "@/core/community/hooks/useGroups";
 import { useJoinGroup, useLeaveGroup, useUpdateGroupMemberRole } from "@/core/community/hooks/useGroupQueries";
+import { useTerritorialContext } from "@/core/routing/components/TerritorialLayout";
 import { Button } from "@/shared/components/ui/button";
 import { ArrowLeft, Copy, Info, Loader2, Lock, MessageCircle, UserMinus, UserPlus, Users } from "lucide-react";
 import { GrupoDetailChat } from "./GrupoDetailChat";
@@ -15,8 +17,13 @@ export default function GrupoDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const appUrls = useAppUrls(); // SSOT URLs
+  const territorialContext = useTerritorialContext();
   const { activeProfile } = useSessionContext();
   const { user } = useAuth();
+  const communityAccess = useCommunityAccess({
+    resolved: territorialContext.resolved,
+    activeMemberIds: territorialContext.activeMemberIds,
+  });
   const { group, members, isMember, userRole, loading, refetch } =
     useGroupDetail(id);
   const joinGroupMutation = useJoinGroup();
@@ -25,8 +32,10 @@ export default function GrupoDetailPage() {
   const [activeTab, setActiveTab] = useState<"chat" | "membros" | "info">(
     "chat",
   );
-  const canModerate = ["admin", "moderator"].includes(userRole || "");
+  const canModerate =
+    communityAccess.can.moderate && ["admin", "moderator"].includes(userRole || "");
   const canPost =
+    communityAccess.can.send_message &&
     isMember &&
     (group?.posting_policy === "members" ||
       (group?.posting_policy === "moderators" && ["admin", "moderator"].includes(userRole || "")) ||
@@ -62,6 +71,11 @@ export default function GrupoDetailPage() {
   };
 
   const handleJoin = async () => {
+    if (!communityAccess.can.join_group) {
+      toast.info("Entrar em grupos exige residencia verificada nesta comunidade.");
+      return;
+    }
+
     if (!user) {
       toast.error("Faça login primeiro");
       return;
@@ -90,15 +104,32 @@ export default function GrupoDetailPage() {
     role: "admin" | "moderator" | "member",
   ) => {
     if (!id) return;
+    if (!canModerate) {
+      toast.info("Apenas moderadores do grupo podem alterar funcoes.");
+      return;
+    }
+
     await updateRoleMutation.mutateAsync({ groupId: id, memberProfileId, role });
     toast.success("Função atualizada");
     refetch();
   };
 
-  if (loading) {
+  if (communityAccess.isLoading || loading) {
     return (
       <div className="min-h-screen bg-[#12181B] flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-teal-400" />
+      </div>
+    );
+  }
+
+  if (!communityAccess.can.join_group) {
+    return (
+      <div className="min-h-screen bg-[#12181B] text-white">
+        <CommunityPortalGate
+          resolved={territorialContext.resolved}
+          activeMemberIds={territorialContext.activeMemberIds}
+          action="join_group"
+        />
       </div>
     );
   }
@@ -220,7 +251,7 @@ export default function GrupoDetailPage() {
         {activeTab === "membros" && (
           <GrupoDetailMembersPanel
             members={members}
-            canManageRoles={["admin", "moderator"].includes(userRole || "")}
+            canManageRoles={canModerate}
             currentProfileId={activeProfile?.id}
             onRoleChange={handleRoleChange}
           />

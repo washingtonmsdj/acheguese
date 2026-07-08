@@ -11,8 +11,10 @@
  */
 
 import { supabase } from "@/integrations/supabase";
-import type { RealtimeChannel } from "@/integrations/supabase";
-import type { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
+import type {
+  RealtimeChannel,
+  RealtimePostgresChangesPayload,
+} from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 

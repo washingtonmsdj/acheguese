@@ -3,7 +3,6 @@ import { ArrowRight, UtensilsCrossed } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { SafeImage } from '@/shared/components/security';
-import { formatBrl } from '@/modules/business/gastronomy/utils/currency';
 import type { EmpresaGastronomiaPreviewSectionProps } from './types';
 
 export function EmpresaGastronomiaPreviewSection({
@@ -79,9 +78,11 @@ export function EmpresaGastronomiaPreviewSection({
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {items.map((item) => (
-          <article
+          <Link
             key={item.id}
-            className="overflow-hidden rounded-xl border border-border bg-card"
+            to={item.menuUrl}
+            className="group overflow-hidden rounded-xl border border-border bg-card transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            aria-label={`Abrir cardapio de ${businessName}: ${item.name}`}
           >
             {item.imageUrl ? (
               <SafeImage
@@ -99,10 +100,10 @@ export function EmpresaGastronomiaPreviewSection({
                 {item.name}
               </h3>
               <p className="mt-2 text-sm font-bold text-primary">
-                A partir de {formatBrl(item.priceFrom)}
+                {item.priceLabel}
               </p>
             </div>
-          </article>
+          </Link>
         ))}
       </div>
     </section>

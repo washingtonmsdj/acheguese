@@ -1,6 +1,7 @@
 import { Button } from '@/shared/components/ui/button';
 import { ShoppingCart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { GastronomyUrlService } from '@/core/verticals/gastronomy/services/GastronomyUrlService';
 import { useGastronomyCart } from '../hooks';
 import type { GastronomyBusiness } from '../types';
 import { formatBrl } from '../utils/currency';
@@ -20,6 +21,14 @@ export function StickyOrderBar({ business }: Props) {
   } = useGastronomyCart(business);
 
   if (!hasCart || itemCount === 0) return null;
+
+  const checkoutUrl =
+    business.geographic_path && business.slug
+      ? `${GastronomyUrlService.getPublicDetailUrlFromTerritory(
+          business.geographic_path,
+          business.slug,
+        )}/checkout`
+      : 'checkout';
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-lg backdrop-blur sm:p-4 sm:pb-4">
@@ -46,7 +55,7 @@ export function StickyOrderBar({ business }: Props) {
         <Button
           size="lg"
           className="w-full sm:w-auto"
-          onClick={() => navigate("checkout", { state: { business } })}
+          onClick={() => navigate(checkoutUrl, { state: { business } })}
           disabled={!minimumOrderReached}
         >
           Continuar checkout

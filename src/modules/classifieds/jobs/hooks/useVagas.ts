@@ -23,7 +23,7 @@ interface UseVagasParams {
 }
 
 export function useVagas(params: UseVagasParams = {}) {
-  const { resolved } = params;
+  const { resolved, activeMemberIds } = params;
   
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -31,7 +31,7 @@ export function useVagas(params: UseVagasParams = {}) {
   const [selectedModality, setSelectedModality] = useState<VagaModalidade | null>(null);
   const [selectedLevel, setSelectedLevel] = useState<VagaNivel | null>(null);
 
-  const moduleTerritory = useModuleTerritoryFilter({ routeResolved: resolved });
+  const moduleTerritory = useModuleTerritoryFilter({ routeResolved: resolved, activeMemberIds });
   const locationId = moduleTerritory.resolvedLocationIds[0] ?? "";
   const locationIds = moduleTerritory.resolvedLocationIds;
 

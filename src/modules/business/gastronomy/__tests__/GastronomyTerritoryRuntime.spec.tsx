@@ -291,7 +291,7 @@ describe("Gastronomy territorial runtime", () => {
       screen.getByText(/não pertence a um estabelecimento ativo neste território/i),
     ).toBeInTheDocument();
   });
-  it("redirects legacy gastronomy detail to the public business URL", async () => {
+  it("renders legacy gastronomy detail without redirecting to the public business URL", async () => {
     usePublicGastronomySnapshotMock.mockReturnValue({
       data: {
         identity: {
@@ -404,7 +404,8 @@ describe("Gastronomy territorial runtime", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText("Empresa publica canonica")).toBeInTheDocument();
+      expect(screen.getByText("Pasta Lab")).toBeInTheDocument();
     });
+    expect(screen.queryByText("Empresa publica canonica")).not.toBeInTheDocument();
   });
 });

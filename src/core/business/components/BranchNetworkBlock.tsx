@@ -103,9 +103,11 @@ function BranchItem({
             : null,
       };
       onNavigate(
-        await BusinessUrlService.getCanonicalUrlWithResolvedCommunityAlias(
-          routeContext,
-        ),
+        communityAliasOverride &&
+          currentBusinessGeographicPath &&
+          ctx.geographic_path === currentBusinessGeographicPath
+          ? BusinessUrlService.getCommunityScopedUrl(ctx, communityAliasOverride)
+          : BusinessUrlService.getCanonicalUrl(routeContext),
       );
     }
   };

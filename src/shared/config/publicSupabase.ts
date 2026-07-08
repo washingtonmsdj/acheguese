@@ -30,8 +30,10 @@ export const PUBLIC_SUPABASE_CONFIG = {
 export type SupabaseFunctionName =
   | "admin-suspend-profile"
   | "admin-verify-profile"
+  | "auth-username-login"
   | "health-check"
   | "nominatim-proxy"
+  | "track-public-view"
   | "user-delete-account"
   | "user-export-data";
 

@@ -3,15 +3,16 @@
  *
  * Rules:
  * - No direct DB access outside this service
- * - Creation must happen via RPC (create_community_alert)
+ * - Creation must happen via community-rpc
  * - Hooks should only orchestrate loading/error state
  */
 
 import { supabase } from "@/integrations/supabase";
-import { callRPC, insertLooseRow } from "@/integrations/supabase";
+import { insertLooseRow } from "@/integrations/supabase";
 import type { Database } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { SessionService } from "@/core/session/services/SessionService";
+import { CommunityRpcService } from "@/core/community/services/CommunityRpcService";
 import type {
   AlertCategory,
   AlertFeedFilters,
@@ -42,11 +43,6 @@ type CommunityAlertsRow = Pick<
   | "updated_at"
   | "removed_at"
 >;
-type CreateCommunityAlertRpcArgs = Extract<
-  Database["public"]["Functions"]["create_community_alert"],
-  { Args: { payload: unknown } }
->["Args"];
-
 class CommunityAlertServiceClass {
   private readonly TABLE = "community_alerts";
   private readonly DB_SELECT = `
@@ -215,20 +211,9 @@ class CommunityAlertServiceClass {
 
   async createAlert(payload: CreateAlertPayload): Promise<AlertRpcResult> {
     try {
-      const { data, error } = await callRPC<AlertRpcResult>("create_community_alert", {
-        payload,
-      } as unknown as CreateCommunityAlertRpcArgs);
-
-      if (error) {
-        logger.error(
-          "CommunityAlertService.createAlert RPC error",
-          error,
-          this._errorContext(error)
-        );
-        return { error: "internal_error", detail: String(error) };
-      }
-
-      return data ?? { error: "internal_error" };
+      return await CommunityRpcService.createAlert<AlertRpcResult>(
+        payload as unknown as Record<string, unknown>,
+      );
     } catch (error) {
       logger.error(
         "CommunityAlertService.createAlert",
@@ -241,10 +226,7 @@ class CommunityAlertServiceClass {
 
   async updateAlert(alertId: string, payload: UpdateAlertPayload): Promise<boolean> {
     try {
-      const { error: rpcError } = await callRPC<unknown>("increment_alert_edit_count", {
-        p_alert_id: alertId,
-      });
-      if (rpcError) throw rpcError;
+      await CommunityRpcService.incrementAlertEditCount(alertId);
 
       const updateData: Record<string, unknown> = {
         updated_at: new Date().toISOString(),

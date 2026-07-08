@@ -248,7 +248,7 @@ function generateReport(): void {
   console.log('\n📚 Consulte a documentação em docs/audits/ para correções\n');
 
   // Exit code baseado em violações críticas
-  if (critical.length > 0) {
+  if (violations.length > 0) {
     process.exit(1);
   }
 }

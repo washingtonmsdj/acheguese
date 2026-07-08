@@ -3,7 +3,9 @@
  */
 
 // Services
+export { CommunityNotificationBrokerService } from './services/CommunityNotificationBrokerService';
 export { NotificationService } from './services/NotificationService';
+export { ProfessionalNotificationBrokerService } from './services/ProfessionalNotificationBrokerService';
 export { notificationService } from './services';
 
 // Types

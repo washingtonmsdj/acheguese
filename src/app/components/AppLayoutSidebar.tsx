@@ -46,7 +46,17 @@ export function AppLayoutSidebar() {
     !isReservedSlug(pathSegments[0] ?? '') &&
     (
       pathSegments.length === 1 ||
-      isCommunityRouteSuffixSegment(pathSegments[1])
+      isCommunityRouteSuffixSegment(pathSegments[1]) ||
+      (
+        pathSegments.length === 2 &&
+        !isReservedSlug(pathSegments[1] ?? '')
+      )
+    );
+  const isPublicBusinessLandingRoute =
+    (pathname === '/empresas-landing') ||
+    (
+      pathSegments[0] === MODULE_SLUGS.business &&
+      pathSegments[1] !== 'cadastrar'
     );
 
   // Ocultar sidebar na home e na página de perfil (que tem sua própria sidebar)
@@ -55,25 +65,50 @@ export function AppLayoutSidebar() {
     pathname.startsWith('/conta') ||
     isBarePublicTerritorialRoute ||
     isCommunityPublicLandingRoute ||
-    isShortCommunityRoute;
+    isShortCommunityRoute ||
+    isPublicBusinessLandingRoute;
 
   const isInternalGroupRoute =
     pathSegments[0] === 'grupos' && pathSegments.length >= 2;
   const isConversationRoute =
     pathSegments[0] === 'chat' && pathSegments.length >= 2;
-  const hideMobileBottomNav = isInternalGroupRoute || isConversationRoute;
+  const isPublicEntityDetailRoute =
+    isShortCommunityRoute &&
+    pathSegments.length === 2 &&
+    !isReservedSlug(pathSegments[1] ?? '') &&
+    !isCommunityRouteSuffixSegment(pathSegments[1] ?? '');
+  const useDocumentScrollPublicShell = isPublicEntityDetailRoute;
+  const hideMobileBottomNav =
+    isInternalGroupRoute || isConversationRoute || isPublicEntityDetailRoute;
 
   // Se deve ocultar a sidebar global, renderizar apenas o conteúdo
   if (hideGlobalSidebar) {
     return (
-      <div className="flex h-screen w-full overflow-hidden bg-background">
-        <main id="main-content" className="flex-1 overflow-y-auto flex flex-col min-h-0" tabIndex={-1}>
-          <TerritoryMismatchBanner />
-          <div className="flex-1 min-h-0">
-            <Outlet />
-          </div>
-        </main>
-      </div>
+      <>
+        <div
+          className={
+            useDocumentScrollPublicShell
+              ? "flex min-h-screen w-full bg-background"
+              : "flex h-screen w-full overflow-hidden bg-background"
+          }
+        >
+          <main
+            id="main-content"
+            className={
+              useDocumentScrollPublicShell
+                ? "flex-1 flex flex-col min-w-0"
+                : "flex-1 overflow-y-auto flex flex-col min-h-0"
+            }
+            tabIndex={-1}
+          >
+            <TerritoryMismatchBanner />
+            <div className={useDocumentScrollPublicShell ? "flex-1" : "flex-1 min-h-0"}>
+              <Outlet />
+            </div>
+          </main>
+        </div>
+        {!hideMobileBottomNav ? <BottomNav /> : null}
+      </>
     );
   }
 

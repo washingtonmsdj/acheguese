@@ -1,36 +1,30 @@
-/**
- * RatingDistribution
- * 
- * Distribuição de avaliações por estrelas (1-5).
- * Exibe barras de progresso com percentuais.
- * 
- * SSOT: Props tipadas vindas de sections/types.ts
- * Sem gambiarras: Componente focado apenas em renderização
- */
-
 import { Star } from 'lucide-react';
 import type { RatingDistributionProps } from '../../sections/types';
 
-export function RatingDistribution({ reviews }: RatingDistributionProps) {
+export function RatingDistribution({
+  reviews,
+  ratingBreakdown,
+  totalReviews,
+}: RatingDistributionProps) {
   return (
-    <div className="flex-1 w-full space-y-2">
+    <div className="w-full flex-1 space-y-2 xl:space-y-1.5 [@media(max-height:1100px)]:space-y-[0.275rem]">
       {[5, 4, 3, 2, 1].map((star) => {
-        const count = reviews.filter((r) => r.rating === star).length;
-        const pct = reviews.length > 0 ? (count / reviews.length) * 100 : 0;
-        
+        const count = ratingBreakdown?.[star as keyof typeof ratingBreakdown]
+          ?? reviews.filter((review) => review.rating === star).length;
+        const denominator = totalReviews && totalReviews > 0 ? totalReviews : reviews.length;
+        const pct = denominator > 0 ? (count / denominator) * 100 : 0;
+
         return (
-          <div key={star} className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground w-3">{star}</span>
-            <Star className="h-3.5 w-3.5 text-primary fill-primary" />
-            <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden">
+          <div key={star} className="flex items-center gap-2 xl:gap-1.5 [@media(max-height:1100px)]:gap-[0.275rem]">
+            <span className="w-3 text-xs text-white/48 xl:text-[11px] [@media(max-height:1100px)]:text-[10px]">{star}</span>
+            <Star className="h-3.5 w-3.5 fill-teal-300 text-teal-300 xl:h-3 xl:w-3 [@media(max-height:1100px)]:h-[0.6875rem] [@media(max-height:1100px)]:w-[0.6875rem]" />
+            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/8 xl:h-[0.3125rem] [@media(max-height:1100px)]:h-1">
               <div
-                className="h-full bg-primary rounded-full transition-all"
+                className="h-full rounded-full bg-teal-300 transition-all"
                 style={{ width: `${pct}%` }}
               />
             </div>
-            <span className="text-xs text-muted-foreground w-6 text-right">
-              {count}
-            </span>
+            <span className="w-6 text-right text-xs text-white/48 xl:text-[11px] [@media(max-height:1100px)]:text-[10px]">{count}</span>
           </div>
         );
       })}

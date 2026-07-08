@@ -19,6 +19,7 @@ import { logger } from '@/shared/utils/logger';
 import { supabase as supabaseClient } from '@/integrations/supabase';
 import { getDriverDataByProfileIds, getDriverOfferCapabilities } from './mobility.queries';
 import { MobilityService } from './MobilityService.impl';
+import { MobilityRpcService } from './MobilityRpcService';
 
 // No browser, sempre usa o cliente público com RLS.
 // Em testes Node, o arquivo de setup deve injetar um cliente com service role
@@ -446,17 +447,12 @@ export class DriverAvailabilityService {
     rideId: string
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      const { data, error } = await driverAvailabilityDb.rpc<boolean>(
-        'release_driver_availability_for_ride',
-        {
-          p_driver_profile_id: driverProfileId,
-          p_ride_id: rideId,
-        },
+      const released = await MobilityRpcService.releaseDriverAvailabilityForRide(
+        driverProfileId,
+        rideId,
       );
 
-      if (error) throw error;
-
-      if (data !== true) {
+      if (released !== true) {
         return {
           success: false,
           error: 'Driver was not busy with the specified ride or was already released',

@@ -123,7 +123,7 @@ export function ConsentBanner() {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-7 rounded-lg px-2 text-[0.62rem] font-medium"
+                className="h-7 rounded-lg border-slate-300 !bg-white px-2 text-[0.62rem] font-medium !text-slate-950 hover:!bg-slate-100"
                 onClick={rejectOptionalConsents}
                 disabled={saveConsentsMutation.isPending}
               >
@@ -131,7 +131,7 @@ export function ConsentBanner() {
               </Button>
               <Button
                 size="sm"
-                className="h-7 rounded-lg px-2 text-[0.62rem] font-medium"
+                className="h-7 rounded-lg !bg-teal-700 px-2 text-[0.62rem] font-medium !text-white hover:!bg-teal-800"
                 onClick={acceptAllConsents}
                 disabled={saveConsentsMutation.isPending}
               >
@@ -140,7 +140,7 @@ export function ConsentBanner() {
               <button
                 type="button"
                 onClick={() => setShowDetails(true)}
-                className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-slate-100 transition-colors hover:bg-white/15 hover:text-white"
                 aria-label="Personalizar cookies"
               >
                 <Shield className="h-3.5 w-3.5" />
@@ -148,7 +148,7 @@ export function ConsentBanner() {
               <button
                 type="button"
                 onClick={() => setShowBanner(false)}
-                className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-slate-100 transition-colors hover:bg-white/15 hover:text-white"
                 aria-label="Fechar"
               >
                 <X className="h-3.5 w-3.5" />
@@ -171,7 +171,7 @@ export function ConsentBanner() {
             <Button
               variant="outline"
               size="sm"
-              className="h-[22px] rounded-md px-1.25 text-[0.5rem] font-medium max-[360px]:h-5 max-[360px]:rounded-[10px] max-[360px]:px-1 max-[360px]:text-[0.46rem]"
+              className="h-[22px] rounded-md border-slate-300 !bg-white px-1.25 text-[0.5rem] font-medium !text-slate-950 hover:!bg-slate-100 max-[360px]:h-5 max-[360px]:rounded-[10px] max-[360px]:px-1 max-[360px]:text-[0.46rem]"
               onClick={rejectOptionalConsents}
               disabled={saveConsentsMutation.isPending}
             >
@@ -180,7 +180,7 @@ export function ConsentBanner() {
             </Button>
             <Button
               size="sm"
-              className="h-[22px] rounded-md px-1.25 text-[0.5rem] font-medium max-[360px]:h-5 max-[360px]:rounded-[10px] max-[360px]:px-1 max-[360px]:text-[0.46rem]"
+              className="h-[22px] rounded-md !bg-teal-700 px-1.25 text-[0.5rem] font-medium !text-white hover:!bg-teal-800 max-[360px]:h-5 max-[360px]:rounded-[10px] max-[360px]:px-1 max-[360px]:text-[0.46rem]"
               onClick={acceptAllConsents}
               disabled={saveConsentsMutation.isPending}
             >
@@ -190,7 +190,7 @@ export function ConsentBanner() {
             <button
               type="button"
               onClick={() => setShowDetails(true)}
-              className="inline-flex h-5.5 w-5.5 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground max-[360px]:h-4.5 max-[360px]:w-4.5"
+              className="inline-flex h-5.5 w-5.5 items-center justify-center rounded-md text-slate-100 transition-colors hover:bg-white/15 hover:text-white max-[360px]:h-4.5 max-[360px]:w-4.5"
               aria-label="Personalizar cookies"
             >
               <Shield className="h-3 w-3 max-[360px]:h-2.75 max-[360px]:w-2.75" />
@@ -198,7 +198,7 @@ export function ConsentBanner() {
             <button
               type="button"
               onClick={() => setShowBanner(false)}
-              className="inline-flex h-5.5 w-5.5 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground max-[360px]:h-4.5 max-[360px]:w-4.5"
+              className="inline-flex h-5.5 w-5.5 items-center justify-center rounded-md text-slate-100 transition-colors hover:bg-white/15 hover:text-white max-[360px]:h-4.5 max-[360px]:w-4.5"
               aria-label="Fechar"
             >
               <X className="h-3 w-3 max-[360px]:h-2.75 max-[360px]:w-2.75" />
@@ -223,7 +223,7 @@ export function ConsentBanner() {
               <button
                 type="button"
                 onClick={() => setShowBanner(false)}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-100 transition-colors hover:bg-white/15 hover:text-white"
                 aria-label="Fechar"
               >
                 <X className="h-4 w-4" />
@@ -234,7 +234,7 @@ export function ConsentBanner() {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-9 rounded-xl px-4 text-[0.72rem] font-medium"
+                className="h-9 rounded-xl border-slate-300 !bg-white px-4 text-[0.72rem] font-medium !text-slate-950 hover:!bg-slate-100"
                 onClick={rejectOptionalConsents}
                 disabled={saveConsentsMutation.isPending}
               >
@@ -243,7 +243,7 @@ export function ConsentBanner() {
 
               <Button
                 size="sm"
-                className="h-9 rounded-xl px-4 text-[0.72rem] font-medium"
+                className="h-9 rounded-xl !bg-teal-700 px-4 text-[0.72rem] font-medium !text-white hover:!bg-teal-800"
                 onClick={acceptAllConsents}
                 disabled={saveConsentsMutation.isPending}
               >
@@ -253,7 +253,7 @@ export function ConsentBanner() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-9 rounded-xl px-3 text-[0.72rem] text-muted-foreground"
+                className="h-9 rounded-xl px-3 text-[0.72rem] !text-slate-100 hover:!bg-white/15 hover:!text-white"
                 onClick={() => setShowDetails(true)}
               >
                 Personalizar

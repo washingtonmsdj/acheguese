@@ -126,33 +126,45 @@ ALTER TABLE posts DISABLE ROW LEVEL SECURITY;
 
 ---
 
-## 🚀 Como Executar Migrations
+## Como Executar Migrations
 
-### Método 1: Supabase Dashboard (Recomendado)
+### Regra vigente: remoto versionado
 
-1. Acesse: https://seu-projeto.supabase.co/project/seu-projeto/editor
-2. Vá em "SQL Editor"
-3. Cole o conteúdo do arquivo `.sql`
-4. Clique em "Run"
-5. Verifique mensagens de sucesso
+O projeto usa Supabase remoto como banco de desenvolvimento e validacao. O ambiente local do Supabase CLI nao e requisito para validar ou aplicar migrations neste repositorio.
 
-### Método 2: Supabase CLI
+Regras:
+
+- `supabase/migrations/` continua sendo a fonte versionada do schema.
+- Nao executar `supabase db push` sem `--linked`.
+- Nao executar `supabase db push --linked` automaticamente quando houver drift local/remoto; revisar `supabase migration list --linked` primeiro.
+- Preferir pipeline/revisao de migration ou dry-run antes de aplicar no remoto.
+- Nunca colar SQL manualmente no dashboard quando existir migration versionada, exceto incidente operacional documentado.
+
+### Metodo 1: Supabase CLI remoto
 
 ```bash
-# Instalar CLI
-npm install -g supabase
-
 # Login
 supabase login
 
-# Link ao projeto
+# Link ao projeto remoto, se necessario
 supabase link --project-ref seu-projeto-id
 
-# Executar migration
-supabase db push
+# Conferir drift local/remoto antes de qualquer push
+supabase migration list --linked
+npm run validate:migrations:remote
+
+# Validar impacto sem aplicar
+supabase db push --linked --dry-run
+
+# Aplicar somente apos revisao do plano e ausencia de drift inesperado
+supabase db push --linked
 ```
 
-### Método 3: Script Automatizado
+### Metodo 2: Supabase Dashboard
+
+Use o SQL Editor apenas para incidente operacional ou investigacao pontual. Depois, registre a mudanca como migration para manter o repositorio como SSOT.
+
+### Metodo 3: Script Automatizado
 
 ```bash
 # Executar via script Node.js
@@ -163,12 +175,17 @@ node scripts/execute-migration.mjs nome-da-migration.sql
 
 Antes de executar:
 
-- [ ] Backup do banco criado
-- [ ] Migration testada em ambiente local
-- [ ] Código atualizado para nova estrutura
+- [ ] Backup do banco remoto criado ou estrategia de rollback definida
+- [ ] `npm run validate:migrations` executado
+- [ ] `npm run validate:migrations:remote` executado quando houver acesso ao projeto remoto linkado
+- [ ] `npm run validate:security-authority` executado para validar regras da Security Authority
+- [ ] `supabase migration list --linked` revisado
+- [ ] `supabase db push --linked --dry-run` revisado quando aplicavel
+- [ ] `npm run verify:deploy` executado antes de promover release
+- [ ] Codigo atualizado para nova estrutura
 - [ ] Types TypeScript atualizados
 - [ ] Testes passando
-- [ ] Documentação atualizada
+- [ ] Documentacao atualizada
 - [ ] Rollback plan definido
 
 Após executar:
@@ -229,32 +246,26 @@ CREATE INDEX ...;
 COMMENT ON ...;
 ```
 
-### 3. Teste Local
+### 3. Validacao Local Estatica
 
 ```bash
-# Criar banco local
-supabase start
-
-# Executar migration
-supabase db reset
-
-# Testar aplicação
-npm run dev
+npm run validate:migrations
+npm run typecheck:app
+npm run validate:ssot
 ```
 
-### 4. Execução em Produção
+### 4. Execucao no Remoto
 
 ```bash
-# Backup
-supabase db dump > backup-$(date +%Y%m%d).sql
+# Conferir estado remoto
+supabase migration list --linked
 
-# Executar
-supabase db push
+# Simular aplicacao
+supabase db push --linked --dry-run
 
-# Verificar
-supabase db diff
+# Aplicar apos revisao
+supabase db push --linked
 ```
-
 ### 5. Validação
 
 ```bash

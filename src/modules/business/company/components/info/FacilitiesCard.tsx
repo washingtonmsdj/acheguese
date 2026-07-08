@@ -1,13 +1,3 @@
-/**
- * FacilitiesCard
- * 
- * Card de facilidades com ícones e labels.
- * Usa constantes do SSOT para ícones e labels.
- * 
- * SSOT: Props tipadas vindas de sections/types.ts
- * Sem gambiarras: Componente focado apenas em renderização
- */
-
 import { Store } from 'lucide-react';
 import { getFacilityIcon, getFacilityLabel } from '@/core/business/constants';
 import type { FacilitiesCardProps } from '../../sections/types';
@@ -16,20 +6,20 @@ export function FacilitiesCard({ facilidades }: FacilitiesCardProps) {
   if (!facilidades || facilidades.length === 0) return null;
 
   return (
-    <div className="bg-card border border-border rounded-xl p-5">
-      <h2 className="text-base font-bold text-foreground mb-3">Facilidades</h2>
-      <div className="space-y-2.5">
-        {facilidades.map((fac, idx) => {
-          const Icon = getFacilityIcon(fac) || Store;
-          const label = getFacilityLabel(fac) || fac.replace(/_/g, " ");
-          
+    <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-4 sm:p-5">
+      <h2 className="mb-3 text-base font-semibold text-white">Facilidades</h2>
+      <div className="space-y-2">
+        {facilidades.map((facility, index) => {
+          const Icon = getFacilityIcon(facility) || Store;
+          const label = getFacilityLabel(facility) || facility.replace(/_/g, ' ');
+
           return (
             <div
-              key={idx}
-              className="flex items-center gap-3 bg-secondary/50 rounded-lg px-3 py-2.5"
+              key={`${facility}-${index}`}
+              className="flex items-center gap-3 rounded-2xl border border-white/8 bg-black/20 px-3 py-[0.5625rem]"
             >
-              <Icon className="h-4 w-4 text-primary shrink-0" />
-              <span className="text-sm text-foreground font-medium">{label}</span>
+              <Icon className="h-4 w-4 shrink-0 text-teal-300" />
+              <span className="text-sm font-medium text-white/78">{label}</span>
             </div>
           );
         })}

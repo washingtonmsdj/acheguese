@@ -1,13 +1,19 @@
 import { expect, test, type Page } from '@playwright/test';
-import { createClient } from '@supabase/supabase-js';
 import { loginAsUser } from '../../e2e/helpers/auth';
+import {
+  createOperationalAnonClient,
+  createOptionalOperationalAdminClient,
+  getOperationalEnv,
+  hasOperationalAnonEnv,
+} from '../helpers/operational-env';
+import { expectNoSeriousA11yViolations } from './support/axeAssertions';
+import { DEFAULT_MOBILE_VIEWPORT, expectNoHorizontalOverflow } from './support/publicRouteAssertions';
 
 const BUSINESS_ID = process.env.E2E_GASTRONOMY_BUSINESS_ID || null;
-const TEST_EMAIL = process.env.E2E_USER_EMAIL || '';
-const TEST_PASSWORD = process.env.E2E_USER_PASSWORD || '';
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || '';
-const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || '';
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const operationalEnv = getOperationalEnv();
+const TEST_EMAIL = operationalEnv.driverEmail || '';
+const TEST_PASSWORD = operationalEnv.driverPassword || '';
+const admin = createOptionalOperationalAdminClient();
 let BOOTSTRAP_BUSINESS_ID: string | null = null;
 let BOOTSTRAP_BUSINESS_DATA_ID: string | null = null;
 
@@ -37,13 +43,11 @@ async function ensureBusinessProfileForE2EUser(): Promise<{
   businessProfileId: string | null;
   businessDataId: string | null;
 }> {
-  if (!TEST_EMAIL || !TEST_PASSWORD || !SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  if (!TEST_EMAIL || !TEST_PASSWORD || !hasOperationalAnonEnv()) {
     return { businessProfileId: null, businessDataId: null };
   }
 
-  const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
+  const client = createOperationalAnonClient();
 
   const signIn = await client.auth.signInWithPassword({
     email: TEST_EMAIL,
@@ -64,19 +68,32 @@ async function ensureBusinessProfileForE2EUser(): Promise<{
 
   if (!existingBusinessProfile?.id) {
     const handleSuffix = Date.now().toString().slice(-6);
-    await client.rpc('create_profile_with_extension', {
-      p_profile_type: 'business',
-      p_handle: `e2e-biz-${handleSuffix}`,
-      p_display_name: `E2E Gastronomia ${handleSuffix}`,
-      p_avatar_url: null,
-      p_bio: 'Perfil bootstrap para validacao automatizada de gastronomia.',
-      p_extension_data: {
-        category: 'restaurante',
-        subcategory: 'e2e',
-        description: 'Empresa automatica para fluxo E2E.',
-        status: 'active',
+    const rpc = await client.functions.invoke<{
+      data?: { success?: boolean; error?: string };
+      error?: string;
+    }>('profile-rpc', {
+      body: {
+        action: 'createProfile',
+        params: {
+          profileType: 'business',
+          handle: `e2e-biz-${handleSuffix}`,
+          displayName: `E2E Gastronomia ${handleSuffix}`,
+          avatarUrl: null,
+          bio: 'Perfil bootstrap para validacao automatizada de gastronomia.',
+          extensionData: {
+            legal_name: `E2E Gastronomia ${handleSuffix}`,
+            category: 'restaurante',
+            subcategory: 'e2e',
+            description: 'Empresa automatica para fluxo E2E.',
+            status: 'active',
+          },
+        },
       },
     });
+
+    if (rpc.error || rpc.data?.error || rpc.data?.data?.success === false) {
+      throw rpc.error ?? new Error(rpc.data?.error ?? rpc.data?.data?.error ?? 'Falha ao criar perfil business.');
+    }
 
     const refreshed = await client
       .from('profiles')
@@ -213,12 +230,10 @@ async function ensureBusinessProfileForE2EUser(): Promise<{
 }
 
 async function createOrderFixture(): Promise<string | null> {
-  if (!TEST_EMAIL || !TEST_PASSWORD || !SUPABASE_URL || !SUPABASE_ANON_KEY) return null;
+  if (!TEST_EMAIL || !TEST_PASSWORD || !hasOperationalAnonEnv()) return null;
   if (!BOOTSTRAP_BUSINESS_ID || !BOOTSTRAP_BUSINESS_DATA_ID) return null;
 
-  const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
+  const client = createOperationalAnonClient();
 
   const signIn = await client.auth.signInWithPassword({
     email: TEST_EMAIL,
@@ -302,17 +317,45 @@ async function createOrderFixture(): Promise<string | null> {
   return orderId;
 }
 
+async function waitForOrderLogisticsStatus(
+  orderId: string,
+  expectedStatuses: string[],
+): Promise<string> {
+  if (!admin) {
+    throw new Error(
+      'SUPABASE_SERVICE_ROLE_KEY ausente: nao foi possivel verificar status do pedido.',
+    );
+  }
+
+  for (let attempt = 0; attempt < 30; attempt += 1) {
+    const { data, error } = await admin
+      .from('orders')
+      .select('logistics_status')
+      .eq('id', orderId)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    const status = String(data?.logistics_status ?? '');
+    if (expectedStatuses.includes(status)) {
+      return status;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+
+  throw new Error(
+    `Pedido ${orderId} nao atingiu status esperado: ${expectedStatuses.join(', ')}.`,
+  );
+}
+
 async function assertAdministrativeOrderEvidence(orderId: string): Promise<void> {
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+  if (!admin) {
     console.info(
       'SUPABASE_SERVICE_ROLE_KEY ausente: asserts administrativos profundos de orders/notifications/trust pulados explicitamente.',
     );
     return;
   }
-
-  const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
 
   const [timelineResult, notificationResult, trustResult] = await Promise.all([
     admin
@@ -420,6 +463,69 @@ async function assertAdministrativeOrderEvidence(orderId: string): Promise<void>
       ).toBe(true);
     }
   }
+}
+
+async function prepareReviewSlotForE2EOrder(orderId: string): Promise<void> {
+  if (!admin) {
+    return;
+  }
+
+  const { data: order, error: orderError } = await admin
+    .from('orders')
+    .select('customer_profile_id, merchant_profile_id')
+    .eq('id', orderId)
+    .maybeSingle();
+
+  expect(orderError).toBeNull();
+
+  const customerProfileId = String(order?.customer_profile_id ?? '');
+  const merchantProfileId = String(order?.merchant_profile_id ?? '');
+
+  if (!isUuid(customerProfileId) || !isUuid(merchantProfileId)) {
+    throw new Error(`Pedido ${orderId} sem perfis validos para preparar avaliacao E2E.`);
+  }
+
+  const cleanup = await admin
+    .from('reviews')
+    .delete()
+    .eq('reviewer_profile_id', customerProfileId)
+    .eq('reviewed_profile_id', merchantProfileId)
+    .eq('review_type', 'business');
+
+  expect(cleanup.error).toBeNull();
+}
+
+async function assertCustomerReviewEvidence(orderId: string, expectedComment: string): Promise<void> {
+  if (!admin) {
+    console.info(
+      'SUPABASE_SERVICE_ROLE_KEY ausente: assert administrativo da avaliacao pulado explicitamente.',
+    );
+    return;
+  }
+
+  const { data: order, error: orderError } = await admin
+    .from('orders')
+    .select('customer_profile_id, merchant_profile_id')
+    .eq('id', orderId)
+    .maybeSingle();
+
+  expect(orderError).toBeNull();
+  expect(order?.merchant_profile_id).toBeTruthy();
+  expect(order?.customer_profile_id).toBeTruthy();
+
+  const { data: review, error: reviewError } = await admin
+    .from('reviews')
+    .select('id, reviewed_profile_id, reviewer_profile_id, rating, comment, order_id, status, review_type')
+    .eq('order_id', orderId)
+    .eq('review_type', 'business')
+    .maybeSingle();
+
+  expect(reviewError).toBeNull();
+  expect(review?.reviewed_profile_id).toBe(order?.merchant_profile_id);
+  expect(review?.reviewer_profile_id).toBe(order?.customer_profile_id);
+  expect(review?.rating).toBe(5);
+  expect(review?.comment).toBe(expectedComment);
+  expect(review?.status).toBe('active');
 }
 
 async function resolveBusinessId(page: Page) {
@@ -562,10 +668,34 @@ test.describe('Gastronomia operacional autenticada', () => {
     ).toBeVisible({ timeout: 20_000 });
   });
 
+  test('dashboard de gastronomia nao estoura horizontalmente em 360px', async ({ page }) => {
+    await page.setViewportSize(DEFAULT_MOBILE_VIEWPORT);
+    await loginAsUser(page);
+    const businessId = BOOTSTRAP_BUSINESS_ID ?? (await resolveBusinessId(page));
+
+    test.skip(
+      !isUuid(businessId),
+      'Usuario autenticado nao possui empresa vinculada em /central/empresas para validar dashboard gastronomico mobile.',
+    );
+
+    await page.goto(`/central/empresas/${businessId}/gastronomia`, {
+      waitUntil: 'domcontentloaded',
+      timeout: 60_000,
+    });
+
+    await expect(page.locator('main').first()).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByText(/preparando a casa para voce se achegar/i)).toHaveCount(0);
+    await expectNoHorizontalOverflow(page, DEFAULT_MOBILE_VIEWPORT.width);
+    await expectNoSeriousA11yViolations(page);
+  });
+
   test('fluxo pedido autenticado: cliente visualiza e loja opera pedido ate estado terminal', async ({ page }) => {
     await loginAsUser(page);
     const businessId = BOOTSTRAP_BUSINESS_ID ?? (await resolveBusinessId(page));
     const orderId = await createOrderFixture();
+    const adminOrderUrl = isUuid(businessId)
+      ? `/central/empresas/${businessId}/gastronomia/pedidos/${orderId}`
+      : null;
 
     if (!isUuid(businessId) || !orderId) {
       await page.goto('/central/empresas', {
@@ -576,52 +706,139 @@ test.describe('Gastronomia operacional autenticada', () => {
       return;
     }
 
+    await prepareReviewSlotForE2EOrder(orderId);
+
     await page.goto(`/gastronomia/pedidos/${orderId}`, {
       waitUntil: 'domcontentloaded',
       timeout: 60_000,
     });
 
-    await expect(page.getByText(/pedido #/i)).toBeVisible({ timeout: 20_000 });
-    await expect(page.getByText(/cliente/i)).toBeVisible({ timeout: 20_000 });
+    await expect(
+      page.getByRole('heading', { name: /pedido\s*#/i }),
+    ).toBeVisible({ timeout: 30_000 });
+    await expect(
+      page.getByRole('heading', { name: /^cliente$/i }),
+    ).toBeVisible({ timeout: 20_000 });
 
-    await page.goto(`/central/empresas/${businessId}/gastronomia/pedidos/${orderId}`, {
+    await page.goto(adminOrderUrl!, {
       waitUntil: 'domcontentloaded',
       timeout: 60_000,
     });
-    await expect(page.getByText(/operacao da loja/i)).toBeVisible({ timeout: 20_000 });
+    await expect(
+      page
+        .getByRole('button', {
+          name: /aceitar pedido|cancelar|marcar pagamento confirmado/i,
+        })
+        .first(),
+    ).toBeVisible({ timeout: 20_000 });
     await expect(
       page.getByText(/timeline em tempo real|reconectando timeline/i).first(),
     ).toBeVisible({ timeout: 20_000 });
 
     const actionSequence = [
-      /aceitar pedido/i,
-      /iniciar preparo/i,
-      /marcar pronto/i,
-      /marcar saiu para entrega|marcar retirado/i,
-      /marcar entregue/i,
+      {
+        current: /aceitar pedido/i,
+        next: /iniciar preparo/i,
+        nextType: 'button',
+      },
+      {
+        current: /iniciar preparo/i,
+        next: /marcar pronto/i,
+        nextType: 'button',
+      },
+      {
+        current: /marcar pronto/i,
+        next: /marcar saiu para entrega|marcar retirado/i,
+        nextType: 'button',
+      },
+      {
+        current: /marcar saiu para entrega|marcar retirado/i,
+        next: /marcar entregue/i,
+        nextType: 'button',
+      },
+      {
+        current: /marcar entregue/i,
+        next: /sem ação operacional pendente|sem acao operacional pendente/i,
+        nextType: 'text',
+      },
     ] as const;
 
-    for (const actionLabel of actionSequence) {
-      const actionButton = page.getByRole('button', { name: actionLabel }).first();
+    for (const step of actionSequence) {
+      const actionButton = page.getByRole('button', { name: step.current }).first();
       const hasAction = await actionButton.isVisible().catch(() => false);
       if (!hasAction) break;
+
+      await expect(actionButton).toBeEnabled({ timeout: 20_000 });
       await actionButton.click();
-      await page.waitForTimeout(500);
+
+      if (step.nextType === 'button') {
+        const nextButton = page.getByRole('button', { name: step.next }).first();
+        await expect(nextButton).toBeVisible({ timeout: 20_000 });
+        await expect(nextButton).toBeEnabled({ timeout: 20_000 });
+      } else {
+        await expect(page.getByText(step.next).first()).toBeVisible({
+          timeout: 20_000,
+        });
+      }
     }
 
+    await page.goto(adminOrderUrl!, {
+      waitUntil: 'domcontentloaded',
+      timeout: 60_000,
+    });
+    await expect(page.getByText(/pedido #/i)).toBeVisible({ timeout: 20_000 });
+
+    const markDeliveredButton = page
+      .getByRole('button', { name: /marcar entregue/i })
+      .first();
+    const terminalState = page
+      .getByText(/sem ação operacional pendente|sem acao operacional pendente/i)
+      .first();
+    await expect
+      .poll(
+        async () =>
+          (await markDeliveredButton.isVisible().catch(() => false)) ||
+          (await terminalState.isVisible().catch(() => false)),
+        { timeout: 20_000 },
+      )
+      .toBe(true);
+
+    if (await markDeliveredButton.isVisible().catch(() => false)) {
+      await expect(markDeliveredButton).toBeEnabled({ timeout: 20_000 });
+      await markDeliveredButton.click();
+      await waitForOrderLogisticsStatus(orderId, ['delivered']);
+    }
+
+    await expect(terminalState).toBeVisible({ timeout: 20_000 });
     await expect(
-      page.getByText(/sem acao operacional pendente|estado final|pedido entregue|entregue/i).first(),
-    ).toBeVisible({ timeout: 20_000 });
+      page.getByRole('button', { name: /marcar entregue/i }),
+    ).toHaveCount(0);
 
     await page.goto(`/gastronomia/pedidos/${orderId}`, {
       waitUntil: 'domcontentloaded',
       timeout: 60_000,
     });
     await expect(page.getByText(/pedido #/i)).toBeVisible({ timeout: 20_000 });
-    await expect(page.getByText(/operacao da loja/i)).toHaveCount(0);
+    await expect(
+      page.getByRole('button', {
+        name: /aceitar pedido|cancelar|marcar pagamento confirmado/i,
+      }),
+    ).toHaveCount(0);
     await expect(page.getByText(/linha do tempo|itens do pedido/i).first()).toBeVisible({
       timeout: 20_000,
     });
+
+    const reviewComment = `Review operacional E2E ${Date.now()}`;
+    await expect(
+      page.getByRole('heading', { name: /avaliar experi/i }),
+    ).toBeVisible({ timeout: 20_000 });
+    await page.getByRole('button', { name: /5 estrelas/i }).click();
+    await page.getByLabel(/conte sobre sua experi/i).fill(reviewComment);
+    await page.getByRole('button', { name: /publicar avalia/i }).click();
+    await expect(page.getByText(/avaliacao registrada|avalia.*registrada|obrigado/i)).toBeVisible({
+      timeout: 20_000,
+    });
+    await assertCustomerReviewEvidence(orderId, reviewComment);
 
     await page.goto(`/central/empresas/${businessId}/gastronomia/pedidos`, {
       waitUntil: 'domcontentloaded',

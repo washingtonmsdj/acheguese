@@ -1,27 +1,29 @@
 # Business Module
 
-Módulo de empresas responsável por listagem pública, detalhe, gestão básica e navegação canônica.
+Modulo de empresas responsavel por detalhe publico, gestao basica, navegacao canonica e integracao com verticais como Gastronomia.
 
 ## Diretrizes
 
-- Dados de empresa vêm de `@/core/business/services/BusinessService`.
-- URLs públicas vêm de `@/core/business/services/BusinessUrlService`.
-- Favoritos do módulo `empresas` usam `@/core/favorites/services/FavoritesService` (compatibilidade via `business_favorites`).
-- Favoritos do braço `gastronomia` usam `user_favorite_businesses` (SSOT atual de user -> business_data).
-- Hooks do módulo não mantêm stores paralelas para a mesma responsabilidade.
+- Dados de empresa vem de `@/core/business/services/BusinessService`.
+- URLs publicas vem de `@/core/business/services/BusinessUrlService`.
+- Favoritos publicos de Empresas e Gastronomia usam `user_favorite_businesses` via `BusinessFavoriteService`/`useCanonicalBusinessFavorite`.
+- O core de favoritos tambem resolve favoritos de empresas por `user_favorite_businesses`; `business_favorites` deve permanecer restrito a migrations/types historicos ate limpeza de banco com backfill validado.
+- Hooks do modulo nao devem manter stores paralelas para a mesma responsabilidade.
 
-## API pública principal
+## API Publica Principal
 
 - `useBusinessList`
 - `useBusinessById`
-- `useBusinessFavorite`
-- `useBusinessFavorites`
+- `useCanonicalBusinessFavorite`
+- `useCanonicalBusinessFavorites`
+- `useBusinessRecommendation`
 - `useBusinessCreate`
 - `useBusinessEdit`
 - `useBusinessNavigation`
 
-## Observações de arquitetura
+## Observacoes De Arquitetura
 
-- O módulo ainda contém componentes legados fora da API recomendada. Eles não devem ser usados como referência para novos fluxos.
-- Sempre preferir `location` e `address` canônicos em vez de campos legados soltos.
-- Novos verticais (ex.: saúde, educação) devem reaproveitar contratos centrais de `core/business` e não criar variações de schema por vertical.
+- A listagem publica real de Empresas vive em `src/app/pages/EmpresasLandingPage.tsx` e usa componentes de `src/app/features/business-landing`.
+- Sempre preferir `business_data.id` para engajamento publico e `profiles.id` apenas para rotas/ownership que explicitamente exigem perfil.
+- Sempre preferir `location` e `address` canonicos em vez de campos legados soltos.
+- Novos verticais devem reaproveitar contratos centrais de `core/business` e nao criar variacoes de schema por vertical.

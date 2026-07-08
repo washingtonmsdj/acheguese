@@ -16,25 +16,22 @@ import {
   type PublicMediaBucket,
 } from "@/core/media/config/storageBuckets";
 import { RoleService } from "@/core/authorization/services/RoleService";
+import { parseAuthIdentifier } from "@/core/auth/utils/authIdentifier";
+import {
+  buildSupabaseFunctionUrl,
+  PUBLIC_SUPABASE_CONFIG,
+} from "@/shared/config/publicSupabase";
 
-type AuthRpcClient = {
-  rpc<T>(fn: string, params?: Record<string, unknown>): Promise<{
-    data: T | null;
-    error: { message?: string | null } | null;
-  }>;
-};
-
-const authRpc = supabase as unknown as AuthRpcClient;
+interface UsernameLoginResponse {
+  session?: {
+    access_token?: string;
+    refresh_token?: string;
+  };
+  error?: string;
+}
 
 function isPublicMediaBucket(bucket: string): bucket is PublicMediaBucket {
   return bucket === "avatars" || bucket === "post-images";
-}
-
-function parseAuthIdentifier(input: string): { kind: "email" | "username"; value: string } | null {
-  const value = input.trim();
-  if (!value) return null;
-  if (value.includes("@")) return { kind: "email", value };
-  return { kind: "username", value: value.replace(/^@/, "") };
 }
 
 export class AuthService {
@@ -96,19 +93,19 @@ export class AuthService {
     });
   }
 
-  private static async resolveEmailByUsername(username: string): Promise<string> {
-    const normalizedUsername = username.replace(/^@/, "").toLowerCase().trim();
+  private static normalizeUsername(username: string): string {
+    return username.replace(/^@/, "").toLowerCase().trim();
+  }
 
-    const { data: email, error: rpcError } = await authRpc.rpc<string>(
-      "get_email_by_username",
-      { p_username: normalizedUsername },
-    );
+  private static async readAuthFunctionResponse(response: Response): Promise<UsernameLoginResponse> {
+    const text = await response.text();
+    if (!text) return {};
 
-    if (rpcError || !email) {
-      throw new Error("Usuario nao encontrado. Verifique o nome de usuario.");
+    try {
+      return JSON.parse(text) as UsernameLoginResponse;
+    } catch {
+      return {};
     }
-
-    return email;
   }
 
   /**
@@ -282,13 +279,44 @@ export class AuthService {
   }
 
   /**
-   *  LOGIN POR USERNAME
-   * Resolve o email via RPC SECURITY DEFINER (acessa auth.users server-side).
-   * O email nunca trafega como dado visível — é usado apenas pelo SDK internamente.
+   * LOGIN POR USERNAME
+   * Usa Edge Function publica com rate limit. O lookup privilegiado do e-mail
+   * fica server-side e o browser recebe apenas tokens de sessao autenticada.
    */
   static async signInWithUsername(data: import("./types").SignInWithUsernameData): Promise<void> {
-    const email = await AuthService.resolveEmailByUsername(data.username);
-    await AuthService.signIn({ email, password: data.password });
+    const username = AuthService.normalizeUsername(data.username);
+    if (!username) {
+      throw new Error("E-mail, usuario ou senha incorretos.");
+    }
+
+    const response = await fetch(buildSupabaseFunctionUrl("auth-username-login"), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: PUBLIC_SUPABASE_CONFIG.publishableKey,
+      },
+      body: JSON.stringify({ username, password: data.password }),
+    });
+
+    const payload = await AuthService.readAuthFunctionResponse(response);
+
+    if (!response.ok) {
+      throw new Error(payload.error || "Invalid login credentials");
+    }
+
+    const accessToken = payload.session?.access_token;
+    const refreshToken = payload.session?.refresh_token;
+    if (!accessToken || !refreshToken) {
+      throw new Error("Resposta de login invalida.");
+    }
+
+    const { error } = await supabase.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
+
+    if (error) throw error;
+    await SessionService.refreshSession();
   }
   static async signInWithGoogle(): Promise<void> {
     if (!AuthService.isGoogleAuthEnabled()) {
@@ -320,7 +348,7 @@ export class AuthService {
     const parsedIdentifier = parseAuthIdentifier(identifier);
 
     if (!parsedIdentifier) {
-      throw new Error("Informe seu e-mail ou nome de usuario.");
+      throw new Error("Informe seu e-mail cadastrado.");
     }
 
     if (parsedIdentifier.kind === "email") {
@@ -328,8 +356,7 @@ export class AuthService {
       return;
     }
 
-    const email = await AuthService.resolveEmailByUsername(parsedIdentifier.value);
-    await AuthService.resetPassword(email);
+    throw new Error("Para recuperar senha, informe o e-mail cadastrado.");
   }
   static async resendConfirmationEmail(email: string): Promise<void> {
     const { error } = await supabase.auth.resend({

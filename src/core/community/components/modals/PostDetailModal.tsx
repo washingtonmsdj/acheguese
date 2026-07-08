@@ -67,6 +67,8 @@ interface PostDetailModalProps {
   onShare: (postId: string) => void;
   onReport: (postId: string) => void;
   onTagClick?: (tag: string) => void;
+  canComment?: boolean;
+  commentBlockedMessage?: string;
 }
 
 export function PostDetailModal({
@@ -79,13 +81,15 @@ export function PostDetailModal({
   onShare,
   onReport,
   onTagClick,
+  canComment = true,
+  commentBlockedMessage = "Verifique sua residencia para comentar nesta comunidade.",
 }: PostDetailModalProps) {
   const { activeProfile } = useSessionContext();
   const [commentText, setCommentText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [localComments, setLocalComments] = useState<Comment[]>(comments);
 
-  const { state, isProcessing, handleLike, handleSave, handleShare } =
+  const { state, isProcessing } =
     usePostInteractions(post.id, {
       isLiked: post.is_liked || false,
       isSaved: post.is_saved || false,
@@ -109,6 +113,11 @@ export function PostDetailModal({
 
   const handleSubmitComment = async () => {
     if (!commentText.trim() || isSubmitting) return;
+    if (!canComment) {
+      toast.info(commentBlockedMessage);
+      return;
+    }
+
     if (!activeProfile?.id) {
       toast.error("Você precisa estar logado para comentar.");
       return;
@@ -200,10 +209,10 @@ export function PostDetailModal({
               commentsCount={post.comments_count}
               isLiked={state.isLiked}
               isSaved={state.isSaved}
-              onLike={handleLike}
+              onLike={() => onLike(post.id)}
               onComment={() => {}}
-              onSave={handleSave}
-              onShare={handleShare}
+              onSave={() => onSave(post.id)}
+              onShare={() => onShare(post.id)}
               onReport={() => onReport(post.id)}
               disabled={isProcessing}
             />
@@ -253,14 +262,14 @@ export function PostDetailModal({
               placeholder="Escreva um comentário..."
               className="flex-1 min-h-[80px] resize-none border-white/10"
               style={{ backgroundColor: "rgba(255, 255, 255, 0.05)", color: "#FFFFFF" }}
-              disabled={isSubmitting}
+              disabled={!canComment || isSubmitting}
             />
             <Button
               onClick={handleSubmitComment}
-              disabled={!commentText.trim() || isSubmitting}
+              disabled={!commentText.trim() || !canComment || isSubmitting}
               className="h-[80px] px-4"
               style={{
-                background: commentText.trim()
+                background: commentText.trim() && canComment
                   ? "linear-gradient(135deg, #4FD1C5 0%, #06B6D4 100%)"
                   : "rgba(255, 255, 255, 0.1)",
                 color: "#FFFFFF",

@@ -7,6 +7,7 @@
 
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
+import { SessionRpcService } from '@/core/session/services/SessionRpcService';
 
 export interface UserSession {
   id: string;
@@ -191,17 +192,7 @@ class SessionService {
    */
   async revokeSession(sessionId: string, reason?: string): Promise<boolean> {
     try {
-      const { error } = await supabase.rpc('revoke_user_session', {
-        p_session_id: sessionId,
-        p_reason: reason || 'Revogado pelo usuário',
-      });
-
-      if (error) {
-        logger.error('SessionService.revokeSession', error);
-        return false;
-      }
-
-      return true;
+      return SessionRpcService.revokeSession(sessionId, reason || 'Revogado pelo usuario');
     } catch (error) {
       logger.error('SessionService.revokeSession', error);
       return false;
@@ -213,18 +204,7 @@ class SessionService {
    */
   async revokeAllSessions(exceptCurrent: boolean = true): Promise<number> {
     try {
-      const { data, error } = await supabase.rpc('revoke_all_user_sessions', {
-        p_user_id: null, // null = usuário atual
-        p_except_current: exceptCurrent,
-        p_reason: 'Logout em todos os dispositivos',
-      });
-
-      if (error) {
-        logger.error('SessionService.revokeAllSessions', error);
-        return 0;
-      }
-
-      return typeof data === 'number' ? data : 0;
+      return SessionRpcService.revokeAllSessions(exceptCurrent, 'Logout em todos os dispositivos');
     } catch (error) {
       logger.error('SessionService.revokeAllSessions', error);
       return 0;
@@ -344,16 +324,8 @@ class SessionService {
    */
   async updateActivity(sessionToken: string): Promise<boolean> {
     try {
-      const { error } = await supabase.rpc('update_session_activity', {
-        p_session_token: sessionToken,
-      });
-
-      if (error) {
-        logger.error('SessionService.updateActivity', error);
-        return false;
-      }
-
-      return true;
+      if (!sessionToken) return false;
+      return SessionRpcService.updateSessionActivity();
     } catch (error) {
       logger.error('SessionService.updateActivity', error);
       return false;

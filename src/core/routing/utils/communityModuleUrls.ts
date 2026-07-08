@@ -1,8 +1,10 @@
 import {
+  MODULE_SLUGS,
   buildCommunityScopedUrl,
   buildModuleTerritoryUrl,
   type ModuleSlug,
 } from "./territoryUrls";
+import { buildCommunityPortalUrl } from "@/core/routing/policies";
 
 function normalizeRouteBase(value: string): string {
   const normalized = value.trim().replace(/\/+$/g, "");
@@ -43,8 +45,18 @@ export function buildContextualModuleUrl({
   useCommunityScopedModules?: boolean;
 }): string {
   if (communityBaseUrl && useCommunityScopedModules) {
-    return buildCommunityScopedUrl(communityBaseUrl, module);
+    return buildCommunityScopedUrl(normalizeCommunityBaseUrl(communityBaseUrl), module);
   }
 
   return buildModuleTerritoryUrl(module, territoryBaseUrl);
+}
+
+function normalizeCommunityBaseUrl(communityBaseUrl: string): string {
+  const normalizedBase = normalizeRouteBase(communityBaseUrl);
+  const parts = normalizedBase.split("/").filter(Boolean);
+  if (parts.length === 1 && parts[0] !== MODULE_SLUGS.community) {
+    return buildCommunityPortalUrl(parts[0]);
+  }
+
+  return normalizedBase;
 }

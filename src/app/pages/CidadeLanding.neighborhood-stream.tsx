@@ -3,51 +3,23 @@ import {
   ChevronRight,
   Lock,
   MessageCircle,
-  type LucideIcon,
 } from "lucide-react";
 
-export type NeighborhoodCommunityTabId =
-  | "all"
-  | "feed"
-  | "business"
-  | "services"
-  | "classifieds"
-  | "gastronomy"
-  | "map";
+import type {
+  NeighborhoodCommunityTab,
+  NeighborhoodCommunityTabId,
+  NeighborhoodStreamItem,
+  NeighborhoodStreamMoreConfig,
+} from "@/core/landing/types";
 
-export type NeighborhoodCommunityTab = {
-  id: NeighborhoodCommunityTabId;
-  label: string;
-  shortLabel?: string;
-  icon: LucideIcon;
-};
-
-export type NeighborhoodStreamTone = "cyan" | "blue" | "amber" | "pink" | "green";
-
-export type NeighborhoodStreamItem = {
-  id: string;
-  category: Exclude<NeighborhoodCommunityTabId, "all">;
-  label: string;
-  tone: NeighborhoodStreamTone;
-  title: string;
-  description: string;
-  href: string;
-  mediaUrl?: string | null;
-  mediaFallback: LucideIcon;
-  meta: string;
-  engagementLabel?: string;
-  lockedActionLabel?: string;
-};
-
-export type NeighborhoodStreamGroups = Record<NeighborhoodCommunityTabId, NeighborhoodStreamItem[]>;
-
-export type NeighborhoodStreamMoreConfig = {
-  href: string;
-  label: string;
-  emptyTitle: string;
-  emptyDescription: string;
-  emptyAction: string;
-};
+export type {
+  NeighborhoodCommunityTab,
+  NeighborhoodCommunityTabId,
+  NeighborhoodStreamGroups,
+  NeighborhoodStreamItem,
+  NeighborhoodStreamMoreConfig,
+  NeighborhoodStreamTone,
+} from "@/core/landing/types";
 
 function getUnlockedActionLabel(item: NeighborhoodStreamItem): string {
   switch (item.category) {

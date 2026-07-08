@@ -1,12 +1,14 @@
 import { expect, test, type Page } from '@playwright/test';
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import {
+  createOperationalAnonClient,
+  createOptionalOperationalAdminClient,
+  getMissingOperationalEnv,
+  getOperationalEnv,
+  type OperationalSupabaseClient,
+} from '../../helpers/operational-env';
 
 const TEST_EMAIL = process.env.E2E_USER_EMAIL || '';
 const TEST_PASSWORD = process.env.E2E_USER_PASSWORD || '';
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || '';
-const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || '';
-const SUPABASE_SERVICE_KEY =
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || '';
 
 const E2E_PROFILE_USERNAME = 'e2e-education-school';
 const E2E_BUSINESS_NAME = 'E2E Educacao Instituto';
@@ -31,7 +33,7 @@ type EducationProfileRow = {
   school_facility_features: string[] | null;
 };
 
-let admin: SupabaseClient | null = null;
+let admin: OperationalSupabaseClient | null = null;
 let businessProfileId: string | null = null;
 let businessRouteBase: string | null = null;
 let authSessionPayload: unknown = null;
@@ -40,7 +42,10 @@ test.describe.configure({ mode: 'serial' });
 test.setTimeout(180_000);
 
 function requiredEnvAvailable(): boolean {
-  return Boolean(TEST_EMAIL && TEST_PASSWORD && SUPABASE_URL && SUPABASE_ANON_KEY && SUPABASE_SERVICE_KEY);
+  return (
+    Boolean(TEST_EMAIL && TEST_PASSWORD) &&
+    getMissingOperationalEnv({ requireServiceRole: true }).length === 0
+  );
 }
 
 async function ensureEducationBusiness(): Promise<string> {
@@ -48,13 +53,12 @@ async function ensureEducationBusiness(): Promise<string> {
     throw new Error('Credenciais E2E/Supabase ausentes.');
   }
 
-  admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
+  admin = createOptionalOperationalAdminClient();
+  if (!admin) {
+    throw new Error('Cliente administrativo Supabase indisponivel para setup Education E2E.');
+  }
 
-  const authClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
+  const authClient = createOperationalAnonClient();
 
   const signIn = await authClient.auth.signInWithPassword({
     email: TEST_EMAIL,
@@ -198,7 +202,7 @@ async function getEducationProfile(): Promise<EducationProfileRow> {
     throw new Error(`Perfil education nao encontrado: ${error?.message ?? 'sem dados'}`);
   }
 
-  return data as EducationProfileRow;
+  return data as unknown as EducationProfileRow;
 }
 
 async function waitForEducationProfile(): Promise<EducationProfileRow> {
@@ -220,7 +224,12 @@ async function waitForEducationProfile(): Promise<EducationProfileRow> {
 async function injectAuthSession(page: Page): Promise<void> {
   if (!authSessionPayload) throw new Error('Sessao E2E ausente.');
 
-  const projectRef = new URL(SUPABASE_URL).hostname.split('.')[0];
+  const supabaseUrl = getOperationalEnv().supabaseUrl;
+  if (!supabaseUrl) {
+    throw new Error('VITE_SUPABASE_URL ausente para injetar sessao E2E.');
+  }
+
+  const projectRef = new URL(supabaseUrl).hostname.split('.')[0];
   const authStorageKey = `sb-${projectRef}-auth-token`;
   await page.addInitScript(
     ({ key, session }) => {

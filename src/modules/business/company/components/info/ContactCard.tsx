@@ -1,26 +1,4 @@
-/**
- * ContactCard
- * 
- * Card de contato com telefone, WhatsApp, email, website e redes sociais.
- * Botão de copiar telefone e CTA de reivindicar empresa.
- * 
- * SSOT: Props tipadas vindas de sections/types.ts
- * Sem gambiarras: Componente focado apenas em renderização
- */
-
-import {
-  Phone,
-  MessageCircle,
-  Mail,
-  Globe,
-  ExternalLink,
-  Copy,
-  Check,
-  Instagram,
-  Facebook,
-  Award,
-} from 'lucide-react';
-import { Button } from '@/shared/components/ui/button';
+import { Check, Copy, ExternalLink, Facebook, Globe, Instagram, Mail, Phone } from 'lucide-react';
 import { SafeLink } from '@/shared/components/security';
 import {
   buildFacebookUrl,
@@ -28,7 +6,6 @@ import {
   buildMailtoUrl,
   buildTelUrl,
   buildWebsiteUrl,
-  buildWhatsAppUrl,
 } from '@/shared/utils/contactLinks';
 import type { ContactCardProps } from '../../sections/types';
 
@@ -36,124 +13,102 @@ export function ContactCard({
   business,
   copiedPhone,
   onCopyPhone,
-  navigate,
 }: ContactCardProps) {
   const websiteUrl = buildWebsiteUrl(business.website);
   const instagramUrl = buildInstagramUrl(business.instagram);
   const facebookUrl = buildFacebookUrl(business.facebook);
 
   return (
-    <div className="space-y-4">
-      {/* Contact info */}
-      <div className="bg-card border border-border rounded-xl p-5">
-        <h2 className="text-base font-bold text-foreground mb-4">Contato</h2>
-        <div className="space-y-3">
-          {business.phone && (
-            <div className="flex items-center gap-3">
-              <Phone className="h-4 w-4 text-primary shrink-0" />
+    <div className="space-y-3.5">
+      <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-4 sm:p-5">
+        <h2 className="mb-1 text-base font-semibold text-white">Contato e links</h2>
+        <p className="mb-3 text-sm text-white/52">
+          Canais publicos e formas complementares de contato.
+        </p>
+        <div className="space-y-2.5">
+          {business.email ? (
+            <a
+              href={buildMailtoUrl(business.email) ?? undefined}
+              className="flex items-center gap-3 rounded-2xl border border-white/8 bg-black/20 px-3 py-2.5 text-sm font-medium text-white transition-colors hover:border-teal-400/24 hover:text-teal-200"
+            >
+              <Mail className="h-4 w-4 shrink-0 text-teal-300" />
+              <span className="min-w-0 truncate">{business.email}</span>
+            </a>
+          ) : null}
+
+          {websiteUrl ? (
+            <SafeLink
+              href={websiteUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 rounded-2xl border border-white/8 bg-black/20 px-3 py-2.5 text-sm font-medium text-teal-200 transition-colors hover:border-teal-400/24 hover:text-teal-100"
+            >
+              <Globe className="h-4 w-4 shrink-0" />
+              <span className="min-w-0 flex-1 truncate">
+                {business.website.replace(/^https?:\/\//, '')}
+              </span>
+              <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+            </SafeLink>
+          ) : null}
+        </div>
+
+        {(instagramUrl || facebookUrl) ? (
+          <div className="mt-3 border-t border-white/8 pt-3">
+            <p className="mb-2.5 text-xs font-semibold uppercase tracking-[0.16em] text-white/44">
+              Redes
+            </p>
+            <div className="grid grid-cols-1 gap-2 xl:grid-cols-2">
+              {instagramUrl ? (
+                <SafeLink
+                  href={instagramUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 rounded-2xl border border-white/8 bg-black/20 px-3 py-2.5 text-sm font-medium text-white transition-colors hover:border-teal-400/24 hover:text-teal-200"
+                >
+                  <Instagram className="h-4 w-4 shrink-0 text-teal-300" />
+                  <span className="truncate">@{business.instagram}</span>
+                </SafeLink>
+              ) : null}
+              {facebookUrl ? (
+                <SafeLink
+                  href={facebookUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 rounded-2xl border border-white/8 bg-black/20 px-3 py-2.5 text-sm font-medium text-white transition-colors hover:border-teal-400/24 hover:text-teal-200"
+                >
+                  <Facebook className="h-4 w-4 shrink-0 text-teal-300" />
+                  Facebook
+                </SafeLink>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
+
+        {business.phone ? (
+          <div className="mt-3 border-t border-white/8 pt-3">
+            <div className="flex items-center gap-3 rounded-2xl border border-white/8 bg-black/18 px-3 py-2.5">
+              <Phone className="h-4 w-4 shrink-0 text-teal-300" />
               <a
                 href={buildTelUrl(business.phone) ?? undefined}
-                className="text-sm text-foreground hover:text-primary transition-colors flex-1"
+                className="min-w-0 flex-1 text-sm font-medium text-white transition-colors hover:text-teal-200"
               >
                 {business.phone}
               </a>
               <button
+                type="button"
                 onClick={onCopyPhone}
-                className="h-7 w-7 rounded-md bg-secondary flex items-center justify-center hover:bg-secondary/80"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/8 bg-white/[0.04] text-white/72 transition-colors hover:border-white/16 hover:bg-white/[0.07]"
+                aria-label={copiedPhone ? 'Telefone copiado' : 'Copiar telefone'}
               >
                 {copiedPhone ? (
-                  <Check className="h-3 w-3 text-emerald-400" />
+                  <Check className="h-4 w-4 text-emerald-300" />
                 ) : (
-                  <Copy className="h-3 w-3 text-muted-foreground" />
+                  <Copy className="h-4 w-4" />
                 )}
               </button>
             </div>
-          )}
-          {business.whatsapp && (
-            <div className="flex items-center gap-3">
-              <MessageCircle className="h-4 w-4 text-emerald-400 shrink-0" />
-              <a
-                href={buildWhatsAppUrl(business.whatsapp) ?? undefined}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-foreground hover:text-emerald-400 transition-colors"
-              >
-                WhatsApp
-              </a>
-            </div>
-          )}
-          {business.email && (
-            <div className="flex items-center gap-3">
-              <Mail className="h-4 w-4 text-primary shrink-0" />
-              <a
-                href={buildMailtoUrl(business.email) ?? undefined}
-                className="text-sm text-foreground hover:text-primary transition-colors truncate"
-              >
-                {business.email}
-              </a>
-            </div>
-          )}
-          {websiteUrl && (
-            <div className="flex items-center gap-3">
-              <Globe className="h-4 w-4 text-primary shrink-0" />
-              <SafeLink
-                href={websiteUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-primary hover:underline truncate flex items-center gap-1"
-              >
-                {business.website.replace(/^https?:\/\//, "")}{" "}
-                <ExternalLink className="h-3 w-3" />
-              </SafeLink>
-            </div>
-          )}
-        </div>
-
-        {/* Social */}
-        {(business.instagram || business.facebook) && (
-          <div className="flex gap-2 mt-4 pt-4 border-t border-border">
-            {instagramUrl && (
-              <SafeLink
-                href={instagramUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-1 flex items-center justify-center gap-2 h-10 rounded-lg bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 hover:border-purple-500/40 transition-colors"
-              >
-                <Instagram className="h-4 w-4 text-purple-400" />
-                <span className="text-xs font-medium text-purple-400">
-                  @{business.instagram}
-                </span>
-              </SafeLink>
-            )}
-            {facebookUrl && (
-              <SafeLink
-                href={facebookUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="h-10 w-10 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center hover:border-sky-500/40 transition-colors"
-              >
-                <Facebook className="h-4 w-4 text-sky-400" />
-              </SafeLink>
-            )}
           </div>
-        )}
-      </div>
-
-      {/* Claim CTA */}
-      <div className="bg-gradient-to-br from-primary/10 via-accent/5 to-transparent border border-primary/20 rounded-xl p-5 text-center">
-        <Award className="h-8 w-8 text-primary mx-auto mb-2" />
-        <p className="text-sm font-semibold text-foreground mb-1">
-          Esta é a sua empresa?
-        </p>
-        <p className="text-xs text-muted-foreground mb-3">
-          Reivindique e gerencie seu perfil gratuitamente
-        </p>
-        <Button
-          onClick={() => navigate("/empresas/cadastrar")}
-          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-sm rounded-lg h-9"
-        >
-          Reivindicar empresa
-        </Button>
+        ) : null}
       </div>
     </div>
   );

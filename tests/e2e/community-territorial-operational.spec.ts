@@ -67,4 +67,22 @@ test.describe('community territorial routes', () => {
 
     await expectPausedLaunchSurface(page, '/educacao/ba/salvador');
   });
+
+  test('community-scoped business route keeps community context and public escape', async ({ page }) => {
+    await openPublicRoute(page, '/comunidade/complexo-do-nordeste-de-amaralina/empresas/tone-cos-loja', {
+      waitUntil: 'domcontentloaded',
+      dismissConsent: true,
+    });
+    await expectRouteReady(page, {
+      expectedUrlPart: '/comunidade/complexo-do-nordeste-de-amaralina/empresas/tone-cos-loja',
+      readyPattern: /Tone|Empresa|Comercio|Comércio|Ver no site publico/i,
+    });
+
+    await expect(page.getByRole('link', { name: 'Ver no site publico' })).toBeVisible({
+      timeout: 30_000,
+    });
+    await expect.poll(() => new URL(page.url()).pathname, { timeout: 15_000 }).toContain(
+      '/comunidade/',
+    );
+  });
 });

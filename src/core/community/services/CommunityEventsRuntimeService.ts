@@ -3,6 +3,7 @@ import type { Json } from "@/integrations/supabase";
 import type { TerritoryFilter } from "@/core/location/types";
 import { logger } from "@/shared/utils/logger";
 import { sanitizeForILike } from "@/shared/utils/sqlSanitization";
+import { CommunityRpcService } from "@/core/community/services/CommunityRpcService";
 
 export interface CommunityEvent {
   id: string;
@@ -360,7 +361,7 @@ class CommunityEventsRuntimeService {
         .insert({ event_id: eventId, profile_id: profileId });
 
       if (error) throw error;
-      await supabase.rpc("increment_event_participants", { event_id: eventId });
+      await CommunityRpcService.incrementEventParticipants(eventId, profileId);
     } catch (error: unknown) {
       logger.error("CommunityEventsRuntimeService.joinEvent", error);
       throw new Error(`Erro ao participar do evento: ${this.getErrorMessage(error)}`);
@@ -376,7 +377,7 @@ class CommunityEventsRuntimeService {
         .eq("profile_id", profileId);
 
       if (error) throw error;
-      await supabase.rpc("decrement_event_participants", { event_id: eventId });
+      await CommunityRpcService.decrementEventParticipants(eventId, profileId);
     } catch (error: unknown) {
       logger.error("CommunityEventsRuntimeService.leaveEvent", error);
       throw new Error(`Erro ao sair do evento: ${this.getErrorMessage(error)}`);

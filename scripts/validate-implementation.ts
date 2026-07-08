@@ -1,60 +1,44 @@
 #!/usr/bin/env tsx
 
 /**
- * VALIDAÇÃO DA IMPLEMENTAÇÃO MULTI-PERFIL
- * Verifica que todas as estruturas do banco foram criadas corretamente
+ * Validates the multi-profile database implementation using the public
+ * Supabase client. This script should not require service_role.
  */
 
-import { createClient } from '@supabase/supabase-js';
-import * as dotenv from 'dotenv';
-import { resolve } from 'path';
+import { createAnonClient } from './lib/supabase-client';
 
-// Carregar variáveis de ambiente
-dotenv.config({ path: resolve(process.cwd(), '.env.local') });
-
-const supabaseUrl = process.env.VITE_SUPABASE_URL;
-const supabaseKey = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-
-if (!supabaseUrl || !supabaseKey) {
-  console.error('❌ Variáveis de ambiente não configuradas');
-  console.error('   Configure VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY em .env.local');
-  process.exit(1);
-}
-
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = createAnonClient();
 
 async function validateImplementation() {
-  console.log('🔍 VALIDANDO IMPLEMENTAÇÃO MULTI-PERFIL\n');
-  
+  console.log('VALIDANDO IMPLEMENTACAO MULTI-PERFIL\n');
+
   let errors = 0;
   let warnings = 0;
 
-  // 1. Verificar views públicas
-  console.log('=== 1. VIEWS PÚBLICAS ===');
+  console.log('=== 1. VIEWS PUBLICAS ===');
   const views = [
     'public_profiles',
     'public_business_profiles',
     'public_professional_profiles',
     'public_driver_profiles',
-    'public_profile_links'
+    'public_profile_links',
   ];
 
   for (const view of views) {
     try {
       const { error } = await supabase.from(view).select('*').limit(1);
       if (error) {
-        console.log(`❌ ${view}: ${error.message}`);
+        console.log(`ERRO ${view}: ${error.message}`);
         errors++;
       } else {
-        console.log(`✅ ${view}`);
+        console.log(`OK ${view}`);
       }
-    } catch (e) {
-      console.log(`❌ ${view}: ${e}`);
+    } catch (error) {
+      console.log(`ERRO ${view}: ${error}`);
       errors++;
     }
   }
 
-  // 2. Verificar tabelas (via RLS - deve falhar para anon)
   console.log('\n=== 2. TABELAS (RLS) ===');
   const tables = [
     'profiles',
@@ -62,68 +46,69 @@ async function validateImplementation() {
     'profile_links',
     'business_data',
     'professional_data',
-    'driver_data'
+    'driver_data',
   ];
 
   for (const table of tables) {
     try {
       const { error } = await supabase.from(table).select('*').limit(1);
       if (error && error.message.includes('permission denied')) {
-        console.log(`✅ ${table}: RLS ativo (acesso negado para anon)`);
+        console.log(`OK ${table}: RLS ativo (acesso negado para anon)`);
       } else if (error) {
-        console.log(`⚠️  ${table}: ${error.message}`);
+        console.log(`WARN ${table}: ${error.message}`);
         warnings++;
       } else {
-        console.log(`⚠️  ${table}: RLS pode estar desativado (acesso permitido)`);
+        console.log(`WARN ${table}: RLS pode estar desativado (acesso permitido)`);
         warnings++;
       }
-    } catch (e) {
-      console.log(`❌ ${table}: ${e}`);
+    } catch (error) {
+      console.log(`ERRO ${table}: ${error}`);
       errors++;
     }
   }
 
-  // 3. Verificar RPCs (deve falhar sem auth)
   console.log('\n=== 3. RPCs ===');
-  
+
   try {
     const { error } = await supabase.rpc('create_profile_with_extension', {
       p_profile_type: 'personal',
       p_handle: 'test',
       p_display_name: 'Test',
-      p_extension_data: {}
+      p_extension_data: {},
     });
-    
+
     if (error && (error.message.includes('permission denied') || error.message.includes('not authenticated'))) {
-      console.log('✅ create_profile_with_extension: Requer autenticação');
+      console.log('OK create_profile_with_extension: requer autenticacao');
     } else if (error) {
-      console.log(`⚠️  create_profile_with_extension: ${error.message}`);
+      console.log(`WARN create_profile_with_extension: ${error.message}`);
       warnings++;
     } else {
-      console.log('⚠️  create_profile_with_extension: Executou sem auth (problema de segurança)');
+      console.log('WARN create_profile_with_extension: executou sem auth');
       warnings++;
     }
-  } catch (e) {
-    console.log(`✅ create_profile_with_extension: Protegido`);
+  } catch {
+    console.log('OK create_profile_with_extension: protegido');
   }
 
-  // 4. Resumo
   console.log('\n=== RESUMO ===');
-  console.log(`✅ Sucessos: ${views.length - errors}`);
-  console.log(`❌ Erros: ${errors}`);
-  console.log(`⚠️  Warnings: ${warnings}`);
-  
+  console.log(`Erros: ${errors}`);
+  console.log(`Warnings: ${warnings}`);
+
   if (errors === 0 && warnings === 0) {
-    console.log('\n🎉 VALIDAÇÃO COMPLETA - IMPLEMENTAÇÃO OK');
+    console.log('\nVALIDACAO COMPLETA - IMPLEMENTACAO OK');
     process.exit(0);
-  } else if (errors === 0) {
-    console.log('\n⚠️  VALIDAÇÃO COM WARNINGS - REVISAR');
-    process.exit(0);
-  } else {
-    console.log('\n❌ VALIDAÇÃO FALHOU - CORRIGIR ERROS');
-    process.exit(1);
   }
+
+  if (errors === 0) {
+    console.log('\nVALIDACAO COM WARNINGS - REVISAR');
+    process.exit(0);
+  }
+
+  console.log('\nVALIDACAO FALHOU - CORRIGIR ERROS');
+  process.exit(1);
 }
 
-validateImplementation().catch(console.error);
-
+validateImplementation().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});

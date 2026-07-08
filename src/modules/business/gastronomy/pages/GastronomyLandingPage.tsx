@@ -9,8 +9,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
-import { Building2, LayoutList, Loader2, MapPin, Plus, Search, Store, Tag, UtensilsCrossed, Wrench } from 'lucide-react';
-import { useModuleTerritoryFilter } from '@/core/location/hooks/useModuleTerritoryFilter';
+import { Building2, LayoutList, MapPin, Plus, Search, Store, Tag, UtensilsCrossed, Wrench } from 'lucide-react';
+import { useModuleTerritoryFilter } from '@/core/location';
 import { useAppUrls } from '@/core/routing/hooks';
 import { useFriendlyModuleUrls } from '@/core/routing/hooks/useFriendlyModuleUrls';
 import { useTerritorialContextOptional } from '@/core/routing/components/TerritorialLayout';
@@ -165,7 +165,7 @@ function NeighborhoodGastronomyHero({
               Gastronomia do bairro
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-white/62">
-              Restaurantes, cardapios e sabores perto de voce, organizados pelo territorio da comunidade.
+              Restaurantes, cardápios e sabores perto de você, organizados pelo território da comunidade.
             </p>
 
             <div className="mt-3 flex flex-wrap gap-2">
@@ -202,7 +202,7 @@ function NeighborhoodGastronomyHero({
                 Mesa local
               </p>
               <p className="mt-1 text-sm leading-5 text-white/65">
-                {restaurantsCount} restaurantes e {catalogCount} itens de cardapio no territorio.
+                {restaurantsCount} restaurantes e {catalogCount} itens de cardápio no território.
               </p>
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -230,11 +230,12 @@ export default function GastronomyLandingPage() {
   const location = useLocation();
   const territorialContext = useTerritorialContextOptional();
   const resolved = territorialContext?.resolved ?? null;
+  const activeMemberIds = territorialContext?.activeMemberIds;
   const appUrls = useAppUrls(resolved);
   const moduleUrls = useFriendlyModuleUrls();
   const isCommunityScopedSurface = location.pathname.includes('/comunidade/');
   const { user } = useSessionContext();
-  const moduleTerritory = useModuleTerritoryFilter({ routeResolved: resolved });
+  const moduleTerritory = useModuleTerritoryFilter({ routeResolved: resolved, activeMemberIds });
   const territoryFilter = moduleTerritory.territoryFilter;
   // Estado local
   const [displayLayout, setDisplayLayout] = useState<DisplayLayout>('grid');
@@ -288,9 +289,9 @@ export default function GastronomyLandingPage() {
         ? resolved.group.name
         : moduleTerritory.displayLabel;
   const hasDeliveryContext = Boolean(deliveryDestination);
-  const isDestinationRequired = !hasDeliveryContext;
-  const canShowCatalog = isCommunityScopedSurface || hasDeliveryContext;
-  const shouldLoadCatalog = canShowCatalog && territoryFilter.scope !== 'none';
+  const shouldShowDestinationGate = !isCommunityScopedSurface && !hasDeliveryContext;
+  const canShowCatalog = territoryFilter.scope !== 'none';
+  const shouldLoadCatalog = canShowCatalog;
   // Active filters for queries
   const activeFilters = useMemo(
     () => ({
@@ -383,8 +384,8 @@ export default function GastronomyLandingPage() {
     : isLocatingUser
       ? 'Validando sua localização para calcular distâncias e tempo de entrega com precisão.'
       : locationPermissionState === 'denied'
-        ? 'Localização bloqueada no navegador. Informe um endereço válido para liberar a listagem.'
-        : 'Informe um endereço completo ou use sua localização atual para liberar restaurantes e cardápios.';
+        ? 'Localização bloqueada no navegador. Informe um endereço válido para calcular entrega, distância e tempo com mais precisão.'
+        : 'Informe um endereço completo ou use sua localização atual para calcular entrega, distância e tempo com mais precisão.';
   const proximityFallbackMessage = distanceReferenceCoords
     ? `Ainda estamos mapeando os restaurantes desta seleção. Em breve você verá os mais próximos do seu endereço.`
     : !canUseGeolocation
@@ -412,16 +413,6 @@ export default function GastronomyLandingPage() {
     }
     setSortBy((current) => (current === 'relevance' ? 'nearest' : current));
   }, [searchQuery]);
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="space-y-4 text-center">
-          <Loader2 className="mx-auto h-10 w-10 animate-spin text-primary" />
-          <p className="font-medium text-muted-foreground">Carregando gastronomia...</p>
-        </div>
-      </div>
-    );
-  }
   return (
     <>
       <Helmet>
@@ -492,7 +483,7 @@ export default function GastronomyLandingPage() {
           territoryName={territoryName}
           title="Descubra Sabores"
           titleHighlight="Perto de Você"
-          subtitle={`Restaurantes e cardápios em ${territoryName}. Escolha um destino de entrega e veja as melhores opções da região.`}
+          subtitle={`Restaurantes e cardápios em ${territoryName}. Defina um destino para calcular entrega e distância com mais precisão.`}
           search={{
             value: searchQuery,
             onChange: setSearchQuery,
@@ -526,7 +517,7 @@ export default function GastronomyLandingPage() {
         </section>
           </>
         )}
-        {!isCommunityScopedSurface && isDestinationRequired && (
+        {shouldShowDestinationGate && (
           <DeliveryDestinationGate
             message={destinationGateMessage}
             canUseGeolocation={canUseGeolocation}
@@ -628,6 +619,7 @@ export default function GastronomyLandingPage() {
                 distanceMap={businessDistanceMap}
                 totalCount={sortedBusinesses.length}
                 subtitle={allStoresSubtitle}
+                isLoading={isLoading}
                 canLoadMore={canLoadMore}
                 isFetchingMore={isFetchingNextPage}
                 hasActiveFilters={hasActiveFilters}

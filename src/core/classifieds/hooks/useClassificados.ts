@@ -67,11 +67,12 @@ interface UseClassificadosOptions {
 }
 
 export function useClassificados(options: UseClassificadosOptions = {}) {
-  const { filters, routeResolved } = options;
+  const { filters, routeResolved, activeMemberIds } = options;
 
   // Filtro territorial canônico — suporta location e group
   const moduleTerritory = useModuleTerritoryFilter({
     routeResolved,
+    activeMemberIds,
     uiFilter: options.uiTerritoryFilter,
   });
   const filter = options.territoryFilter ?? moduleTerritory.territoryFilter;

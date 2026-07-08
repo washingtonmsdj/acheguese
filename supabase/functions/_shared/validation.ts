@@ -514,6 +514,31 @@ export const deleteAccountSchema: Schema<DeleteAccountBody> = {
   export_first: { required: false, validator: v.boolean() },
 };
 
+/** Schema para login publico por username via Edge Function */
+export interface AuthUsernameLoginBody {
+  username: string;
+  password: string;
+}
+
+export const authUsernameLoginSchema: Schema<AuthUsernameLoginBody> = {
+  username: { required: true, validator: v.username() },
+  password: { required: true, validator: v.string(1, 512) },
+};
+
+/** Schema para tracking publico de visualizacoes nao criticas */
+export interface PublicViewEventBody {
+  entityType: "business" | "professional" | "vaga";
+  entityId: string;
+}
+
+export const publicViewEventSchema: Schema<PublicViewEventBody> = {
+  entityType: {
+    required: true,
+    validator: v.enum(["business", "professional", "vaga"] as const),
+  },
+  entityId: { required: true, validator: v.uuid() },
+};
+
 /** Schema para geracao de conteudo de territorio por IA */
 export interface TerritoryAiContentBody {
   territory_slug: string;

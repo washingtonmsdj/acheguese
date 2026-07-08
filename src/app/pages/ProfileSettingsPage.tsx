@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { ArrowLeft, Link2, Settings2, Shield, Users } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
-import { getProfileTypeLabel } from "@/core/profile/utils/profileDomainRules";
+import { canProfileHaveMembers, getProfileTypeLabel } from "@/core/profile/utils/profileDomainRules";
 import { PrivacySettings } from "@/core/profiles/components/PrivacySettings";
 import { ProfileLinksManager } from "@/core/profiles/components/ProfileLinksManager";
 import { ProfileMembersManagerImproved } from "@/core/profiles/components/ProfileMembersManagerImproved";
@@ -54,8 +54,7 @@ export default function ProfileSettingsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<ProfileSettingsTab>(normalizeTab(searchParams.get("tab")));
 
-  const canHaveMembers =
-    activeProfile?.profile_type === "business" || activeProfile?.profile_type === "professional";
+  const canHaveMembers = canProfileHaveMembers(activeProfile);
 
   const resolvedTab = useMemo<ProfileSettingsTab>(() => {
     const requestedTab = normalizeTab(searchParams.get("tab"));

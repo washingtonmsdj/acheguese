@@ -6,21 +6,9 @@
  */
 
 import { type Page } from '@playwright/test';
-import { createClient } from '@supabase/supabase-js';
+import { createOptionalOperationalAdminClient } from './operational-env';
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
-// Suporta tanto SERVICE_ROLE_KEY (padrão Supabase) quanto SUPABASE_SECRET_KEY (alias do projeto)
-const SERVICE_KEY =
-  process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  process.env.SUPABASE_SECRET_KEY ||
-  null;
-
-export const admin =
-  SUPABASE_URL && SERVICE_KEY
-    ? createClient(SUPABASE_URL, SERVICE_KEY, {
-        auth: { autoRefreshToken: false, persistSession: false },
-      })
-    : null;
+export const admin = createOptionalOperationalAdminClient();
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -472,7 +460,7 @@ export async function waitForDashboard(page: Page, url: string): Promise<boolean
   const finalUrl = page.url();
   const isOnDashboard = finalUrl.includes(businessSegment + '/education');
   const hasContent = await page.locator('body').evaluate(
-    (el) => el.innerText.trim().length > 20
+    (el) => (el.textContent ?? '').trim().length > 20
   ).catch(() => false);
 
   console.log(`waitForDashboard: url=${finalUrl}, onDashboard=${isOnDashboard}, hasContent=${hasContent}`);

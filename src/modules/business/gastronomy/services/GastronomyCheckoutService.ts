@@ -12,12 +12,21 @@ import { OrderDeliverySSOTService } from "@/core/mobility/delivery/services/Orde
 import { GastronomyOrderOriginAdapter } from "@/core/mobility/delivery/order/adapters/GastronomyOrderOriginAdapter";
 import type { OrderRecord } from "@/core/mobility/delivery/order/types";
 import { DeliveryAreaService } from "./DeliveryAreaService";
+import {
+  isPlatformCourierUnavailableForCheckout,
+  normalizeFulfillmentMode,
+  requiresDeliveryDestination,
+  resolveAcceptedPaymentMethods,
+  type GastronomyCheckoutPaymentMethod,
+  type GastronomyFulfillmentMode,
+} from "../checkout/checkoutRules";
 
 export interface CreateGastronomyCheckoutOrderInput {
   customer_profile_id: string;
   actor_profile_id: string;
   business: GastronomyBusiness;
   cart: Cart;
+  fulfillment_mode?: GastronomyFulfillmentMode;
   payment_method?: string;
   notes?: string;
   customer_snapshot?: {
@@ -47,14 +56,45 @@ export class GastronomyCheckoutService {
     input: CreateGastronomyCheckoutOrderInput,
   ): Promise<OrderRecord> {
     try {
-      if (input.business.gastronomy_profile.delivery_enabled) {
+      const fulfillmentMode = normalizeFulfillmentMode(
+        input.business,
+        input.fulfillment_mode ?? input.cart.fulfillment_mode,
+      );
+
+      if (!input.cart.items.length) {
+        throw new Error("O carrinho precisa ter pelo menos um item.");
+      }
+
+      if (isPlatformCourierUnavailableForCheckout(input.business, fulfillmentMode)) {
+        throw new Error(
+          "Entrega por rede de motoboy ainda nao esta disponivel neste lancamento. Ajuste a loja para frota propria ou use retirada/no local.",
+        );
+      }
+
+      const normalizedPaymentMethod = input.payment_method?.trim().toLowerCase();
+      const paymentMethod = normalizedPaymentMethod
+        ? (normalizedPaymentMethod as GastronomyCheckoutPaymentMethod)
+        : undefined;
+      if (paymentMethod) {
+        const acceptedPaymentMethods = resolveAcceptedPaymentMethods(input.business);
+        if (!acceptedPaymentMethods.has(paymentMethod)) {
+          throw new Error(
+            "Forma de pagamento indisponivel para este estabelecimento.",
+          );
+        }
+      }
+
+      if (requiresDeliveryDestination(fulfillmentMode)) {
+        const postalCode = input.delivery_snapshot?.postal_code?.trim();
+        const street = input.delivery_snapshot?.street?.trim();
+        const number = input.delivery_snapshot?.number?.trim();
         const neighborhood = input.delivery_snapshot?.neighborhood?.trim();
         const city = input.delivery_snapshot?.city?.trim();
         const state = input.delivery_snapshot?.state?.trim();
 
-        if (!neighborhood || !city || !state) {
+        if (!postalCode || !street || !number || !neighborhood || !city || !state) {
           throw new Error(
-            "Destino de entrega incompleto. Informe bairro, cidade e estado para validar a área.",
+            "Destino de entrega incompleto. Informe CEP, rua, numero, bairro, cidade e estado para validar a area.",
           );
         }
 
@@ -69,14 +109,14 @@ export class GastronomyCheckoutService {
         if (eligibilityResult.error || !eligibilityResult.data) {
           throw new Error(
             eligibilityResult.error ||
-              "Não foi possível validar sua área de entrega no momento.",
+              "Nao foi possivel validar sua area de entrega no momento.",
           );
         }
 
         if (!eligibilityResult.data.is_eligible) {
           throw new Error(
             eligibilityResult.data.message ||
-              "Este endereço está fora da área de entrega deste estabelecimento.",
+              "Este endereco esta fora da area de entrega deste estabelecimento.",
           );
         }
       }
@@ -86,7 +126,8 @@ export class GastronomyCheckoutService {
         actor_profile_id: input.actor_profile_id,
         business: input.business,
         cart: input.cart,
-        payment_method: input.payment_method,
+        fulfillment_mode: fulfillmentMode,
+        payment_method: paymentMethod,
         notes: input.notes,
         customer_snapshot: input.customer_snapshot,
         delivery_snapshot: input.delivery_snapshot,

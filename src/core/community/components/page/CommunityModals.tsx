@@ -72,6 +72,8 @@ interface CommunityModalsProps {
   onShare: (postId: string) => void;
   onReport: (postId: string) => void;
   onTagClick: (tag: string) => void;
+  canComment?: boolean;
+  commentBlockedMessage?: string;
 }
 
 function isCommentModalData(data: ModalState["data"]): data is ModalCommentData {
@@ -156,6 +158,8 @@ export function CommunityModals({
   onShare,
   onReport,
   onTagClick,
+  canComment = true,
+  commentBlockedMessage,
 }: CommunityModalsProps) {
   const commentData = isCommentModalData(modalState.data) ? modalState.data : null;
   const unifiedData = isUnifiedModalData(modalState.data) ? modalState.data : null;
@@ -172,6 +176,8 @@ export function CommunityModals({
             postAuthorId={commentData?.authorProfileId ?? ""}
             postAuthorName={commentData?.authorName ?? "Autor"}
             currentUserId={profileId}
+            canComment={canComment}
+            commentBlockedMessage={commentBlockedMessage}
           />
         </Suspense>
       ) : null}
@@ -188,6 +194,8 @@ export function CommunityModals({
             onShare={onShare}
             onReport={onReport}
             onTagClick={onTagClick}
+            canComment={canComment}
+            commentBlockedMessage={commentBlockedMessage}
           />
         </Suspense>
       ) : null}
@@ -205,6 +213,8 @@ export function CommunityModals({
             onReport={onReport}
             onUpvote={(id) => logger.info("Upvote:", { action: id })}
             onTagClick={onTagClick}
+            canComment={canComment}
+            commentBlockedMessage={commentBlockedMessage}
           />
         </Suspense>
       ) : null}

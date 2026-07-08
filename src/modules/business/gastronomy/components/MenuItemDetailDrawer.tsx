@@ -15,6 +15,12 @@ import {
 import { Textarea } from "@/shared/components/ui/textarea";
 import { useMenuItem } from "../hooks";
 import { useGastronomyCartStore } from "../cart/useGastronomyCartStore";
+import {
+  fulfillmentModeLabel,
+  getEnabledFulfillmentModes,
+  resolveDefaultFulfillmentMode,
+  resolveDeliveryFeeForFulfillment,
+} from "../checkout/checkoutRules";
 import type { GastronomyBusiness } from "../types/gastronomy";
 import type { MenuItemAddon, MenuItemVariant, MenuItemWithRelations } from "../types";
 import { formatBrl, money } from "../utils/currency";
@@ -98,8 +104,11 @@ export function MenuItemDetailDrawer({
   const [shouldUsePizzaBuilder, setShouldUsePizzaBuilder] = useState(false);
   const [shouldUsePredefinedPizzaBuilder, setShouldUsePredefinedPizzaBuilder] = useState(false);
 
-  const matchesPizzaByText =
-    /pizza/i.test(resolvedItem?.category?.name ?? "") || /pizza/i.test(resolvedItem?.name ?? "");
+  const matchesPizzaByText = /pizza/i.test(resolvedItem?.name ?? "");
+  const mayUsePizzaCatalog =
+    matchesPizzaByText ||
+    /pizza|pizzaria/i.test(business.gastronomy_profile?.niche_key ?? "") ||
+    /pizza|pizzaria/i.test(business.gastronomy_profile?.cuisine_type ?? "");
 
   useEffect(() => {
     if (!resolvedItem) return;
@@ -119,6 +128,15 @@ export function MenuItemDetailDrawer({
     let mounted = true;
     setPizzaCatalogError(null);
     setPizzaCatalog(null);
+
+    if (!mayUsePizzaCatalog) {
+      setPizzaMenuItemConfig(null);
+      setShouldUsePizzaBuilder(false);
+      setShouldUsePredefinedPizzaBuilder(false);
+      return () => {
+        mounted = false;
+      };
+    }
 
     Promise.all([
       PizzaAdminService.getCatalog(business.business_data_id),
@@ -148,7 +166,7 @@ export function MenuItemDetailDrawer({
     return () => {
       mounted = false;
     };
-  }, [business.business_data_id, matchesPizzaByText, open, resolvedItem]);
+  }, [business.business_data_id, matchesPizzaByText, mayUsePizzaCatalog, open, resolvedItem]);
 
   const availableVariants = useMemo(
     () => (resolvedItem?.variants ?? []).filter((variant) => variant.is_available),
@@ -263,7 +281,11 @@ export function MenuItemDetailDrawer({
 
   if (!resolvedItem) return null;
 
-  const deliveryEnabled = business.gastronomy_profile?.delivery_enabled ?? false;
+  const enabledFulfillmentModes = getEnabledFulfillmentModes(business);
+  const defaultFulfillmentMode = resolveDefaultFulfillmentMode(business);
+  const hasOrderableFulfillment = enabledFulfillmentModes.length > 0;
+  const orderableModeLabel = fulfillmentModeLabel(defaultFulfillmentMode);
+  const cartDeliveryFee = resolveDeliveryFeeForFulfillment(business, defaultFulfillmentMode);
   const businessDataId = business.business_data_id;
   const handleSelectVariant = (variantId: string) => {
     setSelectedVariantId((current) => (current === variantId ? current : variantId));
@@ -283,7 +305,8 @@ export function MenuItemDetailDrawer({
     try {
       addItem({
         business_id: businessDataId,
-        delivery_fee: business.gastronomy_profile?.delivery_fee ?? 0,
+        delivery_fee: cartDeliveryFee,
+        fulfillment_mode: defaultFulfillmentMode,
         item_input: {
           item: resolvedItem,
           quantity,
@@ -293,7 +316,7 @@ export function MenuItemDetailDrawer({
         },
       });
 
-      toast.success("Item adicionado ao carrinho.");
+      toast.success("Item adicionado ao carrinho.", { position: "top-center" });
       onOpenChange(false);
     } catch (error) {
       const message =
@@ -309,11 +332,12 @@ export function MenuItemDetailDrawer({
       const cartItem = PizzaCartItemBuilder.build(selection, pizzaCatalog);
       addCartItem({
         business_id: businessDataId,
-        delivery_fee: business.gastronomy_profile?.delivery_fee ?? 0,
+        delivery_fee: cartDeliveryFee,
+        fulfillment_mode: defaultFulfillmentMode,
         cart_item: cartItem,
       });
 
-      toast.success("Pizza adicionada ao carrinho.");
+      toast.success("Pizza adicionada ao carrinho.", { position: "top-center" });
       onOpenChange(false);
     } catch (error) {
       const message =
@@ -404,7 +428,9 @@ export function MenuItemDetailDrawer({
                   )}
                 </div>
 
-                {!deliveryEnabled && <Badge variant="outline">Delivery indisponível</Badge>}
+                <Badge variant="outline">
+                  {hasOrderableFulfillment ? orderableModeLabel : "Pedido online indisponivel"}
+                </Badge>
               </div>
 
               {/* Ingredientes e Alérgenos */}
@@ -483,6 +509,7 @@ export function MenuItemDetailDrawer({
                               size="icon"
                               onClick={() => updateAddonQuantity(addon, -1)}
                               disabled={selectedQuantity === 0}
+                              aria-label={`Remover ${addon.name}`}
                             >
                               <Minus className="h-4 w-4" />
                             </Button>
@@ -493,6 +520,7 @@ export function MenuItemDetailDrawer({
                               size="icon"
                               onClick={() => updateAddonQuantity(addon, 1)}
                               disabled={selectedQuantity >= addon.max_quantity}
+                              aria-label={`Adicionar ${addon.name}`}
                             >
                               <Plus className="h-4 w-4" />
                             </Button>
@@ -529,6 +557,7 @@ export function MenuItemDetailDrawer({
                     size="icon"
                     onClick={() => setQuantity((current) => Math.max(1, current - 1))}
                     disabled={quantity === 1}
+                    aria-label="Diminuir quantidade"
                   >
                     <Minus className="h-4 w-4" />
                   </Button>
@@ -538,6 +567,7 @@ export function MenuItemDetailDrawer({
                     variant="outline"
                     size="icon"
                     onClick={() => setQuantity((current) => current + 1)}
+                    aria-label="Aumentar quantidade"
                   >
                     <Plus className="h-4 w-4" />
                   </Button>
@@ -589,10 +619,10 @@ export function MenuItemDetailDrawer({
                 type="button"
                 className="shrink-0"
                 size="lg"
-                disabled={!resolvedItem.is_available || !deliveryEnabled}
+                disabled={!resolvedItem.is_available || !hasOrderableFulfillment}
                 onClick={handleAddToCart}
               >
-                {deliveryEnabled ? "Adicionar ao carrinho" : "Delivery indisponivel"}
+                {hasOrderableFulfillment ? "Adicionar ao carrinho" : "Pedido online indisponivel"}
               </Button>
             </div>
           </SheetFooter>

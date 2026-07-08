@@ -24,7 +24,7 @@ async function businessUrlFromContext(input: {
       geographic_path: input.geographic_path,
     };
 
-    return BusinessUrlService.getCanonicalUrlWithResolvedCommunityAlias(urlContext);
+    return BusinessUrlService.getCanonicalUrl(urlContext);
   } catch (error) {
     logger.warn("[AI] Business URL unavailable for search result", {
       businessId: input.id,

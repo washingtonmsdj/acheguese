@@ -17,7 +17,10 @@ import { useNavigate } from "react-router-dom";
 import { AuthBrandHeader } from "@/app/components/auth/AuthBrandHeader";
 import { useCadastro } from "@/app/features/onboarding/hooks/useCadastro";
 import { useAuth } from "@/core/auth/hooks/useAuth";
-import { getAuthPasswordRequirementStatus } from "@/core/auth/utils/passwordPolicy";
+import {
+  AUTH_PASSWORD_MIN_LENGTH,
+  getAuthPasswordRequirementStatus,
+} from "@/core/auth/utils/passwordPolicy";
 import { useLocationCascade } from "@/core/location/hooks/useLocationCascade";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
@@ -253,7 +256,7 @@ export default function CadastroPage() {
                         <Input
                           id="password"
                           type={showPassword ? "text" : "password"}
-                          placeholder={"M\u00ednimo 8 caracteres"}
+                          placeholder={`M\u00ednimo ${AUTH_PASSWORD_MIN_LENGTH} caracteres`}
                           value={formData.password}
                           onChange={(event) => updateField("password", event.target.value)}
                           className={cn("h-10 pr-10 sm:h-11", errors.password && "border-destructive")}

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
   BusinessUrlService,
   type BusinessUrlContext,
@@ -11,10 +11,10 @@ export interface ResolvedBusinessPublicUrlState {
 }
 
 /**
- * Resolves the preferred public business URL.
+ * Resolves the public business URL.
  *
- * The territorial URL is available immediately as fallback, then the hook
- * upgrades to /:communityAlias/:slug when the SSOT alias can be resolved.
+ * Public URLs never upgrade to community aliases automatically. Community
+ * scoped URLs are generated only from explicit community context.
  */
 export function useResolvedBusinessPublicUrl(
   ctx: BusinessUrlContext | null | undefined,
@@ -47,45 +47,9 @@ export function useResolvedBusinessPublicUrl(
     }
   }, [resolvedContext]);
 
-  const [url, setUrl] = useState<string | null>(fallbackUrl);
-  const [isResolving, setIsResolving] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    setUrl(fallbackUrl);
-
-    if (!resolvedContext || !fallbackUrl) {
-      setIsResolving(false);
-      return;
-    }
-
-    setIsResolving(true);
-
-    void BusinessUrlService.getCanonicalUrlWithResolvedCommunityAlias(resolvedContext)
-      .then((resolvedUrl) => {
-        if (!cancelled) {
-          setUrl(resolvedUrl);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setUrl(fallbackUrl);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setIsResolving(false);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [fallbackUrl, resolvedContext]);
-
   return {
-    url,
+    url: fallbackUrl,
     fallbackUrl,
-    isResolving,
+    isResolving: false,
   };
 }

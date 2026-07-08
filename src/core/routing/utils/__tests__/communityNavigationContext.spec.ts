@@ -17,9 +17,9 @@ const district = {
 };
 
 describe("communityNavigationContext", () => {
-  it("uses short community alias as base for embedded module links", () => {
+  it("uses explicit community alias as base for embedded module links", () => {
     const context = resolveCommunityNavigationContext({
-      pathname: "/santa-cruz/empresas",
+      pathname: "/comunidade/santa-cruz/empresas",
       aliasResolution: {
         status: "resolved",
         alias: "santa-cruz",
@@ -34,19 +34,19 @@ describe("communityNavigationContext", () => {
       city: "salvador",
       territorySlug: "santa-cruz",
       territoryBasePath: "/ba/salvador/santa-cruz",
-      basePath: "/santa-cruz",
+      basePath: "/comunidade/santa-cruz",
       groupId: null,
       usesEmbeddedCommunityModules: true,
     });
 
     expect(buildCommunityNavigationModuleUrls(context!).business).toBe(
-      "/santa-cruz/empresas",
+      "/comunidade/santa-cruz/empresas",
     );
     expect(buildCommunityNavigationModuleUrls(context!).gastronomy).toBe(
-      "/santa-cruz/gastronomia",
+      "/comunidade/santa-cruz/gastronomia",
     );
     expect(buildCommunityNavigationModuleUrls(context!).jobs).toBe(
-      "/santa-cruz/vagas",
+      "/comunidade/santa-cruz/vagas",
     );
   });
 
@@ -66,10 +66,36 @@ describe("communityNavigationContext", () => {
     );
   });
 
+  it("uses explicit community portal links from territorial context", () => {
+    const context = resolveCommunityNavigationContext({
+      pathname: "/comunidade/santa-cruz/empresas",
+      territorialContext: {
+        resolved: { kind: "location", location: district as never },
+        baseUrl: "/ba/salvador/santa-cruz",
+        communityBaseUrl: "/comunidade/santa-cruz",
+      },
+    });
+
+    expect(context).toMatchObject({
+      territoryBasePath: "/ba/salvador/santa-cruz",
+      basePath: "/comunidade/santa-cruz",
+      usesEmbeddedCommunityModules: true,
+    });
+
+    expect(buildCommunityNavigationModuleUrls(context!).business).toBe(
+      "/comunidade/santa-cruz/empresas",
+    );
+    expect(buildCommunityNavigationModuleUrls(context!).gastronomy).toBe(
+      "/comunidade/santa-cruz/gastronomia",
+    );
+  });
+
   it("does not treat reserved root paths as community aliases", () => {
     expect(getCommunityAliasCandidateFromPath("/empresas/ba/salvador")).toBeNull();
     expect(getCommunityAliasCandidateFromPath("/p/padaria-do-joao")).toBeNull();
-    expect(getCommunityAliasCandidateFromPath("/santa-cruz/empresas")).toBe(
+    expect(getCommunityAliasCandidateFromPath("/santa-cruz/empresas")).toBeNull();
+    expect(getCommunityAliasCandidateFromPath("/comunidade/ba/salvador")).toBeNull();
+    expect(getCommunityAliasCandidateFromPath("/comunidade/santa-cruz/empresas")).toBe(
       "santa-cruz",
     );
   });

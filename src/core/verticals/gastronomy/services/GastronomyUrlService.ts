@@ -28,7 +28,7 @@ export class GastronomyUrlService {
     return buildModuleTerritoryUrl(APP_MODULE_SLUGS.gastronomy, territoryBaseUrl);
   }
 
-  static getLegacyDetailUrlFromTerritory(territoryBaseUrl: string, slug: string): string {
+  static getPublicDetailUrlFromTerritory(territoryBaseUrl: string, slug: string): string {
     return buildModuleTerritoryEntityUrl(
       APP_MODULE_SLUGS.gastronomy,
       territoryBaseUrl,
@@ -36,14 +36,12 @@ export class GastronomyUrlService {
     );
   }
 
-  static getCanonicalUrl(ctx: BusinessUrlContext): string {
-    return this.buildUrls(ctx).canonical;
+  static getLegacyDetailUrlFromTerritory(territoryBaseUrl: string, slug: string): string {
+    return this.getPublicDetailUrlFromTerritory(territoryBaseUrl, slug);
   }
 
-  static async getCanonicalUrlWithResolvedCommunityAlias(
-    ctx: BusinessUrlContext,
-  ): Promise<string> {
-    return BusinessUrlService.getCanonicalUrlWithResolvedCommunityAlias(ctx);
+  static getCanonicalUrl(ctx: BusinessUrlContext): string {
+    return this.buildUrls(ctx).canonical;
   }
 
   static async resolveBySlug(slug: string): Promise<BusinessUrlContext | null> {

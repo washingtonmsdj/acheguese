@@ -15,6 +15,7 @@ import { CommentsList } from "./comments/CommentsList";
 import { CommentForm } from "./comments/CommentForm";
 import { INLINE_STYLES } from "./styles/communityDesignSystem";
 import { ConfirmActionDialog } from "@/shared/components/ConfirmActionDialog";
+import { toast } from "sonner";
 interface CommentsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -22,6 +23,8 @@ interface CommentsModalProps {
   postAuthorId?: string;
   postAuthorName?: string;
   currentUserId?: string;
+  canComment?: boolean;
+  commentBlockedMessage?: string;
 }
 
 export function CommentsModal({
@@ -31,6 +34,8 @@ export function CommentsModal({
   postAuthorId,
   postAuthorName,
   currentUserId,
+  canComment = true,
+  commentBlockedMessage = "Verifique sua residencia para comentar nesta comunidade.",
 }: CommentsModalProps) {
   const { user, activeProfile } = useSessionContext();
   const { handleLike, getCommentState, initializeComment, isProcessing } =
@@ -72,6 +77,11 @@ export function CommentsModal({
   }, [open, postId, handleFetchComments]);
 
   const handleSubmitComment = async () => {
+    if (!canComment) {
+      toast.info(commentBlockedMessage);
+      return;
+    }
+
     const comment = await submitComment(newComment, replyTo?.id);
 
     if (comment) {
@@ -144,7 +154,14 @@ export function CommentsModal({
             getCommentState={getCommentState}
             isProcessing={isProcessing}
             onLike={handleLike}
-            onReply={(id, name) => setReplyTo({ id, name })}
+            onReply={(id, name) => {
+              if (!canComment) {
+                toast.info(commentBlockedMessage);
+                return;
+              }
+
+              setReplyTo({ id, name });
+            }}
             onDelete={handleDeleteComment}
           />
         </ScrollArea>
@@ -160,6 +177,8 @@ export function CommentsModal({
           userAvatar={activeProfile?.avatarUrl}
           userName={activeProfile?.name}
           isLoggedIn={!!user}
+          canComment={canComment}
+          blockedMessage={commentBlockedMessage}
         />
       </DialogContent>
     </Dialog>

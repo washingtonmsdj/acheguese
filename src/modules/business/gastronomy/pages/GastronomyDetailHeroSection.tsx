@@ -83,6 +83,7 @@ export function GastronomyDetailHeroSection({
           variant="ghost"
           className="h-10 w-10 rounded-full bg-black/40 text-white backdrop-blur-sm hover:bg-black/60"
           onClick={onBack}
+          aria-label="Voltar"
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
@@ -99,6 +100,7 @@ export function GastronomyDetailHeroSection({
                 : 'bg-black/40 text-white hover:bg-black/60'
             )}
             onClick={onToggleFavorite}
+            aria-label={isFavorited ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
           >
             <Heart className={cn('h-5 w-5', isFavorited && 'fill-current')} />
           </Button>
@@ -108,6 +110,7 @@ export function GastronomyDetailHeroSection({
             variant="ghost"
             className="h-10 w-10 rounded-full bg-black/40 text-white backdrop-blur-sm hover:bg-black/60"
             onClick={onShare}
+            aria-label="Compartilhar estabelecimento"
           >
             <Share2 className="h-5 w-5" />
           </Button>

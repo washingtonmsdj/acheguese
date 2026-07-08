@@ -94,12 +94,3 @@ export function buildCommunityAliasRoutePath(
     ...suffixSegments,
   ]);
 }
-
-export function buildCommunityRootAliasRoutePath(
-  suffixSegments: readonly string[] = [],
-): string {
-  return joinRoutePath([
-    TERRITORIAL_ROUTE_PARAMS.communitySlug,
-    ...suffixSegments,
-  ]);
-}

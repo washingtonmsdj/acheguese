@@ -29,6 +29,7 @@ export interface ITerritorialGroupRepository {
   findBySlugAndCity(slug: string, cityId: string): Promise<TerritorialGroup | null>;
   findWithMembers(groupId: string): Promise<TerritorialGroupWithMembers | null>;
   listMembers(groupId: string): Promise<Location[]>;
+  hasMember(groupId: string, locationId: string): Promise<boolean>;
   findGroupsContainingLocation(locationId: string): Promise<TerritorialGroup[]>;
   listAll(): Promise<TerritorialGroupWithMembers[]>;
   

@@ -169,8 +169,12 @@ const UnifiedPostCardComponent = ({
     if (import.meta.env.DEV) {
       logger.info("[UnifiedPostCard] Like action", { postId: post.id });
     }
+    if (onLike) {
+      onLike(post.id);
+      return;
+    }
+
     likePost();
-    onLike?.(post.id);
   }, [likePost, onLike, post.id]);
 
   const handleUpvote = useCallback(() => {
@@ -183,16 +187,24 @@ const UnifiedPostCardComponent = ({
     if (import.meta.env.DEV) {
       logger.info("[UnifiedPostCard] Save action", { postId: post.id });
     }
+    if (onSave) {
+      onSave(post.id);
+      return;
+    }
+
     savePost();
-    onSave?.(post.id);
   }, [savePost, onSave, post.id]);
 
   const handleShare = useCallback(() => {
     if (import.meta.env.DEV) {
       logger.info("[UnifiedPostCard] Share action", { postId: post.id });
     }
+    if (onShare) {
+      onShare(post.id);
+      return;
+    }
+
     sharePost();
-    onShare?.(post.id);
   }, [sharePost, onShare, post.id]);
 
   const handleCardClick = useCallback(() => {

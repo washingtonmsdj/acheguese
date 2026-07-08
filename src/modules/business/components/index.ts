@@ -8,14 +8,6 @@
  */
 
 // ============================================
-// CORE COMPONENTS - Componentes principais
-// ============================================
-
-export { BusinessCard } from "./BusinessCard";
-export { BusinessGrid } from "./BusinessGrid";
-export { BusinessHeader } from "./BusinessHeader";
-
-// ============================================
 // DETAIL COMPONENTS - Componentes de detalhes
 // ============================================
 
@@ -59,7 +51,6 @@ export { default as NetworkTab } from "./NetworkTab";
 // ============================================
 
 export { default as BookingButton } from "./BookingButton";
-export { BusinessFilters } from "./BusinessFilters";
 export { ContactLink } from "./ContactLink";
 export { NeighborhoodMap } from "@/core/business/components/NeighborhoodMap";
 export { default as QuickActions } from "./QuickActions";

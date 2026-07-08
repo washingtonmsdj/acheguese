@@ -1,18 +1,18 @@
 # Decisao Canonica: Roteamento Territorial
 
 Data: 2026-05-07
-Atualizado: 2026-06-05
+Atualizado: 2026-07-05
 Status: ativo
 
 Este documento e o SSOT de produto/SEO para rotas territoriais publicas do Achegue-se.
 
 ## Regra Principal
 
-O Achegue-se tem quatro camadas publicas:
+O Achegue-se tem quatro camadas publicas/operacionais:
 
 1. Site geral da cidade e do territorio.
 2. Modulos publicos por cidade ou territorio.
-3. Comunidade local por alias publico curto, quando o alias for unico.
+3. Portal de comunidade por rota explicita.
 4. Comunicacao territorial institucional/editorial.
 
 Essas camadas podem apontar para os mesmos dados, mas nao devem ter a mesma intencao de produto.
@@ -60,78 +60,85 @@ Papel:
 
 Regra importante: listagem de gastronomia continua em `/gastronomia/...`, mas detalhe de restaurante nao e canonico em `/gastronomia/.../:slug`.
 
-## Camada 3: Comunidade
+## Camada 3: Portal de Comunidade
 
 Uso: experiencia social/local, vida de bairro, feed, grupos, alertas, problemas, recomendacoes e contexto comunitario.
 
-URL publica principal vista pelo usuario:
+URL principal vista pelo usuario quando ele entra no portal:
+
+```text
+/comunidade/santa-cruz
+/comunidade/chapada-do-rio-vermelho
+```
+
+Rotas dentro da comunidade:
+
+```text
+/comunidade/santa-cruz/empresas
+/comunidade/santa-cruz/gastronomia
+/comunidade/santa-cruz/feed
+/comunidade/santa-cruz/grupos
+/comunidade/santa-cruz/problemas
+```
+
+Detalhe comunitario de empresa ou restaurante, apenas quando a origem for o
+portal:
+
+```text
+/comunidade/santa-cruz/empresas/padaria-do-joao
+/comunidade/santa-cruz/gastronomia/pizzaria-estrela
+```
+
+Aliases curtos legados, mantidos apenas para compatibilidade e redirecionamento:
 
 ```text
 /santa-cruz
-/chapada-do-rio-vermelho
-```
-
-Rotas publicas dentro da comunidade:
-
-```text
-/santa-cruz/empresas
-/santa-cruz/gastronomia
-/santa-cruz/feed
-/santa-cruz/grupos
-/santa-cruz/problemas
-```
-
-Detalhe publico preferencial de empresa ou restaurante:
-
-```text
-/santa-cruz/padaria-do-joao
-/santa-cruz/pizzaria-estrela
-```
-
-Aliases legados de detalhe, mantidos apenas para compatibilidade e redirecionamento:
-
-```text
 /santa-cruz/empresas/padaria-do-joao
 /santa-cruz/gastronomia/pizzaria-estrela
+/santa-cruz/padaria-do-joao
 ```
 
-Fallbacks tecnicos, nao preferenciais para compartilhamento:
+Rotas publicas de entidade, usadas fora da comunidade:
 
 ```text
-/comunidade/ba/salvador
-/comunidade/ba/salvador/santa-cruz
 /empresas/ba/salvador/santa-cruz/padaria-do-joao
 /gastronomia/ba/salvador/santa-cruz/pizzaria-estrela
 ```
 
 Regras:
 
-- O alias curto usa a raiz do site somente quando for unico e nao colidir com rotas reservadas.
+- O alias curto na raiz nao e rota canonica nova; o portal comunitario canonico
+  usa `/comunidade/:communitySlug`.
 - O alias precisa ser unico em `community_public_aliases`; em caso de colisao, o sistema nao escolhe uma comunidade arbitrariamente.
 - O banco continua guardando estado, cidade, territorio, tipo e comunidade como SSOT.
-- Sitemap, canonical e compartilhamentos favorecem a URL curta quando houver alias unico.
-- `/comunidade/:state/:city...` e `/comunidade/:communitySlug...` sao rotas tecnicas/legadas.
-- A URL publica nao expoe tipo tecnico (`area`, `district`, `territorial_group`, `locality`).
+- Sitemap publico nao emite URLs de comunidade.
+- `/comunidade/:communitySlug...` e a rota canonica do portal comunitario.
+- `/comunidade/:state/:city...` existe como fallback tecnico quando nao ha alias
+  publico unico.
+- A URL do portal nao expoe tipo tecnico (`area`, `district`, `territorial_group`, `locality`).
 
 ## Empresa, Restaurante e Premium
 
 Empresa e restaurante compartilham a mesma URL publica quando representam a mesma entidade:
 
 ```text
-/santa-cruz/padaria-do-joao
-/santa-cruz/pizzaria-estrela
-```
-
-O fallback tecnico de detalhe e:
-
-```text
 /empresas/ba/salvador/santa-cruz/padaria-do-joao
+/empresas/ba/salvador/santa-cruz/pizzaria-estrela
 ```
 
-Detalhe antigo de gastronomia redireciona para a URL publica da empresa:
+Quando o restaurante tiver detalhe vertical proprio, a rota publica da
+gastronomia tambem pode existir:
 
 ```text
 /gastronomia/ba/salvador/santa-cruz/pizzaria-estrela
+```
+
+Dentro do portal de comunidade, a entidade usa rota comunitaria explicita e
+canonical SEO para a rota publica equivalente:
+
+```text
+/comunidade/santa-cruz/empresas/padaria-do-joao
+/comunidade/santa-cruz/gastronomia/pizzaria-estrela
 ```
 
 Mini-site premium continua sendo uma camada propria:
@@ -166,9 +173,14 @@ Plano de distribuicao: [COMUNICACAO_DISTRIBUICAO_TERRITORIAL_PLANO.md](./COMUNIC
 ## SEO e Canonical
 
 - Rotas publicas de modulo (`/empresas/...`, `/servicos/...`, `/classificados/...`, `/gastronomia/...`) usam `index, follow` e canonical self para listagens.
-- Rotas curtas de comunidade (`/:communitySlug`, `/:communitySlug/empresas`, `/:communitySlug/gastronomia`, etc.) usam `index, follow` e canonical self quando o alias for unico.
-- Detalhes de empresa/restaurante usam `/:communitySlug/:slug` quando houver alias; sem alias, usam `/empresas/:state/:city/:district/:slug`.
-- Rotas legadas de detalhe redirecionam para a URL publica da entidade.
+- Rotas do portal comunitario (`/comunidade/...`) usam `noindex, follow` por
+  padrao.
+- Modulos publicos duplicados dentro da comunidade usam `noindex, follow` e
+  canonical para a rota publica equivalente.
+- Detalhes publicos de empresa/restaurante usam rota publica de modulo, como
+  `/empresas/:state/:city/:territory/:slug`.
+- Rotas curtas legadas nao aparecem em sitemap ou compartilhamento novo e nao
+  devem ser preservadas como segunda superficie publica.
 - Rotas editoriais/institucionais (`/comunicacao/...`) usam `index, follow` e canonical self quando publicas e verificadas.
 - Conteudo editorial exibido dentro da comunidade aponta canonical para `/comunicacao/...`.
 
@@ -177,7 +189,7 @@ Plano de distribuicao: [COMUNICACAO_DISTRIBUICAO_TERRITORIAL_PLANO.md](./COMUNIC
 Antes de criar uma rota nova, responder:
 
 1. A rota e uma vitrine publica/SEO? Use prefixo de modulo direto.
-2. A rota e social/comunitaria com alias unico? Use `/:communitySlug`.
+2. A rota e social/comunitaria com alias unico? Use `/comunidade/:communitySlug`.
 3. A rota e fallback tecnico comunitario? Use `/comunidade/...`.
 4. A rota e editorial/institucional de canal territorial? Use `/comunicacao/...`.
 5. A rota e operacional para dono/motorista/motoboy/profissional/canal? Use `/central`.
@@ -186,6 +198,8 @@ Antes de criar uma rota nova, responder:
 
 ## Status de Fechamento
 
-- Runtime de URL curta de comunidade, listagens e detalhe `/:communitySlug/:slug` fechado em testes unitarios de roteamento.
-- Sitemap dinamico do app e Edge Function prioriza alias curto quando houver alias unico e usa fallback tecnico quando necessario.
+- Runtime de entidade comunitaria nao canonica falha visivelmente em vez de
+  redirecionar para `/comunidade/:communitySlug...`.
+- Sitemap publico nao emite `/comunidade/...`; comunidade fica fora de
+  indexacao publica e entra apenas por CTA/contexto explicito.
 - E2E amplo pode ser ampliado por fluxo de produto, mas nao e pre-requisito para o contrato SSOT de URL.

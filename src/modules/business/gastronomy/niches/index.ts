@@ -1,21 +1,9 @@
 /**
- * 🍽️ GASTRONOMY NICHES MODULE
+ * Public contract for Gastronomy niches.
  *
- * Módulo de nichos gastronômicos - especializações internas do módulo Gastronomia.
- *
- * Este módulo fornece:
- * - Definições de tipos para nichos
- * - Registro canônico de nichos
- * - Configurações por nicho
- * - Serviços e hooks para acesso
- *
- * @version 1.0.0
- * @module gastronomy/niches
+ * Keep this barrel limited to domain contracts used by runtime code. Generic
+ * niche UI/hooks were removed until they have real product consumers.
  */
-
-// ═════════════════════════════════════════════════════════════════════════════
-// TIPOS
-// ═════════════════════════════════════════════════════════════════════════════
 
 export type {
   NicheStatus,
@@ -32,10 +20,6 @@ export type {
 } from './types';
 
 export { NICHE_KEYS, NICHE_STATUS_PRIORITY } from './types';
-
-// ═════════════════════════════════════════════════════════════════════════════
-// REGISTRY
-// ═════════════════════════════════════════════════════════════════════════════
 
 export {
   GASTRONOMY_NICHE_REGISTRY,
@@ -56,52 +40,19 @@ export {
   DEFAULT_NICHE_KEY,
 } from './registry';
 
-// ═════════════════════════════════════════════════════════════════════════════
-// SERVICES
-// ═════════════════════════════════════════════════════════════════════════════
-
 export { NicheConfigService } from './services/NicheConfigService';
 export type {
   AdminSectionVisibility,
   NicheDashboardInfo,
 } from './services/NicheConfigService';
 
-// ═════════════════════════════════════════════════════════════════════════════
-// HOOKS
-// ═════════════════════════════════════════════════════════════════════════════
-
-export {
-  useGastronomyNiche,
-  useNicheList,
-  useSelectableNiches,
-  useAdminSectionVisibility,
-  useNicheValidation,
-} from './hooks/useGastronomyNiche';
-
-export type {
-  UseGastronomyNicheOptions,
-  UseGastronomyNicheReturn,
-} from './hooks/useGastronomyNiche';
-
-// ═════════════════════════════════════════════════════════════════════════════
-// PRESETS (exportação seletiva para casos avançados)
-// ═════════════════════════════════════════════════════════════════════════════
-
-// Base
 export { createNichePreset } from './presets/base';
-
-// Presets individuais (para casos de uso específicos)
 export { pizzaNicheConfig } from './presets/pizza';
 export { hamburguerNicheConfig } from './presets/hamburguer';
 export { lanchesNicheConfig } from './presets/lanches';
 export { brasileiraNicheConfig } from './presets/brasileira';
 export { sushiNicheConfig } from './presets/sushi';
 
-// ═════════════════════════════════════════════════════════════════════════════
-// CONSTANTES ÚTEIS
-// ═════════════════════════════════════════════════════════════════════════════
-
-/** Nichos disponíveis para seleção pública */
 export const SELECTABLE_NICHE_KEYS = [
   'pizza',
   'lanches',
@@ -115,7 +66,6 @@ export const SELECTABLE_NICHE_KEYS = [
   'hamburguer',
 ] as const;
 
-/** Nichos complexos (em desenvolvimento) */
 export const COMPLEX_NICHE_KEYS = [
   'sushi',
   'acai',
@@ -124,33 +74,23 @@ export const COMPLEX_NICHE_KEYS = [
   'bares',
 ] as const;
 
-/** Mapeamento de labels públicos */
 export const NICHE_PUBLIC_LABELS: Record<string, string> = {
   lanches: 'Lanches',
   brasileira: 'Brasileira',
-  arabe: 'Árabe',
-  saudavel: 'Saudável',
+  arabe: '\u00c1rabe',
+  saudavel: 'Saud\u00e1vel',
   salgados: 'Salgados',
   padaria: 'Padaria',
   doces: 'Doces & Bolos',
-  cafes: 'Cafés',
-  hamburguer: 'Hambúrguer',
+  cafes: 'Caf\u00e9s',
+  hamburguer: 'Hamb\u00farguer',
   pizza: 'Pizzaria',
   sushi: 'Japonesa / Sushi',
-  acai: 'Açaí & Sorvete',
+  acai: 'A\u00e7a\u00ed & Sorvete',
   pastel: 'Pastel',
   churrascaria: 'Carnes & Churrascaria',
   bares: 'Bares & Pubs',
 };
 
-// ═════════════════════════════════════════════════════════════════════════════
-// VERSIONING (SISTEMA DE EVOLUÇÃO DE NICHOS)
-// ═════════════════════════════════════════════════════════════════════════════
-
 export * from './versioning';
-
-// ═════════════════════════════════════════════════════════════════════════════
-// PIZZARIA (NICHO COMPLETO)
-// ═════════════════════════════════════════════════════════════════════════════
-
 export * from './pizzaria';

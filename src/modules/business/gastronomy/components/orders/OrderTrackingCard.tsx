@@ -1,7 +1,7 @@
 /**
  * OrderTrackingCard - card de rastreamento GPS do pedido.
  *
- * Exibe o estado operacional da entrega mesmo quando ainda não há motoboy.
+ * Exibe o estado operacional da entrega mesmo quando ainda nao ha rastreamento GPS.
  */
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
@@ -19,10 +19,10 @@ interface OrderTrackingCardProps {
 
 const STATUS_LABELS: Record<string, string> = {
   requested: 'Solicitado',
-  searching_driver: 'Buscando entregador',
-  driver_assigned: 'Entregador encontrado',
-  driver_accepted: 'Entregador confirmou',
-  driver_arriving: 'Entregador a caminho da coleta',
+  searching_driver: 'Buscando responsavel pela entrega',
+  driver_assigned: 'Responsavel pela entrega definido',
+  driver_accepted: 'Responsavel pela entrega confirmou',
+  driver_arriving: 'Responsavel a caminho da coleta',
   pickup_confirmed: 'Pedido coletado',
   in_delivery: 'Em rota de entrega',
   delivered: 'Entregue',
@@ -39,7 +39,7 @@ export function OrderTrackingCard({ order, className }: OrderTrackingCardProps) 
     typeof rideRequest?.origin_lng === 'number' &&
     typeof rideRequest?.destination_lat === 'number' &&
     typeof rideRequest?.destination_lng === 'number';
-  const statusLabel = rideRequest ? STATUS_LABELS[rideRequest.status] || rideRequest.status : 'Entrega ainda não vinculada';
+  const statusLabel = rideRequest ? STATUS_LABELS[rideRequest.status] || rideRequest.status : 'Entrega sem rastreamento vinculado';
 
   return (
     <Card className={className}>
@@ -51,7 +51,7 @@ export function OrderTrackingCard({ order, className }: OrderTrackingCardProps) 
           </div>
           <div className="flex items-center gap-2">
             {isActive && (
-              <Badge variant="default" className="gap-1">
+              <Badge variant="default" className="gap-1" aria-live="polite">
                 <span className="h-2 w-2 bg-green-400 rounded-full animate-pulse" />
                 Ativo
               </Badge>
@@ -69,7 +69,7 @@ export function OrderTrackingCard({ order, className }: OrderTrackingCardProps) 
           </div>
         </div>
         <CardDescription>
-          Loja, cliente e entregador devem enxergar o mesmo estado operacional da entrega.
+          Loja e cliente acompanham o mesmo estado operacional da entrega.
         </CardDescription>
       </CardHeader>
 
@@ -87,17 +87,17 @@ export function OrderTrackingCard({ order, className }: OrderTrackingCardProps) 
           />
         )}
         {hasDriver && rideRequest && !hasRouteCoordinates && (
-          <div className="rounded-lg border border-dashed bg-muted/40 px-4 py-6 text-sm text-muted-foreground">
+          <div className="rounded-lg border border-dashed bg-muted/40 px-4 py-6 text-sm text-muted-foreground" role="status" aria-live="polite">
             Mapa indisponivel no momento: aguardando coordenadas completas de coleta e entrega no SSOT.
           </div>
         )}
 
         <div className="grid gap-4 md:grid-cols-2">
-          <div className="flex items-start gap-3 p-4 rounded-lg border bg-card">
+          <div className="flex items-start gap-3 p-4 rounded-lg border bg-card" role="status" aria-live="polite">
             <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
             <div className="flex-1 space-y-1">
               <p className="text-sm font-medium">Status da entrega</p>
-              <p className="text-xs text-muted-foreground">{statusLabel}</p>
+              <p className="text-xs text-muted-foreground break-words">{statusLabel}</p>
             </div>
           </div>
 
@@ -130,23 +130,23 @@ export function OrderTrackingCard({ order, className }: OrderTrackingCardProps) 
               <User className="h-5 w-5 text-muted-foreground mt-0.5" />
               <div className="flex-1 space-y-1">
                 <p className="text-sm font-medium">Destino</p>
-                <p className="text-xs text-muted-foreground">{rideRequest.destination_address}</p>
+                <p className="text-xs text-muted-foreground break-words">{rideRequest.destination_address}</p>
               </div>
             </div>
           )}
         </div>
 
         {!hasDriver && (
-          <div className="flex items-center justify-center p-8 rounded-lg border border-dashed bg-muted/50">
+          <div className="flex items-center justify-center p-8 rounded-lg border border-dashed bg-muted/50" role="status" aria-live="polite">
             <div className="text-center space-y-2">
               <Navigation className="h-8 w-8 text-muted-foreground mx-auto animate-pulse" />
               <p className="text-sm font-medium">
-                {hasTracking ? 'Buscando entregador...' : 'Entrega ainda sem motoboy vinculado'}
+                {hasTracking ? 'Aguardando responsavel pela entrega...' : 'Entrega manual pela loja'}
               </p>
               <p className="text-xs text-muted-foreground">
                 {hasTracking
-                  ? 'Aguarde enquanto encontramos um entregador disponível.'
-                  : 'Quando o pedido gerar a entrega SSOT, o rastreamento aparecera aqui.'}
+                  ? 'Aguarde enquanto a entrega vinculada recebe um responsavel.'
+                  : 'Para frota propria, acompanhe pelos status do pedido. Quando houver entrega SSOT vinculada, o rastreamento aparecera aqui.'}
               </p>
             </div>
           </div>

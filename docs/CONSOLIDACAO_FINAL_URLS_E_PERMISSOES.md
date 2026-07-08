@@ -1,29 +1,35 @@
 # Consolidacao: URLs Publicas e Permissoes
 
-Atualizado: 2026-06-05
+Atualizado: 2026-07-05
 Status: ativo
 
 Este documento consolida a politica atual de URLs publicas e a separacao entre URL publica de entidade e mini-site premium.
 
 ## Mapa Atual de URLs Publicas
 
-| Tipo | URL publica preferencial | Fallback tecnico | SSOT |
+| Tipo | URL publica preferencial | Contexto comunitario explicito | SSOT |
 | --- | --- | --- | --- |
 | Perfil pessoal | `/u/:username` | - | `buildPublicProfileUrl()` |
-| Comunidade | `/:communitySlug` | `/comunidade/:state/:city/:territorySlug` | `community_public_aliases` + routing services |
-| Empresas da comunidade | `/:communitySlug/empresas` | `/empresas/:state/:city/:territorySlug` | `BusinessUrlService` + territory SSOT |
-| Gastronomia da comunidade | `/:communitySlug/gastronomia` | `/gastronomia/:state/:city/:territorySlug` | `GastronomyUrlService` + territory SSOT |
-| Empresa/restaurante | `/:communitySlug/:slug` | `/empresas/:state/:city/:district/:slug` | `BusinessUrlService` |
+| Comunidade | `/comunidade/:communitySlug` | mesma rota | `community_public_aliases` + routing services |
+| Empresas | `/empresas/:state/:city/:territorySlug/:slug` | `/comunidade/:communitySlug/empresas/:slug` | `BusinessUrlService` + routing policies |
+| Gastronomia | `/gastronomia/:state/:city/:territorySlug/:slug` quando houver detalhe proprio; caso contrario usa a URL publica da empresa | `/comunidade/:communitySlug/gastronomia/:slug` | `GastronomyUrlService` + `BusinessUrlService` |
 | Mini-site premium | `/p/:slug` | - | `buildBusinessPremiumUrl()` + `BusinessUrlService` |
 | Profissional | `/profissionais/:state/:city/:slug` | - | `ProfessionalUrlService` |
 
 ## Regras de Produto
 
-- Comunidade curta e a URL que o usuario deve ver quando o alias for unico: `/santa-cruz`.
-- Listagens usam o contexto da comunidade: `/santa-cruz/empresas` e `/santa-cruz/gastronomia`.
-- Detalhe de empresa e restaurante usa a mesma URL publica: `/santa-cruz/padaria-do-joao`.
-- `/santa-cruz/empresas/padaria-do-joao` e `/santa-cruz/gastronomia/pizzaria-estrela` sao aliases legados e redirecionam.
-- `/gastronomia/:state/:city/:district/:slug` e legado para detalhe; o canonical aponta para a URL publica de empresa.
+- Comunidade so entra por rota explicita: `/comunidade/santa-cruz`.
+- Listagens publicas usam prefixo de modulo: `/empresas/ba/salvador/santa-cruz`
+  e `/gastronomia/ba/salvador/santa-cruz`.
+- Detalhe publico de empresa/restaurante usa URL de modulo:
+  `/empresas/ba/salvador/santa-cruz/padaria-do-joao`.
+- Rotas comunitarias de entidade existem apenas dentro do portal:
+  `/comunidade/santa-cruz/empresas/padaria-do-joao`.
+- Aliases curtos legados de entidade nao sao emitidos em codigo novo e devem
+  falhar visivelmente quando nao correspondem a uma rota comunitaria canonica.
+- `/gastronomia/:state/:city/:territory/:slug` so deve existir como detalhe
+  publico quando houver pagina propria da vertical; caso contrario canonicaliza
+  para a URL publica de empresa.
 - `/p/:slug` continua reservado ao mini-site premium. Ele nao substitui a URL publica canonica da empresa.
 
 ## Relacao Empresa e Gastronomia
@@ -33,15 +39,17 @@ Uma empresa pode ter vertical de gastronomia ativo. A identidade publica continu
 ```text
 business_data
   -> gastronomy_profiles
-  -> public detail: /:communitySlug/:slug
+  -> public detail: /empresas/:state/:city/:territory/:slug
+  -> community detail: /comunidade/:communitySlug/gastronomia/:slug
   -> premium site: /p/:slug
 ```
 
 A listagem de gastronomia e especifica do modulo, mas o detalhe evita duplicacao de entidade:
 
 ```text
-/santa-cruz/gastronomia              -> lista restaurantes da comunidade
-/santa-cruz/pizzaria-estrela         -> detalhe publico do restaurante
+/gastronomia/ba/salvador/santa-cruz  -> lista restaurantes publica
+/empresas/ba/salvador/santa-cruz/pizzaria-estrela -> detalhe publico do restaurante
+/comunidade/santa-cruz/gastronomia/pizzaria-estrela -> detalhe comunitario
 /p/pizzaria-estrela                  -> mini-site premium, quando habilitado
 ```
 
@@ -64,15 +72,15 @@ Regra de implementacao:
 - Nunca usar `/p/:slug` como link publico geral da empresa sem permissao premium apropriada.
 - Nunca gerar perfil publico com `id`/UUID; `/u/:username` exige `username` publico.
 
-## Redirecionamentos Esperados
+## Compatibilidade Esperada
 
 ```text
-/comunidade/santa-cruz                  -> /santa-cruz
-/comunidade/santa-cruz/empresas         -> /santa-cruz/empresas
-/santa-cruz/empresas/padaria-do-joao    -> /santa-cruz/padaria-do-joao
-/santa-cruz/gastronomia/pizzaria-x      -> /santa-cruz/pizzaria-x
-/empresas/ba/salvador/santa-cruz/x      -> /santa-cruz/x quando alias existir
-/gastronomia/ba/salvador/santa-cruz/x   -> URL publica de empresa
+/santa-cruz                            -> compatibilidade do portal quando alias unico existir
+/santa-cruz/empresas                   -> nao emitir em codigo novo; usar /comunidade/santa-cruz/empresas
+/santa-cruz/empresas/padaria-do-joao   -> nao emitir em codigo novo; usar /comunidade/santa-cruz/empresas/padaria-do-joao
+/santa-cruz/gastronomia/pizzaria-x     -> nao emitir em codigo novo; usar /comunidade/santa-cruz/gastronomia/pizzaria-x
+/santa-cruz/padaria-do-joao            -> alias ambiguo de entidade; falha visivel quando nao canonico
+/gastronomia/ba/salvador/santa-cruz/x  -> URL publica de empresa quando nao houver detalhe vertical proprio
 ```
 
 ## Validacoes

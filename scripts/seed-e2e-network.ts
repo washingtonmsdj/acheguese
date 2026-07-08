@@ -12,24 +12,14 @@
  *   npx tsx scripts/seed-e2e-network.ts --reset
  */
 
-import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
 import fs from 'fs';
+import { createServiceRoleClient, loadSupabaseScriptEnv } from './lib/supabase-client';
 
-dotenv.config({ path: '.env.test' });
-dotenv.config({ path: '.env.local' });
+const E2E_ENV_FILES = ['.env.test', '.env.local'];
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL!;
-const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+loadSupabaseScriptEnv(E2E_ENV_FILES);
 
-if (!SUPABASE_URL || !SERVICE_KEY) {
-  console.error('❌ VITE_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY são obrigatórios');
-  process.exit(1);
-}
-
-const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
-  auth: { autoRefreshToken: false, persistSession: false },
-});
+const supabase = createServiceRoleClient({ envFiles: E2E_ENV_FILES });
 
 const RESET = process.argv.includes('--reset');
 

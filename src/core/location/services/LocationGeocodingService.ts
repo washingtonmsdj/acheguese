@@ -21,6 +21,7 @@ import {
 import type { ILocationRepository } from '../repositories/ILocationRepository';
 import { createLocationRepository } from '../repositories/createLocationRepository';
 import { LocationStatus, LocationType, type Location } from '../types';
+import { LocationRpcService } from './LocationRpcService';
 
 type GeocodingEngine = Pick<
   typeof providerGeocodingService,
@@ -530,18 +531,17 @@ export class LocationGeocodingService {
       return false;
     }
 
-    const { error } = await supabase.rpc('rpc_upsert_canonical_city_by_ibge', {
-      p_state_code: normalizedStateCode,
-      p_city_name: normalizedCity,
-      p_ibge_code: ibgeCode,
+    const upserted = await LocationRpcService.upsertCanonicalCityByIbge({
+      stateCode: normalizedStateCode,
+      cityName: normalizedCity,
+      ibgeCode,
     });
 
-    if (error) {
+    if (!upserted) {
       logger.warn('[LocationGeocodingService] Could not upsert canonical city by IBGE', {
         state: normalizedStateCode,
         city: normalizedCity,
         ibgeCode,
-        error,
       });
       return false;
     }

@@ -74,7 +74,7 @@ export default function LoginPage() {
   const loginHighlights = [
     "Perfil, conta e módulos no mesmo acesso.",
     "Entrada por e-mail ou @usuário.",
-    "Recuperação simples sem sair do fluxo.",
+    "Recuperação por e-mail cadastrado.",
   ] as const;
 
   const statusMessage = useMemo(() => {
@@ -137,8 +137,17 @@ export default function LoginPage() {
   const handleForgotPassword = async () => {
     if (!parsedIdentifier) {
       toast({
-        title: "Informe email ou usuario",
-        description: "Usamos esse identificador para enviar a recuperação de senha.",
+        title: "Informe o e-mail",
+        description: "Usamos o e-mail cadastrado para enviar a recuperação de senha.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (parsedIdentifier.kind !== "email") {
+      toast({
+        title: "Informe o e-mail cadastrado",
+        description: "A recuperação de senha não resolve @usuário por segurança.",
         variant: "destructive",
       });
       return;
@@ -346,7 +355,7 @@ export default function LoginPage() {
                     {pendingAction === "recovery" ? "Enviando recuperação..." : "Esqueci minha senha"}
                   </button>
                   <p className="text-xs text-muted-foreground">
-                    A recuperação funciona com e-mail ou @usuário.
+                    A recuperação é enviada para o e-mail cadastrado.
                   </p>
                 </div>
 

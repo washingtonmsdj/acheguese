@@ -100,4 +100,20 @@ describe("PublicBusinessSnapshotService", () => {
 
     expect(snapshot).toBeNull();
   });
+
+  it("uses the Tone Pizzaria dev fixture without calling the public snapshot RPC", async () => {
+    const snapshot = await PublicBusinessSnapshotService.getByTerritorySlug({
+      state: "ba",
+      city: "salvador",
+      district: "complexo-do-nordeste-de-amaralina",
+      slug: "tone-cos-loja",
+    });
+
+    expect(snapshot?.identity.businessId).toBe("00000000-0000-4000-8000-000000000101");
+    expect(snapshot?.institutional.name).toBe("Ton\u00e9 Pizzaria");
+    expect(snapshot?.seo.canonical).toBe(
+      "/empresas/ba/salvador/complexo-do-nordeste-de-amaralina/tone-cos-loja",
+    );
+    expect(vi.mocked(PublicSnapshotRpcService.getBusinessSnapshotBySlug)).not.toHaveBeenCalled();
+  });
 });

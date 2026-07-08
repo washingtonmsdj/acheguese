@@ -7,8 +7,8 @@ import { isStrongPassword } from "@/shared/validation/passwordPolicy";
 import { strongPasswordValidator } from "@/shared/validation/validators/custom.validators";
 
 describe("password policy SSOT", () => {
-  const validPassword = "Senha123!";
-  const missingSpecial = "Senha123";
+  const validPassword = "SenhaForte123!";
+  const missingSpecial = "SenhaForte123";
 
   it("uses the same strong password rule in auth helpers and Zod schemas", () => {
     expect(isStrongPassword(validPassword)).toBe(true);

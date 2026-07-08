@@ -4,10 +4,10 @@
  * Fornece o client service_role para operações de sistema/dispatch nos testes.
  */
 
-import { createClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { createOperationalAdminClient } from './operational-env';
 
-let _adminClient: ReturnType<typeof createClient> | null = null;
+let _adminClient: SupabaseClient | null = null;
 
 /**
  * Retorna o client Supabase com service_role para testes
@@ -24,7 +24,7 @@ export function getAdminClient() {
  * Wrapper para operações de dispatch que precisam de service_role
  */
 export async function withAdminClient<T>(
-  operation: (client: ReturnType<typeof createClient>) => Promise<T>
+  operation: (client: SupabaseClient) => Promise<T>
 ): Promise<T> {
   const client = getAdminClient();
   return operation(client);

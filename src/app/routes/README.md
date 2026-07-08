@@ -81,37 +81,40 @@ No arquivo `AppRoutes.tsx`, adicione dentro do componente `Routes`:
 /empresas/:state/:city                        # Vitrine publica do modulo na cidade
 /empresas/:state/:city/:district              # Vitrine publica do modulo no bairro
 /empresas/:state/:city/:groupSlug             # Vitrine publica do modulo no grupo
-/:communitySlug                               # URL curta publica da comunidade
-/:communitySlug/empresas                      # Empresas da comunidade
-/:communitySlug/:slug                         # Detalhe publico preferencial de empresa/restaurante
-/:communitySlug/empresas/:slug                # Alias legado; redireciona para /:communitySlug/:slug
-/:communitySlug/gastronomia                   # Gastronomia da comunidade
-/:communitySlug/gastronomia/:slug             # Alias legado; redireciona para /:communitySlug/:slug
+/comunidade/:communitySlug                    # Portal publico/preview da comunidade
+/comunidade/:communitySlug/empresas           # Empresas dentro do contexto da comunidade
+/comunidade/:communitySlug/empresas/:slug     # Empresa com acoes comunitarias
+/comunidade/:communitySlug/gastronomia        # Gastronomia dentro do contexto da comunidade
+/comunidade/:communitySlug/gastronomia/:slug  # Gastronomia com acoes comunitarias
+/:communitySlug                               # Alias curto legado do portal; normaliza para /comunidade/:communitySlug quando inequivoco
+/:communitySlug/empresas/:slug                # Alias legado de entidade; nao e superficie canonica e falha quando nao canonico
+/:communitySlug/gastronomia/:slug             # Alias legado de entidade; nao e superficie canonica e falha quando nao canonico
 /comunidade/:state/:city                      # Fallback tecnico de comunidade municipal
 /comunidade/:state/:city/:communitySlug       # Fallback tecnico de bairro/grupo
 /comunidade/:state/:city/feed                 # Fallback tecnico do feed comunitario municipal
-/empresas/:state/:city/:district/:businessSlug # Fallback legado de detalhe; redireciona se houver alias
-/gastronomia/:state/:city/:district/:slug     # Fallback legado de detalhe; redireciona para URL publica da empresa
+/empresas/:state/:city/:district/:businessSlug # Detalhe publico canonico de empresa
+/gastronomia/:state/:city/:district/:slug     # Detalhe publico de gastronomia quando existir; senao resolve empresa
 /p/:slug                                      # Mini-site premium, separado da URL publica da empresa
 ```
 
 Regra de intencao:
 
 - Rotas diretas de modulo (`/empresas/...`, `/servicos/...`) sao vitrines publicas e SEO.
-- Rotas curtas `/:communitySlug/...` sao a experiencia social/local com contexto comunitario.
-- `/:communitySlug` so e valido quando existe alias publico unico em
-  `community_public_aliases`; em caso de colisao, a rota territorial fica como fallback tecnico.
-- Detalhes publicos de empresa e restaurante usam `/:communitySlug/:slug`.
+- Rotas em `/comunidade/:communitySlug/...` sao a experiencia social/local com contexto comunitario.
+- `/:communitySlug` e compatibilidade curta do portal e so e valido quando existe alias publico
+  unico em `community_public_aliases`; em caso de colisao, a rota territorial fica como fallback
+  tecnico.
+- Detalhes publicos de empresa e restaurante usam `/empresas/:state/:city/:district/:slug`.
 - Detalhes em `/:communitySlug/empresas/:slug`,
-  `/:communitySlug/gastronomia/:slug` e
-  `/empresas/:state/:city/:district/:slug` sao aliases legados e redirecionam
-  para a URL curta quando ha alias publico resolvido pelo SSOT territorial.
-- Detalhe em `/gastronomia/:state/:city/:district/:slug` e legado; quando o
-  snapshot resolve a empresa, redireciona para a URL publica da empresa.
-- `/comunidade/:communitySlug...` e alias legado; deve redirecionar para
-  `/:communitySlug...`.
-- Em comunidade, a URL publica nao expoe tipo tecnico (`district` vs `territorial_group`):
-  `/:communitySlug` ou `/comunidade/:state/:city/:communitySlug` como fallback tecnico.
+  `/:communitySlug/gastronomia/:slug` e `/:communitySlug/:slug` sao aliases
+  legados de entidade, nao sao emitidos por codigo novo e falham visivelmente quando nao
+  correspondem a uma rota comunitaria canonica.
+- Detalhe em `/gastronomia/:state/:city/:district/:slug` deve permanecer publico;
+  se a vertical nao tiver detalhe proprio, resolve para a URL publica da empresa.
+- `/comunidade/:communitySlug...` e rota canonica do portal comunitario.
+- Em comunidade, a URL canonica do portal nao expoe tipo tecnico (`district` vs `territorial_group`).
+  O alias curto `/:communitySlug` permanece somente como compatibilidade; o fallback tecnico
+  continua em `/comunidade/:state/:city/:communitySlug`.
 - O premium usa `/p/:slug`; ele nao substitui a URL publica canonica da empresa.
 - Nenhuma rota publica de comunidade usa `/area/`.
 - Rotas operacionais ficam em `/central`.

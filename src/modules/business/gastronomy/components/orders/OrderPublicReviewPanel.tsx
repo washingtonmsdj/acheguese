@@ -30,15 +30,20 @@ function trustSeverityForRating(rating: number) {
 }
 
 export function OrderPublicReviewPanel({ order }: OrderPublicReviewPanelProps) {
-  const { user, activeProfile } = useSessionContext();
+  const { user, activeProfile, profiles } = useSessionContext();
   const [canReview, setCanReview] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  const isCustomerOrder = Boolean(
-    activeProfile?.id && order.customer_id && activeProfile.id === order.customer_id,
+  const customerProfile = useMemo(
+    () =>
+      profiles.find((profile) => profile.id === order.customer_id) ??
+      (activeProfile?.id === order.customer_id ? activeProfile : null),
+    [activeProfile, order.customer_id, profiles],
   );
+  const reviewerProfileId = customerProfile?.id ?? null;
+  const isCustomerOrder = Boolean(reviewerProfileId);
   const isReviewableStatus = REVIEWABLE_ORDER_STATUSES.has(order.status);
 
   useEffect(() => {
@@ -54,7 +59,7 @@ export function OrderPublicReviewPanel({ order }: OrderPublicReviewPanelProps) {
       try {
         const allowed = await ReviewQueryService.canUserReviewBusiness({
           userId: user.id,
-          businessProfileId: order.business_id,
+          businessProfileId: order.merchant_profile_id,
         });
         if (!cancelled) setCanReview(allowed);
       } finally {
@@ -67,7 +72,7 @@ export function OrderPublicReviewPanel({ order }: OrderPublicReviewPanelProps) {
     return () => {
       cancelled = true;
     };
-  }, [user?.id, isCustomerOrder, isReviewableStatus, order.business_id, submitted]);
+  }, [user?.id, isCustomerOrder, isReviewableStatus, order.merchant_profile_id, submitted]);
 
   const statusMessage = useMemo(() => {
     if (!isCustomerOrder) return null;
@@ -82,8 +87,8 @@ export function OrderPublicReviewPanel({ order }: OrderPublicReviewPanelProps) {
   if (!isCustomerOrder) return null;
 
   const handleSubmit = async (data: { rating: number; comment: string; photos: string[] }) => {
-    if (!activeProfile?.id) {
-      toast.error("Perfil ativo obrigatório para avaliar.");
+    if (!reviewerProfileId) {
+      toast.error("Perfil do cliente obrigatório para avaliar este pedido.");
       return;
     }
 
@@ -91,8 +96,8 @@ export function OrderPublicReviewPanel({ order }: OrderPublicReviewPanelProps) {
 
     try {
       const review = await ReviewQueryService.createReview({
-        reviewed_profile_id: order.business_id,
-        reviewer_profile_id: activeProfile.id,
+        reviewed_profile_id: order.merchant_profile_id,
+        reviewer_profile_id: reviewerProfileId,
         rating: data.rating,
         comment: data.comment,
         photos: data.photos,
@@ -101,9 +106,9 @@ export function OrderPublicReviewPanel({ order }: OrderPublicReviewPanelProps) {
 
       if (data.rating <= 2) {
         await TrustEventService.upsertOperationalFeedback({
-          actor_profile_id: activeProfile.id,
+          actor_profile_id: reviewerProfileId,
           actor_role: TRUST_ACTOR_ROLES.CUSTOMER,
-          subject_profile_id: order.business_id,
+          subject_profile_id: order.merchant_profile_id,
           subject_role: TRUST_ACTOR_ROLES.MERCHANT,
           context_type: TRUST_CONTEXT_TYPES.ORDER,
           context_id: order.id,
@@ -164,7 +169,7 @@ export function OrderPublicReviewPanel({ order }: OrderPublicReviewPanelProps) {
             isSubmitting={isSubmitting}
           />
         ) : (
-          <div className="flex items-start gap-3 rounded-lg border bg-white p-4 text-sm text-muted-foreground">
+          <div className="flex items-start gap-3 rounded-lg border bg-white p-4 text-sm text-muted-foreground" role="status" aria-live="polite">
             {submitted ? (
               <Star className="mt-0.5 h-4 w-4 fill-amber-400 text-amber-400" />
             ) : (

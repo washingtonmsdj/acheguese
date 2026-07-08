@@ -1,7 +1,7 @@
 /**
- *  Favorites Query Service - operações de favoritos de gastronomia.
+ * Favorites Query Service - operacoes de favoritos de Gastronomia.
  *
- *  Usa a tabela `user_favorite_businesses` criada pela migration 20260412000002.
+ * Usa a tabela user_favorite_businesses criada pela migration 20260412000002.
  */
 
 import { logger } from '@/shared/utils/logger';
@@ -184,7 +184,7 @@ export class FavoritesQueryService {
   }
 
   /**
-   *  Verificar se negcio est nos favoritos
+   *  Verifica se negocio esta nos favoritos.
    */
   static async isBusinessFavorited(params: {
     userId: string;
@@ -334,7 +334,7 @@ export class FavoritesQueryService {
   }
 
   /**
-   *  Obter contador de favoritos de um negcio
+   *  Obter contador de favoritos de um negocio.
    */
   static async getBusinessFavoritesCount(businessId: string): Promise<number> {
     if (!UUID_REGEX.test(businessId)) {
@@ -342,9 +342,11 @@ export class FavoritesQueryService {
     }
 
     try {
-      const { data, error } = await supabase.rpc('get_business_favorites_count', {
-        p_business_id: businessId,
-      });
+      const { data, error } = await supabase
+        .from('business_data')
+        .select('favorites_count')
+        .eq('id', businessId)
+        .maybeSingle();
 
       if (error) {
         logger.error('Failed to get business favorites count', error, {
@@ -353,7 +355,7 @@ export class FavoritesQueryService {
         return 0;
       }
 
-      return data || 0;
+      return data?.favorites_count ?? 0;
     } catch (error) {
       logger.error('Error in getBusinessFavoritesCount', error);
       return 0;

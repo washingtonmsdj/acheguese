@@ -1,11 +1,15 @@
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "node:url";
 
 const ROOT = process.cwd();
 const MIGRATIONS_DIR = path.join(ROOT, "supabase", "migrations");
 const FILENAME_PATTERN = /^(\d+)_(.+)\.sql$/;
 const INVALID_DO_BLOCK_PATTERNS = [/^DO \$$/m, /^END \$;$/m];
 const SECURITY_DEFINER_HARDENING_VERSION = "20260526000001";
+const SECURITY_AUTHORITY_ENFORCEMENT_VERSION = "20260707000000";
+const EXTENSION_OWNER_PREFLIGHT_ENFORCEMENT_VERSION = "20260708000032";
+const EXTENSION_OWNER_EXCEPTION_ID = "EXC-2026-07-08-POSTGIS-EXTENSION-OWNER";
 const SQL_IDENTIFIER =
   String.raw`(?:"[^"]+"|[A-Za-z_][\w$]*)(?:\s*\.\s*(?:"[^"]+"|[A-Za-z_][\w$]*))?`;
 const MUTATING_RPC_NAME_PATTERN =
@@ -17,7 +21,7 @@ const EXPOSED_MUTATING_RPC_ALLOWLIST = new Set([
 const RPC_AUTH_GUARD_PATTERN =
   /auth\.uid\s*\(|auth\.role\s*\(|\bis_admin\b|\bis_admin_user\b|\bis_admin_from_roles\b|\bhas_role\b|current_setting\s*\(|jwt\s*\(/i;
 
-interface MigrationFile {
+export interface MigrationFile {
   name: string;
   version: string;
   fullPath: string;
@@ -43,6 +47,12 @@ interface FunctionDefinition {
 interface FunctionGrant {
   name: string;
   file: string;
+}
+
+interface PublicTableCreation {
+  table: string;
+  file: string;
+  content: string;
 }
 
 function readMigrationFiles(): MigrationFile[] {
@@ -82,6 +92,38 @@ function normalizeSqlIdentifier(identifier: string): string {
 
 function isPublicSchemaIdentifier(identifier: string): boolean {
   return identifier.startsWith("public.");
+}
+
+function isSecurityAuthorityEnforced(file: MigrationFile): boolean {
+  return file.version >= SECURITY_AUTHORITY_ENFORCEMENT_VERSION;
+}
+
+function isExtensionOwnerPreflightEnforced(file: MigrationFile): boolean {
+  return file.version >= EXTENSION_OWNER_PREFLIGHT_ENFORCEMENT_VERSION;
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function hasSecurityAuthorityMarker(
+  content: string,
+  marker: string,
+  objectName: string,
+): boolean {
+  const pattern = new RegExp(
+    String.raw`security-authority:\s*${escapeRegExp(marker)}\s+${escapeRegExp(objectName)}`,
+    "i",
+  );
+  return pattern.test(content);
+}
+
+function hasExtensionOwnerPreflightMarker(content: string): boolean {
+  const pattern = new RegExp(
+    String.raw`security-authority:\s*extension-owner-preflight\s+${escapeRegExp(EXTENSION_OWNER_EXCEPTION_ID)}`,
+    "i",
+  );
+  return pattern.test(content);
 }
 
 function validatePublicTableRls(files: MigrationFile[]): string[] {
@@ -216,6 +258,186 @@ function validatePublicViewSecurityInvoker(files: MigrationFile[]): string[] {
   return violations;
 }
 
+function validatePublicTableAccessDecisions(files: MigrationFile[]): string[] {
+  const violations: string[] = [];
+  const creations: PublicTableCreation[] = [];
+  const grantOrRevokeDecisions = new Map<string, Set<string>>();
+
+  const createTableRegex = new RegExp(
+    String.raw`\bCREATE\s+(?:(TEMP(?:ORARY)?|UNLOGGED)\s+)?TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(${SQL_IDENTIFIER})`,
+    "gi",
+  );
+  const grantTableRegex = new RegExp(
+    String.raw`\bGRANT\s+[^;]+?\s+ON\s+(?:TABLE\s+)?(${SQL_IDENTIFIER})\s+TO\s+([^;]+)`,
+    "gi",
+  );
+  const revokeTableRegex = new RegExp(
+    String.raw`\bREVOKE\s+[^;]+?\s+ON\s+(?:TABLE\s+)?(${SQL_IDENTIFIER})\s+FROM\s+([^;]+)`,
+    "gi",
+  );
+
+  for (const file of files.filter(isSecurityAuthorityEnforced)) {
+    const rawContent = fs.readFileSync(file.fullPath, "utf8");
+    const content = stripSqlComments(rawContent);
+    let match: RegExpExecArray | null;
+
+    while ((match = createTableRegex.exec(content))) {
+      const tableKind = match[1]?.toUpperCase() ?? "";
+      if (tableKind.startsWith("TEMP")) continue;
+
+      const table = normalizeSqlIdentifier(match[2]);
+      if (!isPublicSchemaIdentifier(table)) continue;
+      creations.push({ table, file: file.name, content: rawContent });
+    }
+
+    const fileDecisions = new Set<string>();
+    while ((match = grantTableRegex.exec(content))) {
+      const grantees = match[2].toLowerCase();
+      if (!/\banon\b|\bauthenticated\b|\bservice_role\b|\bpublic\b/.test(grantees)) {
+        continue;
+      }
+
+      const table = normalizeSqlIdentifier(match[1]);
+      if (isPublicSchemaIdentifier(table)) fileDecisions.add(table);
+    }
+
+    while ((match = revokeTableRegex.exec(content))) {
+      const grantees = match[2].toLowerCase();
+      if (!/\banon\b|\bauthenticated\b|\bservice_role\b|\bpublic\b/.test(grantees)) {
+        continue;
+      }
+
+      const table = normalizeSqlIdentifier(match[1]);
+      if (isPublicSchemaIdentifier(table)) fileDecisions.add(table);
+    }
+
+    grantOrRevokeDecisions.set(file.name, fileDecisions);
+  }
+
+  for (const creation of creations) {
+    const fileDecisions = grantOrRevokeDecisions.get(creation.file) ?? new Set<string>();
+    const hasGrantOrRevokeDecision = fileDecisions.has(creation.table);
+    const hasNoDataApiMarker =
+      hasSecurityAuthorityMarker(creation.content, "no-data-api", creation.table) ||
+      hasSecurityAuthorityMarker(creation.content, "internal-table", creation.table);
+
+    if (hasGrantOrRevokeDecision || hasNoDataApiMarker) continue;
+
+    violations.push(
+      [
+        `Tabela publica criada sem decisao explicita de acesso Data API: ${creation.table} (${creation.file}).`,
+        `Inclua GRANT/REVOKE no mesmo arquivo ou um comentario`,
+        `"-- security-authority: no-data-api ${creation.table}".`,
+      ].join(" "),
+    );
+  }
+
+  return violations;
+}
+
+function validateAnonRpcGrantClassifications(files: MigrationFile[]): string[] {
+  const violations: string[] = [];
+  const grantExecuteRegex = new RegExp(
+    String.raw`\bGRANT\s+EXECUTE\s+ON\s+FUNCTION\s+(${SQL_IDENTIFIER})\s*\([^)]*\)\s+TO\s+([^;]+)`,
+    "gi",
+  );
+
+  for (const file of files.filter(isSecurityAuthorityEnforced)) {
+    const rawContent = fs.readFileSync(file.fullPath, "utf8");
+    const content = stripSqlComments(rawContent);
+    let match: RegExpExecArray | null;
+
+    while ((match = grantExecuteRegex.exec(content))) {
+      const grantees = match[2].toLowerCase();
+      if (!/\banon\b|\bpublic\b/.test(grantees)) continue;
+
+      const functionName = normalizeSqlIdentifier(match[1]);
+      if (!isPublicSchemaIdentifier(functionName)) continue;
+      if (hasSecurityAuthorityMarker(rawContent, "public-rpc", functionName)) continue;
+
+      violations.push(
+        [
+          `RPC concedida a anon/PUBLIC sem classificacao Security Authority: ${functionName} (${file.name}).`,
+          `Inclua justificativa no arquivo com`,
+          `"-- security-authority: public-rpc ${functionName}".`,
+        ].join(" "),
+      );
+    }
+  }
+
+  return violations;
+}
+
+function validatePublicStorageListingClassifications(files: MigrationFile[]): string[] {
+  const violations: string[] = [];
+  const createStoragePolicyRegex =
+    /\bCREATE\s+POLICY\b[\s\S]*?\bON\s+storage\.objects\b[\s\S]*?\bFOR\s+SELECT\b[\s\S]*?\bTO\s+[^;]*\banon\b[\s\S]*?\bUSING\s*\(\s*true\s*\)\s*;/gi;
+
+  for (const file of files.filter(isSecurityAuthorityEnforced)) {
+    const rawContent = fs.readFileSync(file.fullPath, "utf8");
+    const content = stripSqlComments(rawContent);
+    if (!createStoragePolicyRegex.test(content)) continue;
+    createStoragePolicyRegex.lastIndex = 0;
+
+    if (hasSecurityAuthorityMarker(rawContent, "public-storage-listing", "storage.objects")) {
+      continue;
+    }
+
+    violations.push(
+      [
+        `Policy de listagem publica ampla em storage.objects sem classificacao Security Authority (${file.name}).`,
+        `Evite USING (true) para anon ou inclua justificativa com`,
+        `"-- security-authority: public-storage-listing storage.objects".`,
+      ].join(" "),
+    );
+  }
+
+  return violations;
+}
+
+function validateExtensionOwnerPreflight(files: MigrationFile[]): string[] {
+  const violations: string[] = [];
+  const blockedObjectPatterns = [
+    {
+      label: "public.spatial_ref_sys",
+      pattern:
+        /\bALTER\s+TABLE\s+(?:IF\s+EXISTS\s+)?public\s*\.\s*spatial_ref_sys\b|\bDROP\s+TABLE\s+(?:IF\s+EXISTS\s+)?public\s*\.\s*spatial_ref_sys\b/gi,
+    },
+    {
+      label: "public.st_estimatedextent",
+      pattern:
+        /\b(?:GRANT|REVOKE|ALTER|DROP)\b[\s\S]{0,220}\b(?:ON\s+FUNCTION\s+)?public\s*\.\s*st_estimatedextent\b/gi,
+    },
+  ];
+
+  for (const file of files.filter(isExtensionOwnerPreflightEnforced)) {
+    const rawContent = fs.readFileSync(file.fullPath, "utf8");
+    const content = stripSqlComments(rawContent);
+    const touchedObjects = blockedObjectPatterns
+      .filter(({ pattern }) => pattern.test(content))
+      .map(({ label }) => label);
+
+    for (const { pattern } of blockedObjectPatterns) {
+      pattern.lastIndex = 0;
+    }
+
+    if (touchedObjects.length === 0) continue;
+    if (hasExtensionOwnerPreflightMarker(rawContent)) continue;
+
+    violations.push(
+      [
+        `Migration toca objeto PostGIS/extension-owner sem preflight vinculado: ${file.name}`,
+        `(${Array.from(new Set(touchedObjects)).join(", ")}).`,
+        `Inclua evidencia e o marcador`,
+        `"-- security-authority: extension-owner-preflight ${EXTENSION_OWNER_EXCEPTION_ID}"`,
+        `somente depois de aprovar a via de owner/plataforma.`,
+      ].join(" "),
+    );
+  }
+
+  return violations;
+}
+
 function validateExposedMutatingRpcGuards(files: MigrationFile[]): string[] {
   const violations: string[] = [];
   const functions = new Map<string, FunctionDefinition>();
@@ -280,13 +502,16 @@ function validateMigrationAccessControl(files: MigrationFile[]): string[] {
   return [
     ...validatePublicTableRls(files),
     ...validatePublicViewSecurityInvoker(files),
+    ...validatePublicTableAccessDecisions(files),
     ...validateExposedMutatingRpcGuards(files),
+    ...validateAnonRpcGrantClassifications(files),
+    ...validatePublicStorageListingClassifications(files),
+    ...validateExtensionOwnerPreflight(files),
   ];
 }
 
-function main() {
+export function validateMigrationFiles(files: MigrationFile[]): string[] {
   const violations: string[] = [];
-  const files = readMigrationFiles();
   const seenVersions = new Map<string, string>();
   const hasSecurityDefinerHardening = files.some(
     (file) => file.version === SECURITY_DEFINER_HARDENING_VERSION,
@@ -334,6 +559,12 @@ function main() {
 
   violations.push(...validateMigrationAccessControl(files));
 
+  return violations;
+}
+
+function main() {
+  const violations = validateMigrationFiles(readMigrationFiles());
+
   if (violations.length > 0) {
     console.error("Falhas de hygiene em migrations Supabase:\n");
     for (const violation of violations) {
@@ -345,4 +576,6 @@ function main() {
   console.log("Migrations Supabase estao consistentes.");
 }
 
-main();
+if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url))) {
+  main();
+}

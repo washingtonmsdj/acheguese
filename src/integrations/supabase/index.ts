@@ -9,9 +9,14 @@
 // Cliente principal
 export { supabase } from "./supabase";
 
-// Re-export createClient e tipos do supabase-js para uso em services
-export { createClient } from "@supabase/supabase-js";
-export type { SupabaseClient, RealtimeChannel } from "@supabase/supabase-js";
+// Tipos publicos do supabase-js usados pelos services.
+export type {
+  AuthChangeEvent,
+  RealtimeChannel,
+  RealtimePostgresChangesPayload,
+  Session,
+  SupabaseClient,
+} from "@supabase/supabase-js";
 
 // Re-export tipos canônicos do schema
 export * from "./types.generated";

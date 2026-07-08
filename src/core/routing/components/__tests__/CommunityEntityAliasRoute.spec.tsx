@@ -9,17 +9,29 @@ vi.mock("@/core/routing/services/CommunityBusinessEntityResolver", () => ({
   resolveBusinessEntityFromCommunityAlias: vi.fn(),
 }));
 
-function LocationProbe() {
-  const location = useLocation();
-  return <div>{`${location.pathname}${location.search}${location.hash}`}</div>;
-}
+vi.mock("@/app/pages/EmpresaDetailLandingPage", () => ({
+  default: function MockEmpresaDetailLandingPage({
+    routeParams,
+    canonicalPathOverride,
+  }: {
+    routeParams: { state: string; city: string; district: string; slug: string };
+    canonicalPathOverride: string;
+  }) {
+    const location = useLocation();
+    return (
+      <div>
+        {`${location.pathname}|${canonicalPathOverride}|${routeParams.state}/${routeParams.city}/${routeParams.district}/${routeParams.slug}`}
+      </div>
+    );
+  },
+}));
 
 describe("CommunityEntityAliasRoute", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("redireciona alias legado de empresa para a URL curta raiz", async () => {
+  it("renderiza empresa na rota comunitaria explicita", async () => {
     vi.mocked(resolveBusinessEntityFromCommunityAlias).mockResolvedValue({
       status: "resolved",
       alias: "santa-cruz",
@@ -43,19 +55,20 @@ describe("CommunityEntityAliasRoute", () => {
             path="/comunidade/:communitySlug/empresas/:slug"
             element={<CommunityEntityAliasRoute />}
           />
-          <Route path="/santa-cruz/padaria-x" element={<LocationProbe />} />
         </Routes>
       </MemoryRouter>,
     );
 
     await waitFor(() =>
       expect(
-        screen.getByText("/santa-cruz/padaria-x?origem=zap#topo"),
+        screen.getByText(
+          "/comunidade/santa-cruz/empresas/padaria-x|/empresas/ba/salvador/santa-cruz/padaria-x|ba/salvador/santa-cruz/padaria-x",
+        ),
       ).toBeInTheDocument(),
     );
   });
 
-  it("redireciona alias legado de gastronomia para a URL curta raiz", async () => {
+  it("renderiza gastronomia na rota comunitaria explicita", async () => {
     vi.mocked(resolveBusinessEntityFromCommunityAlias).mockResolvedValue({
       status: "resolved",
       alias: "santa-cruz",
@@ -79,19 +92,20 @@ describe("CommunityEntityAliasRoute", () => {
             path="/comunidade/:communitySlug/gastronomia/:slug"
             element={<CommunityEntityAliasRoute />}
           />
-          <Route path="/santa-cruz/pizzaria-x" element={<LocationProbe />} />
         </Routes>
       </MemoryRouter>,
     );
 
     await waitFor(() =>
       expect(
-        screen.getByText("/santa-cruz/pizzaria-x"),
+        screen.getByText(
+          "/comunidade/santa-cruz/gastronomia/pizzaria-x|/empresas/ba/salvador/santa-cruz/pizzaria-x|ba/salvador/santa-cruz/pizzaria-x",
+        ),
       ).toBeInTheDocument(),
     );
   });
 
-  it("resolve empresa dentro de grupo territorial antes de redirecionar", async () => {
+  it("resolve empresa dentro de grupo territorial na rota comunitaria canonica", async () => {
     vi.mocked(resolveBusinessEntityFromCommunityAlias).mockResolvedValue({
       status: "resolved",
       alias: "complexo",
@@ -115,19 +129,20 @@ describe("CommunityEntityAliasRoute", () => {
             path="/comunidade/:communitySlug/empresas/:slug"
             element={<CommunityEntityAliasRoute />}
           />
-          <Route path="/complexo/mercado-x" element={<LocationProbe />} />
         </Routes>
       </MemoryRouter>,
     );
 
     await waitFor(() =>
       expect(
-        screen.getByText("/complexo/mercado-x"),
+        screen.getByText(
+          "/comunidade/complexo/empresas/mercado-x|/empresas/ba/salvador/chapada-do-rio-vermelho/mercado-x|ba/salvador/chapada-do-rio-vermelho/mercado-x",
+        ),
       ).toBeInTheDocument(),
     );
   });
 
-  it("usa o alias canonico resolvido ao redirecionar", async () => {
+  it("rejeita alias comunitario antigo sem redirecionar", async () => {
     vi.mocked(resolveBusinessEntityFromCommunityAlias).mockResolvedValue({
       status: "resolved",
       alias: "santa-cruz",
@@ -151,13 +166,14 @@ describe("CommunityEntityAliasRoute", () => {
             path="/comunidade/:communitySlug/empresas/:slug"
             element={<CommunityEntityAliasRoute />}
           />
-          <Route path="/santa-cruz/padaria-x" element={<LocationProbe />} />
         </Routes>
       </MemoryRouter>,
     );
 
     await waitFor(() =>
-      expect(screen.getByText("/santa-cruz/padaria-x")).toBeInTheDocument(),
+      expect(
+        screen.getByText("URL comunitaria nao canonica para esta entidade."),
+      ).toBeInTheDocument(),
     );
   });
 });

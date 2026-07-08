@@ -20,13 +20,31 @@ interface AlertFeedSectionProps {
   city: string;
   neighborhood?: string;
   locationId?: string;
+  canCreateAlert?: boolean;
+  onBlockedCreateAlert?: () => void;
 }
 
-export function AlertFeedSection({ territoryFilter, city, neighborhood, locationId }: AlertFeedSectionProps) {
+export function AlertFeedSection({
+  territoryFilter,
+  city,
+  neighborhood,
+  locationId,
+  canCreateAlert = true,
+  onBlockedCreateAlert,
+}: AlertFeedSectionProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
 
   const { data: alerts = [], isLoading } = useAlerts({ territoryFilter, limit: 10 });
+
+  const handleOpenCreateAlert = () => {
+    if (!canCreateAlert) {
+      onBlockedCreateAlert?.();
+      return;
+    }
+
+    setModalOpen(true);
+  };
 
   // Feature flag — seção inteira oculta se desativada
   if (!COMMUNITY_ALERTS_ENABLED) return null;
@@ -58,7 +76,7 @@ export function AlertFeedSection({ territoryFilter, city, neighborhood, location
           size="sm"
           variant="outline"
           className="text-xs gap-1 border-red-300 text-red-600 hover:bg-red-50 dark:border-red-700 dark:text-red-400"
-          onClick={() => setModalOpen(true)}
+          onClick={handleOpenCreateAlert}
           disabled={!locationId}
           aria-label="Criar novo alerta"
         >
@@ -93,6 +111,7 @@ export function AlertFeedSection({ territoryFilter, city, neighborhood, location
         neighborhood={neighborhood}
         city={city}
         locationId={locationId}
+        canCreate={canCreateAlert}
       />
     </section>
   );

@@ -1,16 +1,18 @@
 /**
  * SSOT: Modos de atendimento
- * 
- * Este é o ÚNICO lugar onde modos de atendimento são definidos.
- * Usado em:
- * - ServiceModesSelector (componente de edição)
- * - EmpresaDetailLandingPage (exibição pública)
- * - Qualquer outro lugar que precise exibir modos
- * 
- * REGRA: Nunca duplicar estas definições em outro arquivo!
+ *
+ * Este e o unico lugar onde modos de atendimento sao definidos.
+ * Usado em qualquer superficie que precise exibir ou editar esses modos.
  */
 
-import { Store, Truck, Home, Globe } from "lucide-react";
+import {
+  Globe,
+  Home,
+  ShoppingBag,
+  Store,
+  Truck,
+  UtensilsCrossed,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export interface ServiceMode {
@@ -21,7 +23,7 @@ export interface ServiceMode {
   color: string;
   bgColor: string;
   borderColor: string;
-  hasAreas?: boolean; // Se permite configurar áreas de atendimento
+  hasAreas?: boolean;
 }
 
 export const SERVICE_MODES: readonly ServiceMode[] = [
@@ -37,7 +39,7 @@ export const SERVICE_MODES: readonly ServiceMode[] = [
   {
     id: "delivery",
     label: "Delivery",
-    description: "Entrega no endereço do cliente",
+    description: "Entrega no endereco do cliente",
     icon: Truck,
     color: "text-emerald-600",
     bgColor: "bg-emerald-500/10",
@@ -45,9 +47,27 @@ export const SERVICE_MODES: readonly ServiceMode[] = [
     hasAreas: true,
   },
   {
+    id: "retirada",
+    label: "Retirada",
+    description: "Cliente retira o pedido no local",
+    icon: ShoppingBag,
+    color: "text-amber-500",
+    bgColor: "bg-amber-500/10",
+    borderColor: "border-amber-500/20",
+  },
+  {
+    id: "consumo_local",
+    label: "Consumo no Local",
+    description: "Ambiente para consumo no estabelecimento",
+    icon: UtensilsCrossed,
+    color: "text-cyan-500",
+    bgColor: "bg-cyan-500/10",
+    borderColor: "border-cyan-500/20",
+  },
+  {
     id: "domicilio",
-    label: "Atendimento a Domicílio",
-    description: "Profissional vai até o cliente",
+    label: "Atendimento a Domicilio",
+    description: "Profissional vai ate o cliente",
     icon: Home,
     color: "text-amber-600",
     bgColor: "bg-amber-500/10",
@@ -65,9 +85,8 @@ export const SERVICE_MODES: readonly ServiceMode[] = [
   },
 ] as const;
 
-// Helper functions
 export const getServiceModeById = (id: string): ServiceMode | undefined => {
-  return SERVICE_MODES.find(m => m.id === id);
+  return SERVICE_MODES.find((mode) => mode.id === id);
 };
 
 export const getServiceModeLabel = (id: string): string => {
@@ -86,5 +105,4 @@ export const serviceModeSupportAreas = (id: string): boolean => {
   return getServiceModeById(id)?.hasAreas || false;
 };
 
-// Type helper para IDs válidos
-export type ServiceModeId = typeof SERVICE_MODES[number]['id'];
+export type ServiceModeId = typeof SERVICE_MODES[number]["id"];

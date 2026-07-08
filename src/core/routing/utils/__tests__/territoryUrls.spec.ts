@@ -133,10 +133,10 @@ describe("community territory urls", () => {
     ).toBe("/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/feed");
   });
 
-  it("monta alias publico curto de comunidade na raiz", () => {
-    expect(buildCommunityAliasUrl("santa-cruz")).toBe("/santa-cruz");
+  it("gera base explicita de portal por alias publico da comunidade", () => {
+    expect(buildCommunityAliasUrl("santa-cruz")).toBe("/comunidade/santa-cruz");
     expect(buildCommunityAliasUrl("santa-cruz", "empresas")).toBe(
-      "/santa-cruz/empresas",
+      "/comunidade/santa-cruz/empresas",
     );
     expect(() => buildCommunityAliasUrl("santa/cruz")).toThrow("segmento de URL");
   });
@@ -148,13 +148,13 @@ describe("community territory urls", () => {
         "empresas",
       ),
     ).toBe("/comunidade/ba/salvador/nordeste-de-amaralina/empresas");
-    expect(buildCommunityScopedUrl("/nordeste-de-amaralina", "feed")).toBe(
-      "/nordeste-de-amaralina/feed",
+    expect(buildCommunityScopedUrl("/comunidade/nordeste-de-amaralina", "feed")).toBe(
+      "/comunidade/nordeste-de-amaralina/feed",
     );
-    expect(buildCommunityScopedUrl("/nordeste-de-amaralina")).toBe(
-      "/nordeste-de-amaralina",
+    expect(buildCommunityScopedUrl("/comunidade/nordeste-de-amaralina")).toBe(
+      "/comunidade/nordeste-de-amaralina",
     );
-    expect(() => buildCommunityScopedUrl("/nordeste-de-amaralina", "feed?tab=x")).toThrow(
+    expect(() => buildCommunityScopedUrl("/comunidade/nordeste-de-amaralina", "feed?tab=x")).toThrow(
       "segmento de URL",
     );
   });

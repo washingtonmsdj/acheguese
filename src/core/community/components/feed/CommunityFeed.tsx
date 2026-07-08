@@ -25,6 +25,7 @@ import {
 } from "@/core/community/utils/communityFeedTab";
 import { isLaunchCommunityPostEnabled } from "@/config/launchScope";
 import { COMMUNITY_FEED_COPY } from "@/core/community/utils/communityCopy";
+import type { CommunityAction } from "@/core/community/access";
 import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { InfiniteScrollTrigger } from "@/shared/components/ui";
@@ -64,6 +65,12 @@ interface CommunityFeedProps {
   onOpenCreatePost?: () => void;
   onDeletePost?: (postId: string) => void;
   onEditPost?: (postId: string) => void;
+  canReact?: boolean;
+  canComment?: boolean;
+  canSave?: boolean;
+  canReport?: boolean;
+  canSendMessage?: boolean;
+  onBlockedAction?: (action: CommunityAction) => void;
   locationScope?: LocationScope;
   territoryFilter?: TerritoryFilter;
   initialHeaderFilter?: TerritorialFeedChannel;
@@ -78,6 +85,12 @@ export function CommunityFeed({
   onOpenCreatePost,
   onDeletePost,
   onEditPost,
+  canReact = true,
+  canComment = true,
+  canSave = true,
+  canReport = true,
+  canSendMessage = true,
+  onBlockedAction,
   locationScope = "city",
   territoryFilter,
   initialHeaderFilter = "para_voce",
@@ -97,28 +110,48 @@ export function CommunityFeed({
   }, [initialHeaderFilter]);
 
   const handleLike = useCallback((postId: string) => {
+    if (!canReact) {
+      onBlockedAction?.("react");
+      return;
+    }
+
     likePost(postId);
-  }, [likePost]);
+  }, [canReact, likePost, onBlockedAction]);
 
   const handleComment = useCallback((postId: string) => {
+    if (!canComment) {
+      onBlockedAction?.("comment");
+      return;
+    }
+
     onCommentClick?.(postId);
-  }, [onCommentClick]);
+  }, [canComment, onBlockedAction, onCommentClick]);
 
   const handleSave = useCallback((postId: string) => {
+    if (!canSave) {
+      onBlockedAction?.("save");
+      return;
+    }
+
     savePost(postId);
-  }, [savePost]);
+  }, [canSave, onBlockedAction, savePost]);
 
   const handleShare = useCallback((postId: string) => {
     sharePost(postId);
   }, [sharePost]);
 
   const handleReport = useCallback((postId: string) => {
+    if (!canReport) {
+      onBlockedAction?.("report");
+      return;
+    }
+
     reportPost({
       postId,
       reason: "inappropriate_content",
       description: "Denúncia enviada pelo fluxo principal do feed",
     });
-  }, [reportPost]);
+  }, [canReport, onBlockedAction, reportPost]);
 
   const handleTagClick = useCallback((tag: string) => {
     onTagClick?.(tag);
@@ -301,6 +334,8 @@ export function CommunityFeed({
           onDelete={onDeletePost}
           onEdit={onEditPost}
           onTagClick={handleTagClick}
+          canSendMessage={canSendMessage}
+          onBlockedSendMessage={() => onBlockedAction?.("send_message")}
         />
       </div>
 

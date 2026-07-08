@@ -18,7 +18,7 @@ describe("resolveHomeCommunityHref", () => {
     expect(href).toBe("/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina");
   });
 
-  it("usa URL curta publica quando o grupo ativo tem alias resolvido", () => {
+  it("normaliza alias resolvido do grupo para portal comunitario explicito", () => {
     const href = resolveHomeCommunityHref({
       homeCityPath: "/ba/salvador",
       homeDistrictPath: "/ba/salvador/chapada-do-rio-vermelho",
@@ -35,7 +35,7 @@ describe("resolveHomeCommunityHref", () => {
       },
     });
 
-    expect(href).toBe("/complexo-do-nordeste-de-amaralina");
+    expect(href).toBe("/comunidade/complexo-do-nordeste-de-amaralina");
   });
 
   it("usa o bairro quando nao existe grupo territorial ativo", () => {

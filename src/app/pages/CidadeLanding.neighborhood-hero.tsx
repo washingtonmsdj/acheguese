@@ -21,6 +21,7 @@ type NeighborhoodTerritoryHeroProps = {
   enterHref: string;
   interactionHref: string;
   canInteract: boolean;
+  isCommunityMode: boolean;
 };
 
 export function NeighborhoodTerritoryHero({
@@ -34,26 +35,36 @@ export function NeighborhoodTerritoryHero({
   enterHref,
   interactionHref,
   canInteract,
+  isCommunityMode,
 }: NeighborhoodTerritoryHeroProps) {
-  const territoryContextLabel = isGroup ? `${memberCount} áreas conectadas` : `${cityName}, ${stateLabel}`;
+  const territoryContextLabel = isGroup ? `${memberCount} areas conectadas` : `${cityName}, ${stateLabel}`;
+  const title = isCommunityMode ? "Meu bairro" : territoryName;
+  const description = isCommunityMode
+    ? "Comunidade, servicos e negocios perto de voce."
+    : `Empresas, servicos, classificados e mapa local em ${cityName}.`;
+  const ariaLabel = isCommunityMode
+    ? `Comunidade publica de ${territoryName}`
+    : `Territorio publico de ${territoryName}`;
+  const primaryActionLabel = isCommunityMode ? "Entrar no bairro" : "Abrir portal comunitario";
+  const interactionActionLabel = isCommunityMode ? "Publicar" : "Publicar no portal comunitario";
 
   return (
-    <section className="neighborhood-community-hero neighborhood-community-hero-territorial" aria-label={`Comunidade pública de ${territoryName}`}>
+    <section className="neighborhood-community-hero neighborhood-community-hero-territorial" aria-label={ariaLabel}>
       <div className="neighborhood-community-hero-copy">
         <span className="neighborhood-community-eyebrow">
           <MapPin aria-hidden="true" />
           {territoryName.toUpperCase()}
         </span>
-        <h1>Meu bairro</h1>
-        <p>Comunidade, serviços e negócios perto de você.</p>
+        <h1>{title}</h1>
+        <p>{description}</p>
         <div className="neighborhood-community-badges">
           <span>
             <Globe2 aria-hidden="true" />
-            Leitura pública
+            {isCommunityMode ? "Leitura publica" : "Pagina publica"}
           </span>
           <span>
             <Users aria-hidden="true" />
-            Moradores verificados
+            {isCommunityMode ? "Moradores verificados" : "Rotas publicas"}
           </span>
         </div>
         <div className="neighborhood-community-rules">
@@ -63,17 +74,20 @@ export function NeighborhoodTerritoryHero({
           </span>
           <span>
             <Lock aria-hidden="true" />
-            Para publicar, confirme sua moradia
+            {isCommunityMode ? "Para publicar, confirme sua moradia" : "Interacoes ficam no portal comunitario"}
           </span>
         </div>
         <div className="neighborhood-community-hero-actions">
           <Link to={enterHref}>
             <Users aria-hidden="true" />
-            Entrar no bairro
+            {primaryActionLabel}
           </Link>
-          <Link to={interactionHref} aria-label={canInteract ? "Publicar no bairro" : "Entrar ou verificar moradia para publicar"}>
+          <Link
+            to={interactionHref}
+            aria-label={canInteract ? "Publicar no bairro" : "Entrar ou verificar moradia para publicar"}
+          >
             <PencilLine aria-hidden="true" />
-            Publicar
+            {interactionActionLabel}
           </Link>
         </div>
       </div>

@@ -8,12 +8,12 @@
  * REGRAS:
  * - Todas as operações de roles DEVEM passar por este service
  * - Nunca acessar user_roles diretamente de components/pages
- * - Sempre usar as funções do banco (has_role, is_admin, etc)
+ * - Usar brokers/servicos autorizados para helpers privilegiados; nao chamar RPC bloqueado direto do browser
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase';
 import { SessionService } from '@/core/session/services/SessionService';
 import { adminRolesService } from '@/core/admin/services/AdminRolesService';
+import { RoleRpcService } from './RoleRpcService';
 import type {
   AppRole,
   UserRole,
@@ -23,19 +23,6 @@ import type {
   RoleCheckResult
 } from '../types/roles.types';
 
-interface RpcResult<T> {
-  data: T | null;
-  error: unknown;
-}
-
-interface RoleRpcClient {
-  rpc: <T = unknown>(
-    functionName: string,
-    params?: Record<string, unknown>,
-  ) => Promise<RpcResult<T>>;
-}
-
-const roleRpc = supabase as unknown as RoleRpcClient;
 // ============================================================================
 // ROLE SERVICE
 // ============================================================================
@@ -44,74 +31,57 @@ export class RoleService {
   /**
    * Verifica se um usuário possui um role específico.
    * 
-   * Usa a função `has_role()` do banco (SECURITY DEFINER).
+   * Consulta via Edge Function `role-rpc`; chamada direta ao RPC publico nao e permitida.
    */
   static async hasRole(userId: string, role: AppRole): Promise<boolean> {
-    const { data, error } = await roleRpc.rpc<boolean>('has_role', {
-      p_user_id: userId,
-      p_role: role
-    });
-
-    if (error) {
+    try {
+      return RoleRpcService.hasRole(userId, role);
+    } catch (error) {
       logger.error('Erro ao verificar role:', error);
       return false;
     }
-
-    return data === true;
   }
 
   /**
    * Verifica se um usuário é admin (admin ou super_admin).
    * 
-   * Usa a função `is_admin()` do banco (SECURITY DEFINER).
+   * Consulta via Edge Function `role-rpc`; chamada direta ao RPC publico nao e permitida.
    */
   static async isAdmin(userId: string): Promise<boolean> {
-    const { data, error } = await roleRpc.rpc<boolean>('is_admin', {
-      p_user_id: userId
-    });
-
-    if (error) {
+    try {
+      return RoleRpcService.isAdmin(userId);
+    } catch (error) {
       logger.error('Erro ao verificar admin:', error);
       return false;
     }
-
-    return data === true;
   }
 
   /**
    * Verifica se um usuário é super admin.
    * 
-   * Usa a função `is_super_admin()` do banco (SECURITY DEFINER).
+   * Consulta via Edge Function `role-rpc`; chamada direta ao RPC publico nao e permitida.
    */
   static async isSuperAdmin(userId: string): Promise<boolean> {
-    const { data, error } = await roleRpc.rpc<boolean>('is_super_admin', {
-      p_user_id: userId
-    });
-
-    if (error) {
+    try {
+      return RoleRpcService.isSuperAdmin(userId);
+    } catch (error) {
       logger.error('Erro ao verificar super admin:', error);
       return false;
     }
-
-    return data === true;
   }
 
   /**
    * Retorna todos os roles ativos de um usuário.
    * 
-   * Usa a função `get_user_roles()` do banco (SECURITY DEFINER).
+   * Consulta via Edge Function `role-rpc`; chamada direta ao RPC publico nao e permitida.
    */
   static async getUserRoles(userId: string): Promise<AppRole[]> {
-    const { data, error } = await roleRpc.rpc<AppRole[]>('get_user_roles', {
-      p_user_id: userId
-    });
-
-    if (error) {
+    try {
+      return RoleRpcService.getUserRoles(userId);
+    } catch (error) {
       logger.error('Erro ao buscar roles do usuário:', error);
       return [];
     }
-
-    return data || [];
   }
 
   /**

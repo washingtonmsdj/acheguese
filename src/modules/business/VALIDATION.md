@@ -1,26 +1,51 @@
 # Business Module Validation
 
-## Auditoria de 2026-04-10
+## Auditoria De 2026-07-04
 
-### Corrigido nesta rodada
+### Corrigido Nesta Rodada
 
-- Favoritos do fluxo `empresas` mantidos com `business_favorites` (compat).
-- Favoritos do fluxo `gastronomia` consolidados em `user_favorite_businesses` com fallback SSOT em leitura direta.
-- Navegação pública passou a resolver contexto territorial por ID/slug quando necessário.
-- Fluxos paralelos removidos:
-  - `useBusinessActions`
-  - `useBusinessListSSO`
-  - `useBusinessQueries`
-  - stores duplicadas de business
-- Listagem pública voltou a usar coordenadas canônicas de `address`.
-- Documentação do módulo e dos hooks foi reduzida para o contrato real.
+- Favoritos publicos de Empresas foram migrados para `user_favorite_businesses`.
+- Os servicos centrais de favoritos deixaram de consultar `business_favorites` em runtime e preservam o contrato antigo retornando `profiles.id` dos negocios a partir de `user_favorite_businesses.business_id`.
+- `useBusinessFavorite` e `useBusinessFavorites` foram removidos da API publica do modulo.
+- A listagem publica real (`EmpresasLandingPage`) agora renderiza botao de favorito persistente no card.
+- O fluxo E2E cobre lista territorial -> salvar empresa -> detalhe institucional -> recomendar -> remover ambos.
+- A pagina duplicada `src/modules/business/pages/EmpresasPage.tsx` e seus componentes exclusivos foram removidos.
+- Navegacao publica segue resolvendo contexto territorial por ID/slug quando necessario.
+- Queries publicas de Gastronomia foram consolidadas no core; o modulo reexporta o contrato para preservar imports existentes.
+- Copy operacional de entrega em Gastronomia foi neutralizada para frota propria/manual; telas v1 nao prometem rede de motoboys sem entrega SSOT vinculada.
+- Rota publica de pedido foi protegida contra sombra das rotas territoriais dinamicas de Gastronomia.
+- Dashboard, widget de plano e acoes rapidas de Gastronomia deixaram de expor CTAs/beneficios para Entregas avancadas, Analytics e Promocoes enquanto as rotas seguem pausadas.
+- Configuracao operacional de Gastronomia agora persiste entrega como frota propria/manual e bloqueia `uses_platform_delivery` no v1.
+- Checkout SSOT de Gastronomia valida carrinho vazio, metodo de pagamento aceito e bloqueio de `platform_courier` antes de tocar validacao de area/backend.
+- Validacao de area de entrega foi removida do hook e centralizada no service de checkout, evitando chamada duplicada de Supabase.
+- Rotas da Central de Gastronomia foram aninhadas em `CentralRoutes` para garantir que `/central/empresas/:businessId/gastronomia/pedidos/:orderId` renderize o detalhe operacional, e nao o dashboard base.
+- A landing publica e o dashboard autenticado mobile de Gastronomia ganharam cobertura axe para violacoes serias/criticas; a varredura corrigiu botao de filtros sem nome acessivel, select mobile sem label, carrossel de atividade sem acesso por teclado/list semantics e contraste do CTA primario do hero.
 
-### Validação executada
+### Validacao Executada
 
-- `npm run typecheck`
-- `npx eslint src/modules/business src/core/business --ext .ts,.tsx`
+- `npm run typecheck:app`
+- `npx eslint` nos arquivos alterados de Empresas.
+- `npx eslint src/core/favorites/services/favorites.queries.ts src/core/favorites/services/favorites.mutations.ts src/core/favorites/services/favoritesBusinessContract.spec.ts`
+- `npx vitest run src/core/favorites/services/favoritesBusinessContract.spec.ts --reporter=default`
+- `npx vitest run src/modules/business/gastronomy/components/GastronomyCheckoutSheet.spec.tsx src/modules/business/gastronomy/__tests__/GastronomyCheckoutConsistencyAudit.spec.ts src/modules/business/gastronomy/__tests__/GastronomyMicrocopyEncodingAudit.spec.ts --reporter=default`
+- `npx vitest run src/modules/business/gastronomy/__tests__/gastronomyRuntimeBoundaries.spec.ts src/modules/business/gastronomy/__tests__/GastronomyOperationalSSOT.test.ts src/modules/business/gastronomy/services/GastronomyCheckoutService.spec.ts --reporter=default`
+- `npx vitest run src/modules/business/gastronomy/__tests__/GastronomyOrderDetailsAccessibilityAudit.spec.ts src/modules/business/gastronomy/components/orders/OrderOperationsPanel.spec.tsx src/modules/business/gastronomy/pages/OrderDetailsPage.spec.tsx --reporter=default`
+- `npx vitest run src/modules/business/gastronomy/__tests__/GastronomyOrderDetailsAccessibilityAudit.spec.ts src/modules/business/gastronomy/pages/GastronomyDashboardPage.spec.tsx --reporter=default`
+- `npx vitest run src/modules/business/gastronomy/__tests__/GastronomyOperationalSSOT.test.ts src/core/verticals/gastronomy/routes/__tests__/gastronomyPublicRoutes.spec.ts src/core/location/hooks/usePublicBrowsingCity.spec.ts --reporter=default`
+- `npx vitest run src/modules/business/gastronomy/__tests__/GastronomyOperationalSSOT.test.ts src/modules/business/gastronomy/pages/GastronomyDashboardPage.spec.tsx --reporter=default`
+- `npx vitest run src/modules/business/gastronomy/services/GastronomyCheckoutService.spec.ts src/modules/business/gastronomy/checkout/checkoutRules.spec.ts --reporter=default`
+- `npx vitest run src/modules/business/gastronomy --reporter=default` (27 arquivos, 119 testes verdes; warnings conhecidos de teste/React Router).
+- `npx playwright test tests/e2e/business-recommendation-operational.spec.ts --project=chromium --reporter=line`
+- `npx playwright test tests/e2e/gastronomy-onboarding.spec.ts --project=chromium --reporter=line`
+- `npx playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=line`
+- `npx playwright test tests/e2e/gastronomy-operational.spec.ts --project=chromium --reporter=line --grep "360px"`
+- `npx playwright test tests/e2e/mobile-core-layout.spec.ts --project=chromium --reporter=line --grep "/gastronomia/ba/salvador"`
+- `npx playwright test tests/e2e/mobile-core-layout.spec.ts --project=chromium --reporter=line --grep "axe"`
+- `supabase migration list --linked` como inspecao read-only do historico remoto/local.
 
-### Riscos remanescentes
+### Riscos Remanescentes
 
-- Ainda existem componentes legados no módulo que não fazem parte da API recomendada.
-- O módulo segue sem suíte própria de testes automatizados.
+- `business_favorites` ainda existe em migrations/types historicos.
+- A remocao fisica desse contrato antigo exige auditoria de dados, backfill e migration separada, validando fluxos de perfil e favoritos antigos.
+- Ha drift historico de migrations fora das correcoes criticas de Gastronomia/Delivery: julho esta alinhado, mas existem versoes remotas antigas sem arquivo local e migrations locais de maio/junho sem historico remoto. Nao executar `db push`/`migration repair` global sem plano de reconciliacao separado.
+- E2Es de onboarding e operacional de Gastronomia usam estado remoto compartilhado; nao rodar esses dois arquivos em paralelo. Em paralelo houve falso negativo de permissao na Central, mas o cenario de pedido e o arquivo operacional completo passaram quando reexecutados isoladamente.

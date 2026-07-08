@@ -61,7 +61,9 @@ export default function MenuManagementPage() {
     items,
     isLoading: loadingItems,
     createItem,
+    createItemAsync,
     updateItem,
+    updateItemAsync,
     deleteItem,
     toggleAvailability,
     isCreating: creatingItem,
@@ -124,7 +126,7 @@ export default function MenuManagementPage() {
     setItemFormOpen(true);
   };
 
-  const handleItemSubmit = (values: {
+  const handleItemSubmit = async (values: {
     name: string;
     price: number;
     description?: string;
@@ -145,13 +147,14 @@ export default function MenuManagementPage() {
     };
 
     if (selectedItem) {
-      updateItem({ itemId: selectedItem.id, ...normalizedValues });
+      await updateItemAsync({ itemId: selectedItem.id, ...normalizedValues });
     } else {
       if (!canAddMoreItems) return;
-      createItem(normalizedValues);
+      await createItemAsync(normalizedValues);
     }
     setItemFormOpen(false);
     setSelectedItem(null);
+    return true;
   };
 
   const handleConfirmDeleteItem = () => {
@@ -197,27 +200,6 @@ export default function MenuManagementPage() {
     );
   }
 
-  if (!entitlements.canUseAdvancedMenu) {
-    return (
-      <div className="container max-w-6xl py-8 space-y-8">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate(businessManagementRoutes.gastronomia(businessId!))}
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Voltar ao Dashboard
-        </Button>
-
-        <UpgradePromptInline
-          businessId={businessId!}
-          feature="Cardápio Avançado"
-          offerKey="catalog"
-        />
-      </div>
-    );
-  }
-
   return (
     <div className="container max-w-6xl py-8 space-y-8">
       <div>
@@ -235,6 +217,14 @@ export default function MenuManagementPage() {
           Gerencie categorias, itens, variações e adicionais
         </p>
       </div>
+
+      {!entitlements.canUseAdvancedMenu && (
+        <UpgradePromptInline
+          businessId={businessId!}
+          feature="Recursos avançados de cardápio"
+          offerKey="catalog"
+        />
+      )}
 
       <Tabs defaultValue="items" className="space-y-6">
         <TabsList>

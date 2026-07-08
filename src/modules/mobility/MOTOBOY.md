@@ -60,11 +60,13 @@ in_delivery -> failed_delivery -> failed | cancelled_by_driver
 - `useDelivery`: fluxo de criacao/acompanhamento de entrega.
 - `CreateDeliveryModal`: formulario controlado para solicitar motoboy.
 - `MotoboyDeliveryActions`: acoes operacionais do motorista/motoboy.
-- `MobilityOfferService`: aceite atomico de ofertas via `accept_ride_atomic`.
+- `MobilityOfferService`: aceite atomico de ofertas via `mobility-rpc`.
 
 ## Regras
 
 - Dispatch de motoboy filtra motoristas com `driver_data.can_do_delivery = true`.
 - Pricing usa modo `motoboy` no catalogo central de precificacao.
-- Aceite de corrida/entrega usa RPC canonica `accept_ride_atomic`, versionada em `supabase/migrations`.
+- Aceite de corrida/entrega passa por `mobility-rpc`; o helper canonico
+  `accept_ride_atomic` permanece versionado em `supabase/migrations` e
+  executavel diretamente apenas pelo caminho servidor.
 - Scripts one-off de migracao nao fazem parte do runtime nem do fluxo oficial de schema.

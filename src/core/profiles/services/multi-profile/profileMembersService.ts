@@ -6,6 +6,7 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import { SessionService } from '@/core/session/services/SessionService';
+import { ProfileRpcService } from '../ProfileRpcService';
 import type { ProfileMember, ProfileRole, ServiceResponse } from './types';
 
 const errorMessage = (error: unknown, fallback: string): string =>
@@ -77,15 +78,11 @@ export class ProfileMembersService {
     role: ProfileRole = 'member',
   ): Promise<ServiceResponse<{ success: boolean; message?: string }>> {
     try {
-      const { data, error } = await supabase.rpc('invite_profile_member_by_email', {
-        p_profile_id: profileId,
-        p_email: email.trim(),
-        p_role: role,
-      });
-
-      if (error) throw error;
-
-      const result = (data || {}) as { success?: boolean; error?: string; message?: string };
+      const result = await ProfileRpcService.inviteMemberByEmail<{
+        success?: boolean;
+        error?: string;
+        message?: string;
+      }>(profileId, email.trim(), role);
       if (!result.success) {
         return {
           success: false,

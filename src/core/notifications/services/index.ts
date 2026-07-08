@@ -3,6 +3,8 @@
  */
 
 export { NotificationService, notificationService } from "./NotificationService";
+export { CommunityNotificationBrokerService } from "./CommunityNotificationBrokerService";
+export { ProfessionalNotificationBrokerService } from "./ProfessionalNotificationBrokerService";
 export { PushNotificationPreferencesService } from "./PushNotificationPreferencesService";
 export { UserNotificationPreferencesService } from "./UserNotificationPreferencesService";
 

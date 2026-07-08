@@ -7,6 +7,7 @@
  */
 
 import { logger } from "@/shared/utils/logger";
+import { invokeSupabaseBrokerCommand } from "@/core/infrastructure/edge-functions/edgeFunctionBroker";
 import { BusinessService } from "@/core/business/services/BusinessService";
 import { ReviewsService } from "@/core/reviews/services/ReviewsService";
 import { ADMIN_PLACEHOLDER_IDS } from "@/core/admin/config/identifiers";
@@ -26,6 +27,20 @@ export interface AdminBusinessData {
   total_reviews?: number;
   created_at: string;
   updated_at: string;
+}
+
+type AdminBusinessRpcAction = "setVerification" | "setPremium";
+
+async function invokeAdminBusinessRpc(
+  action: AdminBusinessRpcAction,
+  params: Record<string, unknown>,
+): Promise<void> {
+  await invokeSupabaseBrokerCommand({
+    action,
+    functionName: "admin-business-rpc",
+    params,
+    serviceName: "AdminBusinessService",
+  });
 }
 
 class AdminBusinessServiceClass {
@@ -139,7 +154,10 @@ class AdminBusinessServiceClass {
    */
   async verifyBusiness(id: string): Promise<boolean> {
     try {
-      await BusinessService.updateBusiness(id, { is_verified: true });
+      await invokeAdminBusinessRpc("setVerification", {
+        businessId: id,
+        isVerified: true,
+      });
       return true;
     } catch (error) {
       logger.error("Error in verifyBusiness:", error);
@@ -153,7 +171,10 @@ class AdminBusinessServiceClass {
    */
   async unverifyBusiness(id: string): Promise<boolean> {
     try {
-      await BusinessService.updateBusiness(id, { is_verified: false });
+      await invokeAdminBusinessRpc("setVerification", {
+        businessId: id,
+        isVerified: false,
+      });
       return true;
     } catch (error) {
       logger.error("Error in unverifyBusiness:", error);
@@ -167,7 +188,10 @@ class AdminBusinessServiceClass {
    */
   async makePremium(id: string): Promise<boolean> {
     try {
-      await BusinessService.updateBusiness(id, { is_premium: true });
+      await invokeAdminBusinessRpc("setPremium", {
+        businessId: id,
+        isPremium: true,
+      });
       return true;
     } catch (error) {
       logger.error("Error in makePremium:", error);
@@ -181,7 +205,10 @@ class AdminBusinessServiceClass {
    */
   async removePremium(id: string): Promise<boolean> {
     try {
-      await BusinessService.updateBusiness(id, { is_premium: false });
+      await invokeAdminBusinessRpc("setPremium", {
+        businessId: id,
+        isPremium: false,
+      });
       return true;
     } catch (error) {
       logger.error("Error in removePremium:", error);

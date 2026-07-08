@@ -14,11 +14,11 @@
  *   SUPABASE_SERVICE_ROLE_KEY - Service role key with storage admin access
  */
 
-import { createClient } from "@supabase/supabase-js";
 import { existsSync, readdirSync, readFileSync, statSync } from "fs";
 import { join, relative } from "path";
+import { createServiceRoleClient } from "./lib/supabase-client";
 
-type SupabaseClient = ReturnType<typeof createClient>;
+type SupabaseClient = ReturnType<typeof createServiceRoleClient>;
 
 function getContentType(filename: string): string {
   const ext = filename.toLowerCase().split(".").pop();
@@ -133,18 +133,7 @@ async function main() {
     process.exit(1);
   }
 
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl || !supabaseKey) {
-    console.error("Missing environment variables:");
-    console.error("   SUPABASE_URL");
-    console.error("   SUPABASE_SERVICE_ROLE_KEY");
-    console.error("\nLoad from .env file or set manually");
-    process.exit(1);
-  }
-
-  const supabase = createClient(supabaseUrl, supabaseKey);
+  const supabase = createServiceRoleClient();
   const buckets = readdirSync(backupDir).filter((entry) => statSync(join(backupDir, entry)).isDirectory());
 
   console.log(`Backup directory: ${backupDir}\n`);

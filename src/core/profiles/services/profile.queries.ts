@@ -5,11 +5,11 @@
  */
 
 import { supabase } from "@/integrations/supabase";
-import { callRPC } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 import { sanitizeForILike } from "@/shared/utils/sqlSanitization";
 import { SessionService } from "@/core/session/services/SessionService";
+import { SessionRpcService } from "@/core/session/services/SessionRpcService";
 import type {
   AdminFilters,
   AdminProfileListItem,
@@ -140,20 +140,10 @@ export async function getActiveProfileRpc(userId?: string): Promise<Profile | nu
     targetUserId = user.id;
   }
 
-  const { data, error } = await callRPC("get_active_profile", {
-    p_user_id: targetUserId,
-  });
+  const currentUser = await SessionService.getCurrentUser();
+  if (!currentUser || currentUser.id !== targetUserId) return null;
 
-  if (error) {
-    trackError(new Error("Error fetching active profile"), {
-      component: "profile.queries",
-      action: "getActiveProfileRpc",
-      metadata: { userId: targetUserId, error },
-    });
-    return null;
-  }
-
-  const profile = Array.isArray(data) ? data[0] : data;
+  const profile = await SessionRpcService.getActiveProfile();
   return (profile as Profile) || null;
 }
 

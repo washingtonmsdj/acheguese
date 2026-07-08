@@ -1,6 +1,6 @@
 # Status Atual do Projeto
 
-Data: 2026-06-06
+Data: 2026-07-08
 Branch: codex/ssot-cleanup
 Ultimo commit validado: b0bedaaa (`refactor: consolida SSOT de formatacao e admin`)
 
@@ -8,6 +8,606 @@ Observacao: este documento e a fonte operacional atual. O historico abaixo fica 
 
 ## Validacoes Recentes
 
+- Supabase remoto em 2026-07-08: Advisor reexecutado e permanece em 12 achados
+  totais. Os achados de aplicacao/RPC corrigiveis por migrations e Edge
+  Functions foram removidos; restam apenas `public.spatial_ref_sys`,
+  extensoes `postgis`/`unaccent`/`pg_trgm`/`citext` em `public`, overloads
+  PostGIS `st_estimatedextent` executaveis por `anon`/`authenticated` e
+  `auth_leaked_password_protection`. Preflight para habilitar RLS em
+  `public.spatial_ref_sys` falhou com `ERROR: 42501: must be owner of table
+  spatial_ref_sys`; portanto o item foi formalizado como
+  `EXC-2026-07-08-POSTGIS-EXTENSION-OWNER`. Leaked-password protection tambem
+  foi formalizado como `EXC-2026-07-08-AUTH-HIBP-DASHBOARD`, pois depende de
+  Auth Settings/Management API com PAT valido e plano compativel.
+- Security Authority em 2026-07-08: `validate:migrations` passou a bloquear
+  futuras migrations que tentem tocar `public.spatial_ref_sys` ou
+  `public.st_estimatedextent` sem declarar preflight de owner/plataforma
+  vinculado a `EXC-2026-07-08-POSTGIS-EXTENSION-OWNER`. O gate
+  `validate:security-authority` foi ampliado para 57 testes e valida tanto as
+  excecoes canonicas quanto as travas de extension-owner, residuais do Advisor
+  e alinhamento entre `supabase/config.toml` e o SSOT de senha do app. O mesmo
+  gate agora valida que `verify_jwt=false` em Edge Functions permanece restrito
+  as excecoes documentadas em
+  `docs/governance/security/EDGE_FUNCTION_AUTH_POLICY.json` e que funcoes
+  configuradas como `admin-*` ou `*-rpc` exigem `verify_jwt=true`. A validacao
+  de schema da politica vive em `scripts/security/edge-function-auth-policy.mjs`
+  e tem casos negativos para contrato implicito, `kind` invalido, regex
+  invalida e conflito com padroes privilegiados. A validacao do contrato local
+  `[functions.*]` vive em `scripts/security/edge-function-auth-config.mjs`, com
+  casos negativos para `verify_jwt` ausente, `verify_jwt=false` nao autorizado,
+  allowlist publica configurada com JWT e secao obsoleta sem funcao real. Toda
+  Edge Function que usa `SUPABASE_SERVICE_ROLE_KEY`/`SERVICE_ROLE` agora
+  precisa de classificacao explicita em `serviceRoleAllowlist`, com `kind`,
+  `risk`, `label` e padroes obrigatorios conferidos contra o codigo real. Fora
+  das Edge Functions, a fronteira de `service_role` fica em
+  `docs/governance/security/SERVICE_ROLE_BOUNDARY_POLICY.json` e e validada por
+  `scripts/security/service-role-boundary.mjs`, bloqueando env access ou
+  literal sensivel em browser/public/API nao classificada.
+- Scripts operacionais em 2026-07-08: o acesso runtime a
+  `SUPABASE_SERVICE_ROLE_KEY` foi concentrado em
+  `scripts/lib/supabase-client.mjs`, com `scripts/lib/supabase-client.ts` como
+  fachada tipada. Foram migrados backup/restore de Storage, geocoding, sync
+  territorial IBGE/municipal, seeds E2E, validadores remotos curtos
+  (`validate-reconciliation-final`, `validate-slug-history-final`,
+  `validate-etapa12-remote` e `validate-e2e-setup`), `validate-gate3-metadata.mjs`
+  e `economic-benchmark-ssot.mjs`. A policy agora permite nesses caminhos apenas
+  literal/documentacao da chave, nao `process.env.SUPABASE_SERVICE_ROLE_KEY`
+  direto. Scripts legados de validacao (`validate-question-answers`,
+  `validate-comment-likes`, `validate-constraints-final`,
+  `validate-business-district-required`, `validate-implementation`,
+  `validate-gate3-simple`, `validate-e2e-setup` e `economic-benchmark-ssot`)
+  tambem passaram a usar as factories canonicas do helper. O gate
+  `security:validate` agora bloqueia `createClient(...)` direto em `scripts/`,
+  exceto dentro de `scripts/lib/supabase-client.mjs`.
+- Testes E2E em 2026-07-08: a fronteira `service_role` foi expandida para
+  `tests/e2e/`, `tests/helpers/` e `tests/operational/`. Specs E2E podem citar
+  `SUPABASE_SERVICE_ROLE_KEY` em mensagens de setup/skip, mas nao podem mais
+  ler a variavel diretamente. O acesso admin foi concentrado em
+  `tests/helpers/operational-env.ts` e aplicado aos fluxos de gastronomia,
+  recomendacoes, comunidade, comunicacao territorial, auth/business,
+  admin-pricing e education. O mesmo helper agora tambem concentra cliente anon
+  operacional (`VITE_SUPABASE_URL` + publishable/anon key), com `storageKey`
+  isolada por cliente para evitar colisao de sessao nos runners. Essa fronteira
+  tambem ficou enforceable no `security:validate`: `createClient(...)` e leitura
+  direta de `VITE_SUPABASE_*` ficam bloqueados em `tests/e2e/`,
+  `tests/helpers/` e `tests/operational/`, exceto no helper canonico. Os testes
+  Vitest `gate2-validation` e `gate2-tracking-pipeline` sairam de
+  `tests/e2e/` para `tests/operational/`, e `playwright.config.ts` passou a
+  ignorar `*.test.ts` no `testDir` E2E para manter Playwright e Vitest
+  separados. O teste real de RLS de posts tambem saiu da raiz de `tests/` para
+  `tests/operational/` e passou a criar clientes anon/admin somente via
+  `tests/helpers/operational-env.ts`.
+- Runtime Supabase em 2026-07-08: o barrel publico
+  `src/integrations/supabase/index.ts` deixou de reexportar `createClient`. A
+  Security Authority agora bloqueia import/export de `createClient` vindo de
+  `@supabase/supabase-js` em `src/`, exceto no cliente canonico
+  `src/integrations/supabase/supabase.ts`, e em `api/`, exceto no helper
+  `api/_shared/supabaseAdmin.ts`. O mesmo barrel agora concentra os tipos
+  publicos `SupabaseClient`, `RealtimeChannel`,
+  `RealtimePostgresChangesPayload`, `AuthChangeEvent` e `Session` usados pelo
+  runtime do app; hooks de modulo devem consumir tipos expostos pelos services
+  do proprio modulo, nao importar `@supabase/supabase-js` diretamente. Essa
+  fronteira tambem ficou executavel no `security:validate`, que bloqueia
+  import/export de `@supabase/supabase-js` em `src/` fora dos tres arquivos
+  canonicos de integracao Supabase.
+- Deploy gate em 2026-07-08: `verify:deploy` passou a executar
+  `validate:deps`, `validate:taxonomy`,
+  `validate:architecture:incremental`, `validate:architecture:governance`,
+  `validate:session-context`, `validate:ssot`, `validate:hardcodes`, `validate:upload:ssot`,
+  `security:validate` e `security:config:validate`, alem de exigir que esses
+  scripts existam. Assim o gate principal agora falha por violacao de camada,
+  ciclo arquitetural, import legado, modulo fora da taxonomia, quebra de
+  governanca arquitetural, identificador ambiguo de contexto de sessao,
+  regressao de hooks legados de auth/profile, quebra de SSOT/URL canonica, hardcode operacional de
+  preco/coordenada/UUID/status/limite, acesso direto a upload ou otimizacao de
+  imagem fora do SSOT, CSP/vercel.json fora do SSOT de seguranca, secrets
+  hardcoded, CORS wildcard, uso indevido ou nao classificado de `service_role`
+  em Edge Functions, uso de service role fora da fronteira canonica,
+  `verify_jwt=false` fora da allowlist, brokers `admin-*`/`*-rpc` sem
+  `verify_jwt=true` e regressao no bucket privado de documentos de verificacao.
+  A allowlist executavel dessas excecoes vive em
+  `docs/governance/security/EDGE_FUNCTION_AUTH_POLICY.json`, consumida pelo
+  gate e pelos testes da Security Authority. O contrato local tambem passou a
+  exigir bloco `[functions.*]` explicito para todas as Edge Functions, evitando
+  dependencia de default implicito de `verify_jwt` e bloqueando
+  secoes/allowlist obsoletas sem implementacao em `supabase/functions`. O gate
+  tambem valida schema, categorias e regex da propria politica JSON, cobertura
+  de `serviceRoleAllowlist`, fronteira `SERVICE_ROLE_BOUNDARY_POLICY.json` e o
+  contrato local do `config.toml` via modulos compartilhados com a suite da
+  Security Authority.
+- Security Advisor remoto em 2026-07-08: criado
+  `npm run security:advisor:residuals`, comando manual que executa o Advisor
+  remoto e falha se aparecer achado fora dos residuais mapeados nas excecoes
+  ativas. A allowlist dos `cache_key` residuais vive em
+  `docs/governance/security/SUPABASE_ADVISOR_RESIDUALS.json`, sem lista
+  duplicada no script. O comando tambem aceita
+  `-- --advisor-json caminho/advisor.json` para auditoria offline. O modo
+  offline agora tem cobertura no gate `validate:security-authority`, que valida
+  export conhecido e achado desconhecido. O modo remoto nao entra no
+  `verify:deploy` porque depende de rede, projeto linkado e credencial
+  Supabase valida.
+- Supabase/Auth em 2026-07-08: a mitigacao local da excecao
+  `EXC-2026-07-08-AUTH-HIBP-DASHBOARD` foi alinhada ao SSOT de senha. O
+  `supabase/config.toml` agora usa
+  `password_requirements = "lower_upper_letters_digits_symbols"` com
+  `minimum_password_length = 12`, e o app tambem exige 12 caracteres com
+  maiuscula, minuscula, numero e caractere especial em validadores,
+  placeholders e testes. A mitigacao local de senha comprometida agora fica no
+  helper SSOT `checkPasswordCompromise` e cobre cadastro, redefinicao e troca de
+  senha, com guard no `validate:security-authority` para impedir chamada direta
+  a `HibpService` nessas superficies. Esse alinhamento agora e verificado por
+  `validate:security-authority`. A protecao HIBP do provedor continua pendente no
+  Dashboard/Auth Settings ou Management API, pois depende do provedor Supabase.
+- Continuidade em 2026-07-06: removido o ultimo hardcode SSOT detectado por
+  `validate:hardcodes` no fallback territorial publico, criando
+  `TERRITORIAL_GROUP_STATUS` como contrato canonico para status de grupos
+  territoriais. Documentacao viva de URLs foi alinhada ao comportamento sem
+  redirect automatico de entidades comunitarias nao canonicas.
+- Gate de fase reexecutado em 2026-07-06 e fechado verde: corrigida a
+  persistencia de review pos-atendimento profissional para usar
+  `requester_profile_id` do atendimento como SSOT, atualizada a expectativa SEO
+  da aba pausada de oportunidades comunitarias para `noindex`, e corrigido
+  contraste mobile em gastronomia/banner de consentimento.
+- Validacoes em 2026-07-06 nesta continuidade: `npm run validate:hardcodes`,
+  `npm run typecheck:app`, `npm run validate:ssot`,
+  `npm run validate:docs-structure`, `npm run validate:docs-live-links` e
+  eslint pontual dos arquivos alterados passaram.
+- `npm run validate:phase:core`: passou em 2026-07-06 com `53 passed` no
+  Playwright phase-core, alem de typecheck completo, lint, docs-live-links e
+  SSOT comunitario.
+- Supabase remoto em 2026-07-07: o drift local/remoto foi reconciliado. As 4
+  migrations que existiam apenas no remoto foram recuperadas, as 41 migrations
+  locais pendentes foram aplicadas ao projeto linkado com
+  `supabase db push --linked --include-all --yes`, e
+  `npm run validate:migrations:remote` agora passa sem drift. `npm run
+  verify:deploy` passou apos integrar `validate:migrations` e
+  `validate:migrations:remote`. Advisor remoto apos os follow-ups de
+  `public-assets`, `search_path`, RLS always-true, grants anonimos
+  privilegiados e hardening das RPCs LGPD `has_consent`/`record_consent`: 158
+  achados, com 1 erro residual em `public.spatial_ref_sys` e warnings
+  restantes de funcoes `SECURITY DEFINER` publicas/autenticadas, extensoes em
+  `public` e leaked-password protection.
+- Supabase/Auth em 2026-07-07: login por username saiu do RPC publico
+  `get_email_by_username` e passou para a Edge Function remota
+  `auth-username-login` com rate limit e resposta generica. Migration
+  `20260707103853_harden_username_auth_rpc_surface` revogou `PUBLIC`, `anon` e
+  `authenticated` do RPC antigo, mantendo `service_role`; verificacao remota
+  confirmou `anon_execute=false` e advisor caiu para 156 achados totais / 18
+  `anon_security_definer_function_executable`.
+- Supabase/RPC publica em 2026-07-07: `get_site_setting(text)` deixou de ser
+  `SECURITY DEFINER` via migration
+  `20260707111214_harden_get_site_setting_invoker`, mantendo leitura publica
+  como `SECURITY INVOKER` com grants explicitos para `anon`/`authenticated`.
+  `site_settings` ficou sem DML publico e o teste remoto como role `anon`
+  retornou `Achegue-se`; advisor remoto caiu para 154 achados totais / 17
+  `anon_security_definer_function_executable` / 131
+  `authenticated_security_definer_function_executable`.
+- Supabase/reviews publicas em 2026-07-07: `get_business_reviews(uuid,
+  integer, integer)` deixou de ser `SECURITY DEFINER` via migration
+  `20260707112353_harden_get_business_reviews_invoker`, mantendo leitura
+  publica como `SECURITY INVOKER` com grants explicitos para
+  `anon`/`authenticated`. `reviews` ficou sem DML anonimo e o teste remoto como
+  role `anon` retornou uma review publica ativa; advisor remoto caiu para 152
+  achados totais / 16 `anon_security_definer_function_executable` / 130
+  `authenticated_security_definer_function_executable`.
+- Supabase/menu publico em 2026-07-07: `get_featured_menu_items(uuid)` e
+  `get_active_promotions(uuid)` deixaram de ser `SECURITY DEFINER` via
+  migration `20260707113531_harden_gastronomy_public_menu_rpcs_invoker`,
+  mantendo leitura publica como `SECURITY INVOKER` com grants explicitos para
+  `anon`/`authenticated`. `menus`, `menu_categories`, `menu_items` e
+  `menu_promotions` ficaram sem DML anonimo; advisor remoto caiu para 148
+  achados totais / 14 `anon_security_definer_function_executable` / 128
+  `authenticated_security_definer_function_executable`.
+- Supabase/feed publico de gastronomia em 2026-07-07:
+  `get_recent_gastronomy_activities(text, integer, text[])` deixou de ser
+  `SECURITY DEFINER` via migration
+  `20260707114642_harden_gastronomy_activity_rpc_privacy`, mantendo leitura
+  publica como `SECURITY INVOKER` com grants explicitos para
+  `anon`/`authenticated` e sem heranca por `PUBLIC`. A RPC deixou de ler
+  favoritos e compras privados; o feed publico passa a derivar apenas de
+  reviews publicas visiveis por RLS. Advisor remoto caiu para 146 achados
+  totais / 13 `anon_security_definer_function_executable` / 127
+  `authenticated_security_definer_function_executable`.
+- Supabase/helper territorial publico em 2026-07-07:
+  `rpc_get_location_descendants_ids(uuid)` deixou de ser `SECURITY DEFINER` via
+  migration `20260707115617_harden_location_descendants_rpc_invoker`, mantendo
+  leitura publica como `SECURITY INVOKER` com grants explicitos para
+  `anon`/`authenticated` e sem heranca por `PUBLIC`. Testes remotos como role
+  `anon` confirmaram retorno para cidade ativa e grupo territorial ativo;
+  advisor remoto caiu para 144 achados totais / 12
+  `anon_security_definer_function_executable` / 126
+  `authenticated_security_definer_function_executable`.
+- Supabase/RPCs publicas adicionais em 2026-07-07: `get_brand_branches(uuid)`,
+  `rpc_match_district_by_point(uuid, double precision, double precision)`,
+  `count_lost_found_posts_by_type()` e
+  `find_similar_lost_found_posts(uuid, integer)` deixaram de usar modo
+  privilegiado nas migrations `20260707120534`,
+  `20260707120937` e `20260707121321`. O matching territorial por ponto tambem
+  foi corrigido para converter GeoJSON antes de `ST_Contains`, removendo o erro
+  runtime `ST_Contains(jsonb, geometry)`. Advisor remoto caiu para 136 achados
+  totais / 8 `anon_security_definer_function_executable` / 122
+  `authenticated_security_definer_function_executable`.
+- Supabase/contadores publicos em 2026-07-07: `increment_business_views(uuid)`,
+  `increment_professional_views(uuid)` e `increment_vaga_view_count(uuid)`
+  deixaram de ser executaveis diretamente por `PUBLIC`, `anon` e
+  `authenticated` nas migrations `20260707122417` e `20260707123630`; o browser
+  agora chama a Edge Function `track-public-view`, implantada no remoto com
+  `--no-verify-jwt`, rate limit, whitelist de entidade e validacao UUID. O bug
+  SQL de ambiguidade de parametro/coluna nos contadores de empresa/profissional
+  tambem foi corrigido. Smoke HTTP remoto retornou `202 {"ok":true}`. Advisor
+  remoto caiu para 130 achados totais / 5
+  `anon_security_definer_function_executable` / 119
+  `authenticated_security_definer_function_executable`.
+- Supabase/snapshots publicos em 2026-07-07:
+  `get_public_business_snapshot_by_slug(text,text,text,text)` e
+  `get_public_gastronomy_snapshot_by_slug(text,text,text,text)` passaram a
+  `SECURITY INVOKER` na migration `20260707124348`, mantendo `EXECUTE`
+  explicito para `anon` e `authenticated` sem heranca por `PUBLIC`. Smoke
+  remoto como role `anon` retornou snapshots de negocio e gastronomia para uma
+  pizzaria ativa. Advisor remoto caiu para 126 achados totais / 3
+  `anon_security_definer_function_executable` / 117
+  `authenticated_security_definer_function_executable`; os achados anonimos
+  restantes sao apenas overloads `st_estimatedextent` do PostGIS.
+- Supabase/PostGIS em 2026-07-07: a migration `20260707124929` tentou revogar
+  execucao publica dos overloads `st_estimatedextent`, mas o remoto manteve as
+  ACLs porque os grants da extensao foram concedidos por `supabase_admin` e a
+  migration linkada executa como `postgres`. Estado remoto confirmado:
+  126 achados totais / 3 `anon_security_definer_function_executable` / 117
+  `authenticated_security_definer_function_executable`, com os 3 anonimos ainda
+  restritos a `st_estimatedextent`.
+- Supabase/RPCs internas em 2026-07-07: a migration `20260707133656` removeu
+  `EXECUTE` de `authenticated` para nove funcoes internas/trigger-only sem
+  caller runtime de browser (`audit_education_lead_status_change`,
+  `can_use_premium_link`, `check_suspension_expiry`, `generate_unique_handle`,
+  `get_pending_webhooks`, `initialize_notification_preferences`,
+  `initialize_user_mfa_status`, `trigger_start_dispatch` e
+  `validate_profile_link_same_account`), mantendo `service_role`.
+  `update_session_activity(text)` foi preservada por ser chamada por
+  `SessionService`. Advisor remoto caiu para 117 achados totais / 3
+  `anon_security_definer_function_executable` / 108
+  `authenticated_security_definer_function_executable`.
+- Supabase/RPCs autenticadas em 2026-07-07: as migrations `20260707134401` e
+  `20260707134629` removeram `EXECUTE` de `authenticated` para helpers sem
+  caller runtime/policy e para helpers chamados apenas por rotinas
+  privilegiadas. A Edge Function `admin-notifications-rpc` foi criada e
+  implantada com `requireAdmin`, rate limit e whitelist de acoes; a migration
+  `20260707134943` moveu as RPCs `admin_notifications_get_*` para esse broker e
+  removeu execucao direta por `authenticated`. Smoke remoto sem JWT de usuario
+  retornou `401`. Advisor remoto caiu para 86 achados totais / 3
+  `anon_security_definer_function_executable` / 77
+  `authenticated_security_definer_function_executable`.
+- Supabase/pricing admin em 2026-07-07: a Edge Function
+  `admin-pricing-rpc` foi criada e implantada com `verify_jwt=true`,
+  `requireAdmin`, rate limit, whitelist de acoes e validacao de que
+  `performedBy` pertence ao usuario autenticado. A migration `20260707140908`
+  removeu `EXECUTE` direto de `authenticated` dos RPCs
+  `activate_pricing_rule` e `create_active_pricing_rule`, mantendo apenas
+  `service_role`. Verificacao remota confirmou `anon_execute=false`,
+  `authenticated_execute=false` e `service_role_execute=true`; smoke remoto sem
+  JWT retornou `401`. Advisor remoto atual: 84 achados totais / 3
+  `anon_security_definer_function_executable` / 75
+  `authenticated_security_definer_function_executable`.
+- Supabase/site settings admin em 2026-07-07: a Edge Function
+  `admin-site-settings-rpc` foi criada e implantada com `verify_jwt=true`,
+  `requireAdmin`, rate limit, whitelist de acoes, whitelist de chaves e
+  validacao de valor por tipo de setting. A migration `20260707141904` removeu
+  `EXECUTE` direto de `authenticated` dos RPCs `get_all_site_settings` e
+  `upsert_site_setting`, mantendo apenas `service_role`; `get_site_setting`
+  segue publico como `SECURITY INVOKER`. Verificacao remota confirmou
+  `anon_execute=false`, `authenticated_execute=false` e
+  `service_role_execute=true`; smoke remoto sem JWT retornou `401`. Advisor
+  remoto atual: 82 achados totais / 3
+  `anon_security_definer_function_executable` / 73
+  `authenticated_security_definer_function_executable`.
+- Supabase/comunicacao territorial admin em 2026-07-07: a Edge Function
+  `admin-communication-rpc` foi criada e implantada com `verify_jwt=true`,
+  `requireAdmin`, rate limit, whitelist de acoes e validacao de payload. O
+  frontend admin deixou de chamar diretamente os RPCs
+  `admin_approve_communication_channel` e
+  `admin_reject_communication_channel_request`. A migration `20260707143712`
+  ajustou os RPCs para receber o `admin_user_id` real quando chamados via
+  `service_role`, preservando `reviewed_by_user_id`, `approved_by_user_id` e
+  auditoria, e removeu `EXECUTE` direto de `authenticated`. Verificacao remota
+  confirmou `anon_execute=false`, `authenticated_execute=false` e
+  `service_role_execute=true`; smoke remoto sem JWT retornou `401`. Advisor
+  remoto atual: 80 achados totais / 3
+  `anon_security_definer_function_executable` / 71
+  `authenticated_security_definer_function_executable`.
+- Supabase/comunicacao territorial usuario em 2026-07-07: a Edge Function
+  `communication-rpc` foi criada e implantada com `verify_jwt=true`,
+  autenticacao obrigatoria, rate limit, whitelist de acoes e validacao de
+  payload. O servico de comunicacao territorial deixou de chamar diretamente
+  os RPCs de mutacao `request_communication_channel`,
+  `create_communication_publication`, `update_communication_publication_draft`
+  e `publish_communication_publication`. A migration `20260707145342` moveu
+  esses RPCs para execucao exclusiva por `service_role`, preservando o usuario
+  real via `actor_user_id`, e converteu `can_channel_publish_in_location(uuid,
+  uuid)` para `SECURITY INVOKER`. Verificacao remota confirmou
+  `anon_execute=false`, `authenticated_execute=false` e
+  `service_role_execute=true` nas mutacoes; smoke remoto sem JWT retornou
+  `401`. Em seguida, a migration `20260707151447` moveu o helper RLS
+  `communication_current_user_can_manage_channel(uuid)` para o schema privado
+  `private`, atualizou as policies dependentes e removeu o helper publico da
+  superficie RPC. Verificacao remota confirmou `public_helper=null`,
+  `anon_private_execute=false`, `authenticated_private_execute=true` e policies
+  apontando para `private.communication_current_user_can_manage_channel`.
+  Advisor remoto atual: 74 achados totais / 3
+  `anon_security_definer_function_executable` / 65
+  `authenticated_security_definer_function_executable`, sem achados restantes
+  de comunicacao.
+- Supabase/notificacoes em 2026-07-07: as operacoes de leitura/marcacao
+  `mark_notification_as_read`, `mark_all_notifications_as_read` e
+  `get_unread_notifications_count` deixaram de ser chamadas como RPCs
+  privilegiadas pelo browser. `NotificationService` passou a usar
+  `public.notifications` diretamente com RLS e filtro explicito por
+  `user_id = usuario autenticado`; a migration `20260707152429` removeu
+  `EXECUTE` de `authenticated` desses tres RPCs, mantendo apenas
+  `service_role`. Verificacao remota confirmou `authenticated_execute=false`
+  nos tres RPCs e Advisor remoto atual: 71 achados totais / 3
+  `anon_security_definer_function_executable` / 62
+  `authenticated_security_definer_function_executable`.
+- Supabase/gastronomia nichos em 2026-07-07: os RPCs de versionamento
+  `add_niche_capability`, `has_niche_capability` e
+  `mark_niche_needs_upgrade` sairam da superficie executavel por
+  `authenticated`. `has_niche_capability` passou a `SECURITY INVOKER` e a
+  leitura de capability no frontend agora usa `public.gastronomy_profiles`
+  diretamente sob RLS. As mutacoes de capability/upgrade foram bloqueadas no
+  servico de browser ate existirem por caminho admin/server autorizado. A
+  migration `20260707153515` foi aplicada ao remoto; verificacao confirmou
+  `authenticated_execute=false` nos tres RPCs e `service_role_execute=true`.
+  Em seguida, a migration `20260707155447` removeu `INSERT`, `UPDATE` e
+  `DELETE` amplos de `authenticated` em `public.gastronomy_profiles` e
+  restaurou apenas grants por coluna para campos operacionais. Verificacao
+  remota confirmou que `authenticated` nao tem mais escrita em
+  `enabled_capabilities`, `missing_capabilities`, `needs_niche_upgrade`,
+  `niche_config_version`, `support_level`, `operational_mode`,
+  `primary_niche_key`, `last_niche_upgrade_at` ou `plan_tier`.
+  Advisor remoto atual: 68 achados totais / 3
+  `anon_security_definer_function_executable` / 59
+  `authenticated_security_definer_function_executable`, sem achados de nicho.
+- Supabase/favoritos de negocios em 2026-07-07: o frontend de gastronomia
+  deixou de chamar o RPC privilegiado `get_business_favorites_count` para
+  contagem publica/de dono. `FavoritesQueryService.getBusinessFavoritesCount`
+  agora le o contador canonico `business_data.favorites_count` sob RLS da
+  propria tabela. A migration `20260707160719` converteu o RPC para
+  `SECURITY INVOKER`, removeu `EXECUTE` de `PUBLIC`, `anon` e `authenticated`,
+  e manteve apenas `service_role`. Verificacao remota confirmou
+  `security_definer=false`, `anon_execute=false`,
+  `authenticated_execute=false` e `service_role_execute=true`.
+  Advisor remoto atual: 67 achados totais / 3
+  `anon_security_definer_function_executable` / 58
+  `authenticated_security_definer_function_executable`, sem achados de
+  `get_business_favorites_count`.
+- Supabase/business_data em 2026-07-07: a migration `20260707162026`
+  removeu grants amplos de `anon` e `authenticated` em
+  `public.business_data`. `anon` e `authenticated` ficaram apenas com
+  `SELECT` em nivel de tabela; `authenticated` recebeu `INSERT`/`UPDATE`
+  somente por coluna operacional. Flags administrativas (`is_verified`,
+  `is_premium`) e agregados/counters (`favorites_count`,
+  `recommendations_count`, `rating`, `total_reviews`, `total_products`) nao
+  sao mais gravaveis diretamente via Data API com JWT de usuario. A Edge
+  Function `admin-business-rpc` foi criada e implantada com `verify_jwt=true`,
+  `requireAdmin`, rate limit e `service_role` para as acoes administrativas
+  `setVerification` e `setPremium`; smoke remoto sem JWT retornou `401`.
+  Verificacao remota confirmou `anon`/`authenticated` sem `DELETE`,
+  `TRUNCATE`, `REFERENCES`, `TRIGGER` ou DML amplo em `business_data`.
+- Supabase/create_notification em 2026-07-07: a migration `20260707192404`
+  converteu `create_notification` para `SECURITY INVOKER`, manteve
+  `EXECUTE` apenas para `authenticated` e `service_role`, e adicionou guarda
+  interna que bloqueia usuario autenticado criando notificacao para outro
+  `user_id`. `NotificationService.createNotification` tambem passou a bloquear
+  chamadas cross-user no browser. `notifications` e `notification_preferences`
+  perderam grants amplos de `anon`/`authenticated`; `authenticated` ficou com
+  operacoes e colunas minimas para RLS de notificacao propria/preferencias
+  proprias. Verificacao remota confirmou `security_definer=false`,
+  `anon_execute=false`, `authenticated_execute=true`,
+  `service_role_execute=true`, grants por coluna e policies explicitas por
+  operacao. Advisor remoto atual: 66 achados totais / 3
+  `anon_security_definer_function_executable` / 57
+  `authenticated_security_definer_function_executable`, sem achado de
+  `create_notification`.
+- Supabase/community notifications em 2026-07-07: criada e implantada a Edge
+  Function `community-notifications-rpc` com `verify_jwt=true`, autenticacao
+  obrigatoria, rate limit e `service_role` somente dentro do broker. O broker
+  valida ownership do `actorProfileId`, confirma eventos reais em
+  `post_likes_new`, `posts` e `comments`, resolve o destinatario a partir do
+  dominio e so entao chama `create_notification`; o browser nao envia
+  `user_id` de destinatario. `posts.mutations` e
+  `communityBusinessLogic` passaram a usar
+  `CommunityNotificationBrokerService` para curtidas/mencoes e caminhos
+  preparados de comentarios/respostas. Smoke remoto sem JWT retornou
+  `401 {"code":"UNAUTHORIZED_NO_AUTH_HEADER","message":"Missing authorization header"}`.
+- Supabase/professional notifications em 2026-07-07: criada e implantada a
+  Edge Function `professional-notifications-rpc` com `verify_jwt=true`,
+  autenticacao obrigatoria, rate limit e `service_role` somente dentro do
+  broker. Mensagens e propostas de leads agora passam por
+  `ProfessionalNotificationBrokerService`; o browser envia apenas
+  `messageId`/`quoteId`, e o broker valida `sender_user_id`,
+  `professional_user_id`, ownership do profissional e participacao no lead
+  antes de resolver o destinatario. A criacao de lead, que pode ser anonima,
+  ficou no trigger interno `create_professional_lead_created_event()`, com
+  `SECURITY DEFINER`, `search_path` fixo, sem `EXECUTE` para `anon` ou
+  `authenticated`, e insercao da notificacao do profissional resolvida no
+  banco. Smoke remoto sem JWT retornou
+  `401 {"code":"UNAUTHORIZED_NO_AUTH_HEADER","message":"Missing authorization header"}`;
+  verificacao remota confirmou `anon_execute=false`,
+  `authenticated_execute=false`, `service_role_execute=true` para o trigger.
+- Supabase/session-rpc em 2026-07-07: criada e implantada a Edge Function
+  `session-rpc` com `verify_jwt=true`, autenticacao obrigatoria, rate limit e
+  `service_role` somente dentro do broker. `get_active_profile`,
+  `switch_active_profile` e `check_user_mfa_required` deixaram de ser
+  executaveis diretamente por `authenticated`; o browser chama
+  `SessionRpcService`, e o broker deriva `p_user_id` do JWT validado em vez de
+  aceitar id de usuario no payload. Smoke remoto sem JWT retornou
+  `401 {"code":"UNAUTHORIZED_NO_AUTH_HEADER","message":"Missing authorization header"}`;
+  verificacao remota confirmou `anon_execute=false`,
+  `authenticated_execute=false` e `service_role_execute=true` para os tres
+  RPCs. Advisor remoto atual: 63 achados totais / 3
+  `anon_security_definer_function_executable` / 54
+  `authenticated_security_definer_function_executable`, sem match para
+  `get_active_profile`, `switch_active_profile` ou
+  `check_user_mfa_required`.
+- Supabase/billing entitlements em 2026-07-07: criada e implantada a Edge
+  Function `billing-entitlements-rpc` com `verify_jwt=true`, autenticacao
+  obrigatoria, rate limit e `service_role` somente dentro do broker.
+  `get_user_active_subscription`, `user_has_plan`, `user_has_feature` e
+  `get_user_entitlement_limit` deixaram de ser executaveis diretamente por
+  `authenticated`; `SubscriptionService` passou a usar
+  `BillingEntitlementsRpcService`, e o broker deriva `p_user_id` do JWT
+  validado. Smoke remoto sem JWT retornou
+  `401 {"code":"UNAUTHORIZED_NO_AUTH_HEADER","message":"Missing authorization header"}`;
+  verificacao remota confirmou `anon_execute=false`,
+  `authenticated_execute=false` e `service_role_execute=true` para os quatro
+  RPCs. Contagem remota direta em `pg_proc`: 50
+  `authenticated_security_definer_function_executable` e 3
+  `anon_security_definer_function_executable`, sem match no Advisor para os
+  quatro RPCs de billing.
+- Supabase/session revocation em 2026-07-07: `revoke_user_session` e
+  `revoke_all_user_sessions` deixaram de ser executaveis diretamente por
+  `authenticated`. O `session-rpc` existente foi estendido para revogacao de
+  sessoes com `verify_jwt=true`, derivando o usuario real do JWT e atualizando
+  `user_sessions` com filtro obrigatorio `user_id = usuario autenticado`, sem
+  chamar os RPCs legados com `service_role`. Smoke remoto sem JWT retornou
+  `401 {"code":"UNAUTHORIZED_NO_AUTH_HEADER","message":"Missing authorization header"}`;
+  verificacao remota confirmou `anon_execute=false`,
+  `authenticated_execute=false` e `service_role_execute=true` para os dois
+  RPCs legados. Contagem remota direta em `pg_proc`: 48
+  `authenticated_security_definer_function_executable` e 3
+  `anon_security_definer_function_executable`.
+- Supabase/reviews de negocios em 2026-07-07: criada e implantada a Edge
+  Function `business-reviews-rpc` com `verify_jwt=true`, autenticacao
+  obrigatoria, rate limit e `service_role` somente dentro do broker.
+  `can_user_review_business`, `create_business_review`,
+  `update_business_review`, `delete_business_review` e
+  `add_business_review_response` deixaram de ser executaveis diretamente por
+  `authenticated`; `ReviewQueryService` passou a usar
+  `BusinessReviewsRpcService`. O broker deriva o usuario do JWT e valida
+  acesso ao perfil por owner, `profile_members` ativo ou admin canonico antes
+  de escrever em `reviews`. Smoke remoto sem JWT retornou
+  `401 {"code":"UNAUTHORIZED_NO_AUTH_HEADER","message":"Missing authorization header"}`;
+  verificacao remota confirmou `anon_execute=false`,
+  `authenticated_execute=false` e `service_role_execute=true` para os cinco
+  RPCs legados. Contagem remota direta em `pg_proc`: 43
+  `authenticated_security_definer_function_executable` e 3
+  `anon_security_definer_function_executable`.
+- Supabase/privacy e session activity em 2026-07-07: criada e implantada a
+  Edge Function `privacy-rpc` com `verify_jwt=true` para `record_consent`, e
+  `session-rpc` foi estendido com `updateSessionActivity`. Os callers de
+  consentimento passaram a usar `PrivacyRpcService`, sem aceitar `user_id`
+  confiavel do browser; a atividade de sessao agora atualiza apenas a linha do
+  `user_id` autenticado e do bearer token atual. A migration
+  `20260707212504` tambem corrigiu `unique_active_consent` para unicidade
+  parcial em `revoked_at IS NULL`, preservando historico LGPD. Smoke remoto
+  sem JWT retornou `401` para ambos os brokers; grants remotos confirmados:
+  `anon_execute=false`, `authenticated_execute=false`,
+  `service_role_execute=true` para `record_consent` e
+  `update_session_activity`. Advisor remoto oficial: 50 findings totais, 41
+  `authenticated_security_definer_function_executable` e 3
+  `anon_security_definer_function_executable`.
+- Supabase/location SSOT em 2026-07-07: criada e implantada a Edge Function
+  `location-rpc` com `verify_jwt=true` para
+  `rpc_upsert_canonical_city_by_ibge`. `LocationGeocodingService` passou a usar
+  `LocationRpcService`, sem executar o helper diretamente pelo browser. A
+  migration `20260707213810` permite `service_role` no helper legado, remove
+  `EXECUTE` direto de `authenticated` e mantem apenas o broker como caminho de
+  escrita. Smoke remoto sem JWT retornou `401`; grants remotos:
+  `anon_execute=false`, `authenticated_execute=false`,
+  `service_role_execute=true`. Advisor remoto oficial: 49 findings totais, 40
+  `authenticated_security_definer_function_executable` e 3
+  `anon_security_definer_function_executable`.
+- Supabase/mobilidade dispatch em 2026-07-07: criada e implantada a Edge
+  Function `mobility-rpc` com `verify_jwt=true` para
+  `accept_ride_atomic`, `log_ride_dispatch_attempt`,
+  `update_latest_ride_dispatch_attempt`, `cancel_pending_ride_offers` e
+  `release_driver_availability_for_ride`. `MobilityOfferService`,
+  `MobilityAuditService` e `DriverAvailabilityService` deixaram de chamar
+  esses RPCs diretamente pelo browser. O broker deriva usuario do JWT, valida
+  ownership do `driverProfileId` para aceite ou participante/admin para
+  auditoria/disponibilidade, e so entao chama os helpers legados com
+  `service_role`; as migrations `20260707220108` e `20260707224108` removeram
+  `EXECUTE` direto de `authenticated` dos cinco helpers. A funcao
+  `accept_ride_atomic` tambem foi corrigida para continuar exigindo
+  elegibilidade do motorista mesmo quando chamada por `service_role`. Smoke
+  remoto sem JWT retornou `401`; grants remotos: `anon_execute=false`,
+  `authenticated_execute=false`, `service_role_execute=true`. Advisor remoto
+  oficial: 34 findings totais, 25
+  `authenticated_security_definer_function_executable` e 3
+  `anon_security_definer_function_executable`.
+- Supabase/delivery orders em 2026-07-07: criada e implantada a Edge Function
+  `delivery-rpc` com `verify_jwt=true` para os 10 RPCs mutantes de
+  pedido/entrega: `delivery_create_order`,
+  `delivery_transition_logistics_status`, `delivery_mark_picked_up`,
+  `delivery_attach_delivery_proof`, `delivery_mark_delivered`,
+  `delivery_transition_financial_status`, `delivery_report_occurrence`,
+  `delivery_resolve_occurrence`, `delivery_update_order_notes` e
+  `delivery_update_order_source_metadata`. `OrderDeliverySSOTService` deixou
+  de executar esses RPCs diretamente pelo browser e passou por
+  `DeliveryRpcService`. O broker valida JWT, acesso ao `actorProfileId` por
+  dono/membro/admin e papel especifico no pedido antes de usar `service_role`;
+  a migration `20260707222343` removeu `EXECUTE` direto de `authenticated`
+  dos 10 helpers. Smoke remoto sem JWT retornou `401`; grants remotos:
+  `anon_execute=false`, `authenticated_execute=false`,
+  `service_role_execute=true`. Advisor remoto oficial: 35 findings totais, 26
+  `authenticated_security_definer_function_executable` e 3
+  `anon_security_definer_function_executable`.
+- Supabase/comunidade conteudo em 2026-07-07: criada e implantada a Edge
+  Function `community-rpc` com `verify_jwt=true` para criacao de alerta,
+  criacao de ocorrencia, incremento de edicao de alerta, melhor resposta de
+  QA e contadores de participantes de eventos. `CommunityAlertService`,
+  `CommunityIssueService`, `CommunityQAService`, `CommunityEventsRuntimeService`
+  e `AdminEventsService` deixaram de executar diretamente os RPCs
+  `create_community_alert`, `create_community_issue`,
+  `increment_alert_edit_count`, `mark_best_answer`,
+  `increment_event_participants` e `decrement_event_participants`. A migration
+  `20260707225829` removeu `EXECUTE` direto de `authenticated` de oito
+  assinaturas, mantendo apenas `service_role`; os helpers de criacao preservam
+  usuario real via `_actor_user_id` inserido somente pelo broker e continuam
+  exigindo residencia verificada. Smoke remoto sem JWT retornou `401`; grants
+  remotos: `anon_execute=false`, `authenticated_execute=false`,
+  `service_role_execute=true`. Advisor remoto oficial: 26 findings totais, 17
+  `authenticated_security_definer_function_executable` e 3
+  `anon_security_definer_function_executable`.
+- Supabase/perfis em 2026-07-07: criada e implantada a Edge Function
+  `profile-rpc` com `verify_jwt=true` para criacao de perfil, alteracao de
+  handle, exclusao de perfil, transferencia de ownership e convite de membro
+  por email. `MultiProfileService`, `ProfileMembersService` e os bootstraps
+  E2E deixaram de executar diretamente `create_profile_with_extension`,
+  `update_profile_handle`, `delete_profile`, `transfer_profile_ownership` e
+  `invite_profile_member_by_email`. A migration `20260707232826` moveu a
+  logica para helpers internos com `actor_user_id` explicito, criou wrappers
+  `service_role` para o broker e removeu `EXECUTE` direto de
+  `authenticated` dos cinco RPCs antigos. Smoke remoto sem JWT retornou
+  `401`; grants remotos nos helpers antigos, wrappers publicos e helpers
+  privados: `anon_execute=false`, `authenticated_execute=false`,
+  `service_role_execute=true`. Advisor remoto oficial: 21 findings totais, 12
+  `authenticated_security_definer_function_executable` e 3
+  `anon_security_definer_function_executable`.
+- Supabase/roles em 2026-07-07: criada e implantada a Edge Function
+  `role-rpc` com `verify_jwt=true` para leitura de roles e checks
+  `hasRole`, `getUserRoles`, `isAdmin` e `isSuperAdmin`. `RoleService` deixou de
+  executar diretamente `has_role`, `get_user_roles`, `is_admin` e
+  `is_super_admin`; o broker valida JWT, permite leitura apenas do proprio
+  usuario ou por admin canonico, e chama os helpers legados com `service_role`.
+  A migration `20260707234302` removeu `EXECUTE` direto de `anon` e
+  `authenticated` de `has_role` e `get_user_roles`, mantendo apenas
+  `service_role`. Em seguida, a migration `20260708000031` moveu 116 referencias
+  de policies RLS para helpers `private.*` e removeu `EXECUTE` direto de
+  `authenticated` dos wrappers publicos `auth_can_access_profile`,
+  `can_manage_profile`, `group_can_manage_members`, `is_admin`,
+  `is_admin_from_roles`, `is_admin_user` e `is_super_admin`. Smoke remoto sem
+  JWT retornou `401`; policies remotas ficaram com zero referencias publicas ou
+  unqualified aos helpers antigos. Advisor remoto oficial: 12 findings totais,
+  3 `authenticated_security_definer_function_executable` e 3
+  `anon_security_definer_function_executable`.
+- Security Authority em 2026-07-07: criada a governanca minima em
+  `docs/governance/security`, com regras para Supabase/RLS/RPC/Storage,
+  matriz de risco, regras para agentes de IA e excecoes auditaveis. O gate
+  `validate:security-authority` foi integrado ao `verify:deploy`, cobrindo por
+  teste isolado as classificacoes de Data API, RPC publica e listagem ampla de
+  Storage. A Fase 7 foi exercitada em mudanca real de frontend/arquitetura e
+  em migration real aplicada ao Supabase remoto
+  (`20260707102718_harden_lgpd_consent_rpc_authorization`). Evidencia registrada em
+  `docs/audits/SECURITY_AUTHORITY_PILOT_2026-07-07.md`.
 - Auditoria SSOT/admin em 2026-06-06: duplicatas e orfaos de componentes admin foram removidos de `src/modules/admin/components`, mantendo `src/core/admin/components` como fonte canonica para componentes compartilhados.
 - Auditoria de formatacao em 2026-06-06: formatacao BRL foi consolidada em `src/shared/utils/currency.ts`; formatacao de metricas compactas foi consolidada em `src/shared/utils/formatters.ts`.
 - Validacoes em 2026-06-06: `npm run lint`, `npm run typecheck:app`, `npx vitest run src/shared/utils/currency.test.ts src/shared/utils/formatters.test.ts`, `npm run validate:deps`, `npm run validate:hardcodes`, `npm run validate:ssot` e `git diff --check` passaram.
@@ -43,7 +643,7 @@ Observacao: este documento e a fonte operacional atual. O historico abaixo fica 
 - `npx playwright test tests/e2e/gastronomy-operational.spec.ts --reporter=list`: passou em 2026-05-08 com `4/4`, cobrindo fluxo autenticado cliente->loja (pedido ate estado terminal) e acesso operacional do motoboy.
 - `npx playwright test tests/e2e/professional-operational.spec.ts --reporter=list`: passou em 2026-05-08 com `2/2`.
 - `npx playwright test tests/e2e/professional-leads-operational.spec.ts --reporter=list`: passou em 2026-05-08 com `1/1`, cobrindo fluxo autenticado `lead -> proposta -> aceite -> atendimento` e validacao da Central Profissional.
-- `npx playwright test tests/e2e/landing-public.spec.ts -g "complexo short route resolves" --reporter=list`: passou em 2026-05-08 com `1/1`, validando alias curto `/complexo` redirecionando para rota canonica territorial.
+- `npx playwright test tests/e2e/landing-public.spec.ts -g "complexo short route resolves" --reporter=list`: passou em 2026-05-08 com `1/1`, validando o comportamento antigo de alias curto `/complexo`; supersedido pela regra vigente de nao preservar alias curto como segunda superficie publica.
 - `npx playwright test tests/e2e/professional-leads-operational.spec.ts --reporter=list`: reexecutado em 2026-05-08 com `1/1` verde apos hardening de ambiente E2E.
 - `npx playwright test tests/e2e/professional-leads-operational.spec.ts --reporter=list`: passou em 2026-05-08 com `1/1` apos incluir assert de dados reais de `professional_data` (raio, areas e disponibilidade) na Central Profissional.
 - `npx playwright test tests/e2e/professional-leads-operational.spec.ts --reporter=list`: revalidado em 2026-05-08 com `1/1` apos hardening do bloco operacional da Central Profissional e persistencia de avaliacao pos-servico.
@@ -68,7 +668,7 @@ Observacao: este documento e a fonte operacional atual. O historico abaixo fica 
 - `npx playwright test tests/e2e/territorial-seo.spec.ts --project=chromium --reporter=list`: passou em 2026-05-08 com `3/3`, validando indexabilidade de rotas territoriais publicas/sociais e politica obrigatoria de `noindex + canonical publico` nas rotas comunitarias duplicadas de modulo.
 - `npx playwright test tests/e2e/territorial-seo.spec.ts --project=chromium --reporter=list`: ampliado e revalidado em 2026-05-08 com `4/4` (publico indexavel + duplicacoes comunitarias `empresas/servicos/classificados` com `noindex`, incluindo canonical publico validado em classificado).
 - `npx playwright test tests/e2e/territorial-seo.spec.ts --project=chromium --reporter=list`: ampliado novamente em 2026-05-08 com `6/6`, cobrindo duplicacoes comunitarias `servicos`, `classificados`, `vagas`, `eventos` e `mobilidade` com politica `noindex` (e canonical publico validado em `classificados`) sem regressao de rota publica indexavel.
-- `npx playwright test tests/e2e/community-social-seo.spec.ts --project=chromium --reporter=list`: passou em 2026-05-08 com `2/2`, cobrindo rotas sociais da comunidade (`feed` e `grupos`) sem forcar `noindex` e mantendo canonical proprio (quando presente no head).
+- `npx playwright test tests/e2e/community-social-seo.spec.ts --project=chromium --reporter=list`: politica atualizada em 2026-07-05: rotas sociais da comunidade (`feed` e `grupos`) usam `noindex, follow` e canonical proprio do portal.
 - `npm run test:e2e:seo`: passou em 2026-05-08 com `8/8`, consolidando regressao SEO territorial/comunidade em comando unico (`territorial-seo.spec.ts` + `community-social-seo.spec.ts`).
 - `npm run validate:seo:phase`: passou em 2026-05-08 (`typecheck + lint + test:e2e:seo`), virando gate operacional da etapa SEO.
 - `npm run validate:operations:phase`: passou em 2026-05-08 (`typecheck + lint + test:e2e:operations`) com `35/35` nos cenarios operacionais de central/mobilidade, gastronomia e profissionais.
@@ -194,9 +794,9 @@ Plano mestre de execucao por fases: `docs/PLANO_MESTRE_EXECUCAO_INTEGRAL_SSOT.md
 - `npm run typecheck`, `npx eslint` pontual nos arquivos alterados e `npm run build` passaram em 2026-05-08 apos entrega da edicao de post.
 - Navegacao de abas em `ComunidadePage` deixou de montar URL manual por regex e passou a usar helper canonico (`buildCommunityTabUrlFromPath`), cobrindo cidade, bairro e grupo em `/area/:groupSlug`.
 - `useCommunityUrls` (core/routing e core/community) foi alinhado ao SSOT territorial para `groups`, usando rota contextual `${feed}/grupos` em vez de caminhos soltos/fora de contexto.
-- Sitemap dinamico foi fechado no SSOT de roteamento territorial: `generateAndSaveSitemap` agora consulta Supabase (`locations` + `territorial_groups` + membros), gera URLs canonicas de cidade/bairro/area + modulos/comunidade e persiste em `public/sitemap.xml` via script `npm run generate:sitemap`.
+- Sitemap dinamico foi fechado no SSOT de roteamento territorial: `generateAndSaveSitemap` consulta Supabase (`locations` + `territorial_groups` + membros), gera URLs publicas canonicas de cidade/bairro/grupo + modulos e nao emite URLs `/comunidade/...` no sitemap publico.
 - Runtime compartilhado para script/SPA foi endurecido sem gambiarra: `logger` e bootstrap `supabase` ficaram compativeis com ambiente Node (`process.env`) e Vite (`import.meta.env`) sem quebrar frontend.
-- Regra de SEO territorial virou SSOT isolado em `src/core/routing/seo/territorialSeoPolicy.ts`: rotas `/comunidade/.../:modulo-publico` recebem `noindex, follow` + canonical da rota publica equivalente; rotas sociais proprias (`feed/grupos`) mantem `index, follow`.
+- Regra de SEO territorial virou SSOT isolado em `src/core/routing/seo/territorialSeoPolicy.ts`: rotas `/comunidade/.../:modulo-publico` recebem `noindex, follow` + canonical da rota publica equivalente; rotas sociais proprias (`feed/grupos`) tambem usam `noindex, follow`.
 - `TerritorialLayout` ganhou `TerritorialFallbackSEO` para manter emissao minima de `robots/canonical` quando a resolucao territorial entra em fallback de erro, sem quebrar renderizacao das paginas.
 - `CommunityTerritorialShell` passou a emitir fallback de `canonical/robots` via `territorialSeoPolicy` no shell, reforcando consistencia SEO durante transicoes/hidratacao das rotas comunitarias.
 - Suite E2E operacional da Central foi endurecida com `goto` resiliente (`waitUntil=commit`, retry curto) e validacao de conteudo via polling de landmarks/texto em vez de `networkidle`, eliminando flakiness de bootstrap no ambiente local.

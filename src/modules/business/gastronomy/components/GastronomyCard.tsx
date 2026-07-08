@@ -1,22 +1,8 @@
 /**
- * 🍽️ GASTRONOMY CARD - NÍVEL AAA
+ * Card publico de negocio gastronomico.
  *
- * ✅ CARACTERÍSTICAS:
- * - Design gastronômico otimizado para conversão
- * - Hierarquia visual clara e apelo comercial
- * - Status operacional inteligente (aberto/fecha às X)
- * - Metadados úteis para decisão (nota, reviews, preço, distância, tempo)
- * - Badges secundárias coerentes (promoção, premium, entrega grátis)
- * - CTA forte e responsivo
- * - Estados de hover/focus/loading/sem imagem
- * - Animações Framer Motion
- * - Acessibilidade WCAG AAA
- * - TypeScript strict
- * - Memoização completa
- *
- * @version 1.0.0 - Redesign Completo
- * @author Kiro AI
- * @date 2026-04-15
+ * Exibe status operacional, metadados de decisao, favoritos e CTA para a
+ * pagina transacional do estabelecimento.
  */
 
 import { memo, useCallback, useMemo } from 'react';
@@ -38,7 +24,7 @@ import {
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/utils/cn';
-import { useBusinessUrls } from '@/core/business/hooks/useBusinessUrls';
+import { GastronomyUrlService } from '@/core/verticals/gastronomy/services/GastronomyUrlService';
 import { OpeningHoursService } from '@/core/business/services/OpeningHoursService';
 import { getCuisineLabel } from '../constants';
 import { formatBrl } from '../utils/currency';
@@ -137,7 +123,6 @@ export const GastronomyCard = memo<GastronomyCardProps>(
     className,
   }) => {
     const navigate = useNavigate();
-    const businessUrls = useBusinessUrls();
     const { gastronomy_profile: gp } = business;
 
     // ========================================================================
@@ -147,14 +132,12 @@ export const GastronomyCard = memo<GastronomyCardProps>(
     const url = useMemo(
       () =>
         business.slug && business.geographic_path
-          ? businessUrls.canonical({
-              id: business.id,
-              slug: business.slug,
-              is_premium: business.is_premium,
-              geographic_path: business.geographic_path,
-            })
+          ? GastronomyUrlService.getPublicDetailUrlFromTerritory(
+              business.geographic_path,
+              business.slug,
+            )
           : null,
-      [business.id, business.is_premium, business.slug, business.geographic_path, businessUrls],
+      [business.slug, business.geographic_path],
     );
 
     const openingStatus = useMemo(

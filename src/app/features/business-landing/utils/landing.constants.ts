@@ -1,19 +1,15 @@
-/**
- * Constantes de UI da landing de empresas.
- *
- * Dados quantitativos devem ser calculados pela página a partir do SSOT.
- */
-
 import {
-  MapPin,
-  Navigation,
+  CheckCircle2,
+  Clock3,
+  Grid2x2,
+  ShieldCheck,
   Star,
-  Store,
-  ThumbsUp,
+  Truck,
+  MessageCircle,
 } from "lucide-react";
 import { isLaunchBusinessCategoryEnabled } from "@/config/launchScope";
 import { getAllCategories } from "@/core/business/config/categoryFilters";
-import type { Benefit, Category, NeighborActivity, QuickFilter } from "../sections/types";
+import type { Category, QuickFilter } from "../sections/types";
 
 export const CATEGORIES: readonly Category[] = getAllCategories()
   .filter((category) => isLaunchBusinessCategoryEnabled(category.slug))
@@ -25,35 +21,23 @@ export const CATEGORIES: readonly Category[] = getAllCategories()
     slug: category.slug,
   }));
 
-export const NEIGHBOR_ACTIVITY: readonly NeighborActivity[] = [] as const;
-
 export const QUICK_FILTERS: readonly QuickFilter[] = [
-  { label: "Perto de mim", icon: Navigation, active: false },
-  { label: "Abertos agora", icon: Store, active: false },
-  { label: "Recomendados", icon: ThumbsUp, active: false },
-  { label: "Verificados", icon: Star, active: false },
+  { id: "open_now", label: "Aberto agora", icon: Clock3 },
+  { id: "verified", label: "Verificadas", icon: ShieldCheck },
+  { id: "recommended", label: "Recomendadas", icon: Star },
+  { id: "whatsapp", label: "WhatsApp", icon: MessageCircle },
+  { id: "delivery", label: "Entrega no bairro", icon: Truck },
 ] as const;
 
-export const BENEFITS: readonly Benefit[] = [
-  {
-    icon: MapPin,
-    title: "Visibilidade Local",
-    description: "Apareça para clientes do seu bairro",
-    iconClass: "text-primary",
-    bgClass: "bg-primary/10",
-  },
-  {
-    icon: Star,
-    title: "Avaliações",
-    description: "Receba feedback e construa reputação",
-    iconClass: "text-warning",
-    bgClass: "bg-warning/10",
-  },
-  {
-    icon: Store,
-    title: "Presenca local",
-    description: "Mostre catalogo, contato e localizacao",
-    iconClass: "text-accent",
-    bgClass: "bg-accent/10",
-  },
+export const HERO_TRUST_ITEMS = [
+  "Empresas verificadas pela equipe Achegue-se.",
+  "Recomendacoes reais de moradores do bairro.",
+  "Avaliacoes publicas e transparentes.",
+  "Negocios que apoiam a comunidade.",
+] as const;
+
+export const HERO_BADGES = [
+  { id: "territory", label: "Territorio ativo", icon: Grid2x2 },
+  { id: "public", label: "Leitura publica", icon: CheckCircle2 },
+  { id: "community", label: "Moradores recomendam", icon: Star },
 ] as const;

@@ -1,6 +1,6 @@
 # Implementacao de Identidade Publica Canonica
 
-Atualizado: 2026-06-05
+Atualizado: 2026-07-05
 Status: consolidado
 
 Este relatorio historico foi substituido pelo contrato vivo em `docs/ROTAS_PUBLICAS_CANONICAS.md`.
@@ -8,12 +8,14 @@ Este relatorio historico foi substituido pelo contrato vivo em `docs/ROTAS_PUBLI
 ## Resultado Atual
 
 - Perfil pessoal usa `/u/:username`.
-- Comunidade usa `/:communitySlug` quando o alias publico e unico.
-- Empresas da comunidade usam `/:communitySlug/empresas`.
-- Gastronomia da comunidade usa `/:communitySlug/gastronomia`.
-- Empresa e restaurante usam `/:communitySlug/:slug` quando existe alias publico de comunidade.
-- `/empresas/:state/:city/:district/:slug` permanece como fallback tecnico/legado para empresa.
-- `/gastronomia/:state/:city/:district/:slug` permanece apenas como legado de detalhe gastronomico e canonicaliza para empresa.
+- Comunidade usa `/comunidade/:communitySlug` quando o alias publico e unico.
+- Empresas da comunidade usam `/comunidade/:communitySlug/empresas`.
+- Gastronomia da comunidade usa `/comunidade/:communitySlug/gastronomia`.
+- Empresa e restaurante usam URL publica territorial canonica; contexto comunitario explicito usa `/comunidade/:communitySlug/<modulo>/:slug`.
+- `/empresas/:state/:city/:territory/:slug` e a URL publica canonica de empresa.
+- `/gastronomia/:state/:city/:territory/:slug` so permanece como detalhe
+  publico quando a vertical tiver pagina propria; caso contrario canonicaliza
+  para empresa.
 - `/p/:slug` e mini-site premium; nao e URL publica geral da empresa.
 - Profissional usa `/profissionais/:state/:city/:slug`.
 - Motorista nao tem pagina publica generica.
@@ -24,7 +26,7 @@ Este relatorio historico foi substituido pelo contrato vivo em `docs/ROTAS_PUBLI
 - Business usa `BusinessUrlService`.
 - Gastronomia delega detalhe publico para `BusinessUrlService` via `GastronomyUrlService`.
 - Profissionais usam `ProfessionalUrlService`.
-- Rotas legadas redirecionam/canonicalizam quando existe URL publica preferencial.
+- Rotas legadas redirecionam apenas para a URL publica ou comunitaria explicita definida no SSOT atual.
 
 ## Validacao
 

@@ -68,15 +68,15 @@ export function OrderCard({ order, onViewDetails }: OrderCardProps) {
           {order.order_type === 'delivery' && (
             <div className="flex items-start gap-2 text-sm">
               <MapPin className="w-4 h-4 text-muted-foreground mt-0.5" />
-              <div>
+              <div className="min-w-0">
                 {order.delivery_address ? (
                   <>
-                    <p className="text-muted-foreground">
+                    <p className="text-muted-foreground break-words">
                       {order.delivery_address}
                       {order.delivery_complement && `, ${order.delivery_complement}`}
                     </p>
                     {(order.delivery_neighborhood || order.delivery_city || order.delivery_state) && (
-                      <p className="text-muted-foreground">
+                      <p className="text-muted-foreground break-words">
                         {[order.delivery_neighborhood, order.delivery_city].filter(Boolean).join(' - ')}
                         {order.delivery_state ? `/${order.delivery_state}` : ''}
                       </p>
@@ -113,7 +113,7 @@ export function OrderCard({ order, onViewDetails }: OrderCardProps) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs rounded-lg border bg-muted/30 p-3">
             {order.delivery_courier_cost !== null && (
               <div>
-                <p className="text-muted-foreground">Custo logistica (motoboy)</p>
+                <p className="text-muted-foreground">Custo logistico da entrega</p>
                 <p className="font-medium">{formatBrl(order.delivery_courier_cost)}</p>
               </div>
             )}
@@ -131,7 +131,7 @@ export function OrderCard({ order, onViewDetails }: OrderCardProps) {
         {order.notes && (
           <div className="text-sm p-2 bg-muted rounded">
             <p className="font-medium mb-1">Observações:</p>
-            <p className="text-muted-foreground">{order.notes}</p>
+            <p className="whitespace-pre-wrap break-words text-muted-foreground">{order.notes}</p>
           </div>
         )}
 

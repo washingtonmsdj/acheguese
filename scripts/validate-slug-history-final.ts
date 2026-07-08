@@ -1,5 +1,5 @@
 #!/usr/bin/env tsx
-import { createClient } from '@supabase/supabase-js';
+import { createServiceRoleClient } from './lib/supabase-client';
 
 interface BusinessRow {
   id: string;
@@ -27,11 +27,7 @@ function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-const supabase = createClient(
-  process.env.VITE_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  { db: { schema: 'public' }, auth: { persistSession: false } },
-);
+const supabase = createServiceRoleClient();
 
 async function main() {
   console.log('VALIDACAO REAL: BUSINESS SLUG HISTORY\n');

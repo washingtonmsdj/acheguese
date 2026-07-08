@@ -9,7 +9,6 @@ import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from '@/config/launchSc
 import type { Location, TerritorialGroupWithMembers } from '@/core/location/types';
 import {
   MODULE_SLUGS,
-  buildCommunityAliasUrl,
   buildGroupBaseUrl,
   buildModuleTerritoryUrl,
   geoPathToPublicUrl,
@@ -63,21 +62,6 @@ const TERRITORY_SITEMAP_MODULES: readonly TerritorySitemapModule[] = [
   },
 ];
 
-const COMMUNITY_ALIAS_SITEMAP_SUFFIXES: readonly {
-  suffix: string;
-  surface: LaunchSurfaceKey;
-  changefreq: SitemapUrl['changefreq'];
-  priority: number;
-}[] = [
-  { suffix: 'empresas', surface: 'business', changefreq: 'daily', priority: 0.7 },
-  { suffix: 'gastronomia', surface: 'gastronomy', changefreq: 'daily', priority: 0.7 },
-  { suffix: 'servicos', surface: 'services', changefreq: 'daily', priority: 0.7 },
-  { suffix: 'classificados', surface: 'classifieds', changefreq: 'daily', priority: 0.7 },
-  { suffix: 'mapa', surface: 'map', changefreq: 'weekly', priority: 0.6 },
-  { suffix: 'feed', surface: 'community', changefreq: 'hourly', priority: 0.8 },
-  { suffix: 'grupos', surface: 'community', changefreq: 'daily', priority: 0.7 },
-];
-
 function normalizeBaseUrl(value: string): string {
   return value.trim().replace(/\/+$/, "");
 }
@@ -109,25 +93,7 @@ function generateTerritoryUrls(
   baseUrl: string,
   publicPath: string,
   isGroup: boolean,
-  communityAlias?: string | null,
 ): SitemapUrl[] {
-  if (communityAlias) {
-    return [
-      {
-        loc: `${baseUrl}${buildCommunityAliasUrl(communityAlias)}`,
-        changefreq: 'daily',
-        priority: isGroup ? 0.9 : 0.8,
-      },
-      ...COMMUNITY_ALIAS_SITEMAP_SUFFIXES
-        .filter((item) => isLaunchSurfaceEnabled(item.surface))
-        .map((item) => ({
-          loc: `${baseUrl}${buildCommunityAliasUrl(communityAlias, item.suffix)}`,
-          changefreq: item.changefreq,
-          priority: item.priority,
-        })),
-    ];
-  }
-
   const urls: SitemapUrl[] = [
     {
       loc: `${baseUrl}${publicPath}`,
@@ -145,16 +111,6 @@ function generateTerritoryUrls(
   });
 
   return urls;
-}
-
-function getDistrictAliasFromPublicPath(publicPath: string): string | null {
-  const parts = publicPath.split('/').filter(Boolean);
-  return parts.length === 3 ? parts[2] : null;
-}
-
-function incrementAliasCount(counts: Map<string, number>, alias: string | null | undefined) {
-  if (!alias) return;
-  counts.set(alias, (counts.get(alias) ?? 0) + 1);
 }
 
 export function generateSitemap(
@@ -186,22 +142,6 @@ export function generateSitemap(
     });
   });
 
-  const aliasCounts = new Map<string, number>();
-  locations
-    .filter((location) => location.status === 'active' && location.type === 'district')
-    .forEach((location) => {
-      incrementAliasCount(
-        aliasCounts,
-        getDistrictAliasFromPublicPath(geoPathToPublicUrl(location.geographic_path)),
-      );
-    });
-  groups
-    .filter((group) => group.status === 'active')
-    .forEach((group) => incrementAliasCount(aliasCounts, group.slug));
-
-  const getUniqueAlias = (alias: string | null | undefined) =>
-    alias && aliasCounts.get(alias) === 1 ? alias : null;
-
   locations
     .filter((location) => location.status === 'active')
     .forEach((location) => {
@@ -211,9 +151,6 @@ export function generateSitemap(
           normalizedBaseUrl,
           publicPath,
           false,
-          location.type === 'district'
-            ? getUniqueAlias(getDistrictAliasFromPublicPath(publicPath))
-            : null,
         ),
       );
     });
@@ -230,7 +167,6 @@ export function generateSitemap(
             normalizedBaseUrl,
             groupPath,
             true,
-            getUniqueAlias(group.slug),
           ),
         );
       }

@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase";
 import { selectLooseRows } from "@/integrations/supabase";
+import { invokeSupabaseBroker } from "@/core/infrastructure/edge-functions/edgeFunctionBroker";
 import { SessionService } from "@/core/session/services/SessionService";
 import { PublicIdentityService } from "@/core/public-identity";
 import type {
@@ -15,6 +16,13 @@ import { parseRequestCommunicationChannelInput } from "../domain/requestChannelS
 
 type RpcResult<T> = { data: T | null; error: { message?: string } | null };
 type RpcPayload = Record<string, unknown>;
+type CommunicationRpcAction =
+  | "requestChannel"
+  | "createPublication"
+  | "updateDraftPublication"
+  | "publishPublication";
+
+const COMMUNICATION_RPC_FUNCTION = "communication-rpc";
 
 function dbError(error: unknown, fallback: string): Error {
   if (error && typeof error === "object" && "message" in error) {
@@ -32,6 +40,19 @@ async function callLooseRpc<T>(functionName: string, params?: RpcPayload): Promi
   if (result.error) throw dbError(result.error, `RPC ${functionName} failed`);
   if (result.data === null) throw new Error(`RPC ${functionName} returned no data`);
   return result.data;
+}
+
+async function invokeCommunicationRpc<T>(
+  action: CommunicationRpcAction,
+  params: Record<string, unknown>,
+): Promise<T> {
+  return invokeSupabaseBroker<T, CommunicationRpcAction>({
+    action,
+    functionName: COMMUNICATION_RPC_FUNCTION,
+    noDataMessage: `Communication action ${action} returned no data`,
+    params,
+    serviceName: "CommunicationTerritorialService",
+  });
 }
 
 async function selectRows<TRow>(
@@ -64,15 +85,15 @@ function attachPublicationRelations(
 export class CommunicationTerritorialService {
   static async requestChannel(input: RequestCommunicationChannelInput): Promise<{ request_id: string; status: string }> {
     const sanitizedInput = parseRequestCommunicationChannelInput(input);
-    return callLooseRpc("request_communication_channel", { payload: sanitizedInput });
+    return invokeCommunicationRpc("requestChannel", { payload: sanitizedInput });
   }
 
   static async createPublication(input: CreateCommunicationPublicationInput): Promise<{ publication_id: string; status: string }> {
-    return callLooseRpc("create_communication_publication", { payload: input });
+    return invokeCommunicationRpc("createPublication", { payload: input });
   }
 
   static async publishPublication(publicationId: string): Promise<{ publication_id: string; status: string }> {
-    return callLooseRpc("publish_communication_publication", { publication_id: publicationId });
+    return invokeCommunicationRpc("publishPublication", { publicationId });
   }
 
   static async updateDraftPublication(input: {
@@ -87,8 +108,8 @@ export class CommunicationTerritorialService {
     media?: Record<string, unknown>;
   }): Promise<{ publication_id: string; status: string }> {
     const { publication_id, ...payload } = input;
-    return callLooseRpc("update_communication_publication_draft", {
-      publication_id,
+    return invokeCommunicationRpc("updateDraftPublication", {
+      publicationId: publication_id,
       payload,
     });
   }

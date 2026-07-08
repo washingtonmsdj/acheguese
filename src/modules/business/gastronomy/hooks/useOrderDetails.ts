@@ -62,7 +62,8 @@ export function useOrderDetails(orderId: string) {
   // Mutation: Atualizar notas internas
   const updateNotesMutation = useMutation({
     mutationFn: async (notes: string) => {
-      const result = await OrderService.updateInternalNotes(orderId, notes, activeProfile?.id);
+      const actorProfileId = order?.merchant_profile_id || activeProfile?.id;
+      const result = await OrderService.updateInternalNotes(orderId, notes, actorProfileId);
       if (result.error) throw new Error(result.error);
       return result.data;
     },

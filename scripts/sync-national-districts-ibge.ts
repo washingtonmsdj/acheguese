@@ -1,9 +1,7 @@
-import { config } from "dotenv";
 import fetch from "node-fetch";
-import { createClient } from "@supabase/supabase-js";
+import { createServiceRoleClient, loadSupabaseScriptEnv } from "./lib/supabase-client";
 
-config({ path: ".env.local", override: false });
-config({ path: ".env", override: false });
+loadSupabaseScriptEnv();
 
 type JsonObject = Record<string, unknown>;
 
@@ -38,8 +36,6 @@ interface DistrictPayload {
   metadata: JsonObject;
 }
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL ?? "";
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
 const IBGE_DISTRICTS_URL = readRequiredEnv("IBGE_DISTRICTS_URL");
 const NOMINATIM_BASE_URL = readRequiredHttpsBaseUrl("NOMINATIM_BASE_URL");
 const NOMINATIM_USER_AGENT = readRequiredEnv("NOMINATIM_USER_AGENT");
@@ -47,15 +43,7 @@ const NOMINATIM_DEFAULT_FORMAT = readRequiredEnv("NOMINATIM_DEFAULT_FORMAT");
 const NOMINATIM_DEFAULT_LIMIT = readRequiredEnv("NOMINATIM_DEFAULT_LIMIT");
 const NOMINATIM_DEFAULT_COUNTRY_NAME = readRequiredEnv("NOMINATIM_DEFAULT_COUNTRY_NAME");
 
-if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
-  throw new Error(
-    "Defina VITE_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY.",
-  );
-}
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
-  auth: { autoRefreshToken: false, persistSession: false },
-});
+const supabase = createServiceRoleClient();
 
 function readRequiredEnv(name: string): string {
   const value = process.env[name]?.trim();
@@ -275,9 +263,10 @@ async function run(): Promise<void> {
     const ufSlug = String(row["UF-sigla"]).toLowerCase();
     const districtName = String(row["distrito-nome"]).trim();
 
-    let city =
+    let city: LocationRow | null =
       cityByIbgeCode.get(ibgeMunicipioId) ??
-      cityByStateAndName.get(`${ufSlug}:${normalizeText(String(row["municipio-nome"]))}`);
+      cityByStateAndName.get(`${ufSlug}:${normalizeText(String(row["municipio-nome"]))}`) ??
+      null;
 
     if (!city) {
       city = await resolveMissingCity(

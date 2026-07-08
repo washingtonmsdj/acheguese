@@ -20,7 +20,9 @@ export type PostType =
   | "favor"
   | "desapego"
   | "achados"
-  | "civic_report";
+  | "civic_report"
+  | "post"
+  | "ride_share";
 
 export type FeedContext = "all" | "my_posts" | "saved";
 

@@ -38,15 +38,6 @@ import type {
 } from "../order/types";
 import { OrderDraftService } from "../order/OrderDraftService";
 import { PaymentContextService } from "../payment-context/PaymentContextService";
-
-type OrderDeliveryRpcClient = {
-  rpc<T>(fn: string, params?: Record<string, unknown>): Promise<{
-    data: T | null;
-    error: { message?: string | null } | null;
-  }>;
-};
-
-const orderDeliveryRpc = supabase as unknown as OrderDeliveryRpcClient;
 import {
   FINANCIAL_STATUS,
   PAYMENT_MODE,
@@ -55,6 +46,7 @@ import {
 import type { DeliveryProof } from "../proof-of-delivery/types";
 import { LOGISTICS_STATUS, type LogisticsStatus } from "../logistics/types";
 import { SettlementContextService } from "../settlement-context/SettlementContextService";
+import { DeliveryRpcService, type DeliveryRpcAction } from "./DeliveryRpcService";
 import { OrderDeliveryNotificationService } from "./OrderDeliveryNotificationService";
 import type { OrderFinancialBreakdown } from "../settlement-context/types";
 
@@ -63,17 +55,17 @@ const ORDER_ITEMS_TABLE = "order_items";
 const ORDER_TIMELINE_TABLE = "order_timeline_events";
 const DELIVERY_OCCURRENCES_TABLE = "delivery_occurrences";
 
-const DELIVERY_RPCS = {
-  CREATE_ORDER: "delivery_create_order",
-  TRANSITION_LOGISTICS_STATUS: "delivery_transition_logistics_status",
-  MARK_PICKED_UP: "delivery_mark_picked_up",
-  ATTACH_DELIVERY_PROOF: "delivery_attach_delivery_proof",
-  MARK_DELIVERED: "delivery_mark_delivered",
-  TRANSITION_FINANCIAL_STATUS: "delivery_transition_financial_status",
-  UPDATE_ORDER_NOTES: "delivery_update_order_notes",
-  UPDATE_ORDER_SOURCE_METADATA: "delivery_update_order_source_metadata",
-  REPORT_OCCURRENCE: "delivery_report_occurrence",
-  RESOLVE_OCCURRENCE: "delivery_resolve_occurrence",
+const DELIVERY_ACTIONS = {
+  CREATE_ORDER: "createOrder",
+  TRANSITION_LOGISTICS_STATUS: "transitionLogisticsStatus",
+  MARK_PICKED_UP: "markPickedUp",
+  ATTACH_DELIVERY_PROOF: "attachDeliveryProof",
+  MARK_DELIVERED: "markDelivered",
+  TRANSITION_FINANCIAL_STATUS: "transitionFinancialStatus",
+  UPDATE_ORDER_NOTES: "updateOrderNotes",
+  UPDATE_ORDER_SOURCE_METADATA: "updateOrderSourceMetadata",
+  REPORT_OCCURRENCE: "reportOccurrence",
+  RESOLVE_OCCURRENCE: "resolveOccurrence",
 } as const;
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -90,7 +82,9 @@ function asProof(value: unknown): DeliveryProof | null {
   return value as DeliveryProof;
 }
 
-function parseFinancialBreakdown(row: Record<string, unknown>): OrderFinancialBreakdown {
+function parseFinancialBreakdown(
+  row: Record<string, unknown>,
+): OrderFinancialBreakdown {
   return {
     items_total: Number(row.items_total ?? 0),
     delivery_fee: Number(row.delivery_fee ?? 0),
@@ -113,7 +107,8 @@ function parseFinancialBreakdown(row: Record<string, unknown>): OrderFinancialBr
 
 function asSourceContext(row: Record<string, unknown>): OrderSourceContext {
   return {
-    source_type: (row.source_type as OrderSourceContext["source_type"]) ?? "manual",
+    source_type:
+      (row.source_type as OrderSourceContext["source_type"]) ?? "manual",
     source_id: (row.source_id as string | null) ?? null,
     source_reference: (row.source_reference as string | null) ?? null,
     source_metadata: asRecord(row.source_metadata),
@@ -197,10 +192,12 @@ function asTimelineEvent(row: Record<string, unknown>): OrderTimelineEvent {
     event_type: String(row.event_type),
     from_logistics_status:
       (row.from_logistics_status as LogisticsStatus | null) ?? null,
-    to_logistics_status: (row.to_logistics_status as LogisticsStatus | null) ?? null,
+    to_logistics_status:
+      (row.to_logistics_status as LogisticsStatus | null) ?? null,
     from_financial_status:
       (row.from_financial_status as FinancialStatus | null) ?? null,
-    to_financial_status: (row.to_financial_status as FinancialStatus | null) ?? null,
+    to_financial_status:
+      (row.to_financial_status as FinancialStatus | null) ?? null,
     actor_profile_id: (row.actor_profile_id as string | null) ?? null,
     actor_role: (row.actor_role as OrderActorRole) ?? "system",
     reason: (row.reason as string | null) ?? null,
@@ -213,11 +210,13 @@ function asOccurrence(row: Record<string, unknown>): DeliveryOccurrence {
   return {
     id: String(row.id),
     order_id: String(row.order_id),
-    occurrence_type: row.occurrence_type as DeliveryOccurrence["occurrence_type"],
+    occurrence_type:
+      row.occurrence_type as DeliveryOccurrence["occurrence_type"],
     severity: row.severity as DeliveryOccurrence["severity"],
     status: row.status as DeliveryOccurrence["status"],
     description: String(row.description),
-    reported_by_profile_id: (row.reported_by_profile_id as string | null) ?? null,
+    reported_by_profile_id:
+      (row.reported_by_profile_id as string | null) ?? null,
     resolution_notes: (row.resolution_notes as string | null) ?? null,
     metadata: asRecord(row.metadata),
     occurred_at: String(row.occurred_at),
@@ -228,12 +227,29 @@ function asOccurrence(row: Record<string, unknown>): DeliveryOccurrence {
 }
 
 function toErrorMessage(error: unknown): string {
+  if (error && typeof error === "object") {
+    const code =
+      "code" in error && typeof error.code === "string" ? error.code : null;
+    const message =
+      "message" in error && typeof error.message === "string"
+        ? error.message
+        : null;
+
+    if (code === "PGRST203" && message?.includes("delivery_create_order")) {
+      return "Checkout indisponivel temporariamente. A migracao mais recente de pedidos precisa ser aplicada no backend.";
+    }
+
+    if (message) return message;
+  }
   if (error instanceof Error) return error.message;
   if (typeof error === "string") return error;
   return "Erro inesperado no modulo de pedidos/entregas.";
 }
 
-function normalizeRpcRow(data: unknown, rpcName: string): Record<string, unknown> {
+function normalizeRpcRow(
+  data: unknown,
+  rpcName: string,
+): Record<string, unknown> {
   const row = Array.isArray(data) ? data[0] : data;
   if (!row || typeof row !== "object" || Array.isArray(row)) {
     throw new Error(`Resposta invalida do RPC ${rpcName}.`);
@@ -256,6 +272,26 @@ function normalizeOrderItemsInput(
 }
 
 export class OrderDeliverySSOTService {
+  private static notifyBestEffort(
+    label: string,
+    orderId: string,
+    taskFactory: () => Promise<void>,
+  ): void {
+    try {
+      void taskFactory().catch((error) => {
+        logger.warn(`OrderDeliverySSOTService.${label}.notification_failed`, {
+          order_id: orderId,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      });
+    } catch (error) {
+      logger.warn(`OrderDeliverySSOTService.${label}.notification_failed`, {
+        order_id: orderId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
   private static assertCurrentDeliveryModeSupported(
     deliveryMode: OrderRecord["delivery_mode"],
   ): void {
@@ -319,6 +355,31 @@ export class OrderDeliverySSOTService {
     return (data ?? []).map((row: Record<string, unknown>) => asOrderItem(row));
   }
 
+  private static async getOrderItemsByOrderIds(
+    orderIds: string[],
+  ): Promise<Map<string, OrderItemRecord[]>> {
+    const itemsByOrderId = new Map<string, OrderItemRecord[]>();
+    orderIds.forEach((orderId) => itemsByOrderId.set(orderId, []));
+    if (!orderIds.length) return itemsByOrderId;
+
+    const { data, error } = await supabase
+      .from(ORDER_ITEMS_TABLE)
+      .select("*")
+      .in("order_id", orderIds)
+      .order("created_at", { ascending: true });
+
+    if (error) throw error;
+
+    (data ?? []).forEach((row: Record<string, unknown>) => {
+      const item = asOrderItem(row);
+      const list = itemsByOrderId.get(item.order_id) ?? [];
+      list.push(item);
+      itemsByOrderId.set(item.order_id, list);
+    });
+
+    return itemsByOrderId;
+  }
+
   private static async hydrateOrderRecord(
     row: Record<string, unknown>,
   ): Promise<OrderRecord> {
@@ -328,25 +389,19 @@ export class OrderDeliverySSOTService {
   }
 
   private static async invokeOrderRpc(
-    rpcName: string,
+    action: DeliveryRpcAction,
     args: Record<string, unknown>,
   ): Promise<OrderRecord> {
-    const { data, error } = await orderDeliveryRpc.rpc<unknown>(rpcName, args);
-
-    if (error) throw error;
-
-    return this.hydrateOrderRecord(normalizeRpcRow(data, rpcName));
+    const data = await DeliveryRpcService.invoke<unknown>(action, args);
+    return this.hydrateOrderRecord(normalizeRpcRow(data, action));
   }
 
   private static async invokeOccurrenceRpc(
-    rpcName: string,
+    action: DeliveryRpcAction,
     args: Record<string, unknown>,
   ): Promise<DeliveryOccurrence> {
-    const { data, error } = await orderDeliveryRpc.rpc<unknown>(rpcName, args);
-
-    if (error) throw error;
-
-    return asOccurrence(normalizeRpcRow(data, rpcName));
+    const data = await DeliveryRpcService.invoke<unknown>(action, args);
+    return asOccurrence(normalizeRpcRow(data, action));
   }
 
   static async createOrder(
@@ -355,7 +410,8 @@ export class OrderDeliverySSOTService {
     try {
       const actorProfileId = this.requireActorProfileId(input.actor_profile_id);
       const paymentMode = input.payment_mode ?? PAYMENT_MODE.DIRECT_TO_MERCHANT;
-      const deliveryMode = input.delivery_mode ?? DELIVERY_MODE.MERCHANT_OWN_FLEET;
+      const deliveryMode =
+        input.delivery_mode ?? DELIVERY_MODE.MERCHANT_OWN_FLEET;
       const sourceContext = OrderDraftService.normalizeSourceContext(
         input.source_context,
       );
@@ -371,39 +427,44 @@ export class OrderDeliverySSOTService {
         items,
         breakdown.items_total,
       );
-      const initialFinancialStatus = PaymentContextService.resolveInitialFinancialStatus(
-        paymentMode,
-        input.initial_financial_status,
-      );
+      const initialFinancialStatus =
+        PaymentContextService.resolveInitialFinancialStatus(
+          paymentMode,
+          input.initial_financial_status,
+        );
 
       this.assertFinancialStatusSupportedNow(initialFinancialStatus);
 
-      const order = await this.invokeOrderRpc(DELIVERY_RPCS.CREATE_ORDER, {
-        p_customer_profile_id: input.customer_profile_id,
-        p_merchant_profile_id: input.merchant_profile_id,
-        p_courier_profile_id: input.courier_profile_id ?? null,
-        p_payment_mode: paymentMode,
-        p_delivery_mode: deliveryMode,
-        p_financial_status: initialFinancialStatus,
-        p_items_total: breakdown.items_total,
-        p_delivery_fee: breakdown.delivery_fee,
-        p_discount_total: breakdown.discount_total,
-        p_order_total: breakdown.order_total,
-        p_platform_fee_amount: breakdown.platform_fee_amount,
-        p_merchant_net_amount: breakdown.merchant_net_amount,
-        p_courier_amount: breakdown.courier_amount,
-        p_source_type: sourceContext.source_type,
-        p_source_id: sourceContext.source_id ?? null,
-        p_source_reference: sourceContext.source_reference ?? null,
-        p_source_metadata: sourceContext.source_metadata ?? {},
-        p_order_items: items,
-        p_payment_method: input.payment_method ?? null,
-        p_external_payment_reference: input.external_payment_reference ?? null,
-        p_notes: input.notes ?? null,
-        p_actor_profile_id: actorProfileId,
+      const order = await this.invokeOrderRpc(DELIVERY_ACTIONS.CREATE_ORDER, {
+        customerProfileId: input.customer_profile_id,
+        merchantProfileId: input.merchant_profile_id,
+        courierProfileId: input.courier_profile_id ?? null,
+        paymentMode,
+        deliveryMode,
+        financialStatus: initialFinancialStatus,
+        itemsTotal: breakdown.items_total,
+        deliveryFee: breakdown.delivery_fee,
+        discountTotal: breakdown.discount_total,
+        orderTotal: breakdown.order_total,
+        platformFeeAmount: breakdown.platform_fee_amount,
+        merchantNetAmount: breakdown.merchant_net_amount,
+        courierAmount: breakdown.courier_amount,
+        sourceType: sourceContext.source_type,
+        sourceId: sourceContext.source_id ?? null,
+        sourceReference: sourceContext.source_reference ?? null,
+        sourceMetadata: sourceContext.source_metadata ?? {},
+        orderItems: items,
+        paymentMethod: input.payment_method ?? null,
+        externalPaymentReference: input.external_payment_reference ?? null,
+        notes: input.notes ?? null,
+        actorProfileId,
       });
 
-      await OrderDeliveryNotificationService.notifyOrderCreated(order);
+      this.notifyBestEffort(
+        "createOrder",
+        order.id,
+        () => OrderDeliveryNotificationService.notifyOrderCreated(order),
+      );
       return { success: true, data: order };
     } catch (error) {
       logger.error("OrderDeliverySSOTService.createOrder", error as Error, {
@@ -467,18 +528,23 @@ export class OrderDeliverySSOTService {
 
       if (error) throw error;
 
-      const orders = await Promise.all(
-        ((data ?? []) as Record<string, unknown>[]).map((row) =>
-          this.hydrateOrderRecord(row),
-        ),
+      const rows = (data ?? []) as Record<string, unknown>[];
+      const orderIds = rows.map((row) => String(row.id));
+      const itemsByOrderId = await this.getOrderItemsByOrderIds(orderIds);
+      const orders = rows.map((row) =>
+        asOrderRecord(row, itemsByOrderId.get(String(row.id)) ?? []),
       );
 
       return { success: true, data: orders };
     } catch (error) {
-      logger.error("OrderDeliverySSOTService.listOrdersBySource", error as Error, {
-        sourceType,
-        sourceId,
-      });
+      logger.error(
+        "OrderDeliverySSOTService.listOrdersBySource",
+        error as Error,
+        {
+          sourceType,
+          sourceId,
+        },
+      );
       return { success: false, error: toErrorMessage(error) };
     }
   }
@@ -488,17 +554,26 @@ export class OrderDeliverySSOTService {
     try {
       const actorProfileId = this.requireActorProfileId(input.actor_profile_id);
       const order = await this.invokeOrderRpc(
-        DELIVERY_RPCS.TRANSITION_LOGISTICS_STATUS,
+        DELIVERY_ACTIONS.TRANSITION_LOGISTICS_STATUS,
         {
-          p_order_id: input.order_id,
-          p_to_status: input.to_status,
-          p_actor_profile_id: actorProfileId,
-          p_reason: input.reason ?? null,
-          p_metadata: input.metadata ?? {},
+          orderId: input.order_id,
+          toStatus: input.to_status,
+          actorProfileId,
+          reason: input.reason ?? null,
+          metadata: input.metadata ?? {},
         },
       );
 
-      const eventByStatus: Record<LogisticsStatus, "order_accepted" | "order_preparing" | "order_ready_for_pickup" | "courier_picked_up" | "order_delivered" | "delivery_failed" | "order_status_changed"> = {
+      const eventByStatus: Record<
+        LogisticsStatus,
+        | "order_accepted"
+        | "order_preparing"
+        | "order_ready_for_pickup"
+        | "courier_picked_up"
+        | "order_delivered"
+        | "delivery_failed"
+        | "order_status_changed"
+      > = {
         [LOGISTICS_STATUS.PENDING]: "order_status_changed",
         [LOGISTICS_STATUS.ACCEPTED]: "order_accepted",
         [LOGISTICS_STATUS.PREPARING]: "order_preparing",
@@ -512,11 +587,16 @@ export class OrderDeliverySSOTService {
         order.customer_profile_id === actorProfileId
           ? "order_canceled_by_customer"
           : "order_canceled_by_merchant";
-      await OrderDeliveryNotificationService.notifyOrderStatusChanged(
-        order,
-        order.logistics_status === LOGISTICS_STATUS.CANCELED
-          ? canceledEvent
-          : eventByStatus[order.logistics_status] ?? "order_status_changed",
+      this.notifyBestEffort(
+        "transitionLogisticsStatus",
+        order.id,
+        () =>
+          OrderDeliveryNotificationService.notifyOrderStatusChanged(
+          order,
+          order.logistics_status === LOGISTICS_STATUS.CANCELED
+            ? canceledEvent
+            : (eventByStatus[order.logistics_status] ?? "order_status_changed"),
+          ),
       );
       return { success: true, data: order };
     } catch (error) {
@@ -572,21 +652,32 @@ export class OrderDeliverySSOTService {
     reason?: string;
   }): Promise<OrderOperationResult<OrderRecord>> {
     try {
-      const actorProfileId = this.requireActorProfileId(params.actor_profile_id);
-      const order = await this.invokeOrderRpc(DELIVERY_RPCS.MARK_PICKED_UP, {
-        p_order_id: params.order_id,
-        p_actor_profile_id: actorProfileId,
-        p_courier_profile_id: params.courier_profile_id ?? null,
-        p_reason: params.reason ?? null,
+      const actorProfileId = this.requireActorProfileId(
+        params.actor_profile_id,
+      );
+      const order = await this.invokeOrderRpc(DELIVERY_ACTIONS.MARK_PICKED_UP, {
+        orderId: params.order_id,
+        actorProfileId,
+        courierProfileId: params.courier_profile_id ?? null,
+        reason: params.reason ?? null,
       });
 
-      await OrderDeliveryNotificationService.notifyOrderStatusChanged(
-        order,
-        "courier_picked_up",
+      this.notifyBestEffort(
+        "markPickedUp",
+        order.id,
+        () =>
+          OrderDeliveryNotificationService.notifyOrderStatusChanged(
+            order,
+            "courier_picked_up",
+          ),
       );
       return { success: true, data: order };
     } catch (error) {
-      logger.error("OrderDeliverySSOTService.markPickedUp", error as Error, params);
+      logger.error(
+        "OrderDeliverySSOTService.markPickedUp",
+        error as Error,
+        params,
+      );
       return { success: false, error: toErrorMessage(error) };
     }
   }
@@ -596,18 +687,33 @@ export class OrderDeliverySSOTService {
   ): Promise<OrderOperationResult<OrderRecord>> {
     try {
       const actorProfileId = this.requireActorProfileId(input.actor_profile_id);
-      const order = await this.invokeOrderRpc(DELIVERY_RPCS.ATTACH_DELIVERY_PROOF, {
-        p_order_id: input.order_id,
-        p_actor_profile_id: actorProfileId,
-        p_proof: normalizeProofInput(input.proof),
-      });
+      const order = await this.invokeOrderRpc(
+        DELIVERY_ACTIONS.ATTACH_DELIVERY_PROOF,
+        {
+          orderId: input.order_id,
+          actorProfileId,
+          proof: normalizeProofInput(input.proof),
+        },
+      );
 
-      await OrderDeliveryNotificationService.notifyOrderStatusChanged(order, "delivery_proof_attached");
+      this.notifyBestEffort(
+        "attachDeliveryProof",
+        order.id,
+        () =>
+          OrderDeliveryNotificationService.notifyOrderStatusChanged(
+            order,
+            "delivery_proof_attached",
+          ),
+      );
       return { success: true, data: order };
     } catch (error) {
-      logger.error("OrderDeliverySSOTService.attachDeliveryProof", error as Error, {
-        order_id: input.order_id,
-      });
+      logger.error(
+        "OrderDeliverySSOTService.attachDeliveryProof",
+        error as Error,
+        {
+          order_id: input.order_id,
+        },
+      );
       return { success: false, error: toErrorMessage(error) };
     }
   }
@@ -620,16 +726,21 @@ export class OrderDeliverySSOTService {
   }): Promise<OrderOperationResult<OrderRecord>> {
     try {
       const actorProfileId = this.requireActorProfileId(input.actor_profile_id);
-      const order = await this.invokeOrderRpc(DELIVERY_RPCS.MARK_DELIVERED, {
-        p_order_id: input.order_id,
-        p_actor_profile_id: actorProfileId,
-        p_reason: input.reason ?? null,
-        p_proof: normalizeProofInput(input.proof),
+      const order = await this.invokeOrderRpc(DELIVERY_ACTIONS.MARK_DELIVERED, {
+        orderId: input.order_id,
+        actorProfileId,
+        reason: input.reason ?? null,
+        proof: normalizeProofInput(input.proof),
       });
 
-      await OrderDeliveryNotificationService.notifyOrderStatusChanged(
-        order,
-        "order_delivered",
+      this.notifyBestEffort(
+        "markDelivered",
+        order.id,
+        () =>
+          OrderDeliveryNotificationService.notifyOrderStatusChanged(
+            order,
+            "order_delivered",
+          ),
       );
       return { success: true, data: order };
     } catch (error) {
@@ -674,13 +785,13 @@ export class OrderDeliverySSOTService {
       this.assertFinancialStatusSupportedNow(input.to_status);
 
       const order = await this.invokeOrderRpc(
-        DELIVERY_RPCS.TRANSITION_FINANCIAL_STATUS,
+        DELIVERY_ACTIONS.TRANSITION_FINANCIAL_STATUS,
         {
-          p_order_id: input.order_id,
-          p_to_status: input.to_status,
-          p_actor_profile_id: actorProfileId,
-          p_reason: input.reason ?? null,
-          p_metadata: input.metadata ?? {},
+          orderId: input.order_id,
+          toStatus: input.to_status,
+          actorProfileId,
+          reason: input.reason ?? null,
+          metadata: input.metadata ?? {},
         },
       );
 
@@ -702,21 +813,30 @@ export class OrderDeliverySSOTService {
       const actorProfileId = this.requireActorProfileId(input.actor_profile_id);
       const normalizedNotes = input.notes.trim();
       if (!normalizedNotes) {
-        throw new Error("notes e obrigatorio para atualizar observacoes do pedido.");
+        throw new Error(
+          "notes e obrigatorio para atualizar observacoes do pedido.",
+        );
       }
 
-      const order = await this.invokeOrderRpc(DELIVERY_RPCS.UPDATE_ORDER_NOTES, {
-        p_order_id: input.order_id,
-        p_notes: normalizedNotes,
-        p_actor_profile_id: actorProfileId,
-        p_metadata: input.metadata ?? {},
-      });
+      const order = await this.invokeOrderRpc(
+        DELIVERY_ACTIONS.UPDATE_ORDER_NOTES,
+        {
+          orderId: input.order_id,
+          notes: normalizedNotes,
+          actorProfileId,
+          metadata: input.metadata ?? {},
+        },
+      );
 
       return { success: true, data: order };
     } catch (error) {
-      logger.error("OrderDeliverySSOTService.updateOrderNotes", error as Error, {
-        order_id: input.order_id,
-      });
+      logger.error(
+        "OrderDeliverySSOTService.updateOrderNotes",
+        error as Error,
+        {
+          order_id: input.order_id,
+        },
+      );
 
       const message =
         typeof error === "object" &&
@@ -748,19 +868,23 @@ export class OrderDeliverySSOTService {
     try {
       const actorProfileId = this.requireActorProfileId(input.actor_profile_id);
       const order = await this.invokeOrderRpc(
-        DELIVERY_RPCS.UPDATE_ORDER_SOURCE_METADATA,
+        DELIVERY_ACTIONS.UPDATE_ORDER_SOURCE_METADATA,
         {
-          p_order_id: input.order_id,
-          p_actor_profile_id: actorProfileId,
-          p_metadata_patch: input.metadata_patch ?? {},
+          orderId: input.order_id,
+          actorProfileId,
+          metadataPatch: input.metadata_patch ?? {},
         },
       );
 
       return { success: true, data: order };
     } catch (error) {
-      logger.error("OrderDeliverySSOTService.updateOrderSourceMetadata", error as Error, {
-        order_id: input.order_id,
-      });
+      logger.error(
+        "OrderDeliverySSOTService.updateOrderSourceMetadata",
+        error as Error,
+        {
+          order_id: input.order_id,
+        },
+      );
 
       const message =
         typeof error === "object" &&
@@ -791,22 +915,26 @@ export class OrderDeliverySSOTService {
     try {
       const actorProfileId = this.requireActorProfileId(input.actor_profile_id);
       const occurrence = await this.invokeOccurrenceRpc(
-        DELIVERY_RPCS.REPORT_OCCURRENCE,
+        DELIVERY_ACTIONS.REPORT_OCCURRENCE,
         {
-          p_order_id: input.order_id,
-          p_occurrence_type: input.occurrence_type,
-          p_description: input.description,
-          p_actor_profile_id: actorProfileId,
-          p_severity: (input.severity ?? "medium") as DeliveryOccurrenceSeverity,
-          p_metadata: input.metadata ?? {},
+          orderId: input.order_id,
+          occurrenceType: input.occurrence_type,
+          description: input.description,
+          actorProfileId,
+          severity: (input.severity ?? "medium") as DeliveryOccurrenceSeverity,
+          metadata: input.metadata ?? {},
         },
       );
 
       return { success: true, data: occurrence };
     } catch (error) {
-      logger.error("OrderDeliverySSOTService.reportDeliveryOccurrence", error as Error, {
-        order_id: input.order_id,
-      });
+      logger.error(
+        "OrderDeliverySSOTService.reportDeliveryOccurrence",
+        error as Error,
+        {
+          order_id: input.order_id,
+        },
+      );
       return { success: false, error: toErrorMessage(error) };
     }
   }
@@ -817,12 +945,12 @@ export class OrderDeliverySSOTService {
     try {
       const actorProfileId = this.requireActorProfileId(input.actor_profile_id);
       const occurrence = await this.invokeOccurrenceRpc(
-        DELIVERY_RPCS.RESOLVE_OCCURRENCE,
+        DELIVERY_ACTIONS.RESOLVE_OCCURRENCE,
         {
-          p_order_id: input.order_id,
-          p_occurrence_id: input.occurrence_id,
-          p_actor_profile_id: actorProfileId,
-          p_resolution_notes: input.resolution_notes,
+          orderId: input.order_id,
+          occurrenceId: input.occurrence_id,
+          actorProfileId,
+          resolutionNotes: input.resolution_notes,
         },
       );
 
@@ -880,9 +1008,13 @@ export class OrderDeliverySSOTService {
 
       return { success: true, data: occurrences };
     } catch (error) {
-      logger.error("OrderDeliverySSOTService.listDeliveryOccurrences", error as Error, {
-        orderId,
-      });
+      logger.error(
+        "OrderDeliverySSOTService.listDeliveryOccurrences",
+        error as Error,
+        {
+          orderId,
+        },
+      );
       return { success: false, error: toErrorMessage(error) };
     }
   }

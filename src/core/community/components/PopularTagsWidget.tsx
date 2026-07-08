@@ -10,19 +10,22 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Hash } from "lucide-react";
 import { useTerritoryFilter } from "@/core/location/hooks/useTerritoryFilter";
 import { postService } from "@/core/posts/services";
+import type { TerritoryFilter } from "@/core/location";
 
 interface PopularTagsWidgetProps {
   onTagClick?: (tag: string) => void;
+  territoryFilter?: TerritoryFilter;
 }
 
-export function PopularTagsWidget({ onTagClick }: PopularTagsWidgetProps) {
-  const territoryFilter = useTerritoryFilter();
+export function PopularTagsWidget({ onTagClick, territoryFilter }: PopularTagsWidgetProps) {
+  const fallbackTerritoryFilter = useTerritoryFilter();
+  const activeTerritoryFilter = territoryFilter ?? fallbackTerritoryFilter;
 
   const locationIds = useMemo(() => {
-    if (territoryFilter.scope === "location") return [territoryFilter.location_id];
-    if (territoryFilter.scope === "group") return territoryFilter.location_ids;
+    if (activeTerritoryFilter.scope === "location") return [activeTerritoryFilter.location_id];
+    if (activeTerritoryFilter.scope === "group") return activeTerritoryFilter.location_ids;
     return [];
-  }, [territoryFilter]);
+  }, [activeTerritoryFilter]);
 
   const { data: popularTags, isLoading } = useQuery({
     queryKey: ["popular-tags", locationIds],

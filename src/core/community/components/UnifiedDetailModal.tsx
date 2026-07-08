@@ -43,6 +43,7 @@ import {
   type PostStatus,
   type PostUrgency,
 } from "@/shared/constants/statusConfig";
+import { toast } from "sonner";
 
 /**
  * Modal unificado para visualização de posts e reportes cívicos
@@ -122,6 +123,8 @@ interface UnifiedDetailModalProps {
   onReport?: (id: string) => void;
   onUpvote?: (id: string) => void;
   onTagClick?: (tag: string) => void;
+  canComment?: boolean;
+  commentBlockedMessage?: string;
 }
 
 const PROBLEM_TYPES = {
@@ -162,6 +165,8 @@ export function UnifiedDetailModal({
   onReport,
   onUpvote,
   onTagClick,
+  canComment = true,
+  commentBlockedMessage = "Verifique sua residencia para comentar nesta comunidade.",
 }: UnifiedDetailModalProps) {
   const {
     commentText,
@@ -186,6 +191,14 @@ export function UnifiedDetailModal({
 
   const isCivicReport = content.type === "civic_report";
   const allComments = isPost ? comments : [];
+  const handleCommentSubmitWithAccess = () => {
+    if (!canComment) {
+      toast.info(commentBlockedMessage);
+      return;
+    }
+
+    handleSubmitComment();
+  };
 
   if (isCivicReport && isLoadingReport) {
     return (
@@ -265,9 +278,9 @@ export function UnifiedDetailModal({
           isLiked={state.isLiked}
           isSaved={state.isSaved}
           isProcessing={isProcessing}
-          onLike={likePost}
-          onSave={savePost}
-          onShare={sharePost}
+          onLike={() => (onLike ? onLike(id) : likePost())}
+          onSave={() => (onSave ? onSave(id) : savePost())}
+          onShare={() => (onShare ? onShare(id) : sharePost())}
           onReport={() => onReport?.(id)}
         />
       );
@@ -315,8 +328,10 @@ export function UnifiedDetailModal({
         <CommentInput
           value={commentText}
           onChange={setCommentText}
-          onSubmit={handleSubmitComment}
+          onSubmit={handleCommentSubmitWithAccess}
           isSubmitting={false}
+          disabled={!canComment}
+          placeholder={canComment ? "Escreva um comentario..." : commentBlockedMessage}
         />
       </DialogContent>
     </Dialog>

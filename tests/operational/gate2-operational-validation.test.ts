@@ -10,11 +10,10 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { type SupabaseClient } from '@supabase/supabase-js';
 import { trackingService } from '@/core/tracking/services/TrackingService';
+import { createOperationalAnonClient } from '../helpers/operational-env';
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL!;
-const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY!;
 const RUN_GATE2_REAL_TESTS = process.env.RUN_GATE2_REAL_TESTS === '1';
 const describeGate2 = RUN_GATE2_REAL_TESTS ? describe : describe.skip;
 
@@ -23,7 +22,7 @@ describeGate2('GATE 2: VALIDA!OO OPERACIONAL REAL', () => {
   let testDriverId: string;
 
   beforeAll(async () => {
-    supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    supabase = createOperationalAnonClient();
 
     // Buscar um perfil existente para usar como motorista
     const { data: profiles } = await supabase

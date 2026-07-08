@@ -17,7 +17,10 @@ type CommunityRolloutConfig = Awaited<
   ReturnType<(typeof communityRolloutService)["getCommunityConfig"]>
 >;
 
-export function useCommunityRollout(resolved?: ResolvedTerritory) {
+export function useCommunityRollout(
+  resolved?: ResolvedTerritory,
+  fallbackLocationId?: string | null,
+) {
   const [isActive, setIsActive] = useState<boolean>(false);
   const [rollout, setRollout] = useState<EffectiveRollout | null>(null);
   const [config, setConfig] = useState<CommunityRolloutConfig>(null);
@@ -27,9 +30,10 @@ export function useCommunityRollout(resolved?: ResolvedTerritory) {
   const { activeLocationId } = useCommunityLocation();
 
   const checkRolloutStatus = useCallback(async () => {
+    const locationId = fallbackLocationId ?? activeLocationId;
     const hasContext = resolved
       ? (resolved.kind === "location" || (resolved.kind === "group" && resolved.group.members.length > 0))
-      : !!activeLocationId;
+      : !!locationId;
 
     if (!hasContext) {
       setIsActive(false);
@@ -42,16 +46,24 @@ export function useCommunityRollout(resolved?: ResolvedTerritory) {
 
     setIsLoading(true);
     try {
-      const active = await communityRolloutService.isCommunityActive(resolved);
+      const active = resolved
+        ? await communityRolloutService.isCommunityActive(resolved)
+        : await communityRolloutService.isCommunityActiveForLocation(locationId!);
       setIsActive(active);
 
-      const effectiveRollout = await communityRolloutService.getCommunityRollout(resolved);
+      const effectiveRollout = resolved
+        ? await communityRolloutService.getCommunityRollout(resolved)
+        : await communityRolloutService.getCommunityRolloutForLocation(locationId!);
       setRollout(effectiveRollout);
 
-      const moduleConfig = await communityRolloutService.getCommunityConfig(resolved);
+      const moduleConfig = resolved
+        ? await communityRolloutService.getCommunityConfig(resolved)
+        : await communityRolloutService.getCommunityConfigForLocation(locationId!);
       setConfig(moduleConfig);
 
-      const access = await communityRolloutService.checkAccess(resolved);
+      const access = resolved
+        ? await communityRolloutService.checkAccess(resolved)
+        : await communityRolloutService.checkAccessForLocation(locationId!);
       setAccessCheck(access);
     } catch (error: unknown) {
       logger.error("Error checking community rollout:", error);
@@ -62,7 +74,7 @@ export function useCommunityRollout(resolved?: ResolvedTerritory) {
     } finally {
       setIsLoading(false);
     }
-  }, [activeLocationId, resolved]);
+  }, [activeLocationId, fallbackLocationId, resolved]);
 
   useEffect(() => {
     checkRolloutStatus();

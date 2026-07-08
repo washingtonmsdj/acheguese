@@ -1,6 +1,7 @@
 import React from "react";
 import { Eye, EyeOff, Key, Loader2 } from "lucide-react";
 import {
+  AUTH_PASSWORD_MIN_LENGTH,
   getAuthPasswordRequirementStatus,
 } from "@/core/auth/utils/passwordPolicy";
 import {
@@ -46,7 +47,7 @@ export function PasswordSection({
           Alterar Senha
         </CardTitle>
         <CardDescription>
-          Defina uma senha forte com no minimo 8 caracteres.
+          Defina uma senha forte com no minimo {AUTH_PASSWORD_MIN_LENGTH} caracteres.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -58,7 +59,7 @@ export function PasswordSection({
                 type={showNew ? "text" : "password"}
                 value={newPw}
                 onChange={(event) => onNewPwChange(event.target.value)}
-                placeholder="Minimo 8 caracteres"
+                placeholder={`Minimo ${AUTH_PASSWORD_MIN_LENGTH} caracteres`}
               />
               <button
                 type="button"

@@ -117,10 +117,12 @@ export function ModuleHeader({
         <div className="relative flex-1 min-w-0">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
           <Input
+            type="search"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder={placeholder}
             className="pl-9 pr-8 h-8 sm:h-9 rounded-xl bg-muted/60 border-border/50 text-sm focus:bg-background focus:ring-2 focus:ring-primary/30 w-full"
+            aria-label={`Buscar ${moduleName.toLowerCase()}`}
           />
           {searchQuery && (
             <button

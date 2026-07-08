@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase";
 import { BusinessOwnershipService } from "@/core/business/services/BusinessOwnershipService";
+import { resolveGastronomyBusinessId } from "../../services/resolveGastronomyBusinessId";
 import type {
   PizzaCatalog,
   PizzaDough,
@@ -100,7 +101,8 @@ export interface PizzaMenuItemConfig {
 }
 
 async function requireOwnership(businessId: string, userId: string): Promise<void> {
-  await BusinessOwnershipService.requireOwnership(businessId, userId);
+  const resolvedBusinessId = await resolveGastronomyBusinessId(businessId);
+  await BusinessOwnershipService.requireOwnership(resolvedBusinessId, userId);
 }
 
 async function upsertTable<T>(
@@ -108,9 +110,10 @@ async function upsertTable<T>(
   businessId: string,
   input: Record<string, unknown>,
 ): Promise<T> {
+  const resolvedBusinessId = await resolveGastronomyBusinessId(businessId);
   const payload = {
     ...input,
-    business_id: businessId,
+    business_id: resolvedBusinessId,
     updated_at: new Date().toISOString(),
   };
   const inputId = typeof input.id === "string" ? input.id : null;
@@ -129,10 +132,11 @@ export class PizzaAdminService {
     businessId: string,
     menuItemId: string,
   ): Promise<PizzaMenuItemConfig | null> {
+    const resolvedBusinessId = await resolveGastronomyBusinessId(businessId);
     const { data, error } = await supabase
       .from("pizza_menu_items")
       .select("*")
-      .eq("business_id", businessId)
+      .eq("business_id", resolvedBusinessId)
       .eq("menu_item_id", menuItemId)
       .maybeSingle();
 
@@ -141,32 +145,33 @@ export class PizzaAdminService {
   }
 
   static async getCatalog(businessId: string): Promise<PizzaCatalog> {
+    const resolvedBusinessId = await resolveGastronomyBusinessId(businessId);
     const [configResult, sizesResult, flavorsResult, edgesResult, doughsResult] =
       await Promise.all([
         supabase
           .from("pizza_niche_configs")
           .select("*")
-          .eq("business_id", businessId)
+          .eq("business_id", resolvedBusinessId)
           .maybeSingle(),
         supabase
           .from("pizza_sizes")
           .select("*")
-          .eq("business_id", businessId)
+          .eq("business_id", resolvedBusinessId)
           .order("display_order", { ascending: true }),
         supabase
           .from("pizza_flavors")
           .select("*")
-          .eq("business_id", businessId)
+          .eq("business_id", resolvedBusinessId)
           .order("display_order", { ascending: true }),
         supabase
           .from("pizza_edges")
           .select("*")
-          .eq("business_id", businessId)
+          .eq("business_id", resolvedBusinessId)
           .order("display_order", { ascending: true }),
         supabase
           .from("pizza_doughs")
           .select("*")
-          .eq("business_id", businessId)
+          .eq("business_id", resolvedBusinessId)
           .order("display_order", { ascending: true }),
       ]);
 
@@ -180,7 +185,7 @@ export class PizzaAdminService {
       (configResult.data as PizzaNicheConfig | null) ??
       ({
         id: "local-default",
-        business_id: businessId,
+        business_id: resolvedBusinessId,
         default_price_rule: "highest_price",
         allow_half_half: true,
         allow_three_flavors: true,
@@ -205,12 +210,13 @@ export class PizzaAdminService {
     userId: string,
   ): Promise<PizzaNicheConfig> {
     await requireOwnership(businessId, userId);
+    const resolvedBusinessId = await resolveGastronomyBusinessId(businessId);
 
     const { data, error } = await supabase
       .from("pizza_niche_configs")
       .upsert(
         {
-          business_id: businessId,
+          business_id: resolvedBusinessId,
           default_price_rule: input.default_price_rule ?? "highest_price",
           allow_half_half: input.allow_half_half ?? true,
           allow_three_flavors: input.allow_three_flavors ?? true,
@@ -271,12 +277,13 @@ export class PizzaAdminService {
     userId: string,
   ): Promise<void> {
     await requireOwnership(businessId, userId);
+    const resolvedBusinessId = await resolveGastronomyBusinessId(businessId);
 
     const { error } = await supabase
       .from(table)
       .update({ is_available: isAvailable, updated_at: new Date().toISOString() })
       .eq("id", id)
-      .eq("business_id", businessId);
+      .eq("business_id", resolvedBusinessId);
 
     if (error) throw error;
   }

@@ -10,9 +10,7 @@ vi.mock('@/core/business', () => ({
     getBusinessesByIds: vi.fn(),
   },
   BusinessUrlService: {
-    getCanonicalUrlWithResolvedCommunityAlias: vi.fn((ctx) =>
-      Promise.resolve(`/santa-cruz/${ctx.slug}`),
-    ),
+    getCanonicalUrl: vi.fn((ctx) => `/empresas/ba/salvador/pituba/${ctx.slug}`),
   },
 }));
 
@@ -112,7 +110,7 @@ describe('SearchBusinessesActionHandler', () => {
     expect(results[0].distanceMeters).toBe(500);
   });
 
-  it('deve usar URL publica preferencial para negocio gastronomico', async () => {
+  it('deve usar URL publica canonica para negocio gastronomico', async () => {
     vi.mocked(BusinessService.getBusinessesList).mockResolvedValue({
       businesses: [
         {
@@ -129,10 +127,10 @@ describe('SearchBusinessesActionHandler', () => {
 
     const results = await handler.execute(mockIntent, mockContext);
 
-    expect(results[0].url).toBe('/santa-cruz/restaurante-gourmet');
+    expect(results[0].url).toBe('/empresas/ba/salvador/pituba/restaurante-gourmet');
   });
 
-  it('deve manter URL publica preferencial mesmo quando negocio e premium', async () => {
+  it('deve manter URL publica canonica mesmo quando negocio e premium', async () => {
     vi.mocked(BusinessService.getBusinessesList).mockResolvedValue({
       businesses: [
         {
@@ -149,7 +147,7 @@ describe('SearchBusinessesActionHandler', () => {
 
     const results = await handler.execute(mockIntent, mockContext);
 
-    expect(results[0].url).toBe('/santa-cruz/empresa-premium');
+    expect(results[0].url).toBe('/empresas/ba/salvador/pituba/empresa-premium');
   });
 
   it('deve fazer fallback quando busca geoespacial falhar', async () => {

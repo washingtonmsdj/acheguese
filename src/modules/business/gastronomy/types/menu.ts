@@ -1,8 +1,9 @@
 /**
- * Tipos do sistema de cardápio
+ * Tipos do sistema de cardapio.
  */
 
 import type { Json } from '@/integrations/supabase';
+import type { GastronomyFulfillmentMode } from '../checkout/checkoutRules';
 
 // ============================================================================
 // MENU
@@ -336,6 +337,7 @@ export interface CartItem {
 
 export interface Cart {
   business_id: string; // business_data.id
+  fulfillment_mode?: GastronomyFulfillmentMode;
   items: CartItem[];
   subtotal: number;
   delivery_fee: number;

@@ -11,6 +11,7 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import { SessionService } from '@/core/session/services/SessionService';
+import { BillingEntitlementsRpcService } from './BillingEntitlementsRpcService';
 
 type QueryError = {
   message?: string | null;
@@ -28,14 +29,8 @@ type QueryBuilder<T extends object> = {
   single(): Promise<QuerySingleResult<T>>;
 };
 
-type RpcResult<T> = {
-  data: T | null;
-  error: QueryError | null;
-};
-
 type SubscriptionDbClient = {
   from<T extends object>(table: string): QueryBuilder<T>;
-  rpc<T>(fn: string, params?: Record<string, unknown>): Promise<RpcResult<T>>;
 };
 
 const subscriptionDb = supabase as unknown as SubscriptionDbClient;
@@ -107,16 +102,7 @@ export class SubscriptionService {
       throw new Error('User not authenticated');
     }
 
-    const { data, error } = await subscriptionDb.rpc<ActiveSubscription[]>('get_user_active_subscription', {
-      p_user_id: user.id,
-    });
-
-    if (error) {
-      logger.error('Error fetching active subscription:', error);
-      throw error;
-    }
-
-    return data?.[0] || null;
+    return BillingEntitlementsRpcService.getActiveSubscription();
   }
 
   /**
@@ -129,17 +115,7 @@ export class SubscriptionService {
       return false;
     }
 
-    const { data, error } = await subscriptionDb.rpc<boolean>('user_has_plan', {
-      p_user_id: user.id,
-      p_plan_code: planCode,
-    });
-
-    if (error) {
-      logger.error('Error checking plan:', error);
-      return false;
-    }
-
-    return data || false;
+    return BillingEntitlementsRpcService.hasPlan(planCode);
   }
 
   /**
@@ -152,17 +128,7 @@ export class SubscriptionService {
       return false;
     }
 
-    const { data, error } = await subscriptionDb.rpc<boolean>('user_has_feature', {
-      p_user_id: user.id,
-      p_feature: feature,
-    });
-
-    if (error) {
-      logger.error('Error checking feature:', error);
-      return false;
-    }
-
-    return data || false;
+    return BillingEntitlementsRpcService.hasFeature(feature);
   }
 
   /**
@@ -175,17 +141,7 @@ export class SubscriptionService {
       return 0;
     }
 
-    const { data, error } = await subscriptionDb.rpc<number>('get_user_entitlement_limit', {
-      p_user_id: user.id,
-      p_entitlement: entitlement,
-    });
-
-    if (error) {
-      logger.error('Error getting entitlement limit:', error);
-      return 0;
-    }
-
-    return data || 0;
+    return BillingEntitlementsRpcService.getEntitlementLimit(entitlement);
   }
 
   /**

@@ -9,5 +9,3 @@
 export * from './types';
 export * from './NicheVersioningService';
 export * from './AdminSectionVisibilityService';
-export * from './components';
-export * from './hooks';

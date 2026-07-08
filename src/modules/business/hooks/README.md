@@ -1,51 +1,57 @@
-﻿# Business Hooks
+# Business Hooks
 
-## API pública recomendada
+## API Publica Recomendada
 
 ### `useBusinessList`
-- Lista pública de empresas com paginação infinita.
+- Lista publica de empresas com paginacao infinita.
 - Respeita filtro territorial e usa `BusinessService.getBusinessesList`.
 
 ### `useBusinessById`
 - Carrega uma empresa por `profile_id`.
 - Retorna `{ business, isLoading, isError, error, refetch }`.
 
-### `useBusinessFavorite`
-- Toggle de favorito para uma única empresa.
-- Usa `FavoritesService` do core (compatibilidade atual em `business_favorites` para fluxo de perfil).
+### `useCanonicalBusinessFavorite`
+- Toggle de favorito para uma unica empresa usando `business_data.id`.
+- Usa `BusinessFavoriteService` e a tabela `user_favorite_businesses`.
 
-### `useBusinessFavorites`
-- Lista IDs favoritos do perfil ativo.
-- Atualiza cache de lista e status individual sem duplicar lógica em página.
+### `useCanonicalBusinessFavorites`
+- Lista e alterna favoritos publicos do usuario autenticado.
+- Compartilha cache com `useCanonicalBusinessFavorite`.
 
 ### `useBusinessRecommendation`
-- Toggle de recomendação para uma única empresa.
+- Toggle de recomendacao para uma unica empresa usando `business_data.id`.
 - Usa RPCs SSOT (`is_business_recommended` / `toggle_business_recommendation`).
 
 ### `useBusinessCreate`
-- Criação de empresa.
+- Criacao de empresa.
 
 ### `useBusinessEdit`
-- Edição de empresa.
+- Edicao de empresa.
 
 ### `useBusinessNavigation`
-- Navegação pública para URL canônica.
-- Resolve `geographic_path` por ID/slug quando o chamador não traz o contexto completo.
+- Navegacao publica para URL canonica.
+- Resolve `geographic_path` por ID/slug quando o chamador nao traz o contexto completo.
 
-## Hooks legados removidos
+## Hooks Legados Removidos
 
 - `useBusinessActions`
-  Motivo: duplicava favoritos já cobertos por `useBusinessFavorite`.
+  Motivo: duplicava favoritos ja cobertos pelos hooks canonicos.
+
+- `useBusinessFavorite`
+  Motivo: usava o contrato antigo de `business_favorites` para o fluxo publico.
+
+- `useBusinessFavorites`
+  Motivo: foi substituido por `useCanonicalBusinessFavorites`.
 
 - `useBusinessListSSO`
-  Motivo: mantinha um segundo fluxo de listagem com store paralela e fora do SSOT do módulo.
+  Motivo: mantinha um segundo fluxo de listagem com store paralela e fora do SSOT do modulo.
 
 - `useBusinessQueries`
-  Motivo: repetia hooks públicos com contratos diferentes e criava drift de API.
+  Motivo: repetia hooks publicos com contratos diferentes e criava drift de API.
 
 ## Regras
 
-- Não duplicar favoritos em componentes ou páginas.
-- Não misturar contratos de favoritos: `empresas` (perfil -> empresa) e `gastronomia` (usuário -> empresa) têm backends distintos até convergência total.
-- Não montar URL de empresa manualmente.
-- Não criar nova store para listagem pública de empresas.
+- Nao duplicar favoritos em componentes ou paginas.
+- Nao passar `profiles.id` para favoritos/recomendacoes publicas; use `business_data.id`.
+- Nao montar URL de empresa manualmente.
+- Nao criar nova store para listagem publica de empresas.

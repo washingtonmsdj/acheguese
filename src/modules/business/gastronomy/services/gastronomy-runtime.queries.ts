@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
+import { resolveGastronomyBusinessId } from "./resolveGastronomyBusinessId";
 
 export interface GastronomyQuickMetrics {
   totalViews: number;
@@ -96,10 +97,11 @@ export async function fetchGastronomyQuickMetrics(
 export async function getBusinessCategoryByBusinessDataId(
   businessDataId: string,
 ): Promise<string | null> {
+  const resolvedBusinessId = await resolveGastronomyBusinessId(businessDataId);
   const { data, error } = await supabase
     .from("business_data")
     .select("category")
-    .eq("id", businessDataId)
+    .eq("id", resolvedBusinessId)
     .single();
 
   if (error) {

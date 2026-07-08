@@ -55,6 +55,19 @@ export class TerritorialGroupRepositorySupabase implements ITerritorialGroupRepo
       .filter((location): location is Location => Boolean(location));
   }
 
+  async hasMember(groupId: string, locationId: string): Promise<boolean> {
+    const { data, error } = await this.db
+      .from('territorial_group_members')
+      .select('group_id')
+      .eq('group_id', groupId)
+      .eq('location_id', locationId)
+      .limit(1)
+      .maybeSingle();
+
+    if (error) throw error;
+    return Boolean(data);
+  }
+
   async findGroupsContainingLocation(locationId: string): Promise<TerritorialGroup[]> {
     const { data, error } = await this.db
       .from('territorial_group_members')

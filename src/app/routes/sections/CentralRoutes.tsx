@@ -29,16 +29,20 @@ export function CentralRoutes() {
             <Route element={<P.BusinessDashboardShellPage />}>
               <Route index element={<P.BusinessOverviewPage />} />
               <Route path="dados" element={<P.BusinessDetailsPage />} />
-              <Route path="gastronomia" element={<P.GastronomyDashboardPage />} />
-              <Route path="gastronomia/setup" element={<P.GastronomySetupPage />} />
-              <Route path="gastronomia/cardapio" element={<P.MenuManagementPage />} />
-              <Route path="gastronomia/horarios" element={<P.BusinessHoursPage />} />
-              <Route path="gastronomia/area-entrega" element={<P.DeliveryAreaPage />} />
-              <Route path="gastronomia/pedidos" element={<P.OrdersPage />} />
-              <Route path="gastronomia/pedidos/:orderId" element={<P.OrderDetailsPage />} />
-              <Route path="gastronomia/entregas" element={launchElement("mobility", "Entregas", <P.DeliveryManagementPage />)} />
-              <Route path="gastronomia/analytics" element={launchElement("publicAnalytics", "Analytics", <P.AnalyticsPage />)} />
-              <Route path="gastronomia/promocoes" element={launchElement("coupons", "Promocoes", <P.GastronomyPromotionsPage />)} />
+              <Route path="gastronomia">
+                <Route index element={<P.GastronomyDashboardPage />} />
+                <Route path="setup" element={<P.GastronomySetupPage />} />
+                <Route path="cardapio" element={<P.MenuManagementPage />} />
+                <Route path="horarios" element={<P.BusinessHoursPage />} />
+                <Route path="area-entrega" element={<P.DeliveryAreaPage />} />
+                <Route path="pedidos">
+                  <Route index element={<P.OrdersPage />} />
+                  <Route path=":orderId" element={<P.OrderDetailsPage />} />
+                </Route>
+                <Route path="entregas" element={launchElement("mobility", "Entregas", <P.DeliveryManagementPage />)} />
+                <Route path="analytics" element={launchElement("publicAnalytics", "Analytics", <P.AnalyticsPage />)} />
+                <Route path="promocoes" element={launchElement("coupons", "Promocoes", <P.GastronomyPromotionsPage />)} />
+              </Route>
               <Route path="educacao" element={launchElement("education", "Educação", <P.EducationDashboardPage />)} />
               <Route path="educacao/setup" element={launchElement("education", "Educação", <P.EducationSetupPage />)} />
               <Route path="educacao/programas" element={launchElement("education", "Educação", <P.EducationProgramsPage />)} />

@@ -113,6 +113,7 @@ const city = createLocation({
   name: 'Salvador',
   full_name: 'Salvador, Bahia',
   geographic_path: '/br/ba/salvador',
+  metadata: { ibge_code: '2927408' },
 });
 
 const district = createLocation({
@@ -123,6 +124,17 @@ const district = createLocation({
   name: 'Pituba',
   full_name: 'Pituba, Salvador, Bahia',
   geographic_path: '/br/ba/salvador/pituba',
+});
+
+const conceicaoDoJacuipe = createLocation({
+  id: 'city-conceicao-do-jacuipe',
+  parent_id: state.id,
+  type: LocationType.CITY,
+  slug: 'conceicao-do-jacuipe',
+  name: 'Conceição do Jacuípe',
+  full_name: 'Conceição do Jacuípe, Bahia',
+  geographic_path: '/br/ba/conceicao-do-jacuipe',
+  metadata: { ibge_code: '2908507' },
 });
 
 describe('LocationGeocodingService', () => {
@@ -225,5 +237,42 @@ describe('LocationGeocodingService', () => {
     expect(result?.city).toBe('Salvador');
     expect(result?.state).toBe('Bahia');
     expect(result?.stateCode).toBe('BA');
+  });
+
+  it('reconcilia endereco de Conceicao do Jacuipe pelo CEP e codigo IBGE da cidade', async () => {
+    const service = new LocationGeocodingService({
+      geocoding: createGeocodingEngine({
+        lookupPostalCode: async () => ({
+          postalCode: '44230-000',
+          street: 'Rua Joao Marinho Abade',
+          complement: '',
+          neighborhood: '',
+          city: 'Conceição do Jacuípe',
+          state: 'BA',
+          ibgeCode: '2908507',
+          coordinates: { latitude: -12.3169, longitude: -38.7668 },
+        }),
+      }),
+      locationRepository: new RepositoryStub([state, city, district, conceicaoDoJacuipe]),
+    });
+
+    const result = await service.lookupPostalCode({ postalCode: '44230000' });
+
+    expect(result).not.toBeNull();
+    expect(result?.postalCode).toBe('44230-000');
+    expect(result?.street).toBe('Rua Joao Marinho Abade');
+    expect(result?.territory.status).toBe('partial');
+    expect(result?.territory.reviewStatus).toBe('needs_review');
+    expect(result?.territory.reviewReason).toBe('district_unresolved_for_city');
+    expect(result?.territory.authoritativeLocation?.id).toBe(conceicaoDoJacuipe.id);
+    expect(result?.locationData).toEqual({
+      locationId: conceicaoDoJacuipe.id,
+      locationName: 'Conceição do Jacuípe',
+      locationType: LocationType.CITY,
+    });
+    expect(result?.city).toBe('Conceição do Jacuípe');
+    expect(result?.state).toBe('Bahia');
+    expect(result?.stateCode).toBe('BA');
+    expect(result?.providerAddress.city).toBe('Conceição do Jacuípe');
   });
 });

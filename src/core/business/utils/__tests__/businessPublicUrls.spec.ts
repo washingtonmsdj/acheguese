@@ -1,13 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
-  BUSINESS_PUBLIC_URL_PREVIEW_COMMUNITY_ALIAS,
   BUSINESS_PUBLIC_URL_PREVIEW_SLUG,
   BUSINESS_PREMIUM_ROUTE_CHILD_SEGMENTS,
   buildBusinessCityListingUrl,
   buildBusinessPremiumRoute,
   buildBusinessPremiumUrl,
-  buildBusinessPublicListingUrlFromCommunityAlias,
-  buildBusinessPublicUrlFromCommunityAlias,
   buildBusinessPublicListingUrl,
   buildBusinessPublicUrlFromSegments,
   buildBusinessPublicUrlFromTerritory,
@@ -19,12 +16,6 @@ describe('businessPublicUrls', () => {
     expect(
       buildBusinessPublicUrlFromTerritory('/br/ba/salvador/rio-vermelho', 'cafe-central'),
     ).toBe('/empresas/ba/salvador/rio-vermelho/cafe-central');
-  });
-
-  it('builds canonical short business URLs from community aliases', () => {
-    expect(
-      buildBusinessPublicUrlFromCommunityAlias('santa-cruz', 'padaria-x'),
-    ).toBe('/santa-cruz/padaria-x');
   });
 
   it('builds fallback territorial business URLs from explicit territory segments', () => {
@@ -41,9 +32,6 @@ describe('businessPublicUrls', () => {
   it('builds city and district listings through the same module slug SSOT', () => {
     expect(buildBusinessCityListingUrl('ba', 'salvador')).toBe('/empresas/ba/salvador');
     expect(
-      buildBusinessPublicListingUrlFromCommunityAlias('santa-cruz'),
-    ).toBe('/santa-cruz/empresas');
-    expect(
       buildBusinessPublicListingUrl({
         state: 'ba',
         city: 'salvador',
@@ -53,9 +41,8 @@ describe('businessPublicUrls', () => {
   });
 
   it('builds business identity preview with centralized placeholders', () => {
-    expect(BUSINESS_PUBLIC_URL_PREVIEW_COMMUNITY_ALIAS).toBe(':comunidade');
     expect(buildBusinessPublicUrlPreview(BUSINESS_PUBLIC_URL_PREVIEW_SLUG)).toBe(
-      '/:comunidade/seu-link',
+      '/empresas/:uf/:cidade/:bairro/seu-link',
     );
   });
 

@@ -28,7 +28,10 @@ interface QueryResult<T> {
 }
 
 interface QueryBuilder<TRow> extends PromiseLike<QueryResult<TRow[]>> {
-  select: (columns: string, options?: { count?: "exact"; head?: boolean }) => QueryBuilder<TRow>;
+  select: (
+    columns: string,
+    options?: { count?: "exact"; head?: boolean },
+  ) => QueryBuilder<TRow>;
   eq: (column: string, value: unknown) => QueryBuilder<TRow>;
   in: (column: string, values: unknown[]) => QueryBuilder<TRow>;
   or: (filters: string) => QueryBuilder<TRow>;
@@ -37,7 +40,10 @@ interface QueryBuilder<TRow> extends PromiseLike<QueryResult<TRow[]>> {
   gte: (column: string, value: string | number) => QueryBuilder<TRow>;
   lte: (column: string, value: string | number) => QueryBuilder<TRow>;
   lt: (column: string, value: string | number) => QueryBuilder<TRow>;
-  order: (column: string, options?: { ascending?: boolean }) => QueryBuilder<TRow>;
+  order: (
+    column: string,
+    options?: { ascending?: boolean },
+  ) => QueryBuilder<TRow>;
   limit: (value: number) => QueryBuilder<TRow>;
   range: (from: number, to: number) => QueryBuilder<TRow>;
   single: () => Promise<QueryResult<TRow>>;
@@ -161,7 +167,9 @@ export async function getFeed(params: FeedParams): Promise<FeedResult> {
           .select("id")
           .eq("parent_id", location_id);
 
-        const neighborhoodIds = ((neighborhoods as LocationIdRow[] | null) ?? []).map((n) => n.id);
+        const neighborhoodIds = (
+          (neighborhoods as LocationIdRow[] | null) ?? []
+        ).map((n) => n.id);
         if (neighborhoodIds.length > 0) {
           query = query.in("location_id", [location_id, ...neighborhoodIds]);
         } else {
@@ -174,9 +182,9 @@ export async function getFeed(params: FeedParams): Promise<FeedResult> {
           .select("id")
           .or(`id.eq.${location_id},parent_id.eq.${location_id}`);
 
-        const locationIds = ((cityLocations as LocationIdRow[] | null) ?? []).map((l) => l.id) || [
-          location_id,
-        ];
+        const locationIds = (
+          (cityLocations as LocationIdRow[] | null) ?? []
+        ).map((l) => l.id) || [location_id];
         query = query.in("location_id", locationIds);
       } else {
         // Feed simples: apenas a localização específica
@@ -278,9 +286,16 @@ export async function getPostsByType(
         location:locations(id, name, type, parent_id)
       `,
       )
-      .eq("type", type)
       .eq("is_published", true)
       .order("created_at", { ascending: false });
+
+    if (type === "ride_share") {
+      query = query.or(
+        "type.eq.ride_share,content_intent.eq.ride_share,display_format.eq.ride_share",
+      );
+    } else {
+      query = query.eq("type", type);
+    }
 
     if (filters?.location_id) {
       query = query.eq("location_id", filters.location_id);
@@ -574,7 +589,11 @@ export async function getPostsByCategory(params: {
  */
 export async function getPostBasicInfo(
   postId: string,
-): Promise<{ author_profile_id: string; title?: string; content?: string } | null> {
+): Promise<{
+  author_profile_id: string;
+  title?: string;
+  content?: string;
+} | null> {
   try {
     const { data: post, error } = await postsQueryDb
       .from<PostBasicInfoRow>("posts")
@@ -599,9 +618,7 @@ export async function getPostBasicInfo(
 /**
  * Busca apenas o author_profile_id de um post
  */
-export async function getPostAuthorId(
-  postId: string,
-): Promise<string | null> {
+export async function getPostAuthorId(postId: string): Promise<string | null> {
   try {
     const { data: post, error } = await postsQueryDb
       .from<Pick<PostBasicInfoRow, "author_profile_id">>("posts")
@@ -614,7 +631,10 @@ export async function getPostAuthorId(
       throw new PostError(error.message, error.code);
     }
 
-    return (post as Pick<PostBasicInfoRow, "author_profile_id"> | null)?.author_profile_id || null;
+    return (
+      (post as Pick<PostBasicInfoRow, "author_profile_id"> | null)
+        ?.author_profile_id || null
+    );
   } catch (error) {
     if (error instanceof PostError) throw error;
 
@@ -736,7 +756,6 @@ export async function getPopularTags(
     throw new PostError("Erro ao buscar tags populares", "FETCH_ERROR");
   }
 }
-
 
 export * from "./posts.media.queries";
 export * from "./posts.alerts.queries";

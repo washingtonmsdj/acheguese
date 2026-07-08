@@ -13,8 +13,11 @@ Centralizar a documentacao viva em `docs/` e manter contratos tecnicos junto do 
 
 ## Estrutura Oficial
 - `docs/`: regras globais, arquitetura, seguranca, manutencao e mapa canonico.
+- `docs/governance/`: autoridades tecnicas ativas, com Security Authority como
+  primeira autoridade operacional.
 - `docs/audits/`: inventario estrutural, relatorio mestre, checklist, quick wins e backlog pos-prontidao.
 - `src/<dominio>/README.md` e `src/<dominio>/docs/`: contratos vivos de dominio.
+- `plans/`: planos de continuidade na raiz do repositorio.
 
 ## Politica
 - Documento ativo global fica em `docs/`.
@@ -28,3 +31,5 @@ Centralizar a documentacao viva em `docs/` e manter contratos tecnicos junto do 
 - Status atual: [STATUS_ATUAL.md](./STATUS_ATUAL.md)
 - Plano executavel atual: [ACAO_EXECUTAVEL_AUDITORIA_HIPERLOCAL.md](./ACAO_EXECUTAVEL_AUDITORIA_HIPERLOCAL.md)
 - Mapa canonico: [CANONICAL_MAP.md](./CANONICAL_MAP.md)
+- Governance Authorities: [governance/AUTHORITIES.md](./governance/AUTHORITIES.md)
+- Security Authority: [governance/security/SECURITY_AUTHORITY.md](./governance/security/SECURITY_AUTHORITY.md)

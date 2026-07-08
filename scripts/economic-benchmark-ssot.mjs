@@ -4,11 +4,16 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import dotenv from "dotenv";
 import pg from "pg";
-import { createClient } from "@supabase/supabase-js";
+import {
+  createSupabaseScriptClient,
+  getSupabaseClientCandidates,
+  loadSupabaseScriptEnv,
+} from "./lib/supabase-client.mjs";
 
 const ROOT = process.cwd();
 const SQL_FILE = "docs/architecture/sql/economic-circulation-performance-check.sql";
 const BENCH_DIR = ".tmp/bench";
+const ENV_FILES = [".env.local", ".env", ".env.production", ".env.remote", ".env.test"];
 const BEFORE_FILE = path.join(BENCH_DIR, "economic-circulation-before.txt");
 const AFTER_FILE = path.join(BENCH_DIR, "economic-circulation-after.txt");
 const SUMMARY_FILE = path.join(BENCH_DIR, "economic-circulation-summary.md");
@@ -60,81 +65,15 @@ function ensurePsqlAvailable() {
 }
 
 function loadEnv() {
-  const envFiles = [".env.local", ".env", ".env.production", ".env.remote", ".env.test"];
-  for (const file of envFiles) {
-    if (fs.existsSync(file)) {
-      dotenv.config({ path: file, override: false });
-    }
-  }
-}
-
-function readEnvVarFromFiles(keys, files) {
-  for (const file of files) {
-    if (!fs.existsSync(file)) continue;
-    const parsed = dotenv.parse(fs.readFileSync(file, "utf8"));
-    for (const key of keys) {
-      const value = parsed[key];
-      if (value && String(value).trim()) {
-        return String(value).trim();
-      }
-    }
-  }
-  return null;
-}
-
-function readAllEnvValuesFromFiles(keys, files) {
-  const values = [];
-  for (const file of files) {
-    if (!fs.existsSync(file)) continue;
-    const parsed = dotenv.parse(fs.readFileSync(file, "utf8"));
-    for (const key of keys) {
-      const value = parsed[key];
-      if (value && String(value).trim()) {
-        values.push(String(value).trim());
-      }
-    }
-  }
-  return Array.from(new Set(values));
+  loadSupabaseScriptEnv(ENV_FILES);
 }
 
 function buildSupabaseApiCandidates(files) {
-  const candidates = [];
-  const seen = new Set();
-
-  const addCandidate = (url, key, source) => {
-    const cleanUrl = String(url || "").trim();
-    const cleanKey = String(key || "").trim();
-    if (!cleanUrl || !cleanKey) return;
-    if (cleanUrl.includes("your-project")) return;
-    const token = `${cleanUrl}::${cleanKey}`;
-    if (seen.has(token)) return;
-    seen.add(token);
-    candidates.push({ url: cleanUrl, key: cleanKey, source });
-  };
-
-  for (const file of files) {
-    if (!fs.existsSync(file)) continue;
-    const parsed = dotenv.parse(fs.readFileSync(file, "utf8"));
-    const fileUrl = parsed.VITE_SUPABASE_URL;
-    const fileKeys = [
-      parsed.SUPABASE_SERVICE_ROLE_KEY,
-      parsed.VITE_SUPABASE_PUBLISHABLE_KEY,
-    ];
-    for (const key of fileKeys) {
-      addCandidate(fileUrl, key, file);
-    }
-  }
-
-  const processUrl = process.env.VITE_SUPABASE_URL;
-  const processKeys = [
-    process.env.SUPABASE_SERVICE_ROLE_KEY,
-    process.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-  ];
-  for (const key of processKeys) {
-    addCandidate(processUrl, key, "process.env");
-  }
-
-  return candidates;
+  return getSupabaseClientCandidates(files).map((candidate) => ({
+    url: candidate.url,
+    key: candidate.key,
+    source: `${candidate.source}:${candidate.kind}`,
+  }));
 }
 
 function ensurePgEnv() {
@@ -335,11 +274,10 @@ async function runBenchmarkWithPg(outputPath) {
 
 async function runBenchmarkWithSupabaseApi(outputPath) {
   loadEnv();
-  const envPriority = [".env.local", ".env", ".env.remote", ".env.production", ".env.test"];
-  const apiCandidates = buildSupabaseApiCandidates(envPriority);
+  const apiCandidates = buildSupabaseApiCandidates(ENV_FILES);
 
   if (apiCandidates.length === 0) {
-    fail("Fallback API indisponivel: VITE_SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY nao configurados.");
+    fail("Fallback API indisponivel: configuracao Supabase administrativa ou publishable ausente.");
   }
 
   let supabase = null;
@@ -363,7 +301,10 @@ async function runBenchmarkWithSupabaseApi(outputPath) {
   };
 
   for (const apiCandidate of apiCandidates) {
-    const candidate = createClient(apiCandidate.url, apiCandidate.key, { auth: { persistSession: false } });
+    const candidate = createSupabaseScriptClient({
+      key: apiCandidate.key,
+      url: apiCandidate.url,
+    });
     const availability = await probeAvailability(candidate);
     const score =
       (availability.workOpportunitiesView || availability.workOpportunitiesTable ? 2 : 0) +

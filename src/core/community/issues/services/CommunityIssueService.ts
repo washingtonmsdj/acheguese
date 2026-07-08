@@ -3,16 +3,17 @@
  *
  * Rules:
  * - No direct database access outside this service.
- * - Creation always goes through the create_community_issue RPC.
+ * - Creation always goes through community-rpc.
  * - Hooks only manage fetch/loading/error state.
  * - This service does not depend on alerts or posts.
  */
 
-import { callRPC, supabase } from "@/integrations/supabase";
+import { supabase } from "@/integrations/supabase";
 import type { Database, Json } from "@/integrations/supabase";
 import type { TerritoryFilter } from "@/core/location/types";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { SessionService } from "@/core/session/services/SessionService";
+import { CommunityRpcService } from "@/core/community/services/CommunityRpcService";
 import { logger } from "@/shared/utils/logger";
 import type {
   CommunityIssuePublic,
@@ -54,11 +55,6 @@ type CommunityIssueUpdateRow = Pick<
 type CommunityIssueSupportInsert = Database["public"]["Tables"]["community_issue_supports"]["Insert"];
 type CommunityIssueReportInsert = Database["public"]["Tables"]["community_issue_reports"]["Insert"];
 type CommunityIssueAuditInsert = Database["public"]["Tables"]["community_issue_audit"]["Insert"];
-
-type CreateCommunityIssueRpcArgs = Extract<
-  Database["public"]["Functions"]["create_community_issue"],
-  { Args: { payload: Json } }
->["Args"];
 
 class CommunityIssueServiceClass {
   private readonly TABLE = "community_issues" as const;
@@ -192,19 +188,9 @@ class CommunityIssueServiceClass {
 
   async createIssue(payload: CreateIssuePayload): Promise<IssueRpcResult> {
     try {
-      const { data, error } = await callRPC<IssueRpcResult>(
-        "create_community_issue",
-        {
-          payload,
-        } as unknown as CreateCommunityIssueRpcArgs,
+      return await CommunityRpcService.createIssue<IssueRpcResult>(
+        payload as unknown as Record<string, unknown>,
       );
-
-      if (error) {
-        logger.error("CommunityIssueService.createIssue RPC error", error);
-        return { error: "internal_error", detail: String(error) };
-      }
-
-      return data ?? { error: "internal_error" };
     } catch (error) {
       logger.error("CommunityIssueService.createIssue", error);
       return { error: "internal_error", detail: String(error) };

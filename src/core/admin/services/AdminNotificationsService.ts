@@ -7,6 +7,7 @@
  */
 
 import { supabase } from "@/integrations/supabase";
+import { invokeNullableSupabaseBroker } from "@/core/infrastructure/edge-functions/edgeFunctionBroker";
 import { logger } from "@/shared/utils/logger";
 import { normalizeNotification } from "@/core/notifications/utils/normalizeNotification";
 import { profileService } from "@/core/profiles/services/ProfileService";
@@ -119,6 +120,26 @@ export interface AdminEmailDeliveryAuditResult {
   total: number;
   page: number;
   totalPages: number;
+}
+
+type AdminNotificationsRpcAction =
+  | "getSettingsStats"
+  | "getSettingsUserIds"
+  | "getUserSettings"
+  | "getChannelStats"
+  | "getTemplateStats"
+  | "getEmailDeliveryAudit";
+
+async function invokeAdminNotificationsRpc<T>(
+  action: AdminNotificationsRpcAction,
+  params: Record<string, unknown> = {},
+): Promise<T | null> {
+  return invokeNullableSupabaseBroker<T, AdminNotificationsRpcAction>({
+    action,
+    functionName: "admin-notifications-rpc",
+    params,
+    serviceName: "AdminNotificationsService",
+  });
 }
 
 async function loadProfilesByUserId(userIds: string[]): Promise<Map<string, AdminProfileSummary>> {
@@ -244,10 +265,7 @@ class AdminNotificationsService {
 
   async getSettingsStats(): Promise<AdminNotificationSettingsStats> {
     try {
-      const { data, error } = await supabase.rpc(
-        "admin_notifications_get_settings_stats",
-      );
-      if (error) throw error;
+      const data = await invokeAdminNotificationsRpc<unknown>("getSettingsStats");
       const row = Array.isArray(data)
         ? (data[0] as Record<string, unknown> | undefined)
         : (data as Record<string, unknown> | null);
@@ -281,12 +299,10 @@ class AdminNotificationsService {
     }
 
     try {
-      const { data, error } = await supabase.rpc(
-        "admin_notifications_get_settings_user_ids",
-        { p_user_ids: userIds },
+      const data = await invokeAdminNotificationsRpc<Array<{ user_id: string }>>(
+        "getSettingsUserIds",
+        { userIds },
       );
-
-      if (error) throw error;
 
       return new Set(
         ((data as Array<{ user_id: string }> | null) || []).map(
@@ -301,12 +317,10 @@ class AdminNotificationsService {
 
   async getUserSettings(userId: string): Promise<Record<string, unknown> | null> {
     try {
-      const { data, error } = await supabase.rpc(
-        "admin_notifications_get_user_settings",
-        { p_user_id: userId },
+      const data = await invokeAdminNotificationsRpc<unknown>(
+        "getUserSettings",
+        { userId },
       );
-
-      if (error) throw error;
       const row = Array.isArray(data)
         ? (data[0] as { settings?: Record<string, unknown> | null } | undefined)
         : (data as { settings?: Record<string, unknown> | null } | null);
@@ -392,10 +406,7 @@ class AdminNotificationsService {
 
   async getChannelStats(): Promise<AdminNotificationChannelStats> {
     try {
-      const { data, error } = await supabase.rpc(
-        "admin_notifications_get_channel_stats",
-      );
-      if (error) throw error;
+      const data = await invokeAdminNotificationsRpc<unknown>("getChannelStats");
 
       const row = Array.isArray(data)
         ? (data[0] as Record<string, unknown> | undefined)
@@ -426,11 +437,10 @@ class AdminNotificationsService {
 
   async getTemplateStats(limit = 10): Promise<AdminNotificationTemplateStat[]> {
     try {
-      const { data, error } = await supabase.rpc(
-        "admin_notifications_get_template_stats",
-        { p_limit: limit },
+      const data = await invokeAdminNotificationsRpc<Record<string, unknown>[]>(
+        "getTemplateStats",
+        { limit },
       );
-      if (error) throw error;
 
       return ((data as Record<string, unknown>[]) || []).map((row) => ({
         template: String(row.template || "sem_template"),
@@ -454,18 +464,16 @@ class AdminNotificationsService {
     try {
       const page = filters.page ?? 1;
       const limit = filters.limit ?? 20;
-      const { data, error } = await supabase.rpc(
-        "admin_notifications_get_delivery_audit",
+      const data = await invokeAdminNotificationsRpc<Record<string, unknown>[]>(
+        "getEmailDeliveryAudit",
         {
-          p_page: page,
-          p_limit: limit,
-          p_template: filters.template || null,
-          p_status: filters.status || null,
-          p_search: filters.search?.trim() || null,
+          page,
+          limit,
+          template: filters.template || null,
+          status: filters.status || null,
+          search: filters.search?.trim() || null,
         },
       );
-
-      if (error) throw error;
 
       const rows = ((data as Record<string, unknown>[]) || []).map((row) => ({
         id: String(row.id),

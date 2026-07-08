@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
 
 const REQUIRED_FILES = [
   'package.json',
@@ -84,7 +85,24 @@ const OPTIONAL_ENV_VARS = [
   'NOMINATIM_REQUEST_DELAY_MS',
 ];
 
-const REQUIRED_SCRIPTS = ['build', 'typecheck:app', 'lint', 'validate:ssot', 'security:validate'];
+const REQUIRED_SCRIPTS = [
+  'build',
+  'typecheck:app',
+  'lint',
+  'validate:deps',
+  'validate:taxonomy',
+  'validate:architecture:incremental',
+  'validate:architecture:governance',
+  'validate:session-context',
+  'validate:ssot',
+  'validate:hardcodes',
+  'validate:upload:ssot',
+  'validate:migrations',
+  'validate:migrations:remote',
+  'validate:security-authority',
+  'security:validate',
+  'security:config:validate',
+];
 const FORBIDDEN_BILLING_ARTIFACTS = [
   'supabase/functions/stripe-webhook/index.ts',
   'supabase/functions/gastronomy-upgrade-plan/index.ts',
@@ -162,6 +180,29 @@ function isTestSourceFile(file) {
 
 function collectRuntimeSourceFiles(root, extensions) {
   return collectSourceFiles(root, extensions).filter((file) => !isTestSourceFile(file));
+}
+
+function runNpmScript(scriptName) {
+  const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+  const result = spawnSync(npmCommand, ['run', scriptName], {
+    cwd: process.cwd(),
+    encoding: 'utf8',
+    shell: process.platform === 'win32',
+  });
+
+  const output = `${result.stdout ?? ''}${result.stderr ?? ''}`.trim();
+  if (result.error) {
+    fail(`falha ao executar ${scriptName}: ${result.error.message}`);
+    return;
+  }
+
+  if (result.status !== 0) {
+    const summary = output.split(/\r?\n/).slice(-12).join('\n');
+    fail(`${scriptName} falhou${summary ? `:\n${summary}` : ''}`);
+    return;
+  }
+
+  ok(`${scriptName} passou`);
 }
 
 console.log('Verificando preparacao para deploy...\n');
@@ -257,6 +298,31 @@ console.log('Billing canonico');
 for (const file of FORBIDDEN_BILLING_ARTIFACTS) {
   existsSync(file) ? fail(`${file} nao deve existir`) : ok(`${file} removido`);
 }
+console.log();
+
+console.log('Arquitetura e SSOT');
+runNpmScript('validate:deps');
+runNpmScript('validate:taxonomy');
+runNpmScript('validate:architecture:incremental');
+runNpmScript('validate:architecture:governance');
+runNpmScript('validate:session-context');
+runNpmScript('validate:ssot');
+runNpmScript('validate:hardcodes');
+runNpmScript('validate:upload:ssot');
+console.log();
+
+console.log('Supabase remoto');
+runNpmScript('validate:migrations');
+runNpmScript('validate:migrations:remote');
+console.log();
+
+console.log('Security Authority');
+runNpmScript('validate:security-authority');
+console.log();
+
+console.log('Seguranca');
+runNpmScript('security:validate');
+runNpmScript('security:config:validate');
 console.log();
 
 console.log('Higiene de runtime');

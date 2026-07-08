@@ -1,62 +1,52 @@
-/**
- * EmpresasLandingPage (REFATORADO)
- *
- * Página de Empresas (Comunidade) - Estilo Nextdoor
- * Mapa, distâncias, recomendações de vizinhos, rotas
- *
- * REFATORAÇÃO: 971 linhas → ~200 linhas (orquestração limpa)
- * SSOT: Todas as sections e componentes tipados
- * Sem gambiarras: Código profissional e modular
- */
-
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useCallback, useState, useMemo, useEffect } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { BadgeCheck, Building2, LayoutList, MapPin, Star, Store, Tag, ThumbsUp, UtensilsCrossed, Wrench } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { CircleUserRound, MapPin, Search, SlidersHorizontal, UserRoundPlus } from "lucide-react";
+import { TERRITORY_CONFIG } from "@/config/territory";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { useBusinessList } from "@/modules/business/hooks/useBusinessList";
+import { useCanonicalBusinessFavorites } from "@/modules/business/hooks/useCanonicalBusinessFavorite";
 import { useBusinessUrls } from "@/modules/business/hooks/useBusinessUrls";
-import { useFriendlyModuleUrls } from '@/core/routing/hooks/useFriendlyModuleUrls';
-import { useTerritorialContextOptional } from '@/core/routing/components/TerritorialLayout';
+import { useFriendlyModuleUrls } from "@/core/routing/hooks/useFriendlyModuleUrls";
+import { useTerritorialContextOptional } from "@/core/routing/components/TerritorialLayout";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { useTerritoryPolygon } from "@/core/maps/hooks/useTerritoryPolygon";
 import { ModuleLocationDialog } from "@/core/location/components/ModuleLocationDialog";
 import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
-import { useTerritoryLabels } from "@/core/location/hooks/useTerritoryLabels";
 import { useNearbyEntities } from "@/core/geospatial/hooks/useSpatialSearch";
 import { useRobustGeolocation } from "@/shared/hooks";
-import { normalizeBusinessCategoryId } from "@/shared/taxonomy/businessCategories";
-
-import heroImg from "@/assets/empresas-hero.jpg";
-import heroImg2 from "@/assets/servicos-hero.jpg";
-import heroImg3 from "@/assets/gastronomy-hero-bg.jpg";
-
+import { Input } from "@/shared/components/ui/input";
 import {
-  EmpresasCategoriasSection,
-  EmpresasHeroSection,
-  EmpresasFiltrosSection,
-  EmpresasStatsSection,
-  EmpresasAtividadeSection,
-  EmpresasMapaSection,
-  EmpresasListaSection,
-  EmpresasRecomendacoesSection,
-  EmpresasBeneficiosSection,
-  EmpresasCTASection,
-} from "@/app/features/business-landing/sections";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/shared/components/ui/sheet";
+import { normalizeBusinessCategoryId } from "@/shared/taxonomy/businessCategories";
 import { EmpresasLandingLayout } from "@/app/features/business-landing/pages/EmpresasLandingLayout";
-import { EmpresasHeader } from "@/app/features/business-landing/components";
 import {
   CATEGORIES,
-  NEIGHBOR_ACTIVITY,
   QUICK_FILTERS,
-  BENEFITS,
+  applyBusinessFilterSet,
+  buildBusinessHighlights,
   getBusinessUrl,
   getTerritoryName,
-  getTerritoryNameShort,
-  getTerritoryPreposition,
+  normalizeNearbyBusiness,
+  normalizeRealBusinessEntry,
+  sortBusinesses,
 } from "@/app/features/business-landing/utils";
-import type { Business } from "@/app/features/business-landing/sections/types";
+import {
+  EmpresasCategoriasSection,
+  EmpresasFiltrosSection,
+  EmpresasHeroSection,
+  EmpresasListaSection,
+  EmpresasRecomendacoesSection,
+} from "@/app/features/business-landing/sections";
+import type { Business, BusinessSortOption, HeroStat } from "@/app/features/business-landing/sections/types";
+import { CategoryCard } from "@/app/features/business-landing/components/cards";
+import { QuickFilterChip } from "@/app/features/business-landing/components/filters/QuickFilterChip";
 import { withQueryParams } from "@/app/pages/CidadeLanding.utils";
 
 interface EmpresasLandingPageProps {
@@ -64,267 +54,160 @@ interface EmpresasLandingPageProps {
   activeMemberIds?: string[];
 }
 
-type NearbyBusinessResult = {
-  id?: string;
-  entity_id?: string;
-  slug?: string;
-  latitude?: number;
-  longitude?: number;
-  distance_meters?: number;
-  entity_data?: {
-    name?: string;
-    category?: string;
-    rating?: number;
-    total_reviews?: number;
-    description?: string;
-    is_premium?: boolean;
-    phone?: string;
-    slug?: string;
-    geographic_path?: string;
-    address?: {
-      latitude?: number;
-      longitude?: number;
-    };
-  };
-};
+function parseInitialSlugs(resolved: ResolvedTerritory | null | undefined) {
+  const geoPath =
+    resolved?.kind === "location"
+      ? resolved.location.geographic_path
+      : resolved?.kind === "group"
+        ? resolved.group.members.at(0)?.geographic_path
+        : null;
 
-type BusinessAddressLike = {
-  latitude?: number;
-  longitude?: number;
-};
+  if (!geoPath) return {};
 
-type BusinessLocationLike = {
-  canonical_lat?: number;
-  canonical_lng?: number;
-};
-
-type CoreBusiness = import("@/core/business/types/Business").Business;
-
-function normalizeNearbyBusiness(result: NearbyBusinessResult): Business {
-  return {
-    id: result.entity_id || result.id || "",
-    name: result.entity_data?.name || "Empresa",
-    category: result.entity_data?.category || "Outros",
-    rating: result.entity_data?.rating || 0,
-    reviews: result.entity_data?.total_reviews || 0,
-    distance: `${((result.distance_meters ?? 0) / 1000).toFixed(1)} km`,
-    walkTime: `${Math.round((result.distance_meters ?? 0) / 80)} min`,
-    description: result.entity_data?.description || "",
-    tags: [],
-    premium: result.entity_data?.is_premium || false,
-    isOpen: true,
-    neighborRecs: 0,
-    lastVisit: "",
-    coords: {
-      lat: result.entity_data?.address?.latitude || result.latitude || 0,
-      lng: result.entity_data?.address?.longitude || result.longitude || 0,
-    },
-    phone: result.entity_data?.phone || "",
-    slug: result.entity_data?.slug || result.slug,
-    is_premium: result.entity_data?.is_premium,
-    geographic_path: result.entity_data?.geographic_path,
-    distanceMeters: result.distance_meters,
-    is_verified: false,
-  };
+  const [, stateSlug = null, citySlug = null, districtSlug = null] = geoPath.split("/").filter(Boolean);
+  return { stateSlug, citySlug, districtSlug };
 }
 
-function normalizeRealBusinessEntry(business: CoreBusiness): Business {
-  const address = business.address as BusinessAddressLike | undefined;
-  const location = business.location as BusinessLocationLike | undefined;
-  const lat =
-    normalizeCoordinate(address?.latitude) ??
-    normalizeCoordinate(location?.canonical_lat) ??
-    0;
-  const lng =
-    normalizeCoordinate(address?.longitude) ??
-    normalizeCoordinate(location?.canonical_lng) ??
-    0;
-
-  return {
-    id: business.id,
-    name: business.name,
-    category: business.category || "Outros",
-    rating: business.rating || 0,
-    reviews: business.total_reviews || 0,
-    distance: "N/A",
-    walkTime: "N/A",
-    description: business.description || "",
-    tags: [],
-    premium: business.is_premium || false,
-    isOpen: true,
-    neighborRecs: 0,
-    lastVisit: "",
-    coords: { lat, lng },
-    phone: business.phone || "",
-    slug: business.slug,
-    is_premium: business.is_premium,
-    geographic_path: business.geographic_path ?? business.location?.geographic_path,
-    is_verified: business.is_verified,
-  };
-}
-
-const COMMUNITY_MODULE_TABS = [
-  { key: "feed", label: "Feed", icon: LayoutList },
-  { key: "business", label: "Empresas", icon: Building2 },
-  { key: "services", label: "Serviços", icon: Wrench },
-  { key: "classifieds", label: "Classificados", icon: Tag },
-  { key: "gastronomy", label: "Gastronomia", icon: UtensilsCrossed },
-  { key: "map", label: "Mapa", icon: MapPin },
-] as const;
-
-function normalizeCoordinate(value: number | null | undefined): number | null {
-  return typeof value === "number" && Number.isFinite(value) ? value : null;
-}
-
-function NeighborhoodBusinessesHero({
-  territoryName,
-  totalBusinesses,
-  openBusinesses,
-  averageRating,
-  nearbyMode,
-  onToggleNearbyMode,
+function LandingTopBar({
+  locationLabel,
+  searchQuery,
+  onSearchChange,
   onOpenLocationDialog,
+  onOpenFilters,
   primaryHref,
   primaryLabel,
   secondaryHref,
-  moduleUrls,
+  secondaryLabel,
 }: {
-  territoryName: string;
-  totalBusinesses: number;
-  openBusinesses: number;
-  averageRating: string;
-  nearbyMode: boolean;
-  onToggleNearbyMode: () => void;
+  locationLabel: string;
+  searchQuery: string;
+  onSearchChange: (value: string) => void;
   onOpenLocationDialog: () => void;
+  onOpenFilters: () => void;
   primaryHref: string;
   primaryLabel: string;
   secondaryHref: string;
-  moduleUrls: ReturnType<typeof useFriendlyModuleUrls>;
+  secondaryLabel: string;
 }) {
-  const moduleLinks = [
-    { ...COMMUNITY_MODULE_TABS[0], href: moduleUrls.community, isActive: false },
-    { ...COMMUNITY_MODULE_TABS[1], href: moduleUrls.business, isActive: true },
-    { ...COMMUNITY_MODULE_TABS[2], href: moduleUrls.services, isActive: false },
-    { ...COMMUNITY_MODULE_TABS[3], href: moduleUrls.classifieds, isActive: false },
-    { ...COMMUNITY_MODULE_TABS[4], href: moduleUrls.gastronomy, isActive: false },
-    { ...COMMUNITY_MODULE_TABS[5], href: moduleUrls.map, isActive: false },
-  ] as const;
-
   return (
-    <section className="max-w-7xl mx-auto w-full px-4 sm:px-6 mt-3">
-      <div className="overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(10,24,32,0.98),rgba(7,17,24,0.98))] text-white shadow-xl shadow-black/10">
-        <div className="border-b border-white/10 px-4 py-3 sm:px-5">
-          <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {moduleLinks.map((item) => {
-              const Icon = item.icon;
-              return item.isActive ? (
-                <span
-                  key={item.key}
-                  className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border border-teal-300/35 bg-teal-300/12 px-4 text-xs font-semibold text-teal-100"
-                >
-                  <Icon className="h-4 w-4" />
-                  {item.label}
-                </span>
-              ) : (
-                <Link
-                  key={item.key}
-                  to={item.href}
-                  className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 text-xs font-semibold text-white/65 transition-colors hover:border-white/20 hover:text-white"
-                >
-                  <Icon className="h-4 w-4" />
-                  {item.label}
-                </Link>
-              );
-            })}
+    <section className="mx-auto w-full max-w-7xl px-4 pb-4 pt-3 sm:px-6">
+      <div className="flex flex-col gap-3 lg:rounded-[26px] lg:border lg:border-white/10 lg:bg-[linear-gradient(180deg,rgba(9,18,24,0.98),rgba(7,14,20,0.98))] lg:px-5 lg:py-4">
+        <div className="hidden lg:flex lg:items-center lg:gap-5">
+          <Link to="/" className="flex items-center gap-3 text-white">
+            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-teal-500/14 text-teal-300">
+              <MapPin className="h-5 w-5" />
+            </span>
+            <span className="min-w-0">
+              <span className="block text-[1.55rem] font-semibold leading-none">Achegue-se</span>
+              <span className="block pt-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-teal-200/78">
+                Seu bairro, mais perto.
+              </span>
+            </span>
+          </Link>
+
+          <div className="flex flex-1 items-center gap-3">
+            <button
+              type="button"
+              onClick={onOpenLocationDialog}
+              className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-4 text-sm font-medium text-white/82 transition-colors hover:border-white/20 hover:bg-white/[0.05]"
+            >
+              <MapPin className="h-4 w-4 text-teal-300" />
+              {locationLabel}
+            </button>
+
+            <div className="relative flex-1">
+              <Search className="pointer-events-none absolute left-4 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-white/38" />
+              <Input
+                type="search"
+                value={searchQuery}
+                onChange={(event) => onSearchChange(event.target.value)}
+                placeholder="Buscar empresa, servico ou produto no bairro"
+                aria-label="Buscar empresas no bairro"
+                className="h-12 rounded-2xl border-white/10 bg-white/[0.03] pl-11 pr-16 text-white placeholder:text-white/36 focus-visible:ring-teal-400/30 focus-visible:ring-offset-0"
+              />
+              <span className="pointer-events-none absolute right-4 top-1/2 hidden -translate-y-1/2 rounded-lg border border-white/10 bg-black/20 px-2 py-1 text-[0.68rem] font-medium text-white/42 sm:inline-flex">
+                Ctrl + K
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Link
+              to={secondaryHref}
+              className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] px-4 text-sm font-semibold text-white transition-colors hover:border-white/20 hover:bg-white/[0.05]"
+            >
+              {secondaryLabel}
+            </Link>
+            <Link
+              to={primaryHref}
+              className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-teal-500 px-4 text-sm font-semibold text-slate-950 transition-colors hover:bg-teal-400"
+            >
+              {primaryLabel}
+            </Link>
           </div>
         </div>
 
-        <div className="grid gap-4 px-4 py-4 sm:px-5 sm:py-5 lg:grid-cols-[minmax(0,1fr)_18rem]">
-          <div className="min-w-0">
-            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-teal-300">
-              {territoryName}
-            </p>
-            <h1 className="mt-2 text-2xl font-semibold leading-tight sm:text-[2rem]">
-              Empresas e negócios do bairro
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-white/62">
-              Descubra comércios locais, veja reputação, explore negócios perto de você e encontre o que já funciona dentro do território.
-            </p>
-
-            <div className="mt-4 flex flex-wrap gap-2">
-              <span className="inline-flex min-h-8 items-center rounded-full border border-teal-300/30 bg-teal-300/10 px-3 text-xs font-semibold text-teal-100">
-                Descoberta pública
+        <div className="space-y-3 lg:hidden">
+          <div className="flex items-center justify-between gap-3">
+            <Link to="/" className="flex min-w-0 items-center gap-2 text-white">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-teal-500/14 text-teal-300">
+                <MapPin className="h-4.5 w-4.5" />
               </span>
-              <span className="inline-flex min-h-8 items-center rounded-full border border-amber-300/25 bg-amber-300/10 px-3 text-xs font-semibold text-amber-100">
-                Recomendações da comunidade
+              <span className="min-w-0">
+                <span className="block truncate text-[1.3rem] font-semibold leading-none">Achegue-se</span>
+                <span className="block pt-1 text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-teal-200/72">
+                  Seu bairro, mais perto.
+                </span>
               </span>
-            </div>
+            </Link>
 
-            <div className="mt-4 grid gap-2 sm:grid-cols-2 sm:gap-3 sm:max-w-xl">
-              <Link
-                to={primaryHref}
-                className="inline-flex min-h-11 items-center justify-center rounded-xl bg-teal-500 px-4 text-sm font-semibold text-slate-950 transition-colors hover:bg-teal-400"
-              >
-                <Building2 className="mr-2 h-4 w-4" />
-                {primaryLabel}
-              </Link>
+            <div className="flex items-center gap-2">
               <Link
                 to={secondaryHref}
-                className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/14 bg-white/[0.03] px-4 text-sm font-semibold text-white transition-colors hover:bg-white/[0.08]"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] text-white/74 transition-colors hover:border-white/20 hover:bg-white/[0.05]"
+                aria-label={secondaryLabel}
               >
-                <MapPin className="mr-2 h-4 w-4" />
-                Ver mapa do bairro
+                <CircleUserRound className="h-4.5 w-4.5" />
               </Link>
-            </div>
-
-            <div className="mt-4 flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={onToggleNearbyMode}
-                className={`inline-flex min-h-10 items-center rounded-full px-4 text-xs font-semibold transition-colors ${
-                  nearbyMode
-                    ? "border border-teal-300/35 bg-teal-300/12 text-teal-100"
-                    : "border border-white/10 bg-white/[0.03] text-white/70 hover:bg-white/[0.08]"
-                }`}
+              <Link
+                to={primaryHref}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-teal-500 text-slate-950 transition-colors hover:bg-teal-400"
+                aria-label={primaryLabel}
               >
-                {nearbyMode ? "Remover perto de você" : "Perto de você"}
-              </button>
-              <button
-                type="button"
-                onClick={onOpenLocationDialog}
-                className="inline-flex min-h-10 items-center rounded-full border border-white/10 bg-white/[0.03] px-4 text-xs font-semibold text-white/70 transition-colors hover:bg-white/[0.08]"
-              >
-                Alterar local
-              </button>
+                <UserRoundPlus className="h-4.5 w-4.5" />
+              </Link>
             </div>
           </div>
 
-          <div className="grid gap-3 rounded-[20px] border border-white/10 bg-black/20 p-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
-                Panorama local
-              </p>
-              <p className="mt-1 text-sm text-white/65">
-                {totalBusinesses} negócios ativos e média de {averageRating} no território.
-              </p>
+          <button
+            type="button"
+            onClick={onOpenLocationDialog}
+            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-4 text-sm font-medium text-white/82 transition-colors hover:border-white/20 hover:bg-white/[0.05]"
+          >
+            <MapPin className="h-4 w-4 text-teal-300" />
+            {locationLabel}
+          </button>
+
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search className="pointer-events-none absolute left-4 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-white/38" />
+              <Input
+                type="search"
+                value={searchQuery}
+                onChange={(event) => onSearchChange(event.target.value)}
+                placeholder="Buscar empresa no bairro"
+                aria-label="Buscar empresas no bairro"
+                className="h-11 rounded-2xl border-white/10 bg-white/[0.03] pl-11 pr-4 text-white placeholder:text-white/36 focus-visible:ring-teal-400/30 focus-visible:ring-offset-0"
+              />
             </div>
-            <div className="grid grid-cols-3 gap-2">
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-3">
-                <p className="text-lg font-semibold text-white">{totalBusinesses}</p>
-                <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/45">Negócios</p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-3">
-                <p className="text-lg font-semibold text-white">{openBusinesses}</p>
-                <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/45">Abertos</p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-3">
-                <p className="text-lg font-semibold text-white">{averageRating}</p>
-                <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/45">Média</p>
-              </div>
-            </div>
-            <div className="rounded-2xl border border-teal-300/15 bg-teal-300/[0.05] px-3 py-3 text-sm text-white/68">
-              Este módulo usa o território como contexto principal. Explore empresas, abra o mapa e navegue pelos negócios do bairro sem depender de imagem manual por local.
-            </div>
+            <button
+              type="button"
+              onClick={onOpenFilters}
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] text-white/78 transition-colors hover:border-white/20 hover:bg-white/[0.05]"
+              aria-label="Abrir filtros e ordenacao"
+            >
+              <SlidersHorizontal className="h-4.5 w-4.5" />
+            </button>
           </div>
         </div>
       </div>
@@ -336,49 +219,42 @@ export default function EmpresasLandingPage({
   resolved: resolvedProp,
   activeMemberIds: activeMemberIdsProp,
 }: EmpresasLandingPageProps = {}) {
-  // ============================================
-  // Hooks e Context
-  // ============================================
   const navigate = useNavigate();
-  const location = useLocation();
   const { user } = useAuth();
   const territorialContext = useTerritorialContextOptional();
 
   const resolved = territorialContext?.resolved ?? resolvedProp;
   const activeMemberIds = territorialContext?.activeMemberIds ?? activeMemberIdsProp;
   const appUrls = useAppUrls(resolved);
-  const isCommunityScopedSurface = location.pathname.includes("/comunidade/");
-
-  const territoryLabels = useTerritoryLabels(resolved);
-  const moduleTerritory = useModuleTerritoryFilter({ routeResolved: resolved });
-  const businessUrls = useBusinessUrls(resolved);
   const moduleUrls = useFriendlyModuleUrls();
-  const buildBusinessUrl = useCallback(
-    (business: Business, fallbackUrl: string) =>
-      getBusinessUrl(business, fallbackUrl, businessUrls.canonical),
-    [businessUrls],
+  const businessUrls = useBusinessUrls(resolved);
+  const moduleTerritory = useModuleTerritoryFilter({
+    routeResolved: resolved,
+    activeMemberIds,
+  });
+  const territoryName = useMemo(
+    () => (resolved ? getTerritoryName(resolved) : moduleTerritory.displayLabel),
+    [moduleTerritory.displayLabel, resolved],
   );
+  const initialSlugs = useMemo(() => parseInitialSlugs(resolved), [resolved]);
 
-  // ============================================
-  // State Management
-  // ============================================
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeCategory, setActiveCategory] = useState("all");
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
-  const [savedBusinesses, setSavedBusinesses] = useState<Set<string>>(new Set());
-  const [nearbyMode, setNearbyMode] = useState(false);
+  const [sortBy, setSortBy] = useState<BusinessSortOption>("relevance");
   const [locationDialogOpen, setLocationDialogOpen] = useState(false);
-  const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
-  // ============================================
-  // Data Fetching
-  // ============================================
+  const { favorites, toggleFavorite } = useCanonicalBusinessFavorites();
+  const savedBusinesses = useMemo(() => new Set(favorites), [favorites]);
   const { coords: userLocation } = useRobustGeolocation({ useCache: true });
+  const { polygons: territoryPolygons, isLoading: isLoadingBounds } = useTerritoryPolygon(resolved ?? null);
 
   const { data: nearbyBusinesses } = useNearbyEntities({
     userLocation,
-    entityType: 'business',
+    entityType: "business",
     radiusKm: 5,
-    locationId: resolved?.kind === 'location' ? resolved.location.id : undefined,
+    locationId: resolved?.kind === "location" ? resolved.location.id : undefined,
     limit: 50,
   });
 
@@ -390,41 +266,13 @@ export default function EmpresasLandingPage({
     territoryFilter: moduleTerritory.territoryFilter,
   });
 
-  const { polygons: territoryPolygons, isLoading: isLoadingBounds } = useTerritoryPolygon(resolved ?? null);
-
-  // ============================================
-  // Computed Values
-  // ============================================
-  const territoryName = useMemo(
-    () => resolved ? getTerritoryName(resolved) : moduleTerritory.displayLabel,
-    [moduleTerritory.displayLabel, resolved],
-  );
-  const territoryNameShort = useMemo(() => getTerritoryNameShort(territoryName), [territoryName]);
-  const territoryPreposition = useMemo(() => getTerritoryPreposition(territoryName), [territoryName]);
-
-  const bannerImages = useMemo(() => [heroImg, heroImg2, heroImg3], []);
-  const initialSlugs = useMemo(() => {
-    const geoPath =
-      resolved?.kind === "location"
-        ? resolved.location.geographic_path
-        : resolved?.kind === "group"
-          ? resolved.group.members.at(0)?.geographic_path
-          : null;
-    if (!geoPath) return {};
-    const [, stateSlug = null, citySlug = null, districtSlug = null] = geoPath.split("/").filter(Boolean);
-    return {
-      stateSlug,
-      citySlug,
-      districtSlug,
-    };
-  }, [resolved]);
-  // Usa apenas empresas reais do SSOT.
   const businessesToShow = useMemo(() => {
-    if (nearbyMode && nearbyBusinesses && nearbyBusinesses.length > 0) {
-      return nearbyBusinesses.map((result) => normalizeNearbyBusiness(result));
+    if (sortBy === "distance" && nearbyBusinesses?.length) {
+      return nearbyBusinesses.map((business) => normalizeNearbyBusiness(business));
     }
+
     return realBusinesses.map((business) => normalizeRealBusinessEntry(business));
-  }, [nearbyMode, nearbyBusinesses, realBusinesses]);
+  }, [nearbyBusinesses, realBusinesses, sortBy]);
 
   const categoryCards = useMemo(() => {
     const counts = new Map<string, number>();
@@ -439,184 +287,158 @@ export default function EmpresasLandingPage({
     }));
   }, [businessesToShow]);
 
-  const stats = useMemo(() => {
-    const total = businessesToShow.length;
-    const ratings = businessesToShow
-      .map((business) => business.rating)
-      .filter((rating) => rating > 0);
-    const averageRating =
-      ratings.length > 0
-        ? (ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length).toFixed(1)
-        : "Sem avaliações";
-    const verified = businessesToShow.filter((business) => business.is_verified).length;
-    const neighborRecs = businessesToShow.reduce((sum, business) => sum + business.neighborRecs, 0);
+  const filteredBusinesses = useMemo(() => {
+    let result = businessesToShow;
 
+    if (searchQuery.trim()) {
+      const query = searchQuery.trim().toLowerCase();
+      result = result.filter((business) =>
+        [business.name, business.category, business.description]
+          .filter(Boolean)
+          .some((value) => value.toLowerCase().includes(query)),
+      );
+    }
+
+    if (activeCategory !== "all") {
+      result = result.filter(
+        (business) => normalizeBusinessCategoryId(business.category) === normalizeBusinessCategoryId(activeCategory),
+      );
+    }
+
+    result = applyBusinessFilterSet(result, activeFilters);
+    return sortBusinesses(result, sortBy);
+  }, [activeCategory, activeFilters, businessesToShow, searchQuery, sortBy]);
+
+  const highlights = useMemo(
+    () => buildBusinessHighlights(filteredBusinesses),
+    [filteredBusinesses],
+  );
+
+  const heroStats = useMemo<HeroStat[]>(() => {
+    const verifiedCount = businessesToShow.filter((business) => business.is_verified).length;
+    const recommendedCount = businessesToShow.reduce((sum, business) => sum + business.neighborRecs, 0);
     return [
-      { icon: Store, value: total.toLocaleString("pt-BR"), label: "empresas cadastradas" },
-      { icon: Star, value: averageRating, label: "avaliação média" },
-      { icon: BadgeCheck, value: verified.toLocaleString("pt-BR"), label: "verificadas" },
-      { icon: ThumbsUp, value: neighborRecs.toLocaleString("pt-BR"), label: "recomendações" },
+      { label: "negocios", value: String(businessesToShow.length) },
+      { label: "verificados", value: String(verifiedCount) },
+      { label: "recomendacoes", value: String(recommendedCount) },
     ];
   }, [businessesToShow]);
 
-  const filteredBusinesses = useMemo(() => {
-    let result = businessesToShow;
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(
-        (b) => b.name.toLowerCase().includes(q) || b.category.toLowerCase().includes(q)
-      );
-    }
-    if (activeFilters.includes("Abertos agora")) result = result.filter((b) => b.isOpen);
-    if (activeFilters.includes("Recomendados")) result = result.filter((b) => b.neighborRecs > 100);
-    if (activeFilters.includes("Perto de mim")) {
-      result = [...result].sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
-    }
-    return result;
-  }, [businessesToShow, searchQuery, activeFilters]);
+  const buildBusinessUrl = useCallback(
+    (business: Business) =>
+      getBusinessUrl(business, businessUrls.list, businessUrls.canonical),
+    [businessUrls],
+  );
 
-  const topBusinesses = useMemo(() => {
-    return [...businessesToShow]
-      .sort((a, b) => b.neighborRecs - a.neighborRecs)
-      .slice(0, 3);
-  }, [businessesToShow]);
-  const communityPrimaryHref = useMemo(
+  const openBusiness = useCallback(
+    (business: Business) => {
+      navigate(buildBusinessUrl(business));
+    },
+    [buildBusinessUrl, navigate],
+  );
+
+  const handleToggleFilter = useCallback((filterId: string) => {
+    setActiveFilters((current) =>
+      current.includes(filterId)
+        ? current.filter((item) => item !== filterId)
+        : [...current, filterId],
+    );
+  }, []);
+
+  const handleToggleSave = useCallback(
+    (id: string, event: React.MouseEvent) => {
+      event.stopPropagation();
+      void toggleFavorite(id);
+    },
+    [toggleFavorite],
+  );
+
+  const createBusinessHref = useMemo(
     () => (user ? businessUrls.create : withQueryParams(appUrls.auth.login, { redirect: businessUrls.create })),
     [appUrls.auth.login, businessUrls.create, user],
   );
-  const communityPrimaryLabel = user ? "Cadastrar empresa" : "Entrar para interagir";
-  const averageRatingLabel = typeof stats[1]?.value === "string" ? stats[1].value : String(stats[1]?.value ?? "0");
-  const openBusinessesCount = useMemo(
-    () => businessesToShow.filter((business) => business.isOpen).length,
-    [businessesToShow],
-  );
+  const recommendationHref = "/recomendacoes/nova";
+  const topPrimaryHref = user ? businessUrls.create : appUrls.auth.register;
+  const topPrimaryLabel = user ? "Cadastrar empresa" : "Criar conta";
+  const topSecondaryHref = user ? appUrls.profile.businesses : appUrls.auth.login;
+  const topSecondaryLabel = user ? "Central" : "Entrar";
+  const topLocationLabel = useMemo(() => {
+    if (resolved) {
+      return territoryName;
+    }
 
-  // ============================================
-  // Effects
-  // ============================================
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentBannerIndex((prev) => (prev + 1) % bannerImages.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [bannerImages.length]);
+    return `${territoryName}, ${TERRITORY_CONFIG.launch.state.toUpperCase()}`;
+  }, [resolved, territoryName]);
 
-  // ============================================
-  // Event Handlers
-  // ============================================
-  const toggleFilter = (label: string) => {
-    setActiveFilters((prev) =>
-      prev.includes(label) ? prev.filter((f) => f !== label) : [...prev, label]
-    );
-  };
-
-  const toggleSave = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setSavedBusinesses((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  };
-
-  const handlePrevBanner = () => {
-    setCurrentBannerIndex((prev) => (prev - 1 + bannerImages.length) % bannerImages.length);
-  };
-
-  const handleNextBanner = () => {
-    setCurrentBannerIndex((prev) => (prev + 1) % bannerImages.length);
-  };
-
-  // ============================================
-  // Main Render
-  // ============================================
   return (
     <EmpresasLandingLayout>
-      {!resolved && (
+      {!resolved ? (
         <Helmet>
           <title>Empresas locais | Achegue-se</title>
           <meta
             name="description"
-            content="Descubra empresas, lojas e negócios locais no Achegue-se. Encontre comércios perto de você, recomendações da comunidade e rotas canônicas por território."
+            content="Descubra empresas, lojas e negocios locais no Achegue-se. Encontre comercios perto de voce, recomendacoes da comunidade e uma vitrine organizada por territorio."
           />
         </Helmet>
-      )}
-
-      {/* Header exclusivo com busca */}
-      {!isCommunityScopedSurface ? (
-        <EmpresasHeader
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-        />
       ) : null}
 
-      {/* Categorias no Topo */}
-      <EmpresasCategoriasSection
-        categories={categoryCards}
-        businessUrls={businessUrls}
-        navigate={navigate}
+      <LandingTopBar
+        locationLabel={topLocationLabel}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onOpenLocationDialog={() => setLocationDialogOpen(true)}
+        onOpenFilters={() => setMobileFiltersOpen(true)}
+        primaryHref={topPrimaryHref}
+        primaryLabel={topPrimaryLabel}
+        secondaryHref={topSecondaryHref}
+        secondaryLabel={topSecondaryLabel}
       />
 
-      {!isCommunityScopedSurface ? (
-        <>
-      {/* Hero com Carrossel */}
       <EmpresasHeroSection
         territoryName={territoryName}
-        territoryNameShort={territoryNameShort}
-        territoryPreposition={territoryPreposition}
-        currentBannerIndex={currentBannerIndex}
-        bannerImages={bannerImages}
-        onPrevBanner={handlePrevBanner}
-        onNextBanner={handleNextBanner}
-        onBannerSelect={setCurrentBannerIndex}
-        navigate={navigate}
+        businesses={filteredBusinesses.length > 0 ? filteredBusinesses : businessesToShow}
+        territoryPolygons={territoryPolygons}
+        resolved={resolved}
+        isLoadingBounds={isLoadingBounds}
+        stats={heroStats}
+        primaryHref={createBusinessHref}
+        primaryLabel="Cadastrar empresa"
+        secondaryHref={recommendationHref}
+        secondaryLabel="Indicar negocio"
+        mapHref={moduleUrls.map}
+        onOpenLocationDialog={() => setLocationDialogOpen(true)}
+        onOpenBusiness={openBusiness}
       />
 
-      <section className="max-w-7xl mx-auto w-full px-4 sm:px-6 mt-3">
-        <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-3.5 shadow-sm flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-[11px] uppercase tracking-wide text-primary font-semibold flex items-center gap-1.5">
-              <MapPin className="h-3.5 w-3.5" />
-              Localização ativa
-            </p>
-            <p className="text-sm font-bold truncate">{territoryName}</p>
-          </div>
-          <button
-            type="button"
-            className="h-8 rounded-lg px-3 text-xs font-semibold border border-border bg-background hover:bg-muted transition-colors"
-            onClick={() => setNearbyMode((v) => !v)}
-          >
-            {nearbyMode ? "Remover perto de você" : "Perto de você"}
-          </button>
-          <button
-            type="button"
-            className="h-8 rounded-lg px-3 text-xs font-semibold border border-border bg-background hover:bg-muted transition-colors"
-            onClick={() => setLocationDialogOpen(true)}
-          >
-            Alterar local
-          </button>
-        </div>
-      </section>
-        </>
-      ) : (
-        <NeighborhoodBusinessesHero
-          territoryName={territoryName}
-          totalBusinesses={businessesToShow.length}
-          openBusinesses={openBusinessesCount}
-          averageRating={averageRatingLabel}
-          nearbyMode={nearbyMode}
-          onToggleNearbyMode={() => setNearbyMode((v) => !v)}
-          onOpenLocationDialog={() => setLocationDialogOpen(true)}
-          primaryHref={communityPrimaryHref}
-          primaryLabel={communityPrimaryLabel}
-          secondaryHref={moduleUrls.map}
-          moduleUrls={moduleUrls}
-        />
-      )}
+      <EmpresasCategoriasSection
+        categories={categoryCards}
+        activeCategory={activeCategory}
+        onSelectCategory={setActiveCategory}
+      />
+
+      <EmpresasFiltrosSection
+        filters={QUICK_FILTERS}
+        activeFilters={activeFilters}
+        onToggleFilter={handleToggleFilter}
+        resultCount={filteredBusinesses.length}
+        sortBy={sortBy}
+        onSortChange={setSortBy}
+      />
+
+      <EmpresasRecomendacoesSection
+        highlights={highlights}
+        savedBusinesses={savedBusinesses}
+        onToggleSave={handleToggleSave}
+        onOpenBusiness={openBusiness}
+      />
+
+      <EmpresasListaSection
+        businesses={filteredBusinesses}
+        mapHref={moduleUrls.map}
+        savedBusinesses={savedBusinesses}
+        onToggleSave={handleToggleSave}
+        onOpenBusiness={openBusiness}
+      />
 
       <ModuleLocationDialog
         open={locationDialogOpen}
@@ -626,59 +448,106 @@ export default function EmpresasLandingPage({
         onApplyPath={(path) => navigate(path)}
       />
 
-      {/* Filtros Rápidos */}
-      <EmpresasFiltrosSection
-        filters={QUICK_FILTERS}
-        activeFilters={activeFilters}
-        onToggleFilter={toggleFilter}
-        navigate={navigate}
-      />
+      <Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
+        <SheetContent
+          side="bottom"
+          className="max-h-[82vh] overflow-y-auto rounded-t-[28px] border-white/10 bg-[#081118] px-4 pb-8 pt-5 text-white"
+        >
+          <SheetHeader className="text-left">
+            <SheetTitle className="text-left text-xl text-white">Filtros do bairro</SheetTitle>
+            <SheetDescription className="text-left text-white/52">
+              Ajuste categorias, filtros rapidos e ordenacao da vitrine.
+            </SheetDescription>
+          </SheetHeader>
 
-      {/* Stats */}
-      <EmpresasStatsSection stats={stats} />
+          <div className="mt-5">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/42">
+              Categorias
+            </p>
+            <div className="overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <div className="flex min-w-max gap-3">
+                <CategoryCard
+                  category={{
+                    icon: CATEGORIES[0]?.icon ?? Search,
+                    label: "Tudo",
+                    count: String(businessesToShow.length),
+                    iconColor: "text-white/70",
+                    bg: "bg-black/20",
+                    slug: "all",
+                  }}
+                  isActive={activeCategory === "all"}
+                  onClick={() => setActiveCategory("all")}
+                />
+                {categoryCards.map((category) => (
+                  <CategoryCard
+                    key={`sheet-${category.slug}`}
+                    category={category}
+                    isActive={activeCategory === category.slug}
+                    onClick={() => setActiveCategory(category.slug)}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
 
-      {/* Atividade dos Vizinhos */}
-      <EmpresasAtividadeSection activities={NEIGHBOR_ACTIVITY} />
+          <div className="mt-5">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/42">
+              Filtros rapidos
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {QUICK_FILTERS.map((filter) => (
+                <QuickFilterChip
+                  key={`sheet-${filter.id}`}
+                  filter={filter}
+                  isActive={activeFilters.includes(filter.id)}
+                  onClick={() => handleToggleFilter(filter.id)}
+                />
+              ))}
+            </div>
+          </div>
 
-      {/* Mapa do Bairro */}
-      <EmpresasMapaSection
-        territoryLabels={territoryLabels}
-        businesses={businessesToShow}
-        territoryPolygons={territoryPolygons}
-        resolved={resolved}
-        isLoadingBounds={isLoadingBounds}
-        filteredCount={filteredBusinesses.length}
-        moduleUrls={moduleUrls}
-        getBusinessUrl={buildBusinessUrl}
-        navigate={navigate}
-      />
+          <div className="mt-5">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/42">
+              Ordenacao
+            </p>
+            <div className="grid grid-cols-1 gap-2">
+              {(
+                [
+                  ["relevance", "Mais uteis no bairro"],
+                  ["recommendations", "Mais recomendadas"],
+                  ["rating", "Melhor avaliadas"],
+                  ["distance", "Mais proximas"],
+                  ["recent", "Mais recentes"],
+                ] as const
+              ).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setSortBy(value)}
+                  className={[
+                    "flex min-h-12 items-center justify-between rounded-2xl border px-4 text-sm font-medium transition-colors",
+                    sortBy === value
+                      ? "border-teal-400/35 bg-teal-400/12 text-teal-100"
+                      : "border-white/10 bg-white/[0.03] text-white/74 hover:border-white/20 hover:bg-white/[0.05]",
+                  ].join(" ")}
+                  aria-pressed={sortBy === value}
+                >
+                  <span>{label}</span>
+                  <span className={sortBy === value ? "text-teal-200" : "text-white/28"}>•</span>
+                </button>
+              ))}
+            </div>
+          </div>
 
-      {/* Lista de Empresas */}
-      <EmpresasListaSection
-        businesses={filteredBusinesses}
-        territoryNameShort={territoryNameShort}
-        territoryPreposition={territoryPreposition}
-        nearbyMode={nearbyMode}
-        onToggleNearbyMode={setNearbyMode}
-        savedBusinesses={savedBusinesses}
-        onToggleSave={toggleSave}
-        businessUrls={businessUrls}
-        moduleUrls={moduleUrls}
-        getBusinessUrl={buildBusinessUrl}
-        navigate={navigate}
-      />
-
-      {/* Recomendações da Comunidade */}
-      <EmpresasRecomendacoesSection
-        topBusinesses={topBusinesses}
-        moduleUrls={moduleUrls}
-        getBusinessUrl={buildBusinessUrl}
-        navigate={navigate}
-      />
-
-      {!isCommunityScopedSurface ? <EmpresasBeneficiosSection benefits={BENEFITS} /> : null}
-
-      {!isCommunityScopedSurface ? <EmpresasCTASection navigate={navigate} /> : null}
+          <button
+            type="button"
+            onClick={() => setMobileFiltersOpen(false)}
+            className="mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-teal-500 px-4 text-sm font-semibold text-slate-950 transition-colors hover:bg-teal-400"
+          >
+            Ver {filteredBusinesses.length} resultados
+          </button>
+        </SheetContent>
+      </Sheet>
     </EmpresasLandingLayout>
   );
 }

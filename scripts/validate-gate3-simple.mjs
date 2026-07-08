@@ -4,15 +4,9 @@
  * Testa constraints diretamente sem criar corridas
  */
 
-import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
+import { createAnonClient } from './lib/supabase-client.mjs';
 
-dotenv.config({ path: '.env.test' });
-
-const supabase = createClient(
-  process.env.VITE_SUPABASE_URL,
-  process.env.VITE_SUPABASE_PUBLISHABLE_KEY
-);
+const supabase = createAnonClient({ envFiles: ['.env.test', '.env.local', '.env'] });
 
 console.log('========================================');
 console.log('GATE 3: VALIDAÇÃO SIMPLES');

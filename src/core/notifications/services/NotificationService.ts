@@ -161,6 +161,20 @@ function normalizeNotificationRow(row: NotificationRow): Notification {
 
 export class NotificationService {
   static async createNotification(input: CreateNotificationInput): Promise<string | null> {
+    const user = await SessionService.getCurrentUser();
+    if (!user) {
+      throw new Error("User not authenticated");
+    }
+
+    if (input.user_id !== user.id) {
+      logger.warn("[NotificationService] blocked untrusted cross-user notification creation", {
+        actorUserId: user.id,
+        targetUserId: input.user_id,
+        category: input.category ?? "social",
+      });
+      return null;
+    }
+
     const { data, error } = await notificationRpc.rpc<string>("create_notification", {
       p_user_id: input.user_id,
       p_type: input.type,
@@ -220,9 +234,21 @@ export class NotificationService {
   }
 
   static async markAsRead(notificationId: string): Promise<void> {
-    const { error } = await notificationRpc.rpc("mark_notification_as_read", {
-      p_notification_id: notificationId,
-    });
+    const user = await SessionService.getCurrentUser();
+    if (!user) {
+      throw new Error("User not authenticated");
+    }
+
+    const { error } = await supabase
+      .from("notifications")
+      .update({
+        read: true,
+        is_read: true,
+        read_at: new Date().toISOString(),
+      })
+      .eq("id", notificationId)
+      .eq("user_id", user.id)
+      .eq("read", false);
 
     if (error) {
       logger.error("Error marking notification as read:", error);
@@ -236,23 +262,36 @@ export class NotificationService {
       throw new Error("User not authenticated");
     }
 
-    const { data, error } = await notificationRpc.rpc<number>("mark_all_notifications_as_read", {
-      p_user_id: user.id,
-    });
+    const { data, error } = await supabase
+      .from("notifications")
+      .update({
+        read: true,
+        is_read: true,
+        read_at: new Date().toISOString(),
+      })
+      .eq("user_id", user.id)
+      .eq("read", false)
+      .select("id");
 
     if (error) {
       logger.error("Error marking all notifications as read:", error);
       throw error;
     }
 
-    return data ?? 0;
+    return data?.length ?? 0;
   }
 
   static async deleteNotification(notificationId: string): Promise<void> {
+    const user = await SessionService.getCurrentUser();
+    if (!user) {
+      throw new Error("User not authenticated");
+    }
+
     const { error } = await supabase
       .from("notifications")
       .delete()
-      .eq("id", notificationId);
+      .eq("id", notificationId)
+      .eq("user_id", user.id);
 
     if (error) {
       logger.error("Error deleting notification:", error);
@@ -264,20 +303,27 @@ export class NotificationService {
     const user = await SessionService.getCurrentUser();
     if (!user) return 0;
 
-    const { data, error } = await notificationRpc.rpc<number>("get_unread_notifications_count", {
-      p_user_id: user.id,
-    });
+    const { count, error } = await supabase
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("read", false);
 
     if (error) {
       logger.error("Error getting unread count:", error);
       return 0;
     }
 
-    return data ?? 0;
+    return count ?? 0;
   }
 
   static async getStats(userId: string): Promise<{ total: number; unread: number }> {
     try {
+      const user = await SessionService.getCurrentUser();
+      if (!user || user.id !== userId) {
+        return { total: 0, unread: 0 };
+      }
+
       const [totalResult, unreadResult] = await Promise.all([
         supabase
           .from("notifications")

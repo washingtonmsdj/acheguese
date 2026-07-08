@@ -1,8 +1,14 @@
 import React, { useMemo, useState } from "react";
+import { toast } from "sonner";
 import { useGrupos, type GroupSort } from "@/core/community/hooks/useGrupos";
-import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
 import { useHomeCommunityHref } from "@/core/routing/hooks/useHomeCommunityHref";
 import { Hash, Loader2, Lock, MessageSquare, Sparkles, Users } from "lucide-react";
+import { CommunityPortalGate, useCommunityAccess } from "@/core/community/access";
+import { useTerritorialContext } from "@/core/routing/components/TerritorialLayout";
+import {
+  resolveCommunityRouteDefaultLocationId,
+  resolveCommunityRouteTerritoryFilter,
+} from "@/core/community/utils/communityRouteTerritory";
 import { GruposHeader } from "@/shared/components/grupos/GruposHeader";
 import { GruposSearch } from "@/shared/components/grupos/GruposSearch";
 import { GruposTabs } from "@/shared/components/grupos/GruposTabs";
@@ -18,15 +24,28 @@ const SORT_OPTIONS: Array<{ id: GroupSort; label: string }> = [
 ];
 
 export default function GruposPage() {
-  const { homeDistrict } = useUserTerritory();
+  const territorialContext = useTerritorialContext();
+  const resolved = territorialContext.resolved;
   const communityHref = useHomeCommunityHref();
   const [categoryFilter, setCategoryFilter] = useState("todos");
+  const communityAccess = useCommunityAccess({
+    resolved,
+    activeMemberIds: territorialContext.activeMemberIds,
+  });
   const territoryFilter = useMemo(
-    () => homeDistrict
-      ? { scope: "location" as const, location_id: homeDistrict.id }
-      : { scope: "none" as const },
-    [homeDistrict],
+    () =>
+      resolveCommunityRouteTerritoryFilter(
+        resolved,
+        territorialContext.activeMemberIds,
+      ),
+    [resolved, territorialContext.activeMemberIds],
   );
+  const defaultLocationId = useMemo(() => {
+    return resolveCommunityRouteDefaultLocationId(
+      resolved,
+      territorialContext.activeMemberIds,
+    );
+  }, [resolved, territorialContext.activeMemberIds]);
   const {
     groups,
     totalCount,
@@ -49,7 +68,7 @@ export default function GruposPage() {
     handleJoin,
   } = useGrupos({
     territoryFilter,
-    defaultLocationId: homeDistrict?.id,
+    defaultLocationId,
   });
   const { sentinelRef } = useInfiniteScroll({
     hasMore,
@@ -69,10 +88,38 @@ export default function GruposPage() {
     const used = new Set(groups.map((group) => group.category || "geral"));
     return GROUP_CATEGORIES.filter((category) => used.has(category.id)).slice(0, 12);
   }, [groups]);
+  const handleOpenCreateGroup = () => {
+    if (!communityAccess.can.create_group) {
+      toast.info("Criar grupos exige residencia verificada nesta comunidade.");
+      return;
+    }
+
+    setShowCreate(true);
+  };
+
+  if (communityAccess.isLoading) {
+    return (
+      <div className="min-h-screen bg-[#0b1417] flex items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-teal-400" />
+      </div>
+    );
+  }
+
+  if (!communityAccess.can.join_group) {
+    return (
+      <div className="min-h-screen bg-[#0b1417] text-white">
+        <CommunityPortalGate
+          resolved={resolved}
+          activeMemberIds={territorialContext.activeMemberIds}
+          action="join_group"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#0b1417] text-white">
-      <GruposHeader backHref={communityHref} onCreateClick={() => setShowCreate(true)} />
+      <GruposHeader backHref={communityHref} onCreateClick={handleOpenCreateGroup} />
 
       <div className="mx-auto w-full max-w-6xl min-w-0 space-y-4 px-3 py-4 sm:px-4 md:space-y-5 md:px-6 md:py-5">
         <section className="overflow-hidden rounded-2xl border border-teal-400/15 bg-[radial-gradient(1200px_220px_at_0%_0%,rgba(45,212,191,0.14),transparent),#0f191d] p-3.5 shadow-2xl shadow-black/20 md:p-5">
@@ -99,7 +146,7 @@ export default function GruposPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setShowCreate(true)}
+                  onClick={handleOpenCreateGroup}
                   className="rounded-full border border-teal-300/40 bg-teal-400/15 px-3 py-1.5 text-[11px] font-semibold text-teal-100 hover:bg-teal-400/25"
                 >
                   Criar grupo
@@ -232,7 +279,14 @@ export default function GruposPage() {
 
       <CreateGroupDialog
         open={showCreate}
-        onOpenChange={setShowCreate}
+        onOpenChange={(open) => {
+          if (open) {
+            handleOpenCreateGroup();
+            return;
+          }
+
+          setShowCreate(false);
+        }}
         newGroup={newGroup}
         onUpdateGroup={updateNewGroup}
         creating={creating}

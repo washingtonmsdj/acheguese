@@ -1,5 +1,5 @@
 export const PASSWORD_POLICY = {
-  MIN_LENGTH: 8,
+  MIN_LENGTH: 12,
   SPECIAL_CHARACTER_REGEX: /[^A-Za-z0-9\s]/,
 } as const;
 

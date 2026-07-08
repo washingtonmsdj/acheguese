@@ -2,7 +2,7 @@
  * Post write operations.
  */
 
-import { NotificationService } from "@/core/notifications/services/NotificationService";
+import { CommunityNotificationBrokerService } from "@/core/notifications/services";
 import { supabase } from "@/integrations/supabase";
 import type { Database, Json } from "@/integrations/supabase";
 import { EntityStatus, LocationType } from "@/shared/types/enums";
@@ -476,19 +476,7 @@ export async function toggleFollowPost(
 
 export async function createLikeNotification(postId: string, likerId: string): Promise<void> {
   try {
-    const postInfo = await queries.getPostBasicInfo(postId);
-    if (!postInfo || postInfo.author_profile_id === likerId) {
-      return;
-    }
-
-    await NotificationService.createNotification({
-      user_id: postInfo.author_profile_id,
-      type: "info",
-      title: "Novo like no seu post",
-      message: `Alguem curtiu seu post: ${postInfo.title?.substring(0, 50) ?? ""}...`,
-      priority: "low",
-      metadata: { post_id: postId, liker_id: likerId },
-    });
+    await CommunityNotificationBrokerService.notifyPostLike(postId, likerId);
   } catch (error) {
     trackError(error as Error, {
       component: "posts.mutations",

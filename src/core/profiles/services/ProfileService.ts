@@ -5,6 +5,7 @@ import { getServicesByProfile } from "@/core/professional/services/professional.
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 import { adminRolesService } from "@/core/admin/services/AdminRolesService";
 import { publicIdentityService, PublicIdentityService } from "@/core/public-identity";
+import { SessionRpcService } from "@/core/session/services/SessionRpcService";
 import { callRPC } from "@/integrations/supabase";
 import { PROFILE_VERIFICATION_STATUS } from "@/core/profile/constants/verificationStatus";
 import type {
@@ -187,17 +188,14 @@ export class ProfileService {
     userId: string,
     profileId: string,
   ): Promise<void> {
-    const { error } = await callRPC("switch_active_profile", {
-      p_user_id: userId,
-      p_profile_id: profileId,
-    });
-    if (error) {
+    const switched = await SessionRpcService.switchActiveProfile(profileId);
+    if (!switched) {
       trackError(new Error("Error switching profile"), {
         component: "ProfileService",
         action: "switchActiveProfile",
-        metadata: { userId, profileId, error },
+        metadata: { userId, profileId },
       });
-      throw error;
+      throw new Error("Error switching profile");
     }
   }
   async updateProfile(

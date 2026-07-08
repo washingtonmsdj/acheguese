@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase';
 import { BaseRepository } from './BaseRepository';
 import { DatabaseError, DatabaseErrorCode } from '../errors/DatabaseError';
 import type { Filter } from '../interfaces/IRepository';
+import type { Tables } from '@/integrations/supabase';
 
 /**
  * Status possíveis de uma ride
@@ -28,32 +29,7 @@ export type RideStatus =
  * Interface do Ride (SSOT)
  * Define estrutura canônica de uma ride
  */
-export interface Ride {
-  id: string;
-  passenger_id: string;
-  driver_id: string | null;
-  pickup_lat: number;
-  pickup_lng: number;
-  pickup_address: string;
-  dropoff_lat: number;
-  dropoff_lng: number;
-  dropoff_address: string;
-  status: RideStatus;
-  price: number | null;
-  distance_km: number | null;
-  duration_minutes: number | null;
-  payment_method: string | null;
-  payment_status: string | null;
-  rating: number | null;
-  notes: string | null;
-  created_at: string;
-  updated_at: string;
-  accepted_at: string | null;
-  started_at: string | null;
-  completed_at: string | null;
-  cancelled_at: string | null;
-  cancellation_reason: string | null;
-}
+export type Ride = Tables<'ride_requests'>;
 
 /**
  * Repository para operações com rides
@@ -70,9 +46,9 @@ export class RideRepository extends BaseRepository<Ride> {
   /**
    * Busca rides por passageiro
    */
-  async findByPassengerId(passengerId: string): Promise<Ride[]> {
+  async findByPassengerProfileId(passengerProfileId: string): Promise<Ride[]> {
     const filters: Filter[] = [
-      this.createFilter('passenger_id', 'eq', passengerId),
+      this.createFilter('passenger_profile_id', 'eq', passengerProfileId),
     ];
 
     const orderBy = [this.createOrderBy('created_at', 'desc')];
@@ -85,7 +61,7 @@ export class RideRepository extends BaseRepository<Ride> {
    */
   async findByDriverId(driverProfileId: string): Promise<Ride[]> {
     const filters: Filter[] = [
-      this.createFilter('driver_id', 'eq', driverProfileId),
+      this.createFilter('driver_profile_id', 'eq', driverProfileId),
     ];
 
     const orderBy = [this.createOrderBy('created_at', 'desc')];
@@ -140,19 +116,19 @@ export class RideRepository extends BaseRepository<Ride> {
    * Busca ride ativa de um passageiro
    * (apenas 1 ride ativa por passageiro)
    */
-  async findActiveByPassengerId(passengerId: string): Promise<Ride | null> {
+  async findActiveByPassengerProfileId(passengerProfileId: string): Promise<Ride | null> {
     try {
       const { data, error } = await this.client
         .from(this.table)
         .select('*')
-        .eq('passenger_id', passengerId)
+        .eq('passenger_profile_id', passengerProfileId)
         .in('status', ['pending', 'searching', 'accepted', 'in_progress'])
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
 
       if (error) {
-        throw DatabaseError.fromSupabaseError(error, 'findActiveByPassengerId', this.table);
+        throw DatabaseError.fromSupabaseError(error, 'findActiveByPassengerProfileId', this.table);
       }
 
       return data as Ride | null;
@@ -160,11 +136,11 @@ export class RideRepository extends BaseRepository<Ride> {
       if (error instanceof DatabaseError) throw error;
       throw new DatabaseError({
         code: DatabaseErrorCode.QUERY_ERROR,
-        message: `Failed to find active ride for passenger: ${passengerId}`,
+        message: `Failed to find active ride for passenger profile: ${passengerProfileId}`,
         originalError: error,
         table: this.table,
-        operation: 'findActiveByPassengerId',
-        context: { passengerId },
+        operation: 'findActiveByPassengerProfileId',
+        context: { passengerProfileId },
       });
     }
   }
@@ -177,7 +153,7 @@ export class RideRepository extends BaseRepository<Ride> {
       const { data, error } = await this.client
         .from(this.table)
         .select('*')
-        .eq('driver_id', driverProfileId)
+        .eq('driver_profile_id', driverProfileId)
         .in('status', ['accepted', 'in_progress'])
         .order('created_at', { ascending: false })
         .limit(1)
@@ -215,9 +191,9 @@ export class RideRepository extends BaseRepository<Ride> {
   /**
    * Conta rides de um passageiro
    */
-  async countByPassengerId(passengerId: string): Promise<number> {
+  async countByPassengerProfileId(passengerProfileId: string): Promise<number> {
     const filters: Filter[] = [
-      this.createFilter('passenger_id', 'eq', passengerId),
+      this.createFilter('passenger_profile_id', 'eq', passengerProfileId),
     ];
 
     return this.count(filters);
@@ -228,7 +204,7 @@ export class RideRepository extends BaseRepository<Ride> {
    */
   async countByDriverId(driverProfileId: string): Promise<number> {
     const filters: Filter[] = [
-      this.createFilter('driver_id', 'eq', driverProfileId),
+      this.createFilter('driver_profile_id', 'eq', driverProfileId),
     ];
 
     return this.count(filters);
@@ -250,10 +226,10 @@ export class RideRepository extends BaseRepository<Ride> {
       const { data, error } = await this.client
         .from(this.table)
         .select('*')
-        .gte('pickup_lat', centerLat - latDelta)
-        .lte('pickup_lat', centerLat + latDelta)
-        .gte('pickup_lng', centerLng - lngDelta)
-        .lte('pickup_lng', centerLng + lngDelta);
+        .gte('origin_lat', centerLat - latDelta)
+        .lte('origin_lat', centerLat + latDelta)
+        .gte('origin_lng', centerLng - lngDelta)
+        .lte('origin_lng', centerLng + lngDelta);
 
       if (error) {
         throw DatabaseError.fromSupabaseError(error, 'findInArea', this.table);
@@ -287,8 +263,8 @@ export class RideRepository extends BaseRepository<Ride> {
     };
 
     // Adicionar timestamps específicos por status
-    if (status === 'accepted' && !metadata?.accepted_at) {
-      updates.accepted_at = new Date().toISOString();
+    if (status === 'accepted' && !metadata?.driver_accepted_at) {
+      updates.driver_accepted_at = new Date().toISOString();
     } else if (status === 'in_progress' && !metadata?.started_at) {
       updates.started_at = new Date().toISOString();
     } else if (status === 'completed' && !metadata?.completed_at) {
@@ -309,9 +285,11 @@ export class RideRepository extends BaseRepository<Ride> {
    * Atribui motorista à ride
    */
   async assignDriver(rideId: string, driverProfileId: string): Promise<Ride> {
+    const assignedAt = new Date().toISOString();
     return this.updateStatus(rideId, 'accepted', {
-      driver_id: driverProfileId,
-      accepted_at: new Date().toISOString(),
+      driver_profile_id: driverProfileId,
+      driver_accepted_at: assignedAt,
+      driver_assigned_at: assignedAt,
     });
   }
 
@@ -329,23 +307,20 @@ export class RideRepository extends BaseRepository<Ride> {
    */
   async completeRide(
     rideId: string,
-    finalPrice?: number,
-    rating?: number
+    finalPrice?: number
   ): Promise<Ride> {
     return this.updateStatus(rideId, 'completed', {
       completed_at: new Date().toISOString(),
-      price: finalPrice,
-      rating,
+      final_price: finalPrice,
     });
   }
 
   /**
    * Cancela ride
    */
-  async cancelRide(rideId: string, reason: string): Promise<Ride> {
+  async cancelRide(rideId: string): Promise<Ride> {
     return this.updateStatus(rideId, 'cancelled', {
       cancelled_at: new Date().toISOString(),
-      cancellation_reason: reason,
     });
   }
 

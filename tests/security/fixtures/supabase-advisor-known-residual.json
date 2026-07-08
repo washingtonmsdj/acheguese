@@ -1,0 +1,9 @@
+[
+  {
+    "cache_key": "auth_leaked_password_protection",
+    "detail": "Supabase Auth leaked password protection is disabled.",
+    "level": "WARN",
+    "name": "auth_leaked_password_protection",
+    "title": "Leaked Password Protection Disabled"
+  }
+]

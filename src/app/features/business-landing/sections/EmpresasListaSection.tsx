@@ -1,156 +1,82 @@
-/**
- * EmpresasListaSection
- *
- * Seção de lista de empresas com filtros e modo "perto de mim"
- */
-
-import { Navigation, Search } from "lucide-react";
-import { Button } from "@/shared/components/ui/button";
-import { NearbyToggle } from "@/core/geospatial/components/NearbyToggle";
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { MapPin, Search } from "lucide-react";
 import { BusinessCard } from "../components/cards";
-import type { Business, EmpresasListaSectionProps } from "./types";
+import type { EmpresasListaSectionProps } from "./types";
+
+const PAGE_SIZE = 6;
 
 export function EmpresasListaSection({
   businesses,
-  territoryNameShort,
-  territoryPreposition,
-  nearbyMode,
-  onToggleNearbyMode,
+  mapHref,
   savedBusinesses,
   onToggleSave,
-  businessUrls,
-  moduleUrls,
-  getBusinessUrl,
-  navigate,
+  onOpenBusiness,
 }: EmpresasListaSectionProps) {
-  const parseDistrictSlug = (path?: string | null): string | null => {
-    if (!path) return null;
-    const parts = path.split("/").filter(Boolean);
-    return parts.length >= 4 ? parts[3] : null;
-  };
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
-  const toSlug = (value: string): string =>
-    value
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "");
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [businesses]);
 
-  const territorySlug = toSlug(territoryNameShort);
-
-  const isServingBusiness = (biz: Business): boolean => {
-    const tags = (biz.tags ?? []).map((tag) => tag.toLowerCase());
-    const modes = (biz.modos_atendimento ?? []).map((mode) => mode.toLowerCase());
-
-    return (
-      tags.includes("delivery") ||
-      modes.includes("delivery") ||
-      modes.includes("domicilio") ||
-      modes.includes("domicílio")
-    );
-  };
-
-  const localBusinesses = businesses.filter((biz) => parseDistrictSlug(biz.geographic_path) === territorySlug);
-
-  const servingBusinesses = businesses.filter(
-    (biz) => parseDistrictSlug(biz.geographic_path) !== territorySlug && isServingBusiness(biz),
-  );
-
-  const nearbyBusinesses = businesses.filter(
-    (biz) =>
-      !localBusinesses.some((local) => local.id === biz.id) &&
-      !servingBusinesses.some((serving) => serving.id === biz.id),
-  );
-
-  const renderBusinessGrid = (list: readonly Business[]) => (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {list.map((biz, i) => (
-        <BusinessCard
-          key={biz.id}
-          business={biz}
-          onClick={() => navigate(getBusinessUrl(biz, moduleUrls.business))}
-          onToggleSave={onToggleSave}
-          isSaved={savedBusinesses.has(biz.id)}
-          nearbyMode={nearbyMode}
-          index={i}
-        />
-      ))}
-    </div>
+  const visibleBusinesses = useMemo(
+    () => businesses.slice(0, visibleCount),
+    [businesses, visibleCount],
   );
 
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-8 w-full">
-      <div className="flex items-center justify-between mb-5">
+    <section className="mx-auto w-full max-w-7xl px-4 pb-10 sm:px-6">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading flex items-center gap-2">
-            <Navigation className="h-5 w-5 text-primary" /> Comércios {territoryPreposition} {territoryNameShort}
+          <h2 className="text-xl font-semibold text-white sm:text-2xl">
+            Todas as empresas ({businesses.length})
           </h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            {nearbyMode ? "Ordenado por distância" : "Contexto territorial da comunidade"} · {businesses.length} resultados
+          <p className="mt-1 text-sm text-white/48">
+            Lista publica com negocios ativos, recomendados e proximos do territorio.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <NearbyToggle
-            active={nearbyMode}
-            onToggle={onToggleNearbyMode}
-            activeText="Perto de mim ✓"
-            inactiveText="Perto de mim"
-          />
-          <Button
-            variant="outline"
-            onClick={() => navigate(businessUrls.list)}
-            className="border-border text-muted-foreground hover:border-primary hover:text-primary font-medium text-sm rounded-lg hidden sm:flex"
-          >
-            Ver todas
-          </Button>
-        </div>
-      </div>
-
-      {localBusinesses.length > 0 && (
-        <div className="mb-6">
-          <h3 className="text-base font-semibold text-foreground mb-3">
-            Comércios {territoryPreposition} {territoryNameShort}
-          </h3>
-          {renderBusinessGrid(localBusinesses)}
-        </div>
-      )}
-
-      {servingBusinesses.length > 0 && (
-        <div className="mb-6">
-          <h3 className="text-base font-semibold text-foreground mb-3">
-            Também atendem {territoryPreposition} {territoryNameShort}
-          </h3>
-          {renderBusinessGrid(servingBusinesses)}
-        </div>
-      )}
-
-      {nearbyBusinesses.length > 0 && (
-        <div className="mb-2">
-          <h3 className="text-base font-semibold text-foreground mb-3">
-            Próximos {territoryPreposition} {territoryNameShort}
-          </h3>
-          {renderBusinessGrid(nearbyBusinesses)}
-        </div>
-      )}
-
-      {businesses.length === 0 && (
-        <div className="text-center py-12">
-          <Search className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-          <p className="text-foreground font-semibold">Nenhuma empresa encontrada</p>
-          <p className="text-sm text-muted-foreground mt-1">Tente mudar os filtros ou a busca</p>
-        </div>
-      )}
-
-      <div className="mt-4 sm:hidden">
-        <Button
-          variant="outline"
-          onClick={() => navigate(businessUrls.list)}
-          className="w-full border-border text-muted-foreground font-medium text-sm rounded-lg"
+        <Link
+          to={mapHref}
+          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-teal-400/18 bg-teal-400/10 px-4 text-sm font-medium text-teal-100 transition-colors hover:bg-teal-400/14 sm:w-auto"
         >
-          Ver todas as empresas
-        </Button>
+          <MapPin className="h-4 w-4" />
+          Ver no mapa
+        </Link>
       </div>
+
+      {businesses.length > 0 ? (
+        <>
+          <div className="grid gap-3 xl:grid-cols-2">
+            {visibleBusinesses.map((business) => (
+              <BusinessCard
+                key={business.id}
+                business={business}
+                onClick={() => onOpenBusiness(business)}
+                onToggleSave={onToggleSave}
+                isSaved={savedBusinesses.has(business.business_data_id ?? "")}
+              />
+            ))}
+          </div>
+
+          {visibleCount < businesses.length ? (
+            <button
+              type="button"
+              onClick={() => setVisibleCount((current) => current + PAGE_SIZE)}
+              className="mt-4 inline-flex min-h-12 w-full items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] px-4 text-sm font-medium text-white/74 transition-colors hover:border-white/18 hover:bg-white/[0.05]"
+            >
+              Carregar mais empresas
+            </button>
+          ) : null}
+        </>
+      ) : (
+        <div className="rounded-[24px] border border-dashed border-white/12 bg-white/[0.02] px-6 py-14 text-center">
+          <Search className="mx-auto h-10 w-10 text-white/28" />
+          <h3 className="mt-4 text-lg font-semibold text-white">Nenhuma empresa encontrada</h3>
+          <p className="mt-2 text-sm text-white/48">
+            Ajuste a busca, filtros ou troque o territorio ativo.
+          </p>
+        </div>
+      )}
     </section>
   );
 }

@@ -2,12 +2,9 @@
  * Validação final de constraints com estratégia adequada para RLS
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { createServiceRoleClient } from './lib/supabase-client';
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL!;
-const SERVICE_ROLE_KEY = 'process.env.SUPABASE_SERVICE_ROLE_KEY!';
-
-const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+const supabase = createServiceRoleClient();
 
 async function validateBusinessDataConstraint() {
   console.log('\n🧪 Validando business_data.location_id NOT NULL...');

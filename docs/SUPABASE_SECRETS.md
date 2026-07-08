@@ -1,13 +1,14 @@
-# Supabase Secrets Local Workflow
+# Supabase Remote Secrets Workflow
 
 ## Objective
 
-Keep public Supabase config in the repository-local environment files and keep the administrative secret outside the repository in an encrypted local store.
+Keep public Supabase config pointed at the linked remote project and keep the administrative secret outside the repository in an encrypted local store.
 
 ## Canonical Rules
 
 - `VITE_SUPABASE_URL` may exist in `.env.local`, `.env`, or `.env.remote`.
 - `VITE_SUPABASE_PUBLISHABLE_KEY` may exist in `.env.local`, `.env`, or `.env.remote`.
+- `VITE_SUPABASE_URL` and `SUPABASE_URL` must point to the remote Supabase project, not to `localhost`, `127.0.0.1`, or the Supabase local API port.
 - Real `SUPABASE_SERVICE_ROLE_KEY` values must not be persisted in repository environment files. Templates may contain empty placeholders only.
 - `SUPABASE_ANON_KEY` is required by Supabase Edge Functions and may use the same current public publishable/anon key value.
 - `VITE_SUPABASE_SERVICE_ROLE_KEY` is deprecated and must not be introduced again.
@@ -15,7 +16,7 @@ Keep public Supabase config in the repository-local environment files and keep t
 - Administrative scripts may consume `SUPABASE_SERVICE_ROLE_KEY` only from the current shell or a backend secret manager.
 - Edge Function provider secrets are documented in `docs/EDGE_FUNCTION_SECRETS.md`.
 
-## Current Local Workflow
+## Current Remote Workflow
 
 ### 1. Save secrets securely
 
@@ -56,7 +57,7 @@ This writes only public variables to `.env.local`. It does not persist the servi
 - Frontend runtime uses `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`.
 - Edge Functions use `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`.
 - Login, signup, public reads, and normal browser flows continue to work without admin secrets.
-- Admin scripts work after the local import step loads `SUPABASE_SERVICE_ROLE_KEY` into the shell.
+- Admin scripts work against the remote project after the local import step loads `SUPABASE_SERVICE_ROLE_KEY` into the shell.
 
 ## Required Guidance For Humans And Agents
 

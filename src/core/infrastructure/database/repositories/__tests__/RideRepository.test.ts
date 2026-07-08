@@ -38,30 +38,51 @@ describe('RideRepository', () => {
   };
 
   const mockRide: Ride = {
-    id: 'ride-123',
-    passenger_id: 'passenger-456',
-    driver_id: 'driver-789',
-    pickup_lat: -23.5505,
-    pickup_lng: -46.6333,
-    pickup_address: 'Av. Paulista, 1000',
-    dropoff_lat: -23.5629,
-    dropoff_lng: -46.6544,
-    dropoff_address: 'Rua Augusta, 500',
-    status: 'pending',
-    price: 25.50,
-    distance_km: 5.2,
-    duration_minutes: 15,
-    payment_method: 'credit_card',
-    payment_status: 'pending',
-    rating: null,
-    notes: null,
-    created_at: '2026-05-30T10:00:00Z',
-    updated_at: '2026-05-30T10:00:00Z',
-    accepted_at: null,
-    started_at: null,
-    completed_at: null,
+    available_seats: null,
     cancelled_at: null,
-    cancellation_reason: null,
+    completed_at: null,
+    created_at: '2026-05-30T10:00:00Z',
+    delivered_at: null,
+    delivery_notes: null,
+    departure_time: null,
+    destination: 'Rua Augusta, 500',
+    destination_lat: -23.5629,
+    destination_lng: -46.6544,
+    driver_accepted_at: null,
+    driver_assigned_at: null,
+    driver_profile_id: 'driver-789',
+    dropoff_address_id: 'dropoff-address-123',
+    dropoff_location_id: 'dropoff-location-123',
+    failed_delivery_at: null,
+    failed_delivery_metadata: null,
+    failed_delivery_reason: null,
+    final_price: 25.50,
+    id: 'ride-123',
+    observation: null,
+    origin: 'Av. Paulista, 1000',
+    origin_lat: -23.5505,
+    origin_lng: -46.6333,
+    package_description: null,
+    package_size: null,
+    passenger_boarded_at: null,
+    passenger_profile_id: 'passenger-456',
+    payment_method: 'credit_card',
+    pickup_address_id: 'pickup-address-123',
+    pickup_confirmed_at: null,
+    pickup_location_id: 'pickup-location-123',
+    proof_of_delivery: null,
+    recipient_name: null,
+    recipient_phone: null,
+    ride_mode: 'ride',
+    route_id: null,
+    share_token: null,
+    share_view_count: 0,
+    source_id: null,
+    source_type: null,
+    started_at: null,
+    status: 'pending',
+    suggested_price: 25.50,
+    updated_at: '2026-05-30T10:00:00Z',
   };
 
   beforeEach(() => {
@@ -86,17 +107,17 @@ describe('RideRepository', () => {
     vi.mocked(supabase.from).mockReturnValue(mockSupabase as never);
   });
 
-  describe('findByPassengerId', () => {
+  describe('findByPassengerProfileId', () => {
     it('deve buscar rides por passageiro', async () => {
       mockSupabase.maybeSingle.mockResolvedValue({
         data: [mockRide],
         error: null,
       });
 
-      const result = await repository.findByPassengerId('passenger-456');
+      const result = await repository.findByPassengerProfileId('passenger-456');
 
       expect(result).toBeDefined();
-      expect(mockSupabase.eq).toHaveBeenCalledWith('passenger_id', 'passenger-456');
+      expect(mockSupabase.eq).toHaveBeenCalledWith('passenger_profile_id', 'passenger-456');
     });
   });
 
@@ -110,7 +131,7 @@ describe('RideRepository', () => {
       const result = await repository.findByDriverId('driver-789');
 
       expect(result).toBeDefined();
-      expect(mockSupabase.eq).toHaveBeenCalledWith('driver_id', 'driver-789');
+      expect(mockSupabase.eq).toHaveBeenCalledWith('driver_profile_id', 'driver-789');
     });
   });
 
@@ -179,17 +200,17 @@ describe('RideRepository', () => {
     });
   });
 
-  describe('findActiveByPassengerId', () => {
+  describe('findActiveByPassengerProfileId', () => {
     it('deve buscar ride ativa de passageiro', async () => {
       mockSupabase.maybeSingle.mockResolvedValue({
         data: mockRide,
         error: null,
       });
 
-      const result = await repository.findActiveByPassengerId('passenger-456');
+      const result = await repository.findActiveByPassengerProfileId('passenger-456');
 
       expect(result).toEqual(mockRide);
-      expect(mockSupabase.eq).toHaveBeenCalledWith('passenger_id', 'passenger-456');
+      expect(mockSupabase.eq).toHaveBeenCalledWith('passenger_profile_id', 'passenger-456');
       expect(mockSupabase.in).toHaveBeenCalledWith('status', ['pending', 'searching', 'accepted', 'in_progress']);
     });
 
@@ -199,7 +220,7 @@ describe('RideRepository', () => {
         error: null,
       });
 
-      const result = await repository.findActiveByPassengerId('passenger-456');
+      const result = await repository.findActiveByPassengerProfileId('passenger-456');
 
       expect(result).toBeNull();
     });
@@ -211,7 +232,7 @@ describe('RideRepository', () => {
       });
 
       await expect(
-        repository.findActiveByPassengerId('passenger-456')
+        repository.findActiveByPassengerProfileId('passenger-456')
       ).rejects.toThrow(DatabaseError);
     });
   });
@@ -226,7 +247,7 @@ describe('RideRepository', () => {
       const result = await repository.findActiveByDriverId('driver-789');
 
       expect(result).toEqual(mockRide);
-      expect(mockSupabase.eq).toHaveBeenCalledWith('driver_id', 'driver-789');
+      expect(mockSupabase.eq).toHaveBeenCalledWith('driver_profile_id', 'driver-789');
       expect(mockSupabase.in).toHaveBeenCalledWith('status', ['accepted', 'in_progress']);
     });
 
@@ -249,9 +270,9 @@ describe('RideRepository', () => {
     });
   });
 
-  describe('countByPassengerId', () => {
+  describe('countByPassengerProfileId', () => {
     it('deve contar rides de passageiro', async () => {
-      const result = await repository.countByPassengerId('passenger-456');
+      const result = await repository.countByPassengerProfileId('passenger-456');
       expect(result).toBeGreaterThanOrEqual(0);
     });
   });
@@ -312,9 +333,9 @@ describe('RideRepository', () => {
       expect(result).toBeDefined();
     });
 
-    it('deve adicionar timestamp de accepted_at ao aceitar', async () => {
+    it('deve adicionar timestamp de driver_accepted_at ao aceitar', async () => {
       mockSupabase.single.mockResolvedValue({
-        data: { ...mockRide, status: 'accepted', accepted_at: expect.any(String) },
+        data: { ...mockRide, status: 'accepted', driver_accepted_at: expect.any(String) },
         error: null,
       });
 
@@ -354,11 +375,11 @@ describe('RideRepository', () => {
 
     it('deve aceitar metadata adicional', async () => {
       mockSupabase.single.mockResolvedValue({
-        data: { ...mockRide, status: 'completed', price: 30.00 },
+        data: { ...mockRide, status: 'completed', final_price: 30.00 },
         error: null,
       });
 
-      await repository.updateStatus('ride-123', 'completed', { price: 30.00 });
+      await repository.updateStatus('ride-123', 'completed', { final_price: 30.00 });
       // Metadata é incluída no update
     });
   });
@@ -366,7 +387,7 @@ describe('RideRepository', () => {
   describe('assignDriver', () => {
     it('deve atribuir motorista à ride', async () => {
       mockSupabase.single.mockResolvedValue({
-        data: { ...mockRide, driver_id: 'driver-999', status: 'accepted' },
+        data: { ...mockRide, driver_profile_id: 'driver-999', status: 'accepted' },
         error: null,
       });
 
@@ -392,7 +413,7 @@ describe('RideRepository', () => {
   describe('completeRide', () => {
     it('deve completar ride', async () => {
       mockSupabase.single.mockResolvedValue({
-        data: { ...mockRide, status: 'completed', price: 30.00 },
+        data: { ...mockRide, status: 'completed', final_price: 30.00 },
         error: null,
       });
 
@@ -401,26 +422,16 @@ describe('RideRepository', () => {
       expect(result).toBeDefined();
     });
 
-    it('deve completar ride com rating', async () => {
-      mockSupabase.single.mockResolvedValue({
-        data: { ...mockRide, status: 'completed', rating: 5 },
-        error: null,
-      });
-
-      const result = await repository.completeRide('ride-123', 30.00, 5);
-
-      expect(result).toBeDefined();
-    });
   });
 
   describe('cancelRide', () => {
     it('deve cancelar ride com motivo', async () => {
       mockSupabase.single.mockResolvedValue({
-        data: { ...mockRide, status: 'cancelled', cancellation_reason: 'Passageiro desistiu' },
+        data: { ...mockRide, status: 'cancelled' },
         error: null,
       });
 
-      const result = await repository.cancelRide('ride-123', 'Passageiro desistiu');
+      const result = await repository.cancelRide('ride-123');
 
       expect(result).toBeDefined();
     });

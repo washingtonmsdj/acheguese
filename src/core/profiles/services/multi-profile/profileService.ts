@@ -10,13 +10,13 @@
  * - Anon usa apenas views públicas
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase';
 import {
   selectLooseRows,
   updateLooseRows,
 } from '@/integrations/supabase';
 import { SessionService } from '@/core/session/services/SessionService';
 import { SessionState } from '@/core/session/state/SessionState';
+import { ProfileRpcService } from '../ProfileRpcService';
 import { BusinessService } from './businessService';
 import { ProfessionalService } from './professionalService';
 import { DriverService } from './driverService';
@@ -38,14 +38,9 @@ import type {
 } from './types';
 
 type PublicProfileRecord = Record<string, unknown>;
-type RpcResponse<T> = { data: T | null; error: unknown };
 
 function errorMessage(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
-}
-
-async function callRpc<T>(functionName: string, params: Record<string, unknown>): Promise<RpcResponse<T>> {
-  return (await supabase.rpc(functionName as never, params as never)) as unknown as RpcResponse<T>;
 }
 
 export class MultiProfileService {
@@ -190,18 +185,14 @@ export class MultiProfileService {
    */
   static async createProfile(input: CreateProfileInput): Promise<ServiceResponse<{ profile_id: string; handle: string }>> {
     try {
-      const { data, error } = await callRpc<ServiceResponse<{ profile_id: string; handle: string }>>('create_profile_with_extension', {
-        p_profile_type: input.profile_type,
-        p_handle: input.handle,
-        p_display_name: input.display_name,
-        p_avatar_url: input.avatar_url || null,
-        p_bio: input.bio || null,
-        p_extension_data: input.extension_data || null,
+      return ProfileRpcService.createProfile<ServiceResponse<{ profile_id: string; handle: string }>>({
+        profileType: input.profile_type,
+        handle: input.handle,
+        displayName: input.display_name,
+        avatarUrl: input.avatar_url || null,
+        bio: input.bio || null,
+        extensionData: (input.extension_data || null) as Record<string, unknown> | null,
       });
-
-      if (error) throw error;
-
-      return data as ServiceResponse<{ profile_id: string; handle: string }>;
     } catch (error: unknown) {
       return {
         success: false,
@@ -359,14 +350,10 @@ export class MultiProfileService {
    */
   static async updateHandle(profileId: string, newHandle: string): Promise<ServiceResponse<{ handle: string }>> {
     try {
-      const { data, error } = await callRpc<ServiceResponse<{ handle: string }>>('update_profile_handle', {
-        p_profile_id: profileId,
-        p_new_handle: newHandle,
-      });
-
-      if (error) throw error;
-
-      return data as ServiceResponse<{ handle: string }>;
+      return ProfileRpcService.updateHandle<ServiceResponse<{ handle: string }>>(
+        profileId,
+        newHandle,
+      );
     } catch (error: unknown) {
       return {
         success: false,
@@ -526,13 +513,7 @@ export class MultiProfileService {
    */
   static async deleteProfile(profileId: string): Promise<ServiceResponse<{ profile_id: string }>> {
     try {
-      const { data, error } = await callRpc<ServiceResponse<{ profile_id: string }>>('delete_profile', {
-        p_profile_id: profileId,
-      });
-
-      if (error) throw error;
-
-      return data as ServiceResponse<{ profile_id: string }>;
+      return ProfileRpcService.deleteProfile<ServiceResponse<{ profile_id: string }>>(profileId);
     } catch (error: unknown) {
       return {
         success: false,
@@ -546,14 +527,10 @@ export class MultiProfileService {
    */
   static async transferOwnership(profileId: string, newOwnerUserId: string): Promise<ServiceResponse<{ profile_id: string }>> {
     try {
-      const { data, error } = await callRpc<ServiceResponse<{ profile_id: string }>>('transfer_profile_ownership', {
-        p_profile_id: profileId,
-        p_new_owner_user_id: newOwnerUserId,
-      });
-
-      if (error) throw error;
-
-      return data as ServiceResponse<{ profile_id: string }>;
+      return ProfileRpcService.transferOwnership<ServiceResponse<{ profile_id: string }>>(
+        profileId,
+        newOwnerUserId,
+      );
     } catch (error: unknown) {
       return {
         success: false,

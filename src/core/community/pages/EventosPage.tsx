@@ -46,9 +46,8 @@ import { useEventos, type Evento } from "@/core/community/hooks/useEventos";
 import { useCommunityUrls } from "@/core/community/hooks/useCommunityUrls";
 import { ModuleLocationDialog } from "@/core/location/components/ModuleLocationDialog";
 import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
-import { useTerritoryFilter } from "@/core/location/hooks/useTerritoryFilter";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
-import { centralRoutes } from "@/modules/central/routes/centralRoutes";
+import { centralRoutes } from "@/core/routing/config/centralRoutes";
 import { EVENT_LIST_CATEGORY_OPTIONS } from "@/shared/taxonomy/events";
 import { EventGrid } from "@/shared/components/eventos/EventGrid";
 import { Button } from "@/shared/components/ui/button";
@@ -75,8 +74,11 @@ export default function EventosPage({ resolved, activeMemberIds }: EventosPagePr
   const navigate = useNavigate();
   const location = useLocation();
   const communityUrls = useCommunityUrls(resolved);
-  const moduleTerritory = useModuleTerritoryFilter({ routeResolved: resolved });
-  const territoryFilter = useTerritoryFilter(resolved, activeMemberIds);
+  const moduleTerritory = useModuleTerritoryFilter({
+    routeResolved: resolved,
+    activeMemberIds,
+  });
+  const territoryFilter = moduleTerritory.territoryFilter;
   const isEmbeddedCommunityRoute = location.pathname.startsWith("/comunidade/");
 
   // ========================================================================

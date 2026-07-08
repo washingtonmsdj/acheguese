@@ -104,7 +104,7 @@ Fase executada: consolidacao de identidade publica, extracao inicial de regras d
 ### Efeito objetivo
 - Reducao liquida de 58 violacoes no gate estrutural.
 - Eliminacao completa da categoria `business-logic-in-ui` do baseline atual.
-- Namespace publico consolidado por entidade: `/u/:username` para perfil pessoal, `/:communitySlug/:slug` para empresa/restaurante e `/p/:slug` para mini-site premium.
+- Namespace publico consolidado por entidade: `/u/:username` para perfil pessoal, `/empresas/:state/:city/:territory/:slug` para empresa/restaurante, `/comunidade/:communitySlug/...` para contexto comunitario explicito e `/p/:slug` para mini-site premium.
 - Remocao completa da rota publica legada `/perfil/:userId`.
 - Eliminacao completa dos imports cruzados remanescentes do dominio `profile`.
 - Eliminacao completa do cluster de imports cruzados do `admin` para `mobility`, `community-alerts`, `community-issues`, `gastronomy` e `notifications`.
@@ -384,7 +384,7 @@ O gate esta verde no baseline atual. Ele deixou de ser cerca reativa e passou a 
 
 ## Auditoria do perfil como centro de identidade
 - Dados publicos vs privados: o contrato documental agora existe em `docs/audits/PROFILE_IDENTITY_GOVERNANCE.md`, tem reflexo administrativo em `/admin/identidade` e passou a ter snapshot privado canonico em `ProfileService`; o ponto restante de mistura estrutural ficou concentrado em `PerfilEditarPage`.
-- Username e slug: o conflito publico foi resolvido. O sistema usa `/u/:username` para perfil pessoal, `/:communitySlug/:slug` para empresa/restaurante e `/p/:slug` para mini-site premium; o backlog agora e garantir que nenhuma rota legada retorne fora dos SSOTs.
+- Username e slug: o conflito publico foi resolvido. O sistema usa `/u/:username` para perfil pessoal, `/empresas/:state/:city/:territory/:slug` para empresa/restaurante, `/comunidade/:communitySlug/...` apenas para contexto comunitario explicito e `/p/:slug` para mini-site premium; o backlog agora e garantir que nenhuma rota legada retorne fora dos SSOTs.
 - Reputacao: `ProfileService` continua como fonte agregada e `AdminProfileGovernanceService` agora decompone a leitura por origem; o backlog restante esta em politica administrativa de override e ajuste excepcional.
 - Plano: `ProfileService` trata `user_subscriptions`, enquanto o admin tem `AdminSubscriptionsService`. Falta um contrato explicito entre plano do usuario, plano do perfil e cobertura administrativa.
 - Preferencias: o admin agora separa preferencias por escopo entre perfil publico, vinculos, visibilidade de reputacao e notificacoes; ainda falta historico administrativo e ownership de persistencia por escopo.

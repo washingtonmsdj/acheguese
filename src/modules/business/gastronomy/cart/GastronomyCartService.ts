@@ -7,6 +7,7 @@ import type {
   MenuItemVariant,
   MenuItemWithRelations,
 } from "../types/menu";
+import type { GastronomyFulfillmentMode } from "../checkout/checkoutRules";
 import { money } from "../utils/currency";
 
 function normalizeQuantity(value?: number): number {
@@ -85,13 +86,26 @@ export interface BuildCartItemInput {
 }
 
 export class GastronomyCartService {
-  static createEmptyCart(businessId: string, deliveryFee = 0): Cart {
+  private static normalizeDeliveryFee(
+    deliveryFee: number,
+    fulfillmentMode: GastronomyFulfillmentMode = "delivery",
+  ): number {
+    return fulfillmentMode === "delivery" ? money(deliveryFee) : 0;
+  }
+
+  static createEmptyCart(
+    businessId: string,
+    deliveryFee = 0,
+    fulfillmentMode: GastronomyFulfillmentMode = "delivery",
+  ): Cart {
+    const normalizedDeliveryFee = this.normalizeDeliveryFee(deliveryFee, fulfillmentMode);
     return {
       business_id: businessId,
+      fulfillment_mode: fulfillmentMode,
       items: [],
       subtotal: 0,
-      delivery_fee: money(deliveryFee),
-      total: money(deliveryFee),
+      delivery_fee: normalizedDeliveryFee,
+      total: normalizedDeliveryFee,
     };
   }
 
@@ -150,16 +164,19 @@ export class GastronomyCartService {
     params: {
       business_id: string;
       delivery_fee: number;
+      fulfillment_mode?: GastronomyFulfillmentMode;
       cart_item: CartItem;
     },
   ): Cart {
+    const fulfillmentMode = params.fulfillment_mode ?? cart?.fulfillment_mode ?? "delivery";
     const baseCart =
       cart && cart.business_id === params.business_id
         ? {
             ...cart,
-            delivery_fee: money(params.delivery_fee),
+            fulfillment_mode: fulfillmentMode,
+            delivery_fee: this.normalizeDeliveryFee(params.delivery_fee, fulfillmentMode),
           }
-        : this.createEmptyCart(params.business_id, params.delivery_fee);
+        : this.createEmptyCart(params.business_id, params.delivery_fee, fulfillmentMode);
 
     return this.recalculateCartTotals({
       ...baseCart,
@@ -179,12 +196,18 @@ export class GastronomyCartService {
     });
   }
 
-  static syncDeliveryFee(cart: Cart | null, deliveryFee: number): Cart | null {
+  static syncDeliveryFee(
+    cart: Cart | null,
+    deliveryFee: number,
+    fulfillmentMode?: GastronomyFulfillmentMode,
+  ): Cart | null {
     if (!cart) return null;
 
+    const nextFulfillmentMode = fulfillmentMode ?? cart.fulfillment_mode ?? "delivery";
     return this.recalculateCartTotals({
       ...cart,
-      delivery_fee: money(deliveryFee),
+      fulfillment_mode: nextFulfillmentMode,
+      delivery_fee: this.normalizeDeliveryFee(deliveryFee, nextFulfillmentMode),
     });
   }
 

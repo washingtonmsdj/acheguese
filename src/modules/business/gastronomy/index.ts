@@ -1,14 +1,10 @@
 /**
- * Módulo de Gastronomia - Vertical Especializada
- * 
- * SSOT: Gastronomia é uma extensão do módulo Business.
- * GastronomyBusiness = Business + GastronomyProfile.
- * Dados base vêm de BusinessService (SSOT), perfil gastronômico é adição.
- * 
- * Exports públicos do módulo
+ * Public contract for the Gastronomy module.
+ *
+ * Routes import pages directly from pages/. Keep this barrel focused on
+ * domain types, services, hooks, utilities and reusable runtime components.
  */
 
-// Types
 export type {
   GastronomyProfile,
   GastronomyBusiness,
@@ -20,7 +16,7 @@ export type {
   UpdateGastronomyProfileInput,
   GastronomyBusinessFilters,
 } from './types';
-// Menu types
+
 export type {
   Menu,
   MenuCategory,
@@ -38,42 +34,22 @@ export type {
 } from './types/menu';
 
 export * from './cart';
-
-// Services
 export * from './services';
-
-// Hooks
 export * from './hooks';
-
-// Utils
 export * from './utils';
 
-// Constants (runtime values - SSOT)
 export { CUISINE_TYPES, getCuisineLabel, type CuisineType } from './constants';
 
-// Components
 export {
-  GastronomyHero,
   GastronomyCard,
-  GastronomyCTA,
-  GastronomyCategoryCards,
-  GastronomyFilters,
   FoodItemCard,
   FoodSectionCarousel,
   BusinessSectionCarousel,
-  MenuCategoryTabs,
   MenuItemCard,
   MenuItemDetailDrawer,
   GastronomyCheckoutSheet,
   GastronomyDeliveryDestinationPanel,
   StickyOrderBar,
-  DeliveryInfoCard,
-  OpeningStatusBadge,
 } from './components';
 
-// Pages
-export * from './pages';
-
-// Nichos Gastronômicos (Especializações Internas)
-// SSOT: modules/business/gastronomy/niches/
 export * from './niches';

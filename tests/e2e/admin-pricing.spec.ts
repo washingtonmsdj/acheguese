@@ -1,24 +1,15 @@
 import { expect, test, type Page } from "@playwright/test";
-import { createClient, type User } from "@supabase/supabase-js";
+import type { User } from "@supabase/supabase-js";
+import { createOptionalOperationalAdminClient } from "../helpers/operational-env";
 
 const ADMIN_PRICING_URL = "/admin/pricing";
 const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL ?? null;
 const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD ?? null;
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL ?? null;
-const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? null;
 const TEST_RULE_NAME = `Teste E2E Pricing ${Date.now()}`;
 const TEST_RULE_NAME_EDITED = `${TEST_RULE_NAME} Editada`;
 const TEMP_ADMIN_PASSWORD = "AdminPricing@2026!";
 
-const adminClient =
-  SUPABASE_URL && SERVICE_ROLE_KEY
-    ? createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      })
-    : null;
+const adminClient = createOptionalOperationalAdminClient();
 
 let runtimeAdminEmail: string | null = ADMIN_EMAIL;
 let runtimeAdminPassword: string | null = ADMIN_PASSWORD;
@@ -40,7 +31,8 @@ async function findUserByEmail(email: string): Promise<User | null> {
     });
     if (error) throw error;
 
-    const user = data.users.find((item) => item.email === email);
+    const users = data.users as User[];
+    const user = users.find((item) => item.email === email);
     if (user) return user;
     if (data.users.length < 200) return null;
     page += 1;

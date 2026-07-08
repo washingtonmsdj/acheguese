@@ -58,6 +58,7 @@ export type PaymentMethod =
 export interface Order {
   id: string;
   business_id: string;
+  merchant_profile_id: string;
   customer_id: string | null;
   courier_profile_id: string | null;
   delivery_area_id: string | null;
@@ -232,6 +233,13 @@ function getMetadataString(order: OrderRecord, key: string): string | null {
   return typeof value === 'string' && value.trim() ? value : null;
 }
 
+function getOrderType(order: OrderRecord): OrderType {
+  const rawType = getMetadataStringFirst(order, ['fulfillment_mode', 'order_type']);
+  if (rawType === 'takeout' || rawType === 'pickup') return 'pickup';
+  if (rawType === 'dine_in') return 'dine_in';
+  return 'delivery';
+}
+
 function getMetadataStringFirst(order: OrderRecord, keys: readonly string[]): string | null {
   for (const key of keys) {
     const value = getMetadataString(order, key);
@@ -313,15 +321,17 @@ function mapTimelineEvent(event: OrderTimelineEvent): OrderStatusHistory {
 function mapOrder(order: OrderRecord): OrderWithItems {
   const businessId = order.source_context.source_id ?? order.merchant_profile_id;
   const status = logisticsToOrderStatus(order.logistics_status);
+  const orderType = getOrderType(order);
 
   return {
     id: order.id,
     business_id: businessId,
+    merchant_profile_id: order.merchant_profile_id,
     customer_id: order.customer_profile_id,
     courier_profile_id: order.courier_profile_id ?? null,
     delivery_area_id: null,
     order_number: orderDisplayNumber(order.id),
-    order_type: 'delivery',
+    order_type: orderType,
     status,
     customer_name: getMetadataString(order, 'customer_name') ?? `Cliente ${order.customer_profile_id.slice(0, 8)}`,
     customer_phone: getMetadataString(order, 'customer_phone') ?? '',
@@ -369,6 +379,14 @@ function mapOrder(order: OrderRecord): OrderWithItems {
 async function enrichDeliveryFinancials<T extends Order>(orders: T[]): Promise<T[]> {
   const enriched = await Promise.all(
     orders.map(async (order) => {
+      if (order.order_type !== 'delivery') {
+        return {
+          ...order,
+          delivery_courier_cost: null,
+          delivery_margin: null,
+        };
+      }
+
       const ride = (await MobilityService.getLatestRideBySource(
         'gastronomy',
         order.id,

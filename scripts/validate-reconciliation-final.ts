@@ -9,21 +9,17 @@
  * E. Services e campos canonicos
  */
 
-import { createClient } from '@supabase/supabase-js';
-import * as dotenv from 'dotenv';
-import * as path from 'path';
+import { createServiceRoleClient, getSupabaseConfig } from './lib/supabase-client';
 
-dotenv.config({ path: path.resolve(process.cwd(), '.env.remote') });
+const supabaseConfig = getSupabaseConfig({ envFiles: ['.env.remote', '.env.local', '.env'] });
 
-const supabaseUrl = process.env.VITE_SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-if (!supabaseUrl || !supabaseKey) {
+if (!supabaseConfig.url) {
   console.error('Variaveis nao encontradas');
   process.exit(1);
 }
 
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabaseUrl = supabaseConfig.url;
+const supabase = createServiceRoleClient({ envFiles: ['.env.remote', '.env.local', '.env'] });
 
 interface MetadataRow {
   metadata?: Record<string, unknown> | null;

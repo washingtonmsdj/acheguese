@@ -81,11 +81,14 @@ export function useIsFavorited(params: {
 /**
  * Hook para obter contador de favoritos de um negócio
  */
-export function useBusinessFavoritesCount(businessId: string) {
+export function useBusinessFavoritesCount(
+  businessId: string,
+  options?: { enabled?: boolean },
+) {
   return useQuery({
     queryKey: QUERY_KEYS.businessFavoritesCount(businessId),
     queryFn: () => FavoritesQueryService.getBusinessFavoritesCount(businessId),
-    enabled: isValidUUID(businessId),
+    enabled: options?.enabled !== false && isValidUUID(businessId),
     staleTime: 5 * 60 * 1000, // 5 minutos
   });
 }
@@ -285,7 +288,9 @@ export function useFavoritesManager(businessId?: string) {
     enabled: !!userId && !!businessId,
   });
 
-  const favoritesCount = useBusinessFavoritesCount(businessId || '');
+  const favoritesCount = useBusinessFavoritesCount(businessId || '', {
+    enabled: !!userId,
+  });
 
   const toggleFavorite = useToggleFavorite();
   const addFavorite = useAddFavorite();

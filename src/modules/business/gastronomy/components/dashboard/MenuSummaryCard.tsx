@@ -5,7 +5,7 @@
  * SSOT: Usa useMenuCategories e useMenuItems
  */
 
-import { useMenuCategories, useMenuItems } from '../../hooks';
+import { useGastronomyMenuId, useMenuCategories, useMenuItems } from '../../hooks';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
 import { UtensilsCrossed, ArrowRight } from 'lucide-react';
@@ -17,10 +17,11 @@ interface MenuSummaryCardProps {
 }
 
 export function MenuSummaryCard({ businessId }: MenuSummaryCardProps) {
-  const { categories, isLoading: categoriesLoading } = useMenuCategories(businessId);
-  const { items, isLoading: itemsLoading } = useMenuItems(businessId);
+  const { menuId, isLoading: menuIdLoading } = useGastronomyMenuId(businessId);
+  const { categories, isLoading: categoriesLoading } = useMenuCategories(menuId ?? '');
+  const { items, isLoading: itemsLoading } = useMenuItems(menuId ?? '');
 
-  if (categoriesLoading || itemsLoading) {
+  if (menuIdLoading || categoriesLoading || itemsLoading) {
     return (
       <Card>
         <CardContent className="py-8">

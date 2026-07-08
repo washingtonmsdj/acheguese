@@ -2,17 +2,20 @@
  * useBusinessUrls
  *
  * SSOT contextual para URLs publicas do modulo de empresas.
- * Em comunidade curta, gera /:communityAlias/empresas e /:communityAlias/:slug
- * apenas quando a empresa pertence ao territorio atual.
+ * Em comunidade, gera /comunidade/:communityAlias/empresas/:slug apenas quando
+ * a empresa pertence ao territorio atual. Fora da comunidade, sempre usa URL
+ * publica em /empresas.
  */
 
 import { LAUNCH_URLS } from '@/config/territory';
+import { useLocation } from 'react-router-dom';
 import { useActiveTerritory } from '@/core/location/hooks/useActiveTerritory';
 import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
 import type { BusinessUrlContext } from '@/core/business/services/BusinessUrlService';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 import { useTerritorialContextOptional, type TerritorialLayoutContext } from '@/core/routing/components/TerritorialLayout';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
+import { buildCommunityPortalUrl } from '@/core/routing/policies';
 import {
   MODULE_SLUGS,
   buildGroupBaseUrl,
@@ -21,12 +24,12 @@ import {
 } from '@/core/routing/utils/territoryUrls';
 
 export interface BusinessUrls {
-  /** Lista de empresas: /santa-cruz/empresas ou fallback /empresas/ba/salvador */
+  /** Lista de empresas publica ou comunitaria conforme contexto explicito. */
   list: string;
   /**
    * URL publica da empresa.
-   * Usa /:communityAlias/:slug quando a empresa pertence ao alias atual.
-   * Usa fallback territorial quando nao ha alias ou a empresa esta fora do territorio.
+   * Usa /comunidade/:communityAlias/empresas/:slug quando a empresa pertence
+   * ao contexto comunitario atual. Usa /empresas quando nao ha contexto.
    */
   canonical: (ctx: BusinessUrlContext) => string;
   /** URL de compartilhamento: /p/:slug para premium, canonica para demais. */
@@ -39,11 +42,19 @@ export interface BusinessUrls {
   dashboard: (businessId: string) => string;
 }
 
-function getShortCommunityAlias(context: TerritorialLayoutContext | null): string | null {
-  if (!context || context.baseUrl !== context.communityBaseUrl) return null;
+function isPathInsideBase(pathname: string, baseUrl: string): boolean {
+  const normalizedPath = pathname.replace(/\/+$/g, '') || '/';
+  const normalizedBase = baseUrl.replace(/\/+$/g, '') || '/';
+  return normalizedPath === normalizedBase || normalizedPath.startsWith(`${normalizedBase}/`);
+}
 
-  const parts = context.baseUrl.split('/').filter(Boolean);
-  return parts.length === 1 ? parts[0] : null;
+function getCommunityAlias(context: TerritorialLayoutContext | null, pathname: string): string | null {
+  if (!context || !isPathInsideBase(pathname, context.communityBaseUrl)) return null;
+
+  const parts = context.communityBaseUrl.split('/').filter(Boolean);
+  if (parts.length === 1) return parts[0];
+  if (parts.length === 2 && parts[0] === MODULE_SLUGS.community) return parts[1];
+  return null;
 }
 
 function businessBelongsToResolvedTerritory(
@@ -66,18 +77,6 @@ function businessBelongsToResolvedTerritory(
   }
 
   return ctx.geographic_path.startsWith(`${territoryPath}/`);
-}
-
-function withCommunityAlias(
-  ctx: BusinessUrlContext,
-  alias: string | null,
-  resolved: ResolvedTerritory | null | undefined,
-): BusinessUrlContext {
-  if (!alias || !businessBelongsToResolvedTerritory(ctx, resolved)) {
-    return ctx;
-  }
-
-  return { ...ctx, community_alias: alias };
 }
 
 function buildListUrlFromResolved(resolved: ResolvedTerritory | null | undefined): string | null {
@@ -103,16 +102,17 @@ function buildListUrlFromResolved(resolved: ResolvedTerritory | null | undefined
 }
 
 export function useBusinessUrls(routeResolved?: ResolvedTerritory | null): BusinessUrls {
+  const { pathname } = useLocation();
   const { activeLocation } = useActiveTerritory();
   const territorialContext = useTerritorialContextOptional();
-  const shortCommunityAlias = getShortCommunityAlias(territorialContext);
+  const communityAlias = getCommunityAlias(territorialContext, pathname);
   const resolved = routeResolved ?? territorialContext?.resolved ?? null;
 
   let listUrl: string;
 
   if (territorialContext) {
-    listUrl = shortCommunityAlias
-      ? `${territorialContext.baseUrl}/${MODULE_SLUGS.business}`
+    listUrl = communityAlias
+      ? buildCommunityPortalUrl(communityAlias, MODULE_SLUGS.business)
       : buildModuleTerritoryUrl(MODULE_SLUGS.business, territorialContext.baseUrl);
   } else {
     listUrl =
@@ -127,14 +127,14 @@ export function useBusinessUrls(routeResolved?: ResolvedTerritory | null): Busin
 
   return {
     list: listUrl,
-    canonical: (ctx: BusinessUrlContext) =>
-      BusinessUrlService.getCanonicalUrl(
-        withCommunityAlias(ctx, shortCommunityAlias, resolved),
-      ),
-    share: (ctx: BusinessUrlContext) =>
-      BusinessUrlService.getShareUrl(
-        withCommunityAlias(ctx, shortCommunityAlias, resolved),
-      ),
+    canonical: (ctx: BusinessUrlContext) => {
+      if (communityAlias && businessBelongsToResolvedTerritory(ctx, resolved)) {
+        return BusinessUrlService.getCommunityScopedUrl(ctx, communityAlias);
+      }
+
+      return BusinessUrlService.getCanonicalUrl(ctx);
+    },
+    share: (ctx: BusinessUrlContext) => BusinessUrlService.getShareUrl(ctx),
     create: businessManagementRoutes.create(),
     edit: (businessId: string) => `/edit-business/${businessId}`,
     dashboard: (businessId: string) => businessManagementRoutes.overview(businessId),

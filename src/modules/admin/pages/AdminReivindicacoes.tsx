@@ -135,7 +135,7 @@ export default function AdminReivindicacoes() {
           | { profile_id?: string; geographic_path?: string; is_premium?: boolean }
           | null;
         if (businessContext?.profile_id && businessContext?.geographic_path) {
-          businessUrl = await BusinessUrlService.getCanonicalUrlWithResolvedCommunityAlias({
+          businessUrl = BusinessUrlService.getCanonicalUrl({
             id: businessContext.profile_id,
             slug: claim.business_slug,
             geographic_path: businessContext.geographic_path,

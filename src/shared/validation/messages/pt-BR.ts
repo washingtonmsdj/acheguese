@@ -1,3 +1,5 @@
+import { PASSWORD_POLICY } from "../passwordPolicy";
+
 /**
  * Mensagens de validação em Português (Brasil)
  *
@@ -66,7 +68,7 @@ export const validationMessages = {
     password: {
       weak: "Senha muito fraca",
       mismatch: "Senhas não coincidem",
-      min: "Senha deve ter no mínimo 8 caracteres",
+      min: `Senha deve ter no mínimo ${PASSWORD_POLICY.MIN_LENGTH} caracteres`,
       requirements:
         "Senha deve conter letras maiúsculas, minúsculas, números e caracteres especiais",
     },

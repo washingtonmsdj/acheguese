@@ -17,9 +17,9 @@ describe("buildVagasListPath", () => {
     ).toBe("/comunidade/ba/salvador/chapada-do-rio-vermelho/vagas");
   });
 
-  it("preserva a URL curta da comunidade ao voltar da publicacao", () => {
-    expect(buildVagasListPath("/santa-cruz/vagas/publicar")).toBe(
-      "/santa-cruz/vagas",
+  it("preserva o alias explicito da comunidade ao voltar da publicacao", () => {
+    expect(buildVagasListPath("/comunidade/santa-cruz/vagas/publicar")).toBe(
+      "/comunidade/santa-cruz/vagas",
     );
   });
 

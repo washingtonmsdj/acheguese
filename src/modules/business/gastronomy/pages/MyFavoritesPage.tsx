@@ -98,6 +98,7 @@ export default function MyFavoritesPage() {
       <Helmet>
         <title>Meus Favoritos | {PLATFORM_BRAND.name}</title>
         <meta name="description" content="Seus restaurantes favoritos" />
+        <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
       <div className="min-h-screen bg-background">

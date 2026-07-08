@@ -23,6 +23,7 @@ import {
 import { resolveSeoPolicy } from "@/core/routing/seo/territorialSeoPolicy";
 import { parsePublicTerritoryPath } from "@/core/routing/utils/publicTerritoryPath";
 import { resolvePublicTerritoryFallback } from "@/core/routing/utils/publicTerritoryFallbacks";
+import { CommunityPortalModeBanner } from "./CommunityPortalModeBanner";
 
 function cityLabelFromSlug(value?: string): string {
   if (!value) return "Cidade";
@@ -296,7 +297,7 @@ export function CommunityTerritorialShell() {
 
   return (
     <>
-      <TerritorialSEO resolved={resolved} baseUrl={territoryBase} />
+      <TerritorialSEO resolved={effectiveResolved} baseUrl={territoryBase} />
       <Helmet>
         <link rel="canonical" href={canonicalHref} />
         <meta name="robots" content={seoPolicy.robots} />
@@ -314,6 +315,11 @@ export function CommunityTerritorialShell() {
             {effectiveAvailability === "none" && !availabilityLoading ? <UnavailableModuleBanner /> : null}
           </>
         ) : null}
+
+        <CommunityPortalModeBanner
+          territoryName={effectiveTerritoryName}
+          publicHref={territoryBase}
+        />
 
         <ErrorBoundary>
           <Outlet context={outletContext} />

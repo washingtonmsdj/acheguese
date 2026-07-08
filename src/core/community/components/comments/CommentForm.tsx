@@ -7,8 +7,8 @@ import {
 } from "@/shared/components/ui/avatar";
 import { Button } from "@/shared/components/ui/button";
 import { Textarea } from "@/shared/components/ui/textarea";
-import { INLINE_STYLES } from "../styles/communityDesignSystem";
 import { getInitials } from "@/shared/utils/formatters";
+import { INLINE_STYLES } from "../styles/communityDesignSystem";
 
 interface CommentFormProps {
   value: string;
@@ -20,6 +20,8 @@ interface CommentFormProps {
   userAvatar?: string;
   userName?: string;
   isLoggedIn: boolean;
+  canComment?: boolean;
+  blockedMessage?: string;
 }
 
 export function CommentForm({
@@ -32,15 +34,27 @@ export function CommentForm({
   userAvatar,
   userName,
   isLoggedIn,
+  canComment = true,
+  blockedMessage = "Verifique sua residencia para comentar.",
 }: CommentFormProps) {
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
+  const isValid = Boolean(value.trim()) && value.length <= 500;
+  const canSubmit = isLoggedIn && canComment;
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key !== "Enter" || event.shiftKey) return;
+    event.preventDefault();
+    if (isValid && canSubmit && !submitting) {
       onSubmit();
     }
   };
 
-  const isValid = value.trim() && value.length <= 500;
+  const placeholder = !isLoggedIn
+    ? "Faca login para comentar"
+    : !canComment
+      ? blockedMessage
+      : replyTo
+        ? `Responder ${replyTo.name}...`
+        : "Escreva um comentario...";
 
   return (
     <div
@@ -57,6 +71,7 @@ export function CommentForm({
             <span className="font-bold text-teal-400">@{replyTo.name}</span>
           </span>
           <button
+            type="button"
             onClick={onCancelReply}
             className="text-xs text-red-400 hover:text-red-300 transition-colors"
           >
@@ -66,7 +81,6 @@ export function CommentForm({
       )}
 
       <div className="flex items-start gap-3">
-        {/* Avatar do usuário */}
         <Avatar className="w-9 h-9 ring-2 ring-teal-400/20 flex-shrink-0">
           <AvatarImage src={userAvatar} alt={userName} />
           <AvatarFallback className="bg-gradient-to-br from-teal-400 to-pink-400 text-white font-semibold text-xs">
@@ -74,20 +88,13 @@ export function CommentForm({
           </AvatarFallback>
         </Avatar>
 
-        {/* Input */}
         <div className="flex-1 flex flex-col gap-2">
           <Textarea
             value={value}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={(event) => onChange(event.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={
-              isLoggedIn
-                ? replyTo
-                  ? `Responder ${replyTo.name}...`
-                  : "Escreva um comentário..."
-                : "Faça login para comentar"
-            }
-            disabled={!isLoggedIn || submitting}
+            placeholder={placeholder}
+            disabled={!canSubmit || submitting}
             rows={2}
             className="resize-none rounded-lg border-0 text-sm"
             style={{ backgroundColor: "#1E2529", color: "#FFFFFF" }}
@@ -98,12 +105,13 @@ export function CommentForm({
               {value.length}/500
             </span>
             <Button
+              type="button"
               onClick={onSubmit}
-              disabled={!isValid || !isLoggedIn || submitting}
+              disabled={!isValid || !canSubmit || submitting}
               size="sm"
               className="rounded-lg h-8 px-4 font-bold text-xs"
               style={{
-                background: isValid
+                background: isValid && canSubmit
                   ? "linear-gradient(135deg, #4FD1C5 0%, #06B6D4 100%)"
                   : "#2D3748",
                 color: "#FFFFFF",

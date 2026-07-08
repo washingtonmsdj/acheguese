@@ -35,13 +35,9 @@ describe("gastronomy runtime boundaries", () => {
   it("keeps public runtime pages free from mock imports", () => {
     const landing = read("src/modules/business/gastronomy/pages/GastronomyLandingPage.tsx");
     const detail = read("src/modules/business/gastronomy/pages/GastronomyDetailPage.tsx");
-    const categoryCards = read(
-      "src/modules/business/gastronomy/components/GastronomyCategoryCards.tsx",
-    );
 
     expect(landing).not.toContain("__mocks__");
     expect(detail).not.toContain("__mocks__");
-    expect(categoryCards).not.toContain("__mocks__");
   });
 
   it("avoids generic hardcoded gastronomy navigation outside the SSOT", () => {
@@ -74,6 +70,31 @@ describe("gastronomy runtime boundaries", () => {
     });
 
     expect(invalidImports).toEqual([]);
+  });
+
+  it("keeps legacy menu mutations out of public service barrels", () => {
+    const serviceBarrel = read("src/modules/business/gastronomy/services/index.ts");
+    const facade = read("src/modules/business/gastronomy/services/GastronomyService.ts");
+
+    expect(serviceBarrel).not.toContain("menu.mutations");
+    expect(facade).not.toContain("menu.mutations");
+    expect(serviceBarrel).not.toContain("gastronomy.mutations");
+    expect(facade).not.toContain("gastronomy.mutations");
+    expect(facade).not.toContain("class GastronomyService");
+    expect(facade).not.toContain("export default");
+    expect(serviceBarrel).toContain("MenuService");
+  });
+
+  it("keeps gastronomy read queries implemented only in core business", () => {
+    const moduleQueries = read(
+      "src/modules/business/gastronomy/services/gastronomy.queries.ts",
+    );
+    const coreQueries = read("src/core/business/services/gastronomy.queries.ts");
+
+    expect(moduleQueries).toContain("@/core/business/services/gastronomy.queries");
+    expect(moduleQueries).not.toContain("supabase.from");
+    expect(moduleQueries).not.toContain("BusinessService.toBusinessReadModel");
+    expect(coreQueries).toContain("fetchActiveGastronomyProfileByBusinessDataId");
   });
 });
 

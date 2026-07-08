@@ -10,9 +10,10 @@ describe("community route SSOT", () => {
 
     expect(routes).toContain("buildCommunityTerritoryRoutePath");
     expect(routes).toContain("buildCommunityAliasRoutePath");
-    expect(routes).toContain("buildCommunityRootAliasRoutePath");
     expect(routes).toContain("CommunityTerritorialShell");
-    expect(routes).toContain("CommunityShortAliasShellRoute");
+    expect(routes).not.toContain("buildCommunityRootAliasRoutePath");
+    expect(routes).not.toContain("CommunityShortAliasShellRoute");
+    expect(routes).not.toContain("CommunityShortEntityRoute");
     expect(routes).not.toContain("buildCommunityLegacyAreaRoutePath");
     expect(routes).not.toContain("CommunityAreaCanonicalRedirect");
     expect(routes).not.toContain('path="/comunidade/:state/:city/:territorySlug"');

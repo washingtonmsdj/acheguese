@@ -19,6 +19,7 @@
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
+import { PublicViewTrackingService } from '@/core/analytics/services/PublicViewTrackingService';
 import {
   ProfileSavedEntityService,
   type ProfileSavedEntityConfig,
@@ -883,7 +884,7 @@ export class VagasService {
    */
   private static async incrementViewCount(id: string): Promise<void> {
     try {
-      await supabase.rpc('increment_vaga_view_count' as never, { vaga_id: id } as never);
+      await PublicViewTrackingService.track('vaga', id);
     } catch {
       // Silencioso - não quebrar a experiência por analytics
     }

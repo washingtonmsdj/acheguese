@@ -31,8 +31,8 @@ export interface UseVendedoresOptions {
 }
 
 export function useVendedores(options: UseVendedoresOptions = {}) {
-  const { routeResolved, search } = options;
-  const moduleTerritory = useModuleTerritoryFilter({ routeResolved });
+  const { routeResolved, activeMemberIds, search } = options;
+  const moduleTerritory = useModuleTerritoryFilter({ routeResolved, activeMemberIds });
   const filter = options.territoryFilter ?? moduleTerritory.territoryFilter;
   const filterKey = territoryFilterKey(filter);
 

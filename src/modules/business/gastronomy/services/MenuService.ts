@@ -1,5 +1,5 @@
 /**
- * MenuService - SSOT de cardápio com validação de plano.
+ * MenuService - SSOT de cardapio com validacao de plano.
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
@@ -142,6 +142,60 @@ function hasImageUrl(value: string | null | undefined): boolean {
   return typeof value === 'string' && value.trim().length > 0;
 }
 
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value);
+}
+
+function getMenuItemNutritionInfo(value: unknown): LooseRow {
+  return asRecord(value);
+}
+
+function buildMenuItemMetadata(params: {
+  currentMetadata?: LooseRow;
+  tags?: string[] | null;
+  stockQuantity?: number | null;
+  stockAlertThreshold?: number | null;
+  nutritionalInfo?: LooseRow;
+  preserveExisting?: boolean;
+}): LooseRow {
+  const {
+    currentMetadata = {},
+    tags,
+    stockQuantity,
+    stockAlertThreshold,
+    nutritionalInfo = {},
+    preserveExisting = false,
+  } = params;
+
+  const nextMetadata: LooseRow = preserveExisting ? { ...currentMetadata } : {};
+
+  if (tags !== undefined) {
+    nextMetadata.tags = tags;
+  } else if (!preserveExisting && Array.isArray(currentMetadata.tags)) {
+    nextMetadata.tags = currentMetadata.tags;
+  }
+
+  if (stockQuantity !== undefined) {
+    nextMetadata.stock_quantity = stockQuantity;
+  } else if (!preserveExisting && currentMetadata.stock_quantity !== undefined) {
+    nextMetadata.stock_quantity = currentMetadata.stock_quantity;
+  }
+
+  if (stockAlertThreshold !== undefined) {
+    nextMetadata.stock_alert_threshold = stockAlertThreshold;
+  } else if (!preserveExisting && currentMetadata.stock_alert_threshold !== undefined) {
+    nextMetadata.stock_alert_threshold = currentMetadata.stock_alert_threshold;
+  }
+
+  if (nutritionalInfo.pizza_visual !== undefined) {
+    nextMetadata.pizza_visual = nutritionalInfo.pizza_visual;
+  } else if (!preserveExisting && currentMetadata.pizza_visual !== undefined) {
+    nextMetadata.pizza_visual = currentMetadata.pizza_visual;
+  }
+
+  return nextMetadata;
+}
+
 function mapMenuCategory(row: LooseRow): MenuCategory {
   return {
     id: String(row.id ?? ''),
@@ -175,6 +229,7 @@ function mapMenuItem(row: LooseRow, menuId?: string | null): MenuItem {
           is_spicy: row.is_spicy ?? false,
           spicy_level: row.spicy_level ?? undefined,
           ingredients: row.ingredients ?? [],
+          pizza_visual: metadata.pizza_visual,
         };
 
   return {
@@ -194,9 +249,18 @@ function mapMenuItem(row: LooseRow, menuId?: string | null): MenuItem {
         : typeof row.preparation_time === 'number'
           ? row.preparation_time
           : null,
-    stock_quantity: typeof row.stock_quantity === 'number' ? row.stock_quantity : null,
+    stock_quantity:
+      typeof row.stock_quantity === 'number'
+        ? row.stock_quantity
+        : typeof metadata.stock_quantity === 'number'
+          ? metadata.stock_quantity
+          : null,
     stock_alert_threshold:
-      typeof row.stock_alert_threshold === 'number' ? row.stock_alert_threshold : null,
+      typeof row.stock_alert_threshold === 'number'
+        ? row.stock_alert_threshold
+        : typeof metadata.stock_alert_threshold === 'number'
+          ? metadata.stock_alert_threshold
+          : null,
     tags: Array.isArray(row.tags)
       ? (row.tags as string[])
       : Array.isArray(metadata.tags)
@@ -336,6 +400,22 @@ async function countMenuItemsWithImage(menuId: string): Promise<number> {
     .in('category_id', categoryIds)
     .not('image_url', 'is', null);
   return count || 0;
+}
+
+async function resolveFallbackCategoryId(menuId: string): Promise<string | null> {
+  const { data, error } = await db
+    .from('menu_categories')
+    .select('id')
+    .eq('menu_id', menuId)
+    .order('display_order', { ascending: true })
+    .maybeSingle();
+
+  const row = asRecord(data);
+  if (error || !row.id) {
+    return null;
+  }
+
+  return String(row.id);
 }
 
 function requirePlanContext(context: PlanContext | null): ServiceResult<true> {
@@ -570,6 +650,8 @@ export const MenuService = {
       const context = await getPlanContextByMenuId(input.menu_id);
       const contextCheck = requirePlanContext(context);
       if (contextCheck.error) return { data: null, error: contextCheck.error };
+      let categoryId = input.category_id;
+      const nutritionalInfo = getMenuItemNutritionInfo(input.nutritional_info);
 
       if (context!.entitlements.maxMenuItems !== null) {
         const current = await countMenuItems(input.menu_id);
@@ -585,7 +667,11 @@ export const MenuService = {
         return { data: null, error: 'Seu plano não permite categorias no cardápio.' };
       }
 
-      if (!input.category_id) {
+      if (!categoryId && !context!.entitlements.canUseMenuCategories) {
+        categoryId = await resolveFallbackCategoryId(input.menu_id) ?? undefined;
+      }
+
+      if (!categoryId) {
         return { data: null, error: 'Selecione uma categoria para este item.' };
       }
 
@@ -606,17 +692,31 @@ export const MenuService = {
       const { data, error } = await db
     .from('menu_items')
         .insert({
-          category_id: input.category_id,
+          category_id: categoryId,
           name: sanitizeString(input.name),
           description: input.description ? sanitizeString(input.description) : null,
           base_price: input.price,
           image_url: input.image_url || null,
-          preparation_time_min: input.preparation_time_min ?? null,
-          stock_quantity: input.stock_quantity ?? null,
-          stock_alert_threshold: input.stock_alert_threshold ?? null,
-          tags: input.tags || null,
+          preparation_time: input.preparation_time_min ?? null,
+          calories: isFiniteNumber(nutritionalInfo.calories) ? nutritionalInfo.calories : null,
+          is_vegetarian: nutritionalInfo.is_vegetarian === true,
+          is_vegan: nutritionalInfo.is_vegan === true,
+          is_gluten_free: nutritionalInfo.is_gluten_free === true,
+          is_lactose_free: nutritionalInfo.is_lactose_free === true,
+          is_spicy: nutritionalInfo.is_spicy === true,
+          spicy_level: isFiniteNumber(nutritionalInfo.spicy_level)
+            ? nutritionalInfo.spicy_level
+            : null,
+          ingredients: Array.isArray(nutritionalInfo.ingredients)
+            ? nutritionalInfo.ingredients
+            : null,
           allergens: input.allergens || null,
-          nutritional_info: input.nutritional_info || null,
+          metadata: buildMenuItemMetadata({
+            tags: input.tags ?? null,
+            stockQuantity: input.stock_quantity ?? null,
+            stockAlertThreshold: input.stock_alert_threshold ?? null,
+            nutritionalInfo,
+          }),
           is_available: input.is_available ?? true,
           is_featured: false,
           display_order: 0,
@@ -644,6 +744,13 @@ export const MenuService = {
       if (!item) {
         return { data: null, error: 'Item não encontrado.' };
       }
+
+      const currentItemResult = await this.getItem(itemId);
+      if (currentItemResult.error || !currentItemResult.data) {
+        return { data: null, error: currentItemResult.error ?? 'Item não encontrado.' };
+      }
+      const currentItem = currentItemResult.data;
+      const nutritionalInfo = getMenuItemNutritionInfo(input.nutritional_info);
 
       const context = await getPlanContextByMenuId(item.menu_id);
       const contextCheck = requirePlanContext(context);
@@ -686,11 +793,40 @@ export const MenuService = {
       if (input.display_order !== undefined) updates.display_order = input.display_order;
       if (input.is_available !== undefined) updates.is_available = input.is_available;
       if (input.is_featured !== undefined) updates.is_featured = input.is_featured;
-      if (input.preparation_time_min !== undefined) updates.preparation_time_min = input.preparation_time_min;
-      if (input.stock_quantity !== undefined) updates.stock_quantity = input.stock_quantity;
-      if (input.tags !== undefined) updates.tags = input.tags;
+      if (input.preparation_time_min !== undefined) updates.preparation_time = input.preparation_time_min;
+      if (nutritionalInfo.calories !== undefined) updates.calories = nutritionalInfo.calories;
+      if (nutritionalInfo.is_vegetarian !== undefined) updates.is_vegetarian = nutritionalInfo.is_vegetarian === true;
+      if (nutritionalInfo.is_vegan !== undefined) updates.is_vegan = nutritionalInfo.is_vegan === true;
+      if (nutritionalInfo.is_gluten_free !== undefined) updates.is_gluten_free = nutritionalInfo.is_gluten_free === true;
+      if (nutritionalInfo.is_lactose_free !== undefined) updates.is_lactose_free = nutritionalInfo.is_lactose_free === true;
+      if (nutritionalInfo.is_spicy !== undefined) updates.is_spicy = nutritionalInfo.is_spicy === true;
+      if (nutritionalInfo.spicy_level !== undefined) updates.spicy_level = nutritionalInfo.spicy_level;
+      if (nutritionalInfo.ingredients !== undefined) {
+        updates.ingredients = Array.isArray(nutritionalInfo.ingredients)
+          ? nutritionalInfo.ingredients
+          : null;
+      }
       if (input.allergens !== undefined) updates.allergens = input.allergens;
-      if (input.nutritional_info !== undefined) updates.nutritional_info = input.nutritional_info;
+      if (
+        input.tags !== undefined ||
+        input.stock_quantity !== undefined ||
+        input.stock_alert_threshold !== undefined ||
+        input.nutritional_info !== undefined
+      ) {
+        updates.metadata = buildMenuItemMetadata({
+          currentMetadata: {
+            tags: currentItem.tags,
+            stock_quantity: currentItem.stock_quantity,
+            stock_alert_threshold: currentItem.stock_alert_threshold,
+            pizza_visual: currentItem.nutritional_info?.pizza_visual,
+          },
+          tags: input.tags,
+          stockQuantity: input.stock_quantity,
+          stockAlertThreshold: input.stock_alert_threshold,
+          nutritionalInfo,
+          preserveExisting: true,
+        });
+      }
 
       const { data, error } = await db
     .from('menu_items')

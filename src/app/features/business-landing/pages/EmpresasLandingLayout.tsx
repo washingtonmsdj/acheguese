@@ -9,11 +9,11 @@ export function EmpresasLandingLayout({ children }: EmpresasLandingLayoutProps) 
   const launchPlace = `${TERRITORY_CONFIG.launch.name}, ${TERRITORY_CONFIG.launch.state.toUpperCase()}`;
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background text-foreground">
+    <div className="flex min-h-screen w-full flex-col bg-[#071017] text-white">
       {children}
 
-      <footer className="w-full border-t border-border bg-card px-4 py-4 text-center text-xs text-muted-foreground sm:px-6">
-        Empresas locais · {launchPlace} · Território conectado
+      <footer className="mt-auto hidden w-full border-t border-white/8 bg-[#071017] px-4 py-5 text-center text-xs text-white/42 lg:block lg:px-6">
+        Empresas locais - {launchPlace} - Territorio conectado
       </footer>
     </div>
   );

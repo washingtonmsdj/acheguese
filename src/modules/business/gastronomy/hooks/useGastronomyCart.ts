@@ -5,11 +5,17 @@ import type { GastronomyBusiness } from "../types/gastronomy";
 import type { Cart } from "../types/menu";
 import { GastronomyCartService } from "../cart/GastronomyCartService";
 import { useGastronomyCartStore } from "../cart/useGastronomyCartStore";
+import {
+  resolveDefaultFulfillmentMode,
+  resolveDeliveryFeeForFulfillment,
+} from "../checkout/checkoutRules";
 
 function buildEmptyBusinessCart(business: GastronomyBusiness): Cart {
+  const fulfillmentMode = resolveDefaultFulfillmentMode(business);
   return GastronomyCartService.createEmptyCart(
     business.business_data_id,
-    business.gastronomy_profile.delivery_fee ?? 0,
+    resolveDeliveryFeeForFulfillment(business, fulfillmentMode),
+    fulfillmentMode,
   );
 }
 
@@ -26,7 +32,10 @@ export function useGastronomyCart(business?: GastronomyBusiness | null) {
   );
 
   const businessId = business?.business_data_id;
-  const deliveryFee = business?.gastronomy_profile.delivery_fee ?? 0;
+  const fulfillmentMode = business ? resolveDefaultFulfillmentMode(business) : "delivery";
+  const deliveryFee = business
+    ? resolveDeliveryFeeForFulfillment(business, fulfillmentMode)
+    : 0;
 
   useEffect(() => {
     if (!businessId) return;
@@ -34,8 +43,9 @@ export function useGastronomyCart(business?: GastronomyBusiness | null) {
     syncBusinessContext({
       business_id: businessId,
       delivery_fee: deliveryFee,
+      fulfillment_mode: fulfillmentMode,
     });
-  }, [businessId, deliveryFee, syncBusinessContext]);
+  }, [businessId, deliveryFee, fulfillmentMode, syncBusinessContext]);
 
   return useMemo(() => {
     if (!business) {

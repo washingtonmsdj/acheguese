@@ -3,53 +3,58 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { supabase } from '@/integrations/supabase';
 import { NicheVersioningService } from '../NicheVersioningService';
-import type { ProfileNicheConfig } from '../types';
 
-// Mock Supabase
 vi.mock('@/integrations/supabase', () => ({
   supabase: {
     rpc: vi.fn(),
-    from: vi.fn(() => ({
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          single: vi.fn(),
-        })),
-        order: vi.fn(),
-      })),
-      update: vi.fn(() => ({
-        eq: vi.fn(),
-      })),
-      insert: vi.fn(),
-    })),
+    from: vi.fn(),
   },
 }));
 
+function mockSingleRow(data: unknown, error: unknown = null) {
+  const single = vi.fn().mockResolvedValue({ data, error });
+  const eq = vi.fn(() => ({ single }));
+  const select = vi.fn(() => ({ eq }));
+  const from = vi.fn(() => ({ select }));
+
+  vi.mocked(supabase.from).mockImplementation(from as never);
+
+  return { from, select, eq, single };
+}
+
 describe('NicheVersioningService', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(supabase.rpc).mockReset();
+    vi.mocked(supabase.from).mockReset();
+  });
+
   describe('hasCapability', () => {
-    it('deve verificar se perfil tem capability', async () => {
-      const { supabase } = await import('@/integrations/supabase');
-      vi.mocked(supabase.rpc).mockResolvedValueOnce({
-        data: true,
-        error: null,
-      } as never);
+    it('reads capabilities through the RLS-protected table', async () => {
+      const query = mockSingleRow({
+        enabled_capabilities: ['pizza_multi_flavor', 'pizza_sizes'],
+      });
 
       const result = await NicheVersioningService.hasCapability(
         'business-123',
         'pizza_multi_flavor',
       );
 
-      expect(result.has_capability).toBe(true);
-      expect(result.capability).toBe('pizza_multi_flavor');
-      expect(result.business_id).toBe('business-123');
+      expect(result).toEqual({
+        has_capability: true,
+        capability: 'pizza_multi_flavor',
+        business_id: 'business-123',
+      });
+      expect(query.from).toHaveBeenCalledWith('gastronomy_profiles');
+      expect(query.select).toHaveBeenCalledWith('enabled_capabilities');
+      expect(query.eq).toHaveBeenCalledWith('business_id', 'business-123');
+      expect(supabase.rpc).not.toHaveBeenCalled();
     });
 
-    it('deve retornar false em caso de erro', async () => {
-      const { supabase } = await import('@/integrations/supabase');
-      vi.mocked(supabase.rpc).mockResolvedValueOnce({
-        data: null,
-        error: new Error('Database error'),
-      } as never);
+    it('returns false when the profile cannot be read', async () => {
+      mockSingleRow(null, new Error('Database error'));
 
       const result = await NicheVersioningService.hasCapability(
         'business-123',
@@ -57,29 +62,15 @@ describe('NicheVersioningService', () => {
       );
 
       expect(result.has_capability).toBe(false);
+      expect(supabase.rpc).not.toHaveBeenCalled();
     });
   });
 
   describe('hasCapabilities', () => {
-    it('deve verificar múltiplas capabilities', async () => {
-      const { supabase } = await import('@/integrations/supabase');
-      const mockFrom = vi.fn(() => ({
-        select: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            single: vi.fn().mockResolvedValue({
-              data: {
-                enabled_capabilities: [
-                  'pizza_sizes',
-                  'pizza_flavors',
-                  'pizza_crusts',
-                ],
-              },
-              error: null,
-            }),
-          })),
-        })),
-      }));
-      vi.mocked(supabase.from).mockImplementation(mockFrom as never);
+    it('checks multiple capabilities from the profile row', async () => {
+      mockSingleRow({
+        enabled_capabilities: ['pizza_sizes', 'pizza_flavors', 'pizza_crusts'],
+      });
 
       const result = await NicheVersioningService.hasCapabilities(
         'business-123',
@@ -96,99 +87,32 @@ describe('NicheVersioningService', () => {
     });
   });
 
-  describe('addCapability', () => {
-    it('deve adicionar capability com sucesso', async () => {
-      const { supabase } = await import('@/integrations/supabase');
-      vi.mocked(supabase.rpc).mockResolvedValueOnce({
-        data: true,
-        error: null,
-      } as never);
-
+  describe('privileged mutations', () => {
+    it('does not add capabilities from the browser client', async () => {
       const result = await NicheVersioningService.addCapability({
         business_id: 'business-123',
         capability: 'slice_sales',
         upgraded_by: 'user-456',
       });
 
-      expect(result.success).toBe(true);
-      expect(result.already_exists).toBe(false);
-    });
-
-    it('deve indicar quando capability já existe', async () => {
-      const { supabase } = await import('@/integrations/supabase');
-      vi.mocked(supabase.rpc).mockResolvedValueOnce({
-        data: false,
-        error: null,
-      } as never);
-
-      const result = await NicheVersioningService.addCapability({
-        business_id: 'business-123',
-        capability: 'slice_sales',
-      });
-
-      expect(result.success).toBe(true);
-      expect(result.already_exists).toBe(true);
-    });
-
-    it('deve retornar erro em caso de falha', async () => {
-      const { supabase } = await import('@/integrations/supabase');
-      vi.mocked(supabase.rpc).mockResolvedValueOnce({
-        data: null,
-        error: { message: 'Database error' },
-      } as never);
-
-      const result = await NicheVersioningService.addCapability({
-        business_id: 'business-123',
-        capability: 'slice_sales',
-      });
-
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Database error');
+      expect(result.error).toContain('trusted admin/server path');
+      expect(supabase.rpc).not.toHaveBeenCalled();
+      expect(supabase.from).not.toHaveBeenCalled();
     });
-  });
 
-  describe('markNeedsUpgrade', () => {
-    it('deve marcar perfis como precisando upgrade', async () => {
-      const { supabase } = await import('@/integrations/supabase');
-      vi.mocked(supabase.rpc).mockResolvedValueOnce({
-        data: 5,
-        error: null,
-      } as never);
-
+    it('does not mark niche cohorts for upgrade from the browser client', async () => {
       const result = await NicheVersioningService.markNeedsUpgrade({
         niche_key: 'pizza',
         missing_capabilities: ['slice_sales', 'seasonal_flavors'],
       });
 
-      expect(result.updated_count).toBe(5);
+      expect(result.updated_count).toBe(0);
+      expect(supabase.rpc).not.toHaveBeenCalled();
+      expect(supabase.from).not.toHaveBeenCalled();
     });
-  });
 
-  describe('upgradeNiche', () => {
-    it('deve realizar upgrade completo', async () => {
-      const { supabase } = await import('@/integrations/supabase');
-
-      // Mock fetch current profile
-      const mockFrom = vi.fn(() => ({
-        select: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            single: vi.fn().mockResolvedValue({
-              data: {
-                niche_config_version: '1.0.0',
-                operational_mode: 'basic_menu',
-                enabled_capabilities: ['basic_menu', 'menu_variants'],
-              },
-              error: null,
-            }),
-          })),
-        })),
-        update: vi.fn(() => ({
-          eq: vi.fn().mockResolvedValue({ error: null }),
-        })),
-        insert: vi.fn().mockResolvedValue({ error: null }),
-      }));
-      vi.mocked(supabase.from).mockImplementation(mockFrom as never);
-
+    it('does not upgrade niche capabilities from the browser client', async () => {
       const result = await NicheVersioningService.upgradeNiche({
         business_id: 'business-123',
         to_version: '2.0.0',
@@ -196,67 +120,33 @@ describe('NicheVersioningService', () => {
         add_capabilities: ['pizza_sizes', 'pizza_flavors'],
         upgrade_type: 'manual',
         upgraded_by: 'user-456',
-        notes: 'Upgrade para pizzaria completa',
+        notes: 'Upgrade to full pizza mode',
       });
 
-      expect(result.success).toBe(true);
-      expect(result.from_version).toBe('1.0.0');
-      expect(result.to_version).toBe('2.0.0');
-      expect(result.added_capabilities).toEqual(['pizza_sizes', 'pizza_flavors']);
-    });
-
-    it('deve retornar erro se perfil não encontrado', async () => {
-      const { supabase } = await import('@/integrations/supabase');
-
-      const mockFrom = vi.fn(() => ({
-        select: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            single: vi.fn().mockResolvedValue({
-              data: null,
-              error: new Error('Not found'),
-            }),
-          })),
-        })),
-      }));
-      vi.mocked(supabase.from).mockImplementation(mockFrom as never);
-
-      const result = await NicheVersioningService.upgradeNiche({
-        business_id: 'business-123',
+      expect(result).toEqual({
+        success: false,
+        from_version: '0.0.0',
         to_version: '2.0.0',
-        to_operational_mode: 'pizzaria_full',
-        add_capabilities: ['pizza_sizes'],
-        upgrade_type: 'manual',
+        added_capabilities: [],
+        error: expect.stringContaining('trusted admin/server path'),
       });
-
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Perfil gastronômico não encontrado');
+      expect(supabase.rpc).not.toHaveBeenCalled();
+      expect(supabase.from).not.toHaveBeenCalled();
     });
   });
 
   describe('getProfileNicheConfig', () => {
-    it('deve obter configuração de nicho do perfil', async () => {
-      const { supabase } = await import('@/integrations/supabase');
-
-      const mockFrom = vi.fn(() => ({
-        select: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            single: vi.fn().mockResolvedValue({
-              data: {
-                primary_niche_key: 'pizza',
-                niche_config_version: '1.0.0',
-                support_level: 'full_enabled',
-                operational_mode: 'pizzaria_full',
-                enabled_capabilities: ['pizza_sizes', 'pizza_flavors'],
-                missing_capabilities: ['slice_sales'],
-                needs_niche_upgrade: true,
-                last_niche_upgrade_at: '2026-04-26T10:00:00Z',
-              },
-              error: null,
-            }),
-          })),
-        })),
-      }));
-      vi.mocked(supabase.from).mockImplementation(mockFrom as never);
+    it('gets profile niche config', async () => {
+      mockSingleRow({
+        primary_niche_key: 'pizza',
+        niche_config_version: '1.0.0',
+        support_level: 'full_enabled',
+        operational_mode: 'pizzaria_full',
+        enabled_capabilities: ['pizza_sizes', 'pizza_flavors'],
+        missing_capabilities: ['slice_sales'],
+        needs_niche_upgrade: true,
+        last_niche_upgrade_at: '2026-04-26T10:00:00Z',
+      });
 
       const config = await NicheVersioningService.getProfileNicheConfig(
         'business-123',
@@ -270,20 +160,8 @@ describe('NicheVersioningService', () => {
       expect(config?.needs_niche_upgrade).toBe(true);
     });
 
-    it('deve retornar null se perfil não encontrado', async () => {
-      const { supabase } = await import('@/integrations/supabase');
-
-      const mockFrom = vi.fn(() => ({
-        select: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            single: vi.fn().mockResolvedValue({
-              data: null,
-              error: new Error('Not found'),
-            }),
-          })),
-        })),
-      }));
-      vi.mocked(supabase.from).mockImplementation(mockFrom as never);
+    it('returns null when the profile is not found', async () => {
+      mockSingleRow(null, new Error('Not found'));
 
       const config = await NicheVersioningService.getProfileNicheConfig(
         'business-123',

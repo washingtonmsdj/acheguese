@@ -58,7 +58,7 @@ enable_signup = true
 enable_anonymous_sign_ins = false
 enable_manual_linking = false
 minimum_password_length = 12
-password_requirements = "letters_digits"
+password_requirements = "lower_upper_letters_digits_symbols"
 
 [auth.email]
 enable_signup = true
@@ -100,6 +100,156 @@ verify_enabled = false
 enabled = true
 policy = "oneshot"
 inspector_port = 8083
+
+[functions.admin-business-rpc]
+verify_jwt = true
+
+[functions.admin-communication-rpc]
+verify_jwt = true
+
+[functions.admin-create-user]
+verify_jwt = true
+
+[functions.admin-get-user]
+verify_jwt = true
+
+[functions.admin-get-user-auth-summary]
+verify_jwt = true
+
+[functions.admin-list-users]
+verify_jwt = true
+
+[functions.admin-notifications-rpc]
+verify_jwt = true
+
+[functions.admin-pricing-rpc]
+verify_jwt = true
+
+[functions.admin-site-settings-rpc]
+verify_jwt = true
+
+[functions.admin-suspend-profile]
+verify_jwt = true
+
+[functions.admin-verify-profile]
+verify_jwt = true
+
+[functions.ai-image]
+verify_jwt = true
+
+[functions.ai-text]
+verify_jwt = true
+
+[functions.ai-vision]
+verify_jwt = true
+
+[functions.auth-username-login]
+verify_jwt = false
+
+[functions.auto-dispatch-ride]
+verify_jwt = false
+
+[functions.billing-create-checkout]
+verify_jwt = true
+
+[functions.billing-create-portal]
+verify_jwt = true
+
+[functions.billing-entitlements-rpc]
+verify_jwt = true
+
+[functions.billing-webhook]
+verify_jwt = false
+
+[functions.business-reviews-rpc]
+verify_jwt = true
+
+[functions.communication-rpc]
+verify_jwt = true
+
+[functions.community-notifications-rpc]
+verify_jwt = true
+
+[functions.community-rpc]
+verify_jwt = true
+
+[functions.delivery-rpc]
+verify_jwt = true
+
+[functions.get-push-config]
+verify_jwt = false
+
+[functions.health-check]
+verify_jwt = true
+
+[functions.location-rpc]
+verify_jwt = true
+
+[functions.mobility-rpc]
+verify_jwt = true
+
+[functions.nominatim-proxy]
+verify_jwt = false
+
+[functions.privacy-rpc]
+verify_jwt = true
+
+[functions.process-timeouts]
+verify_jwt = false
+
+[functions.professional-notifications-rpc]
+verify_jwt = true
+
+[functions.profile-rpc]
+verify_jwt = true
+
+[functions.role-rpc]
+verify_jwt = true
+
+[functions.send-email]
+verify_jwt = true
+
+[functions.send-emergency-email]
+verify_jwt = true
+
+[functions.send-push]
+verify_jwt = true
+
+[functions.session-rpc]
+verify_jwt = true
+
+[functions.sitemap]
+verify_jwt = false
+
+[functions.subscribe-push]
+verify_jwt = true
+
+[functions.territorial-get-tree]
+verify_jwt = true
+
+[functions.territorial-update-group-visibility]
+verify_jwt = true
+
+[functions.territorial-update-location-visibility]
+verify_jwt = true
+
+[functions.territory-ai-content]
+verify_jwt = true
+
+[functions.track-public-view]
+verify_jwt = false
+
+[functions.tryon-generate]
+verify_jwt = true
+
+[functions.unsubscribe-push]
+verify_jwt = true
+
+[functions.user-delete-account]
+verify_jwt = true
+
+[functions.user-export-data]
+verify_jwt = true
 
 [analytics]
 enabled = false

@@ -1,12 +1,16 @@
-import { useState } from "react";
-import { Wrench } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Loader2, Wrench } from "lucide-react";
+import { toast } from "sonner";
 import { useLocationContext } from "@/core/location";
 import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
-import { useTerritoryFilter } from "@/core/location/hooks/useTerritoryFilter";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
-import type { TerritoryFilter } from "@/core/location";
 import { useSessionContext } from "@/core/session";
 import { buildCommunityTerritoryPresentation } from "@/core/community-issues/utils/communityTerritoryPresentation";
+import { CommunityPortalGate, useCommunityAccess } from "@/core/community/access";
+import {
+  resolveCommunityRouteDefaultLocationId,
+  resolveCommunityRouteTerritoryFilter,
+} from "@/core/community/utils/communityRouteTerritory";
 import { Button } from "@/shared/components/ui/button";
 import { TooltipProvider } from "@/shared/components/ui/tooltip";
 import { getRecordValue } from "@/shared/utils/recordLookup";
@@ -19,18 +23,40 @@ import { useIssues } from "@/core/community-issues/hooks/useIssues";
 
 interface ProblemasPageProps {
   resolved?: ResolvedTerritory;
+  activeMemberIds?: readonly string[];
 }
 
-export default function ProblemasPage({ resolved }: ProblemasPageProps) {
+const EMPTY_ACTIVE_MEMBER_IDS: readonly string[] = [];
+
+export default function ProblemasPage({
+  resolved,
+  activeMemberIds = EMPTY_ACTIVE_MEMBER_IDS,
+}: ProblemasPageProps) {
   const { activeProfile: profile } = useSessionContext();
   const { activeLocation } = useLocationContext();
   const { homeDistrict, homeCity } = useUserTerritory();
-  const routeTerritoryFilter = useTerritoryFilter(resolved);
-  const territoryFilter: TerritoryFilter = resolved
-    ? routeTerritoryFilter
-    : homeDistrict
-      ? { scope: "location", location_id: homeDistrict.id }
-      : routeTerritoryFilter;
+  const accessTarget = useMemo(
+    () =>
+      resolved ??
+      (homeDistrict
+        ? ({ kind: "location", location: homeDistrict } as const)
+        : homeCity
+          ? ({ kind: "location", location: homeCity } as const)
+          : null),
+    [homeCity, homeDistrict, resolved],
+  );
+  const communityAccess = useCommunityAccess({
+    resolved: accessTarget,
+    activeMemberIds,
+  });
+  const territoryFilter = useMemo(
+    () => resolveCommunityRouteTerritoryFilter(accessTarget, activeMemberIds),
+    [accessTarget, activeMemberIds],
+  );
+  const issueLocationId = useMemo(
+    () => resolveCommunityRouteDefaultLocationId(accessTarget, activeMemberIds),
+    [accessTarget, activeMemberIds],
+  );
   const [modalOpen, setModalOpen] = useState(false);
   const [filterStatus, setFilterStatus] = useState<IssueStatus | undefined>("aberto");
 
@@ -45,11 +71,11 @@ export default function ProblemasPage({ resolved }: ProblemasPageProps) {
     activeLocation,
     profile,
   });
-  const territoryPresentation = !resolved && homeDistrict
+  const territoryPresentation = !resolved && (homeDistrict || homeCity)
     ? {
       city: homeCity?.name ?? profile?.city ?? "",
-      neighborhood: homeDistrict.name,
-      locationId: homeDistrict.id,
+      neighborhood: homeDistrict?.name ?? "",
+      locationId: homeDistrict?.id ?? homeCity?.id ?? "",
     }
     : routeTerritoryPresentation;
 
@@ -58,6 +84,40 @@ export default function ProblemasPage({ resolved }: ProblemasPageProps) {
     status: filterStatus,
     limit: 30,
   });
+
+  const handleOpenCreateIssue = () => {
+    if (!communityAccess.can.create_issue) {
+      toast.info("Reportar problemas exige residencia verificada neste territorio.");
+      return;
+    }
+
+    if (!issueLocationId) {
+      toast.info("Selecione um territorio valido para reportar problemas.");
+      return;
+    }
+
+    setModalOpen(true);
+  };
+
+  if (communityAccess.isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!communityAccess.can.view_member_feed) {
+    return (
+      <div className="min-h-screen bg-background">
+        <CommunityPortalGate
+          resolved={accessTarget}
+          activeMemberIds={activeMemberIds}
+          action="view_member_feed"
+        />
+      </div>
+    );
+  }
 
   return (
     <TooltipProvider>
@@ -70,8 +130,8 @@ export default function ProblemasPage({ resolved }: ProblemasPageProps) {
             </div>
             <Button
               size="sm"
-              onClick={() => setModalOpen(true)}
-              disabled={!profile || !territoryPresentation.locationId}
+              onClick={handleOpenCreateIssue}
+              disabled={!profile || !issueLocationId}
               aria-label="Reportar novo problema"
             >
               Reportar
@@ -121,7 +181,9 @@ export default function ProblemasPage({ resolved }: ProblemasPageProps) {
           onClose={() => setModalOpen(false)}
           city={territoryPresentation.city}
           neighborhood={territoryPresentation.neighborhood}
-          locationId={territoryPresentation.locationId}
+          locationId={issueLocationId}
+          canCreate={communityAccess.can.create_issue}
+          blockedMessage="Reportar problemas exige residencia verificada neste territorio."
         />
       </div>
     </TooltipProvider>

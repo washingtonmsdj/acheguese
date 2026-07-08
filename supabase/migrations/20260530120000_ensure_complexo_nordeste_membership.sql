@@ -1,6 +1,42 @@
 -- Ensure the public Complexo community is the SSOT group for its launch neighborhoods.
 -- Uses canonical location slugs only; no UUIDs are embedded in the migration.
 
+CREATE OR REPLACE FUNCTION public.check_territorial_group_member()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  v_location_type   TEXT;
+  v_location_parent UUID;
+  v_anchor_city_id  UUID;
+BEGIN
+  SELECT type, parent_id
+    INTO v_location_type, v_location_parent
+    FROM public.locations
+   WHERE id = NEW.location_id;
+
+  SELECT anchor_city_id
+    INTO v_anchor_city_id
+    FROM public.territorial_groups
+   WHERE id = NEW.group_id;
+
+  IF v_location_type NOT IN ('district', 'neighborhood') THEN
+    RAISE EXCEPTION
+      'territorial_group_members: location % must be a district or neighborhood, got %',
+      NEW.location_id, v_location_type;
+  END IF;
+
+  IF v_location_parent <> v_anchor_city_id THEN
+    RAISE EXCEPTION
+      'territorial_group_members: location % parent (%) must match anchor_city_id (%)',
+      NEW.location_id, v_location_parent, v_anchor_city_id;
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
 WITH anchor_city AS (
   SELECT id
   FROM locations
@@ -10,7 +46,7 @@ WITH anchor_city AS (
   LIMIT 1
 ),
 upserted_group AS (
-  INSERT INTO territorial_groups (
+  INSERT INTO public.territorial_groups (
     slug,
     name,
     description,
@@ -30,13 +66,13 @@ upserted_group AS (
       'community_scope', 'launch'
     )
   FROM anchor_city
-  ON CONFLICT (slug) DO UPDATE
+  ON CONFLICT ON CONSTRAINT territorial_groups_slug_city_unique DO UPDATE
   SET
     name = EXCLUDED.name,
     description = EXCLUDED.description,
     anchor_city_id = EXCLUDED.anchor_city_id,
     status = 'active',
-    metadata = territorial_groups.metadata || EXCLUDED.metadata,
+    metadata = public.territorial_groups.metadata || EXCLUDED.metadata,
     updated_at = now()
   RETURNING id, anchor_city_id
 ),
@@ -53,11 +89,11 @@ member_locations AS (
       'vale-das-pedrinhas'
     )
 )
-INSERT INTO territorial_group_members (group_id, location_id)
+INSERT INTO public.territorial_group_members (group_id, location_id)
 SELECT upserted_group.id, member_locations.id
 FROM upserted_group
 CROSS JOIN member_locations
-ON CONFLICT (group_id, location_id) DO NOTHING;
+ON CONFLICT ON CONSTRAINT territorial_group_members_pkey DO NOTHING;
 
 WITH anchor_city AS (
   SELECT id
@@ -74,7 +110,7 @@ target_group AS (
   WHERE territorial_groups.slug = 'complexo-do-nordeste-de-amaralina'
   LIMIT 1
 )
-INSERT INTO territory_communities (
+INSERT INTO public.territory_communities (
   name,
   slug,
   city_id,
@@ -108,7 +144,7 @@ SELECT
   true,
   1
 FROM target_group
-ON CONFLICT (slug, city_id) DO UPDATE
+ON CONFLICT ON CONSTRAINT territory_communities_slug_city_unique DO UPDATE
 SET
   territory_type = EXCLUDED.territory_type,
   territory_id = EXCLUDED.territory_id,

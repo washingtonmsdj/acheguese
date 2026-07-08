@@ -9,9 +9,14 @@ import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 import type { FavoriteStats } from "../types";
 import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
+import { BusinessFavoriteService } from "@/core/business/services/BusinessFavoriteService";
+import {
+  resolveAuthUserIdFromProfile,
+  resolveBusinessDataIdFromProfile,
+  resolveFavoriteBusinessProfileIdsByUserId,
+} from "./businessFavoriteAdapters";
 
 const TABLE = "profile_favorites_new";
-const BUSINESS_FAVORITES_TABLE = "business_favorites";
 
 const supabaseTyped = supabase as unknown as AdminSupabaseClient;
 
@@ -175,18 +180,14 @@ export async function isBusinessFavorited(
   userId: string,
 ): Promise<boolean> {
   try {
-    const { data, error } = await supabase
-      .from(BUSINESS_FAVORITES_TABLE)
-      .select("id")
-      .eq("business_id", businessId)
-      .eq("profile_id", userId)
-      .limit(1);
+    const [authUserId, businessDataId] = await Promise.all([
+      resolveAuthUserIdFromProfile(userId),
+      resolveBusinessDataIdFromProfile(businessId),
+    ]);
 
-    if (error) {
-      throw error;
-    }
+    if (!authUserId || !businessDataId) return false;
 
-    return Array.isArray(data) && data.length > 0;
+    return BusinessFavoriteService.isFavoritedByUser(businessDataId, authUserId);
   } catch (error) {
     logger.error("[favorites.queries] Error checking if business is favorited:", error);
     trackError(error as Error, {
@@ -203,14 +204,10 @@ export async function isBusinessFavorited(
  */
 export async function getUserBusinessFavorites(userId: string): Promise<string[]> {
   try {
-    const { data, error } = await supabase
-      .from(BUSINESS_FAVORITES_TABLE)
-      .select("business_id")
-      .eq("profile_id", userId);
+    const authUserId = await resolveAuthUserIdFromProfile(userId);
+    if (!authUserId) return [];
 
-    if (error) throw error;
-
-    return data?.map((f) => f.business_id) || [];
+    return resolveFavoriteBusinessProfileIdsByUserId(authUserId);
   } catch (error) {
     logger.error("[favorites.queries] Error getting user business favorites:", error);
     trackError(error as Error, {

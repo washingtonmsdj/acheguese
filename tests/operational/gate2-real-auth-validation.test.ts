@@ -10,9 +10,13 @@
  */
 
 import { it, expect, beforeAll, afterAll } from 'vitest';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { type SupabaseClient } from '@supabase/supabase-js';
 import { TrackingService } from '../../src/core/tracking/services/TrackingService';
-import { describeOperational, requireOperationalEnv } from '../helpers/operational-env';
+import {
+  createOperationalAnonClient,
+  describeOperational,
+  requireOperationalEnv,
+} from '../helpers/operational-env';
 
 describeOperational('GATE 2 - Validação Operacional Real', {
   requireDriverCredentials: true,
@@ -30,7 +34,7 @@ describeOperational('GATE 2 - Validação Operacional Real', {
     driverEmail = env.driverEmail;
     driverPassword = env.driverPassword;
     // Criar cliente Supabase
-    supabase = createClient(env.supabaseUrl, env.anonKey);
+    supabase = createOperationalAnonClient();
 
     // Autenticar como motorista
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({

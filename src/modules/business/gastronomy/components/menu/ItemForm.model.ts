@@ -34,7 +34,7 @@ export type ItemFormValues = z.infer<typeof itemSchema>;
 export interface ItemFormProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (values: Record<string, unknown>) => void;
+  onSubmit: (values: Record<string, unknown>) => Promise<boolean | void> | boolean | void;
   item?: MenuItem | null;
   categories: MenuCategory[];
   isSubmitting?: boolean;

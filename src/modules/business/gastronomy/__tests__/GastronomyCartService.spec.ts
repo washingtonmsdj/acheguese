@@ -93,6 +93,28 @@ describe("GastronomyCartService", () => {
     expect(GastronomyCartService.getItemCount(cart)).toBe(1);
   });
 
+  it("zera taxa de entrega para carrinho de retirada", () => {
+    const cartItem = GastronomyCartService.buildCartItem({
+      item: makeMenuItem({
+        variants: [],
+        addons: [],
+        base_price: 24,
+      }),
+    });
+
+    const cart = GastronomyCartService.appendItem(null, {
+      business_id: "business-1",
+      delivery_fee: 7.5,
+      fulfillment_mode: "takeout",
+      cart_item: cartItem,
+    });
+
+    expect(cart.fulfillment_mode).toBe("takeout");
+    expect(cart.subtotal).toBe(24);
+    expect(cart.delivery_fee).toBe(0);
+    expect(cart.total).toBe(24);
+  });
+
   it("reinicia o carrinho ao trocar de estabelecimento", () => {
     const firstCart = GastronomyCartService.appendItem(null, {
       business_id: "business-1",

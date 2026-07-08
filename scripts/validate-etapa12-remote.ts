@@ -4,12 +4,11 @@
  * Valida que as migrations foram aplicadas corretamente e gera relatório
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { createServiceRoleClient, getSupabaseConfig } from './lib/supabase-client';
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL!;
-const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabaseConfig = getSupabaseConfig();
 
-const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+const supabase = createServiceRoleClient();
 
 interface TableValidation {
   table: string;
@@ -203,7 +202,7 @@ async function main() {
   console.log('═══════════════════════════════════════════════════');
   console.log('  ETAPA 12B: VALIDAÇÃO NO BANCO REMOTO');
   console.log('═══════════════════════════════════════════════════');
-  console.log(`\n📍 Ambiente: ${SUPABASE_URL}\n`);
+  console.log(`\n📍 Ambiente: ${supabaseConfig.url ?? 'Supabase configurado'}\n`);
   
   try {
     // Validar dados

@@ -1,0 +1,67 @@
+{
+  "schemaVersion": "supabase-advisor-residuals/v1",
+  "updatedAt": "2026-07-08",
+  "sourceCommand": "supabase db advisors --linked --type security --fail-on none --output json",
+  "residuals": [
+    {
+      "cacheKey": "rls_disabled_in_public_public_spatial_ref_sys",
+      "exceptionId": "EXC-2026-07-08-POSTGIS-EXTENSION-OWNER",
+      "summary": "PostGIS extension table public.spatial_ref_sys requires owner/platform route."
+    },
+    {
+      "cacheKey": "extension_in_public_unaccent",
+      "exceptionId": "EXC-2026-07-08-POSTGIS-EXTENSION-OWNER",
+      "summary": "Extension schema migration requires dedicated platform review."
+    },
+    {
+      "cacheKey": "extension_in_public_pg_trgm",
+      "exceptionId": "EXC-2026-07-08-POSTGIS-EXTENSION-OWNER",
+      "summary": "Extension schema migration requires dedicated platform review."
+    },
+    {
+      "cacheKey": "extension_in_public_citext",
+      "exceptionId": "EXC-2026-07-08-POSTGIS-EXTENSION-OWNER",
+      "summary": "Extension schema migration requires dedicated platform review."
+    },
+    {
+      "cacheKey": "extension_in_public_postgis",
+      "exceptionId": "EXC-2026-07-08-POSTGIS-EXTENSION-OWNER",
+      "summary": "PostGIS schema migration requires dedicated platform review."
+    },
+    {
+      "cacheKey": "anon_security_definer_function_executable_public_st_estimatedextent_text, text",
+      "exceptionId": "EXC-2026-07-08-POSTGIS-EXTENSION-OWNER",
+      "summary": "PostGIS function grant requires owner/platform route."
+    },
+    {
+      "cacheKey": "anon_security_definer_function_executable_public_st_estimatedextent_text, text, text",
+      "exceptionId": "EXC-2026-07-08-POSTGIS-EXTENSION-OWNER",
+      "summary": "PostGIS function grant requires owner/platform route."
+    },
+    {
+      "cacheKey": "anon_security_definer_function_executable_public_st_estimatedextent_text, text, text, boolean",
+      "exceptionId": "EXC-2026-07-08-POSTGIS-EXTENSION-OWNER",
+      "summary": "PostGIS function grant requires owner/platform route."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_st_estimatedextent_text, text",
+      "exceptionId": "EXC-2026-07-08-POSTGIS-EXTENSION-OWNER",
+      "summary": "PostGIS function grant requires owner/platform route."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_st_estimatedextent_text, text, text",
+      "exceptionId": "EXC-2026-07-08-POSTGIS-EXTENSION-OWNER",
+      "summary": "PostGIS function grant requires owner/platform route."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_st_estimatedextent_text, text, text, boolean",
+      "exceptionId": "EXC-2026-07-08-POSTGIS-EXTENSION-OWNER",
+      "summary": "PostGIS function grant requires owner/platform route."
+    },
+    {
+      "cacheKey": "auth_leaked_password_protection",
+      "exceptionId": "EXC-2026-07-08-AUTH-HIBP-DASHBOARD",
+      "summary": "Leaked password protection depends on Auth Settings or Management API with valid PAT and compatible plan."
+    }
+  ]
+}

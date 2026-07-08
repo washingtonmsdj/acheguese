@@ -1,7 +1,7 @@
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 import { AuthService } from "@/core/auth/services/AuthService";
-import { HibpService } from "@/core/auth/services/HibpService";
 import { getAuthErrorMessage } from "@/core/auth/utils/authMessages";
+import { checkPasswordCompromise } from "@/core/auth/utils/compromisedPassword";
 import { validateAuthPassword } from "@/core/auth/utils/passwordPolicy";
 import { useToast } from "@/shared/hooks/use-toast";
 import { logger } from "@/shared/utils/logger";
@@ -17,20 +17,22 @@ export function usePasswordChange(onSuccess?: () => void) {
     const passwordError = validateAuthPassword(newPassword);
     if (passwordError) {
       toast({
-        title: "Senha inválida",
+        title: "Senha invalida",
         description: passwordError,
         variant: "destructive",
       });
       return false;
     }
+
     if (newPassword !== confirmPassword) {
       toast({
-        title: "Senhas não coincidem",
-        description: "As senhas digitadas não são iguais",
+        title: "Senhas nao coincidem",
+        description: "As senhas digitadas nao sao iguais",
         variant: "destructive",
       });
       return false;
     }
+
     return true;
   }, [newPassword, confirmPassword, toast]);
 
@@ -40,23 +42,16 @@ export function usePasswordChange(onSuccess?: () => void) {
     setLoading(true);
 
     try {
-      // 🔒 Verificar se a senha foi exposta em vazamentos (HIBP)
-      try {
-        const hibp = await HibpService.checkPassword(newPassword);
-        if (hibp.isPwned) {
-          toast({
-            title: "Senha comprometida",
-            description: `Esta senha apareceu ${hibp.count.toLocaleString("pt-BR")} vez(es) em vazamentos de dados conhecidos. Escolha uma senha diferente.`,
-            variant: "destructive",
-          });
-          return false;
-        }
-      } catch (hibpErr) {
-        // Falha na API HIBP não bloqueia o usuário — apenas loga o aviso
-        logger.warn("HIBP check failed, skipping:", hibpErr);
+      const compromise = await checkPasswordCompromise(newPassword);
+      if (compromise.blocked) {
+        toast({
+          title: "Senha comprometida",
+          description: compromise.message,
+          variant: "destructive",
+        });
+        return false;
       }
 
-      // ✅ SSOT - Usar AuthService para atualizar senha
       await AuthService.updatePassword(newPassword);
 
       toast({ title: "Senha alterada com sucesso!" });
@@ -68,7 +63,7 @@ export function usePasswordChange(onSuccess?: () => void) {
       logger.error("Error changing password:", err);
       toast({
         title: "Erro ao alterar senha",
-        description: getAuthErrorMessage(err, "Não foi possível alterar a senha"),
+        description: getAuthErrorMessage(err, "Nao foi possivel alterar a senha"),
         variant: "destructive",
       });
       return false;
@@ -95,4 +90,3 @@ export function usePasswordChange(onSuccess?: () => void) {
     reset,
   };
 }
-

@@ -80,6 +80,19 @@ const filter = useTerritoryFilter(resolved, activeMemberIds);
 // filter.scope === 'none'     → não executar query
 ```
 
+### `useModuleTerritoryFilter({ routeResolved, activeMemberIds })`
+
+Wrapper de borda para paginas de modulo publico. Use este hook em landings e
+listagens publicas, porque ele preserva o territorio da URL, os membros ativos
+de grupos territoriais e os filtros locais de UI quando o modulo permitir.
+
+```ts
+const { territoryFilter, resolvedLocationIds } = useModuleTerritoryFilter({
+  routeResolved: resolved,
+  activeMemberIds,
+});
+```
+
 ### `useGroupAvailability(groupId, moduleKey)`
 
 Resolve disponibilidade de módulo por grupo via batch query.
@@ -115,12 +128,14 @@ Modelo publico atual:
 /empresas/:state/:city                     -> vitrine publica do modulo na cidade
 /empresas/:state/:city/:district           -> vitrine publica do modulo no bairro
 /empresas/:state/:city/:groupSlug          -> vitrine publica do modulo no grupo
-/:communitySlug                            -> URL curta publica da comunidade, apenas quando for unica
-/:communitySlug/empresas                   -> empresas da comunidade
-/:communitySlug/:slug                      -> detalhe publico preferencial de empresa/restaurante
-/:communitySlug/empresas/:slug             -> alias legado, redireciona para /:communitySlug/:slug
-/:communitySlug/gastronomia                -> gastronomia da comunidade
-/:communitySlug/gastronomia/:slug          -> alias legado, redireciona para /:communitySlug/:slug
+/comunidade/:communitySlug                 -> portal publico/preview da comunidade
+/comunidade/:communitySlug/empresas        -> empresas dentro do contexto da comunidade
+/comunidade/:communitySlug/empresas/:slug  -> empresa com acoes comunitarias
+/comunidade/:communitySlug/gastronomia     -> gastronomia dentro do contexto da comunidade
+/comunidade/:communitySlug/gastronomia/:slug -> gastronomia com acoes comunitarias
+/:communitySlug                            -> nao e rota canonica nova
+/:communitySlug/empresas/:slug             -> nao e rota canonica nova
+/:communitySlug/gastronomia/:slug          -> nao e rota canonica nova
 /comunidade/:state/:city                   -> fallback tecnico da comunidade municipal
 /comunidade/:state/:city/:district         -> fallback tecnico do bairro
 /comunidade/:state/:city/:groupSlug        -> fallback tecnico do grupo
@@ -133,7 +148,7 @@ Exemplo real:
 /ba/salvador/nordeste-de-amaralina                 → Nordeste de Amaralina
 ```
 
-Rotas antigas com `/:country/...`, comunidade com `/area/...`, `/community` ou `/feed` nao devem ser usadas em implementacoes novas. Alias curto de comunidade deve permanecer como URL visivel quando for unico; a rota territorial completa fica como fallback tecnico. Detalhes de empresas e gastronomia dentro do alias curto resolvem pelo SSOT territorial e mantem a URL curta.
+Rotas antigas com `/:country/...`, comunidade com `/area/...`, `/community` ou `/feed` nao devem ser usadas em implementacoes novas. O portal comunitario canonico usa `/comunidade/:communitySlug`. Alias curto de comunidade nao e URL canonica de entidade publica. Detalhes publicos de empresas e gastronomia permanecem fora da comunidade; dentro da comunidade, usam rotas explicitas em `/comunidade/:communitySlug/<modulo>/:slug`.
 
 ---
 

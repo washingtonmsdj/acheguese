@@ -15,25 +15,35 @@ describe('EmpresaGastronomiaPreviewSection', () => {
               id: 'item-1',
               name: 'Cafe coado',
               priceFrom: 8,
-              isFeatured: true,
+              priceLabel: 'A partir de R$ 8,00',
+              menuUrl: '/gastronomia/ba/salvador/rio-vermelho/cafe-central',
             },
             {
               id: 'item-2',
               name: 'Bolo de milho',
               priceFrom: 12,
-              isFeatured: true,
+              priceLabel: 'A partir de R$ 12,00',
+              menuUrl: '/gastronomia/ba/salvador/rio-vermelho/cafe-central',
             },
           ]}
         />
       </MemoryRouter>,
     );
 
-    const cta = screen.getByRole('link', { name: /ver cardápio e pedir/i });
+    const cta = screen.getByRole('link', { name: /ver card.pio e pedir/i });
     expect(cta).toHaveAttribute(
       'href',
       '/empresas/ba/salvador/rio-vermelho/cafe-central',
     );
-    expect(screen.getByText('Cafe coado')).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', {
+        name: /abrir cardapio de cafe central: cafe coado/i,
+      }),
+    ).toHaveAttribute(
+      'href',
+      '/gastronomia/ba/salvador/rio-vermelho/cafe-central',
+    );
+    expect(screen.getByText('A partir de R$ 8,00')).toBeInTheDocument();
     expect(screen.queryByText(/adicionar/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/carrinho/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/checkout/i)).not.toBeInTheDocument();

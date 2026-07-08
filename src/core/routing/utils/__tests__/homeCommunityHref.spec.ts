@@ -19,7 +19,7 @@ describe("resolveHomeCommunityHref", () => {
     expect(href).toBe("/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina");
   });
 
-  it("prefere URL curta publica do grupo quando alias foi resolvido", () => {
+  it("normaliza alias resolvido do grupo para portal comunitario explicito", () => {
     const href = resolveHomeCommunityHref({
       groups: [
         {
@@ -36,7 +36,7 @@ describe("resolveHomeCommunityHref", () => {
       },
     });
 
-    expect(href).toBe("/complexo-do-nordeste-de-amaralina");
+    expect(href).toBe("/comunidade/complexo-do-nordeste-de-amaralina");
   });
 
   it("abre o bairro quando nao existe grupo ativo para a residencia", () => {
@@ -50,7 +50,7 @@ describe("resolveHomeCommunityHref", () => {
     expect(href).toBe("/comunidade/ba/salvador/pituba");
   });
 
-  it("prefere URL curta publica do bairro quando nao existe grupo ativo", () => {
+  it("normaliza alias resolvido do bairro para portal comunitario explicito", () => {
     const href = resolveHomeCommunityHref({
       groups: [],
       homeCityPath: "/ba/salvador",
@@ -61,7 +61,7 @@ describe("resolveHomeCommunityHref", () => {
       },
     });
 
-    expect(href).toBe("/pituba");
+    expect(href).toBe("/comunidade/pituba");
   });
 
   it("respeita o ultimo grupo territorial usado quando ele esta ativo", () => {
@@ -94,7 +94,7 @@ describe("resolveHomeCommunityHref", () => {
     expect(href).toBe("/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina");
   });
 
-  it("mantem ultimo territorio curto salvo pelo shell de comunidade", () => {
+  it("normaliza ultimo territorio curto salvo pelo shell de comunidade", () => {
     const href = resolveHomeCommunityHref({
       groups: [],
       homeCityPath: null,
@@ -103,6 +103,6 @@ describe("resolveHomeCommunityHref", () => {
       fallbackHref: "/comunidade/ba/salvador",
     });
 
-    expect(href).toBe("/complexo-do-nordeste-de-amaralina");
+    expect(href).toBe("/comunidade/complexo-do-nordeste-de-amaralina");
   });
 });

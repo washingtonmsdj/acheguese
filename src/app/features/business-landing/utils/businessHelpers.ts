@@ -33,3 +33,27 @@ export function getBusinessUrl(
 
   return fallbackUrl;
 }
+
+export function applyBusinessFilterSet(
+  businesses: readonly Business[],
+  activeFilters: readonly string[],
+): Business[] {
+  return businesses.filter((business) => {
+    if (activeFilters.includes("open_now") && !business.isOpen) return false;
+    if (activeFilters.includes("verified") && !business.is_verified) return false;
+    if (activeFilters.includes("recommended") && business.neighborRecs <= 0) return false;
+    if (activeFilters.includes("whatsapp") && !business.whatsapp) return false;
+    if (
+      activeFilters.includes("delivery") &&
+      !(business.modos_atendimento ?? []).some(
+        (value) =>
+          value.toLowerCase().includes("delivery") ||
+          value.toLowerCase().includes("domic"),
+      )
+    ) {
+      return false;
+    }
+
+    return true;
+  });
+}

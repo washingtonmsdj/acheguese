@@ -5,7 +5,7 @@ import { SearchBusinessesActionHandler } from "../actions/SearchBusinessesAction
 const mocks = vi.hoisted(() => ({
   getBusinessesList: vi.fn(),
   getBusinessesByIds: vi.fn(),
-  getCanonicalUrlWithResolvedCommunityAlias: vi.fn(),
+  getCanonicalUrl: vi.fn(),
   searchHybrid: vi.fn(),
 }));
 
@@ -15,8 +15,7 @@ vi.mock("@/core/business", () => ({
     getBusinessesByIds: mocks.getBusinessesByIds,
   },
   BusinessUrlService: {
-    getCanonicalUrlWithResolvedCommunityAlias:
-      mocks.getCanonicalUrlWithResolvedCommunityAlias,
+    getCanonicalUrl: mocks.getCanonicalUrl,
   },
 }));
 
@@ -38,7 +37,9 @@ const baseIntent: AIIntent = {
 describe("SearchBusinessesActionHandler", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.getCanonicalUrlWithResolvedCommunityAlias.mockResolvedValue("/santa-cruz/teste");
+    mocks.getCanonicalUrl.mockImplementation(
+      (ctx) => `/empresas/ba/salvador/pituba/${ctx.slug}`,
+    );
   });
 
   it("chama BusinessService em business_search", async () => {

@@ -28,12 +28,7 @@ export function useBusinessNavigation() {
       is_premium?: boolean;
       geographic_path: string;
     }) => {
-      const contextualUrl = businessUrls.canonical(ctx);
-      if (!contextualUrl.startsWith("/empresas/")) {
-        return contextualUrl;
-      }
-
-      return BusinessUrlService.getCanonicalUrlWithResolvedCommunityAlias(ctx);
+      return businessUrls.canonical(ctx);
     },
     [businessUrls],
   );

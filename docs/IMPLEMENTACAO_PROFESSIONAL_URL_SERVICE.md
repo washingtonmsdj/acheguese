@@ -1,6 +1,6 @@
 # Implementacao do ProfessionalUrlService
 
-Atualizado: 2026-06-05
+Atualizado: 2026-07-05
 Status: consolidado
 
 `ProfessionalUrlService` e o SSOT para URLs publicas de profissionais.
@@ -17,8 +17,8 @@ Profissional nao usa `/u/:username`, nao usa `/p/:slug` e nao compartilha o cami
 
 | Caracteristica | Empresa/restaurante | Profissional |
 | --- | --- | --- |
-| URL preferencial | `/:communitySlug/:slug` | `/profissionais/:state/:city/:slug` |
-| Fallback tecnico | `/empresas/:state/:city/:district/:slug` | - |
+| URL preferencial | `/empresas/:state/:city/:territory/:slug` | `/profissionais/:state/:city/:slug` |
+| Contexto comunitario | `/comunidade/:communitySlug/empresas/:slug` | apenas quando houver acao comunitaria explicita |
 | Mini-site premium | `/p/:slug` quando habilitado | Nao possui |
 | Bairro obrigatorio | Sim | Nao |
 | SSOT | `BusinessUrlService` | `ProfessionalUrlService` |

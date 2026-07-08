@@ -8,6 +8,7 @@
  */
 
 import { supabase } from "@/integrations/supabase";
+import { PublicViewTrackingService } from "@/core/analytics/services/PublicViewTrackingService";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 import { ReviewsService } from "@/core/reviews";
@@ -574,9 +575,7 @@ export async function updateProfessionalReport(
  */
 export async function incrementViews(professionalId: string): Promise<void> {
   try {
-    await supabase.rpc("increment_professional_views", {
-      professional_id: professionalId,
-    });
+    await PublicViewTrackingService.track("professional", professionalId);
     logger.info("[professional.mutations] Views incremented:", professionalId);
   } catch (error) {
     // Silently fail - views are not critical

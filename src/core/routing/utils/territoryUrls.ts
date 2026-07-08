@@ -9,14 +9,20 @@
  *   Grupo:    /:state/:city/:groupSlug
  *   Modulo:   /[modulo]/:state/:city/:district?
  *
- * Comunidade publica preferencial:
- *   /:communityAlias
- *   /:communityAlias/:module
- *   /:communityAlias/:businessSlug
+ * Portal de comunidade explicito:
+ *   /comunidade/:communityAlias
+ *   /comunidade/:communityAlias/:module
+ *   /comunidade/:communityAlias/:module/:entitySlug
  *
  * Fallback tecnico de comunidade:
  *   /comunidade/:state/:city
  *   /comunidade/:state/:city/:districtOrGroup
+ *
+ * Alias curto legado:
+ *   /:communityAlias
+ *   /:communityAlias/:module
+ *   /:communityAlias/:module/:entitySlug
+ *   Nao e superficie canonica nova; links novos devem usar /comunidade/:alias.
  */
 
 import type { Location, TerritorialGroup } from '@/core/location/types';
@@ -288,28 +294,26 @@ export function buildCommunityTerritoryUrl(territoryBaseUrl: string, suffix = ''
 }
 
 /**
- * URL publica curta da comunidade.
+ * URL canonica do portal comunitario por alias.
  *
- * Esta URL depende de um alias explicito/unico resolvido pelo backend
- * ou pela tabela community_public_aliases. A rota territorial completa
- * continua disponivel como fallback tecnico via buildCommunityTerritoryUrl.
+ * Novos links de portal devem usar /comunidade/:communityAlias.
  */
 export function buildCommunityAliasUrl(alias: string, suffix = ''): string {
   const cleanAlias = cleanUrlSegment(alias, 'alias publico da comunidade');
   const normalizedSuffix = suffix ? `/${suffix.replace(/^\/+/, '')}` : '';
-  return `/${cleanAlias}${normalizedSuffix}`;
+  return `/${MODULE_SLUGS.community}/${cleanAlias}${normalizedSuffix}`;
 }
 
 /**
  * Constrói uma URL dentro da base pública da comunidade.
  *
- * Funciona tanto para fallback técnico:
+ * Funciona para fallback tecnico:
  *   /comunidade/ba/salvador/pituba + empresas
  *   → /comunidade/ba/salvador/pituba/empresas
  *
- * quanto para alias curto:
- *   /pituba + empresas
- *   → /pituba/empresas
+ * e para portal canonico por alias:
+ *   /comunidade/pituba + empresas
+ *   -> /comunidade/pituba/empresas
  */
 export function buildCommunityScopedUrl(communityBaseUrl: string, suffix = ''): string {
   const cleanBase = communityBaseUrl.trim().replace(/\/+$/g, '');

@@ -13,6 +13,7 @@ import { profileService } from '@/core/profiles/services/ProfileService';
 import { TRUST_ACTOR_ROLES, TrustEventService } from '@/core/trust';
 import { MobilityDispatchConfigService } from './MobilityDispatchConfigService';
 import { DriverAvailabilityService } from './DriverAvailabilityService';
+import { MobilityRpcService } from './MobilityRpcService';
 import {
   getDriverOfferCapabilities,
   getExclusiveOfferRideForDriver,
@@ -38,20 +39,11 @@ import type {
 import { RIDE_STATUS } from '../constants';
 import { DISPATCH_ATTEMPT_STATUS } from '../constants/dispatchStatus';
 
-type MobilityOfferRpcClient = {
-  rpc<T>(fn: string, params?: Record<string, unknown>): Promise<{
-    data: T | null;
-    error: { message?: string | null } | null;
-  }>;
-};
-
 type AcceptRideAtomicResult = {
   success?: boolean;
   reason?: string;
   error?: string;
 };
-
-const mobilityOfferRpc = supabase as unknown as MobilityOfferRpcClient;
 
 function normalizeAcceptOfferReason(
   value: string | undefined,
@@ -532,23 +524,12 @@ export class MobilityOfferService {
         };
       }
 
-      // Tentar aceitar com lock atomico
-      const { data, error } = await mobilityOfferRpc.rpc<AcceptRideAtomicResult>('accept_ride_atomic', {
-        p_ride_id: rideId,
-        p_driver_profile_id: driverProfileId,
-        p_strategy: strategy,
-      });
-
-      if (error) {
-        logger.error('Failed to accept offer', error, { rideId, driverProfileId });
-        return {
-          success: false,
-          rideId,
-          driverProfileId,
-          reason: 'already_accepted',
-          error: error.message,
-        };
-      }
+      // Tentar aceitar com lock atomico via broker autenticado
+      const data: AcceptRideAtomicResult = await MobilityRpcService.acceptRideAtomic(
+        rideId,
+        driverProfileId,
+        strategy,
+      );
 
       if (!data || !data.success) {
         return {

@@ -1,7 +1,13 @@
 import { supabase } from "@/integrations/supabase";
-import type { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/supabase-js";
+import type {
+  RealtimeChannel,
+  RealtimePostgresChangesPayload,
+} from "@/integrations/supabase";
 
 type RealtimeChannelStatus = string;
+export type GastronomyOrderRealtimePayload<
+  TRow extends Record<string, unknown> = Record<string, unknown>,
+> = RealtimePostgresChangesPayload<TRow>;
 
 export class GastronomyOrderRealtimeService {
   static subscribeOrderDetails(
@@ -39,7 +45,7 @@ export class GastronomyOrderRealtimeService {
   static subscribeBusinessOrders(
     businessId: string,
     onInvalidateOrders: () => void,
-    onTimelineInsert: (payload: RealtimePostgresChangesPayload<{ order_id?: string | null }>) => void,
+    onTimelineInsert: (payload: GastronomyOrderRealtimePayload<{ order_id?: string | null }>) => void,
     onStatusChange?: (status: RealtimeChannelStatus) => void,
   ): RealtimeChannel {
     return supabase
@@ -70,7 +76,7 @@ export class GastronomyOrderRealtimeService {
 
   static subscribeOrderTracking(
     orderId: string,
-    onRideRequestChange: (payload: RealtimePostgresChangesPayload<Record<string, unknown>>) => void,
+    onRideRequestChange: (payload: GastronomyOrderRealtimePayload<Record<string, unknown>>) => void,
   ): RealtimeChannel {
     return supabase
       .channel(`order-tracking:${orderId}`)

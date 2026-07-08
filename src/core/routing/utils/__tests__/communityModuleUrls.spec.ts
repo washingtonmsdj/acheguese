@@ -7,11 +7,11 @@ import {
 import { MODULE_SLUGS } from "@/core/routing/utils/territoryUrls";
 
 describe("communityModuleUrls", () => {
-  it("usa alias curto para modulos quando a rota atual esta dentro da comunidade publica", () => {
+  it("mantem alias explicito quando a rota atual esta dentro da comunidade publica", () => {
     const useScoped = shouldUseCommunityScopedModuleUrls({
-      pathname: "/complexo-do-nordeste-de-amaralina/feed",
+      pathname: "/comunidade/complexo-do-nordeste-de-amaralina/feed",
       territoryBaseUrl: "/ba/salvador/complexo-do-nordeste-de-amaralina",
-      communityBaseUrl: "/complexo-do-nordeste-de-amaralina",
+      communityBaseUrl: "/comunidade/complexo-do-nordeste-de-amaralina",
     });
 
     expect(useScoped).toBe(true);
@@ -19,10 +19,10 @@ describe("communityModuleUrls", () => {
       buildContextualModuleUrl({
         module: MODULE_SLUGS.business,
         territoryBaseUrl: "/ba/salvador/complexo-do-nordeste-de-amaralina",
-        communityBaseUrl: "/complexo-do-nordeste-de-amaralina",
+        communityBaseUrl: "/comunidade/complexo-do-nordeste-de-amaralina",
         useCommunityScopedModules: useScoped,
       }),
-    ).toBe("/complexo-do-nordeste-de-amaralina/empresas");
+    ).toBe("/comunidade/complexo-do-nordeste-de-amaralina/empresas");
   });
 
   it("usa comunidade fallback quando a base comunitaria e a propria base territorial", () => {
@@ -47,7 +47,7 @@ describe("communityModuleUrls", () => {
     const useScoped = shouldUseCommunityScopedModuleUrls({
       pathname: "/empresas/ba/salvador/complexo-do-nordeste-de-amaralina",
       territoryBaseUrl: "/ba/salvador/complexo-do-nordeste-de-amaralina",
-      communityBaseUrl: "/complexo-do-nordeste-de-amaralina",
+      communityBaseUrl: "/comunidade/complexo-do-nordeste-de-amaralina",
     });
 
     expect(useScoped).toBe(false);
@@ -55,7 +55,7 @@ describe("communityModuleUrls", () => {
       buildContextualModuleUrl({
         module: MODULE_SLUGS.business,
         territoryBaseUrl: "/ba/salvador/complexo-do-nordeste-de-amaralina",
-        communityBaseUrl: "/complexo-do-nordeste-de-amaralina",
+        communityBaseUrl: "/comunidade/complexo-do-nordeste-de-amaralina",
         useCommunityScopedModules: useScoped,
       }),
     ).toBe("/empresas/ba/salvador/complexo-do-nordeste-de-amaralina");

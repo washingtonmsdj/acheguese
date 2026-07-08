@@ -28,15 +28,6 @@ export const CommunityAliasRoute = lazy(() =>
 export const CommunityEntityAliasRoute = lazy(() =>
   import("@/core/routing/components/CommunityEntityAliasRoute").then((m) => ({ default: m.CommunityEntityAliasRoute }))
 );
-export const CommunityShortAliasShellRoute = lazy(() =>
-  import("@/core/routing/components/CommunityShortAliasShellRoute").then((m) => ({ default: m.CommunityShortAliasShellRoute }))
-);
-export const CommunityShortEntityRoute = lazy(() =>
-  import("@/core/routing/components/CommunityShortEntityRoute").then((m) => ({ default: m.CommunityShortEntityRoute }))
-);
-export const CommunityEntityOrTerritorialCityRoute = lazy(() =>
-  import("@/core/routing/components/CommunityEntityOrTerritorialCityRoute").then((m) => ({ default: m.CommunityEntityOrTerritorialCityRoute }))
-);
 export const TerritorialIndexPage = lazy(() =>
   import("@/core/routing/components/TerritorialIndexPage").then((m) => ({ default: m.TerritorialIndexPage }))
 );
@@ -171,7 +162,7 @@ export const PremiumBusinessHomePage = lazy(() => import("@/modules/business/pre
 export const PremiumBusinessMenuPage = lazy(() => import("@/modules/business/premium/pages/PremiumBusinessMenuPage"));
 export const PremiumBusinessProductPage = lazy(() => import("@/modules/business/premium/pages/PremiumBusinessProductPage"));
 export const PremiumBusinessCartPage = lazy(() => import("@/modules/business/premium/pages/PremiumBusinessCartPage"));
-export const PremiumBusinessCheckoutPage = createLaunchPausedRoute("Checkout");
+export const PremiumBusinessCheckoutPage = lazy(() => import("@/modules/business/premium/pages/PremiumBusinessCheckoutPage"));
 
 // ============================================================
 // GASTRONOMIA
@@ -179,15 +170,15 @@ export const PremiumBusinessCheckoutPage = createLaunchPausedRoute("Checkout");
 export const GastronomyLandingPage = lazy(() => import("@/modules/business/gastronomy/pages/GastronomyLandingPage"));
 export const GastronomyDetailPage = lazy(() => import("@/modules/business/gastronomy/pages/GastronomyDetailPage"));
 export const GastronomyPremiumDetailPage = lazy(() => import("@/modules/business/gastronomy/pages/GastronomyPremiumDetailPage"));
-export const GastronomyCheckoutPage = createLaunchPausedRoute("Checkout");
+export const GastronomyCheckoutPage = lazy(() => import("@/modules/business/gastronomy/pages/GastronomyCheckoutPage"));
 export const MyFavoritesPage = lazy(() => import("@/modules/business/gastronomy/pages/MyFavoritesPage"));
 export const GastronomySetupPage = createLaunchPausedRoute("Gastronomia operacional");
 export const GastronomyDashboardPage = createLaunchPausedRoute("Gastronomia operacional");
 export const MenuManagementPage = createLaunchPausedRoute("Gastronomia operacional");
 export const BusinessHoursPage = createLaunchPausedRoute("Gastronomia operacional");
 export const DeliveryAreaPage = createLaunchPausedRoute("Gastronomia operacional");
-export const OrdersPage = createLaunchPausedRoute("Pedidos");
-export const OrderDetailsPage = createLaunchPausedRoute("Pedidos");
+export const OrdersPage = lazy(() => import("@/modules/business/gastronomy/pages/OrdersPage"));
+export const OrderDetailsPage = lazy(() => import("@/modules/business/gastronomy/pages/OrderDetailsPage"));
 export const DeliveryManagementPage = createLaunchPausedRoute("Entregas");
 export const AnalyticsPage = createLaunchPausedRoute("Analytics");
 export const GastronomyPromotionsPage = createLaunchPausedRoute("Promocoes");
@@ -397,34 +388,6 @@ export const AdminTerritoryContent = createLaunchPausedRoute("Admin");
 export const AdminTerritorialGroups = createLaunchPausedRoute("Admin");
 export const AdminCityMetadata = createLaunchPausedRoute("Admin");
 export const AdminTerritoryManagement = createLaunchPausedRoute("Admin");
-
-// ============================================================
-// CENTRAL - Gestao e Operacao
-// ============================================================
-export const CentralHubPage = createLaunchPausedRoute("Central");
-export const CentralEmpresasPage = createLaunchPausedRoute("Central");
-export const CentralProfissionalPage = createLaunchPausedRoute("Central");
-export const CentralMotoristaPage = createLaunchPausedRoute("Mobilidade");
-export const CentralMotoboyPage = createLaunchPausedRoute("Mobilidade");
-export const CentralComunicacaoPage = createLaunchPausedRoute("Comunicacao");
-// Sub-rotas de motorista
-export const CentralMotoristaCadastroPage = createLaunchPausedRoute("Mobilidade");
-export const CentralMotoristaDisponibilidadePage = createLaunchPausedRoute("Mobilidade");
-export const CentralMotoristaCorridasPage = createLaunchPausedRoute("Mobilidade");
-export const CentralMotoristaGanhosPage = createLaunchPausedRoute("Mobilidade");
-export const CentralMotoristaConfiguracoesPage = createLaunchPausedRoute("Mobilidade");
-// Sub-rotas de motoboy
-export const CentralMotoboyCadastroPage = createLaunchPausedRoute("Mobilidade");
-export const CentralMotoboyDisponibilidadePage = createLaunchPausedRoute("Mobilidade");
-export const CentralMotoboyEntregasPage = createLaunchPausedRoute("Mobilidade");
-export const CentralMotoboyGanhosPage = createLaunchPausedRoute("Mobilidade");
-export const CentralMotoboyConfiguracoesPage = createLaunchPausedRoute("Mobilidade");
-// Layout e guards
-export const CentralLayout = createLaunchPausedRoute("Central");
-export const CentralAccessGuard = createLaunchPausedRoute("Central");
-export const BusinessAdminGuard = createLaunchPausedRoute("Central");
-export const ProfessionalGuard = createLaunchPausedRoute("Central");
-export const DriverGuard = createLaunchPausedRoute("Mobilidade");
 
 
 

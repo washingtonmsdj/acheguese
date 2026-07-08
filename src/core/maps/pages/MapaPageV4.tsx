@@ -2,7 +2,8 @@
  * MapaPageV4 - Página do mapa
  *
  * SSoTs respeitados:
- * - Território   → useTerritoryFilter(resolved, activeMemberIds)
+ * - Território   → useModuleTerritoryFilter({ routeResolved, activeMemberIds })
+ * - Focus target → URL com lat/lng explicita, sem herdar filtro territorial artificial
  * - Businesses   → BusinessService.getBusinesses com territoryFilter
  * - Eventos      → EventsService.getByBounds com territoryFilter
  * - Projeção     → mapEntityProjection (MapEntityProjectionService)
@@ -31,7 +32,8 @@ import { mapGastronomyLayerRuntimeService } from '@/core/maps/services/MapGastro
 import { mapServicesLayerRuntimeService } from '@/core/maps/services/MapServicesLayerRuntimeService';
 import { usePublicBrowsingCity } from '@/core/location/hooks/usePublicBrowsingCity';
 import { useResolvedUserLocation } from '@/core/location/hooks/useResolvedUserLocation';
-import { useTerritoryFilter, territoryFilterKey } from '@/core/location/hooks/useTerritoryFilter';
+import { territoryFilterKey } from '@/core/location/hooks/useTerritoryFilter';
+import { useModuleTerritoryFilter } from '@/core/location/hooks/useModuleTerritoryFilter';
 import { useTerritoryLabels } from '@/core/location/hooks/useTerritoryLabels';
 import { useTerritoryPolygon, type TerritoryPolygon } from '../hooks/useTerritoryPolygon';
 import { useQuery } from '@tanstack/react-query';
@@ -611,8 +613,14 @@ export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV
     tryGps: true 
   });
 
-  // SSOT territorial
-  const territoryFilter = useTerritoryFilter(effectiveResolved, activeMemberIds);
+  const moduleTerritory = useModuleTerritoryFilter({
+    routeResolved: effectiveResolved,
+    activeMemberIds,
+    nearbyEnabled: false,
+  });
+  const territoryFilter = moduleTerritory.territoryFilter;
+  const isFocusOnlyMode = Boolean(focusTarget) && !effectiveResolved;
+  const runtimeTerritoryFilter = isFocusOnlyMode ? undefined : territoryFilter;
   const { polygons: territoryPolygons } = useTerritoryPolygon(effectiveResolved);
   const guideUrls = useTouristPointPublicUrls(effectiveResolved);
   const territoryLabels = useTerritoryLabels(effectiveResolved);
@@ -649,13 +657,15 @@ export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV
     placeholderData: (previousData) => previousData,
   });
 
-  const filterKey = territoryFilterKey(territoryFilter);
+  const filterKey = isFocusOnlyMode
+    ? 'focus-target'
+    : territoryFilterKey(territoryFilter);
   const fetchers = React.useMemo(
     () => ({
-      ...(businessesLayerVisible ? { businesses: makeBusinessFetcher(territoryFilter) } : {}),
-      ...(gastronomyLayerVisible ? { gastronomy: makeGastronomyFetcher(territoryFilter) } : {}),
-      ...(servicesLayerVisible ? { services: makeServicesFetcher(territoryFilter) } : {}),
-      ...(classifiedsLayerVisible ? { classifieds: makeClassifiedsFetcher(territoryFilter) } : {}),
+      ...(businessesLayerVisible ? { businesses: makeBusinessFetcher(runtimeTerritoryFilter) } : {}),
+      ...(gastronomyLayerVisible ? { gastronomy: makeGastronomyFetcher(runtimeTerritoryFilter) } : {}),
+      ...(servicesLayerVisible ? { services: makeServicesFetcher(runtimeTerritoryFilter) } : {}),
+      ...(classifiedsLayerVisible ? { classifieds: makeClassifiedsFetcher(runtimeTerritoryFilter) } : {}),
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [filterKey, businessesLayerVisible, gastronomyLayerVisible, servicesLayerVisible, classifiedsLayerVisible],
@@ -766,6 +776,7 @@ export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV
       className="relative h-full min-h-[24rem] w-full md:min-h-[34rem]"
       data-page="mapa-v4"
       data-territory-scope={territoryFilter.scope}
+      data-map-mode={isFocusOnlyMode ? 'focus-target' : 'territory'}
     >
       <div className="absolute inset-0">
         <MapLibreAdapter
@@ -808,7 +819,7 @@ export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV
               enabled: true,
               position: 'top-right',
               showSelector: false,
-              showIndicator: territoryFilter.scope !== 'none',
+              showIndicator: !isFocusOnlyMode && territoryFilter.scope !== 'none',
               compact: true,
             },
           }}

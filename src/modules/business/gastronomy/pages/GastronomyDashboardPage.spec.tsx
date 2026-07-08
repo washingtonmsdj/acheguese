@@ -14,12 +14,10 @@ vi.mock('@tanstack/react-query', () => ({
 }));
 
 vi.mock('../components', () => ({
-  DeliverySummaryCard: () => <div data-testid="delivery-summary-card" />,
   MenuSummaryCard: () => <div data-testid="menu-summary-card" />,
   OperationalStatusCard: () => <div data-testid="operational-status-card" />,
   PlanStatusWidget: () => <div data-testid="plan-status-widget" />,
   QuickActionsCard: () => <div data-testid="quick-actions-card" />,
-  TodayOrdersCard: () => <div data-testid="today-orders-card" />,
   UpgradePromptInline: ({ feature, offerKey }: { feature: string; offerKey: string }) => (
     <div data-testid={`upgrade-${feature}`} data-offer-key={offerKey} />
   ),
@@ -83,11 +81,10 @@ describe('GastronomyDashboardPage', () => {
 
     expect(screen.getByText('Dashboard Gastronomia')).toBeInTheDocument();
     expect(screen.getByText('Cardápio')).toBeInTheDocument();
-    expect(screen.getByText('Pedidos Internos')).toBeInTheDocument();
+    expect(screen.getByTestId('quick-actions-card')).toBeInTheDocument();
     expect(screen.queryByText('Rede de Motoboys')).not.toBeInTheDocument();
     expect(screen.getByText('Gerenciar Cardápio')).toBeInTheDocument();
     expect(screen.queryByTestId('upgrade-Cardápio Avançado')).not.toBeInTheDocument();
-    expect(screen.getByTestId('upgrade-Pedidos Internos')).toHaveAttribute('data-offer-key', 'delivery');
     expect(screen.queryByTestId('upgrade-Rede de Motoboys')).not.toBeInTheDocument();
     expect(screen.queryByTestId('upgrade-Analytics')).not.toBeInTheDocument();
   });

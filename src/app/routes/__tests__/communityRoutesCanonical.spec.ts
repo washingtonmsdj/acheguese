@@ -8,7 +8,6 @@ import {
   TERRITORIAL_ROUTE_PARAMS,
   TERRITORIAL_ROUTE_STATIC_SEGMENTS,
   buildCommunityAliasRoutePath,
-  buildCommunityRootAliasRoutePath,
   buildCommunityTerritoryRoutePath,
 } from "@/core/routing/config/territorialRoutePatterns";
 
@@ -57,18 +56,6 @@ describe("community route patterns", () => {
     expect(buildCommunityAliasRoutePath()).toBe(
       "/comunidade/:communitySlug",
     );
-    expect(buildCommunityRootAliasRoutePath()).toBe(
-      "/:communitySlug",
-    );
-    expect(
-      buildCommunityRootAliasRoutePath([APP_MODULE_SLUGS.business]),
-    ).toBe("/:communitySlug/empresas");
-    expect(
-      buildCommunityRootAliasRoutePath([
-        APP_MODULE_SLUGS.business,
-        TERRITORIAL_ROUTE_PARAMS.slug,
-      ]),
-    ).toBe("/:communitySlug/empresas/:slug");
     expect(buildCommunityAliasRoutePath(["*"])).toBe(
       "/comunidade/:communitySlug/*",
     );
@@ -96,14 +83,14 @@ describe("community route patterns", () => {
     ].join("\n");
 
     expect(routesSource).toContain("COMMUNITY_ROUTE_DEFINITIONS");
-    expect(routesSource).toContain("COMMUNITY_ALIAS_REDIRECT_PREFIXES");
+    expect(routesSource).toContain("COMMUNITY_ALIAS_ROUTE_PREFIXES");
     expect(routesSource).toContain("buildCommunityTerritoryRoutePath()");
     expect(routesSource).toContain("buildCommunityScopedRoutePath()");
     expect(routesSource).toContain("buildCommunityAliasRoutePath");
-    expect(routesSource).toContain("buildCommunityRootAliasRoutePath");
-    expect(routesSource).toContain("CommunityShortAliasShellRoute");
-    expect(routesSource).toContain("CommunityShortEntityRoute");
-    expect(routesSource).toContain("CommunityEntityOrTerritorialCityRoute");
+    expect(routesSource).not.toContain("buildCommunityRootAliasRoutePath");
+    expect(routesSource).not.toContain("CommunityShortAliasShellRoute");
+    expect(routesSource).not.toContain("CommunityShortEntityRoute");
+    expect(routesSource).not.toContain("CommunityEntityOrTerritorialCityRoute");
     expect(routesSource).toContain("TERRITORIAL_STATIC.feed");
     expect(routesSource).toContain("TERRITORIAL_STATIC.groups");
     expect(routesSource).toContain("TERRITORIAL_PARAMS.id");
@@ -117,6 +104,9 @@ describe("community route patterns", () => {
 
     expect(routesSource).not.toContain("buildCommunityLegacyAreaRoutePath");
     expect(routesSource).not.toContain("CommunityAreaCanonicalRedirect");
+    expect(routesSource).not.toContain("buildCommunityRootAliasRoutePath");
+    expect(routesSource).not.toContain("CommunityShortAliasShellRoute");
+    expect(routesSource).not.toContain("CommunityShortEntityRoute");
     expect(routesSource).not.toContain('path="/comunidade/:state/:city/area/:groupSlug/*"');
     expect(routesSource).not.toContain('path="/comunidade"');
     expect(routesSource).not.toContain('path="/comunidade/grupos"');

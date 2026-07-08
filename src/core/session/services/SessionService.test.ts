@@ -2,12 +2,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SessionService } from "./SessionService";
 import { SessionState } from "../state/SessionState";
+import { ACTIVE_PROFILE_STORAGE_KEY } from "@/core/profiles/constants/activeProfileStorage";
 
 const {
   authGetSessionMock,
   authGetUserMock,
   authOnAuthStateChangeMock,
   authSignOutMock,
+  functionsInvokeMock,
   rpcMock,
   fromMock,
   profileServiceGetProfilesByUserIdMock,
@@ -18,6 +20,7 @@ const {
     data: { subscription: { unsubscribe: vi.fn() } },
   })),
   authSignOutMock: vi.fn(),
+  functionsInvokeMock: vi.fn(),
   rpcMock: vi.fn(),
   fromMock: vi.fn(),
   profileServiceGetProfilesByUserIdMock: vi.fn(),
@@ -30,6 +33,9 @@ vi.mock("@/integrations/supabase", () => ({
       getUser: authGetUserMock,
       onAuthStateChange: authOnAuthStateChangeMock,
       signOut: authSignOutMock,
+    },
+    functions: {
+      invoke: functionsInvokeMock,
     },
     rpc: rpcMock,
     from: fromMock,
@@ -44,11 +50,14 @@ vi.mock("@/core/profiles/services/ProfileService", () => ({
 
 describe("SessionService", () => {
   beforeEach(() => {
+    SessionService.cleanup();
     SessionState.clear();
+    window.localStorage.clear();
     authGetSessionMock.mockReset();
     authGetUserMock.mockReset();
     authOnAuthStateChangeMock.mockClear();
     authSignOutMock.mockReset();
+    functionsInvokeMock.mockReset();
     rpcMock.mockReset();
     fromMock.mockReset();
     profileServiceGetProfilesByUserIdMock.mockReset();
@@ -56,6 +65,7 @@ describe("SessionService", () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+    window.localStorage.clear();
   });
 
   it("retorna null em getCurrentUser quando nao ha sessao", async () => {
@@ -146,31 +156,35 @@ describe("SessionService", () => {
     });
     authGetUserMock.mockResolvedValue({ data: { user: { id: "user-123" } }, error: null });
 
-    rpcMock.mockImplementation(async (fn: string) => {
-      if (fn === "switch_active_profile") return { error: null };
-      if (fn === "get_active_profile") {
+    functionsInvokeMock.mockImplementation(async (_fn: string, options: { body?: { action?: string } }) => {
+      if (options.body?.action === "switchActiveProfile") {
+        return { data: { data: { ok: true } }, error: null };
+      }
+      if (options.body?.action === "getActiveProfile") {
         return {
-          data: [
-            {
-              id: "profile-2",
-              user_id: "user-123",
-              name: "Empresa",
-              display_name: null,
-              username: null,
-              avatar_url: null,
-              bio: null,
-              profile_type: "business",
-              city: null,
-              neighborhood: null,
-              state: null,
-              telefone: null,
-              whatsapp: null,
-              location_id: null,
-              is_active: true,
-              verified: false,
-              created_at: "2026-01-01T00:00:00.000Z",
+          data: {
+            data: {
+              profile: {
+                id: "profile-2",
+                user_id: "user-123",
+                name: "Empresa",
+                display_name: null,
+                username: null,
+                avatar_url: null,
+                bio: null,
+                profile_type: "business",
+                city: null,
+                neighborhood: null,
+                state: null,
+                telefone: null,
+                whatsapp: null,
+                location_id: null,
+                is_active: true,
+                verified: false,
+                created_at: "2026-01-01T00:00:00.000Z",
+              },
             },
-          ],
+          },
           error: null,
         };
       }
@@ -201,10 +215,114 @@ describe("SessionService", () => {
 
     await SessionService.switchProfile("profile-2");
 
-    expect(rpcMock).toHaveBeenCalledWith("switch_active_profile", {
-      p_user_id: "user-123",
-      p_profile_id: "profile-2",
+    expect(functionsInvokeMock).toHaveBeenCalledWith("session-rpc", {
+      body: {
+        action: "switchActiveProfile",
+        params: { profileId: "profile-2" },
+      },
     });
     expect(SessionState.getState().activeProfile?.id).toBe("profile-2");
+    expect(window.localStorage.getItem(ACTIVE_PROFILE_STORAGE_KEY)).toBe("profile-2");
+  });
+
+  it("mantem perfil selecionado localmente quando get_active_profile retorna outro perfil ativo legado", async () => {
+    authGetSessionMock.mockResolvedValue({
+      data: {
+        session: {
+          user: {
+            id: "user-123",
+            email: "test@example.com",
+            email_confirmed_at: "2026-01-01T00:00:00.000Z",
+            created_at: "2025-01-01T00:00:00.000Z",
+          },
+        },
+      },
+      error: null,
+    });
+    authGetUserMock.mockResolvedValue({ data: { user: { id: "user-123" } }, error: null });
+
+    functionsInvokeMock.mockImplementation(async (_fn: string, options: { body?: { action?: string } }) => {
+      if (options.body?.action === "switchActiveProfile") {
+        return { data: { data: { ok: true } }, error: null };
+      }
+      if (options.body?.action === "getActiveProfile") {
+        return {
+          data: {
+            data: {
+              profile: {
+                id: "profile-1",
+                user_id: "user-123",
+                name: "Pessoa",
+                display_name: "Pessoa",
+                username: null,
+                avatar_url: null,
+                bio: null,
+                profile_type: "personal",
+                city: null,
+                neighborhood: null,
+                state: null,
+                street: null,
+                telefone: null,
+                whatsapp: null,
+                location_id: null,
+                is_active: true,
+                verified: false,
+                created_at: "2026-01-01T00:00:00.000Z",
+              },
+            },
+          },
+          error: null,
+        };
+      }
+      return { data: null, error: null };
+    });
+
+    profileServiceGetProfilesByUserIdMock.mockResolvedValue([
+      {
+        id: "profile-1",
+        user_id: "user-123",
+        name: "Pessoa",
+        display_name: "Pessoa",
+        username: null,
+        avatar_url: null,
+        bio: null,
+        profile_type: "personal",
+        city: null,
+        neighborhood: null,
+        state: null,
+        street: null,
+        telefone: null,
+        whatsapp: null,
+        location_id: null,
+        is_active: true,
+        verified: false,
+        created_at: "2026-01-01T00:00:00.000Z",
+      },
+      {
+        id: "profile-2",
+        user_id: "user-123",
+        name: "Pizzaria",
+        display_name: "Pizzaria",
+        username: null,
+        avatar_url: null,
+        bio: null,
+        profile_type: "business",
+        city: null,
+        neighborhood: null,
+        state: null,
+        street: null,
+        telefone: null,
+        whatsapp: null,
+        location_id: null,
+        is_active: true,
+        verified: false,
+        created_at: "2026-01-02T00:00:00.000Z",
+      },
+    ]);
+
+    await SessionService.switchProfile("profile-2");
+
+    expect(SessionState.getState().activeProfile?.id).toBe("profile-2");
+    expect(SessionState.getState().activeProfile?.profileType).toBe("business");
   });
 });

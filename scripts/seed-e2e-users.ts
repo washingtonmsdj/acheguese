@@ -8,13 +8,12 @@
  *   npm run seed:e2e:verbose  # Logs detalhados
  */
 
-import { createClient } from "@supabase/supabase-js";
 import type { User } from "@supabase/supabase-js";
-import dotenv from "dotenv";
+import { createServiceRoleClient, loadSupabaseScriptEnv } from "./lib/supabase-client";
 
 // Carregar variáveis de ambiente
-dotenv.config({ path: ".env.test" });
-dotenv.config({ path: ".env.local" });
+const E2E_ENV_FILES = [".env.test", ".env.local"];
+loadSupabaseScriptEnv(E2E_ENV_FILES);
 
 interface SeedOptions {
   reset?: boolean;
@@ -73,37 +72,11 @@ const TEST_USERS: TestUser[] = [
   },
 ];
 
-function getEnvValue(name: string): string | undefined {
-  const value = process.env[name]?.trim();
-
-  if (!value) {
-    return undefined;
-  }
-
-  return value.replace(/^['"]|['"]$/g, "");
-}
-
 async function seedE2EUsers(options: SeedOptions = {}) {
   const { reset = false, verbose = false } = options;
 
   // Validar variáveis de ambiente
-  const supabaseUrl = getEnvValue("VITE_SUPABASE_URL");
-  const serviceRoleKey = getEnvValue("SUPABASE_SERVICE_ROLE_KEY");
-
-  if (!supabaseUrl || !serviceRoleKey) {
-    console.error("❌ Erro: Variáveis de ambiente não configuradas");
-    console.error("   Configure VITE_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY");
-    console.error("   no arquivo .env.test ou .env.local");
-    process.exit(1);
-  }
-
-  // Criar cliente Supabase com service role
-  const supabase = createClient(supabaseUrl, serviceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
+  const supabase = createServiceRoleClient({ envFiles: E2E_ENV_FILES });
 
   console.log("🚀 Iniciando seed de usuários E2E...\n");
 

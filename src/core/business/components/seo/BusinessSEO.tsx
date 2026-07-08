@@ -209,7 +209,7 @@ export default function BusinessSEO({
       <title>{title}</title>
       <meta name="description" content={fullDescription} />
       <meta name="robots" content={robots} />
-      <meta name="googlebot" content="index, follow" />
+      <meta name="googlebot" content={robots} />
 
       <meta property="og:type" content="business.business" />
       <meta property="og:url" content={absoluteUrl} />

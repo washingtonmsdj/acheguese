@@ -10,10 +10,14 @@
  */
 
 import { it, expect, beforeAll, afterAll, vi } from 'vitest';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { type SupabaseClient } from '@supabase/supabase-js';
 import { TrackingService } from '@/core/tracking/services/TrackingService';
 import { ReconnectionManager } from '@/core/tracking/services/ReconnectionManager';
-import { describeOperational, requireOperationalEnv } from '../helpers/operational-env';
+import {
+  createOperationalAnonClient,
+  describeOperational,
+  requireOperationalEnv,
+} from '../helpers/operational-env';
 
 describeOperational('GATE 4: Reconexão e Recuperação', {
   requireDriverCredentials: true,
@@ -26,7 +30,7 @@ describeOperational('GATE 4: Reconexão e Recuperação', {
     const env = requireOperationalEnv({ requireDriverCredentials: true });
 
     // Criar cliente autenticado
-    supabase = createClient(env.supabaseUrl, env.anonKey);
+    supabase = createOperationalAnonClient();
 
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
       email: env.driverEmail,

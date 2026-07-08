@@ -6,10 +6,7 @@
  *   npm run geocode-locations -- --refine
  */
 
-import { createClient } from '@supabase/supabase-js';
-import * as dotenv from 'dotenv';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import { createServiceRoleClient, loadSupabaseScriptEnv } from './lib/supabase-client';
 
 type LocationRow = {
   id: string;
@@ -33,9 +30,7 @@ type BatchStats = {
   skipped: number;
 };
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-dotenv.config({ path: join(__dirname, '..', '.env') });
+loadSupabaseScriptEnv();
 
 function readRequiredEnv(name: string): string {
   const value = process.env[name]?.trim();
@@ -69,8 +64,6 @@ function readHttpsBaseUrl(name: string): string {
   }
 }
 
-const supabaseUrl = readRequiredEnv('VITE_SUPABASE_URL');
-const supabaseKey = readRequiredEnv('SUPABASE_SERVICE_ROLE_KEY');
 const nominatimBaseUrl = readHttpsBaseUrl('NOMINATIM_BASE_URL');
 const nominatimUserAgent = readRequiredEnv('NOMINATIM_USER_AGENT');
 const nominatimDefaultFormat = readRequiredEnv('NOMINATIM_DEFAULT_FORMAT');
@@ -79,7 +72,7 @@ const nominatimDefaultCountryCodes = readRequiredEnv('NOMINATIM_DEFAULT_COUNTRY_
 const nominatimDefaultCountryName = readRequiredEnv('NOMINATIM_DEFAULT_COUNTRY_NAME');
 const requestDelayMs = readRequiredIntEnv('NOMINATIM_REQUEST_DELAY_MS');
 
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = createServiceRoleClient();
 
 async function geocodeWithNominatim(location: LocationRow): Promise<GeocodeResult | null> {
   try {

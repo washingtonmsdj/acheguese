@@ -1,4 +1,5 @@
 import { LAUNCH_URLS } from "@/config/territory";
+import { buildCommunityPortalUrl } from "@/core/routing/policies";
 import {
   buildCommunityTerritoryUrl,
   hasPublicCityTerritoryPath,
@@ -40,7 +41,7 @@ function resolveCommunityUrlForTerritory(
     input.communityUrlsByTerritoryBaseUrl,
     key,
   );
-  return mappedUrl ?? buildCommunityTerritoryUrl(key);
+  return normalizeCommunityPortalHref(mappedUrl) ?? buildCommunityTerritoryUrl(key);
 }
 
 function findCommunityUrlForTerritoryKey(
@@ -64,6 +65,15 @@ function isShortCommunityBaseHref(href: string | null | undefined): href is stri
   return parts.length === 1 && parts[0] !== MODULE_SLUGS.community;
 }
 
+function normalizeCommunityPortalHref(href: string | null | undefined): string | null | undefined {
+  if (isShortCommunityBaseHref(href)) {
+    const [alias] = href.split("/").filter(Boolean);
+    return buildCommunityPortalUrl(alias);
+  }
+
+  return href;
+}
+
 function normalizeCommunityFallbackHref(
   href: string | null | undefined,
   input: Pick<HomeCommunityHrefInput, "communityUrlsByTerritoryBaseUrl">,
@@ -77,7 +87,7 @@ function normalizeCommunityFallbackHref(
     }
     return resolveCommunityUrlForTerritory(`/${territoryParts.join("/")}`, input);
   }
-  return href;
+  return normalizeCommunityPortalHref(href) ?? null;
 }
 
 function extractGroupSlugFromLastTerritory(
@@ -131,7 +141,7 @@ export function resolveHomeCommunityHref(input: HomeCommunityHrefInput): string 
 
   const lastTerritoryBaseUrl = input.lastTerritoryBaseUrl;
   if (isShortCommunityBaseHref(lastTerritoryBaseUrl)) {
-    return lastTerritoryBaseUrl;
+    return normalizeCommunityPortalHref(lastTerritoryBaseUrl) ?? LAUNCH_URLS.community;
   }
 
   if (lastTerritoryBaseUrl && hasPublicCityTerritoryPath(lastTerritoryBaseUrl)) {

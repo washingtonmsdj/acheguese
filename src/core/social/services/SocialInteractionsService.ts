@@ -15,7 +15,7 @@
  */
 
 import { supabase } from "@/integrations/supabase";
-import type { Database } from "@/integrations/supabase/types.generated";
+import type { Database } from "@/integrations/supabase";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { trackError } from "@/shared/utils/errorTracking";
 import type {

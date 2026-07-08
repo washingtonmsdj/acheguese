@@ -149,6 +149,22 @@ export default function GastronomyPremiumDetailPage() {
     setItemQuantities((current) => setRecordValue(current, itemId, next));
   };
 
+  const handleProceedToCheckout = () => {
+    if (!business) return;
+
+    if (!hasCart) {
+      document.getElementById('premium-menu-section')?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+      return;
+    }
+
+    navigate('checkout', {
+      state: { business },
+    });
+  };
+
   const handleQuickAdd = (item: MenuItemWithRelations) => {
     if (!business || !profile || !item.is_available) return;
 
@@ -189,8 +205,8 @@ export default function GastronomyPremiumDetailPage() {
   const averageRating = business.rating.toFixed(1);
   const cartItems = cart?.items ?? [];
   const subtotal = cart?.subtotal ?? 0;
-  const deliveryFee = profile.delivery_fee ?? 0;
-  const total = cart?.total ?? subtotal + deliveryFee;
+  const deliveryFee = cart?.delivery_fee ?? 0;
+  const total = cart?.total ?? subtotal;
 
   return (
     <>
@@ -243,8 +259,11 @@ export default function GastronomyPremiumDetailPage() {
                 >
                   <Share2 className="h-4 w-4" />
                 </Button>
-                <Button className="bg-[hsl(var(--warning))] text-[hsl(var(--warning-foreground))] hover:brightness-95">
-                  Fazer pedido
+                <Button
+                  className="bg-[hsl(var(--warning))] text-[hsl(var(--warning-foreground))] hover:brightness-95"
+                  onClick={handleProceedToCheckout}
+                >
+                  {hasCart ? 'Ir ao checkout' : 'Explorar cardápio'}
                 </Button>
               </div>
             </div>
@@ -293,7 +312,7 @@ export default function GastronomyPremiumDetailPage() {
         </section>
 
         <main className="mx-auto mt-6 grid max-w-7xl gap-6 px-4 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <section className="space-y-4">
+          <section id="premium-menu-section" className="space-y-4">
             <div className="rounded-2xl border bg-card p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <h2 className="text-lg font-semibold">Área de cardápio</h2>
@@ -336,28 +355,28 @@ export default function GastronomyPremiumDetailPage() {
                   size="sm"
                   onClick={() => setVeganOnly((current) => !current)}
                 >
-                  🌱 Vegano
+                  Vegano
                 </Button>
                 <Button
                   variant={vegetarianOnly ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setVegetarianOnly((current) => !current)}
                 >
-                  🥬 Vegetariano
+                  Vegetariano
                 </Button>
                 <Button
                   variant={glutenFreeOnly ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setGlutenFreeOnly((current) => !current)}
                 >
-                  🌾 Sem glúten
+                  Sem glúten
                 </Button>
                 <Button
                   variant={lactoseFreeOnly ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setLactoseFreeOnly((current) => !current)}
                 >
-                  🥛 Sem lactose
+                  Sem lactose
                 </Button>
               </div>
 
@@ -367,6 +386,8 @@ export default function GastronomyPremiumDetailPage() {
                     <button
                       key={category.id}
                       type="button"
+                      aria-pressed={activeCategory === category.id}
+                      aria-label={`Filtrar por ${category.name}`}
                       onClick={() => setActiveCategory(category.id)}
                       className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition ${
                         activeCategory === category.id
@@ -409,6 +430,7 @@ export default function GastronomyPremiumDetailPage() {
                     className="relative cursor-pointer"
                     onClick={() => setSelectedItem(item)}
                     role="button"
+                    aria-label={`Abrir detalhes de ${item.name}`}
                     tabIndex={0}
                     onKeyDown={(event) => {
                       if (event.key === 'Enter' || event.key === ' ') {
@@ -442,31 +464,30 @@ export default function GastronomyPremiumDetailPage() {
                       </p>
                     </div>
 
-                    {/* Badges de características */}
                     <div className="flex flex-wrap gap-1">
                       {item.is_vegan && (
-                        <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
-                          🌱 Vegano
+                        <Badge variant="outline" className="border-green-200 bg-green-50 text-xs text-green-700">
+                          Vegano
                         </Badge>
                       )}
                       {item.is_vegetarian && !item.is_vegan && (
-                        <Badge variant="outline" className="text-xs bg-green-50 text-green-600 border-green-200">
-                          🥬 Vegetariano
+                        <Badge variant="outline" className="border-green-200 bg-green-50 text-xs text-green-600">
+                          Vegetariano
                         </Badge>
                       )}
                       {item.is_gluten_free && (
-                        <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200">
-                          Sem Glúten
+                        <Badge variant="outline" className="border-amber-200 bg-amber-50 text-xs text-amber-700">
+                          Sem glúten
                         </Badge>
                       )}
                       {item.is_lactose_free && (
-                        <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
-                          Sem Lactose
+                        <Badge variant="outline" className="border-blue-200 bg-blue-50 text-xs text-blue-700">
+                          Sem lactose
                         </Badge>
                       )}
                       {item.is_spicy && (
-                        <Badge variant="outline" className="text-xs bg-red-50 text-red-700 border-red-200">
-                          🌶️ Picante
+                        <Badge variant="outline" className="border-red-200 bg-red-50 text-xs text-red-700">
+                          Picante
                         </Badge>
                       )}
                     </div>
@@ -480,6 +501,7 @@ export default function GastronomyPremiumDetailPage() {
                           className="h-8 w-8 rounded-none"
                           onClick={() => updateQuantity(item.id, quantityFor(item.id) - 1)}
                           disabled={!item.is_available}
+                          aria-label={`Diminuir quantidade de ${item.name}`}
                         >
                           <Minus className="h-3.5 w-3.5" />
                         </Button>
@@ -490,6 +512,7 @@ export default function GastronomyPremiumDetailPage() {
                           className="h-8 w-8 rounded-none"
                           onClick={() => updateQuantity(item.id, quantityFor(item.id) + 1)}
                           disabled={!item.is_available}
+                          aria-label={`Aumentar quantidade de ${item.name}`}
                         >
                           <Plus className="h-3.5 w-3.5" />
                         </Button>
@@ -551,6 +574,7 @@ export default function GastronomyPremiumDetailPage() {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => removeItem(line.line_id as string)}
+                                aria-label={`Remover ${line.name} do carrinho`}
                               >
                                 Remover
                               </Button>
@@ -584,12 +608,16 @@ export default function GastronomyPremiumDetailPage() {
                 </div>
 
                 <Input
+                  id="premium-coupon-code"
+                  aria-label="Cupom"
                   placeholder="Cupom"
                   value={couponCode}
                   onChange={(event) => setCouponCode(event.target.value)}
                 />
                 <Textarea
                   rows={3}
+                  id="premium-order-notes"
+                  aria-label="Observações do pedido"
                   placeholder="Observações do pedido"
                   value={orderNotes}
                   onChange={(event) => setOrderNotes(event.target.value)}
@@ -604,6 +632,7 @@ export default function GastronomyPremiumDetailPage() {
                 <Button
                   className="w-full bg-[hsl(var(--warning))] text-[hsl(var(--warning-foreground))] hover:brightness-95"
                   disabled={!hasCart || minimumOrderRemaining > 0}
+                  onClick={handleProceedToCheckout}
                 >
                   Finalizar pedido
                 </Button>

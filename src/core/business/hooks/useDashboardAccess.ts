@@ -5,6 +5,12 @@ import { BusinessOwnershipService } from "@/core/business/services/BusinessOwner
 import type { AccessPermissions } from "@/shared/types/dashboard";
 import { logger } from "@/shared/utils/logger";
 
+const ACCESS_RETRY_DELAY_MS = 300;
+
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export function useDashboardAccess(profileId: string | undefined) {
   const { user, isLoading: sessionLoading } = useSessionContext();
   const [permissions, setPermissions] = useState<AccessPermissions>({
@@ -34,7 +40,15 @@ export function useDashboardAccess(profileId: string | undefined) {
     setError(null);
 
     try {
-      const businessDataId = await BusinessService.getBusinessDataIdByProfileId(profileId);
+      let businessDataId: string | null = null;
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        businessDataId = await BusinessService.getBusinessDataIdByProfileId(profileId);
+        if (businessDataId) break;
+        if (attempt === 0) {
+          await delay(ACCESS_RETRY_DELAY_MS);
+        }
+      }
+
       if (!businessDataId) {
         setPermissions({
           isMember: false,
@@ -45,7 +59,14 @@ export function useDashboardAccess(profileId: string | undefined) {
         return;
       }
 
-      const hasAccess = await BusinessOwnershipService.isOwner(businessDataId, user.id);
+      let hasAccess = false;
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        hasAccess = await BusinessOwnershipService.isOwner(businessDataId, user.id);
+        if (hasAccess) break;
+        if (attempt === 0) {
+          await delay(ACCESS_RETRY_DELAY_MS);
+        }
+      }
 
       setPermissions({
         isMember: hasAccess,

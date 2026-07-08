@@ -11,7 +11,6 @@ import {
   TERRITORIAL_ROUTE_PARAMS,
   TERRITORIAL_ROUTE_STATIC_SEGMENTS,
 } from "@/core/routing/config/territorialRoutePatterns";
-import { createLaunchPausedRoute } from "./launchPausedComponent";
 import LaunchPausedPage from "@/app/pages/LaunchPausedPage";
 
 const QrResolverPage = lazy(() =>
@@ -48,7 +47,9 @@ const PremiumBusinessProductPage = lazy(() =>
 const PremiumBusinessCartPage = lazy(() =>
   import("@/modules/business/premium/pages/PremiumBusinessCartPage"),
 );
-const PremiumBusinessCheckoutPage = createLaunchPausedRoute("Checkout");
+const PremiumBusinessCheckoutPage = lazy(() =>
+  import("@/modules/business/premium/pages/PremiumBusinessCheckoutPage"),
+);
 const CentralRoutes = lazy(() =>
   import("./sections/CentralRoutes").then((module) => ({
     default: module.CentralRoutes,

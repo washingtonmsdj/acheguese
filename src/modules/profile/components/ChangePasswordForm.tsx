@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 import {
+  AUTH_PASSWORD_MIN_LENGTH,
   getAuthPasswordRequirementStatus,
   getAuthPasswordStrength,
 } from "@/core/auth/utils/passwordPolicy";
@@ -137,7 +138,7 @@ export function ChangePasswordForm({
               <Input
                 id="new-password"
                 type={showPassword ? "text" : "password"}
-                placeholder="Minimo 8 caracteres"
+                placeholder={`Minimo ${AUTH_PASSWORD_MIN_LENGTH} caracteres`}
                 className="h-11 pr-10"
                 autoComplete="new-password"
                 disabled={isSubmitting}

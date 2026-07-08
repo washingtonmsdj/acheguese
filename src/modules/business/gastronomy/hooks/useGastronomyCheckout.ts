@@ -3,16 +3,18 @@ import { useShallow } from "zustand/react/shallow";
 
 import { locationGeocodingService } from "@/core/location/services/LocationGeocodingService";
 import { useSessionContext } from "@/core/session";
-import { useMotoboy } from "@/core/mobility/hooks";
-import { toast } from "sonner";
-import { useGastronomyCartStore } from "../cart/useGastronomyCartStore";
-import { DeliveryAreaService } from "../services/DeliveryAreaService";
-import { GastronomyCheckoutService } from "../services/GastronomyCheckoutService";
 import type { OrderRecord } from "@/core/mobility/delivery/order/types";
+import { logger } from "@/shared/utils/logger";
+import { useGastronomyCartStore } from "../cart/useGastronomyCartStore";
+import {
+  normalizeFulfillmentMode,
+  requiresDeliveryDestination,
+  resolveDeliveryFulfillmentMode,
+  type GastronomyFulfillmentMode,
+} from "../checkout/checkoutRules";
+import { GastronomyCheckoutService } from "../services/GastronomyCheckoutService";
 import type { GastronomyBusiness } from "../types/gastronomy";
 import type { Cart } from "../types/menu";
-import { logger } from "@/shared/utils/logger";
-import { formatBrl } from "../utils/currency";
 
 export interface DeliveryAddress {
   id: string;
@@ -35,53 +37,24 @@ export interface DeliveryAddress {
 export interface GastronomyCheckoutInput {
   business: GastronomyBusiness;
   cart: Cart;
+  fulfillment_mode?: GastronomyFulfillmentMode;
   payment_method?: string;
   notes?: string;
   deliveryAddress?: DeliveryAddress;
 }
 
-type DeliveryPaymentMethod = "pix" | "dinheiro" | "cartao" | "link";
-
-function resolveDeliveryPaymentContext(paymentMethod?: string): {
-  deliveryPaymentMethod: DeliveryPaymentMethod;
-  shouldCollectOnDelivery: boolean;
-  operationalLabel: string;
-} {
-  switch (paymentMethod) {
-    case "cash":
-      return {
-        deliveryPaymentMethod: "dinheiro",
-        shouldCollectOnDelivery: true,
-        operationalLabel: "dinheiro",
-      };
-    case "card_on_delivery":
-      return {
-        deliveryPaymentMethod: "cartao",
-        shouldCollectOnDelivery: true,
-        operationalLabel: "cartao",
-      };
-    case "payment_link":
-      return {
-        deliveryPaymentMethod: "link",
-        shouldCollectOnDelivery: false,
-        operationalLabel: "link",
-      };
-    case "pix":
-    default:
-      return {
-        deliveryPaymentMethod: "pix",
-        shouldCollectOnDelivery: true,
-        operationalLabel: "pix",
-      };
-  }
-}
-
-async function resolveDeliveryLocationInfo(deliveryAddress: DeliveryAddress): Promise<{
+async function resolveDeliveryLocationInfo(
+  deliveryAddress: DeliveryAddress,
+): Promise<{
   neighborhood: string;
   city: string;
   state: string;
 }> {
-  if (deliveryAddress.neighborhood && deliveryAddress.city && deliveryAddress.state) {
+  if (
+    deliveryAddress.neighborhood &&
+    deliveryAddress.city &&
+    deliveryAddress.state
+  ) {
     return {
       neighborhood: deliveryAddress.neighborhood,
       city: deliveryAddress.city,
@@ -97,14 +70,14 @@ async function resolveDeliveryLocationInfo(deliveryAddress: DeliveryAddress): Pr
 
   if (!reverse) {
     throw new Error(
-      "Não foi possível validar o endereço de entrega. Informe um endereço mais completo.",
+      "NÃ£o foi possÃ­vel validar o endereÃ§o de entrega. Informe um endereÃ§o mais completo.",
     );
   }
 
   const info = locationGeocodingService.extractLocationInfo(reverse);
   if (!info.neighborhood || !info.city || !info.state) {
     throw new Error(
-      "Endereço sem bairro, cidade e estado válidos para calcular área de entrega.",
+      "EndereÃ§o sem bairro, cidade e estado vÃ¡lidos para calcular Ã¡rea de entrega.",
     );
   }
 
@@ -121,20 +94,6 @@ export function useGastronomyCheckout() {
     useShallow((state) => state.clearCart),
   );
 
-  const motoboy = useMotoboy({
-    sourceType: "gastronomy",
-    sourceId: undefined,
-  });
-
-  const resolveBusinessCoords = (business: GastronomyBusiness): { lat: number; lng: number } | null => {
-    const lat = business.address?.latitude ?? business.location?.canonical_lat;
-    const lng = business.address?.longitude ?? business.location?.canonical_lng;
-    if (typeof lat === "number" && typeof lng === "number" && Number.isFinite(lat) && Number.isFinite(lng)) {
-      return { lat, lng };
-    }
-    return null;
-  };
-
   const mutation = useMutation({
     mutationFn: async (
       input: GastronomyCheckoutInput,
@@ -147,14 +106,39 @@ export function useGastronomyCheckout() {
         throw new Error("O carrinho precisa ter pelo menos um item.");
       }
 
-      let deliveryLocationInfo:
-        | { neighborhood: string; city: string; state: string }
-        | null = null;
+      let deliveryLocationInfo: {
+        neighborhood: string;
+        city: string;
+        state: string;
+      } | null = null;
 
-      if (input.business.gastronomy_profile.delivery_enabled) {
+      const fulfillmentMode = normalizeFulfillmentMode(
+        input.business,
+        input.fulfillment_mode ?? input.cart.fulfillment_mode,
+      );
+      const isDeliveryOrder = requiresDeliveryDestination(fulfillmentMode);
+      const deliveryFulfillmentMode = resolveDeliveryFulfillmentMode(
+        input.business,
+      );
+
+      if (isDeliveryOrder && deliveryFulfillmentMode === "platform_courier") {
+        logger.warn(
+          "[useGastronomyCheckout] Configuracao de entrega nao suportada no checkout oficial",
+          {
+            business_id: input.business.business_data_id,
+            fulfillment_mode: fulfillmentMode,
+            delivery_fulfillment_mode: deliveryFulfillmentMode,
+          },
+        );
+        throw new Error(
+          "Entrega por rede de motoboy ainda nao esta disponivel neste lancamento. Ajuste a loja para frota propria ou use retirada/no local.",
+        );
+      }
+
+      if (isDeliveryOrder) {
         if (!input.deliveryAddress) {
           throw new Error(
-            "Defina um destino de entrega válido antes de concluir o pedido.",
+            "Defina um destino de entrega vÃ¡lido antes de concluir o pedido.",
           );
         }
 
@@ -162,27 +146,6 @@ export function useGastronomyCheckout() {
           input.deliveryAddress,
         );
 
-        const eligibilityResult = await DeliveryAreaService.checkEligibility(
-          input.business.business_data_id,
-          deliveryLocationInfo.neighborhood,
-          deliveryLocationInfo.city,
-          deliveryLocationInfo.state,
-          input.cart.total,
-        );
-
-        if (eligibilityResult.error || !eligibilityResult.data) {
-          throw new Error(
-            eligibilityResult.error ||
-              "Não foi possível validar sua área de entrega no momento.",
-          );
-        }
-
-        if (!eligibilityResult.data.is_eligible) {
-          throw new Error(
-            eligibilityResult.data.message ||
-              "Este endereço está fora da área de entrega deste estabelecimento.",
-          );
-        }
       }
 
       const order = await GastronomyCheckoutService.createOrder({
@@ -190,6 +153,7 @@ export function useGastronomyCheckout() {
         actor_profile_id: activeProfile.id,
         business: input.business,
         cart: input.cart,
+        fulfillment_mode: fulfillmentMode,
         payment_method: input.payment_method,
         notes: input.notes,
         customer_snapshot: {
@@ -197,137 +161,32 @@ export function useGastronomyCheckout() {
           phone: activeProfile.phone,
           email: undefined,
         },
-        delivery_snapshot: input.deliveryAddress
-          ? {
-              address_id: input.deliveryAddress.id,
-              lat: input.deliveryAddress.lat,
-              lng: input.deliveryAddress.lng,
-              recipient_name: input.deliveryAddress.recipient_name,
-              phone: input.deliveryAddress.phone,
-              postal_code: input.deliveryAddress.postal_code,
-              street: input.deliveryAddress.street,
-              number: input.deliveryAddress.number,
-              complement: input.deliveryAddress.complement,
-              reference: input.deliveryAddress.reference,
-              neighborhood: deliveryLocationInfo?.neighborhood,
-              city: deliveryLocationInfo?.city,
-              state: deliveryLocationInfo?.state,
-            }
-          : undefined,
+        delivery_snapshot:
+          isDeliveryOrder && input.deliveryAddress
+            ? {
+                address_id: input.deliveryAddress.id,
+                lat: input.deliveryAddress.lat,
+                lng: input.deliveryAddress.lng,
+                recipient_name: input.deliveryAddress.recipient_name,
+                phone: input.deliveryAddress.phone,
+                postal_code: input.deliveryAddress.postal_code,
+                street: input.deliveryAddress.street,
+                number: input.deliveryAddress.number,
+                complement: input.deliveryAddress.complement,
+                reference: input.deliveryAddress.reference,
+                neighborhood: deliveryLocationInfo?.neighborhood,
+                city: deliveryLocationInfo?.city,
+                state: deliveryLocationInfo?.state,
+              }
+            : undefined,
       });
 
       logger.info("[useGastronomyCheckout] Pedido criado", {
         order_id: order.id,
         business_id: input.business.business_data_id,
-        delivery_enabled: input.business.gastronomy_profile.delivery_enabled,
+        fulfillment_mode: fulfillmentMode,
+        delivery_fulfillment_mode: deliveryFulfillmentMode,
       });
-
-      if (
-        input.business.gastronomy_profile.delivery_enabled &&
-        input.deliveryAddress &&
-        input.business.address_id &&
-        input.business.location_id
-      ) {
-        try {
-          const businessCoords = resolveBusinessCoords(input.business);
-          if (!businessCoords) {
-            throw new Error("Estabelecimento sem coordenadas configuradas");
-          }
-
-          logger.info("[useGastronomyCheckout] Criando ride_request para rastreamento", {
-            order_id: order.id,
-            pickup: { lat: businessCoords.lat, lng: businessCoords.lng },
-            dropoff: { lat: input.deliveryAddress.lat, lng: input.deliveryAddress.lng },
-          });
-
-          // Minimização de dados: o motoboy recebe somente informações operacionais
-          // necessárias para localizar o destino (sem observações gerais/pagamento).
-          const paymentContext = resolveDeliveryPaymentContext(input.payment_method);
-          const orderSubtotal = Number.isFinite(input.cart.subtotal) ? input.cart.subtotal : 0;
-          const orderDeliveryFee = Number.isFinite(input.cart.delivery_fee) ? input.cart.delivery_fee : 0;
-          const orderTotal = Number.isFinite(input.cart.total) ? input.cart.total : 0;
-          const orderSubtotalLabel = formatBrl(orderSubtotal);
-          const orderDeliveryFeeLabel = formatBrl(orderDeliveryFee);
-          const orderTotalLabel = formatBrl(orderTotal);
-          const motoboyNotes = [
-            `PEDIDO_SUBTOTAL: ${orderSubtotalLabel}`,
-            `TAXA_ENTREGA_CLIENTE: ${orderDeliveryFeeLabel}`,
-            `PEDIDO_TOTAL: ${orderTotalLabel}`,
-            `COBRAR_NA_ENTREGA: ${paymentContext.shouldCollectOnDelivery ? "sim" : "não"}`,
-            `FORMA_PAGAMENTO: ${paymentContext.operationalLabel}`,
-            input.deliveryAddress.postal_code
-              ? `CEP ${input.deliveryAddress.postal_code}`
-              : null,
-            input.deliveryAddress.street
-              ? `${input.deliveryAddress.street}${input.deliveryAddress.number ? `, ${input.deliveryAddress.number}` : ''}`
-              : null,
-            input.deliveryAddress.complement
-              ? `Complemento: ${input.deliveryAddress.complement}`
-              : null,
-            input.deliveryAddress.reference
-              ? `Referência: ${input.deliveryAddress.reference}`
-              : null,
-          ]
-            .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
-            .join(' | ');
-
-          const deliveryResult = await motoboy.requestDelivery({
-            pickupAddressId: input.business.address_id,
-            dropoffAddressId: input.deliveryAddress.id,
-            pickupLocationId: input.business.location_id,
-            dropoffLocationId:
-              input.deliveryAddress.locationId || input.business.location_id,
-
-            originLat: businessCoords.lat,
-            originLng: businessCoords.lng,
-            destinationLat: input.deliveryAddress.lat,
-            destinationLng: input.deliveryAddress.lng,
-
-            recipientName:
-              input.deliveryAddress.recipient_name ||
-              activeProfile.displayName ||
-              activeProfile.name ||
-              "Cliente",
-            recipientPhone: input.deliveryAddress.phone || activeProfile.phone,
-            deliveryNotes: motoboyNotes || undefined,
-            packageDescription: `Pedido #${order.id} - ${input.business.name} - Total ${orderTotalLabel}`,
-            packageSize: "medium",
-
-            sourceType: "gastronomy",
-            sourceId: order.id,
-            authorizationSourceId: input.business.business_data_id,
-
-            paymentMethod: paymentContext.deliveryPaymentMethod,
-          });
-
-          if (deliveryResult.success) {
-            logger.info("[useGastronomyCheckout] Rastreamento GPS ativado com sucesso", {
-              order_id: order.id,
-              ride_id: deliveryResult.rideId,
-            });
-
-            toast.success("Pedido criado! Buscando entregador...");
-          } else {
-            logger.warn("[useGastronomyCheckout] Rastreamento não disponível", {
-              order_id: order.id,
-              error: deliveryResult.error,
-            });
-
-            toast.warning("Pedido criado, mas rastreamento não disponível no momento");
-          }
-        } catch (deliveryError) {
-          logger.error(
-            "[useGastronomyCheckout] Erro ao ativar rastreamento",
-            deliveryError as Error,
-            {
-              order_id: order.id,
-              business_id: input.business.business_data_id,
-            },
-          );
-
-          toast.warning("Pedido criado, mas rastreamento não disponível no momento");
-        }
-      }
 
       return order;
     },

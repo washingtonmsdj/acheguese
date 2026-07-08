@@ -2,24 +2,14 @@
  * Centralized exports for gastronomy services (module SSOT).
  */
 
-// Facade
-export {
-  GastronomyFacade,
-  default as gastronomyService,
-  GastronomyService,
-} from './GastronomyService';
+// Read-side facade
+export { GastronomyFacade, type GastronomyFacadeContract } from './GastronomyService';
 
 // Canonical services
 export { MenuService } from './MenuService';
 export { MenuService as menuService } from './MenuService';
 export { GastronomyProfileService } from './GastronomyProfileService';
-export { gastronomyMapService } from './GastronomyMapService';
 export { GastronomyUrlService } from './GastronomyUrlService';
-export {
-  GastronomyPublicPreviewService,
-  type GastronomyPreview,
-  type GastronomyPreviewItem,
-} from './GastronomyPublicPreviewService';
 
 // Runtime queries
 export {
@@ -44,14 +34,6 @@ export {
 } from './gastronomy.queries';
 
 export {
-  createGastronomyProfile,
-  updateGastronomyProfile,
-  deleteGastronomyProfile,
-  updateOperationalStatus,
-  patchGastronomyProfile,
-} from './gastronomy.mutations';
-
-export {
   getMenu,
   getMenusByBusiness,
   getMenuWithCategories,
@@ -68,29 +50,6 @@ export {
   getPublicFoodItems,
   getPublicFoodCatalog,
 } from './menu.queries';
-
-export {
-  createMenu,
-  updateMenu,
-  deleteMenu,
-  createCategory,
-  updateCategory,
-  deleteCategory,
-  createItem,
-  updateItem,
-  deleteItem,
-  createVariant,
-  updateVariant,
-  deleteVariant,
-  createAddon,
-  updateAddon,
-  deleteAddon,
-  createPromotion,
-  updatePromotion,
-  deletePromotion,
-  reorderMenuItems,
-  reorderMenuCategories,
-} from './menu.mutations';
 
 export {
   isGastronomyBusinessOpen,

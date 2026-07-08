@@ -3,9 +3,7 @@
  */
 
 
-// ============================================================
-// 🍽️ GASTRONOMY QUERIES - Leitura de dados gastronômicos
-// ============================================================
+// Gastronomy queries
 export {
   getGastronomyProfile,
   getGastronomyBusiness,
@@ -16,9 +14,7 @@ export {
   hasGastronomyProfile,
 } from "./gastronomy.queries";
 
-// ============================================================
-// 🍽️ GASTRONOMY MUTATIONS - Escrita de dados gastronômicos
-// ============================================================
+// Gastronomy mutations
 export {
   createGastronomyProfile,
   updateGastronomyProfile,
@@ -27,9 +23,7 @@ export {
   patchGastronomyProfile,
 } from "./gastronomy.mutations";
 
-// ============================================================
-// 📝 TYPES - Re-exports de tipos
-// ============================================================
+// Types
 export type {
   Business,
   BusinessCategory,

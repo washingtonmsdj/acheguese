@@ -2,7 +2,7 @@
  * BaseRepository - shared implementation for repositories.
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@/integrations/supabase';
 import { QueryBuilder } from '../query-builders/QueryBuilder';
 import type {
   IRepository,

@@ -1,19 +1,18 @@
 # Arquitetura de Identidade Publica Canonica
 
-Atualizado: 2026-06-05
+Atualizado: 2026-07-05
 Status: consolidado
 
 Este documento substitui o plano historico de identidade publica. O contrato vivo de URLs esta em `docs/ROTAS_PUBLICAS_CANONICAS.md`.
 
 ## Contrato Atual
 
-| Entidade | URL publica preferencial | Fallback tecnico |
+| Entidade | URL publica preferencial | Contexto comunitario explicito |
 | --- | --- | --- |
 | Perfil pessoal | `/u/:username` | - |
-| Comunidade | `/:communitySlug` | `/comunidade/:state/:city/:territorySlug` |
-| Empresas da comunidade | `/:communitySlug/empresas` | `/empresas/:state/:city/:territorySlug` |
-| Gastronomia da comunidade | `/:communitySlug/gastronomia` | `/gastronomia/:state/:city/:territorySlug` |
-| Empresa ou restaurante | `/:communitySlug/:slug` | `/empresas/:state/:city/:district/:slug` |
+| Comunidade | `/comunidade/:communitySlug` | mesma rota |
+| Empresas | `/empresas/:state/:city/:territorySlug/:slug` | `/comunidade/:communitySlug/empresas/:slug` |
+| Gastronomia | `/gastronomia/:state/:city/:territorySlug/:slug` quando houver detalhe proprio; caso contrario usa a URL publica da empresa | `/comunidade/:communitySlug/gastronomia/:slug` |
 | Mini-site premium | `/p/:slug` | - |
 | Profissional | `/profissionais/:state/:city/:slug` | - |
 
@@ -22,9 +21,16 @@ Este documento substitui o plano historico de identidade publica. O contrato viv
 - `/u/:username` e apenas perfil pessoal.
 - `/u/:username` deve receber `username` publico. IDs/UUIDs de perfil nao sao URL publica.
 - Empresa e restaurante nao usam `/u/:username`.
-- Empresa e restaurante compartilham o detalhe publico `/:communitySlug/:slug` quando existe alias de comunidade unico.
-- `/empresas/:state/:city/:district/:slug` e fallback tecnico/legado para detalhe de empresa.
-- `/gastronomia/:state/:city/:district/:slug` e legado para detalhe de restaurante e deve canonicalizar para a URL publica de empresa.
+- Empresa e restaurante nao redirecionam automaticamente para comunidade.
+- `/empresas/:state/:city/:territorySlug/:slug` e a URL publica canonica
+  padrao de empresa/restaurante.
+- `/gastronomia/:state/:city/:territorySlug/:slug` so e URL publica canonica
+  quando houver detalhe proprio da vertical; caso contrario a entidade usa a URL
+  publica de empresa.
+- `/comunidade/:communitySlug/<modulo>/:slug` existe somente para contexto e
+  acoes comunitarias explicitas.
+- Aliases curtos legados como `/:communitySlug/:slug` redirecionam para a rota
+  comunitaria explicita e nao devem ser emitidos em codigo novo.
 - `/p/:slug` e mini-site premium, separado da URL publica canonica da empresa.
 - Motorista nao tem pagina publica generica.
 

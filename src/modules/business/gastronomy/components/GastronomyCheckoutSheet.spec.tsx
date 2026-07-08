@@ -123,10 +123,12 @@ describe("GastronomyCheckoutSheet", () => {
     },
   };
 
-  it("bloqueia checkout de delivery quando não há destino de entrega válido", () => {
+  it("bloqueia checkout de delivery quando nao ha destino de entrega valido", () => {
     mockedUseGastronomyCart.mockReturnValue(baseCartMock);
     mockedUseGastronomyCheckout.mockReturnValue(baseCheckoutMock);
-    mockedUseDeliveryDestination.mockReturnValue(baseDeliveryDestinationMock as never);
+    mockedUseDeliveryDestination.mockReturnValue(
+      baseDeliveryDestinationMock as never,
+    );
     mockedUseSessionContext.mockReturnValue({ user: null } as never);
     mockedUseAppUrls.mockReturnValue({ auth: { login: "/entrar" } } as never);
     mockedUseNavigate.mockReturnValue(vi.fn());
@@ -140,14 +142,11 @@ describe("GastronomyCheckoutSheet", () => {
     );
 
     expect(
-      screen.getByText(/escolha o endereço de entrega/i),
-    ).toBeInTheDocument();
-
-    expect(
       screen.getAllByText(/informe o endereço completo de entrega/i).length,
     ).toBeGreaterThan(0);
-
-    expect(screen.getByRole("button", { name: /confirmar pedido/i })).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: /confirmar pedido/i }),
+    ).toBeDisabled();
   });
 
   it("permite checkout de delivery quando destino de entrega existe", () => {
@@ -160,11 +159,19 @@ describe("GastronomyCheckoutSheet", () => {
         latitude: -12.99,
         longitude: -38.49,
         label: "Rua Teste, Salvador - BA",
+        street: "Rua Teste",
+        number: "123",
+        neighborhood: "Centro",
+        city: "Salvador",
+        state: "BA",
+        postalCode: "40000-000",
         updatedAt: new Date().toISOString(),
       },
       showDestinationEditor: false,
     } as never);
-    mockedUseSessionContext.mockReturnValue({ user: { id: "user-1" } } as never);
+    mockedUseSessionContext.mockReturnValue({
+      user: { id: "user-1" },
+    } as never);
     mockedUseAppUrls.mockReturnValue({ auth: { login: "/entrar" } } as never);
     mockedUseNavigate.mockReturnValue(vi.fn());
 
@@ -180,6 +187,60 @@ describe("GastronomyCheckoutSheet", () => {
     expect(
       screen.queryByText(/checkout de delivery permanece bloqueado/i),
     ).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /confirmar pedido/i })).toBeEnabled();
+    expect(
+      screen.getByRole("button", { name: /confirmar pedido/i }),
+    ).toBeEnabled();
+  });
+
+  it("bloqueia o checkout oficial quando a loja esta configurada para platform courier", () => {
+    mockedUseGastronomyCart.mockReturnValue(baseCartMock);
+    mockedUseGastronomyCheckout.mockReturnValue(baseCheckoutMock);
+    mockedUseDeliveryDestination.mockReturnValue({
+      ...baseDeliveryDestinationMock,
+      deliveryDestination: {
+        source: "manual_address",
+        latitude: -12.99,
+        longitude: -38.49,
+        label: "Rua Teste, Salvador - BA",
+        street: "Rua Teste",
+        number: "123",
+        neighborhood: "Centro",
+        city: "Salvador",
+        state: "BA",
+        postalCode: "40000-000",
+        updatedAt: new Date().toISOString(),
+      },
+      showDestinationEditor: false,
+    } as never);
+    mockedUseSessionContext.mockReturnValue({
+      user: { id: "user-1" },
+    } as never);
+    mockedUseAppUrls.mockReturnValue({ auth: { login: "/entrar" } } as never);
+    mockedUseNavigate.mockReturnValue(vi.fn());
+
+    render(
+      <GastronomyCheckoutSheet
+        business={{
+          ...businessMock,
+          gastronomy_profile: {
+            ...businessMock.gastronomy_profile,
+            metadata: {
+              delivery_fulfillment_mode: "platform_courier",
+            },
+          },
+        }}
+        open
+        onOpenChange={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByText(
+        /entrega por rede de motoboy ainda nao esta disponivel/i,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /confirmar pedido/i }),
+    ).toBeDisabled();
   });
 });

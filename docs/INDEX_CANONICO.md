@@ -1,6 +1,6 @@
 # INDEX CANONICO DE DOCUMENTACAO
 
-Data de referencia: 2026-05-06
+Data de referencia: 2026-07-07
 
 ## Leitura inicial obrigatoria
 1. [README da documentacao](./README.md)
@@ -19,6 +19,10 @@ Data de referencia: 2026-05-06
 - Arquitetura de Comunicacao Territorial: [COMUNICACAO_TERRITORIAL_ARCHITECTURE.md](./COMUNICACAO_TERRITORIAL_ARCHITECTURE.md)
 - Plano de distribuicao territorial da Comunicacao: [COMUNICACAO_DISTRIBUICAO_TERRITORIAL_PLANO.md](./COMUNICACAO_DISTRIBUICAO_TERRITORIAL_PLANO.md)
 - SSOT da consolidacao de gastronomia: [architecture/GASTRONOMY_CONSOLIDATION_SSOT.md](./architecture/GASTRONOMY_CONSOLIDATION_SSOT.md)
+- SSOT alvo de Comunidade vs Entidades Publicas: [architecture/COMMUNITY_PORTAL_PUBLIC_ENTITY_SSOT.md](./architecture/COMMUNITY_PORTAL_PUBLIC_ENTITY_SSOT.md)
+- Task executavel de limpeza de rotas Comunidade/Publico: [tasks/TASK_COMMUNITY_PORTAL_ROUTING_CLEANUP.md](./tasks/TASK_COMMUNITY_PORTAL_ROUTING_CLEANUP.md)
+- Regras atuais de roteamento publico/comunitario:
+  [CURRENT_RULES.md](./CURRENT_RULES.md)
 - Auditoria estrutural global: [AUDITORIA_ESTRUTURAL_GLOBAL.md](./AUDITORIA_ESTRUTURAL_GLOBAL.md)
 - Taxonomia vertical oficial: `src/core/verticals/config.ts` e `src/core/verticals/README.md`
 - Mapa de ownership por assunto: [CANONICAL_MAP.md](./CANONICAL_MAP.md)
@@ -26,11 +30,15 @@ Data de referencia: 2026-05-06
 - Plano operacional atual: [ACAO_EXECUTAVEL_AUDITORIA_HIPERLOCAL.md](./ACAO_EXECUTAVEL_AUDITORIA_HIPERLOCAL.md)
 - Auditoria estrutural e plano de correcao: [AUDITORIA_ESTRUTURAL_MODULOS.md](./AUDITORIA_ESTRUTURAL_MODULOS.md)
 - Migracoes e banco: [MIGRATIONS.md](./MIGRATIONS.md)
+- Supabase remoto e segredos: [SUPABASE_SECRETS.md](./SUPABASE_SECRETS.md)
 - Seguranca: [SECURITY.md](./SECURITY.md)
+- Governance Authorities: [governance/AUTHORITIES.md](./governance/AUTHORITIES.md)
+- Security Authority: [governance/security/SECURITY_AUTHORITY.md](./governance/security/SECURITY_AUTHORITY.md)
 
 ## Auditorias ativas
 - [audits/MASTER_REPORT.md](./audits/MASTER_REPORT.md)
 - [audits/PROJECT_INVENTORY.md](./audits/PROJECT_INVENTORY.md)
+- [audits/SUPABASE_REMOTE_SECURITY_ADVISOR_2026-07-06.md](./audits/SUPABASE_REMOTE_SECURITY_ADVISOR_2026-07-06.md)
 - [audits/EXECUTION_CHECKLIST.md](./audits/EXECUTION_CHECKLIST.md)
 - [audits/QUICK_WINS.md](./audits/QUICK_WINS.md)
 - [audits/POST_READINESS_BACKLOG.md](./audits/POST_READINESS_BACKLOG.md)

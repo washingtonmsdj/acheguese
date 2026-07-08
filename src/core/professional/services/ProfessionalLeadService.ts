@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase";
-import { NotificationService } from "@/core/notifications/services/NotificationService";
+import { ProfessionalNotificationBrokerService } from "@/core/notifications/services/ProfessionalNotificationBrokerService";
 import { ReviewsService } from "@/core/reviews/services/ReviewsService";
 import { SessionService } from "@/core/session/services/SessionService";
 import { logger } from "@/shared/utils/logger";
@@ -188,7 +188,6 @@ export class ProfessionalLeadService {
       if (error) throw error;
 
       await this.incrementContactsCount(data.professional_id);
-      await this.notifyProfessionalOwner(data);
 
       return { success: true, data };
     } catch (error) {
@@ -406,7 +405,7 @@ export class ProfessionalLeadService {
         payload: { sender_role: senderRole },
       });
 
-      await this.notifyLeadMessageRecipient(lead, senderRole, message);
+      await ProfessionalNotificationBrokerService.notifyLeadMessage(data.id);
 
       return { success: true, data };
     } catch (error) {
@@ -459,10 +458,7 @@ export class ProfessionalLeadService {
         payload: { amount_cents: Math.round(input.amountCents) },
       });
 
-      const leadResult = await this.getLeadWithOwner(input.leadId);
-      if (leadResult.success && leadResult.data?.requester_user_id) {
-        await this.notifyQuoteRecipient(leadResult.data, description);
-      }
+      await ProfessionalNotificationBrokerService.notifyLeadQuote(data.id);
 
       return { success: true, data };
     } catch (error) {
@@ -639,11 +635,6 @@ export class ProfessionalLeadService {
         throw new Error("Faca login para avaliar o atendimento");
       }
 
-      const activeProfile = await SessionService.getActiveProfile(user.id);
-      if (!activeProfile) {
-        throw new Error("Perfil ativo nao encontrado");
-      }
-
       const rating = Math.round(input.rating);
       if (rating < 1 || rating > 5) {
         throw new Error("Nota invalida");
@@ -672,6 +663,10 @@ export class ProfessionalLeadService {
         throw new Error("Avaliacao liberada apenas apos conclusao do atendimento");
       }
 
+      if (!data.requester_profile_id) {
+        throw new Error("Perfil do cliente nao encontrado para este atendimento");
+      }
+
       const professional = firstRelation(data.professional_data);
 
       if (!professional?.profile_id) {
@@ -681,7 +676,7 @@ export class ProfessionalLeadService {
       const { review } = await ReviewsService.upsertReview(
         {
           reviewed_profile_id: professional.profile_id,
-          reviewer_profile_id: activeProfile.id,
+          reviewer_profile_id: data.requester_profile_id,
           rating,
           comment: sanitizeString(input.comment).slice(0, 1000),
           job_type: "Atendimento contratado",
@@ -812,95 +807,4 @@ export class ProfessionalLeadService {
     }
   }
 
-  private static async notifyProfessionalOwner(
-    lead: ProfessionalLeadRecord,
-  ): Promise<void> {
-    const owner = await this.getProfessionalOwner(lead.professional_id);
-    const ownerUserId = firstProfileUserId(owner?.profiles ?? null);
-
-    if (!ownerUserId) return;
-
-    try {
-      await NotificationService.createNotification({
-        user_id: ownerUserId,
-        type: "info",
-        category: "transactional",
-        title: "Novo pedido de orcamento",
-        message: `${lead.requester_name} pediu orcamento para ${lead.service_needed}.`,
-        action_url: "/central/profissional",
-        action_label: "Ver pedidos",
-        metadata: {
-          lead_id: lead.id,
-          professional_id: lead.professional_id,
-          source_channel: lead.source_channel,
-        },
-      });
-    } catch (error) {
-      logger.warn("[ProfessionalLeadService] notification not delivered:", error);
-    }
-  }
-
-  private static async notifyLeadMessageRecipient(
-    lead: ProfessionalLeadWithOwner,
-    senderRole: "requester" | "professional",
-    message: string,
-  ): Promise<void> {
-    const owner = getJoinedProfessional(lead);
-    const ownerUserId = firstProfileUserId(owner?.profiles ?? null);
-    const targetUserId =
-      senderRole === "professional" ? lead.requester_user_id : ownerUserId;
-
-    if (!targetUserId) return;
-
-    try {
-      await NotificationService.createNotification({
-        user_id: targetUserId,
-        type: "info",
-        category: "transactional",
-        title:
-          senderRole === "professional"
-            ? "Resposta do profissional"
-            : "Nova mensagem no orcamento",
-        message: message.length > 120 ? `${message.slice(0, 117)}...` : message,
-        action_url:
-          senderRole === "professional"
-            ? `/servicos/orcamentos/${lead.id}`
-            : "/central/profissional",
-        action_label: "Abrir orcamento",
-        metadata: {
-          lead_id: lead.id,
-          professional_id: lead.professional_id,
-          sender_role: senderRole,
-        },
-      });
-    } catch (error) {
-      logger.warn("[ProfessionalLeadService] message notification not delivered:", error);
-    }
-  }
-
-  private static async notifyQuoteRecipient(
-    lead: ProfessionalLeadWithOwner,
-    description: string,
-  ): Promise<void> {
-    if (!lead.requester_user_id) return;
-
-    try {
-      await NotificationService.createNotification({
-        user_id: lead.requester_user_id,
-        type: "info",
-        category: "transactional",
-        title: "Proposta de orcamento recebida",
-        message:
-          description.length > 120 ? `${description.slice(0, 117)}...` : description,
-        action_url: `/servicos/orcamentos/${lead.id}`,
-        action_label: "Ver proposta",
-        metadata: {
-          lead_id: lead.id,
-          professional_id: lead.professional_id,
-        },
-      });
-    } catch (error) {
-      logger.warn("[ProfessionalLeadService] quote notification not delivered:", error);
-    }
-  }
 }

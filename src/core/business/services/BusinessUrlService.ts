@@ -6,26 +6,38 @@
  *   - Toda geracao, resolucao e validacao de URL passa por aqui.
  *   - Hooks apenas consomem este service.
  *
- * Padrao publico preferencial:
- *   Comunidade com alias: /:communityAlias/:slug
- *   Premium isolado:      /p/:slug
- *
- * Fallback tecnico territorial:
+ * Padrao publico canonico:
  *   /empresas/:state/:city/:district/:slug
+ *
+ * Contexto comunitario explicito:
+ *   /comunidade/:communityAlias/empresas/:slug
+ *
+ * Premium isolado:
+ *   /p/:slug
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
+import { APP_MODULE_SLUGS } from '@/config/moduleSlugs';
 import { PublicIdentityService } from '@/core/public-identity/services/PublicIdentityService';
 import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
 import { createTerritorialGroupRepository } from '@/core/location/repositories/createTerritorialGroupRepository';
 import { CommunityPublicAliasService } from '@/core/routing/services/CommunityPublicAliasService';
 import { buildCommunityAliasUrl } from '@/core/routing/utils/territoryUrls';
+import {
+  buildCommunityScopedEntityUrl,
+  buildPublicEntityUrl,
+} from '@/core/routing/policies';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 import {
   buildBusinessPremiumUrl,
-  buildBusinessPublicUrlFromCommunityAlias,
   buildBusinessPublicUrlFromTerritory,
 } from '@/core/business/utils/businessPublicUrls';
+import {
+  buildTonePizzariaFixtureGeographicPath,
+  isTonePizzariaRouteFixture,
+  TONE_PIZZARIA_ROUTE_FIXTURE_ID,
+  TONE_PIZZARIA_ROUTE_FIXTURE_SLUG,
+} from '@/core/business/fixtures/tonePizzariaRouteFixture';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -42,7 +54,7 @@ export interface BusinessUrlContext {
 
 
 export interface ResolvedBusinessUrl {
-  /** URL publica preferencial: /santa-cruz/tonecos-studios quando houver alias. */
+  /** URL publica canonica: /empresas/:state/:city/:district/:slug. */
   canonical: string;
   /** URL premium curta (so para is_premium): /p/tonecos-studios */
   premium: string | null;
@@ -70,15 +82,16 @@ function extractTerritorySegments(
 ): { uf: string; cidade: string; bairro: string } | null {
   // Remove leading slash e divide
   const parts = geoPath.replace(/^\//, '').split('/');
-  // Esperado: [country, state, city, district]
-  if (parts.length < 4) {
+  const territoryParts = parts[0] === 'br' ? parts.slice(1) : parts;
+  // Esperado: [state, city, district]
+  if (territoryParts.length < 3) {
     logger.error(
       `[BusinessUrlService] geographic_path inválido (sem bairro): "${geoPath}". ` +
       `Empresas devem ter location_id apontando para bairro/district.`
     );
     return null;
   }
-  return { uf: parts[1], cidade: parts[2], bairro: parts[3] };
+  return { uf: territoryParts[0], cidade: territoryParts[1], bairro: territoryParts[2] };
 }
 
 // ─── Service ──────────────────────────────────────────────────────────────────
@@ -93,7 +106,7 @@ export class BusinessUrlService {
    * @param ctx - Contexto da empresa
    */
   static buildUrls(ctx: BusinessUrlContext): ResolvedBusinessUrl {
-    const { id, slug, is_premium, geographic_path, community_alias } = ctx;
+    const { id, slug, is_premium, geographic_path } = ctx;
 
     if (!geographic_path) {
       throw new Error(
@@ -111,12 +124,10 @@ export class BusinessUrlService {
       );
     }
 
-    const canonical = community_alias
-      ? buildBusinessPublicUrlFromCommunityAlias(community_alias, slug)
-      : buildBusinessPublicUrlFromTerritory(
-          `/${territory.uf}/${territory.cidade}/${territory.bairro}`,
-          slug,
-        );
+    const canonical = buildBusinessPublicUrlFromTerritory(
+      `/${territory.uf}/${territory.cidade}/${territory.bairro}`,
+      slug,
+    );
     const dashboard = businessManagementRoutes.overview(id);
 
     return {
@@ -136,8 +147,33 @@ export class BusinessUrlService {
   }
 
   /**
-   * Resolve a base publica curta da comunidade da empresa, quando existir.
-   * Mantem retorno nulo para preservar fallback territorial em links antigos.
+   * Nome explicito para consumidores novos.
+   * Ignora community_alias por definicao: canonical publico nunca entra em
+   * comunidade automaticamente.
+   */
+  static getPublicCanonicalUrl(ctx: BusinessUrlContext): string {
+    return buildPublicEntityUrl({
+      module: APP_MODULE_SLUGS.business,
+      geographicPath: ctx.geographic_path,
+      slug: ctx.slug,
+    });
+  }
+
+  /**
+   * URL de empresa dentro de contexto comunitario explicito.
+   * Nao usar para SEO publico, cards publicos ou compartilhamento externo.
+   */
+  static getCommunityScopedUrl(ctx: BusinessUrlContext, communityAlias: string): string {
+    return buildCommunityScopedEntityUrl({
+      communityAlias,
+      module: APP_MODULE_SLUGS.business,
+      slug: ctx.slug,
+    });
+  }
+
+  /**
+   * Resolve a base canonica do portal comunitario da empresa, quando existir.
+   * Mantem retorno nulo para preservar fallback territorial em chamadas antigas.
    */
   static async findCommunityPublicBaseUrl(ctx: BusinessUrlContext): Promise<string | null> {
     if (ctx.community_alias) {
@@ -181,20 +217,6 @@ export class BusinessUrlService {
   }
 
   /**
-   * Gera a URL publica preferencial resolvendo alias de comunidade por territorio.
-   * Retorna fallback territorial quando ainda nao existe alias publico.
-   */
-  static async getCanonicalUrlWithResolvedCommunityAlias(
-    ctx: BusinessUrlContext,
-  ): Promise<string> {
-    const communityBaseUrl = await this.findCommunityPublicBaseUrl(ctx);
-    if (!communityBaseUrl) return this.getCanonicalUrl(ctx);
-
-    const communityAlias = communityBaseUrl.replace(/^\/+|\/+$/g, '');
-    return buildBusinessPublicUrlFromCommunityAlias(communityAlias, ctx.slug);
-  }
-
-  /**
    * Gera a URL premium curta, ou a canônica se não for premium.
    * Uso: botão "compartilhar" para empresas premium.
    *
@@ -229,6 +251,15 @@ export class BusinessUrlService {
    */
   static async resolveBySlug(slug: string): Promise<BusinessUrlContext | null> {
     try {
+      if (isTonePizzariaRouteFixture({ slug })) {
+        return {
+          id: TONE_PIZZARIA_ROUTE_FIXTURE_ID,
+          slug: TONE_PIZZARIA_ROUTE_FIXTURE_SLUG,
+          is_premium: false,
+          geographic_path: buildTonePizzariaFixtureGeographicPath({ slug }),
+        };
+      }
+
       const { data, error } = await supabase
         .from('business_data')
         .select(`
@@ -326,6 +357,15 @@ export class BusinessUrlService {
    */
   static async resolveById(id: string): Promise<BusinessUrlContext | null> {
     try {
+      if (import.meta.env.DEV && id === TONE_PIZZARIA_ROUTE_FIXTURE_ID) {
+        return {
+          id: TONE_PIZZARIA_ROUTE_FIXTURE_ID,
+          slug: TONE_PIZZARIA_ROUTE_FIXTURE_SLUG,
+          is_premium: false,
+          geographic_path: buildTonePizzariaFixtureGeographicPath({}),
+        };
+      }
+
       const { data, error } = await supabase
         .from('business_data')
         .select(`
@@ -368,6 +408,20 @@ export class BusinessUrlService {
     slug: string,
   ): Promise<BusinessUrlContext | null> {
     try {
+      if (isTonePizzariaRouteFixture({ slug })) {
+        return {
+          id: TONE_PIZZARIA_ROUTE_FIXTURE_ID,
+          slug: TONE_PIZZARIA_ROUTE_FIXTURE_SLUG,
+          is_premium: false,
+          geographic_path: buildTonePizzariaFixtureGeographicPath({
+            state: uf,
+            city: cidade,
+            district: bairro,
+            slug,
+          }),
+        };
+      }
+
       const expectedPathPrefix = `/br/${uf}/${cidade}/${bairro}`;
 
       const { data, error } = await supabase

@@ -86,7 +86,7 @@ export function SEO({
         <meta property="article:modified_time" content={modifiedTime} />
       )}
 
-      <meta name="robots" content={noIndex ? "noindex, nofollow" : "index, follow"} />
+      {noIndex ? <meta name="robots" content="noindex, nofollow" /> : null}
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <meta httpEquiv="Content-Type" content="text/html; charset=utf-8" />
       <meta name="language" content="Portuguese" />

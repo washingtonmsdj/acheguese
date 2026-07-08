@@ -1,8 +1,6 @@
-import { createClient } from '@supabase/supabase-js';
-const s = createClient(
-  process.env.VITE_SUPABASE_URL!,
-  'process.env.SUPABASE_SERVICE_ROLE_KEY!'
-);
+import { createAnonClient, createServiceRoleClient } from './lib/supabase-client.mjs';
+
+const s = createServiceRoleClient();
 
 const PROF_A    = 'e114b313-3d76-452b-8dca-3bb8079ca59e';
 const LOC_BARRA = '00000000-0000-0000-0000-000000000002';
@@ -79,8 +77,7 @@ async function main() {
 
   // 6. RLS: anon não pode inserir
   console.log('\n=== 6. RLS: anon não pode inserir ===');
-  const anon = createClient(process.env.VITE_SUPABASE_URL!,
-    'process.env.VITE_SUPABASE_PUBLISHABLE_KEY!');
+  const anon = createAnonClient();
   const { error: e6 } = await anon.from('comment_likes').insert({ comment_id: c.id, user_id: USER_A });
   if (e6) pass(`Anon rejeitado: ${e6.message.substring(0,60)}`);
   else fail_('Anon conseguiu inserir — RLS não está ativa');

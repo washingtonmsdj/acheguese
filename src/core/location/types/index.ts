@@ -143,7 +143,13 @@ export interface GetLocationTreeOutput {
 // TERRITORIAL GROUP TYPES
 // ============================================
 
-export type TerritorialGroupStatus = 'active' | 'inactive';
+export const TERRITORIAL_GROUP_STATUS = {
+  ACTIVE: 'active',
+  INACTIVE: 'inactive',
+} as const;
+
+export type TerritorialGroupStatus =
+  (typeof TERRITORIAL_GROUP_STATUS)[keyof typeof TERRITORIAL_GROUP_STATUS];
 
 export interface TerritorialGroup {
   id: string;

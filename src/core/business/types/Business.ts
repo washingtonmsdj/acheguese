@@ -47,6 +47,7 @@ export interface BusinessHours {
  */
 export interface Business {
   id: string;
+  business_data_id?: string;
   profile_id: string;
   name: string;
   legal_name?: string;

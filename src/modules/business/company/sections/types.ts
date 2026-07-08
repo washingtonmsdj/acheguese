@@ -9,7 +9,7 @@ import type { NavigateFunction } from "react-router-dom";
 import type { AuthUser } from "@/core/auth/services/types";
 import type { Business } from "@/core/business/types";
 import type { VerticalKey } from "@/core/verticals";
-import type { GastronomyPreviewItem } from "@/modules/business/gastronomy/services";
+import type { PublicGastronomyPreviewItem } from "@/modules/business/public/types/publicSnapshots";
 
 // ============================================
 // Business Extended (com campos adicionais)
@@ -22,6 +22,8 @@ export type BusinessExtended = Business & {
   especialidades?: readonly string[];
   facilidades?: readonly string[];
   modos_atendimento?: readonly string[];
+  delivery_eta_label?: string;
+  price_band_label?: string;
   tem_delivery: boolean;
   aceita_cartao: boolean;
   aceita_pix: boolean;
@@ -62,6 +64,14 @@ export interface Review {
   readonly avatar?: string | null;
 }
 
+export interface RatingBreakdown {
+  readonly 5?: number;
+  readonly 4?: number;
+  readonly 3?: number;
+  readonly 2?: number;
+  readonly 1?: number;
+}
+
 // ============================================
 // Nearby Business
 // ============================================
@@ -74,6 +84,9 @@ export interface NearbyBusiness {
   readonly rating: number;
   readonly isOpen?: boolean;
   readonly canonicalUrl?: string;
+  readonly logoUrl?: string | null;
+  readonly imageUrl?: string | null;
+  readonly locationLabel?: string | null;
 }
 
 // ============================================
@@ -101,6 +114,8 @@ export interface EmpresaHeroSectionProps extends BaseSectionProps {
   readonly business: BusinessExtended;
   readonly openStatus: OpenStatus;
   readonly yearsActive: string;
+  readonly onRoute?: () => void;
+  readonly onClaim?: () => void;
 }
 
 export interface EmpresaCTAsSectionProps extends BaseSectionProps {
@@ -108,18 +123,22 @@ export interface EmpresaCTAsSectionProps extends BaseSectionProps {
   readonly isDeliveryBusiness: boolean;
   readonly gastronomyUrl: string | null;
   readonly verticalPublicUrls?: Partial<Record<VerticalKey, string>>;
+  readonly embedded?: boolean;
   readonly isFavorite: boolean;
   readonly hasRecommended: boolean;
+  readonly recommendLoading?: boolean;
   readonly showRouteOptions: boolean;
   readonly onToggleFavorite: () => void;
   readonly onToggleRecommended: () => void;
   readonly onToggleRouteOptions: () => void;
   readonly onRoute: () => void;
+  readonly onShare?: () => void;
 }
 
 export interface EmpresaResumoSectionProps extends BaseSectionProps {
   readonly business: BusinessExtended;
   readonly yearsActive: string;
+  readonly embedded?: boolean;
 }
 
 export interface EmpresaInfoSectionProps extends BaseSectionProps {
@@ -130,6 +149,10 @@ export interface EmpresaInfoSectionProps extends BaseSectionProps {
   readonly isDeliveryBusiness: boolean;
   readonly showAllHours: boolean;
   readonly copiedPhone: boolean;
+  readonly embedded?: boolean;
+  readonly hideAddressCard?: boolean;
+  readonly showSidebar?: boolean;
+  readonly sidebarClassName?: string;
   readonly onToggleShowAllHours: () => void;
   readonly onCopyPhone: () => void;
   readonly onRoute: () => void;
@@ -139,12 +162,13 @@ export interface EmpresaProdutosSectionProps extends BaseSectionProps {
   readonly products: readonly Product[];
   readonly selectedCategory: string;
   readonly showAllProducts: boolean;
+  readonly embedded?: boolean;
   readonly onSelectCategory: (category: string) => void;
   readonly onToggleShowAll: () => void;
 }
 
 export interface EmpresaGastronomiaPreviewSectionProps extends BaseSectionProps {
-  readonly items: readonly GastronomyPreviewItem[];
+  readonly items: readonly PublicGastronomyPreviewItem[];
   readonly canonicalUrl: string;
   readonly businessName: string;
   readonly isLoading?: boolean;
@@ -155,6 +179,8 @@ export interface EmpresaAvaliacoesSectionProps extends BaseSectionProps {
   readonly reviews: readonly Review[];
   readonly user: (AuthUser & { user_metadata?: Record<string, unknown> }) | null;
   readonly reviewUrl?: string | null;
+  readonly ratingBreakdown?: RatingBreakdown | null;
+  readonly embedded?: boolean;
 }
 
 export interface EmpresaFotosSectionProps extends BaseSectionProps {
@@ -166,6 +192,9 @@ export interface EmpresaProximasSectionProps extends BaseSectionProps {
   readonly nearbyBusinesses: readonly NearbyBusiness[];
   readonly currentBusinessId: string;
   readonly currentBusinessGeographicPath?: string | null;
+  readonly embedded?: boolean;
+  readonly maxItems?: number;
+  readonly layout?: "column" | "row";
 }
 
 // ============================================
@@ -178,11 +207,13 @@ export interface ProductCardProps {
 
 export interface ReviewCardProps {
   readonly review: Review;
+  readonly compact?: boolean;
 }
 
 export interface NearbyBusinessCardProps {
   readonly business: NearbyBusiness;
   readonly onClick: () => void;
+  readonly compact?: boolean;
 }
 
 export interface AddressCardProps {
@@ -203,7 +234,6 @@ export interface ContactCardProps {
   readonly business: BusinessExtended;
   readonly copiedPhone: boolean;
   readonly onCopyPhone: () => void;
-  readonly navigate: NavigateFunction;
 }
 
 export interface PaymentCardProps {
@@ -220,7 +250,11 @@ export interface ActionButtonProps {
   readonly onClick?: () => void;
   readonly href?: string;
   readonly color?: string;
+  readonly appearance?: 'soft' | 'solid';
+  readonly layout?: 'stacked' | 'inline';
   readonly isActive?: boolean;
+  readonly ariaPressed?: boolean;
+  readonly disabled?: boolean;
 }
 
 export interface RouteOptionsProps {
@@ -235,6 +269,8 @@ export interface RatingSummaryProps {
 
 export interface RatingDistributionProps {
   readonly reviews: readonly Review[];
+  readonly ratingBreakdown?: RatingBreakdown | null;
+  readonly totalReviews?: number;
 }
 
 // ============================================

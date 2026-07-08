@@ -11,7 +11,6 @@ import {
   extractCommunityTerritoryBaseUrl,
   MODULE_SLUGS,
 } from "@/core/routing/utils/territoryUrls";
-import { getCommunityAliasCandidateFromPath } from "@/core/routing/utils/communityNavigationContext";
 import { jobPublicRoutes } from "@/core/verticals/jobs/routes/jobPublicRoutes";
 import {
   CONTRATO_LABELS,
@@ -63,13 +62,14 @@ export const SUGGESTED_BENEFITS = [
 
 export function buildVagasListPath(pathname: string): string {
   const parts = pathname.split("/").filter(Boolean);
-  const aliasCandidate = getCommunityAliasCandidateFromPath(pathname);
   if (
-    aliasCandidate &&
-    parts.at(1) === MODULE_SLUGS.jobs &&
-    parts.at(2) === "publicar"
+    parts.at(0) === MODULE_SLUGS.community &&
+    parts.at(1) &&
+    !/^[a-z]{2}$/i.test(parts.at(1) ?? "") &&
+    parts.at(2) === MODULE_SLUGS.jobs &&
+    parts.at(3) === "publicar"
   ) {
-    return `/${aliasCandidate}/${MODULE_SLUGS.jobs}`;
+    return `/${MODULE_SLUGS.community}/${parts[1]}/${MODULE_SLUGS.jobs}`;
   }
 
   const communityTerritoryBasePath = extractCommunityTerritoryBaseUrl(pathname);

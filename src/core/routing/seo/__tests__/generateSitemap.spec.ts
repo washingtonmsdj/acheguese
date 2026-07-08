@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { generateSitemap } from "../generateSitemap";
 
 describe("generateSitemap", () => {
-  it("gera URLs comunitarias curtas sem legado /area/", () => {
+  it("gera URLs publicas canonicas sem portal comunitario nem legado /area/", () => {
     const sitemap = generateSitemap(
       [
         {
@@ -28,30 +28,24 @@ describe("generateSitemap", () => {
     );
 
     expect(sitemap).not.toContain("/area/");
-    expect(sitemap).not.toContain("https://acheguese.com.br/comunidade/");
-    expect(sitemap).not.toContain(
+    expect(sitemap).not.toContain("/comunidade/");
+    expect(sitemap).toContain(
       "https://acheguese.com.br/ba/salvador/chapada-do-rio-vermelho",
     );
-    expect(sitemap).not.toContain(
+    expect(sitemap).toContain(
       "https://acheguese.com.br/empresas/ba/salvador/chapada-do-rio-vermelho",
     );
     expect(sitemap).toContain(
-      "https://acheguese.com.br/chapada-do-rio-vermelho",
+      "https://acheguese.com.br/gastronomia/ba/salvador/chapada-do-rio-vermelho",
     );
     expect(sitemap).toContain(
-      "https://acheguese.com.br/chapada-do-rio-vermelho/empresas",
+      "https://acheguese.com.br/ba/salvador/complexo-do-nordeste-de-amaralina",
     );
     expect(sitemap).toContain(
-      "https://acheguese.com.br/chapada-do-rio-vermelho/servicos",
+      "https://acheguese.com.br/empresas/ba/salvador/complexo-do-nordeste-de-amaralina",
     );
     expect(sitemap).toContain(
-      "https://acheguese.com.br/chapada-do-rio-vermelho/classificados",
-    );
-    expect(sitemap).toContain(
-      "https://acheguese.com.br/chapada-do-rio-vermelho/mapa",
-    );
-    expect(sitemap).toContain(
-      "https://acheguese.com.br/complexo-do-nordeste-de-amaralina/feed",
+      "https://acheguese.com.br/mapa/ba/salvador/complexo-do-nordeste-de-amaralina",
     );
     expect(sitemap).not.toContain("/mobilidade");
     expect(sitemap).not.toContain("/eventos");
@@ -66,10 +60,7 @@ describe("generateSitemap", () => {
 
     expect(publicArtifacts).not.toContain("/area/");
     expect(publicArtifacts).not.toContain("http://localhost");
-    expect(publicArtifacts).not.toContain("https://acheguese.com.br/comunidade/");
-    expect(publicArtifacts).toContain(
-      "https://acheguese.com.br/complexo-do-nordeste-de-amaralina/feed",
-    );
+    expect(publicArtifacts).not.toContain("/comunidade/");
     expect(publicArtifacts).not.toContain("https://acheguese.com.br/mobilidade/");
     expect(publicArtifacts).not.toContain("https://acheguese.com.br/eventos/");
     expect(publicArtifacts).not.toContain("https://acheguese.com.br/vagas/");

@@ -1,9 +1,9 @@
-import { supabase } from "@/integrations/supabase";
 import {
   insertLooseRow,
   selectLooseRows,
   updateLooseRows,
 } from "@/integrations/supabase";
+import { invokeSupabaseBroker } from "@/core/infrastructure/edge-functions/edgeFunctionBroker";
 import { PublicIdentityService } from "@/core/public-identity";
 import type { AvailabilityResult } from "@/core/public-identity";
 import { evaluateCommunicationChannelSlugSafety } from "@/core/public-identity/domain/communicationChannelSlugSafety";
@@ -19,7 +19,8 @@ import type {
 import { CommunicationTerritorialService } from "./CommunicationTerritorialService";
 import { COMMUNICATION_REQUEST_STATUS } from "../constants/requestStatus";
 
-type RpcResult<T> = { data: T | null; error: { message?: string } | null };
+const ADMIN_COMMUNICATION_RPC_FUNCTION = "admin-communication-rpc";
+type AdminCommunicationAction = "approveRequest" | "rejectRequest";
 
 function dbError(error: unknown, fallback: string): Error {
   if (error && typeof error === "object" && "message" in error) {
@@ -28,15 +29,17 @@ function dbError(error: unknown, fallback: string): Error {
   return new Error(fallback);
 }
 
-async function callLooseRpc<T>(functionName: string, params?: Record<string, unknown>): Promise<T> {
-  const result = (await supabase.rpc(
-    functionName as never,
-    (params ?? {}) as never,
-  )) as unknown as RpcResult<T>;
-
-  if (result.error) throw dbError(result.error, `RPC ${functionName} failed`);
-  if (result.data === null) throw new Error(`RPC ${functionName} returned no data`);
-  return result.data;
+async function invokeAdminCommunicationRpc<T>(
+  action: AdminCommunicationAction,
+  params: Record<string, unknown>,
+): Promise<T> {
+  return invokeSupabaseBroker<T, AdminCommunicationAction>({
+    action,
+    functionName: ADMIN_COMMUNICATION_RPC_FUNCTION,
+    noDataMessage: `Admin communication action ${action} returned no data`,
+    params,
+    serviceName: "AdminCommunicationTerritorialService",
+  });
 }
 
 async function selectRows<TRow>(
@@ -160,16 +163,16 @@ export class AdminCommunicationTerritorialService {
       admin_notes: payload.admin_notes?.trim() || undefined,
     };
 
-    return callLooseRpc("admin_approve_communication_channel", {
-      request_id: requestId,
+    return invokeAdminCommunicationRpc("approveRequest", {
+      requestId,
       payload: sanitizedPayload,
     });
   }
 
   static async rejectRequest(requestId: string, adminNotes: string): Promise<{ status: string }> {
-    return callLooseRpc("admin_reject_communication_channel_request", {
-      request_id: requestId,
-      admin_notes: adminNotes,
+    return invokeAdminCommunicationRpc("rejectRequest", {
+      requestId,
+      adminNotes,
     });
   }
 

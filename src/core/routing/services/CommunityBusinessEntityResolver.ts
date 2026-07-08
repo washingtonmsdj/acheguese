@@ -2,6 +2,7 @@ import {
   BusinessUrlService,
   type BusinessUrlContext,
 } from "@/core/business/services/BusinessUrlService";
+import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
 import { createTerritorialGroupRepository } from "@/core/location/repositories/createTerritorialGroupRepository";
 import { resolveCommunityPublicAliasTerritory } from "@/core/routing/services/CommunityPublicAliasTerritoryResolver";
 
@@ -48,11 +49,20 @@ async function businessBelongsToTerritorialGroup(
   business: BusinessUrlContext,
   groupId: string,
 ): Promise<boolean> {
-  const group = await createTerritorialGroupRepository().findWithMembers(groupId);
-  if (!group) return false;
+  const location = await createLocationRepository().findByPath(business.geographic_path);
+  if (!location?.id) return false;
 
-  return group.members.some(
-    (member) => member.geographic_path === business.geographic_path,
+  return createTerritorialGroupRepository().hasMember(groupId, location.id);
+}
+
+function businessUsesTerritorialGroupPath(
+  business: BusinessUrlContext,
+  territory: { state: string; city: string; territorySlug?: string },
+): boolean {
+  if (!territory.territorySlug) return false;
+  return (
+    business.geographic_path ===
+    `/br/${territory.state}/${territory.city}/${territory.territorySlug}`
   );
 }
 
@@ -111,10 +121,12 @@ export async function resolveBusinessEntityFromCommunityAlias(
       return resolvedBusiness(null, community.alias);
     }
 
-    const belongsToGroup = await businessBelongsToTerritorialGroup(
-      business,
-      community.resolved.group.id,
-    );
+    const belongsToGroup =
+      businessUsesTerritorialGroupPath(business, territory) ||
+      (await businessBelongsToTerritorialGroup(
+        business,
+        community.resolved.group.id,
+      ));
 
     return resolvedBusiness(belongsToGroup ? business : null, community.alias);
   }

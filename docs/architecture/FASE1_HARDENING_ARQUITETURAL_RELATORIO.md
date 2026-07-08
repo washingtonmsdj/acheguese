@@ -74,7 +74,6 @@ Gerado em: 2026-05-19T15:45:28.644Z
 - `CategoryFilters.tsx`: src/core/community/components/feed/CategoryFilters.tsx, src/modules/community/components/feed/CategoryFilters.tsx, src/shared/components/recomendacoes/CategoryFilters.tsx
 - `PostHeader.tsx`: src/core/community/components/post-card/PostHeader.tsx, src/core/community/components/PostHeader.tsx, src/core/community/components/UnifiedPostCard/PostHeader.tsx
 - `ContactStep.tsx`: src/modules/business/components/edit/ContactStep.tsx, src/modules/classifieds/components/create/ContactStep.tsx, src/modules/classifieds/jobs/pages/steps/ContactStep.tsx
-- `BusinessCard.tsx`: src/app/features/business-landing/components/cards/BusinessCard.tsx, src/modules/business/components/BusinessCard.tsx
 - `DashboardHeader.tsx`: src/modules/communication-territorial/v2/agent-dashboard/sections/DashboardHeader.tsx, src/shared/components/dashboard/DashboardHeader.tsx
 
 ### Components com aliases/reexports (top)
@@ -94,4 +93,3 @@ Gerado em: 2026-05-19T15:45:28.644Z
 ### Imports profundos (top)
 
 ### DB fora de service/repository (top)
-

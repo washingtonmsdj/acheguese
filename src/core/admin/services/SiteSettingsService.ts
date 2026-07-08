@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase";
+import { invokeNullableSupabaseBroker } from "@/core/infrastructure/edge-functions/edgeFunctionBroker";
 import { logger } from "@/shared/utils/logger";
 import { mediaService } from "@/core/media/services/MediaService";
 import type { Json } from "@/integrations/supabase";
@@ -38,6 +39,8 @@ type SiteSettingsRpcClient = {
 };
 
 const siteSettingsRpc = supabase as unknown as SiteSettingsRpcClient;
+const ADMIN_SITE_SETTINGS_RPC_FUNCTION = "admin-site-settings-rpc";
+type AdminSiteSettingsAction = "getAllSettings" | "upsertSetting";
 
 function readOptionalString(value: unknown): string | undefined {
   return typeof value === "string" ? value : undefined;
@@ -71,15 +74,22 @@ function assignSiteSetting(settings: SiteSettings, setting: SiteSetting): void {
   }
 }
 
+async function invokeAdminSiteSettingsRpc<T>(
+  action: AdminSiteSettingsAction,
+  params: Record<string, unknown> = {},
+): Promise<T | null> {
+  return invokeNullableSupabaseBroker<T, AdminSiteSettingsAction>({
+    action,
+    functionName: ADMIN_SITE_SETTINGS_RPC_FUNCTION,
+    params,
+    serviceName: "SiteSettingsService",
+  });
+}
+
 class SiteSettingsServiceClass {
   async getAllSettings(): Promise<SiteSettings> {
     try {
-      const { data, error } = await siteSettingsRpc.rpc<SiteSetting[]>("get_all_site_settings");
-
-      if (error) {
-        logger.error("Erro ao buscar configuracoes do site", error);
-        throw error;
-      }
+      const data = await invokeAdminSiteSettingsRpc<SiteSetting[]>("getAllSettings");
 
       const settings: SiteSettings = {};
       for (const setting of data ?? []) {
@@ -117,16 +127,11 @@ class SiteSettingsServiceClass {
     description?: string,
   ): Promise<SiteSetting> {
     try {
-      const { data, error } = await siteSettingsRpc.rpc<SiteSetting>("upsert_site_setting", {
-        p_key: key,
-        p_value: value as Json,
-        p_description: description,
+      const data = await invokeAdminSiteSettingsRpc<SiteSetting>("upsertSetting", {
+        key,
+        value: value as Json,
+        description,
       });
-
-      if (error) {
-        logger.error(`Erro ao salvar configuracao ${key}`, error);
-        throw error;
-      }
 
       if (!data) {
         throw new Error(`Configuracao ${key} nao retornou payload apos upsert`);

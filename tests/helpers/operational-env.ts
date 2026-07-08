@@ -1,5 +1,12 @@
-import { describe } from 'vitest';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+
+export type OperationalSupabaseClient = SupabaseClient<any, 'public', any>;
+type OperationalSuite = () => void;
+type DescribeLike = {
+  (name: string, suite: OperationalSuite): void;
+  skip: (name: string, suite: OperationalSuite) => void;
+};
+type OperationalClientKind = 'anon' | 'admin';
 
 export interface OperationalEnvRequirements {
   requireAnonKey?: boolean;
@@ -22,9 +29,27 @@ const ENV_LABELS: Record<keyof OperationalEnv, string> = {
   serviceRoleKey: 'SUPABASE_SERVICE_ROLE_KEY or SUPABASE_SECRET_KEY',
   supabaseUrl: 'VITE_SUPABASE_URL',
 };
+let operationalClientSequence = 0;
 
 function readEnv(key: string): string | undefined {
-  return process.env[key] || import.meta.env[key];
+  const viteEnv = (import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env;
+  return process.env[key] || viteEnv?.[key];
+}
+
+function createOperationalClient(
+  supabaseUrl: string,
+  supabaseKey: string,
+  kind: OperationalClientKind,
+): OperationalSupabaseClient {
+  operationalClientSequence += 1;
+
+  return createClient(supabaseUrl, supabaseKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+      storageKey: `achegue-operational-${kind}-${operationalClientSequence}`,
+    },
+  });
 }
 
 export function getOperationalEnv(): OperationalEnv {
@@ -64,29 +89,61 @@ export function requireOperationalEnv(requirements: OperationalEnvRequirements =
 export function describeOperational(
   name: string,
   requirements: OperationalEnvRequirements,
-  suite: Parameters<typeof describe>[1],
-): ReturnType<typeof describe> {
+  suite: OperationalSuite,
+): void {
+  const describe = (globalThis as typeof globalThis & { describe?: DescribeLike }).describe;
+  if (!describe) {
+    throw new Error('describeOperational requires a test runner with global describe support.');
+  }
+
   const missing = getMissingOperationalEnv(requirements);
   const describeFn = missing.length > 0 ? describe.skip : describe;
   return describeFn(name, suite);
 }
 
-export function createOperationalAnonClient(): SupabaseClient {
+export function createOperationalAnonClient(): OperationalSupabaseClient {
   const env = requireOperationalEnv();
-  return createClient(env.supabaseUrl, env.anonKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
+  return createOperationalClient(env.supabaseUrl, env.anonKey, 'anon');
 }
 
-export function createOperationalAdminClient(): SupabaseClient {
+export function createOperationalAdminClient(): OperationalSupabaseClient {
   const env = requireOperationalEnv({ requireServiceRole: true });
-  return createClient(env.supabaseUrl, env.serviceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
+  return createOperationalClient(env.supabaseUrl, env.serviceRoleKey, 'admin');
+}
+
+export function createOptionalOperationalAdminClient(): OperationalSupabaseClient | null {
+  const env = getOperationalEnv();
+  if (!env.supabaseUrl || !env.serviceRoleKey) {
+    return null;
+  }
+
+  return createOperationalClient(env.supabaseUrl, env.serviceRoleKey, 'admin');
+}
+
+export function createOptionalOperationalAnonClient(): OperationalSupabaseClient | null {
+  const env = getOperationalEnv();
+  if (!env.supabaseUrl || !env.anonKey) {
+    return null;
+  }
+
+  return createOperationalClient(env.supabaseUrl, env.anonKey, 'anon');
+}
+
+export function hasOperationalAdminEnv(requirements: OperationalEnvRequirements = {}): boolean {
+  const missing = getMissingOperationalEnv({
+    requireAnonKey: requirements.requireAnonKey ?? false,
+    requireDriverCredentials: requirements.requireDriverCredentials,
+    requireServiceRole: true,
   });
+
+  return missing.length === 0;
+}
+
+export function hasOperationalAnonEnv(requirements: OperationalEnvRequirements = {}): boolean {
+  const missing = getMissingOperationalEnv({
+    ...requirements,
+    requireAnonKey: true,
+  });
+
+  return missing.length === 0;
 }

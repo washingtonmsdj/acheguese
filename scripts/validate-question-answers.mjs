@@ -1,8 +1,6 @@
-import { createClient } from '@supabase/supabase-js';
-const s = createClient(
-  process.env.VITE_SUPABASE_URL!,
-  'process.env.SUPABASE_SERVICE_ROLE_KEY!'
-);
+import { createServiceRoleClient } from './lib/supabase-client.mjs';
+
+const s = createServiceRoleClient();
 const PROF_A = 'e114b313-3d76-452b-8dca-3bb8079ca59e';
 const LOC_BARRA = '00000000-0000-0000-0000-000000000002';
 const USER_A = 'fa000000-0000-0000-0000-000000000001';

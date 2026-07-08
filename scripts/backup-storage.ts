@@ -13,13 +13,13 @@
  *   SUPABASE_SERVICE_ROLE_KEY - Service role key with storage admin access
  */
 
-import { createClient } from "@supabase/supabase-js";
 import { dirname, join, relative, resolve } from "path";
 import { existsSync, mkdirSync, writeFileSync } from "fs";
+import { createServiceRoleClient } from "./lib/supabase-client";
 
 const PAGE_SIZE = 1000;
 
-type SupabaseClient = ReturnType<typeof createClient>;
+type SupabaseClient = ReturnType<typeof createServiceRoleClient>;
 
 type StorageBucket = {
   id: string;
@@ -174,18 +174,7 @@ async function backupBucket(
 async function main() {
   console.log("Starting Supabase Storage Backup\n");
 
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl || !supabaseKey) {
-    console.error("Missing environment variables:");
-    console.error("   SUPABASE_URL");
-    console.error("   SUPABASE_SERVICE_ROLE_KEY");
-    console.error("\nLoad from .env file or set manually");
-    process.exit(1);
-  }
-
-  const supabase = createClient(supabaseUrl, supabaseKey);
+  const supabase = createServiceRoleClient();
 
   const timestamp = new Date().toISOString().split("T")[0];
   const backupDir = join(process.cwd(), "backups", `storage-${timestamp}`);

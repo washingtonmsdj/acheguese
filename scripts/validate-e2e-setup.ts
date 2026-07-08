@@ -7,12 +7,20 @@
  * - admin/service role e opcional para asserts de banco
  */
 
-import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
 import fetch from "node-fetch";
+import {
+  createAnonClient,
+  createServiceRoleClient,
+  getSupabaseConfig,
+  loadSupabaseScriptEnv,
+} from "./lib/supabase-client";
+
+const E2E_ENV_FILES = [".env.test", ".env.local"];
 
 dotenv.config({ path: ".env.test" });
 dotenv.config({ path: ".env.local", override: true });
+loadSupabaseScriptEnv(E2E_ENV_FILES);
 
 interface ValidationResult {
   name: string;
@@ -53,7 +61,7 @@ async function validateEnvironment() {
 
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
   const anonKey = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const serviceRoleKey = getSupabaseConfig({ envFiles: E2E_ENV_FILES }).serviceRoleKey;
   const loginCredential = getLoginCredential();
   const adminEmail = process.env.E2E_ADMIN_EMAIL || null;
   const adminPassword = process.env.E2E_ADMIN_PASSWORD || null;
@@ -156,15 +164,13 @@ async function validateEnvironment() {
     addResult(result.name, result.status, result.message);
     logResult(result);
   } else {
-    const supabase = createClient(supabaseUrl, anonKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
+    const supabase = createAnonClient({
+      anonKey,
+      envFiles: E2E_ENV_FILES,
+      url: supabaseUrl,
     });
 
     if (loginCredential.email && loginCredential.password) {
-      let result: ValidationResult;
       const { data, error } = await supabase.auth
         .signInWithPassword({
           email: loginCredential.email,
@@ -175,7 +181,7 @@ async function validateEnvironment() {
           error: authError instanceof Error ? authError : new Error(String(authError)),
         }));
 
-      result = error
+      const result: ValidationResult = error
         ? {
           name: "Login anonimo",
           status: "FAIL",
@@ -233,12 +239,7 @@ async function validateEnvironment() {
     logResult(result);
   } else {
     try {
-      const admin = createClient(supabaseUrl, serviceRoleKey, {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      });
+      const admin = createServiceRoleClient({ envFiles: E2E_ENV_FILES });
 
       const { error } = await admin.from("profiles").select("id").limit(1);
       const result: ValidationResult = error

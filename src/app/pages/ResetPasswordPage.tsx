@@ -11,7 +11,11 @@ import { AUTH_BROWSER_STORAGE_CONFIG } from "@/config/security.config";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { AuthService } from "@/core/auth/services/AuthService";
 import { getAuthErrorMessage } from "@/core/auth/utils/authMessages";
-import { getAuthPasswordRequirementStatus } from "@/core/auth/utils/passwordPolicy";
+import { checkPasswordCompromise } from "@/core/auth/utils/compromisedPassword";
+import {
+  AUTH_PASSWORD_MIN_LENGTH,
+  getAuthPasswordRequirementStatus,
+} from "@/core/auth/utils/passwordPolicy";
 import { InlineFieldError } from "@/shared/components/ui/InlineFieldError";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
@@ -114,6 +118,16 @@ export default function ResetPasswordPage() {
     }
 
     try {
+      const compromise = await checkPasswordCompromise(data.newPassword);
+      if (compromise.blocked) {
+        toast({
+          title: "Senha comprometida",
+          description: compromise.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
       await updatePassword(data.newPassword);
       setDone(true);
       toast({ title: "Senha redefinida com sucesso." });
@@ -272,7 +286,7 @@ export default function ResetPasswordPage() {
                   <div className="relative">
                     <Input
                       type={showPassword ? "text" : "password"}
-                      placeholder={"M\u00ednimo 8 caracteres"}
+                      placeholder={`M\u00ednimo ${AUTH_PASSWORD_MIN_LENGTH} caracteres`}
                       autoComplete="new-password"
                       className="h-11 pr-10"
                       aria-describedby={errors.newPassword ? "new-password-error" : undefined}

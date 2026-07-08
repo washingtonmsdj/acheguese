@@ -5,9 +5,13 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { type SupabaseClient } from '@supabase/supabase-js';
 import { TrackingService } from '@/core/tracking/services/TrackingService';
-import { describeOperational, requireOperationalEnv } from '../helpers/operational-env';
+import {
+  createOperationalAnonClient,
+  describeOperational,
+  requireOperationalEnv,
+} from '../helpers/operational-env';
 
 describeOperational('GATE 2: VALIDAÇÃO OPERACIONAL AUTENTICADA', {
   requireDriverCredentials: true,
@@ -23,7 +27,7 @@ describeOperational('GATE 2: VALIDAÇÃO OPERACIONAL AUTENTICADA', {
     const env = requireOperationalEnv({ requireDriverCredentials: true });
     e2eUserEmail = env.driverEmail;
     e2eUserPassword = env.driverPassword;
-    supabase = createClient(env.supabaseUrl, env.anonKey);
+    supabase = createOperationalAnonClient();
 
     console.log('\n🔐 Autenticando usuário E2E...');
     

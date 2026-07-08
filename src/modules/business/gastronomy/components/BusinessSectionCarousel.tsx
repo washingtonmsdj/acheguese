@@ -79,6 +79,7 @@ export function BusinessSectionCarousel({
               className="h-8 gap-1 rounded-full px-2.5 text-[11px] sm:text-xs"
               onClick={handlePrevious}
               disabled={pageIndex === 0}
+              aria-label="Ver restaurantes anteriores"
             >
               <ChevronLeft className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Anterior</span>
@@ -93,6 +94,7 @@ export function BusinessSectionCarousel({
               className="h-8 gap-1 rounded-full px-2.5 text-[11px] sm:text-xs"
               onClick={handleNext}
               disabled={pageIndex >= totalPages - 1}
+              aria-label="Ver proximos restaurantes"
             >
               <span className="hidden sm:inline">Próximos</span>
               <ChevronRight className="h-3.5 w-3.5" />

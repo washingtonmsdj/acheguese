@@ -6,7 +6,7 @@
  */
 
 import { z } from "zod";
-import { isStrongPassword } from "../passwordPolicy";
+import { PASSWORD_POLICY, isStrongPassword } from "../passwordPolicy";
 
 /**
  * Validador de CPF
@@ -116,7 +116,7 @@ export const strongPasswordValidator = z.string().refine(
   isStrongPassword,
   {
     message:
-      "Senha deve ter no mínimo 8 caracteres, incluindo maiúsculas, minúsculas, números e caracteres especiais",
+      `Senha deve ter no mínimo ${PASSWORD_POLICY.MIN_LENGTH} caracteres, incluindo maiúsculas, minúsculas, números e caracteres especiais`,
   },
 );
 

@@ -2,14 +2,15 @@
  * BusinessCanonicalRoute - fallback territorial legado de empresa.
  *
  * URL legada: /empresas/:state/:city/:district/:slug
- * Destino preferencial: /:communityAlias/:slug quando ha alias publico.
+ * Destino canonico: /empresas/:state/:city/:district/:slug.
  */
 import { logger } from '@/shared/utils/logger';
 import { useEffect, useState } from 'react';
 import type { ComponentType } from 'react';
-import { Navigate, useLocation, useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
 import { buildBusinessPublicUrlFromSegments } from '@/core/business/utils/businessPublicUrls';
+import { decideLegacyEntityRoute } from '@/core/routing/policies';
 import { Loader2 } from 'lucide-react';
 import { logPageNotFound } from '@/core/public-identity/utils/identity-logger';
 
@@ -19,7 +20,7 @@ interface BusinessCanonicalRouteProps {
 
 type RouteState =
   | { status: 'loading' }
-  | { status: 'found'; businessId: string; redirectPath: string | null }
+  | { status: 'found'; businessId: string }
   | { status: 'not-found' };
 
 export default function BusinessCanonicalRoute({
@@ -75,15 +76,17 @@ export default function BusinessCanonicalRoute({
           return;
         }
 
-        const canonicalPath =
-          await BusinessUrlService.getCanonicalUrlWithResolvedCommunityAlias(ctx);
-        const redirectPath = canonicalPath !== location.pathname ? canonicalPath : null;
+        const canonicalPath = BusinessUrlService.getCanonicalUrl(ctx);
+        decideLegacyEntityRoute({
+          kind: 'public_entity_canonicalization',
+          currentPath: location.pathname,
+          targetPath: canonicalPath,
+        });
 
         if (!cancelled) {
           setRouteState({
             status: 'found',
             businessId: ctx.id,
-            redirectPath,
           });
         }
       } catch (err) {
@@ -123,15 +126,6 @@ export default function BusinessCanonicalRoute({
           </a>
         </div>
       </div>
-    );
-  }
-
-  if (routeState.redirectPath && routeState.redirectPath !== location.pathname) {
-    return (
-      <Navigate
-        to={`${routeState.redirectPath}${location.search}${location.hash}`}
-        replace
-      />
     );
   }
 

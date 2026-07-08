@@ -36,7 +36,7 @@ import {
 } from 'lucide-react';
 import { BusinessLogo } from '@/shared/components/ui/business-logo';
 import { useTerritorialContext } from './TerritorialLayout';
-import { useTerritoryFilter } from '@/core/location/hooks/useTerritoryFilter';
+import { useModuleTerritoryFilter } from '@/core/location';
 import { useLandingFeatured } from '@/core/landing/hooks/useLandingFeatured';
 import { useTerritorialHighlights } from '@/core/territorial/highlights/useTerritorialHighlights';
 import { useTerritoryStats } from '@/core/territorial/hooks/useTerritoryStats';
@@ -306,11 +306,15 @@ const MODULE_ITEMS = [
 // ── Página principal ─────────────────────────────────────────────────────────
 
 export function TerritorialLandingPage() {
-  const { resolved, baseUrl } = useTerritorialContext();
+  const { resolved, baseUrl, activeMemberIds } = useTerritorialContext();
   const navigate = useNavigate();
   const businessUrls = useBusinessUrls(resolved);
+  const moduleTerritory = useModuleTerritoryFilter({
+    routeResolved: resolved,
+    activeMemberIds,
+  });
 
-  const filter = useTerritoryFilter(resolved);
+  const filter = moduleTerritory.territoryFilter;
   const { businesses, services, classifieds, stats, isLoading } = useLandingFeatured(filter);
   const { data: allHighlights = [], isLoading: highlightsLoading } = useTerritorialHighlights(resolved);
   const { data: territoryStats, isLoading: statsLoading } = useTerritoryStats(resolved);
@@ -780,9 +784,9 @@ export function TerritorialLandingPage() {
               </p>
               <button
                 onClick={() => navigate(moduleUrls.community)}
-                className="inline-flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white font-semibold px-6 py-3 rounded-xl transition-colors"
+                className="inline-flex items-center gap-2 rounded-xl border border-teal-500/35 bg-transparent px-6 py-3 font-semibold text-teal-600 transition-colors hover:bg-teal-500/10 dark:text-teal-300"
               >
-                Entrar na comunidade
+                Abrir portal comunitario
                 <ArrowRight className="h-4 w-4" />
               </button>
             </div>

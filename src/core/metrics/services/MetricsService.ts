@@ -9,8 +9,8 @@ import { postService } from "@/core/posts/services/PostService";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { ReviewsService } from "@/core/reviews/services/ReviewsService";
 import { supabase } from "@/integrations/supabase";
+import type { RealtimeChannel } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
-import type { RealtimeChannel } from "@supabase/supabase-js";
 
 function toError(error: unknown): Error {
   return error instanceof Error ? error : new Error(String(error));

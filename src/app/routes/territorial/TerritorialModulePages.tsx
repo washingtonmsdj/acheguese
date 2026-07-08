@@ -27,7 +27,7 @@ import { createLaunchPausedRoute } from '@/app/routes/launchPausedComponent';
 const ComunidadePage       = lazy(() => import('@/modules/community-feed/pages/ComunidadePage'));
 const CidadeLandingPage    = lazy(() => import('@/app/pages/CidadeLandingPage'));
 const CommunityCommunicationTabPage = createLaunchPausedRoute('Comunicacao');
-const ProblemasPage        = createLaunchPausedRoute('Problemas');
+const ProblemasPage        = lazy(() => import('@/modules/community-issues/pages/ProblemasPage'));
 const EmpresasPage         = lazy(() => import('@/app/pages/EmpresasLandingPage'));
 const ServicosPage         = lazy(() => import('@/modules/professionals/services/pages/ServicosLandingPage'));
 const ClassificadosPage    = lazy(() => import('@/modules/classifieds/pages/ClassificadosPage'));
@@ -176,7 +176,7 @@ function CityStatusGate({ module, enforceActive = false, children }: CityStatusG
             Entrar na lista de interesse
           </Link>
           <Link to={communityEntryHref} className="inline-flex rounded-lg border px-4 py-2 text-sm font-medium hover:bg-accent">
-            Abrir página da comunidade
+            Abrir portal comunitario
           </Link>
         </div>
       </div>
@@ -186,18 +186,18 @@ function CityStatusGate({ module, enforceActive = false, children }: CityStatusG
 
 /**
  * HOC mínimo: injeta routeResolved no contexto do módulo.
- * Os módulos leem routeResolved via useTerritoryFilter(routeResolved).
- * Por ora, os módulos existentes não recebem props - o TerritoryFilter
- * é resolvido via useTerritorialContext() dentro de useTerritoryFilter.
+ * Os módulos públicos devem resolver o filtro canônico via
+ * useModuleTerritoryFilter({ routeResolved }) na borda da página.
+ * O contexto de Outlet continua sendo a fonte de routeResolved.
  * Esta camada garante que o contexto de Outlet está disponível.
  */
 
 export function TerritorialCommunityPage() {
-  const { resolved } = useTerritorialContext();
+  const { resolved, activeMemberIds } = useTerritorialContext();
   return (
     <CityStatusGate module="comunidade" enforceActive>
       <Suspense fallback={<ModulePageLoader />}>
-        <ComunidadePage resolved={resolved} />
+        <ComunidadePage resolved={resolved} activeMemberIds={activeMemberIds} />
       </Suspense>
     </CityStatusGate>
   );
@@ -226,11 +226,11 @@ export function TerritorialCommunityEntryPage() {
 }
 
 export function TerritorialCommunityIssuesPage() {
-  const { resolved } = useTerritorialContext();
+  const { resolved, activeMemberIds } = useTerritorialContext();
   return (
     <CityStatusGate module="comunidade" enforceActive>
       <Suspense fallback={<ModulePageLoader />}>
-        <ProblemasPage resolved={resolved} />
+        <ProblemasPage resolved={resolved} activeMemberIds={activeMemberIds} />
       </Suspense>
     </CityStatusGate>
   );
@@ -321,11 +321,11 @@ export function TerritorialMobilidadePage() {
 }
 
 export function TerritorialVagasPage() {
-  const { resolved } = useTerritorialContext();
+  const { resolved, activeMemberIds } = useTerritorialContext();
   return (
     <CityStatusGate module="vagas">
       <Suspense fallback={<ModulePageLoader />}>
-        <VagasPage resolved={resolved} />
+        <VagasPage resolved={resolved} activeMemberIds={activeMemberIds} />
       </Suspense>
     </CityStatusGate>
   );

@@ -203,7 +203,7 @@ function layerSource(layerKey: string): { source: string; route: string; note: s
       };
     case "gastronomy":
       return {
-        source: "gastronomyMapService.getByBounds",
+        source: "gastronomy-runtime.queries",
         route: "/mapa",
         note: "Camada de gastronomia dedicada, derivada do vertical oficial.",
       };

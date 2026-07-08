@@ -1,4 +1,4 @@
-import { createClient, type SupabaseClient, type User } from '@supabase/supabase-js';
+import { type SupabaseClient, type User } from '@supabase/supabase-js';
 import { supabase as runtimeSupabase } from '@/integrations/supabase';
 import {
   createOperationalAdminClient,
@@ -65,7 +65,6 @@ export async function createGate3PassengerFixture(
   admin: SupabaseClient,
   prefix: string,
 ): Promise<Gate3UserFixture> {
-  const { anonKey, supabaseUrl } = requireOperationalEnv();
   const suffix = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
   const email = `${prefix}-${suffix}@acheguese.local`;
   const password = 'Gate3Passenger@2026!';
@@ -83,9 +82,7 @@ export async function createGate3PassengerFixture(
 
   const profileId = await ensureGate3PersonalProfile(admin, data.user, prefix);
   const routeFixture = await createGate3RouteFixture(admin, data.user.id);
-  const client = createClient(supabaseUrl, anonKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
+  const client = createOperationalAnonClient();
 
   const { error: signInError } = await client.auth.signInWithPassword({ email, password });
   if (signInError) {

@@ -3,6 +3,7 @@
  */
 
 import { useParams, useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from '@/shared/utils/dateLocale';
 import {
@@ -69,7 +70,7 @@ const ORDER_STATUS_LABELS: Record<string, string> = {
 };
 
 function formatDateTime(value: string) {
-  return format(parseISO(value), "dd/MM/yyyy 'as' HH:mm", { locale: ptBR });
+  return format(parseISO(value), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
 }
 
 function resolvePaymentOperationalHint(paymentMethod: string | null): string {
@@ -83,7 +84,7 @@ function resolvePaymentOperationalHint(paymentMethod: string | null): string {
     return 'Validar troco quando informado nas observações do pedido.';
   }
   if (paymentMethod === 'card_on_delivery') {
-    return 'Garantir disponibilidade de maquineta no momento da entrega/retirada.';
+    return 'Garantir disponibilidade de maquineta no momento da entrega ou retirada.';
   }
   return 'Pagamento realizado diretamente com o estabelecimento.';
 }
@@ -104,7 +105,7 @@ function resolveTimelineTitle(event: OrderWithItems['status_history'][number]): 
     : null;
   const toStatus = event.to_status
     ? ORDER_STATUS_LABELS[event.to_status] ?? event.to_status
-      : 'Atualização operacional';
+    : 'Atualização operacional';
 
   return fromStatus ? `${fromStatus} -> ${toStatus}` : toStatus;
 }
@@ -125,9 +126,9 @@ export default function OrderDetailsPage() {
 
   if (isLoading) {
     return (
-      <div className="container max-w-6xl py-8 space-y-6">
+      <div className="container max-w-6xl space-y-6 py-8">
         <Skeleton className="h-12 w-72" />
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid gap-6 md:grid-cols-2">
           <Skeleton className="h-48" />
           <Skeleton className="h-48" />
           <Skeleton className="h-56" />
@@ -152,116 +153,316 @@ export default function OrderDetailsPage() {
     : GastronomyUrlService.getHomeUrl();
 
   return (
-    <div className="container max-w-6xl py-6 sm:py-8 space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate(backTarget)}
-          aria-label="Voltar para pedidos"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
+    <>
+      <Helmet>
+        <title>Pedido #{order.order_number} | Gastronomia</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
+      <div className="container max-w-6xl space-y-6 py-6 sm:py-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate(backTarget)}
+            aria-label="Voltar para pedidos"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
 
-        <div className="flex-1 min-w-0">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <h1 className="text-2xl sm:text-3xl font-bold">Pedido #{order.order_number}</h1>
-            <OrderStatusBadge status={order.status} />
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <h1 className="text-2xl font-bold sm:text-3xl">Pedido #{order.order_number}</h1>
+              <OrderStatusBadge status={order.status} />
+            </div>
+            <p className="mt-1 text-muted-foreground">
+              {format(parseISO(order.created_at), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", {
+                locale: ptBR,
+              })}
+            </p>
+            {isBusinessRoute && (
+              <span
+                className={`mt-2 inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs ${
+                  isRealtimeConnected ? 'border-emerald-300 text-emerald-700' : 'border-amber-300 text-amber-700'
+                }`}
+              >
+                <span className={`h-1.5 w-1.5 rounded-full ${isRealtimeConnected ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                {isRealtimeConnected ? 'Timeline em tempo real' : 'Reconectando timeline'}
+              </span>
+            )}
           </div>
-          <p className="text-muted-foreground mt-1">
-            {format(parseISO(order.created_at), "dd 'de' MMMM 'de' yyyy 'as' HH:mm", {
-              locale: ptBR,
-            })}
-          </p>
-          {isBusinessRoute && (
-            <span
-              className={`mt-2 inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs ${
-                isRealtimeConnected ? 'border-emerald-300 text-emerald-700' : 'border-amber-300 text-amber-700'
-              }`}
-            >
-              <span className={`h-1.5 w-1.5 rounded-full ${isRealtimeConnected ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-              {isRealtimeConnected ? 'Timeline em tempo real' : 'Reconectando timeline'}
-            </span>
-          )}
+
+          <div className="sm:text-right">
+            <p className="text-2xl font-bold sm:text-3xl">{formatBrl(order.total)}</p>
+            <p className="text-sm text-muted-foreground">{ORDER_TYPE_LABELS[order.order_type]}</p>
+          </div>
         </div>
 
-        <div className="sm:text-right">
-          <p className="text-2xl sm:text-3xl font-bold">{formatBrl(order.total)}</p>
-          <p className="text-sm text-muted-foreground">{ORDER_TYPE_LABELS[order.order_type]}</p>
-        </div>
-      </div>
+        {order.order_type === 'delivery' && <OrderTrackingCard order={order} />}
 
-      {order.order_type === 'delivery' && <OrderTrackingCard order={order} />}
+        {isBusinessRoute && (
+          <>
+            <OrderOperationsPanel order={order} businessId={effectiveBusinessId} />
+            <OrderTrustFeedbackPanel order={order} />
+          </>
+        )}
 
-      {isBusinessRoute && (
-        <>
-          <OrderOperationsPanel order={order} businessId={effectiveBusinessId} />
+        <OrderPublicReviewPanel order={order} />
 
-          <OrderTrustFeedbackPanel order={order} />
-        </>
-      )}
-
-      <OrderPublicReviewPanel order={order} />
-
-      <div className="grid md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              Cliente
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div>
-              <p className="text-sm text-muted-foreground">Nome</p>
-              <p className="font-medium">{order.customer_name || 'Cliente não informado'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Telefone</p>
-              {order.customer_phone ? (
-                <a
-                  href={buildTelUrl(order.customer_phone) ?? undefined}
-                  className="font-medium text-primary hover:underline flex items-center gap-1"
-                >
-                  <Phone className="h-4 w-4" />
-                  {order.customer_phone}
-                </a>
-              ) : (
-                <p className="font-medium text-muted-foreground">Não informado</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {order.order_type === 'delivery' && (
+        <div className="grid gap-6 md:grid-cols-2">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <MapPin className="h-5 w-5" />
-                Entrega
+                <User className="h-5 w-5" />
+                Cliente
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
-              {order.delivery_address ? (
-                <>
-                  <p className="font-medium">{order.delivery_address}</p>
-                  {order.delivery_complement && (
-                    <p className="text-sm text-muted-foreground">{order.delivery_complement}</p>
-                  )}
-                  {(order.delivery_neighborhood || order.delivery_city || order.delivery_state) && (
-                    <p className="text-sm text-muted-foreground">
-                      {[order.delivery_neighborhood, order.delivery_city].filter(Boolean).join(' - ')}
-                      {order.delivery_state ? `/${order.delivery_state}` : ''}
-                    </p>
-                  )}
-                  {order.delivery_zipcode && (
-                    <p className="text-sm text-muted-foreground">CEP: {order.delivery_zipcode}</p>
-                  )}
-                </>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  Endereço completo ainda não está disponível no pedido. O SSOT deve receber o snapshot do endereço formatado no checkout.
+            <CardContent className="space-y-3">
+              <div>
+                <p className="text-sm text-muted-foreground">Nome</p>
+                <p className="font-medium">{order.customer_name || 'Cliente não informado'}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Telefone</p>
+                {order.customer_phone ? (
+                  <a
+                    href={buildTelUrl(order.customer_phone) ?? undefined}
+                    className="flex items-center gap-1 font-medium text-primary hover:underline"
+                  >
+                    <Phone className="h-4 w-4" />
+                    {order.customer_phone}
+                  </a>
+                ) : (
+                  <p className="font-medium text-muted-foreground">Não informado</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {order.order_type === 'delivery' && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5" />
+                  Entrega
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {order.delivery_address ? (
+                  <>
+                    <p className="font-medium">{order.delivery_address}</p>
+                    {order.delivery_complement && (
+                      <p className="break-words text-sm text-muted-foreground">{order.delivery_complement}</p>
+                    )}
+                    {(order.delivery_neighborhood || order.delivery_city || order.delivery_state) && (
+                      <p className="break-words text-sm text-muted-foreground">
+                        {[order.delivery_neighborhood, order.delivery_city].filter(Boolean).join(' - ')}
+                        {order.delivery_state ? `/${order.delivery_state}` : ''}
+                      </p>
+                    )}
+                    {order.delivery_zipcode && (
+                      <p className="text-sm text-muted-foreground">CEP: {order.delivery_zipcode}</p>
+                    )}
+                  </>
+                ) : (
+                  <p className="break-words text-sm text-muted-foreground">
+                    Endereço completo ainda não está disponível no pedido. O SSOT deve receber o snapshot do endereço formatado no checkout.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CreditCard className="h-5 w-5" />
+                Pagamento
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div>
+                <p className="text-sm text-muted-foreground">Método</p>
+                <p className="font-medium">
+                  {order.payment_method
+                    ? PAYMENT_METHOD_LABELS[order.payment_method] ?? order.payment_method
+                    : 'Não informado'}
                 </p>
+                {order.payment_method === 'payment_link' && (
+                  <Badge variant="outline" className="mt-2">
+                    Link opcional habilitado pela loja
+                  </Badge>
+                )}
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {resolvePaymentOperationalHint(order.payment_method)}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Status financeiro</p>
+                <p className="font-medium">
+                  {PAYMENT_STATUS_LABELS[order.payment_status] ?? order.payment_status}
+                </p>
+              </div>
+              <Separator />
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Subtotal</span>
+                  <span className="font-medium">{formatBrl(order.subtotal)}</span>
+                </div>
+                {order.delivery_fee > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Taxa de entrega</span>
+                    <span className="font-medium">{formatBrl(order.delivery_fee)}</span>
+                  </div>
+                )}
+                {order.discount > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Desconto</span>
+                    <span className="font-medium text-green-600">{formatBrl(-order.discount)}</span>
+                  </div>
+                )}
+                <Separator />
+                <div className="flex justify-between text-lg font-bold">
+                  <span>Total</span>
+                  <span>{formatBrl(order.total)}</span>
+                </div>
+              </div>
+              {(order.delivery_courier_cost !== null || order.delivery_margin !== null) && (
+                <>
+                  <Separator />
+                  <div className="space-y-2 rounded-lg border bg-muted/30 p-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      Indicadores logísticos
+                    </p>
+                    {order.delivery_courier_cost !== null && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Custo logistico da entrega</span>
+                        <span className="font-medium">{formatBrl(order.delivery_courier_cost)}</span>
+                      </div>
+                    )}
+                    {order.delivery_margin !== null && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Margem da taxa de entrega</span>
+                        <span className={`font-medium ${order.delivery_margin >= 0 ? 'text-emerald-600' : 'text-destructive'}`}>
+                          {formatBrl(order.delivery_margin)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Horários
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div>
+                <p className="text-sm text-muted-foreground">Pedido criado</p>
+                <p className="font-medium">{formatDateTime(order.created_at)}</p>
+              </div>
+              {order.confirmed_at && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Confirmado</p>
+                  <p className="font-medium">{formatDateTime(order.confirmed_at)}</p>
+                </div>
+              )}
+              {order.preparing_at && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Em preparo</p>
+                  <p className="font-medium">{formatDateTime(order.preparing_at)}</p>
+                </div>
+              )}
+              {order.ready_at && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Pronto</p>
+                  <p className="font-medium">{formatDateTime(order.ready_at)}</p>
+                </div>
+              )}
+              {order.out_for_delivery_at && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Saiu para entrega</p>
+                  <p className="font-medium">{formatDateTime(order.out_for_delivery_at)}</p>
+                </div>
+              )}
+              {order.delivered_at && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Entregue</p>
+                  <p className="font-medium">{formatDateTime(order.delivered_at)}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {order.status_history.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Linha do tempo
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {order.status_history.map((event) => (
+                <div key={event.id} className="flex gap-3 rounded-lg border p-3">
+                  <div className="mt-1 h-2.5 w-2.5 rounded-full bg-primary" />
+                  <div className="min-w-0">
+                    <p className="font-medium">{resolveTimelineTitle(event)}</p>
+                    <p className="text-sm text-muted-foreground">{formatDateTime(event.created_at)}</p>
+                    {event.changed_by && (
+                      <p className="text-xs text-muted-foreground">
+                        Ator: {event.changed_by.slice(0, 8)}
+                      </p>
+                    )}
+                    {event.notes && <p className="mt-1 whitespace-pre-wrap break-words text-sm">{event.notes}</p>}
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
+        {proof && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                Comprovante de entrega
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-4 text-sm md:grid-cols-2">
+              {proof.code && (
+                <div>
+                  <p className="text-muted-foreground">Código</p>
+                  <p className="font-medium">{proof.code}</p>
+                </div>
+              )}
+              {proof.signed_at && (
+                <div>
+                  <p className="text-muted-foreground">Confirmado em</p>
+                  <p className="font-medium">{formatDateTime(proof.signed_at)}</p>
+                </div>
+              )}
+              {proof.observation && (
+                <div className="md:col-span-2">
+                  <p className="text-muted-foreground">Observação</p>
+                  <p className="font-medium whitespace-pre-wrap break-words">{proof.observation}</p>
+                </div>
+              )}
+              {proof.photo_url && (
+                <div className="md:col-span-2">
+                  <p className="mb-2 text-muted-foreground">Foto</p>
+                  <img
+                    src={proof.photo_url}
+                    alt="Comprovante de entrega"
+                    className="max-h-72 rounded-lg border object-cover"
+                  />
+                </div>
               )}
             </CardContent>
           </Card>
@@ -270,229 +471,46 @@ export default function OrderDetailsPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <CreditCard className="h-5 w-5" />
-              Pagamento
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div>
-              <p className="text-sm text-muted-foreground">Método</p>
-              <p className="font-medium">
-                {order.payment_method
-                  ? PAYMENT_METHOD_LABELS[order.payment_method] ?? order.payment_method
-                  : 'Não informado'}
-              </p>
-              {order.payment_method === 'payment_link' && (
-                <Badge variant="outline" className="mt-2">
-                  Link opcional habilitado pela loja
-                </Badge>
-              )}
-              <p className="mt-2 text-sm text-muted-foreground">
-                {resolvePaymentOperationalHint(order.payment_method)}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Status financeiro</p>
-              <p className="font-medium">
-                {PAYMENT_STATUS_LABELS[order.payment_status] ?? order.payment_status}
-              </p>
-            </div>
-            <Separator />
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Subtotal</span>
-                <span className="font-medium">{formatBrl(order.subtotal)}</span>
-              </div>
-              {order.delivery_fee > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Taxa de entrega</span>
-                  <span className="font-medium">{formatBrl(order.delivery_fee)}</span>
-                </div>
-              )}
-              {order.discount > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Desconto</span>
-                  <span className="font-medium text-green-600">{formatBrl(-order.discount)}</span>
-                </div>
-              )}
-              <Separator />
-              <div className="flex justify-between text-lg font-bold">
-                <span>Total</span>
-                <span>{formatBrl(order.total)}</span>
-              </div>
-            </div>
-            {(order.delivery_courier_cost !== null || order.delivery_margin !== null) && (
-              <>
-                <Separator />
-                <div className="space-y-2 rounded-lg border bg-muted/30 p-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Indicadores logísticos
-                  </p>
-                  {order.delivery_courier_cost !== null && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Custo logística (motoboy)</span>
-                      <span className="font-medium">{formatBrl(order.delivery_courier_cost)}</span>
-                    </div>
-                  )}
-                  {order.delivery_margin !== null && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Margem da taxa de entrega</span>
-                      <span className={`font-medium ${order.delivery_margin >= 0 ? 'text-emerald-600' : 'text-destructive'}`}>
-                        {formatBrl(order.delivery_margin)}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
-              Horários
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div>
-              <p className="text-sm text-muted-foreground">Pedido criado</p>
-              <p className="font-medium">{formatDateTime(order.created_at)}</p>
-            </div>
-            {order.confirmed_at && (
-              <div>
-                <p className="text-sm text-muted-foreground">Confirmado</p>
-                <p className="font-medium">{formatDateTime(order.confirmed_at)}</p>
-              </div>
-            )}
-            {order.ready_at && (
-              <div>
-                <p className="text-sm text-muted-foreground">Pronto</p>
-                <p className="font-medium">{formatDateTime(order.ready_at)}</p>
-              </div>
-            )}
-            {order.delivered_at && (
-              <div>
-                <p className="text-sm text-muted-foreground">Entregue</p>
-                <p className="font-medium">{formatDateTime(order.delivered_at)}</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {order.status_history.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
-              Linha do tempo
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {order.status_history.map((event) => (
-              <div key={event.id} className="flex gap-3 rounded-lg border p-3">
-                <div className="mt-1 h-2.5 w-2.5 rounded-full bg-primary" />
-                <div className="min-w-0">
-                  <p className="font-medium">{resolveTimelineTitle(event)}</p>
-                  <p className="text-sm text-muted-foreground">{formatDateTime(event.created_at)}</p>
-                  {event.changed_by && (
-                    <p className="text-xs text-muted-foreground">
-                      Ator: {event.changed_by.slice(0, 8)}
-                    </p>
-                  )}
-                  {event.notes && <p className="text-sm mt-1">{event.notes}</p>}
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
-      {proof && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-              Comprovante de entrega
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="grid md:grid-cols-2 gap-4 text-sm">
-            {proof.code && (
-              <div>
-                <p className="text-muted-foreground">Código</p>
-                <p className="font-medium">{proof.code}</p>
-              </div>
-            )}
-            {proof.signed_at && (
-              <div>
-                <p className="text-muted-foreground">Confirmado em</p>
-                <p className="font-medium">{formatDateTime(proof.signed_at)}</p>
-              </div>
-            )}
-            {proof.observation && (
-              <div className="md:col-span-2">
-                <p className="text-muted-foreground">Observação</p>
-                <p className="font-medium">{proof.observation}</p>
-              </div>
-            )}
-            {proof.photo_url && (
-              <div className="md:col-span-2">
-                <p className="text-muted-foreground mb-2">Foto</p>
-                <img
-                  src={proof.photo_url}
-                  alt="Comprovante de entrega"
-                  className="max-h-72 rounded-lg border object-cover"
-                />
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Package className="h-5 w-5" />
-            Itens do pedido
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {order.items?.map((item, index) => (
-              <div key={item.id ?? index} className="flex justify-between items-start gap-4 pb-4 border-b last:border-0 last:pb-0">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start gap-2">
-                    <span className="font-medium text-muted-foreground">{item.quantity}x</span>
-                    <div>
-                      <p className="font-medium">{item.name}</p>
-                      {item.notes && (
-                        <p className="text-sm text-muted-foreground mt-1">{item.notes}</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <p className="font-medium whitespace-nowrap">{formatBrl(item.total)}</p>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {order.notes && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Observações
+              <Package className="h-5 w-5" />
+              Itens do pedido
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground">{order.notes}</p>
+            <div className="space-y-4">
+              {order.items?.map((item, index) => (
+                <div key={item.id ?? index} className="flex items-start justify-between gap-4 border-b pb-4 last:border-0 last:pb-0">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start gap-2">
+                      <span className="font-medium text-muted-foreground">{item.quantity}x</span>
+                      <div>
+                        <p className="font-medium">{item.name}</p>
+                        {item.notes && (
+                          <p className="mt-1 whitespace-pre-wrap break-words text-sm text-muted-foreground">{item.notes}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <p className="whitespace-nowrap font-medium">{formatBrl(item.total)}</p>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
-      )}
-    </div>
+
+        {order.notes && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Observações
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="whitespace-pre-wrap break-words text-muted-foreground">{order.notes}</p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </>
   );
 }

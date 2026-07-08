@@ -60,18 +60,15 @@ describe("BusinessUrlService", () => {
     expect(createLocationRepository).not.toHaveBeenCalled();
   });
 
-  it("gera URL curta canonica quando ha alias publico no territorio da empresa", async () => {
-    await expect(
-      BusinessUrlService.getCanonicalUrlWithResolvedCommunityAlias(businessContext),
-    ).resolves.toBe("/santa-cruz/padaria-x");
+  it("mantem URL publica canonica mesmo quando ha alias publico no territorio", async () => {
+    expect(BusinessUrlService.getPublicCanonicalUrl(businessContext)).toBe(
+      "/empresas/ba/salvador/pituba/padaria-x",
+    );
 
-    expect(CommunityPublicAliasService.findPublicUrlForTerritory).toHaveBeenCalledWith({
-      kind: "location",
-      territoryId: "loc-pituba",
-    });
+    expect(CommunityPublicAliasService.findPublicUrlForTerritory).not.toHaveBeenCalled();
   });
 
-  it("usa alias de grupo territorial quando o bairro nao tem alias direto", async () => {
+  it("resolve alias de grupo territorial apenas para contexto comunitario explicito", async () => {
     vi.mocked(CommunityPublicAliasService.findPublicUrlForTerritory)
       .mockResolvedValueOnce(null)
       .mockResolvedValueOnce("/complexo-nordeste");
@@ -82,9 +79,9 @@ describe("BusinessUrlService", () => {
       ]),
     } as unknown as ReturnType<typeof createTerritorialGroupRepository>);
 
-    await expect(
-      BusinessUrlService.getCanonicalUrlWithResolvedCommunityAlias(businessContext),
-    ).resolves.toBe("/complexo-nordeste/padaria-x");
+    await expect(BusinessUrlService.findCommunityPublicBaseUrl(businessContext)).resolves.toBe(
+      "/complexo-nordeste",
+    );
 
     expect(CommunityPublicAliasService.findPublicUrlForTerritory).toHaveBeenNthCalledWith(2, {
       kind: "group",
@@ -95,8 +92,14 @@ describe("BusinessUrlService", () => {
   it("mantem fallback territorial quando nao ha alias publico", async () => {
     vi.mocked(CommunityPublicAliasService.findPublicUrlForTerritory).mockResolvedValue(null);
 
-    await expect(
-      BusinessUrlService.getCanonicalUrlWithResolvedCommunityAlias(businessContext),
-    ).resolves.toBe("/empresas/ba/salvador/pituba/padaria-x");
+    expect(BusinessUrlService.getCanonicalUrl(businessContext)).toBe(
+      "/empresas/ba/salvador/pituba/padaria-x",
+    );
+  });
+
+  it("gera URL de empresa dentro da comunidade apenas por chamada explicita", () => {
+    expect(BusinessUrlService.getCommunityScopedUrl(businessContext, "santa-cruz")).toBe(
+      "/comunidade/santa-cruz/empresas/padaria-x",
+    );
   });
 });

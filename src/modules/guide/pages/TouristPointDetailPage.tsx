@@ -34,7 +34,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
 import { getRecordValue } from '@/shared/utils/recordLookup';
 import { useTerritorialContext } from '@/core/routing/components/TerritorialLayout';
-import { useTerritoryFilter } from '@/core/location/hooks/useTerritoryFilter';
+import { useModuleTerritoryFilter } from '@/core/location';
 import { useTouristPoint } from '../hooks/useTouristPoint';
 import { useTouristPoints } from '../hooks/useTouristPoints';
 import { buildTouristPointDetailUrl, useGuideUrls } from '../hooks/useGuideUrls';
@@ -89,7 +89,7 @@ function getCategoryIcon(category?: TouristPointCategory | null) {
 
 export default function TouristPointDetailPage() {
   const params = useParams<{ state?: string; city?: string; slug?: string; groupSlugOrDistrict?: string }>();
-  const { resolved, activeMemberIds } = useTerritorialContext();
+  const { resolved } = useTerritorialContext();
   const guideUrls = useGuideUrls(resolved);
 
   const pointSlug = params.slug ?? params.groupSlugOrDistrict;
@@ -99,7 +99,8 @@ export default function TouristPointDetailPage() {
       : resolved.group.members.at(0)?.id ?? '')
     : undefined;
 
-  const territoryFilter = useTerritoryFilter(resolved, activeMemberIds);
+  const moduleTerritory = useModuleTerritoryFilter({ routeResolved: resolved });
+  const territoryFilter = moduleTerritory.territoryFilter;
   const { data: point, isLoading } = useTouristPoint(locationId, pointSlug);
   const { data: relatedPointsRaw = [] } = useTouristPoints(territoryFilter);
   const {

@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase";
 import type { Tables } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { buildSafeILikePattern } from "@/shared/utils/sqlSanitization";
+import { CommunityRpcService } from "@/core/community/services/CommunityRpcService";
 
 type ErrorLike = { message?: string | null; code?: string | null } | null;
 
@@ -346,7 +347,7 @@ class AdminEventsServiceClass {
         throw error;
       }
 
-      await this.db.rpc("decrement_event_participants", { event_id: eventId });
+      await CommunityRpcService.decrementEventParticipants(eventId, profileId);
       return true;
     } catch (error) {
       logger.error("Error in removeParticipant:", error);

@@ -32,6 +32,7 @@ interface BusinessListSectionProps {
   distanceMap: Map<string, number>;
   totalCount: number;
   subtitle: string;
+  isLoading: boolean;
   canLoadMore: boolean;
   isFetchingMore: boolean;
   hasActiveFilters: boolean;
@@ -50,6 +51,7 @@ export function BusinessListSection(props: BusinessListSectionProps) {
     distanceMap,
     totalCount,
     subtitle,
+    isLoading,
     canLoadMore,
     isFetchingMore,
     hasActiveFilters,
@@ -115,7 +117,20 @@ export function BusinessListSection(props: BusinessListSectionProps) {
         </div>
       )}
 
-      {businesses.length === 0 ? (
+      {isLoading && businesses.length === 0 ? (
+        <motion.div
+          variants={fadeIn}
+          className="rounded-2xl border border-border/30 bg-card/50 py-16 text-center"
+        >
+          <div className="mb-4 inline-block rounded-full bg-muted/50 p-4">
+            <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
+          </div>
+          <h3 className="mb-2 text-xl font-bold text-foreground">Carregando restaurantes</h3>
+          <p className="mx-auto max-w-md text-muted-foreground">
+            Estamos buscando os restaurantes disponiveis deste territorio.
+          </p>
+        </motion.div>
+      ) : businesses.length === 0 ? (
         <motion.div
           variants={fadeIn}
           className="rounded-2xl border border-border/30 bg-card/50 py-16 text-center"

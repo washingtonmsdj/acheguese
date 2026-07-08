@@ -2,12 +2,57 @@
  * Canonical contracts for national and territorial landing data.
  */
 
+import type { LucideIcon } from 'lucide-react';
+
 export type {
   FeaturedBusiness,
   FeaturedClassified,
   FeaturedService,
   TerritoryStats,
 } from '@/core/landing/services/LandingFeaturedService';
+
+export type NeighborhoodCommunityTabId =
+  | 'all'
+  | 'feed'
+  | 'business'
+  | 'services'
+  | 'classifieds'
+  | 'gastronomy'
+  | 'map';
+
+export type NeighborhoodCommunityTab = {
+  id: NeighborhoodCommunityTabId;
+  label: string;
+  shortLabel?: string;
+  icon: LucideIcon;
+};
+
+export type NeighborhoodStreamTone = 'cyan' | 'blue' | 'amber' | 'pink' | 'green';
+
+export type NeighborhoodStreamItem = {
+  id: string;
+  category: Exclude<NeighborhoodCommunityTabId, 'all'>;
+  label: string;
+  tone: NeighborhoodStreamTone;
+  title: string;
+  description: string;
+  href: string;
+  mediaUrl?: string | null;
+  mediaFallback: LucideIcon;
+  meta: string;
+  engagementLabel?: string;
+  lockedActionLabel?: string;
+};
+
+export type NeighborhoodStreamGroups = Record<NeighborhoodCommunityTabId, NeighborhoodStreamItem[]>;
+
+export type NeighborhoodStreamMoreConfig = {
+  href: string;
+  label: string;
+  emptyTitle: string;
+  emptyDescription: string;
+  emptyAction: string;
+};
 
 export interface CountryData {
   id: string;

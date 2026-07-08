@@ -1,13 +1,11 @@
-import { config } from "dotenv";
 import fetch from "node-fetch";
-import { createClient } from "@supabase/supabase-js";
 import {
   MUNICIPAL_NEIGHBORHOOD_SOURCES,
   type MunicipalNeighborhoodSource,
 } from "./location/municipal-neighborhood-sources";
+import { createServiceRoleClient, loadSupabaseScriptEnv } from "./lib/supabase-client";
 
-config({ path: ".env.local", override: false });
-config({ path: ".env", override: false });
+loadSupabaseScriptEnv();
 
 type JsonObject = Record<string, unknown>;
 
@@ -50,18 +48,7 @@ interface NeighborhoodPayload {
   metadata: JsonObject;
 }
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL ?? "";
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
-
-if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
-  throw new Error(
-    "Defina VITE_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY.",
-  );
-}
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
-  auth: { autoRefreshToken: false, persistSession: false },
-});
+const supabase = createServiceRoleClient();
 
 const args = new Set(process.argv.slice(2));
 const selectedKeyArg = process.argv.find((arg) => arg.startsWith("--source="));
@@ -237,7 +224,7 @@ function buildPayloads(
   const slugUsage = new Map<string, number>();
 
   return features
-    .map((feature) => {
+    .map((feature): NeighborhoodPayload | null => {
       const attributes = feature.attributes ?? {};
       const name = asText(attributes[source.nameField]);
       const objectId = asText(attributes[source.objectIdField]);

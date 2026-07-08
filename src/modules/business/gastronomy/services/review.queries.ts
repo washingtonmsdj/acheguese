@@ -1,28 +1,16 @@
 /**
- *  Review Query Service - operações de reviews para gastronomia.
+ * Review Query Service - operacoes de reviews para Gastronomia.
  *
- *  Usa a tabela cannica `reviews` (schema base) com as colunas
- *  adicionadas pela migration 20260412000001 (photos, status, helpful_count, etc.)
- *
- *  O core/reviews usa tabelas legadas (business_reviews_new) este servio
- *  opera na tabela cannica e o SSOT para reviews de gastronomia.
+ * Opera na tabela canonica e e o SSOT para reviews de Gastronomia.
  */
 
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import { REPORT_STATUS } from '@/shared/types/constants';
 import { EntityStatus } from '@/shared/types/enums';
+import { BusinessReviewsRpcService } from './BusinessReviewsRpcService';
 
-type QueryError = { code?: string; message?: string } | null;
-type QueryResult<T> = Promise<{ data: T; error: QueryError }>;
-
-interface RpcClient {
-  rpc<TResult>(fn: string, args?: Record<string, unknown>): QueryResult<TResult>;
-}
-
-const rpcDb = supabase as unknown as RpcClient;
-
-//  Tipos estendidos da tabela cannica `reviews`
+// Types estendidos da tabela canonica `reviews`
 //  Estende o tipo base de @/shared/types/reviews com os campos adicionados
 //  pela migration 20260412000001 (especficos de gastronomia).
 
@@ -78,7 +66,7 @@ export interface VoteReviewInput {
 
 export class ReviewQueryService {
   /**
-   *  Obter avaliaes de um negcio
+   *  Obter avaliacoes de um negocio
    */
   static async getBusinessReviews(params: {
     businessProfileId: string;
@@ -107,24 +95,15 @@ export class ReviewQueryService {
   }
 
   /**
-   *  Verificar se usurio pode avaliar um negcio
+   *  Verificar se usuario pode avaliar um negocio
    */
   static async canUserReviewBusiness(params: {
     userId: string;
     businessProfileId: string;
   }): Promise<boolean> {
     try {
-      const { data, error } = await supabase.rpc('can_user_review_business', {
-        p_user_id: params.userId,
-        p_business_profile_id: params.businessProfileId,
-      });
-
-      if (error) {
-        logger.error('Failed to check if user can review', error, params);
-        return false;
-      }
-
-      return data === true;
+      void params.userId;
+      return await BusinessReviewsRpcService.canUserReviewBusiness(params.businessProfileId);
     } catch (error) {
       logger.error('Error in canUserReviewBusiness', error);
       return false;
@@ -136,27 +115,9 @@ export class ReviewQueryService {
    */
   static async createReview(input: CreateReviewInput): Promise<{ id: string }> {
     try {
-      const { data, error } = await rpcDb.rpc('create_business_review', {
-        p_reviewed_profile_id: input.reviewed_profile_id,
-        p_reviewer_profile_id: input.reviewer_profile_id,
-        p_rating: input.rating,
-        p_comment: input.comment || null,
-        p_photos: input.photos || [],
-        p_order_id: input.order_id || null,
-      });
-
-      if (error) {
-        logger.error('Failed to create review', error, input);
-        throw error;
-      }
-
-      if (!data) {
-        throw new Error('No data returned from review creation');
-      }
-
-      const reviewData = (data ?? {}) as { id?: string; review_id?: string };
-      logger.info('Review created successfully', { reviewId: reviewData.id ?? reviewData.review_id });
-      return { id: reviewData.id ?? reviewData.review_id ?? '' };
+      const review = await BusinessReviewsRpcService.createReview(input);
+      logger.info('Review created successfully', { reviewId: review.id });
+      return review;
     } catch (error) {
       logger.error('Error in createReview', error);
       throw error;
@@ -171,18 +132,7 @@ export class ReviewQueryService {
     input: UpdateReviewInput,
   ): Promise<void> {
     try {
-      const { error } = await rpcDb.rpc('update_business_review', {
-        p_review_id: reviewId,
-        p_rating: input.rating ?? null,
-        p_comment: input.comment ?? null,
-        p_photos: input.photos ?? null,
-      });
-
-      if (error) {
-        logger.error('Failed to update review', error, { reviewId, input });
-        throw error;
-      }
-
+      await BusinessReviewsRpcService.updateReview(reviewId, input);
       logger.info('Review updated successfully', { reviewId });
     } catch (error) {
       logger.error('Error in updateReview', error);
@@ -195,15 +145,7 @@ export class ReviewQueryService {
    */
   static async deleteReview(reviewId: string): Promise<void> {
     try {
-      const { error } = await rpcDb.rpc('delete_business_review', {
-        p_review_id: reviewId,
-      });
-
-      if (error) {
-        logger.error('Failed to delete review', error, { reviewId });
-        throw error;
-      }
-
+      await BusinessReviewsRpcService.deleteReview(reviewId);
       logger.info('Review deleted successfully', { reviewId });
     } catch (error) {
       logger.error('Error in deleteReview', error);
@@ -219,16 +161,7 @@ export class ReviewQueryService {
     input: BusinessResponseInput,
   ): Promise<void> {
     try {
-      const { error } = await rpcDb.rpc('add_business_review_response', {
-        p_review_id: reviewId,
-        p_business_response: input.business_response,
-      });
-
-      if (error) {
-        logger.error('Failed to add business response', error, { reviewId });
-        throw error;
-      }
-
+      await BusinessReviewsRpcService.addBusinessResponse(reviewId, input);
       logger.info('Business response added successfully', { reviewId });
     } catch (error) {
       logger.error('Error in addBusinessResponse', error);
@@ -301,7 +234,7 @@ export class ReviewQueryService {
   }
 
   /**
-   *  Obter voto do usurio em uma avaliao
+   *  Obter voto do usuario em uma avaliao
    */
   static async getUserReviewVote(params: {
     reviewId: string;
@@ -328,7 +261,7 @@ export class ReviewQueryService {
   }
 
   /**
-   *  Obter Estatisticas de avaliaes de um negcio
+   *  Obter Estatisticas de avaliacoes de um negocio
    */
   static async getBusinessReviewStats(businessProfileId: string): Promise<{
     total: number;

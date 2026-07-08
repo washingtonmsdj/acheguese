@@ -9,6 +9,27 @@
 import { existsSync, readFileSync, readdirSync, statSync } from 'fs';
 import { dirname, extname, join } from 'path';
 import { fileURLToPath } from 'url';
+import {
+  validateEdgeFunctionAuthConfigContract,
+  validateNoJwtEdgeFunctionControls,
+} from './edge-function-auth-config.mjs';
+import {
+  loadEdgeFunctionAuthPolicy,
+  validateEdgeFunctionServiceRoleCoverage,
+} from './edge-function-auth-policy.mjs';
+import {
+  loadServiceRoleBoundaryPolicy,
+  shouldScanServiceRoleBoundaryFile,
+  validateServiceRoleBoundaryFiles,
+} from './service-role-boundary.mjs';
+import {
+  shouldScanSupabaseAccessBoundaryFile,
+  validateSupabaseAccessBoundaryFiles,
+} from './supabase-access-boundary.mjs';
+import {
+  shouldScanEdgeFunctionBrokerBoundaryFile,
+  validateEdgeFunctionBrokerBoundaryFiles,
+} from './edge-function-broker-boundary.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -102,14 +123,20 @@ const SCAN_EXTENSIONS = new Set([
 const VERSIONABLE_ENV_FILES = ['.env', '.env.production'];
 const SENSITIVE_ENV_NAME_PATTERN =
   /(^|_)(SECRET|TOKEN|PASSWORD|PRIVATE|SERVICE_ROLE|API_KEY|APIKEY|WEBHOOK_SECRET)(_|$)/i;
+const EDGE_FUNCTION_AUTH_POLICY_PATH = join(
+  ROOT_DIR,
+  'docs/governance/security/EDGE_FUNCTION_AUTH_POLICY.json',
+);
+const EDGE_FUNCTION_AUTH_POLICY = loadEdgeFunctionAuthPolicy(EDGE_FUNCTION_AUTH_POLICY_PATH);
+const SERVICE_ROLE_BOUNDARY_POLICY_PATH = join(
+  ROOT_DIR,
+  'docs/governance/security/SERVICE_ROLE_BOUNDARY_POLICY.json',
+);
+const SERVICE_ROLE_BOUNDARY_POLICY = loadServiceRoleBoundaryPolicy(SERVICE_ROLE_BOUNDARY_POLICY_PATH);
+const SUPABASE_CONFIG_PATH = join(ROOT_DIR, 'supabase/config.toml');
 const EDGE_FUNCTIONS_DIR = join(ROOT_DIR, 'supabase/functions');
 const EDGE_FUNCTION_SERVICE_ROLE_PATTERN = /SUPABASE_SERVICE_ROLE_KEY|SERVICE_ROLE/g;
-const EDGE_FUNCTION_GUARD_PATTERNS = [
-  { label: 'admin auth', pattern: /require(?:Admin|SuperAdmin)\s*\(/ },
-  { label: 'authenticated user', pattern: /requireAuthenticatedUser\s*\(|\.auth\.getUser\s*\(/ },
-  { label: 'cron secret', pattern: /requireCronSecret\s*\(|CRON_SECRET|AUTO_DISPATCH_SECRET|PROCESS_TIMEOUTS_SECRET/ },
-  { label: 'webhook signature', pattern: /stripe-signature|Stripe-Signature|constructEvent\s*\(|WEBHOOK_SECRET|verify.*signature/i },
-];
+const EDGE_FUNCTION_NO_JWT_ALLOWLIST = new Set(Object.keys(EDGE_FUNCTION_AUTH_POLICY.noJwtAllowlist));
 const VERIFICATION_DOCUMENTS_MIGRATION =
   'supabase/migrations/20260604143000_private_verification_documents_storage.sql';
 
@@ -269,34 +296,121 @@ function scanFile(relativePath, check) {
   }
 }
 
-function validateEdgeFunctionServiceRoleGuards() {
-  const issues = [];
-  if (!existsSync(EDGE_FUNCTIONS_DIR)) return issues;
+function listEdgeFunctionNames() {
+  if (!existsSync(EDGE_FUNCTIONS_DIR)) return [];
 
-  const functionDirs = readdirSync(EDGE_FUNCTIONS_DIR, { withFileTypes: true })
+  return readdirSync(EDGE_FUNCTIONS_DIR, { withFileTypes: true })
     .filter((entry) => entry.isDirectory() && !entry.name.startsWith('_'))
     .map((entry) => entry.name);
+}
 
-  for (const functionName of functionDirs) {
+function validateEdgeFunctionServiceRoleGuards() {
+  const serviceRoleFunctionContents = new Map();
+  const implementedFunctionNames = listEdgeFunctionNames();
+
+  for (const functionName of implementedFunctionNames) {
     const indexPath = join(EDGE_FUNCTIONS_DIR, functionName, 'index.ts');
     if (!existsSync(indexPath)) continue;
 
     const content = readFileSync(indexPath, 'utf-8');
     if (!EDGE_FUNCTION_SERVICE_ROLE_PATTERN.test(content)) continue;
     EDGE_FUNCTION_SERVICE_ROLE_PATTERN.lastIndex = 0;
+    serviceRoleFunctionContents.set(functionName, content);
+  }
 
-    const matchedGuard = EDGE_FUNCTION_GUARD_PATTERNS.find(({ pattern }) => pattern.test(content));
-    if (matchedGuard) continue;
+  return validateEdgeFunctionServiceRoleCoverage({
+    authPolicy: EDGE_FUNCTION_AUTH_POLICY,
+    implementedFunctionNames,
+    serviceRoleFunctionContents,
+    fileForFunction: (functionName) => toPosix(`supabase/functions/${functionName}/index.ts`),
+  });
+}
 
+function validateEdgeFunctionAuthConfig() {
+  const issues = [];
+  const relativeConfigPath = 'supabase/config.toml';
+
+  if (!existsSync(SUPABASE_CONFIG_PATH)) {
     issues.push({
       severity: 'CRITICO',
-      check: 'Edge Function com service_role sem guarda explicita',
-      file: toPosix(`supabase/functions/${functionName}/index.ts`),
-      message: `${functionName} usa service_role sem requireAdmin/auth.getUser/requireCronSecret/assinatura webhook`,
+      check: 'Config Supabase ausente',
+      file: relativeConfigPath,
+      message: 'supabase/config.toml e obrigatorio para auditar verify_jwt das Edge Functions',
     });
+    return issues;
+  }
+
+  const configContent = readFileSync(SUPABASE_CONFIG_PATH, 'utf-8');
+  const implementedFunctionNames = listEdgeFunctionNames();
+  const { issues: contractIssues } = validateEdgeFunctionAuthConfigContract({
+    authPolicy: EDGE_FUNCTION_AUTH_POLICY,
+    configContent,
+    configFile: relativeConfigPath,
+    implementedFunctionNames,
+  });
+  issues.push(...contractIssues);
+
+  const implementedFunctionNameSet = new Set(implementedFunctionNames);
+  for (const functionName of EDGE_FUNCTION_NO_JWT_ALLOWLIST) {
+    const relativeFunctionPath = toPosix(`supabase/functions/${functionName}/index.ts`);
+    const absoluteFunctionPath = join(ROOT_DIR, relativeFunctionPath);
+
+    if (!implementedFunctionNameSet.has(functionName)) {
+      continue;
+    }
+
+    if (!existsSync(absoluteFunctionPath)) {
+      issues.push({
+        severity: 'CRITICO',
+        check: 'Edge Function sem JWT sem implementacao auditavel',
+        file: relativeFunctionPath,
+        message: `${functionName} esta na allowlist sem JWT, mas index.ts nao foi encontrado`,
+      });
+      continue;
+    }
+
+    const content = readFileSync(absoluteFunctionPath, 'utf-8');
+    const policy = EDGE_FUNCTION_AUTH_POLICY.noJwtAllowlist[functionName];
+    issues.push(...validateNoJwtEdgeFunctionControls(functionName, policy, content, relativeFunctionPath));
   }
 
   return issues;
+}
+
+function validateServiceRoleBoundary() {
+  const files = listTrackedFiles()
+    .filter(shouldScanServiceRoleBoundaryFile)
+    .map((relativePath) => ({
+      path: relativePath,
+      content: readFileSync(join(ROOT_DIR, relativePath), 'utf-8'),
+    }));
+
+  return validateServiceRoleBoundaryFiles({
+    files,
+    policy: SERVICE_ROLE_BOUNDARY_POLICY,
+  });
+}
+
+function validateSupabaseAccessBoundary() {
+  const files = listTrackedFiles()
+    .filter(shouldScanSupabaseAccessBoundaryFile)
+    .map((relativePath) => ({
+      path: relativePath,
+      content: readFileSync(join(ROOT_DIR, relativePath), 'utf-8'),
+    }));
+
+  return validateSupabaseAccessBoundaryFiles(files);
+}
+
+function validateEdgeFunctionBrokerBoundary() {
+  const files = listTrackedFiles()
+    .filter(shouldScanEdgeFunctionBrokerBoundaryFile)
+    .map((relativePath) => ({
+      path: relativePath,
+      content: readFileSync(join(ROOT_DIR, relativePath), 'utf-8'),
+    }));
+
+  return validateEdgeFunctionBrokerBoundaryFiles(files);
 }
 
 function validatePrivateVerificationDocuments() {
@@ -414,7 +528,27 @@ function main() {
   allIssues.push(...edgeFunctionIssues);
   console.log(edgeFunctionIssues.length === 0 ? '   OK\n' : `   ${edgeFunctionIssues.length} problema(s)\n`);
 
-  console.log('4) Validando documentos privados de verificacao...');
+  console.log('4) Validando verify_jwt em Edge Functions...');
+  const edgeFunctionAuthIssues = validateEdgeFunctionAuthConfig();
+  allIssues.push(...edgeFunctionAuthIssues);
+  console.log(edgeFunctionAuthIssues.length === 0 ? '   OK\n' : `   ${edgeFunctionAuthIssues.length} problema(s)\n`);
+
+  console.log('5) Validando fronteira Supabase runtime...');
+  const serviceRoleBoundaryIssues = validateServiceRoleBoundary();
+  allIssues.push(...serviceRoleBoundaryIssues);
+  console.log(serviceRoleBoundaryIssues.length === 0 ? '   OK\n' : `   ${serviceRoleBoundaryIssues.length} problema(s)\n`);
+
+  console.log('6) Validando fronteira Supabase na UI...');
+  const supabaseAccessBoundaryIssues = validateSupabaseAccessBoundary();
+  allIssues.push(...supabaseAccessBoundaryIssues);
+  console.log(supabaseAccessBoundaryIssues.length === 0 ? '   OK\n' : `   ${supabaseAccessBoundaryIssues.length} problema(s)\n`);
+
+  console.log('7) Validando broker Edge Function canonico...');
+  const edgeFunctionBrokerBoundaryIssues = validateEdgeFunctionBrokerBoundary();
+  allIssues.push(...edgeFunctionBrokerBoundaryIssues);
+  console.log(edgeFunctionBrokerBoundaryIssues.length === 0 ? '   OK\n' : `   ${edgeFunctionBrokerBoundaryIssues.length} problema(s)\n`);
+
+  console.log('8) Validando documentos privados de verificacao...');
   const verificationDocumentIssues = validatePrivateVerificationDocuments();
   allIssues.push(...verificationDocumentIssues);
   console.log(verificationDocumentIssues.length === 0 ? '   OK\n' : `   ${verificationDocumentIssues.length} problema(s)\n`);

@@ -110,7 +110,8 @@ export abstract class BaseLocationService {
    * Retorna o TerritoryFilter canônico para uso em queries.
    *
    * Este método resolve apenas a partir do LocationContextStore (location ativa).
-   * Para suporte a grupos territoriais, usar useTerritoryFilter() com routeResolved.
+   * Em paginas de modulo com rota territorial, usar useModuleTerritoryFilter()
+   * na borda da pagina para preservar grupos e activeMemberIds.
    *
    * scope: 'location' → eq(location_id, id)
    * scope: 'none'     → sem filtro (território não resolvido)

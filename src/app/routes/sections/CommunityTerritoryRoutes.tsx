@@ -5,7 +5,6 @@ import {
   TERRITORIAL_ROUTE_PARAMS,
   TERRITORIAL_ROUTE_STATIC_SEGMENTS,
   buildCommunityAliasRoutePath,
-  buildCommunityRootAliasRoutePath,
   buildCommunityTerritoryRoutePath,
 } from "@/core/routing/config/territorialRoutePatterns";
 import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from "@/config/launchScope";
@@ -171,7 +170,7 @@ const COMMUNITY_ROUTE_DEFINITIONS: readonly CommunityRouteDefinition[] = [
   },
 ];
 
-const COMMUNITY_ALIAS_REDIRECT_PREFIXES: readonly (readonly string[])[] =
+const COMMUNITY_ALIAS_ROUTE_PREFIXES: readonly (readonly string[])[] =
   COMMUNITY_ROUTE_DEFINITIONS.map((definition) => definition.segments);
 
 function renderLaunchScopedElement(
@@ -220,27 +219,6 @@ function renderCommunityRoutes(
 function renderCommunityTerritoryRoutes() {
   return (
     <>
-      <Route
-        path={buildCommunityRootAliasRoutePath([APP_MODULE_SLUGS.business, TERRITORIAL_PARAMS.slug])}
-        element={<P.CommunityShortEntityRoute />}
-      />
-      <Route
-        path={buildCommunityRootAliasRoutePath([APP_MODULE_SLUGS.gastronomy, TERRITORIAL_PARAMS.slug])}
-        element={<P.CommunityShortEntityRoute />}
-      />
-      {COMMUNITY_ROUTE_DEFINITIONS.map((definition) => (
-        <Route
-          key={`root-alias-${definition.key}`}
-          path={buildCommunityRootAliasRoutePath(definition.segments)}
-          element={renderLaunchScopedElement(definition, <P.CommunityShortAliasShellRoute />)}
-        >
-          <Route index element={definition.kind === "direct" ? definition.element : definition.indexElement} />
-        </Route>
-      ))}
-      <Route path={buildCommunityRootAliasRoutePath()} element={<P.CommunityShortAliasShellRoute />}>
-        <Route index element={<P.TerritorialCommunityEntryPage />} />
-      </Route>
-
       {renderCommunityRoutes("territory", buildCommunityTerritoryRoutePath)}
       {renderCommunityRoutes("scoped", buildCommunityScopedRoutePath)}
       <Route
@@ -251,7 +229,7 @@ function renderCommunityTerritoryRoutes() {
         path={buildCommunityAliasRoutePath([APP_MODULE_SLUGS.gastronomy, TERRITORIAL_PARAMS.slug])}
         element={<P.CommunityEntityAliasRoute />}
       />
-      {COMMUNITY_ALIAS_REDIRECT_PREFIXES.map((segments, index) => {
+      {COMMUNITY_ALIAS_ROUTE_PREFIXES.map((segments, index) => {
         const definition = COMMUNITY_ROUTE_DEFINITIONS[index];
         return (
           <Route
@@ -274,7 +252,9 @@ function renderCommunityTerritoryRoutes() {
               ? <P.CommunityAliasRoute />
               : <P.LaunchPausedPage moduleName={definition.pausedModuleName ?? "Módulo"} />
           }
-        />
+        >
+          <Route index element={definition.kind === "direct" ? definition.element : definition.indexElement} />
+        </Route>
       ))}
       <Route path={buildCommunityScopedRoutePath()} element={<P.CommunityTerritorialShell />}>
         <Route index element={<P.TerritorialCommunityEntryPage />} />
@@ -282,7 +262,9 @@ function renderCommunityTerritoryRoutes() {
       <Route path={buildCommunityTerritoryRoutePath()} element={<P.CommunityTerritorialShell />}>
         <Route index element={<P.TerritorialCommunityEntryPage />} />
       </Route>
-      <Route path={buildCommunityAliasRoutePath()} element={<P.CommunityAliasRoute />} />
+      <Route path={buildCommunityAliasRoutePath()} element={<P.CommunityAliasRoute />}>
+        <Route index element={<P.TerritorialCommunityEntryPage />} />
+      </Route>
       <Route path={buildCommunityAliasRoutePath(["*"])} element={<P.CommunityAliasRoute />} />
     </>
   );

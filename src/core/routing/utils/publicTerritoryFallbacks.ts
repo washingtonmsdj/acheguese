@@ -1,6 +1,7 @@
 import {
   LocationStatus,
   LocationType,
+  TERRITORIAL_GROUP_STATUS,
   type Location,
   type TerritorialGroupWithMembers,
 } from "@/core/location/types";
@@ -98,7 +99,7 @@ const complexoNordesteGroup: TerritorialGroupWithMembers = {
   name: "Complexo do Nordeste de Amaralina",
   description: "Fallback publico da comunidade territorial.",
   anchor_city_id: salvadorLocation.id,
-  status: "active",
+  status: TERRITORIAL_GROUP_STATUS.ACTIVE,
   metadata: {
     [PUBLIC_FALLBACK_FLAG]: true,
   },

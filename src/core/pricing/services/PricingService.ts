@@ -16,6 +16,7 @@
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
+import { invokeNullableSupabaseBroker } from '@/core/infrastructure/edge-functions/edgeFunctionBroker';
 import type { Json, Tables, TablesInsert } from '@/integrations/supabase';
 import { trackError } from '@/shared/utils/errorTracking';
 import { calculateDistance } from '@/shared/utils/geolocation';
@@ -83,6 +84,9 @@ type PricingRuleWithRelationsRow = PricingRuleRow & {
 };
 
 const pricingDb = supabase as unknown as PricingDbClient;
+const ADMIN_PRICING_RPC_FUNCTION = "admin-pricing-rpc";
+
+type AdminPricingAction = "activatePricingRule" | "createActivePricingRule";
 
 function toJsonMetadata(value: Record<string, unknown> | undefined): Json {
   return (value ?? {}) as Json;
@@ -128,6 +132,18 @@ export class PricingService {
    */
   configure(config: Partial<PricingServiceConfig>): void {
     this.config = { ...this.config, ...config };
+  }
+
+  private async invokeAdminPricingRpc<TValue>(
+    action: AdminPricingAction,
+    params: Record<string, unknown>,
+  ): Promise<TValue | null> {
+    return invokeNullableSupabaseBroker<TValue, AdminPricingAction>({
+      action,
+      functionName: ADMIN_PRICING_RPC_FUNCTION,
+      params,
+      serviceName: "PricingService",
+    });
   }
 
   // ============================================
@@ -312,14 +328,10 @@ export class PricingService {
     try {
       // Se está ativando uma regra, usar RPC para evitar conflito com trigger
       if (updates.isActive === true) {
-        const { error: rpcError } = await this.db.rpc<boolean>('activate_pricing_rule', {
-          p_rule_id: ruleId,
-          p_performed_by: performedBy,
+        await this.invokeAdminPricingRpc<null>('activatePricingRule', {
+          ruleId,
+          performedBy,
         });
-
-        if (rpcError) {
-          throw new Error(rpcError.message || 'Erro ao ativar regra');
-        }
 
         // Se só está ativando, não precisa fazer mais nada
         if (Object.keys(updates).length === 1) {
@@ -440,23 +452,22 @@ export class PricingService {
     try {
       // Usar RPC para criar regra ativa (desativa outras automaticamente)
       if (rule.isActive) {
-        const { data: ruleId, error: rpcError } = await this.db.rpc<string>('create_active_pricing_rule', {
-          p_mode: rule.mode,
-          p_name: rule.name,
-          p_base_fare: rule.baseFare,
-          p_price_per_km: rule.pricePerKm,
-          p_price_per_minute: rule.pricePerMinute,
-          p_minimum_fare: rule.minimumFare,
-          p_maximum_fare: rule.maximumFare || null,
-          p_is_active: rule.isActive,
-          p_valid_from: rule.validFrom?.toISOString() || null,
-          p_valid_until: rule.validUntil?.toISOString() || null,
-          p_metadata: rule.metadata ?? {},
-          p_performed_by: performedBy,
+        const ruleId = await this.invokeAdminPricingRpc<string>('createActivePricingRule', {
+          mode: rule.mode,
+          name: rule.name,
+          baseFare: rule.baseFare,
+          pricePerKm: rule.pricePerKm,
+          pricePerMinute: rule.pricePerMinute,
+          minimumFare: rule.minimumFare,
+          maximumFare: rule.maximumFare || null,
+          validFrom: rule.validFrom?.toISOString() || null,
+          validUntil: rule.validUntil?.toISOString() || null,
+          metadata: rule.metadata ?? {},
+          performedBy,
         });
 
-        if (rpcError) {
-          throw new Error(rpcError.message || 'Erro ao criar regra');
+        if (!ruleId) {
+          throw new Error('Erro ao criar regra');
         }
 
         const newRuleId = ruleId as string;

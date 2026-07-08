@@ -63,6 +63,12 @@ export class CommunityRolloutService {
     const locationId = this.resolveLocationId(resolved);
     if (!locationId) return null;
 
+    return this.getCommunityRolloutForLocation(locationId);
+  }
+
+  async getCommunityRolloutForLocation(locationId: string): Promise<EffectiveRollout | null> {
+    if (!locationId) return null;
+
     try {
       const result = await this.rolloutService.getEffectiveRollout({
         module_key: ModuleKey.COMMUNITY,
@@ -81,7 +87,15 @@ export class CommunityRolloutService {
       return { blocked: true, reason: 'Localização não selecionada' };
     }
 
-    const isActive = await this.isCommunityActive(resolved);
+    return this.checkAccessForLocation(locationId);
+  }
+
+  async checkAccessForLocation(locationId: string): Promise<{ blocked: boolean; reason?: string }> {
+    if (!locationId) {
+      return { blocked: true, reason: 'Localização não selecionada' };
+    }
+
+    const isActive = await this.isCommunityActiveForLocation(locationId);
     if (!isActive) {
       return { blocked: true, reason: 'Community não está disponível nesta localização' };
     }
@@ -93,6 +107,12 @@ export class CommunityRolloutService {
     resolved?: ResolvedTerritory,
   ): Promise<Record<string, unknown> | null> {
     const locationId = this.resolveLocationId(resolved);
+    if (!locationId) return null;
+
+    return this.getCommunityConfigForLocation(locationId);
+  }
+
+  async getCommunityConfigForLocation(locationId: string): Promise<Record<string, unknown> | null> {
     if (!locationId) return null;
 
     try {

@@ -77,13 +77,15 @@ export function ServiceBar({ profile }: ServiceBarProps) {
           </div>
 
           <div className="flex items-center gap-3 text-sm">
-            <div className="flex items-center gap-1.5 text-muted-foreground">
-              <span className="text-muted-foreground/70">Taxa:</span>
-              <span className="font-medium text-foreground">{formatBrl(profile.delivery_fee ?? 0)}</span>
-            </div>
+            {profile.delivery_enabled && (
+              <div className="flex items-center gap-1.5 text-muted-foreground">
+                <span className="text-muted-foreground/70">Taxa:</span>
+                <span className="font-medium text-foreground">{formatBrl(profile.delivery_fee ?? 0)}</span>
+              </div>
+            )}
             {profile.minimum_order && profile.minimum_order > 0 && (
               <>
-                <Separator orientation="vertical" className="h-4" />
+                {profile.delivery_enabled && <Separator orientation="vertical" className="h-4" />}
                 <div className="flex items-center gap-1.5 text-muted-foreground">
                   <span className="text-muted-foreground/70">Min:</span>
                   <span className="font-medium text-foreground">{formatBrl(profile.minimum_order)}</span>

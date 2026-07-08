@@ -1,8 +1,8 @@
 # Regras Vigentes do Sistema
 
-Data-base: 2026-04-20
+Data-base: 2026-07-07
 Status: ativo
-Versao documental: 3.1
+Versao documental: 3.2
 
 ## 1. Regras de identidade e ownership
 - `user_id` identifica autenticacao e contexto administrativo.
@@ -27,6 +27,22 @@ Versao documental: 3.1
 - Estado oficial atual: apenas `gastronomy` esta formalizada como vertical.
 - Capacidade implementada em codigo nao implica reconhecimento oficial de vertical sem declaracao no SSOT.
 
+## 2.2 Regras de roteamento publico e comunitario
+- Entidades publicas usam namespace publico canonico:
+  `/empresas/:state/:city/:territory/:slug`,
+  `/gastronomia/:state/:city/:territory/:slug` e equivalentes por modulo.
+- O portal comunitario usa contexto explicito em `/comunidade/...`; rotas publicas
+  de entidade nao devem redirecionar automaticamente para comunidade.
+- Rotas comunitarias de entidade podem renderizar a entidade dentro do contexto
+  comunitario e devem oferecer saida explicita para o site publico quando houver
+  equivalente publico.
+- Aliases comunitarios antigos nao devem redirecionar automaticamente. Quando a
+  URL nao for canonica, a rota deve falhar visivelmente em vez de preservar uma
+  segunda superficie publica.
+- Acoes comunitarias que criam ou alteram conteudo local exigem perfil autenticado
+  e residencia canonica verificada no territorio aplicavel. Enderecos completos
+  de residencia nao podem aparecer em superficies publicas.
+
 ## 3. Regras documentais
 - Documento global vivo fica em `docs/`.
 - Documento tecnico de dominio fica no proprio dominio.
@@ -34,6 +50,8 @@ Versao documental: 3.1
 - `supabase/migrations/` e a unica fonte de schema versionado.
 - O indice mestre da documentacao e `docs/INDEX_CANONICO.md`.
 - O relatorio executivo vigente de organizacao e blindagem e `docs/audits/MASTER_REPORT.md`.
+- A Security Authority vigente fica em `docs/governance/security/SECURITY_AUTHORITY.md`
+  e deve ser consultada antes de mudancas Critical/High em seguranca.
 - Documentos fora do indice canonico (principalmente historico/sessao) nao substituem status oficial.
 
 ## 4. Gates obrigatorios

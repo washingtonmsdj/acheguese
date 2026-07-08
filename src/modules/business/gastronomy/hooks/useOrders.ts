@@ -7,10 +7,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { OrderService, type Order, type OrderStatus, type OrderType } from '@/modules/business/gastronomy/services/OrderService';
-import { GastronomyOrderRealtimeService } from '@/modules/business/gastronomy/services/GastronomyOrderRealtimeService';
+import {
+  GastronomyOrderRealtimeService,
+  type GastronomyOrderRealtimePayload,
+} from '@/modules/business/gastronomy/services/GastronomyOrderRealtimeService';
 import { toast } from 'sonner';
 import { useSessionContext } from '@/core/session';
-import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
 interface UseOrdersFilters {
   status?: OrderStatus;
@@ -70,7 +72,7 @@ export function useOrders(businessId: string, filters?: UseOrdersFilters) {
     };
 
     const invalidateOrdersFromTimeline = async (
-      payload: RealtimePostgresChangesPayload<Record<string, unknown>>,
+      payload: GastronomyOrderRealtimePayload<Record<string, unknown>>,
     ) => {
       const newRow = payload.new as { order_id?: unknown } | null;
       const oldRow = payload.old as { order_id?: unknown } | null;
@@ -130,14 +132,26 @@ export function useOrders(businessId: string, filters?: UseOrdersFilters) {
     },
   });
 
+  const resolveActorProfileId = (orderId: string) => {
+    const cachedOrder = queryClient.getQueryData<Order>(['order', orderId]);
+    const cachedOrders = queryClient.getQueryData<Order[]>(ordersQueryKey);
+    const matchingOrder =
+      cachedOrder ??
+      cachedOrders?.find((entry) => entry.id === orderId) ??
+      orders?.find((entry) => entry.id === orderId);
+
+    return matchingOrder?.merchant_profile_id || activeProfile?.id;
+  };
+
   // Mutation: Atualizar status
   const updateStatusMutation = useMutation({
     mutationFn: async (input: { orderId: string; status: OrderStatus; notes?: string }) => {
+      const actorProfileId = resolveActorProfileId(input.orderId);
       const result = await OrderService.updateOrderStatus(
         input.orderId,
         input.status,
         input.notes,
-        activeProfile?.id
+        actorProfileId,
       );
       if (result.error) throw new Error(result.error);
       return result.data;
@@ -156,7 +170,8 @@ export function useOrders(businessId: string, filters?: UseOrdersFilters) {
   // Mutation: Cancelar pedido
   const cancelOrderMutation = useMutation({
     mutationFn: async (input: { orderId: string; reason: string }) => {
-      const result = await OrderService.cancelOrder(input.orderId, input.reason, activeProfile?.id);
+      const actorProfileId = resolveActorProfileId(input.orderId);
+      const result = await OrderService.cancelOrder(input.orderId, input.reason, actorProfileId);
       if (result.error) throw new Error(result.error);
       return result.data;
     },

@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase";
+import { PrivacyRpcService } from "./PrivacyRpcService";
 
 export interface ConsentPreferenceInput {
   analytics: boolean;
@@ -18,7 +19,8 @@ export class ConsentService {
     const { data, error } = await supabase
       .from("user_consents")
       .select("consent_type, granted")
-      .eq("user_id", userId);
+      .eq("user_id", userId)
+      .is("revoked_at", null);
 
     if (error) throw error;
 
@@ -47,17 +49,13 @@ export class ConsentService {
     if (!input.userId) return;
 
     for (const consent of consentsArray) {
-      const { error } = await supabase.rpc("record_consent", {
-        p_user_id: input.userId,
-        p_consent_type: consent.consent_type,
-        p_granted: consent.granted,
-        p_ip_address: null,
-        p_user_agent: input.userAgent,
-        p_terms_version: "1.0",
-        p_privacy_version: "1.0",
+      await PrivacyRpcService.recordConsent({
+        consentType: consent.consent_type,
+        granted: consent.granted,
+        userAgent: input.userAgent,
+        termsVersion: "1.0",
+        privacyVersion: "1.0",
       });
-
-      if (error) throw error;
     }
   }
 }

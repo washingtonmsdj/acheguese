@@ -18,6 +18,8 @@ interface IssueFeedSectionProps {
   neighborhood?: string;
   locationId?: string;
   profileId?: string;
+  canCreateIssue?: boolean;
+  onBlockedCreateIssue?: () => void;
 }
 
 export function IssueFeedSection({
@@ -26,11 +28,22 @@ export function IssueFeedSection({
   neighborhood,
   locationId,
   profileId,
+  canCreateIssue = true,
+  onBlockedCreateIssue,
 }: IssueFeedSectionProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
 
   const { data: issues = [], isLoading } = useIssues({ territoryFilter, limit: 5 });
+
+  const handleOpenCreateIssue = () => {
+    if (!canCreateIssue) {
+      onBlockedCreateIssue?.();
+      return;
+    }
+
+    setModalOpen(true);
+  };
 
   if (!COMMUNITY_ISSUES_ENABLED) return null;
   if (territoryFilter.scope === "none") return null;
@@ -61,7 +74,7 @@ export function IssueFeedSection({
           size="sm"
           variant="outline"
           className="text-xs gap-1 border-amber-300 text-amber-600 hover:bg-amber-50 dark:border-amber-700 dark:text-amber-400"
-          onClick={() => setModalOpen(true)}
+          onClick={handleOpenCreateIssue}
           disabled={!locationId}
           aria-label="Reportar novo problema"
         >
@@ -93,6 +106,7 @@ export function IssueFeedSection({
         city={city}
         neighborhood={neighborhood}
         locationId={locationId}
+        canCreate={canCreateIssue}
       />
     </section>
   );

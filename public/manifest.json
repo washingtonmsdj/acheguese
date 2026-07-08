@@ -1,7 +1,7 @@
 {
   "name": "Achegue-se",
   "short_name": "Achegue-se",
-  "description": "Comunidade, negócios locais, serviços, gastronomia, mapa e perto de mim no mesmo território.",
+  "description": "Comunidade, negocios locais, servicos, gastronomia, mapa e perto de mim no mesmo territorio.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -26,9 +26,9 @@
   ],
   "shortcuts": [
     {
-      "name": "Comunidade",
-      "short_name": "Comunidade",
-      "url": "/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/feed"
+      "name": "Explorar Salvador",
+      "short_name": "Explorar",
+      "url": "/ba/salvador"
     },
     {
       "name": "Empresas",
@@ -36,8 +36,8 @@
       "url": "/empresas"
     },
     {
-      "name": "Serviços",
-      "short_name": "Serviços",
+      "name": "Servicos",
+      "short_name": "Servicos",
       "url": "/servicos"
     }
   ]

@@ -8,6 +8,7 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import { SessionService } from '@/core/session/services/SessionService';
+import { SessionRpcService } from '@/core/session/services/SessionRpcService';
 
 export interface MFAStatus {
   mfaEnabled: boolean;
@@ -45,12 +46,9 @@ class MFAService {
         return { required: false, gracePeriodExpiresAt: null, daysRemaining: null };
       }
 
-      const { data, error } = await supabase.rpc('check_user_mfa_required', {
-        p_user_id: user.id,
-      });
-
-      if (error) {
-        logger.error('MFAService.checkMFARequired', error);
+      const required = await SessionRpcService.checkMfaRequired();
+      if (required === null) {
+        logger.error('MFAService.checkMFARequired', new Error('session-rpc returned no MFA requirement'));
         return { required: false, gracePeriodExpiresAt: null, daysRemaining: null };
       }
 
@@ -72,7 +70,7 @@ class MFAService {
       }
 
       return {
-        required: data as boolean,
+        required,
         gracePeriodExpiresAt,
         daysRemaining,
       };

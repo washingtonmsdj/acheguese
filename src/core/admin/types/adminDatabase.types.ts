@@ -8,8 +8,10 @@
  * @module core/admin/types/adminDatabase.types
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database as GeneratedDatabase } from '@/integrations/supabase';
+import type {
+  Database as GeneratedDatabase,
+  SupabaseClient,
+} from '@/integrations/supabase';
 
 // ============================================
 // FRAUD ALERTS

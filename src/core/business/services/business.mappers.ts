@@ -232,6 +232,7 @@ export function mapBusinessDataToBusiness(
 
   return {
     id: data.profile_id || data.id || "",
+    business_data_id: data.id,
     profile_id: data.profile_id,
     name: data.business_name || profileData?.name || "",
     legal_name: data.legal_name ?? undefined,

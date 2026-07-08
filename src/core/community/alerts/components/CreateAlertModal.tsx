@@ -5,6 +5,7 @@
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -57,6 +58,8 @@ interface CreateAlertModalProps {
   neighborhood?: string;
   locationId?: string;
   onAlertCreated?: () => void;
+  canCreate?: boolean;
+  blockedMessage?: string;
 }
 
 export function CreateAlertModal({
@@ -66,6 +69,8 @@ export function CreateAlertModal({
   neighborhood = "",
   locationId,
   onAlertCreated,
+  canCreate = true,
+  blockedMessage = "Verifique sua residencia para criar alertas nesta comunidade.",
 }: CreateAlertModalProps) {
   const [step, setStep] = useState(1);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -108,7 +113,7 @@ export function CreateAlertModal({
   }, [locationId, open, reset]);
 
   const description = watch("description") ?? "";
-  const canSubmit = Boolean(locationId);
+  const canSubmit = Boolean(locationId) && canCreate;
 
   function handleClose() {
     reset();
@@ -119,12 +124,23 @@ export function CreateAlertModal({
   }
 
   async function goNext() {
+    if (!canCreate) {
+      setServerError(blockedMessage);
+      toast.info(blockedMessage);
+      return;
+    }
+
     const valid = await trigger(getFieldsForStep(step));
     if (valid) setStep((s) => Math.min(s + 1, TOTAL_STEPS));
   }
 
   async function onSubmit(data: CreateAlertFormData) {
     setServerError(null);
+    if (!canCreate) {
+      setServerError(blockedMessage);
+      toast.info(blockedMessage);
+      return;
+    }
 
     const result = await createAlert({
       category: data.category,
@@ -177,7 +193,9 @@ export function CreateAlertModal({
 
             {!canSubmit && (
               <p className="text-xs text-amber-600">
-                Selecione um bairro válido para publicar alertas.
+                {canCreate
+                  ? "Selecione um bairro valido para publicar alertas."
+                  : blockedMessage}
               </p>
             )}
 

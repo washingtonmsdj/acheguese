@@ -43,6 +43,8 @@ interface CreateIssueModalProps {
   neighborhood?: string;
   locationId?: string;
   onIssueCreated?: () => void;
+  canCreate?: boolean;
+  blockedMessage?: string;
 }
 
 export function CreateIssueModal({
@@ -52,6 +54,8 @@ export function CreateIssueModal({
   neighborhood,
   locationId,
   onIssueCreated,
+  canCreate = true,
+  blockedMessage = "Verifique sua residencia para registrar problemas nesta comunidade.",
 }: CreateIssueModalProps) {
   const { mutate: createIssue, isPending } = useCreateIssue();
 
@@ -75,6 +79,11 @@ export function CreateIssueModal({
   }, [form, locationId, open]);
 
   function onSubmit(data: CreateIssueFormData) {
+    if (!canCreate) {
+      toast.info(blockedMessage);
+      return;
+    }
+
     createIssue(
       {
         category: data.category,
@@ -102,7 +111,7 @@ export function CreateIssueModal({
     );
   }
 
-  const canSubmit = Boolean(locationId);
+  const canSubmit = Boolean(locationId) && canCreate;
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -192,7 +201,13 @@ export function CreateIssueModal({
               )}
             />
 
-            {!canSubmit && (
+            {!canCreate && (
+              <p className="text-xs text-amber-600">
+                {blockedMessage}
+              </p>
+            )}
+
+            {canCreate && !canSubmit && (
               <p className="text-xs text-amber-600">
                 Selecione um bairro válido para registrar o problema.
               </p>

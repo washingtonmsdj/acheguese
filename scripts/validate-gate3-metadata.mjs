@@ -1,4 +1,4 @@
-/**
+﻿/**
  * GATE 3: Validação Operacional de Failed Delivery Metadata
  * 
  * Executa testes automatizados no banco para validar:
@@ -8,20 +8,9 @@
  * - Resolução posterior funcionando
  */
 
-import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
+import { createServiceRoleClient } from './lib/supabase-client.mjs';
 
-dotenv.config({ path: '.env.test' });
-
-const supabaseUrl = process.env.VITE_SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-
-if (!supabaseUrl || !supabaseServiceKey) {
-  console.error('❌ Variáveis de ambiente não configuradas');
-  process.exit(1);
-}
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+const supabase = createServiceRoleClient({ envFiles: ['.env.test', '.env.local', '.env.remote', '.env'] });
 
 console.log('========================================');
 console.log('GATE 3: VALIDAÇÃO OPERACIONAL');

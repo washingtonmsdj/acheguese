@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 import type { Cart, CartItem } from "../types/menu";
+import type { GastronomyFulfillmentMode } from "../checkout/checkoutRules";
 import {
   GastronomyCartService,
   type BuildCartItemInput,
@@ -12,11 +13,13 @@ interface GastronomyCartStoreState {
   addItem: (input: {
     business_id: string;
     delivery_fee: number;
+    fulfillment_mode?: GastronomyFulfillmentMode;
     item_input: BuildCartItemInput;
   }) => Cart;
   addCartItem: (input: {
     business_id: string;
     delivery_fee: number;
+    fulfillment_mode?: GastronomyFulfillmentMode;
     cart_item: CartItem;
   }) => Cart;
   removeItem: (lineId: string) => void;
@@ -24,6 +27,7 @@ interface GastronomyCartStoreState {
   syncBusinessContext: (input: {
     business_id: string;
     delivery_fee: number;
+    fulfillment_mode?: GastronomyFulfillmentMode;
   }) => void;
 }
 
@@ -32,7 +36,7 @@ export const useGastronomyCartStore = create<GastronomyCartStoreState>()(
     (set) => ({
       cart: null,
 
-      addItem: ({ business_id, delivery_fee, item_input }) => {
+      addItem: ({ business_id, delivery_fee, fulfillment_mode, item_input }) => {
         const cartItem = GastronomyCartService.buildCartItem(item_input);
 
         let nextCart: Cart | null = null;
@@ -40,6 +44,7 @@ export const useGastronomyCartStore = create<GastronomyCartStoreState>()(
           nextCart = GastronomyCartService.appendItem(state.cart, {
             business_id,
             delivery_fee,
+            fulfillment_mode,
             cart_item: cartItem,
           });
 
@@ -51,12 +56,13 @@ export const useGastronomyCartStore = create<GastronomyCartStoreState>()(
         return nextCart as Cart;
       },
 
-      addCartItem: ({ business_id, delivery_fee, cart_item }) => {
+      addCartItem: ({ business_id, delivery_fee, fulfillment_mode, cart_item }) => {
         let nextCart: Cart | null = null;
         set((state) => {
           nextCart = GastronomyCartService.appendItem(state.cart, {
             business_id,
             delivery_fee,
+            fulfillment_mode,
             cart_item,
           });
 
@@ -75,7 +81,7 @@ export const useGastronomyCartStore = create<GastronomyCartStoreState>()(
 
       clearCart: () => set({ cart: null }),
 
-      syncBusinessContext: ({ business_id, delivery_fee }) =>
+      syncBusinessContext: ({ business_id, delivery_fee, fulfillment_mode }) =>
         set((state) => {
           if (!state.cart) return state;
           if (state.cart.business_id !== business_id) return state;
@@ -84,6 +90,7 @@ export const useGastronomyCartStore = create<GastronomyCartStoreState>()(
             cart: GastronomyCartService.syncDeliveryFee(
               state.cart,
               delivery_fee,
+              fulfillment_mode,
             ),
           };
         }),

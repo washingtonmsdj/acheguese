@@ -41,6 +41,13 @@ export function useRideHistory(
   pageSize?: number,
 ) {
   const { user } = useAuth();
+  const queryFilters = filters
+    ? ({
+        status: filters.status,
+        dateFrom: filters.dateFrom,
+        dateTo: filters.dateTo,
+      } satisfies Record<string, unknown>)
+    : undefined;
   const cancelledStatuses = new Set<string>([
     RIDE_STATUS.CANCELLED,
     RIDE_STATUS.CANCELLED_BY_DRIVER,
@@ -48,7 +55,11 @@ export function useRideHistory(
   ]);
 
   const { data, isLoading } = useQuery<RideHistoryResult>({
-    queryKey: MOBILITY_QUERY_KEYS.rideHistory(user?.id || "", filters, page),
+    queryKey: MOBILITY_QUERY_KEYS.rideHistory(
+      user?.id || "",
+      queryFilters,
+      page,
+    ),
     queryFn: async () => {
       if (!user)
         return {
@@ -78,8 +89,11 @@ export function useRideHistory(
         rides: mapped,
         stats: {
           total: mapped.length,
-          completed: mapped.filter((r) => r.status === RIDE_STATUS.COMPLETED).length,
-          cancelled: mapped.filter((r) => cancelledStatuses.has(String(r.status))).length,
+          completed: mapped.filter((r) => r.status === RIDE_STATUS.COMPLETED)
+            .length,
+          cancelled: mapped.filter((r) =>
+            cancelledStatuses.has(String(r.status)),
+          ).length,
           totalSpent: mapped.reduce(
             (acc: number, r) => acc + (r.final_price || 0),
             0,

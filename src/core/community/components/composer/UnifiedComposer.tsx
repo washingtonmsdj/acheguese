@@ -20,6 +20,12 @@ interface UnifiedComposerProps {
   onOpenCreatePost?: () => void;
   onOpenAlertModal?: () => void;
   onOpenIssueModal?: () => void;
+  canCreatePost?: boolean;
+  canCreateAlert?: boolean;
+  canCreateIssue?: boolean;
+  onBlockedCreatePost?: () => void;
+  onBlockedCreateAlert?: () => void;
+  onBlockedCreateIssue?: () => void;
 }
 
 type ComposerType = "post" | "alert" | "issue" | null;
@@ -33,10 +39,31 @@ export function UnifiedComposer({
   onOpenCreatePost,
   onOpenAlertModal,
   onOpenIssueModal,
+  canCreatePost = true,
+  canCreateAlert = true,
+  canCreateIssue = true,
+  onBlockedCreatePost,
+  onBlockedCreateAlert,
+  onBlockedCreateIssue,
 }: UnifiedComposerProps) {
   const [activeComposer, setActiveComposer] = useState<ComposerType>(null);
 
   const handleOpenComposer = (type: ComposerType) => {
+    if (type === "post" && !canCreatePost) {
+      onBlockedCreatePost?.();
+      return;
+    }
+
+    if (type === "alert" && !canCreateAlert) {
+      onBlockedCreateAlert?.();
+      return;
+    }
+
+    if (type === "issue" && !canCreateIssue) {
+      onBlockedCreateIssue?.();
+      return;
+    }
+
     if (type === "post" && onOpenCreatePost) {
       onOpenCreatePost();
       return;
@@ -129,6 +156,9 @@ export function UnifiedComposer({
         <CreatePostModal
           open={activeComposer === "post"}
           onClose={handleCloseComposer}
+          canCreatePost={canCreatePost}
+          canCreateAlert={canCreateAlert}
+          canCreateIssue={canCreateIssue}
         />
       )}
 
@@ -140,6 +170,7 @@ export function UnifiedComposer({
           locationId={locationId}
           city=""
           neighborhood={undefined}
+          canCreate={canCreateAlert}
         />
       )}
 
@@ -151,6 +182,7 @@ export function UnifiedComposer({
           locationId={locationId}
           city=""
           neighborhood={undefined}
+          canCreate={canCreateIssue}
         />
       )}
     </>

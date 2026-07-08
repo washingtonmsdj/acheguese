@@ -52,6 +52,7 @@ import {
 
 interface VagasPublicPageProps {
   resolved?: ResolvedTerritory;
+  activeMemberIds?: string[];
 }
 
 function buildEmbeddedCommunityJobsPath(pathname: string, state: string, city: string, suffix = ""): string {
@@ -60,7 +61,7 @@ function buildEmbeddedCommunityJobsPath(pathname: string, state: string, city: s
   return buildCommunityTerritoryUrl(territoryBasePath, jobsSuffix);
 }
 
-export default function VagasPublicPage({ resolved }: VagasPublicPageProps = {}) {
+export default function VagasPublicPage({ resolved, activeMemberIds }: VagasPublicPageProps = {}) {
   const navigate = useNavigate();
   const location = useLocation();
   const { state, city } = useParams<{ state?: string; city?: string }>();
@@ -72,7 +73,7 @@ export default function VagasPublicPage({ resolved }: VagasPublicPageProps = {})
   const { permission, isLoading: isLoadingPublishPermission } =
     useVagaPublishPermission();
 
-  const moduleTerritory = useModuleTerritoryFilter({ routeResolved: resolved });
+  const moduleTerritory = useModuleTerritoryFilter({ routeResolved: resolved, activeMemberIds });
   const territoryLabels = useTerritoryLabels(moduleTerritory.location as never);
   const locationId = moduleTerritory.resolvedLocationIds[0] ?? "";
   const locationIds = moduleTerritory.resolvedLocationIds;

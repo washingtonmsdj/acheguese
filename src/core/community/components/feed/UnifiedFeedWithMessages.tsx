@@ -34,6 +34,8 @@ interface UnifiedFeedWithMessagesProps {
   onDelete?: (postId: string) => void;
   onEdit?: (postId: string) => void;
   onTagClick?: (tag: string) => void;
+  canSendMessage?: boolean;
+  onBlockedSendMessage?: () => void;
 }
 
 type DirectMessagePostType =
@@ -91,6 +93,8 @@ const UnifiedFeedWithMessages = React.forwardRef<
       onDelete,
       onEdit,
       onTagClick,
+      canSendMessage = true,
+      onBlockedSendMessage,
     },
     ref,
   ) => {
@@ -125,6 +129,11 @@ const UnifiedFeedWithMessages = React.forwardRef<
     };
 
     const handleSendMessage = (postId: string, recipientProfileId: string) => {
+      if (!canSendMessage) {
+        onBlockedSendMessage?.();
+        return;
+      }
+
       handleOpen(postId, recipientProfileId, sortedPosts);
     };
 

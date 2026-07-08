@@ -1,6 +1,6 @@
 import { DELIVERY_MODE } from "../../delivery/types";
 import type { FinancialStatus } from "../../payment-context/types";
-import { PAYMENT_MODE } from "../../payment-context/types";
+import { FINANCIAL_STATUS, PAYMENT_MODE } from "../../payment-context/types";
 import { OrderDraftService } from "../OrderDraftService";
 import { roundMoney } from "../money";
 import {
@@ -10,6 +10,8 @@ import {
 } from "../types";
 import { buildDeliveryPricingSnapshot } from "../sourceMetadata";
 
+type GastronomyFulfillmentMode = "delivery" | "takeout" | "dine_in";
+
 interface GastronomyOrderBusiness {
   business_data_id: string;
   profile_id: string;
@@ -17,6 +19,8 @@ interface GastronomyOrderBusiness {
   gastronomy_profile: {
     cuisine_type?: string | null;
     delivery_enabled: boolean;
+    takeout_enabled?: boolean;
+    dine_in_enabled?: boolean;
     minimum_order?: number | null;
   };
 }
@@ -44,6 +48,7 @@ interface CartItem {
 
 interface Cart {
   business_id: string;
+  fulfillment_mode?: GastronomyFulfillmentMode;
   items: CartItem[];
   subtotal: number;
   delivery_fee: number;
@@ -55,6 +60,7 @@ export interface CreateGastronomyOrderDraftInput {
   actor_profile_id: string;
   business: GastronomyOrderBusiness;
   cart: Cart;
+  fulfillment_mode?: GastronomyFulfillmentMode;
   courier_profile_id?: string;
   payment_method?: string;
   external_payment_reference?: string;
@@ -83,6 +89,30 @@ export interface CreateGastronomyOrderDraftInput {
 }
 
 export class GastronomyOrderOriginAdapter {
+  private static resolveInitialFinancialStatus(
+    paymentMethod?: string,
+    requestedStatus?: FinancialStatus,
+  ): FinancialStatus | undefined {
+    if (requestedStatus) return requestedStatus;
+    if (paymentMethod === "pix" || paymentMethod === "payment_link") {
+      return FINANCIAL_STATUS.PENDING_PAYMENT;
+    }
+    return FINANCIAL_STATUS.NOT_APPLICABLE;
+  }
+
+  private static resolveFulfillmentMode(
+    business: GastronomyOrderBusiness,
+    cart: Cart,
+    requestedMode?: GastronomyFulfillmentMode,
+  ): GastronomyFulfillmentMode {
+    const mode = requestedMode ?? cart.fulfillment_mode;
+    if (mode) return mode;
+    if (business.gastronomy_profile.delivery_enabled) return "delivery";
+    if (business.gastronomy_profile.takeout_enabled) return "takeout";
+    if (business.gastronomy_profile.dine_in_enabled) return "dine_in";
+    return "delivery";
+  }
+
   private static mapCartItem(item: CartItem): CreateOrderItemInput {
     const unitPrice = roundMoney(
       item.base_price + (item.variant?.price_adjustment ?? 0),
@@ -148,10 +178,24 @@ export class GastronomyOrderOriginAdapter {
       );
     }
 
-    if (!business.gastronomy_profile.delivery_enabled) {
+    const fulfillmentMode = this.resolveFulfillmentMode(
+      business,
+      cart,
+      input.fulfillment_mode,
+    );
+
+    if (fulfillmentMode === "delivery" && !business.gastronomy_profile.delivery_enabled) {
       throw new Error(
         "A origem gastronomy informada nao esta habilitada para delivery.",
       );
+    }
+
+    if (fulfillmentMode === "takeout" && !business.gastronomy_profile.takeout_enabled) {
+      throw new Error("A origem gastronomy informada nao esta habilitada para retirada.");
+    }
+
+    if (fulfillmentMode === "dine_in" && !business.gastronomy_profile.dine_in_enabled) {
+      throw new Error("A origem gastronomy informada nao esta habilitada para consumo no local.");
     }
 
     if (!cart.items.length) {
@@ -160,6 +204,9 @@ export class GastronomyOrderOriginAdapter {
 
     const subtotal = roundMoney(cart.subtotal, "cart.subtotal");
     const deliveryFee = roundMoney(cart.delivery_fee, "cart.delivery_fee");
+    if (fulfillmentMode !== "delivery" && deliveryFee !== 0) {
+      throw new Error("Pedidos de retirada ou consumo no local nao podem ter taxa de entrega.");
+    }
     const cartTotal = roundMoney(cart.total, "cart.total");
     const grossTotal = roundMoney(subtotal + deliveryFee, "cart.gross_total");
     const discountTotal = roundMoney(grossTotal - cartTotal, "cart.discount_total");
@@ -212,6 +259,8 @@ export class GastronomyOrderOriginAdapter {
         source_metadata: {
           business_name: business.name,
           cuisine_type: business.gastronomy_profile.cuisine_type,
+          fulfillment_mode: fulfillmentMode,
+          order_type: fulfillmentMode,
           delivery_enabled: business.gastronomy_profile.delivery_enabled,
           customer_name: input.delivery_snapshot?.recipient_name ?? input.customer_snapshot?.full_name ?? null,
           customer_phone: input.delivery_snapshot?.phone ?? input.customer_snapshot?.phone ?? null,
@@ -252,7 +301,10 @@ export class GastronomyOrderOriginAdapter {
         discount_total: discountTotal,
       },
       items,
-      initial_financial_status: input.initial_financial_status,
+      initial_financial_status: this.resolveInitialFinancialStatus(
+        input.payment_method,
+        input.initial_financial_status,
+      ),
       actor_profile_id: input.actor_profile_id,
     };
   }

@@ -2,9 +2,10 @@
  * Debug: verifica se o Supabase URL está acessível
  */
 import { test, expect } from '@playwright/test';
+import { getOperationalEnv } from '../../helpers/operational-env';
 
 test('debug - check supabase connectivity', async ({ page }) => {
-  const supabaseUrl = process.env.VITE_SUPABASE_URL;
+  const supabaseUrl = getOperationalEnv().supabaseUrl;
   console.log('Supabase URL:', supabaseUrl);
 
   // Interceptar requests para ver o que está sendo enviado

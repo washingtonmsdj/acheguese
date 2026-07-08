@@ -713,9 +713,9 @@ export const INPUT_VALIDATION = {
  * MUST be updated on every security config change.
  */
 export const SECURITY_AUDIT_LOG = {
-  lastReview: '2026-06-05',
+  lastReview: '2026-07-08',
   reviewer: 'Codex',
-  version: '2.14.0',
+  version: '2.21.0',
   changes: [
     'Initial SSOT implementation',
     'CSP directives centralized',
@@ -795,8 +795,22 @@ export const SECURITY_AUDIT_LOG = {
     'FIX: increment_alert_edit_count agora exige dono do alerta/admin/service_role',
     'FIX: expire_stale_work_opportunities ignora p_now de clientes e aceita override apenas service_role',
     'FIX: validate:migrations bloqueia RPC mutante SECURITY DEFINER exposto sem guarda de auth',
+    // v2.15.0 - Security Authority release gate review
+    'AUDIT: revisao de CSP, headers, dominios, vercel.json e hardcodes de seguranca sem erros; security:config:validate integrado ao verify:deploy',
+    // v2.16.0 - Supabase UI access boundary
+    'FIX: security:validate bloqueia acesso direto a supabase.from/rpc/storage/auth em pages, components, hooks e contexts',
+    // v2.17.0 - Supabase Edge Function broker boundary
+    'FIX: Edge Function brokers centralizados em helper de infraestrutura sem mover regras de dominio para pasta Supabase',
+    // v2.18.0 - Edge Function broker migration completed
+    'FIX: todos os brokers body action/params migrados para edgeFunctionBroker, incluindo modo command sem payload artificial',
+    // v2.19.0 - Edge Function broker boundary gate
+    'FIX: security:validate bloqueia body action/params fora do helper canonico edgeFunctionBroker',
+    // v2.20.0 - Supabase Auth HIBP operator auditability
+    'FIX: operador HIBP remoto valida entradas e gera status JSON sem expor PAT',
+    // v2.21.0 - Supabase PostGIS owner preflight operator
+    'FIX: operador PostGIS read-only valida ownership antes de permitir marker extension-owner-preflight',
   ],
-  nextReview: '2026-07-04',
+  nextReview: '2026-08-07',
 } as const;
 
 /**
@@ -869,9 +883,9 @@ export const CACHE_HEADERS = {
  * Metadata about this configuration file.
  */
 export const SECURITY_CONFIG_METADATA = {
-  version: '2.14.0',
+  version: '2.21.0',
   created: '2026-04-18',
-  lastModified: '2026-06-05',
+  lastModified: '2026-07-08',
   author: 'Kiro AI',
   purpose: 'Single Source of Truth for security configurations',
   criticality: 'CRITICAL',

@@ -88,6 +88,8 @@ Thumbs.db
 *service_role*
 *SERVICE_ROLE*
 *service-role*
+!docs/governance/security/SERVICE_ROLE_BOUNDARY_POLICY.json
+!scripts/security/service-role-boundary.mjs
 
 # Firebase credentials
 *firebase*service*account*.json
@@ -166,6 +168,7 @@ test-output.txt
 !src/core/public-identity/utils/reserved-names.communication.test.ts
 
 # Runtime artifacts
+/.codex-artifacts/
 /artifacts/
 /tmp/
 /playwright-report/

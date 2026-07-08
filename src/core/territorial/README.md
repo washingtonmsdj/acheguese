@@ -195,11 +195,14 @@ const result = await territorialRolloutService.activateRolloutForGroup({
 ### TerritoryFilter
 
 ```typescript
-import { useTerritoryFilter } from '@/core/location';
+import { useModuleTerritoryFilter } from '@/core/location';
 
-// Em componente de rota territorial
-const { resolved } = useTerritorialContext();
-const filter = useTerritoryFilter(resolved);
+// Em pagina de modulo com rota territorial
+const { resolved, activeMemberIds } = useTerritorialContext();
+const { territoryFilter: filter } = useModuleTerritoryFilter({
+  routeResolved: resolved,
+  activeMemberIds,
+});
 
 // filter.scope === 'location' → bairro único
 // filter.scope === 'group'    → grupo de bairros
