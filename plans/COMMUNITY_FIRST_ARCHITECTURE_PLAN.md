@@ -1023,8 +1023,10 @@ Tarefas:
 - [x] definir tipos de link e status;
 - [x] criar contrato backend/RLS e fachada canonica em `community-experience`;
 - [ ] criar services por dominio para expor elegibilidade especifica;
-- adaptar Home/Comunidade a consumir links quando existirem;
-- manter fallback por territorio durante migracao.
+- [x] adaptar Home/Comunidade a consumir links quando existirem para
+  empresas, profissionais/servicos e classificados;
+- [x] manter fallback por territorio durante migracao;
+- [ ] ampliar consumo para eventos, gastronomia dedicada e busca global.
 
 Criterio de pronto:
 
@@ -1039,6 +1041,13 @@ Evidencia parcial:
   privado de moderacao e trigger privado de validacao;
 - `CommunityEntityLinkRepository` e `CommunityEntityLinkService` sao a fronteira
   canonica do app;
+- `LandingFeaturedService.getCommunityFeaturedBusinesses`,
+  `getCommunityFeaturedServices` e `getCommunityFeaturedClassifieds` preferem
+  links ativos da comunidade e caem para o filtro territorial quando nao ha
+  vinculos;
+- `useLandingFeatured`, `TerritorialLandingPage` e `CommunityRightSidebar`
+  consomem `community_entity_links` indiretamente por service, sem Supabase
+  direto fora do SSOT;
 - `validate-project-taxonomy` e `check:ssot` bloqueiam acesso paralelo a
   `community_entity_links`.
 

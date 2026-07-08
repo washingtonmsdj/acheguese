@@ -149,10 +149,39 @@ describe("community supabase security audit", () => {
 
     expect(repository).toContain('.from("community_entity_links" as never)');
     expect(service).toContain("CommunityEntityLinkRepository");
+    expect(service).toContain("listActiveByCommunity");
     expect(taxonomy).toContain("community_entity_links");
     expect(taxonomy).toContain("CommunityEntityLinkRepository.ts");
     expect(architecture).toContain("community_entity_links");
     expect(architecture).toContain("CommunityEntityLinkRepository.ts");
+  });
+
+  it("wires community entity links into public discovery without bypassing the SSOT", () => {
+    const landingFeatured = readProjectFile(
+      "src/core/landing/services/LandingFeaturedService.ts",
+    );
+    const landingHook = readProjectFile("src/core/landing/hooks/useLandingFeatured.ts");
+    const territorialLanding = readProjectFile(
+      "src/core/routing/components/TerritorialLandingPage.tsx",
+    );
+    const communitySidebar = readProjectFile(
+      "src/core/community/components/CommunityRightSidebar.tsx",
+    );
+    const communityPage = readProjectFile("src/core/community/pages/ComunidadePage.tsx");
+
+    expect(landingFeatured).toContain("CommunityEntityLinkService");
+    expect(landingFeatured).toContain("getCommunityFeaturedBusinesses");
+    expect(landingFeatured).toContain("getCommunityFeaturedServices");
+    expect(landingFeatured).toContain("getCommunityFeaturedClassifieds");
+    expect(landingHook).toContain("communityId");
+    expect(landingHook).toContain("getCommunityFeaturedBusinesses");
+    expect(territorialLanding).toContain("useCommunityProfile");
+    expect(territorialLanding).toContain("isPersistedCommunityId");
+    expect(territorialLanding).toContain("useLandingFeatured(filter, {");
+    expect(communitySidebar).toContain("getCommunityFeaturedBusinesses");
+    expect(communitySidebar).not.toContain("BusinessService.getBusinessesList");
+    expect(communityPage).toContain("linkedCommunityId");
+    expect(communityPage).toContain("communityId={linkedCommunityId}");
   });
 
   it("requires verified residence for community alert and issue creation RPCs", () => {

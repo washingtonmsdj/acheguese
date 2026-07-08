@@ -7,7 +7,9 @@
 import { logger } from "@/shared/utils/logger";
 import { supabase } from "@/integrations/supabase";
 import { applyTerritoryFilter } from "@/core/location/utils";
+import { CommunityEntityLinkService } from "@/core/community-experience/services/CommunityEntityLinkService";
 import type { TerritoryFilter } from "@/core/location/types";
+import type { CommunityEntityType } from "@/core/community-experience/types";
 
 type ErrorLike = {
   message?: string | null;
@@ -77,6 +79,7 @@ export interface TerritoryStats {
 }
 
 interface FeaturedBusinessRow {
+  id: string;
   profile_id: string;
   business_name: string | null;
   category: string | null;
@@ -131,6 +134,90 @@ function getStringArray(value: unknown): string[] {
   return value.filter((item): item is string => typeof item === "string");
 }
 
+function mapFeaturedBusinessRow(row: FeaturedBusinessRow): FeaturedBusiness {
+  return {
+    id: row.profile_id,
+    name: row.business_name ?? "",
+    category: row.category ?? "",
+    logo_url: getLogoUrl(row.metadata),
+    rating: row.rating ?? 0,
+    is_premium: row.is_premium ?? false,
+    is_verified: row.is_verified ?? false,
+    slug: row.slug ?? undefined,
+    geographic_path: row.location?.geographic_path ?? null,
+  };
+}
+
+function mapFeaturedServiceRow(row: FeaturedServiceRow): FeaturedService {
+  let priceDisplay = "A combinar";
+
+  if (row.price_type === "hourly" && row.hourly_rate) {
+    priceDisplay = `R$ ${row.hourly_rate}/h`;
+  } else if (row.price_type === "fixed" && row.price_range) {
+    priceDisplay = row.price_range;
+  } else if (row.price_type === "free") {
+    priceDisplay = "Gratuito";
+  } else if (row.price_type === "package") {
+    priceDisplay = row.price_range || "Pacotes disponiveis";
+  } else if (row.price_type === "consultation") {
+    priceDisplay = "Sob consulta";
+  } else if (row.price_range) {
+    priceDisplay = row.price_range;
+  }
+
+  return {
+    id: row.id,
+    name: row.professional_name ?? "",
+    category: row.service_category ?? "",
+    logo_url: getLogoUrl(row.metadata),
+    rating: row.rating ?? 0,
+    is_verified: row.is_verified ?? false,
+    price_range: priceDisplay,
+  };
+}
+
+function mapFeaturedClassifiedRow(row: FeaturedClassifiedRow): FeaturedClassified {
+  return {
+    id: row.id,
+    titulo: row.title ?? row.description ?? "Classificado",
+    category: row.category ?? "",
+    price: row.price ?? 0,
+    photos: getStringArray(row.photos),
+    created_at: row.created_at ?? "",
+    public_id: row.public_id ?? undefined,
+    slug: row.slug ?? undefined,
+    geographic_path: row.locations?.geographic_path ?? undefined,
+    category_slug: row.classified_categories?.slug ?? undefined,
+    subcategory_slug: row.classified_subcategories?.slug ?? undefined,
+  };
+}
+
+function orderRowsByLinkedEntityIds<TRow extends { id: string }>(
+  entityIds: readonly string[],
+  rows: readonly TRow[],
+): TRow[] {
+  const rowsById = new Map(rows.map((row) => [row.id, row]));
+  return entityIds
+    .map((id) => rowsById.get(id))
+    .filter((row): row is TRow => Boolean(row));
+}
+
+async function getLinkedEntityIds(
+  communityId: string | null | undefined,
+  entityType: CommunityEntityType,
+  limit: number,
+): Promise<string[] | null> {
+  if (!communityId) return null;
+
+  const links = await CommunityEntityLinkService.listActiveByCommunity(communityId, {
+    entityTypes: [entityType],
+    limit,
+  });
+
+  if (links.length === 0) return null;
+  return links.map((link) => link.entity_id);
+}
+
 export class LandingFeaturedService {
   static async getFeaturedBusinesses(
     filter: TerritoryFilter,
@@ -140,7 +227,7 @@ export class LandingFeaturedService {
     try {
       let query = landingDb
         .from<FeaturedBusinessRow>("business_data")
-        .select("profile_id, business_name, category, metadata, rating, is_premium, is_verified, slug, location:locations!location_id(geographic_path)")
+        .select("id, profile_id, business_name, category, metadata, rating, is_premium, is_verified, slug, location:locations!location_id(geographic_path)")
         .eq("status", "active")
         .not("location_id", "is", null)
         .order("is_premium", { ascending: false })
@@ -157,19 +244,42 @@ export class LandingFeaturedService {
       }
 
       const rows = (data ?? []) as FeaturedBusinessRow[];
-      return rows.map((d): FeaturedBusiness => ({
-        id: d.profile_id,
-        name: d.business_name ?? "",
-        category: d.category ?? "",
-        logo_url: getLogoUrl(d.metadata),
-        rating: d.rating ?? 0,
-        is_premium: d.is_premium ?? false,
-        is_verified: d.is_verified ?? false,
-        slug: d.slug ?? undefined,
-        geographic_path: d.location?.geographic_path ?? null,
-      }));
+      return rows.map(mapFeaturedBusinessRow);
     } catch (err) {
       logger.warn("LandingFeaturedService.getFeaturedBusinesses unexpected", getErrorMessage(err));
+      return [];
+    }
+  }
+
+  static async getCommunityFeaturedBusinesses(
+    communityId: string | null | undefined,
+    fallbackFilter: TerritoryFilter,
+    limit = 4,
+  ): Promise<FeaturedBusiness[]> {
+    const linkedIds = await getLinkedEntityIds(communityId, "business", limit);
+    if (!linkedIds) {
+      return this.getFeaturedBusinesses(fallbackFilter, limit);
+    }
+
+    try {
+      const { data, error } = await landingDb
+        .from<FeaturedBusinessRow>("business_data")
+        .select("id, profile_id, business_name, category, metadata, rating, is_premium, is_verified, slug, location:locations!location_id(geographic_path)")
+        .eq("status", "active")
+        .in("id", linkedIds);
+
+      if (error) {
+        logger.warn("LandingFeaturedService.getCommunityFeaturedBusinesses", error.message);
+        return [];
+      }
+
+      return orderRowsByLinkedEntityIds(linkedIds, (data ?? []) as FeaturedBusinessRow[])
+        .map(mapFeaturedBusinessRow);
+    } catch (err) {
+      logger.warn(
+        "LandingFeaturedService.getCommunityFeaturedBusinesses unexpected",
+        getErrorMessage(err),
+      );
       return [];
     }
   }
@@ -201,35 +311,43 @@ export class LandingFeaturedService {
       }
 
       const rows = (data ?? []) as FeaturedServiceRow[];
-      return rows.map((d): FeaturedService => {
-        let priceDisplay = "A combinar";
-
-        if (d.price_type === "hourly" && d.hourly_rate) {
-          priceDisplay = `R$ ${d.hourly_rate}/h`;
-        } else if (d.price_type === "fixed" && d.price_range) {
-          priceDisplay = d.price_range;
-        } else if (d.price_type === "free") {
-          priceDisplay = "Gratuito";
-        } else if (d.price_type === "package") {
-          priceDisplay = d.price_range || "Pacotes disponiveis";
-        } else if (d.price_type === "consultation") {
-          priceDisplay = "Sob consulta";
-        } else if (d.price_range) {
-          priceDisplay = d.price_range;
-        }
-
-        return {
-          id: d.id,
-          name: d.professional_name ?? "",
-          category: d.service_category ?? "",
-          logo_url: getLogoUrl(d.metadata),
-          rating: d.rating ?? 0,
-          is_verified: d.is_verified ?? false,
-          price_range: priceDisplay,
-        };
-      });
+      return rows.map(mapFeaturedServiceRow);
     } catch (err) {
       logger.warn("LandingFeaturedService.getFeaturedServices unexpected", getErrorMessage(err));
+      return [];
+    }
+  }
+
+  static async getCommunityFeaturedServices(
+    communityId: string | null | undefined,
+    fallbackFilter: TerritoryFilter,
+    limit = 4,
+  ): Promise<FeaturedService[]> {
+    const linkedIds = await getLinkedEntityIds(communityId, "professional", limit);
+    if (!linkedIds) {
+      return this.getFeaturedServices(fallbackFilter, limit);
+    }
+
+    try {
+      const { data, error } = await landingDb
+        .from<FeaturedServiceRow>("professional_data")
+        .select("id, professional_name, service_category, metadata, rating, is_verified, price_range, price_type, hourly_rate")
+        .eq("is_accepting_clients", true)
+        .eq("visibility", "public_listed")
+        .in("id", linkedIds);
+
+      if (error) {
+        logger.warn("LandingFeaturedService.getCommunityFeaturedServices", error.message);
+        return [];
+      }
+
+      return orderRowsByLinkedEntityIds(linkedIds, (data ?? []) as FeaturedServiceRow[])
+        .map(mapFeaturedServiceRow);
+    } catch (err) {
+      logger.warn(
+        "LandingFeaturedService.getCommunityFeaturedServices unexpected",
+        getErrorMessage(err),
+      );
       return [];
     }
   }
@@ -271,21 +389,56 @@ export class LandingFeaturedService {
       }
 
       const rows = (data ?? []) as FeaturedClassifiedRow[];
-      return rows.map((d): FeaturedClassified => ({
-        id: d.id,
-        titulo: d.title ?? d.description ?? "Classificado",
-        category: d.category ?? "",
-        price: d.price ?? 0,
-        photos: getStringArray(d.photos),
-        created_at: d.created_at ?? "",
-        public_id: d.public_id ?? undefined,
-        slug: d.slug ?? undefined,
-        geographic_path: d.locations?.geographic_path ?? undefined,
-        category_slug: d.classified_categories?.slug ?? undefined,
-        subcategory_slug: d.classified_subcategories?.slug ?? undefined,
-      }));
+      return rows.map(mapFeaturedClassifiedRow);
     } catch (err) {
       logger.warn("LandingFeaturedService.getFeaturedClassifieds unexpected", getErrorMessage(err));
+      return [];
+    }
+  }
+
+  static async getCommunityFeaturedClassifieds(
+    communityId: string | null | undefined,
+    fallbackFilter: TerritoryFilter,
+    limit = 4,
+  ): Promise<FeaturedClassified[]> {
+    const linkedIds = await getLinkedEntityIds(communityId, "classified", limit);
+    if (!linkedIds) {
+      return this.getFeaturedClassifieds(fallbackFilter, limit);
+    }
+
+    try {
+      // eslint-disable-next-line ssot/no-direct-classified-access
+      const { data, error } = await landingDb
+        .from<FeaturedClassifiedRow>("classifieds")
+        .select(`
+          id,
+          title,
+          description,
+          category,
+          price,
+          photos,
+          created_at,
+          public_id,
+          slug,
+          locations(geographic_path),
+          classified_categories(slug),
+          classified_subcategories(slug)
+        `)
+        .eq("status", "active")
+        .in("id", linkedIds);
+
+      if (error) {
+        logger.warn("LandingFeaturedService.getCommunityFeaturedClassifieds", error.message);
+        return [];
+      }
+
+      return orderRowsByLinkedEntityIds(linkedIds, (data ?? []) as FeaturedClassifiedRow[])
+        .map(mapFeaturedClassifiedRow);
+    } catch (err) {
+      logger.warn(
+        "LandingFeaturedService.getCommunityFeaturedClassifieds unexpected",
+        getErrorMessage(err),
+      );
       return [];
     }
   }

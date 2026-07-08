@@ -38,6 +38,8 @@ import { BusinessLogo } from '@/shared/components/ui/business-logo';
 import { useTerritorialContext } from './TerritorialLayout';
 import { useModuleTerritoryFilter } from '@/core/location';
 import { useLandingFeatured } from '@/core/landing/hooks/useLandingFeatured';
+import { useCommunityProfile } from '@/core/community-experience/hooks/useCommunityProfile';
+import { isPersistedCommunityId } from '@/core/community-experience/types';
 import { useTerritorialHighlights } from '@/core/territorial/highlights/useTerritorialHighlights';
 import { useTerritoryStats } from '@/core/territorial/hooks/useTerritoryStats';
 import { getCityStateFromResolved, formatCityState } from '@/core/location/utils/territoryHelpers';
@@ -313,9 +315,16 @@ export function TerritorialLandingPage() {
     routeResolved: resolved,
     activeMemberIds,
   });
+  const communityProfileQuery = useCommunityProfile(resolved);
 
   const filter = moduleTerritory.territoryFilter;
-  const { businesses, services, classifieds, stats, isLoading } = useLandingFeatured(filter);
+  const communityId = isPersistedCommunityId(communityProfileQuery.data?.id)
+    ? communityProfileQuery.data.id
+    : null;
+  const { businesses, services, classifieds, stats, isLoading } = useLandingFeatured(filter, {
+    communityId,
+    enabled: !communityProfileQuery.isLoading,
+  });
   const { data: allHighlights = [], isLoading: highlightsLoading } = useTerritorialHighlights(resolved);
   const { data: territoryStats, isLoading: statsLoading } = useTerritoryStats(resolved);
   // Aplica limite editorial de highlights

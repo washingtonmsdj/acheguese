@@ -70,6 +70,8 @@ import type { TerritorialFeedChannel } from "@/core/community/hooks/feed/territo
 import { getPublicPostPreview } from "@/core/posts/utils/publicPostContent";
 import { useFriendlyModuleUrls } from "@/core/routing/hooks/useFriendlyModuleUrls";
 import { withQueryParams } from "@/core/landing/utils/landingPresentation";
+import { useCommunityProfile } from "@/core/community-experience/hooks/useCommunityProfile";
+import { isPersistedCommunityId } from "@/core/community-experience/types";
 
 const GruposPage = lazy(() => import("./GruposPage"));
 
@@ -156,6 +158,7 @@ function PublicTerritorialFeed({
   onRequireLogin,
   loginHref,
   publishHref,
+  communityId,
 }: {
   resolved?: ResolvedTerritory;
   territoryName: string;
@@ -165,6 +168,7 @@ function PublicTerritorialFeed({
   onRequireLogin: () => void;
   loginHref: string;
   publishHref: string;
+  communityId?: string | null;
 }) {
   const { posts, isLoading, isError, error, hasNextPage, isFetchingNextPage, loadMore } =
     useCommunityFeedSimple({
@@ -445,7 +449,11 @@ function PublicTerritorialFeed({
               </Link>
             </div>
           </section>
-          <CommunityRightSidebar resolved={resolved} territoryFilter={territoryFilter} />
+          <CommunityRightSidebar
+            resolved={resolved}
+            territoryFilter={territoryFilter}
+            communityId={communityId}
+          />
         </div>
       </aside>
     </div>
@@ -506,6 +514,10 @@ export default function ComunidadePage({ resolved, activeMemberIds }: Comunidade
   // SSOT: guarda de acesso por UUID canônico, não por string de perfil
   const { homeDistrict, homeCity, loading: territoryLoading } = useUserTerritory();
   const communityAccess = useCommunityAccess({ resolved: resolved ?? null, activeMemberIds });
+  const communityProfileQuery = useCommunityProfile(resolved ?? null);
+  const linkedCommunityId = isPersistedCommunityId(communityProfileQuery.data?.id)
+    ? communityProfileQuery.data.id
+    : communityAccess.communityId;
   const setTab = (tab: CommunityTab) => {
     const canonicalPath = buildCommunityTabUrlFromPath(location.pathname, tab);
     if (canonicalPath) {
@@ -757,6 +769,7 @@ export default function ComunidadePage({ resolved, activeMemberIds }: Comunidade
               onRequireLogin={handleRequireLogin}
               loginHref={loginHref}
               publishHref={publishRedirectHref}
+              communityId={linkedCommunityId}
             />
           </div>
         </div>
@@ -896,6 +909,7 @@ export default function ComunidadePage({ resolved, activeMemberIds }: Comunidade
                 <CommunityRightSidebar
                   resolved={resolved}
                   territoryFilter={communityTerritoryFilter}
+                  communityId={linkedCommunityId}
                 />
               </div>
             </aside>

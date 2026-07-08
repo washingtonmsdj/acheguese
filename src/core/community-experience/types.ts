@@ -196,6 +196,17 @@ export interface CommunityEntityLinkListOptions {
   limit?: number;
 }
 
+export function isPersistedCommunityId(
+  value: string | null | undefined,
+): value is string {
+  return Boolean(
+    value &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        value,
+      ),
+  );
+}
+
 export function isCommunityRouteableTerritoryType(
   value: string | null | undefined,
 ): value is CommunityRouteableTerritoryType {

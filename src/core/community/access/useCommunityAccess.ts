@@ -15,7 +15,10 @@ import {
   type CommunityAccessLevel,
   type CommunityAccessTarget,
 } from "./CommunityAccessPolicy";
-import type { CommunityMembershipRecord } from "@/core/community-experience/types";
+import {
+  isPersistedCommunityId,
+  type CommunityMembershipRecord,
+} from "@/core/community-experience/types";
 
 export interface UseCommunityAccessInput {
   readonly resolved: CommunityAccessTarget;
@@ -61,15 +64,6 @@ function loadingDecision(level: CommunityAccessLevel = "public_preview"): Commun
     primaryAction: "none",
     targetLocationIds: [],
   };
-}
-
-function isPersistedCommunityId(value: string | null | undefined): value is string {
-  return Boolean(
-    value &&
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-        value,
-      ),
-  );
 }
 
 function getCommunityAccessTargetKey(resolved: CommunityAccessTarget): string {
@@ -229,7 +223,6 @@ export function useCommunityAccess({
     isLoading,
     isBlocked,
     isModerator,
-    communityId,
     membershipRequired,
     membershipQuery.data,
     residenceQuery.data,

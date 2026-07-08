@@ -55,11 +55,14 @@ export class CommunityEntityLinkRepository {
     communityId: string,
     options: CommunityEntityLinkListOptions = {},
   ): Promise<CommunityEntityLinkRecord[]> {
+    const now = new Date().toISOString();
     let query = supabase
       .from("community_entity_links" as never)
       .select(COMMUNITY_ENTITY_LINK_SELECT)
       .eq("community_id", communityId)
       .eq("status", "active")
+      .or(`starts_at.is.null,starts_at.lte.${now}`)
+      .or(`ends_at.is.null,ends_at.gt.${now}`)
       .order("priority", { ascending: false })
       .order("created_at", { ascending: false });
 

@@ -10,7 +10,6 @@ import {
   Wrench,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { BusinessService } from "@/core/business/services/BusinessService";
 import { useBusinessUrls } from "@/core/business/hooks/useBusinessUrls";
 import { usePublicBrowsingCity } from "@/core/location/hooks/usePublicBrowsingCity";
 import {
@@ -18,13 +17,15 @@ import {
   territoryFilterKey,
 } from "@/core/location/hooks/useTerritoryFilter";
 import { useFriendlyModuleUrls } from "@/core/routing/hooks/useFriendlyModuleUrls";
-import type { Business } from "@/core/business/types/Business";
+import { LandingFeaturedService } from "@/core/landing/services/LandingFeaturedService";
+import type { FeaturedBusiness } from "@/core/landing/types";
 import type { TerritoryFilter } from "@/core/location";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 
 interface CommunityRightSidebarProps {
   resolved?: ResolvedTerritory;
   territoryFilter: TerritoryFilter;
+  communityId?: string | null;
 }
 
 function SidebarSection({
@@ -73,7 +74,7 @@ function formatSlugLabel(value: string): string {
 }
 
 function buildBusinessHref(
-  business: Business,
+  business: FeaturedBusiness,
   canonicalUrl: (ctx: {
     id: string;
     slug: string;
@@ -83,7 +84,7 @@ function buildBusinessHref(
 ): string | null {
   if (!business.slug) return null;
 
-  const geographicPath = business.geographic_path ?? business.location?.geographic_path;
+  const geographicPath = business.geographic_path;
   if (!geographicPath) return null;
 
   try {
@@ -104,7 +105,7 @@ function normalizeCategoryLabel(value?: string | null): string {
 }
 
 export const CommunityRightSidebar = memo(
-  ({ resolved, territoryFilter }: CommunityRightSidebarProps) => {
+  ({ resolved, territoryFilter, communityId = null }: CommunityRightSidebarProps) => {
     const { active } = usePublicBrowsingCity();
     const moduleUrls = useFriendlyModuleUrls();
     const businessUrls = useBusinessUrls(resolved);
@@ -135,14 +136,17 @@ export const CommunityRightSidebar = memo(
     );
 
     const { data: businesses = [], isLoading: loadingBusinesses } = useQuery({
-      queryKey: ["community-sidebar", "businesses", filterKey],
+      queryKey: [
+        "community-sidebar",
+        "businesses",
+        communityId ? `community:${communityId}` : `territory:${filterKey}`,
+      ],
       queryFn: async () => {
-        const result = await BusinessService.getBusinessesList({
-          filter: territoryFilter,
-          pageSize: 4,
-          sortBy: "rating",
-        });
-        return result.businesses;
+        return LandingFeaturedService.getCommunityFeaturedBusinesses(
+          communityId,
+          territoryFilter,
+          4,
+        );
       },
       enabled: filterReady,
       staleTime: 5 * 60 * 1000,
@@ -227,7 +231,7 @@ export const CommunityRightSidebar = memo(
                         {normalizeCategoryLabel(business.category)}
                       </p>
                       <p className="text-xs text-primary">
-                        {rating ? `${rating} (${business.total_reviews ?? 0})` : "Sem avaliações"}
+                        {rating ?? "Sem avaliações"}
                       </p>
                     </div>
                   </>

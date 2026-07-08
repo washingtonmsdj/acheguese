@@ -73,6 +73,12 @@ contrato vincula entidades canonicas a uma ou mais comunidades sem copiar dados
 mestres. Moderacao, destaque e ranking local pertencem ao link; identidade,
 status publico e conteudo principal continuam no dominio original.
 
+Descoberta publica e Home/Comunidade devem consumir esses vinculos
+indiretamente por services. `LandingFeaturedService` pode compor os links ativos
+da comunidade com os dados publicos dos dominios canonicos para blocos de
+empresas, servicos/profissionais e classificados, mantendo fallback territorial
+quando uma comunidade ainda nao tem vinculos ativos.
+
 `src/core/community/access/useCommunityAccess.ts` e o gate central de
 permissoes da experiencia comunitaria. Ele pode consumir
 `CommunityExperienceService` e `CommunityMembershipService` para resolver a
