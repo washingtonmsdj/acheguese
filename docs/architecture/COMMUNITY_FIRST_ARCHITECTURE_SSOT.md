@@ -93,6 +93,8 @@ mais comunidades sem copiar seus dados mestres:
 - Empresas: `business_data`, `src/core/business`
 - Gastronomia: `gastronomy_profiles`, `menu_*`, `orders`,
   `src/core/verticals/gastronomy`, `src/modules/business/gastronomy`
+  - descoberta publica deve usar `gastronomy_profiles` ativo e read model
+    canonico de gastronomia, nao inferencia por texto de categoria.
 - Servicos/profissionais: `professional_data`, `src/core/professional`,
   `src/modules/professionals/services`
 - Classificados: `classifieds`, `src/core/classifieds`,

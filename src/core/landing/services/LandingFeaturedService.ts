@@ -8,8 +8,13 @@ import { logger } from "@/shared/utils/logger";
 import { supabase } from "@/integrations/supabase";
 import { applyTerritoryFilter } from "@/core/location/utils";
 import { CommunityEntityLinkService } from "@/core/community-experience/services/CommunityEntityLinkService";
+import {
+  getGastronomyBusinesses,
+  getGastronomyBusinessesByIds,
+} from "@/core/business/services/gastronomy.queries";
 import type { TerritoryFilter } from "@/core/location/types";
 import type { CommunityEntityType } from "@/core/community-experience/types";
+import type { GastronomyBusiness } from "@/core/business/types";
 
 type ErrorLike = {
   message?: string | null;
@@ -35,6 +40,7 @@ type LandingDbClient = {
 };
 
 const landingDb = supabase as unknown as LandingDbClient;
+const GASTRONOMY_LINK_CANDIDATE_MULTIPLIER = 6;
 
 export interface FeaturedBusiness {
   id: string;
@@ -148,6 +154,20 @@ function mapFeaturedBusinessRow(row: FeaturedBusinessRow): FeaturedBusiness {
   };
 }
 
+function mapGastronomyBusinessToFeaturedBusiness(business: GastronomyBusiness): FeaturedBusiness {
+  return {
+    id: business.id,
+    name: business.name,
+    category: business.category,
+    logo_url: business.logo_url,
+    rating: business.rating,
+    is_premium: business.is_premium,
+    is_verified: business.is_verified,
+    slug: business.slug,
+    geographic_path: business.geographic_path ?? null,
+  };
+}
+
 function mapFeaturedServiceRow(row: FeaturedServiceRow): FeaturedService {
   let priceDisplay = "A combinar";
 
@@ -200,6 +220,18 @@ function orderRowsByLinkedEntityIds<TRow extends { id: string }>(
   return entityIds
     .map((id) => rowsById.get(id))
     .filter((row): row is TRow => Boolean(row));
+}
+
+function orderGastronomyByLinkedBusinessIds(
+  businessDataIds: readonly string[],
+  businesses: readonly GastronomyBusiness[],
+): GastronomyBusiness[] {
+  const rowsByBusinessDataId = new Map(
+    businesses.map((business) => [business.business_data_id, business]),
+  );
+  return businessDataIds
+    .map((id) => rowsByBusinessDataId.get(id))
+    .filter((business): business is GastronomyBusiness => Boolean(business));
 }
 
 async function getLinkedEntityIds(
@@ -278,6 +310,58 @@ export class LandingFeaturedService {
     } catch (err) {
       logger.warn(
         "LandingFeaturedService.getCommunityFeaturedBusinesses unexpected",
+        getErrorMessage(err),
+      );
+      return [];
+    }
+  }
+
+  static async getFeaturedGastronomyBusinesses(
+    filter: TerritoryFilter,
+    limit = 4,
+  ): Promise<FeaturedBusiness[]> {
+    if (filter.scope === "none") return [];
+
+    try {
+      const businesses = await getGastronomyBusinesses({ territoryFilter: filter });
+      return businesses
+        .slice(0, limit)
+        .map(mapGastronomyBusinessToFeaturedBusiness);
+    } catch (err) {
+      logger.warn(
+        "LandingFeaturedService.getFeaturedGastronomyBusinesses unexpected",
+        getErrorMessage(err),
+      );
+      return [];
+    }
+  }
+
+  static async getCommunityFeaturedGastronomyBusinesses(
+    communityId: string | null | undefined,
+    fallbackFilter: TerritoryFilter,
+    limit = 4,
+  ): Promise<FeaturedBusiness[]> {
+    const linkedIds = await getLinkedEntityIds(
+      communityId,
+      "business",
+      Math.max(limit * GASTRONOMY_LINK_CANDIDATE_MULTIPLIER, limit),
+    );
+    if (!linkedIds) {
+      return this.getFeaturedGastronomyBusinesses(fallbackFilter, limit);
+    }
+
+    try {
+      const businesses = await getGastronomyBusinessesByIds(linkedIds);
+      const orderedBusinesses = orderGastronomyByLinkedBusinessIds(linkedIds, businesses);
+
+      if (orderedBusinesses.length === 0) {
+        return this.getFeaturedGastronomyBusinesses(fallbackFilter, limit);
+      }
+
+      return orderedBusinesses.slice(0, limit).map(mapGastronomyBusinessToFeaturedBusiness);
+    } catch (err) {
+      logger.warn(
+        "LandingFeaturedService.getCommunityFeaturedGastronomyBusinesses unexpected",
         getErrorMessage(err),
       );
       return [];

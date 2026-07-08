@@ -172,12 +172,18 @@ describe("community supabase security audit", () => {
     expect(landingFeatured).toContain("CommunityEntityLinkService");
     expect(landingFeatured).toContain("getCommunityFeaturedBusinesses");
     expect(landingFeatured).toContain("getCommunityFeaturedServices");
+    expect(landingFeatured).toContain("getCommunityFeaturedGastronomyBusinesses");
     expect(landingFeatured).toContain("getCommunityFeaturedClassifieds");
+    expect(landingFeatured).toContain("getGastronomyBusinessesByIds");
+    expect(landingFeatured).toContain("orderGastronomyByLinkedBusinessIds");
     expect(landingHook).toContain("communityId");
     expect(landingHook).toContain("getCommunityFeaturedBusinesses");
+    expect(landingHook).toContain("getCommunityFeaturedGastronomyBusinesses");
     expect(territorialLanding).toContain("useCommunityProfile");
     expect(territorialLanding).toContain("isPersistedCommunityId");
     expect(territorialLanding).toContain("useLandingFeatured(filter, {");
+    expect(territorialLanding).toContain("gastronomy.length > 0");
+    expect(territorialLanding).not.toContain(".filter(b => ['restaurante'");
     expect(communitySidebar).toContain("getCommunityFeaturedBusinesses");
     expect(communitySidebar).not.toContain("BusinessService.getBusinessesList");
     expect(communityPage).toContain("linkedCommunityId");

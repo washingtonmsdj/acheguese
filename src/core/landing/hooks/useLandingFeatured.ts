@@ -51,6 +51,16 @@ export function useLandingFeatured(
     staleTime: STALE_TIME,
   });
 
+  const gastronomy = useQuery({
+    queryKey: ['landing', 'gastronomy', discoveryKey],
+    queryFn: () =>
+      communityId
+        ? svc.getCommunityFeaturedGastronomyBusinesses(communityId, filter, FEATURED_LIMIT)
+        : svc.getFeaturedGastronomyBusinesses(filter, FEATURED_LIMIT),
+    enabled,
+    staleTime: STALE_TIME,
+  });
+
   const classifieds = useQuery({
     queryKey: ['landing', 'classifieds', discoveryKey],
     queryFn: () =>
@@ -71,11 +81,13 @@ export function useLandingFeatured(
   return {
     businesses:  businesses.data  ?? [],
     services:    services.data    ?? [],
+    gastronomy:  gastronomy.data  ?? [],
     classifieds: classifieds.data ?? [],
     stats: stats.data ?? { businesses: 0, services: 0, classifieds: 0 },
     isLoading:
       businesses.isLoading ||
       services.isLoading   ||
+      gastronomy.isLoading ||
       classifieds.isLoading ||
       stats.isLoading,
   };

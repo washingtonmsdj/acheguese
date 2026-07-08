@@ -321,7 +321,7 @@ export function TerritorialLandingPage() {
   const communityId = isPersistedCommunityId(communityProfileQuery.data?.id)
     ? communityProfileQuery.data.id
     : null;
-  const { businesses, services, classifieds, stats, isLoading } = useLandingFeatured(filter, {
+  const { businesses, services, gastronomy, classifieds, stats, isLoading } = useLandingFeatured(filter, {
     communityId,
     enabled: !communityProfileQuery.isLoading,
   });
@@ -598,10 +598,9 @@ export function TerritorialLandingPage() {
         </div>
         {isLoading ? (
           <BlockLoader />
-        ) : (
+        ) : gastronomy.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {businesses
-              .filter(b => ['restaurante', 'bar', 'lanchonete', 'padaria'].some(cat => b.category.toLowerCase().includes(cat)))
+            {gastronomy
               .slice(0, 3)
               .map((b) => (
                 <button
@@ -638,6 +637,11 @@ export function TerritorialLandingPage() {
                 </button>
               ))}
           </div>
+        ) : (
+          <EmptyBlock
+            label="Nenhuma opcao de gastronomia cadastrada aqui ainda."
+            hint="Restaurantes e bares aparecem quando tiverem perfil de gastronomia ativo neste territorio."
+          />
         )}
       </section>
 

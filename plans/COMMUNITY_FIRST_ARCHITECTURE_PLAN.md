@@ -1026,7 +1026,8 @@ Tarefas:
 - [x] adaptar Home/Comunidade a consumir links quando existirem para
   empresas, profissionais/servicos e classificados;
 - [x] manter fallback por territorio durante migracao;
-- [ ] ampliar consumo para eventos, gastronomia dedicada e busca global.
+- [x] ampliar consumo para gastronomia dedicada na landing territorial;
+- [ ] ampliar consumo para eventos e busca global.
 
 Criterio de pronto:
 
@@ -1042,9 +1043,12 @@ Evidencia parcial:
 - `CommunityEntityLinkRepository` e `CommunityEntityLinkService` sao a fronteira
   canonica do app;
 - `LandingFeaturedService.getCommunityFeaturedBusinesses`,
-  `getCommunityFeaturedServices` e `getCommunityFeaturedClassifieds` preferem
-  links ativos da comunidade e caem para o filtro territorial quando nao ha
-  vinculos;
+  `getCommunityFeaturedServices`, `getCommunityFeaturedGastronomyBusinesses`
+  e `getCommunityFeaturedClassifieds` preferem links ativos da comunidade e
+  caem para o filtro territorial quando nao ha vinculos;
+- Gastronomia dedicada usa `getGastronomyBusinesses`/
+  `getGastronomyBusinessesByIds` e exige `gastronomy_profiles` ativo, sem
+  heuristica local por texto de categoria na landing territorial;
 - `useLandingFeatured`, `TerritorialLandingPage` e `CommunityRightSidebar`
   consomem `community_entity_links` indiretamente por service, sem Supabase
   direto fora do SSOT;
