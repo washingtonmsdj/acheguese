@@ -11,6 +11,7 @@ existente e registrar o que ainda precisa ser implementado.
 ## Planos Ativos
 
 - [Security Authority - plano de implementacao](./SECURITY_AUTHORITY_IMPLEMENTATION_PLAN.md)
+- [Community First Architecture - plano de arquitetura](./COMMUNITY_FIRST_ARCHITECTURE_PLAN.md)
 
 ## Regras Para Novos Planos
 
@@ -19,4 +20,3 @@ existente e registrar o que ainda precisa ser implementado.
 - Evitar criar fonte paralela de verdade.
 - Separar claramente plano de implementacao real.
 - Manter checklist executavel para continuidade futura.
-
