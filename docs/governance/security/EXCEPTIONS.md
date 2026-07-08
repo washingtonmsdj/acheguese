@@ -119,6 +119,10 @@ extensoes, grants, RLS ou migrations; se retornar `blocked`, o marcador
   para extensoes `citext`, `pg_trgm`, `postgis`, `unaccent`,
   `public.spatial_ref_sys` e tres overloads `public.st_estimatedextent`, todos
   com owner `supabase_admin` e `ready=false`.
+- Nova execucao em 2026-07-08 confirmou o mesmo `status=blocked`, sem alteracao
+  remota e sem habilitar o marcador `extension-owner-preflight`.
+- `npm run security:advisor:residuals` em 2026-07-08 validou 12 achados
+  remotos, todos dentro dos residuais mapeados.
 - `supabase/migrations/20260707124929_revoke_public_postgis_estimatedextent_execute.sql`
   tentou revogar os overloads, mas os grants permaneceram por ownership/grantor
   da extensao.

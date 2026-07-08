@@ -957,6 +957,16 @@ Execucao real em 2026-07-08 retornou `blocked`: extensoes `citext`, `pg_trgm`,
 `postgis`, `unaccent`, `public.spatial_ref_sys` e tres overloads
 `public.st_estimatedextent` continuam owned por `supabase_admin` e nao devem
 receber migration padrao ate haver rota de plataforma/owner aprovada.
+Nova execucao em 2026-07-08 confirmou o mesmo `blocked`; isso preserva a
+excecao aberta e impede usar o marcador `extension-owner-preflight` sem rota de
+plataforma/owner.
+
+Resultado readiness em 2026-07-08: `npm run validate:docs-structure` e
+`npm run validate:docs-live-links` passaram, fechando os gates documentais
+citados na definicao de pronto.
+Resultado Advisor em 2026-07-08: `npm run security:advisor:residuals` validou
+12 achados remotos, todos dentro da allowlist canonica
+`docs/governance/security/SUPABASE_ADVISOR_RESIDUALS.json`.
 
 Resultado Auth policy em 2026-07-08: a mitigacao local da excecao HIBP foi
 alinhada ao SSOT de senha. O `supabase/config.toml` ficou com
