@@ -1,4 +1,8 @@
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
+import type {
+  CommunityMembershipRole,
+  CommunityMembershipStatus,
+} from "@/core/community-experience/types";
 
 export interface CommunityAccessLocationTarget {
   readonly kind: "location";
@@ -15,6 +19,8 @@ export type CommunityAccessLevel =
   | "authenticated"
   | "resident"
   | "verified_resident"
+  | "community_member"
+  | "verified_community_member"
   | "moderator"
   | "admin";
 
@@ -39,12 +45,21 @@ export interface CommunityAccessResidence {
   readonly isVerified: boolean;
 }
 
+export interface CommunityAccessMembership {
+  readonly communityId: string;
+  readonly role: CommunityMembershipRole;
+  readonly status: CommunityMembershipStatus;
+  readonly verifiedByResidence: boolean;
+}
+
 export interface CommunityAccessInput {
   readonly isAuthenticated: boolean;
   readonly hasActiveProfile: boolean;
   readonly isAdmin: boolean;
   readonly isModerator: boolean;
   readonly residence: CommunityAccessResidence | null;
+  readonly membership?: CommunityAccessMembership | null;
+  readonly membershipRequired?: boolean;
   readonly resolved: CommunityAccessTarget;
   readonly activeMemberIds?: readonly string[];
   readonly rolloutEnabled: boolean;
@@ -58,11 +73,22 @@ export interface CommunityAccessDecision {
     | "visitor"
     | "missing_profile"
     | "missing_residence"
+    | "missing_membership"
+    | "membership_pending"
+    | "membership_rejected"
+    | "membership_blocked"
     | "out_of_territory"
     | "unverified_residence"
     | "rollout_blocked"
     | "allowed";
-  readonly primaryAction: "login" | "create_profile" | "add_address" | "verify_address" | "waitlist" | "none";
+  readonly primaryAction:
+    | "login"
+    | "create_profile"
+    | "add_address"
+    | "verify_address"
+    | "request_membership"
+    | "waitlist"
+    | "none";
   readonly targetLocationIds: readonly string[];
 }
 
@@ -108,6 +134,33 @@ function permissionsFor(level: CommunityAccessLevel): Record<CommunityAction, bo
   }
 
   if (level === "verified_resident") {
+    can.view_member_feed = true;
+    can.create_post = true;
+    can.create_issue = true;
+    can.create_alert = true;
+    can.comment = true;
+    can.react = true;
+    can.save = true;
+    can.send_message = true;
+    can.join_group = true;
+    can.create_group = true;
+    can.report = true;
+    return can;
+  }
+
+  if (level === "community_member") {
+    can.view_member_feed = true;
+    can.create_post = true;
+    can.comment = true;
+    can.react = true;
+    can.save = true;
+    can.send_message = true;
+    can.join_group = true;
+    can.report = true;
+    return can;
+  }
+
+  if (level === "verified_community_member") {
     can.view_member_feed = true;
     can.create_post = true;
     can.create_issue = true;
@@ -203,16 +256,56 @@ export function resolveCommunityAccess(input: CommunityAccessInput): CommunityAc
     return buildDecision("authenticated", "missing_profile", "create_profile", targetLocationIds);
   }
 
+  if (!input.rolloutEnabled) {
+    return buildDecision("authenticated", "rollout_blocked", "waitlist", targetLocationIds);
+  }
+
+  if (input.membershipRequired) {
+    const membership = input.membership ?? null;
+
+    if (!membership) {
+      return buildDecision(
+        "authenticated",
+        "missing_membership",
+        "request_membership",
+        targetLocationIds,
+      );
+    }
+
+    if (membership.status === "pending") {
+      return buildDecision("authenticated", "membership_pending", "none", targetLocationIds);
+    }
+
+    if (membership.status === "rejected") {
+      return buildDecision("authenticated", "membership_rejected", "none", targetLocationIds);
+    }
+
+    if (membership.status === "blocked") {
+      return buildDecision("authenticated", "membership_blocked", "none", targetLocationIds);
+    }
+
+    const isVerifiedLocalResident =
+      input.residence?.isVerified === true &&
+      residenceMatchesTarget(input.residence, targetLocationIds);
+
+    if (!isVerifiedLocalResident) {
+      return buildDecision(
+        "community_member",
+        "unverified_residence",
+        "verify_address",
+        targetLocationIds,
+      );
+    }
+
+    return buildDecision("verified_community_member", "allowed", "none", targetLocationIds);
+  }
+
   if (!input.residence?.locationId) {
     return buildDecision("authenticated", "missing_residence", "add_address", targetLocationIds);
   }
 
   if (!residenceMatchesTarget(input.residence, targetLocationIds)) {
     return buildDecision("authenticated", "out_of_territory", "add_address", targetLocationIds);
-  }
-
-  if (!input.rolloutEnabled) {
-    return buildDecision("authenticated", "rollout_blocked", "waitlist", targetLocationIds);
   }
 
   if (!input.residence.isVerified) {

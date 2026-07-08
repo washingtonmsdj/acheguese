@@ -1,6 +1,6 @@
 # FASE 1 - Hardening Arquitetural (Gate-First)
 
-Gerado em: 2026-07-08T22:12:31.535Z
+Gerado em: 2026-07-08T22:29:45.978Z
 
 ## Problemas encontrados
 - Dependencias ciclicas detectadas: 7

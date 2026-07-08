@@ -16,9 +16,9 @@ export type CreatePostIntentId =
 
 export const DEFAULT_BLOCKED_POST_MESSAGE = "Publicar exige acesso comunitario valido.";
 export const DEFAULT_BLOCKED_ALERT_MESSAGE =
-  "Criar alerta exige residencia verificada neste territorio.";
+  "Criar alerta exige participacao ativa e residencia verificada neste territorio.";
 export const DEFAULT_BLOCKED_ISSUE_MESSAGE =
-  "Reportar problema exige residencia verificada neste territorio.";
+  "Reportar problema exige participacao ativa e residencia verificada neste territorio.";
 
 export function resolveCreatePostPublicationPermissionError({
   intent,

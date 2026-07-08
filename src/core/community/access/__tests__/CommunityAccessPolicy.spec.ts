@@ -49,6 +49,13 @@ const baseInput: CommunityAccessInput = {
   rolloutEnabled: true,
 };
 
+const activeMembership = {
+  communityId: "community-santa-cruz",
+  role: "member" as const,
+  status: "active" as const,
+  verifiedByResidence: false,
+};
+
 describe("CommunityAccessPolicy", () => {
   it("permite preview publico para visitante e bloqueia acoes residentes", () => {
     const decision = resolveCommunityAccess({
@@ -137,6 +144,69 @@ describe("CommunityAccessPolicy", () => {
     expect(decision.primaryAction).toBe("waitlist");
     expect(decision.can.view_public_preview).toBe(true);
     expect(decision.can.view_member_feed).toBe(false);
+  });
+
+  it("exige pedido de entrada quando a comunidade persistida usa membership", () => {
+    const decision = resolveCommunityAccess({
+      ...baseInput,
+      membershipRequired: true,
+      membership: null,
+    });
+
+    expect(decision.level).toBe("authenticated");
+    expect(decision.reason).toBe("missing_membership");
+    expect(decision.primaryAction).toBe("request_membership");
+    expect(decision.can.view_member_feed).toBe(false);
+    expect(decision.can.create_post).toBe(false);
+  });
+
+  it("mantem solicitacao pendente sem liberar interacoes", () => {
+    const decision = resolveCommunityAccess({
+      ...baseInput,
+      membershipRequired: true,
+      membership: {
+        ...activeMembership,
+        status: "pending",
+      },
+    });
+
+    expect(decision.level).toBe("authenticated");
+    expect(decision.reason).toBe("membership_pending");
+    expect(decision.primaryAction).toBe("none");
+    expect(decision.can.view_member_feed).toBe(false);
+    expect(decision.can.comment).toBe(false);
+  });
+
+  it("libera interacao social para membership ativa sem transformar isso em residencia verificada", () => {
+    const decision = resolveCommunityAccess({
+      ...baseInput,
+      residence: null,
+      membershipRequired: true,
+      membership: activeMembership,
+    });
+
+    expect(decision.level).toBe("community_member");
+    expect(decision.reason).toBe("unverified_residence");
+    expect(decision.can.view_member_feed).toBe(true);
+    expect(decision.can.create_post).toBe(true);
+    expect(decision.can.comment).toBe(true);
+    expect(decision.can.create_alert).toBe(false);
+    expect(decision.can.create_issue).toBe(false);
+  });
+
+  it("libera acoes locais sensiveis para membership ativa com residencia verificada no territorio", () => {
+    const decision = resolveCommunityAccess({
+      ...baseInput,
+      membershipRequired: true,
+      membership: activeMembership,
+    });
+
+    expect(decision.level).toBe("verified_community_member");
+    expect(decision.reason).toBe("allowed");
+    expect(decision.can.create_post).toBe(true);
+    expect(decision.can.create_issue).toBe(true);
+    expect(decision.can.create_alert).toBe(true);
+    expect(decision.can.create_group).toBe(true);
   });
 
   it("libera acoes comunitarias para morador verificado", () => {

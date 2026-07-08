@@ -213,7 +213,7 @@ export default function NovoAchadoPerdidoPage() {
 
   const onValid = async (data: NovoAchadoPerdidoInput) => {
     if (!communityAccess.can.create_post) {
-      toast({ title: "Publicar exige residencia verificada nesta comunidade.", variant: "destructive" });
+      toast({ title: "Publicar exige participacao ativa nesta comunidade.", variant: "destructive" });
       return;
     }
 

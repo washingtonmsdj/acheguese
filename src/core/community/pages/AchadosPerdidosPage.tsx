@@ -224,7 +224,7 @@ export default function AchadosPerdidosPage() {
   );
   const handleOpenCreateLostFound = () => {
     if (!communityAccess.can.create_post) {
-      toast.info("Publicar achados e perdidos exige residencia verificada neste territorio.");
+      toast.info("Publicar achados e perdidos exige participacao ativa nesta comunidade.");
       return;
     }
 

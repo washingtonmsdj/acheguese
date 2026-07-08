@@ -24,6 +24,11 @@ const COMMUNITY_MEMBERSHIP_SELECT = [
   "updated_at",
 ].join(",");
 
+function isDuplicateMembershipError(error: { code?: string; message?: string }): boolean {
+  const message = error.message?.toLowerCase() ?? "";
+  return error.code === "23505" || message.includes("duplicate key");
+}
+
 export class CommunityMembershipRepository {
   static async findByCommunityAndProfile(
     communityId: string,
@@ -67,7 +72,15 @@ export class CommunityMembershipRepository {
       .select(COMMUNITY_MEMBERSHIP_SELECT)
       .maybeSingle();
 
-    if (error || !data) return null;
+    if (error) {
+      if (isDuplicateMembershipError(error)) {
+        return this.findByCommunityAndProfile(input.communityId, input.profileId);
+      }
+
+      return null;
+    }
+
+    if (!data) return null;
     return data as CommunityMembershipRecord;
   }
 

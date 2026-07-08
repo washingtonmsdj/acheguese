@@ -65,6 +65,12 @@ e o unico owner de acesso direto a `community_memberships` no app. Membership
 representa participacao na Comunidade Local; nao substitui residencia,
 perfil ativo, grupo social ou roles globais.
 
+`src/core/community/access/useCommunityAccess.ts` e o gate central de
+permissoes da experiencia comunitaria. Ele pode consumir
+`CommunityExperienceService` e `CommunityMembershipService` para resolver a
+membership da comunidade persistida da rota, mas nao pode acessar
+`community_memberships` diretamente.
+
 ### Entidades Independentes
 
 Estas entidades existem por identidade propria e podem se vincular a uma ou

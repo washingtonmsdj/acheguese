@@ -3,6 +3,7 @@ export {
   type CommunityAccessDecision,
   type CommunityAccessInput,
   type CommunityAccessLevel,
+  type CommunityAccessMembership,
   type CommunityAction,
   type CommunityAccessResidence,
 } from "./CommunityAccessPolicy";

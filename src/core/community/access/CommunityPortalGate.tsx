@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Lock, MapPin, ShieldCheck, UserPlus } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/shared/components/ui/button";
 import { PageLoader } from "@/shared/components/loading/PageLoader";
 import { useAppUrls } from "@/core/routing/hooks";
@@ -45,12 +46,40 @@ function getGateCopy(reason: CommunityAccessDecision["reason"]) {
         description:
           "Acoes comunitarias sao locais. Cadastre um endereco do bairro ou area correspondente para participar.",
       };
+    case "missing_membership":
+      return {
+        icon: UserPlus,
+        title: "Entre nesta comunidade",
+        description:
+          "A leitura publica continua disponivel. Para publicar, comentar e participar dos grupos, solicite entrada com seu perfil ativo.",
+      };
+    case "membership_pending":
+      return {
+        icon: UserPlus,
+        title: "Solicitacao em analise",
+        description:
+          "Seu pedido de entrada nesta comunidade foi recebido. As interacoes serao liberadas quando a membership estiver ativa.",
+      };
+    case "membership_rejected":
+      return {
+        icon: Lock,
+        title: "Entrada nao aprovada",
+        description:
+          "Esta solicitacao de entrada nao foi aprovada. A leitura publica permanece disponivel.",
+      };
+    case "membership_blocked":
+      return {
+        icon: Lock,
+        title: "Participacao bloqueada",
+        description:
+          "Esta membership esta bloqueada para interacoes comunitarias. A leitura publica permanece disponivel.",
+      };
     case "unverified_residence":
       return {
         icon: ShieldCheck,
         title: "Verifique sua residencia",
         description:
-          "Voce ja pode acompanhar a comunidade, mas publicar e participar dos grupos exige residencia verificada.",
+          "Voce ja pode participar da comunidade. Alertas, problemas locais e algumas acoes sensiveis exigem residencia verificada.",
       };
     case "rollout_blocked":
       return {
@@ -99,20 +128,30 @@ export function CommunityPortalGate({
     access.primaryAction === "login"
       ? loginHref
       : access.primaryAction === "create_profile"
-        ? appUrls.profile.manage
-        : access.primaryAction === "add_address" || access.primaryAction === "verify_address"
-          ? appUrls.profile.addresses
-          : appUrls.community.feed;
+          ? appUrls.profile.manage
+          : access.primaryAction === "add_address" || access.primaryAction === "verify_address"
+            ? appUrls.profile.addresses
+            : appUrls.community.feed;
   const actionLabel =
     access.primaryAction === "login"
       ? "Entrar"
       : access.primaryAction === "create_profile"
-        ? "Selecionar perfil"
-        : access.primaryAction === "add_address"
-          ? "Cadastrar endereco"
-          : access.primaryAction === "verify_address"
-            ? "Verificar residencia"
-            : "Acompanhar lancamento";
+          ? "Selecionar perfil"
+          : access.primaryAction === "add_address"
+            ? "Cadastrar endereco"
+            : access.primaryAction === "verify_address"
+              ? "Verificar residencia"
+              : access.primaryAction === "request_membership"
+                ? "Pedir entrada"
+                : "Acompanhar lancamento";
+  const handleRequestMembership = async () => {
+    try {
+      await access.requestMembership();
+      toast.success("Pedido de entrada enviado");
+    } catch {
+      toast.error("Nao foi possivel enviar o pedido de entrada");
+    }
+  };
 
   return (
     <section className="mx-auto flex min-h-[22rem] max-w-xl flex-col items-center justify-center px-4 py-10 text-center">
@@ -120,9 +159,19 @@ export function CommunityPortalGate({
         <Icon className="mx-auto h-10 w-10 text-primary" aria-hidden="true" />
         <h2 className="mt-4 text-xl font-semibold">{copy.title}</h2>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">{copy.description}</p>
-        <Button asChild className="mt-5 w-full">
-          <Link to={actionHref}>{actionLabel}</Link>
-        </Button>
+        {access.primaryAction === "request_membership" ? (
+          <Button
+            className="mt-5 w-full"
+            disabled={!access.canRequestMembership || access.isRequestingMembership}
+            onClick={handleRequestMembership}
+          >
+            {access.isRequestingMembership ? "Enviando..." : actionLabel}
+          </Button>
+        ) : access.primaryAction !== "none" ? (
+          <Button asChild className="mt-5 w-full">
+            <Link to={actionHref}>{actionLabel}</Link>
+          </Button>
+        ) : null}
       </div>
     </section>
   );

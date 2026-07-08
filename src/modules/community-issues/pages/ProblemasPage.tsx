@@ -87,7 +87,7 @@ export default function ProblemasPage({
 
   const handleOpenCreateIssue = () => {
     if (!communityAccess.can.create_issue) {
-      toast.info("Reportar problemas exige residencia verificada neste territorio.");
+      toast.info("Reportar problemas exige participacao ativa e residencia verificada neste territorio.");
       return;
     }
 
@@ -183,7 +183,7 @@ export default function ProblemasPage({
           neighborhood={territoryPresentation.neighborhood}
           locationId={issueLocationId}
           canCreate={communityAccess.can.create_issue}
-          blockedMessage="Reportar problemas exige residencia verificada neste territorio."
+          blockedMessage="Reportar problemas exige participacao ativa e residencia verificada neste territorio."
         />
       </div>
     </TooltipProvider>

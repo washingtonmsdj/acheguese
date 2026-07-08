@@ -90,7 +90,7 @@ export default function GruposPage() {
   }, [groups]);
   const handleOpenCreateGroup = () => {
     if (!communityAccess.can.create_group) {
-      toast.info("Criar grupos exige residencia verificada nesta comunidade.");
+      toast.info("Criar grupos exige participacao ativa e residencia verificada nesta comunidade.");
       return;
     }
 

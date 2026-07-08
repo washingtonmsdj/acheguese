@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CommunityPortalGate } from "../CommunityPortalGate";
@@ -39,6 +39,12 @@ function accessDecision(
     isModerator: false,
     residenceLocationId: null,
     isResidenceVerified: false,
+    communityId: null,
+    membership: null,
+    membershipStatus: null,
+    canRequestMembership: false,
+    isRequestingMembership: false,
+    requestMembership: vi.fn(async () => null),
     reason: "visitor",
     primaryAction: "login",
     targetLocationIds: ["loc-santa-cruz"],
@@ -135,5 +141,55 @@ describe("CommunityPortalGate", () => {
       "href",
       "/conta/enderecos",
     );
+  });
+
+  it("lets an authenticated profile request community membership", async () => {
+    const requestMembership = vi.fn(async () => null);
+    vi.mocked(useCommunityAccess).mockReturnValue(
+      accessDecision({
+        level: "authenticated",
+        isAuthenticated: true,
+        communityId: "community-santa-cruz",
+        reason: "missing_membership",
+        primaryAction: "request_membership",
+        canRequestMembership: true,
+        requestMembership,
+      }),
+    );
+
+    render(
+      <MemoryRouter>
+        <CommunityPortalGate resolved={target} action="view_member_feed" />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText("Entre nesta comunidade")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Pedir entrada" }));
+
+    await waitFor(() => {
+      expect(requestMembership).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it("shows pending membership without another request action", () => {
+    vi.mocked(useCommunityAccess).mockReturnValue(
+      accessDecision({
+        level: "authenticated",
+        isAuthenticated: true,
+        communityId: "community-santa-cruz",
+        reason: "membership_pending",
+        primaryAction: "none",
+        membershipStatus: "pending",
+      }),
+    );
+
+    render(
+      <MemoryRouter>
+        <CommunityPortalGate resolved={target} action="create_post" />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText("Solicitacao em analise")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Pedir entrada" })).not.toBeInTheDocument();
   });
 });

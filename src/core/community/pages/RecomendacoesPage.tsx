@@ -56,7 +56,7 @@ export default function RecomendacoesPage() {
 
   const handleAskRecommendation = () => {
     if (!communityAccess.can.create_post) {
-      toast.info("Perguntar na comunidade exige residencia verificada neste territorio.");
+      toast.info("Perguntar na comunidade exige participacao ativa nesta comunidade.");
       return;
     }
 

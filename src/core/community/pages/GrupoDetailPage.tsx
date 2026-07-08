@@ -72,7 +72,7 @@ export default function GrupoDetailPage() {
 
   const handleJoin = async () => {
     if (!communityAccess.can.join_group) {
-      toast.info("Entrar em grupos exige residencia verificada nesta comunidade.");
+      toast.info("Entrar em grupos exige participacao ativa nesta comunidade.");
       return;
     }
 

@@ -30,7 +30,7 @@ interface UseNovaRecomendacaoOptions {
 export function useNovaRecomendacao({
   locationId: locationIdOverride,
   canCreate = true,
-  blockedMessage = "Perguntar na comunidade exige residencia verificada neste territorio.",
+  blockedMessage = "Perguntar na comunidade exige participacao ativa nesta comunidade.",
 }: UseNovaRecomendacaoOptions = {}) {
   const navigate = useNavigate();
   const { toast } = useToast();

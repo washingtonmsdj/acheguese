@@ -1,10 +1,12 @@
 import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { adminRolesService } from "@/core/admin/services/AdminRolesService";
 import { residenceService } from "@/core/residence/services/ResidenceService";
 import { useCommunityRollout } from "@/core/community/hooks/useCommunityRollout";
 import { useSessionContext } from "@/core/session";
+import { CommunityExperienceService } from "@/core/community-experience/services/CommunityExperienceService";
+import { CommunityMembershipService } from "@/core/community-experience/services/CommunityMembershipService";
 import {
   isCommunityAccessRouteTarget,
   resolveCommunityAccess,
@@ -13,6 +15,7 @@ import {
   type CommunityAccessLevel,
   type CommunityAccessTarget,
 } from "./CommunityAccessPolicy";
+import type { CommunityMembershipRecord } from "@/core/community-experience/types";
 
 export interface UseCommunityAccessInput {
   readonly resolved: CommunityAccessTarget;
@@ -26,6 +29,12 @@ export interface UseCommunityAccessResult extends Omit<CommunityAccessDecision, 
   readonly isModerator: boolean;
   readonly residenceLocationId: string | null;
   readonly isResidenceVerified: boolean;
+  readonly communityId: string | null;
+  readonly membership: CommunityMembershipRecord | null;
+  readonly membershipStatus: CommunityMembershipRecord["status"] | null;
+  readonly canRequestMembership: boolean;
+  readonly isRequestingMembership: boolean;
+  readonly requestMembership: () => Promise<CommunityMembershipRecord | null>;
 }
 
 function loadingDecision(level: CommunityAccessLevel = "public_preview"): CommunityAccessDecision {
@@ -54,10 +63,26 @@ function loadingDecision(level: CommunityAccessLevel = "public_preview"): Commun
   };
 }
 
+function isPersistedCommunityId(value: string | null | undefined): value is string {
+  return Boolean(
+    value &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        value,
+      ),
+  );
+}
+
+function getCommunityAccessTargetKey(resolved: CommunityAccessTarget): string {
+  if (!resolved) return "none";
+  if (resolved.kind === "group") return `group:${resolved.group.id}`;
+  return `location:${resolved.location.id}`;
+}
+
 export function useCommunityAccess({
   resolved,
   activeMemberIds = [],
 }: UseCommunityAccessInput): UseCommunityAccessResult {
+  const queryClient = useQueryClient();
   const { user } = useAuth();
   const { activeProfile, isLoading: sessionLoading } = useSessionContext();
   const targetLocationIds = useMemo(
@@ -70,6 +95,10 @@ export function useCommunityAccess({
     targetLocationIds[0] ?? null,
   );
   const isAuthenticated = Boolean(user?.id);
+  const routeTargetKey = useMemo(
+    () => getCommunityAccessTargetKey(routeResolved ?? null),
+    [routeResolved],
+  );
 
   const rolesQuery = useQuery({
     queryKey: ["community-access", "roles", user?.id],
@@ -83,6 +112,59 @@ export function useCommunityAccess({
     queryFn: () => residenceService.getPrimaryResidence(user!.id),
     enabled: Boolean(user?.id),
     staleTime: 2 * 60 * 1000,
+  });
+
+  const communityProfileQuery = useQuery({
+    queryKey: ["community-access", "local-community", routeTargetKey],
+    queryFn: async () => {
+      if (!routeResolved) return null;
+      const community = await CommunityExperienceService.getCommunityProfile(routeResolved);
+      return isPersistedCommunityId(community.id) ? community : null;
+    },
+    enabled: isAuthenticated && Boolean(activeProfile?.id) && Boolean(routeResolved),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const communityId = communityProfileQuery.data?.id ?? null;
+  const membershipRequired = Boolean(communityId) || communityProfileQuery.isError;
+
+  const membershipQuery = useQuery({
+    queryKey: ["community-access", "membership", communityId, activeProfile?.id],
+    queryFn: async () => {
+      if (!communityId || !activeProfile?.id) return null;
+      return CommunityMembershipService.findByCommunityAndProfile(
+        communityId,
+        activeProfile.id,
+      );
+    },
+    enabled: Boolean(communityId && activeProfile?.id),
+    staleTime: 60 * 1000,
+  });
+
+  const requestMembershipMutation = useMutation({
+    mutationFn: async () => {
+      if (!communityId || !activeProfile?.id || !user?.id) {
+        throw new Error("community_membership_context_missing");
+      }
+
+      const membership = await CommunityMembershipService.requestMembership({
+        communityId,
+        profileId: activeProfile.id,
+        userId: user.id,
+        joinMethod: "open",
+      });
+
+      if (!membership) {
+        throw new Error("community_membership_request_failed");
+      }
+
+      return membership;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["community-access", "membership", communityId, activeProfile?.id],
+      });
+    },
   });
 
   const isAdmin = useMemo(
@@ -100,10 +182,17 @@ export function useCommunityAccess({
   const baseAccessLoading =
     sessionLoading ||
     (isAuthenticated && (rolesQuery.isLoading || residenceQuery.isLoading));
-  const hasResidenceLocation = Boolean(residenceQuery.data?.location_id);
   const needsRolloutDecision =
-    isAuthenticated && Boolean(activeProfile?.id) && hasResidenceLocation && !isAdmin && !isModerator;
-  const isLoading = baseAccessLoading || (needsRolloutDecision && rolloutLoading);
+    isAuthenticated && Boolean(activeProfile?.id) && Boolean(routeResolved) && !isAdmin && !isModerator;
+  const membershipAccessLoading =
+    isAuthenticated &&
+    Boolean(activeProfile?.id) &&
+    Boolean(routeResolved) &&
+    (communityProfileQuery.isLoading || (Boolean(communityId) && membershipQuery.isLoading));
+  const isLoading =
+    baseAccessLoading ||
+    (needsRolloutDecision && rolloutLoading) ||
+    membershipAccessLoading;
 
   const decision = useMemo(() => {
     if (isLoading) return loadingDecision(isAuthenticated ? "authenticated" : "public_preview");
@@ -119,6 +208,15 @@ export function useCommunityAccess({
             isVerified: Boolean(residenceQuery.data.is_verified),
           }
         : null,
+      membership: membershipQuery.data
+        ? {
+            communityId: membershipQuery.data.community_id,
+            role: membershipQuery.data.role,
+            status: membershipQuery.data.status,
+            verifiedByResidence: membershipQuery.data.verified_by_residence,
+          }
+        : null,
+      membershipRequired,
       resolved,
       activeMemberIds,
       rolloutEnabled: !isBlocked,
@@ -131,6 +229,9 @@ export function useCommunityAccess({
     isLoading,
     isBlocked,
     isModerator,
+    communityId,
+    membershipRequired,
+    membershipQuery.data,
     residenceQuery.data,
     resolved,
   ]);
@@ -143,5 +244,17 @@ export function useCommunityAccess({
     isModerator,
     residenceLocationId: residenceQuery.data?.location_id ?? null,
     isResidenceVerified: Boolean(residenceQuery.data?.is_verified),
+    communityId,
+    membership: membershipQuery.data ?? null,
+    membershipStatus: membershipQuery.data?.status ?? null,
+    canRequestMembership: Boolean(
+      communityId &&
+        activeProfile?.id &&
+        user?.id &&
+        !membershipQuery.data &&
+        !membershipQuery.isLoading,
+    ),
+    isRequestingMembership: requestMembershipMutation.isPending,
+    requestMembership: async () => requestMembershipMutation.mutateAsync(),
   };
 }

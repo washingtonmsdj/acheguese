@@ -461,22 +461,22 @@ interface ComunidadePageProps {
 function getBlockedCommunityActionMessage(action: CommunityAction): string {
   switch (action) {
     case "comment":
-      return "Comentar exige residencia verificada neste territorio.";
+      return "Comentar exige participacao ativa nesta comunidade.";
     case "react":
-      return "Interagir no feed exige residencia cadastrada neste territorio.";
+      return "Interagir no feed exige participacao ativa nesta comunidade.";
     case "save":
-      return "Salvar publicacoes exige residencia cadastrada neste territorio.";
+      return "Salvar publicacoes exige participacao ativa nesta comunidade.";
     case "send_message":
-      return "Enviar mensagem exige residencia verificada neste territorio.";
+      return "Enviar mensagem exige participacao ativa nesta comunidade.";
     case "create_issue":
-      return "Registrar problema local exige residencia verificada neste territorio.";
+      return "Registrar problema local exige participacao ativa e residencia verificada neste territorio.";
     case "create_alert":
-      return "Criar alerta exige residencia verificada neste territorio.";
+      return "Criar alerta exige participacao ativa e residencia verificada neste territorio.";
     case "create_post":
-      return "Publicar na comunidade exige residencia verificada neste territorio.";
+      return "Publicar na comunidade exige participacao ativa nesta comunidade.";
     case "join_group":
     case "create_group":
-      return "Participar de grupos exige residencia verificada neste territorio.";
+      return "Participar de grupos exige participacao ativa nesta comunidade.";
     case "report":
       return "Denunciar exige login e perfil ativo.";
     default:

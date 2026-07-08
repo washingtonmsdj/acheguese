@@ -960,7 +960,7 @@ Evidencia:
 
 ### Fase 3 - Definir Membership Da Comunidade
 
-Status: pendente
+Status: concluida para contrato backend/RLS e gate de UI em 2026-07-08
 
 Objetivo:
 
@@ -974,7 +974,7 @@ Tarefas:
 - [x] definir RLS de entrada/saida/moderacao;
 - [x] evitar RPC publica direta nesta etapa; a superficie mutante futura deve
   passar por broker/Edge Function antes de UI publica;
-- [ ] atualizar UI somente depois de backend/RLS prontos.
+- [x] atualizar UI somente depois de backend/RLS prontos.
 
 Criterio de pronto:
 
@@ -991,6 +991,14 @@ Evidencia:
   canonica do app;
 - `validate-project-taxonomy` e `check:ssot` bloqueiam acesso paralelo a
   `community_memberships`.
+- `useCommunityAccess` consome `CommunityExperienceService` e
+  `CommunityMembershipService` para resolver membership da comunidade persistida
+  da rota;
+- `CommunityPortalGate` permite solicitar entrada, mostra estados pending,
+  rejected e blocked, e nao libera interacoes por residencia isolada quando
+  existe `community_memberships`;
+- acoes sociais usam membership ativa; alertas/problemas e acoes sensiveis
+  continuam exigindo residencia verificada quando aplicavel.
 
 ### Fase 4 - Criar Vinculos Comunitarios De Entidades
 
