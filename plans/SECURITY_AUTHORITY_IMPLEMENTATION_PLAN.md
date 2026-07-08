@@ -998,6 +998,11 @@ para auditoria. O script agora valida formato de project ref e nome da env var
 do PAT antes de chamar a Management API, e aceita `--json` para gerar evidencia
 estruturada sem expor o token. A Security Authority cobre parse de argumentos,
 validacao de entradas e status sanitizado sem chamada de rede.
+Resultado adicional em 2026-07-08: o modo JSON do operador HIBP passou a emitir
+status estruturado tambem quando o bloqueio e ausencia de PAT. O comando ainda
+falha com exit code diferente de zero, mas produz evidencia parseavel com
+`status=blocked`, `blocker=missing_pat`, project ref e nome da env var esperada,
+sem imprimir valor de token.
 
 Resultado Edge Function auth policy em 2026-07-08: o modelo Supabase passou a
 documentar que `verify_jwt=false` e excecao operacional. O gate

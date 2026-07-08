@@ -10,6 +10,12 @@ const DEFAULT_TOKEN_ENV_NAMES = [
   'SUPABASE_MANAGEMENT_API_TOKEN',
 ];
 
+function createAlreadyReportedError(message) {
+  const error = new Error(message);
+  error.alreadyReported = true;
+  return error;
+}
+
 function usage() {
   return [
     'Uso:',
@@ -161,19 +167,35 @@ function isHibpEnabled(authConfig) {
   return authConfig.password_hibp_enabled === true;
 }
 
-function createHibpStatus({ action, enabled, projectRef, tokenEnv }) {
+function createHibpStatus({
+  action,
+  enabled,
+  projectRef,
+  tokenEnv,
+  status,
+  blocker,
+  message,
+}) {
   return {
     action,
     checkedAt: new Date().toISOString(),
     enabled,
     projectRef,
     tokenEnv,
+    status: status ?? (enabled === true ? 'enabled' : 'disabled'),
+    ...(blocker ? { blocker } : {}),
+    ...(message ? { message } : {}),
   };
 }
 
 function printHibpStatus(status, json) {
   if (json) {
     console.log(JSON.stringify(status, null, 2));
+    return;
+  }
+
+  if (status.blocker) {
+    console.log(status.message ?? `HIBP check bloqueado: ${status.blocker}.`);
     return;
   }
 
@@ -208,13 +230,41 @@ async function main() {
   const token = resolveAccessToken(options.tokenEnv);
 
   if (!projectRef) {
-    throw new Error('Project ref ausente. Defina SUPABASE_PROJECT_REF ou linke o projeto Supabase.');
+    const message = 'Project ref ausente. Defina SUPABASE_PROJECT_REF ou linke o projeto Supabase.';
+    if (options.json) {
+      printHibpStatus(
+        createHibpStatus({
+          action: options.action,
+          blocker: 'missing_project_ref',
+          enabled: null,
+          message,
+          projectRef: null,
+          status: 'blocked',
+          tokenEnv: token.envName,
+        }),
+        options.json,
+      );
+    }
+    throw options.json ? createAlreadyReportedError(message) : new Error(message);
   }
 
   if (!token.value) {
-    throw new Error(
-      `PAT ausente. Defina ${token.envName.replace(' or ', ' ou ')} com escopos auth_config_write/project_admin_write.`,
-    );
+    const message = `PAT ausente. Defina ${token.envName.replace(' or ', ' ou ')} com escopos auth_config_write/project_admin_write.`;
+    if (options.json) {
+      printHibpStatus(
+        createHibpStatus({
+          action: options.action,
+          blocker: 'missing_pat',
+          enabled: null,
+          message,
+          projectRef,
+          status: 'blocked',
+          tokenEnv: token.envName,
+        }),
+        options.json,
+      );
+    }
+    throw options.json ? createAlreadyReportedError(message) : new Error(message);
   }
 
   if (options.action === 'apply') {
@@ -244,7 +294,8 @@ async function main() {
 
   if (!result.enabled) {
     if (options.json) printHibpStatus(status, options.json);
-    throw new Error('password_hibp_enabled ainda nao esta ativo no Supabase Auth config remoto.');
+    const message = 'password_hibp_enabled ainda nao esta ativo no Supabase Auth config remoto.';
+    throw options.json ? createAlreadyReportedError(message) : new Error(message);
   }
 
   printHibpStatus(status, options.json);
@@ -252,7 +303,9 @@ async function main() {
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   main().catch((error) => {
-    console.error(error instanceof Error ? error.message : String(error));
+    if (!error?.alreadyReported) {
+      console.error(error instanceof Error ? error.message : String(error));
+    }
     process.exit(1);
   });
 }

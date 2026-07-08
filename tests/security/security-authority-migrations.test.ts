@@ -813,11 +813,33 @@ describe("Security Authority Supabase Auth config", () => {
         action: "check",
         enabled: true,
         projectRef: "abcdefghijklmnopqrst",
+        status: "enabled",
         tokenEnv: "SUPABASE_ACCESS_TOKEN",
       }),
     );
     expect(JSON.stringify(status)).not.toContain("sbp_");
     expect(JSON.stringify(status)).not.toContain("Bearer");
+
+    const blockedStatus = createHibpStatus({
+      action: "check",
+      blocker: "missing_pat",
+      enabled: null,
+      message: "PAT ausente.",
+      projectRef: "abcdefghijklmnopqrst",
+      status: "blocked",
+      tokenEnv: "SUPABASE_ACCESS_TOKEN or SUPABASE_MANAGEMENT_API_TOKEN",
+    });
+
+    expect(blockedStatus).toEqual(
+      expect.objectContaining({
+        action: "check",
+        blocker: "missing_pat",
+        enabled: null,
+        status: "blocked",
+      }),
+    );
+    expect(JSON.stringify(blockedStatus)).not.toContain("sbp_");
+    expect(JSON.stringify(blockedStatus)).not.toContain("Bearer");
   });
 });
 

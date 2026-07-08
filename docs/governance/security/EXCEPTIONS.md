@@ -193,6 +193,10 @@ env var usada, nunca o valor do token.
 - CLI local `supabase config` na versao 2.98.2 nao oferece subcomando granular
   para esse ajuste; a tentativa de chamar a Management API com o token local em
   arquivo retornou 401, portanto nao foi feita alteracao cega.
+- `npm run security:auth:hibp -- --json` em 2026-07-08 retornou JSON
+  estruturado com `status=blocked` e `blocker=missing_pat`, sem imprimir valor
+  de token. A correcao remota continua dependente de PAT valido e plano
+  Supabase compativel.
 
 Achados residuais do Supabase Advisor tambem devem continuar registrados no
 relatorio canonico:
