@@ -69,7 +69,7 @@ Estado observado em `src/modules/business/gastronomy/niches/registry.ts`:
 - [x] P1: aplicar impacto graduado em prioridade operacional para `watchlist`/`restricted`, mantendo bloqueio automatico apenas para risco critico.
 - [x] P1: completar reviews publicos cliente -> loja no pos-entrega.
 - [x] P1: criar comprovante e comunicacao cliente/restaurante/motoboy para o fluxo operacional base.
-- [ ] P1: criar testes E2E para pizza e um nicho basico.
+- [x] P1: criar testes E2E para pizza e um nicho basico.
 
 ## Lacunas P2
 
@@ -111,6 +111,9 @@ Estado observado em `src/modules/business/gastronomy/niches/registry.ts`:
 - `src/modules/business/gastronomy/billing/legacy/permissions.ts`: arquivado fora do export publico; SSOT atual em `@/core/billing`.
 - `src/modules/business/gastronomy/billing/legacy/featureFlags.ts`: arquivado fora do export publico; SSOT atual em `@/core/billing`.
 - `src/modules/business/gastronomy/niches/pizzaria/components/PizzaAdminPanel.tsx`: placeholder `pizza_sizes` removido do `tableMap`; configuracao nao usa tabela falsa.
+- `tests/e2e/gastronomy-onboarding.spec.ts`: contrato Playwright cobre pizzaria
+  `full_enabled`, lanches `basic_enabled`, selecao publica no setup e fluxo de
+  pedido/operacao da pizzaria.
 
 ## Definicao de Pronto
 

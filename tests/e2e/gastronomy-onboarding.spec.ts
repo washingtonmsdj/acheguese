@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { type User } from "@supabase/supabase-js";
 import { login } from "../../e2e/helpers/auth";
@@ -9,6 +11,7 @@ import {
 } from "../helpers/operational-env";
 
 const admin = createOptionalOperationalAdminClient();
+const repoRoot = process.cwd();
 
 const CONSENT_FIXTURE = [
   { consent_type: "cookies", granted: true },
@@ -32,6 +35,10 @@ function uniqueSuffix(): string {
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function readProjectFile(path: string): string {
+  return readFileSync(resolve(repoRoot, path), "utf8");
 }
 
 async function gotoApp(page: Page, path: string) {
@@ -716,6 +723,37 @@ async function setSwitchByLabel(page: Page, label: string, desired: boolean) {
     await switchControl.click();
   }
 }
+
+test("keeps pizza and a basic niche covered by the onboarding release contract", () => {
+  const e2eSource = readProjectFile("tests/e2e/gastronomy-onboarding.spec.ts");
+  const setupPageSource = readProjectFile(
+    "src/modules/business/gastronomy/pages/GastronomySetupPage.tsx",
+  );
+  const pizzaPresetSource = readProjectFile(
+    "src/modules/business/gastronomy/niches/presets/pizza.ts",
+  );
+  const lanchesPresetSource = readProjectFile(
+    "src/modules/business/gastronomy/niches/presets/lanches.ts",
+  );
+
+  expect(e2eSource).toContain("Pizzaria");
+  expect(e2eSource).toContain("Confirmar pedido");
+  expect(e2eSource).toContain("advanceOrderAction");
+  expect(setupPageSource).toContain("CUISINE_TYPES.map");
+  expect(setupPageSource).toContain("getCuisineLabel(type)");
+
+  expect(pizzaPresetSource).toContain("nicheKey: 'pizza'");
+  expect(pizzaPresetSource).toContain("supportLevel: 'full_enabled'");
+  expect(pizzaPresetSource).toContain("isSelectable: true");
+  expect(pizzaPresetSource).toContain("isPublic: true");
+  expect(pizzaPresetSource).toContain("'pizza_half_half'");
+
+  expect(lanchesPresetSource).toContain("nicheKey: 'lanches'");
+  expect(lanchesPresetSource).toContain("supportLevel: 'basic_enabled'");
+  expect(lanchesPresetSource).toContain("isSelectable: true");
+  expect(lanchesPresetSource).toContain("isPublic: true");
+  expect(lanchesPresetSource).toContain("'basic_menu'");
+});
 
 test.describe("gastronomy onboarding e2e", () => {
   test.skip(
