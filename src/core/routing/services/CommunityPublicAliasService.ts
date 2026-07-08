@@ -1,7 +1,9 @@
-import { supabase } from "@/integrations/supabase";
+import { CommunityExperienceService } from "@/core/community-experience/services/CommunityExperienceService";
 import {
   isCommunityRouteableTerritoryType,
+  type CommunityPublicAliasTerritoryReference,
   type CommunityRouteableTerritoryType,
+  type TerritoryCommunityRecord,
 } from "@/core/community-experience/types";
 import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
 import {
@@ -21,36 +23,6 @@ export interface CommunityPublicAliasResolution {
   territoryId?: string;
   reason?: string;
 }
-
-export type CommunityPublicAliasTerritoryReference =
-  | { kind: "location"; territoryId: string | null | undefined }
-  | { kind: "group"; territoryId: string | null | undefined };
-
-interface CommunityAliasRow {
-  alias?: string;
-  territory_community_id?: string;
-  status?: string;
-}
-
-interface TerritoryCommunityRow {
-  id?: string;
-  name?: string;
-  slug?: string;
-  city_id?: string | null;
-  territory_type?: string;
-  territory_id?: string;
-  status?: string;
-}
-
-const COMMUNITY_SELECT = [
-  "id",
-  "name",
-  "slug",
-  "city_id",
-  "territory_type",
-  "territory_id",
-  "status",
-].join(",");
 
 const explicitCommunityAliasLookupEnabled =
   import.meta.env.MODE === "test" ||
@@ -121,10 +93,10 @@ export function normalizeCommunityPublicAliasCandidate(value: string): string | 
   return cleanAlias(value);
 }
 
-function isCommunityRouteable(row: TerritoryCommunityRow | null): row is Required<
-  Pick<TerritoryCommunityRow, "id" | "slug" | "city_id" | "territory_type" | "territory_id">
+function isCommunityRouteable(row: TerritoryCommunityRecord | null): row is Required<
+  Pick<TerritoryCommunityRecord, "id" | "slug" | "city_id" | "territory_type" | "territory_id">
 > &
-  TerritoryCommunityRow & { territory_type: CommunityRouteableTerritoryType } {
+  TerritoryCommunityRecord & { territory_type: CommunityRouteableTerritoryType } {
   return Boolean(
     row?.id &&
       row.slug &&
@@ -135,97 +107,36 @@ function isCommunityRouteable(row: TerritoryCommunityRow | null): row is Require
   );
 }
 
-async function findCommunityById(id: string): Promise<TerritoryCommunityRow | null> {
-  const { data, error } = await supabase
-    .from("territory_communities" as never)
-    .select(COMMUNITY_SELECT)
-    .eq("id", id)
-    .maybeSingle();
-
-  if (error || !data) return null;
-  return data as TerritoryCommunityRow;
-}
-
 async function findSingleCommunityBySlug(alias: string): Promise<{
-  row: TerritoryCommunityRow | null;
+  row: TerritoryCommunityRecord | null;
   ambiguous: boolean;
 }> {
-  const { data, error } = await supabase
-    .from("territory_communities" as never)
-    .select(COMMUNITY_SELECT)
-    .eq("slug", alias)
-    .neq("status", "inactive")
-    .limit(2);
-
-  if (error || !data) {
-    return { row: null, ambiguous: false };
-  }
-
-  const rows = data as TerritoryCommunityRow[];
-  return {
-    row: rows.length === 1 ? rows[0] : null,
-    ambiguous: rows.length > 1,
-  };
+  return CommunityExperienceService.findSingleActiveCommunityBySlug(alias);
 }
 
 async function findCommunityByTerritoryReference(
   reference: CommunityPublicAliasTerritoryReference,
-): Promise<TerritoryCommunityRow | null> {
-  if (!reference.territoryId) return null;
-
-  let query = supabase
-    .from("territory_communities" as never)
-    .select(COMMUNITY_SELECT)
-    .eq("territory_id", reference.territoryId)
-    .neq("status", "inactive");
-
-  query =
-    reference.kind === "group"
-      ? query.eq("territory_type", "territorial_group")
-      : query.in("territory_type", ["district", "neighborhood"]);
-
-  const { data, error } = await query.limit(2);
-  if (error || !data) return null;
-
-  const rows = data as TerritoryCommunityRow[];
-  return rows.length === 1 ? rows[0] : null;
+): Promise<TerritoryCommunityRecord | null> {
+  return CommunityExperienceService.findCommunityByTerritoryReference(reference);
 }
 
-async function findCommunityByExplicitAlias(alias: string): Promise<TerritoryCommunityRow | null> {
+async function findCommunityByExplicitAlias(alias: string): Promise<TerritoryCommunityRecord | null> {
   if (!explicitCommunityAliasLookupEnabled) return null;
 
-  const { data, error } = await supabase
-    .from("community_public_aliases" as never)
-    .select("alias, territory_community_id, status")
-    .eq("alias", alias)
-    .eq("status", "active")
-    .maybeSingle();
-
-  if (error || !data) return null;
-
-  const aliasRow = data as CommunityAliasRow;
-  if (!aliasRow.territory_community_id) return null;
-  return findCommunityById(aliasRow.territory_community_id);
+  const aliasRow = await CommunityExperienceService.findActivePublicAlias(alias);
+  if (!aliasRow?.territory_community_id) return null;
+  return CommunityExperienceService.findCommunityById(aliasRow.territory_community_id);
 }
 
 async function findExplicitAliasByCommunityId(communityId: string): Promise<string | null> {
   if (!explicitCommunityAliasLookupEnabled) return null;
 
-  const { data, error } = await supabase
-    .from("community_public_aliases" as never)
-    .select("alias, territory_community_id, status")
-    .eq("territory_community_id", communityId)
-    .eq("status", "active")
-    .maybeSingle();
-
-  if (error || !data) return null;
-
-  const aliasRow = data as CommunityAliasRow;
-  return aliasRow.alias ? cleanAlias(aliasRow.alias) : null;
+  const aliasRow = await CommunityExperienceService.findActivePublicAliasByCommunityId(communityId);
+  return aliasRow?.alias ? cleanAlias(aliasRow.alias) : null;
 }
 
 async function resolvePublicAliasForCommunity(
-  community: TerritoryCommunityRow,
+  community: TerritoryCommunityRecord,
 ): Promise<string | null> {
   if (!community.id) return null;
 
@@ -241,7 +152,7 @@ async function resolvePublicAliasForCommunity(
   return fallbackAlias;
 }
 
-async function buildRoutePaths(row: TerritoryCommunityRow): Promise<{
+async function buildRoutePaths(row: TerritoryCommunityRecord): Promise<{
   canonicalPath: string;
   publicTerritoryPath: string;
 } | null> {

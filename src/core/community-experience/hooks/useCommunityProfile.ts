@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
+import type { CommunityExperienceResolvedTerritory } from "@/core/community-experience/types";
 import { CommunityExperienceService } from "@/core/community-experience/services/CommunityExperienceService";
 
-export function useCommunityProfile(resolved: ResolvedTerritory | null) {
+export function useCommunityProfile(resolved: CommunityExperienceResolvedTerritory) {
   return useQuery({
     queryKey: ["community-profile", resolved?.kind, resolved?.kind === "group" ? resolved.group.id : resolved?.location.id],
     queryFn: async () => {

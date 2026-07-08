@@ -1,37 +1,25 @@
-import { supabase } from "@/integrations/supabase";
-import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { COMMUNITY_EXPERIENCE_STATUS } from "@/core/community-experience/constants/statuses";
+import { CommunityExperienceRepository } from "@/core/community-experience/repositories/CommunityExperienceRepository";
 import type {
+  CommunityExperienceResolvedTerritory,
+  CommunityPublicAliasRecord,
+  CommunityPublicAliasTerritoryReference,
+  CommunitySlugLookup,
   CommunityStatus,
   CommunityTerritoryType,
+  TerritorialCommunityProfile,
+  TerritoryCommunityRecord,
 } from "@/core/community-experience/types";
 
-export type { CommunityStatus, CommunityTerritoryType };
+export type { CommunityStatus, CommunityTerritoryType, TerritorialCommunityProfile };
 
-export interface TerritorialCommunityProfile {
-  id: string;
-  name: string;
-  slug: string;
-  city_id: string | null;
-  territory_type: CommunityTerritoryType;
-  territory_id: string;
-  status: CommunityStatus;
-  headline: string | null;
-  description: string | null;
-  launch_message: string | null;
-  hero_title: string | null;
-  hero_subtitle: string | null;
-  primary_cta_label: string | null;
-  secondary_cta_label: string | null;
-  is_featured: boolean;
-  sort_order: number;
-}
-
-function isPublicFallbackResolved(resolved: ResolvedTerritory): boolean {
+function isPublicFallbackResolved(resolved: CommunityExperienceResolvedTerritory): boolean {
   return resolved.kind === "location" && resolved.location.metadata?.public_fallback === true;
 }
 
-function fallbackFromResolved(resolved: ResolvedTerritory): TerritorialCommunityProfile {
+function fallbackFromResolved(
+  resolved: Exclude<CommunityExperienceResolvedTerritory, null>,
+): TerritorialCommunityProfile {
   if (resolved.kind === "location" && resolved.location.type === "city") {
     return {
       id: `community-city-${resolved.location.id}`,
@@ -98,7 +86,42 @@ function fallbackFromResolved(resolved: ResolvedTerritory): TerritorialCommunity
 }
 
 export class CommunityExperienceService {
-  static async getCommunityProfile(resolved: ResolvedTerritory): Promise<TerritorialCommunityProfile> {
+  static async findCommunityById(id: string): Promise<TerritoryCommunityRecord | null> {
+    return CommunityExperienceRepository.findCommunityById(id);
+  }
+
+  static async findSingleActiveCommunityBySlug(alias: string): Promise<CommunitySlugLookup> {
+    return CommunityExperienceRepository.findSingleActiveCommunityBySlug(alias);
+  }
+
+  static async findCommunityByTerritoryReference(
+    reference: CommunityPublicAliasTerritoryReference,
+  ): Promise<TerritoryCommunityRecord | null> {
+    return CommunityExperienceRepository.findCommunityByTerritoryReference(reference);
+  }
+
+  static async findCommunityByCityAndSlug(
+    cityId: string,
+    slug: string,
+  ): Promise<TerritoryCommunityRecord | null> {
+    return CommunityExperienceRepository.findCommunityByCityAndSlug(cityId, slug);
+  }
+
+  static async findActivePublicAlias(
+    alias: string,
+  ): Promise<CommunityPublicAliasRecord | null> {
+    return CommunityExperienceRepository.findActivePublicAlias(alias);
+  }
+
+  static async findActivePublicAliasByCommunityId(
+    communityId: string,
+  ): Promise<CommunityPublicAliasRecord | null> {
+    return CommunityExperienceRepository.findActivePublicAliasByCommunityId(communityId);
+  }
+
+  static async getCommunityProfile(
+    resolved: CommunityExperienceResolvedTerritory,
+  ): Promise<TerritorialCommunityProfile> {
     if (!resolved) {
       throw new Error("resolved territory is required");
     }
@@ -118,16 +141,11 @@ export class CommunityExperienceService {
     const territoryId = resolved.kind === "group" ? resolved.group.id : resolved.location.id;
 
     try {
-      const { data, error } = await supabase
-        .from("territory_communities" as never)
-        .select("*")
-        .eq("territory_type", territoryType)
-        .eq("territory_id", territoryId)
-        .maybeSingle();
-
-      if (!error && data) {
-        return data as TerritorialCommunityProfile;
-      }
+      const profile = await CommunityExperienceRepository.findCommunityProfileByTerritory(
+        territoryType,
+        territoryId,
+      );
+      if (profile) return profile;
     } catch {
       // fallback handled below
     }

@@ -1,6 +1,6 @@
 # FASE 1 - Hardening Arquitetural (Gate-First)
 
-Gerado em: 2026-07-08T21:27:12.708Z
+Gerado em: 2026-07-08T21:44:41.475Z
 
 ## Problemas encontrados
 - Dependencias ciclicas detectadas: 7
@@ -24,7 +24,7 @@ Gerado em: 2026-07-08T21:27:12.708Z
 ## Arquivos mais problematicos
 - `src/app/pages/CidadeLandingPage.tsx` (1891 linhas)
 - `src/core/community/components/composer/CreatePostModal.tsx` (1332 linhas)
-- `src/modules/business/education/services/education.queries.ts` (1143 linhas)
+- `src/modules/business/education/services/education.queries.ts` (1136 linhas)
 - `src/core/work-opportunities/services/WorkOpportunitiesService.ts` (1122 linhas)
 - `src/modules/business/gastronomy/services/MenuService.ts` (1025 linhas)
 - `src/core/mobility/delivery/services/OrderDeliverySSOTService.ts` (1022 linhas)

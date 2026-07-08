@@ -229,7 +229,7 @@ describe("CommunityPublicAliasService", () => {
       territoryId: "district-1",
     });
 
-    expect(result).toBe("/santa-cruz-salvador");
+    expect(result).toBe("/comunidade/santa-cruz-salvador");
     expect(mocks.from).toHaveBeenNthCalledWith(1, "territory_communities");
     expect(mocks.from).toHaveBeenNthCalledWith(2, "community_public_aliases");
   });
@@ -262,7 +262,7 @@ describe("CommunityPublicAliasService", () => {
       territoryId: "group-1",
     });
 
-    expect(result).toBe("/complexo-do-nordeste-de-amaralina");
+    expect(result).toBe("/comunidade/complexo-do-nordeste-de-amaralina");
     expect(mocks.from).toHaveBeenCalledTimes(3);
   });
 });

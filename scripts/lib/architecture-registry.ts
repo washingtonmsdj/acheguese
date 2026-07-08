@@ -333,6 +333,7 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
       "plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md",
     ],
     ssotPaths: [
+      "src/core/community-experience/repositories/CommunityExperienceRepository.ts",
       "src/core/community-experience/services/CommunityExperienceService.ts",
       "src/core/community-experience/types.ts",
       "src/core/community/access/CommunityAccessPolicy.ts",
@@ -347,6 +348,7 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     adminRoutePrefixes: ["/admin/territory-communities", "/admin/territory-content"],
     criticality: "critical",
     canonicalServiceBasenames: [
+      "CommunityExperienceRepository.ts",
       "CommunityExperienceService.ts",
       "CommunityAccessPolicy.ts",
     ],
@@ -356,7 +358,7 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     docsSummary:
       "Boa para decisao arquitetural. `COMMUNITY_FIRST_ARCHITECTURE_SSOT.md` define Comunidade Local como core domain e aponta para o plano incremental.",
     ssotSummary:
-      "CommunityExperienceService e o SSOT atual de leitura da Comunidade Local (`territory_communities`). Territorio continua em location/territorial; feed e demais experiencias comunitarias nao devem redefinir a identidade da comunidade.",
+      "CommunityExperienceRepository e o owner unico de leitura direta de `territory_communities` e `community_public_aliases` no app. CommunityExperienceService e a fachada canonica consumida por routing e modulos. Territorio continua em location/territorial; feed e demais experiencias comunitarias nao devem redefinir a identidade da comunidade.",
   },
   {
     id: "community-feed",

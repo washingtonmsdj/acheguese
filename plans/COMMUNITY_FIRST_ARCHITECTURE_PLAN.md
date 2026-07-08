@@ -873,7 +873,7 @@ Decisao recomendada:
 
 ### Fase 0 - Congelar Decisao Arquitetural
 
-Status: pendente
+Status: concluida em 2026-07-08
 
 Objetivo:
 
@@ -935,18 +935,28 @@ Objetivo:
 
 Tarefas:
 
-- promover `CommunityExperienceService` ou novo facade equivalente a SSOT de
+- [x] promover `CommunityExperienceService` ou novo facade equivalente a SSOT de
   leitura de `territory_communities`;
-- mover resolucoes de `territory_communities` hoje em routing para repositorio
+- [x] mover resolucoes de `territory_communities` hoje em routing para repositorio
   ou service canonico;
-- manter `core/routing` responsavel por paths, nao por ownership dos dados;
-- documentar `territory_communities` como LocalCommunity.
+- [x] manter `core/routing` responsavel por paths, nao por ownership dos dados;
+- [x] documentar `territory_communities` como LocalCommunity.
 
 Criterio de pronto:
 
 - `territory_communities` acessada por service/repository canonico;
 - routing consome contrato de comunidade, nao tabela direta;
 - testes de alias e rotas continuam passando.
+
+Evidencia:
+
+- `src/core/community-experience/repositories/CommunityExperienceRepository.ts`
+  criado como owner unico de leitura direta de `territory_communities` e
+  `community_public_aliases` no app;
+- `CommunityPublicAliasService`, `TerritoryCommunityRouteService` e
+  `education.queries.ts` passaram a consumir `CommunityExperienceService`;
+- `scripts/validate-project-taxonomy.ts` bloqueia acesso direto a essas tabelas
+  fora do repositorio canonico em codigo de producao.
 
 ### Fase 3 - Definir Membership Da Comunidade
 

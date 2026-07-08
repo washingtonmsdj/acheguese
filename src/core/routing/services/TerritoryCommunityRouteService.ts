@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase";
+import { CommunityExperienceService } from "@/core/community-experience/services/CommunityExperienceService";
 import {
   isCommunityRouteableTerritoryType,
   type CommunityRouteableTerritoryType,
@@ -12,15 +12,8 @@ export interface TerritoryCommunityRoute {
 export class TerritoryCommunityRouteService {
   static async resolveByCityAndSlug(cityId: string, slug: string): Promise<TerritoryCommunityRoute | null> {
     try {
-      const { data } = await supabase
-        .from("territory_communities" as never)
-        .select("territory_type, territory_id")
-        .eq("city_id", cityId)
-        .eq("slug", slug)
-        .maybeSingle();
-
-      if (!data) return null;
-      const row = data as { territory_type?: string; territory_id?: string };
+      const row = await CommunityExperienceService.findCommunityByCityAndSlug(cityId, slug);
+      if (!row) return null;
       if (
         !row.territory_id ||
         !isCommunityRouteableTerritoryType(row.territory_type)

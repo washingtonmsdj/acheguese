@@ -11,6 +11,8 @@ const COMMUNITY_FIRST_ARCHITECTURE_DOC_PATH =
 const COMMUNITY_FIRST_PLAN_PATH = "plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md";
 const ARCHITECTURE_REGISTRY_PATH = "scripts/lib/architecture-registry.ts";
 const VERTICAL_CONFIG_PATH = "src/core/verticals/config.ts";
+const COMMUNITY_EXPERIENCE_REPOSITORY_PATH =
+  "src/core/community-experience/repositories/CommunityExperienceRepository.ts";
 
 const CANONICAL_MODULES = [
   "admin",
@@ -130,6 +132,9 @@ const TAXONOMY_COMMUNITY_FIRST_MARKERS = [
   "`src/core/community-experience`",
 ] as const;
 
+const COMMUNITY_EXPERIENCE_TABLE_ACCESS_RE =
+  /\.from\(\s*["'](?:territory_communities|community_public_aliases)["']/;
+
 function pathExists(relativePath: string): boolean {
   return fs.existsSync(path.join(ROOT, relativePath));
 }
@@ -199,6 +204,16 @@ function walkFiles(relativeDir: string): string[] {
 
 function normalize(filePath: string): string {
   return filePath.replace(/\\/g, "/");
+}
+
+function isTestFile(relativePath: string): boolean {
+  return (
+    relativePath.includes("/__tests__/") ||
+    relativePath.endsWith(".spec.ts") ||
+    relativePath.endsWith(".spec.tsx") ||
+    relativePath.endsWith(".test.ts") ||
+    relativePath.endsWith(".test.tsx")
+  );
 }
 
 function main() {
@@ -358,6 +373,17 @@ function main() {
     }
 
     const content = fs.readFileSync(filePath, "utf8");
+    if (
+      relative.startsWith("src/") &&
+      !isTestFile(relative) &&
+      relative !== COMMUNITY_EXPERIENCE_REPOSITORY_PATH &&
+      COMMUNITY_EXPERIENCE_TABLE_ACCESS_RE.test(content)
+    ) {
+      violations.push(
+        `Acesso direto a tabela de Comunidade Local fora do SSOT em ${relative}. Use ${COMMUNITY_EXPERIENCE_REPOSITORY_PATH}.`,
+      );
+    }
+
     for (const legacyPath of FORBIDDEN_LEGACY_PATH_LITERALS) {
       if (content.includes(legacyPath)) {
         violations.push(

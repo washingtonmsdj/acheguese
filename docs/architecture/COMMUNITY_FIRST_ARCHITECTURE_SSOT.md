@@ -44,6 +44,7 @@ SSOT atual:
 - `territory_communities`
 - `community_public_aliases`
 - `src/core/community-experience`
+- `src/core/community-experience/repositories/CommunityExperienceRepository.ts`
 
 Responsabilidade:
 
@@ -52,9 +53,10 @@ Responsabilidade:
   experiencia;
 - expor a fachada canonica para leitura da comunidade local.
 
-`src/core/community-experience/services/CommunityExperienceService.ts` e o
-servico canonico atual para leitura da Comunidade Local. A Fase 2 do plano deve
-reduzir leituras paralelas de `territory_communities` em outros dominios.
+`src/core/community-experience/repositories/CommunityExperienceRepository.ts`
+e o unico owner de leitura direta de `territory_communities` e
+`community_public_aliases` no app. `CommunityExperienceService` e a fachada
+canonica consumida por routing e modulos.
 
 ### Entidades Independentes
 

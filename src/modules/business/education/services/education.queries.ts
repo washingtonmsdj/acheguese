@@ -8,6 +8,7 @@
  */
 
 import { supabase } from '@/integrations/supabase';
+import { CommunityExperienceService } from '@/core/community-experience/services/CommunityExperienceService';
 import { logger } from '@/shared/utils/logger';
 import { getRecordValue } from '@/shared/utils/recordLookup';
 import type {
@@ -60,11 +61,6 @@ interface EducationTerritoryFilter {
 interface LocationRouteRow {
   id: string;
   geographic_path: string | null;
-}
-
-interface TerritoryCommunityRow {
-  territory_type: 'neighborhood' | 'district' | 'territorial_group';
-  territory_id: string;
 }
 
 function parseEducationPublicRoute(
@@ -173,28 +169,22 @@ async function resolveEducationTerritoryLocationIds(
   }
 
   if (cityLocation?.id) {
-    const { data: community, error: communityError } = await supabase
-      .from('territory_communities')
-      .select('territory_type, territory_id')
-      .eq('city_id', cityLocation.id)
-      .eq('slug', district)
-      .maybeSingle();
-
-    if (communityError) {
-      logger.error('[EducationQueries] Error fetching territory community:', communityError);
-      return [];
-    }
-
-    const resolvedCommunity = community as TerritoryCommunityRow | null;
-
-    if (
+    const resolvedCommunity = await CommunityExperienceService.findCommunityByCityAndSlug(
+      cityLocation.id,
+      district,
+    );
+    const isLocationCommunity =
       resolvedCommunity?.territory_type === 'neighborhood' ||
-      resolvedCommunity?.territory_type === 'district'
-    ) {
+      resolvedCommunity?.territory_type === 'district';
+
+    if (resolvedCommunity?.territory_id && isLocationCommunity) {
       return [resolvedCommunity.territory_id];
     }
 
-    if (resolvedCommunity?.territory_type === 'territorial_group') {
+    if (
+      resolvedCommunity?.territory_type === 'territorial_group' &&
+      resolvedCommunity.territory_id
+    ) {
       const { data: members, error: membersError } = await supabase
         .from('territorial_group_members')
         .select('location_id')
