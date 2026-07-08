@@ -2,7 +2,17 @@
 
 ## Status Executivo
 
-O projeto ainda nao deve ser marcado como 100% pronto para lancamento enquanto o gate completo nao rodar em um ambiente com Node/npm, Git e variaveis reais de producao. A auditoria desta data removeu bloqueios estruturais de release, mas a aprovacao final depende de CI verde.
+Status historico de 2026-05-26. O status operacional vigente fica em
+`docs/STATUS_ATUAL.md`.
+
+Atualizacao 2026-07-08: `npm run verify:deploy` e `npm run build` passaram no
+ambiente local atual. No Supabase remoto, `billing-webhook`,
+`billing-create-checkout`, `billing-create-portal` e `billing-entitlements-rpc`
+estao `ACTIVE`; as funcoes legadas `stripe-webhook`,
+`gastronomy-upgrade-plan`, `gastronomy-cancel-subscription`,
+`gastronomy-reactivate-subscription` e `gastronomy-add-payment-method` nao estao
+presentes. As pendencias remotas restantes antes do lancamento sao as excecoes
+ativas em `docs/governance/security/EXCEPTIONS.md`.
 
 ## P0 - Bloqueadores Antes Do Release
 
@@ -21,7 +31,11 @@ O projeto ainda nao deve ser marcado como 100% pronto para lancamento enquanto o
    - `STRIPE_SECRET_KEY`
    - `STRIPE_WEBHOOK_SECRET`
    - `ALLOWED_REDIRECT_DOMAINS`
-3. Confirmar no Supabase que somente `billing-webhook`, `billing-create-checkout` e `billing-create-portal` estao ativos para billing. Funcoes antigas de gastronomia/Stripe foram removidas do repositorio e nao devem permanecer deployadas.
+3. [Fechado em 2026-07-08] Confirmar no Supabase que somente
+   `billing-webhook`, `billing-create-checkout`, `billing-create-portal` e
+   `billing-entitlements-rpc` estao ativos para billing. Funcoes antigas de
+   gastronomia/Stripe foram removidas do repositorio e nao estao presentes no
+   remoto.
 4. Reexecutar E2E visual em browser para comunidade/feed, SEO territorial, central operacional, gastronomia, mobilidade e mobile.
 
 ## P1 - Hardening Profissional

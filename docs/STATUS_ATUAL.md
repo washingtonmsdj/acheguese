@@ -25,6 +25,15 @@ Observacao: este documento e a fonte operacional atual. O historico abaixo fica 
   `public.spatial_ref_sys` e overloads `st_estimatedextent`, todos com owner
   `supabase_admin`. `npm run security:auth:hibp -- --json` retornou
   `status=blocked`, `blocker=missing_pat`; nenhuma alteracao remota foi feita.
+- Build e billing remoto em 2026-07-08: `npm run build` passou com Vite
+  `7.3.3`. A auditoria remota de Edge Functions confirmou que
+  `billing-webhook`, `billing-create-checkout`, `billing-create-portal` e
+  `billing-entitlements-rpc` estao `ACTIVE`; `billing-webhook` esta com
+  `verify_jwt=false` para assinatura Stripe, e checkout/portal/entitlements
+  estao com `verify_jwt=true`. As funcoes legadas `stripe-webhook`,
+  `gastronomy-upgrade-plan`, `gastronomy-cancel-subscription`,
+  `gastronomy-reactivate-subscription` e `gastronomy-add-payment-method` nao
+  estao presentes no remoto.
 - Supabase remoto em 2026-07-08: Advisor reexecutado e permanece em 12 achados
   totais. Os achados de aplicacao/RPC corrigiveis por migrations e Edge
   Functions foram removidos; restam apenas `public.spatial_ref_sys`,
