@@ -927,7 +927,7 @@ Evidencia:
 
 ### Fase 2 - Consolidar Comunidade Local No Core
 
-Status: pendente
+Status: concluida para contrato backend em 2026-07-08
 
 Objetivo:
 
@@ -968,17 +968,29 @@ Objetivo:
 
 Tarefas:
 
-- desenhar migration `community_memberships`;
-- definir regras de join: aberto, approval, invite, residencia verificada;
-- definir papeis: owner/admin/moderator/member;
-- definir RLS e RPCs de entrada/saida/moderacao;
-- atualizar UI somente depois de backend/RLS prontos.
+- [x] desenhar migration `community_memberships`;
+- [x] definir regras de join: aberto, approval, invite, residencia verificada;
+- [x] definir papeis: owner/admin/moderator/member;
+- [x] definir RLS de entrada/saida/moderacao;
+- [x] evitar RPC publica direta nesta etapa; a superficie mutante futura deve
+  passar por broker/Edge Function antes de UI publica;
+- [ ] atualizar UI somente depois de backend/RLS prontos.
 
 Criterio de pronto:
 
 - membership existe como SSOT;
 - interacoes restritas usam membership;
 - conteudo publico continua indexavel quando permitido.
+
+Evidencia:
+
+- `supabase/migrations/20260708215101_create_community_memberships_ssot.sql`
+  cria `community_memberships` com RLS, grants explicitos, policies e helper
+  privado de gestao;
+- `CommunityMembershipRepository` e `CommunityMembershipService` sao a fronteira
+  canonica do app;
+- `validate-project-taxonomy` e `check:ssot` bloqueiam acesso paralelo a
+  `community_memberships`.
 
 ### Fase 4 - Criar Vinculos Comunitarios De Entidades
 

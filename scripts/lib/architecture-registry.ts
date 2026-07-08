@@ -334,7 +334,9 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     ],
     ssotPaths: [
       "src/core/community-experience/repositories/CommunityExperienceRepository.ts",
+      "src/core/community-experience/repositories/CommunityMembershipRepository.ts",
       "src/core/community-experience/services/CommunityExperienceService.ts",
+      "src/core/community-experience/services/CommunityMembershipService.ts",
       "src/core/community-experience/types.ts",
       "src/core/community/access/CommunityAccessPolicy.ts",
     ],
@@ -349,7 +351,9 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     criticality: "critical",
     canonicalServiceBasenames: [
       "CommunityExperienceRepository.ts",
+      "CommunityMembershipRepository.ts",
       "CommunityExperienceService.ts",
+      "CommunityMembershipService.ts",
       "CommunityAccessPolicy.ts",
     ],
     canonicalTypeBasenames: ["types.ts"],
@@ -358,7 +362,7 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     docsSummary:
       "Boa para decisao arquitetural. `COMMUNITY_FIRST_ARCHITECTURE_SSOT.md` define Comunidade Local como core domain e aponta para o plano incremental.",
     ssotSummary:
-      "CommunityExperienceRepository e o owner unico de leitura direta de `territory_communities` e `community_public_aliases` no app. CommunityExperienceService e a fachada canonica consumida por routing e modulos. Territorio continua em location/territorial; feed e demais experiencias comunitarias nao devem redefinir a identidade da comunidade.",
+      "CommunityExperienceRepository e o owner unico de leitura direta de `territory_communities` e `community_public_aliases` no app. CommunityMembershipRepository e o owner unico de `community_memberships`. CommunityExperienceService e CommunityMembershipService sao as fachadas canonicas consumidas por routing e modulos. Territorio continua em location/territorial; feed e demais experiencias comunitarias nao devem redefinir a identidade da comunidade.",
   },
   {
     id: "community-feed",

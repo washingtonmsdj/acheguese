@@ -43,8 +43,10 @@ SSOT atual:
 
 - `territory_communities`
 - `community_public_aliases`
+- `community_memberships`
 - `src/core/community-experience`
 - `src/core/community-experience/repositories/CommunityExperienceRepository.ts`
+- `src/core/community-experience/repositories/CommunityMembershipRepository.ts`
 
 Responsabilidade:
 
@@ -57,6 +59,11 @@ Responsabilidade:
 e o unico owner de leitura direta de `territory_communities` e
 `community_public_aliases` no app. `CommunityExperienceService` e a fachada
 canonica consumida por routing e modulos.
+
+`src/core/community-experience/repositories/CommunityMembershipRepository.ts`
+e o unico owner de acesso direto a `community_memberships` no app. Membership
+representa participacao na Comunidade Local; nao substitui residencia,
+perfil ativo, grupo social ou roles globais.
 
 ### Entidades Independentes
 
@@ -105,6 +112,7 @@ Dono da identidade da Comunidade Local.
 Pode:
 
 - ler `territory_communities`;
+- ler `community_memberships`;
 - ler alias publico quando a fachada for consolidada;
 - compor dados territoriais canonicos para experiencia publica.
 

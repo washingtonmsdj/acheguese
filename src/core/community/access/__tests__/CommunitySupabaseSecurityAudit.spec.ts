@@ -76,6 +76,39 @@ describe("community supabase security audit", () => {
     expect(aliases).toContain("CONSTRAINT community_public_aliases_alias_not_reserved");
   });
 
+  it("keeps community memberships private, RLS-backed, and owned by community-experience", () => {
+    const memberships = readProjectFile(
+      "supabase/migrations/20260708215101_create_community_memberships_ssot.sql",
+    );
+    const repository = readProjectFile(
+      "src/core/community-experience/repositories/CommunityMembershipRepository.ts",
+    );
+    const taxonomy = readProjectFile("scripts/validate-project-taxonomy.ts");
+
+    expect(memberships).toContain("CREATE TABLE IF NOT EXISTS public.community_memberships");
+    expect(memberships).toContain("community_id UUID NOT NULL REFERENCES public.territory_communities");
+    expect(memberships).toContain("profile_id UUID NOT NULL REFERENCES public.profiles");
+    expect(memberships).toContain("user_id UUID NOT NULL REFERENCES auth.users");
+    expect(memberships).toContain("ALTER TABLE public.community_memberships ENABLE ROW LEVEL SECURITY;");
+    expect(memberships).toContain("REVOKE ALL ON TABLE public.community_memberships FROM anon;");
+    expect(memberships).toContain(
+      "GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.community_memberships TO authenticated;",
+    );
+    expect(memberships).toContain("CREATE POLICY community_memberships_select_own_or_manager");
+    expect(memberships).toContain("CREATE POLICY community_memberships_insert_self_pending");
+    expect(memberships).toContain("AND join_method IN ('open', 'approval')");
+    expect(memberships).toContain("CREATE POLICY community_memberships_update_by_manager");
+    expect(memberships).toContain("CREATE POLICY community_memberships_delete_self_or_manager");
+    expect(memberships).toContain("CREATE OR REPLACE FUNCTION private.can_manage_community_membership");
+    expect(memberships).toContain("SECURITY DEFINER");
+    expect(memberships).toContain("SET search_path = public, private, pg_temp");
+    expect(memberships).toContain("Not exposed as public RPC");
+
+    expect(repository).toContain('.from("community_memberships" as never)');
+    expect(taxonomy).toContain("community_memberships");
+    expect(taxonomy).toContain("CommunityMembershipRepository.ts");
+  });
+
   it("requires verified residence for community alert and issue creation RPCs", () => {
     const hardening = readProjectFile(
       "supabase/migrations/20260706100000_harden_community_creation_residence_authorization.sql",
