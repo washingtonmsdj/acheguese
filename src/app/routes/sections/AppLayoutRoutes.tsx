@@ -14,6 +14,7 @@ import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from "@/config/launchSc
 import {
   TERRITORIAL_ROUTE_PARAMS,
   TERRITORIAL_ROUTE_STATIC_SEGMENTS,
+  buildCommunityTerritoryRoutePath,
   buildTerritorialBareRoutePath,
   buildTerritorialModuleRoutePath,
   buildTerritorialRoutePath,
@@ -60,26 +61,63 @@ const JOB_ROUTES = {
   publish: buildAppModulePath(APP_MODULE_SLUGS.jobs, TERRITORIAL_STATIC.publish),
 } as const;
 
-const DIRECT_PAUSED_ROUTES: Array<{
+type DirectPausedRoute = {
   path: string;
   surface: LaunchSurfaceKey;
   moduleName: string;
-}> = [
+};
+
+function buildCommunityPausedRoutes(
+  segments: readonly string[],
+  surface: LaunchSurfaceKey,
+  moduleName: string,
+): DirectPausedRoute[] {
+  return [
+    {
+      path: buildCommunityTerritoryRoutePath(segments),
+      surface,
+      moduleName,
+    },
+    {
+      path: buildCommunityTerritoryRoutePath([
+        TERRITORIAL_PARAMS.groupSlugOrDistrict,
+        ...segments,
+      ]),
+      surface,
+      moduleName,
+    },
+  ];
+}
+
+const DIRECT_PAUSED_ROUTES: DirectPausedRoute[] = [
   { path: EVENT_ROUTES.home, surface: "events", moduleName: "Eventos" },
   { path: EVENT_ROUTES.favorites, surface: "events", moduleName: "Eventos" },
   { path: EVENT_ROUTES.calendar, surface: "events", moduleName: "Eventos" },
   { path: EVENT_ROUTES.map, surface: "events", moduleName: "Eventos" },
   { path: EVENT_ROUTES.detail, surface: "events", moduleName: "Eventos" },
   { path: EVENT_ROUTES.legacyDetail, surface: "events", moduleName: "Eventos" },
+  { path: EVENT_TERRITORIAL_ROUTES.home, surface: "events", moduleName: "Eventos" },
+  { path: EVENT_TERRITORIAL_ROUTES.district, surface: "events", moduleName: "Eventos" },
+  { path: EVENT_TERRITORIAL_ROUTES.favorites, surface: "events", moduleName: "Eventos" },
+  { path: EVENT_TERRITORIAL_ROUTES.calendar, surface: "events", moduleName: "Eventos" },
+  { path: EVENT_TERRITORIAL_ROUTES.map, surface: "events", moduleName: "Eventos" },
+  { path: EVENT_TERRITORIAL_ROUTES.detail, surface: "events", moduleName: "Eventos" },
   { path: JOB_ROUTES.home, surface: "jobs", moduleName: "Vagas" },
   { path: JOB_ROUTES.publish, surface: "jobs", moduleName: "Vagas" },
+  { path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.jobs), surface: "jobs", moduleName: "Vagas" },
+  { path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.jobs, [TERRITORIAL_PARAMS.slug]), surface: "jobs", moduleName: "Vagas" },
   { path: "/oportunidades", surface: "jobs", moduleName: "Oportunidades" },
   { path: "/oportunidades/:id", surface: "jobs", moduleName: "Oportunidades" },
   { path: "/educacao", surface: "education", moduleName: "Educacao" },
+  { path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.education), surface: "education", moduleName: "Educacao" },
+  { path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.education, [TERRITORIAL_PARAMS.district]), surface: "education", moduleName: "Educacao" },
+  { path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.education, [TERRITORIAL_PARAMS.district, TERRITORIAL_PARAMS.slug]), surface: "education", moduleName: "Educacao" },
   { path: "/comunicacao", surface: "communication", moduleName: "Comunicacao" },
   { path: "/comunicacao/solicitar", surface: "communication", moduleName: "Comunicacao" },
   { path: "/comunicacao/empresa/:channelSlug", surface: "communication", moduleName: "Comunicacao" },
   { path: "/comunicacao/agente/:channelSlug", surface: "communication", moduleName: "Comunicacao" },
+  { path: buildTerritorialRoutePath(TERRITORIAL_STATIC.communication), surface: "communication", moduleName: "Comunicacao" },
+  { path: buildTerritorialRoutePath(TERRITORIAL_STATIC.communication, [TERRITORIAL_PARAMS.channelSlug]), surface: "communication", moduleName: "Comunicacao" },
   { path: "/cupons", surface: "coupons", moduleName: "Cupons" },
   { path: "/cupons/:id", surface: "coupons", moduleName: "Cupons" },
   { path: "/analytics", surface: "publicAnalytics", moduleName: "Analytics" },
@@ -102,6 +140,13 @@ const DIRECT_PAUSED_ROUTES: Array<{
   { path: "/achados-perdidos/:id", surface: "communityLostFound", moduleName: "Achados e perdidos" },
   { path: "/mensagens", surface: "communityCommunication", moduleName: "Mensagens" },
   { path: "/chat/:conversationId", surface: "communityCommunication", moduleName: "Mensagens" },
+  ...buildCommunityPausedRoutes([APP_MODULE_SLUGS.events], "events", "Eventos"),
+  ...buildCommunityPausedRoutes([APP_MODULE_SLUGS.jobs], "jobs", "Vagas"),
+  ...buildCommunityPausedRoutes([APP_MODULE_SLUGS.education], "education", "Educacao"),
+  ...buildCommunityPausedRoutes([APP_MODULE_SLUGS.mobility], "mobility", "Mobilidade"),
+  ...buildCommunityPausedRoutes([TERRITORIAL_STATIC.issues], "communityIssues", "Problemas"),
+  ...buildCommunityPausedRoutes([TERRITORIAL_STATIC.lostAndFound], "communityLostFound", "Achados e perdidos"),
+  ...buildCommunityPausedRoutes([TERRITORIAL_STATIC.communication], "communityCommunication", "Comunicacao"),
 ];
 
 export function AppLayoutRoutes() {

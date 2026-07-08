@@ -2,17 +2,28 @@
 
 Data: 2026-07-08
 Branch: main
-Ultimo commit validado: 303ff478 (`fix: harden try-on image fetch security`)
+Ultimo commit base validado: 4f65f0aa (`test: harden launch e2e readiness`)
 
 Observacao: este documento e a fonte operacional atual. O historico abaixo fica preservado por contexto, mas qualquer registro antigo de bloqueio por falta de `git`/`node` nao representa o ambiente validado em 2026-06-06.
 
 ## Validacoes Recentes
 
+- Gate P0 executavel em 2026-07-08: `npm run typecheck`, `npm run lint`,
+  `npm run security:validate`, `npm run validate:phase:core` e
+  `npm run verify:deploy` passaram no ambiente local. O pacote
+  `validate:phase:core` aprovou typecheck, lint, links vivos de docs,
+  `test:ssot:community` (`11/11`) e E2E de fase core (`53/53`) em Chromium.
+  A correcao desta sessao deixou a tela de modulo pausado independente de
+  consultas dinamicas de territorio/Supabase e antecipou rotas territoriais
+  pausadas pela lista `DIRECT_PAUSED_ROUTES`, antes de qualquer layout
+  territorial. `verify:deploy` declarou `PROJETO PRONTO PARA DEPLOY`; as
+  variaveis reais listadas por ele continuam sendo configuracao externa ao
+  repositorio.
 - E2E de lancamento em 2026-07-08: o pacote de browser para
   comunidade/feed, SEO territorial, central, gastronomia, mobilidade e mobile
   passou com `49/49` testes em Chromium. Tambem passaram o pacote focado
   `gastronomy-operational + mobility-operational` com `7/7`, `npm run
-typecheck:app`, `git diff --check` e os Vitest de SSOT/security para
+  typecheck:app`, `git diff --check` e os Vitest de SSOT/security para
   `GastronomyOperationalSSOT` e `business-reviews-rpc-security` (`17/17`). O
   broker remoto `business-reviews-rpc` foi publicado no Supabase como
   `ACTIVE`, `verify_jwt=true`, versao `2`.

@@ -5,8 +5,10 @@
 Status historico de 2026-05-26. O status operacional vigente fica em
 `docs/STATUS_ATUAL.md`.
 
-Atualizacao 2026-07-08: `npm run verify:deploy` e `npm run build` passaram no
-ambiente local atual. No Supabase remoto, `billing-webhook`,
+Atualizacao 2026-07-08: `npm run typecheck`, `npm run lint`,
+`npm run security:validate`, `npm run validate:phase:core`,
+`npm run verify:deploy` e `npm run build` passaram no ambiente local atual. No
+Supabase remoto, `billing-webhook`,
 `billing-create-checkout`, `billing-create-portal` e `billing-entitlements-rpc`
 estao `ACTIVE`; as funcoes legadas `stripe-webhook`,
 `gastronomy-upgrade-plan`, `gastronomy-cancel-subscription`,
@@ -16,12 +18,12 @@ ativas em `docs/governance/security/EXCEPTIONS.md`.
 
 ## P0 - Bloqueadores Antes Do Release
 
-1. Rodar e corrigir tudo que falhar em:
-   - `npm run typecheck`
-   - `npm run lint`
-   - `npm run security:validate`
-   - `npm run validate:phase:core`
-   - `npm run verify:deploy`
+1. [Fechado em 2026-07-08] Rodar e corrigir tudo que falhar em:
+   - `npm run typecheck`: passou.
+   - `npm run lint`: passou.
+   - `npm run security:validate`: passou.
+   - `npm run validate:phase:core`: passou com E2E `53/53`.
+   - `npm run verify:deploy`: passou com `PROJETO PRONTO PARA DEPLOY`.
 2. Configurar variaveis reais fora do repositorio:
    - `VITE_SUPABASE_URL`
    - `VITE_SUPABASE_PUBLISHABLE_KEY`

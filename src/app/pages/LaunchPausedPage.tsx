@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft, Building2, Home, Map, MapPin, Search, Tag, Users, Wrench } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
-import { useHomeCommunityHref } from "@/core/routing/hooks/useHomeCommunityHref";
+import { LAUNCH_URLS } from "@/config/territory";
 
 interface LaunchPausedPageProps {
   moduleName?: string;
@@ -18,9 +18,8 @@ const STATIC_ACTIVE_LINKS = [
 ] as const;
 
 export default function LaunchPausedPage({ moduleName = "Módulo" }: LaunchPausedPageProps) {
-  const communityHref = useHomeCommunityHref();
   const activeLinks = [
-    { label: "Comunidade", href: communityHref, icon: Users },
+    { label: "Comunidade", href: LAUNCH_URLS.community, icon: Users },
     ...STATIC_ACTIVE_LINKS,
   ] as const;
 

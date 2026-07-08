@@ -89,6 +89,7 @@ export function OrderPublicReviewPanel({ order }: OrderPublicReviewPanelProps) {
     isCustomerOrder,
     isReviewableStatus,
     order.merchant_profile_id,
+    reviewerProfileId,
     submitted,
   ]);
 
