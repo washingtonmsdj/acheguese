@@ -50,6 +50,29 @@ export function isAllowedImageReference(value: string): boolean {
   }
 }
 
+export function isAllowedTryOnProductImageReference(
+  value: string,
+  userId: string,
+  supabaseUrl: string,
+): boolean {
+  if (!isAllowedImageReference(value) || value.startsWith("data:")) return false;
+
+  try {
+    const parsed = new URL(value);
+    const supabaseOrigin = new URL(supabaseUrl).origin;
+    const expectedPathPrefix = `/storage/v1/object/public/tryon/${userId}/inputs/`;
+
+    return parsed.origin === supabaseOrigin &&
+      parsed.search === "" &&
+      parsed.hash === "" &&
+      parsed.pathname.startsWith(expectedPathPrefix) &&
+      parsed.pathname.length > expectedPathPrefix.length &&
+      !parsed.pathname.includes("..");
+  } catch {
+    return false;
+  }
+}
+
 export function dataUrlToImageBytes(dataUrl: string): { bytes: Uint8Array; mime: string } {
   const match = dataUrl.match(ALLOWED_DATA_IMAGE_PATTERN);
   if (!match) throw new Error("data URL de imagem invalida");

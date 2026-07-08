@@ -99,9 +99,39 @@ function getTrustedIp(req: Request): string | null {
   if (!candidate) return null;
 
   const value = candidate.trim();
-  if (/^(?:\d{1,3}\.){3}\d{1,3}$/.test(value)) return value;
-  if (/^[0-9A-Fa-f:.]{2,45}$/.test(value) && value.includes(":")) return value;
+  if (isSafeIpv4(value)) return value;
+  if (isSafeIpv6Like(value)) return value;
   return null;
+}
+
+function isSafeIpv4(value: string): boolean {
+  const parts = value.split(".");
+  if (parts.length !== 4) return false;
+
+  return parts.every((part) => {
+    if (!part || part.length > 3) return false;
+    for (let index = 0; index < part.length; index += 1) {
+      const code = part.charCodeAt(index);
+      if (code < 48 || code > 57) return false;
+    }
+    const octet = Number(part);
+    return Number.isInteger(octet) && octet >= 0 && octet <= 255;
+  });
+}
+
+function isSafeIpv6Like(value: string): boolean {
+  if (!value.includes(":") || value.length < 2 || value.length > 45) return false;
+
+  for (let index = 0; index < value.length; index += 1) {
+    const code = value.charCodeAt(index);
+    const isDigit = code >= 48 && code <= 57;
+    const isUpperHex = code >= 65 && code <= 70;
+    const isLowerHex = code >= 97 && code <= 102;
+    const isSeparator = code === 46 || code === 58;
+    if (!isDigit && !isUpperHex && !isLowerHex && !isSeparator) return false;
+  }
+
+  return true;
 }
 
 async function requireUser(

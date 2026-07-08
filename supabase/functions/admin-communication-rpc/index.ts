@@ -77,11 +77,34 @@ function cleanOptionalSlug(value: unknown): string | null {
   const slug = cleanOptionalText(value, "slug", 120);
   if (!slug) return null;
 
-  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+  if (!isSafeSlug(slug)) {
     throw new RequestValidationError("Invalid slug");
   }
 
   return slug;
+}
+
+function isSafeSlug(value: string): boolean {
+  if (!value || value.startsWith("-") || value.endsWith("-")) return false;
+
+  let previousWasHyphen = false;
+  for (let index = 0; index < value.length; index += 1) {
+    const code = value.charCodeAt(index);
+    const isDigit = code >= 48 && code <= 57;
+    const isLowercaseLetter = code >= 97 && code <= 122;
+    const isHyphen = code === 45;
+
+    if (isHyphen) {
+      if (previousWasHyphen) return false;
+      previousWasHyphen = true;
+      continue;
+    }
+
+    if (!isDigit && !isLowercaseLetter) return false;
+    previousWasHyphen = false;
+  }
+
+  return true;
 }
 
 function cleanApprovePayload(value: unknown, adminUserId: string): Record<string, unknown> {

@@ -3,7 +3,12 @@
 // Provider: Replicate / cuuupid/idm-vton.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { AI_RATE_LIMITS, dataUrlToImageBytes, isAllowedImageReference } from "../_ai/requestGuards.ts";
+import {
+  AI_RATE_LIMITS,
+  dataUrlToImageBytes,
+  isAllowedImageReference,
+  isAllowedTryOnProductImageReference,
+} from "../_ai/requestGuards.ts";
 import {
   getAllSecurityHeaders,
   isValidUUID,
@@ -198,6 +203,14 @@ async function makeImageAvailableToReplicate(imageUrl: string): Promise<string> 
   return `data:${contentType};base64,${btoa(binary)}`;
 }
 
+function assertTryOnProductImageUrl(imageUrl: string, userId: string): string {
+  if (!isAllowedTryOnProductImageReference(imageUrl, userId, SUPABASE_URL)) {
+    throw new Error("Imagem do produto deve vir do storage tryon do proprio usuario.");
+  }
+
+  return imageUrl;
+}
+
 async function waitForPrediction(prediction: ReplicatePrediction): Promise<ReplicatePrediction> {
   let current = prediction;
 
@@ -348,7 +361,7 @@ Deno.serve(async (req) => {
 
         for (let i = 0; i < variations; i++) {
           const imageRef = await callReplicateTryOn(
-            gen.product_image_url,
+            assertTryOnProductImageUrl(gen.product_image_url, user.id),
             gen.category as Category,
             gen.target_gender,
             gen.style,

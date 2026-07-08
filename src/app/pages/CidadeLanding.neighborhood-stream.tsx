@@ -36,8 +36,28 @@ function getUnlockedActionLabel(item: NeighborhoodStreamItem): string {
 
 function getCompactActionLabel(label: string | undefined): string | null {
   if (!label) return null;
-  const match = label.match(/\d+(?:[.,]\d+)?/);
-  return match?.[0] ?? null;
+
+  let started = false;
+  let result = "";
+  let hasDecimalSeparator = false;
+
+  for (let index = 0; index < label.length; index += 1) {
+    const char = label[index];
+    const code = label.charCodeAt(index);
+    const isDigit = code >= 48 && code <= 57;
+    const isDecimalSeparator = (char === "," || char === ".") && started && !hasDecimalSeparator;
+
+    if (isDigit || isDecimalSeparator) {
+      started = true;
+      result += char;
+      if (isDecimalSeparator) hasDecimalSeparator = true;
+      continue;
+    }
+
+    if (started) break;
+  }
+
+  return result && result !== "." && result !== "," ? result : null;
 }
 
 function NeighborhoodStreamEmpty({ config }: { config: NeighborhoodStreamMoreConfig }) {

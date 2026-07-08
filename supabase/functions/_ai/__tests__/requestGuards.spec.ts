@@ -6,6 +6,7 @@ import {
   hasAllowedTextMessages,
   hasAllowedToolSchema,
   isAllowedImageReference,
+  isAllowedTryOnProductImageReference,
   jsonByteLength,
 } from "../requestGuards.ts";
 
@@ -25,6 +26,37 @@ describe("AI request guards", () => {
     expect(isAllowedImageReference("javascript:alert(1)")).toBe(false);
     expect(isAllowedImageReference("data:text/html;base64,PGgxPkJvb208L2gxPg==")).toBe(false);
     expect(isAllowedImageReference(`https://cdn.example.com/${"a".repeat(AI_VISION_REQUEST_LIMITS.maxImageReferenceChars)}`)).toBe(false);
+  });
+
+  it("accepts try-on product images only from the user's Supabase storage input path", () => {
+    const supabaseUrl = "https://project-ref.supabase.co";
+    const userId = "8b40dc30-7b62-48d6-8ec9-0dfae9f8c30e";
+    const validUrl =
+      `${supabaseUrl}/storage/v1/object/public/tryon/${userId}/inputs/product.webp`;
+
+    expect(isAllowedTryOnProductImageReference(validUrl, userId, supabaseUrl)).toBe(true);
+    expect(
+      isAllowedTryOnProductImageReference(
+        `https://cdn.example.com/storage/v1/object/public/tryon/${userId}/inputs/product.webp`,
+        userId,
+        supabaseUrl,
+      ),
+    ).toBe(false);
+    expect(
+      isAllowedTryOnProductImageReference(
+        `${supabaseUrl}/storage/v1/object/public/tryon/other-user/inputs/product.webp`,
+        userId,
+        supabaseUrl,
+      ),
+    ).toBe(false);
+    expect(
+      isAllowedTryOnProductImageReference(
+        `${supabaseUrl}/storage/v1/object/public/tryon/${userId}/outputs/product.webp`,
+        userId,
+        supabaseUrl,
+      ),
+    ).toBe(false);
+    expect(isAllowedTryOnProductImageReference("data:image/png;base64,aGVsbG8=", userId, supabaseUrl)).toBe(false);
   });
 
   it("decodes only allowed image data URLs", () => {
