@@ -1372,6 +1372,10 @@ Evidencia parcial:
   First de 2026-07-09, deixando claro que citacoes historicas de
   `src/modules/community` nao representam a arquitetura vigente; o mesmo
   marcador passou a ser exigido por `validate:taxonomy`.
+- `docs/INDICE_DOCUMENTACAO_SSOT.md` foi convertido em ponte historica para
+  `INDEX_CANONICO.md`, `STATUS_ATUAL.md`, `COMMUNITY_FIRST_ARCHITECTURE_SSOT.md`
+  e este plano; `validate:taxonomy` bloqueia o retorno de linguagem "100%" e
+  referencias antigas como fonte principal.
 
 Criterio de pronto:
 

@@ -10,6 +10,7 @@ const CANONICAL_MAP_PATH = "docs/CANONICAL_MAP.md";
 const CORE_LAYER_SSOT_PATH = "docs/architecture/CORE_LAYER_SSOT.md";
 const GLOBAL_STRUCTURAL_AUDIT_PATH = "docs/AUDITORIA_ESTRUTURAL_GLOBAL.md";
 const STATUS_ATUAL_PATH = "docs/STATUS_ATUAL.md";
+const LEGACY_SSOT_INDEX_PATH = "docs/INDICE_DOCUMENTACAO_SSOT.md";
 const COMMUNITY_FIRST_ARCHITECTURE_DOC_PATH =
   "docs/architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md";
 const COMMUNITY_FIRST_PLAN_PATH = "plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md";
@@ -253,6 +254,17 @@ const STATUS_ATUAL_COMMUNITY_FIRST_MARKERS = [
   "`src/modules/community-feed`",
   "`src/modules/community` nao e modulo canonico vigente",
   "Caminhos historicos",
+] as const;
+const LEGACY_SSOT_INDEX_REQUIRED_MARKERS = [
+  "Historico: este arquivo era um indice antigo",
+  "[INDEX_CANONICO.md](./INDEX_CANONICO.md)",
+  "[STATUS_ATUAL.md](./STATUS_ATUAL.md)",
+  "[architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md](./architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md)",
+] as const;
+const LEGACY_SSOT_INDEX_FORBIDDEN_MARKERS = [
+  "Sistema 100% implementado",
+  "RESUMO_FINAL_SSOT_COMPLETO.md",
+  "VALIDACAO_FINAL_E_PROXIMOS_PASSOS.md` (principal)",
 ] as const;
 
 function pathExists(relativePath: string): boolean {
@@ -548,6 +560,27 @@ function main() {
       if (!statusAtual.includes(marker)) {
         violations.push(
           `${STATUS_ATUAL_PATH} deve declarar o estado Community First vigente antes do historico; falta marcador "${marker}".`,
+        );
+      }
+    }
+  }
+
+  const legacySsotIndex = readText(LEGACY_SSOT_INDEX_PATH);
+  if (!legacySsotIndex) {
+    violations.push(`Indice historico SSOT ausente: ${LEGACY_SSOT_INDEX_PATH}`);
+  } else {
+    for (const marker of LEGACY_SSOT_INDEX_REQUIRED_MARKERS) {
+      if (!legacySsotIndex.includes(marker)) {
+        violations.push(
+          `${LEGACY_SSOT_INDEX_PATH} deve apontar para os SSOTs vigentes; falta marcador "${marker}".`,
+        );
+      }
+    }
+
+    for (const marker of LEGACY_SSOT_INDEX_FORBIDDEN_MARKERS) {
+      if (legacySsotIndex.includes(marker)) {
+        violations.push(
+          `${LEGACY_SSOT_INDEX_PATH} ainda contem marcador legado "${marker}".`,
         );
       }
     }
