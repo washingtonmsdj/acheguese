@@ -102,7 +102,9 @@ mais comunidades sem copiar seus dados mestres:
 - Eventos: `events`, `src/core/verticals/events` para leitura publica,
   escrita, participacao e check-in canonicos via `EventReadService` e
   `EventMutationService`; join, leave e check-in usam `event-rpc` com RPCs
-  atomicas dedicadas.
+  atomicas dedicadas. Os helpers antigos de contador
+  `increment_event_participants` e `decrement_event_participants` nao fazem
+  parte do contrato canonico.
 - Usuarios/perfis: `profiles`, `src/core/profiles`, `src/modules/profile`
 - Posts/feed: `posts` como candidato a SSOT principal, com consolidacao
   pendente contra `community_posts`

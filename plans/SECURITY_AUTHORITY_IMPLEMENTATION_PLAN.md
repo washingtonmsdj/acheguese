@@ -869,10 +869,11 @@ movidos para `event-rpc` com `verify_jwt=true` e RPCs atomicas dedicadas
 (`join_event_participation`, `leave_event_participation`,
 `check_in_event_participation` e `check_in_event_participation_by_code`). O
 `community-rpc` permanece responsavel por alerta, ocorrencia, contador de
-edicao de alerta e melhor resposta de QA; os helpers legados
-`increment_event_participants` e `decrement_event_participants` foram marcados
-como deprecated e tiveram `EXECUTE` de `service_role` revogado pela migration
-`20260709005208`.
+edicao de alerta e melhor resposta de QA. Os helpers legados
+`increment_event_participants` e `decrement_event_participants` tiveram
+`EXECUTE` de `service_role` revogado pela migration `20260709005208` e foram
+removidos do contrato remoto pela migration
+`20260709011223_drop_legacy_event_counter_rpcs.sql`.
 
 Resultado `profile-rpc` em 2026-07-07: criada e implantada a Edge Function
 `profile-rpc` com `verify_jwt=true` para criacao de perfil, alteracao de

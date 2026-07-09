@@ -76,11 +76,6 @@ interface PostMutationSelectRow extends DbPostRow {
     parent_id: string | null;
   } | null;
   hidden?: boolean | null;
-  is_hidden?: boolean | null;
-  is_removed?: boolean | null;
-  removed_reason?: string | null;
-  removed_at?: string | null;
-  removed_by?: string | null;
   shares_count?: number | null;
 }
 

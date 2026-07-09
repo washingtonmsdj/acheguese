@@ -1109,8 +1109,8 @@ Tarefas:
   `EventMutationService`;
 - [x] criar RPCs atomicas dedicadas para join/leave/check-in e contador de
   participantes antes de escala publica ampla;
-- [ ] revisar/remover helpers legados `increment_event_participants` e
-  `decrement_event_participants` apos janela de compatibilidade;
+- [x] revisar/remover helpers legados `increment_event_participants` e
+  `decrement_event_participants` apos deploy de `community-rpc`/`event-rpc`;
 - definir se `vagas` permanece em `classifieds/jobs` ou vira oportunidades
   canonicas;
 - atualizar route registry e launch gates;
@@ -1120,6 +1120,14 @@ Criterio de pronto:
 
 - eventos e oportunidades possuem SSOT, URLs, RLS e testes;
 - comunidade apenas exibe/vincula, nao duplica.
+
+Evidencia parcial:
+
+- `supabase/functions/community-rpc` e `supabase/functions/event-rpc` foram
+  publicados no remoto antes da remocao dos helpers legados;
+- `supabase/migrations/20260709011223_drop_legacy_event_counter_rpcs.sql`
+  remove `increment_event_participants` e `decrement_event_participants` para
+  impedir retorno ao contrato antigo de contador nao atomico.
 
 ### Fase 7 - Limpeza De Duplicacoes
 

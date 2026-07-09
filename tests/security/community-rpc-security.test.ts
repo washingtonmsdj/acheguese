@@ -103,6 +103,9 @@ describe("community content rpc broker security", () => {
     const migration = readProjectFile(
       "supabase/migrations/20260709005208_atomic_event_participation_rpcs.sql",
     );
+    const legacyDropMigration = readProjectFile(
+      "supabase/migrations/20260709011223_drop_legacy_event_counter_rpcs.sql",
+    );
 
     for (const signature of [
       "public.join_event_participation(uuid, uuid, uuid, boolean)",
@@ -119,6 +122,12 @@ describe("community content rpc broker security", () => {
     expect(migration).toContain("REVOKE ALL ON FUNCTION public.increment_event_participants(uuid)");
     expect(migration).toContain("REVOKE ALL ON FUNCTION public.decrement_event_participants(uuid)");
     expect(migration).toContain("FROM service_role");
+    expect(legacyDropMigration).toContain(
+      "DROP FUNCTION IF EXISTS public.increment_event_participants(uuid)",
+    );
+    expect(legacyDropMigration).toContain(
+      "DROP FUNCTION IF EXISTS public.decrement_event_participants(uuid)",
+    );
     expect(migration).toContain("not_authorized_for_event_profile");
     expect(migration).toContain("not_authorized_for_event_checkin");
   });

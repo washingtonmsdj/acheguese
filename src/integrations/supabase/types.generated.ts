@@ -2592,6 +2592,56 @@ export type Database = {
           },
         ]
       }
+      classified_favorites: {
+        Row: {
+          classified_id: string
+          created_at: string
+          id: string
+          profile_id: string
+        }
+        Insert: {
+          classified_id: string
+          created_at?: string
+          id?: string
+          profile_id: string
+        }
+        Update: {
+          classified_id?: string
+          created_at?: string
+          id?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "classified_favorites_classified_id_fkey"
+            columns: ["classified_id"]
+            isOneToOne: false
+            referencedRelation: "classifieds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "classified_favorites_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "classified_favorites_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "classified_favorites_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       classified_likes: {
         Row: {
           classified_id: string
@@ -2926,6 +2976,13 @@ export type Database = {
             foreignKeyName: "comment_likes_comment_id_fkey"
             columns: ["comment_id"]
             isOneToOne: false
+            referencedRelation: "admin_pending_comment_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comment_likes_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
             referencedRelation: "comments"
             referencedColumns: ["id"]
           },
@@ -2939,10 +2996,15 @@ export type Database = {
           created_at: string
           id: string
           is_best_answer: boolean | null
+          is_hidden: boolean
+          is_removed: boolean
           likes_count: number
           parent_id: string | null
           post_id: string
           professional_id: string | null
+          removed_at: string | null
+          removed_by: string | null
+          removed_reason: string | null
           replies_count: number
           updated_at: string
         }
@@ -2953,10 +3015,15 @@ export type Database = {
           created_at?: string
           id?: string
           is_best_answer?: boolean | null
+          is_hidden?: boolean
+          is_removed?: boolean
           likes_count?: number
           parent_id?: string | null
           post_id: string
           professional_id?: string | null
+          removed_at?: string | null
+          removed_by?: string | null
+          removed_reason?: string | null
           replies_count?: number
           updated_at?: string
         }
@@ -2967,10 +3034,15 @@ export type Database = {
           created_at?: string
           id?: string
           is_best_answer?: boolean | null
+          is_hidden?: boolean
+          is_removed?: boolean
           likes_count?: number
           parent_id?: string | null
           post_id?: string
           professional_id?: string | null
+          removed_at?: string | null
+          removed_by?: string | null
+          removed_reason?: string | null
           replies_count?: number
           updated_at?: string
         }
@@ -3021,7 +3093,21 @@ export type Database = {
             foreignKeyName: "comments_parent_id_fkey"
             columns: ["parent_id"]
             isOneToOne: false
+            referencedRelation: "admin_pending_comment_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
             referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "admin_pending_post_reports"
             referencedColumns: ["id"]
           },
           {
@@ -3048,6 +3134,27 @@ export type Database = {
           {
             foreignKeyName: "comments_professional_id_fkey"
             columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_removed_by_fkey"
+            columns: ["removed_by"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "comments_removed_by_fkey"
+            columns: ["removed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_removed_by_fkey"
+            columns: ["removed_by"]
             isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
@@ -3662,6 +3769,110 @@ export type Database = {
           },
         ]
       }
+      community_entity_links: {
+        Row: {
+          approved_at: string | null
+          approved_by_profile_id: string | null
+          community_id: string
+          created_at: string
+          created_by_profile_id: string | null
+          ends_at: string | null
+          entity_id: string
+          entity_type: string
+          id: string
+          link_type: string
+          metadata: Json
+          priority: number
+          starts_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by_profile_id?: string | null
+          community_id: string
+          created_at?: string
+          created_by_profile_id?: string | null
+          ends_at?: string | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          link_type?: string
+          metadata?: Json
+          priority?: number
+          starts_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by_profile_id?: string | null
+          community_id?: string
+          created_at?: string
+          created_by_profile_id?: string | null
+          ends_at?: string | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          link_type?: string
+          metadata?: Json
+          priority?: number
+          starts_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_entity_links_approved_by_profile_id_fkey"
+            columns: ["approved_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "community_entity_links_approved_by_profile_id_fkey"
+            columns: ["approved_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_entity_links_approved_by_profile_id_fkey"
+            columns: ["approved_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_entity_links_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "territory_communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_entity_links_created_by_profile_id_fkey"
+            columns: ["created_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "community_entity_links_created_by_profile_id_fkey"
+            columns: ["created_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_entity_links_created_by_profile_id_fkey"
+            columns: ["created_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       community_issue_audit: {
         Row: {
           action: string
@@ -3949,6 +4160,137 @@ export type Database = {
           },
         ]
       }
+      community_memberships: {
+        Row: {
+          approved_at: string | null
+          approved_by_profile_id: string | null
+          community_id: string
+          created_at: string
+          id: string
+          invited_by_profile_id: string | null
+          join_method: string
+          joined_at: string | null
+          last_seen_at: string | null
+          metadata: Json
+          profile_id: string
+          requested_at: string
+          role: string
+          status: string
+          updated_at: string
+          user_id: string
+          verified_by_residence: boolean
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by_profile_id?: string | null
+          community_id: string
+          created_at?: string
+          id?: string
+          invited_by_profile_id?: string | null
+          join_method?: string
+          joined_at?: string | null
+          last_seen_at?: string | null
+          metadata?: Json
+          profile_id: string
+          requested_at?: string
+          role?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          verified_by_residence?: boolean
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by_profile_id?: string | null
+          community_id?: string
+          created_at?: string
+          id?: string
+          invited_by_profile_id?: string | null
+          join_method?: string
+          joined_at?: string | null
+          last_seen_at?: string | null
+          metadata?: Json
+          profile_id?: string
+          requested_at?: string
+          role?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          verified_by_residence?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_memberships_approved_by_profile_id_fkey"
+            columns: ["approved_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "community_memberships_approved_by_profile_id_fkey"
+            columns: ["approved_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_memberships_approved_by_profile_id_fkey"
+            columns: ["approved_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_memberships_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "territory_communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_memberships_invited_by_profile_id_fkey"
+            columns: ["invited_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "community_memberships_invited_by_profile_id_fkey"
+            columns: ["invited_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_memberships_invited_by_profile_id_fkey"
+            columns: ["invited_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_memberships_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "community_memberships_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_memberships_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       community_poll_options: {
         Row: {
           id: string
@@ -4050,6 +4392,13 @@ export type Database = {
             foreignKeyName: "community_polls_post_id_fkey"
             columns: ["post_id"]
             isOneToOne: false
+            referencedRelation: "admin_pending_post_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_polls_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
             referencedRelation: "posts"
             referencedColumns: ["id"]
           },
@@ -4119,6 +4468,41 @@ export type Database = {
             columns: ["location_id"]
             isOneToOne: false
             referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_public_aliases: {
+        Row: {
+          alias: string
+          created_at: string
+          id: string
+          status: string
+          territory_community_id: string
+          updated_at: string
+        }
+        Insert: {
+          alias: string
+          created_at?: string
+          id?: string
+          status?: string
+          territory_community_id: string
+          updated_at?: string
+        }
+        Update: {
+          alias?: string
+          created_at?: string
+          id?: string
+          status?: string
+          territory_community_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_public_aliases_territory_community_id_fkey"
+            columns: ["territory_community_id"]
+            isOneToOne: false
+            referencedRelation: "territory_communities"
             referencedColumns: ["id"]
           },
         ]
@@ -4202,6 +4586,121 @@ export type Database = {
             columns: ["location_id"]
             isOneToOne: false
             referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_reports: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          description: string | null
+          evidence_urls: string[]
+          id: string
+          reason: string
+          reporter_profile_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          target_author_profile_id: string | null
+          target_id: string
+          target_type: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          description?: string | null
+          evidence_urls?: string[]
+          id?: string
+          reason: string
+          reporter_profile_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          target_author_profile_id?: string | null
+          target_id: string
+          target_type: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          description?: string | null
+          evidence_urls?: string[]
+          id?: string
+          reason?: string
+          reporter_profile_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          target_author_profile_id?: string | null
+          target_id?: string
+          target_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_reports_reporter_profile_id_fkey"
+            columns: ["reporter_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "community_reports_reporter_profile_id_fkey"
+            columns: ["reporter_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_reports_reporter_profile_id_fkey"
+            columns: ["reporter_profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_reports_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "community_reports_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_reports_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_reports_target_author_profile_id_fkey"
+            columns: ["target_author_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "community_reports_target_author_profile_id_fkey"
+            columns: ["target_author_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_reports_target_author_profile_id_fkey"
+            columns: ["target_author_profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -5560,22 +6059,22 @@ export type Database = {
             foreignKeyName: "education_profiles_business_id_fkey"
             columns: ["business_id"]
             isOneToOne: false
-            referencedRelation: "business_data"
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "education_profiles_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "education_profiles_business_id_fkey"
             columns: ["business_id"]
             isOneToOne: false
-            referencedRelation: "public_business_search"
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "education_profiles_business_id_fkey"
-            columns: ["business_id"]
-            isOneToOne: false
-            referencedRelation: "user_companies"
-            referencedColumns: ["company_id"]
           },
         ]
       }
@@ -5866,6 +6365,56 @@ export type Database = {
           },
         ]
       }
+      event_favorites: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          profile_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          profile_id: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_favorites_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_favorites_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "event_favorites_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_favorites_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_participants: {
         Row: {
           checked_in_at: string | null
@@ -5922,6 +6471,174 @@ export type Database = {
           },
         ]
       }
+      event_reminders: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          profile_id: string
+          reminder_time: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          profile_id: string
+          reminder_time: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          profile_id?: string
+          reminder_time?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_reminders_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_reminders_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "event_reminders_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_reminders_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_review_helpfulness: {
+        Row: {
+          created_at: string
+          id: string
+          profile_id: string
+          review_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          profile_id: string
+          review_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          profile_id?: string
+          review_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_review_helpfulness_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "event_review_helpfulness_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_review_helpfulness_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_review_helpfulness_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "event_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_reviews: {
+        Row: {
+          comment: string
+          created_at: string
+          event_id: string
+          helpful_count: number
+          id: string
+          rating: number
+          reviewer_profile_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          comment: string
+          created_at?: string
+          event_id: string
+          helpful_count?: number
+          id?: string
+          rating: number
+          reviewer_profile_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          comment?: string
+          created_at?: string
+          event_id?: string
+          helpful_count?: number
+          id?: string
+          rating?: number
+          reviewer_profile_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_reviews_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_reviews_reviewer_profile_id_fkey"
+            columns: ["reviewer_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "event_reviews_reviewer_profile_id_fkey"
+            columns: ["reviewer_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_reviews_reviewer_profile_id_fkey"
+            columns: ["reviewer_profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           accessibility_info: string | null
@@ -5929,6 +6646,7 @@ export type Database = {
           age_restriction: string | null
           banner_image_url: string | null
           category: string | null
+          city: string | null
           coordinate_source: string | null
           created_at: string
           current_participants: number
@@ -5968,8 +6686,8 @@ export type Database = {
           status: string
           subtitle: string | null
           tags: string[] | null
-          title: string
           timezone: string | null
+          title: string
           updated_at: string
           venue_name: string | null
           video_url: string | null
@@ -5983,6 +6701,7 @@ export type Database = {
           age_restriction?: string | null
           banner_image_url?: string | null
           category?: string | null
+          city?: string | null
           coordinate_source?: string | null
           created_at?: string
           current_participants?: number
@@ -6022,8 +6741,8 @@ export type Database = {
           status?: string
           subtitle?: string | null
           tags?: string[] | null
-          title: string
           timezone?: string | null
+          title: string
           updated_at?: string
           venue_name?: string | null
           video_url?: string | null
@@ -6037,6 +6756,7 @@ export type Database = {
           age_restriction?: string | null
           banner_image_url?: string | null
           category?: string | null
+          city?: string | null
           coordinate_source?: string | null
           created_at?: string
           current_participants?: number
@@ -6076,8 +6796,8 @@ export type Database = {
           status?: string
           subtitle?: string | null
           tags?: string[] | null
-          title?: string
           timezone?: string | null
+          title?: string
           updated_at?: string
           venue_name?: string | null
           video_url?: string | null
@@ -7019,6 +7739,53 @@ export type Database = {
             foreignKeyName: "location_aliases_location_id_fkey"
             columns: ["location_id"]
             isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      location_boundaries: {
+        Row: {
+          boundary: Json
+          center_lat: number
+          center_lng: number
+          created_at: string
+          location_id: string
+          metadata: Json
+          source: string
+          source_object_id: string | null
+          source_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          boundary: Json
+          center_lat: number
+          center_lng: number
+          created_at?: string
+          location_id: string
+          metadata?: Json
+          source: string
+          source_object_id?: string | null
+          source_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          boundary?: Json
+          center_lat?: number
+          center_lng?: number
+          created_at?: string
+          location_id?: string
+          metadata?: Json
+          source?: string
+          source_object_id?: string | null
+          source_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "location_boundaries_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: true
             referencedRelation: "locations"
             referencedColumns: ["id"]
           },
@@ -8311,6 +9078,83 @@ export type Database = {
           },
         ]
       }
+      pickup_points: {
+        Row: {
+          accessibility: boolean
+          active: boolean
+          address: string
+          capacity: number
+          created_at: string
+          created_by: string | null
+          description: string | null
+          has_bench: boolean
+          has_lighting: boolean
+          has_shelter: boolean
+          id: string
+          latitude: number
+          location_id: string
+          longitude: number
+          name: string
+          notes: string | null
+          photo_url: string | null
+          type: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          accessibility?: boolean
+          active?: boolean
+          address: string
+          capacity?: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          has_bench?: boolean
+          has_lighting?: boolean
+          has_shelter?: boolean
+          id?: string
+          latitude: number
+          location_id: string
+          longitude: number
+          name: string
+          notes?: string | null
+          photo_url?: string | null
+          type?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          accessibility?: boolean
+          active?: boolean
+          address?: string
+          capacity?: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          has_bench?: boolean
+          has_lighting?: boolean
+          has_shelter?: boolean
+          id?: string
+          latitude?: number
+          location_id?: string
+          longitude?: number
+          name?: string
+          notes?: string | null
+          photo_url?: string | null
+          type?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pickup_points_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pii_access_log: {
         Row: {
           access_reason: string
@@ -8825,6 +9669,13 @@ export type Database = {
             foreignKeyName: "post_likes_new_post_id_fkey"
             columns: ["post_id"]
             isOneToOne: false
+            referencedRelation: "admin_pending_post_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_likes_new_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
             referencedRelation: "posts"
             referencedColumns: ["id"]
           },
@@ -8885,11 +9736,16 @@ export type Database = {
           id: string
           image_url: string | null
           images: Json | null
+          is_hidden: boolean
           is_published: boolean
+          is_removed: boolean
           is_verified: boolean
           likes_count: number
           location_id: string
           reach: string | null
+          removed_at: string | null
+          removed_by: string | null
+          removed_reason: string | null
           tags: Json | null
           type: string
           updated_at: string
@@ -8908,11 +9764,16 @@ export type Database = {
           id?: string
           image_url?: string | null
           images?: Json | null
+          is_hidden?: boolean
           is_published?: boolean
+          is_removed?: boolean
           is_verified?: boolean
           likes_count?: number
           location_id: string
           reach?: string | null
+          removed_at?: string | null
+          removed_by?: string | null
+          removed_reason?: string | null
           tags?: Json | null
           type?: string
           updated_at?: string
@@ -8931,11 +9792,16 @@ export type Database = {
           id?: string
           image_url?: string | null
           images?: Json | null
+          is_hidden?: boolean
           is_published?: boolean
+          is_removed?: boolean
           is_verified?: boolean
           likes_count?: number
           location_id?: string
           reach?: string | null
+          removed_at?: string | null
+          removed_by?: string | null
+          removed_reason?: string | null
           tags?: Json | null
           type?: string
           updated_at?: string
@@ -8966,6 +9832,27 @@ export type Database = {
           {
             foreignKeyName: "posts_author_profile_id_fkey"
             columns: ["author_profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posts_removed_by_fkey"
+            columns: ["removed_by"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "posts_removed_by_fkey"
+            columns: ["removed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posts_removed_by_fkey"
+            columns: ["removed_by"]
             isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
@@ -9349,13 +10236,6 @@ export type Database = {
           years_experience?: number | null
         }
         Relationships: [
-          {
-            foreignKeyName: "fk_professional_data_location_id"
-            columns: ["location_id"]
-            isOneToOne: false
-            referencedRelation: "locations"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "professional_data_address_id_fkey"
             columns: ["address_id"]
@@ -10486,6 +11366,7 @@ export type Database = {
         Row: {
           id: string
           invited_by: string | null
+          is_active: boolean
           joined_at: string
           profile_id: string
           role: string
@@ -10494,6 +11375,7 @@ export type Database = {
         Insert: {
           id?: string
           invited_by?: string | null
+          is_active?: boolean
           joined_at?: string
           profile_id: string
           role?: string
@@ -10502,6 +11384,7 @@ export type Database = {
         Update: {
           id?: string
           invited_by?: string | null
+          is_active?: boolean
           joined_at?: string
           profile_id?: string
           role?: string
@@ -10798,6 +11681,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "profiles_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "profiles_main_territory_location_id_fkey"
             columns: ["main_territory_location_id"]
             isOneToOne: false
@@ -11057,43 +11947,43 @@ export type Database = {
             foreignKeyName: "question_answers_business_id_fkey"
             columns: ["business_id"]
             isOneToOne: false
-            referencedRelation: "business_data"
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "question_answers_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "question_answers_business_id_fkey"
             columns: ["business_id"]
             isOneToOne: false
-            referencedRelation: "public_business_search"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "question_answers_business_id_fkey"
-            columns: ["business_id"]
-            isOneToOne: false
-            referencedRelation: "user_companies"
-            referencedColumns: ["company_id"]
-          },
-          {
-            foreignKeyName: "question_answers_professional_id_fkey"
-            columns: ["professional_id"]
-            isOneToOne: false
-            referencedRelation: "professional_data"
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "question_answers_professional_id_fkey"
             columns: ["professional_id"]
             isOneToOne: false
-            referencedRelation: "public_professional_search"
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "question_answers_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "question_answers_professional_id_fkey"
             columns: ["professional_id"]
             isOneToOne: false
-            referencedRelation: "user_professional_profiles"
-            referencedColumns: ["professional_profile_id"]
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "question_answers_question_id_fkey"
@@ -12417,6 +13307,13 @@ export type Database = {
             foreignKeyName: "saved_posts_new_post_id_fkey"
             columns: ["post_id"]
             isOneToOne: false
+            referencedRelation: "admin_pending_post_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saved_posts_new_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
             referencedRelation: "posts"
             referencedColumns: ["id"]
           },
@@ -13122,6 +14019,56 @@ export type Database = {
           },
         ]
       }
+      tourist_point_saved_items: {
+        Row: {
+          created_at: string
+          id: string
+          profile_id: string
+          tourist_point_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          profile_id: string
+          tourist_point_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          profile_id?: string
+          tourist_point_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tourist_point_saved_items_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "tourist_point_saved_items_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tourist_point_saved_items_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tourist_point_saved_items_tourist_point_id_fkey"
+            columns: ["tourist_point_id"]
+            isOneToOne: false
+            referencedRelation: "tourist_points"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tourist_points: {
         Row: {
           accessibility: boolean
@@ -13710,6 +14657,49 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_active_profiles: {
+        Row: {
+          created_at: string
+          profile_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          profile_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          profile_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_active_profiles_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "user_active_profiles_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_active_profiles_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_consents: {
         Row: {
@@ -14338,6 +15328,216 @@ export type Database = {
           },
         ]
       }
+      vaga_applications: {
+        Row: {
+          candidato_profile_id: string
+          created_at: string
+          curriculo_url: string | null
+          id: string
+          mensagem: string | null
+          responded_at: string | null
+          resposta_empresa: string | null
+          status: string
+          updated_at: string
+          vaga_id: string
+        }
+        Insert: {
+          candidato_profile_id: string
+          created_at?: string
+          curriculo_url?: string | null
+          id?: string
+          mensagem?: string | null
+          responded_at?: string | null
+          resposta_empresa?: string | null
+          status?: string
+          updated_at?: string
+          vaga_id: string
+        }
+        Update: {
+          candidato_profile_id?: string
+          created_at?: string
+          curriculo_url?: string | null
+          id?: string
+          mensagem?: string | null
+          responded_at?: string | null
+          resposta_empresa?: string | null
+          status?: string
+          updated_at?: string
+          vaga_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vaga_applications_candidato_profile_id_fkey"
+            columns: ["candidato_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "vaga_applications_candidato_profile_id_fkey"
+            columns: ["candidato_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vaga_applications_candidato_profile_id_fkey"
+            columns: ["candidato_profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vaga_applications_vaga_id_fkey"
+            columns: ["vaga_id"]
+            isOneToOne: false
+            referencedRelation: "vagas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vaga_reports: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          description: string | null
+          id: string
+          reason: string
+          reporter_profile_id: string
+          reviewed_at: string | null
+          reviewed_by_profile_id: string | null
+          status: string
+          updated_at: string
+          vaga_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          reason: string
+          reporter_profile_id: string
+          reviewed_at?: string | null
+          reviewed_by_profile_id?: string | null
+          status?: string
+          updated_at?: string
+          vaga_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          reason?: string
+          reporter_profile_id?: string
+          reviewed_at?: string | null
+          reviewed_by_profile_id?: string | null
+          status?: string
+          updated_at?: string
+          vaga_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vaga_reports_reporter_profile_id_fkey"
+            columns: ["reporter_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "vaga_reports_reporter_profile_id_fkey"
+            columns: ["reporter_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vaga_reports_reporter_profile_id_fkey"
+            columns: ["reporter_profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vaga_reports_reviewed_by_profile_id_fkey"
+            columns: ["reviewed_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "vaga_reports_reviewed_by_profile_id_fkey"
+            columns: ["reviewed_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vaga_reports_reviewed_by_profile_id_fkey"
+            columns: ["reviewed_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vaga_reports_vaga_id_fkey"
+            columns: ["vaga_id"]
+            isOneToOne: false
+            referencedRelation: "vagas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vaga_saved_items: {
+        Row: {
+          created_at: string
+          id: string
+          profile_id: string
+          vaga_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          profile_id: string
+          vaga_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          profile_id?: string
+          vaga_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vaga_saved_items_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "vaga_saved_items_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vaga_saved_items_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vaga_saved_items_vaga_id_fkey"
+            columns: ["vaga_id"]
+            isOneToOne: false
+            referencedRelation: "vagas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vagas: {
         Row: {
           application_channel:
@@ -14359,11 +15559,13 @@ export type Database = {
           empresa: string
           empresa_logo: string | null
           expires_at: string | null
+          feed_post_id: string | null
           highlight_type:
             | Database["public"]["Enums"]["vaga_highlight_type"]
             | null
           id: string
           location_id: string
+          matching_notified_at: string | null
           modalidade: Database["public"]["Enums"]["vaga_modalidade"]
           nivel: Database["public"]["Enums"]["vaga_nivel"]
           owner_profile_id: string | null
@@ -14403,11 +15605,13 @@ export type Database = {
           empresa: string
           empresa_logo?: string | null
           expires_at?: string | null
+          feed_post_id?: string | null
           highlight_type?:
             | Database["public"]["Enums"]["vaga_highlight_type"]
             | null
           id?: string
           location_id: string
+          matching_notified_at?: string | null
           modalidade: Database["public"]["Enums"]["vaga_modalidade"]
           nivel: Database["public"]["Enums"]["vaga_nivel"]
           owner_profile_id?: string | null
@@ -14447,11 +15651,13 @@ export type Database = {
           empresa?: string
           empresa_logo?: string | null
           expires_at?: string | null
+          feed_post_id?: string | null
           highlight_type?:
             | Database["public"]["Enums"]["vaga_highlight_type"]
             | null
           id?: string
           location_id?: string
+          matching_notified_at?: string | null
           modalidade?: Database["public"]["Enums"]["vaga_modalidade"]
           nivel?: Database["public"]["Enums"]["vaga_nivel"]
           owner_profile_id?: string | null
@@ -14477,6 +15683,20 @@ export type Database = {
             columns: ["bairro_id"]
             isOneToOne: false
             referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vagas_feed_post_id_fkey"
+            columns: ["feed_post_id"]
+            isOneToOne: false
+            referencedRelation: "admin_pending_post_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vagas_feed_post_id_fkey"
+            columns: ["feed_post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
             referencedColumns: ["id"]
           },
           {
@@ -14696,6 +15916,13 @@ export type Database = {
             foreignKeyName: "work_opportunities_post_id_fkey"
             columns: ["post_id"]
             isOneToOne: true
+            referencedRelation: "admin_pending_post_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_opportunities_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: true
             referencedRelation: "posts"
             referencedColumns: ["id"]
           },
@@ -14784,9 +16011,9 @@ export type Database = {
           created_at?: string | null
           id?: string | null
           is_verified?: boolean | null
-          latitude?: never
+          latitude?: number | null
           location_id?: string | null
-          longitude?: never
+          longitude?: number | null
           precision?: Database["public"]["Enums"]["address_precision"] | null
           verification_status?:
             | Database["public"]["Enums"]["address_verification_status"]
@@ -14797,9 +16024,9 @@ export type Database = {
           created_at?: string | null
           id?: string | null
           is_verified?: boolean | null
-          latitude?: never
+          latitude?: number | null
           location_id?: string | null
-          longitude?: never
+          longitude?: number | null
           precision?: Database["public"]["Enums"]["address_precision"] | null
           verification_status?:
             | Database["public"]["Enums"]["address_verification_status"]
@@ -14811,6 +16038,103 @@ export type Database = {
             columns: ["location_id"]
             isOneToOne: false
             referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admin_pending_comment_reports: {
+        Row: {
+          author_avatar: string | null
+          author_name: string | null
+          author_profile_id: string | null
+          author_reputation: number | null
+          content: string | null
+          created_at: string | null
+          id: string | null
+          latest_report_at: string | null
+          post_content: string | null
+          post_id: string | null
+          priority: number | null
+          reports: Json | null
+          reports_count: number | null
+          status: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_author_profile_id_fkey"
+            columns: ["author_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "comments_author_profile_id_fkey"
+            columns: ["author_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_author_profile_id_fkey"
+            columns: ["author_profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "admin_pending_post_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admin_pending_post_reports: {
+        Row: {
+          author_avatar: string | null
+          author_name: string | null
+          author_previous_reports: number | null
+          author_profile_id: string | null
+          author_reputation: number | null
+          content: string | null
+          created_at: string | null
+          id: string | null
+          images: Json | null
+          latest_report_at: string | null
+          priority: number | null
+          reports: Json | null
+          reports_count: number | null
+          status: string | null
+          type: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "posts_author_profile_id_fkey"
+            columns: ["author_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "posts_author_profile_id_fkey"
+            columns: ["author_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posts_author_profile_id_fkey"
+            columns: ["author_profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -15300,13 +16624,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fk_professional_data_location_id"
-            columns: ["location_id"]
-            isOneToOne: false
-            referencedRelation: "locations"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "professional_data_address_id_fkey"
             columns: ["address_id"]
             isOneToOne: false
@@ -15442,6 +16759,13 @@ export type Database = {
             referencedRelation: "locations"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "profiles_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
         ]
       }
       public_work_opportunity_search: {
@@ -15497,6 +16821,13 @@ export type Database = {
             columns: ["author_profile_id"]
             isOneToOne: false
             referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_opportunities_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: true
+            referencedRelation: "admin_pending_post_reports"
             referencedColumns: ["id"]
           },
           {
@@ -15664,13 +16995,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fk_professional_data_location_id"
-            columns: ["location_id"]
-            isOneToOne: false
-            referencedRelation: "locations"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "professional_data_location_id_fkey"
             columns: ["location_id"]
             isOneToOne: false
@@ -15718,13 +17042,6 @@ export type Database = {
           urgency: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "fk_professional_data_location_id"
-            columns: ["professional_location_id"]
-            isOneToOne: false
-            referencedRelation: "locations"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "professional_data_location_id_fkey"
             columns: ["professional_location_id"]
@@ -15840,13 +17157,35 @@ export type Database = {
         }
         Returns: Json
       }
-      release_driver_availability_for_ride: {
-        Args: { p_driver_profile_id: string; p_ride_id: string }
-        Returns: boolean
-      }
       activate_pricing_rule: {
         Args: { p_performed_by: string; p_rule_id: string }
         Returns: undefined
+      }
+      add_business_review_response: {
+        Args: { p_business_response: string; p_review_id: string }
+        Returns: {
+          business_response: string | null
+          business_response_at: string | null
+          comment: string | null
+          created_at: string
+          helpful_count: number
+          id: string
+          not_helpful_count: number
+          order_id: string | null
+          photos: string[] | null
+          rating: number
+          review_type: string
+          reviewed_profile_id: string
+          reviewer_profile_id: string
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "reviews"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       add_coverage_by_location: {
         Args: {
@@ -15989,7 +17328,11 @@ export type Database = {
         }[]
       }
       admin_reject_communication_channel_request: {
-        Args: { admin_notes?: string; request_id: string }
+        Args: {
+          admin_notes?: string
+          admin_user_id?: string
+          request_id: string
+        }
         Returns: Json
       }
       aggregate_daily_metrics: { Args: { p_date?: string }; Returns: undefined }
@@ -16002,6 +17345,14 @@ export type Database = {
           with_location_id: number
           without_location_id: number
         }[]
+      }
+      auth_can_access_profile: {
+        Args: { p_profile_id: string }
+        Returns: boolean
+      }
+      auth_has_verified_residence_at_location: {
+        Args: { p_location_id: string }
+        Returns: boolean
       }
       backfill_missing_coordinates: {
         Args: never
@@ -16028,6 +17379,14 @@ export type Database = {
       can_user_review_business: {
         Args: { p_business_profile_id: string; p_user_id: string }
         Returns: boolean
+      }
+      can_write_ride_dispatch_audit: {
+        Args: { p_driver_profile_id: string; p_ride_id: string }
+        Returns: boolean
+      }
+      cancel_pending_ride_offers: {
+        Args: { p_ride_id: string }
+        Returns: number
       }
       check_coverage: {
         Args: {
@@ -16061,16 +17420,30 @@ export type Database = {
           minimum_order_value: number
         }[]
       }
+      check_in_event_participation: {
+        Args: {
+          p_actor_user_id: string
+          p_event_id: string
+          p_is_project_admin?: boolean
+          p_profile_id: string
+        }
+        Returns: Json
+      }
+      check_in_event_participation_by_code: {
+        Args: {
+          p_actor_user_id: string
+          p_checkin_code: string
+          p_event_id: string
+          p_is_project_admin?: boolean
+        }
+        Returns: Json
+      }
       check_suspension_expiry: { Args: never; Returns: undefined }
       check_user_mfa_required: { Args: { p_user_id: string }; Returns: boolean }
       cleanup_expired_cache: { Args: never; Returns: number }
       cleanup_expired_sessions: { Args: never; Returns: number }
       cleanup_old_logs: { Args: never; Returns: number }
       cleanup_old_notifications: { Args: never; Returns: number }
-      communication_current_user_can_manage_channel: {
-        Args: { p_channel_id: string }
-        Returns: boolean
-      }
       communication_distribution_rank_reason: {
         Args: {
           p_content_format: string
@@ -16102,6 +17475,10 @@ export type Database = {
         Args: { p_publication_id: string }
         Returns: undefined
       }
+      communication_user_can_manage_channel: {
+        Args: { p_channel_id: string; p_user_id: string }
+        Returns: boolean
+      }
       count_lost_found_posts_by_type: {
         Args: never
         Returns: {
@@ -16114,17 +17491,17 @@ export type Database = {
       create_active_pricing_rule: {
         Args: {
           p_base_fare: number
-          p_is_active: boolean
-          p_maximum_fare: number
-          p_metadata: Json
+          p_is_active?: boolean
+          p_maximum_fare?: number
+          p_metadata?: Json
           p_minimum_fare: number
           p_mode: string
           p_name: string
-          p_performed_by: string
+          p_performed_by?: string
           p_price_per_km: number
           p_price_per_minute: number
-          p_valid_from: string
-          p_valid_until: string
+          p_valid_from?: string
+          p_valid_until?: string
         }
         Returns: string
       }
@@ -16195,6 +17572,39 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "business_data"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      create_business_review: {
+        Args: {
+          p_comment?: string
+          p_order_id?: string
+          p_photos?: string[]
+          p_rating: number
+          p_reviewed_profile_id: string
+          p_reviewer_profile_id: string
+        }
+        Returns: {
+          business_response: string | null
+          business_response_at: string | null
+          comment: string | null
+          created_at: string
+          helpful_count: number
+          id: string
+          not_helpful_count: number
+          order_id: string | null
+          photos: string[] | null
+          rating: number
+          review_type: string
+          reviewed_profile_id: string
+          reviewer_profile_id: string
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "reviews"
           isOneToOne: true
           isSetofReturn: false
         }
@@ -16407,9 +17817,9 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      decrement_event_participants: {
-        Args: { event_id: string }
-        Returns: undefined
+      delete_business_review: {
+        Args: { p_review_id: string }
+        Returns: boolean
       }
       delete_cache: { Args: { p_key: string }; Returns: undefined }
       delete_cache_pattern: { Args: { p_pattern: string }; Returns: number }
@@ -16488,149 +17898,77 @@ export type Database = {
         Args: { p_from_status: string; p_to_status: string }
         Returns: boolean
       }
-      delivery_create_order:
-        | {
-            Args: {
-              p_actor_profile_id?: string
-              p_courier_amount?: number
-              p_courier_profile_id?: string
-              p_customer_profile_id: string
-              p_delivery_fee?: number
-              p_delivery_mode?: string
-              p_discount_total?: number
-              p_external_payment_reference?: string
-              p_financial_status?: string
-              p_items_total?: number
-              p_merchant_net_amount?: number
-              p_merchant_profile_id: string
-              p_notes?: string
-              p_order_items?: Json
-              p_order_total?: number
-              p_payment_method?: string
-              p_payment_mode?: string
-              p_platform_fee_amount?: number
-              p_source_id?: string
-              p_source_metadata?: Json
-              p_source_reference?: string
-              p_source_type?: string
-            }
-            Returns: {
-              accepted_at: string | null
-              canceled_at: string | null
-              cancellation_reason: string | null
-              courier_amount: number | null
-              courier_profile_id: string | null
-              created_at: string
-              currency: string
-              customer_profile_id: string
-              delivered_at: string | null
-              delivery_fee: number
-              delivery_mode: string
-              discount_total: number
-              external_payment_reference: string | null
-              failed_at: string | null
-              failure_reason: string | null
-              financial_status: string
-              id: string
-              items_total: number
-              logistics_status: string
-              merchant_net_amount: number | null
-              merchant_profile_id: string
-              notes: string | null
-              order_total: number
-              paid_at: string | null
-              payment_method: string | null
-              payment_mode: string
-              picked_up_at: string | null
-              platform_fee_amount: number | null
-              preparing_at: string | null
-              proof_of_delivery: Json | null
-              ready_for_pickup_at: string | null
-              refunded_at: string | null
-              source_id: string | null
-              source_metadata: Json
-              source_reference: string | null
-              source_type: string
-              updated_at: string
-            }
-            SetofOptions: {
-              from: "*"
-              to: "orders"
-              isOneToOne: true
-              isSetofReturn: false
-            }
-          }
-        | {
-            Args: {
-              p_actor_profile_id: string
-              p_courier_amount: number
-              p_courier_profile_id: string
-              p_customer_profile_id: string
-              p_delivery_fee: number
-              p_delivery_mode: Database["public"]["Enums"]["delivery_mode"]
-              p_discount_total: number
-              p_external_payment_reference: string
-              p_financial_status: Database["public"]["Enums"]["financial_status"]
-              p_items_total: number
-              p_merchant_net_amount: number
-              p_merchant_profile_id: string
-              p_notes: string
-              p_order_items: Json
-              p_order_total: number
-              p_payment_method: string
-              p_payment_mode: Database["public"]["Enums"]["payment_mode"]
-              p_platform_fee_amount: number
-              p_source_id: string
-              p_source_metadata: Json
-              p_source_reference: string
-              p_source_type: Database["public"]["Enums"]["order_source_type"]
-            }
-            Returns: {
-              accepted_at: string | null
-              canceled_at: string | null
-              cancellation_reason: string | null
-              courier_amount: number | null
-              courier_profile_id: string | null
-              created_at: string
-              currency: string
-              customer_profile_id: string
-              delivered_at: string | null
-              delivery_fee: number
-              delivery_mode: string
-              discount_total: number
-              external_payment_reference: string | null
-              failed_at: string | null
-              failure_reason: string | null
-              financial_status: string
-              id: string
-              items_total: number
-              logistics_status: string
-              merchant_net_amount: number | null
-              merchant_profile_id: string
-              notes: string | null
-              order_total: number
-              paid_at: string | null
-              payment_method: string | null
-              payment_mode: string
-              picked_up_at: string | null
-              platform_fee_amount: number | null
-              preparing_at: string | null
-              proof_of_delivery: Json | null
-              ready_for_pickup_at: string | null
-              refunded_at: string | null
-              source_id: string | null
-              source_metadata: Json
-              source_reference: string | null
-              source_type: string
-              updated_at: string
-            }
-            SetofOptions: {
-              from: "*"
-              to: "orders"
-              isOneToOne: true
-              isSetofReturn: false
-            }
-          }
+      delivery_create_order: {
+        Args: {
+          p_actor_profile_id: string
+          p_courier_amount: number
+          p_courier_profile_id: string
+          p_customer_profile_id: string
+          p_delivery_fee: number
+          p_delivery_mode: Database["public"]["Enums"]["delivery_mode"]
+          p_discount_total: number
+          p_external_payment_reference: string
+          p_financial_status: Database["public"]["Enums"]["financial_status"]
+          p_items_total: number
+          p_merchant_net_amount: number
+          p_merchant_profile_id: string
+          p_notes: string
+          p_order_items: Json
+          p_order_total: number
+          p_payment_method: string
+          p_payment_mode: Database["public"]["Enums"]["payment_mode"]
+          p_platform_fee_amount: number
+          p_source_id: string
+          p_source_metadata: Json
+          p_source_reference: string
+          p_source_type: Database["public"]["Enums"]["order_source_type"]
+        }
+        Returns: {
+          accepted_at: string | null
+          canceled_at: string | null
+          cancellation_reason: string | null
+          courier_amount: number | null
+          courier_profile_id: string | null
+          created_at: string
+          currency: string
+          customer_profile_id: string
+          delivered_at: string | null
+          delivery_fee: number
+          delivery_mode: string
+          discount_total: number
+          external_payment_reference: string | null
+          failed_at: string | null
+          failure_reason: string | null
+          financial_status: string
+          id: string
+          items_total: number
+          logistics_status: string
+          merchant_net_amount: number | null
+          merchant_profile_id: string
+          notes: string | null
+          order_total: number
+          paid_at: string | null
+          payment_method: string | null
+          payment_mode: string
+          picked_up_at: string | null
+          platform_fee_amount: number | null
+          preparing_at: string | null
+          proof_of_delivery: Json | null
+          ready_for_pickup_at: string | null
+          refunded_at: string | null
+          source_id: string | null
+          source_metadata: Json
+          source_reference: string | null
+          source_type: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       delivery_logistics_event_type: {
         Args: { p_to_status: string }
         Returns: string
@@ -16741,69 +18079,37 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      delivery_report_occurrence:
-        | {
-            Args: {
-              p_actor_profile_id: string
-              p_description: string
-              p_metadata: Json
-              p_occurrence_type: Database["public"]["Enums"]["delivery_occurrence_type"]
-              p_order_id: string
-              p_severity: Database["public"]["Enums"]["delivery_occurrence_severity"]
-            }
-            Returns: {
-              created_at: string
-              description: string
-              id: string
-              metadata: Json
-              occurred_at: string
-              occurrence_type: string
-              order_id: string
-              reported_by_profile_id: string | null
-              resolution_notes: string | null
-              resolved_at: string | null
-              severity: string
-              status: string
-              updated_at: string
-            }
-            SetofOptions: {
-              from: "*"
-              to: "delivery_occurrences"
-              isOneToOne: true
-              isSetofReturn: false
-            }
-          }
-        | {
-            Args: {
-              p_actor_profile_id: string
-              p_description: string
-              p_metadata?: Json
-              p_occurrence_type: string
-              p_order_id: string
-              p_severity?: string
-            }
-            Returns: {
-              created_at: string
-              description: string
-              id: string
-              metadata: Json
-              occurred_at: string
-              occurrence_type: string
-              order_id: string
-              reported_by_profile_id: string | null
-              resolution_notes: string | null
-              resolved_at: string | null
-              severity: string
-              status: string
-              updated_at: string
-            }
-            SetofOptions: {
-              from: "*"
-              to: "delivery_occurrences"
-              isOneToOne: true
-              isSetofReturn: false
-            }
-          }
+      delivery_report_occurrence: {
+        Args: {
+          p_actor_profile_id: string
+          p_description: string
+          p_metadata: Json
+          p_occurrence_type: Database["public"]["Enums"]["delivery_occurrence_type"]
+          p_order_id: string
+          p_severity: Database["public"]["Enums"]["delivery_occurrence_severity"]
+        }
+        Returns: {
+          created_at: string
+          description: string
+          id: string
+          metadata: Json
+          occurred_at: string
+          occurrence_type: string
+          order_id: string
+          reported_by_profile_id: string | null
+          resolution_notes: string | null
+          resolved_at: string | null
+          severity: string
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "delivery_occurrences"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       delivery_resolve_actor_role: {
         Args: {
           p_actor_profile_id: string
@@ -16842,224 +18148,114 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      delivery_transition_financial_status:
-        | {
-            Args: {
-              p_actor_profile_id: string
-              p_metadata: Json
-              p_order_id: string
-              p_reason: string
-              p_to_status: Database["public"]["Enums"]["financial_status"]
-            }
-            Returns: {
-              accepted_at: string | null
-              canceled_at: string | null
-              cancellation_reason: string | null
-              courier_amount: number | null
-              courier_profile_id: string | null
-              created_at: string
-              currency: string
-              customer_profile_id: string
-              delivered_at: string | null
-              delivery_fee: number
-              delivery_mode: string
-              discount_total: number
-              external_payment_reference: string | null
-              failed_at: string | null
-              failure_reason: string | null
-              financial_status: string
-              id: string
-              items_total: number
-              logistics_status: string
-              merchant_net_amount: number | null
-              merchant_profile_id: string
-              notes: string | null
-              order_total: number
-              paid_at: string | null
-              payment_method: string | null
-              payment_mode: string
-              picked_up_at: string | null
-              platform_fee_amount: number | null
-              preparing_at: string | null
-              proof_of_delivery: Json | null
-              ready_for_pickup_at: string | null
-              refunded_at: string | null
-              source_id: string | null
-              source_metadata: Json
-              source_reference: string | null
-              source_type: string
-              updated_at: string
-            }
-            SetofOptions: {
-              from: "*"
-              to: "orders"
-              isOneToOne: true
-              isSetofReturn: false
-            }
-          }
-        | {
-            Args: {
-              p_actor_profile_id: string
-              p_metadata?: Json
-              p_order_id: string
-              p_reason?: string
-              p_to_status: string
-            }
-            Returns: {
-              accepted_at: string | null
-              canceled_at: string | null
-              cancellation_reason: string | null
-              courier_amount: number | null
-              courier_profile_id: string | null
-              created_at: string
-              currency: string
-              customer_profile_id: string
-              delivered_at: string | null
-              delivery_fee: number
-              delivery_mode: string
-              discount_total: number
-              external_payment_reference: string | null
-              failed_at: string | null
-              failure_reason: string | null
-              financial_status: string
-              id: string
-              items_total: number
-              logistics_status: string
-              merchant_net_amount: number | null
-              merchant_profile_id: string
-              notes: string | null
-              order_total: number
-              paid_at: string | null
-              payment_method: string | null
-              payment_mode: string
-              picked_up_at: string | null
-              platform_fee_amount: number | null
-              preparing_at: string | null
-              proof_of_delivery: Json | null
-              ready_for_pickup_at: string | null
-              refunded_at: string | null
-              source_id: string | null
-              source_metadata: Json
-              source_reference: string | null
-              source_type: string
-              updated_at: string
-            }
-            SetofOptions: {
-              from: "*"
-              to: "orders"
-              isOneToOne: true
-              isSetofReturn: false
-            }
-          }
-      delivery_transition_logistics_status:
-        | {
-            Args: {
-              p_actor_profile_id: string
-              p_metadata: Json
-              p_order_id: string
-              p_reason: string
-              p_to_status: Database["public"]["Enums"]["logistics_status"]
-            }
-            Returns: {
-              accepted_at: string | null
-              canceled_at: string | null
-              cancellation_reason: string | null
-              courier_amount: number | null
-              courier_profile_id: string | null
-              created_at: string
-              currency: string
-              customer_profile_id: string
-              delivered_at: string | null
-              delivery_fee: number
-              delivery_mode: string
-              discount_total: number
-              external_payment_reference: string | null
-              failed_at: string | null
-              failure_reason: string | null
-              financial_status: string
-              id: string
-              items_total: number
-              logistics_status: string
-              merchant_net_amount: number | null
-              merchant_profile_id: string
-              notes: string | null
-              order_total: number
-              paid_at: string | null
-              payment_method: string | null
-              payment_mode: string
-              picked_up_at: string | null
-              platform_fee_amount: number | null
-              preparing_at: string | null
-              proof_of_delivery: Json | null
-              ready_for_pickup_at: string | null
-              refunded_at: string | null
-              source_id: string | null
-              source_metadata: Json
-              source_reference: string | null
-              source_type: string
-              updated_at: string
-            }
-            SetofOptions: {
-              from: "*"
-              to: "orders"
-              isOneToOne: true
-              isSetofReturn: false
-            }
-          }
-        | {
-            Args: {
-              p_actor_profile_id: string
-              p_metadata?: Json
-              p_order_id: string
-              p_reason?: string
-              p_to_status: string
-            }
-            Returns: {
-              accepted_at: string | null
-              canceled_at: string | null
-              cancellation_reason: string | null
-              courier_amount: number | null
-              courier_profile_id: string | null
-              created_at: string
-              currency: string
-              customer_profile_id: string
-              delivered_at: string | null
-              delivery_fee: number
-              delivery_mode: string
-              discount_total: number
-              external_payment_reference: string | null
-              failed_at: string | null
-              failure_reason: string | null
-              financial_status: string
-              id: string
-              items_total: number
-              logistics_status: string
-              merchant_net_amount: number | null
-              merchant_profile_id: string
-              notes: string | null
-              order_total: number
-              paid_at: string | null
-              payment_method: string | null
-              payment_mode: string
-              picked_up_at: string | null
-              platform_fee_amount: number | null
-              preparing_at: string | null
-              proof_of_delivery: Json | null
-              ready_for_pickup_at: string | null
-              refunded_at: string | null
-              source_id: string | null
-              source_metadata: Json
-              source_reference: string | null
-              source_type: string
-              updated_at: string
-            }
-            SetofOptions: {
-              from: "*"
-              to: "orders"
-              isOneToOne: true
-              isSetofReturn: false
-            }
-          }
+      delivery_transition_financial_status: {
+        Args: {
+          p_actor_profile_id: string
+          p_metadata: Json
+          p_order_id: string
+          p_reason: string
+          p_to_status: Database["public"]["Enums"]["financial_status"]
+        }
+        Returns: {
+          accepted_at: string | null
+          canceled_at: string | null
+          cancellation_reason: string | null
+          courier_amount: number | null
+          courier_profile_id: string | null
+          created_at: string
+          currency: string
+          customer_profile_id: string
+          delivered_at: string | null
+          delivery_fee: number
+          delivery_mode: string
+          discount_total: number
+          external_payment_reference: string | null
+          failed_at: string | null
+          failure_reason: string | null
+          financial_status: string
+          id: string
+          items_total: number
+          logistics_status: string
+          merchant_net_amount: number | null
+          merchant_profile_id: string
+          notes: string | null
+          order_total: number
+          paid_at: string | null
+          payment_method: string | null
+          payment_mode: string
+          picked_up_at: string | null
+          platform_fee_amount: number | null
+          preparing_at: string | null
+          proof_of_delivery: Json | null
+          ready_for_pickup_at: string | null
+          refunded_at: string | null
+          source_id: string | null
+          source_metadata: Json
+          source_reference: string | null
+          source_type: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      delivery_transition_logistics_status: {
+        Args: {
+          p_actor_profile_id: string
+          p_metadata: Json
+          p_order_id: string
+          p_reason: string
+          p_to_status: Database["public"]["Enums"]["logistics_status"]
+        }
+        Returns: {
+          accepted_at: string | null
+          canceled_at: string | null
+          cancellation_reason: string | null
+          courier_amount: number | null
+          courier_profile_id: string | null
+          created_at: string
+          currency: string
+          customer_profile_id: string
+          delivered_at: string | null
+          delivery_fee: number
+          delivery_mode: string
+          discount_total: number
+          external_payment_reference: string | null
+          failed_at: string | null
+          failure_reason: string | null
+          financial_status: string
+          id: string
+          items_total: number
+          logistics_status: string
+          merchant_net_amount: number | null
+          merchant_profile_id: string
+          notes: string | null
+          order_total: number
+          paid_at: string | null
+          payment_method: string | null
+          payment_mode: string
+          picked_up_at: string | null
+          platform_fee_amount: number | null
+          preparing_at: string | null
+          proof_of_delivery: Json | null
+          ready_for_pickup_at: string | null
+          refunded_at: string | null
+          source_id: string | null
+          source_metadata: Json
+          source_reference: string | null
+          source_type: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       delivery_update_order_notes: {
         Args: {
           p_actor_profile_id: string
@@ -17878,12 +19074,12 @@ export type Database = {
         Args: { business_id: string }
         Returns: undefined
       }
-      increment_event_participants: {
-        Args: { event_id: string }
-        Returns: undefined
-      }
       increment_professional_views: {
         Args: { professional_id: string }
+        Returns: undefined
+      }
+      increment_vaga_view_count: {
+        Args: { vaga_id: string }
         Returns: undefined
       }
       invite_profile_member_by_email: {
@@ -17907,6 +19103,24 @@ export type Database = {
       }
       is_in_quiet_hours: { Args: { p_user_id: string }; Returns: boolean }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      join_event_participation: {
+        Args: {
+          p_actor_user_id: string
+          p_event_id: string
+          p_is_project_admin?: boolean
+          p_profile_id: string
+        }
+        Returns: Json
+      }
+      leave_event_participation: {
+        Args: {
+          p_actor_user_id: string
+          p_event_id: string
+          p_is_project_admin?: boolean
+          p_profile_id: string
+        }
+        Returns: Json
+      }
       log_billing_action: {
         Args: {
           p_action: string
@@ -17946,6 +19160,17 @@ export type Database = {
           p_table_name: string
         }
         Returns: string
+      }
+      log_ride_dispatch_attempt: {
+        Args: {
+          p_attempt_number: number
+          p_driver_profile_id: string
+          p_offered_at: string
+          p_ride_id: string
+          p_status: string
+          p_timeout_at: string
+        }
+        Returns: undefined
       }
       longtransactionsenabled: { Args: never; Returns: boolean }
       mark_all_notifications_as_read: {
@@ -18020,8 +19245,49 @@ export type Database = {
           ride_id: string
         }[]
       }
+      profile_rpc_create_profile_with_extension: {
+        Args: {
+          p_actor_user_id: string
+          p_avatar_url: string
+          p_bio: string
+          p_display_name: string
+          p_extension_data: Json
+          p_handle: string
+          p_profile_type: string
+        }
+        Returns: Json
+      }
+      profile_rpc_delete_profile: {
+        Args: { p_actor_user_id: string; p_profile_id: string }
+        Returns: Json
+      }
+      profile_rpc_invite_profile_member_by_email: {
+        Args: {
+          p_actor_user_id: string
+          p_email: string
+          p_profile_id: string
+          p_role: string
+        }
+        Returns: Json
+      }
+      profile_rpc_transfer_profile_ownership: {
+        Args: {
+          p_actor_user_id: string
+          p_new_owner_user_id: string
+          p_profile_id: string
+        }
+        Returns: Json
+      }
+      profile_rpc_update_profile_handle: {
+        Args: {
+          p_actor_user_id: string
+          p_new_handle: string
+          p_profile_id: string
+        }
+        Returns: Json
+      }
       publish_communication_publication: {
-        Args: { publication_id: string }
+        Args: { actor_user_id?: string; publication_id: string }
         Returns: Json
       }
       record_consent: {
@@ -18044,11 +19310,27 @@ export type Database = {
         }
         Returns: string
       }
+      release_driver_availability_for_ride: {
+        Args: { p_driver_profile_id: string; p_ride_id: string }
+        Returns: boolean
+      }
       remove_coverage: { Args: { p_area_id: string }; Returns: boolean }
       request_communication_channel: { Args: { payload: Json }; Returns: Json }
       reserve_route: {
         Args: { p_route_id: string; p_seats?: number }
         Returns: string
+      }
+      resolve_delivery_order_actor_role: {
+        Args: {
+          p_actor_profile_id: string
+          p_allow_courier?: boolean
+          p_allow_customer?: boolean
+          p_allow_merchant?: boolean
+          p_courier_profile_id: string
+          p_customer_profile_id: string
+          p_merchant_profile_id: string
+        }
+        Returns: Database["public"]["Enums"]["order_actor_role"]
       }
       resolve_point_to_location: {
         Args: { lat: number; lng: number; target_location_type?: string }
@@ -18822,9 +20104,49 @@ export type Database = {
       }
       unaccent: { Args: { "": string }; Returns: string }
       unlockrows: { Args: { "": string }; Returns: number }
+      update_business_review: {
+        Args: {
+          p_comment?: string
+          p_photos?: string[]
+          p_rating?: number
+          p_review_id: string
+        }
+        Returns: {
+          business_response: string | null
+          business_response_at: string | null
+          comment: string | null
+          created_at: string
+          helpful_count: number
+          id: string
+          not_helpful_count: number
+          order_id: string | null
+          photos: string[] | null
+          rating: number
+          review_type: string
+          reviewed_profile_id: string
+          reviewer_profile_id: string
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "reviews"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       update_communication_publication_draft: {
         Args: { payload: Json; publication_id: string }
         Returns: Json
+      }
+      update_latest_ride_dispatch_attempt: {
+        Args: {
+          p_driver_profile_id: string
+          p_responded_at?: string
+          p_ride_id: string
+          p_status?: string
+        }
+        Returns: undefined
       }
       update_profile_handle: {
         Args: { p_new_handle: string; p_profile_id: string }
