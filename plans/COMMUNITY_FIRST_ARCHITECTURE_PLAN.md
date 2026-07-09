@@ -395,7 +395,10 @@ Entidades atuais:
 SSOT recomendado:
 
 - `events` para evento canonico.
-- Criar/confirmar `core/events` antes de reativar modulo publico.
+- `src/core/verticals/events` para leitura publica canonica, pois
+  `src/core/events` e bloqueado pelo SSOT de core como pasta legada.
+- Consolidar escrita, participacao e check-in em etapas futuras antes de
+  reativar modulo publico amplo.
 
 Responsabilidade:
 
@@ -415,7 +418,15 @@ Risco atual:
 
 - eventos aparecem como tabela e modulo comunitario, mas nao ha uma fronteira
   de dominio tao clara quanto business/classifieds/professional. Reativar
-  eventos sem `core/events` aumenta risco de logica espalhada em paginas.
+  eventos sem contrato canonico aumenta risco de logica espalhada em paginas.
+
+Evidencia parcial:
+
+- `src/core/verticals/events` centraliza leitura publica de `events` via
+  `EventReadService`;
+- `CommunityEventsRuntimeService` delega listagem, detalhe, paginacao, mapa,
+  recentes e contagens ao `core/verticals/events`, mantendo temporariamente escrita,
+  participacao e check-in no runtime comunitario.
 
 ### Posts, Feed E Interacoes Sociais
 
@@ -618,7 +629,7 @@ src/core/
   verticals/                # registry de verticais de business
   classifieds/              # classificados e marketplace local
   professional/             # profissionais/servicos
-  events/                   # recomendado antes de reativar eventos
+  verticals/events/         # contrato canonico de eventos dentro da taxonomia atual
   search/                   # busca federada/indexada
   routing/                  # URL/routing; nao deve possuir dados de comunidade
   profiles/                 # identidade de perfil
@@ -773,8 +784,9 @@ Decisao recomendada:
 
 Problema:
 
-- `events` existe no banco e ha modulos comunitarios, mas falta um
-  `core/events` equivalente a `core/business`/`core/classifieds`.
+- `events` existe no banco e ha modulos comunitarios, mas ainda faltava um
+  contrato canonico equivalente aos read models consolidados de outros
+  dominios.
 
 Risco:
 
@@ -782,7 +794,7 @@ Risco:
 
 Decisao recomendada:
 
-- criar plano futuro para `core/events` antes de reabrir eventos publicos.
+- criar contrato canonico de eventos antes de reabrir eventos publicos.
 
 ### 4. Busca global incompleta
 
@@ -1057,7 +1069,7 @@ Evidencia parcial:
 
 ### Fase 5 - Busca Global E Descoberta
 
-Status: pendente
+Status: em andamento
 
 Objetivo:
 
@@ -1088,7 +1100,9 @@ Objetivo:
 
 Tarefas:
 
-- criar/confirmar `core/events`;
+- [x] criar/confirmar `core/verticals/events` para leitura publica;
+- [ ] consolidar escrita, participacao e check-in de eventos no dominio
+  canonico;
 - definir se `vagas` permanece em `classifieds/jobs` ou vira oportunidades
   canonicas;
 - atualizar route registry e launch gates;

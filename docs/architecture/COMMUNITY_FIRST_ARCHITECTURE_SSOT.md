@@ -99,8 +99,10 @@ mais comunidades sem copiar seus dados mestres:
   `src/modules/professionals/services`
 - Classificados: `classifieds`, `src/core/classifieds`,
   `src/modules/classifieds`
-- Eventos: tabelas de eventos existentes, com ownership a consolidar antes de
-  reativacao publica ampla
+- Eventos: `events`, `src/core/verticals/events` para leitura publica
+  canonica; fluxos
+  de escrita, participacao e check-in ainda ficam em runtime especifico ate a
+  consolidacao completa do dominio.
 - Usuarios/perfis: `profiles`, `src/core/profiles`, `src/modules/profile`
 - Posts/feed: `posts` como candidato a SSOT principal, com consolidacao
   pendente contra `community_posts`

@@ -1,4 +1,4 @@
-import type { CommunityEvent } from "@/core/community/services/CommunityEventsRuntimeService";
+import type { PublicEvent } from "@/core/verticals/events";
 import type { Event, EventCategory, EventFAQ, EventGalleryItem, EventScheduleItem } from "../types";
 import { isEventCategory } from "../constants";
 import { normalizePersistedTextEncoding } from "@/shared/utils/textEncodingRepair";
@@ -97,7 +97,7 @@ function mapFaq(items: unknown[] | null | undefined): EventFAQ[] {
     .filter((item): item is EventFAQ => item !== null);
 }
 
-export function mapCommunityEventToEvent(input: CommunityEvent): Event {
+export function mapCommunityEventToEvent(input: PublicEvent): Event {
   const description = normalizePersistedTextEncoding(input.description ?? "");
   const location = normalizePersistedTextEncoding(input.location ?? "");
   const organizerContact = readStringRecord(input.organizer_contact);

@@ -1,66 +1,29 @@
 import { supabase } from "@/integrations/supabase";
 import type { Json } from "@/integrations/supabase";
-import type { TerritoryFilter } from "@/core/location/types";
 import { logger } from "@/shared/utils/logger";
-import { sanitizeForILike } from "@/shared/utils/sqlSanitization";
 import { CommunityRpcService } from "@/core/community/services/CommunityRpcService";
+import type { TerritoryFilter } from "@/core/location/types";
+import {
+  eventsReadService,
+  type EventFilters as GetEventsFilters,
+  type EventPageInput as GetEventsPageInput,
+  type EventPageOutput as GetEventsPageOutput,
+  type EventSortBy,
+  type EventSortOrder,
+  type PublicEvent,
+  type PublicEventStatus,
+} from "@/core/verticals/events";
 
-export interface CommunityEvent {
-  id: string;
-  title: string;
-  description: string;
-  date: string;
-  end_date?: string | null;
-  event_date?: string | null;
-  location: string;
-  location_id?: string;
-  organizer_profile_id: string;
-  category: string;
-  image_url?: string;
-  subtitle?: string | null;
-  tags?: string[] | null;
-  duration_minutes?: number | null;
-  timezone?: string | null;
-  location_type?: "physical" | "online" | "hybrid" | null;
-  venue_name?: string | null;
-  address?: string | null;
-  neighborhood?: string | null;
-  city?: string | null;
-  state?: string | null;
-  zipcode?: string | null;
-  online_url?: string | null;
-  online_platform?: string | null;
-  location_instructions?: string | null;
-  is_free?: boolean | null;
-  price?: number | null;
-  waitlist_enabled?: boolean | null;
-  requirements?: string[] | null;
-  what_to_bring?: string[] | null;
-  age_restriction?: string | null;
-  dress_code?: string | null;
-  accessibility_info?: string | null;
-  banner_image_url?: string | null;
-  video_url?: string | null;
-  gallery?: Json[] | null;
-  schedule?: Json[] | null;
-  faq?: Json[] | null;
-  meta_title?: string | null;
-  meta_description?: string | null;
-  meta_keywords?: string[] | null;
-  features?: Record<string, Json> | null;
-  organizer_contact?: Record<string, Json> | null;
-  published_at?: string | null;
-  max_participants?: number;
-  current_participants: number;
-  status: "upcoming" | "ongoing" | "completed" | "cancelled";
-  created_at: string;
-  updated_at: string;
-  latitude?: number | null;
-  longitude?: number | null;
-  coordinate_source?: "exact" | "geocoded" | "approximate" | null;
-}
+export type CommunityEvent = PublicEvent;
 
 export type Event = CommunityEvent;
+export type {
+  EventSortBy,
+  EventSortOrder,
+  GetEventsFilters,
+  GetEventsPageInput,
+  GetEventsPageOutput,
+};
 
 export interface CreateEventInput {
   title: string;
@@ -109,31 +72,6 @@ export interface CreateEventInput {
   coordinate_source?: "exact" | "geocoded" | "approximate";
 }
 
-export type EventSortBy = "date" | "created_at" | "current_participants";
-export type EventSortOrder = "asc" | "desc";
-
-export interface GetEventsFilters {
-  category?: string;
-  status?: string;
-  upcoming?: boolean;
-  territoryFilter?: TerritoryFilter;
-}
-
-export interface GetEventsPageInput extends GetEventsFilters {
-  search?: string;
-  page?: number;
-  pageSize?: number;
-  sortBy?: EventSortBy;
-  sortOrder?: EventSortOrder;
-}
-
-export interface GetEventsPageOutput {
-  items: CommunityEvent[];
-  totalCount: number;
-  hasMore: boolean;
-  nextPage: number | null;
-}
-
 export interface EventParticipantRow {
   profile_id: string;
   joined_at: string;
@@ -157,153 +95,30 @@ class CommunityEventsRuntimeService {
     return error instanceof Error ? error.message : "erro desconhecido";
   }
 
-  private isUuid(value: string): boolean {
-    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
-  }
-
   async getEventById(id: string): Promise<CommunityEvent | null> {
-    try {
-
-      if (!this.isUuid(id)) {
-        return null;
-      }
-
-      const { data, error } = await supabase
-        .from("events")
-        .select("*")
-        .eq("id", id)
-        .maybeSingle();
-
-      if (error) throw error;
-      return (data as CommunityEvent | null) ?? null;
-    } catch (error) {
-      logger.error("CommunityEventsRuntimeService.getEventById", error);
-      return null;
-    }
+    return eventsReadService.getEventById(id);
   }
 
   async getEvents(filters?: GetEventsFilters): Promise<CommunityEvent[]> {
-    try {
-      let query = supabase
-        .from("events")
-        .select("*")
-        .order("date", { ascending: true });
-
-      if (filters?.category) query = query.eq("category", filters.category);
-      if (filters?.status) query = query.eq("status", filters.status);
-      if (filters?.upcoming) query = query.gte("date", new Date().toISOString());
-      if (filters?.territoryFilter) {
-        if (filters.territoryFilter.scope === "location") {
-          query = query.eq("location_id", filters.territoryFilter.location_id);
-        } else if (filters.territoryFilter.scope === "group") {
-          query = query.in("location_id", filters.territoryFilter.location_ids);
-        }
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return (data || []) as CommunityEvent[];
-    } catch (error) {
-      logger.error("CommunityEventsRuntimeService.getEvents", error);
-      return [];
-    }
+    return eventsReadService.getEvents(filters);
   }
 
   async getEventsPage(input: GetEventsPageInput = {}): Promise<GetEventsPageOutput> {
-    const page = Math.max(0, input.page ?? 0);
-    const pageSize = Math.min(Math.max(input.pageSize ?? 12, 1), 50);
-    const from = page * pageSize;
-    const to = from + pageSize - 1;
-
-    try {
-      let query = supabase
-        .from("events")
-        .select("*", { count: "exact" });
-
-      if (input.category) query = query.eq("category", input.category);
-      if (input.status) query = query.eq("status", input.status);
-      if (input.upcoming) query = query.gte("date", new Date().toISOString());
-      if (input.territoryFilter) {
-        if (input.territoryFilter.scope === "location") {
-          query = query.eq("location_id", input.territoryFilter.location_id);
-        } else if (input.territoryFilter.scope === "group") {
-          query = query.in("location_id", input.territoryFilter.location_ids);
-        }
-      }
-      if (input.search?.trim()) {
-        const search = sanitizeForILike(input.search);
-        if (search) {
-          query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%,location.ilike.%${search}%`);
-        }
-      }
-
-      const sortBy = input.sortBy ?? "date";
-      const sortOrder = input.sortOrder ?? "asc";
-
-      query = query
-        .order(sortBy, { ascending: sortOrder === "asc" })
-        .range(from, to);
-
-      const { data, count, error } = await query;
-      if (error) throw error;
-
-      const items = (data || []) as CommunityEvent[];
-      const totalCount = count || 0;
-      const hasMore = from + items.length < totalCount;
-
-      return {
-        items,
-        totalCount,
-        hasMore,
-        nextPage: hasMore ? page + 1 : null,
-      };
-    } catch (error) {
-      logger.error("CommunityEventsRuntimeService.getEventsPage", error);
-      return {
-        items: [],
-        totalCount: 0,
-        hasMore: false,
-        nextPage: null,
-      };
-    }
+    return eventsReadService.getEventsPage(input);
   }
 
   async getByBounds(
     bounds: [number, number, number, number],
     options: { limit?: number; status?: string[]; territoryFilter?: TerritoryFilter } = {},
   ): Promise<CommunityEvent[]> {
-    const [west, south, east, north] = bounds;
-    const { limit = 200, status = ["upcoming", "ongoing"], territoryFilter } = options;
-
-    try {
-      let query = supabase
-        .from("events")
-        .select("*")
-        .not("latitude", "is", null)
-        .not("longitude", "is", null)
-        .gte("latitude", south)
-        .lte("latitude", north)
-        .gte("longitude", west)
-        .lte("longitude", east)
-        .in("status", status)
-        .order("date", { ascending: true })
-        .limit(limit);
-
-      if (territoryFilter) {
-        if (territoryFilter.scope === "location") {
-          query = query.eq("location_id", territoryFilter.location_id);
-        } else if (territoryFilter.scope === "group") {
-          query = query.in("location_id", territoryFilter.location_ids);
-        }
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return (data || []) as CommunityEvent[];
-    } catch (error) {
-      logger.error("CommunityEventsRuntimeService.getByBounds", error);
-      return [];
-    }
+    const statuses = options.status?.filter((status): status is PublicEventStatus =>
+      status === "upcoming" || status === "ongoing" || status === "completed" || status === "cancelled",
+    );
+    return eventsReadService.getByBounds(bounds, {
+      limit: options.limit,
+      statuses: statuses && statuses.length > 0 ? statuses : undefined,
+      territoryFilter: options.territoryFilter,
+    });
   }
 
   async createEvent(profileId: string, input: CreateEventInput): Promise<CommunityEvent> {
@@ -536,66 +351,19 @@ class CommunityEventsRuntimeService {
   }
 
   async getEventsByOrganizerProfile(profileId: string, limit = 20): Promise<CommunityEvent[]> {
-    try {
-      const { data, error } = await supabase
-        .from("events")
-        .select("*")
-        .eq("organizer_profile_id", profileId)
-        .order("created_at", { ascending: false })
-        .limit(limit);
-
-      if (error) throw error;
-      return (data || []) as CommunityEvent[];
-    } catch (error) {
-      logger.error("CommunityEventsRuntimeService.getEventsByOrganizerProfile", error);
-      return [];
-    }
+    return eventsReadService.getEventsByOrganizerProfile(profileId, limit);
   }
 
   async getTotalEventsCount(): Promise<number> {
-    try {
-      const { count, error } = await supabase
-        .from("events")
-        .select("*", { count: "exact", head: true });
-
-      if (error) throw error;
-      return count || 0;
-    } catch (error) {
-      logger.error("CommunityEventsRuntimeService.getTotalEventsCount", error);
-      return 0;
-    }
+    return eventsReadService.getTotalEventsCount();
   }
 
   async getRecentEvents(limit = 10): Promise<CommunityEvent[]> {
-    try {
-      const { data, error } = await supabase
-        .from("events")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(limit);
-
-      if (error) throw error;
-      return (data || []) as CommunityEvent[];
-    } catch (error) {
-      logger.error("CommunityEventsRuntimeService.getRecentEvents", error);
-      return [];
-    }
+    return eventsReadService.getRecentEvents(limit);
   }
 
   async getEventsCreatedInPeriod(startDate: Date, endDate: Date): Promise<number> {
-    try {
-      const { count, error } = await supabase
-        .from("events")
-        .select("*", { count: "exact", head: true })
-        .gte("created_at", startDate.toISOString())
-        .lte("created_at", endDate.toISOString());
-
-      if (error) throw error;
-      return count || 0;
-    } catch (error) {
-      logger.error("CommunityEventsRuntimeService.getEventsCreatedInPeriod", error);
-      return 0;
-    }
+    return eventsReadService.getEventsCreatedInPeriod(startDate, endDate);
   }
 }
 

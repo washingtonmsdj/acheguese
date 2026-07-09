@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import type { CommunityEvent } from "@/core/community/services/CommunityEventsRuntimeService";
+import type { PublicEvent } from "@/core/verticals/events";
 import { mapCommunityEventToEvent } from "./eventAdapters";
 
-const baseCommunityEvent: CommunityEvent = {
+const baseCommunityEvent: PublicEvent = {
   id: "event-legacy-encoding",
   title: "Workshop pr?tico de neg?cios",
   description: "Workshop pr?tico sobre empreendedorismo digital e vendas online.",

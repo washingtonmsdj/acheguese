@@ -190,6 +190,31 @@ describe("community supabase security audit", () => {
     expect(communityPage).toContain("communityId={linkedCommunityId}");
   });
 
+  it("keeps public event reads centralized in core/verticals/events before broad reactivation", () => {
+    const eventReadService = readProjectFile(
+      "src/core/verticals/events/services/EventReadService.ts",
+    );
+    const communityEventsRuntime = readProjectFile(
+      "src/core/community/services/CommunityEventsRuntimeService.ts",
+    );
+    const eventAdapter = readProjectFile("src/features/events/utils/eventAdapters.ts");
+    const architecture = readProjectFile(
+      "docs/architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md",
+    );
+    const plan = readProjectFile("plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md");
+
+    expect(eventReadService).toContain('.from<EventRowWithLegacyCity>("events")');
+    expect(eventReadService).toContain("applyTerritoryFilter");
+    expect(eventReadService).toContain("getEventsPage");
+    expect(eventReadService).toContain("getByBounds");
+    expect(communityEventsRuntime).toContain("eventsReadService.getEventsPage");
+    expect(communityEventsRuntime).toContain("eventsReadService.getByBounds");
+    expect(communityEventsRuntime).toContain(".from(\"event_participants\")");
+    expect(eventAdapter).toContain('from "@/core/verticals/events"');
+    expect(architecture).toContain("src/core/verticals/events");
+    expect(plan).toContain("criar/confirmar `core/verticals/events` para leitura publica");
+  });
+
   it("requires verified residence for community alert and issue creation RPCs", () => {
     const hardening = readProjectFile(
       "supabase/migrations/20260706100000_harden_community_creation_residence_authorization.sql",
