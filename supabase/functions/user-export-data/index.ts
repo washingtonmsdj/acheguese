@@ -128,13 +128,18 @@ serve(async (req: Request) => {
       };
     }
 
-    // 2. Profile
-    const { data: profile } = await serviceClient
+    // 2. Profiles
+    const { data: profiles } = await serviceClient
       .from('profiles')
       .select('*')
-      .eq('user_id', userId)
-      .single();
-    if (profile) userData.profile = profile;
+      .eq('user_id', userId);
+    if (profiles?.length) {
+      userData.profiles = profiles;
+      userData.profile = profiles[0];
+    }
+    const profileIds = (profiles ?? [])
+      .map((profile) => profile.id)
+      .filter((id): id is string => typeof id === 'string' && id.length > 0);
 
     // 3. User Roles
     const { data: roles } = await serviceClient
@@ -206,12 +211,26 @@ serve(async (req: Request) => {
       .eq('user_id', userId);
     if (conversations?.length) userData.conversations = conversations;
 
-    // 13. Community posts
-    const { data: communityPosts } = await serviceClient
-      .from('community_posts')
-      .select('*, community_comments(*), community_reactions(*)')
-      .eq('author_id', userId);
-    if (communityPosts?.length) userData.community_posts = communityPosts;
+    // 13. Community feed and Q&A
+    if (profileIds.length) {
+      const { data: posts } = await serviceClient
+        .from('posts')
+        .select('*')
+        .in('author_profile_id', profileIds);
+      if (posts?.length) userData.posts = posts;
+
+      const { data: communityQuestions } = await serviceClient
+        .from('community_questions')
+        .select('*')
+        .in('author_profile_id', profileIds);
+      if (communityQuestions?.length) userData.community_questions = communityQuestions;
+
+      const { data: questionAnswers } = await serviceClient
+        .from('question_answers')
+        .select('*')
+        .in('author_profile_id', profileIds);
+      if (questionAnswers?.length) userData.question_answers = questionAnswers;
+    }
 
     // 14. Events created
     const { data: events } = await serviceClient

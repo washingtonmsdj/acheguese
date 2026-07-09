@@ -406,7 +406,7 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     adminSummary:
       "Parcial. Moderacao existe, mas a gestao administrativa do ciclo de posts, grupos, recomendacoes, eventos e achados/perdidos nao esta consolidada numa cobertura unica.",
     docsSummary:
-      "Parcial. Ha README do modulo, docs/posts e o contrato Community First; ainda falta consolidar posts vs community_posts.",
+      "Parcial. Ha README do modulo, docs/posts e o contrato Community First; posts eh o SSOT de feed, enquanto Q&A pertence a community_questions/question_answers.",
     ssotSummary:
       "Feed transversal usa core/posts, core/comments, core/social e core/feed. A identidade da Comunidade Local pertence a community-experience; feed nao deve recriar community profile, alias ou territorio.",
   },

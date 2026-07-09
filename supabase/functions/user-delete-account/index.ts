@@ -97,6 +97,13 @@ serve(async (req: Request) => {
 
     const userId = user.id;
     const userEmail = user.email;
+    const { data: profilesForDeletion } = await serviceClient
+      .from('profiles')
+      .select('id')
+      .eq('user_id', userId);
+    const profileIds = (profilesForDeletion ?? [])
+      .map((profile) => profile.id)
+      .filter((id): id is string => typeof id === 'string' && id.length > 0);
 
     // Verificar se usuário é admin - não permitir exclusão de admins
     const { data: isAdmin } = await serviceClient.rpc('is_admin', { _user_id: userId });
@@ -263,19 +270,54 @@ serve(async (req: Request) => {
       deletionResults.messages = { success: false, error: toErrorMessage(e) };
     }
 
-    // 2.5 Anonimizar community posts
+    // 2.5 Remover posts canonicos e anonimizar Q&A
     try {
-      const { error } = await serviceClient
-        .from('community_posts')
-        .update({
-          content: '[Conteúdo removido - usuário deletado]',
-          media_urls: null,
-          deleted_at: new Date().toISOString(),
-        })
-        .eq('author_id', userId);
-      deletionResults.community_posts = { success: !error, error: error?.message };
+      if (!profileIds.length) {
+        deletionResults.posts = { success: true, count: 0 };
+        deletionResults.community_questions = { success: true, count: 0 };
+        deletionResults.question_answers = { success: true, count: 0 };
+      } else {
+        const removedAt = new Date().toISOString();
+        const { error } = await serviceClient
+          .from('posts')
+          .update({
+            content: '[Conteudo removido - usuario deletado]',
+            image_url: null,
+            video_url: null,
+            images: [],
+            is_hidden: true,
+            is_published: false,
+            is_removed: true,
+            removed_at: removedAt,
+            removed_by: null,
+            removed_reason: 'account_deleted',
+          })
+          .in('author_profile_id', profileIds);
+        deletionResults.posts = { success: !error, error: error?.message };
+
+        const { error: questionsError } = await serviceClient
+          .from('community_questions')
+          .update({
+            title: '[Pergunta removida]',
+            description: '[Conteudo removido - usuario deletado]',
+            content: '[Conteudo removido - usuario deletado]',
+            tags: [],
+          })
+          .in('author_profile_id', profileIds);
+        deletionResults.community_questions = { success: !questionsError, error: questionsError?.message };
+
+        const { error: answersError } = await serviceClient
+          .from('question_answers')
+          .update({
+            content: '[Conteudo removido - usuario deletado]',
+          })
+          .in('author_profile_id', profileIds);
+        deletionResults.question_answers = { success: !answersError, error: answersError?.message };
+      }
     } catch (e: unknown) {
-      deletionResults.community_posts = { success: false, error: toErrorMessage(e) };
+      deletionResults.posts = { success: false, error: toErrorMessage(e) };
+      deletionResults.community_questions = { success: false, error: toErrorMessage(e) };
+      deletionResults.question_answers = { success: false, error: toErrorMessage(e) };
     }
 
     // 2.6 Anonimizar classifieds

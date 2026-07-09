@@ -129,8 +129,12 @@ mais comunidades sem copiar seus dados mestres:
   `jobs` e nao devem ser fundidas com `work_opportunities` sem uma migracao
   explicita para um futuro `core/jobs`.
 - Usuarios/perfis: `profiles`, `src/core/profiles`, `src/modules/profile`
-- Posts/feed: `posts` como candidato a SSOT principal, com consolidacao
-  pendente contra `community_posts`
+- Posts/feed: `posts`, `src/core/posts`, `src/core/feed` e
+  `src/modules/community-feed` para feed social, publicacoes comunitarias,
+  moderacao, busca e metricas de perfil. `community_questions` e
+  `question_answers` pertencem ao bounded context de Q&A. `community_posts`
+  nao e runtime SSOT e nao deve ser consultada fora de migrations historicas ou
+  tipos gerados ate a remocao definitiva do schema legado.
 
 ### Busca E Descoberta
 

@@ -10,6 +10,7 @@ import { trackError } from "@/shared/utils/errorTracking";
 import { sanitizeForILike } from "@/shared/utils/sqlSanitization";
 import { SessionService } from "@/core/session/services/SessionService";
 import { SessionRpcService } from "@/core/session/services/SessionRpcService";
+import { postService } from "@/core/posts/services/PostService";
 import type {
   AdminFilters,
   AdminProfileListItem,
@@ -410,13 +411,10 @@ export async function getStats(userId: string): Promise<ProfileActivityStats | n
 
   // Contagens em paralelo
   const [
-    postsResult,
+    postsCount,
     likesResult,
   ] = await Promise.all([
-    profileQueriesDb
-      .from<{ id: string }>("community_posts")
-      .select("id", { count: "exact", head: true })
-      .eq("profile_id", activeProfile.id),
+    postService.getPostsCountByAuthor(activeProfile.id),
     profileQueriesDb
       .from<{ id: string }>("post_likes_new")
       .select("id", { count: "exact", head: true })
@@ -426,7 +424,7 @@ export async function getStats(userId: string): Promise<ProfileActivityStats | n
   const commentsCount = 0;
 
   return {
-    posts: postsResult.count || 0,
+    posts: postsCount || 0,
     likes: likesResult.count || 0,
     favorites: 0,
     businesses: 0,

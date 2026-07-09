@@ -788,9 +788,13 @@ Risco:
 
 Decisao recomendada:
 
-- escolher uma tabela canonica antes de ampliar feed.
-- se `community_posts` permanecer, documentar como especializacao e criar
-  adapter unico de leitura/escrita.
+- `posts` e a tabela canonica de feed social, publicacoes comunitarias,
+  moderacao, busca e metricas de perfil.
+- `community_questions` e o bounded context canonico de perguntas da
+  comunidade; respostas pertencem a `question_answers`.
+- `community_posts` nao deve ser consultada por runtime. Referencias restantes
+  so podem existir em migrations historicas, tipos gerados enquanto o schema
+  remoto ainda expuser a tabela, ou testes que documentam a migracao.
 
 ### 3. Eventos sem dominio core claro
 
@@ -1215,7 +1219,7 @@ Evidencia parcial:
 
 ### Fase 7 - Limpeza De Duplicacoes
 
-Status: pendente
+Status: em andamento
 
 Objetivo:
 
@@ -1223,11 +1227,25 @@ Objetivo:
 
 Tarefas:
 
-- decidir `posts` vs `community_posts`;
+- [x] decidir `posts` vs `community_posts`;
 - reduzir facades duplicadas entre `src/core` e `src/modules`;
 - revisar `AppLayoutRoutes.tsx` e extrair registros declarativos por dominio;
 - arquivar docs antigos que contradizem o modelo novo;
 - adicionar validadores para impedir retorno das duplicacoes.
+
+Evidencia parcial:
+
+- `src/core/profiles/services/profile.queries.ts` conta atividade pelo
+  `postService.getPostsCountByAuthor`, preservando `posts.author_profile_id`
+  atras do SSOT de posts;
+- `supabase/functions/user-export-data/index.ts` exporta todos os `profiles`
+  do usuario e usa seus `profileIds` para `posts`, `community_questions` e
+  `question_answers`;
+- `supabase/functions/user-delete-account/index.ts` remove posts via campos
+  canonicos `is_removed`, `removed_at` e anonimiza Q&A sem acessar
+  `community_posts`;
+- `tests/posts-community-posts-ssot.test.ts` impede que runtime volte a
+  consultar `.from('community_posts')`.
 
 Criterio de pronto:
 
