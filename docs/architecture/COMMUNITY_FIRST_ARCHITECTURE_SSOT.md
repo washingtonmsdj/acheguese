@@ -186,6 +186,13 @@ visibilidade. Componentes como `MainLandingPage` devem consumir esse contrato
 por dados ja normalizados em `SearchDocument`, mantendo a Home como superficie
 de apresentacao e nao como dominio.
 
+A Home Community First e a porta publica de descoberta do ecossistema. Ela pode
+organizar hero, comunidades em destaque, atividades, modulos locais, ranking,
+sugestoes e anuncios, mas essas secoes devem ser derivadas de contratos de
+landing/search/routing ou de configuracao editorial explicita de lancamento.
+Ela nao deve virar SSOT de comunidade, empresa, evento, classificado,
+gastronomia, servico, territorio, perfil ou permissao.
+
 ## Relacionamento Oficial
 
 O modelo oficial e:

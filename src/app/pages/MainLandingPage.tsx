@@ -2,15 +2,12 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import {
-  ArrowRight,
   Bell,
   Briefcase,
   Building2,
-  ChevronDown,
-  ChevronRight,
   Calendar,
-  Flame,
-  Map as MapIcon,
+  ChevronDown,
+  Home as HomeIcon,
   MapPin,
   Moon,
   MoreHorizontal,
@@ -30,44 +27,38 @@ import { HomeDiscoveryService } from "@/core/landing/services";
 import {
   getHomeDiscoveryDocumentHref,
   getHomeDiscoveryDocumentMeta,
-  getHomeDiscoveryDocumentRating,
-  getHomeDiscoveryDocumentTone,
+  withQueryParams,
 } from "@/core/landing/utils/landingPresentation";
-import {
-  DEFAULT_TILE_STYLE,
-  MapLibreAdapter,
-  mapEntityProjection,
-  useTerritoryPolygon,
-  type MapEntityType,
-  type MapMarker,
-  type TerritoryPolygon,
-} from "@/core/maps";
 import { LocationStatus, LocationType, type Location } from "@/core/location/types";
 import { useHomeCommunityHref } from "@/core/routing/hooks/useHomeCommunityHref";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
+import { buildCommunityAliasUrl, buildCommunityScopedUrl } from "@/core/routing/utils/territoryUrls";
 import type { SearchDocument } from "@/core/search";
 import { useTheme } from "@/shared/hooks/useTheme";
 
+import bairroChapada from "@/assets/bairro-chapada.jpg";
+import bairroOndina from "@/assets/bairro-ondina.jpg";
 import bairroPituba from "@/assets/bairro-pituba.jpg";
 import bairroRioVermelho from "@/assets/bairro-riovermelho.jpg";
+import bairroSantaCruz from "@/assets/bairro-santa-cruz.jpg";
+import bairroStiep from "@/assets/bairro-stiep.jpg";
+import complexoComercio from "@/assets/complexo-comercio.jpg";
+import complexoCultura from "@/assets/complexo-cultura.jpg";
+import complexoMusica from "@/assets/complexo-musica.jpg";
 import empresasHero from "@/assets/empresas-hero.jpg";
 import gastronomyHero from "@/assets/gastronomy-hero-bg.jpg";
 import heroImg from "@/assets/hero-landing-main.jpg";
 import neighborhoodFeatured from "@/assets/neighborhood-featured.jpg";
+import personaComerciante from "@/assets/persona-comerciante.jpg";
+import personaEmprego from "@/assets/persona-emprego.jpg";
+import personaMorador from "@/assets/persona-morador.jpg";
+import personaPrestador from "@/assets/persona-prestador.jpg";
 import servicosHero from "@/assets/servicos-hero.jpg";
 import "./MainLandingPage.css";
 
 type NavItem = {
   label: string;
   href: string;
-};
-
-type ModuleCard = {
-  label: string;
-  href: string;
-  icon: LucideIcon;
-  image: string;
-  accent: "cyan" | "amber" | "blue" | "pink" | "green";
 };
 
 type Chip = {
@@ -94,132 +85,257 @@ type CurrentWeatherResponse = {
   };
 };
 
+type VisualTone = "cyan" | "green" | "blue" | "amber" | "pink" | "red" | "neutral";
+
+type FeaturedCommunity = {
+  name: string;
+  href: string;
+  image: string;
+  members: string;
+  delta: string;
+  badge?: string;
+  avatarCount: number;
+};
+
+type HighlightCard = {
+  label: string;
+  title: string;
+  meta: string;
+  detail: string;
+  href: string;
+  image: string;
+  tone: VisualTone;
+  icon: LucideIcon;
+};
+
+type ModuleTile = {
+  label: string;
+  description: string;
+  href: string;
+  icon: LucideIcon;
+  tone: VisualTone;
+};
+
+type CommunityActivity = {
+  author: string;
+  community: string;
+  text: string;
+  time: string;
+  comments: number;
+  avatar: string;
+  image?: string;
+  verified?: boolean;
+};
+
+type SponsoredItem = {
+  title: string;
+  community: string;
+  description: string;
+  href: string;
+  image: string;
+};
+
 const cityPath = LAUNCH_CITY_PATH;
-const mapHref = LAUNCH_URLS.map;
 const searchHref = LAUNCH_URLS.search;
 const weatherCacheTtlMs = 10 * 60 * 1000;
 const currentWeatherCache = new Map<string, { temperatureCelsius: number; expiresAt: number }>();
-
-function withQueryParams(path: string, params: Record<string, string>): string {
-  const searchParams = new URLSearchParams(params);
-  return `${path}?${searchParams.toString()}`;
-}
+const avatarImages = [personaMorador, personaComerciante, personaPrestador, personaEmprego];
 
 const quickChips: Chip[] = [
-  { label: "Em alta", href: withQueryParams(searchHref, { q: "em alta" }), icon: Flame },
   { label: "Restaurantes", href: LAUNCH_URLS.gastronomy },
-  { label: "Eletricista", href: withQueryParams(searchHref, { q: "eletricista" }) },
-  { label: "Salões", href: withQueryParams(searchHref, { q: "salões" }) },
   { label: "Mercados", href: withQueryParams(searchHref, { q: "mercados" }) },
-  { label: "Vagas", href: LAUNCH_URLS.jobs },
-  { label: "Apartamentos", href: withQueryParams(LAUNCH_URLS.classifieds, { q: "apartamentos" }) },
+  { label: "Salões", href: withQueryParams(searchHref, { q: "salões" }) },
+  { label: "Mecânicas", href: withQueryParams(searchHref, { q: "mecânicas" }) },
+  { label: "Academias", href: withQueryParams(searchHref, { q: "academias" }) },
+  { label: "Pet shops", href: withQueryParams(searchHref, { q: "pet shops" }) },
+  { label: "+ Mais", href: searchHref, icon: MoreHorizontal },
 ];
 
 const stats = [
   { value: "+18 mil", label: "Empresas locais", icon: Building2, tone: "cyan" },
-  { value: "+52 mil", label: "Membros ativos", icon: Users, tone: "blue" },
-  { value: "+9 mil", label: "Posts esta semana", icon: Bell, tone: "blue" },
-  { value: "4,8", label: "Confiança média", icon: Star, tone: "amber" },
-  { value: "100%", label: "Verificados", icon: ShieldCheck, tone: "cyan" },
+  { value: "+52 mil", label: "Membros ativos", icon: Users, tone: "cyan" },
+  { value: "+9 mil", label: "Eventos realizados", icon: Calendar, tone: "cyan" },
+  { value: "4,8", label: "Avaliação média", icon: Star, tone: "amber" },
+  { value: "100%", label: "Ambiente seguro", icon: ShieldCheck, tone: "cyan" },
   { value: "Respostas rápidas", label: "Comunidade ativa", icon: Zap, tone: "amber" },
+] as const;
+
+const featuredCommunities: FeaturedCommunity[] = [
+  {
+    name: "Pituba",
+    href: buildCommunityAliasUrl("pituba"),
+    image: bairroPituba,
+    members: "12,5 mil membros",
+    delta: "+8%",
+    badge: "Em alta",
+    avatarCount: 23,
+  },
+  {
+    name: "Barra",
+    href: buildCommunityAliasUrl("barra"),
+    image: bairroOndina,
+    members: "8,7 mil membros",
+    delta: "+5%",
+    avatarCount: 18,
+  },
+  {
+    name: "Itapuã",
+    href: buildCommunityAliasUrl("itapua"),
+    image: bairroStiep,
+    members: "6,2 mil membros",
+    delta: "+3%",
+    avatarCount: 15,
+  },
+  {
+    name: "Rio Vermelho",
+    href: buildCommunityAliasUrl("rio-vermelho"),
+    image: bairroRioVermelho,
+    members: "5,1 mil membros",
+    delta: "+2%",
+    avatarCount: 9,
+  },
+];
+
+const suggestedCommunities: FeaturedCommunity[] = [
+  {
+    name: "Horto Florestal",
+    href: buildCommunityAliasUrl("horto-florestal"),
+    image: neighborhoodFeatured,
+    members: "4,8 mil membros",
+    delta: "+2%",
+    avatarCount: 12,
+  },
+  {
+    name: "Imbuí",
+    href: buildCommunityAliasUrl("imbui"),
+    image: bairroChapada,
+    members: "3,9 mil membros",
+    delta: "+1%",
+    avatarCount: 10,
+  },
+  {
+    name: "Graça",
+    href: buildCommunityAliasUrl("graca"),
+    image: complexoCultura,
+    members: "5,2 mil membros",
+    delta: "+4%",
+    avatarCount: 13,
+  },
+  {
+    name: "Caminho das Árvores",
+    href: buildCommunityAliasUrl("caminho-das-arvores"),
+    image: complexoComercio,
+    members: "6,1 mil membros",
+    delta: "+4%",
+    avatarCount: 16,
+  },
+  {
+    name: "Stella Maris",
+    href: buildCommunityAliasUrl("stella-maris"),
+    image: bairroSantaCruz,
+    members: "4,3 mil membros",
+    delta: "+1%",
+    avatarCount: 8,
+  },
+];
+
+const fallbackHighlights: HighlightCard[] = [
+  {
+    label: "Evento hoje",
+    title: "Samba na Praça",
+    meta: "19h - Praça da Pituba",
+    detail: "Música",
+    href: LAUNCH_URLS.events,
+    image: complexoMusica,
+    tone: "blue",
+    icon: Calendar,
+  },
+  {
+    label: "Promoção",
+    title: "Rodízio de Pizza",
+    meta: "Dom Salvador",
+    detail: "até 30% OFF",
+    href: LAUNCH_URLS.gastronomy,
+    image: gastronomyHero,
+    tone: "green",
+    icon: UtensilsCrossed,
+  },
+  {
+    label: "Nova empresa",
+    title: "Academia Strong",
+    meta: "Pituba",
+    detail: "Aberto agora",
+    href: LAUNCH_URLS.business,
+    image: empresasHero,
+    tone: "blue",
+    icon: Building2,
+  },
+  {
+    label: "Aviso",
+    title: "Interdição na Rua dos Navegantes",
+    meta: "Hoje, das 8h às 17h",
+    detail: "Trânsito",
+    href: buildCommunityAliasUrl("rio-vermelho", "feed"),
+    image: heroImg,
+    tone: "red",
+    icon: Bell,
+  },
+];
+
+const communityActivities: CommunityActivity[] = [
+  {
+    author: "Juliana Santos",
+    community: "Pituba",
+    text: "Alguém sabe de um bom restaurante japonês por aqui?",
+    time: "2h",
+    comments: 24,
+    avatar: personaMorador,
+  },
+  {
+    author: "Prefeitura de Salvador",
+    community: "Avisos oficiais",
+    text: "Mutirão de limpeza neste sábado na orla da Pituba. Participe!",
+    time: "4h",
+    comments: 18,
+    avatar: personaEmprego,
+    verified: true,
+  },
+  {
+    author: "Marcos Lima",
+    community: "Barra",
+    text: "Vendo bicicleta semi nova, usada poucas vezes.",
+    time: "6h",
+    comments: 9,
+    avatar: personaComerciante,
+    image: bairroRioVermelho,
+  },
+];
+
+const sponsoredFallbackItems: SponsoredItem[] = [
+  {
+    title: "Padaria Pão Nosso",
+    community: "Pituba",
+    description: "Pães fresquinhos todos os dias!",
+    href: LAUNCH_URLS.business,
+    image: empresasHero,
+  },
+  {
+    title: "Pet Shop Cão Feliz",
+    community: "Boca do Rio",
+    description: "Banho, tosa e muito carinho.",
+    href: withQueryParams(searchHref, { q: "pet shop" }),
+    image: bairroSantaCruz,
+  },
+  {
+    title: "Farmácia Saúde+",
+    community: "Pituba",
+    description: "Descontos em medicamentos.",
+    href: LAUNCH_URLS.business,
+    image: bairroPituba,
+  },
 ];
 
 const salvadorCenter = { latitude: -12.8744, longitude: -38.5015 };
-
-type HomeMapEntity = {
-  id: string;
-  type: MapEntityType;
-  name: string;
-  subtitle: string;
-  latitude: number;
-  longitude: number;
-  url: string;
-  category: string;
-  map_layer_key: string;
-  rating?: number;
-  isPremium?: boolean;
-};
-
-const homeMapEntities: HomeMapEntity[] = [
-  {
-    id: "home-map-padaria",
-    type: "business",
-    latitude: -13.0112,
-    longitude: -38.4894,
-    name: "Padaria da Esquina",
-    subtitle: "Rio Vermelho",
-    url: LAUNCH_URLS.business,
-    category: "Empresas",
-    map_layer_key: "businesses",
-    rating: 4.9,
-  },
-  {
-    id: "home-map-restaurante",
-    type: "business",
-    latitude: -13.0064,
-    longitude: -38.5324,
-    name: "Restaurante da Barra",
-    subtitle: "Barra",
-    url: LAUNCH_URLS.gastronomy,
-    category: "Gastronomia",
-    map_layer_key: "gastronomy",
-    rating: 4.8,
-    isPremium: true,
-  },
-  {
-    id: "home-map-servico",
-    type: "service",
-    latitude: -12.9747,
-    longitude: -38.508,
-    name: "Serviço rápido",
-    subtitle: "Centro Histórico",
-    url: LAUNCH_URLS.services,
-    category: "Serviços",
-    map_layer_key: "services",
-  },
-  {
-    id: "home-map-classificado",
-    type: "classified",
-    latitude: -12.999,
-    longitude: -38.4593,
-    name: "Apartamento mobiliado",
-    subtitle: "Pituba",
-    url: LAUNCH_URLS.classifieds,
-    category: "Classificados",
-    map_layer_key: "classifieds",
-  },
-  {
-    id: "home-map-alerta",
-    type: "alert",
-    latitude: -12.9505,
-    longitude: -38.3607,
-    name: "Alerta de chuva forte",
-    subtitle: "Itapuã",
-    url: LAUNCH_URLS.community,
-    category: "Comunidade",
-    map_layer_key: "alerts",
-  },
-  {
-    id: "home-map-evento",
-    type: "event",
-    latitude: -12.9027,
-    longitude: -38.425,
-    name: "Mutirão de limpeza",
-    subtitle: "Cajazeiras",
-    url: LAUNCH_URLS.community,
-    category: "Comunidade",
-    map_layer_key: "events",
-  },
-];
-
-const homeMapMarkers = homeMapEntities
-  .map(({ type, ...entity }) =>
-    mapEntityProjection.projectEntity(entity, type, {
-      includeMetadata: true,
-      calculateScore: true,
-    }),
-  )
-  .filter((marker): marker is MapMarker => marker !== null);
 
 const homeSelectedTerritory: ResolvedTerritory = {
   kind: "location",
@@ -241,41 +357,6 @@ const homeSelectedTerritory: ResolvedTerritory = {
     updated_at: "2026-01-01T00:00:00.000Z",
   } satisfies Location,
 };
-
-const salvadorFallbackTerritoryPolygons: TerritoryPolygon[] = [
-  {
-    name: "Salvador",
-    color: "#21e0d0",
-    center: [salvadorCenter.latitude, salvadorCenter.longitude],
-    // Simplified fallback from IBGE municipal mesh 2927408.
-    coordinates: [
-      [-13.0127, -38.5856],
-      [-13.0149, -38.4687],
-      [-12.956, -38.385],
-      [-12.9571, -38.3535],
-      [-12.9109, -38.3043],
-      [-12.8947, -38.3549],
-      [-12.8391, -38.3534],
-      [-12.8243, -38.374],
-      [-12.867, -38.416],
-      [-12.8294, -38.464],
-      [-12.7915, -38.4623],
-      [-12.7793, -38.5038],
-      [-12.7483, -38.5085],
-      [-12.7387, -38.535],
-      [-12.7339, -38.5879],
-      [-12.754, -38.5879],
-      [-12.7541, -38.6952],
-      [-12.8006, -38.6986],
-      [-12.8454, -38.6749],
-      [-12.8926, -38.5888],
-      [-12.9327, -38.5611],
-      [-13.0127, -38.5856],
-    ],
-  },
-];
-
-const homeTerritoryFitPadding = { top: 24, right: 24, bottom: 56, left: 24 };
 
 function toFiniteCoordinate(value: unknown): number | null {
   const numericValue = typeof value === "number" ? value : typeof value === "string" ? Number(value) : Number.NaN;
@@ -415,7 +496,7 @@ function BrandMark() {
   );
 }
 
-function HeaderNav({ navItems }: { navItems: NavItem[] }) {
+function HeaderNav({ navItems, temperature }: { navItems: NavItem[]; temperature: TemperatureBadgeState }) {
   const { theme, toggleTheme } = useTheme();
   const ThemeIcon = theme === "dark" ? Sun : Moon;
 
@@ -438,32 +519,39 @@ function HeaderNav({ navItems }: { navItems: NavItem[] }) {
         <Link to={cityPath} className="home-action-pill home-location-pill">
           <MapPin aria-hidden="true" />
           <span>Salvador, BA</span>
+          <ChevronDown aria-hidden="true" />
         </Link>
+        <span className="home-action-pill home-weather-pill" aria-label={temperature.ariaLabel} aria-live="polite">
+          <Sun aria-hidden="true" />
+          <span>{temperature.label}</span>
+        </span>
         <button type="button" className="home-icon-button" onClick={toggleTheme} aria-label="Alternar tema">
           <ThemeIcon aria-hidden="true" />
         </button>
-        <Link to="/login" className="home-auth-button home-auth-button--ghost">
-          Entrar
+        <Link to="/notifications" className="home-notification-button" aria-label="Abrir notificações">
+          <Bell aria-hidden="true" />
+          <span>3</span>
         </Link>
-        <Link to="/cadastro" className="home-auth-button home-auth-button--primary">
-          Criar conta
+        <Link to="/login" className="home-user-avatar" aria-label="Entrar na conta">
+          <img src={personaMorador} alt="" />
+          <ChevronDown aria-hidden="true" />
         </Link>
       </div>
     </header>
   );
 }
 
-function HeroBadges({ temperature }: { temperature: TemperatureBadgeState }) {
+function HeroBadges({ communityHref }: { communityHref: string }) {
   return (
-    <div className="home-hero-badges" aria-label="Local e clima">
+    <div className="home-hero-badges" aria-label="Local e comunidade">
       <Link to={cityPath} className="home-glass-badge">
         <MapPin aria-hidden="true" />
         <span>Salvador, BA</span>
       </Link>
-      <span className="home-glass-badge" aria-label={temperature.ariaLabel} aria-live="polite">
-        <Sun aria-hidden="true" />
-        <span>{temperature.label}</span>
-      </span>
+      <Link to={communityHref} className="home-glass-badge">
+        <Users aria-hidden="true" />
+        <span>Comunidade em alta</span>
+      </Link>
     </div>
   );
 }
@@ -475,36 +563,29 @@ function SearchPanel() {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const query = String(formData.get("q") ?? "").trim();
-    const target = query ? `${searchHref}?q=${encodeURIComponent(query)}` : searchHref;
+    const target = query ? withQueryParams(searchHref, { q: query }) : searchHref;
     navigate(target);
   };
 
   return (
     <form className="home-search-panel" onSubmit={handleSubmit} role="search">
-      <div className="home-search-row">
-        <Link to={cityPath} className="home-search-location">
-          <MapPin aria-hidden="true" />
-          <span>Salvador, BA</span>
-          <ChevronDown aria-hidden="true" />
-        </Link>
-        <label className="home-search-field">
-          <Search aria-hidden="true" />
-          <input
-            name="q"
-            type="search"
-            autoComplete="off"
-            placeholder="Buscar restaurantes, serviços, empresas, classificados..."
-          />
-        </label>
-        <button type="submit" className="home-search-submit" aria-label="Buscar">
-          <Search aria-hidden="true" />
-        </button>
-      </div>
+      <label className="home-search-field">
+        <span className="sr-only">Buscar no Achegue-se</span>
+        <input
+          name="q"
+          type="search"
+          autoComplete="off"
+          placeholder="Buscar comunidades, empresas, eventos, serviços..."
+        />
+      </label>
+      <button type="submit" className="home-search-submit" aria-label="Buscar">
+        <Search aria-hidden="true" />
+      </button>
       <div className="home-chip-row" aria-label="Buscas rápidas">
         {quickChips.map((chip) => {
           const Icon = chip.icon;
           return (
-            <Link key={chip.label} to={chip.href} className={Icon ? "home-chip home-chip--hot" : "home-chip"}>
+            <Link key={chip.label} to={chip.href} className="home-chip">
               {Icon ? <Icon aria-hidden="true" /> : null}
               <span>{chip.label}</span>
             </Link>
@@ -515,97 +596,160 @@ function SearchPanel() {
   );
 }
 
-function ModuleCards({ cards }: { cards: ModuleCard[] }) {
+function AvatarStack({ count }: { count: number }) {
   return (
-    <section className="home-module-grid" aria-label="Módulos locais">
-      {cards.map((card) => {
-        const Icon = card.icon;
-        return (
-          <Link
-            key={card.label}
-            to={card.href}
-            className={`home-module-card home-module-card--${card.accent}`}
-          >
-            <img src={card.image} alt="" loading="lazy" />
-            <span className="home-module-shade" aria-hidden="true" />
-            <span className="home-module-content">
-              <Icon aria-hidden="true" />
-              <strong>{card.label}</strong>
-            </span>
-            <span className="home-module-arrow" aria-hidden="true">
-              <ArrowRight />
+    <span className="home-avatar-stack" aria-label={`${count} membros recentes`}>
+      {avatarImages.map((avatar, index) => (
+        <img key={avatar} src={avatar} alt="" style={{ zIndex: avatarImages.length - index }} />
+      ))}
+      <span>+{count}</span>
+    </span>
+  );
+}
+
+function FeaturedCommunitiesPanel() {
+  return (
+    <section className="home-featured-communities" aria-labelledby="featured-communities-title">
+      <div className="home-section-heading">
+        <h2 id="featured-communities-title">Comunidades em destaque</h2>
+        <Link to={LAUNCH_URLS.community}>Ver todas</Link>
+      </div>
+      <div className="home-featured-community-grid">
+        {featuredCommunities.map((community) => (
+          <Link key={community.name} to={community.href} className="home-community-card">
+            <img src={community.image} alt="" />
+            <span className="home-community-card-shade" aria-hidden="true" />
+            {community.badge ? <span className="home-community-badge">{community.badge}</span> : null}
+            <span className="home-community-card-copy">
+              <strong>{community.name}</strong>
+              <small>{community.members}</small>
+              <AvatarStack count={community.avatarCount} />
             </span>
           </Link>
-        );
-      })}
+        ))}
+      </div>
     </section>
   );
 }
 
-function HomeTerritoryMap() {
-  const { polygons } = useTerritoryPolygon(homeSelectedTerritory);
-  const territoryPolygons = useMemo(
-    () => (polygons.length > 0 ? polygons : salvadorFallbackTerritoryPolygons),
-    [polygons],
-  );
+function resolveDocumentLabel(document: SearchDocument): Pick<HighlightCard, "label" | "tone" | "icon"> {
+  switch (document.type) {
+    case "business":
+      return { label: "Nova empresa", tone: "blue", icon: Building2 };
+    case "professional":
+      return { label: "Serviço", tone: "amber", icon: Wrench };
+    case "opportunity":
+      return { label: "Vaga", tone: "blue", icon: Briefcase };
+    case "classified":
+      return { label: "Classificado", tone: "pink", icon: Tag };
+    case "event":
+      return { label: "Evento hoje", tone: "blue", icon: Calendar };
+    case "community":
+    case "post":
+      return { label: "Comunidade", tone: "green", icon: Users };
+    default:
+      return { label: "Destaque", tone: "cyan", icon: Bell };
+  }
+}
+
+function getFallbackImageForDocument(document: SearchDocument, index: number): string {
+  if (document.imageUrl) return document.imageUrl;
+
+  const fallbackImages = [complexoMusica, gastronomyHero, empresasHero, heroImg, servicosHero];
+  return fallbackImages[index % fallbackImages.length];
+}
+
+function toHighlightCards(documents: SearchDocument[], communityHref: string): HighlightCard[] {
+  const dynamicCards = documents.slice(0, 4).map((document, index) => {
+    const label = resolveDocumentLabel(document);
+    const meta = getHomeDiscoveryDocumentMeta(document) || document.subtitle || "Salvador, BA";
+    const detail = document.description && document.description !== document.title ? document.description : meta;
+
+    return {
+      ...label,
+      title: document.title,
+      meta,
+      detail,
+      href: getHomeDiscoveryDocumentHref(document, communityHref),
+      image: getFallbackImageForDocument(document, index),
+    };
+  });
+
+  return [...dynamicCards, ...fallbackHighlights].slice(0, 4);
+}
+
+function HappeningCard({ card }: { card: HighlightCard }) {
+  const Icon = card.icon;
 
   return (
-    <div className="home-map-canvas" aria-label="Mapa da cidade de Salvador">
-      <MapLibreAdapter
-        styleUrl={DEFAULT_TILE_STYLE.styleUrl}
-        initialViewport={{ center: salvadorCenter, zoom: 9.6 }}
-        territoryPolygons={territoryPolygons}
-        markers={homeMapMarkers}
-        resolved={homeSelectedTerritory}
-        fitTerritoryBounds
-        territoryFitPadding={homeTerritoryFitPadding}
-        territoryFitMaxZoom={10.8}
-        enableClustering
-        clusterOptions={{ radius: 34, maxZoom: 8, minPoints: 2 }}
-        markerPresentation="compact"
-        userLocationMarker={{ enabled: false, autoAdd: false }}
-        className="home-real-map"
-      />
-      <span className="home-real-map-label" aria-hidden="true">
-        Salvador
+    <Link to={card.href} className="home-happening-card">
+      <img src={card.image} alt="" loading="lazy" />
+      <span className="home-happening-shade" aria-hidden="true" />
+      <span className={`home-card-label is-${card.tone}`}>
+        <Icon aria-hidden="true" />
+        {card.label}
       </span>
-    </div>
+      <span className="home-happening-copy">
+        <strong>{card.title}</strong>
+        <small>{card.meta}</small>
+        <em>{card.detail}</em>
+      </span>
+    </Link>
   );
 }
 
-function MapPanel() {
-  const filters = [
+function HappeningPanel({ cards }: { cards: HighlightCard[] }) {
+  return (
+    <section className="home-panel home-happening-panel" aria-labelledby="happening-title">
+      <div className="home-panel-heading">
+        <h2 id="happening-title">O que está acontecendo perto de você</h2>
+        <Link to={LAUNCH_URLS.community}>Ver tudo</Link>
+      </div>
+      <div className="home-happening-grid">
+        {cards.map((card) => (
+          <HappeningCard key={`${card.label}-${card.title}`} card={card} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ModuleTiles({ communityHref }: { communityHref: string }) {
+  const tiles: ModuleTile[] = [
+    { label: "Empresas", description: "Comércios locais", href: LAUNCH_URLS.business, icon: Building2, tone: "green" },
+    { label: "Eventos", description: "Na sua região", href: LAUNCH_URLS.events, icon: Calendar, tone: "red" },
+    { label: "Classificados", description: "Compre e venda", href: LAUNCH_URLS.classifieds, icon: Tag, tone: "blue" },
+    { label: "Serviços", description: "Profissionais", href: LAUNCH_URLS.services, icon: Wrench, tone: "amber" },
+    { label: "Grupos", description: "Interesses", href: buildCommunityScopedUrl(communityHref, "grupos"), icon: Users, tone: "blue" },
     {
-      label: "Restaurantes",
-      icon: UtensilsCrossed,
-      tone: "amber",
-      href: withQueryParams(mapHref, { layer: "gastronomy" }),
+      label: "Imóveis",
+      description: "Aluguel e venda",
+      href: withQueryParams(LAUNCH_URLS.classifieds, { q: "imóveis" }),
+      icon: HomeIcon,
+      tone: "cyan",
     },
-    {
-      label: "Empresas",
-      icon: Briefcase,
-      tone: "blue",
-      href: withQueryParams(mapHref, { layer: "businesses" }),
-    },
-    { label: "Serviços", icon: Wrench, tone: "blue", href: withQueryParams(mapHref, { layer: "services" }) },
-    { label: "Classificados", icon: Tag, tone: "pink", href: withQueryParams(mapHref, { layer: "classifieds" }) },
-    { label: "Mais", icon: MoreHorizontal, tone: "neutral", href: mapHref },
+    { label: "Vagas", description: "Oportunidades", href: LAUNCH_URLS.jobs, icon: Briefcase, tone: "blue" },
+    { label: "Mais", description: "Ver tudo", href: searchHref, icon: MoreHorizontal, tone: "neutral" },
   ];
 
   return (
-    <section className="home-panel home-map-panel" aria-labelledby="home-map-title">
+    <section className="home-panel home-modules-panel" aria-labelledby="modules-title">
       <div className="home-panel-heading">
-        <h2 id="home-map-title">Mapa da cidade</h2>
-        <Link to={mapHref}>Ver mapa completo</Link>
+        <h2 id="modules-title">Encontre o que precisa na sua comunidade</h2>
+        <Link to={searchHref}>Ver todas</Link>
       </div>
-      <HomeTerritoryMap />
-      <div className="home-map-filters" aria-label="Camadas do mapa">
-        {filters.map((filter) => {
-          const Icon = filter.icon;
+      <div className="home-module-tile-grid">
+        {tiles.map((tile) => {
+          const Icon = tile.icon;
           return (
-            <Link key={filter.label} to={filter.href} className={`home-map-filter is-${filter.tone}`}>
-              <Icon aria-hidden="true" />
-              <span>{filter.label}</span>
+            <Link key={tile.label} to={tile.href} className="home-module-tile">
+              <span className={`home-module-icon is-${tile.tone}`}>
+                <Icon aria-hidden="true" />
+              </span>
+              <span>
+                <strong>{tile.label}</strong>
+                <small>{tile.description}</small>
+              </span>
             </Link>
           );
         })}
@@ -614,160 +758,117 @@ function MapPanel() {
   );
 }
 
-function getDocumentIcon(document: SearchDocument): LucideIcon {
-  switch (document.type) {
-    case "business":
-      return Building2;
-    case "professional":
-      return Wrench;
-    case "opportunity":
-      return Briefcase;
-    case "classified":
-      return Tag;
-    case "event":
-      return Calendar;
-    case "community":
-      return Users;
-    default:
-      return Bell;
-  }
-}
-
-function DocumentThumb({ document }: { document: SearchDocument }) {
-  const Icon = getDocumentIcon(document);
-
-  if (document.imageUrl) {
-    return <img src={document.imageUrl} alt="" loading="lazy" />;
-  }
-
+function CommunityActivityPanel() {
   return (
-    <span className="home-document-thumb" aria-hidden="true">
-      <Icon />
-    </span>
-  );
-}
-
-function PanelStatus({
-  label,
-  isLoading,
-}: {
-  label: string;
-  isLoading: boolean;
-}) {
-  return (
-    <p className="home-panel-status">
-      {isLoading ? "Carregando..." : label}
-    </p>
-  );
-}
-
-function ActivityPanel({
-  communityHref,
-  documents,
-  isLoading,
-}: {
-  communityHref: string;
-  documents: SearchDocument[];
-  isLoading: boolean;
-}) {
-  return (
-    <section className="home-panel home-list-panel" aria-labelledby="activity-title">
+    <section className="home-panel home-activity-panel" aria-labelledby="activity-title">
       <div className="home-panel-heading">
-        <h2 id="activity-title">Atividade da comunidade</h2>
-        <Link to={communityHref}>Ver tudo</Link>
+        <h2 id="activity-title">Atividades nas comunidades</h2>
+        <Link to={LAUNCH_URLS.community}>Ver todas</Link>
       </div>
-      <div className="home-activity-list">
-        {documents.length === 0 ? (
-          <PanelStatus
-            isLoading={isLoading}
-            label="Nenhuma atividade publica em destaque ainda."
-          />
-        ) : (
-          documents.map((document) => {
-            const Icon = getDocumentIcon(document);
-            const tone = getHomeDiscoveryDocumentTone(document);
-            return (
-              <Link
-                key={`${document.type}-${document.id}`}
-                to={getHomeDiscoveryDocumentHref(document, communityHref)}
-                className="home-activity-item"
-              >
-                <DocumentThumb document={document} />
-                <span className="home-activity-copy">
-                  <strong>{document.title}</strong>
-                  <small>{getHomeDiscoveryDocumentMeta(document)}</small>
-                </span>
-                <Icon className={`home-activity-icon is-${tone}`} aria-hidden="true" />
-              </Link>
-            );
-          })
-        )}
+      <div className="home-community-activity-list">
+        {communityActivities.map((activity) => (
+          <article key={`${activity.author}-${activity.time}`} className="home-community-activity-item">
+            <img src={activity.avatar} alt="" />
+            <span className="home-community-activity-copy">
+              <strong>
+                {activity.author}
+                <small>{activity.community}</small>
+                {activity.verified ? <ShieldCheck aria-label="Perfil verificado" /> : null}
+              </strong>
+              <span>{activity.text}</span>
+            </span>
+            <span className="home-community-activity-meta">
+              <small>{activity.time}</small>
+              <span>{activity.comments}</span>
+            </span>
+            {activity.image ? <img className="home-community-activity-preview" src={activity.image} alt="" /> : null}
+          </article>
+        ))}
       </div>
     </section>
   );
 }
 
-function RankingPanel({
-  documents,
-  isLoading,
-}: {
-  documents: SearchDocument[];
-  isLoading: boolean;
-}) {
+function CommunityRankingPanel() {
   return (
-    <section className="home-panel home-list-panel" aria-labelledby="ranking-title">
+    <section className="home-panel home-ranking-panel" aria-labelledby="ranking-title">
       <div className="home-panel-heading">
-        <h2 id="ranking-title">Ranking de confiança</h2>
-        <Link to={LAUNCH_URLS.business}>Ver mais</Link>
+        <h2 id="ranking-title">Ranking das comunidades</h2>
+        <Link to={LAUNCH_URLS.community}>Ver ranking</Link>
       </div>
-      <div className="home-ranking-list">
-        {documents.length === 0 ? (
-          <PanelStatus
-            isLoading={isLoading}
-            label="Nenhuma avaliacao publica em destaque ainda."
-          />
-        ) : (
-          documents.map((document, index) => {
-            const rating = getHomeDiscoveryDocumentRating(document);
-            return (
-              <Link
-                key={`${document.type}-${document.id}`}
-                to={getHomeDiscoveryDocumentHref(document, LAUNCH_URLS.business)}
-                className="home-ranking-item"
-              >
-                <span className="home-ranking-number">{index + 1}</span>
-                <DocumentThumb document={document} />
-                <span className="home-ranking-copy">
-                  <strong>{document.title}</strong>
-                  <small>{getHomeDiscoveryDocumentMeta(document)}</small>
-                </span>
-                {rating ? (
-                  <span className="home-rating">
-                    <Star aria-hidden="true" />
-                    {rating}
-                  </span>
-                ) : null}
-              </Link>
-            );
-          })
-        )}
+      <div className="home-community-ranking-list">
+        {featuredCommunities.concat(suggestedCommunities.slice(0, 1)).map((community, index) => (
+          <Link key={community.name} to={community.href} className="home-community-ranking-item">
+            <span>{index + 1}</span>
+            <img src={community.image} alt="" />
+            <strong>
+              {community.name}
+              <small>{community.members}</small>
+            </strong>
+            <em>{community.delta}</em>
+          </Link>
+        ))}
       </div>
     </section>
   );
 }
 
-function TrustStrip() {
+function SponsoredPanel({ documents }: { documents: SearchDocument[] }) {
+  const sponsoredItems: SponsoredItem[] = [
+    ...documents.slice(0, 3).map((document, index) => ({
+      title: document.title,
+      community: getHomeDiscoveryDocumentMeta(document) || "Salvador, BA",
+      description: document.description || document.subtitle || "Destaque local da comunidade.",
+      href: getHomeDiscoveryDocumentHref(document, LAUNCH_URLS.business),
+      image: getFallbackImageForDocument(document, index + 2),
+    })),
+    ...sponsoredFallbackItems,
+  ].slice(0, 3);
+
   return (
-    <Link to="/regras" className="home-trust-strip">
-      <span className="home-trust-icon" aria-hidden="true">
-        <ShieldCheck />
-      </span>
-      <span>
-        <strong>Ambiente seguro e verificado</strong>
-        <small>Perfis verificados • Conteúdo moderado</small>
-      </span>
-      <ChevronRight aria-hidden="true" />
-    </Link>
+    <section className="home-panel home-sponsored-panel" aria-labelledby="sponsored-title">
+      <div className="home-panel-heading">
+        <h2 id="sponsored-title">Anúncios de empresas locais</h2>
+        <Link to={LAUNCH_URLS.business}>Ver todos</Link>
+      </div>
+      <div className="home-sponsored-list">
+        {sponsoredItems.map((item) => (
+          <Link key={item.title} to={item.href} className="home-sponsored-item">
+            <img src={item.image} alt="" />
+            <span>
+              <strong>{item.title}</strong>
+              <small>{item.community}</small>
+              <em>{item.description}</em>
+            </span>
+            <b>Patrocinado</b>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function CommunitySuggestionsPanel() {
+  return (
+    <section className="home-panel home-suggestions-panel" aria-labelledby="suggestions-title">
+      <div className="home-panel-heading">
+        <h2 id="suggestions-title">Sugestões para você participar</h2>
+        <Link to={LAUNCH_URLS.community}>Ver todas</Link>
+      </div>
+      <div className="home-suggestion-list">
+        {suggestedCommunities.map((community) => (
+          <Link key={community.name} to={community.href} className="home-suggestion-card">
+            <img src={community.image} alt="" loading="lazy" />
+            <span className="home-suggestion-shade" aria-hidden="true" />
+            <span>
+              <strong>{community.name}</strong>
+              <small>{community.members}</small>
+              <em>Participar</em>
+            </span>
+          </Link>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -800,24 +901,16 @@ export default function MainLandingPage() {
   });
   const activityDocuments = homeDiscovery.data?.activityDocuments ?? [];
   const trustDocuments = homeDiscovery.data?.trustDocuments ?? [];
+  const happeningCards = toHighlightCards(activityDocuments, communityHref);
 
   const navItems: NavItem[] = [
     { label: "Início", href: "/" },
-    { label: "Comunidade", href: communityHref },
+    { label: "Comunidades", href: communityHref },
     { label: "Empresas", href: LAUNCH_URLS.business },
-    { label: "Gastronomia", href: LAUNCH_URLS.gastronomy },
-    { label: "Serviços", href: LAUNCH_URLS.services },
+    { label: "Eventos", href: LAUNCH_URLS.events },
     { label: "Classificados", href: LAUNCH_URLS.classifieds },
-    { label: "Mapa", href: mapHref },
-  ];
-
-  const moduleCards: ModuleCard[] = [
-    { label: "Empresas", href: LAUNCH_URLS.business, icon: Briefcase, image: empresasHero, accent: "cyan" },
-    { label: "Gastronomia", href: LAUNCH_URLS.gastronomy, icon: UtensilsCrossed, image: gastronomyHero, accent: "amber" },
-    { label: "Serviços", href: LAUNCH_URLS.services, icon: Wrench, image: servicosHero, accent: "blue" },
-    { label: "Classificados", href: LAUNCH_URLS.classifieds, icon: Tag, image: bairroRioVermelho, accent: "pink" },
-    { label: "Comunidade", href: communityHref, icon: Users, image: neighborhoodFeatured, accent: "green" },
-    { label: "Mapa", href: mapHref, icon: MapIcon, image: bairroPituba, accent: "blue" },
+    { label: "Serviços", href: LAUNCH_URLS.services },
+    { label: "Mapa", href: LAUNCH_URLS.map },
   ];
 
   return (
@@ -826,36 +919,36 @@ export default function MainLandingPage() {
         <img src={heroImg} alt="" />
       </div>
       <div className="home-shell">
-        <HeaderNav navItems={navItems} />
-        <div className="home-main-grid">
-          <section className="home-hero-copy" aria-labelledby="home-title">
-            <HeroBadges temperature={temperature} />
+        <HeaderNav navItems={navItems} temperature={temperature} />
+        <section className="home-hero-layout" aria-labelledby="home-title">
+          <div className="home-hero-copy">
+            <HeroBadges communityHref={communityHref} />
             <h1 id="home-title">
               Tudo do seu bairro,
               <br />
               em <span>um só lugar</span>
             </h1>
-            <p>Descubra, conecte-se e resolva tudo perto de você.</p>
+            <p>Conecte-se com pessoas, descubra empresas locais, participe de eventos e fortaleça sua comunidade.</p>
             <SearchPanel />
-            <ModuleCards cards={moduleCards} />
-          </section>
+          </div>
+          <FeaturedCommunitiesPanel />
+        </section>
 
-          <aside className="home-side" aria-label="Resumo do bairro">
-            <MapPanel />
-            <div className="home-side-grid">
-              <ActivityPanel
-                communityHref={communityHref}
-                documents={activityDocuments}
-                isLoading={homeDiscovery.isLoading}
-              />
-              <RankingPanel
-                documents={trustDocuments}
-                isLoading={homeDiscovery.isLoading}
-              />
+        <section className="home-content-grid" aria-label="Descoberta local">
+          <div className="home-main-column">
+            <div className="home-dashboard-row">
+              <HappeningPanel cards={happeningCards} />
+              <CommunityActivityPanel />
             </div>
-            <TrustStrip />
+            <ModuleTiles communityHref={communityHref} />
+            <CommunitySuggestionsPanel />
+          </div>
+          <aside className="home-aside-column" aria-label="Resumo das comunidades">
+            <CommunityRankingPanel />
+            <SponsoredPanel documents={trustDocuments} />
           </aside>
-        </div>
+        </section>
+
         <StatsBar />
       </div>
     </main>

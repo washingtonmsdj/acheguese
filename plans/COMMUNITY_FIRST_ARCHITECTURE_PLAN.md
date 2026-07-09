@@ -1108,7 +1108,7 @@ Evidencia parcial:
 
 ### Fase 5 - Busca Global E Descoberta
 
-Status: em andamento, contrato de busca/Home discovery e filtro comunitario concluido em 2026-07-09
+Status: em andamento, contrato de busca/Home discovery, filtro comunitario e Home Community First concluidos em 2026-07-09
 
 Objetivo:
 
@@ -1161,7 +1161,13 @@ Evidencia parcial:
   atividade e confianca da Home consumindo services canonicos de landing,
   eventos, oportunidades e classificados, sem query direta em componente;
 - `src/app/pages/MainLandingPage.tsx` consome `HomeDiscoveryService` via React
-  Query e removeu listas estaticas de atividades/ranking;
+  Query para atividade/confianca, usa helpers canonicos de routing/search para
+  links e busca, mantem a Home como superficie de apresentacao e nao consulta
+  Supabase nem tabelas de dominio diretamente;
+- a UX da Home foi atualizada por solicitacao explicita em 2026-07-09 para o
+  modelo Community First: hero de descoberta, comunidades em destaque, blocos
+  de atividades, modulos locais, ranking/sugestoes e anuncios, preservando
+  entidades independentes e contratos SSOT;
 - `src/core/search/services/__tests__/SearchService.spec.ts` cobre query curta,
   federacao multi-dominio, filtro por categoria e filtro por comunidade via
   `community_entity_links`;
@@ -1377,7 +1383,6 @@ Search/Home sao experiencias derivadas desses contratos.
 - renomear tabelas;
 - reorganizar pastas;
 - reativar modulos pausados;
-- alterar UX da Home;
 - alterar rotas publicas;
 - mudar RLS;
 - implementar indice denormalizado/RPC de busca.
