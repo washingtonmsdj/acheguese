@@ -101,7 +101,8 @@ mais comunidades sem copiar seus dados mestres:
   `src/modules/classifieds`
 - Eventos: `events`, `src/core/verticals/events` para leitura publica,
   escrita, participacao e check-in canonicos via `EventReadService` e
-  `EventMutationService`.
+  `EventMutationService`; join, leave e check-in usam `event-rpc` com RPCs
+  atomicas dedicadas.
 - Usuarios/perfis: `profiles`, `src/core/profiles`, `src/modules/profile`
 - Posts/feed: `posts` como candidato a SSOT principal, com consolidacao
   pendente contra `community_posts`

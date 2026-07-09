@@ -2,7 +2,7 @@ import { supabase } from "@/integrations/supabase";
 import type { Tables } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { buildSafeILikePattern } from "@/shared/utils/sqlSanitization";
-import { CommunityRpcService } from "@/core/community/services/CommunityRpcService";
+import { eventMutationService } from "@/core/verticals/events";
 
 type ErrorLike = { message?: string | null; code?: string | null } | null;
 
@@ -336,18 +336,7 @@ class AdminEventsServiceClass {
 
   async removeParticipant(eventId: string, profileId: string): Promise<boolean> {
     try {
-      const { error } = await this.db
-        .from<EventParticipantRow>("event_participants")
-        .delete()
-        .eq("event_id", eventId)
-        .eq("profile_id", profileId);
-
-      if (error) {
-        logger.error("Error removing event participant:", error);
-        throw error;
-      }
-
-      await CommunityRpcService.decrementEventParticipants(eventId, profileId);
+      await eventMutationService.leaveEvent(eventId, profileId);
       return true;
     } catch (error) {
       logger.error("Error in removeParticipant:", error);

@@ -397,8 +397,7 @@ SSOT recomendado:
 - `events` para evento canonico.
 - `src/core/verticals/events` para leitura e mutacoes canonicas, pois
   `src/core/events` e bloqueado pelo SSOT de core como pasta legada.
-- Evoluir join/leave/check-in para RPCs atomicas dedicadas antes de reativar
-  modulo publico amplo em escala.
+- Join, leave e check-in usam RPCs atomicas dedicadas via `event-rpc`.
 
 Responsabilidade:
 
@@ -429,6 +428,9 @@ Evidencia parcial:
 - `EventMutationService` centraliza criacao, atualizacao, remocao,
   participacao e check-in de eventos, mantendo `CommunityEventsRuntimeService`
   como fachada de compatibilidade.
+- `event-rpc` chama `join_event_participation`, `leave_event_participation`,
+  `check_in_event_participation` e `check_in_event_participation_by_code`,
+  evitando insert/delete no cliente seguido de contador separado.
 
 ### Posts, Feed E Interacoes Sociais
 
@@ -1105,8 +1107,10 @@ Tarefas:
 - [x] criar/confirmar `core/verticals/events` para leitura publica;
 - [x] consolidar fronteira TypeScript de escrita, participacao e check-in em
   `EventMutationService`;
-- [ ] criar RPCs atomicas dedicadas para join/leave/check-in e contador de
+- [x] criar RPCs atomicas dedicadas para join/leave/check-in e contador de
   participantes antes de escala publica ampla;
+- [ ] revisar/remover helpers legados `increment_event_participants` e
+  `decrement_event_participants` apos janela de compatibilidade;
 - definir se `vagas` permanece em `classifieds/jobs` ou vira oportunidades
   canonicas;
 - atualizar route registry e launch gates;

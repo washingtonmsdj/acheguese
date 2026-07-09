@@ -176,6 +176,9 @@ verify_jwt = true
 [functions.delivery-rpc]
 verify_jwt = true
 
+[functions.event-rpc]
+verify_jwt = true
+
 [functions.get-push-config]
 verify_jwt = false
 

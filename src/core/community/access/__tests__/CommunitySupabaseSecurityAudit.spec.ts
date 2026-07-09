@@ -197,6 +197,10 @@ describe("community supabase security audit", () => {
     const eventMutationService = readProjectFile(
       "src/core/verticals/events/services/EventMutationService.ts",
     );
+    const eventRpc = readProjectFile("supabase/functions/event-rpc/index.ts");
+    const eventRpcMigration = readProjectFile(
+      "supabase/migrations/20260709005208_atomic_event_participation_rpcs.sql",
+    );
     const communityEventsRuntime = readProjectFile(
       "src/core/community/services/CommunityEventsRuntimeService.ts",
     );
@@ -215,8 +219,19 @@ describe("community supabase security audit", () => {
     expect(eventMutationService).toContain(".from(\"events\")");
     expect(eventMutationService).toContain(".from(\"event_participants\")");
     expect(eventMutationService).toContain("invokeSupabaseBroker");
-    expect(eventMutationService).toContain("incrementEventParticipants");
-    expect(eventMutationService).toContain("decrementEventParticipants");
+    expect(eventMutationService).toContain('const EVENT_RPC_FUNCTION_NAME = "event-rpc"');
+    expect(eventMutationService).toContain("functionName: EVENT_RPC_FUNCTION_NAME");
+    expect(eventMutationService).toContain('"joinEvent"');
+    expect(eventMutationService).toContain('"checkInEventByCode"');
+    expect(eventMutationService).not.toContain("incrementEventParticipants");
+    expect(eventMutationService).not.toContain("decrementEventParticipants");
+    expect(eventRpc).toContain("join_event_participation");
+    expect(eventRpc).toContain("check_in_event_participation_by_code");
+    expect(eventRpcMigration).toContain("CREATE OR REPLACE FUNCTION public.join_event_participation");
+    expect(eventRpcMigration).toContain("CREATE OR REPLACE FUNCTION public.leave_event_participation");
+    expect(eventRpcMigration).toContain("CREATE OR REPLACE FUNCTION public.check_in_event_participation");
+    expect(eventRpcMigration).toContain("REVOKE ALL ON FUNCTION public.join_event_participation");
+    expect(eventRpcMigration).toContain("GRANT EXECUTE ON FUNCTION public.join_event_participation");
     expect(communityEventsRuntime).toContain("eventMutationService.joinEvent");
     expect(communityEventsRuntime).not.toContain(".from(\"event_participants\")");
     expect(eventAdapter).toContain('from "@/core/verticals/events"');

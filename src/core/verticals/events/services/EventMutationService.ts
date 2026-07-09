@@ -13,25 +13,45 @@ import type {
   UpdateEventInput,
 } from "@/core/verticals/events/types";
 
-type EventParticipantCounterAction = "incrementEventParticipants" | "decrementEventParticipants";
+type EventRpcAction = "joinEvent" | "leaveEvent" | "checkInEvent" | "checkInEventByCode";
 
-const EVENT_COUNTER_FUNCTION_NAME = "community-rpc";
+interface EventJoinResult {
+  joined: boolean;
+  alreadyParticipating: boolean;
+  participantId: string;
+  checkinCode: string;
+  joinedAt: string;
+  currentParticipants: number;
+}
+
+interface EventLeaveResult {
+  left: boolean;
+  participantId: string | null;
+  currentParticipants: number;
+}
+
+interface EventCheckInResult {
+  participantId: string;
+  profileId: string;
+  checkedInAt: string;
+}
+
+const EVENT_RPC_FUNCTION_NAME = "event-rpc";
 const SERVICE_NAME = "EventMutationService";
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "erro desconhecido";
 }
 
-async function invokeParticipantCounter(
-  action: EventParticipantCounterAction,
-  eventId: string,
-  profileId: string,
-): Promise<void> {
-  await invokeSupabaseBroker<Record<string, boolean>, EventParticipantCounterAction>({
+async function invokeEventRpc<TResult>(
+  action: EventRpcAction,
+  params: Record<string, unknown>,
+): Promise<TResult> {
+  return invokeSupabaseBroker<TResult, EventRpcAction>({
     action,
-    functionName: EVENT_COUNTER_FUNCTION_NAME,
-    noDataMessage: "Event participant counter broker returned no data",
-    params: { eventId, profileId },
+    functionName: EVENT_RPC_FUNCTION_NAME,
+    noDataMessage: "Event broker returned no data",
+    params,
     serviceName: SERVICE_NAME,
   });
 }
@@ -87,12 +107,7 @@ export class EventMutationService {
 
   async joinEvent(eventId: string, profileId: string): Promise<void> {
     try {
-      const { error } = await supabase
-        .from("event_participants")
-        .insert({ event_id: eventId, profile_id: profileId });
-
-      if (error) throw error;
-      await invokeParticipantCounter("incrementEventParticipants", eventId, profileId);
+      await invokeEventRpc<EventJoinResult>("joinEvent", { eventId, profileId });
     } catch (error: unknown) {
       logger.error("EventMutationService.joinEvent", error);
       throw new Error(`Erro ao participar do evento: ${getErrorMessage(error)}`);
@@ -101,14 +116,7 @@ export class EventMutationService {
 
   async leaveEvent(eventId: string, profileId: string): Promise<void> {
     try {
-      const { error } = await supabase
-        .from("event_participants")
-        .delete()
-        .eq("event_id", eventId)
-        .eq("profile_id", profileId);
-
-      if (error) throw error;
-      await invokeParticipantCounter("decrementEventParticipants", eventId, profileId);
+      await invokeEventRpc<EventLeaveResult>("leaveEvent", { eventId, profileId });
     } catch (error: unknown) {
       logger.error("EventMutationService.leaveEvent", error);
       throw new Error(`Erro ao sair do evento: ${getErrorMessage(error)}`);
@@ -168,30 +176,8 @@ export class EventMutationService {
 
   async checkInEvent(eventId: string, profileId: string): Promise<string> {
     try {
-      const { data: existing, error: existingError } = await supabase
-        .from("event_participants")
-        .select("checked_in_at")
-        .eq("event_id", eventId)
-        .eq("profile_id", profileId)
-        .maybeSingle();
-
-      if (existingError) throw existingError;
-      const existingCheckedInAt = (existing as { checked_in_at?: string } | null)?.checked_in_at;
-      if (existingCheckedInAt) return existingCheckedInAt;
-
-      const now = new Date().toISOString();
-      const { data, error } = await supabase
-        .from("event_participants")
-        .update({ checked_in_at: now } as { checked_in_at: string })
-        .eq("event_id", eventId)
-        .eq("profile_id", profileId)
-        .select("checked_in_at")
-        .maybeSingle();
-
-      if (error) throw error;
-      if (!data) throw new Error("Participacao no evento nao encontrada para este perfil.");
-
-      return (data as { checked_in_at?: string }).checked_in_at ?? now;
+      const result = await invokeEventRpc<EventCheckInResult>("checkInEvent", { eventId, profileId });
+      return result.checkedInAt;
     } catch (error: unknown) {
       logger.error("EventMutationService.checkInEvent", error);
       throw new Error(`Erro ao fazer check-in: ${getErrorMessage(error)}`);
@@ -203,40 +189,13 @@ export class EventMutationService {
     checkinCode: string,
   ): Promise<EventCheckInByCodeResult> {
     try {
-      const { data: existing, error: existingError } = await supabase
-        .from("event_participants")
-        .select("profile_id, checked_in_at")
-        .eq("event_id", eventId)
-        .eq("checkin_code", checkinCode)
-        .maybeSingle();
-
-      if (existingError) throw existingError;
-      if (!existing) throw new Error("Codigo de check-in invalido para este evento.");
-
-      const existingRow = existing as { profile_id: string; checked_in_at?: string };
-      if (existingRow.checked_in_at) {
-        return {
-          profileId: existingRow.profile_id,
-          checkedInAt: existingRow.checked_in_at,
-        };
-      }
-
-      const now = new Date().toISOString();
-      const { data, error } = await supabase
-        .from("event_participants")
-        .update({ checked_in_at: now } as { checked_in_at: string })
-        .eq("event_id", eventId)
-        .eq("checkin_code", checkinCode)
-        .select("profile_id, checked_in_at")
-        .maybeSingle();
-
-      if (error) throw error;
-      if (!data) throw new Error("Codigo de check-in invalido para este evento.");
-
-      const row = data as { profile_id: string; checked_in_at?: string };
+      const row = await invokeEventRpc<EventCheckInResult>("checkInEventByCode", {
+        eventId,
+        checkinCode,
+      });
       return {
-        profileId: row.profile_id,
-        checkedInAt: row.checked_in_at ?? now,
+        profileId: row.profileId,
+        checkedInAt: row.checkedInAt,
       };
     } catch (error: unknown) {
       logger.error("EventMutationService.checkInEventByCode", error);

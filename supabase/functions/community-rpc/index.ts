@@ -25,8 +25,6 @@ const ACTIONS = {
   createAlert: true,
   createIssue: true,
   incrementAlertEditCount: true,
-  incrementEventParticipants: true,
-  decrementEventParticipants: true,
   markBestAnswer: true,
 } as const;
 
@@ -164,33 +162,6 @@ async function profileBelongsToUser(
   return Boolean(data);
 }
 
-async function eventExists(supabaseAdmin: SupabaseClient, eventId: string): Promise<boolean> {
-  const { data, error } = await supabaseAdmin
-    .from("events")
-    .select("id")
-    .eq("id", eventId)
-    .maybeSingle();
-
-  if (error) throw error;
-  return Boolean(data);
-}
-
-async function participantExists(
-  supabaseAdmin: SupabaseClient,
-  eventId: string,
-  profileId: string,
-): Promise<boolean> {
-  const { data, error } = await supabaseAdmin
-    .from("event_participants")
-    .select("id")
-    .eq("event_id", eventId)
-    .eq("profile_id", profileId)
-    .maybeSingle();
-
-  if (error) throw error;
-  return Boolean(data);
-}
-
 async function ensureAnswerBelongsToQuestion(
   supabaseAdmin: SupabaseClient,
   questionId: string,
@@ -261,54 +232,6 @@ async function handleIncrementAlertEditCount(
   return { incremented: true };
 }
 
-async function handleIncrementEventParticipants(
-  supabaseAdmin: SupabaseClient,
-  auth: UserAuthResult,
-  params: Record<string, unknown>,
-) {
-  const eventId = requireUuid(params.eventId ?? params.event_id, "eventId");
-  const profileId = requireUuid(params.profileId ?? params.profile_id, "profileId");
-
-  if (!auth.isProjectAdmin && !await profileBelongsToUser(supabaseAdmin, profileId, auth.userId)) {
-    throw new RequestAuthorizationError("User cannot increment this event participation");
-  }
-
-  if (!await participantExists(supabaseAdmin, eventId, profileId)) {
-    throw new RequestValidationError("Event participant record was not found");
-  }
-
-  const { error } = await supabaseAdmin.rpc("increment_event_participants", {
-    event_id: eventId,
-  });
-
-  if (error) throw error;
-  return { incremented: true };
-}
-
-async function handleDecrementEventParticipants(
-  supabaseAdmin: SupabaseClient,
-  auth: UserAuthResult,
-  params: Record<string, unknown>,
-) {
-  const eventId = requireUuid(params.eventId ?? params.event_id, "eventId");
-  const profileId = requireUuid(params.profileId ?? params.profile_id, "profileId");
-
-  if (!auth.isProjectAdmin && !await profileBelongsToUser(supabaseAdmin, profileId, auth.userId)) {
-    throw new RequestAuthorizationError("User cannot decrement this event participation");
-  }
-
-  if (!await eventExists(supabaseAdmin, eventId)) {
-    throw new RequestValidationError("Event was not found");
-  }
-
-  const { error } = await supabaseAdmin.rpc("decrement_event_participants", {
-    event_id: eventId,
-  });
-
-  if (error) throw error;
-  return { decremented: true };
-}
-
 async function handleMarkBestAnswer(
   supabaseAdmin: SupabaseClient,
   auth: UserAuthResult,
@@ -348,10 +271,6 @@ async function dispatchAction(
       return handleCreateIssue(supabaseAdmin, auth, params);
     case "incrementAlertEditCount":
       return handleIncrementAlertEditCount(supabaseAdmin, auth, params);
-    case "incrementEventParticipants":
-      return handleIncrementEventParticipants(supabaseAdmin, auth, params);
-    case "decrementEventParticipants":
-      return handleDecrementEventParticipants(supabaseAdmin, auth, params);
     case "markBestAnswer":
       return handleMarkBestAnswer(supabaseAdmin, auth, params);
   }

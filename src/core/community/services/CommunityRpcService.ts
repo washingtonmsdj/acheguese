@@ -4,8 +4,6 @@ type CommunityRpcAction =
   | "createAlert"
   | "createIssue"
   | "incrementAlertEditCount"
-  | "incrementEventParticipants"
-  | "decrementEventParticipants"
   | "markBestAnswer";
 
 const FUNCTION_NAME = "community-rpc";
@@ -35,20 +33,6 @@ export class CommunityRpcService {
 
   static async incrementAlertEditCount(alertId: string): Promise<void> {
     await this.invoke<{ incremented: boolean }>("incrementAlertEditCount", { alertId });
-  }
-
-  static async incrementEventParticipants(eventId: string, profileId: string): Promise<void> {
-    await this.invoke<{ incremented: boolean }>("incrementEventParticipants", {
-      eventId,
-      profileId,
-    });
-  }
-
-  static async decrementEventParticipants(eventId: string, profileId: string): Promise<void> {
-    await this.invoke<{ decremented: boolean }>("decrementEventParticipants", {
-      eventId,
-      profileId,
-    });
   }
 
   static async markBestAnswer(questionId: string, answerId: string): Promise<void> {

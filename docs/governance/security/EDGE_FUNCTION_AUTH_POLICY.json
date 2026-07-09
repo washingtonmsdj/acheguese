@@ -220,6 +220,12 @@
       "label": "authenticated delivery RPC broker",
       "requiredPatterns": ["auth\\.getUser\\s*\\("]
     },
+    "event-rpc": {
+      "kind": "authenticated-broker",
+      "risk": "Critical",
+      "label": "authenticated event participation RPC broker",
+      "requiredPatterns": ["auth\\.getUser\\s*\\("]
+    },
     "health-check": {
       "kind": "admin-broker",
       "risk": "Critical",

@@ -864,6 +864,16 @@ remoto sem JWT retornou `401`; grants remotos foram verificados com
 totais, 17 `authenticated_security_definer_function_executable` e 3
 `anon_security_definer_function_executable`.
 
+Atualizacao eventos em 2026-07-09: participacao e check-in de eventos foram
+movidos para `event-rpc` com `verify_jwt=true` e RPCs atomicas dedicadas
+(`join_event_participation`, `leave_event_participation`,
+`check_in_event_participation` e `check_in_event_participation_by_code`). O
+`community-rpc` permanece responsavel por alerta, ocorrencia, contador de
+edicao de alerta e melhor resposta de QA; os helpers legados
+`increment_event_participants` e `decrement_event_participants` foram marcados
+como deprecated e tiveram `EXECUTE` de `service_role` revogado pela migration
+`20260709005208`.
+
 Resultado `profile-rpc` em 2026-07-07: criada e implantada a Edge Function
 `profile-rpc` com `verify_jwt=true` para criacao de perfil, alteracao de
 handle, exclusao de perfil, transferencia de ownership e convite de membro por
