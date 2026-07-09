@@ -96,9 +96,11 @@ Definir uma taxonomia unica e oficial do projeto, separando com clareza:
 - aliases legados de modulo sao proibidos no estado atual.
 - `src/core` nao importa nem reexporta `src/modules`; contratos reutilizados por
   mais de um modulo devem subir para um owner real em `core`.
-- Excecao temporaria e auditada: barrels de UI legados de Mobility em
-  `src/core/mobility/*` permanecem em allowlist ate a consolidacao dedicada de
-  Mobility.
+- Excecao temporaria e auditada: apenas
+  `src/core/mobility/components/driver/index.ts` permanece em allowlist ate a
+  consolidacao dos layouts de motorista usados pela Central. UI compartilhada de
+  tracking ja pertence a `src/core/mobility`, com caminhos antigos em
+  `src/modules/mobility` apenas como reexports de compatibilidade.
 
 ## 5. Guardrails obrigatorios
 - `npm run validate:taxonomy`

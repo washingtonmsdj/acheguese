@@ -151,9 +151,6 @@ const CORE_TO_MODULE_IMPORT_RE =
   /(?:from\s+["']|export\s+(?:type\s+)?(?:\{[\s\S]*?\}|\*)\s+from\s+["'])@\/modules\//m;
 const CORE_TO_MODULE_IMPORT_ALLOWLIST = new Set([
   "src/core/mobility/components/driver/index.ts",
-  "src/core/mobility/components/index.ts",
-  "src/core/mobility/delivery/runtime.ts",
-  "src/core/mobility/hooks/index.ts",
 ]);
 
 function pathExists(relativePath: string): boolean {

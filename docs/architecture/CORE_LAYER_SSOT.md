@@ -41,6 +41,7 @@ Escopo: `src/core`
 | media | core transversal legítimo | manter em `src/core/media` |
 | messaging | core transversal legítimo | manter em `src/core/messaging` |
 | metrics | core transversal legítimo | consolidar com `analytics`/`telemetry` |
+| mobility | domínio operacional compartilhado | manter contratos, serviços e UI cross-domain em `src/core/mobility`; telas de produto em `src/modules/mobility` |
 | moderation | core transversal legítimo | manter em `src/core/moderation` |
 | notifications | core transversal legítimo | manter em `src/core/notifications` |
 | permissions | core transversal legítimo | manter em `src/core/permissions` |
@@ -79,7 +80,6 @@ Escopo: `src/core`
   - `src/core/services` -> `src/modules/professionals/services`
   - `src/core/vagas` -> `src/modules/classifieds/jobs`
   - `src/core/classifieds` -> `src/modules/classifieds`
-  - `src/core/mobility` -> `src/modules/mobility`
   - `src/core/events` -> `src/modules/community/events`
   - `src/core/gastronomy` -> `src/modules/business/gastronomy`
   - `src/core/lostfound` -> `src/modules/community/lostfound`
@@ -91,6 +91,14 @@ Escopo: `src/core`
   - removido `src/core/supabase`
   - canônico em `src/integrations/supabase`
   - imports atualizados para `@/integrations/supabase`
+- Mobility ficou dividido por responsabilidade:
+  - `src/core/mobility` e o dono de contratos, servicos operacionais, tracking,
+    delivery core e UI cross-domain reutilizada por mais de um dominio;
+  - `src/modules/mobility` e o dono das paginas, jornadas e componentes
+    especificos do produto Mobility;
+  - caminhos antigos em `src/modules/mobility` podem reexportar contratos
+    promovidos para `core`, mas `src/core` nao deve reexportar implementacoes de
+    `modules`.
 
 ## Árvore alvo oficial (core)
 
@@ -101,12 +109,13 @@ src/core/
   permissions posts pricing privacy profiles public-identity qr realtime
   reviews rollout safety search service-areas session social subscription
   territorial tracking users verification
+  mobility
   analytics metrics telemetry
   verticals
 ```
 
 ## Blindagem anti-regressão
 - `scripts/validate-project-taxonomy.ts` bloqueia reintrodução em `src/core` de:
-  - `admin-identidade`, `admin-motoristas`, `community-alerts`, `community-issues`, `supabase`, `promotions`, `services`, `vagas`, `classifieds`, `mobility`, `civic`, `events`, `tourist-points`, `landing`, `lostfound`, `gastronomy`
+  - `admin-identidade`, `admin-motoristas`, `community-alerts`, `community-issues`, `supabase`, `promotions`, `services`, `vagas`, `classifieds`, `civic`, `events`, `tourist-points`, `landing`, `lostfound`, `gastronomy`
 - Regra operacional: novo diretório em `src/core` só entra com ADR/SSOT e validador atualizado no mesmo PR.
 
