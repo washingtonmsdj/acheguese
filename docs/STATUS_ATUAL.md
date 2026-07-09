@@ -2,7 +2,7 @@
 
 Data: 2026-07-09
 Branch: main
-Ultimo commit base validado antes desta atualizacao: 562231be (`docs: close completed community first phases`)
+Ultimo commit base validado antes desta atualizacao: c167d87b (`fix: align home mobile with concept`)
 
 Observacao: este documento e a fonte operacional atual. O historico abaixo fica preservado por contexto, mas qualquer registro antigo de bloqueio por falta de `git`/`node` nao representa o ambiente validado em 2026-06-06.
 
@@ -40,6 +40,11 @@ Observacao: este documento e a fonte operacional atual. O historico abaixo fica 
   eventos/oportunidades com SSOT, launch gates e testes. Indice denormalizado
   ou RPC de busca permanece fora do plano ate existir necessidade real de
   escala, ranking ou latencia.
+- Home publica atualizada em 2026-07-09 para o concept Community First mobile:
+  header compacto em uma linha, hero em card com imagem, busca interna com
+  CTA circular, chips com icones e comportamento responsivo sem overflow de
+  documento. A implementacao permanece somente em `MainLandingPage` como
+  superficie de apresentacao, consumindo contratos canonicos.
 - Fase 7 do plano Community First foi fechada em 2026-07-09 no escopo
   arquitetural: duplicacoes residuais foram tratadas, docs ativos foram
   alinhados, barrels vazios continuam proibidos, e o launch gate territorial de

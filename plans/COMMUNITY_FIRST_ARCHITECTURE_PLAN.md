@@ -1173,6 +1173,10 @@ Evidencia:
   modelo Community First: hero de descoberta, comunidades em destaque, blocos
   de atividades, modulos locais, ranking/sugestoes e anuncios, preservando
   entidades independentes e contratos SSOT;
+- a Home mobile foi refinada no commit `c167d87b` para ficar fiel ao concept
+  aprovado: header compacto em uma linha, hero visual em card, busca com CTA
+  circular interno, chips com icones e trilho horizontal em telas estreitas,
+  sem mover regras de dominio para a interface;
 - `src/core/search/services/__tests__/SearchService.spec.ts` cobre query curta,
   federacao multi-dominio, filtro por categoria e filtro por comunidade via
   `community_entity_links`;

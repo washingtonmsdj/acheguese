@@ -193,6 +193,12 @@ landing/search/routing ou de configuracao editorial explicita de lancamento.
 Ela nao deve virar SSOT de comunidade, empresa, evento, classificado,
 gastronomia, servico, territorio, perfil ou permissao.
 
+O layout responsivo da Home, incluindo variacoes mobile-first, header compacto,
+hero visual e trilhos horizontais de descoberta, pertence a camada de
+apresentacao. Ajustes visuais podem evoluir sem alterar o dominio, desde que
+continuem consumindo os contratos canonicos e nao reintroduzam queries diretas
+ou regras de negocio no componente.
+
 ## Relacionamento Oficial
 
 O modelo oficial e:
