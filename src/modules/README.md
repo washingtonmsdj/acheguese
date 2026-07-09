@@ -63,6 +63,8 @@ They live in `src/app/features` (for example: onboarding, dashboard, landings).
 - `src/core` must not import or reexport `src/modules`. When a module UI/hook is
   needed by more than one bounded context, promote the reusable contract to
   `core` and keep the old module path as a compatibility reexport only.
+- `index.ts` files in modules must expose a real public contract. Empty
+  `export {};` indexes are prohibited because they create false SSOT surfaces.
 - There is no `src/core -> src/modules` allowlist. Shared Mobility UI and hooks
   used by Central live in `src/core/mobility`; module paths are thin
   compatibility reexports.

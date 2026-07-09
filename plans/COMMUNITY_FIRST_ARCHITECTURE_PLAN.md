@@ -1357,6 +1357,12 @@ Evidencia parcial:
 - Facades sem consumidores `src/core/community-events/index.ts` e
   `src/modules/community-events/index.ts` foram removidas; `community-events`
   permanece como modulo/documento transversal em `src/modules/community-events/README.md`.
+- Facades vazias remanescentes em `src/modules/central/index.ts`,
+  `src/modules/ai/index.ts` e nos subdiretorios `api`, `store` e `validations`
+  de `src/modules/communication-territorial` foram removidas; consumidores
+  continuam importando paginas/subdominios explicitos.
+- `validate:taxonomy` agora bloqueia genericamente qualquer
+  `src/modules/**/index.ts` cujo conteudo seja apenas `export {};`.
 
 Criterio de pronto:
 

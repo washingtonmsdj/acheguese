@@ -193,9 +193,6 @@ const COMMUNITY_MODULE_EMPTY_FACADE_PATHS = [
   "src/modules/community-lost-found/pages/NovoAchadoPerdidoPage.tsx",
   "src/modules/community-lost-found/pages/AchadoPerdidoDetailPage.tsx",
 ] as const;
-const PRODUCT_MODULE_EMPTY_FACADE_PATHS = [
-  "src/modules/work-opportunities/index.ts",
-] as const;
 const COMMUNITY_MODULE_EMPTY_FACADE_IMPORTS = [
   "@/modules/community-feed/pages/ComunidadePage",
   "@/modules/community-feed/pages/NovoPostPage",
@@ -352,6 +349,17 @@ function main() {
     }
   }
 
+  const emptyModuleIndexes = walkFiles("src/modules")
+    .map((filePath) => normalize(path.relative(ROOT, filePath)))
+    .filter((relative) => relative.endsWith("/index.ts"))
+    .filter((relative) => readText(relative)?.trim() === "export {};");
+
+  for (const emptyIndex of emptyModuleIndexes) {
+    violations.push(
+      `Facade vazia de modulo proibida: ${emptyIndex}. Remova o arquivo ou exponha um contrato publico real; caminhos de pagina/subdominio devem ser importados explicitamente.`,
+    );
+  }
+
   const modulesReadme = readText(MODULES_README_PATH);
   if (!modulesReadme) {
     violations.push(`Documento de taxonomia de modulos ausente: ${MODULES_README_PATH}`);
@@ -447,14 +455,6 @@ function main() {
     if (pathExists(compatPath)) {
       violations.push(
         `Facade vazia comunitaria proibida: ${compatPath}. Rotas e testes devem apontar para owners canonicos explicitos, e modules deve manter apenas boundary de produto quando houver implementacao real.`,
-      );
-    }
-  }
-
-  for (const compatPath of PRODUCT_MODULE_EMPTY_FACADE_PATHS) {
-    if (pathExists(compatPath)) {
-      violations.push(
-        `Facade vazia de modulo proibida: ${compatPath}. Modules deve expor apenas contratos reais; paginas devem importar o caminho explicito e dominios canonicos devem ficar em core.`,
       );
     }
   }
