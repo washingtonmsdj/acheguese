@@ -1225,6 +1225,10 @@ Evidencia parcial:
   territoriais e community-scoped de `vagas`/`oportunidades`, garantindo que
   continuam isoladas pelo launch gate `jobs` e sem renderizar conteudo runtime
   antes da reabertura oficial.
+- O `index.ts` vazio de `src/modules/work-opportunities` foi removido; paginas
+  continuam importadas explicitamente atras do gate `jobs`, enquanto
+  `src/core/work-opportunities` permanece como owner canonico do dominio.
+- `validate:taxonomy` bloqueia a recriacao dessa fachada vazia de produto.
 
 ### Fase 7 - Limpeza De Duplicacoes
 
