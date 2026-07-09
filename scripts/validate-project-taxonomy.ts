@@ -267,6 +267,8 @@ const LEGACY_SSOT_INDEX_FORBIDDEN_MARKERS = [
   "VALIDACAO_FINAL_E_PROXIMOS_PASSOS.md` (principal)",
 ] as const;
 const COMMUNITY_FIRST_PLAN_STATUS_REQUIRED_MARKERS = [
+  "Status: concluido em 2026-07-09",
+  "Implementacao: concluida para o escopo arquitetural Community First",
   "Status: concluida em 2026-07-09 para contrato backend/RLS, services e consumo",
   "Status: concluida em 2026-07-09 para contrato federado de busca/Home.",
   "Indice denormalizado/RPC de busca fica adiado para fase futura condicionada por",
@@ -276,7 +278,9 @@ const COMMUNITY_FIRST_PLAN_STATUS_REQUIRED_MARKERS = [
 ] as const;
 const COMMUNITY_FIRST_PLAN_STATUS_FORBIDDEN_MARKERS = [
   "- [ ] criar indice denormalizado/RPC de busca quando escala e ranking exigirem",
+  "Status: ativo",
   "Status: em andamento",
+  "Implementacao: em andamento incremental",
 ] as const;
 
 function pathExists(relativePath: string): boolean {

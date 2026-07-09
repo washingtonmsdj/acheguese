@@ -1,9 +1,9 @@
 # Community First Architecture Plan
 
-Status: ativo
+Status: concluido em 2026-07-09
 Data: 2026-07-08
 Escopo: arquitetura-base versionada do produto
-Implementacao: em andamento incremental
+Implementacao: concluida para o escopo arquitetural Community First
 
 ## Objetivo
 
