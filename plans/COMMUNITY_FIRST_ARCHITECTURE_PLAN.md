@@ -1046,7 +1046,7 @@ Tarefas:
 - [x] desenhar `community_entity_links`;
 - [x] definir tipos de link e status;
 - [x] criar contrato backend/RLS e fachada canonica em `community-experience`;
-- [ ] criar services por dominio para expor elegibilidade especifica;
+- [x] criar services por dominio para expor elegibilidade especifica;
 - [x] adaptar Home/Comunidade a consumir links quando existirem para
   empresas, profissionais/servicos e classificados;
 - [x] manter fallback por territorio durante migracao;
@@ -1076,10 +1076,22 @@ Evidencia parcial:
 - `useLandingFeatured`, `TerritorialLandingPage` e `CommunityRightSidebar`
   consomem `community_entity_links` indiretamente por service, sem Supabase
   direto fora do SSOT;
+- `CidadeLandingPage`, `NeighborhoodTerritoryHero` e `ProblemasPage` deixam de
+  importar `@/core/community/*` diretamente e passam por fachadas explicitas em
+  `community-feed` e `community-experience`, preservando o validador de
+  fronteira transversal;
 - `SearchService` consome `CommunityEntityLinkService` para restringir busca
   em contexto de comunidade por links ativos de businesses, professionals,
   classifieds, events e posts, mantendo fallback territorial quando o tipo nao
   possui vinculos migrados;
+- `CommunityEntityLinkEligibilityService` valida a entidade antes de gravar
+  pedidos de link comunitario, delegando a regra publica ao dominio dono:
+  empresa ativa por `business_data.id`, profissional `public_listed` aceitando
+  clientes, classificado ativo, evento `upcoming`/`ongoing`, post publicado e
+  visivel, e ponto turistico `published`;
+- `CommunityEntityLinkService.requestCommunityLink` nao chama o repositorio
+  quando a entidade nao e publicamente elegivel, mantendo a UI fora da decisao
+  de integridade;
 - `validate-project-taxonomy` e `check:ssot` bloqueiam acesso paralelo a
   `community_entity_links`.
 

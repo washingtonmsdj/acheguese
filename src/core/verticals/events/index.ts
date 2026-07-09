@@ -6,6 +6,7 @@ export {
   EventMutationService,
   eventMutationService,
 } from "@/core/verticals/events/services/EventMutationService";
+export { EventLinkEligibilityService } from "@/core/verticals/events/services/EventLinkEligibilityService";
 
 export type {
   CreateEventInput,

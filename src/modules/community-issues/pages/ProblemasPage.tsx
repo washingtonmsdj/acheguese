@@ -6,11 +6,11 @@ import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { useSessionContext } from "@/core/session";
 import { buildCommunityTerritoryPresentation } from "@/core/community-issues/utils/communityTerritoryPresentation";
-import { CommunityPortalGate, useCommunityAccess } from "@/core/community/access";
+import { CommunityPortalGate, useCommunityAccess } from "@/core/community-experience/access";
 import {
   resolveCommunityRouteDefaultLocationId,
   resolveCommunityRouteTerritoryFilter,
-} from "@/core/community/utils/communityRouteTerritory";
+} from "@/core/community-experience/utils/communityRouteTerritory";
 import { Button } from "@/shared/components/ui/button";
 import { TooltipProvider } from "@/shared/components/ui/tooltip";
 import { getRecordValue } from "@/shared/utils/recordLookup";

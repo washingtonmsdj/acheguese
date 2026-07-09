@@ -8,6 +8,8 @@ export {
   CLASSIFIED_STATUSES,
 } from "@/core/classifieds/services/ClassifiedService";
 
+export { ClassifiedLinkEligibilityService } from "@/core/classifieds/services/ClassifiedLinkEligibilityService";
+
 export {
   getNeighborhoodsWithClassifieds,
   getAllClassifieds,

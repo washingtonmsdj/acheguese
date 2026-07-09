@@ -81,7 +81,7 @@ import { mapClassifiedsLayerRuntimeService } from "@/core/maps/services/MapClass
 import { mapGastronomyLayerRuntimeService } from "@/core/maps/services/MapGastronomyLayerRuntimeService";
 import { mapServicesLayerRuntimeService } from "@/core/maps/services/MapServicesLayerRuntimeService";
 import type { BoundingBox } from "@/core/maps/types/core";
-import { useCommunityFeedSimple } from "@/core/community/hooks/feed/useCommunityFeed";
+import { useCommunityFeedSimple } from "@/core/community-feed/hooks/useCommunityFeed";
 import { useTouristPoints } from "@/core/guide/tourist-points/hooks/useTouristPoints";
 import type { TouristPoint } from "@/core/guide/tourist-points/types";
 import { residenceService } from "@/core/residence/services/ResidenceService";
@@ -112,7 +112,7 @@ import {
 import {
   NeighborhoodTerritoryHero,
 } from "./CidadeLanding.neighborhood-hero";
-import { NeighborhoodTerritoryArt } from "@/core/community/components/public/NeighborhoodTerritoryArt";
+import { NeighborhoodTerritoryArt } from "@/core/community-feed/components/public/NeighborhoodTerritoryArt";
 import "./CidadeLandingPage.css";
 
 type Coordinates = {

@@ -73,6 +73,14 @@ contrato vincula entidades canonicas a uma ou mais comunidades sem copiar dados
 mestres. Moderacao, destaque e ranking local pertencem ao link; identidade,
 status publico e conteudo principal continuam no dominio original.
 
+`CommunityEntityLinkEligibilityService` e o gate canonico antes de solicitar
+novo vinculo comunitario. Ele nao acessa tabelas de entidades diretamente;
+delega a elegibilidade ao dominio dono. A regra atual exige empresa ativa por
+`business_data.id`, profissional `public_listed` aceitando clientes,
+classificado ativo, evento `upcoming`/`ongoing`, post publicado e nao oculto,
+e ponto turistico `published`. Componentes de UI nao podem gravar ou aprovar
+vinculos baseados apenas em estado visual.
+
 Descoberta publica e Home/Comunidade devem consumir esses vinculos
 indiretamente por services. `LandingFeaturedService` pode compor os links ativos
 da comunidade com os dados publicos dos dominios canonicos para blocos de
@@ -84,6 +92,12 @@ permissoes da experiencia comunitaria. Ele pode consumir
 `CommunityExperienceService` e `CommunityMembershipService` para resolver a
 membership da comunidade persistida da rota, mas nao pode acessar
 `community_memberships` diretamente.
+
+Consumidores fora do bounded context legado de `src/core/community` devem
+importar a fachada publica de acesso por `src/core/community-experience/access`.
+Superficies de feed/descoberta comunitaria fora desse bounded context devem
+usar fachadas explicitas em `src/core/community-feed`, nao caminhos diretos de
+`src/core/community/*`.
 
 ### Entidades Independentes
 

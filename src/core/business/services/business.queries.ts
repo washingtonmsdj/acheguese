@@ -72,6 +72,11 @@ interface BusinessQueriesDbClient {
 
 type BusinessServiceRow = Record<string, unknown>;
 
+interface BusinessCommunityLinkEligibilityRow {
+  id: string;
+  status: string | null;
+}
+
 const businessQueriesDb = supabase as unknown as BusinessQueriesDbClient;
 
 /**
@@ -514,6 +519,42 @@ export async function getBusinessDataIdByProfileId(
   } catch (error) {
     logger.error("Error in getBusinessDataIdByProfileId:", error);
     return null;
+  }
+}
+
+/**
+ * Verifica elegibilidade publica para vinculo com Comunidade Local.
+ *
+ * community_entity_links usa business_data.id como entity_id. Nao reutilizar
+ * getBusinessById aqui porque ele resolve por profile_id.
+ */
+export async function isBusinessCommunityLinkEligibleByDataId(
+  businessDataId: string,
+): Promise<boolean> {
+  if (!isValidBusinessId(businessDataId)) {
+    return false;
+  }
+
+  try {
+    const { data, error } = await businessQueriesDb
+      .from<BusinessCommunityLinkEligibilityRow>("business_data")
+      .select("id, status")
+      .eq("id", businessDataId)
+      .eq("status", "active")
+      .maybeSingle();
+
+    if (error) {
+      logger.warn("Error checking business community link eligibility", {
+        businessDataId,
+        error,
+      });
+      return false;
+    }
+
+    return Boolean(data?.id);
+  } catch (error) {
+    logger.error("Error in isBusinessCommunityLinkEligibleByDataId:", error);
+    return false;
   }
 }
 

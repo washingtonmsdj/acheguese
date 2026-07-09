@@ -33,3 +33,4 @@ export {
 
 export { ProfessionalService, ProfessionalFacade } from "./ProfessionalService";
 export { ProfessionalLeadService, type ServiceResult } from "./ProfessionalLeadService";
+export { ProfessionalLinkEligibilityService } from "./ProfessionalLinkEligibilityService";

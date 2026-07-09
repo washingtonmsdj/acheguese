@@ -1,4 +1,5 @@
 import { CommunityEntityLinkRepository } from "@/core/community-experience/repositories/CommunityEntityLinkRepository";
+import { CommunityEntityLinkEligibilityService } from "@/core/community-experience/services/CommunityEntityLinkEligibilityService";
 import type {
   CommunityEntityLinkListOptions,
   CommunityEntityLinkRecord,
@@ -24,6 +25,12 @@ export class CommunityEntityLinkService {
   static async requestCommunityLink(
     input: CommunityEntityLinkRequestInput,
   ): Promise<CommunityEntityLinkRecord | null> {
+    const eligibility = await CommunityEntityLinkEligibilityService.check(input);
+
+    if (!eligibility.eligible) {
+      return null;
+    }
+
     return CommunityEntityLinkRepository.requestCommunityLink(input);
   }
 }
