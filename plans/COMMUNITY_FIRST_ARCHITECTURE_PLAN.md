@@ -1271,6 +1271,10 @@ Evidencia parcial:
 - `scripts/validate-project-taxonomy.ts` agora exige o consumo do
   `AppLayoutRouteRegistry` pelo shell e bloqueia a volta de componentes
   territoriais extraidos diretamente em `AppLayoutRoutes.tsx`;
+- `docs/INDEX_CANONICO.md`, `docs/README.md` e `docs/ARCHITECTURE.md` agora
+  apontam explicitamente para `docs/architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md`
+  como arquitetura-base, deixando `COMMUNITY_PORTAL_PUBLIC_ENTITY_SSOT.md`
+  como contrato especifico de roteamento publico/comunitario;
 - A antiga raiz `core/profile` deixou de manter hooks/componentes como
   pontes para `src/modules/profile`; `useProfileHub`, `useContaWorkspace`,
   `BusinessModulesSection`, `SectionFrame`, `EmptyPanel` e os cards de

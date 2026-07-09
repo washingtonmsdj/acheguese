@@ -29,6 +29,16 @@ Database -> Service -> Hook -> Component
 - Adaptadores/facades sao permitidos apenas para compatibilidade de import.
 - Nao manter implementacoes paralelas para o mesmo contrato.
 
+## Community First
+- A entidade central do produto hiperlocal e a Comunidade Local, apoiada pelo
+  SSOT territorial.
+- Empresas, gastronomia, servicos, eventos, classificados, profissionais,
+  vagas e conteudos publicos continuam como entidades independentes.
+- Comunidades vinculam, moderam e contextualizam essas entidades por contratos
+  canonicos, sem copiar seus dados mestres.
+- A decisao completa esta em
+  [architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md](./architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md).
+
 ## Fronteiras
 - `core/*`: contratos, capacidades compartilhadas e servicos canonicos.
 - `modules/*`: composicao de telas e casos de uso do dominio, consumindo servicos canonicos.
@@ -44,5 +54,6 @@ Database -> Service -> Hook -> Component
 ## Documentacao Relacionada
 - [CURRENT_RULES.md](./CURRENT_RULES.md)
 - [DATA_MODELING.md](./DATA_MODELING.md)
+- [architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md](./architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md)
 - [COMUNICACAO_TERRITORIAL_ARCHITECTURE.md](./COMUNICACAO_TERRITORIAL_ARCHITECTURE.md)
 - [MIGRATIONS.md](./MIGRATIONS.md)

@@ -33,3 +33,5 @@ Centralizar a documentacao viva em `docs/` e manter contratos tecnicos junto do 
 - Mapa canonico: [CANONICAL_MAP.md](./CANONICAL_MAP.md)
 - Governance Authorities: [governance/AUTHORITIES.md](./governance/AUTHORITIES.md)
 - Security Authority: [governance/security/SECURITY_AUTHORITY.md](./governance/security/SECURITY_AUTHORITY.md)
+- Arquitetura-base Community First:
+  [architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md](./architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md)

@@ -1,6 +1,6 @@
 # INDEX CANONICO DE DOCUMENTACAO
 
-Data de referencia: 2026-07-07
+Data de referencia: 2026-07-09
 
 ## Leitura inicial obrigatoria
 1. [README da documentacao](./README.md)
@@ -16,6 +16,10 @@ Data de referencia: 2026-07-07
 - Arquitetura global: [ARCHITECTURE.md](./ARCHITECTURE.md)
 - Taxonomia global oficial: [architecture/TAXONOMY_SSOT.md](./architecture/TAXONOMY_SSOT.md)
 - SSOT da camada core: [architecture/CORE_LAYER_SSOT.md](./architecture/CORE_LAYER_SSOT.md)
+- Arquitetura-base Community First:
+  [architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md](./architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md)
+- Plano executavel Community First:
+  `plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md`
 - Arquitetura de Comunicacao Territorial: [COMUNICACAO_TERRITORIAL_ARCHITECTURE.md](./COMUNICACAO_TERRITORIAL_ARCHITECTURE.md)
 - Plano de distribuicao territorial da Comunicacao: [COMUNICACAO_DISTRIBUICAO_TERRITORIAL_PLANO.md](./COMUNICACAO_DISTRIBUICAO_TERRITORIAL_PLANO.md)
 - SSOT da consolidacao de gastronomia: [architecture/GASTRONOMY_CONSOLIDATION_SSOT.md](./architecture/GASTRONOMY_CONSOLIDATION_SSOT.md)
@@ -44,6 +48,10 @@ Data de referencia: 2026-07-07
 - [audits/POST_READINESS_BACKLOG.md](./audits/POST_READINESS_BACKLOG.md)
 
 Observacao:
+- Para novas funcionalidades hiperlocais, prevalece a arquitetura-base
+  Community First. O SSOT de Comunidade vs Entidades Publicas continua vigente
+  como contrato especifico de roteamento, canonical e acesso entre site publico
+  e portal comunitario.
 - Auditorias podem citar caminhos legados por contexto historico; para decisao atual, prevalecem `CURRENT_RULES.md`, `STATUS_ATUAL.md` e `ACAO_EXECUTAVEL_AUDITORIA_HIPERLOCAL.md`.
 - `STATUS.md` e documentos com `FINAL`, `100%`, `completo` ou `pronto para producao` no texto/nome sao historicos ate revalidacao explicita em `STATUS_ATUAL.md`.
 
