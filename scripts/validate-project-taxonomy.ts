@@ -6,6 +6,9 @@ import path from "path";
 const ROOT = process.cwd();
 const MODULES_README_PATH = "src/modules/README.md";
 const TAXONOMY_SSOT_PATH = "docs/architecture/TAXONOMY_SSOT.md";
+const CANONICAL_MAP_PATH = "docs/CANONICAL_MAP.md";
+const CORE_LAYER_SSOT_PATH = "docs/architecture/CORE_LAYER_SSOT.md";
+const GLOBAL_STRUCTURAL_AUDIT_PATH = "docs/AUDITORIA_ESTRUTURAL_GLOBAL.md";
 const COMMUNITY_FIRST_ARCHITECTURE_DOC_PATH =
   "docs/architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md";
 const COMMUNITY_FIRST_PLAN_PATH = "plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md";
@@ -198,6 +201,19 @@ const COMMUNITY_MODULE_EMPTY_FACADE_IMPORTS = [
   "@/modules/community-lost-found/pages/AchadosPerdidosPage",
   "@/modules/community-lost-found/pages/NovoAchadoPerdidoPage",
   "@/modules/community-lost-found/pages/AchadoPerdidoDetailPage",
+] as const;
+const ACTIVE_COMMUNITY_DOCS_WITHOUT_LEGACY_AGGREGATOR = [
+  CANONICAL_MAP_PATH,
+  CORE_LAYER_SSOT_PATH,
+  GLOBAL_STRUCTURAL_AUDIT_PATH,
+] as const;
+const ACTIVE_COMMUNITY_DOC_FORBIDDEN_MARKERS = [
+  "src/modules/community/README.md",
+  "src/modules/community/issues",
+  "src/modules/community/events",
+  "src/modules/community/lostfound",
+  "migrar para `src/modules/community`",
+  "-> `src/modules/community`",
 ] as const;
 
 function pathExists(relativePath: string): boolean {
@@ -434,6 +450,22 @@ function main() {
       if (!taxonomySsot.includes(marker)) {
         violations.push(
           `TAXONOMY SSOT sem marcador Community First "${marker}" em ${TAXONOMY_SSOT_PATH}`,
+        );
+      }
+    }
+  }
+
+  for (const activeDocPath of ACTIVE_COMMUNITY_DOCS_WITHOUT_LEGACY_AGGREGATOR) {
+    const content = readText(activeDocPath);
+    if (!content) {
+      violations.push(`Documento ativo ausente: ${activeDocPath}`);
+      continue;
+    }
+
+    for (const marker of ACTIVE_COMMUNITY_DOC_FORBIDDEN_MARKERS) {
+      if (content.includes(marker)) {
+        violations.push(
+          `${activeDocPath} nao deve apontar "${marker}" como destino atual; use Community First com src/core/community-* e src/modules/community-* explicitos.`,
         );
       }
     }

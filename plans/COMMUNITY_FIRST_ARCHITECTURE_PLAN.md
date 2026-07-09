@@ -1322,6 +1322,12 @@ Evidencia parcial:
   removidas; `src/core/community-lost-found` permanece como owner explicito para
   reabertura futura da superficie pausada de achados/perdidos, e
   `validate:taxonomy` bloqueia a volta desses aliases.
+- `docs/CANONICAL_MAP.md`, `docs/architecture/CORE_LAYER_SSOT.md`,
+  `docs/AUDITORIA_ESTRUTURAL_GLOBAL.md`,
+  `docs/COMMUNITY_TRANSVERSAL_ARCHITECTURE.md` e
+  `docs/posts/GUIA_FILTROS_TERRITORIAIS.md` foram alinhados para nao apontar
+  mais `src/modules/community` como destino atual; `validate:taxonomy` bloqueia
+  a volta desses marcadores nos docs ativos.
 
 Criterio de pronto:
 

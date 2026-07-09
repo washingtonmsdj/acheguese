@@ -1,6 +1,6 @@
 ﻿# CORE Layer SSOT (Arquitetura Oficial)
 
-Data: 2026-04-22
+Data: 2026-07-09
 Escopo: `src/core`
 
 ## Papel oficial da camada `core`
@@ -20,11 +20,11 @@ Escopo: `src/core`
 | billing | core transversal legítimo | manter em `src/core/billing` |
 | business | domínio de produto | migrar para `src/modules/business` |
 | city | subdomínio territorial transversal | consolidar em `src/core/location`/`territorial` |
-| civic | domínio de produto | **migrado** para `src/modules/community` |
+| civic | legado historico removido | nao recriar; fluxos civicos atuais devem passar por owners comunitarios explicitos como `src/core/community-issues` ou `src/core/community/alerts` ate ADR dedicada |
 | comments | core transversal legítimo | manter em `src/core/comments` |
-| community | domínio de produto | migrar para `src/modules/community` |
+| community | bounded context legado interno | manter apenas contratos legados internos; novas superficies usam `src/core/community-*` e `src/modules/community-*`, nunca `src/modules/community` |
 | coverage | core transversal legítimo | manter em `src/core/coverage` |
-| events | domínio de produto | **migrado** para `src/modules/community/events` |
+| events | domínio de produto | eventos publicos canonicos vivem em `src/core/verticals/events`; o modulo comunitario fica em `src/modules/community-events` |
 | family | core transversal legítimo | manter em `src/core/family` |
 | favorites | core transversal legítimo | manter em `src/core/favorites` |
 | feed | core transversal legítimo | manter em `src/core/feed` |
@@ -36,7 +36,7 @@ Escopo: `src/core`
 | interaction | core transversal legítimo | manter em `src/core/interaction` |
 | landing | composição app/rota/página | **migrado** para `src/app/features/landing` |
 | location | core transversal legítimo | manter em `src/core/location` |
-| lostfound | domínio de produto | **migrado** para `src/modules/community/lostfound` |
+| lostfound | domínio de produto | owner explicito em `src/core/community-lost-found`; modulo transversal em `src/modules/community-lost-found` |
 | maps | core transversal legítimo | manter em `src/core/maps` |
 | media | core transversal legítimo | manter em `src/core/media` |
 | messaging | core transversal legítimo | manter em `src/core/messaging` |
@@ -77,16 +77,19 @@ Escopo: `src/core`
   - facade top-level `src/core/community-alerts` removida; barrel publico em
     `src/modules/community-alerts`, consumindo owner atual
     `src/core/community/alerts`
-  - `src/core/community-issues` -> `src/modules/community/issues`
+  - `src/core/community-issues` mantido como owner explicito de problemas
+    comunitarios; superficie de produto em `src/modules/community-issues`
   - `src/core/promotions` -> `src/modules/business/promotions`
   - `src/core/services` -> `src/modules/professionals/services`
   - `src/core/vagas` -> `src/modules/classifieds/jobs`
   - `src/core/classifieds` -> `src/modules/classifieds`
-  - `src/core/events` -> `src/modules/community/events`
+  - `src/core/events` legado substituido por `src/core/verticals/events` e
+    `src/modules/community-events`
   - `src/core/gastronomy` -> `src/modules/business/gastronomy`
-  - `src/core/lostfound` -> `src/modules/community/lostfound`
+  - `src/core/lostfound` legado substituido por `src/core/community-lost-found`
+    e `src/modules/community-lost-found`
   - `src/core/tourist-points` -> `src/modules/guide/tourist-points`
-  - `src/core/civic` -> `src/modules/community` (facade removida)
+  - `src/core/civic` removido sem recriar agregador `src/modules/community`
 - Removido de `core` e consolidado em `app`:
   - `src/core/landing` -> `src/app/features/landing`
 - Supabase retirado de `core`:
@@ -112,12 +115,16 @@ src/core/
   reviews rollout safety search service-areas session social subscription
   territorial tracking users verification
   mobility
+  community-experience community-feed community-groups community-issues
+  community-lost-found community-recommendations
   analytics metrics telemetry
   verticals
 ```
 
 ## Blindagem anti-regressão
 - `scripts/validate-project-taxonomy.ts` bloqueia reintrodução em `src/core` de:
-  - `admin-identidade`, `admin-motoristas`, `community-alerts`, `community-issues`, `supabase`, `profile`, `promotions`, `services`, `vagas`, `classifieds`, `civic`, `events`, `tourist-points`, `landing`, `lostfound`, `gastronomy`
+  - `admin-identidade`, `admin-motoristas`, `community-alerts`, `supabase`, `profile`, `promotions`, `services`, `vagas`, `classifieds`, `civic`, `events`, `tourist-points`, `landing`, `lostfound`, `gastronomy`
+  - referencias ativas que tentem recriar `src/modules/community` como destino
+    atual para issues, eventos, lost-found ou civic.
 - Regra operacional: novo diretório em `src/core` só entra com ADR/SSOT e validador atualizado no mesmo PR.
 

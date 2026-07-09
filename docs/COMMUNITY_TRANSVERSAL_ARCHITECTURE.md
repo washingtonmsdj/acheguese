@@ -46,7 +46,7 @@ Regras:
 - `location_id` e o SSOT territorial para leitura, escrita, filtros, rollout e permissao.
 - Cidade, bairro, UF, slug e nome publico sao campos derivados ou de apresentacao.
 - Posts, comentarios, reacoes, favoritos e grupos usam `core/posts`, `core/comments`, `core/social`, `core/favorites` e `core/feed`.
-- Alertas e problemas usam services especificos em `core/community/alerts` e `core/community/issues`; `modules/community-alerts` e `modules/community-issues` sao os barrels publicos dos modulos transversais.
+- Alertas usam services especificos em `core/community/alerts` e barrel publico em `modules/community-alerts`; problemas usam owner explicito em `core/community-issues` e superficie de produto em `modules/community-issues`.
 
 ## Banco de Dados
 

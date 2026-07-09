@@ -97,15 +97,19 @@ src/
   - facade top-level `src/core/community-alerts` removida; barrel publico em
     `src/modules/community-alerts`, consumindo owner atual
     `src/core/community/alerts`
-  - `src/core/community-issues` -> `src/modules/community/issues`
+  - `src/core/community-issues` mantido como owner explicito de problemas
+    comunitarios; superficie de produto em `src/modules/community-issues`
   - `src/core/promotions` -> `src/modules/business/promotions`
   - `src/core/services` -> `src/modules/professionals/services`
   - `src/core/vagas` -> `src/modules/classifieds/jobs`
   - `src/core/classifieds` -> `src/modules/classifieds`
-  - `src/core/mobility` -> `src/modules/mobility`
-  - `src/core/events` -> `src/modules/community/events`
+  - `src/core/mobility` mantem contratos, servicos operacionais e UI
+    cross-domain; `src/modules/mobility` concentra jornadas de produto
+  - `src/core/events` legado substituido por `src/core/verticals/events` e
+    `src/modules/community-events`
   - `src/core/gastronomy` -> `src/modules/business/gastronomy`
-  - `src/core/lostfound` -> `src/modules/community/lostfound`
+  - `src/core/lostfound` legado substituido por `src/core/community-lost-found`
+    e `src/modules/community-lost-found`
   - `src/core/tourist-points` -> `src/modules/guide/tourist-points`
   - `src/core/civic` removido (facade legada)
   - `src/core/landing` -> `src/app/features/landing`
