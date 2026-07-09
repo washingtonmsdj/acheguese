@@ -126,12 +126,16 @@ body:has(.home-concept) {
 .home-nav a {
   position: relative;
   flex: 0 0 auto;
-  padding: 8px 10px;
+  padding: 7px 9px;
   color: rgba(230, 237, 244, 0.76);
-  font-size: 0.84rem;
+  font-size: 0.82rem;
   font-weight: 700;
   text-decoration: none;
   transition: color 160ms ease;
+}
+
+.home-nav a.is-mobile-secondary {
+  display: none;
 }
 
 .home-nav a:hover,
@@ -141,9 +145,9 @@ body:has(.home-concept) {
 
 .home-nav a.is-active::after {
   position: absolute;
-  right: 12px;
+  right: 10px;
   bottom: -2px;
-  left: 12px;
+  left: 10px;
   height: 2px;
   border-radius: 999px;
   background: var(--home-cyan);
@@ -1152,6 +1156,16 @@ body:has(.home-concept) {
   .home-shell {
     padding-right: 28px;
     padding-left: 28px;
+  }
+
+  .home-nav a {
+    display: inline-flex;
+    padding: 8px 10px;
+    font-size: 0.84rem;
+  }
+
+  .home-nav a.is-mobile-secondary {
+    display: inline-flex;
   }
 
   .home-hero-copy h1 {

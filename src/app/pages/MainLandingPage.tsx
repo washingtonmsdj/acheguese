@@ -57,6 +57,7 @@ import "./MainLandingPage.css";
 type NavItem = {
   label: string;
   href: string;
+  mobileHeader?: "primary" | "secondary";
 };
 
 type Chip = {
@@ -503,11 +504,20 @@ function HeaderNav({ navItems, temperature }: { navItems: NavItem[]; temperature
       </Link>
 
       <nav className="home-nav" aria-label="Seções">
-        {navItems.map((item) => (
-          <Link key={item.label} to={item.href} className={item.label === "Início" ? "is-active" : undefined}>
-            {item.label}
-          </Link>
-        ))}
+        {navItems.map((item) => {
+          const className = [
+            item.label === "Início" ? "is-active" : null,
+            item.mobileHeader === "secondary" ? "is-mobile-secondary" : null,
+          ]
+            .filter(Boolean)
+            .join(" ");
+
+          return (
+            <Link key={item.label} to={item.href} className={className || undefined}>
+              {item.label}
+            </Link>
+          );
+        })}
       </nav>
 
       <div className="home-actions">
@@ -896,13 +906,13 @@ export default function MainLandingPage() {
   const happeningCards = toHighlightCards(activityDocuments, communityHref);
 
   const navItems: NavItem[] = [
-    { label: "Início", href: "/" },
-    { label: "Comunidades", href: communityHref },
-    { label: "Empresas", href: LAUNCH_URLS.business },
-    { label: "Eventos", href: LAUNCH_URLS.events },
-    { label: "Classificados", href: LAUNCH_URLS.classifieds },
-    { label: "Serviços", href: LAUNCH_URLS.services },
-    { label: "Mapa", href: LAUNCH_URLS.map },
+    { label: "Início", href: "/", mobileHeader: "primary" },
+    { label: "Comunidades", href: communityHref, mobileHeader: "primary" },
+    { label: "Empresas", href: LAUNCH_URLS.business, mobileHeader: "primary" },
+    { label: "Eventos", href: LAUNCH_URLS.events, mobileHeader: "primary" },
+    { label: "Classificados", href: LAUNCH_URLS.classifieds, mobileHeader: "secondary" },
+    { label: "Serviços", href: LAUNCH_URLS.services, mobileHeader: "secondary" },
+    { label: "Mapa", href: LAUNCH_URLS.map, mobileHeader: "secondary" },
   ];
 
   return (
