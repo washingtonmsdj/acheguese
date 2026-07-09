@@ -9,7 +9,6 @@ import {
   ChevronDown,
   Home as HomeIcon,
   MapPin,
-  Moon,
   MoreHorizontal,
   Search,
   ShieldCheck,
@@ -34,7 +33,6 @@ import { useHomeCommunityHref } from "@/core/routing/hooks/useHomeCommunityHref"
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { buildCommunityAliasUrl, buildCommunityScopedUrl } from "@/core/routing/utils/territoryUrls";
 import type { SearchDocument } from "@/core/search";
-import { useTheme } from "@/shared/hooks/useTheme";
 
 import bairroChapada from "@/assets/bairro-chapada.jpg";
 import bairroOndina from "@/assets/bairro-ondina.jpg";
@@ -497,9 +495,6 @@ function BrandMark() {
 }
 
 function HeaderNav({ navItems, temperature }: { navItems: NavItem[]; temperature: TemperatureBadgeState }) {
-  const { theme, toggleTheme } = useTheme();
-  const ThemeIcon = theme === "dark" ? Sun : Moon;
-
   return (
     <header className="home-header" aria-label="Navegação principal">
       <Link className="home-brand" to="/">
@@ -525,9 +520,6 @@ function HeaderNav({ navItems, temperature }: { navItems: NavItem[]; temperature
           <Sun aria-hidden="true" />
           <span>{temperature.label}</span>
         </span>
-        <button type="button" className="home-icon-button" onClick={toggleTheme} aria-label="Alternar tema">
-          <ThemeIcon aria-hidden="true" />
-        </button>
         <Link to="/notifications" className="home-notification-button" aria-label="Abrir notificações">
           <Bell aria-hidden="true" />
           <span>3</span>
