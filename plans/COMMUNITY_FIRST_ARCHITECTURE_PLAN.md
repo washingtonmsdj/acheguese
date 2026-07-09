@@ -1308,6 +1308,12 @@ Evidencia parcial:
   `src/modules/community-alerts` aponta diretamente para o owner atual
   `src/core/community/alerts`, e `validate:taxonomy` bloqueia a volta desse
   root legado em `core`.
+- Rotas lazy de grupos e recomendacoes comunitarias deixaram de carregar paginas
+  por facades vazias em `src/modules/community-groups/pages` e
+  `src/modules/community-recommendations/pages`; `src/app/routes/lazyImports.ts`
+  agora aponta para `src/core/community-groups/pages/*` e
+  `src/core/community-recommendations/pages/*`, os aliases vazios foram
+  removidos e `validate:taxonomy` bloqueia a volta desses caminhos.
 
 Criterio de pronto:
 

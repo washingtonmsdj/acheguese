@@ -472,7 +472,11 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
   {
     id: "community-groups",
     label: "community-groups",
-    sourceRoots: ["src/core/social", "src/modules/community-groups"],
+    sourceRoots: [
+      "src/core/social",
+      "src/core/community-groups",
+      "src/modules/community-groups",
+    ],
     docsPaths: ["src/modules/community-groups/README.md"],
     ssotPaths: ["src/core/social/services/GroupService.ts"],
     routePrefixes: [
@@ -509,7 +513,11 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
   {
     id: "community-recommendations",
     label: "community-recommendations",
-    sourceRoots: ["src/modules/community-recommendations", "src/core/community"],
+    sourceRoots: [
+      "src/core/community-recommendations",
+      "src/modules/community-recommendations",
+      "src/core/community",
+    ],
     docsPaths: ["src/modules/community-recommendations/README.md", "docs/qa"],
     ssotPaths: ["src/core/community/services/CommunityQAService.ts"],
     routePrefixes: ["/recomendacoes", "/recomendacoes/nova", "/recomendacoes/:id"],

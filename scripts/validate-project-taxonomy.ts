@@ -17,6 +17,7 @@ const COMMUNITY_MEMBERSHIP_REPOSITORY_PATH =
   "src/core/community-experience/repositories/CommunityMembershipRepository.ts";
 const COMMUNITY_ENTITY_LINK_REPOSITORY_PATH =
   "src/core/community-experience/repositories/CommunityEntityLinkRepository.ts";
+const APP_LAZY_IMPORTS_PATH = "src/app/routes/lazyImports.ts";
 const APP_LAYOUT_ROUTES_PATH = "src/app/routes/sections/AppLayoutRoutes.tsx";
 const APP_LAYOUT_ROUTE_REGISTRY_PATH =
   "src/app/routes/sections/AppLayoutRouteRegistry.tsx";
@@ -167,6 +168,20 @@ const APP_LAYOUT_EXTRACTED_ROUTE_COMPONENTS = [
   "<P.TerritorialClassificadosPage />",
   "<P.TerritorialEventosPage />",
   "<P.TerritorialMapPage />",
+] as const;
+const COMMUNITY_MODULE_PAGE_COMPAT_PATHS = [
+  "src/modules/community-groups/pages/GruposPage.tsx",
+  "src/modules/community-groups/pages/GrupoDetailPage.tsx",
+  "src/modules/community-recommendations/pages/RecomendacoesPage.tsx",
+  "src/modules/community-recommendations/pages/NovaRecomendacaoPage.tsx",
+  "src/modules/community-recommendations/pages/RecomendacaoDetailPage.tsx",
+] as const;
+const COMMUNITY_MODULE_PAGE_COMPAT_IMPORTS = [
+  "@/modules/community-groups/pages/GruposPage",
+  "@/modules/community-groups/pages/GrupoDetailPage",
+  "@/modules/community-recommendations/pages/RecomendacoesPage",
+  "@/modules/community-recommendations/pages/NovaRecomendacaoPage",
+  "@/modules/community-recommendations/pages/RecomendacaoDetailPage",
 ] as const;
 
 function pathExists(relativePath: string): boolean {
@@ -371,6 +386,27 @@ function main() {
           `${APP_LAYOUT_ROUTE_REGISTRY_PATH} deve manter ${component} como rota territorial declarativa extraida.`,
         );
       }
+    }
+  }
+
+  const lazyImports = readText(APP_LAZY_IMPORTS_PATH);
+  if (!lazyImports) {
+    violations.push(`Registry de lazy imports ausente: ${APP_LAZY_IMPORTS_PATH}`);
+  } else {
+    for (const forbiddenImport of COMMUNITY_MODULE_PAGE_COMPAT_IMPORTS) {
+      if (lazyImports.includes(forbiddenImport)) {
+        violations.push(
+          `${APP_LAZY_IMPORTS_PATH} nao deve carregar pagina comunitaria por facade de src/modules (${forbiddenImport}). Use o owner canonico em src/core/community-*`,
+        );
+      }
+    }
+  }
+
+  for (const compatPath of COMMUNITY_MODULE_PAGE_COMPAT_PATHS) {
+    if (pathExists(compatPath)) {
+      violations.push(
+        `Facade duplicada de pagina comunitaria proibida: ${compatPath}. Rotas devem apontar para src/core/community-* e modules deve manter apenas boundary de produto quando houver implementacao real.`,
+      );
     }
   }
 

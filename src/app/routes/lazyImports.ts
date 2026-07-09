@@ -228,9 +228,9 @@ export const WorkOpportunityDetailPage = lazy(() => import("@/modules/work-oppor
 // ============================================================
 // COMUNIDADE (GRUPOS, EVENTOS, POSTS)
 // ============================================================
-export const GruposPage = lazy(() => import("@/modules/community-groups/pages/GruposPage"));
+export const GruposPage = lazy(() => import("@/core/community-groups/pages/GruposPage"));
 export const ComunidadePage = lazy(() => import("@/modules/community-feed/pages/ComunidadePage"));
-export const GrupoDetailPage = lazy(() => import("@/modules/community-groups/pages/GrupoDetailPage"));
+export const GrupoDetailPage = lazy(() => import("@/core/community-groups/pages/GrupoDetailPage"));
 export const EventosPage = createLaunchPausedRoute("Eventos");
 export const EventoDetailPage = createLaunchPausedRoute("Eventos");
 export const EventsListPage = createLaunchPausedRoute("Eventos");
@@ -242,9 +242,9 @@ export const EventsOrganizerDashboard = createLaunchPausedRoute("Eventos");
 export const EventsOrganizerForm = createLaunchPausedRoute("Eventos");
 export const EventsOrganizerAnalyticsPage = createLaunchPausedRoute("Eventos");
 export const EventsErrorBoundary = createLaunchPausedRoute("Eventos");
-export const RecomendacoesPage = lazy(() => import("@/modules/community-recommendations/pages/RecomendacoesPage"));
-export const NovaRecomendacaoPage = lazy(() => import("@/modules/community-recommendations/pages/NovaRecomendacaoPage"));
-export const RecomendacaoDetailPage = lazy(() => import("@/modules/community-recommendations/pages/RecomendacaoDetailPage"));
+export const RecomendacoesPage = lazy(() => import("@/core/community-recommendations/pages/RecomendacoesPage"));
+export const NovaRecomendacaoPage = lazy(() => import("@/core/community-recommendations/pages/NovaRecomendacaoPage"));
+export const RecomendacaoDetailPage = lazy(() => import("@/core/community-recommendations/pages/RecomendacaoDetailPage"));
 export const AchadosPerdidosPage = createLaunchPausedRoute("Achados e perdidos");
 export const NovoAchadoPerdidoPage = createLaunchPausedRoute("Achados e perdidos");
 export const AchadoPerdidoDetailPage = createLaunchPausedRoute("Achados e perdidos");

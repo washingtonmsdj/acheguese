@@ -104,12 +104,12 @@ Gerado em: 2026-07-08T22:29:45.978Z
 - `AchadoPerdidoDetailPage.tsx`: canonic `src/core/community/pages/AchadoPerdidoDetailPage.tsx`, aliases `src/core/community-lost-found/pages/AchadoPerdidoDetailPage.tsx`, `src/modules/community-lost-found/pages/AchadoPerdidoDetailPage.tsx`
 - `AchadosPerdidosPage.tsx`: canonic `src/core/community/pages/AchadosPerdidosPage.tsx`, aliases `src/core/community-lost-found/pages/AchadosPerdidosPage.tsx`, `src/modules/community-lost-found/pages/AchadosPerdidosPage.tsx`
 - `ComunidadePage.tsx`: canonic `src/core/community/pages/ComunidadePage.tsx`, aliases `src/core/community-feed/pages/ComunidadePage.tsx`, `src/modules/community-feed/pages/ComunidadePage.tsx`
-- `GrupoDetailPage.tsx`: canonic `src/core/community/pages/GrupoDetailPage.tsx`, aliases `src/core/community-groups/pages/GrupoDetailPage.tsx`, `src/modules/community-groups/pages/GrupoDetailPage.tsx`
-- `GruposPage.tsx`: canonic `src/core/community/pages/GruposPage.tsx`, aliases `src/core/community-groups/pages/GruposPage.tsx`, `src/modules/community-groups/pages/GruposPage.tsx`
-- `NovaRecomendacaoPage.tsx`: canonic `src/core/community/pages/NovaRecomendacaoPage.tsx`, aliases `src/core/community-recommendations/pages/NovaRecomendacaoPage.tsx`, `src/modules/community-recommendations/pages/NovaRecomendacaoPage.tsx`
+- `GrupoDetailPage.tsx`: canonic `src/core/community/pages/GrupoDetailPage.tsx`, alias ativo `src/core/community-groups/pages/GrupoDetailPage.tsx`; alias vazio em `src/modules/community-groups/pages/GrupoDetailPage.tsx` removido em 2026-07-09.
+- `GruposPage.tsx`: canonic `src/core/community/pages/GruposPage.tsx`, alias ativo `src/core/community-groups/pages/GruposPage.tsx`; alias vazio em `src/modules/community-groups/pages/GruposPage.tsx` removido em 2026-07-09.
+- `NovaRecomendacaoPage.tsx`: canonic `src/core/community/pages/NovaRecomendacaoPage.tsx`, alias ativo `src/core/community-recommendations/pages/NovaRecomendacaoPage.tsx`; alias vazio em `src/modules/community-recommendations/pages/NovaRecomendacaoPage.tsx` removido em 2026-07-09.
 - `NovoAchadoPerdidoPage.tsx`: canonic `src/core/community/pages/NovoAchadoPerdidoPage.tsx`, aliases `src/core/community-lost-found/pages/NovoAchadoPerdidoPage.tsx`, `src/modules/community-lost-found/pages/NovoAchadoPerdidoPage.tsx`
 - `NovoPostPage.tsx`: canonic `src/core/community/pages/NovoPostPage.tsx`, aliases `src/core/community-feed/pages/NovoPostPage.tsx`, `src/modules/community-feed/pages/NovoPostPage.tsx`
-- `RecomendacaoDetailPage.tsx`: canonic `src/core/community/pages/RecomendacaoDetailPage.tsx`, aliases `src/core/community-recommendations/pages/RecomendacaoDetailPage.tsx`, `src/modules/community-recommendations/pages/RecomendacaoDetailPage.tsx`
+- `RecomendacaoDetailPage.tsx`: canonic `src/core/community/pages/RecomendacaoDetailPage.tsx`, alias ativo `src/core/community-recommendations/pages/RecomendacaoDetailPage.tsx`; alias vazio em `src/modules/community-recommendations/pages/RecomendacaoDetailPage.tsx` removido em 2026-07-09.
 
 ### Imports profundos (top)
 - `src/modules/business/gastronomy/niches/pizzaria/components/PizzaAdminPanel.tsx` -> `../../../utils/currency` (subidas: 3)
