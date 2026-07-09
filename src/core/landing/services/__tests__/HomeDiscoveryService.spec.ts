@@ -168,7 +168,9 @@ describe("HomeDiscoveryService", () => {
     ]);
     mocks.getFeaturedServices.mockResolvedValue([featuredService]);
     mocks.getFeaturedClassifieds.mockResolvedValue([featuredClassified]);
-    mocks.getBusinessCanonicalUrl.mockImplementation(({ slug }) => `/empresa/${slug}`);
+    mocks.getBusinessCanonicalUrl.mockImplementation(
+      ({ slug }) => `/empresa/${slug}`,
+    );
     mocks.buildClassifiedPublicUrl.mockReturnValue("/c/bike1234");
     mocks.getEventsPage.mockResolvedValue({
       items: [event],
@@ -196,8 +198,8 @@ describe("HomeDiscoveryService", () => {
     );
     expect(result.activityDocuments.map((document) => document.type)).toEqual([
       "event",
-      "classified",
       "opportunity",
+      "classified",
     ]);
     expect(result.activityDocuments).toEqual(
       expect.arrayContaining([
@@ -212,7 +214,10 @@ describe("HomeDiscoveryService", () => {
       ]),
     );
 
-    expect(mocks.getFeaturedBusinesses).toHaveBeenCalledWith(territoryFilter, 4);
+    expect(mocks.getFeaturedBusinesses).toHaveBeenCalledWith(
+      territoryFilter,
+      4,
+    );
     expect(mocks.getEventsPage).toHaveBeenCalledWith(
       expect.objectContaining({ territoryFilter, pageSize: 4 }),
     );
@@ -228,13 +233,73 @@ describe("HomeDiscoveryService", () => {
     const result = await HomeDiscoveryService.getHomeDiscovery(territoryFilter);
 
     expect(result.activityDocuments.map((document) => document.type)).toEqual([
-      "classified",
       "opportunity",
+      "classified",
     ]);
     expect(result.trustDocuments).toHaveLength(3);
     expect(mocks.logger.warn).toHaveBeenCalledWith(
       "HomeDiscoveryService.partialQuery",
       "events unavailable",
     );
+  });
+
+  it("keeps activity discovery diverse before filling by recency", async () => {
+    mocks.getFeaturedClassifieds.mockResolvedValue([
+      {
+        ...featuredClassified,
+        id: "classified-new-1",
+        titulo: "Geladeira nova",
+        created_at: "2026-07-09T15:00:00Z",
+      },
+      {
+        ...featuredClassified,
+        id: "classified-new-2",
+        titulo: "Apartamento mobiliado",
+        created_at: "2026-07-09T14:00:00Z",
+      },
+      {
+        ...featuredClassified,
+        id: "classified-new-3",
+        titulo: "Tenis seminovo",
+        created_at: "2026-07-09T13:00:00Z",
+      },
+    ]);
+    mocks.getEventsPage.mockResolvedValue({
+      items: [
+        {
+          ...event,
+          created_at: "2026-07-07T11:00:00Z",
+          published_at: "2026-07-07T13:00:00Z",
+        },
+      ],
+      totalCount: 1,
+      hasMore: false,
+      nextPage: null,
+    });
+    mocks.listPublicOpportunityCards.mockResolvedValue([
+      {
+        ...opportunity,
+        created_at: "2026-07-07T10:00:00Z",
+        published_at: "2026-07-07T10:30:00Z",
+      },
+    ]);
+
+    const result = await HomeDiscoveryService.getHomeDiscovery(
+      territoryFilter,
+      { activityLimit: 4 },
+    );
+
+    expect(result.activityDocuments.map((document) => document.type)).toEqual([
+      "event",
+      "opportunity",
+      "classified",
+      "classified",
+    ]);
+    expect(result.activityDocuments.map((document) => document.title)).toEqual([
+      "Samba na praca",
+      "Freela de atendimento",
+      "Geladeira nova",
+      "Apartamento mobiliado",
+    ]);
   });
 });

@@ -13,7 +13,10 @@ import {
 } from "@/core/search/services/SearchDocumentMapper";
 import { eventsReadService } from "@/core/verticals/events";
 import { eventPublicRoutes } from "@/core/verticals/events/routes/eventPublicRoutes";
-import { WorkOpportunitiesService, type WorkOpportunityCard } from "@/core/work-opportunities";
+import {
+  WorkOpportunitiesService,
+  type WorkOpportunityCard,
+} from "@/core/work-opportunities";
 import { logger } from "@/shared/utils/logger";
 import {
   LandingFeaturedService,
@@ -62,7 +65,8 @@ function sortByTrustSignals(a: SearchDocument, b: SearchDocument): number {
     Number(getBooleanMetadata(a, "is_verified"));
   if (verifiedDelta !== 0) return verifiedDelta;
 
-  const ratingDelta = getNumericMetadata(b, "rating") - getNumericMetadata(a, "rating");
+  const ratingDelta =
+    getNumericMetadata(b, "rating") - getNumericMetadata(a, "rating");
   if (ratingDelta !== 0) return ratingDelta;
 
   return a.title.localeCompare(b.title);
@@ -71,16 +75,50 @@ function sortByTrustSignals(a: SearchDocument, b: SearchDocument): number {
 function sortByCreatedAtDesc(a: SearchDocument, b: SearchDocument): number {
   const aTime = a.createdAt ? Date.parse(a.createdAt) : 0;
   const bTime = b.createdAt ? Date.parse(b.createdAt) : 0;
-  return (Number.isFinite(bTime) ? bTime : 0) - (Number.isFinite(aTime) ? aTime : 0);
+  return (
+    (Number.isFinite(bTime) ? bTime : 0) - (Number.isFinite(aTime) ? aTime : 0)
+  );
+}
+
+function hasDisplayableTitle(document: SearchDocument): boolean {
+  return document.title.trim().length > 0;
+}
+
+function selectBalancedActivityDocuments(
+  groups: SearchDocument[][],
+  limit: number,
+): SearchDocument[] {
+  if (limit <= 0) return [];
+
+  const sortedGroups = groups
+    .map((group) => group.filter(hasDisplayableTitle).sort(sortByCreatedAtDesc))
+    .filter((group) => group.length > 0);
+
+  const selected = sortedGroups.slice(0, limit).map((group) => group[0]);
+
+  if (selected.length >= limit) {
+    return selected;
+  }
+
+  const remaining = sortedGroups
+    .flatMap((group) => group.slice(1))
+    .sort(sortByCreatedAtDesc);
+
+  return [...selected, ...remaining].slice(0, limit);
 }
 
 function settledValue<T>(result: PromiseSettledResult<T>, fallback: T): T {
   if (result.status === "fulfilled") return result.value;
-  logger.warn("HomeDiscoveryService.partialQuery", getErrorMessage(result.reason));
+  logger.warn(
+    "HomeDiscoveryService.partialQuery",
+    getErrorMessage(result.reason),
+  );
   return fallback;
 }
 
-function featuredBusinessToSearchDocument(business: FeaturedBusiness): SearchDocument {
+function featuredBusinessToSearchDocument(
+  business: FeaturedBusiness,
+): SearchDocument {
   let url: string | null = null;
 
   if (business.slug && business.geographic_path) {
@@ -112,7 +150,9 @@ function featuredBusinessToSearchDocument(business: FeaturedBusiness): SearchDoc
   };
 }
 
-function featuredServiceToSearchDocument(service: FeaturedService): SearchDocument {
+function featuredServiceToSearchDocument(
+  service: FeaturedService,
+): SearchDocument {
   return {
     id: service.id,
     type: "professional",
@@ -128,7 +168,9 @@ function featuredServiceToSearchDocument(service: FeaturedService): SearchDocume
   };
 }
 
-function featuredClassifiedToSearchDocument(classified: FeaturedClassified): SearchDocument {
+function featuredClassifiedToSearchDocument(
+  classified: FeaturedClassified,
+): SearchDocument {
   return classifiedToSearchDocument({
     id: classified.id,
     title: classified.titulo,
@@ -157,7 +199,9 @@ function featuredClassifiedToSearchDocument(classified: FeaturedClassified): Sea
   });
 }
 
-function opportunityCardToSearchDocument(card: WorkOpportunityCard): SearchDocument {
+function opportunityCardToSearchDocument(
+  card: WorkOpportunityCard,
+): SearchDocument {
   return opportunityToSearchDocument({
     id: card.id,
     headline: card.headline,
@@ -165,7 +209,8 @@ function opportunityCardToSearchDocument(card: WorkOpportunityCard): SearchDocum
     opportunity_type: card.opportunity_type,
     territory_name: card.territory_name,
     urgency: card.urgency,
-    availability_notes: card.availability_notes ?? truncateSearchDescription(card.description),
+    availability_notes:
+      card.availability_notes ?? truncateSearchDescription(card.description),
     professional_id: card.professional_id,
     target_url: `/oportunidades/${card.id}`,
     published_at: card.published_at,
@@ -178,10 +223,15 @@ async function resolveLaunchTerritoryFilter(): Promise<TerritoryFilter | null> {
   if (!launchPath) return null;
 
   try {
-    const { location } = await locationService.getLocationByPath({ path: launchPath });
+    const { location } = await locationService.getLocationByPath({
+      path: launchPath,
+    });
     return { scope: "location", location_id: location.id };
   } catch (error) {
-    logger.warn("HomeDiscoveryService.resolveLaunchTerritoryFilter", getErrorMessage(error));
+    logger.warn(
+      "HomeDiscoveryService.resolveLaunchTerritoryFilter",
+      getErrorMessage(error),
+    );
     return null;
   }
 }
@@ -252,19 +302,23 @@ export class HomeDiscoveryService {
       .sort(sortByTrustSignals)
       .slice(0, trustLimit);
 
-    const activityDocuments = [
-      ...eventPage.items.map((event) =>
-        eventToSearchDocument({
-          ...event,
-          target_url: eventPublicRoutes.detail(event.id),
-        }),
-      ),
-      ...opportunities.map(opportunityCardToSearchDocument),
-      ...classifieds.map(featuredClassifiedToSearchDocument),
-    ]
-      .filter((document) => document.title.trim().length > 0)
-      .sort(sortByCreatedAtDesc)
-      .slice(0, activityLimit);
+    const eventDocuments = eventPage.items.map((event) =>
+      eventToSearchDocument({
+        ...event,
+        target_url: eventPublicRoutes.detail(event.id),
+      }),
+    );
+    const opportunityDocuments = opportunities.map(
+      opportunityCardToSearchDocument,
+    );
+    const classifiedDocuments = classifieds.map(
+      featuredClassifiedToSearchDocument,
+    );
+
+    const activityDocuments = selectBalancedActivityDocuments(
+      [eventDocuments, opportunityDocuments, classifiedDocuments],
+      activityLimit,
+    );
 
     return { activityDocuments, trustDocuments };
   }
