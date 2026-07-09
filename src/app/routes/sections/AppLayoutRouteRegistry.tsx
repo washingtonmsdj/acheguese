@@ -1,0 +1,132 @@
+import type { ReactNode } from "react";
+import { Route } from "react-router-dom";
+import { APP_MODULE_SLUGS } from "@/config/moduleSlugs";
+import {
+  TERRITORIAL_ROUTE_PARAMS,
+  TERRITORIAL_ROUTE_STATIC_SEGMENTS,
+  buildTerritorialModuleRoutePath,
+} from "@/core/routing/config/territorialRoutePatterns";
+
+import * as P from "../lazyImports";
+
+const TERRITORIAL_PARAMS = TERRITORIAL_ROUTE_PARAMS;
+const TERRITORIAL_STATIC = TERRITORIAL_ROUTE_STATIC_SEGMENTS;
+
+type AppLayoutRouteDescriptor = {
+  id: string;
+  path: string;
+  element: ReactNode;
+  indexElement?: ReactNode;
+};
+
+export const APP_LAYOUT_TERRITORIAL_DOMAIN_ROUTES: readonly AppLayoutRouteDescriptor[] = [
+  {
+    id: "business-detail",
+    path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.business, [
+      TERRITORIAL_PARAMS.district,
+      TERRITORIAL_PARAMS.slug,
+    ]),
+    element: <P.BusinessRouteResolver BusinessDetailComponent={P.EmpresaDetailLandingPage} />,
+  },
+  {
+    id: "business-category-city",
+    path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.business, [
+      TERRITORIAL_STATIC.category,
+      TERRITORIAL_PARAMS.category,
+    ]),
+    element: <P.TerritorialLayout />,
+    indexElement: <P.TerritorialCategoryBusinessPage />,
+  },
+  {
+    id: "business-category-district",
+    path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.business, [
+      TERRITORIAL_PARAMS.district,
+      TERRITORIAL_STATIC.category,
+      TERRITORIAL_PARAMS.category,
+    ]),
+    element: <P.TerritorialLayout />,
+    indexElement: <P.TerritorialCategoryBusinessPage />,
+  },
+  {
+    id: "business-district",
+    path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.business, [
+      TERRITORIAL_PARAMS.district,
+    ]),
+    element: <P.TerritorialLayout />,
+    indexElement: <P.EmpresasLandingPage />,
+  },
+  {
+    id: "business-city",
+    path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.business),
+    element: <P.TerritorialLayout />,
+    indexElement: <P.EmpresasLandingPage />,
+  },
+  {
+    id: "services-district",
+    path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.services, [
+      TERRITORIAL_PARAMS.district,
+    ]),
+    element: <P.TerritorialLayout />,
+    indexElement: <P.TerritorialServicesPage />,
+  },
+  {
+    id: "services-city",
+    path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.services),
+    element: <P.TerritorialLayout />,
+    indexElement: <P.TerritorialServicesPage />,
+  },
+  {
+    id: "classified-detail",
+    path: "/classificados/:uf/:cidade/:bairro/:categoria/:subcategoria/:slug/:publicId",
+    element: <P.ClassifiedCanonicalRoute />,
+  },
+  {
+    id: "classified-subcategory-district",
+    path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.classifieds, [
+      TERRITORIAL_PARAMS.district,
+      TERRITORIAL_PARAMS.category,
+      TERRITORIAL_PARAMS.subcategory,
+    ]),
+    element: <P.TerritorialLayout />,
+    indexElement: <P.TerritorialClassificadosPage />,
+  },
+  {
+    id: "classified-category-district",
+    path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.classifieds, [
+      TERRITORIAL_PARAMS.district,
+      TERRITORIAL_PARAMS.category,
+    ]),
+    element: <P.TerritorialLayout />,
+    indexElement: <P.TerritorialClassificadosPage />,
+  },
+  {
+    id: "classified-district",
+    path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.classifieds, [
+      TERRITORIAL_PARAMS.district,
+    ]),
+    element: <P.TerritorialLayout />,
+    indexElement: <P.TerritorialClassificadosPage />,
+  },
+  {
+    id: "classified-city",
+    path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.classifieds),
+    element: <P.TerritorialLayout />,
+    indexElement: <P.TerritorialClassificadosPage />,
+  },
+];
+
+export function renderAppLayoutRouteDescriptors(
+  routes: readonly AppLayoutRouteDescriptor[],
+): ReactNode[] {
+  return routes.map((route) => {
+    if (!route.indexElement) {
+      return <Route key={route.id} path={route.path} element={route.element} />;
+    }
+
+    return (
+      <Route key={route.id} path={route.path} element={route.element}>
+        <Route index element={route.indexElement} />
+      </Route>
+    );
+  });
+}

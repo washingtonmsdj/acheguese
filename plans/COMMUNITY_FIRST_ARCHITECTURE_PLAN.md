@@ -1253,7 +1253,12 @@ Evidencia parcial:
   documentar `community_posts` como fonte runtime de Q&A;
 - `tests/posts-community-posts-ssot.test.ts` tambem impede retorno do rotulo
   ambiguo entre `posts` e `community_posts` no plano e de docs que afirmem Q&A
-  em `community_posts`.
+  em `community_posts`;
+- `src/app/routes/sections/AppLayoutRouteRegistry.tsx` extraiu as rotas
+  territoriais declarativas de `empresas`, `servicos` e `classificados`,
+  reduzindo declaracoes inline em `AppLayoutRoutes.tsx` sem alterar a ordem;
+- `src/app/routes/__tests__/appLayoutRouteRegistry.spec.ts` impede que esses
+  dominios voltem a ser re-declarados diretamente em `AppLayoutRoutes.tsx`.
 
 Criterio de pronto:
 

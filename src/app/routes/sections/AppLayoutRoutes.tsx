@@ -27,6 +27,10 @@ import { professionalPublicRoutes } from "@/core/professional/routes/professiona
 import { touristPointPublicRoutes } from "@/core/verticals/guide/routes/touristPointPublicRoutes";
 import { isFeatureEnabled } from "@/shared/utils/featureFlags";
 import { CommunityTerritoryRoutes } from "./CommunityTerritoryRoutes";
+import {
+  APP_LAYOUT_TERRITORIAL_DOMAIN_ROUTES,
+  renderAppLayoutRouteDescriptors,
+} from "./AppLayoutRouteRegistry";
 
 // Lazy imports organizados por dominio
 import * as P from "../lazyImports";
@@ -350,61 +354,7 @@ export function AppLayoutRoutes() {
         <Route path="/brasil" element={<P.BrasilShowcasePage />} />
         <Route path="/br" element={<P.CountryLandingPage />} />
 
-        {/* Modulo empresas - estrutura hierarquica clara */}
-        {/* 5 segmentos = detalhe publico canonico de empresa/restaurante */}
-        <Route path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.business, [TERRITORIAL_PARAMS.district, TERRITORIAL_PARAMS.slug])} element={<P.BusinessRouteResolver BusinessDetailComponent={P.EmpresaDetailLandingPage} />} />
-
-        {/* Categoria: /empresas/:state/:city/categoria/:category */}
-        <Route path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.business, [TERRITORIAL_STATIC.category, TERRITORIAL_PARAMS.category])} element={<P.TerritorialLayout />}>
-          <Route index element={<P.TerritorialCategoryBusinessPage />} />
-        </Route>
-
-        {/* Categoria no bairro: /empresas/:state/:city/:district/categoria/:category */}
-        <Route path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.business, [TERRITORIAL_PARAMS.district, TERRITORIAL_STATIC.category, TERRITORIAL_PARAMS.category])} element={<P.TerritorialLayout />}>
-          <Route index element={<P.TerritorialCategoryBusinessPage />} />
-        </Route>
-
-        {/* 4 segmentos = hub do bairro: /empresas/:state/:city/:district */}
-        <Route path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.business, [TERRITORIAL_PARAMS.district])} element={<P.TerritorialLayout />}>
-          <Route index element={<P.EmpresasLandingPage />} />
-        </Route>
-
-        {/* 3 segmentos = hub da cidade: /empresas/:state/:city */}
-        <Route path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.business)} element={<P.TerritorialLayout />}>
-          <Route index element={<P.EmpresasLandingPage />} />
-        </Route>
-
-        {/* Rotas de servicos */}
-        <Route path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.services, [TERRITORIAL_PARAMS.district])} element={<P.TerritorialLayout />}>
-          <Route index element={<P.TerritorialServicesPage />} />
-        </Route>
-        <Route path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.services)} element={<P.TerritorialLayout />}>
-          <Route index element={<P.TerritorialServicesPage />} />
-        </Route>
-
-        {/* Rotas de classificados */}
-        {/* 7 segmentos = classificado especifico: /classificados/:uf/:cidade/:bairro/:categoria/:subcategoria/:slug/:publicId */}
-        <Route path="/classificados/:uf/:cidade/:bairro/:categoria/:subcategoria/:slug/:publicId" element={<P.ClassifiedCanonicalRoute />} />
-
-        {/* 5 segmentos = hub categoria no bairro: /classificados/:uf/:cidade/:bairro/:categoria/:subcategoria */}
-        <Route path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.classifieds, [TERRITORIAL_PARAMS.district, TERRITORIAL_PARAMS.category, TERRITORIAL_PARAMS.subcategory])} element={<P.TerritorialLayout />}>
-          <Route index element={<P.TerritorialClassificadosPage />} />
-        </Route>
-
-        {/* 4 segmentos = hub categoria no bairro: /classificados/:uf/:cidade/:bairro/:categoria */}
-        <Route path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.classifieds, [TERRITORIAL_PARAMS.district, TERRITORIAL_PARAMS.category])} element={<P.TerritorialLayout />}>
-          <Route index element={<P.TerritorialClassificadosPage />} />
-        </Route>
-
-        {/* 3 segmentos = hub do bairro: /classificados/:uf/:cidade/:bairro */}
-        <Route path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.classifieds, [TERRITORIAL_PARAMS.district])} element={<P.TerritorialLayout />}>
-          <Route index element={<P.TerritorialClassificadosPage />} />
-        </Route>
-
-        {/* 2 segmentos = hub da cidade: /classificados/:uf/:cidade */}
-        <Route path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.classifieds)} element={<P.TerritorialLayout />}>
-          <Route index element={<P.TerritorialClassificadosPage />} />
-        </Route>
+        {renderAppLayoutRouteDescriptors(APP_LAYOUT_TERRITORIAL_DOMAIN_ROUTES)}
 
         {/* Rotas de eventos */}
         <Route path={EVENT_TERRITORIAL_ROUTES.detail} element={launchTerritorialLayout("events", "Eventos")}>
