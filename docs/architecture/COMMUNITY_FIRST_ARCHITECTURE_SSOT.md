@@ -109,6 +109,27 @@ mais comunidades sem copiar seus dados mestres:
 - Posts/feed: `posts` como candidato a SSOT principal, com consolidacao
   pendente contra `community_posts`
 
+### Busca E Descoberta
+
+SSOT operacional:
+
+- `src/core/search`
+- `src/core/search/services/SearchService.ts`
+
+Responsabilidade:
+
+- expor `SearchDocument` como contrato canonico de resultado para UI/Home;
+- orquestrar busca federada entre services/read models dos dominios donos;
+- preservar arrays especificos de dominio apenas como compatibilidade de UI;
+- aplicar filtros por tipo e `TerritoryFilter` canonico quando o dominio
+  consultado suportar esse filtro.
+
+`SearchService` nao e dono de empresas, comunidades, eventos, classificados,
+profissionais, oportunidades ou posts. Ele deve compor resultados consumindo
+os services canonicos de cada dominio. A primeira etapa oficial e busca
+federada via services/read models; indice denormalizado ou RPC de busca so deve
+ser criado quando houver necessidade real de ranking, latencia ou volume.
+
 ## Relacionamento Oficial
 
 O modelo oficial e:

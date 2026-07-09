@@ -3,7 +3,7 @@
 Status: ativo
 Data: 2026-07-08
 Escopo: arquitetura-base versionada do produto
-Implementacao: nao iniciada neste plano
+Implementacao: em andamento incremental
 
 ## Objetivo
 
@@ -487,9 +487,10 @@ Responsabilidade:
 
 Risco atual:
 
-- `SearchService` hoje retorna businesses e professionals; opportunities,
-  classifieds, events e coupons retornam arrays vazios. Isso nao sustenta a
-  proposta de Home/Comunidades como descoberta ampla.
+- a primeira busca federada ja consulta communities, businesses,
+  professionals, opportunities, classifieds, events e posts publicos por
+  services/read models canonicos, mas ainda nao possui indice denormalizado,
+  filtro explicito por comunidade nem contrato de descoberta da Home.
 
 ### Home E Descoberta
 
@@ -802,9 +803,13 @@ Decisao recomendada:
 
 ### 4. Busca global incompleta
 
+Status:
+
+- parcialmente resolvido na Fase 5 em 2026-07-08.
+
 Problema:
 
-- `SearchService` declara categorias que ainda nao busca de fato.
+- `SearchService` declarava categorias que ainda nao buscava de fato.
 
 Risco:
 
@@ -813,7 +818,8 @@ Risco:
 
 Decisao recomendada:
 
-- criar busca federada por dominio e depois indice denormalizado/RPC.
+- manter a busca federada por dominio como contrato inicial e criar indice
+  denormalizado/RPC apenas quando volume, ranking e latencia justificarem.
 
 ### 5. Taxonomia de verticais divergente
 
@@ -1073,7 +1079,7 @@ Evidencia parcial:
 
 ### Fase 5 - Busca Global E Descoberta
 
-Status: em andamento
+Status: em andamento, primeira entrega funcional concluida em 2026-07-08
 
 Objetivo:
 
@@ -1081,18 +1087,40 @@ Objetivo:
 
 Tarefas:
 
-- definir `SearchDocument` canonico;
-- incluir businesses, professionals, classifieds, events, communities e posts
-  publicos;
-- adicionar filtros por territorio, comunidade e tipo;
-- decidir entre RPC federada inicial e indice denormalizado;
-- atualizar Home para consumir busca/descoberta por contrato.
+- [x] definir `SearchDocument` canonico;
+- [x] incluir businesses, professionals, opportunities, classifieds, events,
+  communities e posts publicos;
+- [x] adicionar filtros por territorio e tipo;
+- [ ] adicionar filtro explicito por comunidade quando a busca consumir
+  `community_entity_links`;
+- [x] decidir por busca federada via services/read models como contrato
+  inicial;
+- [ ] criar indice denormalizado/RPC de busca quando escala e ranking exigirem;
+- [ ] atualizar Home para consumir busca/descoberta por contrato.
 
 Criterio de pronto:
 
 - busca global encontra todos os dominios prometidos;
 - Home nao tem query manual de dominio;
 - resultados respeitam launch scope, privacidade e SEO.
+
+Evidencia parcial:
+
+- `src/core/search/services/SearchService.ts` expoe `SearchDocument` e
+  federa leitura por `CommunityExperienceService`, `BusinessService`,
+  `ProfessionalService`, `WorkOpportunitiesService`, `ClassifiedService`,
+  `EventReadService` e `PostService`;
+- `src/core/community-experience/repositories/CommunityExperienceRepository.ts`
+  expoe `searchPublicCommunities` como leitura canonica de comunidades
+  publicas;
+- `src/core/classifieds/services/classifieds.queries.ts` expoe
+  `searchClassifieds` com `TerritoryFilter` canonico;
+- `src/core/posts/services/posts.queries.ts` expoe `searchPublicPosts` para
+  conteudo publico publicado e nao removido;
+- `src/app/pages/BuscaPage.tsx` renderiza filtros de comunidades, eventos,
+  classificados, oportunidades e posts a partir do contrato `SearchDocument`;
+- `src/core/search/services/__tests__/SearchService.spec.ts` cobre query curta,
+  federacao multi-dominio e filtro por categoria.
 
 ### Fase 6 - Eventos E Oportunidades
 
@@ -1231,4 +1259,4 @@ Search/Home sao experiencias derivadas desses contratos.
 - alterar UX da Home;
 - alterar rotas publicas;
 - mudar RLS;
-- implementar busca nova.
+- implementar indice denormalizado/RPC de busca.

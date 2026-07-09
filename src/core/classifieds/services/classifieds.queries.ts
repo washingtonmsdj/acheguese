@@ -12,6 +12,7 @@ import { trackError } from "@/shared/utils/errorTracking";
 import { applyTerritoryFilter } from "@/core/location";
 import { LocationService } from "@/core/location/services/LocationService";
 import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
+import { buildSafeOrILikeFilter } from "@/shared/utils/sqlSanitization";
 import type { TerritoryFilter } from "@/core/location/types";
 import type { ClassifiedData, NeighborhoodWithClassifiedCount } from "./types";
 
@@ -265,6 +266,62 @@ export async function getAllClassifieds(
       action: "getAllClassifieds",
     });
     throw error;
+  }
+}
+
+export async function searchClassifieds(
+  query: string,
+  options: {
+    filter?: TerritoryFilter;
+    limit?: number;
+  } = {},
+): Promise<ClassifiedData[]> {
+  const searchFilter = buildSafeOrILikeFilter(
+    ["title", "description", "category"],
+    query,
+  );
+  if (!searchFilter) return [];
+
+  try {
+    let dbQuery = supabase
+      .from("classifieds")
+      .select(
+        `
+        * ,
+        seller:profiles!seller_id (
+          id,
+          name,
+          avatar_url,
+          phone,
+          whatsapp
+        ),
+        locations(geographic_path, type, parent_id),
+        classified_categories(slug),
+        classified_subcategories(slug)
+      `,
+      )
+      .eq("is_active", true)
+      .or(searchFilter)
+      .order("created_at", { ascending: false })
+      .limit(options.limit ?? 20) as unknown as ClassifiedQuery;
+
+    if (options.filter && options.filter.scope !== "none") {
+      dbQuery = applyTerritoryFilter(dbQuery, options.filter) as ClassifiedQuery;
+    }
+
+    const { data, error } = await dbQuery;
+    if (error) throw error;
+
+    return ((data || []) as unknown[]).map((item) =>
+      mapClassifiedWithSeller(item as ClassifiedWithRelationsRow),
+    );
+  } catch (error) {
+    logger.error("Error in searchClassifieds:", error);
+    trackError(error as Error, {
+      component: "ClassifiedsQueries",
+      action: "searchClassifieds",
+    });
+    return [];
   }
 }
 

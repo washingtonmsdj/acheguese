@@ -22,6 +22,7 @@ export function sanitizeForILike(input: string): string {
   // Remove caracteres especiais que podem ser usados em SQL injection
   // Mantém apenas letras, números, espaços e alguns caracteres seguros
   return input
+    .replace(/[(),]/g, '')
     .replace(/[%_\\]/g, '') // Remove wildcards do SQL
     .replace(/['";]/g, '') // Remove aspas e ponto-e-vírgula
     .replace(/--/g, '') // Remove comentários SQL

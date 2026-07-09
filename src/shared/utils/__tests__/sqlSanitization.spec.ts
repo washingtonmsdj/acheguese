@@ -10,6 +10,12 @@ describe('sqlSanitization', () => {
     expect(sanitizeForILike("%foo_' OR 1=1; --")).toBe('foo OR 1=1');
   });
 
+  it('removes PostgREST OR expression separators from ILIKE input', () => {
+    expect(sanitizeForILike('pizza),id.eq.secret,(x')).toBe(
+      'pizzaid.eq.secretx',
+    );
+  });
+
   it('builds a safe ILIKE pattern only when sanitized input remains', () => {
     expect(buildSafeILikePattern('  bairro  ')).toBe('%bairro%');
     expect(buildSafeILikePattern(' ;-- ')).toBeNull();
@@ -18,6 +24,9 @@ describe('sqlSanitization', () => {
   it('builds Supabase OR ILIKE filters from sanitized input', () => {
     expect(buildSafeOrILikeFilter(['title', 'description'], ' feira% ')).toBe(
       'title.ilike.%feira%,description.ilike.%feira%',
+    );
+    expect(buildSafeOrILikeFilter(['title'], 'pizza),id.eq.secret')).toBe(
+      'title.ilike.%pizzaid.eq.secret%',
     );
   });
 });

@@ -11,6 +11,7 @@
 export {
   getPostById,
   getFeed,
+  searchPublicPosts,
   getPostsByProfile,
   getPostsByType,
   getPostsByCategory,

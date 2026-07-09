@@ -7,6 +7,8 @@
 export { SearchService, searchService } from "./services/SearchService";
 export type {
   SearchCategory,
+  SearchDocument,
+  SearchDocumentType,
   SearchFilters,
   SearchResults,
 } from "./services/SearchService";

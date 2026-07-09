@@ -18,6 +18,11 @@ import {
   Star,
   MapPin,
   Loader2,
+  Users,
+  Calendar,
+  Tag,
+  MessageSquare,
+  Briefcase,
 } from "lucide-react";
 import { Input } from "@/shared/components/ui/input";
 import { BusinessLogo } from "@/shared/components/ui/business-logo";
@@ -26,7 +31,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useBusinessNavigation } from "@/modules/business/hooks/useBusinessNavigation";
 import { useGlobalSearch } from "@/core/search/hooks/useGlobalSearch";
 import { professionalPublicRoutes } from "@/core/professional/routes/professionalPublicRoutes";
-import type { SearchCategory } from "@/core/search";
+import type { SearchCategory, SearchDocument } from "@/core/search";
 
 // ============================================================================
 // TYPES
@@ -59,6 +64,7 @@ interface ProfessionalSearchItem {
 }
 
 interface SearchResultsViewModel {
+  documents: SearchDocument[];
   businesses: BusinessSearchItem[];
   professionals: ProfessionalSearchItem[];
   total: number;
@@ -71,6 +77,11 @@ interface SearchResultsViewModel {
 const FILTERS: FilterOption[] = [
   { id: "all", label: "Todos", icon: <Search className="h-3.5 w-3.5" /> },
   {
+    id: "communities",
+    label: "Comunidades",
+    icon: <Users className="h-3.5 w-3.5" />,
+  },
+  {
     id: "businesses",
     label: "Empresas",
     icon: <Store className="h-3.5 w-3.5" />,
@@ -79,6 +90,26 @@ const FILTERS: FilterOption[] = [
     id: "professionals",
     label: "Profissões e Serviços",
     icon: <Wrench className="h-3.5 w-3.5" />,
+  },
+  {
+    id: "events",
+    label: "Eventos",
+    icon: <Calendar className="h-3.5 w-3.5" />,
+  },
+  {
+    id: "classifieds",
+    label: "Classificados",
+    icon: <Tag className="h-3.5 w-3.5" />,
+  },
+  {
+    id: "opportunities",
+    label: "Oportunidades",
+    icon: <Briefcase className="h-3.5 w-3.5" />,
+  },
+  {
+    id: "posts",
+    label: "Posts",
+    icon: <MessageSquare className="h-3.5 w-3.5" />,
   },
 ];
 
@@ -189,6 +220,9 @@ export default function BuscaPage() {
                 professional.target_url || professionalPublicRoutes.home(),
               )
             }
+            onDocumentClick={(document) => {
+              if (document.url) navigate(document.url);
+            }}
           />
         )}
       </div>
@@ -279,12 +313,19 @@ function ResultsView({
   activeFilter,
   onBusinessClick,
   onProfessionalClick,
+  onDocumentClick,
 }: {
   results: SearchResultsViewModel;
   activeFilter: SearchCategory;
   onBusinessClick: (business: BusinessSearchItem) => void;
   onProfessionalClick: (professional: ProfessionalSearchItem) => void;
+  onDocumentClick: (document: SearchDocument) => void;
 }) {
+  const genericDocuments = results.documents.filter(
+    (document) =>
+      document.type !== "business" && document.type !== "professional",
+  );
+
   return (
     <AnimatePresence mode="wait">
       <motion.div
@@ -325,6 +366,21 @@ function ResultsView({
                 key={professional.id}
                 professional={professional}
                 onClick={() => onProfessionalClick(professional)}
+              />
+            ))}
+          </Section>
+        )}
+
+        {genericDocuments.length > 0 && (
+          <Section
+            title="Outros resultados"
+            icon={<Search className="h-4 w-4 text-primary" />}
+          >
+            {genericDocuments.map((document) => (
+              <SearchDocumentCard
+                key={`${document.type}-${document.id}`}
+                document={document}
+                onClick={() => onDocumentClick(document)}
               />
             ))}
           </Section>
@@ -442,6 +498,72 @@ function ProfessionalCard({
               </span>
             )}
           </div>
+        )}
+      </div>
+    </button>
+  );
+}
+
+const DOCUMENT_TYPE_LABELS: Record<SearchDocument["type"], string> = {
+  community: "Comunidade",
+  business: "Empresa",
+  professional: "Profissional",
+  opportunity: "Oportunidade",
+  classified: "Classificado",
+  event: "Evento",
+  post: "Post",
+  coupon: "Cupom",
+};
+
+function SearchDocumentCard({
+  document,
+  onClick,
+}: {
+  document: SearchDocument;
+  onClick: () => void;
+}) {
+  const disabled = !document.url;
+
+  return (
+    <button
+      type="button"
+      onClick={disabled ? undefined : onClick}
+      disabled={disabled}
+      className={cn(
+        "flex items-center gap-3 w-full p-3 rounded-xl bg-card border text-left transition-colors",
+        disabled ? "cursor-default opacity-80" : "hover:bg-accent/50",
+      )}
+    >
+      {document.imageUrl ? (
+        <img
+          src={document.imageUrl}
+          alt={document.title}
+          className="h-12 w-12 rounded-lg object-cover flex-shrink-0"
+        />
+      ) : (
+        <div className="h-12 w-12 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
+          <Search className="h-5 w-5 text-muted-foreground" />
+        </div>
+      )}
+
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold truncate">{document.title}</p>
+        <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
+          <span className="truncate">
+            {document.subtitle || DOCUMENT_TYPE_LABELS[document.type]}
+          </span>
+          {document.territoryLabel && (
+            <>
+              <span>-</span>
+              <MapPin className="h-3 w-3 flex-shrink-0" />
+              <span className="truncate">{document.territoryLabel}</span>
+            </>
+          )}
+        </div>
+        {document.description && (
+          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+            {document.description}
+          </p>
         )}
       </div>
     </button>

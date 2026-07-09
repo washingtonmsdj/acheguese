@@ -11,6 +11,7 @@ export {
 export {
   getNeighborhoodsWithClassifieds,
   getAllClassifieds,
+  searchClassifieds,
   getClassifiedById,
   getClassifiedsByCategory,
   getUserClassifieds,

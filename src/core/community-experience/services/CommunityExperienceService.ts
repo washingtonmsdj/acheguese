@@ -4,6 +4,7 @@ import type {
   CommunityExperienceResolvedTerritory,
   CommunityPublicAliasRecord,
   CommunityPublicAliasTerritoryReference,
+  CommunitySearchResult,
   CommunitySlugLookup,
   CommunityStatus,
   CommunityTerritoryType,
@@ -12,6 +13,7 @@ import type {
 } from "@/core/community-experience/types";
 
 export type { CommunityStatus, CommunityTerritoryType, TerritorialCommunityProfile };
+export type { CommunitySearchResult };
 
 function isPublicFallbackResolved(resolved: CommunityExperienceResolvedTerritory): boolean {
   return resolved.kind === "location" && resolved.location.metadata?.public_fallback === true;
@@ -151,5 +153,12 @@ export class CommunityExperienceService {
     }
 
     return fallbackFromResolved(resolved);
+  }
+
+  static async searchPublicCommunities(
+    query: string,
+    limit = 12,
+  ): Promise<CommunitySearchResult[]> {
+    return CommunityExperienceRepository.searchPublicCommunities(query, limit);
   }
 }

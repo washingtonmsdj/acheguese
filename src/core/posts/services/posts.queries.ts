@@ -12,6 +12,8 @@ import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 import { PAGINATION } from "@/shared/constants";
 import { buildSafeILikePattern } from "@/shared/utils/sqlSanitization";
+import { applyTerritoryFilter } from "@/core/location";
+import type { TerritoryFilter } from "@/core/location/types";
 import type {
   Post,
   PostStats,
@@ -224,6 +226,53 @@ export async function getFeed(params: FeedParams): Promise<FeedResult> {
       metadata: { location_id, location_ids, context },
     });
     throw new PostError("Erro ao carregar feed", "FEED_ERROR");
+  }
+}
+
+export async function searchPublicPosts(
+  query: string,
+  options: {
+    territoryFilter?: TerritoryFilter;
+    limit?: number;
+  } = {},
+): Promise<Post[]> {
+  const searchPattern = buildSafeILikePattern(query);
+  if (!searchPattern) return [];
+
+  try {
+    let dbQuery = postsQueryDb
+      .from<Post>("posts")
+      .select(
+        `
+        *,
+        author_profile:profiles!author_profile_id(id, name, avatar_url, verified),
+        location:locations(id, name, type, parent_id)
+      `,
+      )
+      .eq("is_published", true)
+      .eq("is_hidden", false)
+      .eq("is_removed", false)
+      .ilike("content", searchPattern)
+      .order("created_at", { ascending: false })
+      .limit(options.limit ?? 20);
+
+    if (options.territoryFilter && options.territoryFilter.scope !== "none") {
+      dbQuery = applyTerritoryFilter(dbQuery, options.territoryFilter) as QueryBuilder<Post>;
+    }
+
+    const { data: posts, error } = await dbQuery;
+    if (error) {
+      throw new PostError(error.message, error.code);
+    }
+
+    return (posts as Post[] | null) ?? [];
+  } catch (error) {
+    logger.error("[posts.queries] Error searching public posts:", error);
+    trackError(error as Error, {
+      component: "posts.queries",
+      action: "searchPublicPosts",
+    });
+    return [];
   }
 }
 

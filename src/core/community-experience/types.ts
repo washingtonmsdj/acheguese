@@ -138,6 +138,21 @@ export interface TerritorialCommunityProfile {
   sort_order: number;
 }
 
+export interface CommunitySearchResult {
+  id: string;
+  name: string;
+  slug: string;
+  city_id: string | null;
+  territory_type: CommunityTerritoryType;
+  territory_id: string;
+  status: CommunityStatus;
+  headline: string | null;
+  description: string | null;
+  is_featured: boolean;
+  sort_order: number;
+  public_alias: string | null;
+}
+
 export interface CommunityMembershipRecord {
   id: string;
   community_id: string;

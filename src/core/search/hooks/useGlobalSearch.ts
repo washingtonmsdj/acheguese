@@ -75,11 +75,14 @@ export function useGlobalSearch(
     results:
       results ||
       ({
+        documents: [],
+        communities: [],
         businesses: [],
         professionals: [],
         opportunities: [],
         classifieds: [],
         events: [],
+        posts: [],
         coupons: [],
         total: 0,
       } as SearchResults),
