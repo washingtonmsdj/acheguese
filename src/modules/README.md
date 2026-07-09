@@ -63,7 +63,6 @@ They live in `src/app/features` (for example: onboarding, dashboard, landings).
 - `src/core` must not import or reexport `src/modules`. When a module UI/hook is
   needed by more than one bounded context, promote the reusable contract to
   `core` and keep the old module path as a compatibility reexport only.
-- Temporary exception: only `src/core/mobility/components/driver/index.ts`
-  remains allowlisted while the Central driver layouts are consolidated. Shared
-  tracking UI already belongs to `src/core/mobility`; module paths are thin
+- There is no `src/core -> src/modules` allowlist. Shared Mobility UI and hooks
+  used by Central live in `src/core/mobility`; module paths are thin
   compatibility reexports.

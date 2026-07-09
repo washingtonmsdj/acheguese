@@ -1266,14 +1266,17 @@ Evidencia parcial:
 - `src/modules/profile` manteve apenas reexports de compatibilidade para esses
   contratos, sem uma segunda implementacao.
 - `scripts/validate-project-taxonomy.ts` passou a bloquear imports/reexports
-  `src/core -> src/modules`, mantendo allowlist temporaria apenas para o barrel
-  de layouts de motorista em `src/core/mobility/components/driver/index.ts`.
+  `src/core -> src/modules` sem allowlist.
 - `RideTrackingMap` e `useDriverLocation` foram promovidos para
   `src/core/mobility` por serem usados por mais de um dominio; os caminhos em
   `src/modules/mobility` ficaram como reexports de compatibilidade.
 - `src/core/mobility/hooks`, `src/core/mobility/components` e
   `src/core/mobility/delivery/runtime.ts` deixaram de reexportar runtime de
   `src/modules/mobility`.
+- Layouts de motorista, componentes auxiliares, chat de corrida, hooks
+  operacionais de dashboard/realtime/URLs e `buildFailedDeliveryMetadata` foram
+  promovidos para `src/core/mobility`; os caminhos antigos em
+  `src/modules/mobility` ficaram como reexports de compatibilidade.
 
 Criterio de pronto:
 
