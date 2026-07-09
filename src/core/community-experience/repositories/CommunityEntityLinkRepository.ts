@@ -1,9 +1,10 @@
 import { supabase } from "@/integrations/supabase";
-import type {
-  CommunityEntityLinkListOptions,
-  CommunityEntityLinkRecord,
-  CommunityEntityLinkRequestInput,
-  CommunityEntityType,
+import {
+  COMMUNITY_ENTITY_LINK_REQUEST_DEFAULTS,
+  type CommunityEntityLinkListOptions,
+  type CommunityEntityLinkRecord,
+  type CommunityEntityLinkRequestInput,
+  type CommunityEntityType,
 } from "@/core/community-experience/types";
 
 const COMMUNITY_ENTITY_LINK_SELECT = [
@@ -103,10 +104,10 @@ export class CommunityEntityLinkRepository {
       community_id: input.communityId,
       entity_type: input.entityType,
       entity_id: input.entityId,
-      link_type: "member_submitted",
-      status: "pending",
+      link_type: COMMUNITY_ENTITY_LINK_REQUEST_DEFAULTS.LINK_TYPE,
+      status: COMMUNITY_ENTITY_LINK_REQUEST_DEFAULTS.STATE,
       created_by_profile_id: input.createdByProfileId,
-      priority: 0,
+      priority: COMMUNITY_ENTITY_LINK_REQUEST_DEFAULTS.PRIORITY,
       metadata: input.metadata ?? {},
     };
 

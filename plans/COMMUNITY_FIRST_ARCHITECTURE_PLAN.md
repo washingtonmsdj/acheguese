@@ -489,8 +489,10 @@ Risco atual:
 
 - a primeira busca federada ja consulta communities, businesses,
   professionals, opportunities, classifieds, events e posts publicos por
-  services/read models canonicos, mas ainda nao possui indice denormalizado,
-  filtro explicito por comunidade nem contrato de descoberta da Home.
+  services/read models canonicos;
+- a Home ja consome descoberta por contrato via `HomeDiscoveryService`, mas a
+  busca ainda nao possui indice denormalizado/RPC nem filtro explicito por
+  comunidade usando `community_entity_links`.
 
 ### Home E Descoberta
 
@@ -1079,7 +1081,7 @@ Evidencia parcial:
 
 ### Fase 5 - Busca Global E Descoberta
 
-Status: em andamento, primeira entrega funcional concluida em 2026-07-08
+Status: em andamento, contrato de busca e Home discovery concluido em 2026-07-08
 
 Objetivo:
 
@@ -1096,7 +1098,7 @@ Tarefas:
 - [x] decidir por busca federada via services/read models como contrato
   inicial;
 - [ ] criar indice denormalizado/RPC de busca quando escala e ranking exigirem;
-- [ ] atualizar Home para consumir busca/descoberta por contrato.
+- [x] atualizar Home para consumir busca/descoberta por contrato.
 
 Criterio de pronto:
 
@@ -1119,8 +1121,19 @@ Evidencia parcial:
   conteudo publico publicado e nao removido;
 - `src/app/pages/BuscaPage.tsx` renderiza filtros de comunidades, eventos,
   classificados, oportunidades e posts a partir do contrato `SearchDocument`;
+- `src/core/search/services/SearchDocumentMapper.ts` centraliza a conversao de
+  entidades canonicas para `SearchDocument`, evitando mapeadores duplicados na
+  busca e na Home;
+- `src/core/landing/services/HomeDiscoveryService.ts` compoe blocos de
+  atividade e confianca da Home consumindo services canonicos de landing,
+  eventos, oportunidades e classificados, sem query direta em componente;
+- `src/app/pages/MainLandingPage.tsx` consome `HomeDiscoveryService` via React
+  Query e removeu listas estaticas de atividades/ranking;
 - `src/core/search/services/__tests__/SearchService.spec.ts` cobre query curta,
-  federacao multi-dominio e filtro por categoria.
+  federacao multi-dominio e filtro por categoria;
+- `src/core/landing/services/__tests__/HomeDiscoveryService.spec.ts` cobre
+  composicao multi-dominio, ordenacao dos destaques e tolerancia a falha
+  parcial de um dominio.
 
 ### Fase 6 - Eventos E Oportunidades
 

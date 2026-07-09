@@ -115,11 +115,16 @@ SSOT operacional:
 
 - `src/core/search`
 - `src/core/search/services/SearchService.ts`
+- `src/core/search/services/SearchDocumentMapper.ts`
+- `src/core/landing/services/HomeDiscoveryService.ts`
 
 Responsabilidade:
 
 - expor `SearchDocument` como contrato canonico de resultado para UI/Home;
 - orquestrar busca federada entre services/read models dos dominios donos;
+- centralizar mapeadores de entidades para `SearchDocument`, para que busca,
+  Home e futuras superficies de descoberta nao dupliquem formatacao, URLs,
+  tipos e metadados;
 - preservar arrays especificos de dominio apenas como compatibilidade de UI;
 - aplicar filtros por tipo e `TerritoryFilter` canonico quando o dominio
   consultado suportar esse filtro.
@@ -129,6 +134,13 @@ profissionais, oportunidades ou posts. Ele deve compor resultados consumindo
 os services canonicos de cada dominio. A primeira etapa oficial e busca
 federada via services/read models; indice denormalizado ou RPC de busca so deve
 ser criado quando houver necessidade real de ranking, latencia ou volume.
+
+`HomeDiscoveryService` e o contrato de descoberta da Home. Ele pode compor
+cards de atividade e confianca a partir de services canonicos, mas nao pode
+consultar tabelas diretamente nem recriar regras de URLs, territorio ou
+visibilidade. Componentes como `MainLandingPage` devem consumir esse contrato
+por dados ja normalizados em `SearchDocument`, mantendo a Home como superficie
+de apresentacao e nao como dominio.
 
 ## Relacionamento Oficial
 

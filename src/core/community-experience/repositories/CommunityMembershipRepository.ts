@@ -1,7 +1,8 @@
 import { supabase } from "@/integrations/supabase";
-import type {
-  CommunityMembershipRecord,
-  CommunityMembershipRequestInput,
+import {
+  COMMUNITY_MEMBERSHIP_REQUEST_DEFAULTS,
+  type CommunityMembershipRecord,
+  type CommunityMembershipRequestInput,
 } from "@/core/community-experience/types";
 
 const COMMUNITY_MEMBERSHIP_SELECT = [
@@ -64,9 +65,9 @@ export class CommunityMembershipRepository {
         community_id: input.communityId,
         profile_id: input.profileId,
         user_id: input.userId,
-        role: "member",
-        status: "pending",
-        join_method: input.joinMethod ?? "open",
+        role: COMMUNITY_MEMBERSHIP_REQUEST_DEFAULTS.ROLE,
+        status: COMMUNITY_MEMBERSHIP_REQUEST_DEFAULTS.STATE,
+        join_method: input.joinMethod ?? COMMUNITY_MEMBERSHIP_REQUEST_DEFAULTS.JOIN_METHOD,
         verified_by_residence: false,
       } as never)
       .select(COMMUNITY_MEMBERSHIP_SELECT)

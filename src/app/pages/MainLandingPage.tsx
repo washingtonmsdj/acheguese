@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
@@ -7,13 +8,12 @@ import {
   Building2,
   ChevronDown,
   ChevronRight,
-  CloudRain,
+  Calendar,
   Flame,
   Map as MapIcon,
   MapPin,
   Moon,
   MoreHorizontal,
-  PawPrint,
   Search,
   ShieldCheck,
   Star,
@@ -26,6 +26,13 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { LAUNCH_CITY_PATH, LAUNCH_URLS } from "@/config/territory";
+import { HomeDiscoveryService } from "@/core/landing/services";
+import {
+  getHomeDiscoveryDocumentHref,
+  getHomeDiscoveryDocumentMeta,
+  getHomeDiscoveryDocumentRating,
+  getHomeDiscoveryDocumentTone,
+} from "@/core/landing/utils/landingPresentation";
 import {
   DEFAULT_TILE_STYLE,
   MapLibreAdapter,
@@ -38,6 +45,7 @@ import {
 import { LocationStatus, LocationType, type Location } from "@/core/location/types";
 import { useHomeCommunityHref } from "@/core/routing/hooks/useHomeCommunityHref";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
+import type { SearchDocument } from "@/core/search";
 import { useTheme } from "@/shared/hooks/useTheme";
 
 import bairroPituba from "@/assets/bairro-pituba.jpg";
@@ -46,9 +54,6 @@ import empresasHero from "@/assets/empresas-hero.jpg";
 import gastronomyHero from "@/assets/gastronomy-hero-bg.jpg";
 import heroImg from "@/assets/hero-landing-main.jpg";
 import neighborhoodFeatured from "@/assets/neighborhood-featured.jpg";
-import personaComerciante from "@/assets/persona-comerciante.jpg";
-import personaMorador from "@/assets/persona-morador.jpg";
-import personaPrestador from "@/assets/persona-prestador.jpg";
 import servicosHero from "@/assets/servicos-hero.jpg";
 import "./MainLandingPage.css";
 
@@ -69,24 +74,6 @@ type Chip = {
   label: string;
   href: string;
   icon?: LucideIcon;
-};
-
-type ActivityItem = {
-  title: string;
-  meta: string;
-  image: string;
-  icon: LucideIcon;
-  tone: "blue" | "cyan" | "pink";
-  href?: string;
-};
-
-type RankingItem = {
-  rank: number;
-  name: string;
-  area: string;
-  rating: string;
-  image: string;
-  href: string;
 };
 
 type WeatherPoint = {
@@ -126,45 +113,6 @@ const quickChips: Chip[] = [
   { label: "Mercados", href: withQueryParams(searchHref, { q: "mercados" }) },
   { label: "Vagas", href: LAUNCH_URLS.jobs },
   { label: "Apartamentos", href: withQueryParams(LAUNCH_URLS.classifieds, { q: "apartamentos" }) },
-];
-
-const activityItems: ActivityItem[] = [
-  {
-    title: "Alerta de chuva forte",
-    meta: "Rio Vermelho • há 15 min",
-    image: personaMorador,
-    icon: CloudRain,
-    tone: "blue",
-  },
-  {
-    title: "Mutirão de limpeza",
-    meta: "Amaralina • há 1 h",
-    image: neighborhoodFeatured,
-    icon: Users,
-    tone: "cyan",
-  },
-  {
-    title: "Vaga: Auxiliar de cozinha",
-    meta: "Pituba • há 2 h",
-    image: personaPrestador,
-    icon: Briefcase,
-    tone: "pink",
-    href: LAUNCH_URLS.jobs,
-  },
-  {
-    title: "Gato encontrado",
-    meta: "Ondina • há 3 h",
-    image: personaComerciante,
-    icon: PawPrint,
-    tone: "cyan",
-  },
-];
-
-const rankingItems: RankingItem[] = [
-  { rank: 1, name: "Padaria da Esquina", area: "Rio Vermelho", rating: "4,9", image: empresasHero, href: LAUNCH_URLS.gastronomy },
-  { rank: 2, name: "Ana Cabeleireira", area: "Ondina", rating: "4,8", image: personaMorador, href: LAUNCH_URLS.services },
-  { rank: 3, name: "Eletro Bahia", area: "Pituba", rating: "4,7", image: servicosHero, href: LAUNCH_URLS.services },
-  { rank: 4, name: "Mercado Bom Preço", area: "Amaralina", rating: "4,6", image: bairroRioVermelho, href: LAUNCH_URLS.business },
 ];
 
 const stats = [
@@ -666,7 +614,62 @@ function MapPanel() {
   );
 }
 
-function ActivityPanel({ communityHref }: { communityHref: string }) {
+function getDocumentIcon(document: SearchDocument): LucideIcon {
+  switch (document.type) {
+    case "business":
+      return Building2;
+    case "professional":
+      return Wrench;
+    case "opportunity":
+      return Briefcase;
+    case "classified":
+      return Tag;
+    case "event":
+      return Calendar;
+    case "community":
+      return Users;
+    default:
+      return Bell;
+  }
+}
+
+function DocumentThumb({ document }: { document: SearchDocument }) {
+  const Icon = getDocumentIcon(document);
+
+  if (document.imageUrl) {
+    return <img src={document.imageUrl} alt="" loading="lazy" />;
+  }
+
+  return (
+    <span className="home-document-thumb" aria-hidden="true">
+      <Icon />
+    </span>
+  );
+}
+
+function PanelStatus({
+  label,
+  isLoading,
+}: {
+  label: string;
+  isLoading: boolean;
+}) {
+  return (
+    <p className="home-panel-status">
+      {isLoading ? "Carregando..." : label}
+    </p>
+  );
+}
+
+function ActivityPanel({
+  communityHref,
+  documents,
+  isLoading,
+}: {
+  communityHref: string;
+  documents: SearchDocument[];
+  isLoading: boolean;
+}) {
   return (
     <section className="home-panel home-list-panel" aria-labelledby="activity-title">
       <div className="home-panel-heading">
@@ -674,25 +677,43 @@ function ActivityPanel({ communityHref }: { communityHref: string }) {
         <Link to={communityHref}>Ver tudo</Link>
       </div>
       <div className="home-activity-list">
-        {activityItems.map((item) => {
-          const Icon = item.icon;
-          return (
-            <Link key={item.title} to={item.href ?? communityHref} className="home-activity-item">
-              <img src={item.image} alt="" loading="lazy" />
-              <span className="home-activity-copy">
-                <strong>{item.title}</strong>
-                <small>{item.meta}</small>
-              </span>
-              <Icon className={`home-activity-icon is-${item.tone}`} aria-hidden="true" />
-            </Link>
-          );
-        })}
+        {documents.length === 0 ? (
+          <PanelStatus
+            isLoading={isLoading}
+            label="Nenhuma atividade publica em destaque ainda."
+          />
+        ) : (
+          documents.map((document) => {
+            const Icon = getDocumentIcon(document);
+            const tone = getHomeDiscoveryDocumentTone(document);
+            return (
+              <Link
+                key={`${document.type}-${document.id}`}
+                to={getHomeDiscoveryDocumentHref(document, communityHref)}
+                className="home-activity-item"
+              >
+                <DocumentThumb document={document} />
+                <span className="home-activity-copy">
+                  <strong>{document.title}</strong>
+                  <small>{getHomeDiscoveryDocumentMeta(document)}</small>
+                </span>
+                <Icon className={`home-activity-icon is-${tone}`} aria-hidden="true" />
+              </Link>
+            );
+          })
+        )}
       </div>
     </section>
   );
 }
 
-function RankingPanel() {
+function RankingPanel({
+  documents,
+  isLoading,
+}: {
+  documents: SearchDocument[];
+  isLoading: boolean;
+}) {
   return (
     <section className="home-panel home-list-panel" aria-labelledby="ranking-title">
       <div className="home-panel-heading">
@@ -700,20 +721,36 @@ function RankingPanel() {
         <Link to={LAUNCH_URLS.business}>Ver mais</Link>
       </div>
       <div className="home-ranking-list">
-        {rankingItems.map((item) => (
-          <Link key={item.name} to={item.href} className="home-ranking-item">
-            <span className="home-ranking-number">{item.rank}</span>
-            <img src={item.image} alt="" loading="lazy" />
-            <span className="home-ranking-copy">
-              <strong>{item.name}</strong>
-              <small>{item.area}</small>
-            </span>
-            <span className="home-rating">
-              <Star aria-hidden="true" />
-              {item.rating}
-            </span>
-          </Link>
-        ))}
+        {documents.length === 0 ? (
+          <PanelStatus
+            isLoading={isLoading}
+            label="Nenhuma avaliacao publica em destaque ainda."
+          />
+        ) : (
+          documents.map((document, index) => {
+            const rating = getHomeDiscoveryDocumentRating(document);
+            return (
+              <Link
+                key={`${document.type}-${document.id}`}
+                to={getHomeDiscoveryDocumentHref(document, LAUNCH_URLS.business)}
+                className="home-ranking-item"
+              >
+                <span className="home-ranking-number">{index + 1}</span>
+                <DocumentThumb document={document} />
+                <span className="home-ranking-copy">
+                  <strong>{document.title}</strong>
+                  <small>{getHomeDiscoveryDocumentMeta(document)}</small>
+                </span>
+                {rating ? (
+                  <span className="home-rating">
+                    <Star aria-hidden="true" />
+                    {rating}
+                  </span>
+                ) : null}
+              </Link>
+            );
+          })
+        )}
       </div>
     </section>
   );
@@ -756,6 +793,13 @@ function StatsBar() {
 export default function MainLandingPage() {
   const communityHref = useHomeCommunityHref();
   const temperature = useCurrentTerritoryTemperature(homeSelectedTerritory);
+  const homeDiscovery = useQuery({
+    queryKey: ["home", "launch-discovery", cityPath],
+    queryFn: () => HomeDiscoveryService.getLaunchHomeDiscovery(),
+    staleTime: 5 * 60 * 1000,
+  });
+  const activityDocuments = homeDiscovery.data?.activityDocuments ?? [];
+  const trustDocuments = homeDiscovery.data?.trustDocuments ?? [];
 
   const navItems: NavItem[] = [
     { label: "Início", href: "/" },
@@ -799,8 +843,15 @@ export default function MainLandingPage() {
           <aside className="home-side" aria-label="Resumo do bairro">
             <MapPanel />
             <div className="home-side-grid">
-              <ActivityPanel communityHref={communityHref} />
-              <RankingPanel />
+              <ActivityPanel
+                communityHref={communityHref}
+                documents={activityDocuments}
+                isLoading={homeDiscovery.isLoading}
+              />
+              <RankingPanel
+                documents={trustDocuments}
+                isLoading={homeDiscovery.isLoading}
+              />
             </div>
             <TrustStrip />
           </aside>

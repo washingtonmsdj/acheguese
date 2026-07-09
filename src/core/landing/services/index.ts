@@ -21,6 +21,7 @@ export {
 } from "./LandingService";
 
 export { LandingFeaturedService } from "./LandingFeaturedService";
+export { HomeDiscoveryService } from "./HomeDiscoveryService";
 export {
   buildNeighborhoodStreamItems,
   getNeighborhoodStreamMoreConfig,
@@ -56,3 +57,7 @@ export type {
   FeaturedService,
   TerritoryStats,
 } from "./LandingFeaturedService";
+export type {
+  HomeDiscoveryOptions,
+  HomeDiscoveryResult,
+} from "./HomeDiscoveryService";

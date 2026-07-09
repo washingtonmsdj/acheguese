@@ -61,6 +61,12 @@ export const COMMUNITY_MEMBERSHIP_JOIN_METHODS = [
 export type CommunityMembershipJoinMethod =
   (typeof COMMUNITY_MEMBERSHIP_JOIN_METHODS)[number];
 
+export const COMMUNITY_MEMBERSHIP_REQUEST_DEFAULTS = {
+  ROLE: "member" as CommunityMembershipRole,
+  STATE: "pending" as CommunityMembershipStatus,
+  JOIN_METHOD: "open" as CommunityMembershipJoinMethod,
+} as const;
+
 export const COMMUNITY_ENTITY_TYPES = [
   "business",
   "event",
@@ -93,6 +99,12 @@ export const COMMUNITY_ENTITY_LINK_STATUSES = [
 
 export type CommunityEntityLinkStatus =
   (typeof COMMUNITY_ENTITY_LINK_STATUSES)[number];
+
+export const COMMUNITY_ENTITY_LINK_REQUEST_DEFAULTS = {
+  LINK_TYPE: "member_submitted" as CommunityEntityLinkType,
+  STATE: "pending" as CommunityEntityLinkStatus,
+  PRIORITY: 0,
+} as const;
 
 export type CommunityPublicAliasTerritoryReference =
   | { kind: "location"; territoryId: string | null | undefined }

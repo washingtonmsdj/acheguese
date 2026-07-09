@@ -6,6 +6,7 @@ import {
   mapEventRow,
   type EventRowWithLegacyCity,
 } from "@/core/verticals/events/mappers";
+import { EVENT_PAGE_SIZE } from "@/core/verticals/events/config/eventReadConfig";
 import type {
   EventBoundsOptions,
   EventFilters,
@@ -50,7 +51,6 @@ type EventDbClient = {
 
 const eventsDb = supabase as unknown as EventDbClient;
 const DEFAULT_BOUNDS_STATUSES: readonly PublicEventStatus[] = ["upcoming", "ongoing"];
-const EVENT_PAGE_MAX_SIZE = 50;
 
 function isUuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
@@ -107,7 +107,10 @@ export class EventReadService {
 
   async getEventsPage(input: EventPageInput = {}): Promise<EventPageOutput> {
     const page = Math.max(0, input.page ?? 0);
-    const pageSize = Math.min(Math.max(input.pageSize ?? 12, 1), EVENT_PAGE_MAX_SIZE);
+    const pageSize = Math.min(
+      Math.max(input.pageSize ?? EVENT_PAGE_SIZE.DEFAULT, EVENT_PAGE_SIZE.MIN),
+      EVENT_PAGE_SIZE.MAX,
+    );
     const from = page * pageSize;
     const to = from + pageSize - 1;
 

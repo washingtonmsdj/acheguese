@@ -5,6 +5,12 @@
  */
 
 export { SearchService, searchService } from "./services/SearchService";
+export {
+  classifiedToSearchDocument,
+  eventToSearchDocument,
+  opportunityToSearchDocument,
+  truncateSearchDescription,
+} from "./services/SearchDocumentMapper";
 export type {
   SearchCategory,
   SearchDocument,
