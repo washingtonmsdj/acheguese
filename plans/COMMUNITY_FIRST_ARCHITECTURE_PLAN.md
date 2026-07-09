@@ -1239,7 +1239,7 @@ Tarefas:
 - reduzir facades duplicadas entre `src/core` e `src/modules`;
 - [x] revisar `AppLayoutRoutes.tsx` e extrair registros declarativos por dominio;
 - arquivar docs antigos que contradizem o modelo novo;
-- adicionar validadores para impedir retorno das duplicacoes.
+- [x] adicionar validadores para impedir retorno das duplicacoes.
 
 Evidencia parcial:
 
@@ -1268,6 +1268,9 @@ Evidencia parcial:
   declarativo, evitando manter uma segunda lista manual para o mesmo dominio;
 - `src/app/routes/__tests__/appLayoutRouteRegistry.spec.ts` impede que esses
   dominios voltem a ser re-declarados diretamente em `AppLayoutRoutes.tsx`.
+- `scripts/validate-project-taxonomy.ts` agora exige o consumo do
+  `AppLayoutRouteRegistry` pelo shell e bloqueia a volta de componentes
+  territoriais extraidos diretamente em `AppLayoutRoutes.tsx`;
 - A antiga raiz `core/profile` deixou de manter hooks/componentes como
   pontes para `src/modules/profile`; `useProfileHub`, `useContaWorkspace`,
   `BusinessModulesSection`, `SectionFrame`, `EmptyPanel` e os cards de

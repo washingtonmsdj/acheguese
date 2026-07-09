@@ -17,6 +17,9 @@ const COMMUNITY_MEMBERSHIP_REPOSITORY_PATH =
   "src/core/community-experience/repositories/CommunityMembershipRepository.ts";
 const COMMUNITY_ENTITY_LINK_REPOSITORY_PATH =
   "src/core/community-experience/repositories/CommunityEntityLinkRepository.ts";
+const APP_LAYOUT_ROUTES_PATH = "src/app/routes/sections/AppLayoutRoutes.tsx";
+const APP_LAYOUT_ROUTE_REGISTRY_PATH =
+  "src/app/routes/sections/AppLayoutRouteRegistry.tsx";
 
 const CANONICAL_MODULES = [
   "admin",
@@ -154,6 +157,17 @@ const CORE_TO_MODULE_IMPORT_RE =
 const CORE_TO_MODULE_IMPORT_ALLOWLIST = new Set<string>();
 const FAVORITES_SERVICES_BARREL_IMPORT_RE =
   /from\s+["']@\/core\/favorites\/services(?:\/index)?["']/;
+const APP_LAYOUT_ROUTE_REGISTRY_MARKERS = [
+  "APP_LAYOUT_TERRITORIAL_DOMAIN_ROUTES",
+  "renderAppLayoutRouteDescriptors",
+] as const;
+const APP_LAYOUT_EXTRACTED_ROUTE_COMPONENTS = [
+  "<P.TerritorialCategoryBusinessPage />",
+  "<P.TerritorialServicesPage />",
+  "<P.TerritorialClassificadosPage />",
+  "<P.TerritorialEventosPage />",
+  "<P.TerritorialMapPage />",
+] as const;
 
 function pathExists(relativePath: string): boolean {
   return fs.existsSync(path.join(ROOT, relativePath));
@@ -324,6 +338,40 @@ function main() {
 
   if (!pathExists(COMMUNITY_FIRST_PLAN_PATH)) {
     violations.push(`Plano Community First ausente: ${COMMUNITY_FIRST_PLAN_PATH}`);
+  }
+
+  const appLayoutRoutes = readText(APP_LAYOUT_ROUTES_PATH);
+  if (!appLayoutRoutes) {
+    violations.push(`Shell de rotas da aplicacao ausente: ${APP_LAYOUT_ROUTES_PATH}`);
+  } else {
+    for (const marker of APP_LAYOUT_ROUTE_REGISTRY_MARKERS) {
+      if (!appLayoutRoutes.includes(marker)) {
+        violations.push(
+          `${APP_LAYOUT_ROUTES_PATH} deve consumir ${marker} em vez de re-declarar rotas territoriais extraidas.`,
+        );
+      }
+    }
+
+    for (const component of APP_LAYOUT_EXTRACTED_ROUTE_COMPONENTS) {
+      if (appLayoutRoutes.includes(component)) {
+        violations.push(
+          `${APP_LAYOUT_ROUTES_PATH} nao deve declarar ${component} diretamente; use ${APP_LAYOUT_ROUTE_REGISTRY_PATH}.`,
+        );
+      }
+    }
+  }
+
+  const appLayoutRouteRegistry = readText(APP_LAYOUT_ROUTE_REGISTRY_PATH);
+  if (!appLayoutRouteRegistry) {
+    violations.push(`Registry declarativo de rotas ausente: ${APP_LAYOUT_ROUTE_REGISTRY_PATH}`);
+  } else {
+    for (const component of APP_LAYOUT_EXTRACTED_ROUTE_COMPONENTS) {
+      if (!appLayoutRouteRegistry.includes(component)) {
+        violations.push(
+          `${APP_LAYOUT_ROUTE_REGISTRY_PATH} deve manter ${component} como rota territorial declarativa extraida.`,
+        );
+      }
+    }
   }
 
   const taxonomySsot = readText(TAXONOMY_SSOT_PATH);
