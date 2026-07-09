@@ -20,7 +20,6 @@ const CORE_DOMAIN_PATHS = [
   "src/core/community/alerts",
   "src/core/community-issues",
   "src/core/community-groups",
-  "src/core/community-events",
   "src/core/community-recommendations",
   "src/core/community-lost-found",
   "src/core/nearby",

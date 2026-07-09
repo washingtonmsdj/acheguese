@@ -20,7 +20,7 @@ Os owners de core por dominio sao:
 - `core/community/alerts` consumido pelo barrel publico `modules/community-alerts`
 - `core/community-issues`
 - `core/community-groups`
-- `core/community-events`
+- `core/verticals/events`
 - `core/community-recommendations`
 - `core/community-lost-found`
 - `core/nearby` para descoberta transversal

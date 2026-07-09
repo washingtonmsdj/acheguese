@@ -1343,9 +1343,12 @@ Evidencia parcial:
   a politica de nao criar markdown operacional na raiz.
 - Runtime de eventos foi promovido para
   `src/core/verticals/events/services/EventRuntimeService.ts`; telas de
-  eventos em `src/features/events`, `useEventos`, `EventoDetailPage` e
-  `core/community-events` passaram a consumir `@/core/verticals/events`,
-  deixando `CommunityEventsRuntimeService` como compatibilidade documentada.
+  eventos em `src/features/events`, `useEventos` e `EventoDetailPage` passaram
+  a consumir `@/core/verticals/events`, deixando `CommunityEventsRuntimeService`
+  como compatibilidade documentada.
+- Facades sem consumidores `src/core/community-events/index.ts` e
+  `src/modules/community-events/index.ts` foram removidas; `community-events`
+  permanece como modulo/documento transversal em `src/modules/community-events/README.md`.
 
 Criterio de pronto:
 

@@ -173,6 +173,8 @@ const APP_LAYOUT_EXTRACTED_ROUTE_COMPONENTS = [
   "<P.TerritorialMapPage />",
 ] as const;
 const COMMUNITY_MODULE_EMPTY_FACADE_PATHS = [
+  "src/core/community-events/index.ts",
+  "src/modules/community-events/index.ts",
   "src/modules/community-feed/pages/ComunidadePage.tsx",
   "src/modules/community-feed/pages/NovoPostPage.tsx",
   "src/modules/community-feed/components/composer/CreatePostModal.tsx",
@@ -437,7 +439,7 @@ function main() {
   for (const compatPath of COMMUNITY_MODULE_EMPTY_FACADE_PATHS) {
     if (pathExists(compatPath)) {
       violations.push(
-        `Facade vazia comunitaria proibida: ${compatPath}. Rotas e testes devem apontar para src/core/community-* e modules deve manter apenas boundary de produto quando houver implementacao real.`,
+        `Facade vazia comunitaria proibida: ${compatPath}. Rotas e testes devem apontar para owners canonicos explicitos, e modules deve manter apenas boundary de produto quando houver implementacao real.`,
       );
     }
   }
