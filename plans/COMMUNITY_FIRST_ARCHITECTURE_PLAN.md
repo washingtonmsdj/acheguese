@@ -1323,6 +1323,10 @@ Evidencia parcial:
   removidas; `src/core/community-lost-found` permanece como owner explicito para
   reabertura futura da superficie pausada de achados/perdidos, e
   `validate:taxonomy` bloqueia a volta desses aliases.
+- Os `index.ts` top-level vazios de `src/modules/community-feed`,
+  `src/modules/community-groups`, `src/modules/community-recommendations` e
+  `src/modules/community-lost-found` foram removidos; `validate:taxonomy`
+  bloqueia a recriacao dessas fachadas sem implementacao real.
 - `docs/CANONICAL_MAP.md`, `docs/architecture/CORE_LAYER_SSOT.md`,
   `docs/AUDITORIA_ESTRUTURAL_GLOBAL.md`,
   `docs/COMMUNITY_TRANSVERSAL_ARCHITECTURE.md` e
