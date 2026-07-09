@@ -71,9 +71,9 @@ Tabelas genericamente problematicas:
 - `community_reports`
 - `community_comments`
 - `community_post_mentions`
-- `community_posts` se ainda existir no ambiente remoto
+- `community_posts` apenas como residuo historico de schema/tipos gerados ate remocao definitiva
 
-Essas tabelas misturam semantica de varios dominios ou duplicam contratos de `core/social`, `core/comments`, `core/posts`, `core/gamification` e `core/moderation`. A remocao deve ser feita por migrations de compatibilidade: criar tabela/contrato canonico, backfill, atualizar services, criar view temporaria para consumidores legados e so entao dropar a tabela antiga.
+Essas tabelas misturam semantica de varios dominios ou duplicam contratos de `core/social`, `core/comments`, `core/posts`, `core/gamification` e `core/moderation`. A remocao deve ser feita por migrations de compatibilidade: criar tabela/contrato canonico, backfill, atualizar services, criar view temporaria para consumidores legados e so entao dropar a tabela antiga. Para feed e Q&A, a decisao atual ja esta fechada: `posts` e o SSOT de feed social, enquanto `community_questions` e `question_answers` sao o SSOT de perguntas e respostas.
 
 ## Validacao
 

@@ -104,9 +104,8 @@ const sorted = PostAdapter.sortPosts(posts, 'nearby', {
 
 ---
 
-## Débito técnico
+## Observações de escopo
 
 A validação de criação via usuário autenticado comum (RLS real com `auth.uid()`) foi validada — ver `EVIDENCIA_RLS_AUTH_FLOW_FINAL.md`.
 
-**Pendência separada — Q&A / community_posts:**
-`CommunityQAService` ainda usa a tabela `community_posts` para perguntas e respostas. Essa tabela não foi removida neste cleanup. A migração do Q&A para `posts` é débito técnico de sprint separada — não afeta o módulo de posts sociais.
+Q&A não pertence ao feed social: perguntas usam `community_questions` e respostas usam `question_answers`. `community_posts` não deve ser tratada como fonte runtime; referências restantes ficam restritas a migrations históricas, tipos gerados enquanto o schema remoto existir, ou testes que documentam a migração.

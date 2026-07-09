@@ -95,7 +95,8 @@ Entidades independentes
   professional_data
   classifieds
   events
-  posts/community_posts
+  posts
+  community_questions + question_answers
   tourist_points
 
 Experiencias
@@ -533,7 +534,8 @@ locations 1:N business_data
 locations 1:N professional_data
 locations 1:N classifieds
 locations 1:N events
-locations 1:N posts/community_posts
+locations 1:N posts
+locations 1:N community_questions
 territorial_groups N:N locations
 territory_communities N:1 locations(city_id)
 territory_communities -> territory_id por territory_type
@@ -1245,7 +1247,13 @@ Evidencia parcial:
   canonicos `is_removed`, `removed_at` e anonimiza Q&A sem acessar
   `community_posts`;
 - `tests/posts-community-posts-ssot.test.ts` impede que runtime volte a
-  consultar `.from('community_posts')`.
+  consultar `.from('community_posts')`;
+- `docs/posts/GUIA_FILTROS_TERRITORIAIS.md` e
+  `docs/COMMUNITY_TRANSVERSAL_ARCHITECTURE.md` foram alinhados para nao
+  documentar `community_posts` como fonte runtime de Q&A;
+- `tests/posts-community-posts-ssot.test.ts` tambem impede retorno do rotulo
+  ambiguo entre `posts` e `community_posts` no plano e de docs que afirmem Q&A
+  em `community_posts`.
 
 Criterio de pronto:
 
@@ -1299,7 +1307,8 @@ territoriais.
 - `professional_data`
 - `classifieds`
 - `events`
-- `posts/community_posts` apos decisao de canonico
+- `posts`
+- `community_questions`, `question_answers`
 - `tourist_points`
 
 ### Quais entidades devem ser vinculos/contextos dentro de comunidades?

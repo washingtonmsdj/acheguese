@@ -89,8 +89,7 @@ describe('Regressão: Cleanup Pós-Sprint 2', () => {
   // ── Tabela community_posts ────────────────────────────────────────────────
 
   it('zero referências a community_posts no módulo posts (src/core/posts)', () => {
-    // Escopo: apenas src/core/posts — CommunityQAService (src/core/community)
-    // ainda usa community_posts para Q&A (débito técnico separado, fora deste escopo).
+    // Escopo: apenas src/core/posts. Q&A usa community_questions/question_answers.
     const files = grepFiles(/community_posts/, ['src/core/posts']);
     expect(files, `Referências a community_posts em src/core/posts: ${files.join(', ')}`).toHaveLength(0);
   });
