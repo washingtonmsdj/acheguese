@@ -68,6 +68,7 @@ const LEGACY_FORBIDDEN_CORE_ROOTS = [
   "events",
   "gastronomy",
   "lostfound",
+  "profile",
   "supabase",
   "promotions",
   "services",

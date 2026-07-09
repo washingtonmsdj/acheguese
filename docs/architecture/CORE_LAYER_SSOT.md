@@ -49,7 +49,7 @@ Escopo: `src/core`
 | pricing | core transversal legítimo | manter em `src/core/pricing` |
 | privacy | core transversal legítimo | manter em `src/core/privacy` |
 | professional | domínio de produto | migrar para `src/modules/professionals/services` |
-| profile | legado/duplicidade conceitual | consolidar em `src/core/profiles` + `src/modules/profile` |
+| profile | legado/duplicidade conceitual | **migrado** para `src/core/profiles` + `src/modules/profile` |
 | profiles | core transversal legítimo | manter em `src/core/profiles` |
 | public-identity | core transversal legítimo | manter em `src/core/public-identity` |
 | qr | core transversal legítimo | manter em `src/core/qr` |
@@ -116,6 +116,6 @@ src/core/
 
 ## Blindagem anti-regressão
 - `scripts/validate-project-taxonomy.ts` bloqueia reintrodução em `src/core` de:
-  - `admin-identidade`, `admin-motoristas`, `community-alerts`, `community-issues`, `supabase`, `promotions`, `services`, `vagas`, `classifieds`, `civic`, `events`, `tourist-points`, `landing`, `lostfound`, `gastronomy`
+  - `admin-identidade`, `admin-motoristas`, `community-alerts`, `community-issues`, `supabase`, `profile`, `promotions`, `services`, `vagas`, `classifieds`, `civic`, `events`, `tourist-points`, `landing`, `lostfound`, `gastronomy`
 - Regra operacional: novo diretório em `src/core` só entra com ADR/SSOT e validador atualizado no mesmo PR.
 

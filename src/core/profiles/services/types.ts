@@ -32,8 +32,8 @@ export type {
 } from "@/core/profiles/views/ProfileSummary";
 export type {
   ProfileVerificationStatus,
-} from "@/core/profile/constants/verificationStatus";
-import type { ProfileVerificationStatus } from "@/core/profile/constants/verificationStatus";
+} from "@/core/profiles/constants/verificationStatus";
+import type { ProfileVerificationStatus } from "@/core/profiles/constants/verificationStatus";
 import type { ProfileActivityStats } from "./ProfileOperationTypes";
 import type {
   ProfileAssociatedBusiness,

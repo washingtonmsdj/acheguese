@@ -1259,7 +1259,7 @@ Evidencia parcial:
   reduzindo declaracoes inline em `AppLayoutRoutes.tsx` sem alterar a ordem;
 - `src/app/routes/__tests__/appLayoutRouteRegistry.spec.ts` impede que esses
   dominios voltem a ser re-declarados diretamente em `AppLayoutRoutes.tsx`.
-- `src/core/profile/hooks` e `src/core/profile/components` deixaram de ser
+- A antiga raiz `core/profile` deixou de manter hooks/componentes como
   pontes para `src/modules/profile`; `useProfileHub`, `useContaWorkspace`,
   `BusinessModulesSection`, `SectionFrame`, `EmptyPanel` e os cards de
   mobilidade reutilizados foram promovidos para `src/core/profiles`.
@@ -1277,6 +1277,9 @@ Evidencia parcial:
   operacionais de dashboard/realtime/URLs e `buildFailedDeliveryMetadata` foram
   promovidos para `src/core/mobility`; os caminhos antigos em
   `src/modules/mobility` ficaram como reexports de compatibilidade.
+- `src/core/profile` foi removido como root legado; `ProfilePublicPage`,
+  `profileDomainRules`, `mobilityServiceStatus` e `verificationStatus` agora
+  pertencem a `src/core/profiles`, e o validador bloqueia a volta desse root.
 
 Criterio de pronto:
 

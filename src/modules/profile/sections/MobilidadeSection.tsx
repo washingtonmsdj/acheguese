@@ -13,7 +13,7 @@ import {
 
 import type { MobilidadeSectionProps } from "./types";
 import type { DriverDataRecord } from "@/core/mobility/types/DriverDataRecord";
-import { getMobilityServiceStatus } from "@/core/profile/utils/mobilityServiceStatus";
+import { getMobilityServiceStatus } from "@/core/profiles/utils/mobilityServiceStatus";
 import type { MobilityRide } from "@/core/mobility/types/ride";
 
 export function MobilidadeSection({

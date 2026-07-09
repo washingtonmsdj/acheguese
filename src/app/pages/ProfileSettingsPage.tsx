@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { ArrowLeft, Link2, Settings2, Shield, Users } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
-import { canProfileHaveMembers, getProfileTypeLabel } from "@/core/profile/utils/profileDomainRules";
+import { canProfileHaveMembers, getProfileTypeLabel } from "@/core/profiles/utils/profileDomainRules";
 import { PrivacySettings } from "@/core/profiles/components/PrivacySettings";
 import { ProfileLinksManager } from "@/core/profiles/components/ProfileLinksManager";
 import { ProfileMembersManagerImproved } from "@/core/profiles/components/ProfileMembersManagerImproved";

@@ -10,7 +10,7 @@ import {
   DriverVehicleDetailsCard,
 } from "@/core/profiles/components/cards";
 import { useDriverProfileIdentity } from "@/core/mobility/hooks/useDriverProfileIdentity";
-import { getMobilityServiceStatus } from "@/core/profile/utils/mobilityServiceStatus";
+import { getMobilityServiceStatus } from "@/core/profiles/utils/mobilityServiceStatus";
 import { getMobilityServicePath } from "@/core/mobility/routes/mobilityNavigation";
 
 export interface DriverProfileLayoutProps {

@@ -32,7 +32,7 @@ import { IdentityChangeConfirmDialog } from '@/core/public-identity/components/I
 import { useIdentitySaveLogger } from '@/core/public-identity/hooks/useIdentitySaveLogger';
 import {
   getProfileTypeLabel,
-} from '@/core/profile/utils/profileDomainRules';
+} from '@/core/profiles/utils/profileDomainRules';
 import type {
   BusinessData, ProfessionalData, DriverData,
 } from '@/core/profiles/services/multi-profile/types';

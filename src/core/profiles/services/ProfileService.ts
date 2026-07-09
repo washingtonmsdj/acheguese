@@ -7,7 +7,7 @@ import { adminRolesService } from "@/core/admin/services/AdminRolesService";
 import { publicIdentityService, PublicIdentityService } from "@/core/public-identity";
 import { SessionRpcService } from "@/core/session/services/SessionRpcService";
 import { callRPC } from "@/integrations/supabase";
-import { PROFILE_VERIFICATION_STATUS } from "@/core/profile/constants/verificationStatus";
+import { PROFILE_VERIFICATION_STATUS } from "@/core/profiles/constants/verificationStatus";
 import type {
   AdminFilters,
   AdminProfileListItem,
@@ -22,7 +22,7 @@ import type {
   ProfileSummaryExtended,
   UpdateProfilePayload,
 } from "./types";
-import type { ProfileVerificationStatus } from "@/core/profile/constants/verificationStatus";
+import type { ProfileVerificationStatus } from "@/core/profiles/constants/verificationStatus";
 import type {
   ProfileLikeActivityRecord,
   ProfilePollVoteActivityRecord,

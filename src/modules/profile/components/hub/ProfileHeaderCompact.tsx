@@ -35,7 +35,7 @@ import {
   buildProfileEditUrl,
   buildPublicProfileUrl,
 } from "@/core/profiles/utils/publicProfileUrl";
-import { getProfileTypeLabel } from "@/core/profile/utils/profileDomainRules";
+import { getProfileTypeLabel } from "@/core/profiles/utils/profileDomainRules";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { ProfileCompletenessWidget } from "@/modules/profile/components/ProfileCompletenessWidget";
 import type { ProfileCompletenessRecord } from "@/modules/profile/hooks/useProfileCompleteness";

@@ -14,7 +14,7 @@ import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { Badge } from "@/shared/components/ui/badge";
 import { cn } from "@/shared/utils/cn";
-import { getProfileTypeLabel } from "@/core/profile/utils/profileDomainRules";
+import { getProfileTypeLabel } from "@/core/profiles/utils/profileDomainRules";
 import { buildPublicProfileUrl } from "@/core/profiles/utils/publicProfileUrl";
 import type {
   MultiProfileRecord,

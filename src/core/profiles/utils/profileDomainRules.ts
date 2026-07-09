@@ -9,8 +9,7 @@ import type {
   Profile,
   ProfileType,
 } from "@/core/profiles/services/multi-profile/types";
-export { resolveProfileVerificationStatus as resolveVerificationStatus } from "@/core/profile/constants/verificationStatus";
-
+export { resolveProfileVerificationStatus as resolveVerificationStatus } from "@/core/profiles/constants/verificationStatus";
 
 export function getProfileType(
   profileOrType?: Pick<Profile, "profile_type"> | ProfileType | null,

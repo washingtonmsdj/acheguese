@@ -107,7 +107,7 @@ Definir uma taxonomia unica e oficial do projeto, separando com clareza:
 - `npm run validate:docs-structure`
 
 ## 6. Observacao de governanca
-Alguns nomes em `src/core` ainda coexistem por historico (`profile/profiles`, `services/service-areas/professional/vagas`, `admin/admin-identidade/admin-motoristas`). Isso deve ser tratado por fases de consolidacao de `core`, sem quebrar contratos publicos. `src/core/profile` nao deve voltar a ser ponte para UI de `src/modules/profile`; reusable profile hooks/components agora pertencem a `src/core/profiles`.
+Alguns nomes em `src/core` ainda coexistem por historico (`services/service-areas/professional/vagas`, `admin/admin-identidade/admin-motoristas`). Isso deve ser tratado por fases de consolidacao de `core`, sem quebrar contratos publicos. `src/core/profile` foi consolidado em `src/core/profiles` e nao deve voltar.
 
 ## 7. Consolidacao de vertical oficial
 - consolidacao detalhada da vertical oficial `gastronomy`:

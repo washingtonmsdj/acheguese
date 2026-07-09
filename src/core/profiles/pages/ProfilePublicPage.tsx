@@ -24,7 +24,7 @@ import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { Separator } from '@/shared/components/ui/separator';
 import { cn } from '@/shared/utils/cn';
-import { getProfileTypeLabel } from '@/core/profile/utils/profileDomainRules';
+import { getProfileTypeLabel } from '@/core/profiles/utils/profileDomainRules';
 import { buildPublicProfileUrl } from '@/core/profiles/utils/publicProfileUrl';
 
 import type { ProfileRow as Profile } from '@/core/profiles/services/types';

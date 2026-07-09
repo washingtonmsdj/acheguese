@@ -1,4 +1,4 @@
-import type { ProfileVerificationStatus } from "@/core/profile/constants/verificationStatus";
+import type { ProfileVerificationStatus } from "@/core/profiles/constants/verificationStatus";
 
 /**
  * Profile account snapshot for UI display.

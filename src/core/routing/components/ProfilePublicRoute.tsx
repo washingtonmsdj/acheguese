@@ -1,13 +1,13 @@
-ï»¿/**
+/**
  * Profile Public Route
- * Rota pÃºblica de perfil pessoal por username: /u/:username
+ * Rota pública de perfil pessoal por username: /u/:username
  *
  * RESPONSABILIDADE:
  * - Resolver username para profile personal
- * - Exibir 404 para tipos nÃ£o pessoais
- * - Renderizar pÃ¡gina pÃºblica do perfil pessoal
+ * - Exibir 404 para tipos não pessoais
+ * - Renderizar página pública do perfil pessoal
  *
- * Rota pÃºblica canÃ´nica:
+ * Rota pública canônica:
  * - /u/:username = apenas perfil pessoal/social
  *
  * COMPORTAMENTO:
@@ -18,7 +18,7 @@ import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { profileService } from '@/core/profiles/services/ProfileService';
 import { buildPublicProfileUrl } from '@/core/profiles/utils/publicProfileUrl';
-import { ProfilePublicPage } from '@/core/profile/pages/ProfilePublicPage';
+import { ProfilePublicPage } from '@/core/profiles/pages/ProfilePublicPage';
 import { logPageNotFound } from '@/core/public-identity/utils/identity-logger';
 
 type PublicRouteProfile = Exclude<
@@ -49,7 +49,7 @@ export default function ProfilePublicRoute() {
         return { type: 'not_found' };
       }
 
-      // Perfil pÃºblico em /u Ã© exclusivo para perfil pessoal.
+      // Perfil público em /u é exclusivo para perfil pessoal.
       if (profile.profile_type === 'business') {
         logger.info('[ProfilePublicRoute] Business profile is not served on /u route', {
           username,
@@ -72,7 +72,7 @@ export default function ProfilePublicRoute() {
           profileId: profile.id,
         });
 
-        // Driver nÃ£o tem pÃ¡gina pÃºblica.
+        // Driver não tem página pública.
         return { type: 'not_found' };
       }
 
@@ -121,12 +121,12 @@ export default function ProfilePublicRoute() {
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
         <div className="max-w-md text-center">
           <p className="text-4xl font-bold text-muted-foreground">404</p>
-          <p className="mt-2 text-lg font-semibold text-foreground">Perfil nÃ£o encontrado</p>
+          <p className="mt-2 text-lg font-semibold text-foreground">Perfil não encontrado</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Este identificador nÃ£o corresponde a um perfil pessoal pÃºblico.
+            Este identificador não corresponde a um perfil pessoal público.
           </p>
           <a href="/" className="mt-4 inline-block text-sm text-primary underline">
-            Voltar para inÃ­cio
+            Voltar para início
           </a>
         </div>
       </div>

@@ -1,4 +1,4 @@
-export { resolveProfileVerificationStatus as resolveVerificationStatus } from "@/core/profile/constants/verificationStatus";
+export { resolveProfileVerificationStatus as resolveVerificationStatus } from "@/core/profiles/constants/verificationStatus";
 import type {
   PlanType,
   ProfilePermissions,

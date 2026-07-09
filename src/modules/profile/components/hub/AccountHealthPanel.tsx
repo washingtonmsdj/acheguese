@@ -6,7 +6,7 @@
 
 import { Badge } from "@/shared/components/ui/badge";
 import { SectionFrame } from "./SectionFrame";
-import { getProfileTypeLabel } from "@/core/profile/utils/profileDomainRules";
+import { getProfileTypeLabel } from "@/core/profiles/utils/profileDomainRules";
 
 import type { MultiProfileRecord } from "@/core/profiles/services/multi-profile/types";
 import type { ProfileAccountSnapshot } from "@/core/profiles/views/ProfileAccountSnapshot";
