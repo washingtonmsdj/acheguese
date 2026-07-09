@@ -7,13 +7,17 @@ import {
   Building2,
   Calendar,
   ChevronDown,
+  Dumbbell,
   Home as HomeIcon,
   MapPin,
   MoreHorizontal,
+  PawPrint,
   Search,
   ShieldCheck,
+  Scissors,
   Star,
   Sun,
+  ShoppingCart,
   Tag,
   Users,
   UtensilsCrossed,
@@ -141,12 +145,12 @@ const currentWeatherCache = new Map<string, { temperatureCelsius: number; expire
 const avatarImages = [personaMorador, personaComerciante, personaPrestador, personaEmprego];
 
 const quickChips: Chip[] = [
-  { label: "Restaurantes", href: LAUNCH_URLS.gastronomy },
-  { label: "Mercados", href: withQueryParams(searchHref, { q: "mercados" }) },
-  { label: "Salões", href: withQueryParams(searchHref, { q: "salões" }) },
-  { label: "Mecânicas", href: withQueryParams(searchHref, { q: "mecânicas" }) },
-  { label: "Academias", href: withQueryParams(searchHref, { q: "academias" }) },
-  { label: "Pet shops", href: withQueryParams(searchHref, { q: "pet shops" }) },
+  { label: "Restaurantes", href: LAUNCH_URLS.gastronomy, icon: UtensilsCrossed },
+  { label: "Mercados", href: withQueryParams(searchHref, { q: "mercados" }), icon: ShoppingCart },
+  { label: "Salões", href: withQueryParams(searchHref, { q: "salões" }), icon: Scissors },
+  { label: "Mecânicas", href: withQueryParams(searchHref, { q: "mecânicas" }), icon: Wrench },
+  { label: "Academias", href: withQueryParams(searchHref, { q: "academias" }), icon: Dumbbell },
+  { label: "Pet shops", href: withQueryParams(searchHref, { q: "pet shops" }), icon: PawPrint },
   { label: "+ Mais", href: searchHref, icon: MoreHorizontal },
 ];
 
