@@ -1,7 +1,9 @@
 import { useNavigate } from "react-router-dom";
 import {
   ArrowUpRight,
+  Bike,
   Building2,
+  Car,
   GraduationCap,
   Shield,
   Sparkles,
@@ -11,7 +13,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { useSessionContext } from "@/core/session";
-import { useProfileHub } from "@/core/profile/hooks";
+import { useProfileHub } from "@/core/profiles/hooks/useProfileHub";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
 import { centralRoutes } from "@/modules/central/routes/centralRoutes";
 
@@ -146,6 +148,46 @@ export default function CentralHubPage() {
                 <Button className="w-full" variant="outline" onClick={() => navigate(centralRoutes.servicos.create)}>
                   <Sparkles className="mr-2 h-4 w-4" />
                   Cadastrar servico
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Car className="h-5 w-5" />
+                  Motorista
+                </CardTitle>
+                <CardDescription>Ative seu cadastro para corridas de passageiros.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  className="w-full"
+                  variant="outline"
+                  onClick={() => navigate(centralRoutes.motorista.cadastro)}
+                >
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Cadastrar motorista
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Bike className="h-5 w-5" />
+                  Motoboy
+                </CardTitle>
+                <CardDescription>Ative seu cadastro para entregas locais.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  className="w-full"
+                  variant="outline"
+                  onClick={() => navigate(centralRoutes.motoboy.cadastro)}
+                >
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Cadastrar motoboy
                 </Button>
               </CardContent>
             </Card>

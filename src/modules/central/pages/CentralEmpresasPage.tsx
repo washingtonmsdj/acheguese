@@ -2,8 +2,8 @@ import { Building2, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent } from "@/shared/components/ui/card";
-import { BusinessModulesSection } from "@/core/profile/components";
-import { useProfileHub } from "@/core/profile/hooks";
+import { BusinessModulesSection } from "@/core/profiles/components/hub/BusinessModulesSection";
+import { useProfileHub } from "@/core/profiles/hooks/useProfileHub";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { navigateToSafeRedirect } from "@/shared/utils/safeRedirect";
 

@@ -121,6 +121,8 @@ export type {
 
 export { usePrivateProfileWorkspace } from "./hooks/usePrivateProfileWorkspace";
 export { useProfileEditor } from "./hooks/useProfileEditor";
+export { useContaWorkspace } from "./hooks/useContaWorkspace";
+export { useProfileHub } from "./hooks/useProfileHub";
 
 export { MultiProfileProvider, ModuleContextSync, useMultiProfileContext } from './contexts/multi-profile-runtime-context.tsx';
 export type { MultiProfileContextValue } from './contexts/multi-profile-runtime-context.tsx';
@@ -129,5 +131,14 @@ export type { UseModuleProfileResult, ModuleProfileState } from './hooks/useModu
 
 export { ActiveProfileBadge } from './components/ActiveProfileBadge';
 export { ModuleProfileGate } from './components/ModuleProfileGate';
+export {
+  BusinessModulesSection,
+  DriverOperationalSnapshotCard,
+  DriverVehicleDetailsCard,
+  EmptyPanel,
+  MobilityDetailRow,
+  MobilityMetricCard,
+  SectionFrame,
+} from "./components";
 export { buildProfileEditUrl, buildPublicProfileUrl } from "./utils/publicProfileUrl";
 

@@ -5,7 +5,10 @@ import { ArrowRight, BadgeCheck, Bike, Car, FileCheck2, IdCard, ImagePlus } from
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
-import { DriverOperationalSnapshotCard, DriverVehicleDetailsCard } from "@/core/profile/components";
+import {
+  DriverOperationalSnapshotCard,
+  DriverVehicleDetailsCard,
+} from "@/core/profiles/components/cards";
 import { useDriverProfileIdentity } from "@/core/mobility/hooks/useDriverProfileIdentity";
 import { getMobilityServiceStatus } from "@/core/profile/utils/mobilityServiceStatus";
 import { getMobilityServicePath } from "@/modules/mobility/routes/mobilityNavigation";

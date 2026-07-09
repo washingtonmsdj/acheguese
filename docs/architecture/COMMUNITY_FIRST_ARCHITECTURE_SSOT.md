@@ -205,6 +205,8 @@ Regras:
 - dados mestres permanecem no dominio dono da entidade;
 - filtros territoriais usam ids canonicos, nao nomes livres de cidade/bairro;
 - URLs publicas usam os servicos canonicos de routing/public identity.
+- contratos reutilizados por multiplos modulos devem viver em `src/core`; `core`
+  nao deve importar nem reexportar implementacao de `src/modules`.
 
 ## Fronteiras De Dominio
 
@@ -241,6 +243,8 @@ Nao devem:
 - acessar Supabase diretamente fora de service/repository aprovado;
 - redefinir entidade Comunidade Local;
 - recriar URL, territorio ou membership por conta propria.
+- expor implementacao para `src/core`; se outro modulo precisar reutilizar,
+  promova o contrato para um owner real em `core`.
 
 ### `src/app`
 

@@ -60,3 +60,8 @@ They live in `src/app/features` (for example: onboarding, dashboard, landings).
 - Modules can import from `shared`, `core`, and `integrations` through approved boundaries.
 - Cross-module implementation imports are not allowed.
 - Shared contracts and canonical services must come from `core`.
+- `src/core` must not import or reexport `src/modules`. When a module UI/hook is
+  needed by more than one bounded context, promote the reusable contract to
+  `core` and keep the old module path as a compatibility reexport only.
+- Temporary exception: legacy Mobility UI barrels in `src/core/mobility/*` still
+  reexport module runtime components until the Mobility consolidation phase.

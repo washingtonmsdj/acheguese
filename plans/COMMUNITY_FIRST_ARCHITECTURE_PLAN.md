@@ -1259,6 +1259,15 @@ Evidencia parcial:
   reduzindo declaracoes inline em `AppLayoutRoutes.tsx` sem alterar a ordem;
 - `src/app/routes/__tests__/appLayoutRouteRegistry.spec.ts` impede que esses
   dominios voltem a ser re-declarados diretamente em `AppLayoutRoutes.tsx`.
+- `src/core/profile/hooks` e `src/core/profile/components` deixaram de ser
+  pontes para `src/modules/profile`; `useProfileHub`, `useContaWorkspace`,
+  `BusinessModulesSection`, `SectionFrame`, `EmptyPanel` e os cards de
+  mobilidade reutilizados foram promovidos para `src/core/profiles`.
+- `src/modules/profile` manteve apenas reexports de compatibilidade para esses
+  contratos, sem uma segunda implementacao.
+- `scripts/validate-project-taxonomy.ts` passou a bloquear imports/reexports
+  `src/core -> src/modules`, mantendo allowlist temporaria apenas para barrels
+  legados de Mobility que serao tratados em consolidacao propria.
 
 Criterio de pronto:
 

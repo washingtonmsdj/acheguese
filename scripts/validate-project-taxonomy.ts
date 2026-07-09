@@ -147,6 +147,14 @@ const COMMUNITY_EXPERIENCE_TABLE_SSOT_PATHS = new Set([
   COMMUNITY_MEMBERSHIP_REPOSITORY_PATH,
   COMMUNITY_ENTITY_LINK_REPOSITORY_PATH,
 ]);
+const CORE_TO_MODULE_IMPORT_RE =
+  /(?:from\s+["']|export\s+(?:type\s+)?(?:\{[\s\S]*?\}|\*)\s+from\s+["'])@\/modules\//m;
+const CORE_TO_MODULE_IMPORT_ALLOWLIST = new Set([
+  "src/core/mobility/components/driver/index.ts",
+  "src/core/mobility/components/index.ts",
+  "src/core/mobility/delivery/runtime.ts",
+  "src/core/mobility/hooks/index.ts",
+]);
 
 function pathExists(relativePath: string): boolean {
   return fs.existsSync(path.join(ROOT, relativePath));
@@ -386,6 +394,17 @@ function main() {
     }
 
     const content = fs.readFileSync(filePath, "utf8");
+    if (
+      relative.startsWith("src/core/") &&
+      !isTestFile(relative) &&
+      !CORE_TO_MODULE_IMPORT_ALLOWLIST.has(relative) &&
+      CORE_TO_MODULE_IMPORT_RE.test(content)
+    ) {
+      violations.push(
+        `Dependencia invertida detectada em ${relative}: src/core nao deve importar ou reexportar src/modules. Mova o owner para core real ou importe o modulo diretamente no consumidor.`,
+      );
+    }
+
     if (
       relative.startsWith("src/") &&
       !isTestFile(relative) &&

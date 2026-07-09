@@ -6,3 +6,5 @@ export * from "./useProfileMembers";
 export * from "./useProfileLinks";
 export * from "./usePrivateProfileWorkspace";
 export * from "./useProfileEditor";
+export * from "./useContaWorkspace";
+export * from "./useProfileHub";

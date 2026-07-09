@@ -94,6 +94,11 @@ Definir uma taxonomia unica e oficial do projeto, separando com clareza:
 - modulo transversal nao ocupa topo de `modules`.
 - fluxo de app nao fica em `modules`.
 - aliases legados de modulo sao proibidos no estado atual.
+- `src/core` nao importa nem reexporta `src/modules`; contratos reutilizados por
+  mais de um modulo devem subir para um owner real em `core`.
+- Excecao temporaria e auditada: barrels de UI legados de Mobility em
+  `src/core/mobility/*` permanecem em allowlist ate a consolidacao dedicada de
+  Mobility.
 
 ## 5. Guardrails obrigatorios
 - `npm run validate:taxonomy`
@@ -102,7 +107,7 @@ Definir uma taxonomia unica e oficial do projeto, separando com clareza:
 - `npm run validate:docs-structure`
 
 ## 6. Observacao de governanca
-Alguns nomes em `src/core` ainda coexistem por historico (`profile/profiles`, `services/service-areas/professional/vagas`, `admin/admin-identidade/admin-motoristas`). Isso deve ser tratado por fases de consolidacao de `core`, sem quebrar contratos publicos.
+Alguns nomes em `src/core` ainda coexistem por historico (`profile/profiles`, `services/service-areas/professional/vagas`, `admin/admin-identidade/admin-motoristas`). Isso deve ser tratado por fases de consolidacao de `core`, sem quebrar contratos publicos. `src/core/profile` nao deve voltar a ser ponte para UI de `src/modules/profile`; reusable profile hooks/components agora pertencem a `src/core/profiles`.
 
 ## 7. Consolidacao de vertical oficial
 - consolidacao detalhada da vertical oficial `gastronomy`:
