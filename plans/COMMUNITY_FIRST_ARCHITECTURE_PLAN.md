@@ -1363,6 +1363,11 @@ Evidencia parcial:
   continuam importando paginas/subdominios explicitos.
 - `validate:taxonomy` agora bloqueia genericamente qualquer
   `src/modules/**/index.ts` cujo conteudo seja apenas `export {};`.
+- `docs/AUDITORIA_ESTRUTURAL_GLOBAL.md` foi alinhado a taxonomia Community
+  First atual, listando `community-*`, `ai`, `central`,
+  `communication-territorial`, `work-opportunities` e os verticais
+  `gastronomy`/`education`; `validate:taxonomy` agora verifica esses marcadores
+  para evitar retorno ao inventario antigo.
 
 Criterio de pronto:
 

@@ -221,6 +221,27 @@ const ACTIVE_COMMUNITY_DOC_FORBIDDEN_MARKERS = [
   "migrar para `src/modules/community`",
   "-> `src/modules/community`",
 ] as const;
+const GLOBAL_STRUCTURAL_AUDIT_REQUIRED_MARKERS = [
+  "`ai`",
+  "`central`",
+  "`communication-territorial`",
+  "`community-feed`",
+  "`community-alerts`",
+  "`community-issues`",
+  "`community-groups`",
+  "`community-events`",
+  "`community-lost-found`",
+  "`community-recommendations`",
+  "`work-opportunities`",
+  "Estado oficial atual: `gastronomy` e `education`.",
+  "`src/core/community-experience`",
+] as const;
+const GLOBAL_STRUCTURAL_AUDIT_FORBIDDEN_MARKERS = [
+  "  - `community`",
+  "community/{alerts",
+  "apenas `gastronomy` e vertical formal",
+  "agregador canonico `src/modules/community`",
+] as const;
 
 function pathExists(relativePath: string): boolean {
   return fs.existsSync(path.join(ROOT, relativePath));
@@ -483,6 +504,25 @@ function main() {
       if (content.includes(marker)) {
         violations.push(
           `${activeDocPath} nao deve apontar "${marker}" como destino atual; use Community First com src/core/community-* e src/modules/community-* explicitos.`,
+        );
+      }
+    }
+  }
+
+  const globalAudit = readText(GLOBAL_STRUCTURAL_AUDIT_PATH);
+  if (globalAudit) {
+    for (const marker of GLOBAL_STRUCTURAL_AUDIT_REQUIRED_MARKERS) {
+      if (!globalAudit.includes(marker)) {
+        violations.push(
+          `${GLOBAL_STRUCTURAL_AUDIT_PATH} esta fora da taxonomia atual; falta marcador "${marker}".`,
+        );
+      }
+    }
+
+    for (const marker of GLOBAL_STRUCTURAL_AUDIT_FORBIDDEN_MARKERS) {
+      if (globalAudit.includes(marker)) {
+        violations.push(
+          `${GLOBAL_STRUCTURAL_AUDIT_PATH} ainda contem marcador legado "${marker}".`,
         );
       }
     }

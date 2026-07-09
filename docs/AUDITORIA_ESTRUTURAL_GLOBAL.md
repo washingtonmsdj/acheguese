@@ -1,6 +1,7 @@
 ﻿# AUDITORIA ESTRUTURAL GLOBAL (SSOT)
 
 Data de referencia: 2026-04-22
+Atualizacao Community First: 2026-07-09
 Escopo: `src/app`, `src/core`, `src/modules`, `src/shared`, `src/integrations`, `docs`, `scripts`
 
 ## 1) Diagnostico das ambiguidades atuais
@@ -32,18 +33,32 @@ Escopo: `src/app`, `src/core`, `src/modules`, `src/shared`, `src/integrations`, 
 ### 2.2 Taxonomia oficial de `src/modules`
 - Modulos de topo canonicos:
   - `admin`
+  - `ai`
   - `business`
+  - `central`
   - `classifieds`
-  - `community`
+  - `communication-territorial`
+  - `community-alerts`
+  - `community-events`
+  - `community-feed`
+  - `community-groups`
+  - `community-issues`
+  - `community-lost-found`
+  - `community-recommendations`
   - `guide`
   - `mobility`
   - `professionals`
   - `profile`
+  - `work-opportunities`
 - Regras:
   - `business`/`empresas` e dominio base horizontal.
   - `business` nao e vertical.
   - Vertical oficial empresarial existe somente por declaracao em `src/core/verticals/config.ts`.
-  - Estado oficial atual: apenas `gastronomy` e vertical formal.
+  - Estado oficial atual: `gastronomy` e `education`.
+  - Community First usa modulos comunitarios explicitos; nao existe mais modulo
+    top-level `community`.
+  - Comunidade Local e core domain social e sua identidade canonica fica em
+    `src/core/community-experience`.
   - Potencial futuro nao equivale a modulo/vertical oficialmente reconhecido.
 
 ## 3) Arvore atual x arvore alvo oficial
@@ -58,14 +73,24 @@ src/
   core/
     ... (transversal + contratos canonicos)
   modules/
-    admin/{analytics,drivers,identity,...}
+    admin/
+    ai/
     business/{company,gastronomy,promotions,...}
+    central/
     classifieds/{jobs,...}
-    community/{alerts,issues,...}
+    communication-territorial/
+    community-alerts/
+    community-events/
+    community-feed/
+    community-groups/
+    community-issues/
+    community-lost-found/
+    community-recommendations/
     guide/
     mobility/{delivery,...}
     professionals/{services,...}
     profile/
+    work-opportunities/
   shared/
   integrations/
 ```
