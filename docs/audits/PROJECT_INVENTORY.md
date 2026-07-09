@@ -1,6 +1,6 @@
 # Inventario Estrutural do Projeto
 
-Gerado em 2026-07-09T12:05:01.809Z.
+Gerado em 2026-07-09T12:58:15.364Z.
 
 ## Modulos existentes
 - Core: `address`, `admin`, `ai`, `alerts`, `analytics`, `auth`, `authorization`, `banners`, `billing`, `business`, `city`, `classifieds`, `comments`, `communication-territorial`, `community`, `community-events`, `community-experience`, `community-feed`, `community-groups`, `community-issues`, `community-lost-found`, `community-recommendations`, `coverage`, `education`, `engagement`, `family`, `favorites`, `feed`, `gamification`, `geocoding`, `geospatial`, `governance`, `guide`, `infrastructure`, `interaction`, `landing`, `location`, `maps`, `media`, `messaging`, `metrics`, `mobility`, `moderation`, `navigation`, `nearby`, `notifications`, `permissions`, `posts`, `pricing`, `privacy`, `professional`, `profiles`, `public-identity`, `qr`, `realtime`, `residence`, `reviews`, `rollout`, `routing`, `safety`, `search`, `service-areas`, `session`, `social`, `subscription`, `telemetry`, `territorial`, `tracking`, `trust`, `users`, `verification`, `verticals`, `work-opportunities`
@@ -36,7 +36,7 @@ Gerado em 2026-07-09T12:05:01.809Z.
 | `professionals/services` | 64 | 28 | 0 | 11 | 22 | 0 | 0 | 0 | 1 | 0 | `high` |
 | `communication-territorial` | 7 | 8 | 0 | 0 | 6 | 0 | 2 | 0 | 0 | 2 | `high` |
 | `community-experience` | 7 | 0 | 0 | 1 | 1 | 0 | 0 | 0 | 0 | 0 | `critical` |
-| `community-feed` | 30 | 2 | 0 | 12 | 4 | 0 | 0 | 0 | 0 | 0 | `critical` |
+| `community-feed` | 30 | 2 | 0 | 12 | 5 | 0 | 0 | 0 | 0 | 0 | `critical` |
 | `community-alerts` | 6 | 0 | 0 | 2 | 7 | 0 | 0 | 0 | 0 | 0 | `high` |
 | `community-issues` | 1 | 1 | 0 | 3 | 3 | 0 | 0 | 0 | 0 | 0 | `high` |
 | `community-groups` | 6 | 2 | 0 | 3 | 1 | 0 | 0 | 0 | 0 | 0 | `medium` |
@@ -201,11 +201,11 @@ Gerado em 2026-07-09T12:05:01.809Z.
 - Admin: Parcial. Moderacao existe, mas a gestao administrativa do ciclo de posts, grupos, recomendacoes, eventos e achados/perdidos nao esta consolidada numa cobertura unica.
 - Documentacao: Parcial. Ha README do modulo, docs/posts e o contrato Community First; posts eh o SSOT de feed, enquanto Q&A pertence a community_questions/question_answers.
 - Services: `src/core/comments/services/CommentService.ts`, `src/core/comments/services/comments.mutations.ts`, `src/core/comments/services/comments.queries.ts`, `src/core/comments/services/index.ts`, `src/core/favorites/services/businessFavoriteAdapters.ts`, `src/core/favorites/services/favorites.mutations.ts`, `src/core/favorites/services/favorites.queries.ts`, `src/core/favorites/services/favoritesBusinessContract.spec.ts`, `src/core/favorites/services/index.ts`, `src/core/feed/services/FeedService.ts`, `src/core/feed/services/index.ts`, `src/core/posts/services/PostLinkEligibilityService.ts`, `src/core/posts/services/PostService.ts`, `src/core/posts/services/index.ts`, `src/core/posts/services/polls.mutations.ts`, `src/core/posts/services/polls.queries.ts`, `src/core/posts/services/post.service.rules.ts`, `src/core/posts/services/post.service.runtime.ts`, `src/core/posts/services/posts.alerts.queries.ts`, `src/core/posts/services/posts.feed.queries.ts`, `src/core/posts/services/posts.media.queries.ts`, `src/core/posts/services/posts.mutations.ts`, `src/core/posts/services/posts.queries.ts`, `src/core/posts/services/posts.user.queries.ts`, `src/core/social/services/BlockService.ts`, `src/core/social/services/GroupService.ts`, `src/core/social/services/SocialGroupInteractionsService.ts`, `src/core/social/services/SocialInteractionsService.ts`, `src/core/social/services/index.ts`, `src/core/social/services/socialInteractionStats.queries.ts`
-- Pages: `src/modules/community-feed/pages/ComunidadePage.tsx`, `src/modules/community-feed/pages/NovoPostPage.tsx`
+- Pages: `src/core/community-feed/pages/ComunidadePage.tsx`, `src/core/community-feed/pages/NovoPostPage.tsx`
 - Routes: nenhuma rota propria mapeada
 - Tabelas: `business_data`, `community_poll_options`, `community_poll_votes`, `community_polls`, `community_post_mentions`, `followed_posts`, `group_members_new`, `locations`, `post_likes_new`, `posts`, `saved_posts_new`, `user_favorite_businesses`
 - RPCs: `add_pontos`, `create_community_group`, `get_community_group_by_id`, `get_community_groups`, `increment_group_members`, `increment_user_reputation`
-- Hooks oficiais: `src/core/comments/hooks/useComments.ts`, `src/core/favorites/hooks/useFavorites.ts`, `src/core/posts/hooks/usePostActions.ts`, `src/core/social/hooks/useCommunityInteractions.ts`
+- Hooks oficiais: `src/core/comments/hooks/useComments.ts`, `src/core/community-feed/hooks/useCommunityFeed.ts`, `src/core/favorites/hooks/useFavorites.ts`, `src/core/posts/hooks/usePostActions.ts`, `src/core/social/hooks/useCommunityInteractions.ts`
 - Hooks legados: nenhum hook legado detectado
 - Arquivos legados: nenhum arquivo legado detectado
 - Acesso direto ao banco fora de service: nenhum detectado

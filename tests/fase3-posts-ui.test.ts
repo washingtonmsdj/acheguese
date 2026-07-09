@@ -8,7 +8,7 @@ import { describe, it, expect } from 'vitest';
 describe('Sprint 2 - Fase 3: Formulários e Hooks Refatorados', () => {
   describe('CreatePostModal - Resolução de location_id', () => {
     it('deve ter lógica de resolução de location_id', async () => {
-      const { CreatePostModal } = await import('@/modules/community-feed/components/composer/CreatePostModal');
+      const { CreatePostModal } = await import('@/core/community-feed/components/composer/CreatePostModal');
       const modalCode = CreatePostModal.toString();
 
       // Verificar que usa useTerritoryFilter
@@ -22,7 +22,7 @@ describe('Sprint 2 - Fase 3: Formulários e Hooks Refatorados', () => {
     });
 
     it('deve bloquear quando filter.scope === group', async () => {
-      const { CreatePostModal } = await import('@/modules/community-feed/components/composer/CreatePostModal');
+      const { CreatePostModal } = await import('@/core/community-feed/components/composer/CreatePostModal');
       const modalCode = CreatePostModal.toString();
 
       // Verificar que valida scope (pode ser === ou == após compilação)
@@ -33,7 +33,7 @@ describe('Sprint 2 - Fase 3: Formulários e Hooks Refatorados', () => {
     });
 
     it('deve ter fallback para profile.location_id', async () => {
-      const { CreatePostModal } = await import('@/modules/community-feed/components/composer/CreatePostModal');
+      const { CreatePostModal } = await import('@/core/community-feed/components/composer/CreatePostModal');
       const modalCode = CreatePostModal.toString();
 
       // Verificar que usa profile.location_id como fallback
@@ -42,7 +42,7 @@ describe('Sprint 2 - Fase 3: Formulários e Hooks Refatorados', () => {
     });
 
     it('deve exibir erro quando não houver localização', async () => {
-      const { CreatePostModal } = await import('@/modules/community-feed/components/composer/CreatePostModal');
+      const { CreatePostModal } = await import('@/core/community-feed/components/composer/CreatePostModal');
       const modalCode = CreatePostModal.toString();
 
       // Verificar mensagem de erro para ausência de localização
@@ -50,7 +50,7 @@ describe('Sprint 2 - Fase 3: Formulários e Hooks Refatorados', () => {
     });
 
     it('deve passar location_id para createPost', async () => {
-      const { CreatePostModal } = await import('@/modules/community-feed/components/composer/CreatePostModal');
+      const { CreatePostModal } = await import('@/core/community-feed/components/composer/CreatePostModal');
       const modalCode = CreatePostModal.toString();
 
       // Verificar que chama createPost com location_id
@@ -59,7 +59,7 @@ describe('Sprint 2 - Fase 3: Formulários e Hooks Refatorados', () => {
     });
 
     it('NÃO deve usar campos legados (city, neighborhood, street)', async () => {
-      const { CreatePostModal } = await import('@/modules/community-feed/components/composer/CreatePostModal');
+      const { CreatePostModal } = await import('@/core/community-feed/components/composer/CreatePostModal');
       const modalCode = CreatePostModal.toString();
 
       // Verificar que NÃO usa campos legados em createPost
@@ -75,7 +75,7 @@ describe('Sprint 2 - Fase 3: Formulários e Hooks Refatorados', () => {
 
   describe('useCreatePostForm - Dados do formulário apenas', () => {
     it('deve gerenciar apenas dados do formulário', async () => {
-      const { useCreatePostForm } = await import('@/modules/community-feed/hooks/composer/useCreatePostForm');
+      const { useCreatePostForm } = await import('@/core/community-feed/hooks/composer/useCreatePostForm');
       const hookCode = useCreatePostForm.toString();
 
       // Verificar que gerencia content, type, reach, images
@@ -86,7 +86,7 @@ describe('Sprint 2 - Fase 3: Formulários e Hooks Refatorados', () => {
     });
 
     it('NÃO deve resolver território por texto', async () => {
-      const { useCreatePostForm } = await import('@/modules/community-feed/hooks/composer/useCreatePostForm');
+      const { useCreatePostForm } = await import('@/core/community-feed/hooks/composer/useCreatePostForm');
       const hookCode = useCreatePostForm.toString();
 
       // Verificar que NÃO tem lógica de resolução de território
@@ -95,7 +95,7 @@ describe('Sprint 2 - Fase 3: Formulários e Hooks Refatorados', () => {
     });
 
     it('NÃO deve converter reach em location_id', async () => {
-      const { useCreatePostForm } = await import('@/modules/community-feed/hooks/composer/useCreatePostForm');
+      const { useCreatePostForm } = await import('@/core/community-feed/hooks/composer/useCreatePostForm');
       const hookCode = useCreatePostForm.toString();
 
       // Verificar que reach é apenas metadado
@@ -106,7 +106,7 @@ describe('Sprint 2 - Fase 3: Formulários e Hooks Refatorados', () => {
 
   describe('UnifiedComposer - SSOT territorial', () => {
     it('deve aceitar locationId como prop opcional', async () => {
-      const { UnifiedComposer } = await import('@/modules/community-feed/components/composer/UnifiedComposer');
+      const { UnifiedComposer } = await import('@/core/community-feed/components/composer/UnifiedComposer');
       const composerCode = UnifiedComposer.toString();
 
       // Verificar que aceita locationId (mesmo que não use ainda)
@@ -115,7 +115,7 @@ describe('Sprint 2 - Fase 3: Formulários e Hooks Refatorados', () => {
     });
 
     it('NÃO deve propagar city/neighborhood para CreatePostModal', async () => {
-      const { UnifiedComposer } = await import('@/modules/community-feed/components/composer/UnifiedComposer');
+      const { UnifiedComposer } = await import('@/core/community-feed/components/composer/UnifiedComposer');
       const composerCode = UnifiedComposer.toString();
 
       // Verificar que CreatePostModal não recebe city/neighborhood
@@ -129,7 +129,7 @@ describe('Sprint 2 - Fase 3: Formulários e Hooks Refatorados', () => {
     });
 
     it('NÃO deve ter novo acoplamento com campos legados', async () => {
-      const { UnifiedComposer } = await import('@/modules/community-feed/components/composer/UnifiedComposer');
+      const { UnifiedComposer } = await import('@/core/community-feed/components/composer/UnifiedComposer');
       const composerCode = UnifiedComposer.toString();
 
       // Verificar que não usa city/neighborhood em lógica nova
@@ -154,7 +154,7 @@ describe('Sprint 2 - Fase 3: Formulários e Hooks Refatorados', () => {
     });
 
     it('UI bloqueia group (não service)', async () => {
-      const { CreatePostModal } = await import('@/modules/community-feed/components/composer/CreatePostModal');
+      const { CreatePostModal } = await import('@/core/community-feed/components/composer/CreatePostModal');
       const modalCode = CreatePostModal.toString();
 
       // Verificar que UI bloqueia group (pode ser === ou == após compilação)
@@ -167,7 +167,7 @@ describe('Sprint 2 - Fase 3: Formulários e Hooks Refatorados', () => {
     });
 
     it('Form gerencia apenas dados do post', async () => {
-      const { useCreatePostForm } = await import('@/modules/community-feed/hooks/composer/useCreatePostForm');
+      const { useCreatePostForm } = await import('@/core/community-feed/hooks/composer/useCreatePostForm');
       const hookCode = useCreatePostForm.toString();
 
       // Verificar que não tem lógica de território
@@ -176,7 +176,7 @@ describe('Sprint 2 - Fase 3: Formulários e Hooks Refatorados', () => {
     });
 
     it('Território sempre por location_id', async () => {
-      const { CreatePostModal } = await import('@/modules/community-feed/components/composer/CreatePostModal');
+      const { CreatePostModal } = await import('@/core/community-feed/components/composer/CreatePostModal');
       const modalCode = CreatePostModal.toString();
 
       // Verificar que usa location_id (não city/neighborhood/street)

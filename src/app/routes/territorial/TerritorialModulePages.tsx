@@ -24,7 +24,7 @@ import { MODULE_SLUGS, buildCommunityTerritoryUrl, buildModuleTerritoryUrl } fro
 import { createLaunchPausedRoute } from '@/app/routes/launchPausedComponent';
 
 // Lazy imports dos módulos existentes
-const ComunidadePage       = lazy(() => import('@/modules/community-feed/pages/ComunidadePage'));
+const ComunidadePage       = lazy(() => import('@/core/community-feed/pages/ComunidadePage'));
 const CidadeLandingPage    = lazy(() => import('@/app/pages/CidadeLandingPage'));
 const CommunityCommunicationTabPage = createLaunchPausedRoute('Comunicacao');
 const ProblemasPage        = lazy(() => import('@/modules/community-issues/pages/ProblemasPage'));

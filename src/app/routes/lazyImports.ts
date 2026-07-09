@@ -229,7 +229,7 @@ export const WorkOpportunityDetailPage = lazy(() => import("@/modules/work-oppor
 // COMUNIDADE (GRUPOS, EVENTOS, POSTS)
 // ============================================================
 export const GruposPage = lazy(() => import("@/core/community-groups/pages/GruposPage"));
-export const ComunidadePage = lazy(() => import("@/modules/community-feed/pages/ComunidadePage"));
+export const ComunidadePage = lazy(() => import("@/core/community-feed/pages/ComunidadePage"));
 export const GrupoDetailPage = lazy(() => import("@/core/community-groups/pages/GrupoDetailPage"));
 export const EventosPage = createLaunchPausedRoute("Eventos");
 export const EventoDetailPage = createLaunchPausedRoute("Eventos");
@@ -249,7 +249,7 @@ export const AchadosPerdidosPage = createLaunchPausedRoute("Achados e perdidos")
 export const NovoAchadoPerdidoPage = createLaunchPausedRoute("Achados e perdidos");
 export const AchadoPerdidoDetailPage = createLaunchPausedRoute("Achados e perdidos");
 export const ProblemasPage = createLaunchPausedRoute("Problemas");
-export const NovoPostPage = lazy(() => import("@/modules/community-feed/pages/NovoPostPage"));
+export const NovoPostPage = lazy(() => import("@/core/community-feed/pages/NovoPostPage"));
 
 // Comunicacao Territorial
 export const CommunicationLandingPage = createLaunchPausedRoute("Comunicacao");

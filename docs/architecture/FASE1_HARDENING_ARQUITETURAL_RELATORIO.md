@@ -99,16 +99,16 @@ Gerado em: 2026-07-08T22:29:45.978Z
 
 ### Components com aliases/reexports (top)
 - `PostCard.tsx`: canonic `src/core/community/components/cards/PostCard.tsx`, aliases `src/core/community/components/PostCard.tsx`, `src/core/posts/components/PostCard.tsx`
-- `CreatePostModal.tsx`: canonic `src/core/community/components/composer/CreatePostModal.tsx`, aliases `src/core/community-feed/components/composer/CreatePostModal.tsx`, `src/modules/community-feed/components/composer/CreatePostModal.tsx`
-- `UnifiedComposer.tsx`: canonic `src/core/community/components/composer/UnifiedComposer.tsx`, aliases `src/core/community-feed/components/composer/UnifiedComposer.tsx`, `src/modules/community-feed/components/composer/UnifiedComposer.tsx`
+- `CreatePostModal.tsx`: canonic `src/core/community/components/composer/CreatePostModal.tsx`, alias ativo `src/core/community-feed/components/composer/CreatePostModal.tsx`; alias vazio em `src/modules/community-feed/components/composer/CreatePostModal.tsx` removido em 2026-07-09.
+- `UnifiedComposer.tsx`: canonic `src/core/community/components/composer/UnifiedComposer.tsx`, alias ativo `src/core/community-feed/components/composer/UnifiedComposer.tsx`; alias vazio em `src/modules/community-feed/components/composer/UnifiedComposer.tsx` removido em 2026-07-09.
 - `AchadoPerdidoDetailPage.tsx`: canonic `src/core/community/pages/AchadoPerdidoDetailPage.tsx`, aliases `src/core/community-lost-found/pages/AchadoPerdidoDetailPage.tsx`, `src/modules/community-lost-found/pages/AchadoPerdidoDetailPage.tsx`
 - `AchadosPerdidosPage.tsx`: canonic `src/core/community/pages/AchadosPerdidosPage.tsx`, aliases `src/core/community-lost-found/pages/AchadosPerdidosPage.tsx`, `src/modules/community-lost-found/pages/AchadosPerdidosPage.tsx`
-- `ComunidadePage.tsx`: canonic `src/core/community/pages/ComunidadePage.tsx`, aliases `src/core/community-feed/pages/ComunidadePage.tsx`, `src/modules/community-feed/pages/ComunidadePage.tsx`
+- `ComunidadePage.tsx`: canonic `src/core/community/pages/ComunidadePage.tsx`, alias ativo `src/core/community-feed/pages/ComunidadePage.tsx`; alias vazio em `src/modules/community-feed/pages/ComunidadePage.tsx` removido em 2026-07-09.
 - `GrupoDetailPage.tsx`: canonic `src/core/community/pages/GrupoDetailPage.tsx`, alias ativo `src/core/community-groups/pages/GrupoDetailPage.tsx`; alias vazio em `src/modules/community-groups/pages/GrupoDetailPage.tsx` removido em 2026-07-09.
 - `GruposPage.tsx`: canonic `src/core/community/pages/GruposPage.tsx`, alias ativo `src/core/community-groups/pages/GruposPage.tsx`; alias vazio em `src/modules/community-groups/pages/GruposPage.tsx` removido em 2026-07-09.
 - `NovaRecomendacaoPage.tsx`: canonic `src/core/community/pages/NovaRecomendacaoPage.tsx`, alias ativo `src/core/community-recommendations/pages/NovaRecomendacaoPage.tsx`; alias vazio em `src/modules/community-recommendations/pages/NovaRecomendacaoPage.tsx` removido em 2026-07-09.
 - `NovoAchadoPerdidoPage.tsx`: canonic `src/core/community/pages/NovoAchadoPerdidoPage.tsx`, aliases `src/core/community-lost-found/pages/NovoAchadoPerdidoPage.tsx`, `src/modules/community-lost-found/pages/NovoAchadoPerdidoPage.tsx`
-- `NovoPostPage.tsx`: canonic `src/core/community/pages/NovoPostPage.tsx`, aliases `src/core/community-feed/pages/NovoPostPage.tsx`, `src/modules/community-feed/pages/NovoPostPage.tsx`
+- `NovoPostPage.tsx`: canonic `src/core/community/pages/NovoPostPage.tsx`, alias ativo `src/core/community-feed/pages/NovoPostPage.tsx`; alias vazio em `src/modules/community-feed/pages/NovoPostPage.tsx` removido em 2026-07-09.
 - `RecomendacaoDetailPage.tsx`: canonic `src/core/community/pages/RecomendacaoDetailPage.tsx`, alias ativo `src/core/community-recommendations/pages/RecomendacaoDetailPage.tsx`; alias vazio em `src/modules/community-recommendations/pages/RecomendacaoDetailPage.tsx` removido em 2026-07-09.
 
 ### Imports profundos (top)

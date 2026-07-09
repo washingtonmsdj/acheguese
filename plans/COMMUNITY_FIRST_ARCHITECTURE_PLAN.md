@@ -1314,6 +1314,10 @@ Evidencia parcial:
   agora aponta para `src/core/community-groups/pages/*` e
   `src/core/community-recommendations/pages/*`, os aliases vazios foram
   removidos e `validate:taxonomy` bloqueia a volta desses caminhos.
+- Rotas, prefetch, pagina territorial e testes de feed comunitario deixaram de
+  depender de facades vazias em `src/modules/community-feed`; o consumo agora
+  aponta para `src/core/community-feed/*`, as cinco pontes vazias foram removidas
+  e `validate:taxonomy` bloqueia a volta desses paths.
 
 Criterio de pronto:
 

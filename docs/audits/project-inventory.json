@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-09T12:05:06.665Z",
+  "generatedAt": "2026-07-09T12:58:15.379Z",
   "inventories": [
     {
       "domain": "core/routing/location/public-identity",
@@ -1237,8 +1237,8 @@
         "src/core/social/services/socialInteractionStats.queries.ts"
       ],
       "pages": [
-        "src/modules/community-feed/pages/ComunidadePage.tsx",
-        "src/modules/community-feed/pages/NovoPostPage.tsx"
+        "src/core/community-feed/pages/ComunidadePage.tsx",
+        "src/core/community-feed/pages/NovoPostPage.tsx"
       ],
       "routes": [],
       "tables": [
@@ -1265,6 +1265,7 @@
       ],
       "officialHooks": [
         "src/core/comments/hooks/useComments.ts",
+        "src/core/community-feed/hooks/useCommunityFeed.ts",
         "src/core/favorites/hooks/useFavorites.ts",
         "src/core/posts/hooks/usePostActions.ts",
         "src/core/social/hooks/useCommunityInteractions.ts"

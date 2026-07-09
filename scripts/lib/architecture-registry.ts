@@ -377,6 +377,7 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
       "src/core/social",
       "src/core/favorites",
       "src/core/feed",
+      "src/core/community-feed",
       "src/modules/community-feed",
     ],
     docsPaths: [

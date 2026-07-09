@@ -41,7 +41,7 @@ const PREFETCHERS: Array<{
   },
   {
     test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.community),
-    load: () => import("@/modules/community-feed/pages/ComunidadePage"),
+    load: () => import("@/core/community-feed/pages/ComunidadePage"),
     surface: "community",
   },
   {

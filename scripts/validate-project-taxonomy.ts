@@ -169,14 +169,24 @@ const APP_LAYOUT_EXTRACTED_ROUTE_COMPONENTS = [
   "<P.TerritorialEventosPage />",
   "<P.TerritorialMapPage />",
 ] as const;
-const COMMUNITY_MODULE_PAGE_COMPAT_PATHS = [
+const COMMUNITY_MODULE_EMPTY_FACADE_PATHS = [
+  "src/modules/community-feed/pages/ComunidadePage.tsx",
+  "src/modules/community-feed/pages/NovoPostPage.tsx",
+  "src/modules/community-feed/components/composer/CreatePostModal.tsx",
+  "src/modules/community-feed/components/composer/UnifiedComposer.tsx",
+  "src/modules/community-feed/hooks/composer/useCreatePostForm.ts",
   "src/modules/community-groups/pages/GruposPage.tsx",
   "src/modules/community-groups/pages/GrupoDetailPage.tsx",
   "src/modules/community-recommendations/pages/RecomendacoesPage.tsx",
   "src/modules/community-recommendations/pages/NovaRecomendacaoPage.tsx",
   "src/modules/community-recommendations/pages/RecomendacaoDetailPage.tsx",
 ] as const;
-const COMMUNITY_MODULE_PAGE_COMPAT_IMPORTS = [
+const COMMUNITY_MODULE_EMPTY_FACADE_IMPORTS = [
+  "@/modules/community-feed/pages/ComunidadePage",
+  "@/modules/community-feed/pages/NovoPostPage",
+  "@/modules/community-feed/components/composer/CreatePostModal",
+  "@/modules/community-feed/components/composer/UnifiedComposer",
+  "@/modules/community-feed/hooks/composer/useCreatePostForm",
   "@/modules/community-groups/pages/GruposPage",
   "@/modules/community-groups/pages/GrupoDetailPage",
   "@/modules/community-recommendations/pages/RecomendacoesPage",
@@ -393,19 +403,19 @@ function main() {
   if (!lazyImports) {
     violations.push(`Registry de lazy imports ausente: ${APP_LAZY_IMPORTS_PATH}`);
   } else {
-    for (const forbiddenImport of COMMUNITY_MODULE_PAGE_COMPAT_IMPORTS) {
+    for (const forbiddenImport of COMMUNITY_MODULE_EMPTY_FACADE_IMPORTS) {
       if (lazyImports.includes(forbiddenImport)) {
         violations.push(
-          `${APP_LAZY_IMPORTS_PATH} nao deve carregar pagina comunitaria por facade de src/modules (${forbiddenImport}). Use o owner canonico em src/core/community-*`,
+          `${APP_LAZY_IMPORTS_PATH} nao deve carregar recurso comunitario por facade vazia de src/modules (${forbiddenImport}). Use o owner canonico em src/core/community-*`,
         );
       }
     }
   }
 
-  for (const compatPath of COMMUNITY_MODULE_PAGE_COMPAT_PATHS) {
+  for (const compatPath of COMMUNITY_MODULE_EMPTY_FACADE_PATHS) {
     if (pathExists(compatPath)) {
       violations.push(
-        `Facade duplicada de pagina comunitaria proibida: ${compatPath}. Rotas devem apontar para src/core/community-* e modules deve manter apenas boundary de produto quando houver implementacao real.`,
+        `Facade vazia comunitaria proibida: ${compatPath}. Rotas e testes devem apontar para src/core/community-* e modules deve manter apenas boundary de produto quando houver implementacao real.`,
       );
     }
   }
