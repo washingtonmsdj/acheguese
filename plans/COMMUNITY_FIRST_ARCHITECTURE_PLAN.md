@@ -1183,7 +1183,7 @@ Tarefas:
 - [x] definir se `vagas` permanece em `classifieds/jobs` ou vira oportunidades
   canonicas;
 - [x] atualizar route registry e launch gates;
-- criar testes E2E antes de reabrir superficies.
+- [x] criar testes E2E antes de reabrir superficies.
 
 Criterio de pronto:
 
@@ -1208,6 +1208,10 @@ Evidencia parcial:
   sob o gate `jobs`.
 - `src/app/routes/__tests__/jobsLaunchScope.spec.ts` impede regressao para
   stubs duplicados e confirma que a liberacao publica depende do gate unico.
+- `tests/e2e/community-opportunities-operational.spec.ts` cobre rotas globais,
+  territoriais e community-scoped de `vagas`/`oportunidades`, garantindo que
+  continuam isoladas pelo launch gate `jobs` e sem renderizar conteudo runtime
+  antes da reabertura oficial.
 
 ### Fase 7 - Limpeza De Duplicacoes
 
