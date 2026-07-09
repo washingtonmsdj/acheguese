@@ -395,10 +395,10 @@ Entidades atuais:
 SSOT recomendado:
 
 - `events` para evento canonico.
-- `src/core/verticals/events` para leitura publica canonica, pois
+- `src/core/verticals/events` para leitura e mutacoes canonicas, pois
   `src/core/events` e bloqueado pelo SSOT de core como pasta legada.
-- Consolidar escrita, participacao e check-in em etapas futuras antes de
-  reativar modulo publico amplo.
+- Evoluir join/leave/check-in para RPCs atomicas dedicadas antes de reativar
+  modulo publico amplo em escala.
 
 Responsabilidade:
 
@@ -425,8 +425,10 @@ Evidencia parcial:
 - `src/core/verticals/events` centraliza leitura publica de `events` via
   `EventReadService`;
 - `CommunityEventsRuntimeService` delega listagem, detalhe, paginacao, mapa,
-  recentes e contagens ao `core/verticals/events`, mantendo temporariamente escrita,
-  participacao e check-in no runtime comunitario.
+  recentes e contagens ao `core/verticals/events`;
+- `EventMutationService` centraliza criacao, atualizacao, remocao,
+  participacao e check-in de eventos, mantendo `CommunityEventsRuntimeService`
+  como fachada de compatibilidade.
 
 ### Posts, Feed E Interacoes Sociais
 
@@ -1092,7 +1094,7 @@ Criterio de pronto:
 
 ### Fase 6 - Eventos E Oportunidades
 
-Status: pendente
+Status: em andamento
 
 Objetivo:
 
@@ -1101,8 +1103,10 @@ Objetivo:
 Tarefas:
 
 - [x] criar/confirmar `core/verticals/events` para leitura publica;
-- [ ] consolidar escrita, participacao e check-in de eventos no dominio
-  canonico;
+- [x] consolidar fronteira TypeScript de escrita, participacao e check-in em
+  `EventMutationService`;
+- [ ] criar RPCs atomicas dedicadas para join/leave/check-in e contador de
+  participantes antes de escala publica ampla;
 - definir se `vagas` permanece em `classifieds/jobs` ou vira oportunidades
   canonicas;
 - atualizar route registry e launch gates;
