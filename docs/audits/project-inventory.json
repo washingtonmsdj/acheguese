@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-09T12:58:15.379Z",
+  "generatedAt": "2026-07-09T13:30:43.013Z",
   "inventories": [
     {
       "domain": "core/routing/location/public-identity",
@@ -1588,6 +1588,8 @@
     {
       "domain": "community-lost-found",
       "services": [
+        "src/core/community-lost-found/services/LostFoundService.ts",
+        "src/core/community-lost-found/services/index.ts",
         "src/core/community/services/CivicReportService.ts",
         "src/core/community/services/CommunityEventsRuntimeService.ts",
         "src/core/community/services/CommunityGamificationService.ts",
@@ -1603,9 +1605,9 @@
         "src/core/community/services/index.ts"
       ],
       "pages": [
-        "src/modules/community-lost-found/pages/AchadoPerdidoDetailPage.tsx",
-        "src/modules/community-lost-found/pages/AchadosPerdidosPage.tsx",
-        "src/modules/community-lost-found/pages/NovoAchadoPerdidoPage.tsx"
+        "src/core/community-lost-found/pages/AchadoPerdidoDetailPage.tsx",
+        "src/core/community-lost-found/pages/AchadosPerdidosPage.tsx",
+        "src/core/community-lost-found/pages/NovoAchadoPerdidoPage.tsx"
       ],
       "routes": [],
       "tables": [

@@ -1318,6 +1318,10 @@ Evidencia parcial:
   depender de facades vazias em `src/modules/community-feed`; o consumo agora
   aponta para `src/core/community-feed/*`, as cinco pontes vazias foram removidas
   e `validate:taxonomy` bloqueia a volta desses paths.
+- Facades vazias de paginas em `src/modules/community-lost-found/pages` foram
+  removidas; `src/core/community-lost-found` permanece como owner explicito para
+  reabertura futura da superficie pausada de achados/perdidos, e
+  `validate:taxonomy` bloqueia a volta desses aliases.
 
 Criterio de pronto:
 

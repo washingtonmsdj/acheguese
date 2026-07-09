@@ -180,6 +180,9 @@ const COMMUNITY_MODULE_EMPTY_FACADE_PATHS = [
   "src/modules/community-recommendations/pages/RecomendacoesPage.tsx",
   "src/modules/community-recommendations/pages/NovaRecomendacaoPage.tsx",
   "src/modules/community-recommendations/pages/RecomendacaoDetailPage.tsx",
+  "src/modules/community-lost-found/pages/AchadosPerdidosPage.tsx",
+  "src/modules/community-lost-found/pages/NovoAchadoPerdidoPage.tsx",
+  "src/modules/community-lost-found/pages/AchadoPerdidoDetailPage.tsx",
 ] as const;
 const COMMUNITY_MODULE_EMPTY_FACADE_IMPORTS = [
   "@/modules/community-feed/pages/ComunidadePage",
@@ -192,6 +195,9 @@ const COMMUNITY_MODULE_EMPTY_FACADE_IMPORTS = [
   "@/modules/community-recommendations/pages/RecomendacoesPage",
   "@/modules/community-recommendations/pages/NovaRecomendacaoPage",
   "@/modules/community-recommendations/pages/RecomendacaoDetailPage",
+  "@/modules/community-lost-found/pages/AchadosPerdidosPage",
+  "@/modules/community-lost-found/pages/NovoAchadoPerdidoPage",
+  "@/modules/community-lost-found/pages/AchadoPerdidoDetailPage",
 ] as const;
 
 function pathExists(relativePath: string): boolean {

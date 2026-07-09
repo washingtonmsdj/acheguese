@@ -533,7 +533,11 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
   {
     id: "community-lost-found",
     label: "community-lost-found",
-    sourceRoots: ["src/modules/community-lost-found", "src/core/community/services"],
+    sourceRoots: [
+      "src/core/community-lost-found",
+      "src/modules/community-lost-found",
+      "src/core/community/services",
+    ],
     docsPaths: ["src/modules/community-lost-found/README.md"],
     ssotPaths: ["src/core/community/services/LostFoundRuntimeService.ts"],
     routePrefixes: ["/achados-perdidos", "/achados-perdidos/novo", "/achados-perdidos/:id"],

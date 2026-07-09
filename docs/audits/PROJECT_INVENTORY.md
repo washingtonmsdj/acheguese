@@ -1,6 +1,6 @@
 # Inventario Estrutural do Projeto
 
-Gerado em 2026-07-09T12:58:15.364Z.
+Gerado em 2026-07-09T13:30:43.006Z.
 
 ## Modulos existentes
 - Core: `address`, `admin`, `ai`, `alerts`, `analytics`, `auth`, `authorization`, `banners`, `billing`, `business`, `city`, `classifieds`, `comments`, `communication-territorial`, `community`, `community-events`, `community-experience`, `community-feed`, `community-groups`, `community-issues`, `community-lost-found`, `community-recommendations`, `coverage`, `education`, `engagement`, `family`, `favorites`, `feed`, `gamification`, `geocoding`, `geospatial`, `governance`, `guide`, `infrastructure`, `interaction`, `landing`, `location`, `maps`, `media`, `messaging`, `metrics`, `mobility`, `moderation`, `navigation`, `nearby`, `notifications`, `permissions`, `posts`, `pricing`, `privacy`, `professional`, `profiles`, `public-identity`, `qr`, `realtime`, `residence`, `reviews`, `rollout`, `routing`, `safety`, `search`, `service-areas`, `session`, `social`, `subscription`, `telemetry`, `territorial`, `tracking`, `trust`, `users`, `verification`, `verticals`, `work-opportunities`
@@ -42,7 +42,7 @@ Gerado em 2026-07-09T12:58:15.364Z.
 | `community-groups` | 6 | 2 | 0 | 3 | 1 | 0 | 0 | 0 | 0 | 0 | `medium` |
 | `community-events` | 13 | 0 | 0 | 11 | 0 | 0 | 0 | 0 | 0 | 0 | `medium` |
 | `community-recommendations` | 27 | 26 | 0 | 17 | 57 | 0 | 0 | 0 | 0 | 0 | `medium` |
-| `community-lost-found` | 13 | 3 | 0 | 11 | 0 | 0 | 0 | 0 | 0 | 0 | `medium` |
+| `community-lost-found` | 15 | 3 | 0 | 11 | 0 | 0 | 0 | 0 | 0 | 0 | `medium` |
 | `map` | 18 | 1 | 0 | 4 | 10 | 0 | 0 | 0 | 0 | 0 | `high` |
 | `classifieds` | 23 | 29 | 0 | 8 | 21 | 0 | 0 | 0 | 1 | 0 | `high` |
 | `mobility` | 14 | 10 | 0 | 6 | 41 | 0 | 1 | 0 | 6 | 1 | `critical` |
@@ -308,8 +308,8 @@ Gerado em 2026-07-09T12:58:15.364Z.
 - SSOT atual: Achados e perdidos deve depender de core e location_id.
 - Admin: Pendente. Sem superficie administrativa dedicada.
 - Documentacao: Inicial. Boundary separado do antigo agregador community.
-- Services: `src/core/community/services/CivicReportService.ts`, `src/core/community/services/CommunityEventsRuntimeService.ts`, `src/core/community/services/CommunityGamificationService.ts`, `src/core/community/services/CommunityGroupsService.ts`, `src/core/community/services/CommunityLocationService.ts`, `src/core/community/services/CommunityQAService.ts`, `src/core/community/services/CommunityRolloutService.ts`, `src/core/community/services/CommunityRpcService.ts`, `src/core/community/services/CommunityService.ts`, `src/core/community/services/LostFoundRuntimeService.ts`, `src/core/community/services/SponsoredAdsRuntimeService.ts`, `src/core/community/services/community.types.ts`, `src/core/community/services/index.ts`
-- Pages: `src/modules/community-lost-found/pages/AchadoPerdidoDetailPage.tsx`, `src/modules/community-lost-found/pages/AchadosPerdidosPage.tsx`, `src/modules/community-lost-found/pages/NovoAchadoPerdidoPage.tsx`
+- Services: `src/core/community-lost-found/services/LostFoundService.ts`, `src/core/community-lost-found/services/index.ts`, `src/core/community/services/CivicReportService.ts`, `src/core/community/services/CommunityEventsRuntimeService.ts`, `src/core/community/services/CommunityGamificationService.ts`, `src/core/community/services/CommunityGroupsService.ts`, `src/core/community/services/CommunityLocationService.ts`, `src/core/community/services/CommunityQAService.ts`, `src/core/community/services/CommunityRolloutService.ts`, `src/core/community/services/CommunityRpcService.ts`, `src/core/community/services/CommunityService.ts`, `src/core/community/services/LostFoundRuntimeService.ts`, `src/core/community/services/SponsoredAdsRuntimeService.ts`, `src/core/community/services/community.types.ts`, `src/core/community/services/index.ts`
+- Pages: `src/core/community-lost-found/pages/AchadoPerdidoDetailPage.tsx`, `src/core/community-lost-found/pages/AchadosPerdidosPage.tsx`, `src/core/community-lost-found/pages/NovoAchadoPerdidoPage.tsx`
 - Routes: nenhuma rota propria mapeada
 - Tabelas: `ad_campaigns`, `civic_engagement_scores`, `civic_report_comments`, `civic_reports`, `community_badges`, `community_interactions`, `community_profiles`, `community_questions`, `groups`, `question_answer_likes`, `question_answers`
 - RPCs: `increment_civic_upvote`
