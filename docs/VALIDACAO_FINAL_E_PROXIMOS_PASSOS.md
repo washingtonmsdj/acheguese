@@ -8,7 +8,7 @@ Este relatorio era um snapshot antigo de validacao. Ele nao deve ser usado para 
 
 - Status operacional atual: [STATUS_ATUAL.md](./STATUS_ATUAL.md)
 - Plano executavel atual: [ACAO_EXECUTAVEL_AUDITORIA_HIPERLOCAL.md](./ACAO_EXECUTAVEL_AUDITORIA_HIPERLOCAL.md)
-- Checklist de documentos obsoletos: [audits/AUDITORIA_DOCS_OBSOLETOS.md](./audits/AUDITORIA_DOCS_OBSOLETOS.md)
+- Indice canonico de documentacao: [INDEX_CANONICO.md](./INDEX_CANONICO.md)
 
 ## Regra
 

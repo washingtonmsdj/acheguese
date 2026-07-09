@@ -1,5 +1,10 @@
 # Auditoria Estrutural Modular - Estado Real
 
+> Historico: snapshot estrutural de 2026-04-22. Para decisao atual, use
+> `docs/architecture/TAXONOMY_SSOT.md`,
+> `docs/architecture/CORE_LAYER_SSOT.md` e
+> `docs/architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md`.
+
 Data: 2026-04-22
 
 ## Escopo executado
@@ -42,7 +47,9 @@ Fluxos de app removidos de `src/modules`:
 - `src/app/features/landing`
 - `src/app/features/business-landing`
 
-Inventario detalhado por metrica e classificacao automatizada: `docs/AUDITORIA_MODULAR_INVENTARIO_FINAL.md` e `docs/audits/module-audit-inventory.json`.
+Inventario detalhado por metrica e classificacao automatizada:
+`docs/audits/historical/AUDITORIA_MODULAR_INVENTARIO_FINAL_2026-04-22.md`
+e `docs/audits/module-audit-inventory.json`.
 
 ## Problemas objetivos por modulo (estado atual)
 - Nenhum problema estrutural bloqueante identificado nos modulos de produto auditados.

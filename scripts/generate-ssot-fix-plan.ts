@@ -6,7 +6,7 @@
  * baseado em impacto, criticidade e esforço estimado.
  */
 
-import { readFileSync, readdirSync, statSync, writeFileSync } from 'fs';
+import { mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'fs';
 import { join, relative } from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -35,7 +35,10 @@ const PRIORITY_CONFIG = {
   // Arquivos de baixa prioridade
   low: [
     'src/shared/hooks/',
-    'src/modules/community/',
+    'src/core/community-feed/',
+    'src/core/community-issues/',
+    'src/core/community-lost-found/',
+    'src/modules/community-alerts/',
   ],
 };
 
@@ -198,11 +201,13 @@ function generateFixPlan(): void {
   report += '- Final testing\n\n';
   
   // Salvar relatório
-  const reportPath = join(rootDir, 'SSOT_FIX_PLAN.md');
+  const plansDir = join(rootDir, 'plans');
+  mkdirSync(plansDir, { recursive: true });
+  const reportPath = join(plansDir, 'SSOT_FIX_PLAN.md');
   writeFileSync(reportPath, report, 'utf-8');
   
   console.log('✅ Fix plan generated successfully!');
-  console.log(`📄 Report saved to: SSOT_FIX_PLAN.md\n`);
+  console.log(`📄 Report saved to: plans/SSOT_FIX_PLAN.md\n`);
   
   // Mostrar resumo
   console.log('📊 Summary:');

@@ -1,5 +1,9 @@
 # Inventario Modular Final (Auditoria Estrutural)
 
+> Historico: inventario gerado em 2026-04-22. Para ownership vigente, use
+> `docs/CANONICAL_MAP.md` e os README dos dominios atuais em `src/core/*` e
+> `src/modules/*`.
+
 Data: 2026-04-22
 
 ## Resumo

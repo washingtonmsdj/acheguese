@@ -1328,6 +1328,18 @@ Evidencia parcial:
   `docs/posts/GUIA_FILTROS_TERRITORIAIS.md` foram alinhados para nao apontar
   mais `src/modules/community` como destino atual; `validate:taxonomy` bloqueia
   a volta desses marcadores nos docs ativos.
+- `docs/AUDITORIA_ESTRUTURAL_MODULOS.md`,
+  `docs/AUDITORIA_MODULAR_INVENTARIO_FINAL.md` e
+  `docs/AUDITORIA_PRODUTO_HIPERLOCAL_CHECKLIST.md` foram arquivados em
+  `docs/audits/historical/`; `README.md`, `docs/INDEX_CANONICO.md`,
+  `docs/ACAO_EXECUTAVEL_AUDITORIA_HIPERLOCAL.md`, `docs/STATUS.md`,
+  `docs/STATUS_ATUAL.md` e
+  `docs/VALIDACAO_FINAL_E_PROXIMOS_PASSOS.md` foram atualizados para nao
+  tratar esses snapshots como SSOT vigente nem apontar para checklist
+  documental ausente.
+- `scripts/generate-ssot-fix-plan.ts` deixou de priorizar
+  `src/modules/community/` e passou a gerar `plans/SSOT_FIX_PLAN.md`, mantendo
+  a politica de nao criar markdown operacional na raiz.
 
 Criterio de pronto:
 

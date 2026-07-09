@@ -56,12 +56,14 @@ Regras obrigatorias:
 
 Leia antes de executar:
 
-- `docs/AUDITORIA_PRODUTO_HIPERLOCAL_CHECKLIST.md`
+- `docs/INDEX_CANONICO.md`
+- `docs/CURRENT_RULES.md`
+- `docs/CANONICAL_MAP.md`
+- `plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md`
 - `docs/PLANO_MESTRE_EXECUCAO_INTEGRAL_SSOT.md`
 - `docs/audits/AUDITORIA_MODULO_MOBILIDADE.md`
 - `docs/audits/AUDITORIA_MODULO_PROFISSIONAIS.md`
 - `docs/audits/AUDITORIA_MODULO_GASTRONOMIA_NICHOS.md`
-- `docs/audits/AUDITORIA_DOCS_OBSOLETOS.md`
 - `docs/DECISAO_ROTEAMENTO_TERRITORIAL.md`
 - `package.json`
 
@@ -69,6 +71,8 @@ Documentos que nao devem ser tratados como verdade sem revisao:
 
 - Docs antigos com termos como `FINAL`, `100%`, `completo`, `pronto para producao`, `zero TODO`.
 - Relatorios historicos soltos na raiz.
+- Snapshots em `docs/audits/historical/`, incluindo checklists de produto e
+  auditorias modulares antigas.
 - READMEs de migracao que ainda citam modelos legados.
 
 ## Validacoes Obrigatorias
@@ -514,7 +518,6 @@ Arquivos com evidencia:
 - `src/core/community/pages/ComunidadePage.tsx`
 - `src/core/community/components/CommentsModal.tsx`
 - `src/core/community/components/CommentItem.tsx`
-- `src/modules/community/components/CommentsModal.tsx`
 
 Passos:
 
@@ -525,7 +528,7 @@ Passos:
 Criterio de aceite:
 
 - [x] `rg -n "confirm\\(" src/modules/business/gastronomy -S` nao encontra esses casos.
-- [x] `rg -n "confirm\\(" src/app/pages/OfflineSettingsPage.tsx src/core/community src/modules/community -g "*.tsx" -g "*.ts"` nao encontra casos nos fluxos auditados.
+- [x] `rg -n "confirm\\(" src/app/pages/OfflineSettingsPage.tsx src/core/community src/core/community-feed src/core/community-issues src/core/community-lost-found -g "*.tsx" -g "*.ts"` nao encontra casos nos fluxos auditados.
 - [x] Acoes destrutivas usam `ConfirmActionDialog`, baseado em `AlertDialog` do design system.
 - [x] Dialogs preservam estado pendente e bloqueiam confirmacao quando ha operacao destrutiva em andamento.
 

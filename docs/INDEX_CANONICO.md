@@ -9,7 +9,7 @@ Data de referencia: 2026-07-09
 4. [Status atual](./STATUS_ATUAL.md)
 5. [Plano executavel da auditoria hiperlocal](./ACAO_EXECUTAVEL_AUDITORIA_HIPERLOCAL.md)
 6. [Auditoria estrutural global](./AUDITORIA_ESTRUTURAL_GLOBAL.md)
-7. [Auditoria estrutural de modulos](./AUDITORIA_ESTRUTURAL_MODULOS.md)
+7. Arquitetura-base Community First: `docs/architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md`
 
 ## Fontes ativas por tema
 - Regras SSOT e governanca: [CURRENT_RULES.md](./CURRENT_RULES.md)
@@ -32,7 +32,6 @@ Data de referencia: 2026-07-09
 - Mapa de ownership por assunto: [CANONICAL_MAP.md](./CANONICAL_MAP.md)
 - Estado operacional atual: [STATUS_ATUAL.md](./STATUS_ATUAL.md)
 - Plano operacional atual: [ACAO_EXECUTAVEL_AUDITORIA_HIPERLOCAL.md](./ACAO_EXECUTAVEL_AUDITORIA_HIPERLOCAL.md)
-- Auditoria estrutural e plano de correcao: [AUDITORIA_ESTRUTURAL_MODULOS.md](./AUDITORIA_ESTRUTURAL_MODULOS.md)
 - Migracoes e banco: [MIGRATIONS.md](./MIGRATIONS.md)
 - Supabase remoto e segredos: [SUPABASE_SECRETS.md](./SUPABASE_SECRETS.md)
 - Seguranca: [SECURITY.md](./SECURITY.md)
@@ -53,6 +52,8 @@ Observacao:
   como contrato especifico de roteamento, canonical e acesso entre site publico
   e portal comunitario.
 - Auditorias podem citar caminhos legados por contexto historico; para decisao atual, prevalecem `CURRENT_RULES.md`, `STATUS_ATUAL.md` e `ACAO_EXECUTAVEL_AUDITORIA_HIPERLOCAL.md`.
+- Snapshots de auditoria antigos ficam em `docs/audits/historical/` e nao
+  substituem contratos vivos.
 - `STATUS.md` e documentos com `FINAL`, `100%`, `completo` ou `pronto para producao` no texto/nome sao historicos ate revalidacao explicita em `STATUS_ATUAL.md`.
 
 ## Regras de atualizacao

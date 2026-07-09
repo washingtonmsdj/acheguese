@@ -36,8 +36,9 @@ npm run build
 
 ## Documentacao oficial
 - Indice canonico: [docs/INDEX_CANONICO.md](./docs/INDEX_CANONICO.md)
-- Status oficial: [docs/STATUS.md](./docs/STATUS.md)
-- Auditoria estrutural: [docs/AUDITORIA_ESTRUTURAL_MODULOS.md](./docs/AUDITORIA_ESTRUTURAL_MODULOS.md)
+- Status oficial: [docs/STATUS_ATUAL.md](./docs/STATUS_ATUAL.md)
+- Arquitetura Community First: [docs/architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md](./docs/architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md)
+- Auditoria estrutural ativa: [docs/audits/MASTER_REPORT.md](./docs/audits/MASTER_REPORT.md)
 - Regras SSOT: [docs/CURRENT_RULES.md](./docs/CURRENT_RULES.md)
 - Seguranca: [SECURITY.md](./SECURITY.md)
 

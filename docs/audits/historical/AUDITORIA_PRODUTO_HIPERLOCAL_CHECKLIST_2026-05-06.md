@@ -1,5 +1,9 @@
 # Auditoria de Produto Hiperlocal: Checklist por Modulo e Pagina
 
+> Historico: snapshot de produto de 2026-05-06. Para decisao atual, use
+> `docs/INDEX_CANONICO.md`, `docs/CURRENT_RULES.md` e
+> `plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md`.
+
 Data: 2026-05-06
 Projeto: Achegue-se
 
@@ -373,7 +377,7 @@ Foram criados anexos de auditoria para responder ponto a ponto se as telas e mod
 - `docs/audits/AUDITORIA_MODULO_MOBILIDADE.md`
 - `docs/audits/AUDITORIA_MODULO_PROFISSIONAIS.md`
 - `docs/audits/AUDITORIA_MODULO_GASTRONOMIA_NICHOS.md`
-- `docs/audits/AUDITORIA_DOCS_OBSOLETOS.md`
+- `docs/INDEX_CANONICO.md`
 
 ### Vereditos objetivos
 

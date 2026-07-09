@@ -8,7 +8,7 @@ Este arquivo foi preservado apenas por compatibilidade com links antigos.
 
 - Status operacional atual: [STATUS_ATUAL.md](./STATUS_ATUAL.md)
 - Plano executavel da auditoria hiperlocal: [ACAO_EXECUTAVEL_AUDITORIA_HIPERLOCAL.md](./ACAO_EXECUTAVEL_AUDITORIA_HIPERLOCAL.md)
-- Auditoria de documentos obsoletos: [audits/AUDITORIA_DOCS_OBSOLETOS.md](./audits/AUDITORIA_DOCS_OBSOLETOS.md)
+- Indice canonico de documentacao: [INDEX_CANONICO.md](./INDEX_CANONICO.md)
 
 ## Regra
 

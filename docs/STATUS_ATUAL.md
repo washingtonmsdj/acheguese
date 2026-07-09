@@ -794,7 +794,7 @@ Plano mestre de execucao por fases: `docs/PLANO_MESTRE_EXECUCAO_INTEGRAL_SSOT.md
 - Vitrine publica de servicos agora expoe `main#main-content`, mantendo o skip-link global funcional e cobrindo a rota publica no smoke E2E profissional.
 - Onboarding publico de cadastro e confirmacao agora usa a marca `Achegue-se`, expoe `main#main-content` e possui smoke Playwright dedicado para evitar regressao na porta de entrada do usuario.
 - Paginas institucionais publicas (`/sobre`, `/contato`, `/termos`, `/privacidade`) foram alinhadas a marca `Achegue-se`, expoem `main#main-content` e possuem smoke Playwright dedicado.
-- Documentacao viva realinhada: `STATUS.md` e `VALIDACAO_FINAL_E_PROXIMOS_PASSOS.md` agora sao redirecionamentos historicos; `README`, `INDEX`, `DOCUMENTATION_INDEX`, `INDEX_CANONICO`, `DOCUMENT_REPLACEMENTS` e `AUDITORIA_DOCS_OBSOLETOS` apontam para `STATUS_ATUAL.md` e para o plano executavel como SSOT.
+- Documentacao viva realinhada: `STATUS.md` e `VALIDACAO_FINAL_E_PROXIMOS_PASSOS.md` agora sao redirecionamentos historicos; `README`, `INDEX`, `INDEX_CANONICO` e demais redirecionamentos historicos apontam para `STATUS_ATUAL.md` e para o plano executavel como SSOT.
 - Rota historica com typo `businesss` foi canonicalizada: `/businesss` redireciona para `/empresas`, `/businesss/:id/catalogo` para `/empresas/:id/catalogo`, `/admin/businesss` para `/admin/empresas`, e o breadcrumb usa apenas `empresas` como rota canonica.
 - Comunidade e offline cache deixaram de usar `confirm()` nativo nos fluxos auditados de exclusao de post/comentario e limpeza de cache; a confirmacao agora usa `ConfirmActionDialog` do design system, mantendo hooks/servicos sem responsabilidade de UI.
 - Feed de comunidade (core/modulo) deixou de ter handlers no-op para curtir/salvar/compartilhar/denunciar: as acoes agora disparam `usePostActions` (`likePost`, `savePost`, `sharePost`, `reportPost`) no SSOT de posts/moderacao.
@@ -1504,7 +1504,8 @@ Avancar para fechamento total da Fase 3 (sem abrir Fase 4):
 - Executado pente-fino de documentacao obsoleta na raiz de `docs/` sem apagar historico:
   - `108` arquivos de analise/refatoracao/sessao/progresso/resumo foram movidos para `docs/historico/root-markdown-2026-05-cleanup/`.
   - Politica de navegacao atualizada em `docs/README.md` e `docs/INDEX_CANONICO.md` apontando o novo lote historico.
-  - `docs/audits/AUDITORIA_DOCS_OBSOLETOS.md` atualizado com marcacoes de concluido parcial da limpeza.
+  - Snapshots documentais antigos foram separados de documentos vivos; a
+    governanca vigente passa por `docs/INDEX_CANONICO.md` e `docs/README.md`.
 - Objetivo cumprido: reduzir ruido de SSOT e impedir que snapshot antigo concorra com `docs/STATUS_ATUAL.md`.
 
 ## Atualizacao 2026-05-12 (P0 Frontend + E2E Admin Mobilidade)
