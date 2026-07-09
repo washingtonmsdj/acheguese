@@ -114,7 +114,7 @@ function main() {
     }
   }
 
-  const scanRoots = ["src/app", "src/core", "src/shared", "tests"];
+  const scanRoots = ["src/app", "src/core", "src/features", "src/shared", "tests"];
   for (const scanRoot of scanRoots) {
     for (const filePath of walk(path.join(ROOT, scanRoot))) {
       const relative = normalize(path.relative(ROOT, filePath));
@@ -136,6 +136,7 @@ function main() {
 
   const externalRoots = [
     "src/app",
+    "src/features",
     "src/shared",
     "src/modules/business",
     "src/modules/classifieds",

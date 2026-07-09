@@ -16,7 +16,7 @@ import { Heart, Home, Sparkles, Trash2 } from 'lucide-react';
 import { EventCard } from '../components/EventCard';
 import { Button } from '@/shared/components/ui/button';
 import { useFavorites } from '../hooks/useFavorites';
-import { communityEventsRuntimeService } from '@/core/community/services/CommunityEventsRuntimeService';
+import { eventRuntimeService } from '@/core/verticals/events';
 import { mapCommunityEventToEvent } from '../utils/eventAdapters';
 import { useConfirmActionDialog } from '@/shared/hooks/useConfirmActionDialog';
 import { useTerritorialContextOptional } from '@/core/routing/components/TerritorialLayout';
@@ -32,7 +32,7 @@ export default function EventsFavoritesPage() {
     queryKey: ['events-favorites', favorites],
     enabled: favorites.length > 0,
     queryFn: async () => {
-      const rows = await Promise.all(favorites.map((eventId) => communityEventsRuntimeService.getEventById(eventId)));
+      const rows = await Promise.all(favorites.map((eventId) => eventRuntimeService.getEventById(eventId)));
       return rows.filter(Boolean).map((event) => mapCommunityEventToEvent(event!));
     },
   });

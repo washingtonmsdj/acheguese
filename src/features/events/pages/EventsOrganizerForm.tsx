@@ -22,7 +22,7 @@ import {
   type EventsOrganizerFieldChange,
 } from './EventsOrganizerForm.model';
 import { EventsOrganizerFormStepContent } from './EventsOrganizerFormStepContent';
-import { communityEventsRuntimeService } from '@/core/community/services/CommunityEventsRuntimeService';
+import { eventRuntimeService } from '@/core/verticals/events';
 import { mapCommunityEventToEvent } from '../utils/eventAdapters';
 import { useSessionContext } from '@/core/session/hooks/useSessionContext';
 import { useToast } from '@/shared/hooks/use-toast';
@@ -54,7 +54,7 @@ export default function EventsOrganizerForm() {
     enabled: isEditing,
     queryFn: async () => {
       if (!currentEventId) return null;
-      const row = await communityEventsRuntimeService.getEventById(currentEventId);
+      const row = await eventRuntimeService.getEventById(currentEventId);
       return row ? mapCommunityEventToEvent(row) : null;
     },
   });
@@ -115,8 +115,8 @@ export default function EventsOrganizerForm() {
     try {
       const input = buildCommunityEventInput(formData);
       const savedEvent = currentEventId
-        ? await communityEventsRuntimeService.updateEvent(currentEventId, input)
-        : await communityEventsRuntimeService.createEvent(activeProfile.id, input);
+        ? await eventRuntimeService.updateEvent(currentEventId, input)
+        : await eventRuntimeService.createEvent(activeProfile.id, input);
 
       setPersistedEventId(savedEvent.id);
       await Promise.all([

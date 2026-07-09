@@ -17,9 +17,9 @@ import { useConfirmActionDialog } from '@/shared/hooks/useConfirmActionDialog';
 import type { EventStatus } from '../types';
 import { useSessionContext } from '@/core/session/hooks/useSessionContext';
 import {
-  communityEventsRuntimeService,
+  eventRuntimeService,
   type EventParticipantRow,
-} from '@/core/community/services/CommunityEventsRuntimeService';
+} from '@/core/verticals/events';
 import { parseEventCheckinQrPayload } from '../utils/checkinQr';
 import { mapCommunityEventToEvent } from '../utils/eventAdapters';
 import {
@@ -70,7 +70,7 @@ export default function EventsOrganizerDashboard() {
     enabled: Boolean(activeProfile?.id),
     queryFn: async () => {
       if (!activeProfile?.id) return [];
-      const rows = await communityEventsRuntimeService.getEventsByOrganizerProfile(activeProfile.id, 200);
+      const rows = await eventRuntimeService.getEventsByOrganizerProfile(activeProfile.id, 200);
       return rows.map(mapCommunityEventToEvent);
     },
   });
@@ -115,7 +115,7 @@ export default function EventsOrganizerDashboard() {
     }
 
     try {
-      const duplicated = await communityEventsRuntimeService.createEvent(activeProfile.id, {
+      const duplicated = await eventRuntimeService.createEvent(activeProfile.id, {
         title: `Copia de ${sourceEvent.title}`,
         description: sourceEvent.description,
         date: sourceEvent.start_date,
@@ -191,7 +191,7 @@ export default function EventsOrganizerDashboard() {
     if (!confirmed) return;
 
     try {
-      await communityEventsRuntimeService.deleteEvent(eventId);
+      await eventRuntimeService.deleteEvent(eventId);
       await queryClient.invalidateQueries({
         queryKey: ['events-organizer-dashboard', activeProfile?.id],
       });
@@ -267,7 +267,7 @@ export default function EventsOrganizerDashboard() {
     setParticipants([]);
 
     try {
-      const rows = await communityEventsRuntimeService.getEventParticipants(eventId);
+      const rows = await eventRuntimeService.getEventParticipants(eventId);
       const mapped = rows.map((row: EventParticipantRow) => {
         const profile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
         return {
@@ -289,7 +289,7 @@ export default function EventsOrganizerDashboard() {
 
     setCheckInLoadingProfileId(profileId);
     try {
-      const checkedInAt = await communityEventsRuntimeService.checkInEvent(selectedEventId, profileId);
+      const checkedInAt = await eventRuntimeService.checkInEvent(selectedEventId, profileId);
       setParticipants((prev) =>
         prev.map((participant) =>
           participant.id === profileId
@@ -356,7 +356,7 @@ export default function EventsOrganizerDashboard() {
 
     setCheckInLoadingProfileId('__qr__');
     try {
-      const result = await communityEventsRuntimeService.checkInEventByCode(
+      const result = await eventRuntimeService.checkInEventByCode(
         selectedEventId,
         parsed.checkinCode
       );
@@ -419,7 +419,7 @@ export default function EventsOrganizerDashboard() {
     setScannerBusy(true);
     recentPayloadsRef.current.add(trimmed);
     try {
-      const result = await communityEventsRuntimeService.checkInEventByCode(
+      const result = await eventRuntimeService.checkInEventByCode(
         selectedEventId,
         payload.checkinCode
       );

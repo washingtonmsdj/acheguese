@@ -4,7 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import { BarChart3, Home } from 'lucide-react';
 import { EventAnalyticsCard } from '../components/EventAnalyticsCard';
 import { EventNotFound } from '../components/EventNotFound';
-import { communityEventsRuntimeService } from '@/core/community/services/CommunityEventsRuntimeService';
+import { eventRuntimeService } from '@/core/verticals/events';
 import { mapCommunityEventToEvent } from '../utils/eventAdapters';
 
 export default function EventsOrganizerAnalyticsPage() {
@@ -15,7 +15,7 @@ export default function EventsOrganizerAnalyticsPage() {
     enabled: Boolean(eventId),
     queryFn: async () => {
       if (!eventId) return null;
-      const row = await communityEventsRuntimeService.getEventById(eventId);
+      const row = await eventRuntimeService.getEventById(eventId);
       return row ? mapCommunityEventToEvent(row) : null;
     },
   });

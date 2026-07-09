@@ -4,11 +4,11 @@
 
 import { useInfiniteQuery } from "@tanstack/react-query";
 import {
-  communityEventsRuntimeService,
+  eventRuntimeService,
   type CommunityEvent,
   type EventSortBy,
   type EventSortOrder,
-} from "@/core/community/services/CommunityEventsRuntimeService";
+} from "@/core/verticals/events";
 import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
 import type { TerritoryFilter } from "@/core/location/types";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
@@ -49,7 +49,7 @@ export function useEventos(options: UseEventosOptions = {}) {
     queryKey: ["eventos", filters, territoryFilter, routeCacheKey],
     queryFn: async ({ pageParam }) => {
       const page = typeof pageParam === "number" ? pageParam : 0;
-      const response = await communityEventsRuntimeService.getEventsPage({
+      const response = await eventRuntimeService.getEventsPage({
         category: filters?.category,
         search: filters?.search,
         sortBy: filters?.sortBy,

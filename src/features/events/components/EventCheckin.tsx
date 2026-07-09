@@ -26,7 +26,7 @@ import { cn } from '@/shared/utils/cn';
 import QRCodeLib from 'qrcode';
 import { useToast } from '@/shared/hooks/use-toast';
 import { useSessionContext } from '@/core/session';
-import { communityEventsRuntimeService } from '@/core/community/services/CommunityEventsRuntimeService';
+import { eventRuntimeService } from '@/core/verticals/events';
 import type { Event } from '../types';
 
 interface EventCheckinProps {
@@ -56,7 +56,7 @@ export function EventCheckin({ event }: EventCheckinProps) {
         return;
       }
 
-      const checkedInAt = await communityEventsRuntimeService.getCheckInStatus(
+      const checkedInAt = await eventRuntimeService.getCheckInStatus(
         event.id,
         activeProfile.id
       );
@@ -86,7 +86,7 @@ export function EventCheckin({ event }: EventCheckinProps) {
     }
 
     try {
-      const participating = await communityEventsRuntimeService.isParticipating(
+      const participating = await eventRuntimeService.isParticipating(
         event.id,
         activeProfile.id
       );
@@ -99,7 +99,7 @@ export function EventCheckin({ event }: EventCheckinProps) {
         return;
       }
 
-      const checkinCode = await communityEventsRuntimeService.getParticipantCheckinCode(
+      const checkinCode = await eventRuntimeService.getParticipantCheckinCode(
         event.id,
         activeProfile.id
       );
@@ -142,7 +142,7 @@ export function EventCheckin({ event }: EventCheckinProps) {
 
     setIsLoadingCheckin(true);
     try {
-      const participating = await communityEventsRuntimeService.isParticipating(
+      const participating = await eventRuntimeService.isParticipating(
         event.id,
         activeProfile.id
       );
@@ -155,7 +155,7 @@ export function EventCheckin({ event }: EventCheckinProps) {
         return;
       }
 
-      const checkedInAt = await communityEventsRuntimeService.checkInEvent(
+      const checkedInAt = await eventRuntimeService.checkInEvent(
         event.id,
         activeProfile.id
       );

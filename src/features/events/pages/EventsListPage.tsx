@@ -36,7 +36,7 @@ import { cn } from '@/shared/utils/cn';
 import { useFavorites } from '../hooks/useFavorites';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
 import { useCommunityUrls } from '@/core/routing/hooks/useCommunityUrls';
-import { communityEventsRuntimeService } from '@/core/community/services/CommunityEventsRuntimeService';
+import { eventRuntimeService } from '@/core/verticals/events';
 import { mapCommunityEventToEvent } from '../utils/eventAdapters';
 import { useEventTerritoryFilter } from '../hooks/useEventTerritoryFilter';
 import {
@@ -78,7 +78,7 @@ export default function EventsListPage({ resolved, activeMemberIds }: EventsList
   const { data: eventsData = [], isLoading: isEventsLoading } = useQuery({
     queryKey: ['events-list-ssot', territoryFilter],
     queryFn: async () => {
-      const rows = await communityEventsRuntimeService.getEvents({
+      const rows = await eventRuntimeService.getEvents({
         upcoming: true,
         territoryFilter,
       });

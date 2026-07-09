@@ -429,11 +429,12 @@ Evidencia parcial:
 
 - `src/core/verticals/events` centraliza leitura publica de `events` via
   `EventReadService`;
-- `CommunityEventsRuntimeService` delega listagem, detalhe, paginacao, mapa,
-  recentes e contagens ao `core/verticals/events`;
+- `EventRuntimeService` consolida listagem, detalhe, paginacao, mapa, recentes
+  e contagens no owner canonico `core/verticals/events`;
 - `EventMutationService` centraliza criacao, atualizacao, remocao,
-  participacao e check-in de eventos, mantendo `CommunityEventsRuntimeService`
-  como fachada de compatibilidade.
+  participacao e check-in de eventos;
+- `CommunityEventsRuntimeService` permanece apenas como fachada de
+  compatibilidade e nao deve ser usado por consumidores novos.
 - `event-rpc` chama `join_event_participation`, `leave_event_participation`,
   `check_in_event_participation` e `check_in_event_participation_by_code`,
   evitando insert/delete no cliente seguido de contador separado.
@@ -1340,6 +1341,11 @@ Evidencia parcial:
 - `scripts/generate-ssot-fix-plan.ts` deixou de priorizar
   `src/modules/community/` e passou a gerar `plans/SSOT_FIX_PLAN.md`, mantendo
   a politica de nao criar markdown operacional na raiz.
+- Runtime de eventos foi promovido para
+  `src/core/verticals/events/services/EventRuntimeService.ts`; telas de
+  eventos em `src/features/events`, `useEventos`, `EventoDetailPage` e
+  `core/community-events` passaram a consumir `@/core/verticals/events`,
+  deixando `CommunityEventsRuntimeService` como compatibilidade documentada.
 
 Criterio de pronto:
 

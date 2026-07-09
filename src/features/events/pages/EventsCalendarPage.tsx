@@ -13,7 +13,7 @@ import { motion } from 'framer-motion';
 import { Calendar, Home, List, Map } from 'lucide-react';
 import { EventCalendar } from '../components/EventCalendar';
 import { Button } from '@/shared/components/ui/button';
-import { communityEventsRuntimeService } from '@/core/community/services/CommunityEventsRuntimeService';
+import { eventRuntimeService } from '@/core/verticals/events';
 import { mapCommunityEventToEvent } from '../utils/eventAdapters';
 import { useTerritorialContextOptional } from '@/core/routing/components/TerritorialLayout';
 import { useCommunityUrls } from '@/core/routing/hooks/useCommunityUrls';
@@ -30,7 +30,7 @@ export default function EventsCalendarPage() {
   const { data: events = [] } = useQuery({
     queryKey: ['events-calendar', territoryFilter],
     queryFn: async () => {
-      const rows = await communityEventsRuntimeService.getEvents({
+      const rows = await eventRuntimeService.getEvents({
         upcoming: true,
         territoryFilter,
       });

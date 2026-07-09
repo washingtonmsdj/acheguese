@@ -201,7 +201,10 @@ describe("community supabase security audit", () => {
     const eventRpcMigration = readProjectFile(
       "supabase/migrations/20260709005208_atomic_event_participation_rpcs.sql",
     );
-    const communityEventsRuntime = readProjectFile(
+    const eventRuntimeService = readProjectFile(
+      "src/core/verticals/events/services/EventRuntimeService.ts",
+    );
+    const communityEventsRuntimeCompat = readProjectFile(
       "src/core/community/services/CommunityEventsRuntimeService.ts",
     );
     const eventAdapter = readProjectFile("src/features/events/utils/eventAdapters.ts");
@@ -214,8 +217,8 @@ describe("community supabase security audit", () => {
     expect(eventReadService).toContain("applyTerritoryFilter");
     expect(eventReadService).toContain("getEventsPage");
     expect(eventReadService).toContain("getByBounds");
-    expect(communityEventsRuntime).toContain("eventsReadService.getEventsPage");
-    expect(communityEventsRuntime).toContain("eventsReadService.getByBounds");
+    expect(eventRuntimeService).toContain("eventsReadService.getEventsPage");
+    expect(eventRuntimeService).toContain("eventsReadService.getByBounds");
     expect(eventMutationService).toContain(".from(\"events\")");
     expect(eventMutationService).toContain(".from(\"event_participants\")");
     expect(eventMutationService).toContain("invokeSupabaseBroker");
@@ -232,12 +235,18 @@ describe("community supabase security audit", () => {
     expect(eventRpcMigration).toContain("CREATE OR REPLACE FUNCTION public.check_in_event_participation");
     expect(eventRpcMigration).toContain("REVOKE ALL ON FUNCTION public.join_event_participation");
     expect(eventRpcMigration).toContain("GRANT EXECUTE ON FUNCTION public.join_event_participation");
-    expect(communityEventsRuntime).toContain("eventMutationService.joinEvent");
-    expect(communityEventsRuntime).not.toContain(".from(\"event_participants\")");
+    expect(eventRuntimeService).toContain("eventMutationService.joinEvent");
+    expect(eventRuntimeService).not.toContain(".from(\"event_participants\")");
+    expect(communityEventsRuntimeCompat).toContain(
+      "@/core/verticals/events/services/EventRuntimeService",
+    );
+    expect(communityEventsRuntimeCompat).not.toContain(".from(\"event_participants\")");
     expect(eventAdapter).toContain('from "@/core/verticals/events"');
     expect(architecture).toContain("src/core/verticals/events");
+    expect(architecture).toContain("EventRuntimeService");
     expect(architecture).toContain("EventMutationService");
     expect(plan).toContain("criar/confirmar `core/verticals/events` para leitura publica");
+    expect(plan).toContain("EventRuntimeService");
     expect(plan).toContain("EventMutationService");
   });
 

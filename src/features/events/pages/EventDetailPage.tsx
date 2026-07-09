@@ -56,7 +56,7 @@ import { useFavorites } from '../hooks/useFavorites';
 import { cn } from '@/shared/utils/cn';
 import { buildGoogleMapsSearchUrl } from '@/shared/utils/contactLinks';
 import { openSafeExternalUrl } from '@/shared/utils/safeRedirect';
-import { communityEventsRuntimeService } from '@/core/community/services/CommunityEventsRuntimeService';
+import { eventRuntimeService } from '@/core/verticals/events';
 import { mapCommunityEventToEvent } from '../utils/eventAdapters';
 import { useConfirmActionDialog } from '@/shared/hooks/useConfirmActionDialog';
 import { EventEngagementService } from '../services/EventEngagementService';
@@ -86,7 +86,7 @@ export default function EventDetailPage() {
     queryKey: ['event-detail-ssot', eventId],
     queryFn: async () => {
       if (!eventId) return null;
-      const row = await communityEventsRuntimeService.getEventById(eventId);
+      const row = await eventRuntimeService.getEventById(eventId);
       return row ? mapCommunityEventToEvent(row) : null;
     },
   });
@@ -94,7 +94,7 @@ export default function EventDetailPage() {
     queryKey: ['event-related-ssot', event?.category, event?.id],
     enabled: Boolean(event?.category),
     queryFn: async () => {
-      const rows = await communityEventsRuntimeService.getEvents({
+      const rows = await eventRuntimeService.getEvents({
         category: event?.category,
         upcoming: true,
       });
@@ -119,7 +119,7 @@ export default function EventDetailPage() {
         return;
       }
 
-      const participating = await communityEventsRuntimeService.isParticipating(
+      const participating = await eventRuntimeService.isParticipating(
         event.id,
         activeProfile.id
       );
@@ -192,7 +192,7 @@ export default function EventDetailPage() {
 
     setIsRegistering(true);
 
-    communityEventsRuntimeService
+    eventRuntimeService
       .joinEvent(event.id, activeProfile.id)
       .then(async () => {
         setIsParticipating(true);
@@ -272,7 +272,7 @@ export default function EventDetailPage() {
 
     setIsCancelling(true);
 
-    communityEventsRuntimeService
+    eventRuntimeService
       .leaveEvent(event.id, activeProfile.id)
       .then(async () => {
         setIsParticipating(false);
