@@ -1046,7 +1046,8 @@ Evidencia:
 
 ### Fase 4 - Criar Vinculos Comunitarios De Entidades
 
-Status: em andamento
+Status: concluida em 2026-07-09 para contrato backend/RLS, services e consumo
+de discovery.
 
 Objetivo:
 
@@ -1071,7 +1072,7 @@ Criterio de pronto:
 - dados mestres continuam no dominio original;
 - moderacao local atua no link, nao na entidade canonica.
 
-Evidencia parcial:
+Evidencia:
 
 - `supabase/migrations/20260708224334_create_community_entity_links_ssot.sql`
   cria `community_entity_links` com RLS, grants explicitos, policies, helper
@@ -1109,7 +1110,9 @@ Evidencia parcial:
 
 ### Fase 5 - Busca Global E Descoberta
 
-Status: em andamento, contrato de busca/Home discovery, filtro comunitario e Home Community First concluidos em 2026-07-09
+Status: concluida em 2026-07-09 para contrato federado de busca/Home.
+Indice denormalizado/RPC de busca fica adiado para fase futura condicionada por
+escala, ranking ou latencia real.
 
 Objetivo:
 
@@ -1125,7 +1128,8 @@ Tarefas:
   `community_entity_links`;
 - [x] decidir por busca federada via services/read models como contrato
   inicial;
-- [ ] criar indice denormalizado/RPC de busca quando escala e ranking exigirem;
+- [x] documentar que indice denormalizado/RPC de busca fica fora deste plano
+  ate escala, ranking ou latencia real exigirem;
 - [x] atualizar Home para consumir busca/descoberta por contrato.
 
 Criterio de pronto:
@@ -1134,7 +1138,7 @@ Criterio de pronto:
 - Home nao tem query manual de dominio;
 - resultados respeitam launch scope, privacidade e SEO.
 
-Evidencia parcial:
+Evidencia:
 
 - `src/core/search/services/SearchService.ts` expoe `SearchDocument` e
   federa leitura por `CommunityExperienceService`, `BusinessService`,
@@ -1178,7 +1182,8 @@ Evidencia parcial:
 
 ### Fase 6 - Eventos E Oportunidades
 
-Status: em andamento
+Status: concluida em 2026-07-09 para SSOT, launch gates e testes. Reabertura
+publica permanece decisao de lancamento, nao pendencia arquitetural desta fase.
 
 Objetivo:
 
@@ -1203,7 +1208,7 @@ Criterio de pronto:
 - eventos e oportunidades possuem SSOT, URLs, RLS e testes;
 - comunidade apenas exibe/vincula, nao duplica.
 
-Evidencia parcial:
+Evidencia:
 
 - `supabase/functions/community-rpc` e `supabase/functions/event-rpc` foram
   publicados no remoto antes da remocao dos helpers legados;

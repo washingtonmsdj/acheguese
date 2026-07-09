@@ -34,6 +34,14 @@ Observacao: este documento e a fonte operacional atual. O historico abaixo fica 
   `validate:architecture:community`, `validate:architecture:governance`,
   `validate:docs-live-links`, `validate:docs-structure`, `tsc --noEmit` e
   `git diff --check` passaram nas etapas Community First executadas.
+- Fases 4, 5 e 6 do plano Community First foram fechadas no escopo
+  arquitetural em 2026-07-09: vinculos comunitarios por
+  `community_entity_links`, busca/Home por contrato federado inicial e
+  eventos/oportunidades com SSOT, launch gates e testes. Indice denormalizado
+  ou RPC de busca permanece fora do plano ate existir necessidade real de
+  escala, ranking ou latencia.
+- Fase 7 continua como trilha de limpeza incremental de duplicacoes e docs,
+  com guardrails ativos em `validate:taxonomy`.
 
 ## Validacoes Recentes
 

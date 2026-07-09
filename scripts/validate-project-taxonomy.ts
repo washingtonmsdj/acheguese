@@ -266,6 +266,15 @@ const LEGACY_SSOT_INDEX_FORBIDDEN_MARKERS = [
   "RESUMO_FINAL_SSOT_COMPLETO.md",
   "VALIDACAO_FINAL_E_PROXIMOS_PASSOS.md` (principal)",
 ] as const;
+const COMMUNITY_FIRST_PLAN_STATUS_REQUIRED_MARKERS = [
+  "Status: concluida em 2026-07-09 para contrato backend/RLS, services e consumo",
+  "Status: concluida em 2026-07-09 para contrato federado de busca/Home.",
+  "Indice denormalizado/RPC de busca fica adiado para fase futura condicionada por",
+  "Status: concluida em 2026-07-09 para SSOT, launch gates e testes.",
+] as const;
+const COMMUNITY_FIRST_PLAN_STATUS_FORBIDDEN_MARKERS = [
+  "- [ ] criar indice denormalizado/RPC de busca quando escala e ranking exigirem",
+] as const;
 
 function pathExists(relativePath: string): boolean {
   return fs.existsSync(path.join(ROOT, relativePath));
@@ -447,6 +456,25 @@ function main() {
 
   if (!pathExists(COMMUNITY_FIRST_PLAN_PATH)) {
     violations.push(`Plano Community First ausente: ${COMMUNITY_FIRST_PLAN_PATH}`);
+  } else {
+    const communityFirstPlan = readText(COMMUNITY_FIRST_PLAN_PATH);
+    if (communityFirstPlan) {
+      for (const marker of COMMUNITY_FIRST_PLAN_STATUS_REQUIRED_MARKERS) {
+        if (!communityFirstPlan.includes(marker)) {
+          violations.push(
+            `${COMMUNITY_FIRST_PLAN_PATH} deve refletir o fechamento das fases Community First ja implementadas; falta marcador "${marker}".`,
+          );
+        }
+      }
+
+      for (const marker of COMMUNITY_FIRST_PLAN_STATUS_FORBIDDEN_MARKERS) {
+        if (communityFirstPlan.includes(marker)) {
+          violations.push(
+            `${COMMUNITY_FIRST_PLAN_PATH} ainda contem pendencia fora de escopo como tarefa aberta: "${marker}".`,
+          );
+        }
+      }
+    }
   }
 
   const appLayoutRoutes = readText(APP_LAYOUT_ROUTES_PATH);
