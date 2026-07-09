@@ -1,4 +1,4 @@
-import { getFavoriteStats } from "@/core/favorites/services";
+import { getFavoriteStats } from "@/core/favorites/services/favorites.queries";
 import type { ProfileRow as Profile } from "./types";
 
 type ProfileStatsDependencies = {

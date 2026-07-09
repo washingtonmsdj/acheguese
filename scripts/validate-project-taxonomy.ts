@@ -151,6 +151,8 @@ const COMMUNITY_EXPERIENCE_TABLE_SSOT_PATHS = new Set([
 const CORE_TO_MODULE_IMPORT_RE =
   /(?:from\s+["']|export\s+(?:type\s+)?(?:\{[\s\S]*?\}|\*)\s+from\s+["'])@\/modules\//m;
 const CORE_TO_MODULE_IMPORT_ALLOWLIST = new Set<string>();
+const FAVORITES_SERVICES_BARREL_IMPORT_RE =
+  /from\s+["']@\/core\/favorites\/services(?:\/index)?["']/;
 
 function pathExists(relativePath: string): boolean {
   return fs.existsSync(path.join(ROOT, relativePath));
@@ -409,6 +411,16 @@ function main() {
     ) {
       violations.push(
         `Acesso direto a tabela de Comunidade Local fora do SSOT em ${relative}. Use repositorios canonicos em src/core/community-experience/repositories/.`,
+      );
+    }
+
+    if (
+      relative.startsWith("src/") &&
+      !isTestFile(relative) &&
+      FAVORITES_SERVICES_BARREL_IMPORT_RE.test(content)
+    ) {
+      violations.push(
+        `Import runtime do barrel de favoritos detectado em ${relative}. Use src/core/favorites/services/favorites.queries ou favorites.mutations para evitar ciclo de chunks.`,
       );
     }
 

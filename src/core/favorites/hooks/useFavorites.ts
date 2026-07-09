@@ -1,10 +1,8 @@
 import { useCallback, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { BusinessService } from "@/core/business/services/BusinessService";
-import {
-  getUserBusinessFavorites,
-  toggleBusinessFavorite,
-} from "@/core/favorites/services";
+import { getUserBusinessFavorites } from "@/core/favorites/services/favorites.queries";
+import { toggleBusinessFavorite } from "@/core/favorites/services/favorites.mutations";
 import type { ProfileAssociatedBusiness } from "@/core/profiles/services/ProfileBusinessTypes";
 
 interface UseFavoritesResult {

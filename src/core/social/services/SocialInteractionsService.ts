@@ -18,6 +18,7 @@ import { supabase } from "@/integrations/supabase";
 import type { Database } from "@/integrations/supabase";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { trackError } from "@/shared/utils/errorTracking";
+import { getSocialInteractionStatsByProfile } from "./socialInteractionStats.queries";
 import type {
   SavedPost,
   CreateGroupMessageData,
@@ -428,35 +429,13 @@ export class SocialInteractionsService {
     profileId?: string,
   ): Promise<SocialInteractionStats> {
     try {
-      // Se profileId nao fornecido, resolver via usuario autenticado
       let targetProfileId = profileId;
       if (!targetProfileId) {
         const activeProfile = await profileService.getRequiredActiveProfile();
         targetProfileId = activeProfile.id;
       }
 
-      const [likesResult, savedResult, groupsResult] = await Promise.all([
-        supabase
-          .from("post_likes_new")
-          .select("id", { count: "exact", head: true })
-          .eq("liker_profile_id", targetProfileId),
-
-        supabase
-          .from("saved_posts_new")
-          .select("id", { count: "exact", head: true })
-          .eq("saver_profile_id", targetProfileId),
-
-        supabase
-          .from("group_members_new")
-          .select("id", { count: "exact", head: true })
-          .eq("member_profile_id", targetProfileId),
-      ]);
-
-      return {
-        likesGiven: likesResult.count || 0,
-        postsSaved: savedResult.count || 0,
-        groupsJoined: groupsResult.count || 0,
-      };
+      return getSocialInteractionStatsByProfile(targetProfileId);
     } catch (error) {
       trackError(error as Error, {
         component: "SocialInteractionsService",

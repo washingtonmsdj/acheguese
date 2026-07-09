@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
-import { getFavoriteStats } from "@/core/favorites/services";
+import { getFavoriteStats } from "@/core/favorites/services/favorites.queries";
 import { getServicesByProfile } from "@/core/professional/services/professional.queries";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 import { getEligibleVerticals } from "@/core/verticals/config";

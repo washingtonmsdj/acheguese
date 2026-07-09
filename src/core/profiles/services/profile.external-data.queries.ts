@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase";
-import { getUserBusinessFavorites } from "@/core/favorites/services";
+import { getUserBusinessFavorites } from "@/core/favorites/services/favorites.queries";
 import type { ProfileRow as Profile } from "./types";
 import type { BusinessRow } from "./profile.service.types";
 import { resolveOwnedProfileIds } from "./profile.queries";

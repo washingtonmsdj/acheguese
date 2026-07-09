@@ -8,6 +8,7 @@ import { publicIdentityService, PublicIdentityService } from "@/core/public-iden
 import { SessionRpcService } from "@/core/session/services/SessionRpcService";
 import { callRPC } from "@/integrations/supabase";
 import { PROFILE_VERIFICATION_STATUS } from "@/core/profiles/constants/verificationStatus";
+import { getSocialInteractionStatsByProfile } from "@/core/social/services/socialInteractionStats.queries";
 import type {
   AdminFilters,
   AdminProfileListItem,
@@ -461,11 +462,7 @@ export class ProfileService {
   }
   async getUserLikesCount(profileId: string): Promise<number> {
     try {
-      // Import dinamico evita ciclo ProfileService <-> SocialInteractionsService.
-      const { SocialInteractionsService } = await import(
-        "@/core/social/services/SocialInteractionsService"
-      );
-      const stats = await SocialInteractionsService.getInteractionStats(profileId);
+      const stats = await getSocialInteractionStatsByProfile(profileId);
       return stats.likesGiven || 0;
     } catch (error) {
       trackError(error as Error, {

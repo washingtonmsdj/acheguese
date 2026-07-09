@@ -25,7 +25,7 @@ import { cn } from "@/shared/utils/cn";
 import SecoesAtivasManager from "./SecoesAtivasManager";
 import SubscriptionPlans from "./SubscriptionPlans";
 import { Separator } from "@/shared/components/ui/separator";
-import { getFavoritersOfProfile } from "@/core/favorites/services";
+import { getFavoritersOfProfile } from "@/core/favorites/services/favorites.queries";
 import { SubscriptionService, useBusinessSubscription } from "@/core/billing";
 import { PlanTier } from "@/core/billing/types";
 import { toast } from "sonner";

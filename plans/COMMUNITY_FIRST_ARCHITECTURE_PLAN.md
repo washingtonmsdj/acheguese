@@ -1280,6 +1280,14 @@ Evidencia parcial:
 - `src/core/profile` foi removido como root legado; `ProfilePublicPage`,
   `profileDomainRules`, `mobilityServiceStatus` e `verificationStatus` agora
   pertencem a `src/core/profiles`, e o validador bloqueia a volta desse root.
+- Consumos runtime de favoritos deixaram de importar o barrel
+  `@/core/favorites/services` e passaram a apontar diretamente para
+  `favorites.queries`/`favorites.mutations`; `validate:taxonomy` bloqueia a
+  volta desse padrao que gerava ciclo de chunks no build.
+- `getSocialInteractionStatsByProfile` foi extraido como query neutra em
+  `src/core/social/services/socialInteractionStats.queries.ts`, removendo a
+  dependencia dinamica `ProfileService -> SocialInteractionsService` sem
+  duplicar a regra de estatisticas sociais.
 
 Criterio de pronto:
 
