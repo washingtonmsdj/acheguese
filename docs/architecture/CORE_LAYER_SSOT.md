@@ -74,7 +74,9 @@ Escopo: `src/core`
 
 ## Execução aplicada nesta rodada
 - Removidos de `core` e consolidados em `modules`:
-  - `src/core/community-alerts` -> `src/modules/community/alerts`
+  - facade top-level `src/core/community-alerts` removida; barrel publico em
+    `src/modules/community-alerts`, consumindo owner atual
+    `src/core/community/alerts`
   - `src/core/community-issues` -> `src/modules/community/issues`
   - `src/core/promotions` -> `src/modules/business/promotions`
   - `src/core/services` -> `src/modules/professionals/services`

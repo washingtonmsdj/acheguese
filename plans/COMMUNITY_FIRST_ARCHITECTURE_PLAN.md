@@ -1288,6 +1288,10 @@ Evidencia parcial:
   `src/core/social/services/socialInteractionStats.queries.ts`, removendo a
   dependencia dinamica `ProfileService -> SocialInteractionsService` sem
   duplicar a regra de estatisticas sociais.
+- A facade top-level `src/core/community-alerts` foi removida; o barrel publico
+  `src/modules/community-alerts` aponta diretamente para o owner atual
+  `src/core/community/alerts`, e `validate:taxonomy` bloqueia a volta desse
+  root legado em `core`.
 
 Criterio de pronto:
 

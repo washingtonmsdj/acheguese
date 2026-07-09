@@ -36,7 +36,7 @@ Fase executada: consolidacao de identidade publica, extracao inicial de regras d
 - `PublicProfilePage.tsx`, `PerfilPublicoPage.tsx` e `PerfilHubPageLegacy.tsx` foram removidos do fluxo ativo.
 - Regras de tipo/verificacao de perfil foram extraidas de `PerfilEditarPage`, `PerfilHubPage`, `PerfilIdentidadesPage` e `usePerfilPageV3` para helpers de dominio.
 - `MobilitySettingsPanel`, `ReputationRankings`, `AdminCommunityAlerts`, `AdminCommunityIssues`, `AdminGastronomia`, `AdminMotoristas`, `AdminOperacoes`, `AdminReivindicacoes` e `AdminReportsPassageiros` passaram a consumir contratos em `core`.
-- Foram criadas fachadas canonicas em `core/community-alerts`, `core/community-issues`, `core/gastronomy` e `core/mobility/services`.
+- Alertas comunitarios usam barrel publico em `modules/community-alerts` sobre o owner `core/community/alerts`; issues, gastronomia e mobility seguem seus owners canonicos vigentes.
 - `business`, `classifieds`, `community` e `services` deixaram de consumir `promotions` diretamente e passaram a usar `core/promotions`.
 - `mobility` deixou de consumir `modules/notifications` diretamente e passou a usar `core/notifications`.
 - `community` e `dashboard` passaram a compor `community-alerts`, `community-issues`, `verification` e `business` apenas via `core`.

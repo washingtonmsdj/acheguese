@@ -15,15 +15,15 @@ const TRANSVERSAL_MODULES = [
   "community-lost-found",
 ] as const;
 
-const CORE_DOMAIN_ROOTS = [
-  "community-feed",
-  "community-alerts",
-  "community-issues",
-  "community-groups",
-  "community-events",
-  "community-recommendations",
-  "community-lost-found",
-  "nearby",
+const CORE_DOMAIN_PATHS = [
+  "src/core/community-feed",
+  "src/core/community/alerts",
+  "src/core/community-issues",
+  "src/core/community-groups",
+  "src/core/community-events",
+  "src/core/community-recommendations",
+  "src/core/community-lost-found",
+  "src/core/nearby",
 ] as const;
 
 const CODE_FILE_RE = /\.(ts|tsx|js|jsx)$/;
@@ -37,6 +37,9 @@ const CORE_COMMUNITY_BARREL_IMPORT_RE =
   /(?:from\s+["']|import\(\s*["'])@\/core\/community["']/;
 const CORE_COMMUNITY_LEGACY_IMPORT_RE =
   /(?:from\s+["']|import\(\s*["'])@\/core\/community\//;
+const CORE_COMMUNITY_IMPORT_ALLOWLIST = new Set([
+  "src/modules/community-alerts/index.ts",
+]);
 
 function normalize(filePath: string): string {
   return filePath.replace(/\\/g, "/");
@@ -64,10 +67,10 @@ function walk(dir: string): string[] {
 function main() {
   const violations: string[] = [];
 
-  for (const coreRoot of CORE_DOMAIN_ROOTS) {
-    const rootPath = path.join(ROOT, "src", "core", coreRoot);
-    if (!fs.existsSync(rootPath)) {
-      violations.push(`Core transversal ausente: src/core/${coreRoot}`);
+  for (const corePath of CORE_DOMAIN_PATHS) {
+    const fullPath = path.join(ROOT, corePath);
+    if (!fs.existsSync(fullPath)) {
+      violations.push(`Core transversal ausente: ${corePath}`);
     }
   }
 
@@ -100,9 +103,12 @@ function main() {
         );
       }
 
-      if (CORE_COMMUNITY_LEGACY_IMPORT_RE.test(content)) {
+      if (
+        CORE_COMMUNITY_LEGACY_IMPORT_RE.test(content) &&
+        !CORE_COMMUNITY_IMPORT_ALLOWLIST.has(relative)
+      ) {
         violations.push(
-          `${relative}: modulo transversal nao deve importar @/core/community/*. Use core/community-feed, core/community-alerts, etc.`,
+          `${relative}: modulo transversal nao deve importar @/core/community/*. Use core/community-* ou um owner explicitamente allowlisted.`,
         );
       }
     }

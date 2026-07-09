@@ -34,7 +34,7 @@ Se houver conflito entre documentos, vence a ordem abaixo:
 | verticals | `src/core/verticals/config.ts`, `src/core/verticals/README.md` |
 | gastronomy | `src/modules/business/gastronomy/README.md`, `src/modules/business/gastronomy/index.ts` |
 | professionals/services | `src/modules/professionals/README.md`, `src/modules/professionals/services/*`, `src/core/professional/README.md` |
-| community/posts | `src/modules/community/README.md`, `src/modules/community/alerts/*`, `src/modules/community/issues/*`, `src/core/community/index.ts`, `src/core/community-alerts/README.md` |
+| community/posts | `src/modules/community/README.md`, `src/modules/community-alerts/README.md`, `src/modules/community-issues/README.md`, `src/core/community/index.ts`, `src/core/community/alerts/*`, `src/core/community/issues/*` |
 | map | `src/core/maps/README.md` |
 | classifieds | `src/modules/classifieds/data/README.md`, `src/modules/classifieds/jobs/*`, `src/core/classifieds/services/ClassifiedUrlService.ts` |
 | mobility | `src/modules/mobility/README.md`, `src/modules/mobility/delivery/*`, `src/core/mobility/services/MobilityService.ts`, `src/core/safety/README.md`, `src/core/tracking/README.md` |

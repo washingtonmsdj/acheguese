@@ -2,7 +2,7 @@
 
 Data: 2026-05-15
 Status: proposta canonica para implementacao faseada
-Owner conceitual: core/comunicacao-territorial + core/community-alerts + core/notifications + core/verification + core/moderation
+Owner conceitual: core/comunicacao-territorial + core/community/alerts + core/notifications + core/verification + core/moderation
 
 ## Decisao
 
@@ -62,7 +62,7 @@ A ideia e forte, mas precisa ser encaixada no SSOT atual do projeto. O ajuste pr
 | `core/public-identity` | slug publico e historico de identificador |
 | `core/verification` | verificacao institucional do canal |
 | `core/moderation` | denuncia, revisao, auditoria e penalidade |
-| `core/community-alerts` | infraestrutura de alertas territoriais e mapa |
+| `core/community/alerts` | infraestrutura de alertas territoriais e mapa; barrel publico em `modules/community-alerts` |
 | `core/notifications` | push/in-app/email com preferencia do usuario |
 | `core/feed` / `core/posts` | exibicao agregada no feed geral, sem virar fonte primaria editorial |
 
@@ -497,7 +497,7 @@ Responsabilidades:
 ### Fase 3: alertas autorizados
 
 - Criar RPC `create_communication_alert`.
-- Integrar `core/community-alerts` e `core/notifications`.
+- Integrar `core/community/alerts` e `core/notifications`.
 - Implementar limites por reputacao e territorio.
 - Auditar push territorial.
 

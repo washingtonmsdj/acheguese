@@ -14,10 +14,10 @@
 
 Cada modulo pode ter UI propria, mas comunicacao e compartilhamento de comportamento passam apenas por `core`.
 
-As entradas publicas de core por dominio sao:
+Os owners de core por dominio sao:
 
 - `core/community-feed`
-- `core/community-alerts`
+- `core/community/alerts` consumido pelo barrel publico `modules/community-alerts`
 - `core/community-issues`
 - `core/community-groups`
 - `core/community-events`
@@ -33,7 +33,7 @@ Regras:
 
 - Rotas canonicas editoriais usam `/comunicacao/...`, nao `/comunidade/...`.
 - Conteudo institucional pode aparecer no feed comunitario como agregacao, mas a fonte primaria deve ser o dominio de comunicacao.
-- Alertas institucionais devem consumir a infraestrutura de `core/community-alerts` e `core/notifications`, sem duplicar stack de alerta/push.
+- Alertas institucionais devem consumir a infraestrutura de `core/community/alerts` via `modules/community-alerts` quando precisarem do barrel publico, e `core/notifications`, sem duplicar stack de alerta/push.
 - A autorizacao territorial continua baseada em `location_id`.
 
 ## Boundaries
@@ -42,11 +42,11 @@ Regras:
 - Modulos transversais nao acessam Supabase diretamente.
 - Consumidores externos nao importam o agregador legado `@/modules/community`.
 - Consumidores externos nao importam o barrel `@/core/community`; devem usar subdominios explicitos.
-- Modulos transversais nao importam `@/core/community/*`; devem usar `@/core/community-*` ou outro core de dominio.
+- Modulos transversais nao importam `@/core/community/*`, exceto barrels publicos explicitamente allowlisted como `modules/community-alerts`; os demais devem usar `@/core/community-*` ou outro core de dominio.
 - `location_id` e o SSOT territorial para leitura, escrita, filtros, rollout e permissao.
 - Cidade, bairro, UF, slug e nome publico sao campos derivados ou de apresentacao.
 - Posts, comentarios, reacoes, favoritos e grupos usam `core/posts`, `core/comments`, `core/social`, `core/favorites` e `core/feed`.
-- Alertas e problemas usam services especificos em `core/community/alerts` e `core/community/issues` ate a drenagem final para roots `core/community-alerts` e `core/community-issues`.
+- Alertas e problemas usam services especificos em `core/community/alerts` e `core/community/issues`; `modules/community-alerts` e `modules/community-issues` sao os barrels publicos dos modulos transversais.
 
 ## Banco de Dados
 

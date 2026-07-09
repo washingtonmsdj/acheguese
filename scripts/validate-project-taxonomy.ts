@@ -64,6 +64,7 @@ const LEGACY_FORBIDDEN_MODULE_ROOTS = [
 const LEGACY_FORBIDDEN_CORE_ROOTS = [
   "admin-identidade",
   "admin-motoristas",
+  "community-alerts",
   "civic",
   "events",
   "gastronomy",
