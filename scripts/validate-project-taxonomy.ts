@@ -9,6 +9,7 @@ const TAXONOMY_SSOT_PATH = "docs/architecture/TAXONOMY_SSOT.md";
 const CANONICAL_MAP_PATH = "docs/CANONICAL_MAP.md";
 const CORE_LAYER_SSOT_PATH = "docs/architecture/CORE_LAYER_SSOT.md";
 const GLOBAL_STRUCTURAL_AUDIT_PATH = "docs/AUDITORIA_ESTRUTURAL_GLOBAL.md";
+const STATUS_ATUAL_PATH = "docs/STATUS_ATUAL.md";
 const COMMUNITY_FIRST_ARCHITECTURE_DOC_PATH =
   "docs/architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md";
 const COMMUNITY_FIRST_PLAN_PATH = "plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md";
@@ -241,6 +242,17 @@ const GLOBAL_STRUCTURAL_AUDIT_FORBIDDEN_MARKERS = [
   "community/{alerts",
   "apenas `gastronomy` e vertical formal",
   "agregador canonico `src/modules/community`",
+] as const;
+const STATUS_ATUAL_COMMUNITY_FIRST_MARKERS = [
+  "Atualizacao 2026-07-09 (Community First / SSOT operacional)",
+  "`plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md`",
+  "`docs/architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md`",
+  "`src/core/community-experience`",
+  "`community_entity_links`",
+  "`community_memberships`",
+  "`src/modules/community-feed`",
+  "`src/modules/community` nao e modulo canonico vigente",
+  "Caminhos historicos",
 ] as const;
 
 function pathExists(relativePath: string): boolean {
@@ -523,6 +535,19 @@ function main() {
       if (globalAudit.includes(marker)) {
         violations.push(
           `${GLOBAL_STRUCTURAL_AUDIT_PATH} ainda contem marcador legado "${marker}".`,
+        );
+      }
+    }
+  }
+
+  const statusAtual = readText(STATUS_ATUAL_PATH);
+  if (!statusAtual) {
+    violations.push(`Status operacional ausente: ${STATUS_ATUAL_PATH}`);
+  } else {
+    for (const marker of STATUS_ATUAL_COMMUNITY_FIRST_MARKERS) {
+      if (!statusAtual.includes(marker)) {
+        violations.push(
+          `${STATUS_ATUAL_PATH} deve declarar o estado Community First vigente antes do historico; falta marcador "${marker}".`,
         );
       }
     }

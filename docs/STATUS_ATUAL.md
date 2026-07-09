@@ -1,10 +1,39 @@
 # Status Atual do Projeto
 
-Data: 2026-07-08
+Data: 2026-07-09
 Branch: main
-Ultimo commit base validado: 4f65f0aa (`test: harden launch e2e readiness`)
+Ultimo commit base validado antes desta atualizacao: 46496973 (`docs: align global audit with community taxonomy`)
 
 Observacao: este documento e a fonte operacional atual. O historico abaixo fica preservado por contexto, mas qualquer registro antigo de bloqueio por falta de `git`/`node` nao representa o ambiente validado em 2026-06-06.
+
+## Atualizacao 2026-07-09 (Community First / SSOT operacional)
+
+- Arquitetura vigente: Community First com entidades independentes, conforme
+  `plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md` e
+  `docs/architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md`.
+- Core domain: `Comunidade Local`, com identidade e acesso canonicos em
+  `src/core/community-experience`.
+- SSOT territorial: `locations`, `territorial_groups`, `src/core/location` e
+  `src/core/territorial`.
+- Vinculos entre comunidades e entidades canonicas usam
+  `community_entity_links`; membership de comunidade usa
+  `community_memberships`.
+- Modulos comunitarios vigentes sao explicitos: `src/modules/community-feed`,
+  `src/modules/community-alerts`, `src/modules/community-issues`,
+  `src/modules/community-groups`, `src/modules/community-events`,
+  `src/modules/community-lost-found` e
+  `src/modules/community-recommendations`.
+- `src/modules/community` nao e modulo canonico vigente. Caminhos historicos
+  `src/modules/community` citados abaixo pertencem a snapshots antigos e nao
+  representam arquitetura atual.
+- Limpezas recentes: facades vazias comunitarias, de `community-events`,
+  `work-opportunities`, `ai`, `central` e subpastas vazias de
+  `communication-territorial` foram removidas; `validate:taxonomy` bloqueia a
+  recriacao de `src/modules/**/index.ts` contendo apenas `export {};`.
+- Validacoes recentes em 2026-07-09: `validate:taxonomy`,
+  `validate:architecture:community`, `validate:architecture:governance`,
+  `validate:docs-live-links`, `validate:docs-structure`, `tsc --noEmit` e
+  `git diff --check` passaram nas etapas Community First executadas.
 
 ## Validacoes Recentes
 

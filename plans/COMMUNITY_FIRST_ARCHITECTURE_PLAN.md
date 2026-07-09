@@ -1368,6 +1368,10 @@ Evidencia parcial:
   `communication-territorial`, `work-opportunities` e os verticais
   `gastronomy`/`education`; `validate:taxonomy` agora verifica esses marcadores
   para evitar retorno ao inventario antigo.
+- `docs/STATUS_ATUAL.md` passou a abrir com o estado operacional Community
+  First de 2026-07-09, deixando claro que citacoes historicas de
+  `src/modules/community` nao representam a arquitetura vigente; o mesmo
+  marcador passou a ser exigido por `validate:taxonomy`.
 
 Criterio de pronto:
 
