@@ -2,7 +2,7 @@
 
 Data: 2026-07-09
 Branch: main
-Ultimo commit base validado antes desta atualizacao: c167d87b (`fix: align home mobile with concept`)
+Ultimo commit base validado antes desta atualizacao: cee01ce5 (`docs: record home mobile concept alignment`)
 
 Observacao: este documento e a fonte operacional atual. O historico abaixo fica preservado por contexto, mas qualquer registro antigo de bloqueio por falta de `git`/`node` nao representa o ambiente validado em 2026-06-06.
 
@@ -64,6 +64,13 @@ Observacao: este documento e a fonte operacional atual. O historico abaixo fica 
   `npm run security:validate`, `npm run validate:phase:core`,
   `npm run verify:deploy` e `git diff --check` passaram. O E2E core fechou com
   `56/56` em Chromium e `verify:deploy` declarou `PROJETO PRONTO PARA DEPLOY`.
+- Revalidacao Security Authority em 2026-07-09: `npm run
+  validate:security-authority` passou com `68/68`; `npm run security:validate`
+  passou; `npm run security:advisor:residuals` validou 12 achados, todos dentro
+  da allowlist canonica. `npm run security:postgis:preflight` segue
+  `status=blocked` por ownership `supabase_admin`, e `npm run
+  security:auth:hibp -- --json` segue `status=blocked`/`missing_pat`, sem
+  imprimir segredo.
 
 ## Validacoes Recentes
 
@@ -127,7 +134,7 @@ spatial_ref_sys`; portanto o item foi formalizado como
   futuras migrations que tentem tocar `public.spatial_ref_sys` ou
   `public.st_estimatedextent` sem declarar preflight de owner/plataforma
   vinculado a `EXC-2026-07-08-POSTGIS-EXTENSION-OWNER`. O gate
-  `validate:security-authority` foi ampliado para 57 testes e valida tanto as
+  `validate:security-authority` foi ampliado para 68 testes e valida tanto as
   excecoes canonicas quanto as travas de extension-owner, residuais do Advisor
   e alinhamento entre `supabase/config.toml` e o SSOT de senha do app. O mesmo
   gate agora valida que `verify_jwt=false` em Edge Functions permanece restrito

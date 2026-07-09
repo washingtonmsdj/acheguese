@@ -133,6 +133,13 @@ extensoes, grants, RLS ou migrations; se retornar `blocked`, o marcador
 - `supabase/migrations/20260707124929_revoke_public_postgis_estimatedextent_execute.sql`
   tentou revogar os overloads, mas os grants permaneceram por ownership/grantor
   da extensao.
+- Execucao em 2026-07-09T20:35Z de `npm run security:postgis:preflight`
+  confirmou `status=blocked`, com extensoes `citext`, `pg_trgm`, `postgis`,
+  `unaccent`, `public.spatial_ref_sys` e tres overloads
+  `public.st_estimatedextent` ainda owned por `supabase_admin` e
+  `ready=false`.
+- Execucao em 2026-07-09 de `npm run security:advisor:residuals` validou 12
+  achados remotos, todos dentro da allowlist canonica.
 
 ## EXC-2026-07-08-AUTH-HIBP-DASHBOARD
 
@@ -206,6 +213,10 @@ env var usada, nunca o valor do token.
   Supabase compativel.
 - Execucao em 2026-07-08T18:13Z de `npm run security:auth:hibp -- --json`
   retornou novamente `status=blocked`, `blocker=missing_pat`, project ref
+  `xhdowzacfujckjelqhtd` e nome das env vars esperadas, sem imprimir segredo e
+  sem aplicar alteracao remota.
+- Execucao em 2026-07-09T20:34Z de `npm run security:auth:hibp -- --json`
+  retornou `status=blocked`, `blocker=missing_pat`, project ref
   `xhdowzacfujckjelqhtd` e nome das env vars esperadas, sem imprimir segredo e
   sem aplicar alteracao remota.
 

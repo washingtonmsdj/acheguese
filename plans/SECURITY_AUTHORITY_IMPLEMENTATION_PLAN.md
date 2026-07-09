@@ -1058,7 +1058,7 @@ onde `SUPABASE_SERVICE_ROLE_KEY`, `SERVICE_ROLE_KEY` ou
 validador `scripts/security/service-role-boundary.mjs` e consumido por
 `security:validate` e bloqueia segredo/env access em `src/`, `public/` ou API
 runtime fora de caminho allowlistado. A cobertura em
-`validate:security-authority` subiu para 57 testes, incluindo fixtures
+`validate:security-authority` subiu para 68 testes, incluindo fixtures
 negativas para browser source, asset publico e caminho de auditoria que so pode
 conter literal historico, nao acesso runtime a env.
 
@@ -1071,7 +1071,7 @@ E2E, validadores remotos curtos, `validate-gate3-metadata.mjs` e
 `economic-benchmark-ssot.mjs`. A policy `SERVICE_ROLE_BOUNDARY_POLICY.json`
 agora permite nesses scripts apenas literal/documentacao da chave; se voltarem a
 ler `process.env.SUPABASE_SERVICE_ROLE_KEY` direto, `security:validate` falha.
-A cobertura da Authority subiu para 57 testes, com casos especificos para helper
+A cobertura da Authority subiu para 68 testes, com casos especificos para helper
 runtime permitido, fachada tipada proibida e operadores migrados proibidos.
 
 Resultado concentracao E2E em 2026-07-08: a fronteira `service_role` passou a
@@ -1092,6 +1092,13 @@ linhas do worklist fechadas e `0` achados reportaveis. Em seguida,
 `EXC-2026-07-08-AUTH-HIBP-DASHBOARD`, `npm run security:advisor:residuals`
 validou os 12 residuais mapeados e `npm run verify:deploy` passou com
 `PROJETO PRONTO PARA DEPLOY`.
+
+Resultado revalidacao em 2026-07-09: `npm run validate:security-authority`
+passou com `68/68`, `npm run security:validate` passou,
+`npm run security:advisor:residuals` validou novamente os 12 residuais
+mapeados, `npm run security:postgis:preflight` retornou `status=blocked` por
+ownership `supabase_admin` e `npm run security:auth:hibp -- --json` retornou
+`status=blocked`/`missing_pat` sem expor token.
 
 Proxima etapa recomendada antes do lancamento:
 
