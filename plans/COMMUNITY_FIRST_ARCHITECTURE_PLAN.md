@@ -1237,7 +1237,7 @@ Tarefas:
 
 - [x] decidir `posts` vs `community_posts`;
 - reduzir facades duplicadas entre `src/core` e `src/modules`;
-- revisar `AppLayoutRoutes.tsx` e extrair registros declarativos por dominio;
+- [x] revisar `AppLayoutRoutes.tsx` e extrair registros declarativos por dominio;
 - arquivar docs antigos que contradizem o modelo novo;
 - adicionar validadores para impedir retorno das duplicacoes.
 
@@ -1261,8 +1261,11 @@ Evidencia parcial:
   ambiguo entre `posts` e `community_posts` no plano e de docs que afirmem Q&A
   em `community_posts`;
 - `src/app/routes/sections/AppLayoutRouteRegistry.tsx` extraiu as rotas
-  territoriais declarativas de `empresas`, `servicos` e `classificados`,
-  reduzindo declaracoes inline em `AppLayoutRoutes.tsx` sem alterar a ordem;
+  territoriais declarativas de `empresas`, `servicos`, `classificados`,
+  `eventos` e `mapa`, reduzindo declaracoes inline em `AppLayoutRoutes.tsx`
+  sem alterar a ordem;
+- `DIRECT_PAUSED_ROUTES` deriva os paths territoriais de eventos do registry
+  declarativo, evitando manter uma segunda lista manual para o mesmo dominio;
 - `src/app/routes/__tests__/appLayoutRouteRegistry.spec.ts` impede que esses
   dominios voltem a ser re-declarados diretamente em `AppLayoutRoutes.tsx`.
 - A antiga raiz `core/profile` deixou de manter hooks/componentes como

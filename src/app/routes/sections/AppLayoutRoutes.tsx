@@ -28,6 +28,7 @@ import { touristPointPublicRoutes } from "@/core/verticals/guide/routes/touristP
 import { isFeatureEnabled } from "@/shared/utils/featureFlags";
 import { CommunityTerritoryRoutes } from "./CommunityTerritoryRoutes";
 import {
+  APP_LAYOUT_EVENT_TERRITORIAL_ROUTES,
   APP_LAYOUT_TERRITORIAL_DOMAIN_ROUTES,
   renderAppLayoutRouteDescriptors,
 } from "./AppLayoutRouteRegistry";
@@ -48,17 +49,6 @@ const EVENT_ROUTES = {
     `${TERRITORIAL_STATIC.eventDetail}/${TERRITORIAL_PARAMS.eventId}`,
   ),
   legacyDetail: buildAppModulePath(APP_MODULE_SLUGS.events, TERRITORIAL_PARAMS.eventId),
-} as const;
-const EVENT_TERRITORIAL_ROUTES = {
-  home: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.events),
-  district: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.events, [TERRITORIAL_PARAMS.district]),
-  favorites: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.events, [TERRITORIAL_STATIC.favorites]),
-  calendar: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.events, [TERRITORIAL_STATIC.calendar]),
-  map: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.events, [TERRITORIAL_STATIC.map]),
-  detail: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.events, [
-    TERRITORIAL_STATIC.eventDetail,
-    TERRITORIAL_PARAMS.eventId,
-  ]),
 } as const;
 const JOB_ROUTES = {
   home: buildAppModulePath(APP_MODULE_SLUGS.jobs),
@@ -100,12 +90,13 @@ const DIRECT_PAUSED_ROUTES: DirectPausedRoute[] = [
   { path: EVENT_ROUTES.map, surface: "events", moduleName: "Eventos" },
   { path: EVENT_ROUTES.detail, surface: "events", moduleName: "Eventos" },
   { path: EVENT_ROUTES.legacyDetail, surface: "events", moduleName: "Eventos" },
-  { path: EVENT_TERRITORIAL_ROUTES.home, surface: "events", moduleName: "Eventos" },
-  { path: EVENT_TERRITORIAL_ROUTES.district, surface: "events", moduleName: "Eventos" },
-  { path: EVENT_TERRITORIAL_ROUTES.favorites, surface: "events", moduleName: "Eventos" },
-  { path: EVENT_TERRITORIAL_ROUTES.calendar, surface: "events", moduleName: "Eventos" },
-  { path: EVENT_TERRITORIAL_ROUTES.map, surface: "events", moduleName: "Eventos" },
-  { path: EVENT_TERRITORIAL_ROUTES.detail, surface: "events", moduleName: "Eventos" },
+  ...APP_LAYOUT_EVENT_TERRITORIAL_ROUTES.map(
+    (route): DirectPausedRoute => ({
+      path: route.path,
+      surface: "events",
+      moduleName: "Eventos",
+    }),
+  ),
   { path: JOB_ROUTES.home, surface: "jobs", moduleName: "Vagas" },
   { path: JOB_ROUTES.publish, surface: "jobs", moduleName: "Vagas" },
   { path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.jobs), surface: "jobs", moduleName: "Vagas" },
@@ -355,34 +346,6 @@ export function AppLayoutRoutes() {
         <Route path="/br" element={<P.CountryLandingPage />} />
 
         {renderAppLayoutRouteDescriptors(APP_LAYOUT_TERRITORIAL_DOMAIN_ROUTES)}
-
-        {/* Rotas de eventos */}
-        <Route path={EVENT_TERRITORIAL_ROUTES.detail} element={launchTerritorialLayout("events", "Eventos")}>
-          <Route index element={<P.EventsErrorBoundary><P.EventDetailPage /></P.EventsErrorBoundary>} />
-        </Route>
-        <Route path={EVENT_TERRITORIAL_ROUTES.favorites} element={launchTerritorialLayout("events", "Eventos")}>
-          <Route index element={<P.EventsErrorBoundary><P.EventsFavoritesPage /></P.EventsErrorBoundary>} />
-        </Route>
-        <Route path={EVENT_TERRITORIAL_ROUTES.calendar} element={launchTerritorialLayout("events", "Eventos")}>
-          <Route index element={<P.EventsErrorBoundary><P.EventsCalendarPage /></P.EventsErrorBoundary>} />
-        </Route>
-        <Route path={EVENT_TERRITORIAL_ROUTES.map} element={launchTerritorialLayout("events", "Eventos")}>
-          <Route index element={<P.EventsErrorBoundary><P.EventsMapPage /></P.EventsErrorBoundary>} />
-        </Route>
-        <Route path={EVENT_TERRITORIAL_ROUTES.district} element={launchTerritorialLayout("events", "Eventos")}>
-          <Route index element={<P.TerritorialEventosPage />} />
-        </Route>
-        <Route path={EVENT_TERRITORIAL_ROUTES.home} element={launchTerritorialLayout("events", "Eventos")}>
-          <Route index element={<P.TerritorialEventosPage />} />
-        </Route>
-
-        {/* Rotas do mapa - mesmo padrao territorial */}
-        <Route path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.map, [TERRITORIAL_PARAMS.district])} element={<P.TerritorialLayout />}>
-          <Route index element={<P.TerritorialMapPage />} />
-        </Route>
-        <Route path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.map)} element={<P.TerritorialLayout />}>
-          <Route index element={<P.TerritorialMapPage />} />
-        </Route>
 
         {/* Rotas de gastronomia */}
         <Route path={gastronomyPublicRoutes.home()} element={<P.GastronomyLandingPage />} />

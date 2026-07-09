@@ -27,6 +27,14 @@ describe("AppLayoutRouteRegistry", () => {
       "classified-category-district",
       "classified-district",
       "classified-city",
+      "events-detail",
+      "events-favorites",
+      "events-calendar",
+      "events-map",
+      "events-district",
+      "events-city",
+      "map-district",
+      "map-city",
     ]);
 
     const ids = APP_LAYOUT_TERRITORIAL_DOMAIN_ROUTES.map((route) => route.id);
@@ -47,6 +55,9 @@ describe("AppLayoutRouteRegistry", () => {
       "/classificados/:uf/:cidade/:bairro/:categoria/:subcategoria/:slug/:publicId",
     );
     expect(pathsById.get("classified-city")).toBe("/classificados/:state/:city");
+    expect(pathsById.get("events-detail")).toBe("/eventos/:state/:city/evento/:eventId");
+    expect(pathsById.get("events-city")).toBe("/eventos/:state/:city");
+    expect(pathsById.get("map-district")).toBe("/mapa/:state/:city/:district");
   });
 
   it("keeps AppLayoutRoutes consuming the registry instead of re-declaring extracted domains", () => {
@@ -57,5 +68,7 @@ describe("AppLayoutRouteRegistry", () => {
     expect(appLayoutRoutes).not.toContain("<P.TerritorialClassificadosPage />");
     expect(appLayoutRoutes).not.toContain("<P.TerritorialServicesPage />");
     expect(appLayoutRoutes).not.toContain("<P.TerritorialCategoryBusinessPage />");
+    expect(appLayoutRoutes).not.toContain("<P.TerritorialEventosPage />");
+    expect(appLayoutRoutes).not.toContain("<P.TerritorialMapPage />");
   });
 });

@@ -262,12 +262,17 @@ Pode:
 - montar paginas;
 - aplicar guards de lancamento;
 - combinar modulos.
+- concentrar rotas territoriais repetidas em registries declarativos, como
+  `AppLayoutRouteRegistry`, para preservar ordem publica sem espalhar
+  declaracoes por dominio no shell.
 
 Nao deve:
 
 - ser SSOT de dominio;
 - conter regra de negocio persistente;
 - consultar tabela canonica diretamente para substituir service de dominio.
+- manter listas paralelas de rotas publicas quando um registry canonico ja
+  existe para aquele grupo.
 
 ## Verticais Oficiais
 

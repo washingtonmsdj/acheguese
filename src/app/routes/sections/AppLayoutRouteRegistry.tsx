@@ -19,7 +19,7 @@ type AppLayoutRouteDescriptor = {
   indexElement?: ReactNode;
 };
 
-export const APP_LAYOUT_TERRITORIAL_DOMAIN_ROUTES: readonly AppLayoutRouteDescriptor[] = [
+const APP_LAYOUT_BUSINESS_SERVICE_CLASSIFIED_ROUTES: readonly AppLayoutRouteDescriptor[] = [
   {
     id: "business-detail",
     path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.business, [
@@ -113,6 +113,95 @@ export const APP_LAYOUT_TERRITORIAL_DOMAIN_ROUTES: readonly AppLayoutRouteDescri
     element: <P.TerritorialLayout />,
     indexElement: <P.TerritorialClassificadosPage />,
   },
+];
+
+export const APP_LAYOUT_EVENT_TERRITORIAL_ROUTES: readonly AppLayoutRouteDescriptor[] = [
+  {
+    id: "events-detail",
+    path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.events, [
+      TERRITORIAL_STATIC.eventDetail,
+      TERRITORIAL_PARAMS.eventId,
+    ]),
+    element: <P.TerritorialLayout />,
+    indexElement: (
+      <P.EventsErrorBoundary>
+        <P.EventDetailPage />
+      </P.EventsErrorBoundary>
+    ),
+  },
+  {
+    id: "events-favorites",
+    path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.events, [
+      TERRITORIAL_STATIC.favorites,
+    ]),
+    element: <P.TerritorialLayout />,
+    indexElement: (
+      <P.EventsErrorBoundary>
+        <P.EventsFavoritesPage />
+      </P.EventsErrorBoundary>
+    ),
+  },
+  {
+    id: "events-calendar",
+    path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.events, [
+      TERRITORIAL_STATIC.calendar,
+    ]),
+    element: <P.TerritorialLayout />,
+    indexElement: (
+      <P.EventsErrorBoundary>
+        <P.EventsCalendarPage />
+      </P.EventsErrorBoundary>
+    ),
+  },
+  {
+    id: "events-map",
+    path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.events, [
+      TERRITORIAL_STATIC.map,
+    ]),
+    element: <P.TerritorialLayout />,
+    indexElement: (
+      <P.EventsErrorBoundary>
+        <P.EventsMapPage />
+      </P.EventsErrorBoundary>
+    ),
+  },
+  {
+    id: "events-district",
+    path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.events, [
+      TERRITORIAL_PARAMS.district,
+    ]),
+    element: <P.TerritorialLayout />,
+    indexElement: <P.TerritorialEventosPage />,
+  },
+  {
+    id: "events-city",
+    path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.events),
+    element: <P.TerritorialLayout />,
+    indexElement: <P.TerritorialEventosPage />,
+  },
+];
+
+const APP_LAYOUT_MAP_TERRITORIAL_ROUTES: readonly AppLayoutRouteDescriptor[] = [
+  {
+    id: "map-district",
+    path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.map, [
+      TERRITORIAL_PARAMS.district,
+    ]),
+    element: <P.TerritorialLayout />,
+    indexElement: <P.TerritorialMapPage />,
+  },
+  {
+    id: "map-city",
+    path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.map),
+    element: <P.TerritorialLayout />,
+    indexElement: <P.TerritorialMapPage />,
+  },
+];
+
+export const APP_LAYOUT_TERRITORIAL_DOMAIN_ROUTES: readonly AppLayoutRouteDescriptor[] = [
+  ...APP_LAYOUT_BUSINESS_SERVICE_CLASSIFIED_ROUTES,
+  ...APP_LAYOUT_EVENT_TERRITORIAL_ROUTES,
+  ...APP_LAYOUT_MAP_TERRITORIAL_ROUTES,
 ];
 
 export function renderAppLayoutRouteDescriptors(
