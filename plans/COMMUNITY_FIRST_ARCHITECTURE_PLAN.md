@@ -1051,7 +1051,7 @@ Tarefas:
   empresas, profissionais/servicos e classificados;
 - [x] manter fallback por territorio durante migracao;
 - [x] ampliar consumo para gastronomia dedicada na landing territorial;
-- [ ] ampliar consumo para eventos e busca global.
+- [x] ampliar consumo para eventos e busca global.
 
 Criterio de pronto:
 
@@ -1076,12 +1076,16 @@ Evidencia parcial:
 - `useLandingFeatured`, `TerritorialLandingPage` e `CommunityRightSidebar`
   consomem `community_entity_links` indiretamente por service, sem Supabase
   direto fora do SSOT;
+- `SearchService` consome `CommunityEntityLinkService` para restringir busca
+  em contexto de comunidade por links ativos de businesses, professionals,
+  classifieds, events e posts, mantendo fallback territorial quando o tipo nao
+  possui vinculos migrados;
 - `validate-project-taxonomy` e `check:ssot` bloqueiam acesso paralelo a
   `community_entity_links`.
 
 ### Fase 5 - Busca Global E Descoberta
 
-Status: em andamento, contrato de busca e Home discovery concluido em 2026-07-08
+Status: em andamento, contrato de busca/Home discovery e filtro comunitario concluido em 2026-07-09
 
 Objetivo:
 
@@ -1093,7 +1097,7 @@ Tarefas:
 - [x] incluir businesses, professionals, opportunities, classifieds, events,
   communities e posts publicos;
 - [x] adicionar filtros por territorio e tipo;
-- [ ] adicionar filtro explicito por comunidade quando a busca consumir
+- [x] adicionar filtro explicito por comunidade quando a busca consumir
   `community_entity_links`;
 - [x] decidir por busca federada via services/read models como contrato
   inicial;
@@ -1112,6 +1116,12 @@ Evidencia parcial:
   federa leitura por `CommunityExperienceService`, `BusinessService`,
   `ProfessionalService`, `WorkOpportunitiesService`, `ClassifiedService`,
   `EventReadService` e `PostService`;
+- `SearchFilters.communityId` ativa filtro por links comunitarios sem expor
+  `community_entity_links` para UI; empresas, profissionais, classificados,
+  eventos e posts sao recortados pelos links ativos, enquanto oportunidades
+  seguem somente por territorio ate haver contrato canonico de vinculo;
+- `src/core/search/config/searchConfig.ts` centraliza limites de resultado,
+  candidatos comunitarios e leitura de links;
 - `src/core/community-experience/repositories/CommunityExperienceRepository.ts`
   expoe `searchPublicCommunities` como leitura canonica de comunidades
   publicas;
@@ -1130,7 +1140,8 @@ Evidencia parcial:
 - `src/app/pages/MainLandingPage.tsx` consome `HomeDiscoveryService` via React
   Query e removeu listas estaticas de atividades/ranking;
 - `src/core/search/services/__tests__/SearchService.spec.ts` cobre query curta,
-  federacao multi-dominio e filtro por categoria;
+  federacao multi-dominio, filtro por categoria e filtro por comunidade via
+  `community_entity_links`;
 - `src/core/landing/services/__tests__/HomeDiscoveryService.spec.ts` cobre
   composicao multi-dominio, ordenacao dos destaques e tolerancia a falha
   parcial de um dominio.

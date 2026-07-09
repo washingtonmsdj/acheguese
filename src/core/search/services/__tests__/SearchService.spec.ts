@@ -4,6 +4,7 @@ import { SearchService } from "../SearchService";
 
 const mocks = vi.hoisted(() => ({
   searchPublicCommunities: vi.fn(),
+  listActiveByCommunity: vi.fn(),
   getBusinessesList: vi.fn(),
   getBusinessCanonicalUrl: vi.fn(),
   searchProfessionals: vi.fn(),
@@ -33,6 +34,12 @@ vi.mock("@/core/business", () => ({
 vi.mock("@/core/community-experience/services/CommunityExperienceService", () => ({
   CommunityExperienceService: {
     searchPublicCommunities: mocks.searchPublicCommunities,
+  },
+}));
+
+vi.mock("@/core/community-experience/services/CommunityEntityLinkService", () => ({
+  CommunityEntityLinkService: {
+    listActiveByCommunity: mocks.listActiveByCommunity,
   },
 }));
 
@@ -124,6 +131,13 @@ const business = {
   created_at: "2026-07-01T00:00:00Z",
 };
 
+const unlinkedBusiness = {
+  ...business,
+  id: "business-unlinked",
+  profile_id: "profile-business-unlinked",
+  name: "Pizzaria Fora da Comunidade",
+};
+
 const professional = {
   professional_data_id: "professional-data-1",
   id: "professional-1",
@@ -139,6 +153,13 @@ const professional = {
   is_verified: true,
   is_accepting_clients: true,
   created_at: "2026-07-01T00:00:00Z",
+};
+
+const unlinkedProfessional = {
+  ...professional,
+  professional_data_id: "professional-data-unlinked",
+  id: "professional-unlinked",
+  name: "Servico Fora da Comunidade",
 };
 
 const opportunity = {
@@ -184,6 +205,12 @@ const classified = {
   updated_at: "2026-07-01T00:00:00Z",
 };
 
+const unlinkedClassified = {
+  ...classified,
+  id: "classified-unlinked",
+  title: "Forno fora da comunidade",
+};
+
 const event = {
   id: "event-1",
   title: "Festival de Pizza",
@@ -203,6 +230,12 @@ const event = {
   updated_at: "2026-07-01T00:00:00Z",
 };
 
+const unlinkedEvent = {
+  ...event,
+  id: "event-unlinked",
+  title: "Evento fora da comunidade",
+};
+
 const post = {
   id: "post-1",
   author_profile_id: "profile-post-1",
@@ -218,10 +251,17 @@ const post = {
   updated_at: "2026-07-01T00:00:00Z",
 };
 
+const unlinkedPost = {
+  ...post,
+  id: "post-unlinked",
+  content: "Post fora da comunidade",
+};
+
 describe("SearchService", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
+    mocks.listActiveByCommunity.mockResolvedValue([]);
     mocks.searchPublicCommunities.mockResolvedValue([community]);
     mocks.getBusinessesList.mockResolvedValue({ businesses: [business] });
     mocks.getBusinessCanonicalUrl.mockReturnValue("/empresa/pizzaria-central");
@@ -256,6 +296,7 @@ describe("SearchService", () => {
     });
     expect(mocks.getBusinessesList).not.toHaveBeenCalled();
     expect(mocks.searchPublicCommunities).not.toHaveBeenCalled();
+    expect(mocks.listActiveByCommunity).not.toHaveBeenCalled();
   });
 
   it("federates canonical domain read models into SearchDocument results", async () => {
@@ -343,5 +384,68 @@ describe("SearchService", () => {
     expect(mocks.searchProfessionals).not.toHaveBeenCalled();
     expect(mocks.searchClassifieds).not.toHaveBeenCalled();
     expect(mocks.searchPublicPosts).not.toHaveBeenCalled();
+  });
+
+  it("filters supported domain buckets by active community entity links", async () => {
+    const otherCommunity = {
+      ...community,
+      id: "community-unlinked",
+      name: "Outra Comunidade",
+      slug: "outra-comunidade",
+      public_alias: "outra-comunidade",
+    };
+
+    mocks.searchPublicCommunities.mockResolvedValue([community, otherCommunity]);
+    mocks.getBusinessesList.mockResolvedValue({
+      businesses: [unlinkedBusiness, business],
+    });
+    mocks.searchProfessionals.mockResolvedValue([unlinkedProfessional, professional]);
+    mocks.searchClassifieds.mockResolvedValue([unlinkedClassified, classified]);
+    mocks.getEventsPage.mockResolvedValue({
+      items: [unlinkedEvent, event],
+      totalCount: 2,
+      hasMore: false,
+      nextPage: null,
+    });
+    mocks.searchPublicPosts.mockResolvedValue([unlinkedPost, post]);
+    mocks.listActiveByCommunity.mockResolvedValue([
+      { entity_type: "business", entity_id: "business-1" },
+      { entity_type: "professional", entity_id: "professional-data-1" },
+      { entity_type: "classified", entity_id: "classified-1" },
+      { entity_type: "event", entity_id: "event-1" },
+      { entity_type: "post", entity_id: "post-1" },
+    ]);
+
+    const result = await SearchService.search("pizza", {
+      category: "all",
+      territoryFilter,
+      communityId: "community-1",
+    });
+
+    expect(mocks.listActiveByCommunity).toHaveBeenCalledWith(
+      "community-1",
+      expect.objectContaining({
+        entityTypes: ["business", "professional", "classified", "event", "post"],
+      }),
+    );
+    expect(result.documents.map((document) => `${document.type}:${document.id}`)).toEqual([
+      "community:community-1",
+      "business:business-1",
+      "professional:professional-data-1",
+      "opportunity:opportunity-1",
+      "classified:classified-1",
+      "event:event-1",
+      "post:post-1",
+    ]);
+    expect(result.documents).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: "business-unlinked" }),
+        expect.objectContaining({ id: "professional-data-unlinked" }),
+        expect.objectContaining({ id: "classified-unlinked" }),
+        expect.objectContaining({ id: "event-unlinked" }),
+        expect.objectContaining({ id: "post-unlinked" }),
+        expect.objectContaining({ id: "community-unlinked" }),
+      ]),
+    );
   });
 });

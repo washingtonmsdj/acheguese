@@ -128,12 +128,22 @@ Responsabilidade:
 - preservar arrays especificos de dominio apenas como compatibilidade de UI;
 - aplicar filtros por tipo e `TerritoryFilter` canonico quando o dominio
   consultado suportar esse filtro.
+- aplicar filtro por `communityId` dentro de `SearchService`, consumindo
+  `CommunityEntityLinkService` para recortar businesses, professionals,
+  classifieds, events e posts por links ativos da comunidade, sem expor
+  `community_entity_links` para componentes de UI.
 
 `SearchService` nao e dono de empresas, comunidades, eventos, classificados,
 profissionais, oportunidades ou posts. Ele deve compor resultados consumindo
 os services canonicos de cada dominio. A primeira etapa oficial e busca
 federada via services/read models; indice denormalizado ou RPC de busca so deve
 ser criado quando houver necessidade real de ranking, latencia ou volume.
+
+Quando existir contexto de Comunidade Local, `SearchFilters.communityId` e o
+contrato publico do core/search. A busca pode consultar links comunitarios
+ativos por service canonico para tipos ja modelados em `community_entity_links`;
+tipos ainda sem vinculo canonico, como oportunidades, continuam dependentes do
+filtro territorial ate a fase de modelagem correspondente.
 
 `HomeDiscoveryService` e o contrato de descoberta da Home. Ele pode compor
 cards de atividade e confianca a partir de services canonicos, mas nao pode
