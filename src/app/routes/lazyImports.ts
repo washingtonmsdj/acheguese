@@ -219,11 +219,11 @@ export const ClassifiedShortRoute = lazy(() => import("@/app/routes/classifieds/
 // ============================================================
 // VAGAS/EMPREGOS
 // ============================================================
-export const PublicarVagaPage = createLaunchPausedRoute("Vagas");
-export const VagasPublicPage = createLaunchPausedRoute("Vagas");
-export const VagaDetailPublicPage = createLaunchPausedRoute("Vagas");
-export const WorkOpportunitiesPage = createLaunchPausedRoute("Oportunidades");
-export const WorkOpportunityDetailPage = createLaunchPausedRoute("Oportunidades");
+export const PublicarVagaPage = lazy(() => import("@/modules/classifieds/jobs/pages/PublicarVagaPage"));
+export const VagasPublicPage = lazy(() => import("@/modules/classifieds/jobs/pages/VagasPublicPage"));
+export const VagaDetailPublicPage = lazy(() => import("@/modules/classifieds/jobs/pages/VagaDetailPublicPage"));
+export const WorkOpportunitiesPage = lazy(() => import("@/modules/work-opportunities/pages/WorkOpportunitiesPage"));
+export const WorkOpportunityDetailPage = lazy(() => import("@/modules/work-opportunities/pages/WorkOpportunityDetailPage"));
 
 // ============================================================
 // COMUNIDADE (GRUPOS, EVENTOS, POSTS)

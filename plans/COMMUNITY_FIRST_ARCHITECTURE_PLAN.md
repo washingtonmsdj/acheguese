@@ -364,22 +364,27 @@ Entidades atuais:
 SSOT recomendado:
 
 - `classifieds` para classificados gerais.
-- `vagas`/jobs devem ser tratados como subdominio de oportunidades, com
-  contrato claro se continuam dentro de `classifieds/jobs` ou migram para um
-  dominio unico de oportunidades.
+- `vagas` para vagas estruturadas/recrutamento formal, mantendo ownership em
+  `src/modules/classifieds/jobs` enquanto nao existir um `core/jobs` dedicado.
+- `work_opportunities` para oportunidades rapidas e circulacao profissional
+  local, com ownership em `src/core/work-opportunities` e
+  `src/modules/work-opportunities`.
 
 Responsabilidade:
 
 - anuncios;
 - compra/venda;
 - favoritos/comentarios/reportes;
-- vagas/oportunidades quando tratadas como marketplace local.
+- vagas estruturadas como subdominio de classificados/recrutamento;
+- oportunidades rapidas como dominio proprio de circulacao profissional local.
 
 Risco atual:
 
-- existem sinais de tres conceitos proximos: `classifieds`, `vagas` e
-  `work-opportunities`. Antes de reativar vagas em launch, definir se vagas
-  sao categoria de classificados, entidade separada ou vertical propria.
+- `classifieds`, `vagas` e `work-opportunities` parecem proximos, mas nao
+  devem ser fundidos sem perda de semantica: classificados gerais vendem itens,
+  `vagas` publica recrutamento estruturado, e `work_opportunities` publica
+  demandas/ofertas rapidas. A integracao entre eles deve ocorrer por busca,
+  Home e links comunitarios, nao por copia de dados mestres.
 
 ### Eventos
 
@@ -1175,9 +1180,9 @@ Tarefas:
   participantes antes de escala publica ampla;
 - [x] revisar/remover helpers legados `increment_event_participants` e
   `decrement_event_participants` apos deploy de `community-rpc`/`event-rpc`;
-- definir se `vagas` permanece em `classifieds/jobs` ou vira oportunidades
+- [x] definir se `vagas` permanece em `classifieds/jobs` ou vira oportunidades
   canonicas;
-- atualizar route registry e launch gates;
+- [x] atualizar route registry e launch gates;
 - criar testes E2E antes de reabrir superficies.
 
 Criterio de pronto:
@@ -1192,6 +1197,17 @@ Evidencia parcial:
 - `supabase/migrations/20260709011223_drop_legacy_event_counter_rpcs.sql`
   remove `increment_event_participants` e `decrement_event_participants` para
   impedir retorno ao contrato antigo de contador nao atomico.
+- `vagas` permanece como recrutamento estruturado em
+  `src/modules/classifieds/jobs`, enquanto `work_opportunities` permanece como
+  dominio canonico de oportunidades rapidas em `src/core/work-opportunities`;
+  eles compartilham a launch surface `jobs`, mas nao sao o mesmo aggregate.
+- `src/app/routes/lazyImports.ts` carrega as paginas reais de `vagas` e
+  `oportunidades`; `src/app/routes/sections/AppLayoutRoutes.tsx`,
+  `src/app/routes/sections/CommunityTerritoryRoutes.tsx` e
+  `src/config/launchScope.ts` continuam mantendo todas as superficies publicas
+  sob o gate `jobs`.
+- `src/app/routes/__tests__/jobsLaunchScope.spec.ts` impede regressao para
+  stubs duplicados e confirma que a liberacao publica depende do gate unico.
 
 ### Fase 7 - Limpeza De Duplicacoes
 

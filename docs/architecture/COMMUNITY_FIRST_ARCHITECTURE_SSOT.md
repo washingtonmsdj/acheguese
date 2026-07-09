@@ -119,6 +119,15 @@ mais comunidades sem copiar seus dados mestres:
   atomicas dedicadas. Os helpers antigos de contador
   `increment_event_participants` e `decrement_event_participants` nao fazem
   parte do contrato canonico.
+- Oportunidades rapidas: `work_opportunities`,
+  `src/core/work-opportunities` e `src/modules/work-opportunities` para
+  demandas/ofertas locais de ciclo curto, disponibilidade profissional e
+  circulacao rapida de trabalho. Nao sao o owner de vagas estruturadas.
+- Vagas estruturadas: `vagas`, `vaga_saved_items` e
+  `src/modules/classifieds/jobs` para recrutamento formal, candidatura,
+  favoritos e paginas publicas de emprego. Permanecem sob a launch surface
+  `jobs` e nao devem ser fundidas com `work_opportunities` sem uma migracao
+  explicita para um futuro `core/jobs`.
 - Usuarios/perfis: `profiles`, `src/core/profiles`, `src/modules/profile`
 - Posts/feed: `posts` como candidato a SSOT principal, com consolidacao
   pendente contra `community_posts`
@@ -156,8 +165,15 @@ ser criado quando houver necessidade real de ranking, latencia ou volume.
 Quando existir contexto de Comunidade Local, `SearchFilters.communityId` e o
 contrato publico do core/search. A busca pode consultar links comunitarios
 ativos por service canonico para tipos ja modelados em `community_entity_links`;
-tipos ainda sem vinculo canonico, como oportunidades, continuam dependentes do
-filtro territorial ate a fase de modelagem correspondente.
+tipos ainda sem vinculo canonico, como oportunidades rapidas, continuam
+dependentes do filtro territorial ate a fase de modelagem correspondente.
+
+Oportunidades rapidas e vagas estruturadas compartilham a launch surface
+`jobs`, mas possuem aggregates diferentes. `SearchService` pode federar
+`work_opportunities` pelo `WorkOpportunitiesService`; vagas estruturadas so
+devem entrar na busca global por um adapter explicito do dominio de jobs, sem
+consultas diretas de UI e sem tratar `vagas` como alias de
+`work_opportunities`.
 
 `HomeDiscoveryService` e o contrato de descoberta da Home. Ele pode compor
 cards de atividade e confianca a partir de services canonicos, mas nao pode

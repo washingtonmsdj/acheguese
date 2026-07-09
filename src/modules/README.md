@@ -43,7 +43,9 @@
   `community-recommendations`
 - Mobility derived domains stay inside `mobility`.
 : `mobility/delivery`
-- Classified jobs stay inside `classifieds`.
+- Quick work opportunities stay in the explicit top-level bounded context.
+: `work-opportunities`
+- Structured classified jobs stay inside `classifieds`.
 : `classifieds/jobs`
 - Services capability stays consolidated in `professionals`.
 : `professionals/services`

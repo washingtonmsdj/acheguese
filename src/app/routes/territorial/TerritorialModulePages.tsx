@@ -35,7 +35,7 @@ const EventsListPage     = createLaunchPausedRoute('Eventos');
 const GastronomyPage        = lazy(() => import('@/modules/business/gastronomy/pages/GastronomyLandingPage'));
 const EducationPage         = createLaunchPausedRoute('Educacao');
 const MobilidadePage       = createLaunchPausedRoute('Mobilidade');
-const VagasPage            = createLaunchPausedRoute('Vagas');
+const VagasPage            = lazy(() => import('@/modules/classifieds/jobs/pages/VagasPublicPage'));
 const CategoryBusinessPage = lazy(() => import('@/core/business/pages/CategoryBusinessPage'));
 const MapaPage             = lazy(() => import('@/core/maps/pages/MapaPageV4'));
 
