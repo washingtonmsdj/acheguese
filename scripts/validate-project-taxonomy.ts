@@ -271,9 +271,12 @@ const COMMUNITY_FIRST_PLAN_STATUS_REQUIRED_MARKERS = [
   "Status: concluida em 2026-07-09 para contrato federado de busca/Home.",
   "Indice denormalizado/RPC de busca fica adiado para fase futura condicionada por",
   "Status: concluida em 2026-07-09 para SSOT, launch gates e testes.",
+  "Status: concluida em 2026-07-09 para limpeza de duplicacoes, docs ativos e gates finais.",
+  "Status: concluido em 2026-07-09 para o escopo arquitetural Community First.",
 ] as const;
 const COMMUNITY_FIRST_PLAN_STATUS_FORBIDDEN_MARKERS = [
   "- [ ] criar indice denormalizado/RPC de busca quando escala e ranking exigirem",
+  "Status: em andamento",
 ] as const;
 
 function pathExists(relativePath: string): boolean {

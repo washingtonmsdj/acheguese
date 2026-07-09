@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Route } from "react-router-dom";
+import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from "@/config/launchScope";
 import { APP_MODULE_SLUGS } from "@/config/moduleSlugs";
 import {
   TERRITORIAL_ROUTE_PARAMS,
@@ -17,6 +18,8 @@ type AppLayoutRouteDescriptor = {
   path: string;
   element: ReactNode;
   indexElement?: ReactNode;
+  launchSurface?: LaunchSurfaceKey;
+  pausedModuleName?: string;
 };
 
 const APP_LAYOUT_BUSINESS_SERVICE_CLASSIFIED_ROUTES: readonly AppLayoutRouteDescriptor[] = [
@@ -122,6 +125,8 @@ export const APP_LAYOUT_EVENT_TERRITORIAL_ROUTES: readonly AppLayoutRouteDescrip
       TERRITORIAL_STATIC.eventDetail,
       TERRITORIAL_PARAMS.eventId,
     ]),
+    launchSurface: "events",
+    pausedModuleName: "Eventos",
     element: <P.TerritorialLayout />,
     indexElement: (
       <P.EventsErrorBoundary>
@@ -134,6 +139,8 @@ export const APP_LAYOUT_EVENT_TERRITORIAL_ROUTES: readonly AppLayoutRouteDescrip
     path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.events, [
       TERRITORIAL_STATIC.favorites,
     ]),
+    launchSurface: "events",
+    pausedModuleName: "Eventos",
     element: <P.TerritorialLayout />,
     indexElement: (
       <P.EventsErrorBoundary>
@@ -146,6 +153,8 @@ export const APP_LAYOUT_EVENT_TERRITORIAL_ROUTES: readonly AppLayoutRouteDescrip
     path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.events, [
       TERRITORIAL_STATIC.calendar,
     ]),
+    launchSurface: "events",
+    pausedModuleName: "Eventos",
     element: <P.TerritorialLayout />,
     indexElement: (
       <P.EventsErrorBoundary>
@@ -158,6 +167,8 @@ export const APP_LAYOUT_EVENT_TERRITORIAL_ROUTES: readonly AppLayoutRouteDescrip
     path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.events, [
       TERRITORIAL_STATIC.map,
     ]),
+    launchSurface: "events",
+    pausedModuleName: "Eventos",
     element: <P.TerritorialLayout />,
     indexElement: (
       <P.EventsErrorBoundary>
@@ -170,12 +181,16 @@ export const APP_LAYOUT_EVENT_TERRITORIAL_ROUTES: readonly AppLayoutRouteDescrip
     path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.events, [
       TERRITORIAL_PARAMS.district,
     ]),
+    launchSurface: "events",
+    pausedModuleName: "Eventos",
     element: <P.TerritorialLayout />,
     indexElement: <P.TerritorialEventosPage />,
   },
   {
     id: "events-city",
     path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.events),
+    launchSurface: "events",
+    pausedModuleName: "Eventos",
     element: <P.TerritorialLayout />,
     indexElement: <P.TerritorialEventosPage />,
   },
@@ -208,12 +223,18 @@ export function renderAppLayoutRouteDescriptors(
   routes: readonly AppLayoutRouteDescriptor[],
 ): ReactNode[] {
   return routes.map((route) => {
-    if (!route.indexElement) {
-      return <Route key={route.id} path={route.path} element={route.element} />;
+    const isPaused =
+      route.launchSurface !== undefined && !isLaunchSurfaceEnabled(route.launchSurface);
+    const element = isPaused
+      ? <P.LaunchPausedPage moduleName={route.pausedModuleName ?? "Módulo"} />
+      : route.element;
+
+    if (!route.indexElement || isPaused) {
+      return <Route key={route.id} path={route.path} element={element} />;
     }
 
     return (
-      <Route key={route.id} path={route.path} element={route.element}>
+      <Route key={route.id} path={route.path} element={element}>
         <Route index element={route.indexElement} />
       </Route>
     );

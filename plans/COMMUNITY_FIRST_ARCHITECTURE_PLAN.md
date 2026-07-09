@@ -1237,7 +1237,7 @@ Evidencia:
 
 ### Fase 7 - Limpeza De Duplicacoes
 
-Status: em andamento
+Status: concluida em 2026-07-09 para limpeza de duplicacoes, docs ativos e gates finais.
 
 Objetivo:
 
@@ -1246,12 +1246,12 @@ Objetivo:
 Tarefas:
 
 - [x] decidir `posts` vs `community_posts`;
-- reduzir facades duplicadas entre `src/core` e `src/modules`;
+- [x] reduzir facades duplicadas entre `src/core` e `src/modules`;
 - [x] revisar `AppLayoutRoutes.tsx` e extrair registros declarativos por dominio;
-- arquivar docs antigos que contradizem o modelo novo;
+- [x] arquivar docs antigos que contradizem o modelo novo;
 - [x] adicionar validadores para impedir retorno das duplicacoes.
 
-Evidencia parcial:
+Evidencia:
 
 - `src/core/profiles/services/profile.queries.ts` conta atividade pelo
   `postService.getPostsCountByAuthor`, preservando `posts.author_profile_id`
@@ -1381,6 +1381,29 @@ Evidencia parcial:
   `INDEX_CANONICO.md`, `STATUS_ATUAL.md`, `COMMUNITY_FIRST_ARCHITECTURE_SSOT.md`
   e este plano; `validate:taxonomy` bloqueia o retorno de linguagem "100%" e
   referencias antigas como fonte principal.
+- O `.env` versionado voltou a ser template sem chave real; credenciais locais
+  permanecem em `.env.local`, que nao e versionado.
+- `src/integrations/supabase/client.ts` foi removido como cliente Supabase
+  legado; o cliente browser canonico continua sendo
+  `src/integrations/supabase/supabase.ts`, exposto por
+  `src/integrations/supabase/index.ts`.
+- `src/app/routes/sections/AppLayoutRouteRegistry.tsx` passou a aplicar o
+  launch gate das rotas territoriais de Eventos no proprio registry, removendo
+  a duplicacao em `DIRECT_PAUSED_ROUTES` que deixava
+  `/eventos/ba/salvador/calendario` cair no resolvedor territorial.
+- `scripts/validate-architecture-boundaries-incremental.mjs` foi alinhado ao
+  SSOT de modulos: `index.ts` raiz so e exigido quando ha contrato publico real;
+  modulos sem API publica raiz ficam explicitamente classificados em vez de
+  recriar barrels vazios.
+- Gates finais executados em 2026-07-09 e aprovados:
+  `npm run validate:taxonomy`, `npm run validate:architecture:community`,
+  `npm run validate:architecture:governance`,
+  `npm run validate:docs-live-links`, `npm run validate:docs-structure`,
+  `npm run security:validate`, `npm run validate:phase:core`,
+  `npm run verify:deploy` e `git diff --check`.
+- `npm run validate:phase:core` aprovou typecheck, lint, links vivos de docs,
+  `test:ssot:community` (`11/11`) e E2E core em Chromium (`56/56`).
+- `npm run verify:deploy` declarou `PROJETO PRONTO PARA DEPLOY`.
 
 Criterio de pronto:
 
@@ -1396,11 +1419,14 @@ Criterio de pronto:
 4. Fase 4: links comunitarios antes de monetizacao community-first ampla.
 5. Fase 5: busca/descoberta para sustentar Home.
 6. Fase 6: reabrir eventos/oportunidades com SSOT.
-7. Fase 7: limpar duplicacoes residuais.
+7. Fase 7: limpar duplicacoes residuais. Concluida em 2026-07-09 no escopo
+   arquitetural Community First.
 
 ## Definicao De Pronto Do Plano Completo
 
-O plano so deve ser considerado 100% implementado quando:
+Status: concluido em 2026-07-09 para o escopo arquitetural Community First.
+
+O plano foi considerado implementado quando:
 
 - Comunidade Local estiver formalmente documentada como core domain.
 - `territory_communities` tiver service/repository canonico unico.

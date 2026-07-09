@@ -60,6 +60,19 @@ describe("AppLayoutRouteRegistry", () => {
     expect(pathsById.get("map-district")).toBe("/mapa/:state/:city/:district");
   });
 
+  it("gates territorial event routes in the route registry itself", () => {
+    const eventRoutes = APP_LAYOUT_TERRITORIAL_DOMAIN_ROUTES.filter((route) =>
+      route.id.startsWith("events-"),
+    );
+
+    expect(eventRoutes).toHaveLength(6);
+    expect(eventRoutes.every((route) => route.launchSurface === "events")).toBe(true);
+    expect(eventRoutes.every((route) => route.pausedModuleName === "Eventos")).toBe(true);
+
+    const appLayoutRoutes = readProjectFile("src/app/routes/sections/AppLayoutRoutes.tsx");
+    expect(appLayoutRoutes).not.toContain("APP_LAYOUT_EVENT_TERRITORIAL_ROUTES.map");
+  });
+
   it("keeps AppLayoutRoutes consuming the registry instead of re-declaring extracted domains", () => {
     const appLayoutRoutes = readProjectFile("src/app/routes/sections/AppLayoutRoutes.tsx");
 

@@ -90,13 +90,6 @@ const DIRECT_PAUSED_ROUTES: DirectPausedRoute[] = [
   { path: EVENT_ROUTES.map, surface: "events", moduleName: "Eventos" },
   { path: EVENT_ROUTES.detail, surface: "events", moduleName: "Eventos" },
   { path: EVENT_ROUTES.legacyDetail, surface: "events", moduleName: "Eventos" },
-  ...APP_LAYOUT_EVENT_TERRITORIAL_ROUTES.map(
-    (route): DirectPausedRoute => ({
-      path: route.path,
-      surface: "events",
-      moduleName: "Eventos",
-    }),
-  ),
   { path: JOB_ROUTES.home, surface: "jobs", moduleName: "Vagas" },
   { path: JOB_ROUTES.publish, surface: "jobs", moduleName: "Vagas" },
   { path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.jobs), surface: "jobs", moduleName: "Vagas" },

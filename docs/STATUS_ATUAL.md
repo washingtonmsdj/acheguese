@@ -2,7 +2,7 @@
 
 Data: 2026-07-09
 Branch: main
-Ultimo commit base validado antes desta atualizacao: 46496973 (`docs: align global audit with community taxonomy`)
+Ultimo commit base validado antes desta atualizacao: 562231be (`docs: close completed community first phases`)
 
 Observacao: este documento e a fonte operacional atual. O historico abaixo fica preservado por contexto, mas qualquer registro antigo de bloqueio por falta de `git`/`node` nao representa o ambiente validado em 2026-06-06.
 
@@ -40,8 +40,25 @@ Observacao: este documento e a fonte operacional atual. O historico abaixo fica 
   eventos/oportunidades com SSOT, launch gates e testes. Indice denormalizado
   ou RPC de busca permanece fora do plano ate existir necessidade real de
   escala, ranking ou latencia.
-- Fase 7 continua como trilha de limpeza incremental de duplicacoes e docs,
-  com guardrails ativos em `validate:taxonomy`.
+- Fase 7 do plano Community First foi fechada em 2026-07-09 no escopo
+  arquitetural: duplicacoes residuais foram tratadas, docs ativos foram
+  alinhados, barrels vazios continuam proibidos, e o launch gate territorial de
+  Eventos foi movido para o registry canonico de rotas.
+- `scripts/validate-architecture-boundaries-incremental.mjs` agora diferencia
+  modulos sem contrato publico raiz de barrels ausentes indevidos, evitando a
+  recriacao de `index.ts` vazio apenas para satisfazer o gate.
+- `.env` versionado voltou a ser template sem chave real; as variaveis locais
+  ficam em `.env.local`, que permanece fora do controle de versao.
+- Cliente Supabase browser canonico: `src/integrations/supabase/supabase.ts`
+  via `src/integrations/supabase/index.ts`. O antigo
+  `src/integrations/supabase/client.ts` foi removido.
+- Gates finais do plano executados em 2026-07-09: `npm run validate:taxonomy`,
+  `npm run validate:architecture:community`,
+  `npm run validate:architecture:governance`,
+  `npm run validate:docs-live-links`, `npm run validate:docs-structure`,
+  `npm run security:validate`, `npm run validate:phase:core`,
+  `npm run verify:deploy` e `git diff --check` passaram. O E2E core fechou com
+  `56/56` em Chromium e `verify:deploy` declarou `PROJETO PRONTO PARA DEPLOY`.
 
 ## Validacoes Recentes
 

@@ -18,6 +18,16 @@ const IMPORT_RE = /from\s+["']([^"']+)["']/g;
 const SUPABASE_BOUNDARY_RE =
   /(\(\s*supabase\s+as\s+any\s*\)|\bsupabase\s*\.\s*(from|rpc|channel|functions|auth|storage|removeChannel)\s*\(|from\s+['"]@\/integrations\/supabase(?:\/client)?['"])/;
 const DEPRECATED_MODULE_IMPORTS = new Set(["analytics", "notifications", "verification"]);
+const MODULES_WITHOUT_PUBLIC_ROOT_BARREL = new Set([
+  "ai",
+  "central",
+  "community-events",
+  "community-feed",
+  "community-groups",
+  "community-lost-found",
+  "community-recommendations",
+  "work-opportunities",
+]);
 
 function normalize(filePath) {
   return filePath.replace(/\\/g, "/");
@@ -97,6 +107,8 @@ function collectMissingBarrels() {
 
   for (const entry of entries) {
     if (!entry.isDirectory()) continue;
+    if (MODULES_WITHOUT_PUBLIC_ROOT_BARREL.has(entry.name)) continue;
+
     const barrelPath = path.join(MODULES_DIR, entry.name, "index.ts");
     if (fs.existsSync(barrelPath)) continue;
 
