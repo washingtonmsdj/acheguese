@@ -261,8 +261,8 @@ export function AppLayoutRoutes() {
         <Route path="/novo-post" element={<P.NovoPostPage />} />
         <Route path="/busca" element={<P.BuscaPage />} />
         <Route path="/buscar" element={<P.BuscarPage />} />
-        <Route path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.search)} element={<P.BuscarPage />} />
-        <Route path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.search, [TERRITORIAL_PARAMS.district])} element={<P.BuscarPage />} />
+        <Route path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.search)} element={<P.BuscaPage />} />
+        <Route path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.search, [TERRITORIAL_PARAMS.district])} element={<P.BuscaPage />} />
         <Route path={buildTerritorialRoutePath(TERRITORIAL_STATIC.searchAlias)} element={<P.BuscarPage />} />
         <Route path={buildTerritorialRoutePath(TERRITORIAL_STATIC.searchAlias, [TERRITORIAL_PARAMS.district])} element={<P.BuscarPage />} />
         {aiVirtualTryOnEnabled && (

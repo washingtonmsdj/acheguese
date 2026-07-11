@@ -21,12 +21,14 @@ import { useParams, useLocation } from 'react-router-dom';
 import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
 import { createTerritorialGroupRepository } from '@/core/location/repositories/createTerritorialGroupRepository';
 import { TerritoryCommunityRouteService } from '@/core/routing/services/TerritoryCommunityRouteService';
+import { resolveCommunityPublicAliasTerritory } from '@/core/routing/services/CommunityPublicAliasTerritoryResolver';
 import { APP_MODULE_SLUGS, isAppModulePath } from '@/config/moduleSlugs';
 import { TERRITORY_CONFIG } from '@/config/territory';
 import type { Location, TerritorialGroupWithMembers } from '@/core/location/types';
 import { isTerritoryPubliclyNavigable } from '../utils/territoryVisibility';
 import { parsePublicTerritoryPath } from '../utils/publicTerritoryPath';
 import { resolvePublicTerritoryFallback } from '../utils/publicTerritoryFallbacks';
+import { isCommunityRouteSuffixSegment } from '../utils/territoryUrls';
 
 export const TERRITORY_RESOLVE_STATUS = {
   IDLE: 'idle',
@@ -85,6 +87,10 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs = RESOLVE_TIMEOUT_MS): Pr
       },
     );
   });
+}
+
+function normalizePathForCompare(value: string): string {
+  return value.trim().replace(/\/+$/g, "").toLowerCase();
 }
 
 export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
@@ -146,6 +152,41 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
 
     async function resolve() {
       try {
+        const communitySlug = groupSlug || districtSlug;
+        if (
+          isCommunityRoute &&
+          communitySlug &&
+          !isCommunityRouteSuffixSegment(communitySlug)
+        ) {
+          const expectedCanonicalPath = normalizePathForCompare(
+            `/${APP_MODULE_SLUGS.community}/${state}/${city}/${communitySlug}`,
+          );
+          try {
+            const aliasResolution = await withTimeout(
+              resolveCommunityPublicAliasTerritory(communitySlug),
+            );
+
+            if (
+              aliasResolution.status === "resolved" &&
+              normalizePathForCompare(aliasResolution.canonicalPath) === expectedCanonicalPath
+            ) {
+              if (!cancelled) {
+                setResult({
+                  status:
+                    aliasResolution.resolved.kind === "group"
+                      ? TERRITORY_RESOLVE_STATUS.RESOLVED_GROUP
+                      : TERRITORY_RESOLVE_STATUS.RESOLVED_LOCATION,
+                  resolved: aliasResolution.resolved,
+                  error: null,
+                });
+              }
+              return;
+            }
+          } catch {
+            // Fall through to the generic territorial resolver.
+          }
+        }
+
         const locationRepo = createLocationRepository();
         const cityPath = `/${country}/${state}/${city}`;
         const cityLocation = await withTimeout(locationRepo.findByPath(cityPath));

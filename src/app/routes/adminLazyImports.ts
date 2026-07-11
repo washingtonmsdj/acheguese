@@ -17,6 +17,7 @@ export const AdminBanners = lazy(() => import("@/modules/admin/pages/BannersPage
 export const AdminEmpresas = lazy(() => import("@/modules/admin/pages/AdminEmpresas"));
 export const AdminGastronomia = lazy(() => import("@/modules/admin/pages/AdminGastronomia"));
 export const AdminServicos = lazy(() => import("@/modules/admin/pages/AdminServicos"));
+export const AdminAnuncios = lazy(() => import("@/modules/admin/pages/AdminAnuncios"));
 export const AdminClassificados = lazy(() =>
   import("@/modules/admin/pages/AdminClassificados"),
 );

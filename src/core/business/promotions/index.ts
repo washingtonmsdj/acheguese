@@ -7,12 +7,32 @@ export {
   adDeliveryService,
   AdDeliveryService,
 } from '@/core/business/promotions/services/AdDeliveryService';
+export {
+  AdCampaignRequestService,
+} from '@/core/business/promotions/services/AdCampaignRequestService';
+export {
+  AdCampaignAdminService,
+} from '@/core/business/promotions/services/AdCampaignAdminService';
+export type {
+  AdCampaignRequestInput,
+  AdCampaignTerritoryType,
+  BusinessAdCampaignSummary,
+} from '@/core/business/promotions/services/AdCampaignRequestService';
+export type {
+  AdminAdCampaignListParams,
+  AdminAdCampaignListResult,
+  AdminAdCampaignStateInput,
+  AdminAdCampaignStats,
+  AdminAdCampaignSummary,
+} from '@/core/business/promotions/services/AdCampaignAdminService';
 export type {
   AdCampaign,
+  AdCampaignBillingStatus,
+  AdCampaignReviewStatus,
+  AdCampaignSource,
   AdCampaignStatus,
   AdCampaignWithTargets,
   AdEligibilityContext,
-  AdOwnerEntityType,
   AdPlacementKey,
   AdResolutionResult,
   AdTarget,

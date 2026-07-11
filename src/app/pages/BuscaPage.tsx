@@ -1,14 +1,17 @@
 /**
- * BuscaPage - Busca Global Profissional
+ * BuscaPage - busca federada publica.
  *
  * Busca unificada de:
- * - Negocios
+ * - Comunidades
+ * - Negocios locais
  * - Profissionais
+ * - Classificados
+ * - Conteudos comunitarios
  *
  */
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   Search,
   Store,
@@ -31,7 +34,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useBusinessNavigation } from "@/modules/business/hooks/useBusinessNavigation";
 import { useGlobalSearch } from "@/core/search/hooks/useGlobalSearch";
 import { professionalPublicRoutes } from "@/core/professional/routes/professionalPublicRoutes";
+import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from "@/config/launchScope";
+import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
+import {
+  TERRITORY_RESOLVE_STATUS,
+  useResolveTerritoryFromUrl,
+} from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import type { SearchCategory, SearchDocument } from "@/core/search";
+import type { TerritoryFilter } from "@/core/location/types";
 
 // ============================================================================
 // TYPES
@@ -41,6 +51,7 @@ interface FilterOption {
   id: SearchCategory;
   label: string;
   icon: React.ReactNode;
+  launchSurface?: LaunchSurfaceKey;
 }
 
 interface BusinessSearchItem {
@@ -74,7 +85,7 @@ interface SearchResultsViewModel {
 // CONSTANTS
 // ============================================================================
 
-const FILTERS: FilterOption[] = [
+const RAW_FILTERS: FilterOption[] = [
   { id: "all", label: "Todos", icon: <Search className="h-3.5 w-3.5" /> },
   {
     id: "communities",
@@ -95,6 +106,7 @@ const FILTERS: FilterOption[] = [
     id: "events",
     label: "Eventos",
     icon: <Calendar className="h-3.5 w-3.5" />,
+    launchSurface: "events",
   },
   {
     id: "classifieds",
@@ -105,6 +117,7 @@ const FILTERS: FilterOption[] = [
     id: "opportunities",
     label: "Oportunidades",
     icon: <Briefcase className="h-3.5 w-3.5" />,
+    launchSurface: "jobs",
   },
   {
     id: "posts",
@@ -113,14 +126,38 @@ const FILTERS: FilterOption[] = [
   },
 ];
 
+const FILTERS: FilterOption[] = RAW_FILTERS.filter(
+  (filter) => !filter.launchSurface || isLaunchSurfaceEnabled(filter.launchSurface),
+);
+
 // ============================================================================
 // COMPONENT
 // ============================================================================
 
 export default function BuscaPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { state, city } = useParams<{ state?: string; city?: string }>();
   const { navigateToBusiness } = useBusinessNavigation();
   const [activeFilter, setActiveFilter] = useState<SearchCategory>("all");
+  const initialQuery = searchParams.get("q")?.trim() ?? "";
+  const territoryResolution = useResolveTerritoryFromUrl();
+  const moduleTerritory = useModuleTerritoryFilter({
+    nearbyEnabled: true,
+    routeResolved: territoryResolution.resolved,
+  });
+  const routeResolvePending =
+    Boolean(state && city) &&
+    (
+      territoryResolution.status === TERRITORY_RESOLVE_STATUS.IDLE ||
+      territoryResolution.status === TERRITORY_RESOLVE_STATUS.LOADING
+    );
+  const searchEnabled = !routeResolvePending && !moduleTerritory.isLoading;
+  const territoryFilterKey = JSON.stringify(moduleTerritory.territoryFilter ?? null);
+  const searchTerritoryFilter = useMemo<TerritoryFilter | undefined>(() => {
+    const parsed = JSON.parse(territoryFilterKey) as TerritoryFilter | null;
+    return parsed ?? undefined;
+  }, [territoryFilterKey]);
 
   const {
     query,
@@ -131,11 +168,39 @@ export default function BuscaPage() {
     clearQuery,
     suggestions,
     history,
-  } = useGlobalSearch("", { category: activeFilter });
+  } = useGlobalSearch(
+    initialQuery,
+    {
+      category: activeFilter,
+      territoryFilter: searchTerritoryFilter,
+    },
+    { enabled: searchEnabled },
+  );
+
+  useEffect(() => {
+    setQuery(initialQuery);
+  }, [initialQuery, setQuery]);
+
+  useEffect(() => {
+    if (!searchEnabled) return;
+
+    updateFilters({
+      category: activeFilter,
+      territoryFilter: searchTerritoryFilter,
+    });
+  }, [
+    activeFilter,
+    searchTerritoryFilter,
+    searchEnabled,
+    updateFilters,
+  ]);
 
   const handleFilterChange = (filter: SearchCategory) => {
     setActiveFilter(filter);
-    updateFilters({ category: filter });
+    updateFilters({
+      category: filter,
+      territoryFilter: searchTerritoryFilter,
+    });
   };
 
   const handleSuggestionClick = (suggestion: string) => {
@@ -161,7 +226,7 @@ export default function BuscaPage() {
               autoFocus
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Buscar empresas, profissionais e serviços..."
+              placeholder="Buscar comunidades, empresas, serviços, classificados..."
               className="pl-9 pr-9 h-10 rounded-full bg-secondary border-none"
               aria-label="Campo de busca"
             />
@@ -206,7 +271,7 @@ export default function BuscaPage() {
             history={history}
             onSuggestionClick={handleSuggestionClick}
           />
-        ) : isLoading ? (
+        ) : isLoading || !searchEnabled ? (
           <LoadingState />
         ) : results.total === 0 ? (
           <NoResultsState query={query} />
@@ -247,7 +312,7 @@ function EmptyState({
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <Search className="h-12 w-12 text-muted-foreground/30 mb-4" />
         <p className="text-sm text-muted-foreground">
-          Digite para buscar empresas, profissionais e serviços
+          Digite para buscar comunidades, empresas, serviços e classificados
         </p>
       </div>
 
@@ -321,10 +386,14 @@ function ResultsView({
   onProfessionalClick: (professional: ProfessionalSearchItem) => void;
   onDocumentClick: (document: SearchDocument) => void;
 }) {
-  const genericDocuments = results.documents.filter(
-    (document) =>
-      document.type !== "business" && document.type !== "professional",
-  );
+  const documentSections = DOCUMENT_SECTION_ORDER.map((type) => {
+    const config = DOCUMENT_SECTION_CONFIG[type];
+    return {
+      ...config,
+      type,
+      documents: results.documents.filter((document) => document.type === type),
+    };
+  }).filter((section) => section.documents.length > 0);
 
   return (
     <AnimatePresence mode="wait">
@@ -371,12 +440,13 @@ function ResultsView({
           </Section>
         )}
 
-        {genericDocuments.length > 0 && (
+        {documentSections.map((section) => (
           <Section
-            title="Outros resultados"
-            icon={<Search className="h-4 w-4 text-primary" />}
+            key={section.type}
+            title={section.title}
+            icon={section.icon}
           >
-            {genericDocuments.map((document) => (
+            {section.documents.map((document) => (
               <SearchDocumentCard
                 key={`${document.type}-${document.id}`}
                 document={document}
@@ -384,7 +454,7 @@ function ResultsView({
               />
             ))}
           </Section>
-        )}
+        ))}
       </motion.div>
     </AnimatePresence>
   );
@@ -515,6 +585,58 @@ const DOCUMENT_TYPE_LABELS: Record<SearchDocument["type"], string> = {
   coupon: "Cupom",
 };
 
+const DOCUMENT_TYPE_ICONS: Record<SearchDocument["type"], React.ReactNode> = {
+  community: <Users className="h-5 w-5 text-muted-foreground" />,
+  business: <Store className="h-5 w-5 text-muted-foreground" />,
+  professional: <Wrench className="h-5 w-5 text-muted-foreground" />,
+  opportunity: <Briefcase className="h-5 w-5 text-muted-foreground" />,
+  classified: <Tag className="h-5 w-5 text-muted-foreground" />,
+  event: <Calendar className="h-5 w-5 text-muted-foreground" />,
+  post: <MessageSquare className="h-5 w-5 text-muted-foreground" />,
+  coupon: <Tag className="h-5 w-5 text-muted-foreground" />,
+};
+
+type GenericSearchDocumentType = Exclude<SearchDocument["type"], "business" | "professional">;
+
+const DOCUMENT_SECTION_ORDER: GenericSearchDocumentType[] = [
+  "community",
+  "classified",
+  "post",
+  "event",
+  "opportunity",
+  "coupon",
+];
+
+const DOCUMENT_SECTION_CONFIG: Record<
+  GenericSearchDocumentType,
+  { title: string; icon: React.ReactNode }
+> = {
+  community: {
+    title: "Comunidades",
+    icon: <Users className="h-4 w-4 text-primary" />,
+  },
+  classified: {
+    title: "Classificados",
+    icon: <Tag className="h-4 w-4 text-primary" />,
+  },
+  post: {
+    title: "Atividades nas comunidades",
+    icon: <MessageSquare className="h-4 w-4 text-primary" />,
+  },
+  event: {
+    title: "Eventos",
+    icon: <Calendar className="h-4 w-4 text-primary" />,
+  },
+  opportunity: {
+    title: "Oportunidades",
+    icon: <Briefcase className="h-4 w-4 text-primary" />,
+  },
+  coupon: {
+    title: "Cupons",
+    icon: <Tag className="h-4 w-4 text-primary" />,
+  },
+};
+
 function SearchDocumentCard({
   document,
   onClick,
@@ -542,7 +664,7 @@ function SearchDocumentCard({
         />
       ) : (
         <div className="h-12 w-12 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
-          <Search className="h-5 w-5 text-muted-foreground" />
+          {DOCUMENT_TYPE_ICONS[document.type]}
         </div>
       )}
 

@@ -1159,30 +1159,64 @@ Evidencia:
   conteudo publico publicado e nao removido;
 - `src/app/pages/BuscaPage.tsx` renderiza filtros de comunidades, eventos,
   classificados, oportunidades e posts a partir do contrato `SearchDocument`;
+- em 2026-07-10, `/busca/:state/:city[/district]` passou a renderizar
+  `BuscaPage` com `q` da URL e `TerritoryFilter` resolvido pela rota, fazendo
+  a Home usar a busca federada multi-dominio. `/buscar` permanece como busca
+  inteligente de linguagem natural, sem redirect;
+- `SearchService` respeita `launchScope` para `events` e `jobs` e falha
+  fechado em filtros por `communityId` quando buckets linkaveis nao possuem
+  vinculo ativo em `community_entity_links`;
 - `src/core/search/services/SearchDocumentMapper.ts` centraliza a conversao de
   entidades canonicas para `SearchDocument`, evitando mapeadores duplicados na
   busca e na Home;
 - `src/core/landing/services/HomeDiscoveryService.ts` compoe blocos de
-  atividade e confianca da Home consumindo services canonicos de landing,
-  eventos, oportunidades e classificados, sem query direta em componente;
+  atividade, confianca, comunidades em destaque, ranking, sugestoes, anuncios
+  e indicadores da Home consumindo services canonicos de landing, comunidade,
+  posts, anuncios, eventos habilitados, oportunidades habilitadas e
+  classificados, sem query direta em componente;
 - `src/app/pages/MainLandingPage.tsx` consome `HomeDiscoveryService` via React
-  Query para atividade/confianca, usa helpers canonicos de routing/search para
+  Query para as secoes do concept, usa helpers canonicos de routing/search para
   links e busca, mantem a Home como superficie de apresentacao e nao consulta
   Supabase nem tabelas de dominio diretamente;
+- `CommunityExperienceService.listPublicCommunitiesForDiscovery` concentra a
+  leitura publica de comunidades usada pela Home; `HomeDiscoveryService` nao
+  acessa `territory_communities` diretamente, preservando
+  `src/core/community-experience` como owner do SSOT de Comunidade Local;
+- membros ativos e indicadores operacionais agregados ainda nao possuem
+  aggregate publico final. Enquanto isso, o concept e atendido por fallback
+  editorial explicito em `HomeDiscoveryService`, sem consultar
+  `community_memberships` ou dados privados no browser;
+- ranking da Home foi isolado em
+  `src/core/landing/services/HomeCommunityRankingService.ts`, usando ordem e
+  destaque editorial mais sinais publicos de `community_entity_links` ativos
+  (`link_type`, `entity_type`, `priority`);
+- anuncios patrocinados usam `src/core/business/promotions` como SSOT:
+  `AdRepositorySupabase` segue o schema gerado atual de `ad_campaigns`, e
+  `SponsoredAdsRuntimeService` delega para `useAdDelivery` em vez de consultar
+  Supabase diretamente;
+- eventos e vagas na Home passam por `src/config/launchScope.ts`; se a surface
+  estiver pausada, HomeDiscovery, menu, tiles e fallbacks visuais nao devem
+  anunciar esses blocos como lancados;
 - a UX da Home foi atualizada por solicitacao explicita em 2026-07-09 para o
   modelo Community First: hero de descoberta, comunidades em destaque, blocos
   de atividades, modulos locais, ranking/sugestoes e anuncios, preservando
   entidades independentes e contratos SSOT;
 - a Home mobile foi refinada no commit `c167d87b` para ficar fiel ao concept
   aprovado: header compacto em uma linha, hero visual em card, busca com CTA
-  circular interno, chips com icones e trilho horizontal em telas estreitas,
-  sem mover regras de dominio para a interface;
+  circular interno, chips com icones e trilho horizontal em telas estreitas.
+  A regra responsiva da header mantem marca, acoes de territorio/clima/sino e
+  perfil na primeira linha; a navegacao principal e a unica area que desce para
+  a segunda linha quando nao ha espaco, sem mover regras de dominio para a
+  interface;
 - `src/core/search/services/__tests__/SearchService.spec.ts` cobre query curta,
   federacao multi-dominio, filtro por categoria e filtro por comunidade via
   `community_entity_links`;
 - `src/core/landing/services/__tests__/HomeDiscoveryService.spec.ts` cobre
-  composicao multi-dominio, ordenacao dos destaques e tolerancia a falha
-  parcial de um dominio.
+  composicao multi-dominio, launch gates, anuncio elegivel, atividades por
+  posts publicos e tolerancia a falha parcial de um dominio;
+- `src/core/landing/services/__tests__/HomeCommunityRankingService.spec.ts`
+  cobre ranking por sinais publicos e evita query de links para ids editoriais
+  de fallback.
 
 ### Fase 6 - Eventos E Oportunidades
 

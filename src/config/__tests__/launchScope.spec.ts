@@ -17,6 +17,7 @@ describe("launchScope", () => {
     expect(isLaunchSurfaceEnabled("nearby")).toBe(true);
     expect(isLaunchSurfaceEnabled("community")).toBe(true);
     expect(isLaunchSurfaceEnabled("classifieds")).toBe(true);
+    expect(isLaunchSurfaceEnabled("communityEventsPreview")).toBe(true);
 
     expect(isLaunchSurfaceEnabled("jobs")).toBe(false);
     expect(isLaunchSurfaceEnabled("events")).toBe(false);

@@ -44,5 +44,6 @@ export const ROUTING_MODULE_SLUGS = {
   alerts: APP_MODULE_SLUGS.communityAlerts,
   map: APP_MODULE_SLUGS.map,
   guide: "guia",
+  search: APP_MODULE_SLUGS.search,
   ranking: APP_MODULE_SLUGS.ranking,
 } as const;

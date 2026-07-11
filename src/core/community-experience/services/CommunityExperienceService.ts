@@ -11,6 +11,7 @@ import type {
   TerritorialCommunityProfile,
   TerritoryCommunityRecord,
 } from "@/core/community-experience/types";
+import type { TerritoryFilter } from "@/core/location/types";
 
 export type { CommunityStatus, CommunityTerritoryType, TerritorialCommunityProfile };
 export type { CommunitySearchResult };
@@ -160,5 +161,17 @@ export class CommunityExperienceService {
     limit = 12,
   ): Promise<CommunitySearchResult[]> {
     return CommunityExperienceRepository.searchPublicCommunities(query, limit);
+  }
+
+  static async listPublicCommunitiesForDiscovery(
+    filter: TerritoryFilter,
+    limit = 12,
+  ): Promise<CommunitySearchResult[]> {
+    if (filter.scope === "none") return [];
+
+    return CommunityExperienceRepository.listPublicCommunitiesForDiscovery({
+      cityId: filter.scope === "location" ? filter.location_id : null,
+      limit,
+    });
   }
 }

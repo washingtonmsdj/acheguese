@@ -3,6 +3,7 @@ import { Outlet, useLocation, useParams } from "react-router-dom";
 import { AlertTriangle } from "lucide-react";
 import { APP_MODULE_SLUGS } from "@/config/moduleSlugs";
 import { useCommunityProfile } from "@/core/community-experience/hooks/useCommunityProfile";
+import { isCommunityStatusPubliclyRenderable } from "@/core/community-experience/constants/statuses";
 import { useGroupAvailability } from "@/core/territorial/hooks/useGroupAvailability";
 import { ModuleKey } from "@/core/rollout/types";
 import { PageLoader } from "@/shared/components/loading/PageLoader";
@@ -15,12 +16,34 @@ import type { TerritorialLayoutContext } from "./TerritorialLayout";
 import { TerritorialNotFound } from "./TerritorialNotFound";
 import { lastTerritoryStore } from "@/core/routing/stores/LastTerritoryStore";
 import { buildCommunityPortalUrl } from "@/core/routing/policies";
-import { CommunityPortalModeBanner } from "./CommunityPortalModeBanner";
 
 type AliasShellState =
   | { status: "loading" }
   | { status: "resolved"; resolution: Extract<CommunityPublicAliasTerritoryResolution, { status: "resolved" }> }
   | { status: "not-found"; message: string };
+
+const ALIAS_RESOLVE_TIMEOUT_MS = 10_000;
+
+function withAliasResolveTimeout(
+  promise: Promise<CommunityPublicAliasTerritoryResolution>,
+): Promise<CommunityPublicAliasTerritoryResolution> {
+  return new Promise((resolve, reject) => {
+    const timer = window.setTimeout(() => {
+      reject(new Error("Community alias resolution timeout"));
+    }, ALIAS_RESOLVE_TIMEOUT_MS);
+
+    promise.then(
+      (value) => {
+        window.clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        window.clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
 
 function resolveModuleKeyFromAliasPath(pathname: string): ModuleKey {
   const parts = pathname.split("/").filter(Boolean);
@@ -70,7 +93,21 @@ export function CommunityAliasShellRoute() {
         return;
       }
 
-      const resolution = await resolveCommunityPublicAliasTerritory(communitySlug);
+      let resolution: CommunityPublicAliasTerritoryResolution;
+      try {
+        resolution = await withAliasResolveTimeout(
+          resolveCommunityPublicAliasTerritory(communitySlug),
+        );
+      } catch {
+        if (!cancelled) {
+          setState({
+            status: "not-found",
+            message: "Nao foi possivel resolver esta comunidade agora. Recarregue para tentar novamente.",
+          });
+        }
+        return;
+      }
+
       if (cancelled) return;
 
       if (resolution.status !== "resolved") {
@@ -162,7 +199,7 @@ export function CommunityAliasShellRoute() {
   }
 
   const communityStatus = profileQuery.data?.status ?? "active";
-  if (communityStatus === "inactive") {
+  if (!isCommunityStatusPubliclyRenderable(communityStatus)) {
     return (
       <TerritorialNotFound message="Esta comunidade esta indisponivel neste momento." />
     );
@@ -194,11 +231,6 @@ export function CommunityAliasShellRoute() {
           ) : null}
         </>
       ) : null}
-
-      <CommunityPortalModeBanner
-        territoryName={territoryName}
-        publicHref={outletContext.baseUrl}
-      />
 
       <Outlet context={outletContext} />
     </>

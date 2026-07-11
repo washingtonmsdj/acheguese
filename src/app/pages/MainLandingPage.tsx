@@ -22,21 +22,31 @@ import {
   Users,
   UtensilsCrossed,
   Wrench,
-  Zap,
   type LucideIcon,
 } from "lucide-react";
+import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from "@/config/launchScope";
 import { LAUNCH_CITY_PATH, LAUNCH_URLS } from "@/config/territory";
-import { HomeDiscoveryService } from "@/core/landing/services";
+import {
+  HomeDiscoveryService,
+  type HomeCommunityActivity,
+  type HomeCommunityCard,
+  type HomeImageKey,
+  type HomeSponsoredItem,
+  type HomeStatCard,
+} from "@/core/landing/services";
+import { useUnifiedNotifications } from "@/core/notifications/useUnifiedNotifications";
 import {
   getHomeDiscoveryDocumentHref,
   getHomeDiscoveryDocumentMeta,
   withQueryParams,
 } from "@/core/landing/utils/landingPresentation";
 import { LocationStatus, LocationType, type Location } from "@/core/location/types";
+import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { useHomeCommunityHref } from "@/core/routing/hooks/useHomeCommunityHref";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { buildCommunityAliasUrl, buildCommunityScopedUrl } from "@/core/routing/utils/territoryUrls";
 import type { SearchDocument } from "@/core/search";
+import { useSessionContext } from "@/core/session";
 
 import bairroChapada from "@/assets/bairro-chapada.jpg";
 import bairroOndina from "@/assets/bairro-ondina.jpg";
@@ -62,6 +72,7 @@ type NavItem = {
   label: string;
   href: string;
   mobileHeader?: "primary" | "secondary";
+  surface?: LaunchSurfaceKey;
 };
 
 type Chip = {
@@ -88,17 +99,17 @@ type CurrentWeatherResponse = {
   };
 };
 
-type VisualTone = "cyan" | "green" | "blue" | "amber" | "pink" | "red" | "neutral";
-
-type FeaturedCommunity = {
-  name: string;
-  href: string;
-  image: string;
-  members: string;
-  delta: string;
-  badge?: string;
-  avatarCount: number;
+type HeaderSessionActions = {
+  isAuthenticated: boolean;
+  loginHref: string;
+  notificationHref: string;
+  profileAvatarUrl: string | null;
+  profileHref: string;
+  profileName: string;
+  unreadCount: number;
 };
+
+type VisualTone = "cyan" | "green" | "blue" | "amber" | "pink" | "red" | "neutral";
 
 type HighlightCard = {
   label: string;
@@ -109,6 +120,7 @@ type HighlightCard = {
   image: string;
   tone: VisualTone;
   icon: LucideIcon;
+  surface?: LaunchSurfaceKey;
 };
 
 type ModuleTile = {
@@ -117,32 +129,44 @@ type ModuleTile = {
   href: string;
   icon: LucideIcon;
   tone: VisualTone;
-};
-
-type CommunityActivity = {
-  author: string;
-  community: string;
-  text: string;
-  time: string;
-  comments: number;
-  avatar: string;
-  image?: string;
-  verified?: boolean;
-};
-
-type SponsoredItem = {
-  title: string;
-  community: string;
-  description: string;
-  href: string;
-  image: string;
+  surface?: LaunchSurfaceKey;
 };
 
 const cityPath = LAUNCH_CITY_PATH;
 const searchHref = LAUNCH_URLS.search;
 const weatherCacheTtlMs = 10 * 60 * 1000;
 const currentWeatherCache = new Map<string, { temperatureCelsius: number; expiresAt: number }>();
+const homeDiscoveryFallback = HomeDiscoveryService.getFallbackHomeDiscovery();
 const avatarImages = [personaMorador, personaComerciante, personaPrestador, personaEmprego];
+const homeAvatarsByKey: Record<HomeCommunityActivity["avatarKey"], string> = {
+  comerciante: personaComerciante,
+  emprego: personaEmprego,
+  morador: personaMorador,
+  prestador: personaPrestador,
+};
+const homeImagesByKey: Record<HomeImageKey, string> = {
+  bairroChapada,
+  bairroOndina,
+  bairroPituba,
+  bairroRioVermelho,
+  bairroSantaCruz,
+  bairroStiep,
+  complexoComercio,
+  complexoCultura,
+  complexoMusica,
+  empresasHero,
+  gastronomyHero,
+  heroImg,
+  neighborhoodFeatured,
+  servicosHero,
+};
+const statIcons: Record<HomeStatCard["id"], LucideIcon> = {
+  businesses: Building2,
+  classifieds: Tag,
+  events: Calendar,
+  rating: Star,
+  services: Wrench,
+};
 
 const quickChips: Chip[] = [
   { label: "Restaurantes", href: LAUNCH_URLS.gastronomy, icon: UtensilsCrossed },
@@ -152,94 +176,6 @@ const quickChips: Chip[] = [
   { label: "Academias", href: withQueryParams(searchHref, { q: "academias" }), icon: Dumbbell },
   { label: "Pet shops", href: withQueryParams(searchHref, { q: "pet shops" }), icon: PawPrint },
   { label: "+ Mais", href: searchHref, icon: MoreHorizontal },
-];
-
-const stats = [
-  { value: "+18 mil", label: "Empresas locais", icon: Building2, tone: "cyan" },
-  { value: "+52 mil", label: "Membros ativos", icon: Users, tone: "cyan" },
-  { value: "+9 mil", label: "Eventos realizados", icon: Calendar, tone: "cyan" },
-  { value: "4,8", label: "Avaliação média", icon: Star, tone: "amber" },
-  { value: "100%", label: "Ambiente seguro", icon: ShieldCheck, tone: "cyan" },
-  { value: "Respostas rápidas", label: "Comunidade ativa", icon: Zap, tone: "amber" },
-] as const;
-
-const featuredCommunities: FeaturedCommunity[] = [
-  {
-    name: "Pituba",
-    href: buildCommunityAliasUrl("pituba"),
-    image: bairroPituba,
-    members: "12,5 mil membros",
-    delta: "+8%",
-    badge: "Em alta",
-    avatarCount: 23,
-  },
-  {
-    name: "Barra",
-    href: buildCommunityAliasUrl("barra"),
-    image: bairroOndina,
-    members: "8,7 mil membros",
-    delta: "+5%",
-    avatarCount: 18,
-  },
-  {
-    name: "Itapuã",
-    href: buildCommunityAliasUrl("itapua"),
-    image: bairroStiep,
-    members: "6,2 mil membros",
-    delta: "+3%",
-    avatarCount: 15,
-  },
-  {
-    name: "Rio Vermelho",
-    href: buildCommunityAliasUrl("rio-vermelho"),
-    image: bairroRioVermelho,
-    members: "5,1 mil membros",
-    delta: "+2%",
-    avatarCount: 9,
-  },
-];
-
-const suggestedCommunities: FeaturedCommunity[] = [
-  {
-    name: "Horto Florestal",
-    href: buildCommunityAliasUrl("horto-florestal"),
-    image: neighborhoodFeatured,
-    members: "4,8 mil membros",
-    delta: "+2%",
-    avatarCount: 12,
-  },
-  {
-    name: "Imbuí",
-    href: buildCommunityAliasUrl("imbui"),
-    image: bairroChapada,
-    members: "3,9 mil membros",
-    delta: "+1%",
-    avatarCount: 10,
-  },
-  {
-    name: "Graça",
-    href: buildCommunityAliasUrl("graca"),
-    image: complexoCultura,
-    members: "5,2 mil membros",
-    delta: "+4%",
-    avatarCount: 13,
-  },
-  {
-    name: "Caminho das Árvores",
-    href: buildCommunityAliasUrl("caminho-das-arvores"),
-    image: complexoComercio,
-    members: "6,1 mil membros",
-    delta: "+4%",
-    avatarCount: 16,
-  },
-  {
-    name: "Stella Maris",
-    href: buildCommunityAliasUrl("stella-maris"),
-    image: bairroSantaCruz,
-    members: "4,3 mil membros",
-    delta: "+1%",
-    avatarCount: 8,
-  },
 ];
 
 const fallbackHighlights: HighlightCard[] = [
@@ -252,6 +188,7 @@ const fallbackHighlights: HighlightCard[] = [
     image: complexoMusica,
     tone: "blue",
     icon: Calendar,
+    surface: "events",
   },
   {
     label: "Promoção",
@@ -262,6 +199,7 @@ const fallbackHighlights: HighlightCard[] = [
     image: gastronomyHero,
     tone: "green",
     icon: UtensilsCrossed,
+    surface: "coupons",
   },
   {
     label: "Nova empresa",
@@ -272,6 +210,7 @@ const fallbackHighlights: HighlightCard[] = [
     image: empresasHero,
     tone: "blue",
     icon: Building2,
+    surface: "business",
   },
   {
     label: "Aviso",
@@ -282,59 +221,7 @@ const fallbackHighlights: HighlightCard[] = [
     image: heroImg,
     tone: "red",
     icon: Bell,
-  },
-];
-
-const communityActivities: CommunityActivity[] = [
-  {
-    author: "Juliana Santos",
-    community: "Pituba",
-    text: "Alguém sabe de um bom restaurante japonês por aqui?",
-    time: "2h",
-    comments: 24,
-    avatar: personaMorador,
-  },
-  {
-    author: "Prefeitura de Salvador",
-    community: "Avisos oficiais",
-    text: "Mutirão de limpeza neste sábado na orla da Pituba. Participe!",
-    time: "4h",
-    comments: 18,
-    avatar: personaEmprego,
-    verified: true,
-  },
-  {
-    author: "Marcos Lima",
-    community: "Barra",
-    text: "Vendo bicicleta semi nova, usada poucas vezes.",
-    time: "6h",
-    comments: 9,
-    avatar: personaComerciante,
-    image: bairroRioVermelho,
-  },
-];
-
-const sponsoredFallbackItems: SponsoredItem[] = [
-  {
-    title: "Padaria Pão Nosso",
-    community: "Pituba",
-    description: "Pães fresquinhos todos os dias!",
-    href: LAUNCH_URLS.business,
-    image: empresasHero,
-  },
-  {
-    title: "Pet Shop Cão Feliz",
-    community: "Boca do Rio",
-    description: "Banho, tosa e muito carinho.",
-    href: withQueryParams(searchHref, { q: "pet shop" }),
-    image: bairroSantaCruz,
-  },
-  {
-    title: "Farmácia Saúde+",
-    community: "Pituba",
-    description: "Descontos em medicamentos.",
-    href: LAUNCH_URLS.business,
-    image: bairroPituba,
+    surface: "communityAlerts",
   },
 ];
 
@@ -392,6 +279,22 @@ function getWeatherCacheKey(point: WeatherPoint): string {
 
 function formatTemperatureLabel(temperatureCelsius: number): string {
   return `${Math.round(temperatureCelsius)}°C`;
+}
+
+function formatNotificationBadgeCount(count: number): string {
+  return count > 99 ? "99+" : String(count);
+}
+
+function getInitials(value: string): string {
+  const initials = value
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+
+  return initials || "A";
 }
 
 async function fetchCurrentTemperature(point: WeatherPoint, signal: AbortSignal): Promise<number> {
@@ -499,7 +402,30 @@ function BrandMark() {
   );
 }
 
-function HeaderNav({ navItems, temperature }: { navItems: NavItem[]; temperature: TemperatureBadgeState }) {
+function HeaderNav({
+  navItems,
+  sessionActions,
+  temperature,
+}: {
+  navItems: NavItem[];
+  sessionActions: HeaderSessionActions;
+  temperature: TemperatureBadgeState;
+}) {
+  const notificationTarget = sessionActions.isAuthenticated
+    ? sessionActions.notificationHref
+    : sessionActions.loginHref;
+  const profileTarget = sessionActions.isAuthenticated
+    ? sessionActions.profileHref
+    : sessionActions.loginHref;
+  const notificationAriaLabel = sessionActions.isAuthenticated
+    ? sessionActions.unreadCount > 0
+      ? `Abrir notificações, ${sessionActions.unreadCount} não lidas`
+      : "Abrir notificações"
+    : "Entrar para ver notificações";
+  const profileAriaLabel = sessionActions.isAuthenticated
+    ? `Abrir perfil de ${sessionActions.profileName}`
+    : "Entrar na conta";
+
   return (
     <header className="home-header" aria-label="Navegação principal">
       <Link className="home-brand" to="/">
@@ -534,12 +460,20 @@ function HeaderNav({ navItems, temperature }: { navItems: NavItem[]; temperature
           <Sun aria-hidden="true" />
           <span>{temperature.label}</span>
         </span>
-        <Link to="/notifications" className="home-notification-button" aria-label="Abrir notificações">
+        <Link to={notificationTarget} className="home-notification-button" aria-label={notificationAriaLabel}>
           <Bell aria-hidden="true" />
-          <span>3</span>
+          {sessionActions.isAuthenticated && sessionActions.unreadCount > 0 ? (
+            <span>{formatNotificationBadgeCount(sessionActions.unreadCount)}</span>
+          ) : null}
         </Link>
-        <Link to="/login" className="home-user-avatar" aria-label="Entrar na conta">
-          <img src={personaMorador} alt="" />
+        <Link to={profileTarget} className="home-user-avatar" aria-label={profileAriaLabel}>
+          {sessionActions.profileAvatarUrl ? (
+            <img src={sessionActions.profileAvatarUrl} alt="" />
+          ) : (
+            <span className="home-user-avatar-fallback" aria-hidden="true">
+              {getInitials(sessionActions.profileName)}
+            </span>
+          )}
           <ChevronDown aria-hidden="true" />
         </Link>
       </div>
@@ -564,6 +498,9 @@ function HeroBadges({ communityHref }: { communityHref: string }) {
 
 function SearchPanel() {
   const navigate = useNavigate();
+  const searchPlaceholder = isLaunchSurfaceEnabled("events")
+    ? "Buscar comunidades, empresas, eventos, servicos..."
+    : "Buscar comunidades, empresas, servicos...";
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -581,7 +518,7 @@ function SearchPanel() {
           name="q"
           type="search"
           autoComplete="off"
-          placeholder="Buscar comunidades, empresas, eventos, serviços..."
+          placeholder={searchPlaceholder}
         />
       </label>
       <button type="submit" className="home-search-submit" aria-label="Buscar">
@@ -613,7 +550,7 @@ function AvatarStack({ count }: { count: number }) {
   );
 }
 
-function FeaturedCommunitiesPanel() {
+function FeaturedCommunitiesPanel({ communities }: { communities: HomeCommunityCard[] }) {
   return (
     <section className="home-featured-communities" aria-labelledby="featured-communities-title">
       <div className="home-section-heading">
@@ -621,14 +558,14 @@ function FeaturedCommunitiesPanel() {
         <Link to={LAUNCH_URLS.community}>Ver todas</Link>
       </div>
       <div className="home-featured-community-grid">
-        {featuredCommunities.map((community) => (
-          <Link key={community.name} to={community.href} className="home-community-card">
-            <img src={community.image} alt="" />
+        {communities.map((community) => (
+          <Link key={community.id} to={community.href} className="home-community-card">
+            <img src={homeImagesByKey[community.imageKey]} alt="" />
             <span className="home-community-card-shade" aria-hidden="true" />
             {community.badge ? <span className="home-community-badge">{community.badge}</span> : null}
             <span className="home-community-card-copy">
               <strong>{community.name}</strong>
-              <small>{community.members}</small>
+              <small>{community.membersLabel}</small>
               <AvatarStack count={community.avatarCount} />
             </span>
           </Link>
@@ -680,8 +617,11 @@ function toHighlightCards(documents: SearchDocument[], communityHref: string): H
       image: getFallbackImageForDocument(document, index),
     };
   });
+  const enabledFallbacks = fallbackHighlights.filter(
+    (card) => !card.surface || isLaunchSurfaceEnabled(card.surface),
+  );
 
-  return [...dynamicCards, ...fallbackHighlights].slice(0, 4);
+  return [...dynamicCards, ...enabledFallbacks].slice(0, 4);
 }
 
 function HappeningCard({ card }: { card: HighlightCard }) {
@@ -723,7 +663,7 @@ function HappeningPanel({ cards }: { cards: HighlightCard[] }) {
 function ModuleTiles({ communityHref }: { communityHref: string }) {
   const tiles: ModuleTile[] = [
     { label: "Empresas", description: "Comércios locais", href: LAUNCH_URLS.business, icon: Building2, tone: "green" },
-    { label: "Eventos", description: "Na sua região", href: LAUNCH_URLS.events, icon: Calendar, tone: "red" },
+    { label: "Eventos", description: "Na sua região", href: LAUNCH_URLS.events, icon: Calendar, tone: "red", surface: "events" },
     { label: "Classificados", description: "Compre e venda", href: LAUNCH_URLS.classifieds, icon: Tag, tone: "blue" },
     { label: "Serviços", description: "Profissionais", href: LAUNCH_URLS.services, icon: Wrench, tone: "amber" },
     { label: "Grupos", description: "Interesses", href: buildCommunityScopedUrl(communityHref, "grupos"), icon: Users, tone: "blue" },
@@ -734,9 +674,12 @@ function ModuleTiles({ communityHref }: { communityHref: string }) {
       icon: HomeIcon,
       tone: "cyan",
     },
-    { label: "Vagas", description: "Oportunidades", href: LAUNCH_URLS.jobs, icon: Briefcase, tone: "blue" },
+    { label: "Vagas", description: "Oportunidades", href: LAUNCH_URLS.jobs, icon: Briefcase, tone: "blue", surface: "jobs" },
     { label: "Mais", description: "Ver tudo", href: searchHref, icon: MoreHorizontal, tone: "neutral" },
   ];
+  const enabledTiles = tiles.filter(
+    (tile) => !tile.surface || isLaunchSurfaceEnabled(tile.surface),
+  );
 
   return (
     <section className="home-panel home-modules-panel" aria-labelledby="modules-title">
@@ -745,7 +688,7 @@ function ModuleTiles({ communityHref }: { communityHref: string }) {
         <Link to={searchHref}>Ver todas</Link>
       </div>
       <div className="home-module-tile-grid">
-        {tiles.map((tile) => {
+        {enabledTiles.map((tile) => {
           const Icon = tile.icon;
           return (
             <Link key={tile.label} to={tile.href} className="home-module-tile">
@@ -764,7 +707,7 @@ function ModuleTiles({ communityHref }: { communityHref: string }) {
   );
 }
 
-function CommunityActivityPanel() {
+function CommunityActivityPanel({ activities }: { activities: HomeCommunityActivity[] }) {
   return (
     <section className="home-panel home-activity-panel" aria-labelledby="activity-title">
       <div className="home-panel-heading">
@@ -772,9 +715,9 @@ function CommunityActivityPanel() {
         <Link to={LAUNCH_URLS.community}>Ver todas</Link>
       </div>
       <div className="home-community-activity-list">
-        {communityActivities.map((activity) => (
-          <article key={`${activity.author}-${activity.time}`} className="home-community-activity-item">
-            <img src={activity.avatar} alt="" />
+        {activities.map((activity) => (
+          <article key={activity.id} className="home-community-activity-item">
+            <img src={homeAvatarsByKey[activity.avatarKey]} alt="" />
             <span className="home-community-activity-copy">
               <strong>
                 {activity.author}
@@ -787,7 +730,9 @@ function CommunityActivityPanel() {
               <small>{activity.time}</small>
               <span>{activity.comments}</span>
             </span>
-            {activity.image ? <img className="home-community-activity-preview" src={activity.image} alt="" /> : null}
+            {activity.imageKey ? (
+              <img className="home-community-activity-preview" src={homeImagesByKey[activity.imageKey]} alt="" />
+            ) : null}
           </article>
         ))}
       </div>
@@ -795,7 +740,7 @@ function CommunityActivityPanel() {
   );
 }
 
-function CommunityRankingPanel() {
+function CommunityRankingPanel({ communities }: { communities: HomeCommunityCard[] }) {
   return (
     <section className="home-panel home-ranking-panel" aria-labelledby="ranking-title">
       <div className="home-panel-heading">
@@ -803,15 +748,15 @@ function CommunityRankingPanel() {
         <Link to={LAUNCH_URLS.community}>Ver ranking</Link>
       </div>
       <div className="home-community-ranking-list">
-        {featuredCommunities.concat(suggestedCommunities.slice(0, 1)).map((community, index) => (
-          <Link key={community.name} to={community.href} className="home-community-ranking-item">
+        {communities.map((community, index) => (
+          <Link key={community.id} to={community.href} className="home-community-ranking-item">
             <span>{index + 1}</span>
-            <img src={community.image} alt="" />
+            <img src={homeImagesByKey[community.imageKey]} alt="" />
             <strong>
               {community.name}
-              <small>{community.members}</small>
+              <small>{community.membersLabel}</small>
             </strong>
-            <em>{community.delta}</em>
+            <em>{community.deltaLabel}</em>
           </Link>
         ))}
       </div>
@@ -819,42 +764,59 @@ function CommunityRankingPanel() {
   );
 }
 
-function SponsoredPanel({ documents }: { documents: SearchDocument[] }) {
-  const sponsoredItems: SponsoredItem[] = [
-    ...documents.slice(0, 3).map((document, index) => ({
-      title: document.title,
-      community: getHomeDiscoveryDocumentMeta(document) || "Salvador, BA",
-      description: document.description || document.subtitle || "Destaque local da comunidade.",
-      href: getHomeDiscoveryDocumentHref(document, LAUNCH_URLS.business),
-      image: getFallbackImageForDocument(document, index + 2),
-    })),
-    ...sponsoredFallbackItems,
-  ].slice(0, 3);
+function isExternalHref(href: string): boolean {
+  return /^https?:\/\//i.test(href);
+}
 
+function SponsoredPanel({ items }: { items: HomeSponsoredItem[] }) {
   return (
     <section className="home-panel home-sponsored-panel" aria-labelledby="sponsored-title">
       <div className="home-panel-heading">
         <h2 id="sponsored-title">Anúncios de empresas locais</h2>
         <Link to={LAUNCH_URLS.business}>Ver todos</Link>
       </div>
+      {items.length === 0 ? (
+        <div className="home-sponsored-empty">
+          <strong>Sem anuncios ativos</strong>
+          <small>Campanhas aprovadas aparecem aqui quando estiverem ativas.</small>
+        </div>
+      ) : null}
       <div className="home-sponsored-list">
-        {sponsoredItems.map((item) => (
-          <Link key={item.title} to={item.href} className="home-sponsored-item">
-            <img src={item.image} alt="" />
-            <span>
-              <strong>{item.title}</strong>
-              <small>{item.community}</small>
-              <em>{item.description}</em>
-            </span>
-            <b>Patrocinado</b>
-          </Link>
-        ))}
+        {items.map((item) => {
+          const content = (
+            <>
+              <img src={item.imageUrl || homeImagesByKey[item.imageKey]} alt="" />
+              <span>
+                <strong>{item.title}</strong>
+                <small>{item.community}</small>
+                <em>{item.description}</em>
+              </span>
+              <b>Patrocinado</b>
+            </>
+          );
+
+          return isExternalHref(item.href) ? (
+            <a
+              key={item.id}
+              href={item.href}
+              className="home-sponsored-item"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {content}
+            </a>
+          ) : (
+            <Link key={item.id} to={item.href} className="home-sponsored-item">
+              {content}
+            </Link>
+          );
+        })}
       </div>
     </section>
   );
 }
 
-function CommunitySuggestionsPanel() {
+function CommunitySuggestionsPanel({ communities }: { communities: HomeCommunityCard[] }) {
   return (
     <section className="home-panel home-suggestions-panel" aria-labelledby="suggestions-title">
       <div className="home-panel-heading">
@@ -862,13 +824,13 @@ function CommunitySuggestionsPanel() {
         <Link to={LAUNCH_URLS.community}>Ver todas</Link>
       </div>
       <div className="home-suggestion-list">
-        {suggestedCommunities.map((community) => (
-          <Link key={community.name} to={community.href} className="home-suggestion-card">
-            <img src={community.image} alt="" loading="lazy" />
+        {communities.map((community) => (
+          <Link key={community.id} to={community.href} className="home-suggestion-card">
+            <img src={homeImagesByKey[community.imageKey]} alt="" loading="lazy" />
             <span className="home-suggestion-shade" aria-hidden="true" />
             <span>
               <strong>{community.name}</strong>
-              <small>{community.members}</small>
+              <small>{community.membersLabel}</small>
               <em>Participar</em>
             </span>
           </Link>
@@ -878,13 +840,13 @@ function CommunitySuggestionsPanel() {
   );
 }
 
-function StatsBar() {
+function StatsBar({ stats }: { stats: HomeStatCard[] }) {
   return (
     <section className="home-stats" aria-label="Indicadores da comunidade">
       {stats.map((stat) => {
-        const Icon = stat.icon;
+        const Icon = statIcons[stat.id];
         return (
-          <div key={stat.label} className="home-stat-item">
+          <div key={stat.id} className="home-stat-item">
             <Icon className={`is-${stat.tone}`} aria-hidden="true" />
             <span>
               <strong>{stat.value}</strong>
@@ -898,26 +860,51 @@ function StatsBar() {
 }
 
 export default function MainLandingPage() {
+  const appUrls = useAppUrls();
   const communityHref = useHomeCommunityHref();
+  const { activeProfile, user } = useSessionContext();
+  const { unreadCount } = useUnifiedNotifications({
+    enableRealtime: true,
+    enableToast: false,
+    filters: { limit: 1 },
+  });
   const temperature = useCurrentTerritoryTemperature(homeSelectedTerritory);
   const homeDiscovery = useQuery({
     queryKey: ["home", "launch-discovery", cityPath],
     queryFn: () => HomeDiscoveryService.getLaunchHomeDiscovery(),
     staleTime: 5 * 60 * 1000,
   });
-  const activityDocuments = homeDiscovery.data?.activityDocuments ?? [];
-  const trustDocuments = homeDiscovery.data?.trustDocuments ?? [];
+  const homeDiscoveryData = homeDiscovery.data ?? homeDiscoveryFallback;
+  const activityDocuments = homeDiscoveryData.activityDocuments;
+  const communityActivities = homeDiscoveryData.communityActivities;
+  const communityRanking = homeDiscoveryData.communityRanking;
+  const featuredCommunities = homeDiscoveryData.featuredCommunities;
+  const homeStats = homeDiscoveryData.stats;
+  const suggestedCommunities = homeDiscoveryData.suggestedCommunities;
+  const sponsoredItems = homeDiscoveryData.sponsoredItems;
   const happeningCards = toHighlightCards(activityDocuments, communityHref);
 
-  const navItems: NavItem[] = [
+  const navItems = [
     { label: "Início", href: "/", mobileHeader: "primary" },
     { label: "Comunidades", href: communityHref, mobileHeader: "primary" },
     { label: "Empresas", href: LAUNCH_URLS.business, mobileHeader: "primary" },
-    { label: "Eventos", href: LAUNCH_URLS.events, mobileHeader: "primary" },
+    { label: "Eventos", href: LAUNCH_URLS.events, mobileHeader: "primary", surface: "events" },
     { label: "Classificados", href: LAUNCH_URLS.classifieds, mobileHeader: "secondary" },
     { label: "Serviços", href: LAUNCH_URLS.services, mobileHeader: "secondary" },
     { label: "Mapa", href: LAUNCH_URLS.map, mobileHeader: "secondary" },
-  ];
+  ] satisfies NavItem[];
+  const enabledNavItems = navItems.filter(
+    (item) => !item.surface || isLaunchSurfaceEnabled(item.surface),
+  );
+  const sessionActions: HeaderSessionActions = {
+    isAuthenticated: Boolean(user),
+    loginHref: appUrls.auth.login,
+    notificationHref: appUrls.notifications,
+    profileAvatarUrl: activeProfile?.avatarUrl ?? null,
+    profileHref: appUrls.profile.home,
+    profileName: activeProfile?.displayName ?? user?.email ?? "Conta",
+    unreadCount,
+  };
 
   return (
     <main className="home-concept">
@@ -925,7 +912,7 @@ export default function MainLandingPage() {
         <img src={heroImg} alt="" />
       </div>
       <div className="home-shell">
-        <HeaderNav navItems={navItems} temperature={temperature} />
+        <HeaderNav navItems={enabledNavItems} sessionActions={sessionActions} temperature={temperature} />
         <section className="home-hero-layout" aria-labelledby="home-title">
           <div className="home-hero-copy">
             <HeroBadges communityHref={communityHref} />
@@ -937,25 +924,25 @@ export default function MainLandingPage() {
             <p>Conecte-se com pessoas, descubra empresas locais, participe de eventos e fortaleça sua comunidade.</p>
             <SearchPanel />
           </div>
-          <FeaturedCommunitiesPanel />
+          <FeaturedCommunitiesPanel communities={featuredCommunities} />
         </section>
 
         <section className="home-content-grid" aria-label="Descoberta local">
           <div className="home-main-column">
             <div className="home-dashboard-row">
               <HappeningPanel cards={happeningCards} />
-              <CommunityActivityPanel />
+              <CommunityActivityPanel activities={communityActivities} />
             </div>
             <ModuleTiles communityHref={communityHref} />
-            <CommunitySuggestionsPanel />
+            <CommunitySuggestionsPanel communities={suggestedCommunities} />
           </div>
           <aside className="home-aside-column" aria-label="Resumo das comunidades">
-            <CommunityRankingPanel />
-            <SponsoredPanel documents={trustDocuments} />
+            <CommunityRankingPanel communities={communityRanking} />
+            <SponsoredPanel items={sponsoredItems} />
           </aside>
         </section>
 
-        <StatsBar />
+        <StatsBar stats={homeStats} />
       </div>
     </main>
   );

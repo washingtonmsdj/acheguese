@@ -1,9 +1,19 @@
-import { TERRITORY_CONFIG } from "@/config/territory";
+import { LAUNCH_URLS, TERRITORY_CONFIG } from "@/config/territory";
+import { isLaunchSurfaceEnabled } from "@/config/launchScope";
 import { BusinessUrlService } from "@/core/business";
+import {
+  adDeliveryService,
+  type AdCampaignWithTargets,
+} from "@/core/business/promotions";
 import { ClassifiedUrlService } from "@/core/classifieds/services";
+import {
+  CommunityExperienceService,
+  type CommunitySearchResult,
+} from "@/core/community-experience/services/CommunityExperienceService";
 import { LocationService } from "@/core/location/services/LocationService";
 import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
 import type { TerritoryFilter } from "@/core/location/types";
+import { postService } from "@/core/posts/services/PostService";
 import type { SearchDocument } from "@/core/search";
 import {
   classifiedToSearchDocument,
@@ -17,6 +27,7 @@ import {
   WorkOpportunitiesService,
   type WorkOpportunityCard,
 } from "@/core/work-opportunities";
+import { buildCommunityAliasUrl } from "@/core/routing/utils/territoryUrls";
 import { logger } from "@/shared/utils/logger";
 import {
   LandingFeaturedService,
@@ -24,21 +35,225 @@ import {
   type FeaturedClassified,
   type FeaturedService,
 } from "./LandingFeaturedService";
+import { HomeCommunityRankingService } from "./HomeCommunityRankingService";
 
 export interface HomeDiscoveryResult {
   activityDocuments: SearchDocument[];
+  communityActivities: HomeCommunityActivity[];
+  communityRanking: HomeCommunityCard[];
+  featuredCommunities: HomeCommunityCard[];
+  stats: HomeStatCard[];
+  suggestedCommunities: HomeCommunityCard[];
+  sponsoredItems: HomeSponsoredItem[];
   trustDocuments: SearchDocument[];
 }
 
 export interface HomeDiscoveryOptions {
   activityLimit?: number;
+  communityLimit?: number;
   trustLimit?: number;
 }
 
+export type HomeImageKey =
+  | "bairroChapada"
+  | "bairroOndina"
+  | "bairroPituba"
+  | "bairroRioVermelho"
+  | "bairroSantaCruz"
+  | "bairroStiep"
+  | "complexoComercio"
+  | "complexoCultura"
+  | "complexoMusica"
+  | "empresasHero"
+  | "gastronomyHero"
+  | "heroImg"
+  | "neighborhoodFeatured"
+  | "servicosHero";
+
+export interface HomeCommunityCard {
+  id: string;
+  name: string;
+  href: string;
+  imageKey: HomeImageKey;
+  membersLabel: string;
+  deltaLabel: string;
+  avatarCount: number;
+  badge?: string;
+}
+
+export interface HomeCommunityActivity {
+  id: string;
+  author: string;
+  community: string;
+  text: string;
+  time: string;
+  comments: number;
+  avatarKey: "morador" | "comerciante" | "prestador" | "emprego";
+  imageKey?: HomeImageKey;
+  verified?: boolean;
+}
+
+export interface HomeSponsoredItem {
+  id: string;
+  title: string;
+  community: string;
+  description: string;
+  href: string;
+  imageKey: HomeImageKey;
+  imageUrl?: string;
+}
+
+export type HomeStatId =
+  | "businesses"
+  | "classifieds"
+  | "events"
+  | "rating"
+  | "services";
+
+export interface HomeStatCard {
+  id: HomeStatId;
+  value: string;
+  label: string;
+  tone: "cyan" | "amber";
+}
+
 const DEFAULT_ACTIVITY_LIMIT = 4;
+const DEFAULT_COMMUNITY_LIMIT = 5;
 const DEFAULT_TRUST_LIMIT = 4;
+const COMMUNITY_ACTIVE_LABEL = "Comunidade ativa";
+const COMMUNITY_TREND_LABEL = "Ativa";
 
 const locationService = new LocationService(createLocationRepository());
+
+const launchCommunityFallbacks: HomeCommunityCard[] = [
+  {
+    id: "launch-community-pituba",
+    name: "Pituba",
+    href: buildCommunityAliasUrl("pituba"),
+    imageKey: "bairroPituba",
+    membersLabel: COMMUNITY_ACTIVE_LABEL,
+    deltaLabel: COMMUNITY_TREND_LABEL,
+    badge: "Em alta",
+    avatarCount: 23,
+  },
+  {
+    id: "launch-community-barra",
+    name: "Barra",
+    href: buildCommunityAliasUrl("barra"),
+    imageKey: "bairroOndina",
+    membersLabel: COMMUNITY_ACTIVE_LABEL,
+    deltaLabel: COMMUNITY_TREND_LABEL,
+    avatarCount: 18,
+  },
+  {
+    id: "launch-community-itapua",
+    name: "Itapuã",
+    href: buildCommunityAliasUrl("itapua"),
+    imageKey: "bairroStiep",
+    membersLabel: COMMUNITY_ACTIVE_LABEL,
+    deltaLabel: COMMUNITY_TREND_LABEL,
+    avatarCount: 15,
+  },
+  {
+    id: "launch-community-rio-vermelho",
+    name: "Rio Vermelho",
+    href: buildCommunityAliasUrl("rio-vermelho"),
+    imageKey: "bairroRioVermelho",
+    membersLabel: COMMUNITY_ACTIVE_LABEL,
+    deltaLabel: COMMUNITY_TREND_LABEL,
+    avatarCount: 9,
+  },
+  {
+    id: "launch-community-horto-florestal",
+    name: "Horto Florestal",
+    href: buildCommunityAliasUrl("horto-florestal"),
+    imageKey: "neighborhoodFeatured",
+    membersLabel: COMMUNITY_ACTIVE_LABEL,
+    deltaLabel: COMMUNITY_TREND_LABEL,
+    avatarCount: 12,
+  },
+  {
+    id: "launch-community-imbui",
+    name: "Imbuí",
+    href: buildCommunityAliasUrl("imbui"),
+    imageKey: "bairroChapada",
+    membersLabel: COMMUNITY_ACTIVE_LABEL,
+    deltaLabel: COMMUNITY_TREND_LABEL,
+    avatarCount: 10,
+  },
+  {
+    id: "launch-community-graca",
+    name: "Graça",
+    href: buildCommunityAliasUrl("graca"),
+    imageKey: "complexoCultura",
+    membersLabel: COMMUNITY_ACTIVE_LABEL,
+    deltaLabel: COMMUNITY_TREND_LABEL,
+    avatarCount: 13,
+  },
+  {
+    id: "launch-community-caminho-das-arvores",
+    name: "Caminho das Árvores",
+    href: buildCommunityAliasUrl("caminho-das-arvores"),
+    imageKey: "complexoComercio",
+    membersLabel: COMMUNITY_ACTIVE_LABEL,
+    deltaLabel: COMMUNITY_TREND_LABEL,
+    avatarCount: 16,
+  },
+  {
+    id: "launch-community-stella-maris",
+    name: "Stella Maris",
+    href: buildCommunityAliasUrl("stella-maris"),
+    imageKey: "bairroSantaCruz",
+    membersLabel: COMMUNITY_ACTIVE_LABEL,
+    deltaLabel: COMMUNITY_TREND_LABEL,
+    avatarCount: 8,
+  },
+];
+
+const launchActivities: HomeCommunityActivity[] = [
+  {
+    id: "launch-activity-question-pituba",
+    author: "Juliana Santos",
+    community: "Pituba",
+    text: "Alguém sabe de um bom restaurante japonês por aqui?",
+    time: "2h",
+    comments: 24,
+    avatarKey: "morador",
+  },
+  {
+    id: "launch-activity-official-cleanup",
+    author: "Prefeitura de Salvador",
+    community: "Avisos oficiais",
+    text: "Mutirão de limpeza neste sábado na orla da Pituba. Participe!",
+    time: "4h",
+    comments: 18,
+    avatarKey: "emprego",
+    verified: true,
+  },
+  {
+    id: "launch-activity-classified-bike",
+    author: "Marcos Lima",
+    community: "Barra",
+    text: "Vendo bicicleta semi nova, usada poucas vezes.",
+    time: "6h",
+    comments: 9,
+    avatarKey: "comerciante",
+    imageKey: "bairroRioVermelho",
+  },
+];
+
+const communityImageBySlug: Partial<Record<string, HomeImageKey>> = {
+  barra: "bairroOndina",
+  "caminho-das-arvores": "complexoComercio",
+  "complexo-do-nordeste-de-amaralina": "bairroSantaCruz",
+  graca: "complexoCultura",
+  "horto-florestal": "neighborhoodFeatured",
+  imbui: "bairroChapada",
+  itapua: "bairroStiep",
+  pituba: "bairroPituba",
+  "rio-vermelho": "bairroRioVermelho",
+  "stella-maris": "bairroSantaCruz",
+};
 
 function getLaunchCityGeographicPath(): string | null {
   const { country, state, city } = TERRITORY_CONFIG.launch;
@@ -84,6 +299,63 @@ function hasDisplayableTitle(document: SearchDocument): boolean {
   return document.title.trim().length > 0;
 }
 
+function formatCompactCount(value: number, fallback: string): string {
+  if (!Number.isFinite(value) || value <= 0) return fallback;
+  if (value >= 1000) {
+    const compact = new Intl.NumberFormat("pt-BR", {
+      maximumFractionDigits: value >= 10000 ? 0 : 1,
+      notation: "compact",
+    }).format(value);
+    return `+${compact}`;
+  }
+  return String(value);
+}
+
+function formatMembersLabel(value: number | null | undefined, fallback: string): string {
+  if (!Number.isFinite(value ?? NaN) || !value || value <= 0) return fallback;
+  return `${formatCompactCount(value, fallback)} membros`;
+}
+
+function cleanCommunityName(name: string): string {
+  return name.replace(/^Achegue-se\s+/i, "").trim() || name;
+}
+
+function mergeWithLaunchFallbacks<T extends { id: string }>(
+  dynamicItems: T[],
+  fallbackItems: T[],
+  limit: number,
+): T[] {
+  const seen = new Set(dynamicItems.map((item) => item.id));
+  return [
+    ...dynamicItems,
+    ...fallbackItems.filter((item) => !seen.has(item.id)),
+  ].slice(0, limit);
+}
+
+function mergeCommunityCards(
+  dynamicItems: HomeCommunityCard[],
+  fallbackItems: HomeCommunityCard[],
+  limit: number,
+): HomeCommunityCard[] {
+  const seen = new Set(
+    dynamicItems.map((item) => `${item.href}|${item.name.toLowerCase()}`),
+  );
+
+  return [
+    ...dynamicItems,
+    ...fallbackItems.filter(
+      (item) => !seen.has(`${item.href}|${item.name.toLowerCase()}`),
+    ),
+  ].slice(0, limit);
+}
+
+function communityFallbackBySlug(slug: string): HomeCommunityCard | undefined {
+  return launchCommunityFallbacks.find((community) => {
+    const hrefSlug = community.href.split("/").filter(Boolean).at(0);
+    return hrefSlug === slug || community.id.endsWith(slug);
+  });
+}
+
 function selectBalancedActivityDocuments(
   groups: SearchDocument[][],
   limit: number,
@@ -114,6 +386,148 @@ function settledValue<T>(result: PromiseSettledResult<T>, fallback: T): T {
     getErrorMessage(result.reason),
   );
   return fallback;
+}
+
+function territoryCommunityToCard(
+  row: CommunitySearchResult,
+  index: number,
+): HomeCommunityCard {
+  const fallback = communityFallbackBySlug(row.slug);
+
+  return {
+    id: row.id,
+    name: cleanCommunityName(row.name),
+    href: buildCommunityAliasUrl(row.slug),
+    imageKey: communityImageBySlug[row.slug] ?? fallback?.imageKey ?? "neighborhoodFeatured",
+    membersLabel: fallback?.membersLabel ?? formatMembersLabel(null, "Comunidade ativa"),
+    deltaLabel: fallback?.deltaLabel ?? COMMUNITY_TREND_LABEL,
+    badge: row.is_featured || index === 0 ? (fallback?.badge ?? "Em alta") : fallback?.badge,
+    avatarCount: fallback?.avatarCount ?? Math.max(6, 18 - index * 2),
+  };
+}
+
+function topPostToCommunityActivity(
+  post: Awaited<ReturnType<typeof postService.getTopPosts>>[number],
+  index: number,
+): HomeCommunityActivity {
+  const avatarKeys: HomeCommunityActivity["avatarKey"][] = [
+    "morador",
+    "comerciante",
+    "prestador",
+  ];
+
+  return {
+    id: `post-${post.id}`,
+    author: post.author_name || "Morador",
+    community: "Comunidade local",
+    text: post.content,
+    time: "7d",
+    comments: post.engagement,
+    avatarKey: avatarKeys[index % avatarKeys.length],
+  };
+}
+
+function adCampaignToSponsoredItem(
+  campaign: AdCampaignWithTargets,
+): HomeSponsoredItem {
+  return {
+    id: `ad-${campaign.id}`,
+    title: campaign.title,
+    community: campaign.advertiser_name ?? "Anunciante local",
+    description: campaign.description || "Destaque patrocinado da comunidade.",
+    href: campaign.cta_url ?? LAUNCH_URLS.business,
+    imageKey: "empresasHero",
+    imageUrl: campaign.image_url,
+  };
+}
+
+function buildStats(
+  territoryStats: Awaited<ReturnType<typeof LandingFeaturedService.getTerritoryStats>>,
+  eventCount: number,
+  trustDocuments: SearchDocument[],
+): HomeStatCard[] {
+  const ratings = trustDocuments
+    .map((document) => document.metadata?.rating)
+    .filter((rating): rating is number => typeof rating === "number" && rating > 0);
+  const averageRating =
+    ratings.length > 0
+      ? ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length
+      : null;
+
+  const stats: HomeStatCard[] = [
+    {
+      id: "businesses",
+      value: formatCompactCount(territoryStats.businesses, "0"),
+      label: "Empresas locais",
+      tone: "cyan",
+    },
+    {
+      id: "services",
+      value: formatCompactCount(territoryStats.services, "0"),
+      label: "Servicos profissionais",
+      tone: "cyan",
+    },
+    {
+      id: "classifieds",
+      value: formatCompactCount(territoryStats.classifieds, "0"),
+      label: "Classificados ativos",
+      tone: "cyan",
+    },
+    ...(isLaunchSurfaceEnabled("events")
+      ? [
+          {
+            id: "events" as const,
+            value: formatCompactCount(eventCount, "0"),
+            label: "Eventos locais",
+            tone: "cyan" as const,
+          },
+        ]
+      : []),
+    {
+      id: "rating",
+      value: averageRating ? averageRating.toFixed(1).replace(".", ",") : "Sem dados",
+      label: averageRating ? "Avaliacao media" : "Avaliacoes publicas",
+      tone: "amber",
+    },
+  ];
+
+  return stats;
+}
+
+function buildSponsoredItems(adCampaign: AdCampaignWithTargets | null): HomeSponsoredItem[] {
+  return adCampaign ? [adCampaignToSponsoredItem(adCampaign)] : [];
+}
+
+function buildCommunityActivities(
+  topPosts: Awaited<ReturnType<typeof postService.getTopPosts>>,
+  limit: number,
+): HomeCommunityActivity[] {
+  return mergeWithLaunchFallbacks(
+    topPosts.map(topPostToCommunityActivity),
+    launchActivities,
+    limit,
+  );
+}
+
+function buildFallbackDiscovery(
+  options: HomeDiscoveryOptions = {},
+): HomeDiscoveryResult {
+  const communityLimit = options.communityLimit ?? DEFAULT_COMMUNITY_LIMIT;
+
+  return {
+    activityDocuments: [],
+    communityActivities: launchActivities,
+    communityRanking: launchCommunityFallbacks.slice(0, communityLimit),
+    featuredCommunities: launchCommunityFallbacks.slice(0, Math.min(4, communityLimit)),
+    stats: buildStats(
+      { businesses: 0, services: 0, classifieds: 0 },
+      0,
+      [],
+    ),
+    suggestedCommunities: launchCommunityFallbacks.slice(4, 4 + communityLimit),
+    sponsoredItems: [],
+    trustDocuments: [],
+  };
 }
 
 function featuredBusinessToSearchDocument(
@@ -237,12 +651,40 @@ async function resolveLaunchTerritoryFilter(): Promise<TerritoryFilter | null> {
 }
 
 export class HomeDiscoveryService {
+  static getFallbackHomeDiscovery(
+    options: HomeDiscoveryOptions = {},
+  ): HomeDiscoveryResult {
+    return buildFallbackDiscovery(options);
+  }
+
+  private static async getCommunityCards(
+    filter: TerritoryFilter,
+    limit: number,
+  ): Promise<HomeCommunityCard[]> {
+    if (filter.scope === "none") return [];
+
+    try {
+      const communities =
+        await CommunityExperienceService.listPublicCommunitiesForDiscovery(
+          filter,
+          limit,
+        );
+      return communities.map(territoryCommunityToCard);
+    } catch (error) {
+      logger.warn(
+        "HomeDiscoveryService.getCommunityCards unexpected",
+        getErrorMessage(error),
+      );
+      return [];
+    }
+  }
+
   static async getLaunchHomeDiscovery(
     options: HomeDiscoveryOptions = {},
   ): Promise<HomeDiscoveryResult> {
     const filter = await resolveLaunchTerritoryFilter();
     if (!filter) {
-      return { activityDocuments: [], trustDocuments: [] };
+      return buildFallbackDiscovery(options);
     }
 
     return this.getHomeDiscovery(filter, options);
@@ -253,11 +695,15 @@ export class HomeDiscoveryService {
     options: HomeDiscoveryOptions = {},
   ): Promise<HomeDiscoveryResult> {
     if (filter.scope === "none") {
-      return { activityDocuments: [], trustDocuments: [] };
+      return buildFallbackDiscovery(options);
     }
 
     const activityLimit = options.activityLimit ?? DEFAULT_ACTIVITY_LIMIT;
+    const communityLimit = options.communityLimit ?? DEFAULT_COMMUNITY_LIMIT;
     const trustLimit = options.trustLimit ?? DEFAULT_TRUST_LIMIT;
+    const eventsEnabled = isLaunchSurfaceEnabled("events");
+    const jobsEnabled = isLaunchSurfaceEnabled("jobs");
+    const fallbackLocationId = filter.scope === "location" ? filter.location_id : null;
 
     const [
       businessesResult,
@@ -265,22 +711,40 @@ export class HomeDiscoveryService {
       classifiedsResult,
       eventPageResult,
       opportunitiesResult,
+      territoryStatsResult,
+      communityCardsResult,
+      sponsoredAdResult,
+      topPostsResult,
     ] = await Promise.allSettled([
       LandingFeaturedService.getFeaturedBusinesses(filter, trustLimit),
       LandingFeaturedService.getFeaturedServices(filter, trustLimit),
       LandingFeaturedService.getFeaturedClassifieds(filter, activityLimit),
-      eventsReadService.getEventsPage({
-        territoryFilter: filter,
-        statuses: ["upcoming", "ongoing"],
-        pageSize: activityLimit,
-        sortBy: "date",
-        sortOrder: "asc",
-      }),
-      WorkOpportunitiesService.listPublicOpportunityCards({
-        territoryLocationId:
-          filter.scope === "location" ? filter.location_id : undefined,
-        limit: activityLimit,
-      }),
+      eventsEnabled
+        ? eventsReadService.getEventsPage({
+            territoryFilter: filter,
+            statuses: ["upcoming", "ongoing"],
+            pageSize: activityLimit,
+            sortBy: "date",
+            sortOrder: "asc",
+          })
+        : Promise.resolve({
+            items: [],
+            totalCount: 0,
+            hasMore: false,
+            nextPage: null,
+          }),
+      jobsEnabled
+        ? WorkOpportunitiesService.listPublicOpportunityCards({
+            territoryLocationId: fallbackLocationId ?? undefined,
+            limit: activityLimit,
+          })
+        : Promise.resolve([]),
+      LandingFeaturedService.getTerritoryStats(filter),
+      this.getCommunityCards(filter, communityLimit + 4),
+      adDeliveryService.getAdForPlacement("sidebar_widget", fallbackLocationId),
+      fallbackLocationId
+        ? postService.getTopPosts(fallbackLocationId, activityLimit)
+        : Promise.resolve([]),
     ]);
 
     const businesses = settledValue(businessesResult, []);
@@ -293,6 +757,26 @@ export class HomeDiscoveryService {
       nextPage: null,
     });
     const opportunities = settledValue(opportunitiesResult, []);
+    const territoryStats = settledValue(territoryStatsResult, {
+      businesses: 0,
+      services: 0,
+      classifieds: 0,
+    });
+    const communityCards = mergeCommunityCards(
+      settledValue(communityCardsResult, []),
+      launchCommunityFallbacks,
+      communityLimit + 4,
+    );
+    const rankedCommunities =
+      await HomeCommunityRankingService.rankCommunityCards(
+        communityCards,
+        communityLimit,
+      );
+    const sponsoredAd = settledValue(sponsoredAdResult, {
+      campaign: null,
+      resolution_source: "none" as const,
+    }).campaign;
+    const topPosts = settledValue(topPostsResult, []);
 
     const trustDocuments = [
       ...businesses.map(featuredBusinessToSearchDocument),
@@ -320,6 +804,15 @@ export class HomeDiscoveryService {
       activityLimit,
     );
 
-    return { activityDocuments, trustDocuments };
+    return {
+      activityDocuments,
+      communityActivities: buildCommunityActivities(topPosts, activityLimit),
+      communityRanking: rankedCommunities,
+      featuredCommunities: communityCards.slice(0, Math.min(4, communityLimit)),
+      stats: buildStats(territoryStats, eventPage.totalCount, trustDocuments),
+      suggestedCommunities: communityCards.slice(4, 4 + communityLimit),
+      sponsoredItems: buildSponsoredItems(sponsoredAd),
+      trustDocuments,
+    };
   }
 }

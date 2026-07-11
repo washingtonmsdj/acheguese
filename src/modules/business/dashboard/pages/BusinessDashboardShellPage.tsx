@@ -13,6 +13,7 @@ import {
   CreditCard,
   GraduationCap,
   Link as LinkIcon,
+  Megaphone,
   Settings,
   Store,
   UtensilsCrossed,
@@ -119,6 +120,7 @@ export default function BusinessDashboardShellPage() {
         ]
       : []),
     { label: "Planos", to: businessManagementRoutes.planos(businessId), icon: CreditCard },
+    { label: "Anuncios", to: businessManagementRoutes.anuncios(businessId), icon: Megaphone },
     { label: "Link premium", to: businessManagementRoutes.linkPremium(businessId), icon: LinkIcon },
     ...(isLaunchSurfaceEnabled("publicAnalytics")
       ? [{ label: "Analytics", to: businessManagementRoutes.analytics(businessId), icon: BarChart3 }]

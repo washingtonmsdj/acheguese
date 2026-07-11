@@ -93,6 +93,28 @@ const nordesteDeAmaralinaLocation: Location = {
   updated_at: FALLBACK_TIMESTAMP,
 };
 
+const pitubaLocation: Location = {
+  id: "fallback-location-pituba",
+  parent_id: salvadorLocation.id,
+  type: LocationType.DISTRICT,
+  slug: "pituba",
+  name: "Pituba",
+  full_name: "Pituba, Salvador - BA",
+  geographic_path: "/br/ba/salvador/pituba",
+  status: LocationStatus.ACTIVE,
+  metadata: {
+    population: 65000,
+    business_count: 542,
+    services_count: 214,
+    classifieds_count: 1200,
+    center_latitude: -13.0042,
+    center_longitude: -38.4576,
+    [PUBLIC_FALLBACK_FLAG]: true,
+  },
+  created_at: FALLBACK_TIMESTAMP,
+  updated_at: FALLBACK_TIMESTAMP,
+};
+
 const complexoNordesteGroup: TerritorialGroupWithMembers = {
   id: "fallback-group-complexo-nordeste",
   slug: "complexo-do-nordeste-de-amaralina",
@@ -127,6 +149,10 @@ export function resolvePublicTerritoryFallback(input: FallbackInput): ResolvedTe
 
   if (territorySlug === nordesteDeAmaralinaLocation.slug) {
     return { kind: "location", location: nordesteDeAmaralinaLocation };
+  }
+
+  if (territorySlug === pitubaLocation.slug) {
+    return { kind: "location", location: pitubaLocation };
   }
 
   if (territorySlug === complexoNordesteGroup.slug) {

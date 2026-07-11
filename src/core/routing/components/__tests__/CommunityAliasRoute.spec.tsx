@@ -88,11 +88,6 @@ describe("CommunityAliasRoute", () => {
       ).toBeInTheDocument(),
     );
     expect(resolveCommunityPublicAliasTerritory).toHaveBeenCalledWith("santa-cruz");
-    expect(screen.getByText("Portal comunitario de Santa Cruz")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Ver no site publico" })).toHaveAttribute(
-      "href",
-      "/ba/salvador/santa-cruz",
-    );
   });
 
   it("renderiza subrotas comunitarias profundas no proprio portal", async () => {

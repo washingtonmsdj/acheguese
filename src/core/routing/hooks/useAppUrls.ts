@@ -221,7 +221,7 @@ export function useAppUrls(routeResolved?: ResolvedTerritory | null): AppUrls {
     map: `/mapa${cityBase}`,
     ranking: '/ranking',
     gamification: '/gamificacao',
-    search: `/buscar${cityBase}`,
+    search: buildModuleTerritoryUrl(MODULE_SLUGS.search, cityBase),
     notifications: '/notificacoes',
     jobs: jobPublicRoutes.list({ state: active.state, city: active.city }),
     family: {

@@ -21,6 +21,7 @@ interface UseCommunityFeedOptions {
   locationScope?: LocationScope;
   context?: "all" | "my_posts" | "saved";
   limit?: number;
+  enabled?: boolean;
   /** Território resolvido pela rota — passar quando dentro de TerritorialLayout */
   routeResolved?: ResolvedTerritory | null;
   /** Filtro territorial canônico resolvido pela página */
@@ -34,6 +35,7 @@ export function useCommunityFeedSimple(options: UseCommunityFeedOptions = {}) {
   const filter = territoryFilter ?? moduleTerritory.territoryFilter;
   const filterReady = isTerritoryFilterReady(filter);
   const filterKey = territoryFilterKey(filter);
+  const queryEnabled = filterReady && options.enabled !== false;
 
   const query = useInfiniteQuery({
     queryKey: [
@@ -62,7 +64,7 @@ export function useCommunityFeedSimple(options: UseCommunityFeedOptions = {}) {
     },
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
-    enabled: filterReady, // Só executa se há território resolvido
+    enabled: queryEnabled, // Só executa se há território resolvido e a superfície pediu dados reais
     staleTime: 2 * 60 * 1000,
     gcTime: 5 * 60 * 1000,
   });
@@ -95,4 +97,3 @@ export function useCommunityFeedSimple(options: UseCommunityFeedOptions = {}) {
     refetch: query.refetch,
   };
 }
-

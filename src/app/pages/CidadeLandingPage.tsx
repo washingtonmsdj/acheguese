@@ -18,12 +18,10 @@ import {
   ExternalLink,
   Heart,
   HelpCircle,
-  Home,
   LayoutGrid,
   List,
   Map as MapIcon,
   MapPin,
-  Menu,
   MessageCircle,
   Moon,
   Plus,
@@ -37,7 +35,6 @@ import {
   Users,
   UtensilsCrossed,
   Wrench,
-  X,
   type LucideIcon,
 } from "lucide-react";
 
@@ -82,6 +79,9 @@ import { mapGastronomyLayerRuntimeService } from "@/core/maps/services/MapGastro
 import { mapServicesLayerRuntimeService } from "@/core/maps/services/MapServicesLayerRuntimeService";
 import type { BoundingBox } from "@/core/maps/types/core";
 import { useCommunityFeedSimple } from "@/core/community-feed/hooks/useCommunityFeed";
+import { CommunityOverviewSurface } from "@/core/community/components/page/CommunityOverviewSurface";
+import type { TerritorialFeedChannel } from "@/core/community/hooks/feed/territorialFeedEngine";
+import { useCommunityProfile } from "@/core/community-experience/hooks/useCommunityProfile";
 import { useTouristPoints } from "@/core/guide/tourist-points/hooks/useTouristPoints";
 import type { TouristPoint } from "@/core/guide/tourist-points/types";
 import { residenceService } from "@/core/residence/services/ResidenceService";
@@ -1096,58 +1096,76 @@ function CommunityPanel({
 }
 
 function NeighborhoodCommunityHeader({
+  urls,
   cityLabel,
   cityHref,
-  searchQuery,
-  onSearchChange,
-  onSearchSubmit,
+  temperature,
   theme,
   onToggleTheme,
   authHref,
   authLabel,
-  signupHref,
-  showSignup,
 }: {
+  urls: CityModuleUrls;
   cityLabel: string;
   cityHref: string;
-  searchQuery: string;
-  onSearchChange: (value: string) => void;
-  onSearchSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  temperature: WeatherBadgeState;
   theme: "dark" | "light";
   onToggleTheme: () => void;
   authHref: string;
   authLabel: string;
-  signupHref: string;
-  showSignup: boolean;
 }) {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const communityNavItems = useMemo(
+    () =>
+      [
+        { id: "home", label: "Início", href: "/" },
+        { id: "community", label: "Comunidades", href: urls.community },
+        { id: "business", label: "Empresas", href: urls.business },
+        { id: "classifieds", label: "Classificados", href: urls.classifieds },
+        { id: "services", label: "Serviços", href: urls.services },
+        { id: "map", label: "Mapa", href: urls.map },
+      ].filter((item) => isLaunchSurfaceEnabled(item.id as LaunchSurfaceKey)),
+    [urls.business, urls.classifieds, urls.community, urls.map, urls.services],
+  );
 
   return (
     <header className="neighborhood-community-header">
       <Link to="/" className="city-op-brand neighborhood-community-brand" aria-label="Achegue-se">
         <span className="city-op-brand-mark" aria-hidden="true">
-          <Home />
+          <MapPin />
         </span>
         <span>Achegue-se</span>
       </Link>
 
-      <Link to={cityHref} className="city-op-location-switch neighborhood-community-location">
-        <MapPin aria-hidden="true" />
-        <span>{cityLabel}</span>
-        <ChevronDown aria-hidden="true" />
-      </Link>
-
-      <form className="neighborhood-community-top-search" onSubmit={onSearchSubmit}>
-        <Search aria-hidden="true" />
-        <input
-          value={searchQuery}
-          onChange={(event) => onSearchChange(event.target.value)}
-          placeholder="Buscar no bairro"
-          aria-label="Buscar no bairro"
-        />
-      </form>
+      <nav className="neighborhood-community-nav" aria-label="Navegacao principal">
+        {communityNavItems.map((item) =>
+          item.href.startsWith("#") ? (
+            <a key={item.id} href={item.href}>
+              {item.label}
+            </a>
+          ) : (
+            <Link
+              key={item.id}
+              to={item.href}
+              className={item.id === "community" ? "is-active" : undefined}
+            >
+              {item.label}
+            </Link>
+          ),
+        )}
+      </nav>
 
       <div className="neighborhood-community-actions">
+        <Link to={cityHref} className="city-op-location-switch neighborhood-community-location">
+          <MapPin aria-hidden="true" />
+          <span>{cityLabel}</span>
+          <ChevronDown aria-hidden="true" />
+        </Link>
+
+        <span className="neighborhood-community-weather" aria-label={`Temperatura atual: ${temperature.label}`}>
+          <CloudSun aria-hidden="true" />
+          <span>{temperature.label}</span>
+        </span>
+
         <button
           type="button"
           className="city-op-icon-button neighborhood-community-theme-button"
@@ -1157,55 +1175,17 @@ function NeighborhoodCommunityHeader({
           {theme === "dark" ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}
         </button>
 
-        <div className="neighborhood-community-mobile-tools">
-          <Link to={authHref} className="city-op-icon-button neighborhood-community-mobile-bell" aria-label={authLabel}>
-            <Bell aria-hidden="true" />
-          </Link>
-          <button
-            type="button"
-            className="city-op-icon-button neighborhood-community-mobile-menu-toggle"
-            aria-label={mobileMenuOpen ? "Fechar menu" : "Abrir menu"}
-            aria-expanded={mobileMenuOpen}
-            aria-controls="neighborhood-community-mobile-menu"
-            onClick={() => setMobileMenuOpen((current) => !current)}
-          >
-            {mobileMenuOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
-          </button>
-        </div>
-
-        <Link to={authHref} className="city-op-login-link neighborhood-community-desktop-auth">
-          {authLabel}
+        <Link to={authHref} className="city-op-icon-button neighborhood-community-bell" aria-label="Notificacoes">
+          <Bell aria-hidden="true" />
         </Link>
-        {showSignup ? (
-          <Link to={signupHref} className="city-op-publish-link neighborhood-community-create neighborhood-community-desktop-auth">
-            <span>Criar conta</span>
-          </Link>
-        ) : null}
 
-        <div
-          id="neighborhood-community-mobile-menu"
-          className={`neighborhood-community-mobile-menu${mobileMenuOpen ? " is-open" : ""}`}
+        <Link
+          to={authHref}
+          className="neighborhood-community-account"
+          aria-label={authLabel}
         >
-          <Link to={authHref} className="city-op-login-link" onClick={() => setMobileMenuOpen(false)}>
-            {authLabel}
-          </Link>
-          {showSignup ? (
-            <Link to={signupHref} className="city-op-publish-link neighborhood-community-create" onClick={() => setMobileMenuOpen(false)}>
-              <span>Criar conta</span>
-            </Link>
-          ) : null}
-          <button
-            type="button"
-            className="city-op-login-link neighborhood-community-mobile-theme-action"
-            onClick={() => {
-              onToggleTheme();
-              setMobileMenuOpen(false);
-            }}
-          >
-            {theme === "dark" ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}
-            <span>{theme === "dark" ? "Tema claro" : "Tema escuro"}</span>
-          </button>
-        </div>
+          <Users aria-hidden="true" />
+        </Link>
       </div>
     </header>
   );
@@ -1228,9 +1208,8 @@ function NeighborhoodLandingContent({
   gastronomyItems,
   feedPosts,
   stats,
-  searchQuery,
-  onSearchChange,
-  onSearchSubmit,
+  territoryFilter,
+  temperature,
   onMarkerClick,
   theme,
   onToggleTheme,
@@ -1258,9 +1237,8 @@ function NeighborhoodLandingContent({
   gastronomyItems: FeaturedBusiness[];
   feedPosts: Post[];
   stats: { businesses?: number; services?: number; classifieds?: number } | undefined;
-  searchQuery: string;
-  onSearchChange: (value: string) => void;
-  onSearchSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  territoryFilter: TerritoryFilter;
+  temperature: WeatherBadgeState;
   onMarkerClick: (id: string) => void;
   theme: "dark" | "light";
   onToggleTheme: () => void;
@@ -1272,8 +1250,11 @@ function NeighborhoodLandingContent({
   residenceLoading: boolean;
   isLoading: boolean;
 }) {
+  const navigate = useNavigate();
   const [activeStreamTab, setActiveStreamTab] = useState<NeighborhoodCommunityTabId>("all");
+  const [activeFeedFilter, setActiveFeedFilter] = useState<TerritorialFeedChannel>("para_voce");
   const routeLocation = useLocation();
+  const communityProfileQuery = useCommunityProfile(resolved);
   const territoryName = getPublicTerritoryDisplayName(routeLocation.pathname, resolved, cityLabel);
   const memberLocations = getResolvedTerritoryLocations(resolved);
   const memberCount = Math.max(memberLocations.length, 1);
@@ -1293,7 +1274,6 @@ function NeighborhoodLandingContent({
   const canInteract = accessStatus === "verified";
   const enterLoginHref = withQueryParams("/login", { redirect: urls.feed });
   const publishLoginHref = withQueryParams("/login", { redirect: urls.publish });
-  const signupHref = withQueryParams("/cadastro", { redirect: urls.community });
   const residenceHref = "/conta/enderecos";
   const verifyHref = accessStatus === "visitor" ? withQueryParams("/login", { redirect: residenceHref }) : residenceHref;
   const interactionHref = canInteract ? urls.publish : accessStatus === "visitor" ? publishLoginHref : verifyHref;
@@ -1328,6 +1308,57 @@ function NeighborhoodLandingContent({
     { id: "map", label: "Mapa", shortLabel: "Mapa", icon: MapPin },
   ];
 
+  if (isCommunityMode) {
+    return (
+      <main className="city-op-page neighborhood-community-page" data-page="bairro-landing" data-community-home="community-first">
+        <div className="city-op-backdrop neighborhood-community-backdrop" aria-hidden="true">
+          <span />
+        </div>
+
+        <NeighborhoodCommunityHeader
+          urls={urls}
+          cityLabel={cityLabel}
+          cityHref={cityHref}
+          temperature={temperature}
+          theme={theme}
+          onToggleTheme={onToggleTheme}
+          authHref={authHref}
+          authLabel={authLabel}
+        />
+
+        <CommunityOverviewSurface
+          resolved={resolved}
+          territoryName={territoryName}
+          territoryFilter={territoryFilter}
+          activeHeaderFilter={activeFeedFilter}
+          onHeaderFilterChange={setActiveFeedFilter}
+          onRequireLogin={() => navigate(canInteract ? urls.feed : lockedActionHref)}
+          loginHref={enterHref}
+          publishHref={interactionHref}
+          communityProfile={communityProfileQuery.data ?? null}
+          mode={canInteract ? "member" : "public"}
+          onOpenCreatePost={() => navigate(interactionHref)}
+        />
+
+        <footer className="city-op-footer neighborhood-community-footer">
+          <span>
+            <strong>Achegue-se</strong>
+            <small>{territoryName} - {cityLabel}</small>
+          </span>
+          <nav aria-label="Rodape do bairro">
+            <Link to="/termos">Termos</Link>
+            <Link to="/privacidade">Privacidade</Link>
+            <Link to={urls.feed}>Feed</Link>
+            <Link to={urls.business}>Empresas</Link>
+            <Link to={communityUrls.groups}>Grupos</Link>
+            <Link to={urls.map}>Mapa</Link>
+          </nav>
+          <small>{new Date().getFullYear()}</small>
+        </footer>
+      </main>
+    );
+  }
+
   return (
     <main className="city-op-page neighborhood-community-page" data-page="bairro-landing" data-community-home="meu-bairro">
       <div className="city-op-backdrop neighborhood-community-backdrop" aria-hidden="true">
@@ -1335,17 +1366,14 @@ function NeighborhoodLandingContent({
       </div>
 
       <NeighborhoodCommunityHeader
+        urls={urls}
         cityLabel={cityLabel}
         cityHref={cityHref}
-        searchQuery={searchQuery}
-        onSearchChange={onSearchChange}
-        onSearchSubmit={onSearchSubmit}
+        temperature={temperature}
         theme={theme}
         onToggleTheme={onToggleTheme}
         authHref={authHref}
         authLabel={authLabel}
-        signupHref={signupHref}
-        showSignup={!isAuthenticated}
       />
 
       <NeighborhoodTerritoryHero
@@ -1725,9 +1753,8 @@ export default function CidadeLandingPage() {
         gastronomyItems={gastronomyItems}
         feedPosts={communityFeed.posts}
         stats={territoryStats}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        onSearchSubmit={handleSearchSubmit}
+        territoryFilter={moduleTerritory.territoryFilter}
+        temperature={temperature}
         onMarkerClick={handleMarkerClick}
         theme={theme}
         onToggleTheme={toggleTheme}

@@ -9,9 +9,14 @@ import { useQuery } from "@tanstack/react-query";
 import { SearchService } from "../services/SearchService";
 import type { SearchFilters, SearchResults } from "../services/SearchService";
 
+interface UseGlobalSearchOptions {
+  enabled?: boolean;
+}
+
 export function useGlobalSearch(
   initialQuery = "",
   initialFilters: SearchFilters = {},
+  options: UseGlobalSearchOptions = {},
 ) {
   const [query, setQuery] = useState(initialQuery);
   const [debouncedQuery, setDebouncedQuery] = useState(initialQuery);
@@ -40,7 +45,7 @@ export function useGlobalSearch(
   } = useQuery({
     queryKey: ["global-search", debouncedQuery, filters],
     queryFn: () => SearchService.search(debouncedQuery, filters),
-    enabled: debouncedQuery.trim().length >= 2,
+    enabled: (options.enabled ?? true) && debouncedQuery.trim().length >= 2,
     staleTime: 5 * 60 * 1000, // 5 minutos
   });
 

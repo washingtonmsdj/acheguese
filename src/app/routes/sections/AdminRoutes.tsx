@@ -10,6 +10,7 @@ export function AdminRoutes() {
       <Route path="empresas" element={<P.AdminEmpresas />} />
       <Route path="gastronomia" element={<P.AdminGastronomia />} />
       <Route path="servicos" element={<P.AdminServicos />} />
+      <Route path="anuncios" element={<P.AdminAnuncios />} />
       <Route path="classificados" element={<P.AdminClassificados />} />
       <Route path="classificados/denuncias" element={<P.AdminClassificadosDenuncias />} />
       <Route path="vagas" element={<P.AdminVagas />} />

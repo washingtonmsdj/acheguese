@@ -51,6 +51,7 @@ export function CentralRoutes() {
               <Route path="educacao/analytics" element={launchElement("education", "Educação", <P.EducationAnalyticsPage />)} />
               <Route path="educacao/planos" element={launchElement("education", "Educação", <P.EducationPlansPage />)} />
               <Route path="planos" element={<P.BusinessPlansPage />} />
+              <Route path="anuncios" element={<P.BusinessAdsPage />} />
               <Route path="link-premium" element={<P.BusinessPremiumSitePage />} />
               <Route path="analytics" element={launchElement("publicAnalytics", "Analytics", <P.BusinessAnalyticsPage />)} />
               <Route path="configuracoes" element={<P.BusinessSettingsPage />} />

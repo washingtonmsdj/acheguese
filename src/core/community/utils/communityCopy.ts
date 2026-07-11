@@ -1,6 +1,7 @@
 ﻿export const COMMUNITY_FEED_COPY = {
   errorLoadingFeedPrefix: 'Erro ao carregar feed:',
   unknownError: 'Erro desconhecido',
+  sectionTitle: 'O que está acontecendo',
   composerTitle: 'O que você quer compartilhar com o bairro?',
   composerSubtitle: 'Compartilhe uma indicação, pedido, foto ou texto com a comunidade.',
   composerActionsAriaLabel: 'Ações de postagem',

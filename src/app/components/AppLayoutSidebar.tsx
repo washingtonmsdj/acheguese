@@ -40,6 +40,10 @@ export function AppLayoutSidebar() {
       pathSegments.length === 3 ||
       (pathSegments.length === 4 && !isCommunityRouteSuffixSegment(pathSegments[3]))
     );
+  const isCommunityAliasPublicRoute =
+    pathSegments[0] === MODULE_SLUGS.community &&
+    Boolean(pathSegments[1]) &&
+    !/^[a-z]{2}$/i.test(pathSegments[1] ?? '');
   const isShortCommunityRoute =
     Boolean(pathSegments[0]) &&
     !/^[a-z]{2}$/i.test(pathSegments[0] ?? '') &&
@@ -65,6 +69,7 @@ export function AppLayoutSidebar() {
     pathname.startsWith('/conta') ||
     isBarePublicTerritorialRoute ||
     isCommunityPublicLandingRoute ||
+    isCommunityAliasPublicRoute ||
     isShortCommunityRoute ||
     isPublicBusinessLandingRoute;
 
@@ -79,7 +84,11 @@ export function AppLayoutSidebar() {
     !isCommunityRouteSuffixSegment(pathSegments[1] ?? '');
   const useDocumentScrollPublicShell = isPublicEntityDetailRoute;
   const hideMobileBottomNav =
-    isInternalGroupRoute || isConversationRoute || isPublicEntityDetailRoute;
+    isInternalGroupRoute ||
+    isConversationRoute ||
+    isPublicEntityDetailRoute ||
+    isCommunityPublicLandingRoute ||
+    isCommunityAliasPublicRoute;
 
   // Se deve ocultar a sidebar global, renderizar apenas o conteúdo
   if (hideGlobalSidebar) {

@@ -21,6 +21,9 @@ export const BusinessDetailsPage = lazy(() =>
 export const BusinessPlansPage = lazy(() =>
   import("@/modules/business/dashboard/pages/BusinessPlansPage"),
 );
+export const BusinessAdsPage = lazy(() =>
+  import("@/modules/business/dashboard/pages/BusinessAdsPage"),
+);
 export const BusinessPremiumSitePage = lazy(() =>
   import("@/modules/business/dashboard/pages/BusinessPremiumSitePage"),
 );

@@ -3,6 +3,7 @@
  */
 
 import { BusinessService } from "@/core/business";
+import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from "@/config/launchScope";
 import { CommunityEntityLinkService } from "@/core/community-experience/services/CommunityEntityLinkService";
 import { CommunityExperienceService } from "@/core/community-experience/services/CommunityExperienceService";
 import type {
@@ -150,22 +151,32 @@ const SEARCH_LINKED_ENTITY_TYPES_BY_BUCKET: Record<SearchBucket, readonly Search
   events: ["event"],
   posts: ["post"],
 };
+const SEARCH_BUCKET_LAUNCH_SURFACES: Partial<Record<SearchBucket, LaunchSurfaceKey>> = {
+  opportunities: "jobs",
+  events: "events",
+};
+
+function isSearchBucketEnabled(bucket: SearchBucket): boolean {
+  const surface = SEARCH_BUCKET_LAUNCH_SURFACES[bucket];
+  return surface ? isLaunchSurfaceEnabled(surface) : true;
+}
 
 function shouldSearch(category: SearchCategory, bucket: SearchBucket): boolean {
-  return category === "all" || category === bucket;
+  return isSearchBucketEnabled(bucket) && (category === "all" || category === bucket);
 }
 
 function getLinkedEntityTypesForCategory(category: SearchCategory): SearchLinkedEntityType[] {
   if (category === "all") {
     return Array.from(
       new Set(
-        Object.values(SEARCH_LINKED_ENTITY_TYPES_BY_BUCKET)
-          .flat(),
+        Object.entries(SEARCH_LINKED_ENTITY_TYPES_BY_BUCKET)
+          .filter(([bucket]) => isSearchBucketEnabled(bucket as SearchBucket))
+          .flatMap(([, entityTypes]) => entityTypes),
       ),
     );
   }
 
-  if (category === "coupons") return [];
+  if (category === "coupons" || !isSearchBucketEnabled(category)) return [];
   return [...SEARCH_LINKED_ENTITY_TYPES_BY_BUCKET[category]];
 }
 
@@ -192,14 +203,15 @@ function filterByLinkedEntityIds<T>(
   linkedIds: CommunityLinkedEntityIds,
   entityType: SearchLinkedEntityType,
   getEntityId: (item: T) => string | null | undefined,
+  requireLinkedEntity = false,
 ): T[] {
   const ids = linkedIds[entityType];
-  const filtered = ids?.size
-    ? items.filter((item) => {
-        const entityId = getEntityId(item);
-        return Boolean(entityId && ids.has(entityId));
-      })
-    : [...items];
+  if (!ids?.size) return requireLinkedEntity ? [] : [...items].slice(0, SEARCH_LIMIT);
+
+  const filtered = items.filter((item) => {
+    const entityId = getEntityId(item);
+    return Boolean(entityId && ids.has(entityId));
+  });
 
   return filtered.slice(0, SEARCH_LIMIT);
 }
@@ -358,6 +370,7 @@ export class SearchService {
         linkedEntityIds,
         "business",
         (business) => business.id,
+        Boolean(filters.communityId),
       );
     } catch (error) {
       logger.error("Error searching businesses:", error);
@@ -387,6 +400,7 @@ export class SearchService {
         linkedEntityIds,
         "professional",
         (professional) => professional.professional_data_id,
+        Boolean(filters.communityId),
       );
     } catch (error) {
       logger.error("Error searching professionals:", error);
@@ -436,6 +450,7 @@ export class SearchService {
         linkedEntityIds,
         "classified",
         (classified) => classified.id,
+        Boolean(filters.communityId),
       );
     } catch (error) {
       logger.error("Error searching classifieds:", error);
@@ -468,6 +483,7 @@ export class SearchService {
         linkedEntityIds,
         "event",
         (event) => event.id,
+        Boolean(filters.communityId),
       );
     } catch (error) {
       logger.error("Error searching events:", error);
@@ -496,6 +512,7 @@ export class SearchService {
         linkedEntityIds,
         "post",
         (post) => post.id,
+        Boolean(filters.communityId),
       );
     } catch (error) {
       logger.error("Error searching posts:", error);
@@ -542,7 +559,7 @@ export class SearchService {
   static getSearchSuggestions(): string[] {
     return [
       "comunidade pituba",
-      "eventos hoje",
+      ...(isLaunchSurfaceEnabled("events") ? ["eventos hoje"] : []),
       "classificados bicicleta",
       "pedreiro pituba",
       "pizzaiolo",

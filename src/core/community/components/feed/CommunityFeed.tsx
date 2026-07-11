@@ -208,6 +208,7 @@ export function CommunityFeed({
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-white/10 bg-[#0f171a] p-3 shadow-xl shadow-black/10 md:p-4">
+        <h2 className="mb-3 text-sm font-semibold text-white">{COMMUNITY_FEED_COPY.sectionTitle}</h2>
         <div className="flex min-w-0 items-center gap-3">
           <Avatar className="h-10 w-10 shrink-0 border border-white/15">
             <AvatarImage src={profileAvatar} alt={profileName} />

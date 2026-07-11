@@ -1,22 +1,18 @@
 /**
- * AdContextService
+ * Builds ad eligibility context from the canonical location foundation.
  *
- * Constrói o AdEligibilityContext a partir da fundação geográfica.
- * Responsável por:
- * - Ler localização ativa do locationContextStore
- * - Resolver parent_city_id quando active é district
- * - Aceitar fallback_location_id do perfil
- *
- * Não usa strings de bairro/cidade.
- * Não usa CoverageService.
+ * This service reads the active location from LocationContextStore, resolves
+ * the parent city for local territories, and accepts a profile fallback
+ * location. It never uses free-form neighborhood/city strings and does not use
+ * CoverageService.
  */
 
-import { locationContextStore } from '@/core/location/stores/LocationContextStore';
-import { LocationService } from '@/core/location/services/LocationService';
-import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
-import type { ILocationRepository } from '@/core/location/repositories/ILocationRepository';
-import type { AdEligibilityContext } from '../types';
-import type { Location } from '@/core/location/types';
+import { locationContextStore } from "@/core/location/stores/LocationContextStore";
+import { LocationService } from "@/core/location/services/LocationService";
+import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
+import type { ILocationRepository } from "@/core/location/repositories/ILocationRepository";
+import type { Location } from "@/core/location/types";
+import type { AdEligibilityContext } from "../types";
 
 export class AdContextService {
   private locationService: LocationService;
@@ -26,8 +22,9 @@ export class AdContextService {
   }
 
   /**
-   * Constrói o contexto de elegibilidade para resolução de anúncios.
-   * @param fallbackLocationId - primary_location_id do perfil, se disponível
+   * Builds the eligibility context for ad resolution.
+   *
+   * @param fallbackLocationId - profile primary_location_id when available
    */
   async buildContext(fallbackLocationId?: string | null): Promise<AdEligibilityContext> {
     const activeLocation = locationContextStore.getActiveLocation();
@@ -42,53 +39,52 @@ export class AdContextService {
     }
 
     const locationType = activeLocation.type as string;
-    const isDistrict = locationType === 'district';
-    const isCity = locationType === 'city';
+    const isDistrict = locationType === "district";
+    const isNeighborhood = locationType === "neighborhood";
+    const isCity = locationType === "city";
 
-    let parent_city_id: string | null = null;
+    let parentCityId: string | null = null;
 
-    if (isDistrict && activeLocation.parent_id) {
-      // Resolver city pai do district
-      parent_city_id = await this.resolveParentCityId(activeLocation);
+    if ((isDistrict || isNeighborhood) && activeLocation.parent_id) {
+      parentCityId = await this.resolveParentCityId(activeLocation);
     }
 
     return {
       active_location_id: activeLocation.id,
-      active_location_type: isDistrict ? 'district' : isCity ? 'city' : null,
-      parent_city_id,
+      active_location_type: isDistrict
+        ? "district"
+        : isNeighborhood
+          ? "neighborhood"
+          : isCity
+            ? "city"
+            : null,
+      parent_city_id: parentCityId,
       fallback_location_id: fallbackLocationId || null,
     };
   }
 
-  /**
-   * Resolve o ID da city pai de um district.
-   * Sobe na hierarquia até encontrar uma location do tipo city.
-   */
-  private async resolveParentCityId(district: Location): Promise<string | null> {
+  private async resolveParentCityId(locality: Location): Promise<string | null> {
     try {
       const { ancestors } = await this.locationService.getAncestors({
-        location_id: district.id,
+        location_id: locality.id,
         include_self: false,
       });
 
-      const cityAncestor = ancestors.find((a) => a.type === 'city');
+      const cityAncestor = ancestors.find((ancestor) => ancestor.type === "city");
       return cityAncestor?.id || null;
     } catch {
       return null;
     }
   }
 
-  /** Retorna a localização ativa atual (conveniência) */
   getActiveLocation(): Location | null {
     return locationContextStore.getActiveLocation();
   }
 
-  /** Retorna o ID da localização ativa */
   getActiveLocationId(): string | null {
     return this.getActiveLocation()?.id || null;
   }
 
-  /** Verifica se há localização ativa */
   hasActiveLocation(): boolean {
     return this.getActiveLocation() !== null;
   }

@@ -93,6 +93,11 @@ const MODULE_COPY: Record<ModuleSlug, ModuleCopy> = {
     focus: 'Mapa local',
     descriptionSuffix: 'Explore o mapa interativo da região.',
   },
+  busca: {
+    label: 'Busca',
+    focus: 'Busca territorial',
+    descriptionSuffix: 'Encontre comunidades, empresas, serviços, classificados e conteúdos locais.',
+  },
   ranking: {
     label: 'Ranking',
     focus: 'Ranking local',

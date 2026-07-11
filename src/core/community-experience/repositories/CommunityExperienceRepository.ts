@@ -193,4 +193,24 @@ export class CommunityExperienceRepository {
     if (error || !data) return [];
     return (data as unknown as CommunitySearchRow[]).map(mapCommunitySearchRow);
   }
+
+  static async listPublicCommunitiesForDiscovery(
+    options: { cityId?: string | null; limit?: number } = {},
+  ): Promise<CommunitySearchResult[]> {
+    let query = supabase
+      .from("territory_communities" as never)
+      .select(COMMUNITY_SEARCH_SELECT)
+      .neq("status", "inactive")
+      .order("is_featured", { ascending: false })
+      .order("sort_order", { ascending: true })
+      .limit(options.limit ?? 12);
+
+    if (options.cityId) {
+      query = query.eq("city_id", options.cityId);
+    }
+
+    const { data, error } = await query;
+    if (error || !data) return [];
+    return (data as unknown as CommunitySearchRow[]).map(mapCommunitySearchRow);
+  }
 }

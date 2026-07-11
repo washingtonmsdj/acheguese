@@ -40,7 +40,6 @@ import { cn } from '@/shared/utils/cn';
 import { useSessionContext } from '@/core/session';
 import { useAuth } from '@/core/auth/hooks/useAuth';
 import { useAppUrls } from '@/core/routing/hooks/useAppUrls';
-import { useSiteSettings } from '@/core/admin/hooks/useSiteSettings';
 import { GuideSidebarItem } from '@/modules/guide/components/GuideSidebarItem';
 import { prefetchRouteByHref } from '@/app/routes/prefetch';
 import { NAV_SECTIONS, type NavItem } from './navigation.config';
@@ -97,7 +96,6 @@ export function AppSidebar() {
   const { user } = useAuth();
   const { activeProfile } = useSessionContext();
   const appUrls = useAppUrls();
-  const { data: siteSettings, isLoading: isSiteSettingsLoading } = useSiteSettings();
   const { active } = usePublicBrowsingCity();
   const { theme, toggleTheme } = useTheme();
   const homeCommunityHref = useHomeCommunityHref();
@@ -162,6 +160,10 @@ export function AppSidebar() {
 
     const base = communityContext.basePath;
     const communityModuleUrls = buildCommunityNavigationModuleUrls(communityContext);
+    const communitySearchUrl = buildModuleTerritoryUrl(
+      MODULE_SLUGS.search,
+      communityContext.territoryBasePath,
+    );
     const territoryName = formatSlugLabel(communityContext.territorySlug).replace(
       /^Complexo Do\s+/i,
       'Complexo do ',
@@ -254,7 +256,7 @@ export function AppSidebar() {
         label: 'Ferramentas',
         items: visibleNavItems([
           { id: 'community-map', icon: MapPin, label: 'Mapa', description: 'Camadas territoriais', href: communityModuleUrls.map, visible: moduleVisibility.map },
-          { id: 'community-search', icon: Search, label: 'Busca', description: 'Busca no contexto local', href: `/buscar/${communityContext.state}/${communityContext.city}`, visible: moduleVisibility.search },
+          { id: 'community-search', icon: Search, label: 'Busca', description: 'Busca no contexto local', href: communitySearchUrl, visible: moduleVisibility.search },
           { id: 'community-nearby', icon: MapPin, label: 'Perto de mim', description: 'Explorar o que está por perto', href: '/perto-de-mim', visible: moduleVisibility.nearby },
           {
             id: 'community-mobility',
@@ -280,6 +282,7 @@ export function AppSidebar() {
     jobs: buildModuleTerritoryUrl(MODULE_SLUGS.jobs, activeCityBase),
     events: buildModuleTerritoryUrl(MODULE_SLUGS.events, activeCityBase),
     map: buildModuleTerritoryUrl(MODULE_SLUGS.map, activeCityBase),
+    search: buildModuleTerritoryUrl(MODULE_SLUGS.search, activeCityBase),
   } as const;
 
   const getNavHref = (item: NavItem): string => {
@@ -305,7 +308,7 @@ export function AppSidebar() {
       case 'map':
         return activeModuleUrls.map;
       case 'search':
-        return `/buscar${activeCityBase}`;
+        return activeModuleUrls.search;
       default:
         return item.href;
     }
@@ -374,30 +377,19 @@ export function AppSidebar() {
               : 'flex flex-col items-center justify-center gap-0 px-3 pt-0 pb-3',
           )}
         >
-          {isSiteSettingsLoading ? (
-            <div
-              className={cn(
-                'animate-pulse rounded-md bg-muted/70',
-                collapsed ? 'h-6 w-6' : 'h-24 w-full',
-              )}
-            />
-          ) : (
-            <>
-              <img
-                src={OFFICIAL_LOGO_SRC}
-                alt={siteSettings?.site_name || 'Achegue-se'}
-                className={cn(
-                  'object-contain',
-                  collapsed ? 'h-8 w-8 rounded-sm' : 'h-32 w-auto max-w-full',
-                )}
-              />
-              {!collapsed ? (
-                <span className="w-full text-center text-2xl font-semibold text-foreground font-heading leading-none -mt-3">
-                  Achegue-<span className="text-primary">se</span>
-                </span>
-              ) : null}
-            </>
-          )}
+          <img
+            src={OFFICIAL_LOGO_SRC}
+            alt="Achegue-se"
+            className={cn(
+              'object-contain',
+              collapsed ? 'h-8 w-8 rounded-sm' : 'h-32 w-auto max-w-full',
+            )}
+          />
+          {!collapsed ? (
+            <span className="w-full text-center text-2xl font-semibold text-foreground font-heading leading-none -mt-3">
+              Achegue-<span className="text-primary">se</span>
+            </span>
+          ) : null}
         </Link>
         {!collapsed ? (
           <div className="border-t border-sidebar-border px-2 py-2">

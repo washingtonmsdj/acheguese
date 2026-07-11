@@ -90,6 +90,23 @@ function normalizeGroup(group: GroupRow): GroupRow {
   };
 }
 
+function getNormalizedMembersCount(group: GroupRow): number {
+  if (typeof group.members_count === "number" && Number.isFinite(group.members_count)) {
+    return group.members_count;
+  }
+
+  if (typeof group.members_count === "string") {
+    const parsed = Number(group.members_count);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  if (Array.isArray(group.members_count) && group.members_count[0]) {
+    return group.members_count[0].count;
+  }
+
+  return 0;
+}
+
 export class CommunityGroupsService {
   static async getGroupsPage(params: {
     search?: string;
@@ -126,13 +143,7 @@ export class CommunityGroupsService {
         )
         .range(offset, offset + limit - 1);
 
-      if (sortBy === "populares") {
-        query = query
-          .order("members_count", { ascending: false, nullsFirst: false })
-          .order("created_at", { ascending: false });
-      } else {
-        query = query.order("created_at", { ascending: false });
-      }
+      query = query.order("created_at", { ascending: false });
 
       if (search) {
         const sanitizedSearch = sanitizeForILike(search);
@@ -158,6 +169,11 @@ export class CommunityGroupsService {
       if (error) throw error;
 
       const normalized = (data ?? []).map(normalizeGroup);
+      if (sortBy === "populares") {
+        normalized.sort(
+          (a, b) => getNormalizedMembersCount(b) - getNormalizedMembersCount(a),
+        );
+      }
       const totalCount = count ?? normalized.length;
       const hasMore = offset + normalized.length < totalCount;
 

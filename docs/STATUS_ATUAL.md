@@ -1,8 +1,8 @@
 # Status Atual do Projeto
 
-Data: 2026-07-09
+Data: 2026-07-10
 Branch: main
-Ultimo commit base validado antes desta atualizacao: cee01ce5 (`docs: record home mobile concept alignment`)
+Ultimo commit base validado antes desta atualizacao: e16f3671 (`docs: record security authority revalidation`)
 
 Observacao: este documento e a fonte operacional atual. O historico abaixo fica preservado por contexto, mas qualquer registro antigo de bloqueio por falta de `git`/`node` nao representa o ambiente validado em 2026-06-06.
 
@@ -43,8 +43,134 @@ Observacao: este documento e a fonte operacional atual. O historico abaixo fica 
 - Home publica atualizada em 2026-07-09 para o concept Community First mobile:
   header compacto em uma linha, hero em card com imagem, busca interna com
   CTA circular, chips com icones e comportamento responsivo sem overflow de
-  documento. A implementacao permanece somente em `MainLandingPage` como
-  superficie de apresentacao, consumindo contratos canonicos.
+  documento. A header mantem marca, cidade/estado, temperatura quando visivel,
+  sino e perfil na mesma linha; somente a navegacao principal desce para a
+  segunda linha quando nao ha espaco. A implementacao permanece somente em
+  `MainLandingPage` como superficie de apresentacao, consumindo contratos
+  canonicos.
+- Home Discovery atualizada em 2026-07-09 para cobrir as secoes do concept
+  como contrato de produto: comunidades em destaque, ranking, sugestoes,
+  atividades comunitarias, anuncios locais e indicadores. `MainLandingPage`
+  nao possui mais arrays de dominio para essas secoes; consome
+  `HomeDiscoveryService`, que compoe dados publicos dos dominios canonicos e
+  fallback editorial explicito de lancamento quando ainda nao existe agregado
+  publico real. A leitura de comunidades permanece no owner
+  `src/core/community-experience`, nao em query direta da Home.
+- Indicadores numericos da Home revisados em 2026-07-10: a barra final agora
+  exibe apenas sinais com fonte canonica (`businesses`, `services`,
+  `classifieds`, `events` quando habilitado, e `rating` por avaliacoes
+  publicas). Sinais sem agregado aprovado (`members`, `safety`, `responses`)
+  foram removidos do runtime para evitar numeros de lancamento tratados como
+  produto real.
+- Cards de comunidade tambem foram saneados em 2026-07-10: contagens de
+  membros e percentuais editoriais foram substituidos por labels neutras
+  (`Comunidade ativa`, `Ativa`) enquanto nao houver agregado publico aprovado
+  para esses sinais.
+- Plano executavel especifico da Home real criado em
+  `plans/HOME_REAL_PRODUCT_COMPLETION_PLAN.md`. A primeira execucao alinhou a
+  Home para nao anunciar dinamicamente surfaces pausadas: `events` e `jobs`
+  passam por `launchScope` no discovery, no menu, nos tiles e nos fallbacks
+  visuais. Cards de eventos/vagas so devem voltar quando as surfaces forem
+  habilitadas pelos gates correspondentes.
+- Busca territorial da Home alinhada em 2026-07-10: `/busca/:state/:city` e
+  `/busca/:state/:city/:district` agora usam a busca federada canonica
+  (`BuscaPage` + `SearchService`) com `q` da URL e `TerritoryFilter` da rota.
+  `/buscar` continua existindo como busca inteligente de linguagem natural
+  focada em empresas/servicos, sem redirect e sem virar SSOT da descoberta
+  multi-dominio.
+- `SearchService` foi protegido por `launchScope` e recorte comunitario:
+  buckets de `events`/`jobs` pausados nao sao consultados nem sugeridos, e
+  buscas com `communityId` em entidades linkaveis falham fechadas quando nao
+  existe vinculo ativo em `community_entity_links`.
+- UI da busca federada alinhada em 2026-07-10: `BuscaPage` deixou de agrupar
+  comunidades, classificados e posts em "Outros resultados" e passou a
+  renderizar secoes por dominio usando o contrato `SearchDocument`. A tela
+  continua sem query direta a Supabase ou dominios; empresas/profissionais
+  mantem cards dedicados por compatibilidade visual.
+- Sidebar publico saneado em 2026-07-10: `AppSidebar` nao importa mais
+  `useSiteSettings` de `core/admin`, evitando chamada a
+  `admin-site-settings-rpc` em rotas publicas. O logo/alt publicos usam o
+  branding oficial local, e a leitura/escrita administrativa de site settings
+  permanece restrita ao modulo admin. O gate
+  `tests/public-shell-admin-boundary-regression.test.ts` impede regressao
+  dessa fronteira.
+- Navegacao publica de busca alinhada em 2026-07-10: destinos genericos de
+  descoberta (`AppSidebar`, `navigation.config`, `useAppUrls` e JSON-LD
+  `SearchAction`) apontam para `/busca`, a superficie federada multi-dominio.
+  `/buscar` permanece como rota de busca IA de linguagem natural. O gate
+  `tests/public-search-route-regression.test.ts` protege essa separacao.
+- Ranking da Home agora passa por
+  `src/core/landing/services/HomeCommunityRankingService.ts`. A regra v1 usa
+  ordem/destaque editorial mais sinais publicos de `community_entity_links`
+  ativos (`link_type`, `entity_type` e `priority`), sem consultar
+  `community_memberships` nem dados privados no browser.
+- Atividades nas comunidades deixaram de ser somente estaticas: quando ha
+  `location_id` publico, `HomeDiscoveryService` usa
+  `postService.getTopPosts(...)` como fonte primaria e mantem fallback de
+  lancamento apenas quando nao ha posts publicos suficientes.
+- Anuncios patrocinados foram concentrados em `core/business/promotions`.
+  `AdRepositorySupabase` foi alinhado ao schema gerado atual de
+  `ad_campaigns` (`advertiser_name`, `description`, `cta_label`, `priority`,
+  `starts_at`, `ends_at`) e `SponsoredAdsRuntimeService` passou a delegar para
+  `useAdDelivery`, removendo a consulta direta duplicada ao Supabase. A Home
+  prioriza campanha elegivel antes de destaques organicos e aceita `imageUrl`
+  externo com link seguro.
+- Hardening complementar de anuncios em 2026-07-09:
+  `supabase/migrations/20260709234225_harden_ad_campaign_self_service_contract.sql`
+  torna `ad_campaigns/ad_targets` o contrato canonico de campanhas
+  patrocinadas, com `owner_business_id -> business_data.id`, RLS por ownership,
+  leitura publica apenas para campanhas `active` + `approved` + billing
+  `authorized`/`paid` dentro da janela e grants explicitos. Os SQLs antigos de
+  `src/core/business/promotions/sql` foram removidos por duplicarem schema e
+  RLS obsoletos. Os tipos de `core/business/promotions` tambem foram alinhados
+  ao contrato atual, sem aliases legados como `owner_entity_type`, `content` ou
+  `cta_text`.
+- Anuncios self-service agora possuem contrato operacional no app:
+  `AdCampaignRequestService` chama a RPC autenticada
+  `public.request_ad_campaign(payload jsonb)` e a tela
+  `/central/empresas/:businessId/anuncios` permite que uma empresa solicite
+  campanha pendente. A exibicao publica continua dependente de revisao,
+  pagamento/autorizacao e ativacao operacional. A migration canonica de
+  self-service foi aplicada ao Supabase remoto e revalidada por
+  `validate:migrations:remote`.
+- Operacao admin de anuncios foi adicionada em 2026-07-10:
+  `AdCampaignAdminService` e `/admin/anuncios` centralizam revisao, billing,
+  ativacao/pausa e prioridade usando a RPC
+  `public.admin_update_ad_campaign_state(p_campaign_id, p_payload)`. A
+  migration `20260710010449_add_admin_ad_campaign_operations.sql` adiciona
+  constraint de ativacao, RLS admin, auditoria em `ad_campaign_admin_actions`
+  e trigger privado, mantendo `core/business/promotions` como SSOT de
+  anuncios patrocinados. A migration foi aplicada ao Supabase remoto e a
+  verificacao confirmou constraint, RLS, policy admin, tabela de auditoria e
+  RPC `SECURITY INVOKER`.
+- Home nao mistura mais organico com patrocinado: `sponsoredItems` passa a vir
+  apenas de campanha elegivel do `adDeliveryService`. Empresas/profissionais
+  organicos continuam em descoberta/confianca, mas nao recebem selo
+  `Patrocinado`; sem campanha ativa, o painel exibe estado vazio.
+- Header da Home tambem foi saneado em 2026-07-10: o sino nao usa mais contador
+  fixo e o perfil nao usa avatar editorial. Usuario logado recebe contador pelo
+  hook canonico de notificacoes e avatar/nome do perfil ativo da sessao;
+  visitante ve estado neutro sem badge.
+- Pagina publica de comunidade atualizada em 2026-07-10:
+  `/comunidade/:alias` e a landing em modo comunidade usam
+  `CommunityOverviewSurface` como superficie canonica de overview. A pagina
+  agora renderiza fora do chrome operacional global (`AppSidebar`, `AppTopbar`
+  e bottom nav), removeu a faixa legada de "portal comunitario", usa titulo
+  canonico do territorio no `h1`, consome stats/empresas/anuncios por services
+  canonicos e mantem interacoes gated pelo fluxo existente de comunidade. O
+  plano rastreavel esta em
+  `plans/COMMUNITY_PAGE_CONCEPT_IMPLEMENTATION_PLAN.md`.
+- Segundo passe de fidelidade do concept da pagina de comunidade em
+  2026-07-10: header publico passou a seguir o padrao marca + navegacao +
+  cidade/tempo/sino/conta na mesma linha; a navegacao mostra `Eventos` como
+  ancora local enquanto a surface publica segue pausada; blocos de membros,
+  eventos e albuns existem com estados seguros em vez de dados simulados; e
+  copies genericas de pre-lancamento sao ignoradas na descricao publica da
+  comunidade.
+- O gate `tests/public-territorial-copy-regression.test.ts` foi reativado em
+  2026-07-10 para o estado atual da Home e da landing de bairro: removeu
+  referencia a arquivo historico inexistente e voltou a validar copy publica
+  canonica sem mojibake.
 - Fase 7 do plano Community First foi fechada em 2026-07-09 no escopo
   arquitetural: duplicacoes residuais foram tratadas, docs ativos foram
   alinhados, barrels vazios continuam proibidos, e o launch gate territorial de

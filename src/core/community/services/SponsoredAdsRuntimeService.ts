@@ -1,5 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase";
+import { useAdDelivery } from "@/core/business/promotions";
+import type { AdPlacementKey } from "@/core/business/promotions";
 
 type SponsoredAd = {
   id: string;
@@ -9,37 +9,20 @@ type SponsoredAd = {
   link: string;
 };
 
-export function useSponsoredAdsRuntime(placementKey = "sidebar_widget") {
-  const query = useQuery({
-    queryKey: ["sponsored-ad", placementKey],
-    queryFn: async (): Promise<SponsoredAd | null> => {
-      const { data, error } = await supabase
-        .from("ad_campaigns")
-        .select("id, title, description, image_url, cta_url")
-        .eq("status", "active")
-        .eq("placement_key", placementKey)
-        .order("updated_at", { ascending: false })
-        .limit(1)
-        .maybeSingle<{
-          id: string;
-          title: string;
-          description: string | null;
-          image_url: string | null;
-          cta_url: string | null;
-        }>();
+export function useSponsoredAdsRuntime(
+  placementKey: AdPlacementKey = "sidebar_widget",
+) {
+  const { campaign, isLoading } = useAdDelivery(placementKey);
 
-      if (error || !data) return null;
+  const data: SponsoredAd | null = campaign
+    ? {
+        id: campaign.id,
+        title: campaign.title,
+        description: campaign.description ?? "",
+        imageUrl: campaign.image_url ?? "",
+        link: campaign.cta_url ?? "",
+      }
+    : null;
 
-      return {
-        id: data.id,
-        title: data.title,
-        description: data.description ?? "",
-        imageUrl: data.image_url ?? "",
-        link: data.cta_url ?? "",
-      };
-    },
-    staleTime: 1000 * 60 * 5,
-  });
-
-  return { data: query.data, isLoading: query.isLoading };
+  return { data, isLoading };
 }

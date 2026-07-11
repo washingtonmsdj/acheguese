@@ -12,6 +12,7 @@ export type LaunchSurfaceKey =
   | "education"
   | "jobs"
   | "events"
+  | "communityEventsPreview"
   | "communication"
   | "mobility"
   | "coupons"
@@ -37,6 +38,7 @@ export const PUBLIC_LAUNCH_SURFACES: Record<LaunchSurfaceKey, boolean> = {
   education: false,
   jobs: false,
   events: false,
+  communityEventsPreview: true,
   communication: false,
   mobility: false,
   coupons: false,

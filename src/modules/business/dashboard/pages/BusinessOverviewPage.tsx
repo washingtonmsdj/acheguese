@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { BarChart3, CreditCard, Link as LinkIcon, UtensilsCrossed } from "lucide-react";
+import { BarChart3, CreditCard, Link as LinkIcon, Megaphone, UtensilsCrossed } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
@@ -69,6 +69,12 @@ export default function BusinessOverviewPage() {
             <Button variant="outline" className="gap-2">
               <CreditCard className="h-4 w-4" />
               Planos
+            </Button>
+          </Link>
+          <Link to={businessManagementRoutes.anuncios(businessId)}>
+            <Button variant="outline" className="gap-2">
+              <Megaphone className="h-4 w-4" />
+              Anuncios
             </Button>
           </Link>
           <Link to={businessManagementRoutes.linkPremium(businessId)}>

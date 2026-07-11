@@ -6,6 +6,7 @@ import { Button } from "@/shared/components/ui/button";
 import { PageLoader } from "@/shared/components/loading/PageLoader";
 import { useCommunityScopeResolver } from "@/core/community/hooks/useCommunityScopeResolver";
 import { useCommunityProfile } from "@/core/community-experience/hooks/useCommunityProfile";
+import { isCommunityStatusPubliclyRenderable } from "@/core/community-experience/constants/statuses";
 import { useGroupAvailability } from "@/core/territorial/hooks/useGroupAvailability";
 import type { GroupModuleAvailability } from "@/core/territorial/types";
 import { ModuleKey } from "@/core/rollout/types";
@@ -17,13 +18,11 @@ import type { TerritorialLayoutContext } from "./TerritorialLayout";
 import { TerritorialNotFound } from "./TerritorialNotFound";
 import {
   buildCommunityTerritoryUrl,
-  buildModuleTerritoryUrl,
   MODULE_SLUGS,
 } from "@/core/routing/utils/territoryUrls";
 import { resolveSeoPolicy } from "@/core/routing/seo/territorialSeoPolicy";
 import { parsePublicTerritoryPath } from "@/core/routing/utils/publicTerritoryPath";
 import { resolvePublicTerritoryFallback } from "@/core/routing/utils/publicTerritoryFallbacks";
-import { CommunityPortalModeBanner } from "./CommunityPortalModeBanner";
 
 function cityLabelFromSlug(value?: string): string {
   if (!value) return "Cidade";
@@ -152,12 +151,6 @@ export function CommunityTerritorialShell() {
   const communityBase = hasInvalidRouteParams
     ? `/${MODULE_SLUGS.community}`
     : buildCommunityTerritoryUrl(territoryBase);
-  const businessModuleUrl = hasInvalidRouteParams
-    ? `/${MODULE_SLUGS.business}`
-    : buildModuleTerritoryUrl(MODULE_SLUGS.business, territoryBase);
-  const eventsModuleUrl = hasInvalidRouteParams
-    ? `/${MODULE_SLUGS.events}`
-    : buildModuleTerritoryUrl(MODULE_SLUGS.events, territoryBase);
   const cityHref = `/${state}/${city}`;
   const cityName = cityLabelFromSlug(city);
   const territoryName = resolved
@@ -191,8 +184,7 @@ export function CommunityTerritorialShell() {
     });
   }, [effectiveResolved, effectiveTerritoryName, hasInvalidCommunityRoute, territoryBase]);
 
-  const profile = communityProfileQuery.data;
-  const communityStatus = publicCommunityFallback ? "active" : profile?.status ?? "active";
+  const communityStatus = publicCommunityFallback ? "active" : communityProfileQuery.data?.status ?? "active";
   const seoPolicy = resolveSeoPolicy(location.pathname);
   const canonicalHref = typeof window !== "undefined"
     ? `${window.location.origin}${seoPolicy.canonicalPath}`
@@ -235,7 +227,7 @@ export function CommunityTerritorialShell() {
     );
   }
 
-  if (communityStatus === "inactive") {
+  if (!isCommunityStatusPubliclyRenderable(communityStatus)) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4 py-10 text-center text-foreground">
         <h1 className="text-2xl font-bold sm:text-3xl">Comunidade indisponivel neste momento</h1>
@@ -249,40 +241,6 @@ export function CommunityTerritorialShell() {
           </Button>
         </div>
       </div>
-    );
-  }
-
-  if (communityStatus === "launching" || communityStatus === "coming_soon" || communityStatus === "waiting_list") {
-    const interestPath = `${communityBase}/interesse`;
-    return (
-      <>
-        <Helmet>
-          <meta name="robots" content="noindex, follow" />
-          <title>{profile?.hero_title ?? territoryName} | Achegue-se</title>
-        </Helmet>
-        <div className="min-h-screen bg-background px-4 py-10 text-foreground sm:py-14">
-          <div className="mx-auto max-w-3xl rounded-2xl border border-border bg-card p-6 text-card-foreground sm:p-8">
-            <p className="text-xs uppercase tracking-wide text-primary">Proxima comunidade</p>
-            <h1 className="mt-2 text-2xl font-bold sm:text-3xl">{profile?.hero_title ?? `A comunidade de ${territoryName} esta chegando`}</h1>
-            <p className="mt-3 text-sm text-muted-foreground sm:text-base">{profile?.hero_subtitle ?? profile?.description}</p>
-            <p className="mt-2 text-sm text-muted-foreground sm:text-base">
-              Enquanto esta comunidade estiver em preparacao, voce pode navegar pela cidade e registrar interesse para o lancamento.
-            </p>
-            <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              <Button className="w-full" onClick={() => navigate(interestPath)}>
-                {profile?.primary_cta_label ?? "Cadastrar interesse"}
-              </Button>
-              <Button className="w-full" variant="outline" onClick={() => navigate(businessModuleUrl)}>
-                {profile?.secondary_cta_label ?? "Quero minha empresa aqui"}
-              </Button>
-              <Button className="w-full" variant="outline" onClick={() => navigate(interestPath)}>
-                Indicar comercio ou servico da regiao
-              </Button>
-              <Button className="w-full" variant="outline" onClick={() => navigate(eventsModuleUrl)}>Cadastrar evento da regiao</Button>
-            </div>
-          </div>
-        </div>
-      </>
     );
   }
 
@@ -315,11 +273,6 @@ export function CommunityTerritorialShell() {
             {effectiveAvailability === "none" && !availabilityLoading ? <UnavailableModuleBanner /> : null}
           </>
         ) : null}
-
-        <CommunityPortalModeBanner
-          territoryName={effectiveTerritoryName}
-          publicHref={territoryBase}
-        />
 
         <ErrorBoundary>
           <Outlet context={outletContext} />

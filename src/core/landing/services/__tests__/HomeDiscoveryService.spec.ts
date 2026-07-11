@@ -6,14 +6,24 @@ const mocks = vi.hoisted(() => ({
   getFeaturedBusinesses: vi.fn(),
   getFeaturedServices: vi.fn(),
   getFeaturedClassifieds: vi.fn(),
+  getTerritoryStats: vi.fn(),
   getBusinessCanonicalUrl: vi.fn(),
   buildClassifiedPublicUrl: vi.fn(),
   getEventsPage: vi.fn(),
   eventDetailUrl: vi.fn(),
   listPublicOpportunityCards: vi.fn(),
+  listPublicCommunitiesForDiscovery: vi.fn(),
+  listActiveByCommunity: vi.fn(),
+  getAdForPlacement: vi.fn(),
+  getTopPosts: vi.fn(),
+  isLaunchSurfaceEnabled: vi.fn(),
   logger: {
     warn: vi.fn(),
   },
+}));
+
+vi.mock("@/config/launchScope", () => ({
+  isLaunchSurfaceEnabled: mocks.isLaunchSurfaceEnabled,
 }));
 
 vi.mock("../LandingFeaturedService", () => ({
@@ -21,6 +31,31 @@ vi.mock("../LandingFeaturedService", () => ({
     getFeaturedBusinesses: mocks.getFeaturedBusinesses,
     getFeaturedServices: mocks.getFeaturedServices,
     getFeaturedClassifieds: mocks.getFeaturedClassifieds,
+    getTerritoryStats: mocks.getTerritoryStats,
+  },
+}));
+
+vi.mock("@/core/community-experience/services/CommunityExperienceService", () => ({
+  CommunityExperienceService: {
+    listPublicCommunitiesForDiscovery: mocks.listPublicCommunitiesForDiscovery,
+  },
+}));
+
+vi.mock("@/core/community-experience/services/CommunityEntityLinkService", () => ({
+  CommunityEntityLinkService: {
+    listActiveByCommunity: mocks.listActiveByCommunity,
+  },
+}));
+
+vi.mock("@/core/business/promotions", () => ({
+  adDeliveryService: {
+    getAdForPlacement: mocks.getAdForPlacement,
+  },
+}));
+
+vi.mock("@/core/posts/services/PostService", () => ({
+  postService: {
+    getTopPosts: mocks.getTopPosts,
   },
 }));
 
@@ -161,6 +196,13 @@ const opportunity = {
 describe("HomeDiscoveryService", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.isLaunchSurfaceEnabled.mockReturnValue(true);
+    mocks.listActiveByCommunity.mockResolvedValue([]);
+    mocks.getAdForPlacement.mockResolvedValue({
+      campaign: null,
+      resolution_source: "none",
+    });
+    mocks.getTopPosts.mockResolvedValue([]);
 
     mocks.getFeaturedBusinesses.mockResolvedValue([
       lowerRatedBusiness,
@@ -180,6 +222,41 @@ describe("HomeDiscoveryService", () => {
     });
     mocks.eventDetailUrl.mockReturnValue("/eventos/event-1");
     mocks.listPublicOpportunityCards.mockResolvedValue([opportunity]);
+    mocks.getTerritoryStats.mockResolvedValue({
+      businesses: 18,
+      services: 7,
+      classifieds: 3,
+    });
+    mocks.listPublicCommunitiesForDiscovery.mockResolvedValue([
+      {
+        id: "community-pituba",
+        name: "Achegue-se Pituba",
+        slug: "pituba",
+        status: "active",
+        is_featured: true,
+        sort_order: 1,
+        city_id: "loc-salvador",
+        territory_type: "neighborhood",
+        territory_id: "loc-pituba",
+        headline: null,
+        description: null,
+        public_alias: null,
+      },
+      {
+        id: "community-barra",
+        name: "Achegue-se Barra",
+        slug: "barra",
+        status: "active",
+        is_featured: true,
+        sort_order: 2,
+        city_id: "loc-salvador",
+        territory_type: "neighborhood",
+        territory_id: "loc-barra",
+        headline: null,
+        description: null,
+        public_alias: null,
+      },
+    ]);
   });
 
   it("builds Home discovery documents from canonical domain services", async () => {
@@ -225,6 +302,41 @@ describe("HomeDiscoveryService", () => {
       territoryLocationId: "loc-salvador",
       limit: 4,
     });
+    expect(mocks.listPublicCommunitiesForDiscovery).toHaveBeenCalledWith(
+      territoryFilter,
+      9,
+    );
+    expect(mocks.getAdForPlacement).toHaveBeenCalledWith(
+      "sidebar_widget",
+      "loc-salvador",
+    );
+    expect(mocks.getTopPosts).toHaveBeenCalledWith("loc-salvador", 4);
+    expect(result.featuredCommunities.map((community) => community.name)).toEqual([
+      "Pituba",
+      "Barra",
+      "Itapuã",
+      "Rio Vermelho",
+    ]);
+    expect(result.communityRanking).toHaveLength(5);
+    expect(
+      result.featuredCommunities.every(
+        (community) => community.membersLabel === "Comunidade ativa",
+      ),
+    ).toBe(true);
+    expect(
+      result.communityRanking.every(
+        (community) => community.deltaLabel === "Ativa",
+      ),
+    ).toBe(true);
+    expect(result.sponsoredItems).toEqual([]);
+    expect(result.stats.find((stat) => stat.id === "businesses")?.value).toBe("18");
+    expect(result.stats.find((stat) => stat.id === "services")?.value).toBe("7");
+    expect(result.stats.find((stat) => stat.id === "classifieds")?.value).toBe("3");
+    expect(result.stats.find((stat) => stat.id === "events")?.value).toBe("1");
+    expect(result.stats.find((stat) => stat.id === "rating")?.value).toBe("4,6");
+    expect(result.stats.map((stat) => stat.id)).not.toEqual(
+      expect.arrayContaining(["members", "safety", "responses"]),
+    );
   });
 
   it("returns the remaining sections when one domain service fails", async () => {
@@ -240,6 +352,125 @@ describe("HomeDiscoveryService", () => {
     expect(mocks.logger.warn).toHaveBeenCalledWith(
       "HomeDiscoveryService.partialQuery",
       "events unavailable",
+    );
+  });
+
+  it("does not query paused launch surfaces for Home activity discovery", async () => {
+    mocks.isLaunchSurfaceEnabled.mockImplementation(
+      (surface) => surface !== "events" && surface !== "jobs",
+    );
+
+    const result = await HomeDiscoveryService.getHomeDiscovery(territoryFilter);
+
+    expect(mocks.getEventsPage).not.toHaveBeenCalled();
+    expect(mocks.listPublicOpportunityCards).not.toHaveBeenCalled();
+    expect(result.activityDocuments.map((document) => document.type)).toEqual([
+      "classified",
+    ]);
+    expect(result.stats.some((stat) => stat.id === "events")).toBe(false);
+  });
+
+  it("keeps Home indicators tied to canonical public aggregates", async () => {
+    mocks.getFeaturedBusinesses.mockResolvedValueOnce([]);
+    mocks.getFeaturedServices.mockResolvedValueOnce([]);
+    mocks.getTerritoryStats.mockResolvedValueOnce({
+      businesses: 0,
+      services: 0,
+      classifieds: 0,
+    });
+    mocks.getEventsPage.mockResolvedValueOnce({
+      items: [],
+      totalCount: 0,
+      hasMore: false,
+      nextPage: null,
+    });
+
+    const result = await HomeDiscoveryService.getHomeDiscovery(territoryFilter);
+
+    expect(result.stats).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "businesses",
+          value: "0",
+        }),
+        expect.objectContaining({
+          id: "services",
+          value: "0",
+        }),
+        expect.objectContaining({
+          id: "classifieds",
+          value: "0",
+        }),
+        expect.objectContaining({
+          id: "events",
+          value: "0",
+        }),
+        expect.objectContaining({
+          id: "rating",
+          value: "Sem dados",
+          label: "Avaliacoes publicas",
+        }),
+      ]),
+    );
+    expect(result.stats.map((stat) => stat.id)).not.toEqual(
+      expect.arrayContaining(["members", "safety", "responses"]),
+    );
+  });
+
+  it("prioritizes eligible ad campaigns in sponsored Home items", async () => {
+    mocks.getAdForPlacement.mockResolvedValueOnce({
+      campaign: {
+        id: "ad-campaign-1",
+        advertiser_name: "Padaria patrocinada",
+        title: "Pao frances em destaque",
+        description: "Oferta do dia no seu bairro",
+        image_url: "https://cdn.example.com/ad.png",
+        cta_label: "Ver oferta",
+        cta_url: "/empresa/padaria-patrocinada",
+        status: "active",
+        placement_key: "sidebar_widget",
+        priority: 10,
+        starts_at: "2026-07-01T00:00:00Z",
+        ends_at: null,
+        created_at: "2026-07-01T00:00:00Z",
+        updated_at: "2026-07-08T00:00:00Z",
+        targets: [],
+      },
+      resolution_source: "generic",
+    });
+
+    const result = await HomeDiscoveryService.getHomeDiscovery(territoryFilter);
+
+    expect(result.sponsoredItems).toHaveLength(1);
+    expect(result.sponsoredItems[0]).toEqual(
+      expect.objectContaining({
+        id: "ad-ad-campaign-1",
+        title: "Pao frances em destaque",
+        community: "Padaria patrocinada",
+        imageUrl: "https://cdn.example.com/ad.png",
+      }),
+    );
+  });
+
+  it("uses public top posts as the primary source for community activities", async () => {
+    mocks.getTopPosts.mockResolvedValueOnce([
+      {
+        id: "post-activity-1",
+        content: "Alguem recomenda uma oficina confiavel?",
+        author_name: "Marina",
+        engagement: 12,
+      },
+    ]);
+
+    const result = await HomeDiscoveryService.getHomeDiscovery(territoryFilter);
+
+    expect(result.communityActivities[0]).toEqual(
+      expect.objectContaining({
+        id: "post-post-activity-1",
+        author: "Marina",
+        text: "Alguem recomenda uma oficina confiavel?",
+        comments: 12,
+      }),
     );
   });
 

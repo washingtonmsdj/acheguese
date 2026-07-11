@@ -20,12 +20,12 @@
  */
 
 import { memo, forwardRef, useCallback, useMemo } from 'react';
-import { ExternalLink, Megaphone, Package, Sparkles, Star, Store, TrendingUp, Wrench, type LucideIcon } from 'lucide-react';
+import { ExternalLink, Megaphone, Star, Store, type LucideIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/utils/cn';
-import { openSafeExternalUrl } from '@/shared/utils/safeRedirect';
+import { openSafeUrlInNewTab } from '@/shared/utils/safeRedirect';
 import type { AdCampaignWithTargets } from '../types';
 
 // ============================================================================
@@ -69,25 +69,16 @@ function hasImage(campaign: AdCampaignWithTargets): boolean {
  * Verifica se o anúncio tem CTA
  */
 function hasCTA(campaign: AdCampaignWithTargets): boolean {
-  return !!campaign.cta_text && !!campaign.cta_url;
+  return !!campaign.cta_label && !!campaign.cta_url;
 }
 
 /**
  * Obtém ícone baseado no tipo de owner
  */
-function getOwnerIcon(ownerType: string): LucideIcon {
-  switch (ownerType) {
-    case 'business':
-      return Store;
-    case 'service_provider':
-      return Wrench;
-    case 'classified':
-      return Package;
-    case 'platform':
-      return Star;
-    default:
-      return Megaphone;
-  }
+function getCampaignIcon(campaign: AdCampaignWithTargets): LucideIcon {
+  if (campaign.owner_business_id) return Store;
+  if (campaign.source === 'platform') return Star;
+  return Megaphone;
 }
 
 // ============================================================================
@@ -111,7 +102,7 @@ export const SponsoredAdCard = memo(
 
     const hasImg = useMemo(() => hasImage(campaign), [campaign]);
     const hasCta = useMemo(() => hasCTA(campaign), [campaign]);
-    const OwnerIcon = useMemo(() => getOwnerIcon(campaign.owner_entity_type), [campaign.owner_entity_type]);
+    const CampaignIcon = useMemo(() => getCampaignIcon(campaign), [campaign]);
 
     // ========================================================================
     // HANDLERS
@@ -119,11 +110,11 @@ export const SponsoredAdCard = memo(
 
     const handleClick = useCallback(() => {
       // Track click
-      onAdClick?.(campaign.id, campaign.cta_url);
+      onAdClick?.(campaign.id, campaign.cta_url ?? undefined);
 
       // Open URL
       if (campaign.cta_url) {
-        openSafeExternalUrl(campaign.cta_url, { context: 'sponsored-ad-cta' });
+        openSafeUrlInNewTab(campaign.cta_url, { context: 'sponsored-ad-cta' });
       }
     }, [campaign.id, campaign.cta_url, onAdClick]);
 
@@ -149,7 +140,7 @@ export const SponsoredAdCard = memo(
         >
           {/* Ícone */}
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-purple-500/20">
-            <OwnerIcon className="h-5 w-5 text-primary" />
+            <CampaignIcon className="h-5 w-5 text-primary" />
           </div>
 
           {/* Conteúdo */}
@@ -213,7 +204,7 @@ export const SponsoredAdCard = memo(
               {campaign.title}
             </h3>
             <p className="line-clamp-2 text-sm text-muted-foreground">
-              {campaign.content}
+              {campaign.description}
             </p>
           </div>
 
@@ -227,7 +218,7 @@ export const SponsoredAdCard = memo(
                 handleClick();
               }}
             >
-              {campaign.cta_text}
+              {campaign.cta_label}
               <ExternalLink className="ml-1 h-3.5 w-3.5" />
             </Button>
           )}
@@ -288,13 +279,13 @@ export const SponsoredAdCard = memo(
 
           {/* Descrição */}
           <p className="line-clamp-2 text-xs text-muted-foreground leading-relaxed">
-            {campaign.content}
+            {campaign.description}
           </p>
 
           {/* CTA */}
           {hasCta && (
             <div className="mt-1 flex items-center gap-1 text-xs font-semibold text-primary transition-colors group-hover:text-primary/80">
-              <span>{campaign.cta_text}</span>
+              <span>{campaign.cta_label}</span>
               <ExternalLink className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
             </div>
           )}

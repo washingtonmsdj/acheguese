@@ -16,6 +16,7 @@ import {
   LayoutDashboard,
   Map,
   MapPin,
+  Megaphone,
   MessagesSquare,
   Radio,
   Settings2,
@@ -124,6 +125,7 @@ export const ADMIN_NAV_SECTIONS: readonly AdminNavSection[] = [
       { id: "empresas", to: "/admin/empresas", icon: Building2, label: "Empresas", section: "negocios" },
       { id: "gastronomia", to: "/admin/gastronomia", icon: UtensilsCrossed, label: "Gastronomia", section: "negocios" },
       { id: "services", to: "/admin/servicos", icon: Wrench, label: "Servicos", section: "negocios" },
+      { id: "anuncios", to: "/admin/anuncios", icon: Megaphone, label: "Anuncios", section: "negocios" },
       { id: "vagas", to: "/admin/vagas", icon: Briefcase, label: "Vagas de Emprego", section: "negocios" },
       {
         id: "assinaturas",

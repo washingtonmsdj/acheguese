@@ -1,31 +1,17 @@
-/**
- * ComunidadePage - Página principal da comunidade
+﻿/**
+ * ComunidadePage - PÃ¡gina principal da comunidade
  * 
  * SSOT - Usa Services via hooks
  * Arquitetura modular - Componentes isolados
- * Performance - Lazy loading e memoização
+ * Performance - Lazy loading e memoizaÃ§Ã£o
  * Acessibilidade - ARIA labels e roles
  */
 
 import React, { lazy, Suspense, useCallback, useMemo } from "react";
-import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
-  BadgeCheck,
-  Bookmark,
-  Building2,
-  Heart,
   LayoutList,
-  Lock,
-  LogIn,
-  MapPin,
-  MessageCircle,
-  Megaphone,
-  Share2,
-  Store,
-  Tag,
-  UtensilsCrossed,
   Users,
-  Wrench,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -35,7 +21,6 @@ import { ConfirmActionDialog } from "@/shared/components/ConfirmActionDialog";
 import { useAppUrls } from "@/core/routing/hooks";
 import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
 import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
-import { useCommunityFeedSimple } from "@/core/community/hooks/feed/useCommunityFeed";
 import { residenceService } from "@/core/residence/services/ResidenceService";
 import {
   CommunityPortalGate,
@@ -43,21 +28,19 @@ import {
   type CommunityAction,
 } from "@/core/community/access";
 import {
-  COMMUNITY_FEED_HEADER_FILTERS,
   resolveCommunityFeedChannelFromTab,
   resolveCommunityFeedQueryTabFromChannel,
   type CommunityDiscoveryTab,
 } from "@/core/community/utils/communityFeedTab";
-import { isLaunchCommunityPostEnabled } from "@/config/launchScope";
 import {
   useComunidadePage,
   type CreatePostModalData,
 } from "../hooks/page/useComunidadePage";
 import { CommunityFeed } from "../components/feed/CommunityFeed";
-import { CommunityRightSidebar } from "../components/CommunityRightSidebar";
 import { LocationScopeCards } from "../components/page/LocationScopeCards";
 import { CommunityFloatingButtons } from "../components/page/CommunityFloatingButtons";
 import { CommunityModals } from "../components/page/CommunityModals";
+import { CommunityOverviewSurface } from "../components/page/CommunityOverviewSurface";
 import { CreatePostModal } from "../components/composer/CreatePostModal";
 import { VerificationBanner } from "@/core/verification";
 import { COMMUNITY_PAGE_COPY } from "@/core/community/utils/communityCopy";
@@ -67,8 +50,6 @@ import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritory
 import type { TerritoryFilter } from "@/core/location";
 import { buildCommunityTabUrlFromPath } from "@/core/routing/utils/territoryUrls";
 import type { TerritorialFeedChannel } from "@/core/community/hooks/feed/territorialFeedEngine";
-import { getPublicPostPreview } from "@/core/posts/utils/publicPostContent";
-import { useFriendlyModuleUrls } from "@/core/routing/hooks/useFriendlyModuleUrls";
 import { withQueryParams } from "@/core/landing/utils/landingPresentation";
 import { useCommunityProfile } from "@/core/community-experience/hooks/useCommunityProfile";
 import { isPersistedCommunityId } from "@/core/community-experience/types";
@@ -81,384 +62,6 @@ const TABS: { id: CommunityTab; label: string; icon: React.ElementType }[] = [
   { id: "feed",   label: "Feed",   icon: LayoutList },
   { id: "grupos", label: "Grupos", icon: Users },
 ];
-
-const PUBLIC_FEED_MODULES = [
-  { key: "feed", label: "Feed", icon: LayoutList },
-  { key: "business", label: "Empresas", icon: Building2 },
-  { key: "services", label: "Serviços", icon: Wrench },
-  { key: "classifieds", label: "Classificados", icon: Tag },
-  { key: "gastronomy", label: "Gastronomia", icon: UtensilsCrossed },
-  { key: "map", label: "Mapa", icon: MapPin },
-] as const;
-
-interface PublicPostAuthorRecord {
-  author_name?: string | null;
-  author?: {
-    display_name?: string | null;
-  } | null;
-}
-
-function getPublicPostAuthor(post: unknown): string {
-  if (!post || typeof post !== "object") return "Morador";
-  const record = post as PublicPostAuthorRecord;
-  const authorName = typeof record.author_name === "string" ? record.author_name.trim() : "";
-  const authorDisplayName =
-    typeof record.author?.display_name === "string" ? record.author.display_name.trim() : "";
-  return authorName || authorDisplayName || "Morador";
-}
-
-function formatPublicPostDate(value: string | null | undefined): string {
-  if (!value) return "Agora";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Agora";
-  return new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
-}
-
-function getPublicPostTypeLabel(type: string | null | undefined): string {
-  switch (type) {
-    case "alerta":
-      return "Alerta";
-    case "recomendacao":
-      return "Recomendação";
-    case "enquete":
-      return "Enquete";
-    case "achados":
-      return "Achados";
-    case "desapego":
-      return "Classificado";
-    default:
-      return "Comunidade";
-  }
-}
-
-function getPublicPostTypeIcon(type: string | null | undefined) {
-  switch (type) {
-    case "alerta":
-      return Megaphone;
-    case "recomendacao":
-      return BadgeCheck;
-    case "desapego":
-      return Tag;
-    default:
-      return MessageCircle;
-  }
-}
-
-function PublicTerritorialFeed({
-  resolved,
-  territoryName,
-  territoryFilter,
-  activeHeaderFilter,
-  onHeaderFilterChange,
-  onRequireLogin,
-  loginHref,
-  publishHref,
-  communityId,
-}: {
-  resolved?: ResolvedTerritory;
-  territoryName: string;
-  territoryFilter: TerritoryFilter;
-  activeHeaderFilter: TerritorialFeedChannel;
-  onHeaderFilterChange: (filter: TerritorialFeedChannel) => void;
-  onRequireLogin: () => void;
-  loginHref: string;
-  publishHref: string;
-  communityId?: string | null;
-}) {
-  const { posts, isLoading, isError, error, hasNextPage, isFetchingNextPage, loadMore } =
-    useCommunityFeedSimple({
-      locationScope: "neighborhood",
-      territoryFilter,
-      limit: 12,
-    });
-  const moduleUrls = useFriendlyModuleUrls();
-  const visiblePosts = posts.filter(isLaunchCommunityPostEnabled);
-  const alertCount = visiblePosts.filter((post) => post.type === "alerta").length;
-  const moduleLinks = [
-    { ...PUBLIC_FEED_MODULES[0], href: moduleUrls.community, isActive: true },
-    { ...PUBLIC_FEED_MODULES[1], href: moduleUrls.business, isActive: false },
-    { ...PUBLIC_FEED_MODULES[2], href: moduleUrls.services, isActive: false },
-    { ...PUBLIC_FEED_MODULES[3], href: moduleUrls.classifieds, isActive: false },
-    { ...PUBLIC_FEED_MODULES[4], href: moduleUrls.gastronomy, isActive: false },
-    { ...PUBLIC_FEED_MODULES[5], href: moduleUrls.map, isActive: false },
-  ] as const;
-
-  const handleShare = useCallback((postId: string) => {
-    const shareUrl = typeof window !== "undefined"
-      ? `${window.location.origin}${window.location.pathname}?post=${encodeURIComponent(postId)}`
-      : "";
-
-    if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
-      void navigator.share({ title: territoryName, url: shareUrl }).catch(() => undefined);
-      return;
-    }
-
-    if (typeof navigator !== "undefined" && navigator.clipboard && shareUrl) {
-      void navigator.clipboard.writeText(shareUrl).then(() => toast.success("Link copiado"));
-    }
-  }, [territoryName]);
-
-  return (
-    <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-      <main className="min-w-0 max-w-full overflow-x-hidden" role="feed" aria-label="Feed público da comunidade">
-        <section className="mb-4 overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(10,24,32,0.98),rgba(7,17,24,0.98))] text-white shadow-xl shadow-black/10">
-          <div className="border-b border-white/10 px-4 py-3 sm:px-5">
-            <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {moduleLinks.map((item) => {
-                const Icon = item.icon;
-                return item.isActive ? (
-                  <span
-                    key={item.key}
-                    className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border border-teal-300/35 bg-teal-300/12 px-4 text-xs font-semibold text-teal-100"
-                  >
-                    <Icon className="h-4 w-4" />
-                    {item.label}
-                  </span>
-                ) : (
-                  <Link
-                    key={item.key}
-                    to={item.href}
-                    className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 text-xs font-semibold text-white/65 transition-colors hover:border-white/20 hover:text-white"
-                  >
-                    <Icon className="h-4 w-4" />
-                    {item.label}
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="grid gap-4 px-4 py-4 sm:px-5 sm:py-5 lg:grid-cols-[minmax(0,1fr)_18rem]">
-            <div className="min-w-0">
-              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-teal-300">
-                {territoryName}
-              </p>
-              <h1 className="mt-2 text-2xl font-semibold leading-tight sm:text-[2rem]">
-                Feed público do bairro
-              </h1>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-white/62">
-                Veja publicações, avisos e recomendações locais. Para publicar, comentar e participar dos grupos, é preciso entrar e verificar a moradia.
-              </p>
-
-              <div className="mt-4 flex flex-wrap gap-2">
-                <span className="inline-flex min-h-8 items-center rounded-full border border-teal-300/30 bg-teal-300/10 px-3 text-xs font-semibold text-teal-100">
-                  Leitura pública
-                </span>
-                <span className="inline-flex min-h-8 items-center rounded-full border border-amber-300/25 bg-amber-300/10 px-3 text-xs font-semibold text-amber-100">
-                  Interação para moradores verificados
-                </span>
-              </div>
-
-              <div className="mt-4 grid gap-2 sm:grid-cols-2 sm:gap-3 sm:max-w-xl">
-                <Link
-                  to={loginHref}
-                  className="inline-flex min-h-11 items-center justify-center rounded-xl bg-teal-500 px-4 text-sm font-semibold text-slate-950 transition-colors hover:bg-teal-400"
-                >
-                  <LogIn className="mr-2 h-4 w-4" />
-                  Entrar no bairro
-                </Link>
-                <Link
-                  to={publishHref}
-                  className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/14 bg-white/[0.03] px-4 text-sm font-semibold text-white transition-colors hover:bg-white/[0.08]"
-                >
-                  <MessageCircle className="mr-2 h-4 w-4" />
-                  Publicar no bairro
-                </Link>
-              </div>
-            </div>
-
-            <div className="grid gap-3 rounded-[20px] border border-white/10 bg-black/20 p-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
-                  Agora no território
-                </p>
-                <p className="mt-1 text-sm text-white/65">
-                  {visiblePosts.length} publicações públicas e {alertCount} alertas recentes em {territoryName}.
-                </p>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-3">
-                  <p className="text-lg font-semibold text-white">{visiblePosts.length}</p>
-                  <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/45">Posts</p>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-3">
-                  <p className="text-lg font-semibold text-white">{alertCount}</p>
-                  <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/45">Alertas</p>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-3">
-                  <p className="text-lg font-semibold text-white">{COMMUNITY_FEED_HEADER_FILTERS.length}</p>
-                  <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/45">Canais</p>
-                </div>
-              </div>
-              <Link
-                to={moduleUrls.map}
-                className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] px-4 text-sm font-semibold text-white transition-colors hover:bg-white/[0.08]"
-              >
-                <MapPin className="mr-2 h-4 w-4 text-teal-300" />
-                Ver mapa do bairro
-              </Link>
-            </div>
-          </div>
-        </section>
-
-        <section className="mb-4 rounded-2xl border border-white/10 bg-[#0f171a] p-4 text-white shadow-xl shadow-black/10">
-          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-wide text-teal-300">Explorar o feed</p>
-              <p className="mt-1 text-sm text-white/55">
-                Filtre o que aparece no stream público do bairro sem sair desta página.
-              </p>
-            </div>
-            <Button onClick={onRequireLogin} className="shrink-0 bg-teal-500 text-slate-950 hover:bg-teal-400">
-              <LogIn className="mr-2 h-4 w-4" />
-              Entrar para interagir
-            </Button>
-          </div>
-
-          <div
-            className="mt-4 flex min-w-0 flex-wrap gap-2 border-t border-white/10 pt-4"
-            role="tablist"
-            aria-label="Filtros públicos do feed"
-          >
-            {COMMUNITY_FEED_HEADER_FILTERS.map(({ id, label }) => (
-              <button
-                key={id}
-                type="button"
-                role="tab"
-                aria-selected={activeHeaderFilter === id}
-                onClick={() => onHeaderFilterChange(id)}
-                className={`min-h-9 rounded-full border px-3 text-xs font-semibold transition-colors ${
-                  activeHeaderFilter === id
-                    ? "border-teal-300/50 bg-teal-300/15 text-teal-100"
-                    : "border-white/10 bg-black/20 text-white/55 hover:border-white/20 hover:text-white"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </section>
-
-        {isLoading ? (
-          <div className="space-y-3">
-            {[0, 1, 2].map((index) => (
-              <div key={index} className="h-36 animate-pulse rounded-2xl border border-white/10 bg-white/[0.04]" />
-            ))}
-          </div>
-        ) : isError ? (
-          <div className="rounded-2xl border border-red-400/20 bg-red-500/10 p-4 text-sm text-red-100">
-            Erro ao carregar feed: {error?.message ?? "tente novamente em instantes."}
-          </div>
-        ) : visiblePosts.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.03] px-4 py-10 text-center text-gray-400">
-            <p className="text-sm font-semibold text-white/75">Nenhuma postagem pública encontrada</p>
-            <p className="mt-1 text-xs text-white/45">Quando houver publicações deste bairro, elas aparecem aqui.</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {visiblePosts.map((post) => (
-              <article key={post.id} className="rounded-2xl border border-white/10 bg-[#10191d] p-4 text-white shadow-xl shadow-black/10">
-                <div className="flex min-w-0 items-start justify-between gap-3">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-teal-200">
-                    {React.createElement(getPublicPostTypeIcon(post.type), { className: "h-5 w-5" })}
-                  </div>
-                  <div className="min-w-0">
-                    <span className="text-xs font-semibold uppercase tracking-wide text-teal-300">
-                      {getPublicPostTypeLabel(post.type)}
-                    </span>
-                    <h2 className="mt-1 text-base font-semibold leading-snug">
-                      {getPublicPostPreview(post.content, 96)}
-                    </h2>
-                    <p className="mt-2 text-sm leading-relaxed text-white/65">
-                      {getPublicPostPreview(post.content, 220)}
-                    </p>
-                    <p className="mt-3 text-xs text-white/45">
-                      {getPublicPostAuthor(post)} - {formatPublicPostDate(post.created_at)}
-                    </p>
-                  </div>
-                </div>
-                <div className="mt-4 flex min-w-0 flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-3">
-                  <div className="flex min-w-0 flex-wrap items-center gap-2 text-xs text-white/55">
-                    <span className="inline-flex items-center gap-1">
-                      <Heart className="h-3.5 w-3.5" />
-                      {post.likes_count ?? 0}
-                    </span>
-                    <span className="inline-flex items-center gap-1">
-                      <MessageCircle className="h-3.5 w-3.5" />
-                      {post.comments_count ?? 0}
-                    </span>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-1">
-                    <Button variant="ghost" size="sm" onClick={onRequireLogin} className="h-9 rounded-full px-3 text-xs text-white/70 hover:bg-white/5 hover:text-white">
-                      <Lock className="mr-1 h-3.5 w-3.5" />
-                      Comentar
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={onRequireLogin} className="h-9 rounded-full px-3 text-xs text-white/70 hover:bg-white/5 hover:text-white">
-                      <Bookmark className="mr-1 h-3.5 w-3.5" />
-                      Salvar
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleShare(post.id)} className="h-9 rounded-full px-3 text-xs text-white/70 hover:bg-white/5 hover:text-white">
-                      <Share2 className="mr-1 h-3.5 w-3.5" />
-                      Compartilhar
-                    </Button>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
-        )}
-
-        {hasNextPage ? (
-          <div className="mt-5 flex justify-center">
-            <Button variant="outline" onClick={loadMore} disabled={isFetchingNextPage} className="border-white/15 bg-white/[0.03] text-white hover:bg-white/10">
-              {isFetchingNextPage ? "Carregando..." : "Carregar mais"}
-            </Button>
-          </div>
-        ) : null}
-      </main>
-
-      <aside className="hidden lg:block w-80 flex-shrink-0" aria-label="Widgets da comunidade">
-        <div className="sticky top-6 space-y-3">
-          <section className="rounded-2xl border border-white/10 bg-[#0f171a] p-4 text-white shadow-xl shadow-black/10">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-teal-300">
-              Participação local
-            </p>
-            <h2 className="mt-2 text-lg font-semibold leading-tight">
-              Morar aqui libera publicação e grupos
-            </h2>
-            <p className="mt-2 text-sm leading-6 text-white/60">
-              Entre com sua conta e confirme o endereço para comentar, publicar e participar da comunidade do bairro.
-            </p>
-            <div className="mt-4 grid gap-2">
-              <Link
-                to={loginHref}
-                className="inline-flex min-h-10 items-center justify-center rounded-xl bg-teal-500 px-4 text-sm font-semibold text-slate-950 transition-colors hover:bg-teal-400"
-              >
-                Entrar agora
-              </Link>
-              <Link
-                to={publishHref}
-                className="inline-flex min-h-10 items-center justify-center rounded-xl border border-white/14 bg-white/[0.03] px-4 text-sm font-semibold text-white transition-colors hover:bg-white/[0.08]"
-              >
-                Tentar publicar
-              </Link>
-            </div>
-          </section>
-          <CommunityRightSidebar
-            resolved={resolved}
-            territoryFilter={territoryFilter}
-            communityId={communityId}
-          />
-        </div>
-      </aside>
-    </div>
-  );
-}
 
 
 interface ComunidadePageProps {
@@ -511,7 +114,7 @@ export default function ComunidadePage({ resolved, activeMemberIds }: Comunidade
   const moduleTerritory = useModuleTerritoryFilter({ routeResolved: resolved, activeMemberIds });
   const territoryFilter = moduleTerritory.territoryFilter;
 
-  // SSOT: guarda de acesso por UUID canônico, não por string de perfil
+  // SSOT: guarda de acesso por UUID canÃ´nico, nÃ£o por string de perfil
   const { homeDistrict, homeCity, loading: territoryLoading } = useUserTerritory();
   const communityAccess = useCommunityAccess({ resolved: resolved ?? null, activeMemberIds });
   const communityProfileQuery = useCommunityProfile(resolved ?? null);
@@ -759,25 +362,25 @@ export default function ComunidadePage({ resolved, activeMemberIds }: Comunidade
     return (
       <TooltipProvider>
         <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#12181B]" role="main">
-          <div className="mx-auto w-full max-w-[1600px] min-w-0 px-4 py-6 md:px-6 lg:px-8">
-            <PublicTerritorialFeed
-              resolved={resolved}
-              territoryName={territoryName}
-              territoryFilter={territoryFilter}
-              activeHeaderFilter={feedHeaderFilter}
-              onHeaderFilterChange={handleFeedHeaderFilterChange}
-              onRequireLogin={handleRequireLogin}
-              loginHref={loginHref}
-              publishHref={publishRedirectHref}
-              communityId={linkedCommunityId}
-            />
-          </div>
+          <CommunityOverviewSurface
+            resolved={resolved}
+            territoryName={territoryName}
+            territoryFilter={territoryFilter}
+            activeHeaderFilter={feedHeaderFilter}
+            onHeaderFilterChange={handleFeedHeaderFilterChange}
+            onRequireLogin={handleRequireLogin}
+            loginHref={loginHref}
+            publishHref={publishRedirectHref}
+            communityId={linkedCommunityId}
+            communityProfile={communityProfileQuery.data ?? null}
+            mode="public"
+          />
         </div>
       </TooltipProvider>
     );
   }
 
-  // Bloquear se não estiver logado
+  // Bloquear se nÃ£o estiver logado
   if (!profile) {
     return (
       <TooltipProvider>
@@ -799,7 +402,7 @@ export default function ComunidadePage({ resolved, activeMemberIds }: Comunidade
     );
   }
 
-  // Aguardar resolução do território antes de bloquear
+  // Aguardar resoluÃ§Ã£o do territÃ³rio antes de bloquear
   if (territoryLoading || communityAccess.isLoading) {
     return (
       <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#12181B] flex items-center justify-center">
@@ -808,7 +411,7 @@ export default function ComunidadePage({ resolved, activeMemberIds }: Comunidade
     );
   }
 
-  // SSOT: bloquear por ausência de user_residence (location_id), não por string de perfil
+  // SSOT: bloquear por ausÃªncia de user_residence (location_id), nÃ£o por string de perfil
   // Admin e moderadores tem acesso mesmo sem bairro cadastrado
   if (!communityAccess.can.view_member_feed) {
     return (
@@ -820,34 +423,40 @@ export default function ComunidadePage({ resolved, activeMemberIds }: Comunidade
     );
   }
 
-  // Aviso se não for verificado (mas permite acesso)
+  // Aviso se nÃ£o for verificado (mas permite acesso)
   const showVerificationBanner = !communityAccess.isResidenceVerified;
 
   return (
     <TooltipProvider>
       <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#12181B]" role="main">
-        <div className="mx-auto w-full max-w-[1600px] min-w-0 px-4 py-6 md:px-6 lg:px-8">
-          <nav
-            className="mb-6 flex min-w-0 flex-wrap gap-1 border-b border-white/10 pb-0"
-            aria-label={COMMUNITY_PAGE_COPY.subcategoryNavAriaLabel}
-          >
-            {TABS.map(({ id, label, icon: Icon }) => (
-              <button
-                key={id}
-                onClick={() => setTab(id)}
-                className={cn(
-                    "flex min-w-0 items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px",
-                  activeTab === id
-                    ? "border-teal-400 text-teal-300"
-                    : "border-transparent text-gray-400 hover:text-gray-200 hover:border-white/20"
-                )}
-                aria-current={activeTab === id ? "page" : undefined}
-              >
-                <Icon className="h-4 w-4" aria-hidden="true" />
-                {label}
-              </button>
-            ))}
-          </nav>
+        <div className={cn(
+          activeTab === "feed"
+            ? "min-w-0"
+            : "mx-auto w-full max-w-[1600px] min-w-0 px-4 py-6 md:px-6 lg:px-8",
+        )}>
+          {activeTab !== "feed" && (
+            <nav
+              className="mb-6 flex min-w-0 flex-wrap gap-1 border-b border-white/10 pb-0"
+              aria-label={COMMUNITY_PAGE_COPY.subcategoryNavAriaLabel}
+            >
+              {TABS.map(({ id, label, icon: Icon }) => (
+                <button
+                  key={id}
+                  onClick={() => setTab(id)}
+                  className={cn(
+                      "flex min-w-0 items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px",
+                    activeTab === id
+                      ? "border-teal-400 text-teal-300"
+                      : "border-transparent text-gray-400 hover:text-gray-200 hover:border-white/20"
+                  )}
+                  aria-current={activeTab === id ? "page" : undefined}
+                >
+                  <Icon className="h-4 w-4" aria-hidden="true" />
+                  {label}
+                </button>
+              ))}
+            </nav>
+          )}
 
           {activeTab !== "feed" && (
             <Suspense fallback={
@@ -864,56 +473,58 @@ export default function ComunidadePage({ resolved, activeMemberIds }: Comunidade
           )}
 
           {activeTab === "feed" && (
-          <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-            <main className="min-w-0 max-w-full overflow-x-hidden" role="feed" aria-label="Feed da comunidade">
-              {showVerificationBanner && showBanner && (
-                <VerificationBanner
-                  onDismiss={() => setShowBanner(false)}
-                  onRequestVerification={() => navigate("/conta")}
+            <CommunityOverviewSurface
+              resolved={resolved}
+              territoryName={territoryName}
+              territoryFilter={communityTerritoryFilter}
+              activeHeaderFilter={feedHeaderFilter}
+              onHeaderFilterChange={handleFeedHeaderFilterChange}
+              onRequireLogin={handleRequireLogin}
+              loginHref={loginHref}
+              publishHref={publishRedirectHref}
+              communityId={linkedCommunityId}
+              communityProfile={communityProfileQuery.data ?? null}
+              mode="member"
+              onOpenCreatePost={handleOpenCreatePostWithAccess}
+            >
+              <div className="space-y-4">
+                {showVerificationBanner && showBanner && (
+                  <VerificationBanner
+                    onDismiss={() => setShowBanner(false)}
+                    onRequestVerification={() => navigate("/conta")}
+                  />
+                )}
+
+                <LocationScopeCards
+                  city={homeCity?.name}
+                  neighborhood={resolved?.kind === "group" ? resolved.group.name : homeDistrict?.name}
+                  isTerritorialGroup={resolved?.kind === "group"}
+                  street={primaryStreet}
+                  streetAvailable={hasPrimaryStreet}
+                  currentScope={immediateFilters.locationScope}
+                  onScopeChange={handleScopeChange}
                 />
-              )}
-
-              <LocationScopeCards
-                city={homeCity?.name}
-                neighborhood={resolved?.kind === "group" ? resolved.group.name : homeDistrict?.name}
-                isTerritorialGroup={resolved?.kind === "group"}
-                street={primaryStreet}
-                streetAvailable={hasPrimaryStreet}
-                currentScope={immediateFilters.locationScope}
-                onScopeChange={handleScopeChange}
-              />
-              <CommunityFeed
-                currentUserId={profile?.id}
-                onPostClick={handlePostClick}
-                onCommentClick={handleCommentClickWithAccess}
-                onTagClick={handleTagClick}
-                onOpenCreatePost={handleOpenCreatePostWithAccess}
-                onDeletePost={handleDeletePost}
-                onEditPost={handleEditPost}
-                locationScope={immediateFilters.locationScope}
-                territoryFilter={communityTerritoryFilter}
-                initialHeaderFilter={feedHeaderFilter}
-                onHeaderFilterChange={handleFeedHeaderFilterChange}
-                canReact={communityAccess.can.react}
-                canComment={communityAccess.can.comment}
-                canSave={communityAccess.can.save}
-                canReport={communityAccess.can.report}
-                canSendMessage={communityAccess.can.send_message}
-                onBlockedAction={handleBlockedCommunityAction}
-              />
-
-            </main>
-
-            <aside className="hidden lg:block w-80 flex-shrink-0" aria-label="Widgets da comunidade">
-              <div className="sticky top-6">
-                <CommunityRightSidebar
-                  resolved={resolved}
+                <CommunityFeed
+                  currentUserId={profile?.id}
+                  onPostClick={handlePostClick}
+                  onCommentClick={handleCommentClickWithAccess}
+                  onTagClick={handleTagClick}
+                  onOpenCreatePost={handleOpenCreatePostWithAccess}
+                  onDeletePost={handleDeletePost}
+                  onEditPost={handleEditPost}
+                  locationScope={immediateFilters.locationScope}
                   territoryFilter={communityTerritoryFilter}
-                  communityId={linkedCommunityId}
+                  initialHeaderFilter={feedHeaderFilter}
+                  onHeaderFilterChange={handleFeedHeaderFilterChange}
+                  canReact={communityAccess.can.react}
+                  canComment={communityAccess.can.comment}
+                  canSave={communityAccess.can.save}
+                  canReport={communityAccess.can.report}
+                  canSendMessage={communityAccess.can.send_message}
+                  onBlockedAction={handleBlockedCommunityAction}
                 />
               </div>
-            </aside>
-          </div>
+            </CommunityOverviewSurface>
           )}
         </div>
 

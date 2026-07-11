@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SearchService } from "../SearchService";
 
 const mocks = vi.hoisted(() => ({
+  isLaunchSurfaceEnabled: vi.fn(),
   searchPublicCommunities: vi.fn(),
   listActiveByCommunity: vi.fn(),
   getBusinessesList: vi.fn(),
@@ -20,6 +21,10 @@ const mocks = vi.hoisted(() => ({
     warn: vi.fn(),
     error: vi.fn(),
   },
+}));
+
+vi.mock("@/config/launchScope", () => ({
+  isLaunchSurfaceEnabled: mocks.isLaunchSurfaceEnabled,
 }));
 
 vi.mock("@/core/business", () => ({
@@ -261,6 +266,7 @@ describe("SearchService", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
+    mocks.isLaunchSurfaceEnabled.mockReturnValue(true);
     mocks.listActiveByCommunity.mockResolvedValue([]);
     mocks.searchPublicCommunities.mockResolvedValue([community]);
     mocks.getBusinessesList.mockResolvedValue({ businesses: [business] });
@@ -384,6 +390,61 @@ describe("SearchService", () => {
     expect(mocks.searchProfessionals).not.toHaveBeenCalled();
     expect(mocks.searchClassifieds).not.toHaveBeenCalled();
     expect(mocks.searchPublicPosts).not.toHaveBeenCalled();
+  });
+
+  it("does not query launch-paused buckets or expose them in suggestions", async () => {
+    mocks.isLaunchSurfaceEnabled.mockImplementation(
+      (surface: string) => surface !== "events" && surface !== "jobs",
+    );
+
+    const result = await SearchService.search("pizza", {
+      category: "all",
+      territoryFilter,
+    });
+
+    expect(result.documents.map((document) => document.type)).toEqual([
+      "community",
+      "business",
+      "professional",
+      "classified",
+      "post",
+    ]);
+    expect(result.opportunities).toHaveLength(0);
+    expect(result.events).toHaveLength(0);
+    expect(mocks.listPublicOpportunityCards).not.toHaveBeenCalled();
+    expect(mocks.getEventsPage).not.toHaveBeenCalled();
+    expect(SearchService.getSearchSuggestions()).not.toContain("eventos hoje");
+
+    const explicitPausedResult = await SearchService.search("pizza", {
+      category: "events",
+      territoryFilter,
+    });
+
+    expect(explicitPausedResult.total).toBe(0);
+    expect(mocks.getEventsPage).not.toHaveBeenCalled();
+  });
+
+  it("fails closed for community-scoped linked buckets without active links", async () => {
+    mocks.listActiveByCommunity.mockResolvedValue([]);
+    mocks.getBusinessesList.mockResolvedValue({
+      businesses: [business, unlinkedBusiness],
+    });
+
+    const result = await SearchService.search("pizza", {
+      category: "businesses",
+      territoryFilter,
+      communityId: "community-1",
+    });
+
+    expect(mocks.listActiveByCommunity).toHaveBeenCalledWith(
+      "community-1",
+      expect.objectContaining({
+        entityTypes: ["business"],
+      }),
+    );
+    expect(result.total).toBe(0);
+    expect(result.businesses).toEqual([]);
+    expect(result.documents).toEqual([]);
   });
 
   it("filters supported domain buckets by active community entity links", async () => {

@@ -17,6 +17,7 @@ export const businessManagementRoutes = {
   dados: (businessId: string) => `/central/empresas/${businessId}/dados`,
   gastronomia: (businessId: string) => `/central/empresas/${businessId}/gastronomia`,
   planos: (businessId: string) => `/central/empresas/${businessId}/planos`,
+  anuncios: (businessId: string) => `/central/empresas/${businessId}/anuncios`,
   linkPremium: (businessId: string) => `/central/empresas/${businessId}/link-premium`,
   analytics: (businessId: string) => `/central/empresas/${businessId}/analytics`,
   configuracoes: (businessId: string) => `/central/empresas/${businessId}/configuracoes`,
@@ -46,6 +47,7 @@ export function getBusinessManagementSectionLabel(pathname: string) {
   if (/\/gastronomia(\/|$)/.test(pathname)) return "Gastronomia";
   if (/\/educacao(\/|$)/.test(pathname)) return "Educação";
   if (/\/planos$/.test(pathname)) return "Planos";
+  if (/\/anuncios$/.test(pathname)) return "Anuncios";
   if (/\/link-premium$/.test(pathname)) return "Link premium";
   if (/\/analytics$/.test(pathname)) return "Analytics";
   if (/\/configuracoes$/.test(pathname)) return "Configurações";
