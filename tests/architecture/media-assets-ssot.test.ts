@@ -85,7 +85,7 @@ describe("MediaAsset SSOT", () => {
       broker.indexOf("req.formData()"),
     );
     expect(broker).toContain("validateAndStripJpegMetadata");
-    expect(broker).toContain("crypto.subtle.digest(\"SHA-256\"");
+    expect(broker).toContain('crypto.subtle.digest("SHA-256"');
     expect(broker).toContain("crypto.randomUUID()");
     expect(broker).toContain('"reserve_media_asset_upload"');
     expect(broker).toContain("upsert: false");
@@ -99,7 +99,9 @@ describe("MediaAsset SSOT", () => {
 
     expect(migration).toContain("CREATE TABLE public.media_assets");
     expect(migration).toContain("CREATE TABLE public.media_asset_links");
-    expect(migration).toContain("ALTER TABLE public.media_assets ENABLE ROW LEVEL SECURITY");
+    expect(migration).toContain(
+      "ALTER TABLE public.media_assets ENABLE ROW LEVEL SECURITY",
+    );
     expect(migration).toContain("media_assets_owner_select");
     expect(migration).toContain("pg_advisory_xact_lock");
     expect(migration).toContain("media_asset_quota_exceeded");
@@ -129,12 +131,12 @@ describe("MediaAsset SSOT", () => {
     expect(scheduler).toContain("vault.decrypted_secrets");
     expect(scheduler).toContain("acheguese_cron_secret");
     expect(scheduler).toContain("*/5 * * * *");
-    expect(scheduler).not.toMatch(/x-cron-secret['"],\s*['"][A-Za-z0-9_-]{20,}/);
+    expect(scheduler).not.toMatch(
+      /x-cron-secret['"],\s*['"][A-Za-z0-9_-]{20,}/,
+    );
     expect(reviewsBroker).toContain("REVIEW_PHOTO_REFERENCE_PATTERN");
     expect(reviewsBroker).toContain("Duplicate photo reference");
-    expect(config).toMatch(
-      /\[functions\.media-assets\]\s+verify_jwt = true/,
-    );
+    expect(config).toMatch(/\[functions\.media-assets\]\s+verify_jwt = true/);
     expect(config).toMatch(
       /\[functions\.media-assets-cleanup\]\s+verify_jwt = false/,
     );
@@ -152,6 +154,17 @@ describe("MediaAsset SSOT", () => {
       /(?:DELETE FROM public\.(?:business_gallery|banners)|UPDATE public\.(?:profiles|business_data|classifieds|professional_data|site_settings))/,
     );
     expect(preflight).toContain("CP-016 read-only preflight");
-    expect(preflight).not.toMatch(/\b(?:INSERT|UPDATE|DELETE|ALTER|DROP|CREATE)\b/i);
+    expect(preflight).not.toMatch(
+      /\b(?:INSERT|UPDATE|DELETE|ALTER|DROP|CREATE)\b/i,
+    );
+  });
+  it("does not reintroduce public-domain upload wrappers outside MediaAsset", () => {
+    const mediaService = read("src/core/media/services/MediaService.ts");
+    const authService = read("src/core/auth/services/AuthService.ts");
+
+    expect(mediaService).not.toMatch(
+      /async (?:uploadAvatar|uploadProfessionalImage|uploadBusinessImage)\(/,
+    );
+    expect(authService).not.toContain("static async uploadImage(");
   });
 });

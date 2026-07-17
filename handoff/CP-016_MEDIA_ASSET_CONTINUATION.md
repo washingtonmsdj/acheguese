@@ -108,8 +108,9 @@ Auditoria em 2026-07-17: `useCommunityImageUpload` era o unico consumidor de
 do lifecycle MediaAsset. Avatar e Business ja usam `uploadMediaAsset`.
 `uploadToBucket` permanece porque ainda atende fluxos de Seguranca e virtual
 try-on, que nao pertencem ao dominio de midia publica CP-016. Os wrappers
-legados internos de MediaService sem consumidores devem ser removidos em uma
-etapa propria, com teste de regressao de cada bucket preservado.
+`uploadAvatar`, `uploadProfessionalImage` e `uploadBusinessImage` de
+`MediaService` foram removidos depois de busca sem consumidores. O teste de
+arquitetura impede a reintroducao desses caminhos de bucket antigo.
 
 ### Readers parcialmente adaptados
 
