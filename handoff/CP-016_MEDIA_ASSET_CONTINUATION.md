@@ -64,6 +64,14 @@ corte de leitura devem continuar em migrations separadas, para:
 3. executar limpeza somente em ambiente explicitamente autorizado;
 4. separar schema, backfill e remocao em migrations auditaveis.
 
+**Preflight remoto em 2026-07-17:** `profiles`, `business_gallery`,
+`professional_data` e `banners` retornaram zero referencias legadas;
+`business_data` retornou 1, `classifieds.photos` retornou 23 e
+`site_settings` retornou 1. O dry-run confirmou que CP-016 e a unica migration
+pendente. Os guards da migration permitem manter esses valores somente quando
+o campo de midia permanece inalterado; qualquer nova escrita exige referencia
+canonico. Nao executar backfill ou limpeza sem plano por dominio.
+
 ### Presets e referencias
 
 Alteracoes locais relevantes:

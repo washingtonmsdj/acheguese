@@ -281,6 +281,12 @@ AS $$
 DECLARE
   v_reference TEXT;
 BEGIN
+  IF TG_OP = 'UPDATE'
+     AND NEW.profile_id IS NOT DISTINCT FROM OLD.profile_id
+     AND NEW.metadata IS NOT DISTINCT FROM OLD.metadata THEN
+    RETURN NEW;
+  END IF;
+
   NEW.metadata := COALESCE(NEW.metadata, '{}'::JSONB);
   IF jsonb_typeof(NEW.metadata) <> 'object' THEN
     RAISE EXCEPTION 'business_metadata_must_be_object' USING ERRCODE = '22023';
@@ -333,6 +339,12 @@ BEGIN
     DELETE FROM public.media_asset_links
     WHERE aggregate_type = 'business' AND aggregate_id = OLD.id;
     RETURN OLD;
+  END IF;
+
+  IF TG_OP = 'UPDATE'
+     AND NEW.profile_id IS NOT DISTINCT FROM OLD.profile_id
+     AND NEW.metadata IS NOT DISTINCT FROM OLD.metadata THEN
+    RETURN NEW;
   END IF;
 
   DELETE FROM public.media_asset_links
@@ -448,6 +460,12 @@ DECLARE
   v_count INTEGER;
   v_distinct_count INTEGER;
 BEGIN
+  IF TG_OP = 'UPDATE'
+     AND NEW.seller_id IS NOT DISTINCT FROM OLD.seller_id
+     AND NEW.photos IS NOT DISTINCT FROM OLD.photos THEN
+    RETURN NEW;
+  END IF;
+
   NEW.photos := COALESCE(NEW.photos, '[]'::JSONB);
   IF jsonb_typeof(NEW.photos) <> 'array' THEN
     RAISE EXCEPTION 'classified_photos_must_be_array' USING ERRCODE = '22023';
@@ -500,6 +518,12 @@ BEGIN
     DELETE FROM public.media_asset_links
     WHERE aggregate_type = 'classified' AND aggregate_id = OLD.id;
     RETURN OLD;
+  END IF;
+
+  IF TG_OP = 'UPDATE'
+     AND NEW.seller_id IS NOT DISTINCT FROM OLD.seller_id
+     AND NEW.photos IS NOT DISTINCT FROM OLD.photos THEN
+    RETURN NEW;
   END IF;
 
   DELETE FROM public.media_asset_links
@@ -740,6 +764,12 @@ BEGIN
   END;
   IF v_preset IS NULL THEN RETURN NEW; END IF;
 
+  IF TG_OP = 'UPDATE'
+     AND NEW.key IS NOT DISTINCT FROM OLD.key
+     AND NEW.value IS NOT DISTINCT FROM OLD.value THEN
+    RETURN NEW;
+  END IF;
+
   IF jsonb_typeof(NEW.value) <> 'string' THEN
     RAISE EXCEPTION 'site_media_setting_must_be_string' USING ERRCODE = '22023';
   END IF;
@@ -784,6 +814,12 @@ BEGIN
     ELSE NULL
   END;
   IF v_preset IS NULL THEN RETURN NEW; END IF;
+
+  IF TG_OP = 'UPDATE'
+     AND NEW.key IS NOT DISTINCT FROM OLD.key
+     AND NEW.value IS NOT DISTINCT FROM OLD.value THEN
+    RETURN NEW;
+  END IF;
 
   DELETE FROM public.media_asset_links
   WHERE aggregate_type = 'site_setting' AND aggregate_id = NEW.id;
