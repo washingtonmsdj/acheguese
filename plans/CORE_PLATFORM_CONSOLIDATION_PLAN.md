@@ -507,8 +507,10 @@ Nao usar:
 
 Continuar **Fase 6 - Remocao de compatibilidade e escala**.
 
-Proxima ordem: auditar CP-016 e consolidar o lifecycle dos uploads anteriores
-sem duplicar `MediaService`; depois remover aliases/facades comprovadamente sem
+Proxima ordem: executar o preflight remoto somente leitura de CP-016 em
+`tests/security/media-assets-cp016-preflight-remote-audit.sql`, registrar as
+contagens e consolidar o lifecycle dos uploads anteriores sem duplicar
+`MediaService`; depois remover aliases/facades comprovadamente sem
 consumidores e executar os gates completos por dominio. Carga, p50/p95/p99,
 backup/restore e rollback exigem staging explicitamente autorizado. CP-016 e a
 aprovacao de retencao/anonymizacao permanecem abertos e nao podem ser

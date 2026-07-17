@@ -53,12 +53,13 @@ Tentativas presentes na migration:
 - rejeitar URLs brutas e referencias de preset ou owner incorretos;
 - limpar dados legados em campos publicos.
 
-**Bloqueio obrigatorio:** o SQL atual contem operacoes de limpeza destrutivas
-(`DELETE` e `UPDATE` que removem valores antigos). Nao aplique a migration como
-esta. Primeiro execute uma auditoria de contagem no remoto, confirme por escrito
-que o ambiente nao possui dados de clientes, e reescreva a migration para:
+**Bloqueio obrigatorio:** a migration foi reescrita para nao apagar valores
+legados e proteger apenas novas escritas. Ainda nao a aplique sem executar a
+auditoria de contagem no remoto com
+`tests/security/media-assets-cp016-preflight-remote-audit.sql`. O backfill e o
+corte de leitura devem continuar em migrations separadas, para:
 
-1. validar o estado atual e falhar com mensagem clara se houver dados legados;
+1. registrar o estado atual e as referencias legadas encontradas;
 2. migrar referencias validas quando existir caminho seguro;
 3. executar limpeza somente em ambiente explicitamente autorizado;
 4. separar schema, backfill e remocao em migrations auditaveis.

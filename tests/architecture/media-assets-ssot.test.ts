@@ -15,8 +15,11 @@ const presets = [
   "gastronomy_menu_item",
   "classified_image",
   "professional_logo",
+  "professional_banner",
   "professional_portfolio",
   "site_banner",
+  "site_logo",
+  "site_favicon",
   "attachment_image",
 ] as const;
 
@@ -24,14 +27,24 @@ describe("MediaAsset SSOT", () => {
   it("keeps the client and server preset registries aligned", () => {
     const client = read("src/core/media/config/mediaPresets.ts");
     const server = read("supabase/functions/_shared/mediaPresets.ts");
-    const migration = read(
+    const coreMigration = read(
       "supabase/migrations/20260714125000_create_media_asset_core.sql",
     );
+    const extensionMigration = read(
+      "supabase/migrations/20260715113000_consolidate_public_media_asset_domains.sql",
+    );
+    const extensionPresets = new Set([
+      "professional_banner",
+      "site_logo",
+      "site_favicon",
+    ]);
 
     for (const preset of presets) {
       expect(client).toContain(`"${preset}"`);
       expect(server).toContain(`${preset}: preset(`);
-      expect(migration).toContain(`'${preset}'`);
+      expect(
+        extensionPresets.has(preset) ? extensionMigration : coreMigration,
+      ).toContain(`'${preset}'`);
     }
   });
 
@@ -125,5 +138,20 @@ describe("MediaAsset SSOT", () => {
     expect(config).toMatch(
       /\[functions\.media-assets-cleanup\]\s+verify_jwt = false/,
     );
+  });
+
+  it("keeps CP-016 non-destructive and requires a read-only remote preflight", () => {
+    const migration = read(
+      "supabase/migrations/20260715113000_consolidate_public_media_asset_domains.sql",
+    );
+    const preflight = read(
+      "tests/security/media-assets-cp016-preflight-remote-audit.sql",
+    );
+
+    expect(migration).not.toMatch(
+      /(?:DELETE FROM public\.(?:business_gallery|banners)|UPDATE public\.(?:profiles|business_data|classifieds|professional_data|site_settings))/,
+    );
+    expect(preflight).toContain("CP-016 read-only preflight");
+    expect(preflight).not.toMatch(/\b(?:INSERT|UPDATE|DELETE|ALTER|DROP|CREATE)\b/i);
   });
 });

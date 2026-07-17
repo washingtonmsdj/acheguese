@@ -122,9 +122,12 @@ validator e security validator.
 Avatar, imagens gerais de Business, Classified, Professional, Site e alguns
 wrappers antigos de `MediaService` ainda usam contratos de bucket anteriores.
 Eles nao podem reutilizar presets de Post, Review ou Menu e nao devem ganhar
-novos consumidores. A migracao deve ocorrer por preset e dominio, preservando
-as regras privadas de documentos/evidencias e removendo cada caminho anterior
-somente depois de consumidores e dados zerados.
+novos consumidores. A migration CP-016 aceita os presets e protege escritas
+futuras sem apagar valores legados. Antes do backfill/cutover, execute
+`tests/security/media-assets-cp016-preflight-remote-audit.sql` em modo somente
+leitura, registre as contagens e crie uma migration separada, idempotente e
+explicitamente aprovada para cada dominio. Documentos/evidencias privadas
+permanecem fora desse fluxo.
 
 Esse residual nao reabre CP-006: o acoplamento incorreto de Gastronomia ao
 lifecycle de Post foi removido. Ele registra que a adocao de `MediaAsset` pelos

@@ -806,47 +806,10 @@ BEGIN
 END;
 $$;
 
--- Development has no production clients. URL-only media cannot be retained as
--- a second source of truth, so incompatible references are removed before the
--- strict triggers are enabled.
-UPDATE public.profiles
-SET avatar_url = NULL
-WHERE avatar_url IS NOT NULL;
-
-UPDATE public.business_data
-SET metadata = COALESCE(metadata, '{}'::JSONB)
-  - 'logo_url'
-  - 'banner_url'
-  - 'fotos'
-  - 'photos'
-  - 'gallery'
-  - 'gallery_images'
-WHERE COALESCE(metadata, '{}'::JSONB) ?| ARRAY[
-  'logo_url', 'banner_url', 'fotos', 'photos', 'gallery', 'gallery_images'
-];
-
-DELETE FROM public.business_gallery;
-
-UPDATE public.classifieds
-SET photos = '[]'::JSONB
-WHERE photos IS DISTINCT FROM '[]'::JSONB;
-
-UPDATE public.professional_data
-SET metadata = COALESCE(metadata, '{}'::JSONB)
-      - 'logo_url'
-      - 'banner_url'
-      - 'portfolio_images',
-    portfolio_items = '[]'::JSONB
-WHERE COALESCE(metadata, '{}'::JSONB) ?| ARRAY[
-        'logo_url', 'banner_url', 'portfolio_images'
-      ]
-   OR portfolio_items IS DISTINCT FROM '[]'::JSONB;
-
-DELETE FROM public.banners;
-
-UPDATE public.site_settings
-SET value = '""'::JSONB
-WHERE key IN ('logo_url', 'logo_mobile_url', 'favicon_url');
+-- Existing values are intentionally preserved. This migration only enforces
+-- canonical references on future writes to the media fields below. A separate,
+-- explicitly approved backfill/cutover may remove legacy values after the
+-- read-only CP-016 audit proves the data can be migrated without loss.
 
 DROP TRIGGER IF EXISTS profiles_guard_avatar_media_asset ON public.profiles;
 CREATE TRIGGER profiles_guard_avatar_media_asset
