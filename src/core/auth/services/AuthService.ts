@@ -365,35 +365,4 @@ export class AuthService {
    *  UPLOAD DE IMAGEM PARA STORAGE
    * Upload genérico de imagem para um bucket específico
    */
-  static async uploadImage(
-    bucket: string,
-    userId: string,
-    file: File,
-  ): Promise<string> {
-    // Validar tipo de arquivo
-    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
-    if (!allowedTypes.includes(file.type)) {
-      throw new Error(
-        "Tipo de arquivo não suportado. Use JPEG, PNG, GIF ou WebP.",
-      );
-    }
-
-    // Validar tamanho (5MB)
-    const maxSize = 5 * 1024 * 1024;
-    if (file.size > maxSize) {
-      throw new Error("Imagem muito grande. Tamanho máximo: 5MB");
-    }
-
-    if (!isPublicImageUploadBucket(bucket)) {
-      throw new Error("Bucket nao permitido para upload.");
-    }
-
-    const upload = await mediaService.uploadToBucket(file, {
-      bucket,
-      pathPrefix: userId,
-      preset: "site_asset",
-      upsert: false,
-    });
-    return upload.url;
-  }
 }

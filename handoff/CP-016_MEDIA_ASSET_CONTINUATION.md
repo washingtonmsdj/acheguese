@@ -103,6 +103,14 @@ mas ainda precisam de revisao integrada:
 
 Antes de prosseguir, rode `rg "uploadAvatar|uploadBusinessImage|uploadProfessionalImage|uploadToBucket" src supabase` e classifique cada uso. Nao remova wrappers genericos enquanto ainda houver consumidores legitimos (por exemplo, evidencias privadas e virtual try-on).
 
+Auditoria em 2026-07-17: `useCommunityImageUpload` era o unico consumidor de
+`AuthService.uploadImage`; ambos foram removidos por criarem URL publica fora
+do lifecycle MediaAsset. Avatar e Business ja usam `uploadMediaAsset`.
+`uploadToBucket` permanece porque ainda atende fluxos de Seguranca e virtual
+try-on, que nao pertencem ao dominio de midia publica CP-016. Os wrappers
+legados internos de MediaService sem consumidores devem ser removidos em uma
+etapa propria, com teste de regressao de cada bucket preservado.
+
 ### Readers parcialmente adaptados
 
 - `SafeImage` foi adotado em `business-logo.tsx` e `ProfessionalHeader.tsx`.
