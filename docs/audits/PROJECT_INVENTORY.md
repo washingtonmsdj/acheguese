@@ -1,6 +1,6 @@
 # Inventario Estrutural do Projeto
 
-Gerado em 2026-07-17T17:30:18.192Z.
+Gerado em 2026-07-17T21:00:45.810Z.
 
 ## Modulos existentes
 - Core: `address`, `admin`, `ai`, `alerts`, `analytics`, `audit`, `auth`, `authorization`, `banners`, `billing`, `business`, `city`, `classifieds`, `comments`, `communication-territorial`, `community`, `community-experience`, `community-feed`, `community-groups`, `community-issues`, `community-lost-found`, `community-recommendations`, `coverage`, `education`, `engagement`, `family`, `favorites`, `feed`, `geocoding`, `geospatial`, `governance`, `guide`, `infrastructure`, `interaction`, `landing`, `legal`, `location`, `maps`, `media`, `messaging`, `metrics`, `mobility`, `moderation`, `navigation`, `nearby`, `notifications`, `permissions`, `posts`, `pricing`, `privacy`, `professional`, `profiles`, `public-identity`, `qr`, `realtime`, `residence`, `reviews`, `rollout`, `routing`, `safety`, `search`, `service-areas`, `session`, `social`, `subscription`, `telemetry`, `territorial`, `tracking`, `trust`, `users`, `verification`, `verticals`, `work-opportunities`

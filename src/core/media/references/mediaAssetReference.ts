@@ -43,9 +43,11 @@ export function resolveMediaAssetReference(
 /** Database references are canonical; relative values are code-owned fixtures. */
 export function resolveMediaAssetSource(
   value: string | null | undefined,
+  expectedPreset?: MediaPreset | readonly MediaPreset[],
 ): string | null {
   if (!value) return null;
-  const resolved = resolveMediaAssetReference(value);
+  const normalized = normalizeMediaAssetReference(value, expectedPreset);
+  const resolved = resolveMediaAssetReference(normalized);
   if (resolved) return resolved;
   if (value.startsWith("/") && !value.startsWith("//")) return value;
   return null;
@@ -55,13 +57,24 @@ export function isMediaAssetReference(value: unknown): value is string {
   return typeof value === "string" && parseMediaAssetReference(value) !== null;
 }
 
+export function isMediaAssetReferenceForPreset(
+  value: unknown,
+  preset: MediaPreset,
+): value is string {
+  return (
+    typeof value === "string" &&
+    normalizeMediaAssetReference(value, preset) !== undefined
+  );
+}
+
 export function normalizeMediaAssetReference(
   value: string | null | undefined,
   expectedPreset?: MediaPreset | readonly MediaPreset[],
 ): string | undefined {
   const normalized = value?.trim();
   const parsed = parseMediaAssetReference(normalized);
-  if (!parsed || parsed.presetVersion !== MEDIA_PRESET_VERSION) return undefined;
+  if (!parsed || parsed.presetVersion !== MEDIA_PRESET_VERSION)
+    return undefined;
 
   if (expectedPreset) {
     const allowedPresets = Array.isArray(expectedPreset)
@@ -86,4 +99,14 @@ export function toMediaAssetReference(input: {
     throw new Error("Invalid media asset identity");
   }
   return reference;
+}
+
+export function resolveMediaAssetSources(
+  values: readonly string[],
+  expectedPreset?: MediaPreset | readonly MediaPreset[],
+): string[] {
+  return values.flatMap((value) => {
+    const resolved = resolveMediaAssetSource(value, expectedPreset);
+    return resolved ? [resolved] : [];
+  });
 }

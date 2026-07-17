@@ -471,14 +471,23 @@ funcoes temporarias restantes. Typecheck, lint, build, dependencias, SSOT,
 seguranca, testes MediaAsset/JPEG e migrations passaram. Contrato:
 `docs/architecture/MEDIA_ASSET_SSOT.md`.
 
+O corte complementar de Posts e Achados/Perdidos foi concluido em 2026-07-17
+pela migration `20260717130000`. Os dois agregados agora persistem somente
+`MediaAssetRef` do preset `post_image`; triggers mantem os links `post` e
+`lost_found_post`, e o navegador nao escreve nem remove objetos diretamente.
+O bucket vazio `post_images` foi removido pela API oficial do Storage. A
+auditoria remota agregada confirmou zero referencia invalida, link ausente,
+bucket, policy ou funcao legada. O probe anonimo confirmou bloqueio do insert
+de Post (`42501`) e do upload direto em `media-assets` (`403`).
+
 Checkpoint de limpeza da Fase 6 em 2026-07-17: foram removidos os metodos sem
 consumidor `AuthService.deleteStorageImage`, `MediaService.uploadMultipleImages`,
 `MediaService.deleteFile` e `MediaService.getPublicUrl`; tambem sairam
 `ProfileFacade`, `BusinessFacade`, `ChatFacade`, `chatService` e o alias
 `UnifiedMobilityService`. O relatorio estrutural historico que ainda descrevia
 `profile.facade.ts` como estado atual foi removido e o inventario foi regenerado.
-O baseline de Storage dinamico do `MediaService` caiu de 6 para 2 leituras e de
-8 para 4 escritas. Facades com consumidores reais, como `PostsFacade`,
+O baseline de Storage dinamico do `MediaService` caiu de 6 para 1 leitura e de
+8 para 3 escritas. Facades com consumidores reais, como `PostsFacade`,
 `ProfessionalFacade`, `GastronomyFacade` e `MobilityFacade`, foram preservadas.
 
 ### Fase 6 - Remocao de compatibilidade e escala
@@ -526,14 +535,15 @@ Nao usar:
 
 Continuar **Fase 6 - Remocao de compatibilidade e escala**.
 
-Proxima ordem: migrar os uploads publicos restantes de posts e achados/perdidos,
-hoje em `MediaService.uploadPostImage`, para o preset `post_image` do MediaAsset;
-so depois remover o writer e o cleanup do bucket antigo. Documentos de
-verificacao, evidencias privadas e try-on permanecem em contratos separados.
-Depois continuar a busca por aliases sem consumidores e preparar staging
-explicitamente autorizado para carga, p50/p95/p99, backup/restore e rollback.
-A aprovacao de retencao/anonymizacao continua aberta e nao pode ser mascarada
-como concluida.
+Proxima ordem: classificar os 46 resultados do lint remoto entre funcoes de
+extensao e funcoes da aplicacao, provar callsites e remover ou corrigir as que
+referenciam schema antigo. Depois continuar a busca comprovada por aliases,
+facades, tipos e allowlists sem consumidores, removendo apenas depois de migrar
+ou provar a ausencia de callsites. Documentos de verificacao, evidencias
+privadas e try-on permanecem em contratos separados e nao devem ser forcados
+para o MediaAsset publico. Por fim, preparar staging explicitamente autorizado
+para carga, p50/p95/p99, backup/restore e rollback. A aprovacao de
+retencao/anonymizacao continua aberta e nao pode ser mascarada como concluida.
 
 ## 9. Comandos de validacao base
 

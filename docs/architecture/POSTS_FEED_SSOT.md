@@ -1,7 +1,7 @@
 # Posts e Feed SSOT
 
 Status: vigente
-Data: 2026-07-14
+Data: 2026-07-17
 Finding encerrado: CP-008
 
 ## Decisao
@@ -29,6 +29,8 @@ tipos antecipadamente produziria uma abstracao sem consumidor.
 - posts tecnicos de seed nao entram na resposta publica;
 - `is_published`, `is_hidden` e `is_removed` sao aplicados na consulta como
   defesa em profundidade e tambem pela RLS.
+- `images` persiste somente `MediaAssetRef` do preset `post_image`; leitura
+  resolve a URL no read model e nunca consulta o campo legado `image_url`.
 
 ## Fronteiras
 
@@ -49,6 +51,7 @@ tipos antecipadamente produziria uma abstracao sem consumidor.
 - alias `postService as feedService`;
 - consulta territorial duplicada em `posts.queries.ts`;
 - adapter `feedItems` sem consumidor no hook comunitario.
+- writer e resolvedor do bucket legado `post_images`.
 
 Nao foi mantido adapter deprecated porque o inventario confirmou zero
 consumidores dos contratos removidos.

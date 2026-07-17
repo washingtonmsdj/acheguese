@@ -19,7 +19,10 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { useAppUrls } from "@/core/routing/hooks"; // ✅ SSOT URLs
 import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
-import { CommunityPortalGate, useCommunityAccess } from "@/core/community/access";
+import {
+  CommunityPortalGate,
+  useCommunityAccess,
+} from "@/core/community/access";
 import type { TerritorialLayoutContext } from "@/core/routing/components/TerritorialLayout";
 import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
 import { resolveCommunityRouteTerritoryFilter } from "@/core/community/utils/communityRouteTerritory";
@@ -46,6 +49,8 @@ import {
   LOST_FOUND_FILTER_OPTIONS,
 } from "@/shared/validation/schemas/lostfound.schema";
 import { getRecordValue } from "@/shared/utils/recordLookup";
+import { SafeImage } from "@/shared/components/security/SafeImage";
+import { resolveMediaAssetSource } from "@/core/media";
 type LostFoundTipoFilter = "todos" | "perdido" | "achado";
 const LOST_FOUND_PAGE_SIZE = 20;
 
@@ -69,10 +74,13 @@ export default function AchadosPerdidosPage() {
   const [search, setSearch] = useState("");
   const [filterTipo, setFilterTipo] = useState<LostFoundTipoFilter>("todos");
   const [filterCategoria, setFilterCategoria] = useState("todos");
-  const [locationLabels, setLocationLabels] = useState<Record<string, string>>({});
+  const [locationLabels, setLocationLabels] = useState<Record<string, string>>(
+    {},
+  );
 
   // ✅ Verificação de autenticação
-  const territorialContext = useOutletContext<TerritorialLayoutContext | null>() ?? null;
+  const territorialContext =
+    useOutletContext<TerritorialLayoutContext | null>() ?? null;
   const { homeDistrict, homeCity } = useUserTerritory();
   const resolved = useMemo(
     () =>
@@ -93,11 +101,7 @@ export default function AchadosPerdidosPage() {
     activeMemberIds,
   });
   const territoryFilter = useMemo<TerritoryFilter>(
-    () =>
-      resolveCommunityRouteTerritoryFilter(
-        resolved,
-        activeMemberIds,
-      ),
+    () => resolveCommunityRouteTerritoryFilter(resolved, activeMemberIds),
     [activeMemberIds, resolved],
   );
 
@@ -132,7 +136,8 @@ export default function AchadosPerdidosPage() {
           categoria: post.categoria,
           titulo: post.titulo,
           descricao: post.descricao || "",
-          foto_url: post.imagens?.[0] || "",
+          foto_url:
+            resolveMediaAssetSource(post.imagens?.[0], "post_image") ?? "",
           bairro_publico: "",
           location_id: post.location_id ?? null,
           data_ocorrido: post.data_perdido || "",
@@ -146,7 +151,8 @@ export default function AchadosPerdidosPage() {
   const loading = lostFoundQuery.isFetchingNextPage;
   const hasMore = Boolean(lostFoundQuery.hasNextPage);
   const loadMore = useCallback(() => {
-    if (!lostFoundQuery.hasNextPage || lostFoundQuery.isFetchingNextPage) return;
+    if (!lostFoundQuery.hasNextPage || lostFoundQuery.isFetchingNextPage)
+      return;
     void lostFoundQuery.fetchNextPage();
   }, [lostFoundQuery]);
 
@@ -161,7 +167,10 @@ export default function AchadosPerdidosPage() {
       new Set(
         items
           .map((item) => item.location_id)
-          .filter((id): id is string => Boolean(id) && !getRecordValue(locationLabels, id)),
+          .filter(
+            (id): id is string =>
+              Boolean(id) && !getRecordValue(locationLabels, id),
+          ),
       ),
     );
 
@@ -196,7 +205,10 @@ export default function AchadosPerdidosPage() {
 
   const resolveItemTerritoryLabel = (item: LostFoundItem) => {
     if (item.location_id) {
-      return getRecordValue(locationLabels, item.location_id) ?? "Carregando território...";
+      return (
+        getRecordValue(locationLabels, item.location_id) ??
+        "Carregando território..."
+      );
     }
 
     return item.bairro_publico || "Território não informado";
@@ -212,7 +224,9 @@ export default function AchadosPerdidosPage() {
   );
   const handleOpenCreateLostFound = () => {
     if (!communityAccess.can.create_post) {
-      toast.info("Publicar achados e perdidos exige participacao ativa nesta comunidade.");
+      toast.info(
+        "Publicar achados e perdidos exige participacao ativa nesta comunidade.",
+      );
       return;
     }
 
@@ -251,7 +265,7 @@ export default function AchadosPerdidosPage() {
               Ajude a comunidade a encontrar o que perdeu
             </p>
           </div>
-          <Button size="sm" onClick={handleOpenCreateLostFound}> {/* ✅ SSOT */}
+          <Button size="sm" onClick={handleOpenCreateLostFound}>
             <Plus className="h-4 w-4 mr-1" /> Publicar
           </Button>
         </div>
@@ -271,7 +285,11 @@ export default function AchadosPerdidosPage() {
         {[
           { id: "todos", label: "Todos", color: "" },
           { id: "perdido", label: "Perdidos", color: "text-destructive" },
-          { id: "achado" as const, label: "Encontrados", color: "text-success" },
+          {
+            id: "achado" as const,
+            label: "Encontrados",
+            color: "text-success",
+          },
         ].map((t) => (
           <button
             key={t.id}
@@ -314,7 +332,10 @@ export default function AchadosPerdidosPage() {
           ))
         ) : filtered.length === 0 ? (
           <div className="text-center py-12">
-            <Search className="h-10 w-10 mx-auto mb-3 text-muted-foreground" aria-hidden="true" />
+            <Search
+              className="h-10 w-10 mx-auto mb-3 text-muted-foreground"
+              aria-hidden="true"
+            />
             <p className="text-sm text-muted-foreground mb-3">
               Nenhum item publicado ainda.
             </p>
@@ -332,18 +353,19 @@ export default function AchadosPerdidosPage() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: Math.min(i, 5) * 0.04 }}
-              onClick={() => navigate(appUrls.community.lostAndFoundDetail(item.id))}
+              onClick={() =>
+                navigate(appUrls.community.lostAndFoundDetail(item.id))
+              }
               className={cn(
                 "flex gap-3 bg-card rounded-xl border p-3 cursor-pointer hover:shadow-md transition-shadow",
                 item.resolvido && "opacity-60",
               )}
             >
               {item.foto_url ? (
-                <img
+                <SafeImage
                   src={item.foto_url}
                   alt={item.titulo}
                   className="h-20 w-20 rounded-xl object-cover flex-shrink-0"
-                  loading="lazy"
                 />
               ) : (
                 <div className="h-20 w-20 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0 px-2 text-center">

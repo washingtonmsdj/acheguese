@@ -6,8 +6,6 @@ import { trackError } from "@/shared/utils/errorTracking";
 import { PAGINATION } from "@/shared/constants";
 import { POST_LIMITS } from "@/shared/constants/socialContent";
 import { mediaService } from "@/core/media/services/MediaService";
-import { MEDIA_STORAGE_BUCKETS } from "@/core/media/config/storageBuckets";
-import { toPostImageReference } from "@/core/media/references/postImageReference";
 import { LocationType } from "@/shared/types/enums";
 import type {
   Post,
@@ -63,8 +61,8 @@ export class PostService {
   }
 
   /**
-   * Uploads post media and persists the post as one application operation.
-   * Uploaded objects are removed if an upload or the database insert fails.
+   * Uploads canonical MediaAssets and persists their references on the post.
+   * Unattached uploads are reclaimed by the bounded orphan worker.
    */
   async createPostWithImages(
     data: Omit<CreatePostInput, "images">,
@@ -77,43 +75,17 @@ export class PostService {
       );
     }
 
-    const uploads: Array<{ path: string; url: string }> = [];
-    try {
-      for (const imageFile of imageFiles) {
-        uploads.push(
-          await mediaService.uploadPostImage(
-            data.author_profile_id,
-            imageFile,
-            {
-              preset: "post_image",
-            },
-          ),
-        );
-      }
-
-      return await this.createPost({
-        ...data,
-        images: uploads.map((upload) =>
-          toPostImageReference(upload.path, data.author_profile_id),
-        ),
-      });
-    } catch (error) {
-      if (uploads.length > 0) {
-        await mediaService
-          .deleteFromBucket(
-            MEDIA_STORAGE_BUCKETS.POST_IMAGES,
-            uploads.map((upload) => upload.path),
-          )
-          .catch((cleanupError) => {
-            trackError(cleanupError as Error, {
-              component: "PostService",
-              action: "rollbackPostImageUploads",
-              metadata: { uploadedImageCount: uploads.length },
-            });
-          });
-      }
-      throw error;
+    const references: string[] = [];
+    for (const imageFile of imageFiles) {
+      const asset = await mediaService.uploadMediaAsset(
+        data.author_profile_id,
+        imageFile,
+        "post_image",
+      );
+      references.push(asset.reference);
     }
+
+    return this.createPost({ ...data, images: references });
   }
 
   /**
@@ -148,9 +120,7 @@ export class PostService {
    * Busca posts do feed com expansao territorial
    * Sprint 2 - Fase 2: Refatorado para usar location_ids com expansao territorial
    */
-  async getFeed(
-    params: FeedParams = {},
-  ): Promise<FeedResult> {
+  async getFeed(params: FeedParams = {}): Promise<FeedResult> {
     return queries.getFeed(params);
   }
 

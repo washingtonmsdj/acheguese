@@ -17,8 +17,10 @@ export {
 export type { MediaPreset } from "./config/mediaPresets";
 export {
   isMediaAssetReference,
+  isMediaAssetReferenceForPreset,
   parseMediaAssetReference,
   resolveMediaAssetReference,
   resolveMediaAssetSource,
+  resolveMediaAssetSources,
   toMediaAssetReference,
 } from "./references/mediaAssetReference";

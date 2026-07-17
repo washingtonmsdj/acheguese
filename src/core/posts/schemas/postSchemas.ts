@@ -1,13 +1,16 @@
 import { z } from "zod";
 import { CANONICAL_POST_TYPES, type PostType } from "@/core/posts/postTypes";
 import { COMMENT_LIMITS, POST_LIMITS } from "@/shared/constants/socialContent";
-import { isPostImageReference } from "@/core/media/references/postImageReference";
+import { isMediaAssetReferenceForPreset } from "@/core/media";
 
 const VALID_POST_TYPES = [...CANONICAL_POST_TYPES];
 
 export const postImageReferenceSchema = z
   .string()
-  .refine(isPostImageReference, "Referencia de imagem de post invalida");
+  .refine(
+    (value) => isMediaAssetReferenceForPreset(value, "post_image"),
+    "Referencia de imagem de post invalida",
+  );
 
 const structuredContentPayloadSchema = z
   .record(z.unknown())

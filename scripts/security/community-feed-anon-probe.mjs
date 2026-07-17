@@ -8,7 +8,7 @@ const anon = createAnonClient();
 const probeId = randomUUID();
 const profileId = randomUUID();
 const locationId = randomUUID();
-const storagePath = `${profileId}/posts/${probeId.padEnd(16, "0")}.jpg`;
+const storagePath = `${profileId}/post_image/v1/${probeId}.jpg`;
 
 const outcomes = [];
 
@@ -32,7 +32,7 @@ outcomes.push({
 
 const jpegSignature = new Uint8Array([0xff, 0xd8, 0xff, 0xd9]);
 const storageResult = await anon.storage
-  .from("post_images")
+  .from("media-assets")
   .upload(storagePath, jpegSignature, {
     contentType: "image/jpeg",
     upsert: false,
@@ -53,7 +53,7 @@ if (unexpectedPostId || unexpectedStoragePath) {
     await admin.from("posts").delete().eq("id", unexpectedPostId);
   }
   if (unexpectedStoragePath) {
-    await admin.storage.from("post_images").remove([unexpectedStoragePath]);
+    await admin.storage.from("media-assets").remove([unexpectedStoragePath]);
   }
 }
 

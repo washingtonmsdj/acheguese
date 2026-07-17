@@ -2,14 +2,17 @@
  * Post media and metrics queries.
  */
 
-import { resolveCityToLocationIds, resolveNeighborhoodInCity } from "@/core/location/helpers/territorialResolver";
+import {
+  resolveCityToLocationIds,
+  resolveNeighborhoodInCity,
+} from "@/core/location/helpers/territorialResolver";
 import { supabase } from "@/integrations/supabase";
 import { trackError } from "@/shared/utils/errorTracking";
 import { mapPostsWithImagesRows } from "./post.service.rules";
 
 interface PostWithImageRow {
   id: string;
-  image_url: string;
+  images: unknown;
   content?: string | null;
   created_at: string;
   author_profile?: {
@@ -58,28 +61,30 @@ export async function getPostsWithImages(options: {
   neighborhood?: string;
   state?: string;
   limit?: number;
-}): Promise<Array<{
-  id: string;
-  image_url: string;
-  content: string;
-  author_name: string;
-  author_avatar: string | null;
-  created_at: string;
-}>> {
+}): Promise<
+  Array<{
+    id: string;
+    image_url: string;
+    content: string;
+    author_name: string;
+    author_avatar: string | null;
+    created_at: string;
+  }>
+> {
   try {
     let query = supabase
       .from("posts")
       .select(
         `
           id,
-          image_url,
+          images,
           content,
           created_at,
           author_profile:profiles!author_profile_id(display_name, avatar_url)
         `,
       )
       .eq("is_published", true)
-      .not("image_url", "is", null)
+      .not("images", "eq", "[]")
       .order("created_at", { ascending: false })
       .limit(options.limit ?? 12);
 
@@ -88,7 +93,10 @@ export async function getPostsWithImages(options: {
     } else if (options.locationIds?.length) {
       query = query.in("location_id", options.locationIds);
     } else if (options.city && options.state) {
-      const cityResolution = await resolveCityToLocationIds(options.state, options.city);
+      const cityResolution = await resolveCityToLocationIds(
+        options.state,
+        options.city,
+      );
       if (cityResolution?.districtIds?.length) {
         if (options.neighborhood) {
           const neighborhoodId = await resolveNeighborhoodInCity(

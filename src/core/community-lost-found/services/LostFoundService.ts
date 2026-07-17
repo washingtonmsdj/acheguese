@@ -3,7 +3,6 @@ import { logger } from "@/shared/utils/logger";
 import { COMMUNITY_RUNTIME_LIMITS } from "@/shared/constants/communityRuntime";
 import type { TerritoryFilter } from "@/core/location";
 import { mediaService } from "@/core/media/services/MediaService";
-import { MEDIA_STORAGE_BUCKETS } from "@/core/media/config/storageBuckets";
 
 type QueryResult<T> = Promise<{
   data: T;
@@ -101,8 +100,7 @@ const LOST_FOUND_POST_SELECT = [
   "updated_at",
 ].join(",");
 
-const LOST_FOUND_COMMENT_SELECT =
-  "id,post_id,autor_id,conteudo,created_at";
+const LOST_FOUND_COMMENT_SELECT = "id,post_id,autor_id,conteudo,created_at";
 
 const DEFAULT_PAGE_SIZE = COMMUNITY_RUNTIME_LIMITS.LOST_FOUND_DEFAULT_PAGE_SIZE;
 const UUID_PATTERN =
@@ -112,7 +110,8 @@ function normalizeCursor(
   cursor: LostFoundPageCursor | null,
 ): LostFoundPageCursor | null {
   if (!cursor) return null;
-  if (!UUID_PATTERN.test(cursor.id)) throw new Error("invalid_lost_found_cursor");
+  if (!UUID_PATTERN.test(cursor.id))
+    throw new Error("invalid_lost_found_cursor");
 
   const timestamp = new Date(cursor.createdAt);
   if (Number.isNaN(timestamp.getTime())) {
@@ -164,30 +163,19 @@ class LostFoundServiceClass {
   ): Promise<LostFoundPost | null> {
     if (!imageFile) return this.createPost({ ...postData, imagens: [] });
 
-    let uploadedPath: string | null = null;
     try {
-      const upload = await mediaService.uploadPostImage(
+      const asset = await mediaService.uploadMediaAsset(
         ownerProfileId,
         imageFile,
+        "post_image",
       );
-      uploadedPath = upload.path;
       const createdPost = await this.createPost({
         ...postData,
-        imagens: [upload.url],
+        imagens: [asset.reference],
       });
       if (!createdPost) throw new Error("lost_found_post_insert_failed");
       return createdPost;
     } catch (error) {
-      if (uploadedPath) {
-        await mediaService
-          .deleteFromBucket(MEDIA_STORAGE_BUCKETS.POST_IMAGES, [uploadedPath])
-          .catch((cleanupError) => {
-            logger.error(
-              "LostFoundService.createPostWithImage.cleanup",
-              cleanupError,
-            );
-          });
-      }
       logger.error("LostFoundService.createPostWithImage", error);
       return null;
     }

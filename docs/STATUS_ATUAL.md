@@ -1,10 +1,32 @@
 # Status Atual do Projeto
 
-Data: 2026-07-15
+Data: 2026-07-17
 Branch: main
-Ultimo commit base validado antes desta atualizacao: e16f3671 (`docs: record security authority revalidation`)
+Ultimo commit base validado antes desta atualizacao: 3c307846 (`refactor(core): remove unused facades and media wrappers`)
 
 Observacao: este documento e a fonte operacional atual. O historico abaixo fica preservado por contexto, mas qualquer registro antigo de bloqueio por falta de `git`/`node` nao representa o ambiente validado em 2026-06-06.
+
+## Atualizacao 2026-07-17 (Core Platform - Midia de Comunidade)
+
+- Posts e Achados/Perdidos foram migrados do bucket `post_images` para o
+  MediaAsset canonico com preset `post_image` e referencias `storage://`.
+- A migration `20260717130000` esta aplicada no remoto. Ela valida owner,
+  preset, versao, estado e anexo unico, e sincroniza links dos agregados `post`
+  e `lost_found_post`.
+- O writer e o cleanup direto do navegador foram removidos. O bucket legado,
+  que estava vazio, foi excluido pela API oficial do Storage.
+- A auditoria remota retornou zero referencia invalida, link ausente, bucket,
+  policy ou funcao legada. O probe anonimo bloqueou insert de Post (`42501`) e
+  upload direto (`403`).
+- O baseline dinamico do `MediaService` caiu para uma leitura e tres escritas;
+  o inventario e o manifest de ownership foram regenerados.
+- O lint remoto encontrou zero issue nas quatro funcoes deste corte. O relatorio
+  global ainda possui 46 resultados historicos, entre falsos positivos de
+  extensoes PostGIS e funcoes da aplicacao que referenciam schema antigo; a
+  triagem e remocao/correcao dessas funcoes e bloqueio de lancamento.
+- Documentos privados, evidencias sensiveis e try-on continuam em contratos
+  separados. Carga, p95/p99, backup/restore e rollback ainda exigem staging
+  explicitamente autorizado.
 
 ## Atualizacao 2026-07-15 (Core Platform - Moderation e Audit)
 

@@ -4,6 +4,7 @@ import { openPublicRoute } from "./support/publicRouteAssertions";
 
 const COMMUNITY_ROUTE = "/comunidade/ba/salvador/pituba";
 const PROFILE_ID = "2f10a5d2-2fd8-4a52-909c-4f8a5f6d1337";
+const ASSET_ID = "3410a5d2-2fd8-4a52-909c-4f8a5f6d1337";
 const LOCATION_ID = "88a96045-ddb0-4f49-a25a-f7b61fe980c1";
 const PAGE_SIZE = 12;
 const PAGE_SIZE_WITH_SENTINEL = PAGE_SIZE + 1;
@@ -11,8 +12,9 @@ const FULL_PAGES = 8;
 
 function makePost(pageIndex: number, itemIndex: number) {
   const sequence = pageIndex * PAGE_SIZE + itemIndex;
-  const createdAt = new Date(Date.UTC(2026, 6, 14, 12, 0, 0) - sequence * 1000)
-    .toISOString();
+  const createdAt = new Date(
+    Date.UTC(2026, 6, 14, 12, 0, 0) - sequence * 1000,
+  ).toISOString();
   const suffix = String(sequence + 1).padStart(12, "0");
   const content =
     sequence === 0
@@ -20,9 +22,7 @@ function makePost(pageIndex: number, itemIndex: number) {
       : `Publicacao territorial de teste numero ${sequence + 1}`;
   const images =
     sequence === 1
-      ? [
-          `storage://post_images/${PROFILE_ID}/posts/1720950000000-AbCdEfGhIjKlMnOp.jpg`,
-        ]
+      ? [`storage://media-assets/${PROFILE_ID}/post_image/v1/${ASSET_ID}.jpg`]
       : [];
 
   return {
@@ -86,8 +86,7 @@ test.describe("community feed resilience", () => {
       feedLimits.push(requestedLimit);
       const pageIndex = feedRequestCount;
       feedRequestCount += 1;
-      const rowCount =
-        pageIndex < FULL_PAGES ? PAGE_SIZE_WITH_SENTINEL : 8;
+      const rowCount = pageIndex < FULL_PAGES ? PAGE_SIZE_WITH_SENTINEL : 8;
       const rows = Array.from({ length: rowCount }, (_, index) =>
         makePost(pageIndex, index),
       );
@@ -100,16 +99,19 @@ test.describe("community feed resilience", () => {
       });
     });
 
-    await page.route("**/storage/v1/object/public/post_images/**", async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: "image/jpeg",
-        body: Buffer.from(
-          "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////2wBDAf//////////////////////////////////////////////////////////////////////////////////////wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAf/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIQAxAAAAH/AP/EABQQAQAAAAAAAAAAAAAAAAAAABD/2gAIAQEAAQUCf//EABQRAQAAAAAAAAAAAAAAAAAAABD/2gAIAQMBAT8Bf//EABQRAQAAAAAAAAAAAAAAAAAAABD/2gAIAQIBAT8Bf//EABQQAQAAAAAAAAAAAAAAAAAAABD/2gAIAQEABj8Cf//Z",
-          "base64",
-        ),
-      });
-    });
+    await page.route(
+      "**/storage/v1/object/public/media-assets/**",
+      async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: "image/jpeg",
+          body: Buffer.from(
+            "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////2wBDAf//////////////////////////////////////////////////////////////////////////////////////wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAf/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIQAxAAAAH/AP/EABQQAQAAAAAAAAAAAAAAAAAAABD/2gAIAQEAAQUCf//EABQRAQAAAAAAAAAAAAAAAAAAABD/2gAIAQMBAT8Bf//EABQRAQAAAAAAAAAAAAAAAAAAABD/2gAIAQIBAT8Bf//EABQQAQAAAAAAAAAAAAAAAAAAABD/2gAIAQEABj8Cf//Z",
+            "base64",
+          ),
+        });
+      },
+    );
 
     await openPublicRoute(page, COMMUNITY_ROUTE, {
       waitUntil: "domcontentloaded",
@@ -125,27 +127,36 @@ test.describe("community feed resilience", () => {
     await expect
       .poll(() =>
         page.evaluate(
-          () =>
-            (window as Window & { __postXss?: number }).__postXss,
+          () => (window as Window & { __postXss?: number }).__postXss,
         ),
       )
       .toBeUndefined();
 
     const canonicalImage = feedPosts
-      .filter({ has: page.locator('img[src*="/storage/v1/object/public/post_images/"]') })
-      .locator('img[src*="/storage/v1/object/public/post_images/"]')
+      .filter({
+        has: page.locator(
+          'img[src*="/storage/v1/object/public/media-assets/"]',
+        ),
+      })
+      .locator('img[src*="/storage/v1/object/public/media-assets/"]')
       .first();
     await expect(canonicalImage).toHaveAttribute("loading", "lazy");
     await expect(canonicalImage).toHaveAttribute("decoding", "async");
     await expect(canonicalImage).toHaveAttribute(
       "src",
       new RegExp(
-        `/storage/v1/object/public/post_images/${PROFILE_ID}/posts/`,
+        `/storage/v1/object/public/media-assets/${PROFILE_ID}/post_image/v1/`,
       ),
     );
 
-    for (let expectedPages = 2; expectedPages <= FULL_PAGES + 1; expectedPages += 1) {
-      const loadMoreButton = page.getByRole("button", { name: "Carregar mais" });
+    for (
+      let expectedPages = 2;
+      expectedPages <= FULL_PAGES + 1;
+      expectedPages += 1
+    ) {
+      const loadMoreButton = page.getByRole("button", {
+        name: "Carregar mais",
+      });
       await loadMoreButton.scrollIntoViewIfNeeded();
       await loadMoreButton.click();
       const expectedCount =

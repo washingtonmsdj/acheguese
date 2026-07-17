@@ -1547,9 +1547,8 @@
       "resource": "<dynamic>",
       "access": "read",
       "path": "src/core/media/services/MediaService.ts",
-      "maxCalls": 2,
+      "maxCalls": 1,
       "details": [
-        "MEDIA_STORAGE_BUCKETS.POST_IMAGES",
         "options.bucket"
       ]
     },
@@ -1558,9 +1557,8 @@
       "resource": "<dynamic>",
       "access": "write",
       "path": "src/core/media/services/MediaService.ts",
-      "maxCalls": 4,
+      "maxCalls": 3,
       "details": [
-        "MEDIA_STORAGE_BUCKETS.POST_IMAGES",
         "MEDIA_STORAGE_BUCKETS.VERIFICATION_DOCUMENTS",
         "bucket",
         "options.bucket"

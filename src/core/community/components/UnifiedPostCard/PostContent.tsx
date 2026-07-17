@@ -19,7 +19,7 @@ import {
   getOpportunityUrgencyLabel,
 } from "@/core/work-opportunities";
 import { normalizePublicPostContent } from "@/core/posts/utils/publicPostContent";
-import { resolvePostImageSource } from "@/core/media/references/postImageReference";
+import { resolveMediaAssetSource } from "@/core/media";
 
 const civicTypeConfigMap = new Map(
   Object.entries(CIVIC_PROBLEM_TYPES) as Array<
@@ -27,10 +27,14 @@ const civicTypeConfigMap = new Map(
   >,
 );
 const statusConfigMap = new Map(
-  Object.entries(STATUS_CONFIG) as Array<[PostStatus, (typeof STATUS_CONFIG)[PostStatus]]>,
+  Object.entries(STATUS_CONFIG) as Array<
+    [PostStatus, (typeof STATUS_CONFIG)[PostStatus]]
+  >,
 );
 const urgencyConfigMap = new Map(
-  Object.entries(URGENCY_CONFIG) as Array<[PostUrgency, (typeof URGENCY_CONFIG)[PostUrgency]]>,
+  Object.entries(URGENCY_CONFIG) as Array<
+    [PostUrgency, (typeof URGENCY_CONFIG)[PostUrgency]]
+  >,
 );
 
 interface PostContentProps {
@@ -48,10 +52,24 @@ interface PostContentProps {
 }
 
 export const PostContent = memo<PostContentProps>(
-  ({ postType, content, image, civicType, status, urgency, contentIntent, displayFormat, contentPayload, tags, onTagClick }) => {
+  ({
+    postType,
+    content,
+    image,
+    civicType,
+    status,
+    urgency,
+    contentIntent,
+    displayFormat,
+    contentPayload,
+    tags,
+    onTagClick,
+  }) => {
     const displayContent = normalizePublicPostContent(content);
-    const resolvedImage = resolvePostImageSource(image);
-    const civicTypeConfig = civicType ? civicTypeConfigMap.get(civicType) : undefined;
+    const resolvedImage = resolveMediaAssetSource(image, "post_image");
+    const civicTypeConfig = civicType
+      ? civicTypeConfigMap.get(civicType)
+      : undefined;
     const statusConfig = status ? statusConfigMap.get(status) : undefined;
     const urgencyConfig = urgency ? urgencyConfigMap.get(urgency) : undefined;
     const opportunityPayload =
@@ -98,15 +116,18 @@ export const PostContent = memo<PostContentProps>(
             <div className="mt-2 space-y-1.5 text-sm text-emerald-100/85">
               <p className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-emerald-300" />
-                {opportunityPayload.territory_name || COMMUNITY_POST_CARD_COPY.localTerritoryFallback}
+                {opportunityPayload.territory_name ||
+                  COMMUNITY_POST_CARD_COPY.localTerritoryFallback}
               </p>
               <p className="flex items-center gap-2">
                 <Clock3 className="h-4 w-4 text-emerald-300" />
-                {getOpportunityTypeLabel(opportunityPayload.type)} - {getOpportunityUrgencyLabel(opportunityPayload.urgency)}
+                {getOpportunityTypeLabel(opportunityPayload.type)} -{" "}
+                {getOpportunityUrgencyLabel(opportunityPayload.urgency)}
               </p>
               {opportunityPayload.availability_notes && (
                 <p className="text-xs text-emerald-100/70">
-                  {COMMUNITY_POST_CARD_COPY.availabilityPrefix} {opportunityPayload.availability_notes}
+                  {COMMUNITY_POST_CARD_COPY.availabilityPrefix}{" "}
+                  {opportunityPayload.availability_notes}
                 </p>
               )}
             </div>
@@ -131,35 +152,40 @@ export const PostContent = memo<PostContentProps>(
           </div>
         )}
 
-        {(postType as string) === "civic_report" && (statusConfig || urgencyConfig) && (
-          <div className="flex items-center gap-2 mb-3">
-            {statusConfig && (
-              <Badge
-                className="border-0 text-xs"
-                style={{
-                  backgroundColor: `${statusConfig.color}20`,
-                  color: statusConfig.color,
-                }}
-              >
-                {statusConfig.label}
-              </Badge>
-            )}
-            {urgencyConfig && (
-              <Badge
-                className="border-0 text-xs"
-                style={{
-                  backgroundColor: `${urgencyConfig.color}20`,
-                  color: urgencyConfig.color,
-                }}
-              >
-                {COMMUNITY_POST_CARD_COPY.urgencyPrefix} {urgencyConfig.label}
-              </Badge>
-            )}
-          </div>
-        )}
+        {(postType as string) === "civic_report" &&
+          (statusConfig || urgencyConfig) && (
+            <div className="flex items-center gap-2 mb-3">
+              {statusConfig && (
+                <Badge
+                  className="border-0 text-xs"
+                  style={{
+                    backgroundColor: `${statusConfig.color}20`,
+                    color: statusConfig.color,
+                  }}
+                >
+                  {statusConfig.label}
+                </Badge>
+              )}
+              {urgencyConfig && (
+                <Badge
+                  className="border-0 text-xs"
+                  style={{
+                    backgroundColor: `${urgencyConfig.color}20`,
+                    color: urgencyConfig.color,
+                  }}
+                >
+                  {COMMUNITY_POST_CARD_COPY.urgencyPrefix} {urgencyConfig.label}
+                </Badge>
+              )}
+            </div>
+          )}
 
         {tags && tags.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-3" role="list" aria-label="Tags do post">
+          <div
+            className="flex flex-wrap gap-1 mt-3"
+            role="list"
+            aria-label="Tags do post"
+          >
             {tags.map((tag, index) => (
               <button
                 key={index}

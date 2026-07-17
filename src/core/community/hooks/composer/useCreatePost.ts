@@ -2,11 +2,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSessionContext } from "@/core/session";
 import type { PostType } from "@/core/posts/types";
 import { toast } from "sonner";
-import {
-  sanitizeContent,
-  validatePostContent,
-} from "@/shared/utils/textUtils";
-import { isPostImageReference } from "@/core/media/references/postImageReference";
+import { sanitizeContent, validatePostContent } from "@/shared/utils/textUtils";
+import { isMediaAssetReferenceForPreset } from "@/core/media";
 import { communityFeedQueryKeys } from "@/core/feed";
 import { PostsFacade } from "@/core/posts/services"; // ✅ GATE 4A FASE 13 - SSOT v2.0
 
@@ -53,13 +50,15 @@ export function useCreatePost() {
       // Requirement 29.2: Sanitizar conteúdo para prevenir XSS
       const sanitizedContent = sanitizeContent(data.content);
 
-      const canonicalImages = data.images?.filter(isPostImageReference) ?? [];
+      const canonicalImages =
+        data.images?.filter((image) =>
+          isMediaAssetReferenceForPreset(image, "post_image"),
+        ) ?? [];
       if (canonicalImages.length !== (data.images?.length ?? 0)) {
         throw new Error("Referencia de imagem de post invalida");
       }
 
-      const resolvedLocationId =
-        activeProfile.locationId ?? null;
+      const resolvedLocationId = activeProfile.locationId ?? null;
       if (!resolvedLocationId) {
         throw new Error("Configure seu bairro no perfil antes de publicar");
       }

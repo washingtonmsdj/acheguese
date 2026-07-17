@@ -59,13 +59,15 @@ Versao documental: 4.5
   Community apenas filtra por `communityId`, territorio e vinculos ativos.
   Escopo incompleto falha fechado, limites ficam em `searchConfig.ts` e a
   telemetria nunca registra o texto pesquisado. Contrato em `SEARCH_SSOT.md`.
-- Review e Menu persistem somente `MediaAssetRef` no formato
+- Dominios de imagem publica, incluindo Posts e Achados/Perdidos, persistem
+  somente `MediaAssetRef` no formato
   `storage://media-assets/{profile}/{preset}/v{version}/{asset}.jpg`. Upload
   passa por `media-assets`; browser nao escolhe bucket/path, nao escreve
   metadata e nao envia URL externa. MIME por bytes, dimensao, Profile owner,
   quota, link e cleanup sao server-owned. `media-assets` e apenas para imagens
   publicas; documentos privados permanecem fora. Contrato em
-  `MEDIA_ASSET_SSOT.md`; demais buckets anteriores estao em CP-016.
+  `MEDIA_ASSET_SSOT.md`. Buckets privados de documentos e evidencias possuem
+  contratos separados e nao podem ser usados para descoberta publica.
 - Em Safety, o navegador nunca escreve `safety_audit_log` ou
   `emergency_delivery_log`. Alertas, incidentes, evidencias e shares validam o
   perfil/viagem por RLS; status, revogacao, notificacao e auditoria sao

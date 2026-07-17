@@ -8,37 +8,51 @@ const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 describe("community post and feed security contracts", () => {
   it("persists only canonical post image references", () => {
     const migration = read(
-      "supabase/migrations/20260714100000_harden_community_post_content_media.sql",
+      "supabase/migrations/20260717130000_consolidate_community_post_media_assets.sql",
     );
-    const references = read(
-      "src/core/media/references/postImageReference.ts",
-    );
+    const references = read("src/core/media/references/mediaAssetReference.ts");
     const postRuntime = read("src/core/posts/services/post.service.runtime.ts");
     const schema = read("src/core/posts/schemas/postSchemas.ts");
 
-    expect(migration).toContain("storage://post_images/");
+    expect(migration).toContain("private.require_attachable_owned_media_asset");
+    expect(migration).toContain("private.sync_post_media_asset_links");
     expect(migration).toContain("legacy_post_media_fields_not_supported");
-    expect(migration).toContain("normalize_post_image_reference");
-    expect(migration).not.toMatch(/image\.value\s*#>>\s*'\{\}'\s*!~\*\s*'\^https:\/\/'/);
-    expect(references).toContain("resolvePostImageReference");
-    expect(references).toContain("PUBLIC_SUPABASE_CONFIG.url");
-    expect(postRuntime).toContain("toPostImageReference");
-    expect(postRuntime).not.toContain("images: uploads.map((upload) => upload.url)");
+    expect(migration).toContain(
+      "DROP POLICY IF EXISTS post_images_owner_insert",
+    );
+    expect(migration).toContain(
+      "DROP FUNCTION IF EXISTS private.can_upload_owned_post_image",
+    );
+    expect(references).toContain("resolveMediaAssetReference");
+    expect(references).toContain("isMediaAssetReferenceForPreset");
+    expect(postRuntime).toContain("uploadMediaAsset(");
+    expect(postRuntime).toContain("references.push(asset.reference)");
+    expect(postRuntime).not.toContain("uploadPostImage(");
+    expect(postRuntime).not.toContain("deleteFromBucket(");
     expect(schema).toContain("postImageReferenceSchema");
+    expect(schema).toContain(
+      'isMediaAssetReferenceForPreset(value, "post_image")',
+    );
   });
 
   it("bounds storage and structured payload consumption in the database", () => {
-    const migration = read(
+    const contentMigration = read(
       "supabase/migrations/20260714100000_harden_community_post_content_media.sql",
     );
+    const mediaMigration = read(
+      "supabase/migrations/20260715113000_consolidate_public_media_asset_domains.sql",
+    );
 
-    expect(migration).toContain("private.can_upload_owned_post_image");
-    expect(migration).toContain("pg_advisory_xact_lock");
-    expect(migration).toContain("v_daily_count < 20");
-    expect(migration).toContain("v_total_count < 200");
-    expect(migration).toContain("pg_column_size(NEW.content_payload) > 16384");
-    expect(migration).toContain("cardinality(NEW.distribution_channels), 0) > 8");
-    expect(migration).toContain("invalid_post_structured_payload");
+    expect(mediaMigration).toContain("private.media_preset_daily_limit");
+    expect(mediaMigration).toContain("WHEN 'post_image' THEN 20");
+    expect(mediaMigration).toContain("pg_advisory_xact_lock");
+    expect(contentMigration).toContain(
+      "pg_column_size(NEW.content_payload) > 16384",
+    );
+    expect(contentMigration).toContain(
+      "cardinality(NEW.distribution_channels), 0) > 8",
+    );
+    expect(contentMigration).toContain("invalid_post_structured_payload");
   });
 
   it("keeps feed pages bounded and skips offscreen card rendering work", () => {

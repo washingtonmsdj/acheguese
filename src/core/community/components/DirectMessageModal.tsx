@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 
 import type { CommunityDirectMessage } from "@/core/messaging";
-import { resolvePostImageSource } from "@/core/media/references/postImageReference";
+import { resolveMediaAssetSource } from "@/core/media";
 import type { DirectMessageRecipientView } from "@/core/profiles/views/DirectMessageRecipientView";
 import { useSessionContext } from "@/core/session";
 import {
@@ -117,7 +117,10 @@ export function DirectMessageModal({
 }: DirectMessageModalProps) {
   const { activeProfile } = useSessionContext();
   const currentProfileId = activeProfile?.id || fallbackCurrentProfileId || "";
-  const postContextImage = resolvePostImageSource(postContext.imageUrl);
+  const postContextImage = resolveMediaAssetSource(
+    postContext.imageUrl,
+    "post_image",
+  );
   const [newMessage, setNewMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);

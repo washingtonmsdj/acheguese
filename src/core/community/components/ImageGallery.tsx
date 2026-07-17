@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import { logger } from "@/shared/utils/logger";
-import { resolvePostImageSources } from "@/core/media/references/postImageReference";
+import { resolveMediaAssetSources } from "@/core/media";
 /**
  * Galeria de imagens profissional com lightbox
  *
@@ -32,9 +32,12 @@ interface ImageGalleryProps {
   className?: string;
 }
 
-export function ImageGallery({ images: imageReferences, className }: ImageGalleryProps) {
+export function ImageGallery({
+  images: imageReferences,
+  className,
+}: ImageGalleryProps) {
   const images = useMemo(
-    () => resolvePostImageSources(imageReferences),
+    () => resolveMediaAssetSources(imageReferences, "post_image"),
     [imageReferences],
   );
   const [lightboxOpen, setLightboxOpen] = useState(false);

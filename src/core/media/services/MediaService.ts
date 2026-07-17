@@ -63,13 +63,6 @@ export interface UploadMediaAssetOptions {
   focalPointY?: number;
 }
 
-interface UploadPostImageOptions {
-  preset?: "post_image";
-  fit?: "cover" | "contain";
-  focalPointX?: number;
-  focalPointY?: number;
-}
-
 interface UploadToBucketOptions {
   bucket: PublicImageUploadBucket;
   pathPrefix?: string;
@@ -304,69 +297,6 @@ class MediaServiceClass {
       path: parsed.path,
       url,
     };
-  }
-
-  /**
-   * Upload de imagem de post/conteúdo
-   */
-  async uploadPostImage(
-    profileId: string,
-    file: File,
-    options: UploadPostImageOptions = {},
-  ): Promise<UploadResult> {
-    try {
-      this.assertImageFileAllowed(file);
-
-      const preset = options.preset ?? "post_image";
-      let optimizedFile: File;
-      try {
-        optimizedFile = await optimizeImage(file, {
-          ...getImageOptimizePreset(preset),
-          fit: options.fit ?? getImageOptimizePreset(preset).fit,
-          focalPointX:
-            options.focalPointX ?? getImageOptimizePreset(preset).focalPointX,
-          focalPointY:
-            options.focalPointY ?? getImageOptimizePreset(preset).focalPointY,
-        });
-      } catch (error) {
-        logger.warn("Post image decoding failed:", error);
-        throw new MediaError(
-          "Arquivo de imagem invalido",
-          "INVALID_IMAGE_DATA",
-        );
-      }
-      this.assertImageFileAllowed(optimizedFile);
-
-      const timestamp = Date.now();
-      const ext = this.getSafeExtensionFromMime(optimizedFile.type);
-      const path = `${profileId}/posts/${timestamp}-${secureRandomString(16)}.${ext}`;
-
-      // Upload para storage
-      const { error: uploadError } = await supabase.storage
-        .from(MEDIA_STORAGE_BUCKETS.POST_IMAGES)
-        .upload(path, optimizedFile, {
-          contentType: optimizedFile.type,
-        });
-
-      if (uploadError) {
-        logger.error("Error uploading post image:", uploadError);
-        throw new MediaError("Erro ao fazer upload da imagem", "UPLOAD_FAILED");
-      }
-
-      // Obter URL pública
-      const { data: urlData } = supabase.storage
-        .from(MEDIA_STORAGE_BUCKETS.POST_IMAGES)
-        .getPublicUrl(path);
-
-      return { url: urlData.publicUrl, path };
-    } catch (error) {
-      if (error instanceof MediaError) throw error;
-      logger.error("Unexpected error uploading post image:", error);
-      throw new MediaError(
-        "Erro inesperado ao fazer upload",
-        "UNEXPECTED_ERROR",
-      );
-    }
   }
 
   /**

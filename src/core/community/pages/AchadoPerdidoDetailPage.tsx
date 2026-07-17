@@ -33,6 +33,8 @@ import { motion } from "framer-motion";
 import { ProfileService } from "@/core/profiles/services/ProfileService";
 import { getLostFoundCategoryLabel } from "@/shared/validation/schemas/lostfound.schema";
 import type { LostFoundComment } from "@/core/community-lost-found/services";
+import { SafeImage } from "@/shared/components/security/SafeImage";
+import { resolveMediaAssetSource } from "@/core/media";
 type CommentProfileSummary = {
   id: string;
   displayName: string;
@@ -113,7 +115,7 @@ export default function AchadoPerdidoDetailPage() {
       category: data.categoria || "",
       titulo: data.titulo,
       description: data.descricao || "",
-      photo_url: data.imagens?.[0] || "",
+      photo_url: resolveMediaAssetSource(data.imagens?.[0], "post_image") ?? "",
       publicNeighborhood: "",
       localizacao_aprox: data.local_perdido || "",
       latitude: null,
@@ -258,7 +260,7 @@ export default function AchadoPerdidoDetailPage() {
         </div>
 
         {post.photo_url ? (
-          <img
+          <SafeImage
             src={post.photo_url}
             alt={post.titulo}
             className="w-full h-56 object-cover"

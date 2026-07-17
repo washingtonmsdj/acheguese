@@ -275,9 +275,10 @@ pesquisado. Contrato completo em `SEARCH_SSOT.md`.
 bucket `media-assets`, metadata, links, presets v1 e cleanup agendado formam o
 contrato canonico para imagens publicas aprovadas.
 
-**Consolidado:** Review e Item de cardapio nao usam mais `uploadPostImage` nem
-aceitam URL arbitraria. O broker autentica, valida JPEG/dimensao/owner, remove
-metadata, gera path, reserva quota atomica e retorna referencia `storage://`.
+**Consolidado:** Avatar, Business, Classified, Professional, Site, Review,
+Item de cardapio, Post e Achados/Perdidos usam `MediaAssetRef` e nao aceitam URL
+arbitraria. O broker autentica, valida JPEG/dimensao/owner, remove metadata,
+gera path, reserva quota atomica e retorna referencia `storage://`.
 
 **Permanece no dominio:** quem anexa, quantidade, finalidade, retencao e
 associacao ao agregado.
@@ -287,10 +288,9 @@ quota, lifecycle, resolucao de CDN e cleanup. O dominio escolhe preset
 allowlisted; UI nao escolhe bucket/path arbitrario. Contrato completo em
 `MEDIA_ASSET_SSOT.md`.
 
-**Residual:** uploads anteriores de Avatar, Business, Classified,
-Professional e Site ainda nao usam metadata/lifecycle de MediaAsset. CP-016
-impede novos consumidores e rastreia a migracao incremental sem misturar
-documentos privados com o bucket publico.
+**Residual:** documentos de verificacao, evidencias sensiveis e virtual try-on
+mantem contratos privados proprios. Eles nao podem reutilizar o bucket publico
+nem o lifecycle de descoberta do MediaAsset.
 
 ### 7.7 Autorizacao e permissoes
 

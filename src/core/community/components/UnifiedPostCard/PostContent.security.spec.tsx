@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { PostContent } from "./PostContent";
 
 const PROFILE_ID = "2f10a5d2-2fd8-4a52-909c-4f8a5f6d1337";
+const ASSET_ID = "3410a5d2-2fd8-4a52-909c-4f8a5f6d1337";
 
 describe("UnifiedPostCard PostContent security", () => {
   it("renders hostile markup as text without executable DOM", () => {
@@ -16,7 +17,9 @@ describe("UnifiedPostCard PostContent security", () => {
     expect(container.querySelector("script")).toBeNull();
     expect(container.querySelector("img")).toBeNull();
     expect(screen.getByText(/window.__postXss=2/)).toBeInTheDocument();
-    expect((window as Window & { __postXss?: number }).__postXss).toBeUndefined();
+    expect(
+      (window as Window & { __postXss?: number }).__postXss,
+    ).toBeUndefined();
   });
 
   it("drops external tracking images and lazily renders canonical media", () => {
@@ -34,7 +37,7 @@ describe("UnifiedPostCard PostContent security", () => {
       <PostContent
         postType="discussao"
         content="Conteudo seguro para a comunidade"
-        image={`storage://post_images/${PROFILE_ID}/posts/1720950000000-AbCdEfGhIjKlMnOp.jpg`}
+        image={`storage://media-assets/${PROFILE_ID}/post_image/v1/${ASSET_ID}.jpg`}
       />,
     );
 
@@ -43,7 +46,7 @@ describe("UnifiedPostCard PostContent security", () => {
     expect(image).toHaveAttribute("loading", "lazy");
     expect(image).toHaveAttribute("decoding", "async");
     expect(image?.getAttribute("src")).toContain(
-      `/storage/v1/object/public/post_images/${PROFILE_ID}/posts/`,
+      `/storage/v1/object/public/media-assets/${PROFILE_ID}/post_image/v1/`,
     );
   });
 });

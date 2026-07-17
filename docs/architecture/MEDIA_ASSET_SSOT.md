@@ -82,7 +82,13 @@ nao escreve `media_assets`, `media_asset_links` ou `storage.objects`.
 O banco conserva `storage://`. O resolver transforma a referencia em URL
 publica apenas no read model/UI. URL externa arbitraria e path traversal falham
 fechado. Paths relativos sao aceitos somente para fixtures controladas pelo
-codigo e nunca sao gravados pelos novos fluxos de Review/Menu.
+codigo e nunca sao gravados por fluxos de dominio.
+
+Posts e Achados/Perdidos usam o preset `post_image`. Cada referencia e validada
+contra owner, preset, versao, estado ativo e anexo unico; os triggers mantem os
+links `post` e `lost_found_post`. O navegador nao possui writer direto em bucket
+publico e uma falha de persistencia deixa o asset para o cleanup limitado de
+orfaos, sem conceder delete de Storage ao cliente.
 
 ## 6. Lifecycle e cleanup
 
@@ -140,6 +146,25 @@ sem URL. Os SQLs de evidencia sao:
 - `tests/security/media-assets-cp016-preflight-remote-audit.sql`;
 - `tests/security/media-assets-cp016-legacy-shape-remote-audit.sql`;
 - `tests/security/media-assets-cp016-cutover-remote-audit.sql`.
+
+## 9. Corte de Posts e Achados/Perdidos
+
+Concluido no remoto em 2026-07-17 pela migration
+`20260717130000_consolidate_community_post_media_assets.sql`:
+
+- `posts.images` e `lost_found_posts.imagens` aceitam somente referencias do
+  preset `post_image` pertencentes ao autor e em estado `active`;
+- triggers sincronizam `media_asset_links` com os agregados `post` e
+  `lost_found_post`;
+- o writer e o cleanup direto do navegador foram removidos;
+- o bucket vazio `post_images` foi removido pela API oficial do Storage;
+- auditoria remota: zero referencia invalida, link ausente, bucket, policy ou
+  funcao legada;
+- probe anonimo: insert de Post bloqueado com `42501` e upload direto em
+  `media-assets` bloqueado com `403`.
+
+Evidencia somente leitura:
+`tests/security/community-media-assets-cutover-remote-audit.sql`.
 
 Documentos privados, evidencias de seguranca e virtual try-on continuam fora
 deste SSOT e preservam buckets e politicas proprios. `uploadToBucket` nao pode

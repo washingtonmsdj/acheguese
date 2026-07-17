@@ -45,10 +45,10 @@ const transactionalCommunityNotificationMigration = readFileSync(
   ),
   "utf8",
 );
-const postMediaMigration = readFileSync(
+const communityMediaAssetMigration = readFileSync(
   join(
     root,
-    "supabase/migrations/20260713120000_harden_community_post_media_storage.sql",
+    "supabase/migrations/20260717130000_consolidate_community_post_media_assets.sql",
   ),
   "utf8",
 );
@@ -542,20 +542,31 @@ describe("community social production hardening", () => {
     ).toBe(false);
   });
 
-  it("owns post media by active profile and never persists blob previews", () => {
-    expect(postMediaMigration).toContain("'post_images'");
-    expect(postMediaMigration).toContain("private.auth_owns_active_profile");
-    expect(postMediaMigration).toContain("file_size_limit");
-    expect(postMediaMigration).toContain("ARRAY['image/jpeg']");
-    expect(storageBuckets).toContain('POST_IMAGES: "post_images"');
-    expect(storageBuckets).not.toContain('POST_IMAGES: "post-images"');
-    expect(storageBuckets).not.toContain('POSTS: "posts"');
+  it("owns post media through MediaAsset and never persists blob previews", () => {
+    expect(communityMediaAssetMigration).toContain(
+      "private.require_attachable_owned_media_asset",
+    );
+    expect(communityMediaAssetMigration).toContain(
+      "private.sync_post_media_asset_links",
+    );
+    expect(communityMediaAssetMigration).toContain(
+      "private.sync_lost_found_media_asset_links",
+    );
+    expect(communityMediaAssetMigration).toContain(
+      "DROP POLICY IF EXISTS post_images_owner_insert",
+    );
+    expect(communityMediaAssetMigration).toContain(
+      "DROP FUNCTION IF EXISTS private.can_upload_owned_post_image",
+    );
+    expect(storageBuckets).not.toContain("POST_IMAGES");
     expect(createPostForm).toContain("imageFiles");
     expect(createPostForm).toContain("URL.revokeObjectURL");
     expect(createPostModal).toContain("createPostWithImages");
     expect(createPostModal).not.toContain("images: form.images");
-    expect(postRuntime).toContain("rollbackPostImageUploads");
-    expect(postRuntime).toContain("deleteFromBucket");
+    expect(postRuntime).toContain("uploadMediaAsset(");
+    expect(postRuntime).toContain("references.push(asset.reference)");
+    expect(postRuntime).not.toContain("uploadPostImage(");
+    expect(postRuntime).not.toContain("deleteFromBucket(");
   });
 
   it("protects Local Community membership roles and audits every transition", () => {

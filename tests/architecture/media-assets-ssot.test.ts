@@ -254,6 +254,7 @@ describe("MediaAsset SSOT", () => {
   it("does not reintroduce public-domain upload wrappers outside MediaAsset", () => {
     const mediaService = read("src/core/media/services/MediaService.ts");
     const authService = read("src/core/auth/services/AuthService.ts");
+    const storageBuckets = read("src/core/media/config/storageBuckets.ts");
 
     expect(mediaService).not.toMatch(
       /async (?:uploadAvatar|uploadProfessionalImage|uploadBusinessImage)\(/,
@@ -262,8 +263,32 @@ describe("MediaAsset SSOT", () => {
       /async (?:uploadMultipleImages|deleteFile)\(/,
     );
     expect(mediaService).not.toMatch(/\n\s*getPublicUrl\s*\(/);
+    expect(mediaService).not.toContain("uploadPostImage(");
+    expect(storageBuckets).not.toContain("POST_IMAGES");
     expect(authService).not.toContain("deleteStorageImage");
     expect(authService).not.toContain("static async uploadImage(");
+  });
+  it("cuts Community media over without exposing remote row data", () => {
+    const cutover = read(
+      "supabase/migrations/20260717130000_consolidate_community_post_media_assets.sql",
+    );
+    const audit = read(
+      "tests/security/community-media-assets-cutover-remote-audit.sql",
+    );
+
+    expect(cutover).toContain(
+      "community_media_asset_cutover_requires_backfill",
+    );
+    expect(cutover).toContain("DROP POLICY IF EXISTS post_images_owner_insert");
+    expect(cutover).not.toContain("DELETE FROM storage.buckets");
+    expect(cutover).toContain("private.sync_post_media_asset_links");
+    expect(cutover).toContain("private.sync_lost_found_media_asset_links");
+    expect(audit).toContain("Returns aggregate counts only");
+    expect(audit).toContain("invalid_post_references");
+    expect(audit).toContain("legacy_bucket_count");
+    expect(audit).not.toMatch(
+      /^\s*(?:INSERT|UPDATE|DELETE|ALTER|DROP|CREATE)\b/gim,
+    );
   });
   it("renders migrated business and classified media through SafeImage", () => {
     const migratedReaders = [
