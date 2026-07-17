@@ -3,9 +3,8 @@
  *
  * Implementação real de ICoverageRepository usando Supabase.
  *
- * STATUS: implementação canônica; depende da migration de service_areas no ambiente.
- *
- * Migration necessária: src/core/coverage/sql/001_coverage_table.sql (a criar)
+ * Mutations use the server-owned coverage commands; browser writes to the
+ * canonical table are intentionally unavailable.
  */
 
 import { supabase } from '@/integrations/supabase';
@@ -33,13 +32,24 @@ function rowToServiceArea(row: Record<string, unknown>): ServiceArea {
 }
 
 export class CoverageRepositorySupabase implements ICoverageRepository {
-  async createMany(
-    coverages: Omit<ServiceArea, 'id' | 'created_at' | 'updated_at'>[]
+  async replaceByEntity(
+    entity_type: EntityType,
+    entity_id: string,
+    coverages: Omit<
+      ServiceArea,
+      'id' | 'entity_type' | 'entity_id' | 'created_at' | 'updated_at'
+    >[],
   ): Promise<ServiceArea[]> {
-    const { data, error } = await supabase
-      .from(TABLE)
-      .insert(coverages)
-      .select();
+    const { data, error } = await supabase.rpc('replace_entity_coverage', {
+      p_entity_type: entity_type,
+      p_entity_id: entity_id,
+      p_coverages: coverages.map((coverage) => ({
+        coverage_type: coverage.coverage_type,
+        location_id: coverage.location_id,
+        radius_km: coverage.radius_km,
+        is_primary: coverage.is_primary,
+      })),
+    });
 
     if (error) throw new CoverageError(CoverageErrorCode.DATABASE_ERROR, error.message);
     return (data ?? []).map(rowToServiceArea);
@@ -115,26 +125,20 @@ export class CoverageRepositorySupabase implements ICoverageRepository {
     entity_id: string,
     coverage_id?: string
   ): Promise<number> {
-    let query = supabase
-      .from(TABLE)
-      .delete()
-      .eq('entity_type', entity_type)
-      .eq('entity_id', entity_id);
-
-    if (coverage_id) {
-      query = query.eq('id', coverage_id);
-    }
-
-    const { error, count } = await query;
+    const { data, error } = await supabase.rpc('remove_entity_coverage', {
+      p_entity_type: entity_type,
+      p_entity_id: entity_id,
+      p_coverage_id: coverage_id ?? null,
+    });
     if (error) throw new CoverageError(CoverageErrorCode.DATABASE_ERROR, error.message);
-    return count ?? 0;
+    return data ?? 0;
   }
 
   async updateStatus(coverage_id: string, status: CoverageStatus): Promise<void> {
-    const { error } = await supabase
-      .from(TABLE)
-      .update({ status, updated_at: new Date().toISOString() })
-      .eq('id', coverage_id);
+    const { error } = await supabase.rpc('update_entity_coverage_status', {
+      p_coverage_id: coverage_id,
+      p_status: status,
+    });
 
     if (error) throw new CoverageError(CoverageErrorCode.DATABASE_ERROR, error.message);
   }

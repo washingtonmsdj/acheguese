@@ -793,7 +793,7 @@ export const SECURITY_AUDIT_LOG = {
     'FIX: accept_ride_atomic agora exige driver_profile_id pertencente ao usuario/admin/service_role',
     'FIX: mark_best_answer agora exige autor da pergunta/admin/service_role',
     'FIX: increment_alert_edit_count agora exige dono do alerta/admin/service_role',
-    'FIX: expire_stale_work_opportunities ignora p_now de clientes e aceita override apenas service_role',
+    'FIX: expire_stale_work_opportunities e executavel somente por service_role',
     'FIX: validate:migrations bloqueia RPC mutante SECURITY DEFINER exposto sem guarda de auth',
     // v2.15.0 - Security Authority release gate review
     'AUDIT: revisao de CSP, headers, dominios, vercel.json e hardcodes de seguranca sem erros; security:config:validate integrado ao verify:deploy',

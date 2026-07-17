@@ -7,13 +7,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui
 import { Alert, AlertDescription, AlertTitle } from "@/shared/components/ui/alert";
 import { useAnalyticsAccess } from "@/core/analytics/hooks/useAnalyticsAccess";
 import { workOpportunityCirculationAnalyticsService } from "@/core/work-opportunities";
-import { workOpportunitiesService } from "@/core/work-opportunities/services/WorkOpportunitiesService";
 import type { OpportunityOpenSource, WorkOpportunityType } from "@/core/work-opportunities";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Input } from "@/shared/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
-import { Button } from "@/shared/components/ui/button";
-import { toast } from "sonner";
 
 function Metric({ label, value }: { label: string; value: string | number }) {
   return (
@@ -34,7 +31,6 @@ function CirculationDashboardSection() {
   const [opportunityType, setOpportunityType] = React.useState<"all" | WorkOpportunityType>("all");
   const [professionalCategory, setProfessionalCategory] = React.useState("");
   const [territoryLocationId, setTerritoryLocationId] = React.useState("");
-  const [expiringNow, setExpiringNow] = React.useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: [
@@ -124,21 +120,6 @@ function CirculationDashboardSection() {
             onChange={(event) => setTerritoryLocationId(event.target.value)}
             placeholder="Território ID"
           />
-          <Button
-            variant="outline"
-            disabled={expiringNow}
-            onClick={async () => {
-              setExpiringNow(true);
-              try {
-                const result = await workOpportunitiesService.expireStaleOpportunities();
-                toast.success(`Varredura concluida: ${result.expiredCount} oportunidades expiradas.`);
-              } finally {
-                setExpiringNow(false);
-              }
-            }}
-          >
-            {expiringNow ? "Executando..." : "Executar expiracao agora"}
-          </Button>
         </CardContent>
       </Card>
 

@@ -535,11 +535,19 @@ Nao usar:
 
 Continuar **Fase 6 - Remocao de compatibilidade e escala**.
 
-Proxima ordem: classificar os 46 resultados do lint remoto entre funcoes de
-extensao e funcoes da aplicacao, provar callsites e remover ou corrigir as que
-referenciam schema antigo. Depois continuar a busca comprovada por aliases,
-facades, tipos e allowlists sem consumidores, removendo apenas depois de migrar
-ou provar a ausencia de callsites. Documentos de verificacao, evidencias
+Checkpoint concluido em 2026-07-17: os 46 registros do lint remoto foram
+classificados por owner. As migrations `20260717140000`, `20260717141000` e
+`20260717142000` removeram funcoes sem callers, corrigiram todas as funcoes da
+aplicacao e consolidaram Coverage. O lint agora reporta zero achados da
+aplicacao; restam somente 12 nomes pertencentes ao PostGIS, registrados em
+`docs/audits/SUPABASE_REMOTE_FUNCTION_LINT_2026-07-17.md`. A auditoria remota
+de Coverage retornou quatro contagens zero, e o inventario foi regenerado.
+
+Proxima ordem: continuar a busca comprovada por aliases, facades, tipos e
+allowlists sem consumidores, removendo apenas depois de migrar ou provar a
+ausencia de callsites. Depois revisar o acionamento operacional de rotinas
+`service_role` para garantir que nenhuma UI tente executa-las diretamente.
+Documentos de verificacao, evidencias
 privadas e try-on permanecem em contratos separados e nao devem ser forcados
 para o MediaAsset publico. Por fim, preparar staging explicitamente autorizado
 para carga, p50/p95/p99, backup/restore e rollback. A aprovacao de

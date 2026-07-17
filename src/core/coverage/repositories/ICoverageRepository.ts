@@ -10,7 +10,14 @@ export interface ICoverageRepository {
   /**
    * Cria múltiplas coberturas (transação)
    */
-  createMany(coverages: Omit<ServiceArea, 'id' | 'created_at' | 'updated_at'>[]): Promise<ServiceArea[]>;
+  replaceByEntity(
+    entity_type: EntityType,
+    entity_id: string,
+    coverages: Omit<
+      ServiceArea,
+      'id' | 'entity_type' | 'entity_id' | 'created_at' | 'updated_at'
+    >[],
+  ): Promise<ServiceArea[]>;
 
   /**
    * Busca coberturas de uma entidade

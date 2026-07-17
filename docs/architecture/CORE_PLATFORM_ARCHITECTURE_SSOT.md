@@ -86,6 +86,7 @@ Supabase (RLS, functions, storage, realtime)
 | Identidade    | User                    | `auth.users` + `core/auth`/`core/session`             | Conta autenticada; nao e autor social               |
 | Identidade    | Profile                 | `profiles` + `core/profiles`                          | Identidade de atuacao; um User pode ter N Profiles  |
 | Territorio    | Location                | `locations` + `core/location`                         | Labels publicos sao derivados                       |
+| Territorio    | ServiceArea             | `service_areas` + `core/coverage`                     | Cobertura polimorfica com comandos autorizados      |
 | Comunidade    | TerritoryCommunity      | `territory_communities` + `core/community-experience` | Contexto local, nao copia entidades publicas        |
 | Comunidade    | CommunityMembership     | `community_memberships`                               | Participacao e papel do Profile                     |
 | Comunidade    | CommunityEntityLink     | `community_entity_links`                              | Vincula entidades independentes sem duplicar mestre |

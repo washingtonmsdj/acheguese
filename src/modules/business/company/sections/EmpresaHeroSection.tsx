@@ -11,7 +11,7 @@ import {
   Star,
 } from 'lucide-react';
 import { BusinessLogo } from '@/shared/components/ui/business-logo';
-import { CoverageBadge } from '@/core/geospatial/components/CoverageBadge';
+import { BusinessCoverageBadge } from '@/modules/business/components/coverage';
 import { getPaymentMethodLabel } from '@/core/business/constants';
 import { cn } from '@/shared/utils/cn';
 import type { EmpresaHeroSectionProps } from './types';
@@ -304,9 +304,8 @@ export function EmpresaHeroSection({
                         {ageChipLabel}
                       </span>
                     ) : null}
-                    <CoverageBadge
-                      entityType="business"
-                      entityId={business.id}
+                    <BusinessCoverageBadge
+                      businessId={business.id}
                       className="hidden w-full sm:ml-auto sm:block sm:w-auto"
                     />
                   </div>

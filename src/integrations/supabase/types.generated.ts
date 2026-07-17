@@ -17960,24 +17960,6 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      add_coverage_by_location: {
-        Args: {
-          p_entity_id: string
-          p_entity_type: string
-          p_location_id: string
-        }
-        Returns: string
-      }
-      add_coverage_by_radius: {
-        Args: {
-          p_center_latitude: number
-          p_center_longitude: number
-          p_entity_id: string
-          p_entity_type: string
-          p_radius_km: number
-        }
-        Returns: string
-      }
       add_niche_capability: {
         Args: {
           p_business_id: string
@@ -18205,20 +18187,6 @@ export type Database = {
         Args: { p_ride_id: string }
         Returns: number
       }
-      check_coverage: {
-        Args: {
-          p_entity_id: string
-          p_entity_type: string
-          p_user_latitude: number
-          p_user_longitude: number
-        }
-        Returns: {
-          coverage_type: string
-          distance_meters: number
-          has_coverage: boolean
-          location_id: string
-        }[]
-      }
       check_delivery_eligibility: {
         Args: {
           p_business_id: string
@@ -18335,77 +18303,6 @@ export type Database = {
           p_valid_until?: string
         }
         Returns: string
-      }
-      create_business_data_with_canonical: {
-        Args: {
-          p_address_id?: string
-          p_business_name?: string
-          p_business_type?: string
-          p_description?: string
-          p_email?: string
-          p_location_id: string
-          p_metadata?: Json
-          p_phone?: string
-          p_profile_id: string
-          p_website?: string
-        }
-        Returns: {
-          address: string | null
-          address_id: string | null
-          business_address: string | null
-          business_city: string | null
-          business_hours: Json | null
-          business_name: string
-          business_role: string
-          business_state: string | null
-          business_zip: string | null
-          can_post_vagas: boolean
-          category: string | null
-          cnpj: string | null
-          company_type: string | null
-          created_at: string
-          description: string | null
-          email: string | null
-          employee_count: string | null
-          facebook: string | null
-          facilities: Json | null
-          favorites_count: number
-          founded_year: number | null
-          id: string
-          industry: string | null
-          instagram: string | null
-          is_headquarters: boolean
-          is_premium: boolean
-          is_verified: boolean
-          latitude: number | null
-          legal_name: string | null
-          location_id: string | null
-          longitude: number | null
-          metadata: Json
-          opening_hours: Json | null
-          parent_business_id: string | null
-          payment_methods: Json | null
-          point: unknown
-          profile_id: string
-          rating: number | null
-          recommendations_count: number
-          slug: string | null
-          specialties: Json | null
-          status: string
-          subcategory: string | null
-          tax_id: string | null
-          total_products: number
-          total_reviews: number
-          unit_name: string | null
-          updated_at: string
-          website: string | null
-        }
-        SetofOptions: {
-          from: "*"
-          to: "business_data"
-          isOneToOne: true
-          isSetofReturn: false
-        }
       }
       create_business_review: {
         Args: {
@@ -18539,67 +18436,6 @@ export type Database = {
         }
         Returns: string
       }
-      create_professional_data_with_canonical: {
-        Args: {
-          p_address_id?: string
-          p_description?: string
-          p_email?: string
-          p_location_id: string
-          p_metadata?: Json
-          p_phone?: string
-          p_profession?: string
-          p_profile_id: string
-          p_specialization?: string
-        }
-        Returns: {
-          accepts_remote: boolean | null
-          address_id: string | null
-          availability_notes: string | null
-          available_hours: Json | null
-          certifications: Json | null
-          created_at: string
-          description: string | null
-          education: string | null
-          email: string | null
-          experience_years: number | null
-          hourly_rate: number | null
-          id: string
-          is_accepting_clients: boolean
-          is_verified: boolean
-          license_number: string | null
-          license_state: string | null
-          location_id: string
-          metadata: Json
-          owner_user_id: string | null
-          portfolio_items: Json
-          price_range: string | null
-          price_type: string | null
-          profession: string | null
-          professional_name: string | null
-          profile_id: string
-          rating: number | null
-          service_area: string[] | null
-          service_areas: Json | null
-          service_category: string | null
-          service_radius_km: number | null
-          service_subcategory: string | null
-          services_offered: string[] | null
-          slug: string | null
-          specialties: string[] | null
-          updated_at: string
-          updated_by_user_id: string | null
-          verified_at: string | null
-          visibility: Database["public"]["Enums"]["professional_profile_visibility"]
-          whatsapp: string | null
-          years_experience: number | null
-        }
-        SetofOptions: {
-          from: "*"
-          to: "professional_data"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
       create_profile_with_extension: {
         Args: {
           p_avatar_url?: string
@@ -18672,101 +18508,6 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      create_ride_request_with_canonical: {
-        Args: {
-          p_available_seats?: number
-          p_departure_time: string
-          p_dropoff_address_id: string
-          p_dropoff_location_id: string
-          p_observation?: string
-          p_payment_method: string
-          p_pickup_address_id: string
-          p_pickup_location_id: string
-          p_search_radius_km?: number
-          p_suggested_price: number
-          p_type: string
-          p_user_id: string
-        }
-        Returns: {
-          available_seats: number | null
-          cancelled_at: string | null
-          completed_at: string | null
-          created_at: string
-          delivered_at: string | null
-          delivery_notes: string | null
-          departure_time: string | null
-          destination: string | null
-          destination_lat: number | null
-          destination_lng: number | null
-          driver_accepted_at: string | null
-          driver_assigned_at: string | null
-          driver_profile_id: string | null
-          dropoff_address_id: string
-          dropoff_location_id: string
-          failed_delivery_at: string | null
-          failed_delivery_metadata: Json | null
-          failed_delivery_reason: string | null
-          final_price: number | null
-          id: string
-          observation: string | null
-          origin: string | null
-          origin_lat: number | null
-          origin_lng: number | null
-          package_description: string | null
-          package_size: string | null
-          passenger_boarded_at: string | null
-          passenger_profile_id: string
-          payment_method: string | null
-          pickup_address_id: string
-          pickup_confirmed_at: string | null
-          pickup_location_id: string
-          proof_of_delivery: Json | null
-          recipient_name: string | null
-          recipient_phone: string | null
-          ride_mode: string
-          route_id: string | null
-          share_token: string | null
-          share_view_count: number
-          source_id: string | null
-          source_type: string | null
-          started_at: string | null
-          status: string
-          suggested_price: number | null
-          updated_at: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "ride_requests"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
-      create_user_residence_with_canonical: {
-        Args: {
-          p_address_id: string
-          p_country?: string
-          p_location_id: string
-          p_user_id: string
-        }
-        Returns: {
-          address_id: string
-          country: string
-          created_at: string
-          id: string
-          is_primary: boolean
-          is_verified: boolean
-          location_id: string
-          updated_at: string
-          user_id: string
-          verification_requested_at: string | null
-        }
-        SetofOptions: {
-          from: "*"
-          to: "user_residences"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
       create_vaga_report: {
         Args: { p_description?: string; p_reason: string; p_vaga_id: string }
         Returns: {
@@ -18799,10 +18540,6 @@ export type Database = {
       delete_profile_review: {
         Args: { p_review_id: string; p_reviewer_profile_id: string }
         Returns: boolean
-      }
-      delivery_assert_actor_profile: {
-        Args: { p_actor_profile_id: string; p_user_id: string }
-        Returns: undefined
       }
       delivery_assert_authenticated_user: { Args: never; Returns: string }
       delivery_assert_courier_linked_to_merchant: {
@@ -19384,7 +19121,6 @@ export type Database = {
       enable_strict_coordinate_validation: { Args: never; Returns: string }
       enablelongtransactions: { Args: never; Returns: string }
       equals: { Args: { geom1: unknown; geom2: unknown }; Returns: boolean }
-      exec_sql: { Args: { sql: string }; Returns: Json }
       expire_stale_work_opportunities: {
         Args: { p_now?: string }
         Returns: {
@@ -19406,19 +19142,6 @@ export type Database = {
           distance_km: number
           profile_id: string
           rating: number
-        }[]
-      }
-      find_entities_with_coverage: {
-        Args: {
-          p_entity_type: string
-          p_limit?: number
-          p_user_latitude: number
-          p_user_longitude: number
-        }
-        Returns: {
-          coverage_type: string
-          distance_meters: number
-          entity_id: string
         }[]
       }
       find_similar_lost_found_posts: {
@@ -19791,19 +19514,6 @@ export type Database = {
           users: number
         }[]
       }
-      get_coverage_areas: {
-        Args: { p_entity_id: string; p_entity_type: string }
-        Returns: {
-          center_latitude: number
-          center_longitude: number
-          coverage_type: string
-          id: string
-          is_active: boolean
-          location_id: string
-          location_name: string
-          radius_km: number
-        }[]
-      }
       get_current_notification_preferences: {
         Args: never
         Returns: {
@@ -19935,48 +19645,6 @@ export type Database = {
           lng: number
         }[]
       }
-      get_location_ancestors: {
-        Args: { location_id: string }
-        Returns: {
-          depth: number
-          full_name: string
-          geographic_path: string
-          id: string
-          name: string
-          parent_id: string
-          slug: string
-          type: Database["public"]["Enums"]["location_type"]
-        }[]
-      }
-      get_location_by_path: {
-        Args: { path: string }
-        Returns: {
-          full_name: string
-          geographic_path: string
-          id: string
-          metadata: Json
-          name: string
-          parent_id: string
-          slug: string
-          status: Database["public"]["Enums"]["location_status"]
-          type: Database["public"]["Enums"]["location_type"]
-        }[]
-      }
-      get_location_descendants:
-        | {
-            Args: { location_id: string; max_depth?: number }
-            Returns: {
-              depth: number
-              full_name: string
-              geographic_path: string
-              id: string
-              name: string
-              parent_id: string
-              slug: string
-              type: Database["public"]["Enums"]["location_type"]
-            }[]
-          }
-        | { Args: { p_location_id: string }; Returns: string[] }
       get_logs_statistics: {
         Args: { p_end_date?: string; p_start_date?: string }
         Returns: {
@@ -20875,7 +20543,38 @@ export type Database = {
         Args: { p_driver_profile_id: string; p_ride_id: string }
         Returns: boolean
       }
-      remove_coverage: { Args: { p_area_id: string }; Returns: boolean }
+      remove_entity_coverage: {
+        Args: {
+          p_coverage_id?: string
+          p_entity_id: string
+          p_entity_type: string
+        }
+        Returns: number
+      }
+      replace_entity_coverage: {
+        Args: { p_coverages: Json; p_entity_id: string; p_entity_type: string }
+        Returns: {
+          center_latitude: number | null
+          center_longitude: number | null
+          coverage_polygon: unknown
+          coverage_type: string
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          is_primary: boolean
+          location_id: string
+          radius_km: number | null
+          status: string
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "service_areas"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       report_classified_comment: {
         Args: {
           p_classified_id: string
@@ -20978,14 +20677,6 @@ export type Database = {
           p_event_ids: string[]
           p_resolution_notes?: string
           p_status: Database["public"]["Enums"]["trust_event_status"]
-        }
-        Returns: number
-      }
-      revoke_all_user_sessions: {
-        Args: {
-          p_except_current?: boolean
-          p_reason?: string
-          p_user_id?: string
         }
         Returns: number
       }
@@ -21870,6 +21561,10 @@ export type Database = {
       update_communication_publication_draft: {
         Args: { payload: Json; publication_id: string }
         Returns: Json
+      }
+      update_entity_coverage_status: {
+        Args: { p_coverage_id: string; p_status: string }
+        Returns: undefined
       }
       update_latest_ride_dispatch_attempt: {
         Args: {

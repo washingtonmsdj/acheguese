@@ -1,6 +1,6 @@
 # Inventario Estrutural do Projeto
 
-Gerado em 2026-07-17T21:00:45.810Z.
+Gerado em 2026-07-17T23:58:23.019Z.
 
 ## Modulos existentes
 - Core: `address`, `admin`, `ai`, `alerts`, `analytics`, `audit`, `auth`, `authorization`, `banners`, `billing`, `business`, `city`, `classifieds`, `comments`, `communication-territorial`, `community`, `community-experience`, `community-feed`, `community-groups`, `community-issues`, `community-lost-found`, `community-recommendations`, `coverage`, `education`, `engagement`, `family`, `favorites`, `feed`, `geocoding`, `geospatial`, `governance`, `guide`, `infrastructure`, `interaction`, `landing`, `legal`, `location`, `maps`, `media`, `messaging`, `metrics`, `mobility`, `moderation`, `navigation`, `nearby`, `notifications`, `permissions`, `posts`, `pricing`, `privacy`, `professional`, `profiles`, `public-identity`, `qr`, `realtime`, `residence`, `reviews`, `rollout`, `routing`, `safety`, `search`, `service-areas`, `session`, `social`, `subscription`, `telemetry`, `territorial`, `tracking`, `trust`, `users`, `verification`, `verticals`, `work-opportunities`
@@ -43,7 +43,7 @@ Gerado em 2026-07-17T21:00:45.810Z.
 | `community-events` | 5 | 15 | 0 | 2 | 2 | 0 | 2 | 0 | 0 | 0 | `medium` |
 | `community-recommendations` | 25 | 23 | 0 | 13 | 45 | 0 | 4 | 0 | 0 | 0 | `medium` |
 | `community-lost-found` | 12 | 0 | 0 | 6 | 0 | 0 | 0 | 0 | 0 | 0 | `medium` |
-| `map` | 18 | 1 | 0 | 4 | 10 | 0 | 0 | 0 | 0 | 0 | `high` |
+| `map` | 17 | 1 | 0 | 3 | 9 | 0 | 0 | 0 | 0 | 0 | `high` |
 | `classifieds` | 23 | 29 | 0 | 7 | 21 | 0 | 0 | 0 | 1 | 0 | `high` |
 | `mobility` | 13 | 10 | 0 | 4 | 41 | 0 | 1 | 0 | 5 | 1 | `critical` |
 | `notifications` | 10 | 90 | 0 | 4 | 18 | 0 | 0 | 0 | 1 | 0 | `high` |
@@ -326,12 +326,12 @@ Gerado em 2026-07-17T21:00:45.810Z.
 - SSOT atual: Maps agora tem SSOT explicito para runtime layers e coverage administrativa do produto, mas ainda convive com `NearbyPage` fora do ownership de `core/maps` e com composicao de alertas puxada direto do modulo.
 - Admin: Parcial. O dominio agora possui coverage operacional dedicada em `/admin/mapa`, alem de locations e pontos turisticos. Ainda faltam write-side de boundaries, reconciliacao geografica e convergencia final de Nearby.
 - Documentacao: Boa. Maps ja tinha documentacao tecnica forte e agora ganhou documento vivo de governanca administrativa; o passivo principal restante esta em alinhar docs historicas com a implementacao real dos providers.
-- Services: `src/core/geocoding/services/GeocodingService.ts`, `src/core/geospatial/services/BoundaryService.ts`, `src/core/geospatial/services/CoverageService.ts`, `src/core/geospatial/services/GeospatialService.ts`, `src/core/geospatial/services/SpatialSearchService.ts`, `src/core/geospatial/services/__tests__/BoundaryService.spec.ts`, `src/core/maps/services/ClusteringService.ts`, `src/core/maps/services/GeolocationService.ts`, `src/core/maps/services/IpGeolocationService.ts`, `src/core/maps/services/MapClassifiedsLayerRuntimeService.ts`, `src/core/maps/services/MapEntityProjectionService.ts`, `src/core/maps/services/MapGastronomyLayerRuntimeService.ts`, `src/core/maps/services/MapGeocodingAdapter.ts`, `src/core/maps/services/MapLayerRuntimeService.ts`, `src/core/maps/services/MapServicesLayerRuntimeService.ts`, `src/core/maps/services/NeighborhoodBoundaryService.ts`, `src/core/maps/services/index.ts`, `src/integrations/maps/services/HaversineGeospatialPort.ts`
+- Services: `src/core/geocoding/services/GeocodingService.ts`, `src/core/geospatial/services/BoundaryService.ts`, `src/core/geospatial/services/GeospatialService.ts`, `src/core/geospatial/services/SpatialSearchService.ts`, `src/core/geospatial/services/__tests__/BoundaryService.spec.ts`, `src/core/maps/services/ClusteringService.ts`, `src/core/maps/services/GeolocationService.ts`, `src/core/maps/services/IpGeolocationService.ts`, `src/core/maps/services/MapClassifiedsLayerRuntimeService.ts`, `src/core/maps/services/MapEntityProjectionService.ts`, `src/core/maps/services/MapGastronomyLayerRuntimeService.ts`, `src/core/maps/services/MapGeocodingAdapter.ts`, `src/core/maps/services/MapLayerRuntimeService.ts`, `src/core/maps/services/MapServicesLayerRuntimeService.ts`, `src/core/maps/services/NeighborhoodBoundaryService.ts`, `src/core/maps/services/index.ts`, `src/integrations/maps/services/HaversineGeospatialPort.ts`
 - Pages: `src/core/maps/pages/MapaPageV4.tsx`
 - Routes: nenhuma rota propria mapeada
-- Tabelas: `location_boundaries`, `locations`, `neighborhood_boundaries`, `service_areas`
-- RPCs: `add_coverage_by_location`, `add_coverage_by_radius`, `calculate_distance_meters`, `check_coverage`, `find_entities_with_coverage`, `get_coverage_areas`, `remove_coverage`, `resolve_point_to_location`, `resolve_point_to_location_with_fallback`, `search_entities_by_bounds`, `search_entities_by_radius`, `search_entities_hybrid`
-- Hooks oficiais: `src/core/geocoding/hooks/useGeocoding.ts`, `src/core/geospatial/hooks/useCoverage.ts`, `src/core/geospatial/hooks/useGeocoding.ts`, `src/core/geospatial/hooks/useSpatialSearch.ts`, `src/core/maps/hooks/useCityNeighborhoodsPolygons.d.ts`, `src/core/maps/hooks/useCityNeighborhoodsPolygons.ts`, `src/core/maps/hooks/useMapClustering.ts`, `src/core/maps/hooks/useMapViewportFetch.ts`, `src/core/maps/hooks/useTerritoryPolygon.ts`, `src/core/maps/hooks/useUserLocation.ts`
+- Tabelas: `location_boundaries`, `locations`, `neighborhood_boundaries`
+- RPCs: `calculate_distance_meters`, `resolve_point_to_location`, `resolve_point_to_location_with_fallback`, `search_entities_by_bounds`, `search_entities_by_radius`, `search_entities_hybrid`
+- Hooks oficiais: `src/core/geocoding/hooks/useGeocoding.ts`, `src/core/geospatial/hooks/useGeocoding.ts`, `src/core/geospatial/hooks/useSpatialSearch.ts`, `src/core/maps/hooks/useCityNeighborhoodsPolygons.d.ts`, `src/core/maps/hooks/useCityNeighborhoodsPolygons.ts`, `src/core/maps/hooks/useMapClustering.ts`, `src/core/maps/hooks/useMapViewportFetch.ts`, `src/core/maps/hooks/useTerritoryPolygon.ts`, `src/core/maps/hooks/useUserLocation.ts`
 - Hooks legados: nenhum hook legado detectado
 - Arquivos legados: nenhum arquivo legado detectado
 - Acesso direto ao banco fora de service: nenhum detectado

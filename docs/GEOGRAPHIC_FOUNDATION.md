@@ -331,17 +331,23 @@ src/core/
 │   │   └── validation.ts             # Validação de integridade
 │   └── index.ts                      # Barrel export
 │
-├── coverage/                         # Cobertura de entidades
+├── coverage/                         # SSOT de cobertura de entidades
 │   ├── services/
-│   │   └── CoverageService.ts        # Serviço principal
-│   ├── hooks/
-│   │   ├── useCoverage.ts            # Hook de cobertura de entidade
-│   │   └── useEntitiesInLocation.ts  # Hook de entidades em localização
+│   │   ├── CoverageService.ts        # Regras e orquestração canônicas
+│   │   └── ICoverageService.ts       # Contrato do domínio
+│   ├── repositories/
+│   │   ├── ICoverageRepository.ts    # Porta de persistência
+│   │   └── CoverageRepositorySupabase.ts # RPCs transacionais autorizados
+│   ├── ports/                        # Integração espacial sem duplicar domínio
 │   ├── types/
 │   │   └── index.ts                  # ServiceArea, CoverageType
-│   ├── utils/
-│   │   └── validation.ts             # Validação de cobertura
-│   └── index.ts                      # Barrel export
+│   └── index.ts                      # API pública do domínio
+│
+├── geospatial/                       # Busca, limites e cálculos espaciais
+│   ├── services/                     # SpatialSearch e BoundaryService
+│   ├── repositories/                 # Consultas geoespaciais
+│   ├── hooks/                        # useSpatialSearch e useGeocoding
+│   └── components/                   # UI espacial genérica
 │
 └── rollout/                          # Rollout de módulos
     ├── services/

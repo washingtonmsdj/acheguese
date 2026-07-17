@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-17T21:00:45.813Z",
+  "generatedAt": "2026-07-17T23:58:23.156Z",
   "inventories": [
     {
       "domain": "core/routing/location/public-identity",
@@ -1629,7 +1629,6 @@
       "services": [
         "src/core/geocoding/services/GeocodingService.ts",
         "src/core/geospatial/services/BoundaryService.ts",
-        "src/core/geospatial/services/CoverageService.ts",
         "src/core/geospatial/services/GeospatialService.ts",
         "src/core/geospatial/services/SpatialSearchService.ts",
         "src/core/geospatial/services/__tests__/BoundaryService.spec.ts",
@@ -1653,17 +1652,10 @@
       "tables": [
         "location_boundaries",
         "locations",
-        "neighborhood_boundaries",
-        "service_areas"
+        "neighborhood_boundaries"
       ],
       "rpcs": [
-        "add_coverage_by_location",
-        "add_coverage_by_radius",
         "calculate_distance_meters",
-        "check_coverage",
-        "find_entities_with_coverage",
-        "get_coverage_areas",
-        "remove_coverage",
         "resolve_point_to_location",
         "resolve_point_to_location_with_fallback",
         "search_entities_by_bounds",
@@ -1672,7 +1664,6 @@
       ],
       "officialHooks": [
         "src/core/geocoding/hooks/useGeocoding.ts",
-        "src/core/geospatial/hooks/useCoverage.ts",
         "src/core/geospatial/hooks/useGeocoding.ts",
         "src/core/geospatial/hooks/useSpatialSearch.ts",
         "src/core/maps/hooks/useCityNeighborhoodsPolygons.d.ts",

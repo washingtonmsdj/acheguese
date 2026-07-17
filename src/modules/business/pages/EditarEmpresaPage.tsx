@@ -27,7 +27,7 @@ import { IdentityChangeConfirmDialog } from "@/core/public-identity/components/I
 import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-runtime-context";
 import { ActiveProfileBadge } from "@/core/profiles/components/ActiveProfileBadge";
 import { useIdentitySaveLogger } from "@/core/public-identity/hooks/useIdentitySaveLogger";
-import { CoverageSettingsForm } from "@/core/geospatial/components/CoverageSettingsForm";
+import { BusinessCoverageSettings } from "@/modules/business/components/coverage";
 import { CATEGORY_CONFIGS } from "@/modules/business/config/categoryFilters";
 import {
   evaluateBusinessSlugSafety,
@@ -448,17 +448,9 @@ export default function EditarEmpresaPage() {
 
               {/* Area de cobertura */}
               <div className="mt-6">
-                <CoverageSettingsForm
-                  entityType="business"
-                  entityId={profileId!}
-                  entityLocation={
-                    typeof business.address === 'object' && business.address?.latitude && business.address?.longitude
-                      ? {
-                          latitude: business.address.latitude,
-                          longitude: business.address.longitude,
-                        }
-                      : undefined
-                  }
+                <BusinessCoverageSettings
+                  businessId={business.id}
+                  locationId={business.location_id}
                 />
               </div>
             </>

@@ -69,10 +69,7 @@ export class CoverageService implements ICoverageService {
       await this.validateCoverageDefinition(coverage);
     }
 
-    // Remover coberturas existentes (transação simulada)
-    await this.repository.deleteByEntity(input.entity_type, input.entity_id);
-
-    // Criar novas coberturas
+    // The repository performs one authorized atomic replacement in PostgreSQL.
     const coveragesToCreate = input.coverages.map((c) => ({
       entity_type: input.entity_type,
       entity_id: input.entity_id,
@@ -83,7 +80,11 @@ export class CoverageService implements ICoverageService {
       status: CoverageStatus.ACTIVE,
     }));
 
-    const coverages = await this.repository.createMany(coveragesToCreate);
+    const coverages = await this.repository.replaceByEntity(
+      input.entity_type,
+      input.entity_id,
+      coveragesToCreate,
+    );
 
     return {
       coverages,

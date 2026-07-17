@@ -3,11 +3,8 @@
  * 
  * Operações geoespaciais com PostGIS.
  * 
- * ETAPA 1 - Novos recursos:
- * - Busca espacial por distância/raio
- * - Sistema de cobertura geográfica
- * - Hooks reutilizáveis
- * - Componentes de UI
+ * Owns spatial search, boundaries and coordinate calculations. Entity
+ * coverage belongs to core/coverage and must not be implemented here.
  */
 
 // Types
@@ -24,34 +21,19 @@ export type {
   SearchByBoundsInput,
   SearchHybridInput,
 } from './services/SpatialSearchService';
-export { CoverageService } from './services/CoverageService';
-export type {
-  CoverageEntityType,
-  CoverageType,
-  CoverageCheckResult,
-  CoverageArea,
-  CheckCoverageInput,
-  AddCoverageByRadiusInput,
-  AddCoverageByLocationInput,
-  FindEntitiesWithCoverageInput,
-} from './services/CoverageService';
 export { boundaryService, BoundaryServiceClass } from './services/BoundaryService';
 export type { BoundsResult, CityBoundsInput, NeighborhoodBoundsInput } from './services/BoundaryService';
 
 // Service Instances
 export { geospatialService } from './services/GeospatialService';
 export { spatialSearchService } from './services/SpatialSearchService';
-export { coverageService } from './services/CoverageService';
 
 // Hooks
 export * from './hooks/useSpatialSearch';
-export * from './hooks/useCoverage';
 
 // Components
-export { CoverageBadge } from './components/CoverageBadge';
 export { DistanceBadge } from './components/DistanceBadge';
 export { NearbyToggle } from './components/NearbyToggle';
-export { CoverageSettingsForm } from './components/CoverageSettingsForm';
 
 // Repositories
 export * from './repositories/IGeospatialRepository';

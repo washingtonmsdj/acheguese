@@ -1,118 +1,74 @@
-/**
- * useBusinessCoverage - Hook para integração com sistema de cobertura
- * 
- * Responsável por:
- * - Verificar se business atende na localização
- * - Obter áreas de cobertura
- * - Validar cobertura para pedidos/agendamentos
- */
-import { logger } from '@/shared/utils/logger';
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { businessCoverageService } from '../services';
 import { useBusinessLocation } from './useBusinessLocation';
-import type { ServiceArea, DoesCoverOutput } from '@/core/coverage';
 
+export const businessCoverageQueryKeys = {
+  all: ['business', 'coverage'] as const,
+  areas: (businessId: string) =>
+    [...businessCoverageQueryKeys.all, 'areas', businessId] as const,
+  decision: (businessId: string, locationId: string | null) =>
+    [...businessCoverageQueryKeys.all, 'decision', businessId, locationId] as const,
+};
+
+/**
+ * Read model for business coverage. It performs one areas query and one
+ * location decision query, both backed by the canonical coverage service.
+ */
 export function useBusinessCoverage(businessId?: string) {
-  const [hasCoverage, setHasCoverage] = useState<boolean>(false);
-  const [coverageDetails, setCoverageDetails] = useState<DoesCoverOutput | null>(null);
-  const [serviceAreas, setServiceAreas] = useState<ServiceArea[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [coverageMessage, setCoverageMessage] = useState<string>('');
-  
   const { activeLocationId } = useBusinessLocation();
 
-  // Verificar cobertura quando localização ou business mudar
-  const checkCoverage = useCallback(async () => {
-    if (!businessId || !activeLocationId) {
-      setHasCoverage(false);
-      setCoverageDetails(null);
-      setCoverageMessage('Selecione uma localização para verificar cobertura');
-      return;
-    }
+  const areasQuery = useQuery({
+    queryKey: businessCoverageQueryKeys.areas(businessId ?? 'missing'),
+    queryFn: () => businessCoverageService.getBusinessCoverage(businessId!),
+    enabled: Boolean(businessId),
+    staleTime: 5 * 60 * 1000,
+  });
 
-    setIsLoading(true);
-    try {
-      // Verificar cobertura
-      const coverage = await businessCoverageService.checkCoverageInActiveLocation(businessId);
-      setHasCoverage(coverage);
+  const decisionQuery = useQuery({
+    queryKey: businessCoverageQueryKeys.decision(
+      businessId ?? 'missing',
+      activeLocationId,
+    ),
+    queryFn: () => businessCoverageService.getCoverageDetails(businessId!),
+    enabled: Boolean(businessId && activeLocationId),
+    staleTime: 5 * 60 * 1000,
+  });
 
-      // Obter detalhes
-      const details = await businessCoverageService.getCoverageDetails(businessId);
-      setCoverageDetails(details);
+  const coverageDetails = decisionQuery.data ?? null;
+  const hasCoverage = coverageDetails?.covers ?? false;
+  const serviceAreas =
+    areasQuery.data?.coverages.map(({ coverage }) => coverage) ?? [];
 
-      // Obter mensagem
-      const message = await businessCoverageService.getCoverageMessage(businessId);
-      setCoverageMessage(message);
-    } catch (error) {
-      logger.error('Error checking coverage', error as Error, {
-        hook: 'useBusinessCoverage',
-        businessId,
-      });
-      setHasCoverage(false);
-      setCoverageDetails(null);
-      setCoverageMessage('Erro ao verificar cobertura');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [businessId, activeLocationId]);
-
-  // Obter áreas de cobertura
-  const loadServiceAreas = useCallback(async () => {
-    if (!businessId) {
-      setServiceAreas([]);
-      return;
-    }
-
-    try {
-      const areas = await businessCoverageService.getBusinessServiceAreas(businessId);
-      setServiceAreas(areas);
-    } catch (error) {
-      logger.error('Error loading service areas', error as Error, {
-        hook: 'useBusinessCoverage',
-        businessId,
-      });
-      setServiceAreas([]);
-    }
-  }, [businessId]);
-
-  // Validar para pedido/agendamento
-  const validateForOrder = useCallback(async (): Promise<{ valid: boolean; reason?: string }> => {
-    if (!businessId) {
-      return {
-        valid: false,
-        reason: 'Business não especificado'
-      };
-    }
-
-    return businessCoverageService.validateForOrder(businessId);
-  }, [businessId]);
-
-  // Atualizar quando localização ou business mudar
-  useEffect(() => {
-    checkCoverage();
-  }, [checkCoverage]);
-
-  // Carregar áreas de cobertura uma vez
-  useEffect(() => {
-    loadServiceAreas();
-  }, [loadServiceAreas]);
+  const coverageMessage = !activeLocationId
+    ? 'Selecione uma localizacao para verificar cobertura'
+    : hasCoverage
+      ? coverageDetails?.coverage?.coverage_type === 'city'
+        ? 'Atende nesta regiao (cobertura herdada)'
+        : 'Atende nesta regiao'
+      : 'Nao atende nesta regiao';
 
   return {
-    // Estado
     hasCoverage,
     coverageDetails,
+    coverageAreas: areasQuery.data?.coverages ?? [],
     serviceAreas,
-    isLoading,
+    isLoading: areasQuery.isLoading || decisionQuery.isLoading,
+    isError: areasQuery.isError || decisionQuery.isError,
+    error: areasQuery.error ?? decisionQuery.error,
     coverageMessage,
-    
-    // Métodos
-    checkCoverage,
-    loadServiceAreas,
-    validateForOrder,
-    
-    // Computed
-    coverageType: coverageDetails?.coverage?.coverage_type === 'city' ? 'inherited' : coverageDetails?.covers ? 'direct' : null,
-    isDirect: coverageDetails?.covers && coverageDetails?.coverage?.coverage_type !== 'city',
+    checkCoverage: decisionQuery.refetch,
+    loadServiceAreas: areasQuery.refetch,
+    validateForOrder: () =>
+      businessId
+        ? businessCoverageService.validateForOrder(businessId)
+        : Promise.resolve({ valid: false, reason: 'Business nao especificado' }),
+    coverageType:
+      coverageDetails?.coverage?.coverage_type === 'city'
+        ? 'inherited'
+        : hasCoverage
+          ? 'direct'
+          : null,
+    isDirect: hasCoverage && coverageDetails?.coverage?.coverage_type !== 'city',
     isInherited: coverageDetails?.coverage?.coverage_type === 'city',
     hasAnyCoverage: serviceAreas.length > 0,
   };

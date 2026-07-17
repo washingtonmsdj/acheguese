@@ -103,11 +103,6 @@ type ProfessionalListItemRow = Pick<
 
 type OpportunityResolutionUpdate = Pick<WorkOpportunityUpdate, "status" | "closed_at">;
 
-interface ExpireStaleOpportunitiesRow {
-  expired_count?: number | null;
-  expired_ids?: string[] | null;
-}
-
 type PublicOpportunityCardRow = PublicWorkOpportunitySearchRow;
 
 const workOpportunitiesDb = supabase as unknown as WorkOpportunitiesDbClient;
@@ -739,29 +734,6 @@ class WorkOpportunitiesServiceClass {
         metadata: { opportunityId },
       });
       return false;
-    }
-  }
-
-  async expireStaleOpportunities(): Promise<{ expiredCount: number; expiredIds: string[] }> {
-    try {
-      const { data, error } = await workOpportunitiesDb.rpc<
-        ExpireStaleOpportunitiesRow | ExpireStaleOpportunitiesRow[]
-      >("expire_stale_work_opportunities");
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      const row = Array.isArray(data) ? data[0] : data;
-      return {
-        expiredCount: Number(row?.expired_count ?? 0),
-        expiredIds: Array.isArray(row?.expired_ids) ? row.expired_ids : [],
-      };
-    } catch (error) {
-      trackError(error as Error, {
-        component: "WorkOpportunitiesService",
-        action: "expireStaleOpportunities",
-      });
-      return { expiredCount: 0, expiredIds: [] };
     }
   }
 

@@ -18,7 +18,6 @@
 // ============================================
 export type {
   ServiceArea,
-  CoverageType,
   EntityType,
   CoverageWithLocation,
   CoverageError,
@@ -40,7 +39,13 @@ export type {
   ValidateCoverageOutput,
 } from './types';
 
-export { CoverageStatus, CoverageErrorCode, COVERAGE_VALIDATION, COVERAGE_PAGINATION } from './types';
+export {
+  CoverageType,
+  CoverageStatus,
+  CoverageErrorCode,
+  COVERAGE_VALIDATION,
+  COVERAGE_PAGINATION,
+} from './types';
 
 export type { ICoverageService } from './services/ICoverageService';
 export { CoverageService } from './services/CoverageService';
