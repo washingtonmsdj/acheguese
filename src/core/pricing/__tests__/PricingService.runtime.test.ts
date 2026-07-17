@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Testes de runtime para PricingService
  *
