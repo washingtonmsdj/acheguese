@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-15T21:17:41.484Z",
+  "generatedAt": "2026-07-17T17:30:18.195Z",
   "inventories": [
     {
       "domain": "core/routing/location/public-identity",
@@ -167,7 +167,6 @@
         "src/core/profiles/services/profile.admin-user-queries.ts",
         "src/core/profiles/services/profile.context.aggregate.ts",
         "src/core/profiles/services/profile.external-data.queries.ts",
-        "src/core/profiles/services/profile.facade.ts",
         "src/core/profiles/services/profile.identity.commands.ts",
         "src/core/profiles/services/profile.membership.queries.ts",
         "src/core/profiles/services/profile.mutations.ts",
@@ -761,7 +760,6 @@
         "src/modules/business/hooks/useBusinessAd.ts",
         "src/modules/business/hooks/useBusinessById.ts",
         "src/modules/business/hooks/useBusinessCoverage.ts",
-        "src/modules/business/hooks/useBusinessCreate.ts",
         "src/modules/business/hooks/useBusinessCreateMultiProfile.ts",
         "src/modules/business/hooks/useBusinessData.ts",
         "src/modules/business/hooks/useBusinessDistance.ts",
@@ -1531,7 +1529,6 @@
         "src/core/community/hooks/useCommentInteractions.ts",
         "src/core/community/hooks/useComments.ts",
         "src/core/community/hooks/useCommunityFiltersAAA.ts",
-        "src/core/community/hooks/useCommunityImageUpload.ts",
         "src/core/community/hooks/useCommunityKeyboard.ts",
         "src/core/community/hooks/useCommunityLocation.ts",
         "src/core/community/hooks/useCommunityRollout.ts",

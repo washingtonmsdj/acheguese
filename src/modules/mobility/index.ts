@@ -15,7 +15,7 @@ export {
   RideRequestCard,
   DriverOfferCard,
   RouteEstimateCard,
-  RouteEstimateCardSkeleton
+  RouteEstimateCardSkeleton,
 } from "./components";
 export { RideTrackingMap } from "./components/RideTrackingMap";
 export { ActiveRideWidget } from "./components/ActiveRideWidget";
@@ -52,8 +52,10 @@ export { MobilidadeTabs } from "./components/landing/MobilidadeTabs";
 // Services
 export { rideService } from "@/core/mobility/services/RideService";
 export { driverService } from "@/core/mobility/services/DriverService";
-export { chatService } from "@/core/mobility/services/ChatService";
-export { MobilityService, mobilityService } from "@/core/mobility/services/MobilityService";
+export {
+  MobilityService,
+  mobilityService,
+} from "@/core/mobility/services/MobilityService";
 
 // Hooks - Rides
 export { useActiveRide } from "./hooks/useActiveRide";
@@ -89,9 +91,7 @@ export type {
   WeeklyEarning,
 } from "@/core/mobility/services/DriverService";
 
-export type {
-  RideDispatchContextRow as DriverLocation,
-} from "@/core/mobility/services/mobility.queries";
+export type { RideDispatchContextRow as DriverLocation } from "@/core/mobility/services/mobility.queries";
 
 export type RideStats = {
   totalRides: number;

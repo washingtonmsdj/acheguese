@@ -19,7 +19,6 @@ import {
 import {
   MEDIA_STORAGE_BUCKETS,
   type PublicImageUploadBucket,
-  type PublicMediaBucket,
 } from "@/core/media/config/storageBuckets";
 import {
   getImageOptimizePreset,
@@ -368,56 +367,6 @@ class MediaServiceClass {
         "UNEXPECTED_ERROR",
       );
     }
-  }
-
-  /**
-   * Upload de múltiplas imagens
-   */
-  async uploadMultipleImages(
-    profileId: string,
-    files: File[],
-  ): Promise<UploadResult[]> {
-    const results: UploadResult[] = [];
-
-    for (const file of files) {
-      try {
-        const result = await this.uploadPostImage(profileId, file);
-        results.push(result);
-      } catch (error) {
-        logger.error("Error uploading image in batch:", error);
-        // Continua com as outras imagens
-      }
-    }
-
-    return results;
-  }
-
-  /**
-   * Deletar arquivo do storage
-   */
-  async deleteFile(bucket: PublicMediaBucket, path: string): Promise<boolean> {
-    try {
-      const { error } = await supabase.storage.from(bucket).remove([path]);
-
-      if (error) {
-        logger.error("Error deleting file:", error);
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      logger.error("Unexpected error deleting file:", error);
-      return false;
-    }
-  }
-
-  /**
-   * Obter URL pública de um arquivo
-   */
-  getPublicUrl(bucket: PublicMediaBucket, path: string): string {
-    const { data } = supabase.storage.from(bucket).getPublicUrl(path);
-
-    return data.publicUrl;
   }
 
   /**

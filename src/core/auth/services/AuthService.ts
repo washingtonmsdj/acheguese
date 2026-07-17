@@ -9,11 +9,6 @@
 import { supabase } from "@/integrations/supabase";
 import { SessionService } from "@/core/session/services/SessionService";
 import { logger } from "@/shared/utils/logger";
-import { mediaService } from "@/core/media/services/MediaService";
-import {
-  isPublicImageUploadBucket,
-  type PublicMediaBucket,
-} from "@/core/media/config/storageBuckets";
 import { RoleService } from "@/core/authorization/services/RoleService";
 import { parseAuthIdentifier } from "@/core/auth/utils/authIdentifier";
 import { isCurrentTermsAcceptance } from "@/core/legal/termsOfService";
@@ -29,10 +24,6 @@ interface UsernameLoginResponse {
     refresh_token?: string;
   };
   error?: string;
-}
-
-function isPublicMediaBucket(bucket: string): bucket is PublicMediaBucket {
-  return bucket === "avatars" || bucket === "post-images";
 }
 
 export class AuthService {
@@ -327,38 +318,6 @@ export class AuthService {
       password: newPassword,
     });
     if (error) throw error;
-  }
-
-  /**
-   *  DELETAR IMAGEM DO STORAGE
-   * Remove uma imagem do storage community-posts
-   */
-  static async deleteStorageImage(
-    bucket: string,
-    imageUrl: string,
-  ): Promise<boolean> {
-    try {
-      // Extrair o path do arquivo da URL
-      const urlParts = imageUrl.split(`/${bucket}/`);
-      if (urlParts.length < 2) return false;
-
-      const filePath = urlParts[1]?.split("?")[0] ?? "";
-      if (!filePath) return false;
-
-      if (isPublicImageUploadBucket(bucket)) {
-        await mediaService.deleteFromBucket(bucket, [filePath]);
-        return true;
-      }
-
-      if (isPublicMediaBucket(bucket)) {
-        return await mediaService.deleteFile(bucket, filePath);
-      }
-
-      return false;
-    } catch (error) {
-      logger.error("Error deleting image:", error);
-      return false;
-    }
   }
 
   /**

@@ -471,10 +471,20 @@ funcoes temporarias restantes. Typecheck, lint, build, dependencias, SSOT,
 seguranca, testes MediaAsset/JPEG e migrations passaram. Contrato:
 `docs/architecture/MEDIA_ASSET_SSOT.md`.
 
+Checkpoint de limpeza da Fase 6 em 2026-07-17: foram removidos os metodos sem
+consumidor `AuthService.deleteStorageImage`, `MediaService.uploadMultipleImages`,
+`MediaService.deleteFile` e `MediaService.getPublicUrl`; tambem sairam
+`ProfileFacade`, `BusinessFacade`, `ChatFacade`, `chatService` e o alias
+`UnifiedMobilityService`. O relatorio estrutural historico que ainda descrevia
+`profile.facade.ts` como estado atual foi removido e o inventario foi regenerado.
+O baseline de Storage dinamico do `MediaService` caiu de 6 para 2 leituras e de
+8 para 4 escritas. Facades com consumidores reais, como `PostsFacade`,
+`ProfessionalFacade`, `GastronomyFacade` e `MobilityFacade`, foram preservadas.
+
 ### Fase 6 - Remocao de compatibilidade e escala
 
 - [ ] remover aliases, facades e tipos deprecated sem consumidores;
-- [ ] regenerar inventario e provar reducao de duplicacoes;
+- [x] regenerar inventario e provar reducao de duplicacoes;
 - [ ] remover allowlists fechadas dos validadores;
 - [ ] executar suites unitarias, integracao, RLS e E2E por dominio;
 - [ ] executar carga somente em staging explicitamente autorizado;
@@ -516,12 +526,14 @@ Nao usar:
 
 Continuar **Fase 6 - Remocao de compatibilidade e escala**.
 
-Proxima ordem: regenerar o inventario depois do corte CP-016, localizar aliases,
-facades e adapters ainda sem consumidores fora do MediaAsset e remove-los em
-incrementos protegidos por teste. Depois executar suites por dominio e preparar
-um ambiente de staging explicitamente autorizado para carga, p50/p95/p99,
-backup/restore e rollback. A aprovacao de retencao/anonymizacao continua aberta
-e nao pode ser mascarada como concluida.
+Proxima ordem: migrar os uploads publicos restantes de posts e achados/perdidos,
+hoje em `MediaService.uploadPostImage`, para o preset `post_image` do MediaAsset;
+so depois remover o writer e o cleanup do bucket antigo. Documentos de
+verificacao, evidencias privadas e try-on permanecem em contratos separados.
+Depois continuar a busca por aliases sem consumidores e preparar staging
+explicitamente autorizado para carga, p50/p95/p99, backup/restore e rollback.
+A aprovacao de retencao/anonymizacao continua aberta e nao pode ser mascarada
+como concluida.
 
 ## 9. Comandos de validacao base
 

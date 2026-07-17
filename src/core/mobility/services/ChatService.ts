@@ -4,16 +4,9 @@
  * Implementations live in chat.queries/chat.mutations/ChatService.impl.
  */
 
-export {
-  getChatByRideId,
-  getMessages,
-} from "./chat.queries";
+export { getChatByRideId, getMessages } from "./chat.queries";
 
-export {
-  sendMessage,
-  markMessagesAsRead,
-  createChat,
-} from "./chat.mutations";
+export { sendMessage, markMessagesAsRead, createChat } from "./chat.mutations";
 
 export type {
   RideChat,
@@ -23,5 +16,4 @@ export type {
   CreateMessageData,
 } from "./chat.types";
 
-export { ChatFacade, ChatService, chatService } from "./ChatService.impl";
-
+export { ChatService } from "./ChatService.impl";

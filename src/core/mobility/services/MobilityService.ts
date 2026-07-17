@@ -159,15 +159,10 @@ export {
   type RideChat,
   type ChatMessage,
   type SendMessageInput,
-  //  Facade de chat.
-  ChatFacade,
 } from "./ChatService";
 
 //  Runtime chat service exports.
-export {
-  ChatService,
-  chatService,
-} from "./ChatService.impl";
+export { ChatService } from "./ChatService.impl";
 export type { Conversation } from "./ChatService";
 
 export { MobilityLocationService } from "./MobilityLocationService";
@@ -199,7 +194,8 @@ export class MobilityFacade {
   static getAllRideRequests = MobilityQueries.getAllRideRequests;
   static getRidesByPassenger = MobilityQueries.getRidesByPassenger;
   static getRidesByDriverProfile = MobilityQueries.getRidesByDriverProfile;
-  static getActiveRideByDriverProfile = MobilityQueries.getActiveRideByDriverProfile;
+  static getActiveRideByDriverProfile =
+    MobilityQueries.getActiveRideByDriverProfile;
   static getActiveRide = MobilityQueries.getActiveRide;
   static getRideDispatchData = MobilityQueries.getRideDispatchData;
   static getDriverProfiles = MobilityQueries.getDriverProfiles;
@@ -207,7 +203,8 @@ export class MobilityFacade {
   static getTopDrivers = MobilityQueries.getTopDrivers;
   static getMobilityStats = MobilityQueries.getMobilityStats;
   static getDriverEarnings = MobilityQueries.getDriverEarnings;
-  static getCompletedRidePaymentsByDriver = MobilityQueries.getCompletedRidePaymentsByDriver;
+  static getCompletedRidePaymentsByDriver =
+    MobilityQueries.getCompletedRidePaymentsByDriver;
   static getDriverCompleteProfile = MobilityQueries.getDriverCompleteProfile;
   static getPassengerRating = MobilityQueries.getPassengerRating;
   static getMobilityConversations = MobilityQueries.getMobilityConversations;
@@ -254,6 +251,3 @@ export class MobilityFacade {
   static getRideStatusLabel = MobilityHelpers.getRideStatusLabel;
   static getRideStatusColor = MobilityHelpers.getRideStatusColor;
 }
-
-//  Alias publico do facade unificado.
-export { MobilityFacade as UnifiedMobilityService };

@@ -1,13 +1,21 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-07-15",
+  "updatedAt": "2026-07-17",
   "architecture": "docs/architecture/CORE_PLATFORM_ARCHITECTURE_SSOT.md",
   "plan": "plans/CORE_PLATFORM_CONSOLIDATION_PLAN.md",
-  "sourceRoots": ["src", "api", "supabase/functions"],
+  "sourceRoots": [
+    "src",
+    "api",
+    "supabase/functions"
+  ],
   "policy": {
     "defaultMutationOwner": "one-writer-per-table-operation",
     "frontendAuthorization": "ui-hint-only",
-    "backendEnforcement": ["rls", "rpc", "edge-function"],
+    "backendEnforcement": [
+      "rls",
+      "rpc",
+      "edge-function"
+    ],
     "baselineUpdate": "requires-reviewed-architecture-change"
   },
   "controlledTables": [
@@ -1529,19 +1537,19 @@
       "access": "connect",
       "path": "src/core/realtime/services/RealtimeService.ts",
       "maxCalls": 3,
-      "details": ["subscriptionId", "`${definition.channelPrefix}:${scopeId}`"]
+      "details": [
+        "`${definition.channelPrefix}:${scopeId}`",
+        "subscriptionId"
+      ]
     },
     {
       "kind": "dynamic-storage",
       "resource": "<dynamic>",
       "access": "read",
       "path": "src/core/media/services/MediaService.ts",
-      "maxCalls": 6,
+      "maxCalls": 2,
       "details": [
-        "MEDIA_STORAGE_BUCKETS.AVATARS",
-        "MEDIA_STORAGE_BUCKETS.BUSINESS_LOGOS",
         "MEDIA_STORAGE_BUCKETS.POST_IMAGES",
-        "bucket",
         "options.bucket"
       ]
     },
@@ -1550,10 +1558,8 @@
       "resource": "<dynamic>",
       "access": "write",
       "path": "src/core/media/services/MediaService.ts",
-      "maxCalls": 8,
+      "maxCalls": 4,
       "details": [
-        "MEDIA_STORAGE_BUCKETS.AVATARS",
-        "MEDIA_STORAGE_BUCKETS.BUSINESS_LOGOS",
         "MEDIA_STORAGE_BUCKETS.POST_IMAGES",
         "MEDIA_STORAGE_BUCKETS.VERIFICATION_DOCUMENTS",
         "bucket",
@@ -1566,7 +1572,9 @@
       "access": "read",
       "path": "src/core/engagement/services/ProfileSavedEntityService.ts",
       "maxCalls": 2,
-      "details": ["config.tableName as never"]
+      "details": [
+        "config.tableName as never"
+      ]
     },
     {
       "kind": "dynamic-table",
@@ -1588,7 +1596,9 @@
       "access": "read",
       "path": "src/core/infrastructure/database/query-builders/QueryBuilder.ts",
       "maxCalls": 6,
-      "details": ["table"]
+      "details": [
+        "table"
+      ]
     },
     {
       "kind": "dynamic-table",
@@ -1596,7 +1606,9 @@
       "access": "read",
       "path": "src/core/tracking/services/TrackingService.ts",
       "maxCalls": 2,
-      "details": ["tableName"]
+      "details": [
+        "tableName"
+      ]
     },
     {
       "kind": "dynamic-table",
@@ -1604,7 +1616,9 @@
       "access": "read",
       "path": "src/integrations/supabase/services/supabaseHelpers.ts",
       "maxCalls": 2,
-      "details": ["tableName as never"]
+      "details": [
+        "tableName as never"
+      ]
     },
     {
       "kind": "dynamic-table",
@@ -1612,7 +1626,9 @@
       "access": "read",
       "path": "src/modules/admin/services/OperationalDiagnosticsService.ts",
       "maxCalls": 1,
-      "details": ["definition.table"]
+      "details": [
+        "definition.table"
+      ]
     },
     {
       "kind": "dynamic-table",
@@ -1620,7 +1636,9 @@
       "access": "write",
       "path": "src/core/engagement/services/ProfileSavedEntityService.ts",
       "maxCalls": 3,
-      "details": ["config.tableName as never"]
+      "details": [
+        "config.tableName as never"
+      ]
     },
     {
       "kind": "dynamic-table",
@@ -1642,7 +1660,9 @@
       "access": "write",
       "path": "src/core/infrastructure/database/query-builders/QueryBuilder.ts",
       "maxCalls": 4,
-      "details": ["table"]
+      "details": [
+        "table"
+      ]
     },
     {
       "kind": "dynamic-table",
@@ -1650,7 +1670,9 @@
       "access": "write",
       "path": "src/core/mobility/services/mobility.mutations.ts",
       "maxCalls": 1,
-      "details": ["table"]
+      "details": [
+        "table"
+      ]
     },
     {
       "kind": "dynamic-table",
@@ -1658,7 +1680,9 @@
       "access": "write",
       "path": "src/core/mobility/services/MobilityService.impl.ts",
       "maxCalls": 1,
-      "details": ["table"]
+      "details": [
+        "table"
+      ]
     },
     {
       "kind": "dynamic-table",
@@ -1666,7 +1690,9 @@
       "access": "write",
       "path": "src/core/tracking/services/TrackingService.ts",
       "maxCalls": 1,
-      "details": ["tableName"]
+      "details": [
+        "tableName"
+      ]
     },
     {
       "kind": "dynamic-table",
@@ -1674,7 +1700,9 @@
       "access": "write",
       "path": "src/integrations/supabase/services/supabaseHelpers.ts",
       "maxCalls": 6,
-      "details": ["tableName as never"]
+      "details": [
+        "tableName as never"
+      ]
     },
     {
       "kind": "dynamic-table",
@@ -1682,7 +1710,9 @@
       "access": "write",
       "path": "src/modules/business/gastronomy/niches/pizzaria/PizzaAdminService.ts",
       "maxCalls": 3,
-      "details": ["table"]
+      "details": [
+        "table"
+      ]
     },
     {
       "kind": "storage",

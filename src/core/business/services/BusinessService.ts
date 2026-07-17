@@ -106,29 +106,12 @@ export type {
   ReviewWithUser,
 } from "../types";
 
-// ============================================================
-// 🏛️ SSOT v2.0 - FACADE
-// ============================================================
 import * as BusinessMappers from "./business.mappers";
 import * as BusinessQueries from "./business.queries";
 import * as BusinessMutations from "./business.mutations";
 import * as BusinessAdmin from "./business.admin";
 import * as BusinessHelpers from "./business.helpers";
 import type { BusinessStats } from "../types";
-/**
- * 🏢 BusinessFacade - Interface SSOT unificada v2.0
- *
- * Uso: BusinessFacade.queries.getBusinessById(id)
- *      BusinessFacade.mutations.createBusiness(data)
- *      BusinessFacade.admin.getBusinessMetrics()
- */
-export const BusinessFacade = {
-  queries: BusinessQueries,
-  mutations: BusinessMutations,
-  admin: BusinessAdmin,
-  mappers: BusinessMappers,
-  helpers: BusinessHelpers,
-} as const;
 
 /**
  * Fachada estatica para consumo dos modulos de empresa.
@@ -143,7 +126,8 @@ export class BusinessService {
   static getBusinessesList = BusinessQueries.getBusinessesList;
   static getBusinessProfile = BusinessQueries.getBusinessProfile;
   static getBusinessById = BusinessQueries.getBusinessById;
-  static getBusinessDataIdByProfileId = BusinessQueries.getBusinessDataIdByProfileId;
+  static getBusinessDataIdByProfileId =
+    BusinessQueries.getBusinessDataIdByProfileId;
   static isCommunityLinkEligibleByDataId =
     BusinessQueries.isBusinessCommunityLinkEligibleByDataId;
   static getBusinessBySlug = BusinessQueries.getBusinessBySlug;
@@ -156,7 +140,9 @@ export class BusinessService {
   static getServices = BusinessQueries.getServices;
   static getSimilarBusinesses = BusinessQueries.getSimilarBusinesses;
   static getGallery = BusinessQueries.getGallery;
-  static async getRecentBusinesses(limit = 10): Promise<Array<{ id: string; name: string; created_at: string }>> {
+  static async getRecentBusinesses(
+    limit = 10,
+  ): Promise<Array<{ id: string; name: string; created_at: string }>> {
     const { businesses } = await BusinessQueries.getBusinessesList({
       pageParam: 0,
       pageSize: limit,
@@ -183,7 +169,8 @@ export class BusinessService {
   static getBusinessClaimDetails = BusinessAdmin.getBusinessClaimDetails;
   static getTotalBusinessesCount = BusinessAdmin.getTotalBusinessesCount;
   static getPremiumBusinessesCount = BusinessAdmin.getPremiumBusinessesCount;
-  static getBusinessesCreatedInPeriod = BusinessAdmin.getBusinessesCreatedInPeriod;
+  static getBusinessesCreatedInPeriod =
+    BusinessAdmin.getBusinessesCreatedInPeriod;
   static getBusinessMetrics = BusinessAdmin.getBusinessMetrics;
   static getActiveCoupons = BusinessAdmin.getActiveCoupons;
   static getCouponById = BusinessAdmin.getCouponById;

@@ -2,14 +2,7 @@
  * Profile services - SSOT exports.
  */
 
-// ============================================================
-// Facade
-// ============================================================
-export {
-  ProfileFacade,
-  ProfileService,
-  profileService,
-} from "./ProfileService";
+export { ProfileService, profileService } from "./ProfileService";
 
 // ============================================================
 // Queries

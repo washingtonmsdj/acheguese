@@ -258,6 +258,11 @@ describe("MediaAsset SSOT", () => {
     expect(mediaService).not.toMatch(
       /async (?:uploadAvatar|uploadProfessionalImage|uploadBusinessImage)\(/,
     );
+    expect(mediaService).not.toMatch(
+      /async (?:uploadMultipleImages|deleteFile)\(/,
+    );
+    expect(mediaService).not.toMatch(/\n\s*getPublicUrl\s*\(/);
+    expect(authService).not.toContain("deleteStorageImage");
     expect(authService).not.toContain("static async uploadImage(");
   });
   it("renders migrated business and classified media through SafeImage", () => {

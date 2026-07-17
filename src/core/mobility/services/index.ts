@@ -44,57 +44,37 @@ export {
 //  ============================================================
 //  SERVICES ESPECIALIZADOS
 //  ============================================================
-export {
-  MobilityAdminQueryService,
-} from "@/core/mobility/services/MobilityAdminQueryService";
+export { MobilityAdminQueryService } from "@/core/mobility/services/MobilityAdminQueryService";
 
 export {
   MobilityRolloutService,
   mobilityRolloutService,
 } from "@/core/mobility/services/MobilityRolloutService";
 
-export {
-  mobilityAuditService,
-} from "@/core/mobility/services/MobilityAuditService";
+export { mobilityAuditService } from "@/core/mobility/services/MobilityAuditService";
 
-export {
-  DriverModerationEventsService,
-} from "@/core/mobility/services/DriverModerationEventsService";
-export type {
-  DriverModerationAction,
-} from "@/core/mobility/services/DriverModerationEventsService";
+export { DriverModerationEventsService } from "@/core/mobility/services/DriverModerationEventsService";
+export type { DriverModerationAction } from "@/core/mobility/services/DriverModerationEventsService";
 
-export {
-  RideReportsService,
-} from "@/core/mobility/services/RideReportsService";
+export { RideReportsService } from "@/core/mobility/services/RideReportsService";
 export type {
   RideReport,
   ReportStatus,
   ReportSeverity,
 } from "@/core/mobility/services/RideReportsService";
 
-export {
-  RideOperationalService,
-} from "@/core/mobility/core/RideOperationalService";
+export { RideOperationalService } from "@/core/mobility/core/RideOperationalService";
 export { RideRatingService } from "@/core/mobility/services/RideRatingService";
 export { MobilityTrustService } from "@/core/mobility/services/MobilityTrustService";
 export { RidePassengerService } from "@/core/mobility/services/RidePassengerService";
-export {
-  DriverAvailabilityService,
-} from "@/core/mobility/services/DriverAvailabilityService";
-export {
-  BoardingPointService,
-} from "@/core/mobility/services/BoardingPointService";
+export { DriverAvailabilityService } from "@/core/mobility/services/DriverAvailabilityService";
+export { BoardingPointService } from "@/core/mobility/services/BoardingPointService";
 export type {
   BoardingPointSummary,
   BoardingPointSuggestionInput,
 } from "@/core/mobility/services/BoardingPointService";
-export {
-  DriverPresenceService,
-} from "@/core/mobility/services/DriverPresenceService";
-export type {
-  DriverPresenceStats,
-} from "@/core/mobility/services/DriverPresenceService";
+export { DriverPresenceService } from "@/core/mobility/services/DriverPresenceService";
+export type { DriverPresenceStats } from "@/core/mobility/services/DriverPresenceService";
 
 //  ============================================================
 //  FACADE UNIFICADA (Recomendado)
@@ -102,6 +82,5 @@ export type {
 export {
   MobilityService,
   MobilityFacade,
-  UnifiedMobilityService,
 } from "@/core/mobility/services/MobilityService";
 export { mobilityService } from "@/core/mobility/services/MobilityService.impl";

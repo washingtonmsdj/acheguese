@@ -23,7 +23,10 @@ export class ChatService {
     return chatMutations.sendMessage(input);
   }
 
-  static async markMessagesAsRead(chatId: string, userId: string): Promise<void> {
+  static async markMessagesAsRead(
+    chatId: string,
+    userId: string,
+  ): Promise<void> {
     await chatMutations.markMessagesAsRead(chatId, userId);
   }
 
@@ -31,10 +34,3 @@ export class ChatService {
     return chatMutations.createChat(rideId);
   }
 }
-
-export const chatService = ChatService;
-
-export const ChatFacade = {
-  queries: chatQueries,
-  mutations: chatMutations,
-} as const;

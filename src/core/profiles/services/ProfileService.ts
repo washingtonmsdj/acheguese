@@ -4,7 +4,10 @@ import { trackError } from "@/shared/utils/errorTracking";
 import { getServicesByProfile } from "@/core/professional/services/professional.queries";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 import { adminRolesService } from "@/core/admin/services/AdminRolesService";
-import { publicIdentityService, PublicIdentityService } from "@/core/public-identity";
+import {
+  publicIdentityService,
+  PublicIdentityService,
+} from "@/core/public-identity";
 import { SessionRpcService } from "@/core/session/services/SessionRpcService";
 import { callRPC } from "@/integrations/supabase";
 import { PROFILE_VERIFICATION_STATUS } from "@/core/profiles/constants/verificationStatus";
@@ -47,9 +50,7 @@ import {
   mapBusinessRecords,
   resolveVerificationStatus,
 } from "./profile.service.rules";
-import {
-  buildPermissionMatrix,
-} from "./profile.workspace.rules";
+import { buildPermissionMatrix } from "./profile.workspace.rules";
 import { buildBusinessModuleSnapshot } from "./profile.workspace.business-modules";
 import { getPrivateWorkspaceAggregate } from "./profile.workspace.aggregate";
 import {
@@ -150,20 +151,34 @@ export class ProfileService {
     }
   }
   async getProfileContext(userId: string): Promise<ProfileContext | null> {
-    return getProfileContextAggregate({ userId, getActiveProfile: (id) => this.getActiveProfile(id) });
+    return getProfileContextAggregate({
+      userId,
+      getActiveProfile: (id) => this.getActiveProfile(id),
+    });
   }
-  async getProfileById(profileId: string): Promise<Profile | null> { return getProfileByIdQuery(profileId); }
-  async getActiveProfile(userId?: string): Promise<Profile | null> { return getActiveProfileRpc(userId); }
-  async getProfilesByUserId(userId?: string): Promise<Profile[]> { return getProfilesByUserIdQuery(userId); }
+  async getProfileById(profileId: string): Promise<Profile | null> {
+    return getProfileByIdQuery(profileId);
+  }
+  async getActiveProfile(userId?: string): Promise<Profile | null> {
+    return getActiveProfileRpc(userId);
+  }
+  async getProfilesByUserId(userId?: string): Promise<Profile[]> {
+    return getProfilesByUserIdQuery(userId);
+  }
   async resolveProfileId(identifier: string): Promise<string | null> {
     const directProfile = await this.getProfileById(identifier);
     if (directProfile?.id) return directProfile.id;
     return this.resolveProfileIdByUserId(identifier);
   }
-  async getProfileByType(userId: string, profileType: "personal" | "driver" | "business" | "professional"): Promise<Profile | null> {
+  async getProfileByType(
+    userId: string,
+    profileType: "personal" | "driver" | "business" | "professional",
+  ): Promise<Profile | null> {
     return getProfileByTypeQuery(userId, profileType);
   }
-  async ensureDriverProfileForUser(userId: string): Promise<Profile | null> { return ensureActiveDriverProfileForUser(userId); }
+  async ensureDriverProfileForUser(userId: string): Promise<Profile | null> {
+    return ensureActiveDriverProfileForUser(userId);
+  }
   async getRequiredActiveProfile(userId?: string): Promise<Profile> {
     const profile = await this.getActiveProfile(userId);
     if (!profile) {
@@ -183,10 +198,7 @@ export class ProfileService {
   async createProfile(profile: CreateProfilePayload): Promise<Profile> {
     return createProfileWithIdentityValidation(profile);
   }
-  async switchActiveProfile(
-    userId: string,
-    profileId: string,
-  ): Promise<void> {
+  async switchActiveProfile(userId: string, profileId: string): Promise<void> {
     const switched = await SessionRpcService.switchActiveProfile(profileId);
     if (!switched) {
       trackError(new Error("Error switching profile"), {
@@ -247,7 +259,8 @@ export class ProfileService {
       getProfilesByUserId: (id) => this.getProfilesByUserId(id),
       getUserRoles: (id) => this.getUserRoles(id),
       getUserLikesCount: (profileId) => this.getUserLikesCount(profileId),
-      getUserBusinessesByProfiles: (profileIds) => this.getUserBusinessesByProfiles(profileIds),
+      getUserBusinessesByProfiles: (profileIds) =>
+        this.getUserBusinessesByProfiles(profileIds),
       resolvePermissions: (profileContext) =>
         profileContext?.permissions ?? {
           canPost: false,
@@ -288,10 +301,10 @@ export class ProfileService {
     try {
       const availability = await PublicIdentityService.checkAvailability({
         identifier: username,
-        entityType: 'profile',
+        entityType: "profile",
         excludeEntityId: excludeProfileId,
       });
-      return availability.status === 'available';
+      return availability.status === "available";
     } catch (error) {
       trackError(new Error("Error verifying username"), {
         component: "ProfileService",
@@ -378,8 +391,8 @@ export class ProfileService {
     options?: {
       limit?: number;
       offset?: number;
-      orderBy?: 'created_at' | 'updated_at';
-    }
+      orderBy?: "created_at" | "updated_at";
+    },
   ): Promise<Profile[]> {
     return getProfilesByVerificationStatusQuery(status, options);
   }
@@ -396,18 +409,18 @@ export class ProfileService {
   async updateVerificationStatus(
     profileId: string,
     status: VerificationWorkflowStatus,
-    reason?: string
+    reason?: string,
   ): Promise<void> {
     await updateVerificationStatusMutation(profileId, status, reason);
   }
   async approveVerification(profileId: string): Promise<void> {
-    await this.updateVerificationStatus(profileId, 'verified');
+    await this.updateVerificationStatus(profileId, "verified");
   }
   async rejectVerification(profileId: string, reason?: string): Promise<void> {
-    await this.updateVerificationStatus(profileId, 'rejected', reason);
+    await this.updateVerificationStatus(profileId, "rejected", reason);
   }
   async revokeVerification(profileId: string): Promise<void> {
-    await this.updateVerificationStatus(profileId, 'none');
+    await this.updateVerificationStatus(profileId, "none");
   }
   async suspendUser(
     userId: string,
@@ -448,7 +461,10 @@ export class ProfileService {
     const profile = profiles.find((item) => item.is_active) ?? profiles[0];
     return profile?.share_activity_default ?? true;
   }
-  async updateShareActivityDefault(userId: string, shareDefault: boolean): Promise<void> {
+  async updateShareActivityDefault(
+    userId: string,
+    shareDefault: boolean,
+  ): Promise<void> {
     const profiles = await this.getProfilesByUserId(userId);
     const profile = profiles.find((item) => item.is_active) ?? profiles[0];
     if (!profile) {
@@ -471,13 +487,17 @@ export class ProfileService {
       return 0;
     }
   }
-  private async resolveProfileIdByUserId(userId: string): Promise<string | null> {
+  private async resolveProfileIdByUserId(
+    userId: string,
+  ): Promise<string | null> {
     return resolveProfileIdByUserId(userId);
   }
   async getUserFavoritesCount(userId: string): Promise<number> {
     return getUserFavoritesCountQuery(userId);
   }
-  async getUserBusinessesByProfiles(profileIds: string[]): Promise<BusinessRow[]> {
+  async getUserBusinessesByProfiles(
+    profileIds: string[],
+  ): Promise<BusinessRow[]> {
     try {
       return await getUserBusinessesByProfilesQuery(profileIds);
     } catch (error) {
@@ -613,27 +633,27 @@ export class ProfileService {
   // SSOT: USERNAME MANAGEMENT (para ProfileIdentityAdapter)
   static async checkUsernameExists(
     username: string,
-    excludeId?: string
+    excludeId?: string,
   ): Promise<boolean> {
     return checkUsernameExistsQuery(username, excludeId);
   }
   static async getSimilarUsernames(
     username: string,
-    limit = 20
+    limit = 20,
   ): Promise<string[]> {
     return getSimilarUsernamesQuery(username, limit);
   }
-  static async getUsernameHistory(profileId: string): Promise<Array<{
-    id: string;
-    profile_id: string;
-    old_username: string;
-    new_username: string;
-    change_reason: string;
-    changed_at: string;
-  }>> {
+  static async getUsernameHistory(profileId: string): Promise<
+    Array<{
+      id: string;
+      profile_id: string;
+      old_username: string;
+      new_username: string;
+      change_reason: string;
+      changed_at: string;
+    }>
+  > {
     return getUsernameHistoryQuery(profileId);
   }
 }
-// Profile facade - interface unificada SSOT.
-export { ProfileFacade } from "./profile.facade";
 export const profileService = new ProfileService();
